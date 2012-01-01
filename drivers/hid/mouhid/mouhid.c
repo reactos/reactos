@@ -637,7 +637,7 @@ MouHid_StartDevice(
 
     /* lets get the caps */
     Status = HidP_GetCaps(PreparsedData, &Capabilities);
-    if (!NT_SUCCESS(Status))
+    if (Status != HIDP_STATUS_SUCCESS)
     {
         /* failed to get capabilities */
         DPRINT1("[MOUHID] failed to obtain caps with %x\n", Status);
@@ -645,7 +645,7 @@ MouHid_StartDevice(
         return Status;
     }
 
-    DPRINT1("[MOUHID] Usage %x UsagePage %x\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
+    DPRINT1("[MOUHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
 
     /* verify capabilities */
     if (Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)

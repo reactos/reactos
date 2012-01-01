@@ -453,7 +453,7 @@ HidClassPDO_PnP(
             //
             // do nothing
             //
-            Status = Irp->IoStatus.Status;
+            Status = STATUS_SUCCESS; //Irp->IoStatus.Status;
             break;
         }
         case IRP_MN_QUERY_INTERFACE:
@@ -544,6 +544,7 @@ HidClassPDO_CreatePDO(
     PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
     PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
     PDODeviceExtension->Common.IsFDO = FALSE;
+    PDODeviceExtension->FDODeviceObject = DeviceObject;
     PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
     RtlCopyMemory(&PDODeviceExtension->Common.Attributes, &FDODeviceExtension->Common.Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
     RtlCopyMemory(&PDODeviceExtension->Common.DeviceDescription, &FDODeviceExtension->Common.DeviceDescription, sizeof(HIDP_DEVICE_DESC));

@@ -340,7 +340,7 @@ HidUsb_ResetWorkerRoutine(
     // get port status
     //
     Status = HidUsb_GetPortStatus(ResetContext->DeviceObject, &PortStatus);
-    DPRINT1("[HIDUSB] ResetWorkerRoutine GetPortStatus %x\n", Status);
+    DPRINT1("[HIDUSB] ResetWorkerRoutine GetPortStatus %x PortStatus %x\n", Status, PortStatus);
     if (NT_SUCCESS(Status))
     {
         if (!(PortStatus & USB_PORT_STATUS_ENABLE))
@@ -393,7 +393,6 @@ HidUsb_ResetWorkerRoutine(
     //
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     IoFreeWorkItem(ResetContext->WorkItem);
-    ResetContext->Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(ResetContext->Irp, IO_NO_INCREMENT);
     ExFreePool(ResetContext);
 }
@@ -409,7 +408,6 @@ HidUsb_ReadReportCompletion(
     PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
-    PUCHAR Buffer;
     PHID_USB_RESET_CONTEXT ResetContext;
 
     //
@@ -417,6 +415,16 @@ HidUsb_ReadReportCompletion(
     //
     Urb = (PURB)Context;
     ASSERT(Urb);
+
+    DPRINT("[HIDUSB] HidUsb_ReadReportCompletion %p Status %x Urb Status %x\n", Irp, Irp->IoStatus, Urb->UrbHeader.Status);
+
+    if (Irp->PendingReturned)
+    {
+        //
+        // mark irp pending
+        //
+        IoMarkIrpPending(Irp);
+    }
 
     //
     // did the reading report succeed / cancelled
@@ -433,11 +441,6 @@ HidUsb_ReadReportCompletion(
         //
         ASSERT(Urb->UrbHeader.Status == USBD_STATUS_SUCCESS);
 
-
-        Buffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
-        ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBufferLength == 4);
-        DPRINT("[HIDUSB] ReadCompletion Information %lu Buffer %x %x %x %x\n", Buffer[0] & 0xFF, Buffer[1] & 0xFF, Buffer[2] & 0xFF, Buffer[3] & 0xFF);
-
         //
         // free the urb
         //
@@ -446,7 +449,7 @@ HidUsb_ReadReportCompletion(
         //
         // finish completion
         //
-        return STATUS_SUCCESS;
+        return STATUS_CONTINUE_COMPLETION;
     }
 
     //
@@ -502,7 +505,7 @@ HidUsb_ReadReportCompletion(
     //
     // complete request
     //
-    return STATUS_SUCCESS;
+    return STATUS_CONTINUE_COMPLETION;
 }
 
 
@@ -560,6 +563,13 @@ HidUsb_ReadReport(
     RtlZeroMemory(Urb, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
 
     //
+    // sanity check
+    //
+    ASSERT(Irp->UserBuffer);
+    ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+    ASSERT(PipeInformation->PipeHandle);
+
+    //
     // build the urb
     //
     UsbBuildInterruptOrBulkTransferRequest(Urb,
@@ -572,6 +582,11 @@ HidUsb_ReadReport(
                                            NULL);
 
     //
+    // store configuration handle
+    //
+    Urb->UrbHeader.UsbdDeviceHandle = HidDeviceExtension->ConfigurationHandle;
+
+    //
     // get next location to setup irp
     //
     IoStack = IoGetNextIrpStackLocation(Irp);
@@ -580,8 +595,12 @@ HidUsb_ReadReport(
     // init irp for lower driver
     //
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = 0;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = 0;
+    IoStack->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
+    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+
 
     //
     // set completion routine
@@ -762,7 +781,7 @@ HidInternalDeviceControl(
         }
         case IOCTL_HID_READ_REPORT:
         {
-            DPRINT1("[HIDUSB] IOCTL_HID_READ_REPORT\n");
+            DPRINT("[HIDUSB] IOCTL_HID_READ_REPORT\n");
             Status = HidUsb_ReadReport(DeviceObject, Irp);
             return Status;
         }
@@ -949,6 +968,11 @@ Hid_DispatchUrb(
     // store urb
     //
     IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+
+    //
+    // set completion routine
+    //
+    IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
 
     //
     // call driver
@@ -1329,6 +1353,7 @@ Hid_PnpStart(
         // select configuration
         //
         Status = Hid_SelectConfiguration(DeviceObject);
+        ASSERT(Status == STATUS_SUCCESS);
 
         //
         // done

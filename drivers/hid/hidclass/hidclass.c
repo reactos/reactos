@@ -140,7 +140,6 @@ HidClass_Create(
          //
          // only supported for PDO
          //
-         DPRINT1("[HIDCLASS] IRP_MJ_CREATE for FDO\n");
          Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          return STATUS_UNSUCCESSFUL;
@@ -269,6 +268,31 @@ HidClass_Close(
     return STATUS_SUCCESS;
 }
 
+PVOID
+HidClass_GetSystemAddress(
+    IN PMDL ReportMDL)
+{
+    //
+    // sanity check
+    //
+    ASSERT(ReportMDL);
+
+    if (ReportMDL->MdlFlags & (MDL_SOURCE_IS_NONPAGED_POOL | MDL_MAPPED_TO_SYSTEM_VA))
+    {
+       //
+       // buffer is non paged pool
+       //
+       return ReportMDL->MappedSystemVa;
+    }
+    else
+    {
+       //
+       // map mdl
+       //
+       return MmMapLockedPages(ReportMDL, KernelMode);
+    }
+}
+
 NTSTATUS
 NTAPI
 HidClass_ReadCompleteIrp(
@@ -278,19 +302,23 @@ HidClass_ReadCompleteIrp(
 {
     PHIDCLASS_IRP_CONTEXT IrpContext;
     KIRQL OldLevel;
+    PUCHAR Address;
+    ULONG Offset;
+    PHIDP_DEVICE_DESC DeviceDescription;
+    ULONG CollectionIndex;
 
     //
     // get irp context
     //
     IrpContext = (PHIDCLASS_IRP_CONTEXT)Ctx;
 
-    DPRINT1("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
-    DPRINT1("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
-    DPRINT1("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
-    DPRINT1("HidClass_ReadCompleteIrp Irp %p\n", Irp);
-    DPRINT1("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
-    DPRINT1("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
-    DPRINT1("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
+    DPRINT("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
+    DPRINT("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
+    DPRINT("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
+    DPRINT("HidClass_ReadCompleteIrp Irp %p\n", Irp);
+    DPRINT("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
+    DPRINT("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
+    DPRINT("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
 
     //
     // copy result
@@ -298,9 +326,28 @@ HidClass_ReadCompleteIrp(
     if (Irp->IoStatus.Information)
     {
         //
-        // copy result
+        // get address
         //
-        RtlCopyMemory(IrpContext->OriginalIrp->UserBuffer, IrpContext->InputReportBuffer, IrpContext->InputReportBufferLength);
+        Address = HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
+        if (Address)
+        {
+            //
+            // reports may have a report id prepended
+            //
+            CollectionIndex = IrpContext->FileOp->DeviceExtension->CollectionIndex;
+            DeviceDescription = &IrpContext->FileOp->DeviceExtension->Common.DeviceDescription;
+
+            //
+            // calculate offset
+            //
+            ASSERT(DeviceDescription->CollectionDesc[CollectionIndex].InputLength >= DeviceDescription->ReportIDs[CollectionIndex].InputLength);
+            Offset = DeviceDescription->CollectionDesc[CollectionIndex].InputLength - DeviceDescription->ReportIDs[CollectionIndex].InputLength;
+
+            //
+            // copy result
+            //
+            RtlCopyMemory(&Address[Offset], IrpContext->InputReportBuffer, IrpContext->InputReportBufferLength);
+        }
     }
 
     //
@@ -315,11 +362,6 @@ HidClass_ReadCompleteIrp(
     ExFreePool(IrpContext->InputReportBuffer);
 
     //
-    // complete original request
-    //
-    IoCompleteRequest(IrpContext->OriginalIrp, IO_NO_INCREMENT);
-
-    //
     // remove us from pending list
     //
     KeAcquireSpinLock(&IrpContext->FileOp->Lock, &OldLevel);
@@ -330,9 +372,19 @@ HidClass_ReadCompleteIrp(
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     //
+    // insert into completed list
+    //
+    InsertTailList(&IrpContext->FileOp->IrpCompletedListHead, &Irp->Tail.Overlay.ListEntry);
+
+    //
     // release lock
     //
     KeReleaseSpinLock(&IrpContext->FileOp->Lock, OldLevel);
+
+    //
+    // complete original request
+    //
+    IoCompleteRequest(IrpContext->OriginalIrp, IO_NO_INCREMENT);
 
     //
     // free irp context
@@ -342,7 +394,47 @@ HidClass_ReadCompleteIrp(
     //
     // done
     //
-    return STATUS_SUCCESS;
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+PIRP
+HidClass_GetIrp(
+    IN PHIDCLASS_FILEOP_CONTEXT Context)
+{
+   KIRQL OldLevel;
+   PIRP Irp = NULL;
+   PLIST_ENTRY ListEntry;
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&Context->Lock, &OldLevel);
+
+    //
+    // is list empty?
+    //
+    if (!IsListEmpty(&Context->IrpCompletedListHead))
+    {
+        //
+        // grab first entry
+        //
+        ListEntry = RemoveHeadList(&Context->IrpCompletedListHead);
+
+        //
+        // get irp
+        //
+        Irp = (PIRP)CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&Context->Lock, OldLevel);
+
+    //
+    // done
+    //
+    return Irp;
 }
 
 NTSTATUS
@@ -358,17 +450,32 @@ HidClass_BuildIrp(
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
     PHIDCLASS_IRP_CONTEXT IrpContext;
+    PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
 
     //
-    // build new irp
+    // get an irp from fresh list
     //
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    Irp = HidClass_GetIrp(Context);
     if (!Irp)
     {
         //
-        // no memory
+        // build new irp
         //
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+        if (!Irp)
+        {
+            //
+            // no memory
+            //
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    else
+    {
+        //
+        // re-use irp
+        //
+        IoReuseIrp(Irp, STATUS_SUCCESS);
     }
 
     //
@@ -385,17 +492,31 @@ HidClass_BuildIrp(
     }
 
     //
+    // get device extension
+    //
+    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+    //
+    // sanity checks
+    //
+    ASSERT(PDODeviceExtension->CollectionIndex < PDODeviceExtension->Common.DeviceDescription.CollectionDescLength);
+    ASSERT(PDODeviceExtension->CollectionIndex < PDODeviceExtension->Common.DeviceDescription.ReportIDsLength);
+    ASSERT(PDODeviceExtension->Common.DeviceDescription.ReportIDs[PDODeviceExtension->CollectionIndex].InputLength > 0);
+    ASSERT(PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].InputLength == BufferLength);
+
+    //
     // init irp context
     //
     RtlZeroMemory(IrpContext, sizeof(HIDCLASS_IRP_CONTEXT));
-    IrpContext->InputReportBufferLength = BufferLength;
+    IrpContext->InputReportBufferLength = PDODeviceExtension->Common.DeviceDescription.ReportIDs[PDODeviceExtension->CollectionIndex].InputLength;
     IrpContext->OriginalIrp = RequestIrp;
     IrpContext->FileOp = Context;
 
     //
     // allocate buffer
     //
-    IrpContext->InputReportBuffer = ExAllocatePool(NonPagedPool, BufferLength);
+    IrpContext->InputReportBuffer = ExAllocatePool(NonPagedPool, IrpContext->InputReportBufferLength);
     if (!IrpContext->InputReportBuffer)
     {
         //
@@ -428,8 +549,6 @@ HidClass_BuildIrp(
     *OutIrp = Irp;
     *OutIrpContext = IrpContext;
 
-    DPRINT1("IRP %p Buffer %p\n", Irp, Irp->UserBuffer);
-
     //
     // done
     //
@@ -449,11 +568,18 @@ HidClass_Read(
     NTSTATUS Status;
     PIRP NewIrp;
     PHIDCLASS_IRP_CONTEXT NewIrpContext;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
 
     //
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get device extension
+    //
+    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(CommonDeviceExtension->IsFDO == FALSE);
 
     //
     // sanity check
@@ -472,12 +598,10 @@ HidClass_Read(
     //
     ASSERT(Context->DeviceExtension->Common.DriverExtension->DevicesArePolled == FALSE);
 
-    DPRINT1("[HIDCLASS] IRP_MJ_READ\n");
-
     //
     // build irp request
     //
-    Status = HidClass_BuildIrp(DeviceObject, Irp, Context, IOCTL_HID_READ_REPORT, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &NewIrp, &NewIrpContext);
+    Status = HidClass_BuildIrp(DeviceObject, Irp, Context, IOCTL_HID_READ_REPORT, IoStack->Parameters.Read.Length, &NewIrp, &NewIrpContext);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -523,12 +647,12 @@ HidClass_Read(
     // lets dispatch the request
     //
     ASSERT(Context->DeviceExtension);
-    Status = Context->DeviceExtension->Common.DriverExtension->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL](DeviceObject, NewIrp);
+    Status = Context->DeviceExtension->Common.DriverExtension->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL](Context->DeviceExtension->FDODeviceObject, NewIrp);
 
     //
     // complete
     //
-    return Status;
+    return STATUS_PENDING;
 }
 
 NTSTATUS
@@ -655,6 +779,8 @@ HidClass_InternalDeviceControl(
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -728,7 +854,7 @@ HidClass_DispatchDefault(
     //
     // dispatch to lower device object
     //
-	return IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, Irp);
+    return IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, Irp);
 }
 
 
@@ -744,7 +870,7 @@ HidClassDispatch(
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[HIDCLASS] Dispatch Major %x Minor %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
+    DPRINT("[HIDCLASS] Dispatch Major %x Minor %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
 
     //
     // dispatch request based on major function

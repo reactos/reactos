@@ -2,6 +2,7 @@
 
 #define _HIDPI_
 #define _HIDPI_NO_FUNCTION_MACROS_
+#define NDEBUG
 #include <ntddk.h>
 #include <hidport.h>
 #include <debug.h>

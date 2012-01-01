@@ -1,6 +1,7 @@
 #pragma once
 
 #define _HIDPI_NO_FUNCTION_MACROS_
+#define NDEBUG
 #include <ntddk.h>
 #include <initguid.h>
 #include <hidport.h>
@@ -47,7 +48,6 @@ typedef struct
     // hid attributes
     //
     HID_DEVICE_ATTRIBUTES Attributes;
-
 
 }HIDCLASS_COMMON_DEVICE_EXTENSION, *PHIDCLASS_COMMON_DEVICE_EXTENSION;
 
@@ -101,6 +101,12 @@ typedef struct
     // device interface 
     //
     UNICODE_STRING DeviceInterface;
+
+    //
+    // FDO device object
+    //
+    PDEVICE_OBJECT FDODeviceObject;
+
 }HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
 typedef struct __HIDCLASS_FILEOP_CONTEXT__
