@@ -517,9 +517,8 @@ VfatGetEaInformation(PFILE_OBJECT FileObject,
     {
         /* FIXME */
         DPRINT1("VFAT: FileEaInformation not implemented!\n");
-        return STATUS_SUCCESS;
     }
-    return STATUS_EAS_NOT_SUPPORTED;
+    return STATUS_SUCCESS;
 }
 
 
