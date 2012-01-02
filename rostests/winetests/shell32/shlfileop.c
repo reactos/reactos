@@ -2396,6 +2396,7 @@ START_TEST(shlfileop)
     test_rename();
     clean_after_shfo_tests();
 
+#if 0
     init_shfo_tests();
     test_copy();
     clean_after_shfo_tests();
@@ -2403,6 +2404,7 @@ START_TEST(shlfileop)
     init_shfo_tests();
     test_move();
     clean_after_shfo_tests();
+#endif
 
     test_sh_create_dir();
     clean_after_shfo_tests();
