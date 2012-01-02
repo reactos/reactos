@@ -116,6 +116,7 @@ static BOOL file_existsW(LPCWSTR name)
   return GetFileAttributesW(name) != INVALID_FILE_ATTRIBUTES;
 }
 
+#if 0
 static BOOL file_has_content(const CHAR *name, const CHAR *content)
 {
     CHAR buf[MAX_PATH];
@@ -130,6 +131,7 @@ static BOOL file_has_content(const CHAR *name, const CHAR *content)
     CloseHandle(file);
     return strcmp(buf, content)==0;
 }
+#endif
 
 /* initializes the tests */
 static void init_shfo_tests(void)
@@ -811,6 +813,7 @@ static void test_rename(void)
 }
 
 /* tests the FO_COPY action */
+#if 0
 static void test_copy(void)
 {
     SHFILEOPSTRUCTA shfo, shfo2;
@@ -1757,8 +1760,10 @@ static void test_copy(void)
     ok(DeleteFileA("dir\\abcdefgh.abc"), "Expected file to exist\n");
     ok(RemoveDirectoryA("dir"), "Expected dir to exist\n");
 }
+#endif
 
 /* tests the FO_MOVE action */
+#if 0
 static void test_move(void)
 {
     SHFILEOPSTRUCTA shfo, shfo2;
@@ -2036,6 +2041,7 @@ static void test_move(void)
             ok(file_exists("test3.txt"), "Expected test3.txt to exist\n");
     }
 }
+#endif
 
 static void test_sh_create_dir(void)
 {
