@@ -76,7 +76,7 @@ typedef struct
     //
     // device relations
     //
-    DEVICE_RELATIONS DeviceRelations;
+    PDEVICE_RELATIONS DeviceRelations;
 
 }HIDCLASS_FDO_EXTENSION, *PHIDCLASS_FDO_EXTENSION;
 
@@ -95,7 +95,7 @@ typedef struct
     //
     // collection index
     //
-    ULONG CollectionIndex;
+    ULONG CollectionNumber;
 
     //
     // device interface 
@@ -176,12 +176,22 @@ HidClassFDO_DispatchRequestSynchronous(
 /* pdo.c */
 NTSTATUS
 HidClassPDO_CreatePDO(
-    IN PDEVICE_OBJECT DeviceObject);
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PDEVICE_RELATIONS *OutDeviceRelations);
 
 NTSTATUS
 HidClassPDO_PnP(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
+PHIDP_COLLECTION_DESC
+HidClassPDO_GetCollectionDescription(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    ULONG CollectionNumber);
+
+PHIDP_REPORT_IDS
+HidClassPDO_GetReportDescription(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    ULONG CollectionNumber);
 
 /* eof */

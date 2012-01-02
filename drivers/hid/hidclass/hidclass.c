@@ -304,8 +304,8 @@ HidClass_ReadCompleteIrp(
     KIRQL OldLevel;
     PUCHAR Address;
     ULONG Offset;
-    PHIDP_DEVICE_DESC DeviceDescription;
-    ULONG CollectionIndex;
+    PHIDP_COLLECTION_DESC CollectionDescription;
+    PHIDP_REPORT_IDS ReportDescription;
 
     //
     // get irp context
@@ -328,20 +328,34 @@ HidClass_ReadCompleteIrp(
         //
         // get address
         //
-        Address = HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
+        Address = (PUCHAR)HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
         if (Address)
         {
             //
             // reports may have a report id prepended
             //
-            CollectionIndex = IrpContext->FileOp->DeviceExtension->CollectionIndex;
-            DeviceDescription = &IrpContext->FileOp->DeviceExtension->Common.DeviceDescription;
+            Offset = 0;
 
             //
-            // calculate offset
+            // get collection description
             //
-            ASSERT(DeviceDescription->CollectionDesc[CollectionIndex].InputLength >= DeviceDescription->ReportIDs[CollectionIndex].InputLength);
-            Offset = DeviceDescription->CollectionDesc[CollectionIndex].InputLength - DeviceDescription->ReportIDs[CollectionIndex].InputLength;
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+            ASSERT(CollectionDescription);
+
+            //
+            // get report description
+            //
+            ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+            ASSERT(ReportDescription);
+
+            if (CollectionDescription && ReportDescription)
+            {
+                //
+                // calculate offset
+                //
+                ASSERT(CollectionDescription->InputLength >= ReportDescription->InputLength);
+                Offset = CollectionDescription->InputLength - ReportDescription->InputLength;
+            }
 
             //
             // copy result
@@ -451,6 +465,8 @@ HidClass_BuildIrp(
     PIO_STACK_LOCATION IoStack;
     PHIDCLASS_IRP_CONTEXT IrpContext;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
+    PHIDP_COLLECTION_DESC CollectionDescription;
+    PHIDP_REPORT_IDS ReportDescription;
 
     //
     // get an irp from fresh list
@@ -498,20 +514,33 @@ HidClass_BuildIrp(
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
-    // sanity checks
-    //
-    ASSERT(PDODeviceExtension->CollectionIndex < PDODeviceExtension->Common.DeviceDescription.CollectionDescLength);
-    ASSERT(PDODeviceExtension->CollectionIndex < PDODeviceExtension->Common.DeviceDescription.ReportIDsLength);
-    ASSERT(PDODeviceExtension->Common.DeviceDescription.ReportIDs[PDODeviceExtension->CollectionIndex].InputLength > 0);
-    ASSERT(PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].InputLength == BufferLength);
-
-    //
     // init irp context
     //
     RtlZeroMemory(IrpContext, sizeof(HIDCLASS_IRP_CONTEXT));
-    IrpContext->InputReportBufferLength = PDODeviceExtension->Common.DeviceDescription.ReportIDs[PDODeviceExtension->CollectionIndex].InputLength;
     IrpContext->OriginalIrp = RequestIrp;
     IrpContext->FileOp = Context;
+
+    //
+    // get collection description
+    //
+    CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+    ASSERT(CollectionDescription);
+
+    //
+    // get report description
+    //
+    ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+    ASSERT(ReportDescription);
+
+    //
+    // sanity check
+    //
+    ASSERT(CollectionDescription->InputLength >= ReportDescription->InputLength);
+
+    //
+    // store report length
+    //
+    IrpContext->InputReportBufferLength = ReportDescription->InputLength;
 
     //
     // allocate buffer
@@ -677,11 +706,19 @@ HidClass_DeviceControl(
     PIO_STACK_LOCATION IoStack;
     PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
     PHID_COLLECTION_INFORMATION CollectionInformation;
+    PHIDP_COLLECTION_DESC CollectionDescription;
+    PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
 
     //
     // get device extension
     //
     CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(CommonDeviceExtension->IsFDO == FALSE);
+
+    //
+    // get pdo device extension
+    //
+    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // get stack location
@@ -712,9 +749,15 @@ HidClass_DeviceControl(
             ASSERT(CollectionInformation);
 
             //
+            // get collection description
+            //
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription, PDODeviceExtension->CollectionNumber);
+            ASSERT(CollectionDescription);
+
+            //
             // init result buffer
             //
-            CollectionInformation->DescriptorSize = CommonDeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength; //FIXME which collection is to be retrieved for composite devices / multi collection devices?
+            CollectionInformation->DescriptorSize = CollectionDescription->PreparsedDataLength;
             CollectionInformation->Polled = CommonDeviceExtension->DriverExtension->DevicesArePolled;
             CollectionInformation->VendorID = CommonDeviceExtension->Attributes.VendorID;
             CollectionInformation->ProductID = CommonDeviceExtension->Attributes.ProductID;
@@ -731,13 +774,15 @@ HidClass_DeviceControl(
         case IOCTL_HID_GET_COLLECTION_DESCRIPTOR:
         {
             //
-            // FIXME: which collection to use for composite / multi collection devices...
+            // get collection description
             //
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription, PDODeviceExtension->CollectionNumber);
+            ASSERT(CollectionDescription);
 
             //
             // check if output buffer is big enough
             //
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < CommonDeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength)
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < CollectionDescription->PreparsedDataLength)
             {
                 //
                 // invalid buffer size
@@ -751,12 +796,12 @@ HidClass_DeviceControl(
             // copy result
             //
             ASSERT(Irp->UserBuffer);
-            RtlCopyMemory(Irp->UserBuffer, CommonDeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedData, CommonDeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength);
+            RtlCopyMemory(Irp->UserBuffer, CollectionDescription->PreparsedData, CollectionDescription->PreparsedDataLength);
 
             //
             // complete request
             //
-            Irp->IoStatus.Information = CommonDeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength;
+            Irp->IoStatus.Information = CollectionDescription->PreparsedDataLength;
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;

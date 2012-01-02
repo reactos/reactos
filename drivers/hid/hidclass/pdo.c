@@ -9,6 +9,58 @@
  */
 #include "precomp.h"
 
+PHIDP_COLLECTION_DESC
+HidClassPDO_GetCollectionDescription(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    ULONG CollectionNumber)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < DeviceDescription->CollectionDescLength; Index++)
+    {
+        if (DeviceDescription->CollectionDesc[Index].CollectionNumber == CollectionNumber)
+        {
+            //
+            // found collection
+            //
+            return &DeviceDescription->CollectionDesc[Index];
+        }
+    }
+
+    //
+    // failed to find collection
+    //
+    DPRINT1("[HIDCLASS] GetCollectionDescription CollectionNumber %x not found\n", CollectionNumber);
+    ASSERT(FALSE);
+    return NULL;
+}
+
+PHIDP_REPORT_IDS
+HidClassPDO_GetReportDescription(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    ULONG CollectionNumber)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < DeviceDescription->ReportIDsLength; Index++)
+    {
+        if (DeviceDescription->ReportIDs[Index].CollectionNumber == CollectionNumber)
+        {
+            //
+            // found collection
+            //
+            return &DeviceDescription->ReportIDs[Index];
+        }
+    }
+
+    //
+    // failed to find collection
+    //
+    DPRINT1("[HIDCLASS] GetReportDescription CollectionNumber %x not found\n", CollectionNumber);
+    ASSERT(FALSE);
+    return NULL;
+}
+
 NTSTATUS
 HidClassPDO_HandleQueryDeviceId(
     IN PDEVICE_OBJECT DeviceObject,
@@ -93,6 +145,7 @@ HidClassPDO_HandleQueryHardwareId(
     WCHAR Buffer[100];
     ULONG Offset = 0;
     LPWSTR Ptr;
+    PHIDP_COLLECTION_DESC CollectionDescription;
 
     //
     // get device extension
@@ -117,15 +170,32 @@ HidClassPDO_HandleQueryHardwareId(
         return Status;
     }
 
-    //
-    // store hardware ids
-    //
-    Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
-    Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
-
-    if (PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_GENERIC)
+    if (PDODeviceExtension->Common.DeviceDescription.CollectionDescLength > 1)
     {
-        switch(PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage)
+        //
+        // multi-tlc device
+        //
+        Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber, PDODeviceExtension->CollectionNumber) + 1;
+        Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->CollectionNumber) + 1;
+    }
+    else
+    {
+        //
+        // single tlc device
+        //
+        Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
+        Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
+    }
+
+    //
+    // get collection description
+    //
+    CollectionDescription = HidClassPDO_GetCollectionDescription(&PDODeviceExtension->Common.DeviceDescription, PDODeviceExtension->CollectionNumber);
+    ASSERT(CollectionDescription);
+
+    if (CollectionDescription->UsagePage == HID_USAGE_PAGE_GENERIC)
+    {
+        switch(CollectionDescription->Usage)
         {
             case HID_USAGE_GENERIC_POINTER:
             case HID_USAGE_GENERIC_MOUSE:
@@ -156,7 +226,7 @@ HidClassPDO_HandleQueryHardwareId(
                 break;
         }
     }
-    else if (PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_CONSUMER && PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage == HID_USAGE_CONSUMERCTRL)
+    else if (CollectionDescription->UsagePage  == HID_USAGE_PAGE_CONSUMER && CollectionDescription->Usage == HID_USAGE_CONSUMERCTRL)
     {
         //
         // Consumer Audio Control
@@ -501,12 +571,16 @@ HidClassPDO_PnP(
 
 NTSTATUS
 HidClassPDO_CreatePDO(
-    IN PDEVICE_OBJECT DeviceObject)
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PDEVICE_RELATIONS *OutDeviceRelations)
 {
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
     NTSTATUS Status;
     PDEVICE_OBJECT PDODeviceObject;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
+    ULONG Index;
+    PDEVICE_RELATIONS DeviceRelations;
+    ULONG Length;
 
     //
     // get device extension
@@ -515,64 +589,121 @@ HidClassPDO_CreatePDO(
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
-    // lets create the device object
+    // first allocate device relations
     //
-    Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject, sizeof(HIDCLASS_PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_UNKNOWN, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &PDODeviceObject);
+    Length = sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * FDODeviceExtension->Common.DeviceDescription.CollectionDescLength;
+    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, Length);
+    if (!DeviceRelations)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // zero device relations
+    //
+    RtlZeroMemory(DeviceRelations, Length);
+
+    //
+    // lets create a PDO for top level collection
+    //
+    Index = 0;
+    do
+    {
+        //
+        // lets create the device object
+        //
+        Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject, sizeof(HIDCLASS_PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_UNKNOWN, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &PDODeviceObject);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to create device
+            //
+            DPRINT1("[HIDCLASS] Failed to create PDO %x\n", Status);
+            break;
+        }
+
+        //
+        // patch stack size
+        //
+        PDODeviceObject->StackSize = DeviceObject->StackSize + 1;
+
+        //
+        // get device extension
+        //
+        PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)PDODeviceObject->DeviceExtension;
+
+        //
+        // init device extension
+        //
+        PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
+        PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
+        PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
+        PDODeviceExtension->Common.IsFDO = FALSE;
+        PDODeviceExtension->FDODeviceObject = DeviceObject;
+        PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
+        PDODeviceExtension->CollectionNumber = FDODeviceExtension->Common.DeviceDescription.CollectionDesc[Index].CollectionNumber;
+
+        //
+        // copy device data
+        //
+        RtlCopyMemory(&PDODeviceExtension->Common.Attributes, &FDODeviceExtension->Common.Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
+        RtlCopyMemory(&PDODeviceExtension->Common.DeviceDescription, &FDODeviceExtension->Common.DeviceDescription, sizeof(HIDP_DEVICE_DESC));
+        RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
+
+        //
+        // set device flags
+        //
+        PDODeviceObject->Flags |= DO_MAP_IO_BUFFER;
+
+        //
+        // device is initialized
+        //
+        PDODeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+        //
+        // store device object in device relations
+        //
+        DeviceRelations->Objects[Index] = PDODeviceObject;
+        DeviceRelations->Count++;
+
+        //
+        // move to next
+        // 
+        Index++;
+
+    }while(Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength);
+
+
+    //
+    // check if creating succeeded
+    //
     if (!NT_SUCCESS(Status))
     {
         //
-        // failed to create device
+        // failed
         //
-        DPRINT1("[HIDCLASS] Failed to create device %x\n", Status);
+        for(Index = 0; Index < DeviceRelations->Count; Index++)
+        {
+            //
+            // delete device
+            //
+            IoDeleteDevice(DeviceRelations->Objects[Index]);
+        }
+
+        //
+        // free device relations
+        //
+        ExFreePool(DeviceRelations);
         return Status;
     }
 
     //
-    // patch stack size
+    // store device relations
     //
-    PDODeviceObject->StackSize = DeviceObject->StackSize + 1;
-
-    //
-    // get device extension
-    //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)PDODeviceObject->DeviceExtension;
-
-    //
-    // init device extension
-    //
-    PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
-    PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
-    PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
-    PDODeviceExtension->Common.IsFDO = FALSE;
-    PDODeviceExtension->FDODeviceObject = DeviceObject;
-    PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
-    RtlCopyMemory(&PDODeviceExtension->Common.Attributes, &FDODeviceExtension->Common.Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
-    RtlCopyMemory(&PDODeviceExtension->Common.DeviceDescription, &FDODeviceExtension->Common.DeviceDescription, sizeof(HIDP_DEVICE_DESC));
-    RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
-
-    //
-    // FIXME: support composite devices
-    //
-    PDODeviceExtension->CollectionIndex = 0;
-    ASSERT(PDODeviceExtension->Common.DeviceDescription.CollectionDescLength == 1);
-
-    //
-    // store in device relations struct
-    //
-    FDODeviceExtension->DeviceRelations.Count = 1;
-    FDODeviceExtension->DeviceRelations.Objects[0] = PDODeviceObject;
-
-    //
-    // set device flags
-    //
-    PDODeviceObject->Flags |= DO_MAP_IO_BUFFER;
-
-    //
-    // device is initialized
-    //
-    PDODeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
-    ObReferenceObject(PDODeviceObject);
+    *OutDeviceRelations = DeviceRelations;
 
     //
     // done

@@ -180,8 +180,6 @@ HidClassFDO_DispatchRequestSynchronous(
     //
     IoStack->DeviceObject = DeviceObject;
 
-
-
     //
     // call driver
     //
@@ -409,7 +407,7 @@ HidClassFDO_CopyDeviceRelations(
     //
     // allocate result
     //
-    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations.Count-1) * sizeof(PDEVICE_OBJECT));
+    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations->Count-1) * sizeof(PDEVICE_OBJECT));
     if (!DeviceRelations)
     {
         //
@@ -422,24 +420,23 @@ HidClassFDO_CopyDeviceRelations(
     //
     // copy device objects
     //
-    for(Index = 0; Index < FDODeviceExtension->DeviceRelations.Count; Index++)
+    for(Index = 0; Index < FDODeviceExtension->DeviceRelations->Count; Index++)
     {
         //
         // reference pdo
         //
-        ObReferenceObject(FDODeviceExtension->DeviceRelations.Objects[Index]);
+        ObReferenceObject(FDODeviceExtension->DeviceRelations->Objects[Index]);
 
         //
         // store object
         //
-        DeviceRelations->Objects[Index] = FDODeviceExtension->DeviceRelations.Objects[Index];
+        DeviceRelations->Objects[Index] = FDODeviceExtension->DeviceRelations->Objects[Index];
     }
 
     //
     // set object count
     //
-    DeviceRelations->Count = FDODeviceExtension->DeviceRelations.Count;
-
+    DeviceRelations->Count = FDODeviceExtension->DeviceRelations->Count;
 
     //
     // store result
@@ -481,12 +478,12 @@ HidClassFDO_DeviceRelations(
         return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
     }
 
-    if (FDODeviceExtension->DeviceRelations.Count == 0)
+    if (FDODeviceExtension->DeviceRelations == NULL)
     {
         //
         // time to create the pdos
         //
-        Status = HidClassPDO_CreatePDO(DeviceObject);
+        Status = HidClassPDO_CreatePDO(DeviceObject, &FDODeviceExtension->DeviceRelations);
         if (!NT_SUCCESS(Status))
         {
             //
@@ -500,7 +497,7 @@ HidClassFDO_DeviceRelations(
         //
         // sanity check
         //
-        ASSERT(FDODeviceExtension->DeviceRelations.Count > 0);
+        ASSERT(FDODeviceExtension->DeviceRelations->Count > 0);
     }
 
     //
