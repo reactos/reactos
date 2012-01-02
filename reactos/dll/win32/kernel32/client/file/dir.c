@@ -150,7 +150,7 @@ CreateDirectoryW(IN LPCWSTR lpPathName,
         if (Length == 0)
         {
             RtlReleaseRelativeName(&RelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, NtPathU.Buffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
             SetLastError(ERROR_FILENAME_EXCED_RANGE);
             return FALSE;
         }
@@ -201,7 +201,7 @@ CreateDirectoryW(IN LPCWSTR lpPathName,
                           0);
 
     RtlReleaseRelativeName(&RelativeName);
-    RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
 
     if (NT_SUCCESS(Status))
     {
@@ -229,15 +229,16 @@ CreateDirectoryExW(IN LPCWSTR lpTemplateDirectory,
 {
     DWORD Length;
     NTSTATUS Status;
-    ULONG EaLength = 0;
     PVOID EaBuffer = NULL;
     BOOL ReparsePoint = FALSE;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_EA_INFORMATION FileEaInfo;
+    ULONG EaLength = 0, StreamSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
     FILE_BASIC_INFORMATION FileBasicInfo;
     PREPARSE_DATA_BUFFER ReparseDataBuffer;
     HANDLE TemplateHandle, DirectoryHandle;
+    PFILE_STREAM_INFORMATION FileStreamInfo;
     FILE_ATTRIBUTE_TAG_INFORMATION FileTagInfo;
     UNICODE_STRING NtPathU, NtTemplatePathU, NewDirectory;
     RTL_RELATIVE_NAME_U RelativeName, TemplateRelativeName;
@@ -283,7 +284,7 @@ CreateDirectoryExW(IN LPCWSTR lpTemplateDirectory,
         if (Status != STATUS_INVALID_PARAMETER)
         {
             RtlReleaseRelativeName(&TemplateRelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
             BaseSetLastNTError(Status);
             return FALSE;
         }
@@ -300,7 +301,7 @@ OpenWithoutReparseSupport:
         if (!NT_SUCCESS(Status))
         {
             RtlReleaseRelativeName(&TemplateRelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
             BaseSetLastNTError(Status);
             return FALSE;
         }
@@ -315,7 +316,7 @@ OpenWithoutReparseSupport:
         if (!NT_SUCCESS(Status))
         {
             RtlReleaseRelativeName(&TemplateRelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
             CloseHandle(TemplateHandle);
             BaseSetLastNTError(Status);
             return FALSE;
@@ -334,7 +335,7 @@ OpenWithoutReparseSupport:
         if (!NT_SUCCESS(Status))
         {
             RtlReleaseRelativeName(&TemplateRelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
             CloseHandle(TemplateHandle);
             BaseSetLastNTError(Status);
             return FALSE;
@@ -352,7 +353,7 @@ OpenWithoutReparseSupport:
             if (!NT_SUCCESS(Status))
             {
                 RtlReleaseRelativeName(&TemplateRelativeName);
-                RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
                 CloseHandle(TemplateHandle);
                 BaseSetLastNTError(Status);
                 return FALSE;
@@ -374,7 +375,7 @@ OpenWithoutReparseSupport:
     if (!RtlDosPathNameToRelativeNtPathName_U(lpNewDirectory, &NtPathU, NULL, &RelativeName))
     {
         RtlReleaseRelativeName(&TemplateRelativeName);
-        RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
         NtClose(TemplateHandle);
         SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
@@ -390,15 +391,15 @@ OpenWithoutReparseSupport:
     {
         RtlReleaseRelativeName(&RelativeName);
         RtlReleaseRelativeName(&TemplateRelativeName);
-        RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
-        RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
         NtClose(TemplateHandle);
         SetLastError(ERROR_INVALID_NAME);
         return FALSE;
     }
 
     RtlReleaseRelativeName(&TemplateRelativeName);
-    RtlFreeHeap(GetProcessHeap(), 0, TemplateBuffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
 
     /* Check if path length is < MAX_PATH (with space for file name).
      * If not, prefix is required.
@@ -411,7 +412,7 @@ OpenWithoutReparseSupport:
         if (Length == 0)
         {
             RtlReleaseRelativeName(&RelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
             CloseHandle(TemplateHandle);
             SetLastError(ERROR_FILENAME_EXCED_RANGE);
             return FALSE;
@@ -423,7 +424,7 @@ OpenWithoutReparseSupport:
         if (Length > MAX_PATH)
         {
             RtlReleaseRelativeName(&RelativeName);
-            RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
             CloseHandle(TemplateHandle);
             SetLastError(ERROR_FILENAME_EXCED_RANGE);
             return FALSE;
@@ -451,7 +452,7 @@ OpenWithoutReparseSupport:
     if (!NT_SUCCESS(Status))
     {
         RtlReleaseRelativeName(&RelativeName);
-        RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
         CloseHandle(TemplateHandle);
         BaseSetLastNTError(Status);
         return FALSE;
@@ -467,7 +468,7 @@ OpenWithoutReparseSupport:
             if (!EaBuffer)
             {
                 RtlReleaseRelativeName(&RelativeName);
-                RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
                 CloseHandle(TemplateHandle);
                 BaseSetLastNTError(STATUS_NO_MEMORY);
                 return FALSE;
@@ -485,7 +486,7 @@ OpenWithoutReparseSupport:
                                    TRUE);
             if (!NT_SUCCESS(Status))
             {
-                RtlFreeHeap(GetProcessHeap(), 0, EaBuffer);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
                 IoStatusBlock.Information = 0;
             }
 
@@ -548,10 +549,10 @@ OpenWithoutReparseSupport:
             else
             {
                 RtlReleaseRelativeName(&RelativeName);
-                RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
                 if (EaBuffer)
                 {
-                    RtlFreeHeap(GetProcessHeap(), 0, EaBuffer);
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
                 }
                 CloseHandle(TemplateHandle);
                 BaseSetLastNTError(Status);
@@ -561,7 +562,7 @@ OpenWithoutReparseSupport:
     }
 
     RtlReleaseRelativeName(&RelativeName);
-    RtlFreeHeap(GetProcessHeap(), 0, PathUBuffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
     if (EaBuffer)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
@@ -683,12 +684,10 @@ OpenWithoutReparseSupport:
     /* In case it's not a reparse point, handle streams on the file */
     else
     {
-        PVOID StreamInfo;
-        ULONG StreamSize = 0x1000;
-        for (;;)
+        for (StreamSize = 0x1000; ; StreamSize = StreamSize * 2)
         {
-            StreamInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, StreamSize);
-            if (!StreamInfo)
+            FileStreamInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, StreamSize);
+            if (!FileStreamInfo)
             {
                 BaseMarkFileForDelete(DirectoryHandle, FileBasicInfo.FileAttributes);
                 SetLastError(STATUS_NO_MEMORY);
@@ -698,15 +697,16 @@ OpenWithoutReparseSupport:
             /* Query stream information */
             Status = NtQueryInformationFile(TemplateHandle,
                                             &IoStatusBlock,
-                                            StreamInfo,
+                                            FileStreamInfo,
                                             StreamSize,
                                             FileStreamInformation);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, StreamInfo);
-                StreamInfo = NULL;
-                StreamSize << 1;
+                break;
             }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
+            FileStreamInfo = NULL;
 
             /* If it failed, ensure that's not because of too small buffer */
             if (Status != STATUS_BUFFER_OVERFLOW &&
@@ -718,9 +718,9 @@ OpenWithoutReparseSupport:
 
         if (!NT_SUCCESS(Status) || IoStatusBlock.Information == 0)
         {
-            if (StreamInfo)
+            if (FileStreamInfo)
             {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, StreamInfo);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
             }
 
             NtClose(TemplateHandle);
@@ -731,7 +731,7 @@ OpenWithoutReparseSupport:
 #if 1
         /* FIXME: TODO */
         DPRINT1("Warning: streams copying is unimplemented!\n");
-        RtlFreeHeap(RtlGetProcessHeap(), 0, StreamInfo);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
         NtClose(TemplateHandle);
         NtClose(DirectoryHandle);
 #endif
@@ -980,7 +980,7 @@ MarkFileForDelete:
 
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
