@@ -348,7 +348,6 @@ static void Cleanup(void)
     RemoveDirectoryA(".\\testdir");
 }
 
-#if 0
 /* perform test */
 static void test_EnumObjects(IShellFolder *iFolder)
 {
@@ -434,7 +433,6 @@ static void test_EnumObjects(IShellFolder *iFolder)
     for (i=0;i<5;i++)
         IMalloc_Free(ppM, idlArr[i]);
 }
-#endif
 
 static void test_BindToObject(void)
 {
@@ -1336,7 +1334,6 @@ static void test_SHGetPathFromIDList(void)
     ok(result, "SHGetPathFromIDListW failed\n");
 }
 
-#if 0
 static void test_EnumObjects_and_CompareIDs(void)
 {
     ITEMIDLIST *newPIDL;
@@ -1381,7 +1378,6 @@ static void test_EnumObjects_and_CompareIDs(void)
 
     IShellFolder_Release(IDesktopFolder);
 }
-#endif
 
 /* A simple implementation of an IPropertyBag, which returns fixed values for
  * 'Target' and 'Attributes' properties.
@@ -4591,9 +4587,7 @@ START_TEST(shlfolder)
     test_ParseDisplayName();
     test_SHParseDisplayName();
     test_BindToObject();
-#if 0
     test_EnumObjects_and_CompareIDs();
-#endif
     test_GetDisplayName();
     test_GetAttributesOf();
     test_SHGetPathFromIDList();
