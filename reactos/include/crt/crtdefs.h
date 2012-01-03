@@ -4,6 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 #include <_mingw.h>
+#include <specstrings.h>
 
 #ifndef _INC_CRTDEFS
 #define _INC_CRTDEFS
