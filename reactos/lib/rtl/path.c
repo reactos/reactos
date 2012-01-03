@@ -39,6 +39,8 @@ const UNICODE_STRING RtlpDosAUXDevice = RTL_CONSTANT_STRING(L"AUX");
 const UNICODE_STRING RtlpDosCONDevice = RTL_CONSTANT_STRING(L"CON");
 const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
+PRTLP_CURDIR_REF RtlpCurDirRef;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 ULONG
@@ -455,11 +457,12 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     WCHAR BigBuffer[MAX_PATH + 1];
     PWCHAR PrefixBuffer, NewBuffer, Buffer;
     ULONG MaxLength, PathLength, PrefixLength, PrefixCut, LengthChars, Length;
-    UNICODE_STRING CapturedDosName, PartNameString;
+    UNICODE_STRING CapturedDosName, PartNameString, FullPath;
     BOOLEAN QuickPath;
     RTL_PATH_TYPE InputPathType, BufferPathType;
     NTSTATUS Status;
     BOOLEAN NameInvalid;
+    PCURDIR CurrentDirectory;
 
     /* Assume MAX_PATH for now */
     DPRINT("Relative: %lx DosName: %wZ NtName: %wZ, PartName: %p, RelativeName: %p\n",
@@ -608,26 +611,59 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         /* Setup the structure */
         RtlInitEmptyUnicodeString(&RelativeName->RelativeName, NULL, 0);
         RelativeName->ContainingDirectory = NULL;
-        RelativeName->CurDirRef = 0;
+        RelativeName->CurDirRef = NULL;
 
         /* Check if the input path itself was relative */
         if (InputPathType == RtlPathTypeRelative)
         {
-            /* FIXME: HACK: Old code */
-            PCURDIR cd;
-            UNICODE_STRING us;
-            cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
-            if (cd->Handle)
+            /* Get current directory */
+            CurrentDirectory = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
+            if (CurrentDirectory->Handle)
             {
-                RtlInitUnicodeString(&us, Buffer);
-                us.Length = (cd->DosPath.Length < us.Length) ? cd->DosPath.Length : us.Length;
-                if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
+                Status = RtlInitUnicodeStringEx(&FullPath, Buffer);
+                if (!NT_SUCCESS(Status))
                 {
-                    Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
-                    RelativeName->RelativeName.Buffer = NewBuffer + Length;
-                    RelativeName->RelativeName.Length = NtName->Length - (USHORT)(Length * sizeof(WCHAR));
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
+                    RtlReleasePebLock();
+                    return Status;
+                }
+
+                /* If current directory is bigger than full path, there's no way */
+                if (CurrentDirectory->DosPath.Length > FullPath.Length)
+                {
+                    RtlReleasePebLock();
+                    return Status;
+                }
+ 
+                /* File is in current directory */
+                if (RtlEqualUnicodeString(&FullPath, &CurrentDirectory->DosPath, TRUE))
+                {
+                    /* Make relative name string */
+                    RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)NewBuffer + FullPath.Length - PrefixCut);
+                    RelativeName->RelativeName.Length = PathLength - FullPath.Length;
+                    /* If relative name starts with \, skip it */
+                    if (RelativeName->RelativeName.Buffer[0] == L'\\')
+                    {
+                        RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)RelativeName->RelativeName.Buffer + sizeof(WCHAR));
+                        RelativeName->RelativeName.Length -= sizeof(WCHAR);
+                    }
                     RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
-                    RelativeName->ContainingDirectory = cd->Handle;
+                    DPRINT("RelativeName: %wZ\n", &(RelativeName->RelativeName));
+
+                    if (!HaveRelative)
+                    {
+                        RelativeName->ContainingDirectory = CurrentDirectory->Handle;
+                        return Status;
+                    }
+
+                    /* Give back current directory data & reference counter */
+                    RelativeName->CurDirRef = RtlpCurDirRef;
+                    if (RelativeName->CurDirRef)
+                    {
+                        /* FIXME: Increment reference count */
+                    }
+
+                    RelativeName->ContainingDirectory = CurrentDirectory->Handle;
                 }
             }
         }
