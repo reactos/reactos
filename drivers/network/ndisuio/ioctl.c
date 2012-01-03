@@ -52,6 +52,7 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
             i++;
             CurrentEntry = CurrentEntry->Flink;
         }
+        KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
         if (i == QueryBinding->BindingIndex)
         {
             AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
@@ -78,7 +79,7 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         else
         {
             /* Invalid index */
-            Status = STATUS_INVALID_PARAMETER;
+            Status = STATUS_NO_MORE_ENTRIES;
         }
     }
     else
