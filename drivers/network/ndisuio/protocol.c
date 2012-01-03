@@ -135,6 +135,11 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     PLIST_ENTRY CurrentOpenEntry;
     PNDISUIO_OPEN_ENTRY OpenEntry;
 
+    /* Remove the adapter context from the global list */
+    KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
+    RemoveEntryList(&AdapterContext->ListEntry);
+    KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
+
     /* Invalidate all handles to this adapter */
     CurrentOpenEntry = AdapterContext->OpenEntryList.Flink;
     while (CurrentOpenEntry != &AdapterContext->OpenEntryList)
@@ -163,11 +168,6 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     /* If this fails, we have a refcount mismatch somewhere */
     ASSERT(AdapterContext->OpenCount == 0);
 
-    /* Remove the adapter context from the global list */
-    KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
-    RemoveEntryList(&AdapterContext->ListEntry);
-    KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
-    
     /* Send the close request */
     NdisCloseAdapter(Status,
                      AdapterContext->BindingHandle);
@@ -209,7 +209,7 @@ BindAdapterByName(PNDIS_STRING DeviceName, PNDISUIO_ADAPTER_CONTEXT *Context)
     KeInitializeSpinLock(&AdapterContext->Spinlock);
     InitializeListHead(&AdapterContext->PacketList);
     InitializeListHead(&AdapterContext->OpenEntryList);
-    AdapterContext->OpenCount = 1;
+    AdapterContext->OpenCount = 0;
 
     /* Send the open request */
     NdisOpenAdapter(&Status,
@@ -261,8 +261,8 @@ NduBindAdapter(PNDIS_STATUS Status,
                PVOID SystemSpecific1,
                PVOID SystemSpecific2)
 {
-    /* We don't bind like this */
-    *Status = NDIS_STATUS_SUCCESS;
+    /* Use our helper function to create a context for this adapter */
+    *Status = BindAdapterByName(DeviceName);
 }
 
 VOID

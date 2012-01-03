@@ -17,11 +17,13 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
                 PIRP Irp)
 {
     ASSERT(DeviceObject == GlobalDeviceObject);
-    
+
     /* FIXME: Not implemented */
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;
-    
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -35,6 +37,8 @@ NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
     /* FIXME: Not implemented */
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;
-    
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return STATUS_NOT_IMPLEMENTED;
 }

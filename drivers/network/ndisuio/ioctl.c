@@ -126,6 +126,7 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     NTSTATUS Status;
     PNDISUIO_ADAPTER_CONTEXT AdapterContext;
     PNDISUIO_OPEN_ENTRY OpenEntry;
+    KIRQL OldIrql;
 
     NameLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     if (NameLength != 0)
@@ -135,16 +136,17 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 
         /* Check if this already has a context */
         AdapterContext = FindAdapterContextByName(&DeviceName);
-        if (AdapterContext == NULL)
+        if (AdapterContext != NULL)
         {
-            /* Create a new context */
-            Status = BindAdapterByName(&DeviceName, &AdapterContext);
+            /* Reference the adapter context */
+            KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
+            ReferenceAdapterContext(AdapterContext);
+            Status = STATUS_SUCCESS;
         }
         else
         {
-            /* Reference the existing context */
-            ReferenceAdapterContext(AdapterContext, FALSE);
-            Status = STATUS_SUCCESS;
+            /* Invalid device name */
+            Status = STATUS_INVALID_PARAMETER;
         }
 
         /* Check that the bind succeeded */
@@ -161,24 +163,25 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
                 FileObject->FsContext2 = OpenEntry;
 
                 /* Add it to the adapter's list */
-                ExInterlockedInsertTailList(&AdapterContext->OpenEntryList,
-                                            &OpenEntry->ListEntry,
-                                            &AdapterContext->Spinlock);
+                InsertTailList(&AdapterContext->OpenEntryList,
+                               &OpenEntry->ListEntry);
 
                 /* Success */
+                KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
                 Status = STATUS_SUCCESS;
             }
             else
             {
                 /* Remove the reference we added */
+                KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
                 DereferenceAdapterContext(AdapterContext, NULL);
-
                 Status = STATUS_NO_MEMORY;
             }
         }
     }
     else
     {
+        /* Invalid device name */
         Status = STATUS_INVALID_PARAMETER;
     }
     
