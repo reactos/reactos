@@ -11,6 +11,90 @@
 #define NDEBUG
 #include <debug.h>
 
+
+NTSTATUS
+WaitForBind(PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    /* I've seen several code samples that use this IOCTL but there's
+     * no official documentation on it. I'm just implementing it as a no-op
+     * right now because I don't see any reason we need it. We handle an open
+     * and bind just fine with IRP_MJ_CREATE and IOCTL_NDISUIO_OPEN_DEVICE */
+    
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext;
+    PNDISUIO_QUERY_BINDING QueryBinding = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    ULONG BindingLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+    NTSTATUS Status;
+    PLIST_ENTRY CurrentEntry;
+    KIRQL OldIrql;
+    ULONG i;
+    ULONG BytesCopied = 0;
+    
+    if (QueryBinding && BindingLength >= sizeof(NDISUIO_QUERY_BINDING))
+    {
+        KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
+        i = 0;
+        CurrentEntry = GlobalAdapterList.Flink;
+        while (CurrentEntry != &GlobalAdapterList)
+        {
+            if (i == QueryBinding->BindingIndex)
+                break;
+            i++;
+            CurrentEntry = CurrentEntry->Flink;
+        }
+        if (i == QueryBinding->BindingIndex)
+        {
+            AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
+            if (AdapterContext->DeviceName.Length <= QueryBinding->DeviceNameLength)
+            {
+                BytesCopied += AdapterContext->DeviceName.Length;
+                RtlCopyMemory((PUCHAR)QueryBinding + QueryBinding->DeviceNameOffset,
+                              AdapterContext->DeviceName.Buffer,
+                              BytesCopied);
+                QueryBinding->DeviceNameLength = AdapterContext->DeviceName.Length;
+
+                /* FIXME: Copy description too */
+                QueryBinding->DeviceDescrLength = 0;
+                
+                /* Successful */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Not enough buffer space */
+                Status = STATUS_BUFFER_TOO_SMALL;
+            }
+        }
+        else
+        {
+            /* Invalid index */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        /* Invalid parameters */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = BytesCopied;
+    
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    
+    return Status;
+}
+
 NTSTATUS
 CancelPacketRead(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -338,6 +422,12 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 
         case IOCTL_NDISUIO_OPEN_WRITE_DEVICE:
             return OpenDeviceWrite(Irp, IrpSp);
+            
+        case IOCTL_NDISUIO_BIND_WAIT:
+            return WaitForBind(Irp, IrpSp);
+            
+        case IOCTL_NDISUIO_QUERY_BINDING:
+            return QueryBinding(Irp, IrpSp);
 
         default:
             /* Fail if this file object has no adapter associated */
