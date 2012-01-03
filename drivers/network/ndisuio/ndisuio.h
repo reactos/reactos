@@ -42,9 +42,24 @@ struct _NDISUIO_OPEN_ENTRY
     /* File object */
     PFILE_OBJECT FileObject;
     
+    /* Tracks how this adapter was opened (write-only or read-write) */
+    BOOLEAN WriteOnly;
+    
     /* List entry */
     LIST_ENTRY ListEntry;
 } NDISUIO_OPEN_ENTRY, *PNDISUIO_OPEN_ENTRY;
+
+struct _NDISUIO_PACKET_ENTRY
+{
+    /* Length of data at the end of the struct */
+    ULONG PacketLength;
+    
+    /* Entry on the packet list */
+    LIST_ENTRY ListEntry;
+
+    /* Packet data */
+    UCHAR PacketData[1];
+} NDISUIO_PACKET_ENTRY, *PNDISUIO_PACKET_ENTRY;
 
 /* NDIS version info */
 #define NDIS_MAJOR_VERISON 5

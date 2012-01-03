@@ -174,8 +174,19 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         {
             /* Reference the adapter context */
             KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
-            ReferenceAdapterContext(AdapterContext);
-            Status = STATUS_SUCCESS;
+            if (AdapterContext->OpenCount != 0)
+            {
+                /* An open for read-write is exclusive,
+                 * so we can't have any other open handles */
+                KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
+                Status = STATUS_INVALID_PARAMETER;
+            }
+            else
+            {
+                /* Add a reference */
+                ReferenceAdapterContext(AdapterContext);
+                Status = STATUS_SUCCESS;
+            }
         }
         else
         {
@@ -191,6 +202,9 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
             {
                 /* Set the file object pointer */
                 OpenEntry->FileObject = FileObject;
+                
+                /* Set the permissions */
+                OpenEntry->WriteOnly = FALSE;
 
                 /* Associate this FO with the adapter */
                 FileObject->FsContext = AdapterContext;
@@ -230,8 +244,80 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 NTSTATUS
 OpenDeviceWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
-    /* FIXME: Handle this correctly */
-    return OpenDeviceReadWrite(Irp, IrpSp);
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    UNICODE_STRING DeviceName;
+    ULONG NameLength;
+    NTSTATUS Status;
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext;
+    PNDISUIO_OPEN_ENTRY OpenEntry;
+    KIRQL OldIrql;
+    
+    NameLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+    if (NameLength != 0)
+    {
+        DeviceName.MaximumLength = DeviceName.Length = NameLength;
+        DeviceName.Buffer = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        
+        /* Check if this already has a context */
+        AdapterContext = FindAdapterContextByName(&DeviceName);
+        if (AdapterContext != NULL)
+        {
+            /* Reference the adapter context */
+            KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
+            ReferenceAdapterContext(AdapterContext);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Invalid device name */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        
+        /* Check that the bind succeeded */
+        if (NT_SUCCESS(Status))
+        {
+            OpenEntry = ExAllocatePool(NonPagedPool, sizeof(*OpenEntry));
+            if (OpenEntry)
+            {
+                /* Set the file object pointer */
+                OpenEntry->FileObject = FileObject;
+                
+                /* Associate this FO with the adapter */
+                FileObject->FsContext = AdapterContext;
+                FileObject->FsContext2 = OpenEntry;
+                
+                /* Set permissions */
+                OpenEntry->WriteOnly = TRUE;
+                
+                /* Add it to the adapter's list */
+                InsertTailList(&AdapterContext->OpenEntryList,
+                               &OpenEntry->ListEntry);
+                
+                /* Success */
+                KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Remove the reference we added */
+                KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
+                DereferenceAdapterContext(AdapterContext, NULL);
+                Status = STATUS_NO_MEMORY;
+            }
+        }
+    }
+    else
+    {
+        /* Invalid device name */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    
+    return Status;
 }
 
 NTSTATUS
@@ -240,6 +326,7 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
                          PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    PNDISUIO_OPEN_ENTRY OpenEntry;
     
     ASSERT(DeviceObject == GlobalDeviceObject);
 
@@ -263,24 +350,39 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* Now handle other IOCTLs */
+            /* Now handle write IOCTLs */
             switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
             {
-                case IOCTL_CANCEL_READ:
-                    return CancelPacketRead(Irp, IrpSp);
-
-                case IOCTL_NDISUIO_QUERY_OID_VALUE:
-                    return QueryAdapterOid(Irp, IrpSp);
-
                 case IOCTL_NDISUIO_SET_OID_VALUE:
                     return SetAdapterOid(Irp, IrpSp);
 
                 default:
-                    DPRINT1("Unimplemented\n");
-                    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-                    Irp->IoStatus.Information = 0;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                    break;
+                    /* Check that we have read permissions */
+                    OpenEntry = IrpSp->FileObject->FsContext2;
+                    if (OpenEntry->WriteOnly)
+                    {
+                        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                        Irp->IoStatus.Information = 0;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                        
+                        return STATUS_INVALID_PARAMETER;
+                    }
+
+                    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
+                    {
+                        case IOCTL_CANCEL_READ:
+                            return CancelPacketRead(Irp, IrpSp);
+                        
+                        case IOCTL_NDISUIO_QUERY_OID_VALUE:
+                            return QueryAdapterOid(Irp, IrpSp);
+                        
+                        default:
+                            DPRINT1("Unimplemented\n");
+                            Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+                            Irp->IoStatus.Information = 0;
+                            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                            break;
+                    }
             }
             break;
     }

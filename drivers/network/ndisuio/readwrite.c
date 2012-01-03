@@ -18,6 +18,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
+    PNDISUIO_OPEN_ENTRY OpenEntry = IrpSp->FileObject->FsContext2;
     KIRQL OldIrql;
     NTSTATUS Status;
     PLIST_ENTRY ListEntry;
@@ -25,6 +26,15 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
     ULONG BytesCopied = 0;
 
     ASSERT(DeviceObject == GlobalDeviceObject);
+
+    if (OpenEntry->WriteOnly)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        
+        return STATUS_INVALID_PARAMETER;
+    }
 
     while (TRUE)
     {
