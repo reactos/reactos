@@ -5,10 +5,14 @@
 	<define name="NDIS50" />
 	<define name="_NTDRIVER_" />
 	<library>ndis</library>
-	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<pch>ndisuio.h</pch>
+	<file>createclose.c</file>
+	<file>ioctl.c</file>
 	<file>main.c</file>
+	<file>misc.c</file>
+	<file>protocol.c</file>
+	<file>readwrite.c</file>
 	<file>ndisuio.rc</file>
 </module>
