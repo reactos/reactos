@@ -27,19 +27,8 @@ FindAdapterContextByName(PNDIS_STRING DeviceName)
         /* Check if the device name matches */
         if (RtlEqualUnicodeString(&AdapterContext->DeviceName, DeviceName, TRUE))
         {
-            KeAcquireSpinLockAtDpcLevel(&AdapterContext->Spinlock);
-
-            /* Check that it's not being destroyed */
-            if (AdapterContext->OpenCount > 0)
-            {
-                KeReleaseSpinLockFromDpcLevel(&AdapterContext->Spinlock);
-                KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
-                return AdapterContext;
-            }
-            else
-            {
-                KeReleaseSpinLockFromDpcLevel(&Adaptercontext->Spinlock);
-            }
+            KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
+            return AdapterContext;
         }
         
         CurrentEntry = CurrentEntry->Flink;
@@ -50,24 +39,10 @@ FindAdapterContextByName(PNDIS_STRING DeviceName)
 }
 
 VOID
-ReferenceAdapterContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext, BOOLEAN Locked)
+ReferenceAdapterContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 {
-    KIRQL OldIrql;
-
-    /* Lock if needed */
-    if (!Locked)
-    {
-        KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
-    }
-
     /* Increment the open count */
     AdapterContext->OpenCount++;
-    
-    /* Unlock if needed */
-    if (!Locked)
-    {
-        KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
-    }
 }
 
 VOID
