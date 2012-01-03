@@ -109,7 +109,7 @@ CancelPacketRead(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     {
         PacketEntry->PacketLength = 0;
         
-        ExInterlockedInsertTailList(&AdapterContext->PacketList,
+        ExInterlockedInsertHeadList(&AdapterContext->PacketList,
                                     &PacketEntry->ListEntry,
                                     &AdapterContext->Spinlock);
         

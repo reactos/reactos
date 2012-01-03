@@ -11,6 +11,30 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+NTAPI
+ReadIrpCancel(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
+    PNDISUIO_PACKET_ENTRY PacketEntry;
+    
+    /* Release the cancel spin lock */
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    /* Indicate a 0-byte packet on the queue to cancel the read */
+    PacketEntry = ExAllocatePool(PagedPool, sizeof(NDISUIO_PACKET_ENTRY));
+    if (PacketEntry)
+    {
+        PacketEntry->PacketLength = 0;
+        
+        ExInterlockedInsertHeadList(&AdapterContext->PacketList,
+                                    &PacketEntry->ListEntry,
+                                    &AdapterContext->Spinlock);
+        
+        KeSetEvent(&AdapterContext->PacketReadEvent, IO_NO_INCREMENT, FALSE);
+    }
+}
+
 NTSTATUS
 NTAPI
 NduDispatchRead(PDEVICE_OBJECT DeviceObject,
@@ -19,7 +43,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_OPEN_ENTRY OpenEntry = IrpSp->FileObject->FsContext2;
-    KIRQL OldIrql;
+    KIRQL OldIrql, OldCancelIrql;
     NTSTATUS Status;
     PLIST_ENTRY ListEntry;
     PNDISUIO_PACKET_ENTRY PacketEntry = NULL;
@@ -35,6 +59,22 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
         
         return STATUS_INVALID_PARAMETER;
     }
+
+    /* Make the read cancellable */
+    IoAcquireCancelSpinLock(&OldCancelIrql);
+    IoSetCancelRoutine(Irp, ReadIrpCancel);
+    if (Irp->Cancel)
+    {
+        IoReleaseCancelSpinLock(OldCancelIrql);
+
+        /* Indicate a 0 byte read */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        
+        return STATUS_SUCCESS;
+    }
+    IoReleaseCancelSpinLock(OldCancelIrql);
 
     while (TRUE)
     {
@@ -52,10 +92,22 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
                                            TRUE,
                                            NULL);
             if (Status != STATUS_SUCCESS)
+            {
+                /* Remove the cancel routine */
+                IoAcquireCancelSpinLock(&OldCancelIrql);
+                IoSetCancelRoutine(Irp, NULL);
+                IoReleaseCancelSpinLock(OldCancelIrql);
+
                 break;
+            }
         }
         else
         {
+            /* Remove the cancel routine */
+            IoAcquireCancelSpinLock(&OldCancelIrql);
+            IoSetCancelRoutine(Irp, NULL);
+            IoReleaseCancelSpinLock(OldCancelIrql);
+            
             /* Remove the first packet in the list */
             ListEntry = RemoveHeadList(&AdapterContext->PacketList);
             PacketEntry = CONTAINING_RECORD(ListEntry, NDISUIO_PACKET_ENTRY, ListEntry);
