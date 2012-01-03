@@ -1,7 +1,4 @@
 
-add_typelib(msxml3_v1 msxml3_v1.idl)
-add_dependencies(msxml3_v1 stdole2)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x601)
 
@@ -19,6 +16,8 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 set_rc_compiler()
 
 spec2def(msxml3.dll msxml3.spec)
+
+add_typelib(msxml3_v1.idl)
 
 list(APPEND SOURCE
     attribute.c
@@ -59,6 +58,8 @@ add_library(msxml3 SHARED ${SOURCE})
 
 set_module_type(msxml3 win32dll)
 
+set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml3_v1.tlb)
+
 target_link_libraries(msxml3
     libxml2
     uuid
@@ -87,5 +88,7 @@ add_importlibs(msxml3
     kernel32
     ntdll)
 
-add_dependencies(msxml3 msxml3_v1)
+# msxml3_v1.tlb needs stdole2.tlb
+add_dependencies(msxml3 stdole2)
+
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

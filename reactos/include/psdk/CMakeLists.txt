@@ -116,7 +116,8 @@ endif()
 
 add_idl_headers(psdk ${SOURCE})
 
-add_typelib(stdole2 stdole2.idl)
+add_typelib(stdole2.idl)
+add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
 
 add_iid_library(wuguid wuapi.idl)
 add_iid_library(xml_uuids msxml2.idl)
