@@ -28,9 +28,7 @@ struct _NDISUIO_ADAPTER_CONTEXT
 
     /* Receive packet list */
     LIST_ENTRY PacketList;
-
-    /* Cancel read */
-    BOOLEAN CancelRead;
+    KEVENT PacketReadEvent;
 
     /* Global list entry */
     LIST_ENTRY ListEntry;

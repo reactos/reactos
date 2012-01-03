@@ -11,6 +11,98 @@
 #define NDEBUG
 #include <debug.h>
 
+NDIS_STATUS
+AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOLEAN Front)
+{
+    NDIS_STATUS Status;
+
+    /* Allocate the NDIS buffer mapping the pool */
+    NdisAllocateBuffer(&Status,
+                       &Buffer,
+                       GlobalBufferPoolHandle,
+                       Buffer,
+                       Length);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("No free buffer descriptors\n");
+        return Status;
+    }
+
+    if (Front)
+    {
+        /* Chain the buffer to front */
+        NdisChainBufferAtFront(Packet, Buffer);
+    }
+    else
+    {
+        /* Chain the buffer to back */
+        NdisChainBufferAtBack(Packet, Buffer);
+    }
+
+    /* Return success */
+    return NDIS_STATUS_SUCCESS;
+}
+
+PNDIS_PACKET
+CreatePacketFromPoolBuffer(PVOID Buffer, ULONG BufferSize)
+{
+    PNDIS_PACKET Packet;
+    NDIS_STATUS Status;
+
+    /* Allocate a packet descriptor */
+    NdisAllocatePacket(&Status,
+                       &Packet,
+                       GlobalPacketPoolHandle);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("No free packet descriptors\n");
+        return NULL;
+    }
+
+    /* Use the helper to chain the buffer */
+    Status = AllocateAndChainBuffer(Packet, Buffer, BufferSize, TRUE);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        NdisFreePacket(Packet);
+        return NULL;
+    }
+
+    /* Return the packet */
+    return Packet;
+}
+
+VOID
+CleanupAndFreePacket(PNDIS_PACKET Packet, BOOLEAN FreePool)
+{
+    PNDIS_BUFFER Buffer;
+    PVOID Data;
+    ULONG Length;
+
+    /* Free each buffer and its backing pool memory */
+    while (TRUE)
+    {
+        /* Unchain each buffer */
+        NdisUnchainBufferAtFront(Packet, &Buffer);
+        if (!Buffer)
+            break;
+        
+        /* Get the backing memory */
+        NdisQueryBuffer(Buffer, &Data, &Length);
+        
+        /* Free the buffer */
+        NdisFreeBuffer(Buffer);
+
+        if (FreePool)
+        {
+            /* Free the backing memory */
+            ExFreePool(Data);
+        }
+    }
+    
+    /* Free the packet descriptor */
+    NdisFreePacket(Packet);
+}
+
 PNDISUIO_ADAPTER_CONTEXT
 FindAdapterContextByName(PNDIS_STRING DeviceName)
 {
@@ -70,19 +162,7 @@ DereferenceAdapterContextWithOpenEntry(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
         /* Free the open entry */
         ExFreePool(OpenEntry);
     }
-    
-    /* See if this binding can be destroyed */
-    if (AdapterContext->OpenCount == 0)
-    {
-        /* Unlock the context */
-        KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
 
-        /* Destroy the adapter context */
-        UnbindAdapterByContext(AdapterContext);
-    }
-    else
-    {
-        /* Still more references on it */
-        KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
-    }
+    /* Release the adapter context lock */
+    KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
 }

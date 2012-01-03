@@ -12,6 +12,40 @@
 #include <debug.h>
 
 NTSTATUS
+CancelPacketRead(PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
+    PNDISUIO_PACKET_ENTRY PacketEntry;
+    NTSTATUS Status;
+    
+    /* Indicate a 0-byte packet on the queue so one read returns 0 */
+    PacketEntry = ExAllocatePool(PagedPool, sizeof(NDISUIO_PACKET_ENTRY));
+    if (PacketEntry)
+    {
+        PacketEntry->PacketLength = 0;
+        
+        ExInterlockedInsertTailList(&AdapterContext->PacketList,
+                                    &PacketEntry->ListEntry,
+                                    &AdapterContext->Spinlock);
+        
+        KeSetEvent(&AdapterContext->PacketReadEvent, IO_NO_INCREMENT, FALSE);
+        
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_NO_MEMORY;
+    }
+    
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    
+    return Status;
+}
+
+NTSTATUS
 SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
@@ -232,6 +266,9 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
             /* Now handle other IOCTLs */
             switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
             {
+                case IOCTL_CANCEL_READ:
+                    return CancelPacketRead(Irp, IrpSp);
+
                 case IOCTL_NDISUIO_QUERY_OID_VALUE:
                     return QueryAdapterOid(Irp, IrpSp);
 

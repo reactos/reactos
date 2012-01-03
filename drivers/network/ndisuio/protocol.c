@@ -48,7 +48,13 @@ NduSendComplete(NDIS_HANDLE ProtocolBindingContext,
                 PNDIS_PACKET Packet,
                 NDIS_STATUS Status)
 {
-    /* FIXME: Implement send/receive */
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = ProtocolBindingContext;
+    
+    DPRINT("Asynchronous adapter send completed\n");
+    
+    /* Store the final status and signal the event */
+    AdapterContext->AsyncStatus = Status;
+    KeSetEvent(&AdapterContext->AsyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
 VOID
@@ -58,7 +64,13 @@ NduTransferDataComplete(NDIS_HANDLE ProtocolBindingContext,
                         NDIS_STATUS Status,
                         UINT BytesTransferred)
 {
-    /* FIXME: Implement send/receive */
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = ProtocolBindingContext;
+
+    DPRINT("Asynchronous adapter transfer completed\n");
+
+    /* Store the final status and signal the event */
+    AdapterContext->AsyncStatus = Status;
+    KeSetEvent(&AdapterContext->AsyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
 VOID
@@ -100,8 +112,82 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
            UINT LookaheadBufferSize,
            UINT PacketSize)
 {
-    /* FIXME: Implement send/receive */
-    return NDIS_STATUS_NOT_ACCEPTED;
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = ProtocolBindingContext;
+    PVOID PacketBuffer;
+    PNDIS_PACKET Packet;
+    NDIS_STATUS Status;
+    ULONG BytesTransferred;
+    
+    /* Allocate a buffer to hold the packet data and header */
+    PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize);
+    if (!PacketBuffer)
+        return NDIS_STATUS_NOT_ACCEPTED;
+
+    /* Allocate the packet descriptor and buffer */
+    Packet = CreatePacketFromPoolBuffer((PUCHAR)PacketBuffer + HeaderBufferSize,
+                                        PacketSize);
+    if (!Packet)
+    {
+        ExFreePool(PacketBuffer);
+        return NDIS_STATUS_NOT_ACCEPTED;
+    }
+
+    /* Transfer the packet data into our data buffer */
+    NdisTransferData(&Status,
+                     AdapterContext->BindingHandle,
+                     MacReceiveContext,
+                     0,
+                     PacketSize,
+                     &BytesTransferred);
+    if (Status == NDIS_STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&AdapterContext->AsyncEvent,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = AdapterContext->AsyncStatus;
+    }
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("Failed to transfer data with status 0x%x\n", Status);
+        CleanupAndFreePacket(Packet, TRUE);
+        return NDIS_STATUS_NOT_ACCEPTED;
+    }
+    
+    /* Copy the header data */
+    RtlCopyMemory(PacketBuffer, HeaderBuffer, HeaderBufferSize);
+    
+    /* Free the packet descriptor and buffers 
+       but not the pool because we still need it */
+    CleanupAndFreePacket(Packet, FALSE);
+
+    /* Allocate a packet entry from paged pool */
+    PacketEntry = ExAllocatePool(PagedPool, sizeof(NDISUIO_PACKET_ENTRY) + BytesTransferred + HeaderBufferSize - 1);
+    if (!PacketEntry)
+    {
+        ExFreePool(PacketBuffer);
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    /* Initialize the packet entry and copy in packet data */
+    PacketEntry->PacketLength = BytesTransferred + HeaderBufferSize;
+    RtlCopyMemory(&PacketEntry->PacketData[0], PacketBuffer, PacketEntry->PacketLength);
+    
+    /* Free the old non-paged buffer */
+    ExFreePool(PacketBuffer);
+
+    /* Insert the packet on the adapter's packet list */
+    ExInterlockedInsertTailList(&AdapterContext->PacketList,
+                                &PacketEntry->ListEntry,
+                                &AdapterContext->Spinlock);
+    
+    /* Signal the read event */
+    KeSetEvent(&AdapterContext->PacketReadEvent,
+               IO_NETWORK_INCREMENT,
+               FALSE);
+
+    return NDIS_STATUS_SUCCESS;
 }
 
 VOID
@@ -134,7 +220,7 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     KIRQL OldIrql;
     PLIST_ENTRY CurrentOpenEntry;
     PNDISUIO_OPEN_ENTRY OpenEntry;
-
+    
     /* Remove the adapter context from the global list */
     KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
     RemoveEntryList(&AdapterContext->ListEntry);
@@ -167,7 +253,7 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 
     /* If this fails, we have a refcount mismatch somewhere */
     ASSERT(AdapterContext->OpenCount == 0);
-
+    
     /* Send the close request */
     NdisCloseAdapter(Status,
                      AdapterContext->BindingHandle);
@@ -206,6 +292,7 @@ BindAdapterByName(PNDIS_STRING DeviceName, PNDISUIO_ADAPTER_CONTEXT *Context)
     /* Set up the adapter context */
     RtlZeroMemory(AdapterContext, sizeof(*AdapterContext));
     KeInitializeEvent(&AdapterContext->AsyncEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&AdapterContext->PacketReadEvent, SynchronizationEvent, FALSE);
     KeInitializeSpinLock(&AdapterContext->Spinlock);
     InitializeListHead(&AdapterContext->PacketList);
     InitializeListHead(&AdapterContext->OpenEntryList);
