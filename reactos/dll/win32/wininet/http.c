@@ -1900,6 +1900,8 @@ static void http_release_netconn(http_request_t *req, BOOL reuse)
                 if(module)
                     FreeLibrary(module);
             }
+            else
+                CloseHandle(thread);
         }
         return;
     }
