@@ -10,26 +10,314 @@
 
 #include "hidparse.h"
 
+PVOID
+NTAPI
+AllocFunction(
+    IN ULONG ItemSize)
+{
+    PVOID Item = ExAllocatePool(NonPagedPool, ItemSize);
+    if (Item)
+    {
+        //
+        // zero item
+        //
+        RtlZeroMemory(Item, ItemSize);
+    }
+
+    //
+    // done
+    //
+    return Item;
+}
+
+VOID
+NTAPI
+FreeFunction(
+    IN PVOID Item)
+{
+    //
+    // free item
+    //
+    ExFreePool(Item);
+}
+
+VOID
+NTAPI
+ZeroFunction(
+    IN PVOID Item,
+    IN ULONG ItemSize)
+{
+    //
+    // zero item
+    //
+    RtlZeroMemory(Item, ItemSize);
+}
+
+VOID
+NTAPI
+CopyFunction(
+    IN PVOID Target,
+    IN PVOID Source,
+    IN ULONG Length)
+{
+    //
+    // copy item
+    //
+    RtlCopyMemory(Target, Source, Length);
+}
+
+VOID
+NTAPI
+DebugFunction(
+    IN LPCSTR FormatStr, ...)
+{
+
+    va_list args;
+    unsigned int i;
+     char printbuffer[1024];
+
+     va_start(args, FormatStr);
+     i = vsprintf(printbuffer, FormatStr, args);
+     va_end(args);
+
+     DbgPrint(printbuffer);
+}
 
 VOID
 NTAPI
 HidP_FreeCollectionDescription (
     IN PHIDP_DEVICE_DESC   DeviceDescription)
 {
-    DPRINT1("HidP_FreeCollectionDescription DeviceDescription %p\n", DeviceDescription);
+    HID_PARSER Parser;
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, NULL, &Parser);
 
     //
     // free collection
     //
-    ExFreePool(DeviceDescription->CollectionDesc);
-
-    //
-    // free report ids
-    //
-    ExFreePool(DeviceDescription->ReportIDs);
+    HidParser_FreeCollectionDescription(&Parser, DeviceDescription);
 }
 
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_GetCaps(
+    IN PHIDP_PREPARSED_DATA  PreparsedData,
+    OUT PHIDP_CAPS  Capabilities)
+{
+    HID_PARSER Parser;
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+
+    //
+    // get caps
+    //
+    return HidParser_GetCaps(&Parser, Capabilities);
+}
+
+NTSTATUS
+NTAPI
+HidP_GetCollectionDescription(
+    IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
+    IN ULONG DescLength,
+    IN POOL_TYPE PoolType,
+    OUT PHIDP_DEVICE_DESC DeviceDescription)
+{
+    PHID_PARSER Parser;
+    HIDPARSER_STATUS Status;
+
+    //
+    // first allocate the parser
+    //
+    Status = HidParser_AllocateParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
+    if (Status != HIDPARSER_STATUS_SUCCESS)
+    {
+        //
+        // not enough memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // get description;
+    //
+    Status = HidParser_GetCollectionDescription(Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
+
+    //
+    // FIXME parser memory leak
+    //
+    return Status;
+}
+
+HIDAPI
+ULONG
+NTAPI
+HidP_MaxUsageListLength(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USAGE  UsagePage  OPTIONAL,
+  IN PHIDP_PREPARSED_DATA  PreparsedData)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+
+
+    //
+    // get usage length
+    //
+    return HidParser_MaxUsageListLength(&Parser, ReportType, UsagePage);
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_GetSpecificValueCaps(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USAGE  UsagePage,
+  IN USHORT  LinkCollection,
+  IN USAGE  Usage,
+  OUT PHIDP_VALUE_CAPS  ValueCaps,
+  IN OUT PULONG  ValueCapsLength,
+  IN PHIDP_PREPARSED_DATA  PreparsedData)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+
+    //
+    // get value caps
+    //
+    return HidParser_GetSpecificValueCaps(&Parser, ReportType, UsagePage, LinkCollection, Usage, ValueCaps, ValueCapsLength);
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_GetUsages(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USAGE  UsagePage,
+  IN USHORT  LinkCollection  OPTIONAL,
+  OUT USAGE  *UsageList,
+  IN OUT ULONG  *UsageLength,
+  IN PHIDP_PREPARSED_DATA  PreparsedData,
+  IN PCHAR  Report,
+  IN ULONG  ReportLength)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+
+    //
+    // get usages
+    //
+    return HidParser_GetUsages(&Parser, ReportType, UsagePage, LinkCollection, UsageList, UsageLength, Report, ReportLength);
+}
+
+
 #undef HidP_GetButtonCaps
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_UsageListDifference(
+  IN PUSAGE  PreviousUsageList,
+  IN PUSAGE  CurrentUsageList,
+  OUT PUSAGE  BreakUsageList,
+  OUT PUSAGE  MakeUsageList,
+  IN ULONG  UsageListLength)
+{
+    return HidParser_UsageListDifference(PreviousUsageList, CurrentUsageList, BreakUsageList, MakeUsageList, UsageListLength);
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_GetUsagesEx(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USHORT  LinkCollection,
+  OUT PUSAGE_AND_PAGE  ButtonList,
+  IN OUT ULONG  *UsageLength,
+  IN PHIDP_PREPARSED_DATA  PreparsedData,
+  IN PCHAR  Report,
+  IN ULONG  ReportLength)
+{
+    return HidP_GetUsages(ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, PreparsedData, Report, ReportLength);
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_UsageAndPageListDifference(
+   IN PUSAGE_AND_PAGE  PreviousUsageList,
+   IN PUSAGE_AND_PAGE  CurrentUsageList,
+   OUT PUSAGE_AND_PAGE  BreakUsageList,
+   OUT PUSAGE_AND_PAGE  MakeUsageList,
+   IN ULONG  UsageListLength)
+{
+    return HidParser_UsageAndPageListDifference(PreviousUsageList, CurrentUsageList, BreakUsageList, MakeUsageList, UsageListLength);
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidP_GetScaledUsageValue(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USAGE  UsagePage,
+  IN USHORT  LinkCollection  OPTIONAL,
+  IN USAGE  Usage,
+  OUT PLONG  UsageValue,
+  IN PHIDP_PREPARSED_DATA  PreparsedData,
+  IN PCHAR  Report,
+  IN ULONG  ReportLength)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+
+    //
+    // get scaled usage value
+    //
+    return HidParser_GetScaledUsageValue(&Parser, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
+}
 
 HIDAPI
 NTSTATUS
@@ -60,32 +348,6 @@ HidP_GetSpecificButtonCaps(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_GetCaps(
-    IN PHIDP_PREPARSED_DATA  PreparsedData,
-    OUT PHIDP_CAPS  Capabilities)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-HidP_GetCollectionDescription(
-    IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
-    IN ULONG DescLength,
-    IN POOL_TYPE PoolType,
-    OUT PHIDP_DEVICE_DESC DeviceDescription)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 HIDAPI
 NTSTATUS
 NTAPI
@@ -107,7 +369,7 @@ NTSTATUS
 NTAPI
 HidP_GetExtendedAttributes(
   IN HIDP_REPORT_TYPE  ReportType,
-  IN USHORT  DataIndex,
+  IN USAGE  UsagePage,
   IN PHIDP_PREPARSED_DATA  PreparsedData,
   OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
   IN OUT PULONG  LengthAttributes)
@@ -133,209 +395,12 @@ HidP_GetLinkCollectionNodes(
 HIDAPI
 NTSTATUS
 NTAPI
-HidP_GetScaledUsageValue(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection  OPTIONAL,
-  IN USAGE  Usage,
-  OUT PLONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
 HidP_GetUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
   IN USHORT  LinkCollection,
   IN USAGE  Usage,
   OUT PULONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_UsageListDifference(
-  IN PUSAGE  PreviousUsageList,
-  IN PUSAGE  CurrentUsageList,
-  OUT PUSAGE  BreakUsageList,
-  OUT PUSAGE  MakeUsageList,
-  IN ULONG  UsageListLength)
-{
-    ULONG Index, SubIndex, bFound, BreakUsageIndex = 0, MakeUsageIndex = 0;
-    USAGE CurrentUsage, Usage;
-
-    if (UsageListLength)
-    {
-        Index = 0;
-        do
-        {
-            /* get current usage */
-            CurrentUsage = PreviousUsageList[Index];
-
-            /* is the end of list reached? */
-            if (!CurrentUsage)
-                break;
-
-            /* start searching in current usage list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage of current list */
-                Usage = CurrentUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (!Usage)
-                    break;
-
-                /* check if it matches the current one */
-                if (CurrentUsage == Usage)
-                {
-                    /* it does */
-                    bFound = TRUE;
-                    break;
-                }
-
-                /* move to next usage */
-                SubIndex++;
-            }while(SubIndex < UsageListLength);
-
-            /* was the usage found ?*/
-            if (!bFound)
-            {
-                /* store it in the break usage list */
-                BreakUsageList[BreakUsageIndex] = CurrentUsage;
-                BreakUsageIndex++;
-            }
-
-            /* move to next usage */
-            Index++;
-
-        }while(Index < UsageListLength);
-
-        /* now process the new items */
-        Index = 0;
-        do
-        {
-            /* get current usage */
-            CurrentUsage = CurrentUsageList[Index];
-
-            /* is the end of list reached? */
-            if (!CurrentUsage)
-                break;
-
-            /* start searching in current usage list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage of previous list */
-                Usage = PreviousUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (!Usage)
-                    break;
-
-                /* check if it matches the current one */
-                if (CurrentUsage == Usage)
-                {
-                    /* it does */
-                    bFound = TRUE;
-                    break;
-                }
-
-                /* move to next usage */
-                SubIndex++;
-            }while(SubIndex < UsageListLength);
-
-            /* was the usage found ?*/
-            if (!bFound)
-            {
-                /* store it in the make usage list */
-                MakeUsageList[MakeUsageIndex] = CurrentUsage;
-                MakeUsageIndex++;
-            }
-
-            /* move to next usage */
-            Index++;
-
-        }while(Index < UsageListLength);
-    }
-
-    /* does the break list contain empty entries */
-    if (BreakUsageIndex < UsageListLength)
-    {
-        /* zeroize entries */
-        RtlZeroMemory(&BreakUsageList[BreakUsageIndex], sizeof(USAGE) * (UsageListLength - BreakUsageIndex));
-    }
-
-    /* does the make usage list contain empty entries */
-    if (MakeUsageIndex < UsageListLength)
-    {
-        /* zeroize entries */
-        RtlZeroMemory(&MakeUsageList[MakeUsageIndex], sizeof(USAGE) * (UsageListLength - MakeUsageIndex));
-    }
-
-    /* done */
-    return HIDP_STATUS_SUCCESS;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_GetSpecificValueCaps(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN USAGE  Usage,
-  OUT PHIDP_VALUE_CAPS  ValueCaps,
-  IN OUT PULONG  ValueCapsLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-ULONG
-NTAPI
-HidP_MaxUsageListLength(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage  OPTIONAL,
-  IN PHIDP_PREPARSED_DATA  PreparsedData)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_GetUsages(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection  OPTIONAL,
-  OUT USAGE  *UsageList,
-  IN OUT ULONG  *UsageLength,
   IN PHIDP_PREPARSED_DATA  PreparsedData,
   IN PCHAR  Report,
   IN ULONG  ReportLength)
@@ -388,150 +453,6 @@ HidP_GetUsageValueArray(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_GetUsagesEx(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USHORT  LinkCollection,
-  OUT PUSAGE_AND_PAGE  ButtonList,
-  IN OUT ULONG  *UsageLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength)
-{
-    return HidP_GetUsages(ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, PreparsedData, Report, ReportLength);
-}
-
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_UsageAndPageListDifference(
-   IN PUSAGE_AND_PAGE  PreviousUsageList,
-   IN PUSAGE_AND_PAGE  CurrentUsageList,
-   OUT PUSAGE_AND_PAGE  BreakUsageList,
-   OUT PUSAGE_AND_PAGE  MakeUsageList,
-   IN ULONG  UsageListLength)
-{
-    ULONG Index, SubIndex, BreakUsageListIndex = 0, MakeUsageListIndex = 0, bFound;
-    PUSAGE_AND_PAGE CurrentUsage, Usage;
-
-    if (UsageListLength)
-    {
-        /* process removed usages */
-        Index = 0;
-        do
-        {
-            /* get usage from current index */
-            CurrentUsage = &PreviousUsageList[Index];
-
-            /* end of list reached? */
-            if (CurrentUsage->Usage == 0 && CurrentUsage->UsagePage == 0)
-                break;
-
-            /* search in current list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage */
-                Usage = &CurrentUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (Usage->Usage == 0 && Usage->UsagePage == 0)
-                    break;
-
-                /* does it match */
-                if (Usage->Usage == CurrentUsage->Usage && Usage->UsagePage == CurrentUsage->UsagePage)
-                {
-                    /* found match */
-                    bFound = TRUE;
-                }
-
-                /* move to next index */
-                SubIndex++;
-
-            }while(SubIndex < UsageListLength);
-
-            if (!bFound)
-            {
-                /* store it in break usage list */
-                BreakUsageList[BreakUsageListIndex].Usage = CurrentUsage->Usage;
-                BreakUsageList[BreakUsageListIndex].UsagePage = CurrentUsage->UsagePage;
-                BreakUsageListIndex++;
-            }
-
-            /* move to next index */
-            Index++;
-
-        }while(Index < UsageListLength);
-
-        /* process new usages */
-        Index = 0;
-        do
-        {
-            /* get usage from current index */
-            CurrentUsage = &CurrentUsageList[Index];
-
-            /* end of list reached? */
-            if (CurrentUsage->Usage == 0 && CurrentUsage->UsagePage == 0)
-                break;
-
-            /* search in current list */
-            SubIndex = 0;
-            bFound = FALSE;
-            do
-            {
-                /* get usage */
-                Usage = &PreviousUsageList[SubIndex];
-
-                /* end of list reached? */
-                if (Usage->Usage == 0 && Usage->UsagePage == 0)
-                    break;
-
-                /* does it match */
-                if (Usage->Usage == CurrentUsage->Usage && Usage->UsagePage == CurrentUsage->UsagePage)
-                {
-                    /* found match */
-                    bFound = TRUE;
-                }
-
-                /* move to next index */
-                SubIndex++;
-
-            }while(SubIndex < UsageListLength);
-
-            if (!bFound)
-            {
-                /* store it in break usage list */
-                MakeUsageList[MakeUsageListIndex].Usage = CurrentUsage->Usage;
-                MakeUsageList[MakeUsageListIndex].UsagePage = CurrentUsage->UsagePage;
-                MakeUsageListIndex++;
-            }
-
-            /* move to next index */
-            Index++;
-        }while(Index < UsageListLength);
-    }
-
-    /* are there remaining free list entries */
-    if (BreakUsageListIndex < UsageListLength)
-    {
-        /* zero them */
-        RtlZeroMemory(&BreakUsageList[BreakUsageListIndex], (UsageListLength - BreakUsageListIndex) * sizeof(USAGE_AND_PAGE));
-    }
-
-    /* are there remaining free list entries */
-    if (MakeUsageListIndex < UsageListLength)
-    {
-        /* zero them */
-        RtlZeroMemory(&MakeUsageList[MakeUsageListIndex], (UsageListLength - MakeUsageListIndex) * sizeof(USAGE_AND_PAGE));
-    }
-
-    /* done */
-    return HIDP_STATUS_SUCCESS;
-}
 
 HIDAPI
 NTSTATUS
