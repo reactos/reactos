@@ -344,7 +344,7 @@ HidParser_GetSpecificValueCapsWithReport(
 HIDPARSER_STATUS
 HidParser_GetUsagesWithReport(
     IN PHID_PARSER Parser,
-    IN HIDP_REPORT_TYPE  ReportType,
+    IN ULONG  ReportType,
     IN USAGE  UsagePage,
     OUT USAGE  *UsageList,
     IN OUT PULONG UsageLength,
@@ -354,9 +354,9 @@ HidParser_GetUsagesWithReport(
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
     IN PHID_PARSER Parser,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
+    IN ULONG ReportType,
+    IN USAGE UsagePage,
     IN USAGE  Usage,
-    OUT PLONG  UsageValue,
-    IN PCHAR  ReportDescriptor,
-    IN ULONG  ReportDescriptorLength);
+    OUT PLONG UsageValue,
+    IN PCHAR ReportDescriptor,
+    IN ULONG ReportDescriptorLength);
