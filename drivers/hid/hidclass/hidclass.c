@@ -137,12 +137,23 @@ HidClass_Create(
     CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     if (CommonDeviceExtension->IsFDO)
     {
+#ifndef __REACTOS__
+
          //
          // only supported for PDO
          //
          Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          return STATUS_UNSUCCESSFUL;
+#else
+         //
+         // ReactOS PnP manager [...]
+         //
+         DPRINT1("[HIDCLASS] PnP HACK\n");
+         Irp->IoStatus.Status = STATUS_SUCCESS;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_SUCCESS;
+#endif
     }
 
     //

@@ -19,6 +19,7 @@ cdrom.inf
 display.inf
 fdc.inf
 hdc.inf
+input.inf
 keyboard.inf
 machine.inf
 msmouse.inf

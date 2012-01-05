@@ -971,7 +971,7 @@ CreateDeviceIds(
        //
        // copy instance id
        //
-       RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, wcslen(Buffer) * sizeof(WCHAR));
+       RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
        UsbChildExtension->usInstanceId.Length = UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
 
        DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
