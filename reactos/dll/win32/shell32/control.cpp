@@ -247,7 +247,7 @@ static LRESULT Control_WndProc_LButton(CPanel* panel, LPARAM lParam, BOOL up)
     return 0;
 }
 
-static LRESULT WINAPI    Control_WndProc(HWND hWnd, UINT wMsg,
+static LRESULT WINAPI Control_WndProc(HWND hWnd, UINT wMsg,
                     WPARAM lParam1, LPARAM lParam2)
 {
     CPanel*    panel = (CPanel*)GetWindowLongPtrW(hWnd, 0);
@@ -259,16 +259,15 @@ static LRESULT WINAPI    Control_WndProc(HWND hWnd, UINT wMsg,
             case WM_CREATE:
                 Control_WndProc_Create(hWnd, (CREATESTRUCTW*)lParam2);
                 return 0;
-            
             case WM_DESTROY:
             {
-                CPlApplet*    applet = panel->first;
+                CPlApplet *applet = panel->first;
                 while (applet)
                     applet = Control_UnloadApplet(applet);
                 
                 PostQuitMessage(0);
-            }; break;
-            
+                break;
+            }
             case WM_PAINT:
                 return Control_WndProc_Paint(panel, lParam1);
             case WM_LBUTTONUP:
@@ -324,27 +323,26 @@ static void Control_DoInterface(CPanel* panel, HWND hWnd, HINSTANCE hInst)
     }
 }
 
-static void Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
+static void Control_DoWindow(CPanel *panel, HWND hWnd, HINSTANCE hInst)
 {
-    HANDLE        h;
-    WIN32_FIND_DATAW    fd;
-    WCHAR        buffer[MAX_PATH];
-    static const WCHAR wszAllCpl[] = {'*','.','c','p','l',0};
-    WCHAR *p;
+    HANDLE hFind;
+    WIN32_FIND_DATAW wfd;
+    WCHAR wszPath[MAX_PATH];
+    WCHAR *Ptr = wszPath;
 
-    GetSystemDirectoryW( buffer, MAX_PATH );
-    p = buffer + wcslen(buffer);
-    *p++ = '\\';
-    wcscpy(p, wszAllCpl);
+    Ptr += GetSystemDirectoryW(wszPath, MAX_PATH);
+    *Ptr++ = '\\';
+    wcscpy(Ptr, L"*.cpl");
 
-    if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE)
+    hFind = FindFirstFileW(wszPath, &wfd);
+    if (hFind != INVALID_HANDLE_VALUE)
     {
         do
         {
-            wcscpy(p, fd.cFileName);
-            Control_LoadApplet(hWnd, buffer, panel);
-        } while (FindNextFileW(h, &fd));
-        FindClose(h);
+            wcscpy(Ptr, wfd.cFileName);
+            Control_LoadApplet(hWnd, wszPath, panel);
+        } while (FindNextFileW(hFind, &wfd));
+        FindClose(hFind);
     }
 
     Control_DoInterface(panel, hWnd, hInst);
