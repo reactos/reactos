@@ -41,29 +41,32 @@ private:
 
 	struct SHELLNEW_ITEM
 	{
-		SHELLNEW_TYPE					Type;
-		LPWSTR							szExt;
-		LPWSTR							szTarget;
-		LPWSTR							szDesc;
-		LPWSTR							szIcon;
-		SHELLNEW_ITEM					*Next;
+		SHELLNEW_TYPE Type;
+		LPWSTR pwszExt;
+		LPWSTR pwszTarget;
+		LPWSTR pwszDesc;
+		LPWSTR pwszIcon;
+		SHELLNEW_ITEM *pNext;
 	};
 
-    LPWSTR szPath;
-    SHELLNEW_ITEM *s_SnHead;
-    IUnknown*	fSite;
-public:
-	CNewMenu();
-	~CNewMenu();
-	SHELLNEW_ITEM *LoadItem(LPWSTR szKeyName);
-    void UnloadItem(SHELLNEW_ITEM *item);
+    LPWSTR m_wszPath;
+    SHELLNEW_ITEM *m_pShellItems;
+    IUnknown *m_pSite;
+    HMENU m_hSubMenu;
+
+    void CleanupMenu();
+    static BOOL GetKeyDescription(LPCWSTR pwszExt, LPWSTR pwszResult);
+    SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
+    void UnloadItem(SHELLNEW_ITEM *pItem);
 	void UnloadShellItems();
 	BOOL LoadShellNewItems();
 	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
-	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView * psv);
-	HRESULT DoMeasureItem(HWND hWnd, MEASUREITEMSTRUCT *lpmis);
-	HRESULT DoDrawItem(HWND hWnd, DRAWITEMSTRUCT *drawItem);
-	void DoNewFolder(IShellView *psv);
+	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv);
+	void CreateNewFolder(IShellView *psv);
+
+public:
+	CNewMenu();
+	~CNewMenu();
 
 	// IObjectWithSite
 	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
@@ -72,7 +75,7 @@ public:
 	// IContextMenu
 	virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
 	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
 	// IContextMenu2
 	virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);

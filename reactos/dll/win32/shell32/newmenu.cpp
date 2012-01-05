@@ -23,172 +23,194 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static WCHAR szNew[MAX_PATH];
-
 CNewMenu::CNewMenu()
 {
-    szPath = NULL;
-    s_SnHead = NULL;
-    fSite = NULL;
+    m_wszPath = NULL;
+    m_pShellItems = NULL;
+    m_pSite = NULL;
 }
-
 
 CNewMenu::~CNewMenu()
 {
     UnloadShellItems();
+    if (m_hSubMenu)
+        CleanupMenu();
 }
 
-void CNewMenu::UnloadItem(SHELLNEW_ITEM *item)
+void CNewMenu::CleanupMenu()
 {
-    // bail if the item is clearly invalid
-    if (NULL == item)
+    INT Count, Index;
+    MENUITEMINFOW mii;
+
+    /* get item count */
+    Count = GetMenuItemCount(m_hSubMenu);
+    if (Count == -1)
         return;
 
-    if (NULL != item->szTarget)
-        free(item->szTarget);
+    /* setup menuitem info */
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_CHECKMARKS;
 
-    free(item->szDesc);
-    free(item->szIcon);
-    free(item->szExt);
+    for(Index = 0; Index < Count; Index++)
+    {
+        if (GetMenuItemInfoW(m_hSubMenu, Index, TRUE, &mii))
+        {
+            if (mii.hbmpChecked)
+                DeleteObject(mii.hbmpChecked);
+        }
+    }
+}
 
-    HeapFree(GetProcessHeap(), 0, item);
+void CNewMenu::UnloadItem(SHELLNEW_ITEM *pItem)
+{
+    // bail if the item is clearly invalid
+    if (NULL == pItem)
+        return;
+
+    if (NULL != pItem->pwszTarget)
+        free(pItem->pwszTarget);
+
+    free(pItem->pwszDesc);
+    free(pItem->pwszIcon);
+    free(pItem->pwszExt);
+
+    HeapFree(GetProcessHeap(), 0, pItem);
 }
 
 void CNewMenu::UnloadShellItems()
 {
     SHELLNEW_ITEM *pCurItem;
 
-    while (s_SnHead)
+    while (m_pShellItems)
     {
-        pCurItem = s_SnHead;
-        s_SnHead = s_SnHead->Next;
+        pCurItem = m_pShellItems;
+        m_pShellItems = m_pShellItems->pNext;
 
         UnloadItem(pCurItem);
     }
-
-    s_SnHead = NULL;
 }
 
-static
-BOOL
-GetKeyDescription(LPWSTR szKeyName, LPWSTR szResult)
+BOOL CNewMenu::GetKeyDescription(LPCWSTR pwszExt, LPWSTR pwszResult)
 {
     HKEY hKey;
-    DWORD dwDesc, dwError;
-    WCHAR szDesc[100];
+    DWORD cbDesc;
+    WCHAR wszDesc[100];
+    LONG Result;
 
-    TRACE("GetKeyDescription: keyname %s\n", debugstr_w(szKeyName));
+    TRACE("GetKeyDescription: keyname %s\n", debugstr_w(pwszExt));
 
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szKeyName, 0, KEY_READ | KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
-    if (RegLoadMUIStringW(hKey, L"\\FriendlyTypeName", szResult, MAX_PATH, &dwDesc, 0, NULL) == ERROR_SUCCESS)
+    /* Get user friendly name */
+    if (RegLoadMUIStringW(hKey, L"\\FriendlyTypeName", pwszResult, MAX_PATH, &cbDesc, 0, NULL) == ERROR_SUCCESS)
     {
-        TRACE("result %s\n", debugstr_w(szResult));
+        TRACE("result %s\n", debugstr_w(pwszResult));
         RegCloseKey(hKey);
         return TRUE;
     }
-    /* fetch default value */
-    dwDesc = sizeof(szDesc);
-    dwError = RegGetValueW(hKey, NULL, NULL, RRF_RT_REG_SZ, NULL, szDesc, &dwDesc);
-    if(dwError == ERROR_SUCCESS)
+
+    /* Fetch default value */
+    cbDesc = sizeof(wszDesc);
+    Result = RegGetValueW(hKey, NULL, L"", RRF_RT_REG_SZ, NULL, wszDesc, &cbDesc);
+    if(Result == ERROR_SUCCESS)
     {
-        if (wcsncmp(szKeyName, szDesc, dwDesc / sizeof(WCHAR)))
+        if (wcscmp(pwszExt, wszDesc) != 0)
         {
             /* recurse for to a linked key */
-            if (!GetKeyDescription(szDesc, szResult))
+            if (!GetKeyDescription(wszDesc, pwszResult))
             {
                 /* use description */
-                wcscpy(szResult, szDesc);
+                wcscpy(pwszResult, wszDesc);
             }
         }
         else
         {
             /* use default value as description */
-            wcscpy(szResult, szDesc);
+            wcscpy(pwszResult, wszDesc);
         }
     }
     else
     {
         /* registry key w/o default key?? */
-        TRACE("RegGetValue failed with %x\n", dwError);
-        wcscpy(szResult, szKeyName);
+        ERR("RegGetValue failed with %x\n", Result);
+        wcscpy(pwszResult, pwszExt);
     }
 
     RegCloseKey(hKey);
     return TRUE;
 }
 
-CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPWSTR szKeyName)
+CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 {
     HKEY hKey;
     DWORD dwIndex = 0;
-    WCHAR szName[MAX_PATH];
-    WCHAR szCommand[MAX_PATH];
-    WCHAR szDesc[MAX_PATH] = L"";
-    WCHAR szIcon[MAX_PATH] = L"";
-    DWORD dwName, dwCommand;
-    LONG result;
+    WCHAR wszBuf[MAX_PATH];
+    WCHAR wszCommand[MAX_PATH];
+    WCHAR wszDesc[MAX_PATH] = L"";
+    WCHAR wszIcon[MAX_PATH] = L"";
+    DWORD cchName, cbCommand;
     SHELLNEW_ITEM *pNewItem = NULL;
 
-    wcscpy(szName, szKeyName);
-    GetKeyDescription(szKeyName, szDesc);
-    wcscat(szName, L"\\ShellNew");
-    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey);
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\ShellNew", pwszExt);
 
-    TRACE("LoadItem dwName %d keyname %s szName %s szDesc %s szIcon %s\n", dwName, debugstr_w(szKeyName), debugstr_w(szName), debugstr_w(szDesc), debugstr_w(szIcon));
+    TRACE("LoadItem Keyname %s Name %s\n", debugstr_w(pwszExt), debugstr_w(wszBuf));
 
-    if (result != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         TRACE("Failed to open key\n");
         return NULL;
     }
 
-    do
+    /* Find first valid value */
+    while (TRUE)
     {
-        dwName = MAX_PATH;
-        dwCommand = MAX_PATH;
-        result = RegEnumValueW(hKey, dwIndex, szName, &dwName, NULL, NULL, (LPBYTE)szCommand, &dwCommand);
-        if (result == ERROR_SUCCESS)
+        cchName = _countof(wszBuf);
+        cbCommand = sizeof(wszCommand);
+        if (RegEnumValueW(hKey, dwIndex++, wszBuf, &cchName, NULL, NULL, (LPBYTE)wszCommand, &cbCommand) != ERROR_SUCCESS)
+            break;
+
+        SHELLNEW_TYPE Type = SHELLNEW_TYPE_INVALID;
+        LPWSTR pwszTarget = wszCommand;
+
+        TRACE("wszBuf %s wszCommand %s\n", debugstr_w(wszBuf), debugstr_w(wszCommand));
+
+        /* Handle different types */
+        if (!wcsicmp(wszBuf, L"Command"))
+            Type = SHELLNEW_TYPE_COMMAND;
+        else if (!wcsicmp(wszBuf, L"Data"))
+            Type = SHELLNEW_TYPE_DATA;
+        else if (!wcsicmp(wszBuf, L"FileName"))
+            Type = SHELLNEW_TYPE_FILENAME;
+        else if (!wcsicmp(wszBuf, L"NullFile"))
         {
-            SHELLNEW_TYPE type = SHELLNEW_TYPE_INVALID;
-            LPWSTR szTarget = szCommand;
-
-            TRACE("szName %s szCommand %s\n", debugstr_w(szName), debugstr_w(szCommand));
-
-            if (!wcsicmp(szName, L"Command"))
-                type = SHELLNEW_TYPE_COMMAND;
-            else if (!wcsicmp(szName, L"Data"))
-                type = SHELLNEW_TYPE_DATA;
-            else if (!wcsicmp(szName, L"FileName"))
-                type = SHELLNEW_TYPE_FILENAME;
-            else if (!wcsicmp(szName, L"NullFile"))
-            {
-                type = SHELLNEW_TYPE_NULLFILE;
-                szTarget = NULL;
-            }
-
-            if (type != SHELLNEW_TYPE_INVALID)
-            {
-                pNewItem = (SHELLNEW_ITEM *)HeapAlloc(GetProcessHeap(), 0, sizeof(SHELLNEW_ITEM));
-                if (!pNewItem)
-                    break;
-
-                pNewItem->Type = type;
-                if (szTarget)
-                    pNewItem->szTarget = _wcsdup(szTarget);
-                else
-                    pNewItem->szTarget = NULL;
-
-                pNewItem->szDesc = _wcsdup(szDesc);
-                pNewItem->szIcon = _wcsdup(szIcon);
-                pNewItem->szExt = _wcsdup(szKeyName);
-                pNewItem->Next = NULL;
-                break;
-            }
+            Type = SHELLNEW_TYPE_NULLFILE;
+            pwszTarget = NULL;
         }
-        dwIndex++;
-    } while(result != ERROR_NO_MORE_ITEMS);
+
+        /* Create new item */
+        if (Type != SHELLNEW_TYPE_INVALID)
+        {
+            pNewItem = (SHELLNEW_ITEM *)HeapAlloc(GetProcessHeap(), 0, sizeof(SHELLNEW_ITEM));
+            if (!pNewItem)
+                break;
+
+            pNewItem->Type = Type;
+            if (pwszTarget)
+                pNewItem->pwszTarget = _wcsdup(pwszTarget);
+            else
+                pNewItem->pwszTarget = NULL;
+
+            GetKeyDescription(pwszExt, wszDesc);
+            pNewItem->pwszDesc = _wcsdup(wszDesc);
+            pNewItem->pwszIcon = _wcsdup(wszIcon);
+            pNewItem->pwszExt = _wcsdup(pwszExt);
+            pNewItem->pNext = NULL;
+            break;
+        }
+    }
+
     RegCloseKey(hKey);
     return pNewItem;
 }
@@ -196,71 +218,87 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPWSTR szKeyName)
 BOOL
 CNewMenu::LoadShellNewItems()
 {
-    DWORD dwIndex;
-    WCHAR szName[MAX_PATH];
-    LONG result;
+    DWORD dwIndex = 0;
+    WCHAR wszName[MAX_PATH];
     SHELLNEW_ITEM *pNewItem;
     SHELLNEW_ITEM *pCurItem = NULL;
 
-    /* insert do new folder action */
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, szNew, sizeof(szNew) / sizeof(WCHAR)))
-        szNew[0] = 0;
-
+    /* If there are any unload them */
     UnloadShellItems();
 
-    dwIndex = 0;
-    do
+    /* Enumerate all extesions */
+    while (RegEnumKeyW(HKEY_CLASSES_ROOT, dwIndex++, wszName, _countof(wszName)) == ERROR_SUCCESS)
     {
-        result = RegEnumKeyW(HKEY_CLASSES_ROOT, dwIndex, szName, MAX_PATH);
-        if (result == ERROR_SUCCESS)
+        if (wszName[0] != '.' || wcsicmp(wszName, L".lnk") == 0)
+            continue;
+
+        pNewItem = LoadItem(wszName);
+        if (pNewItem)
         {
-            pNewItem = LoadItem(szName);
-            if (pNewItem)
+            if (!wcsicmp(pNewItem->pwszExt, L".lnk"))
             {
-                if (!wcsicmp(pNewItem->szExt, L".lnk"))
+                /* FIXME: Should we load them?
+                   Add lnk handlers to begin of the list */
+                if (m_pShellItems)
                 {
-                    if (s_SnHead)
-                    {
-                        pNewItem->Next = s_SnHead;
-                        s_SnHead = pNewItem;
-                    }
-                    else
-                    {
-                        s_SnHead = pCurItem = pNewItem;
-                    }
+                    pNewItem->pNext = m_pShellItems;
+                    m_pShellItems = pNewItem;
                 }
                 else
+                    m_pShellItems = pCurItem = pNewItem;
+            }
+            else
+            {
+                /* Add at the end of list */
+                if (pCurItem)
                 {
-                    if (pCurItem)
-                    {
-                        pCurItem->Next = pNewItem;
-                        pCurItem = pNewItem;
-                    }
-                    else
-                    {
-                        pCurItem = s_SnHead = pNewItem;
-                    }
+                    pCurItem->pNext = pNewItem;
+                    pCurItem = pNewItem;
                 }
+                else
+                    pCurItem = m_pShellItems = pNewItem;
             }
         }
-        dwIndex++;
-    } while(result != ERROR_NO_MORE_ITEMS);
+    }
 
-    if (s_SnHead == NULL)
+    if (m_pShellItems == NULL)
         return FALSE;
     else
         return TRUE;
 }
 
+static HBITMAP IconToBitmap(HICON hIcon)
+{
+    HDC hdc, hdcScr;
+    HBITMAP hbm, hbmOld;
+    RECT rc;
+
+    hdcScr = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcScr);
+    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXMENUCHECK), GetSystemMetrics(SM_CYMENUCHECK));
+    hbm = CreateCompatibleBitmap(hdcScr, rc.right, rc.bottom);
+    ReleaseDC(NULL, hdcScr);
+
+    hbmOld = (HBITMAP)SelectObject(hdc, hbm);
+    FillRect(hdc, &rc, (HBRUSH)(COLOR_MENU + 1));
+    if (!DrawIconEx(hdc, 0, 0, hIcon, rc.right, rc.bottom, 0, NULL, DI_NORMAL))
+        ERR("DrawIcon failed: %x\n", GetLastError());
+    SelectObject(hdc, hbmOld);
+
+    DeleteDC(hdc);
+
+    return hbm;
+}
+
 UINT
-CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
+CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 {
     MENUITEMINFOW mii;
-    SHELLNEW_ITEM *pCurItem;
-    UINT i;
-    WCHAR szBuffer[MAX_PATH];
+    WCHAR wszBuf[256];
+    HICON hIcon;
+    UINT idCmd = idCmdFirst;
 
-    if (s_SnHead == NULL)
+    if (m_pShellItems == NULL)
     {
         if (!LoadShellNewItems())
             return 0;
@@ -269,334 +307,279 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
 
-    /* insert do new shortcut action */
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
-        szBuffer[0] = 0;
-    szBuffer[MAX_PATH-1] = 0;
+    /* Insert new folder action */
+    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, wszBuf, _countof(wszBuf)))
+        wszBuf[0] = 0;
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = szBuffer;
+    mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
-    mii.wID = idFirst++;
-    InsertMenuItemW(hMenu, idMenu++, TRUE, &mii);
+    mii.wID = idCmd;
+    hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 0, 0, 0);
+    if (hIcon)
+    {
+        mii.fMask |= MIIM_CHECKMARKS;
+        mii.hbmpChecked = mii.hbmpUnchecked = IconToBitmap(hIcon);
+    }
+    if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
+        ++idCmd;
 
-    /* insert do new shortcut action */
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWLINK, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
-        szBuffer[0] = 0;
-    szBuffer[MAX_PATH-1] = 0;
-    mii.dwTypeData = szBuffer;
+    /* Insert new shortcut action */
+    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWLINK, wszBuf, _countof(wszBuf)))
+        wszBuf[0] = 0;
+    mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
-    mii.wID = idFirst++;
-    InsertMenuItemW(hMenu, idMenu++, TRUE, &mii);
+    mii.wID = idCmdFirst++;
+    hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 0, 0, 0);
+    if (hIcon)
+    {
+        mii.fMask |= MIIM_CHECKMARKS;
+        mii.hbmpChecked = mii.hbmpUnchecked = IconToBitmap(hIcon);
+    }
+    if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
+        ++idCmd;
 
-    /* insert seperator for custom new action */
+    /* Insert seperator for custom new action */
     mii.fMask = MIIM_TYPE | MIIM_ID;
     mii.fType = MFT_SEPARATOR;
     mii.wID = -1;
-    InsertMenuItemW(hMenu, idMenu++, TRUE, &mii);
+    InsertMenuItemW(hMenu, Pos++, TRUE, &mii);
 
+    /* Insert rest of items */
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     /*
-     * FIXME
+     * FIXME:
      * implement loading of icons
      * and using MFT_OWNERDRAWN
      */
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
 
-    pCurItem = s_SnHead;
-    i = 0;
-
-    while(pCurItem)
+    SHELLNEW_ITEM *pCurItem = m_pShellItems;
+    while (pCurItem)
     {
-        if (i >= 1)
-        {
-            TRACE("szDesc %s\n", debugstr_w(pCurItem->szDesc));
-            mii.dwTypeData = pCurItem->szDesc;
-            mii.cch = wcslen(mii.dwTypeData);
-            mii.wID = idFirst++;
-            InsertMenuItemW(hMenu, idMenu++, TRUE, &mii);
-        }
-        pCurItem = pCurItem->Next;
-        i++;
+        TRACE("szDesc %s\n", debugstr_w(pCurItem->pwszDesc));
+        mii.dwTypeData = pCurItem->pwszDesc;
+        mii.cch = wcslen(mii.dwTypeData);
+        mii.wID = idCmd;
+        if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
+            ++idCmd;
+        pCurItem = pCurItem->pNext;
     }
-    return (i + 2);
+
+    return idCmd - idCmdFirst;
 }
 
 HRESULT
 CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv)
 {
-    SHELLNEW_ITEM *pCurItem = s_SnHead;
-    IPersistFolder3 * psf;
+    SHELLNEW_ITEM *pCurItem = m_pShellItems;
     LPITEMIDLIST pidl;
     STRRET strTemp;
-    WCHAR szTemp[MAX_PATH];
-    WCHAR szBuffer[MAX_PATH];
-    WCHAR szPath[MAX_PATH];
-    STARTUPINFOW sInfo;
-    PROCESS_INFORMATION pi;
-    UINT i, target;
-    HANDLE hFile;
-    DWORD dwWritten, dwError;
-    CComPtr<IFolderView> folderView;
-    CComPtr<IShellFolder> parentFolder;
-    HRESULT hResult;
+    WCHAR wszBuf[MAX_PATH];
+    WCHAR wszPath[MAX_PATH];
+    UINT i, idCmd = LOWORD(lpcmi->lpVerb);
+    CComPtr<IFolderView> pFolderView;
+    CComPtr<IShellFolder> pParentFolder;
+    CComPtr<IPersistFolder3> psf;
+    HRESULT hr;
 
-    i = 1;
-    target = LOWORD(lpcmi->lpVerb);
-
-    while(pCurItem)
+    /* Find shell new item */
+    for (i = 1; pCurItem; ++i)
     {
-        if (i == target)
+        if (i == idCmd)
             break;
 
-        pCurItem = pCurItem->Next;
-        i++;
+        pCurItem = pCurItem->pNext;
     }
 
     if (!pCurItem)
         return E_UNEXPECTED;
-
-    //if (fSite == NULL)
+    //if (m_pSite == NULL)
     //    return E_FAIL;
-    hResult = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&folderView);
-    if (FAILED(hResult))
-        return hResult;
-    hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
-    if (FAILED(hResult))
-        return hResult;
 
-    if (parentFolder->QueryInterface(IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+    /* Get current folder */
+    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&pFolderView);
+    if (FAILED(hr))
+        return hr;
+
+    hr = pFolderView->GetFolder(IID_IShellFolder, (void **)&pParentFolder);
+    if (FAILED(hr))
+        return hr;
+
+    if (pParentFolder->QueryInterface(IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
     {
         ERR("Failed to get interface IID_IPersistFolder2\n");
         return E_FAIL;
     }
+
     if (psf->GetCurFolder(&pidl) != S_OK)
     {
         ERR("IPersistFolder2_GetCurFolder failed\n");
         return E_FAIL;
     }
 
-    if (parentFolder == NULL || parentFolder->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
+    /* Get folder path */
+    if (pParentFolder == NULL || pParentFolder->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed\n");
         return E_FAIL;
     }
-    StrRetToBufW(&strTemp, pidl, szPath, MAX_PATH);
+    StrRetToBufW(&strTemp, pidl, wszPath, _countof(wszPath));
 
-    switch(pCurItem->Type)
+    switch (pCurItem->Type)
     {
         case SHELLNEW_TYPE_COMMAND:
         {
-            LPWSTR ptr;
-            LPWSTR szCmd;
+            LPWSTR Ptr, pwszCmd;
+            WCHAR wszTemp[MAX_PATH];
+            STARTUPINFOW si;
+            PROCESS_INFORMATION pi;
 
-            if (!ExpandEnvironmentStringsW(pCurItem->szTarget, szBuffer, MAX_PATH))
+            if (!ExpandEnvironmentStringsW(pCurItem->pwszTarget, wszBuf, MAX_PATH))
             {
                 TRACE("ExpandEnvironmentStrings failed\n");
                 break;
             }
 
-            ptr = wcsstr(szBuffer, L"%1");
-            if (ptr)
+            /* Expand command parameter, FIXME: there can be more modifiers */
+            Ptr = wcsstr(wszBuf, L"%1");
+            if (Ptr)
             {
-                ptr[1] = 's';
-                swprintf(szTemp, szBuffer, szPath);
-                ptr = szTemp;
+                Ptr[1] = 's';
+                StringCbPrintfW(wszTemp, sizeof(wszTemp), wszBuf, wszPath);
+                pwszCmd = wszTemp;
             }
             else
-            {
-                ptr = szBuffer;
-            }
+                pwszCmd = wszBuf;
 
-            ZeroMemory(&sInfo, sizeof(sInfo));
-            sInfo.cb = sizeof(sInfo);
-            szCmd = _wcsdup(ptr);
-            if (!szCmd)
-                break;
-            if (CreateProcessW(NULL, szCmd, NULL, NULL, FALSE, 0, NULL, NULL, &sInfo, &pi))
+            /* Create process */
+            ZeroMemory(&si, sizeof(si));
+            si.cb = sizeof(si);
+            if (CreateProcessW(NULL, pwszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
             {
-                CloseHandle( pi.hProcess );
-                CloseHandle( pi.hThread );
-            }
-            free(szCmd);
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            } else
+                ERR("Failed to create process\n");
             break;
         }
         case SHELLNEW_TYPE_DATA:
         case SHELLNEW_TYPE_FILENAME:
         case SHELLNEW_TYPE_NULLFILE:
         {
-            i = 2;
+            BOOL bSuccess = TRUE;
+            LPWSTR pwszFilename = NULL;
+            size_t cchFilenameMax = 0;
 
-            PathAddBackslashW(szPath);
-            wcscat(szPath, szNew);
-            wcscat(szPath, L" ");
-            wcscat(szPath, pCurItem->szDesc);
-            wcscpy(szBuffer, szPath);
-            wcscat(szBuffer, pCurItem->szExt);
-            do
+            /* Build new file name */
+            LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf));
+            StringCchCatExW(wszPath, _countof(wszPath), L"\\", &pwszFilename, &cchFilenameMax, 0);
+            StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s%s", wszBuf, pCurItem->pwszDesc, pCurItem->pwszExt);
+
+            /* Find unique name */
+            for (i = 2; PathFileExistsW(wszPath); ++i)
             {
-                hFile = CreateFileW(szBuffer, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+                StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s (%u)%s", wszBuf, pCurItem->pwszDesc, i, pCurItem->pwszExt);
+                TRACE("New Filename %ls\n", pwszFilename);
+            }
+
+            if (pCurItem->Type == SHELLNEW_TYPE_DATA || pCurItem->Type == SHELLNEW_TYPE_NULLFILE)
+            {
+                /* Create new file */
+                HANDLE hFile = CreateFileW(wszPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE)
-                    break;
-                dwError = GetLastError();
-
-                TRACE("FileName %s szBuffer %s i %u error %x\n", debugstr_w(szBuffer), debugstr_w(szPath), i, dwError);
-                swprintf(szBuffer, L"%s (%d)%s", szPath, i, pCurItem->szExt);
-                i++;
-            } while(hFile == INVALID_HANDLE_VALUE && dwError == ERROR_FILE_EXISTS);
-
-            if (hFile == INVALID_HANDLE_VALUE)
-                return E_FAIL;
-
-            if (pCurItem->Type == SHELLNEW_TYPE_DATA)
-            {
-                i = WideCharToMultiByte(CP_ACP, 0, pCurItem->szTarget, -1, (LPSTR)szTemp, MAX_PATH * 2, NULL, NULL);
-                if (i)
                 {
-                    WriteFile(hFile, (LPCVOID)szTemp, i, &dwWritten, NULL);
+                    if (pCurItem->Type == SHELLNEW_TYPE_DATA)
+                    {
+                        /* Write a content */
+                        CHAR szTemp[256];
+                        DWORD cbWritten, cbTemp = WideCharToMultiByte(CP_ACP, 0, pCurItem->pwszTarget, -1, szTemp, _countof(szTemp), NULL, NULL);
+                        if (cbTemp)
+                            WriteFile(hFile, (LPCVOID)szTemp, cbTemp, &cbWritten, NULL);
+                        else
+                            ERR("WideCharToMultiByte failed\n");
+                    }
+
+                    /* Close file now */
+                    CloseHandle(hFile);
                 }
+                else bSuccess = FALSE;
             }
-            CloseHandle(hFile);
-            if (pCurItem->Type == SHELLNEW_TYPE_FILENAME)
+            else if (pCurItem->Type == SHELLNEW_TYPE_FILENAME)
             {
-                if (!CopyFileW(pCurItem->szTarget, szBuffer, FALSE))
-                    break;
+                /* Copy file */
+                bSuccess = CopyFileW(pCurItem->pwszTarget, wszPath, FALSE);
             }
-            TRACE("Notifying fs %s\n", debugstr_w(szBuffer));
-            SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (LPCVOID)szBuffer, NULL);
-            break;
-            case SHELLNEW_TYPE_INVALID:
-                break;
+
+            /* Show message if we failed */
+            if (bSuccess)
+            {
+                TRACE("Notifying fs %s\n", debugstr_w(wszPath));
+                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (LPCVOID)wszPath, NULL);
             }
-    }
-    return S_OK;
-}
-/**************************************************************************
-* DoMeasureItem
-*/
-HRESULT
-CNewMenu::DoMeasureItem(HWND hWnd, MEASUREITEMSTRUCT * lpmis)
-{
-    SHELLNEW_ITEM *pCurItem;
-    SHELLNEW_ITEM *pItem;
-    UINT i;
-    HDC hDC;
-    SIZE size;
-
-    TRACE("DoMeasureItem entered with id %x\n", lpmis->itemID);
-
-    pCurItem = s_SnHead;
-
-    i = 1;
-    pItem = NULL;
-    while(pCurItem)
-    {
-        if (i == lpmis->itemID)
-        {
-            pItem = pCurItem;
+            else
+            {
+                StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", pwszFilename);
+                MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME
+            }
             break;
         }
-        pCurItem = pCurItem->Next;
-        i++;
-    }
-
-    if (!pItem)
-    {
-        TRACE("DoMeasureItem no item found\n");
-        return E_FAIL;
-    }
-    hDC = GetDC(hWnd);
-    GetTextExtentPoint32W(hDC, pCurItem->szDesc, wcslen(pCurItem->szDesc), &size);
-    lpmis->itemWidth = size.cx + 32;
-    lpmis->itemHeight = max(size.cy, 20);
-    ReleaseDC (hWnd, hDC);
-    return S_OK;
-}
-/**************************************************************************
-* DoDrawItem
-*/
-HRESULT
-CNewMenu::DoDrawItem(HWND hWnd, DRAWITEMSTRUCT * drawItem)
-{
-    SHELLNEW_ITEM *pCurItem;
-    SHELLNEW_ITEM *pItem;
-    UINT i;
-    pCurItem = s_SnHead;
-
-    TRACE("DoDrawItem entered with id %x\n", drawItem->itemID);
-
-    i = 1;
-    pItem = NULL;
-    while(pCurItem)
-    {
-        if (i == drawItem->itemID)
-        {
-            pItem = pCurItem;
+        case SHELLNEW_TYPE_INVALID:
+            ERR("Invalid type\n");
             break;
-        }
-        pCurItem = pCurItem->Next;
-        i++;
     }
-
-    if (!pItem)
-        return E_FAIL;
-
-    drawItem->rcItem.left += 20;
-
-    DrawTextW(drawItem->hDC, pCurItem->szDesc, wcslen(pCurItem->szDesc), &drawItem->rcItem, 0);
     return S_OK;
 }
 
-/**************************************************************************
-* DoNewFolder
-*/
-void CNewMenu::DoNewFolder(
-    IShellView *psv)
+void CNewMenu::CreateNewFolder(IShellView *psv)
 {
-    ISFHelper *psfhlp;
     WCHAR wszName[MAX_PATH];
-    CComPtr<IFolderView> folderView;
-    CComPtr<IShellFolder> parentFolder;
-    HRESULT hResult;
+    CComPtr<ISFHelper> psfhlp; 
+    CComPtr<IFolderView> pFolderView;
+    CComPtr<IShellFolder> pParentFolder;
+    HRESULT hr;
 
-    //if (fSite == NULL)
+    //if (m_pSite == NULL)
     //    return;
-    hResult = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&folderView);
-    if (FAILED(hResult))
-        return;
-    hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
-    if (FAILED(hResult))
+
+    /* Get current folder */
+    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&pFolderView);
+    if (FAILED(hr))
         return;
 
-    parentFolder->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlp);
-    if (psfhlp)
+    hr = pFolderView->GetFolder(IID_IShellFolder, (void **)&pParentFolder);
+    if (FAILED(hr))
+        return;
+
+    hr = pParentFolder->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlp);
+    if (SUCCEEDED(hr))
     {
         LPITEMIDLIST pidl;
 
-        if (psfhlp->GetUniqueName(wszName, MAX_PATH) != S_OK)
+        /* Get unique name and create a folder */
+        if (psfhlp->GetUniqueName(wszName, _countof(wszName)) != S_OK)
             return;
         if (psfhlp->AddFolder(0, wszName, &pidl) != S_OK)
-            return;
-
-        if(psv)
         {
-            psv->Refresh();
-            /* if we are in a shellview do labeledit */
-            psv->SelectItem(
-                pidl, (SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE
-                       | SVSI_FOCUSED | SVSI_SELECT));
-            psv->Refresh();
+            WCHAR wszBuf[256];
+            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create folder: %s", wszName);
+            MessageBoxW(NULL, wszBuf, L"Cannot create folder", MB_OK|MB_ICONERROR);
+            return;
         }
-        SHFree(pidl);
 
-        psfhlp->Release();
+        /* Do a labeledit */
+        psv->Refresh();
+        psv->SelectItem(pidl, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
+                              SVSI_FOCUSED | SVSI_SELECT);
+
+        SHFree(pidl);
     }
 }
 
 HRESULT STDMETHODCALLTYPE CNewMenu::SetSite(IUnknown *pUnkSite)
 {
-    fSite = pUnkSite;
+    m_pSite = pUnkSite;
     return S_OK;
 }
 
@@ -604,52 +587,51 @@ HRESULT STDMETHODCALLTYPE CNewMenu::GetSite(REFIID riid, void **ppvSite)
 {
     if (ppvSite == NULL)
         return E_POINTER;
-    *ppvSite = fSite;
-    if (fSite != NULL)
-        fSite->AddRef();
+    *ppvSite = m_pSite;
+    if (m_pSite != NULL)
+        m_pSite->AddRef();
     return S_OK;
 }
 
 HRESULT
 WINAPI
-CNewMenu::QueryContextMenu(HMENU hmenu,
+CNewMenu::QueryContextMenu(HMENU hMenu,
                            UINT indexMenu,
                            UINT idCmdFirst,
                            UINT idCmdLast,
                            UINT uFlags)
 {
-    WCHAR szBuffer[200];
+    WCHAR wszNew[200];
     MENUITEMINFOW mii;
-    HMENU hSubMenu;
-    int id = 1;
+    UINT cItems = 0;
 
     TRACE("%p %p %u %u %u %u\n", this,
-          hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+          hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, szBuffer, _countof(szBuffer)))
-        szBuffer[0] = 0;
+    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszNew, _countof(wszNew)))
+        return E_FAIL;
 
-    hSubMenu = CreateMenu();
-    memset( &mii, 0, sizeof(mii) );
-    mii.cbSize = sizeof (mii);
+    m_hSubMenu = CreateMenu();
+    memset(&mii, 0, sizeof(mii));
+    mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
     mii.fType = MFT_STRING;
-    mii.wID = idCmdFirst + id++;
-    mii.dwTypeData = szBuffer;
+    mii.wID = -1;
+    mii.dwTypeData = wszNew;
     mii.cch = wcslen(mii.dwTypeData);
     mii.fState = MFS_ENABLED;
 
-    if (hSubMenu)
+    if (m_hSubMenu)
     {
-        id += InsertShellNewItems(hSubMenu, idCmdFirst, 0);
+        cItems = InsertShellNewItems(m_hSubMenu, idCmdFirst, 0);
         mii.fMask |= MIIM_SUBMENU;
-        mii.hSubMenu = hSubMenu;
+        mii.hSubMenu = m_hSubMenu;
     }
 
-    if (!InsertMenuItemW(hmenu, indexMenu, TRUE, &mii))
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return E_FAIL;
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cItems);
 }
 
 HRESULT
@@ -660,24 +642,21 @@ CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     LPSHELLVIEW lpSV = NULL;
     HRESULT hr;
 
-    if((lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0)))
-    {
+    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+    if (lpSB)
         lpSB->QueryActiveShellView(&lpSV);
-    }
 
     if (LOWORD(lpici->lpVerb) == 0)
     {
-        DoNewFolder(lpSV);
+        CreateNewFolder(lpSV);
         return S_OK;
     }
 
     hr = DoShellNewCmd(lpici, lpSV);
     if (SUCCEEDED(hr) && lpSV)
-    {
         lpSV->Refresh();
-    }
 
-    TRACE("INewItem_IContextMenu_fnInvokeCommand %x\n", hr);
+    TRACE("CNewMenu::InvokeCommand %x\n", hr);
     return hr;
 }
 
@@ -685,7 +664,7 @@ HRESULT
 WINAPI
 CNewMenu::GetCommandString(UINT_PTR idCmd,
                            UINT uType,
-                           UINT* pwReserved,
+                           UINT *pwReserved,
                            LPSTR pszName,
                            UINT cchMax)
 {
@@ -701,29 +680,13 @@ CNewMenu::HandleMenuMsg(UINT uMsg,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-    DRAWITEMSTRUCT *lpids = (DRAWITEMSTRUCT*) lParam;
-    MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
-
-    TRACE("INewItem_IContextMenu_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
-
-    switch(uMsg)
-    {
-        case WM_MEASUREITEM:
-            return DoMeasureItem((HWND)wParam, lpmis);
-            break;
-        case WM_DRAWITEM:
-            return DoDrawItem((HWND)wParam, lpids);
-            break;
-    }
+    UNIMPLEMENTED;
     return S_OK;
-
-    return E_UNEXPECTED;
 }
 
 HRESULT WINAPI
 CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
-                     IDataObject *pdtobj, HKEY hkeyProgID )
+                     IDataObject *pdtobj, HKEY hkeyProgID)
 {
-
     return S_OK;
 }
