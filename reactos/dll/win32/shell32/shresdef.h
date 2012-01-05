@@ -137,6 +137,8 @@
 #define IDS_FILE_DETAILS            175
 #define IDS_FILE_DETAILSADV         176
 #define IDS_BYTES_FORMAT            177
+#define IDS_OPEN_WITH_RECOMMENDED   178
+#define IDS_OPEN_WITH_OTHER         179
 
 #define IDS_RUNDLG_ERROR            180
 #define IDS_RUNDLG_BROWSE_ERROR     181

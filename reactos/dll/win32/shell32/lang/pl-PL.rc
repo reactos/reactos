@@ -380,10 +380,10 @@ BEGIN
 	LTEXT "Wybierz program, którego chcesz użyć do otwarcia tego pliku:", -1, 44, 12, 211, 10
 	LTEXT "Plik:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programy", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Zawsze używaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Przeglądaj", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	PUSHBUTTON "&Przeglądaj...", 14004, 198, 207, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Anuluj", 14006, 206, 236, 50, 14
 END
 
@@ -721,8 +721,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Dysk sieciowy"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Otwórz za pomocą"
 	IDS_OPEN_WITH_CHOOSE        "Wybierz program..."
+	IDS_OPEN_WITH_RECOMMENDED   "Zalecane programy:"
+	IDS_OPEN_WITH_OTHER         "Inne programy:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autorzy"
 	IDS_SHELL_ABOUT_BACK        "< &Wstecz"

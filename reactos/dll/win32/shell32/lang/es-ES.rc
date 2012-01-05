@@ -726,8 +726,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Unidad de red"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Abrir con"
 	IDS_OPEN_WITH_CHOOSE        "Elegir programa..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autores"
 	IDS_SHELL_ABOUT_BACK        "< A&trás"

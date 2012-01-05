@@ -372,10 +372,10 @@ BEGIN
 	LTEXT "このファイルを開くために使用するプログラムを選択してください:", -1, 44, 12, 211, 10
 	LTEXT "ファイル:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "プログラムの一覧(&P)", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "この種類のファイルを開くときは、常に選択したプログラムを使用する(&A)", 14003, 20, 193, 225, 10
 	PUSHBUTTON "参照(&B)...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "キャンセル", 14006, 206, 236, 50, 14
 END
 
@@ -713,8 +713,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "ネットワーク ディスク"
 
+	/* Open With */
 	IDS_OPEN_WITH               "プログラムから開く"
 	IDS_OPEN_WITH_CHOOSE        "プログラムの選択..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "制作者(&A)"
 	IDS_SHELL_ABOUT_BACK        "< 戻る(&B)"

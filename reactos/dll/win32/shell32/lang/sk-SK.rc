@@ -378,10 +378,10 @@ BEGIN
 	LTEXT "Vyberte program, v ktorom sa má otvoriť tento súbor:", -1, 44, 12, 211, 10
 	LTEXT "Súbor:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programy", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "N&a otvorenie týchto súborov vždy použiť vybratý program", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Prehľadávať...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Zrušiť", 14006, 206, 236, 50, 14
 END
 
@@ -719,8 +719,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "Jednotka CD"
 	IDS_DRIVE_NETWORK           "Sieťový disk"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Otvoriť v progra&me"
 	IDS_OPEN_WITH_CHOOSE        "&Vybrať program..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autori"
 	IDS_SHELL_ABOUT_BACK        "< &Späť"

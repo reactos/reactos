@@ -22,6 +22,8 @@
 #ifndef _SHE_OCMENU_H_
 #define _SHE_OCMENU_H_
 
+class COpenWithList;
+
 class COpenWithMenu :
     public CComCoClass<COpenWithMenu, &CLSID_OpenWithMenu>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -32,6 +34,11 @@ class COpenWithMenu :
         UINT m_idCmdFirst, m_idCmdLast;
         WCHAR m_wszPath[MAX_PATH];
         HMENU m_hSubMenu;
+        COpenWithList *m_pAppList;
+
+        HBITMAP IconToBitmap(HICON hIcon);
+        VOID AddChooseProgramItem();
+        VOID AddApp(PVOID pApp);
 
     public:
         COpenWithMenu();

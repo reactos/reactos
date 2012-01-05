@@ -732,8 +732,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CD-ROM"
 	IDS_DRIVE_NETWORK           "Disc din rețea"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Deschide cu"
 	IDS_OPEN_WITH_CHOOSE        "Alegere program…"
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autori"
 	IDS_SHELL_ABOUT_BACK        "< Îna&poi"

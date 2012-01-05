@@ -376,10 +376,10 @@ BEGIN
 	LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
 	LTEXT "Fichier :    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programmes", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10
 	PUSHBUTTON "Parcourir...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Annuler", 14006, 206, 236, 50, 14
 END
 
@@ -717,8 +717,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Disque réseau"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Ouvrir avec"
 	IDS_OPEN_WITH_CHOOSE        "Choisir le programme..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Auteurs"
 	IDS_SHELL_ABOUT_BACK        "< Précédent"
