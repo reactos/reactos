@@ -131,6 +131,8 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // store result
     //
+    DPRINT1("NewBuffer %S\n", NewBuffer);
+    ASSERT(FALSE);
     Irp->IoStatus.Information = (ULONG_PTR)NewBuffer;
     return STATUS_SUCCESS;
 }
@@ -183,8 +185,8 @@ HidClassPDO_HandleQueryHardwareId(
         //
         // single tlc device
         //
-        Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
-        Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
+        Offset = swprintf(&Buffer[Offset], L"HID\\Vix_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
+        Offset += swprintf(&Buffer[Offset], L"HID\\Vix_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
     }
 
     //
@@ -270,6 +272,7 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // store result
     //
+    ASSERT(FALSE);
     Irp->IoStatus.Information = (ULONG_PTR)Ptr;
     return STATUS_SUCCESS;
 }
@@ -298,11 +301,7 @@ HidClassPDO_HandleQueryInstanceId(
         return Status;
     }
     DPRINT1("HidClassPDO_HandleQueryInstanceId Buffer %S\n", Irp->IoStatus.Information);
-    //
-    //TODO implement instance id
-    // example:
-    // HID\VID_045E&PID_0047\8&1A0700BC&0&0000
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }
 
 NTSTATUS
@@ -310,29 +309,28 @@ HidClassPDO_HandleQueryCompatibleId(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    NTSTATUS Status;
+    LPWSTR Buffer;
 
-    //
-    // copy current stack location
-    //
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    //
-    // call mini-driver
-    //
-    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
-    if (!NT_SUCCESS(Status))
+    Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+    if (!Buffer)
     {
         //
-        // failed
+        // no memory
         //
-        return Status;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     //
-    // FIXME: implement me
+    // zero buffer
     //
-    return STATUS_NOT_IMPLEMENTED;
+    Buffer[0] = 0;
+    Buffer[1] = 0;
+
+    //
+    // store result
+    //
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+    return STATUS_SUCCESS;
 }
 
 

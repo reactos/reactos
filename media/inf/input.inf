@@ -59,7 +59,7 @@ ServiceType   = 1
 StartType     = 3
 ErrorControl  = 1
 ServiceBinary = %12%\hidusb.sys
-LoadOrderGroup = Pointer Port
+LoadOrderGroup = extended base
 
 [strings]
 MSFT                  = "ReactOS"
