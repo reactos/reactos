@@ -474,6 +474,14 @@ NTSTATUS ElfrReportEventW(
                 DPRINT("Info: %wZ\n", Strings[i]);
                 break;
 
+            case EVENTLOG_AUDIT_SUCCESS:
+                DPRINT("Audit Success: %wZ\n", Strings[i]);
+                break;
+
+            case EVENTLOG_AUDIT_FAILURE:
+                DPRINT("Audit Failure: %wZ\n", Strings[i]);
+                break;
+
             default:
                 DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;

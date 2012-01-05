@@ -1077,13 +1077,200 @@ NTSTATUS
 LogfBackupFile(PLOGFILE LogFile,
                PUNICODE_STRING BackupFileName)
 {
-//    RtlAcquireResourceShared(&LogFile->Lock, TRUE);
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    EVENTLOGHEADER Header;
+    EVENTLOGEOF EofRec;
+    HANDLE FileHandle = NULL;
+    ULONG i;
+    LARGE_INTEGER FileOffset;
+    NTSTATUS Status;
+    PUCHAR Buffer = NULL;
 
-    /* FIXME: Write a backup file */
+    DWORD dwOffset, dwRead, dwRecSize;
 
-//    RtlReleaseResource(&LogFile->Lock);
+    DPRINT("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
 
-    return STATUS_NOT_IMPLEMENTED;
+    /* Lock the log file shared */
+    RtlAcquireResourceShared(&LogFile->Lock, TRUE);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               BackupFileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ,
+                          FILE_CREATE,
+                          FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Can't create backup file %wZ (Status: 0x%08lx)\n", BackupFileName, Status);
+        goto Done;
+    }
+
+    /* Initialize the (dirty) log file header */
+    Header.HeaderSize = sizeof(EVENTLOGHEADER);
+    Header.Signature = LOGFILE_SIGNATURE;
+    Header.MajorVersion = MAJORVER;
+    Header.MinorVersion = MINORVER;
+    Header.StartOffset = sizeof(EVENTLOGHEADER);
+    Header.EndOffset = sizeof(EVENTLOGHEADER);
+    Header.CurrentRecordNumber = 1;
+    Header.OldestRecordNumber = 1;
+    Header.MaxSize = 0;
+    Header.Flags = ELF_LOGFILE_HEADER_DIRTY;
+    Header.Retention = LogFile->Header.Retention;
+    Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
+
+    /* Write the (dirty) log file header */
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &Header,
+                         sizeof(EVENTLOGHEADER),
+                         NULL,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write the log file header (Status: 0x%08lx)\n", Status);
+        goto Done;
+    }
+
+    for (i = LogFile->Header.OldestRecordNumber; i < LogFile->Header.CurrentRecordNumber; i++)
+    {
+        dwOffset = LogfOffsetByNumber(LogFile, i);
+        if (dwOffset == 0)
+            break;
+
+        if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        {
+            DPRINT1("SetFilePointer() failed!\n");
+            goto Done;
+        }
+
+        if (!ReadFile(LogFile->hFile, &dwRecSize, sizeof(DWORD), &dwRead, NULL))
+        {
+            DPRINT1("ReadFile() failed!\n");
+            goto Done;
+        }
+
+        if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        {
+            DPRINT1("SetFilePointer() failed!\n");
+            goto Done;
+        }
+
+        Buffer = HeapAlloc(MyHeap, 0, dwRecSize);
+        if (Buffer == NULL)
+        {
+            DPRINT1("HeapAlloc() failed!\n");
+            goto Done;
+        }
+
+        if (!ReadFile(LogFile->hFile, &Buffer, dwRecSize, &dwRead, NULL))
+        {
+            DPRINT1("ReadFile() failed!\n");
+            goto Done;
+        }
+
+        /* Write the event record */
+        Status = NtWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             Buffer,
+                             dwRecSize,
+                             NULL,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtWriteFile() failed!\n");
+            goto Done;
+        }
+
+        /* Update the header information */
+        Header.EndOffset += dwRecSize;
+
+        /* Free the buffer */
+        HeapFree(MyHeap, 0, Buffer);
+        Buffer = NULL;
+    }
+
+    /* Initialize the EOF record */
+    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
+    EofRec.Ones = 0x11111111;
+    EofRec.Twos = 0x22222222;
+    EofRec.Threes = 0x33333333;
+    EofRec.Fours = 0x44444444;
+    EofRec.BeginRecord = sizeof(EVENTLOGHEADER);
+    EofRec.EndRecord = Header.EndOffset;
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
+
+    /* Write the EOF record */
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &EofRec,
+                         sizeof(EVENTLOGEOF),
+                         NULL,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile() failed!\n");
+        goto Done;
+    }
+
+    /* Update the header information */
+    Header.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    Header.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    Header.MaxSize = Header.EndOffset + sizeof(EVENTLOGEOF);
+    Header.Flags = 0;
+
+    /* Write the (clean) log file header */
+    FileOffset.QuadPart = 0;
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &Header,
+                         sizeof(EVENTLOGHEADER),
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile() failed!\n");
+    }
+
+Done:
+    /* Free the buffer */
+    if (Buffer != NULL)
+        HeapFree(MyHeap, 0, Buffer);
+
+    /* Close the backup file */
+    if (FileHandle != NULL)
+        NtClose(FileHandle);
+
+    /* Unlock the log file */
+    RtlReleaseResource(&LogFile->Lock);
+
+    return Status;
 }
 
 
