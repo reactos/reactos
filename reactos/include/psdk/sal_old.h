@@ -1,5 +1,5 @@
 /*
- * sal_dep.h
+ * sal_old.h
  *
  * Old style Standard Annotation Language (SAL) definitions
  *
