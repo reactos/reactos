@@ -954,6 +954,28 @@ CreateDeviceIds(
         UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
         DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
+    else
+    {
+       //
+       // the device did not provide a serial number, lets create a pseudo instance id
+       //
+       Index = swprintf(BufferPtr, L"USB\\Vid_%04x&Pid_%04x&1A0700BC\0", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct) + 1;
+       UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+       if (UsbChildExtension->usInstanceId.Buffer == NULL)
+       {
+           DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+           goto Cleanup;
+       }
+
+       //
+       // copy instance id
+       //
+       RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, BufferPtr, wcslen(BufferPtr) * sizeof(WCHAR));
+       UsbChildExtension->usInstanceId.Length = UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
+
+       DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
+    }
+
 
     return Status;
 
