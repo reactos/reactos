@@ -316,6 +316,10 @@ HKCR,"NDS\Clsid","",0x00000002,"{323991f0-7bad-11cf-b03d-00aa006e0975}"
 
 HKCR,"WinNT\Clsid","",0x00000002,"{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
 
+; Applications
+HKCR,"Applications\notepad.exe\shell\open\command","",0x00000002,"notepad.exe %1"
+HKCR,"Applications\mspaint.exe\shell\open\command","",0x00000002,"mspaint.exe %1"
+HKCR,"Applications\wordpad.exe\shell\open\command","",0x00000002,"wordpad.exe %1"
 
 ; For language support:
 
