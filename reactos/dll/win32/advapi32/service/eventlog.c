@@ -145,32 +145,38 @@ BOOL WINAPI
 BackupEventLogA(IN HANDLE hEventLog,
                 IN LPCSTR lpBackupFileName)
 {
-    ANSI_STRING BackupFileName;
+    ANSI_STRING BackupFileNameA;
+    UNICODE_STRING BackupFileNameW;
     NTSTATUS Status;
+    BOOL Result;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
-
-    RpcTryExcept
+    if (lpBackupFileName == NULL)
     {
-        Status = ElfrBackupELFA(hEventLog,
-                                (PRPC_STRING)&BackupFileName);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
 
+    RtlInitAnsiString(&BackupFileNameA, lpBackupFileName);
+
+    Status = RtlAnsiStringToUnicodeString(&BackupFileNameW,
+                                          &BackupFileNameA,
+                                          TRUE);
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
-    return TRUE;
+    Result = BackupEventLogW(hEventLog,
+                             BackupFileNameW.Buffer);
+
+    RtlFreeUnicodeString(&BackupFileNameW);
+
+    return(Result);
 }
+
 
 /******************************************************************************
  * BackupEventLogW [ADVAPI32.@]
@@ -183,23 +189,36 @@ BOOL WINAPI
 BackupEventLogW(IN HANDLE hEventLog,
                 IN LPCWSTR lpBackupFileName)
 {
-    UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileNameW;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
+    if (lpBackupFileName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!RtlDosPathNameToNtPathName_U(lpBackupFileName, &BackupFileNameW,
+                                      NULL, NULL))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     RpcTryExcept
     {
         Status = ElfrBackupELFW(hEventLog,
-                                (PRPC_UNICODE_STRING)&BackupFileName);
+                                (PRPC_UNICODE_STRING)&BackupFileNameW);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, BackupFileNameW.Buffer);
 
     if (!NT_SUCCESS(Status))
     {
@@ -218,31 +237,37 @@ BOOL WINAPI
 ClearEventLogA(IN HANDLE hEventLog,
                IN LPCSTR lpBackupFileName)
 {
-    ANSI_STRING BackupFileName;
+    ANSI_STRING BackupFileNameA;
+    UNICODE_STRING BackupFileNameW;
     NTSTATUS Status;
+    BOOL Result;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
-
-    RpcTryExcept
+    if (lpBackupFileName == NULL)
     {
-        Status = ElfrClearELFA(hEventLog,
-                               (PRPC_STRING)&BackupFileName);
+        RtlInitUnicodeString(&BackupFileNameW, NULL);
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
+        RtlInitAnsiString(&BackupFileNameA, lpBackupFileName);
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
+        Status = RtlAnsiStringToUnicodeString(&BackupFileNameW,
+                                              &BackupFileNameA,
+                                              TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
 
-    return TRUE;
+    Result = ClearEventLogW(hEventLog,
+                            BackupFileNameW.Buffer);
+
+    RtlFreeUnicodeString(&BackupFileNameW);
+
+    return Result;
 }
 
 
@@ -253,23 +278,38 @@ BOOL WINAPI
 ClearEventLogW(IN HANDLE hEventLog,
                IN LPCWSTR lpBackupFileName)
 {
-    UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileNameW;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    RtlInitUnicodeString(&BackupFileName,lpBackupFileName);
+    if (lpBackupFileName == NULL)
+    {
+        RtlInitUnicodeString(&BackupFileNameW, NULL);
+    }
+    else
+    {
+        if (!RtlDosPathNameToNtPathName_U(lpBackupFileName, &BackupFileNameW,
+                                          NULL, NULL))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
 
     RpcTryExcept
     {
         Status = ElfrClearELFW(hEventLog,
-                               (PRPC_UNICODE_STRING)&BackupFileName);
+                               (PRPC_UNICODE_STRING)&BackupFileNameW);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (lpBackupFileName != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BackupFileNameW.Buffer);
 
     if (!NT_SUCCESS(Status))
     {
