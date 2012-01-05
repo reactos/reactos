@@ -1,8 +1,25 @@
-/**
- * This file has no copyright assigned and is placed in the Public Domain.
- * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER.PD within this package.
+/*
+ * specstrings.h
+ *
+ * Standard Annotation Language (SAL) definitions
+ *
+ * This file is part of the ReactOS PSDK package.
+ *
+ * Contributors:
+ *   Timo Kreuzer (timo.kreuzer@reactos.org)
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
  */
+
 #pragma once
 #define SPECSTRINGS_H
 
@@ -10,7 +27,6 @@
 
 #define __field_bcount(size) __notnull __byte_writableTo(size)
 #define __field_ecount(size) __notnull __elem_writableTo(size)
-
 
 #define __deref_in
 #define __deref_in_ecount(size)
@@ -28,6 +44,4 @@
 #define __in_awcount(expr,size)
 #define __nullnullterminated
 #define __analysis_assume(expr)
-
-//#endif
 

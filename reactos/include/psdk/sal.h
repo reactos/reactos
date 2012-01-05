@@ -21,312 +21,695 @@
  */
 
 #pragma once
-#define __specstrings
+#define __ATTR_SAL
 
-#ifdef __cplusplus
-#ifndef __nothrow
-#define __nothrow __declspec(nothrow)
-#endif
-#else
-#ifndef __nothrow
-#define __nothrow
-#endif
+/* HACK: gcc's C++ headers conflict with oldstyle macros */
+#if !defined(__cplusplus) || !defined(__GNUC__)
+#include <sal_old.h>
 #endif
 
-
-#if defined(_PREFAST_) && !defined(__midl)
-
-#define SPECSTRINGIZE(x) #x
-#define __null __declspec("SAL_null")
-#define __notnull __declspec("SAL_notnull")
-#define __maybenull __declspec("SAL_maybenull")
-#define __readonly __declspec("SAL_readonly")
-#define __notreadonly __declspec("SAL_notreadonly")
-#define __maybereadonly __declspec("SAL_maybereadonly")
-#define __valid __declspec("SAL_valid")
-#define __notvalid __declspec("SAL_notvalid")
-#define __maybevalid __declspec("SAL_maybevalid")
-#define __readableTo(extent) __declspec("SAL_readableTo("SPECSTRINGIZE(extent)")")
-#define __elem_readableTo(size) __declspec("SAL_readableTo(elementCount("SPECSTRINGIZE(size)"))")
-#define __byte_readableTo(size) __declspec("SAL_readableTo(byteCount("SPECSTRINGIZE(size)"))")
-#define __writableTo(size) __declspec("SAL_writableTo("SPECSTRINGIZE(size)")")
-#define __elem_writableTo(size) __declspec("SAL_writableTo(elementCount("SPECSTRINGIZE(size)"))")
-#define __byte_writableTo(size) __declspec("SAL_writableTo(byteCount("SPECSTRINGIZE(size)"))")
-#define __deref __declspec("SAL_deref")
-#define __pre __declspec("SAL_pre")
-#define __post __declspec("SAL_post")
-#define __precond(expr) __pre
-#define __postcond(expr) __post
-#define __exceptthat __declspec("SAL_except")
-#define __execeptthat __exceptthat
-#define __refparam __deref __notreadonly
-#define __inner_control_entrypoint(category) __declspec("SAL_entrypoint(controlEntry, "SPECSTRINGIZE(category)")")
-#define __inner_data_entrypoint(category) __declspec("SAL_entrypoint(dataEntry, "SPECSTRINGIZE(category)")")
-#define __inner_success(expr) __declspec("SAL_success("SPECSTRINGIZE(expr)")")
-#define __inner_checkReturn __declspec("SAL_checkReturn")
-#define __inner_typefix(ctype) __declspec("SAL_typefix("SPECSTRINGIZE(ctype)")")
-#define __inner_override __declspec("__override")
-#define __inner_callback __declspec("__callback")
-#define __inner_blocksOn(resource) __declspec("SAL_blocksOn("SPECSTRINGIZE(resource)")")
-#define __inner_fallthrough_dec __inline __nothrow void __FallThrough() {}
-#define __inner_fallthrough __FallThrough();
-
-#else
-
-#define __null
-#define __notnull
-#define __maybenull
-#define __readonly
-#define __notreadonly
-#define __maybereadonly
-#define __valid
-#define __notvalid
-#define __maybevalid
-#define __readableTo(extent)
-#define __elem_readableTo(size)
-#define __byte_readableTo(size)
-#define __writableTo(size)
-#define __elem_writableTo(size)
-#define __byte_writableTo(size)
-#define __deref
-#define __pre
-#define __post
-#define __precond(expr)
-#define __postcond(expr)
-#define __exceptthat
-#define __execeptthat
-#define __inner_success(expr)
-#define __inner_checkReturn
-#define __inner_typefix(ctype)
-#define __inner_override
-#define __inner_callback
-#define __inner_blocksOn(resource)
-#define __inner_fallthrough_dec
-#define __inner_fallthrough
-#define __refparam
-#define __inner_control_entrypoint(category)
-#define __inner_data_entrypoint(category)
-
-#endif /* defined(_PREFAST_) && !defined(__midl) */
-
-#define __bcount(size) __notnull __byte_writableTo(size)
-#define __bcount_opt(size) __bcount(size) __exceptthat __maybenull
-
-#define __ecount(size) __notnull __elem_writableTo(size)
-#define __ecount_opt(size) __ecount(size) __exceptthat __maybenull
-
-#define __in __pre __valid __pre __deref __readonly
-#define __in_ecount(size) __in __pre __elem_readableTo(size)
-#define __in_bcount(size) __in __pre __byte_readableTo(size)
-#define __in_z __in __pre __nullterminated
-#define __in_ecount_z(size) __in_ecount(size) __pre __nullterminated
-#define __in_bcount_z(size) __in_bcount(size) __pre __nullterminated
-#define __in_nz __in
-#define __in_ecount_nz(size) __in_ecount(size)
-#define __in_bcount_nz(size) __in_bcount(size)
-#define __in_opt __in __exceptthat __maybenull
-#define __in_ecount_opt(size) __in_ecount(size) __exceptthat __maybenull
-#define __in_bcount_opt(size) __in_bcount(size) __exceptthat __maybenull
-#define __in_z_opt __in_opt __pre __nullterminated
-#define __in_ecount_z_opt(size) __in_ecount_opt(size) __pre __nullterminated
-#define __in_bcount_z_opt(size) __in_bcount_opt(size) __pre __nullterminated
-#define __in_nz_opt __in_opt
-#define __in_ecount_nz_opt(size) __in_ecount_opt(size)
-#define __in_bcount_nz_opt(size) __in_bcount_opt(size)
-
-#define __inout __pre __valid __post __valid __refparam
-#define __inout_ecount(size) __out_ecount(size) __pre __valid
-#define __inout_bcount(size) __out_bcount(size) __pre __valid
-#define __inout_ecount_part(size,length) __out_ecount_part(size,length) __pre __valid __pre __elem_readableTo(length)
-#define __inout_bcount_part(size,length) __out_bcount_part(size,length) __pre __valid __pre __byte_readableTo(length)
-#define __inout_ecount_full(size) __inout_ecount_part(size,size)
-#define __inout_bcount_full(size) __inout_bcount_part(size,size)
-#define __inout_z __inout __pre __nullterminated __post __nullterminated
-#define __inout_ecount_z(size) __inout_ecount(size) __pre __nullterminated __post __nullterminated
-#define __inout_bcount_z(size) __inout_bcount(size) __pre __nullterminated __post __nullterminated
-#define __inout_nz __inout
-#define __inout_ecount_nz(size) __inout_ecount(size)
-#define __inout_bcount_nz(size) __inout_bcount(size)
-#define __inout_opt __inout __exceptthat __maybenull
-#define __inout_ecount_opt(size) __inout_ecount(size) __exceptthat __maybenull
-#define __inout_bcount_opt(size) __inout_bcount(size) __exceptthat __maybenull
-#define __inout_ecount_part_opt(size,length) __inout_ecount_part(size,length) __exceptthat __maybenull
-#define __inout_bcount_part_opt(size,length) __inout_bcount_part(size,length) __exceptthat __maybenull
-#define __inout_ecount_full_opt(size) __inout_ecount_full(size) __exceptthat __maybenull
-#define __inout_bcount_full_opt(size) __inout_bcount_full(size) __exceptthat __maybenull
-#define __inout_z_opt __inout_opt __pre __nullterminated __post __nullterminated
-#define __inout_ecount_z_opt(size) __inout_ecount_opt(size) __pre __nullterminated __post __nullterminated
-#define __inout_bcount_z_opt(size) __inout_bcount_opt(size)
-#define __inout_nz_opt __inout_opt
-#define __inout_ecount_nz_opt(size) __inout_ecount_opt(size)
-#define __inout_bcount_nz_opt(size) __inout_bcount_opt(size)
-
-#define __out __ecount(1) __post __valid __refparam
-#define __out_ecount(size) __ecount(size) __post __valid __refparam
-#define __out_bcount(size) __bcount(size) __post __valid __refparam
-#define __out_ecount_part(size,length) __out_ecount(size) __post __elem_readableTo(length)
-#define __out_bcount_part(size,length) __out_bcount(size) __post __byte_readableTo(length)
-#define __out_ecount_full(size) __out_ecount_part(size,size)
-#define __out_bcount_full(size) __out_bcount_part(size,size)
-#define __out_z __post __valid __refparam __post __nullterminated
-#define __out_z_opt __post __valid __refparam __post __nullterminated __exceptthat __maybenull
-#define __out_ecount_z(size) __ecount(size) __post __valid __refparam __post __nullterminated
-#define __out_bcount_z(size) __bcount(size) __post __valid __refparam __post __nullterminated
-#define __out_ecount_part_z(size,length) __out_ecount_part(size,length) __post __nullterminated
-#define __out_bcount_part_z(size,length) __out_bcount_part(size,length) __post __nullterminated
-#define __out_ecount_full_z(size) __out_ecount_full(size) __post __nullterminated
-#define __out_bcount_full_z(size) __out_bcount_full(size) __post __nullterminated
-#define __out_nz __post __valid __refparam __post
-#define __out_nz_opt __post __valid __refparam __post __exceptthat __maybenull
-#define __out_ecount_nz(size) __ecount(size) __post __valid __refparam
-#define __out_bcount_nz(size) __bcount(size) __post __valid __refparam
-#define __out_opt __out __exceptthat __maybenull
-#define __out_ecount_opt(size) __out_ecount(size) __exceptthat __maybenull
-#define __out_bcount_opt(size) __out_bcount(size) __exceptthat __maybenull
-#define __out_ecount_part_opt(size,length) __out_ecount_part(size,length) __exceptthat __maybenull
-#define __out_bcount_part_opt(size,length) __out_bcount_part(size,length) __exceptthat __maybenull
-#define __out_ecount_full_opt(size) __out_ecount_full(size) __exceptthat __maybenull
-#define __out_bcount_full_opt(size) __out_bcount_full(size) __exceptthat __maybenull
-#define __out_ecount_z_opt(size) __out_ecount_opt(size) __post __nullterminated
-#define __out_bcount_z_opt(size) __out_bcount_opt(size) __post __nullterminated
-#define __out_ecount_part_z_opt(size,length) __out_ecount_part_opt(size,length) __post __nullterminated
-#define __out_bcount_part_z_opt(size,length) __out_bcount_part_opt(size,length) __post __nullterminated
-#define __out_ecount_full_z_opt(size) __out_ecount_full_opt(size) __post __nullterminated
-#define __out_bcount_full_z_opt(size) __out_bcount_full_opt(size) __post __nullterminated
-#define __out_ecount_nz_opt(size) __out_ecount_opt(size) __post __nullterminated
-#define __out_bcount_nz_opt(size) __out_bcount_opt(size) __post __nullterminated
-
-#define __deref_ecount(size) __ecount(1) __post __elem_readableTo(1) __post __deref __notnull __post __deref __elem_writableTo(size)
-#define __deref_bcount(size) __ecount(1) __post __elem_readableTo(1) __post __deref __notnull __post __deref __byte_writableTo(size)
-#define __deref_out __deref_ecount(1) __post __deref __valid __refparam
-#define __deref_out_ecount(size) __deref_ecount(size) __post __deref __valid __refparam
-#define __deref_out_bcount(size) __deref_bcount(size) __post __deref __valid __refparam
-#define __deref_out_ecount_part(size,length) __deref_out_ecount(size) __post __deref __elem_readableTo(length)
-#define __deref_out_bcount_part(size,length) __deref_out_bcount(size) __post __deref __byte_readableTo(length)
-#define __deref_out_ecount_full(size) __deref_out_ecount_part(size,size)
-#define __deref_out_bcount_full(size) __deref_out_bcount_part(size,size)
-#define __deref_out_z __post __deref __valid __refparam __post __deref __nullterminated
-#define __deref_out_ecount_z(size) __deref_out_ecount(size) __post __deref __nullterminated
-#define __deref_out_bcount_z(size) __deref_out_ecount(size) __post __deref __nullterminated
-#define __deref_out_nz __deref_out
-#define __deref_out_ecount_nz(size) __deref_out_ecount(size)
-#define __deref_out_bcount_nz(size) __deref_out_ecount(size)
-#define __deref_inout __notnull __elem_readableTo(1) __pre __deref __valid __post __deref __valid __refparam
-#define __deref_inout_z __deref_inout __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_ecount(size) __deref_inout __pre __deref __elem_writableTo(size) __post __deref __elem_writableTo(size)
-#define __deref_inout_bcount(size) __deref_inout __pre __deref __byte_writableTo(size) __post __deref __byte_writableTo(size)
-#define __deref_inout_ecount_part(size,length) __deref_inout_ecount(size) __pre __deref __elem_readableTo(length) __post __deref __elem_readableTo(length)
-#define __deref_inout_bcount_part(size,length) __deref_inout_bcount(size) __pre __deref __byte_readableTo(length) __post __deref __byte_readableTo(length)
-#define __deref_inout_ecount_full(size) __deref_inout_ecount_part(size,size)
-#define __deref_inout_bcount_full(size) __deref_inout_bcount_part(size,size)
-#define __deref_inout_ecount_z(size) __deref_inout_ecount(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_bcount_z(size) __deref_inout_bcount(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_nz __deref_inout
-#define __deref_inout_ecount_nz(size) __deref_inout_ecount(size)
-#define __deref_inout_bcount_nz(size) __deref_inout_ecount(size)
-#define __deref_ecount_opt(size) __deref_ecount(size) __post __deref __exceptthat __maybenull
-#define __deref_bcount_opt(size) __deref_bcount(size) __post __deref __exceptthat __maybenull
-#define __deref_out_opt __deref_out __post __deref __exceptthat __maybenull
-#define __deref_out_ecount_opt(size) __deref_out_ecount(size) __post __deref __exceptthat __maybenull
-#define __deref_out_bcount_opt(size) __deref_out_bcount(size) __post __deref __exceptthat __maybenull
-#define __deref_out_ecount_part_opt(size,length) __deref_out_ecount_part(size,length) __post __deref __exceptthat __maybenull
-#define __deref_out_bcount_part_opt(size,length) __deref_out_bcount_part(size,length) __post __deref __exceptthat __maybenull
-#define __deref_out_ecount_full_opt(size) __deref_out_ecount_full(size) __post __deref __exceptthat __maybenull
-#define __deref_out_bcount_full_opt(size) __deref_out_bcount_full(size) __post __deref __exceptthat __maybenull
-#define __deref_out_z_opt __post __deref __valid __refparam __execeptthat __maybenull __post __deref __nullterminated
-#define __deref_out_ecount_z_opt(size) __deref_out_ecount_opt(size) __post __deref __nullterminated
-#define __deref_out_bcount_z_opt(size) __deref_out_bcount_opt(size) __post __deref __nullterminated
-#define __deref_out_nz_opt __deref_out_opt
-#define __deref_out_ecount_nz_opt(size) __deref_out_ecount_opt(size)
-#define __deref_out_bcount_nz_opt(size) __deref_out_bcount_opt(size)
-#define __deref_inout_opt __deref_inout __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_ecount_opt(size) __deref_inout_ecount(size) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_bcount_opt(size) __deref_inout_bcount(size) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_ecount_part_opt(size,length) __deref_inout_ecount_part(size,length) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_bcount_part_opt(size,length) __deref_inout_bcount_part(size,length) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_ecount_full_opt(size) __deref_inout_ecount_full(size) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_bcount_full_opt(size) __deref_inout_bcount_full(size) __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull
-#define __deref_inout_z_opt __deref_inout_opt __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_ecount_z_opt(size) __deref_inout_ecount_opt(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_bcount_z_opt(size) __deref_inout_bcount_opt(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_inout_nz_opt __deref_inout_opt
-#define __deref_inout_ecount_nz_opt(size) __deref_inout_ecount_opt(size)
-#define __deref_inout_bcount_nz_opt(size) __deref_inout_bcount_opt(size)
-
-#define __deref_opt_ecount(size) __deref_ecount(size) __exceptthat __maybenull
-#define __deref_opt_bcount(size) __deref_bcount(size) __exceptthat __maybenull
-#define __deref_opt_out __deref_out __exceptthat __maybenull
-#define __deref_opt_out_z __deref_opt_out __post __deref __nullterminated
-#define __deref_opt_out_ecount(size) __deref_out_ecount(size) __exceptthat __maybenull
-#define __deref_opt_out_bcount(size) __deref_out_bcount(size) __exceptthat __maybenull
-#define __deref_opt_out_ecount_part(size,length) __deref_out_ecount_part(size,length) __exceptthat __maybenull
-#define __deref_opt_out_bcount_part(size,length) __deref_out_bcount_part(size,length) __exceptthat __maybenull
-#define __deref_opt_out_ecount_full(size) __deref_out_ecount_full(size) __exceptthat __maybenull
-#define __deref_opt_out_bcount_full(size) __deref_out_bcount_full(size) __exceptthat __maybenull
-#define __deref_opt_inout __deref_inout __exceptthat __maybenull
-#define __deref_opt_inout_ecount(size) __deref_inout_ecount(size) __exceptthat __maybenull
-#define __deref_opt_inout_bcount(size) __deref_inout_bcount(size) __exceptthat __maybenull
-#define __deref_opt_inout_ecount_part(size,length) __deref_inout_ecount_part(size,length) __exceptthat __maybenull
-#define __deref_opt_inout_bcount_part(size,length) __deref_inout_bcount_part(size,length) __exceptthat __maybenull
-#define __deref_opt_inout_ecount_full(size) __deref_inout_ecount_full(size) __exceptthat __maybenull
-#define __deref_opt_inout_bcount_full(size) __deref_inout_bcount_full(size) __exceptthat __maybenull
-#define __deref_opt_inout_z __deref_opt_inout __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_ecount_z(size) __deref_opt_inout_ecount(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_bcount_z(size) __deref_opt_inout_bcount(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_nz __deref_opt_inout
-#define __deref_opt_inout_ecount_nz(size) __deref_opt_inout_ecount(size)
-#define __deref_opt_inout_bcount_nz(size) __deref_opt_inout_bcount(size)
-#define __deref_opt_ecount_opt(size) __deref_ecount_opt(size) __exceptthat __maybenull
-#define __deref_opt_bcount_opt(size) __deref_bcount_opt(size) __exceptthat __maybenull
-#define __deref_opt_out_opt __deref_out_opt __exceptthat __maybenull
-#define __deref_opt_out_ecount_opt(size) __deref_out_ecount_opt(size) __exceptthat __maybenull
-#define __deref_opt_out_bcount_opt(size) __deref_out_bcount_opt(size) __exceptthat __maybenull
-#define __deref_opt_out_ecount_part_opt(size,length) __deref_out_ecount_part_opt(size,length) __exceptthat __maybenull
-#define __deref_opt_out_bcount_part_opt(size,length) __deref_out_bcount_part_opt(size,length) __exceptthat __maybenull
-#define __deref_opt_out_ecount_full_opt(size) __deref_out_ecount_full_opt(size) __exceptthat __maybenull
-#define __deref_opt_out_bcount_full_opt(size) __deref_out_bcount_full_opt(size) __exceptthat __maybenull
-#define __deref_opt_out_z_opt __post __deref __valid __refparam __exceptthat __maybenull __pre __deref __exceptthat __maybenull __post __deref __exceptthat __maybenull __post __deref __nullterminated
-#define __deref_opt_out_ecount_z_opt(size) __deref_opt_out_ecount_opt(size) __post __deref __nullterminated
-#define __deref_opt_out_bcount_z_opt(size) __deref_opt_out_bcount_opt(size) __post __deref __nullterminated
-#define __deref_opt_out_nz_opt __deref_opt_out_opt
-#define __deref_opt_out_ecount_nz_opt(size) __deref_opt_out_ecount_opt(size)
-#define __deref_opt_out_bcount_nz_opt(size) __deref_opt_out_bcount_opt(size)
-#define __deref_opt_inout_opt __deref_inout_opt __exceptthat __maybenull
-#define __deref_opt_inout_ecount_opt(size) __deref_inout_ecount_opt(size) __exceptthat __maybenull
-#define __deref_opt_inout_bcount_opt(size) __deref_inout_bcount_opt(size) __exceptthat __maybenull
-#define __deref_opt_inout_ecount_part_opt(size,length) __deref_inout_ecount_part_opt(size,length) __exceptthat __maybenull
-#define __deref_opt_inout_bcount_part_opt(size,length) __deref_inout_bcount_part_opt(size,length) __exceptthat __maybenull
-#define __deref_opt_inout_ecount_full_opt(size) __deref_inout_ecount_full_opt(size) __exceptthat __maybenull
-#define __deref_opt_inout_bcount_full_opt(size) __deref_inout_bcount_full_opt(size) __exceptthat __maybenull
-#define __deref_opt_inout_z_opt __deref_opt_inout_opt __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_ecount_z_opt(size) __deref_opt_inout_ecount_opt(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_bcount_z_opt(size) __deref_opt_inout_bcount_opt(size) __pre __deref __nullterminated __post __deref __nullterminated
-#define __deref_opt_inout_nz_opt __deref_opt_inout_opt
-#define __deref_opt_inout_ecount_nz_opt(size) __deref_opt_inout_ecount_opt(size)
-#define __deref_opt_inout_bcount_nz_opt(size) __deref_opt_inout_bcount_opt(size)
-
-#define __success(expr) __inner_success(expr)
-#define __nullterminated __readableTo(sentinel(0))
-#define __nullnullterminated
-#define __reserved __pre __null
-#define __checkReturn __inner_checkReturn
-#define __typefix(ctype) __inner_typefix(ctype)
-#define __override __inner_override
-#define __callback __inner_callback
-#define __format_string
-#define __blocksOn(resource) __inner_blocksOn(resource)
-#define __control_entrypoint(category) __inner_control_entrypoint(category)
-#define __data_entrypoint(category) __inner_data_entrypoint(category)
-
-#ifndef __fallthrough
-__inner_fallthrough_dec
-#define __fallthrough __inner_fallthrough
-#endif
-
-#ifndef __analysis_assume
 #ifdef _PREFAST_
-#define __analysis_assume(expr) __assume(expr)
+
+#ifndef _USE_DECLSPECS_FOR_SAL
+#define _USE_DECLSPECS_FOR_SAL 1
+#endif
+
+#if !defined(_USE_ATTRIBUTES_FOR_SAL) || _USE_DECLSPECS_FOR_SAL
+#define _USE_ATTRIBUTES_FOR_SAL 0
+#endif
+
+#if !_USE_DECLSPECS_FOR_SAL && !_USE_ATTRIBUTES_FOR_SAL
+#if _MSC_VER >= 1400
+#undef _USE_ATTRIBUTES_FOR_SAL
+#define _USE_ATTRIBUTES_FOR_SAL 1
 #else
-#define __analysis_assume(expr)
+#undef _USE_DECLSPECS_FOR_SAL
+#define _USE_DECLSPECS_FOR_SAL  1
+#endif /* _MSC_VER >= 1400 */
+#endif /* !_USE_DECLSPECS_FOR_SAL && !_USE_ATTRIBUTES_FOR_SAL */
+
+#else /* _PREFAST_ */
+
+#undef _USE_DECLSPECS_FOR_SAL
+#define _USE_DECLSPECS_FOR_SAL 0
+#undef _USE_ATTRIBUTES_FOR_SAL
+#define _USE_ATTRIBUTES_FOR_SAL 0
+
+#endif /* _PREFAST_ */
+
+#if defined(MIDL_PASS) || defined(__midl) || defined(RC_INVOKED)
+#undef _USE_DECLSPECS_FOR_SAL
+#define _USE_DECLSPECS_FOR_SAL 0
+#undef _USE_ATTRIBUTES_FOR_SAL
+#define _USE_ATTRIBUTES_FOR_SAL 0
 #endif
+
+#if !defined(_MSC_EXTENSIONS)
+#undef _USE_ATTRIBUTES_FOR_SAL
+#define _USE_ATTRIBUTES_FOR_SAL 0
 #endif
+
+
+#if _USE_ATTRIBUTES_FOR_SAL || _USE_DECLSPECS_FOR_SAL
+
+#error unimplemented
+
+#if _USE_ATTRIBUTES_FOR_SAL
+
+#else /* #if _USE_DECLSPECS_FOR_SAL */
+
+#endif
+
+
+#else /* _USE_ATTRIBUTES_FOR_SAL || _USE_DECLSPECS_FOR_SAL */
+
+#define	__inner_exceptthat
+#define	__inner_typefix(ctype)
+#define	_Always_(annos)
+#define	_At_(target, annos)
+#define	_At_buffer_(target, iter, bound, annos)
+#define	_Check_return_
+#define	_COM_Outptr_
+#define	_COM_Outptr_opt_
+#define	_COM_Outptr_opt_result_maybenull_
+#define	_COM_Outptr_result_maybenull_
+#define	_Const_
+#define	_Deref_in_bound_
+#define	_Deref_in_range_(lb,ub)
+#define	_Deref_inout_bound_
+#define	_Deref_inout_z_
+#define	_Deref_inout_z_bytecap_c_(size)
+#define	_Deref_inout_z_cap_c_(size)
+#define	_Deref_opt_out_
+#define	_Deref_opt_out_opt_
+#define	_Deref_opt_out_opt_z_
+#define	_Deref_opt_out_z_
+#define	_Deref_out_
+#define	_Deref_out_bound_
+#define	_Deref_out_opt_
+#define	_Deref_out_opt_z_
+#define	_Deref_out_range_(lb,ub)
+#define	_Deref_out_z_
+#define	_Deref_out_z_bytecap_c_(size)
+#define	_Deref_out_z_cap_c_(size)
+#define	_Deref_post_bytecap_(size)
+#define	_Deref_post_bytecap_c_(size)
+#define	_Deref_post_bytecap_x_(size)
+#define	_Deref_post_bytecount_(size)
+#define	_Deref_post_bytecount_c_(size)
+#define	_Deref_post_bytecount_x_(size)
+#define	_Deref_post_cap_(size)
+#define	_Deref_post_cap_c_(size)
+#define	_Deref_post_cap_x_(size)
+#define	_Deref_post_count_(size)
+#define	_Deref_post_count_c_(size)
+#define	_Deref_post_count_x_(size)
+#define	_Deref_post_maybenull_
+#define	_Deref_post_notnull_
+#define	_Deref_post_null_
+#define	_Deref_post_opt_bytecap_(size)
+#define	_Deref_post_opt_bytecap_c_(size)
+#define	_Deref_post_opt_bytecap_x_(size)
+#define	_Deref_post_opt_bytecount_(size)
+#define	_Deref_post_opt_bytecount_c_(size)
+#define	_Deref_post_opt_bytecount_x_(size)
+#define	_Deref_post_opt_cap_(size)
+#define	_Deref_post_opt_cap_c_(size)
+#define	_Deref_post_opt_cap_x_(size)
+#define	_Deref_post_opt_count_(size)
+#define	_Deref_post_opt_count_c_(size)
+#define	_Deref_post_opt_count_x_(size)
+#define	_Deref_post_opt_valid_
+#define	_Deref_post_opt_valid_bytecap_(size)
+#define	_Deref_post_opt_valid_bytecap_c_(size)
+#define	_Deref_post_opt_valid_bytecap_x_(size)
+#define	_Deref_post_opt_valid_cap_(size)
+#define	_Deref_post_opt_valid_cap_c_(size)
+#define	_Deref_post_opt_valid_cap_x_(size)
+#define	_Deref_post_opt_z_
+#define	_Deref_post_opt_z_bytecap_(size)
+#define	_Deref_post_opt_z_bytecap_c_(size)
+#define	_Deref_post_opt_z_bytecap_x_(size)
+#define	_Deref_post_opt_z_cap_(size)
+#define	_Deref_post_opt_z_cap_c_(size)
+#define	_Deref_post_opt_z_cap_x_(size)
+#define	_Deref_post_valid_
+#define	_Deref_post_valid_bytecap_(size)
+#define	_Deref_post_valid_bytecap_c_(size)
+#define	_Deref_post_valid_bytecap_x_(size)
+#define	_Deref_post_valid_cap_(size)
+#define	_Deref_post_valid_cap_c_(size)
+#define	_Deref_post_valid_cap_x_(size)
+#define	_Deref_post_z_
+#define	_Deref_post_z_bytecap_(size)
+#define	_Deref_post_z_bytecap_c_(size)
+#define	_Deref_post_z_bytecap_x_(size)
+#define	_Deref_post_z_cap_(size)
+#define	_Deref_post_z_cap_c_(size)
+#define	_Deref_post_z_cap_x_(size)
+#define	_Deref_pre_bytecap_(size)
+#define	_Deref_pre_bytecap_c_(size)
+#define	_Deref_pre_bytecap_x_(size)
+#define	_Deref_pre_bytecount_(size)
+#define	_Deref_pre_bytecount_c_(size)
+#define	_Deref_pre_bytecount_x_(size)
+#define	_Deref_pre_cap_(size)
+#define	_Deref_pre_cap_c_(size)
+#define	_Deref_pre_cap_x_(size)
+#define	_Deref_pre_count_(size)
+#define	_Deref_pre_count_c_(size)
+#define	_Deref_pre_count_x_(size)
+#define	_Deref_pre_invalid_
+#define	_Deref_pre_maybenull_
+#define	_Deref_pre_notnull_
+#define	_Deref_pre_null_
+#define	_Deref_pre_opt_bytecap_(size)
+#define	_Deref_pre_opt_bytecap_c_(size)
+#define	_Deref_pre_opt_bytecap_x_(size)
+#define	_Deref_pre_opt_bytecount_(size)
+#define	_Deref_pre_opt_bytecount_c_(size)
+#define	_Deref_pre_opt_bytecount_x_(size)
+#define	_Deref_pre_opt_cap_(size)
+#define	_Deref_pre_opt_cap_c_(size)
+#define	_Deref_pre_opt_cap_x_(size)
+#define	_Deref_pre_opt_count_(size)
+#define	_Deref_pre_opt_count_c_(size)
+#define	_Deref_pre_opt_count_x_(size)
+#define	_Deref_pre_opt_valid_
+#define	_Deref_pre_opt_valid_bytecap_(size)
+#define	_Deref_pre_opt_valid_bytecap_c_(size)
+#define	_Deref_pre_opt_valid_bytecap_x_(size)
+#define	_Deref_pre_opt_valid_cap_(size)
+#define	_Deref_pre_opt_valid_cap_c_(size)
+#define	_Deref_pre_opt_valid_cap_x_(size)
+#define	_Deref_pre_opt_z_
+#define	_Deref_pre_opt_z_bytecap_(size)
+#define	_Deref_pre_opt_z_bytecap_c_(size)
+#define	_Deref_pre_opt_z_bytecap_x_(size)
+#define	_Deref_pre_opt_z_cap_(size)
+#define	_Deref_pre_opt_z_cap_c_(size)
+#define	_Deref_pre_opt_z_cap_x_(size)
+#define	_Deref_pre_readonly_
+#define	_Deref_pre_valid_
+#define	_Deref_pre_valid_bytecap_(size)
+#define	_Deref_pre_valid_bytecap_c_(size)
+#define	_Deref_pre_valid_bytecap_x_(size)
+#define	_Deref_pre_valid_cap_(size)
+#define	_Deref_pre_valid_cap_c_(size)
+#define	_Deref_pre_valid_cap_x_(size)
+#define	_Deref_pre_writeonly_
+#define	_Deref_pre_z_
+#define	_Deref_pre_z_bytecap_(size)
+#define	_Deref_pre_z_bytecap_c_(size)
+#define	_Deref_pre_z_bytecap_x_(size)
+#define	_Deref_pre_z_cap_(size)
+#define	_Deref_pre_z_cap_c_(size)
+#define	_Deref_pre_z_cap_x_(size)
+#define	_Deref_prepost_bytecap_(size)
+#define	_Deref_prepost_bytecap_x_(size)
+#define	_Deref_prepost_bytecount_(size)
+#define	_Deref_prepost_bytecount_x_(size)
+#define	_Deref_prepost_cap_(size)
+#define	_Deref_prepost_cap_x_(size)
+#define	_Deref_prepost_count_(size)
+#define	_Deref_prepost_count_x_(size)
+#define	_Deref_prepost_opt_bytecap_(size)
+#define	_Deref_prepost_opt_bytecap_x_(size)
+#define	_Deref_prepost_opt_bytecount_(size)
+#define	_Deref_prepost_opt_bytecount_x_(size)
+#define	_Deref_prepost_opt_cap_(size)
+#define	_Deref_prepost_opt_cap_x_(size)
+#define	_Deref_prepost_opt_count_(size)
+#define	_Deref_prepost_opt_count_x_(size)
+#define	_Deref_prepost_opt_valid_
+#define	_Deref_prepost_opt_valid_bytecap_(size)
+#define	_Deref_prepost_opt_valid_bytecap_x_(size)
+#define	_Deref_prepost_opt_valid_cap_(size)
+#define	_Deref_prepost_opt_valid_cap_x_(size)
+#define	_Deref_prepost_opt_z_
+#define	_Deref_prepost_opt_z_bytecap_(size)
+#define	_Deref_prepost_opt_z_cap_(size)
+#define	_Deref_prepost_valid_
+#define	_Deref_prepost_valid_bytecap_(size)
+#define	_Deref_prepost_valid_bytecap_x_(size)
+#define	_Deref_prepost_valid_cap_(size)
+#define	_Deref_prepost_valid_cap_x_(size)
+#define	_Deref_prepost_z_
+#define	_Deref_prepost_z_bytecap_(size)
+#define	_Deref_prepost_z_cap_(size)
+#define	_Deref_ret_bound_
+#define	_Deref_ret_opt_z_
+#define	_Deref_ret_range_(lb,ub)
+#define	_Deref_ret_z_
+#define	_Deref2_pre_readonly_
+#define	_Field_range_(min,max)
+#define	_Field_size_(size)
+#define	_Field_size_bytes_(size)
+#define	_Field_size_bytes_full_(size)
+#define	_Field_size_bytes_full_opt_(size)
+#define	_Field_size_bytes_opt_(size)
+#define	_Field_size_bytes_part_(size, count)
+#define	_Field_size_bytes_part_opt_(size, count)
+#define	_Field_size_full_(size)
+#define	_Field_size_full_opt_(size)
+#define	_Field_size_opt_(size)
+#define	_Field_size_part_(size, count)
+#define	_Field_size_part_opt_(size, count)
+#define	_Field_z_
+#define	_Group_(annos)
+#define	_In_
+#define	_In_bound_
+#define	_In_bytecount_(size)
+#define	_In_bytecount_c_(size)
+#define	_In_bytecount_x_(size)
+#define	_In_count_(size)
+#define	_In_count_c_(size)
+#define	_In_count_x_(size)
+#define	_In_defensive_(annotes)
+#define	_In_opt_
+#define	_In_opt_bytecount_(size)
+#define	_In_opt_bytecount_c_(size)
+#define	_In_opt_bytecount_x_(size)
+#define	_In_opt_count_(size)
+#define	_In_opt_count_c_(size)
+#define	_In_opt_count_x_(size)
+#define	_In_opt_ptrdiff_count_(size)
+#define	_In_opt_z_
+#define	_In_opt_z_bytecount_(size)
+#define	_In_opt_z_bytecount_c_(size)
+#define	_In_opt_z_count_(size)
+#define	_In_opt_z_count_c_(size)
+#define	_In_ptrdiff_count_(size)
+#define	_In_range_(lb,ub)
+#define	_In_reads_(size)
+#define	_In_reads_bytes_(size)
+#define	_In_reads_bytes_opt_(size)
+#define	_In_reads_opt_(size)
+#define	_In_reads_opt_z_(size)
+#define	_In_reads_or_z_(size)
+#define	_In_reads_to_ptr_(ptr)
+#define	_In_reads_to_ptr_opt_(ptr)
+#define	_In_reads_to_ptr_opt_z_(ptr)
+#define	_In_reads_to_ptr_z_(ptr)
+#define	_In_reads_z_(size)
+#define	_In_z_
+#define	_In_z_bytecount_(size)
+#define	_In_z_bytecount_c_(size)
+#define	_In_z_count_(size)
+#define	_In_z_count_c_(size)
+#define	_Inout_
+#define	_Inout_bytecap_(size)
+#define	_Inout_bytecap_c_(size)
+#define	_Inout_bytecap_x_(size)
+#define	_Inout_bytecount_(size)
+#define	_Inout_bytecount_c_(size)
+#define	_Inout_bytecount_x_(size)
+#define	_Inout_cap_(size)
+#define	_Inout_cap_c_(size)
+#define	_Inout_cap_x_(size)
+#define	_Inout_count_(size)
+#define	_Inout_count_c_(size)
+#define	_Inout_count_x_(size)
+#define	_Inout_defensive_(annotes)
+#define	_Inout_opt_
+#define	_Inout_opt_bytecap_(size)
+#define	_Inout_opt_bytecap_c_(size)
+#define	_Inout_opt_bytecap_x_(size)
+#define	_Inout_opt_bytecount_(size)
+#define	_Inout_opt_bytecount_c_(size)
+#define	_Inout_opt_bytecount_x_(size)
+#define	_Inout_opt_cap_(size)
+#define	_Inout_opt_cap_c_(size)
+#define	_Inout_opt_cap_x_(size)
+#define	_Inout_opt_count_(size)
+#define	_Inout_opt_count_c_(size)
+#define	_Inout_opt_count_x_(size)
+#define	_Inout_opt_ptrdiff_count_(size)
+#define	_Inout_opt_z_
+#define	_Inout_opt_z_bytecap_(size)
+#define	_Inout_opt_z_bytecap_c_(size)
+#define	_Inout_opt_z_bytecap_x_(size)
+#define	_Inout_opt_z_bytecount_(size)
+#define	_Inout_opt_z_bytecount_c_(size)
+#define	_Inout_opt_z_cap_(size)
+#define	_Inout_opt_z_cap_c_(size)
+#define	_Inout_opt_z_cap_x_(size)
+#define	_Inout_opt_z_count_(size)
+#define	_Inout_opt_z_count_c_(size)
+#define	_Inout_ptrdiff_count_(size)
+#define	_Inout_updates_(size)
+#define	_Inout_updates_all_(size)
+#define	_Inout_updates_all_opt_(size)
+#define	_Inout_updates_bytes_(size)
+#define	_Inout_updates_bytes_all_(size)
+#define	_Inout_updates_bytes_all_opt_(size)
+#define	_Inout_updates_bytes_opt_(size)
+#define	_Inout_updates_bytes_to_(size,count)
+#define	_Inout_updates_bytes_to_opt_(size,count)
+#define	_Inout_updates_opt_(size)
+#define	_Inout_updates_opt_z_(size)
+#define	_Inout_updates_to_(size,count)
+#define	_Inout_updates_to_opt_(size,count)
+#define	_Inout_updates_z_(size)
+#define	_Inout_z_
+#define	_Inout_z_bytecap_(size)
+#define	_Inout_z_bytecap_c_(size)
+#define	_Inout_z_bytecap_x_(size)
+#define	_Inout_z_bytecount_(size)
+#define	_Inout_z_bytecount_c_(size)
+#define	_Inout_z_cap_(size)
+#define	_Inout_z_cap_c_(size)
+#define	_Inout_z_cap_x_(size)
+#define	_Inout_z_count_(size)
+#define	_Inout_z_count_c_(size)
+#define	_Literal_
+#define	_Maybenull_
+#define	_Maybevalid_
+#define	_Must_inspect_result_
+#define	_Notliteral_
+#define	_Notnull_
+#define	_Notref_
+#define	_Notvalid_
+#define	_Null_
+#define	_Null_terminated_
+#define	_NullNull_terminated_
+#define	_On_failure_(annos)
+#define	_Out_
+#define	_Out_bound_
+#define	_Out_bytecap_(size)
+#define	_Out_bytecap_c_(size)
+#define	_Out_bytecap_post_bytecount_(cap,count)
+#define	_Out_bytecap_x_(size)
+#define	_Out_bytecapcount_(capcount)
+#define	_Out_bytecapcount_x_(capcount)
+#define	_Out_cap_(size)
+#define	_Out_cap_c_(size)
+#define	_Out_cap_m_(mult,size)
+#define	_Out_cap_post_count_(cap,count)
+#define	_Out_cap_x_(size)
+#define	_Out_capcount_(capcount)
+#define	_Out_capcount_x_(capcount)
+#define	_Out_defensive_(annotes)
+#define	_Out_opt_
+#define	_Out_opt_bytecap_(size)
+#define	_Out_opt_bytecap_c_(size)
+#define	_Out_opt_bytecap_post_bytecount_(cap,count)
+#define	_Out_opt_bytecap_x_(size)
+#define	_Out_opt_bytecapcount_(capcount)
+#define	_Out_opt_bytecapcount_x_(capcount)
+#define	_Out_opt_cap_(size)
+#define	_Out_opt_cap_c_(size)
+#define	_Out_opt_cap_m_(mult,size)
+#define	_Out_opt_cap_post_count_(cap,count)
+#define	_Out_opt_cap_x_(size)
+#define	_Out_opt_capcount_(capcount)
+#define	_Out_opt_capcount_x_(capcount)
+#define	_Out_opt_ptrdiff_cap_(size)
+#define	_Out_opt_z_bytecap_(size)
+#define	_Out_opt_z_bytecap_c_(size)
+#define	_Out_opt_z_bytecap_post_bytecount_(cap,count)
+#define	_Out_opt_z_bytecap_x_(size)
+#define	_Out_opt_z_bytecapcount_(capcount)
+#define	_Out_opt_z_cap_(size)
+#define	_Out_opt_z_cap_c_(size)
+#define	_Out_opt_z_cap_m_(mult,size)
+#define	_Out_opt_z_cap_post_count_(cap,count)
+#define	_Out_opt_z_cap_x_(size)
+#define	_Out_opt_z_capcount_(capcount)
+#define	_Out_ptrdiff_cap_(size)
+#define	_Out_range_(lb,ub)
+#define	_Out_writes_(size)
+#define	_Out_writes_all_(size)
+#define	_Out_writes_all_opt_(size)
+#define	_Out_writes_bytes_(size)
+#define	_Out_writes_bytes_all_(size)
+#define	_Out_writes_bytes_all_opt_(size)
+#define	_Out_writes_bytes_opt_(size)
+#define	_Out_writes_bytes_to_(size,count)
+#define	_Out_writes_bytes_to_opt_(size,count)
+#define	_Out_writes_opt_(size)
+#define	_Out_writes_opt_z_(size)
+#define	_Out_writes_to_(size,count)
+#define	_Out_writes_to_opt_(size,count)
+#define	_Out_writes_to_ptr_(ptr)
+#define	_Out_writes_to_ptr_opt_(ptr)
+#define	_Out_writes_to_ptr_opt_z_(ptr)
+#define	_Out_writes_to_ptr_z_(ptr)
+#define	_Out_writes_z_(size)
+#define	_Out_z_bytecap_(size)
+#define	_Out_z_bytecap_c_(size)
+#define	_Out_z_bytecap_post_bytecount_(cap,count)
+#define	_Out_z_bytecap_x_(size)
+#define	_Out_z_bytecapcount_(capcount)
+#define	_Out_z_cap_(size)
+#define	_Out_z_cap_c_(size)
+#define	_Out_z_cap_m_(mult,size)
+#define	_Out_z_cap_post_count_(cap,count)
+#define	_Out_z_cap_x_(size)
+#define	_Out_z_capcount_(capcount)
+#define	_Outptr_
+#define	_Outptr_opt_
+#define	_Outptr_opt_result_buffer_(size)
+#define	_Outptr_opt_result_buffer_all_(size)
+#define	_Outptr_opt_result_buffer_all_maybenull_(size)
+#define	_Outptr_opt_result_buffer_maybenull_(size)
+#define	_Outptr_opt_result_buffer_to_(size, count)
+#define	_Outptr_opt_result_buffer_to_maybenull_(size, count)
+#define	_Outptr_opt_result_bytebuffer_(size)
+#define	_Outptr_opt_result_bytebuffer_all_(size)
+#define	_Outptr_opt_result_bytebuffer_all_maybenull_(size)
+#define	_Outptr_opt_result_bytebuffer_maybenull_(size)
+#define	_Outptr_opt_result_bytebuffer_to_(size, count)
+#define	_Outptr_opt_result_bytebuffer_to_maybenull_(size, count)
+#define	_Outptr_opt_result_maybenull_
+#define	_Outptr_opt_result_maybenull_z_
+#define	_Outptr_opt_result_nullonfailure_
+#define	_Outptr_opt_result_z_
+#define	_Outptr_result_buffer_(size)
+#define	_Outptr_result_buffer_all_(size)
+#define	_Outptr_result_buffer_all_maybenull_(size)
+#define	_Outptr_result_buffer_maybenull_(size)
+#define	_Outptr_result_buffer_to_(size, count)
+#define	_Outptr_result_buffer_to_maybenull_(size, count)
+#define	_Outptr_result_bytebuffer_(size)
+#define	_Outptr_result_bytebuffer_all_(size)
+#define	_Outptr_result_bytebuffer_all_maybenull_(size)
+#define	_Outptr_result_bytebuffer_maybenull_(size)
+#define	_Outptr_result_bytebuffer_to_(size, count)
+#define	_Outptr_result_bytebuffer_to_maybenull_(size, count)
+#define	_Outptr_result_maybenull_
+#define	_Outptr_result_maybenull_z_
+#define	_Outptr_result_nullonfailure_
+#define	_Outptr_result_z_
+#define	_Outref_
+#define	_Outref_result_buffer_(size)
+#define	_Outref_result_buffer_all_(size)
+#define	_Outref_result_buffer_all_maybenull_(size)
+#define	_Outref_result_buffer_maybenull_(size)
+#define	_Outref_result_buffer_to_(size, count)
+#define	_Outref_result_buffer_to_maybenull_(size, count)
+#define	_Outref_result_bytebuffer_(size)
+#define	_Outref_result_bytebuffer_all_(size)
+#define	_Outref_result_bytebuffer_all_maybenull_(size)
+#define	_Outref_result_bytebuffer_maybenull_(size)
+#define	_Outref_result_bytebuffer_to_(size, count)
+#define	_Outref_result_bytebuffer_to_maybenull_(size, count)
+#define	_Outref_result_maybenull_
+#define	_Outref_result_nullonfailure_
+#define	_Points_to_data_
+#define	_Post_
+#define	_Post_bytecap_(size)
+#define	_Post_bytecount_(size)
+#define	_Post_bytecount_c_(size)
+#define	_Post_bytecount_x_(size)
+#define	_Post_cap_(size)
+#define	_Post_count_(size)
+#define	_Post_count_c_(size)
+#define	_Post_count_x_(size)
+#define	_Post_defensive_
+#define	_Post_equal_to_(expr)
+#define	_Post_invalid_
+#define	_Post_maybenull_
+#define	_Post_maybez_
+#define	_Post_notnull_
+#define	_Post_null_
+#define	_Post_ptr_invalid_
+#define	_Post_readable_byte_size_(size)
+#define	_Post_readable_size_(size)
+#define	_Post_satisfies_(cond)
+#define	_Post_valid_
+#define	_Post_writable_byte_size_(size)
+#define	_Post_writable_size_(size)
+#define	_Post_z_
+#define	_Post_z_bytecount_(size)
+#define	_Post_z_bytecount_c_(size)
+#define	_Post_z_bytecount_x_(size)
+#define	_Post_z_count_(size)
+#define	_Post_z_count_c_(size)
+#define	_Post_z_count_x_(size)
+#define	_Pre_
+#define	_Pre_bytecap_(size)
+#define	_Pre_bytecap_c_(size)
+#define	_Pre_bytecap_x_(size)
+#define	_Pre_bytecount_(size)
+#define	_Pre_bytecount_c_(size)
+#define	_Pre_bytecount_x_(size)
+#define	_Pre_cap_(size)
+#define	_Pre_cap_c_(size)
+#define	_Pre_cap_c_one_
+#define	_Pre_cap_for_(param)
+#define	_Pre_cap_m_(mult,size)
+#define	_Pre_cap_x_(size)
+#define	_Pre_count_(size)
+#define	_Pre_count_c_(size)
+#define	_Pre_count_x_(size)
+#define	_Pre_defensive_
+#define	_Pre_equal_to_(expr)
+#define	_Pre_invalid_
+#define	_Pre_maybenull_
+#define	_Pre_notnull_
+#define	_Pre_null_
+#define	_Pre_opt_bytecap_(size)
+#define	_Pre_opt_bytecap_c_(size)
+#define	_Pre_opt_bytecap_x_(size)
+#define	_Pre_opt_bytecount_(size)
+#define	_Pre_opt_bytecount_c_(size)
+#define	_Pre_opt_bytecount_x_(size)
+#define	_Pre_opt_cap_(size)
+#define	_Pre_opt_cap_c_(size)
+#define	_Pre_opt_cap_c_one_
+#define	_Pre_opt_cap_for_(param)
+#define	_Pre_opt_cap_m_(mult,size)
+#define	_Pre_opt_cap_x_(size)
+#define	_Pre_opt_count_(size)
+#define	_Pre_opt_count_c_(size)
+#define	_Pre_opt_count_x_(size)
+#define	_Pre_opt_ptrdiff_cap_(ptr)
+#define	_Pre_opt_ptrdiff_count_(ptr)
+#define	_Pre_opt_valid_
+#define	_Pre_opt_valid_bytecap_(size)
+#define	_Pre_opt_valid_bytecap_c_(size)
+#define	_Pre_opt_valid_bytecap_x_(size)
+#define	_Pre_opt_valid_cap_(size)
+#define	_Pre_opt_valid_cap_c_(size)
+#define	_Pre_opt_valid_cap_x_(size)
+#define	_Pre_opt_z_
+#define	_Pre_opt_z_bytecap_(size)
+#define	_Pre_opt_z_bytecap_c_(size)
+#define	_Pre_opt_z_bytecap_x_(size)
+#define	_Pre_opt_z_cap_(size)
+#define	_Pre_opt_z_cap_c_(size)
+#define	_Pre_opt_z_cap_x_(size)
+#define	_Pre_ptrdiff_cap_(ptr)
+#define	_Pre_ptrdiff_count_(ptr)
+#define	_Pre_readable_byte_size_(size)
+#define	_Pre_readable_size_(size)
+#define	_Pre_readonly_
+#define	_Pre_satisfies_(cond)
+#define	_Pre_valid_
+#define	_Pre_valid_bytecap_(size)
+#define	_Pre_valid_bytecap_c_(size)
+#define	_Pre_valid_bytecap_x_(size)
+#define	_Pre_valid_cap_(size)
+#define	_Pre_valid_cap_c_(size)
+#define	_Pre_valid_cap_x_(size)
+#define	_Pre_writable_byte_size_(size)
+#define	_Pre_writable_size_(size)
+#define	_Pre_writeonly_
+#define	_Pre_z_
+#define	_Pre_z_bytecap_(size)
+#define	_Pre_z_bytecap_c_(size)
+#define	_Pre_z_bytecap_x_(size)
+#define	_Pre_z_cap_(size)
+#define	_Pre_z_cap_c_(size)
+#define	_Pre_z_cap_x_(size)
+#define	_Prepost_bytecount_(size)
+#define	_Prepost_bytecount_c_(size)
+#define	_Prepost_bytecount_x_(size)
+#define	_Prepost_count_(size)
+#define	_Prepost_count_c_(size)
+#define	_Prepost_count_x_(size)
+#define	_Prepost_opt_bytecount_(size)
+#define	_Prepost_opt_bytecount_c_(size)
+#define	_Prepost_opt_bytecount_x_(size)
+#define	_Prepost_opt_count_(size)
+#define	_Prepost_opt_count_c_(size)
+#define	_Prepost_opt_count_x_(size)
+#define	_Prepost_opt_valid_
+#define	_Prepost_opt_z_
+#define	_Prepost_valid_
+#define	_Prepost_z_
+#define	_Printf_format_string_
+#define	_Readable_bytes_(size)
+#define	_Readable_elements_(size)
+#define	_Reserved_
+#define	_Result_nullonfailure_
+#define	_Result_zeroonfailure_
+#define	_Ret_
+#define	_Ret_bound_
+#define	_Ret_bytecap_(size)
+#define	_Ret_bytecap_c_(size)
+#define	_Ret_bytecap_x_(size)
+#define	_Ret_bytecount_(size)
+#define	_Ret_bytecount_c_(size)
+#define	_Ret_bytecount_x_(size)
+#define	_Ret_cap_(size)
+#define	_Ret_cap_c_(size)
+#define	_Ret_cap_x_(size)
+#define	_Ret_count_(size)
+#define	_Ret_count_c_(size)
+#define	_Ret_count_x_(size)
+#define	_Ret_maybenull_
+#define	_Ret_maybenull_z_
+#define	_Ret_notnull_
+#define	_Ret_null_
+#define	_Ret_opt_
+#define	_Ret_opt_bytecap_(size)
+#define	_Ret_opt_bytecap_c_(size)
+#define	_Ret_opt_bytecap_x_(size)
+#define	_Ret_opt_bytecount_(size)
+#define	_Ret_opt_bytecount_c_(size)
+#define	_Ret_opt_bytecount_x_(size)
+#define	_Ret_opt_cap_(size)
+#define	_Ret_opt_cap_c_(size)
+#define	_Ret_opt_cap_x_(size)
+#define	_Ret_opt_count_(size)
+#define	_Ret_opt_count_c_(size)
+#define	_Ret_opt_count_x_(size)
+#define	_Ret_opt_valid_
+#define	_Ret_opt_z_
+#define	_Ret_opt_z_bytecap_(size)
+#define	_Ret_opt_z_bytecount_(size)
+#define	_Ret_opt_z_cap_(size)
+#define	_Ret_opt_z_count_(size)
+#define	_Ret_range_(lb,ub)
+#define	_Ret_valid_
+#define	_Ret_writes_(size)
+#define	_Ret_writes_bytes_(size)
+#define	_Ret_writes_bytes_maybenull_(size)
+#define	_Ret_writes_bytes_to_(size,count)
+#define	_Ret_writes_bytes_to_maybenull_(size,count)
+#define	_Ret_writes_maybenull_(size)
+#define	_Ret_writes_maybenull_z_(size)
+#define	_Ret_writes_to_(size,count)
+#define	_Ret_writes_to_maybenull_(size,count)
+#define	_Ret_writes_z_(size)
+#define	_Ret_z_
+#define	_Ret_z_bytecap_(size)
+#define	_Ret_z_bytecount_(size)
+#define	_Ret_z_cap_(size)
+#define	_Ret_z_count_(size)
+#define	_Return_type_success_(expr)
+#define	_Scanf_format_string_
+#define	_Scanf_s_format_string_
+#define	_Struct_size_bytes_(size)
+#define	_Success_(expr)
+#define	_Unchanged_(e)
+#define	_Use_decl_annotations_
+#define	_Valid_
+#define	_When_(expr, annos)
+#define	_Writable_bytes_(size)
+#define	_Writable_elements_(size)
+
+#endif /* _USE_ATTRIBUTES_FOR_SAL || _USE_ATTRIBUTES_FOR_SAL */
+

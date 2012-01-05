@@ -9073,7 +9073,7 @@ typedef struct _SEC_NEGOTIATION_INFO
 {
     ULONG Size;
     ULONG NameLength;
-    SEC_WCHAR * Name;
+    SEC_WCHAR *Name;
     PVOID Reserved;
 } SEC_NEGOTIATION_INFO, *PSEC_NEGOTIATION_INFO;
 
@@ -9091,7 +9091,8 @@ typedef struct _SEC_CHANNEL_BINDINGS
 
 #ifndef _AUTH_IDENTITY_EX2_DEFINED
 #define _AUTH_IDENTITY_EX2_DEFINED
-typedef struct _SEC_WINNT_AUTH_IDENTITY_EX2 {
+typedef struct _SEC_WINNT_AUTH_IDENTITY_EX2
+{
     ULONG Version;
     USHORT cbHeaderLength;
     ULONG cbStructureLength;
@@ -9110,7 +9111,8 @@ typedef struct _SEC_WINNT_AUTH_IDENTITY_EX2 {
 
 #ifndef _AUTH_IDENTITY_DEFINED
 #define _AUTH_IDENTITY_DEFINED
-typedef struct _SEC_WINNT_AUTH_IDENTITY_W {
+typedef struct _SEC_WINNT_AUTH_IDENTITY_W
+{
     PUSHORT User;
     ULONG UserLength;
     PUSHORT Domain;
@@ -9128,15 +9130,16 @@ typedef struct _SEC_WINNT_AUTH_IDENTITY_W {
 
 #ifndef SEC_WINNT_AUTH_IDENTITY_VERSION
 #define SEC_WINNT_AUTH_IDENTITY_VERSION 0x200
-typedef struct _SEC_WINNT_AUTH_IDENTITY_EXW {
+typedef struct _SEC_WINNT_AUTH_IDENTITY_EXW
+{
     ULONG Version;
     ULONG Length;
-    PUSHORT User;           //  Non-NULL terminated string.
-    ULONG UserLength;       //  # of characters (NOT bytes), not including NULL.
-    PUSHORT Domain;         //  Non-NULL terminated string.
-    ULONG DomainLength;     //  # of characters (NOT bytes), not including NULL.
-    PUSHORT Password;       //  Non-NULL terminated string.
-    ULONG PasswordLength;   //  # of characters (NOT bytes), not including NULL.
+    PUSHORT User;
+    ULONG UserLength;
+    PUSHORT Domain;
+    ULONG DomainLength;
+    PUSHORT Password;
+    ULONG PasswordLength;
     ULONG Flags;
     PUSHORT PackageList;
     ULONG PackageListLength;
@@ -9165,14 +9168,14 @@ typedef struct _SecBuffer
 #else
     __field_bcount(cbBuffer) void SEC_FAR *pvBuffer;
 #endif
-} SecBuffer, * PSecBuffer;
+} SecBuffer, *PSecBuffer;
 
 typedef struct _SecBufferDesc
 {
     ULONG ulVersion;
     ULONG cBuffers;
     MIDL_PROP([size_is(cBuffers)]) __field_ecount(cBuffers) PSecBuffer pBuffers;
-} SecBufferDesc, SEC_FAR * PSecBufferDesc;
+} SecBufferDesc, SEC_FAR *PSecBufferDesc;
 
 typedef struct _SecPkgInfoW
 {
@@ -9188,8 +9191,8 @@ typedef struct _SecPkgInfoW
 
 typedef struct _SecPkgCredentials_NamesW
 {
-    MIDL_PROP([string]) SEC_WCHAR * sUserName;
-} SecPkgCredentials_NamesW, * PSecPkgCredentials_NamesW;
+    MIDL_PROP([string]) SEC_WCHAR *sUserName;
+} SecPkgCredentials_NamesW, *PSecPkgCredentials_NamesW;
 #define SecPkgCredentials_Names SecPkgCredentials_NamesW
 #define PSecPkgCredentials_Names PSecPkgCredentials_NamesW
 
@@ -9210,11 +9213,13 @@ typedef struct _SecPkgContext_CredentialNameW
 #define SecPkgContext_CredentialName SecPkgContext_CredentialNameW
 #define PSecPkgContext_CredentialName PSecPkgContext_CredentialNameW
 
-typedef struct _SecPkgContext_SubjectAttributes {
+typedef struct _SecPkgContext_SubjectAttributes
+{
     PVOID AttributeInfo;
 } SecPkgContext_SubjectAttributes, *PSecPkgContext_SubjectAttributes;
 
-typedef struct _SecPkgContext_CredInfo {
+typedef struct _SecPkgContext_CredInfo
+{
     SECPKG_CRED_CLASS CredClass;
     ULONG IsPromptingNeeded;
 } SecPkgContext_CredInfo, *PSecPkgContext_CredInfo;
@@ -9222,7 +9227,7 @@ typedef struct _SecPkgContext_CredInfo {
 typedef struct _SecPkgContext_NegoPackageInfo
 {
     ULONG PackageMask;
-} SecPkgContext_NegoPackageInfo, * PSecPkgContext_NegoPackageInfo;
+} SecPkgContext_NegoPackageInfo, *PSecPkgContext_NegoPackageInfo;
 
 typedef struct _SecPkgContext_NegoStatus
 {
@@ -9255,7 +9260,7 @@ typedef struct _SecPkgContext_Lifespan
 typedef struct _SecPkgContext_PasswordExpiry
 {
     TimeStamp tsPasswordExpires;
-} SecPkgContext_PasswordExpiry, * PSecPkgContext_PasswordExpiry;
+} SecPkgContext_PasswordExpiry, *PSecPkgContext_PasswordExpiry;
 
 typedef struct _SecPkgContext_ProtoInfoW
 {
@@ -9320,7 +9325,7 @@ typedef struct _SecPkgContext_NegotiationInfoW
 {
     PSecPkgInfoW PackageInfo ;
     ULONG NegotiationState ;
-} SecPkgContext_NegotiationInfoW, *PSecPkgContext_NegotiationInfoW ;
+} SecPkgContext_NegotiationInfoW, *PSecPkgContext_NegotiationInfoW;
 
 typedef struct _SecPkgContext_AuthorityW
 {
@@ -9336,7 +9341,7 @@ typedef struct _SecPkgCredentials_SSIProviderW
     SEC_WCHAR *sProviderName;
     ULONG ProviderInfoLength;
     PCHAR ProviderInfo;
-} SecPkgCredentials_SSIProviderW, * PSecPkgCredentials_SSIProviderW;
+} SecPkgCredentials_SSIProviderW, *PSecPkgCredentials_SSIProviderW;
 #define SecPkgCredentials_SSIProvider SecPkgCredentials_SSIProviderW
 #define PSecPkgCredentials_SSIProvider PSecPkgCredentials_SSIProviderW
 
@@ -9347,7 +9352,7 @@ typedef struct _SecPkgContext_LogoffTime
 #endif
 
 /* forward declaration */
-typedef struct _SECURITY_FUNCTION_TABLE_W SecurityFunctionTableW, * PSecurityFunctionTableW;
+typedef struct _SECURITY_FUNCTION_TABLE_W SecurityFunctionTableW, *PSecurityFunctionTableW;
 #define SecurityFunctionTable SecurityFunctionTableW
 #define PSecurityFunctionTable PSecurityFunctionTableW
 
@@ -9364,15 +9369,15 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 AcceptSecurityContext(
-    __in_opt PCredHandle phCredential,
-    __in_opt PCtxtHandle phContext,
-    __in_opt PSecBufferDesc pInput,
-    __in ULONG fContextReq,
-    __in ULONG TargetDataRep,
-    __in_opt PCtxtHandle phNewContext,
-    __in_opt PSecBufferDesc pOutput,
-    __out PULONG pfContextAttr,
-    __out_opt PTimeStamp ptsExpiry);
+    _In_opt_ PCredHandle phCredential,
+    _In_opt_ PCtxtHandle phContext,
+    _In_opt_ PSecBufferDesc pInput,
+    _In_ ULONG fContextReq,
+    _In_ ULONG TargetDataRep,
+    _In_opt_ PCtxtHandle phNewContext,
+    _In_opt_ PSecBufferDesc pOutput,
+    _Out_ PULONG pfContextAttr,
+    _Out_opt_ PTimeStamp ptsExpiry);
 
 typedef
 SECURITY_STATUS
@@ -9391,15 +9396,15 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 AcquireCredentialsHandleW(
-    __in_opt  PSSPI_SEC_STRING pPrincipal,
-    __in      PSSPI_SEC_STRING pPackage,
-    __in      ULONG fCredentialUse,
-    __in_opt  PVOID pvLogonId,
-    __in_opt  PVOID pAuthData,
-    __in_opt  SEC_GET_KEY_FN pGetKeyFn,
-    __in_opt  PVOID pvGetKeyArgument,
-    __out     PCredHandle phCredential,
-    __out_opt PTimeStamp ptsExpiry);
+    _In_opt_ PSSPI_SEC_STRING pPrincipal,
+    _In_ PSSPI_SEC_STRING pPackage,
+    _In_ ULONG fCredentialUse,
+    _In_opt_ PVOID pvLogonId,
+    _In_opt_ PVOID pAuthData,
+    _In_opt_ SEC_GET_KEY_FN pGetKeyFn,
+    _In_opt_ PVOID pvGetKeyArgument,
+    _Out_ PCredHandle phCredential,
+    _Out_opt_ PTimeStamp ptsExpiry);
 #define AcquireCredentialsHandle AcquireCredentialsHandleW
 
 typedef
@@ -9419,14 +9424,14 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 AddCredentialsA(
-    __in PCredHandle hCredentials,
-    __in_opt LPSTR pszPrincipal,
-    __in LPSTR pszPackage,
-    __in ULONG fCredentialUse,
-    __in_opt PVOID pAuthData,
-    __in_opt SEC_GET_KEY_FN pGetKeyFn,
-    __in_opt PVOID pvGetKeyArgument,
-    __out_opt PTimeStamp ptsExpiry);
+    _In_ PCredHandle hCredentials,
+    _In_opt_ LPSTR pszPrincipal,
+    _In_ LPSTR pszPackage,
+    _In_ ULONG fCredentialUse,
+    _In_opt_ PVOID pAuthData,
+    _In_opt_ SEC_GET_KEY_FN pGetKeyFn,
+    _In_opt_ PVOID pvGetKeyArgument,
+    _Out_opt_ PTimeStamp ptsExpiry);
 
 typedef
 SECURITY_STATUS
@@ -9444,14 +9449,14 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 AddCredentialsW(
-    __in PCredHandle hCredentials,
-    __in_opt PSSPI_SEC_STRING pPrincipal,
-    __in PSSPI_SEC_STRING pPackage,
-    __in ULONG fCredentialUse,
-    __in_opt PVOID pAuthData,
-    __in_opt SEC_GET_KEY_FN pGetKeyFn,
-    __in_opt PVOID pvGetKeyArgument,
-    __out_opt PTimeStamp ptsExpiry);
+    _In_ PCredHandle hCredentials,
+    _In_opt_ PSSPI_SEC_STRING pPrincipal,
+    _In_ PSSPI_SEC_STRING pPackage,
+    _In_ ULONG fCredentialUse,
+    _In_opt_ PVOID pAuthData,
+    _In_opt_ SEC_GET_KEY_FN pGetKeyFn,
+    _In_opt_ PVOID pvGetKeyArgument,
+    _Out_opt_ PTimeStamp ptsExpiry);
 
 typedef
 SECURITY_STATUS
@@ -9477,8 +9482,8 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 ApplyControlToken(
-    __in PCtxtHandle phContext,
-    __in PSecBufferDesc pInput);
+    _In_ PCtxtHandle phContext,
+    _In_ PSecBufferDesc pInput);
 
 typedef
 SECURITY_STATUS
@@ -9490,14 +9495,14 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 ChangeAccountPasswordA(
-    __in SEC_CHAR* pszPackageName,
-    __in SEC_CHAR* pszDomainName,
-    __in SEC_CHAR* pszAccountName,
-    __in SEC_CHAR* pszOldPassword,
-    __in SEC_CHAR* pszNewPassword,
-    __in BOOLEAN bImpersonating,
-    __in ULONG dwReserved,
-    __inout PSecBufferDesc pOutput);
+    _In_ SEC_CHAR* pszPackageName,
+    _In_ SEC_CHAR* pszDomainName,
+    _In_ SEC_CHAR* pszAccountName,
+    _In_ SEC_CHAR* pszOldPassword,
+    _In_ SEC_CHAR* pszNewPassword,
+    _In_ BOOLEAN bImpersonating,
+    _In_ ULONG dwReserved,
+    _Inout_ PSecBufferDesc pOutput);
 
 typedef
 SECURITY_STATUS
@@ -9514,14 +9519,14 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 ChangeAccountPasswordW(
-    __in SEC_WCHAR* pszPackageName,
-    __in SEC_WCHAR* pszDomainName,
-    __in SEC_WCHAR* pszAccountName,
-    __in SEC_WCHAR* pszOldPassword,
-    __in SEC_WCHAR* pszNewPassword,
-    __in BOOLEAN bImpersonating,
-    __in ULONG dwReserved,
-    __inout PSecBufferDesc pOutput);
+    _In_ SEC_WCHAR* pszPackageName,
+    _In_ SEC_WCHAR* pszDomainName,
+    _In_ SEC_WCHAR* pszAccountName,
+    _In_ SEC_WCHAR* pszOldPassword,
+    _In_ SEC_WCHAR* pszNewPassword,
+    _In_ BOOLEAN bImpersonating,
+    _In_ ULONG dwReserved,
+    _Inout_ PSecBufferDesc pOutput);
 
 typedef
 SECURITY_STATUS
@@ -9548,8 +9553,8 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 CompleteAuthToken(
-    __in PCtxtHandle phContext,
-    __in PSecBufferDesc pToken);
+    _In_ PCtxtHandle phContext,
+    _In_ PSecBufferDesc pToken);
 
 typedef
 SECURITY_STATUS
@@ -9560,10 +9565,10 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 DecryptMessage(
-    __in PCtxtHandle phContext,
-    __inout PSecBufferDesc pMessage,
-    __in ULONG MessageSeqNo,
-    __out_opt PULONG pfQOP);
+    _In_ PCtxtHandle phContext,
+    _Inout_ PSecBufferDesc pMessage,
+    _In_ ULONG MessageSeqNo,
+    _Out_opt_ PULONG pfQOP);
 
 typedef
 SECURITY_STATUS
@@ -9577,7 +9582,7 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 DeleteSecurityContext(
-    __in PCtxtHandle phContext);
+    _In_ PCtxtHandle phContext);
 
 typedef
 SECURITY_STATUS
@@ -9587,10 +9592,10 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 EncryptMessage(
-    __in PCtxtHandle phContext,
-    __in ULONG  fQOP,
-    __inout PSecBufferDesc pMessage,
-    __in ULONG MessageSeqNo);
+    _In_ PCtxtHandle phContext,
+    _In_ ULONG  fQOP,
+    _Inout_ PSecBufferDesc pMessage,
+    _In_ ULONG MessageSeqNo);
 
 typedef
 SECURITY_STATUS
@@ -9604,8 +9609,8 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 EnumerateSecurityPackagesW(
-    __out       PULONG pcPackages,
-    __deref_out PSecPkgInfoW  * ppPackageInfo);
+    _Out_ PULONG pcPackages,
+    _Deref_out_ PSecPkgInfoW* ppPackageInfo);
 #define EnumerateSecurityPackages EnumerateSecurityPackagesW
 
 typedef
@@ -9619,10 +9624,10 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 ExportSecurityContext(
-    __in PCtxtHandle phContext,
-    __in ULONG fFlags,
-    __out PSecBuffer pPackedContext,
-    __out PVOID* pToken);
+    _In_ PCtxtHandle phContext,
+    _In_ ULONG fFlags,
+    _Out_ PSecBuffer pPackedContext,
+    _Out_ PVOID* pToken);
 
 typedef
 SECURITY_STATUS
@@ -9635,18 +9640,18 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 FreeContextBuffer(
-    __inout PVOID pvContextBuffer);
+    _Inout_ PVOID pvContextBuffer);
 
 typedef
 SECURITY_STATUS
 (SEC_ENTRY * FREE_CONTEXT_BUFFER_FN)(
-    __inout PVOID);
+    _Inout_ PVOID);
 
 KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 FreeCredentialsHandle(
-    __in PCredHandle phCredential);
+    _In_ PCredHandle phCredential);
 
 typedef
 SECURITY_STATUS
@@ -9657,7 +9662,7 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 ImpersonateSecurityContext(
-    __in PCtxtHandle phContext);
+    _In_ PCtxtHandle phContext);
 
 typedef
 SECURITY_STATUS
@@ -9668,10 +9673,10 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 ImportSecurityContextW(
-    __in PSSPI_SEC_STRING pszPackage,
-    __in PSecBuffer pPackedContext,
-    __in PVOID Token,
-    __out PCtxtHandle phContext);
+    _In_ PSSPI_SEC_STRING pszPackage,
+    _In_ PSecBuffer pPackedContext,
+    _In_ PVOID Token,
+    _Out_ PCtxtHandle phContext);
 #define ImportSecurityContext ImportSecurityContextW
 
 typedef
@@ -9687,18 +9692,18 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 InitializeSecurityContextW(
-    __in_opt PCredHandle phCredential,
-    __in_opt PCtxtHandle phContext,
-    __in_opt PSSPI_SEC_STRING pTargetName,
-    __in ULONG fContextReq,
-    __in ULONG Reserved1,
-    __in ULONG TargetDataRep,
-    __in_opt PSecBufferDesc pInput,
-    __in ULONG Reserved2,
-    __inout_opt PCtxtHandle phNewContext,
-    __inout_opt PSecBufferDesc pOutput,
-    __out PULONG pfContextAttr,
-    __out_opt PTimeStamp ptsExpiry);
+    _In_opt_ PCredHandle phCredential,
+    _In_opt_ PCtxtHandle phContext,
+    _In_opt_ PSSPI_SEC_STRING pTargetName,
+    _In_ ULONG fContextReq,
+    _In_ ULONG Reserved1,
+    _In_ ULONG TargetDataRep,
+    _In_opt_ PSecBufferDesc pInput,
+    _In_ ULONG Reserved2,
+    _Inout_opt_ PCtxtHandle phNewContext,
+    _Inout_opt_ PSecBufferDesc pOutput,
+    _Out_ PULONG pfContextAttr,
+    _Out_opt_ PTimeStamp ptsExpiry);
 #define InitializeSecurityContext InitializeSecurityContextW
 
 typedef
@@ -9733,10 +9738,10 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 MakeSignature(
-    __in PCtxtHandle phContext,
-    __in ULONG fQOP,
-    __in PSecBufferDesc pMessage,
-    __in ULONG MessageSeqNo);
+    _In_ PCtxtHandle phContext,
+    _In_ ULONG fQOP,
+    _In_ PSecBufferDesc pMessage,
+    _In_ ULONG MessageSeqNo);
 
 typedef
 SECURITY_STATUS
@@ -9750,9 +9755,9 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 QueryContextAttributesW(
-    __in PCtxtHandle phContext,
-    __in ULONG ulAttribute,
-    __out PVOID pBuffer);
+    _In_ PCtxtHandle phContext,
+    _In_ ULONG ulAttribute,
+    _Out_ PVOID pBuffer);
 #define QueryContextAttributes QueryContextAttributesW
 
 typedef
@@ -9767,9 +9772,9 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 QueryCredentialsAttributesW(
-    __in    PCredHandle phCredential,
-    __in    ULONG ulAttribute,
-    __inout PVOID pBuffer);
+    _In_    PCredHandle phCredential,
+    _In_    ULONG ulAttribute,
+    _Inout_ PVOID pBuffer);
 #define QueryCredentialsAttributes QueryCredentialsAttributesW
 
 typedef
@@ -9784,8 +9789,8 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 QuerySecurityContextToken(
-    __in PCtxtHandle phContext,
-    __out PVOID * Token);
+    _In_ PCtxtHandle phContext,
+    _Out_ PVOID* Token);
 
 typedef
 SECURITY_STATUS
@@ -9796,8 +9801,8 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 QuerySecurityPackageInfoW(
-    __in PSSPI_SEC_STRING pPackageName,
-    __deref_out PSecPkgInfoW *ppPackageInfo);
+    _In_ PSSPI_SEC_STRING pPackageName,
+    _Deref_out_ PSecPkgInfoW *ppPackageInfo);
 #define QuerySecurityPackageInfo QuerySecurityPackageInfoW
 
 typedef
@@ -9811,7 +9816,7 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 RevertSecurityContext(
-    __in PCtxtHandle phContext);
+    _In_ PCtxtHandle phContext);
 
 typedef
 SECURITY_STATUS
@@ -9822,10 +9827,10 @@ SECURITY_STATUS
 SECURITY_STATUS
 SEC_ENTRY
 SetContextAttributesW(
-    __in PCtxtHandle phContext,
-    __in ULONG ulAttribute,
-    __in_bcount(cbBuffer) PVOID pBuffer,
-    __in ULONG cbBuffer);
+    _In_ PCtxtHandle phContext,
+    _In_ ULONG ulAttribute,
+    _In_bytecount_(cbBuffer) PVOID pBuffer,
+    _In_ ULONG cbBuffer);
 #define SetContextAttributes SetContextAttributesW
 
 typedef
@@ -9843,10 +9848,10 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 SetCredentialsAttributesW(
-    __in PCredHandle phCredential,
-    __in ULONG ulAttribute,
-    __in_bcount(cbBuffer) PVOID pBuffer,
-    __in ULONG cbBuffer);
+    _In_ PCredHandle phCredential,
+    _In_ ULONG ulAttribute,
+    _In_bytecount_(cbBuffer) PVOID pBuffer,
+    _In_ ULONG cbBuffer);
 #define SetCredentialsAttributes SetCredentialsAttributesW
 
 typedef
@@ -9863,10 +9868,10 @@ KSECDDDECLSPEC
 SECURITY_STATUS
 SEC_ENTRY
 VerifySignature(
-    __in  PCtxtHandle phContext,
-    __in  PSecBufferDesc pMessage,
-    __in  ULONG MessageSeqNo,
-    __out PULONG pfQOP);
+    _In_ PCtxtHandle phContext,
+    _In_ PSecBufferDesc pMessage,
+    _In_ ULONG MessageSeqNo,
+    _Out_ PULONG pfQOP);
 
 typedef
 SECURITY_STATUS
@@ -9876,59 +9881,57 @@ SECURITY_STATUS
     ULONG,
     PULONG);
 
-
 #if (ISSP_MODE == 0)
 
 KSECDDDECLSPEC
 NTSTATUS
 NTAPI
 SecMakeSPN(
-    __in PUNICODE_STRING ServiceClass,
-    __in PUNICODE_STRING ServiceName,
-    __in_opt PUNICODE_STRING InstanceName,
-    __in_opt USHORT InstancePort,
-    __in_opt PUNICODE_STRING Referrer,
-    __inout PUNICODE_STRING Spn,
-    __out_opt PULONG Length,
-    __in BOOLEAN Allocate);
+    _In_ PUNICODE_STRING ServiceClass,
+    _In_ PUNICODE_STRING ServiceName,
+    _In_opt_ PUNICODE_STRING InstanceName,
+    _In_opt_ USHORT InstancePort,
+    _In_opt_ PUNICODE_STRING Referrer,
+    _Inout_ PUNICODE_STRING Spn,
+    _Out_opt_ PULONG Length,
+    _In_ BOOLEAN Allocate);
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 KSECDDDECLSPEC
 NTSTATUS
 NTAPI
 SecMakeSPNEx(
-    __in PUNICODE_STRING ServiceClass,
-    __in PUNICODE_STRING ServiceName,
-    __in_opt PUNICODE_STRING InstanceName,
-    __in_opt USHORT InstancePort,
-    __in_opt PUNICODE_STRING Referrer,
-    __in_opt PUNICODE_STRING TargetInfo,
-    __inout PUNICODE_STRING Spn,
-    __out PULONG Length OPTIONAL,
-    __in BOOLEAN Allocate);
+    _In_ PUNICODE_STRING ServiceClass,
+    _In_ PUNICODE_STRING ServiceName,
+    _In_opt_ PUNICODE_STRING InstanceName,
+    _In_opt_ USHORT InstancePort,
+    _In_opt_ PUNICODE_STRING Referrer,
+    _In_opt_ PUNICODE_STRING TargetInfo,
+    _Inout_ PUNICODE_STRING Spn,
+    _Out_ PULONG Length OPTIONAL,
+    _In_ BOOLEAN Allocate);
 
 KSECDDDECLSPEC
 NTSTATUS
 SEC_ENTRY
 SecLookupAccountSid(
-    __in      PSID Sid,
-    __out     PULONG NameSize,
-    __inout   PUNICODE_STRING NameBuffer,
-    __out     PULONG DomainSize OPTIONAL,
-    __out_opt PUNICODE_STRING DomainBuffer,
-    __out     PSID_NAME_USE NameUse
-    );
+    _In_ PSID Sid,
+    _Out_ PULONG NameSize,
+    _Inout_ PUNICODE_STRING NameBuffer,
+    _Out_ PULONG DomainSize OPTIONAL,
+    _Out_opt_ PUNICODE_STRING DomainBuffer,
+    _Out_ PSID_NAME_USE NameUse);
 
 KSECDDDECLSPEC
 NTSTATUS
 SEC_ENTRY
 SecLookupAccountName(
-    __in PUNICODE_STRING Name,
-    __inout PULONG SidSize,
-    __out PSID Sid,
-    __out PSID_NAME_USE NameUse,
-    __out_opt PULONG DomainSize, // WDK says __out only + ... OPTIONAL
-    __inout_opt PUNICODE_STRING ReferencedDomain);
+    _In_ PUNICODE_STRING Name,
+    _Inout_ PULONG SidSize,
+    _Out_ PSID Sid,
+    _Out_ PSID_NAME_USE NameUse,
+    _Out_opt_ PULONG DomainSize, // WDK says _Out_ only + ... OPTIONAL
+    _Inout_opt_ PUNICODE_STRING ReferencedDomain);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
@@ -9936,10 +9939,10 @@ KSECDDDECLSPEC
 NTSTATUS
 SEC_ENTRY
 SecLookupWellKnownSid(
-    __in WELL_KNOWN_SID_TYPE SidType,
-    __out PSID Sid,
-    __in ULONG SidBufferSize,
-    __inout_opt PULONG SidSize);
+    _In_ WELL_KNOWN_SID_TYPE SidType,
+    _Out_ PSID Sid,
+    _In_ ULONG SidBufferSize,
+    _Inout_opt_ PULONG SidSize);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -9947,16 +9950,16 @@ KSECDDDECLSPEC
 NTSTATUS
 NTAPI
 SecMakeSPNEx2(
-    __in PUNICODE_STRING ServiceClass,
-    __in PUNICODE_STRING ServiceName,
-    __in_opt PUNICODE_STRING InstanceName,
-    __in_opt USHORT InstancePort,
-    __in_opt PUNICODE_STRING Referrer,
-    __in_opt PUNICODE_STRING InTargetInfo,
-    __inout PUNICODE_STRING Spn,
-    __out_opt PULONG TotalSize,
-    __in BOOLEAN Allocate,
-    __in BOOLEAN IsTargetInfoMarshaled);
+    _In_ PUNICODE_STRING ServiceClass,
+    _In_ PUNICODE_STRING ServiceName,
+    _In_opt_ PUNICODE_STRING InstanceName,
+    _In_opt_ USHORT InstancePort,
+    _In_opt_ PUNICODE_STRING Referrer,
+    _In_opt_ PUNICODE_STRING InTargetInfo,
+    _Inout_ PUNICODE_STRING Spn,
+    _Out_opt_ PULONG TotalSize,
+    _In_ BOOLEAN Allocate,
+    _In_ BOOLEAN IsTargetInfoMarshaled);
 #endif
 
 #endif /* ISSP_MODE == 0 */
@@ -9966,84 +9969,84 @@ SecMakeSPNEx2(
 SECURITY_STATUS
 SEC_ENTRY
 SspiEncodeAuthIdentityAsStrings(
-    __in PSEC_WINNT_AUTH_IDENTITY_OPAQUE pAuthIdentity,
-    __deref_out_opt PCWSTR* ppszUserName,
-    __deref_out_opt PCWSTR* ppszDomainName,
-    __deref_opt_out_opt PCWSTR* ppszPackedCredentialsString);
+    _In_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE pAuthIdentity,
+    _Deref_out_opt_ PCWSTR* ppszUserName,
+    _Deref_out_opt_ PCWSTR* ppszDomainName,
+    _Deref_opt_out_opt_ PCWSTR* ppszPackedCredentialsString);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiValidateAuthIdentity(
-    __in PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
+    _In_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiCopyAuthIdentity(
-    __in PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData,
-    __deref_out PSEC_WINNT_AUTH_IDENTITY_OPAQUE* AuthDataCopy);
+    _In_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData,
+    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* AuthDataCopy);
 
 VOID
 SEC_ENTRY
 SspiFreeAuthIdentity(
-    __in_opt PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
+    _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
 
 VOID
 SEC_ENTRY
 SspiZeroAuthIdentity(
-    __in_opt PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
+    _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthData);
 
 VOID
 SEC_ENTRY
 SspiLocalFree(
-    __in_opt PVOID DataBuffer);
+    _In_opt_ PVOID DataBuffer);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiEncodeStringsAsAuthIdentity(
-    __in_opt PCWSTR pszUserName,
-    __in_opt PCWSTR pszDomainName,
-    __in_opt PCWSTR pszPackedCredentialsString,
-    __deref_out PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
+    _In_opt_ PCWSTR pszUserName,
+    _In_opt_ PCWSTR pszDomainName,
+    _In_opt_ PCWSTR pszPackedCredentialsString,
+    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiCompareAuthIdentities(
-    __in_opt PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity1,
-    __in_opt PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity2,
-    __out_opt PBOOLEAN SameSuppliedUser,
-    __out_opt PBOOLEAN SameSuppliedIdentity);
+    _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity1,
+    _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity2,
+    _Out_opt_ PBOOLEAN SameSuppliedUser,
+    _Out_opt_ PBOOLEAN SameSuppliedIdentity);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiMarshalAuthIdentity(
-    __in PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
-    __out PULONG AuthIdentityLength,
-    __deref_out_bcount(*AuthIdentityLength) PCHAR* AuthIdentityByteArray);
+    _In_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
+    _Out_ PULONG AuthIdentityLength,
+    _Deref_out__bcount(*AuthIdentityLength) PCHAR* AuthIdentityByteArray);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiUnmarshalAuthIdentity(
-    __in PULONG AuthIdentityLength,
-    __in_bcount(AuthIdentityLength) PCHAR AuthIdentityByteArray,
-    __deref_out PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
+    _In_ PULONG AuthIdentityLength,
+    _In__bcount(AuthIdentityLength) PCHAR AuthIdentityByteArray,
+    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
 
 BOOLEAN
 SEC_ENTRY
 SspiIsPromptingNeeded(
-    __in PULONG ErrorOrNtStatus);
+    _In_ PULONG ErrorOrNtStatus);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiGetTargetHostName(
-    __in PCWSTR pszTargetName,
-    __deref_out PWSTR* pszHostName);
+    _In_ PCWSTR pszTargetName,
+    _Deref_out_ PWSTR* pszHostName);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiExcludePackage(
-    __in_opt PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
-    __in PCWSTR pszPackageName,
-    __deref_out PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppNewAuthIdentity);
+    _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
+    _In_ PCWSTR pszPackageName,
+    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppNewAuthIdentity);
 
 #define SEC_WINNT_AUTH_IDENTITY_MARSHALLED 0x04
 #define SEC_WINNT_AUTH_IDENTITY_ONLY 0x08
