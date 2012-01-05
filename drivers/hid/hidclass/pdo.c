@@ -501,15 +501,16 @@ HidClassPDO_PnP(
             // now register the device interface
             //
             Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject, &GUID_DEVINTERFACE_HID, NULL, &PDODeviceExtension->DeviceInterface);
+            DPRINT1("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
             if (NT_SUCCESS(Status))
             {
                 //
                 // enable device interface
                 //
                 Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
+                DPRINT1("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
             }
             ASSERT(Status == STATUS_SUCCESS);
-
             //
             // break
             //
