@@ -532,6 +532,7 @@ drivers\network\tcpip\tcpip.sys                     2
 drivers\network\tdi\tdi.sys                         2
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
+drivers\network\ndisuio\ndisuio.sys                 2
 
 drivers\serial\serenum\serenum.sys                  2
 drivers\serial\serial\serial.sys                    2

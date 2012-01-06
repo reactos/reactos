@@ -15,8 +15,6 @@ PDEVICE_OBJECT GlobalDeviceObject;
 NDIS_HANDLE GlobalProtocolHandle;
 KSPIN_LOCK GlobalAdapterListLock;
 LIST_ENTRY GlobalAdapterList;
-NDIS_HANDLE GlobalPacketPoolHandle;
-NDIS_HANDLE GlobalBufferPoolHandle;
 
 NDIS_STRING ProtocolName = RTL_CONSTANT_STRING(L"NDISUIO");
 
@@ -70,32 +68,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
-    /* Create the buffer pool */
-    NdisAllocateBufferPool(&Status,
-                           &GlobalBufferPoolHandle,
-                           100);
-    if (Status != NDIS_STATUS_SUCCESS)
-    {
-        DPRINT1("Failed to allocate buffer pool with status 0x%x\n", Status);
-        IoDeleteSymbolicLink(&DosDeviceName);
-        IoDeleteDevice(GlobalDeviceObject);
-        return Status;
-    }
-
-    /* Create the packet pool */
-    NdisAllocatePacketPool(&Status,
-                           &GlobalPacketPoolHandle,
-                           50,
-                           0);
-    if (Status != NDIS_STATUS_SUCCESS)
-    {
-        DPRINT1("Failed to allocate packet pool with status 0x%x\n", Status);
-        NdisFreeBufferPool(GlobalBufferPoolHandle);
-        IoDeleteSymbolicLink(&DosDeviceName);
-        IoDeleteDevice(GlobalDeviceObject);
-        return Status;
-    }
-
     /* Register the protocol with NDIS */
     RtlZeroMemory(&Chars, sizeof(Chars));
     Chars.MajorNdisVersion = NDIS_MAJOR_VERSION;
@@ -121,8 +93,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("Failed to register protocol with status 0x%x\n", Status);
-        NdisFreePacketPool(GlobalPacketPoolHandle);
-        NdisFreeBufferPool(GlobalBufferPoolHandle);
         IoDeleteSymbolicLink(&DosDeviceName);
         IoDeleteDevice(GlobalDeviceObject);
         return Status;

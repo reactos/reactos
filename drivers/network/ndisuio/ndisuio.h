@@ -15,8 +15,6 @@ extern PDEVICE_OBJECT GlobalDeviceObject;
 extern NDIS_HANDLE GlobalProtocolHandle;
 extern LIST_ENTRY GlobalAdapterList;
 extern KSPIN_LOCK GlobalAdapterListLock;
-extern NDIS_HANDLE GlobalPacketPoolHandle;
-extern NDIS_HANDLE GlobalBufferPoolHandle;
 
 typedef struct _NDISUIO_ADAPTER_CONTEXT
 {
@@ -30,6 +28,10 @@ typedef struct _NDISUIO_ADAPTER_CONTEXT
     /* Reference count information */
     ULONG OpenCount;
     LIST_ENTRY OpenEntryList;
+    
+    /* NDIS pools */
+    NDIS_HANDLE PacketPoolHandle;
+    NDIS_HANDLE BufferPoolHandle;
 
     /* Receive packet list */
     LIST_ENTRY PacketList;
@@ -92,13 +94,15 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 
 /* misc.c */
 NDIS_STATUS
-AllocateAndChainBuffer(PNDIS_PACKET Packet,
+AllocateAndChainBuffer(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
+                       PNDIS_PACKET Packet,
                        PVOID Buffer,
                        ULONG BufferSize,
                        BOOLEAN Front);
 
 PNDIS_PACKET
-CreatePacketFromPoolBuffer(PVOID Buffer,
+CreatePacketFromPoolBuffer(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
+                           PVOID Buffer,
                            ULONG BufferSize);
 
 VOID

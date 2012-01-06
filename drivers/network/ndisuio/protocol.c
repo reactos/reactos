@@ -8,7 +8,7 @@
 
 #include "ndisuio.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 PNDIS_MEDIUM SupportedMedia = {NdisMedium802_3};
@@ -119,13 +119,20 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     NDIS_STATUS Status;
     UINT BytesTransferred;
     
+    DPRINT("Received a %d byte packet on %wZ\n", PacketSize + HeaderBufferSize, &AdapterContext->DeviceName);
+    
+    /* Discard if nobody is waiting for it */
+    if (AdapterContext->OpenCount == 0)
+        return NDIS_STATUS_NOT_ACCEPTED;
+    
     /* Allocate a buffer to hold the packet data and header */
     PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize);
     if (!PacketBuffer)
         return NDIS_STATUS_NOT_ACCEPTED;
 
     /* Allocate the packet descriptor and buffer */
-    Packet = CreatePacketFromPoolBuffer((PUCHAR)PacketBuffer + HeaderBufferSize,
+    Packet = CreatePacketFromPoolBuffer(AdapterContext,
+                                        (PUCHAR)PacketBuffer + HeaderBufferSize,
                                         PacketSize);
     if (!Packet)
     {
@@ -221,20 +228,28 @@ NDIS_STATUS
 UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 {
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentOpenEntry;
+    PLIST_ENTRY CurrentEntry;
     PNDISUIO_OPEN_ENTRY OpenEntry;
+    PNDISUIO_PACKET_ENTRY PacketEntry;
     NDIS_STATUS Status;
     
+    DPRINT("Unbinding adapter %wZ\n", &AdapterContext->DeviceName);
+    
+    /* FIXME: We don't do anything with outstanding reads */
+
     /* Remove the adapter context from the global list */
     KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
     RemoveEntryList(&AdapterContext->ListEntry);
     KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
+    
+    /* Free the device name string */
+    RtlFreeUnicodeString(&AdapterContext->DeviceName);
 
     /* Invalidate all handles to this adapter */
-    CurrentOpenEntry = AdapterContext->OpenEntryList.Flink;
-    while (CurrentOpenEntry != &AdapterContext->OpenEntryList)
+    CurrentEntry = AdapterContext->OpenEntryList.Flink;
+    while (CurrentEntry != &AdapterContext->OpenEntryList)
     {
-        OpenEntry = CONTAINING_RECORD(CurrentOpenEntry, NDISUIO_OPEN_ENTRY, ListEntry);
+        OpenEntry = CONTAINING_RECORD(CurrentEntry, NDISUIO_OPEN_ENTRY, ListEntry);
 
         /* Make sure the entry is sane */
         ASSERT(OpenEntry->FileObject);
@@ -249,7 +264,7 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
         OpenEntry->FileObject->FsContext2 = NULL;
         
         /* Move to the next entry */
-        CurrentOpenEntry = CurrentOpenEntry->Flink;
+        CurrentEntry = CurrentEntry->Flink;
 
         /* Free the open entry */
         ExFreePool(OpenEntry);
@@ -257,6 +272,19 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 
     /* If this fails, we have a refcount mismatch somewhere */
     ASSERT(AdapterContext->OpenCount == 0);
+    
+    /* Free all pending packet entries */
+    CurrentEntry = AdapterContext->PacketList.Flink;
+    while (CurrentEntry != &AdapterContext->PacketList)
+    {
+        PacketEntry = CONTAINING_RECORD(CurrentEntry, NDISUIO_PACKET_ENTRY, ListEntry);
+
+        /* Move to the next entry */
+        CurrentEntry = CurrentEntry->Flink;
+
+        /* Free the packet entry */
+        ExFreePool(PacketEntry);
+    }
     
     /* Send the close request */
     NdisCloseAdapter(&Status,
@@ -288,6 +316,8 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     UINT SelectedMedium;
     NDIS_STATUS Status;
     
+    DPRINT("Binding adapter %wZ\n", &AdapterContext->DeviceName);
+    
     /* Allocate the adapter context */
     AdapterContext = ExAllocatePool(NonPagedPool, sizeof(*AdapterContext));
     if (!AdapterContext)
@@ -313,15 +343,42 @@ BindAdapterByName(PNDIS_STRING DeviceName)
         return NDIS_STATUS_RESOURCES;
     }
 
+    /* Copy the device name into the adapter context */
     RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, DeviceName->Length);
-    
+
+    /* Create the buffer pool */
+    NdisAllocateBufferPool(&Status,
+                           &AdapterContext->BufferPoolHandle,
+                           50);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("Failed to allocate buffer pool with status 0x%x\n", Status);
+        RtlFreeUnicodeString(&AdapterContext->DeviceName);
+        ExFreePool(AdapterContext);
+        return Status;
+    }
+
+    /* Create the packet pool */
+    NdisAllocatePacketPool(&Status,
+                           &AdapterContext->PacketPoolHandle,
+                           25,
+                           PROTOCOL_RESERVED_SIZE_IN_PACKET);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("Failed to allocate packet pool with status 0x%x\n", Status);
+        NdisFreeBufferPool(AdapterContext->BufferPoolHandle);
+        RtlFreeUnicodeString(&AdapterContext->DeviceName);
+        ExFreePool(AdapterContext);
+        return Status;
+    }
+
     /* Send the open request */
     NdisOpenAdapter(&Status,
                     &OpenErrorStatus,
                     &AdapterContext->BindingHandle,
                     &SelectedMedium,
-                    SupportedMedia,
-                    sizeof(SupportedMedia),
+                    &SupportedMedia[0],
+                    1,
                     GlobalProtocolHandle,
                     AdapterContext,
                     DeviceName,
@@ -343,6 +400,9 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("Failed to open adapter for bind with status 0x%x\n", Status);
+        NdisFreePacketPool(AdapterContext->PacketPoolHandle);
+        NdisFreeBufferPool(AdapterContext->BufferPoolHandle);
+        RtlFreeUnicodeString(&AdapterContext->DeviceName);
         ExFreePool(AdapterContext);
         return Status;
     }

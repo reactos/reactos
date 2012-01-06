@@ -12,7 +12,11 @@
 #include <debug.h>
 
 NDIS_STATUS
-AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOLEAN Front)
+AllocateAndChainBuffer(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
+                       PNDIS_PACKET Packet,
+                       PVOID Buffer,
+                       ULONG BufferSize,
+                       BOOLEAN Front)
 {
     NDIS_STATUS Status;
     PNDIS_BUFFER NdisBuffer;
@@ -20,7 +24,7 @@ AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOL
     /* Allocate the NDIS buffer mapping the pool */
     NdisAllocateBuffer(&Status,
                        &NdisBuffer,
-                       GlobalBufferPoolHandle,
+                       AdapterContext->BufferPoolHandle,
                        Buffer,
                        BufferSize);
     if (Status != NDIS_STATUS_SUCCESS)
@@ -45,7 +49,9 @@ AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOL
 }
 
 PNDIS_PACKET
-CreatePacketFromPoolBuffer(PVOID Buffer, ULONG BufferSize)
+CreatePacketFromPoolBuffer(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
+                           PVOID Buffer,
+                           ULONG BufferSize)
 {
     PNDIS_PACKET Packet;
     NDIS_STATUS Status;
@@ -53,7 +59,7 @@ CreatePacketFromPoolBuffer(PVOID Buffer, ULONG BufferSize)
     /* Allocate a packet descriptor */
     NdisAllocatePacket(&Status,
                        &Packet,
-                       GlobalPacketPoolHandle);
+                       AdapterContext->PacketPoolHandle);
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("No free packet descriptors\n");
@@ -61,7 +67,8 @@ CreatePacketFromPoolBuffer(PVOID Buffer, ULONG BufferSize)
     }
 
     /* Use the helper to chain the buffer */
-    Status = AllocateAndChainBuffer(Packet, Buffer, BufferSize, TRUE);
+    Status = AllocateAndChainBuffer(AdapterContext, Packet,
+                                    Buffer, BufferSize, TRUE);
     if (Status != NDIS_STATUS_SUCCESS)
     {
         NdisFreePacket(Packet);

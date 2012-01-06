@@ -167,7 +167,8 @@ NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject == GlobalDeviceObject);
     
     /* Create a packet and buffer descriptor for this user buffer */
-    Packet = CreatePacketFromPoolBuffer(Irp->AssociatedIrp.SystemBuffer,
+    Packet = CreatePacketFromPoolBuffer(AdapterContext,
+                                        Irp->AssociatedIrp.SystemBuffer,
                                         IrpSp->Parameters.Write.Length);
     if (Packet)
     {
@@ -191,7 +192,7 @@ NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
         if (Status == NDIS_STATUS_SUCCESS)
             BytesCopied = IrpSp->Parameters.Write.Length;
 
-        CleanupAndFreePacket(Packet, TRUE);
+        CleanupAndFreePacket(Packet, FALSE);
     }
     else
     {
