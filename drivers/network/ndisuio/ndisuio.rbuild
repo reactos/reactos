@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ndisuio" type="kernelmodedriver" installbase="system32/drivers" installname="ndisuio.sys">
 	<include base="ndisuio">.</include>
+	<include base="ReactOS">include/reactos/drivers/ndisuio</include>
 	<define name="NDIS50" />
 	<define name="_NTDRIVER_" />
 	<library>ndis</library>
