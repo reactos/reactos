@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
+static
 NTSTATUS
 WaitForBind(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -28,6 +28,7 @@ WaitForBind(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
 QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -96,6 +97,8 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     return Status;
 }
 
+#if 0
+static
 NTSTATUS
 CancelPacketRead(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -129,13 +132,15 @@ CancelPacketRead(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     
     return Status;
 }
+#endif
 
+static
 NTSTATUS
 SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_SET_OID SetOidRequest;
-    NDIS_REQUEST NdisRequest;
+    NDIS_REQUEST Request;
     ULONG RequestLength;
     NDIS_STATUS Status;
     
@@ -143,18 +148,18 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     
     SetOidRequest = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     RequestLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
-    if (QueryOidRequest && RequestLength >= sizeof(NDIS_OID))
+    if (SetOidRequest && RequestLength >= sizeof(NDIS_OID))
     {
         /* Setup the NDIS request */
-        NdisRequest.RequestType = NdisRequestSetInformation;
-        NdisRequest.Oid = SetOidRequest->Oid;
-        NdisRequest.InformationBuffer = SetOidRequest->Data;
-        NdisRequest.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
+        Request.RequestType = NdisRequestSetInformation;
+        Request.DATA.SET_INFORMATION.Oid = SetOidRequest->Oid;
+        Request.DATA.SET_INFORMATION.InformationBuffer = SetOidRequest->Data;
+        Request.DATA.SET_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
 
         /* Dispatch the request */
         NdisRequest(&Status,
                     AdapterContext->BindingHandle,
-                    &NdisRequest);
+                    &Request);
 
         /* Wait for the request */
         if (Status == NDIS_STATUS_PENDING)
@@ -168,7 +173,7 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes read */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = NdisRequest.BytesRead;
+        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = Request.DATA.SET_INFORMATION.BytesRead;
     }
     else
     {
@@ -183,12 +188,13 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     return Status;
 }
 
+static
 NTSTATUS
 QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_QUERY_OID QueryOidRequest;
-    NDIS_REQUEST NdisRequest;
+    NDIS_REQUEST Request;
     ULONG RequestLength;
     NDIS_STATUS Status;
 
@@ -199,15 +205,15 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     if (QueryOidRequest && RequestLength >= sizeof(NDIS_OID))
     {
         /* Setup the NDIS request */
-        NdisRequest.RequestType = NdisRequestQueryInformation;
-        NdisRequest.Oid = QueryOidRequest->Oid;
-        NdisRequest.InformationBuffer = QueryOidRequest->Data;
-        NdisRequest.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
+        Request.RequestType = NdisRequestQueryInformation;
+        Request.DATA.QUERY_INFORMATION.Oid = QueryOidRequest->Oid;
+        Request.DATA.QUERY_INFORMATION.InformationBuffer = QueryOidRequest->Data;
+        Request.DATA.QUERY_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
         
         /* Dispatch the request */
         NdisRequest(&Status,
                     AdapterContext->BindingHandle,
-                    &NdisRequest);
+                    &Request);
         
         /* Wait for the request */
         if (Status == NDIS_STATUS_PENDING)
@@ -221,7 +227,7 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes written */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = NdisRequest.BytesWritten;
+        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = Request.DATA.QUERY_INFORMATION.BytesWritten;
     }
     else
     {
@@ -236,6 +242,7 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     return Status;
 }
 
+static
 NTSTATUS
 OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -307,7 +314,7 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
             {
                 /* Remove the reference we added */
                 KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
-                DereferenceAdapterContext(AdapterContext, NULL);
+                DereferenceAdapterContextWithOpenEntry(AdapterContext, NULL);
                 Status = STATUS_NO_MEMORY;
             }
         }
@@ -326,6 +333,8 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     return Status;
 }
 
+#if 0
+static
 NTSTATUS
 OpenDeviceWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -404,6 +413,7 @@ OpenDeviceWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     
     return Status;
 }
+#endif
 
 NTSTATUS
 NTAPI
@@ -420,10 +430,10 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
     {
         case IOCTL_NDISUIO_OPEN_DEVICE:
             return OpenDeviceReadWrite(Irp, IrpSp);
-
+#if 0
         case IOCTL_NDISUIO_OPEN_WRITE_DEVICE:
             return OpenDeviceWrite(Irp, IrpSp);
-            
+#endif
         case IOCTL_NDISUIO_BIND_WAIT:
             return WaitForBind(Irp, IrpSp);
             
@@ -461,8 +471,10 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 
                     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
                     {
+#if 0
                         case IOCTL_CANCEL_READ:
                             return CancelPacketRead(Irp, IrpSp);
+#endif
                         
                         case IOCTL_NDISUIO_QUERY_OID_VALUE:
                             return QueryAdapterOid(Irp, IrpSp);
@@ -472,7 +484,7 @@ NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
                             Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
                             Irp->IoStatus.Information = 0;
                             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                            break;
+                            return STATUS_NOT_IMPLEMENTED;
                     }
             }
             break;

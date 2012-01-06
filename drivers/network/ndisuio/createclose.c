@@ -41,7 +41,6 @@ NduDispatchClose(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_OPEN_ENTRY OpenEntry = IrpSp->FileObject->FsContext2;
-    KIRQL OldIrql;
     
     ASSERT(DeviceObject == GlobalDeviceObject);
 

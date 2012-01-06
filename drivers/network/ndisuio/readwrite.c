@@ -11,10 +11,12 @@
 #define NDEBUG
 #include <debug.h>
 
+static
 VOID
 NTAPI
 ReadIrpCancel(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_PACKET_ENTRY PacketEntry;
     
@@ -22,7 +24,7 @@ ReadIrpCancel(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     /* Indicate a 0-byte packet on the queue to cancel the read */
-    PacketEntry = ExAllocatePool(PagedPool, sizeof(NDISUIO_PACKET_ENTRY));
+    PacketEntry = ExAllocatePool(NonPagedPool, sizeof(NDISUIO_PACKET_ENTRY));
     if (PacketEntry)
     {
         PacketEntry->PacketLength = 0;
@@ -131,7 +133,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
 
         /* Copy the packet */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-                      &PacketEntry->PacketBuffer[0],
+                      &PacketEntry->PacketData[0],
                       BytesCopied);
         
         /* Free the packet entry */
@@ -189,7 +191,7 @@ NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
         if (Status == NDIS_STATUS_SUCCESS)
             BytesCopied = IrpSp->Parameters.Write.Length;
 
-        CleanupAndFreePacket(Packet);
+        CleanupAndFreePacket(Packet, TRUE);
     }
     else
     {

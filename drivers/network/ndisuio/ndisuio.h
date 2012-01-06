@@ -9,11 +9,16 @@
 
 #include <wdm.h>
 #include <ndis.h>
-//#include <nuiouser.h>
-#include <ndistapi.h>
-#include <ndisguid.h>
+#include <nuiouser.h>
 
-struct _NDISUIO_ADAPTER_CONTEXT
+extern PDEVICE_OBJECT GlobalDeviceObject;
+extern NDIS_HANDLE GlobalProtocolHandle;
+extern LIST_ENTRY GlobalAdapterList;
+extern KSPIN_LOCK GlobalAdapterListLock;
+extern NDIS_HANDLE GlobalPacketPoolHandle;
+extern NDIS_HANDLE GlobalBufferPoolHandle;
+
+typedef struct _NDISUIO_ADAPTER_CONTEXT
 {
     /* Asynchronous completion */
     NDIS_STATUS AsyncStatus;
@@ -30,6 +35,9 @@ struct _NDISUIO_ADAPTER_CONTEXT
     LIST_ENTRY PacketList;
     KEVENT PacketReadEvent;
 
+    /* Device name */
+    UNICODE_STRING DeviceName;
+
     /* Global list entry */
     LIST_ENTRY ListEntry;
 
@@ -37,7 +45,7 @@ struct _NDISUIO_ADAPTER_CONTEXT
     KSPIN_LOCK Spinlock;
 } NDISUIO_ADAPTER_CONTEXT, *PNDISUIO_ADAPTER_CONTEXT;
 
-struct _NDISUIO_OPEN_ENTRY
+typedef struct _NDISUIO_OPEN_ENTRY
 {
     /* File object */
     PFILE_OBJECT FileObject;
@@ -49,7 +57,7 @@ struct _NDISUIO_OPEN_ENTRY
     LIST_ENTRY ListEntry;
 } NDISUIO_OPEN_ENTRY, *PNDISUIO_OPEN_ENTRY;
 
-struct _NDISUIO_PACKET_ENTRY
+typedef struct _NDISUIO_PACKET_ENTRY
 {
     /* Length of data at the end of the struct */
     ULONG PacketLength;
@@ -62,7 +70,134 @@ struct _NDISUIO_PACKET_ENTRY
 } NDISUIO_PACKET_ENTRY, *PNDISUIO_PACKET_ENTRY;
 
 /* NDIS version info */
-#define NDIS_MAJOR_VERISON 5
+#define NDIS_MAJOR_VERSION 5
 #define NDIS_MINOR_VERSION 0
 
+/* createclose.c */
+NTSTATUS
+NTAPI
+NduDispatchCreate(PDEVICE_OBJECT DeviceObject,
+                  PIRP Irp);
+
+NTSTATUS
+NTAPI
+NduDispatchClose(PDEVICE_OBJECT DeviceObject,
+                 PIRP Irp);
+
+/* ioctl.c */
+NTSTATUS
+NTAPI
+NduDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
+                         PIRP Irp);
+
+/* misc.c */
+NDIS_STATUS
+AllocateAndChainBuffer(PNDIS_PACKET Packet,
+                       PVOID Buffer,
+                       ULONG BufferSize,
+                       BOOLEAN Front);
+
+PNDIS_PACKET
+CreatePacketFromPoolBuffer(PVOID Buffer,
+                           ULONG BufferSize);
+
+VOID
+CleanupAndFreePacket(PNDIS_PACKET Packet,
+                     BOOLEAN FreePool);
+
+PNDISUIO_ADAPTER_CONTEXT
+FindAdapterContextByName(PNDIS_STRING DeviceName);
+
+VOID
+ReferenceAdapterContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext);
+
+VOID
+DereferenceAdapterContextWithOpenEntry(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
+                                       PNDISUIO_OPEN_ENTRY OpenEntry);
+
+/* protocol.c */
+VOID
+NTAPI
+NduOpenAdapterComplete(NDIS_HANDLE ProtocolBindingContext,
+                       NDIS_STATUS Status,
+                       NDIS_STATUS OpenStatus);
+
+VOID
+NTAPI
+NduCloseAdapterComplete(NDIS_HANDLE ProtocolBindingContext,
+                        NDIS_STATUS Status);
+
+VOID
+NTAPI
+NduSendComplete(NDIS_HANDLE ProtocolBindingContext,
+                PNDIS_PACKET Packet,
+                NDIS_STATUS Status);
+
+VOID
+NTAPI
+NduTransferDataComplete(NDIS_HANDLE ProtocolBindingContext,
+                        PNDIS_PACKET Packet,
+                        NDIS_STATUS Status,
+                        UINT BytesTransferred);
+
+VOID
+NTAPI
+NduResetComplete(NDIS_HANDLE ProtocolBindingContext,
+                 NDIS_STATUS Status);
+
+VOID
+NTAPI
+NduRequestComplete(NDIS_HANDLE ProtocolBindingContext,
+                   PNDIS_REQUEST NdisRequest,
+                   NDIS_STATUS Status);
+
+NDIS_STATUS
+NTAPI
+NduReceive(NDIS_HANDLE ProtocolBindingContext,
+           NDIS_HANDLE MacReceiveContext,
+           PVOID HeaderBuffer,
+           UINT HeaderBufferSize,
+           PVOID LookAheadBuffer,
+           UINT LookaheadBufferSize,
+           UINT PacketSize);
+
+VOID
+NTAPI
+NduReceiveComplete(NDIS_HANDLE ProtocolBindingContext);
+
+VOID
+NTAPI
+NduStatus(NDIS_HANDLE ProtocolBindingContext,
+          NDIS_STATUS GeneralStatus,
+          PVOID StatusBuffer,
+          UINT StatusBufferSize);
+
+VOID
+NTAPI
+NduStatusComplete(NDIS_HANDLE ProtocolBindingContext);
+
+VOID
+NTAPI
+NduBindAdapter(PNDIS_STATUS Status,
+               NDIS_HANDLE BindContext,
+               PNDIS_STRING DeviceName,
+               PVOID SystemSpecific1,
+               PVOID SystemSpecific2);
+
+VOID
+NTAPI
+NduUnbindAdapter(PNDIS_STATUS Status,
+                 NDIS_HANDLE ProtocolBindingContext,
+                 NDIS_HANDLE UnbindContext);
+
+/* readwrite.c */
+NTSTATUS
+NTAPI
+NduDispatchRead(PDEVICE_OBJECT DeviceObject,
+                PIRP Irp);
+
+NTSTATUS
+NTAPI
+NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
+                 PIRP Irp);
 #endif /* __NDISUIO_H */

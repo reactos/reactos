@@ -15,13 +15,14 @@ NDIS_STATUS
 AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOLEAN Front)
 {
     NDIS_STATUS Status;
+    PNDIS_BUFFER NdisBuffer;
 
     /* Allocate the NDIS buffer mapping the pool */
     NdisAllocateBuffer(&Status,
-                       &Buffer,
+                       &NdisBuffer,
                        GlobalBufferPoolHandle,
                        Buffer,
-                       Length);
+                       BufferSize);
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("No free buffer descriptors\n");
@@ -31,12 +32,12 @@ AllocateAndChainBuffer(PNDIS_PACKET Packet, PVOID Buffer, ULONG BufferSize, BOOL
     if (Front)
     {
         /* Chain the buffer to front */
-        NdisChainBufferAtFront(Packet, Buffer);
+        NdisChainBufferAtFront(Packet, NdisBuffer);
     }
     else
     {
         /* Chain the buffer to back */
-        NdisChainBufferAtBack(Packet, Buffer);
+        NdisChainBufferAtBack(Packet, NdisBuffer);
     }
 
     /* Return success */

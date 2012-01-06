@@ -113,10 +113,11 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
            UINT PacketSize)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = ProtocolBindingContext;
+    PNDISUIO_PACKET_ENTRY PacketEntry;
     PVOID PacketBuffer;
     PNDIS_PACKET Packet;
     NDIS_STATUS Status;
-    ULONG BytesTransferred;
+    UINT BytesTransferred;
     
     /* Allocate a buffer to hold the packet data and header */
     PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize);
@@ -138,6 +139,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
                      MacReceiveContext,
                      0,
                      PacketSize,
+                     Packet,
                      &BytesTransferred);
     if (Status == NDIS_STATUS_PENDING)
     {
@@ -214,12 +216,14 @@ NduStatusComplete(NDIS_HANDLE ProtocolBindingContext)
     /* FIXME: Implement status tracking */
 }
 
+static
 NDIS_STATUS
 UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 {
     KIRQL OldIrql;
     PLIST_ENTRY CurrentOpenEntry;
     PNDISUIO_OPEN_ENTRY OpenEntry;
+    NDIS_STATUS Status;
     
     /* Remove the adapter context from the global list */
     KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
@@ -255,27 +259,29 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     ASSERT(AdapterContext->OpenCount == 0);
     
     /* Send the close request */
-    NdisCloseAdapter(Status,
+    NdisCloseAdapter(&Status,
                      AdapterContext->BindingHandle);
     
     /* Wait for a pending close */
-    if (*Status == NDIS_STATUS_PENDING)
+    if (Status == NDIS_STATUS_PENDING)
     {
         KeWaitForSingleObject(&AdapterContext->AsyncEvent,
                               Executive,
                               KernelMode,
                               FALSE,
                               NULL);
-        *Status = AdapterContext->AsyncStatus;
+        Status = AdapterContext->AsyncStatus;
     }
     
     /* Free the context */
     ExFreePool(AdapterContext);
+    
+    return Status;
 }
 
-
+static
 NDIS_STATUS
-BindAdapterByName(PNDIS_STRING DeviceName, PNDISUIO_ADAPTER_CONTEXT *Context)
+BindAdapterByName(PNDIS_STRING DeviceName)
 {
     NDIS_STATUS OpenErrorStatus;
     PNDISUIO_ADAPTER_CONTEXT AdapterContext;
@@ -298,6 +304,17 @@ BindAdapterByName(PNDIS_STRING DeviceName, PNDISUIO_ADAPTER_CONTEXT *Context)
     InitializeListHead(&AdapterContext->OpenEntryList);
     AdapterContext->OpenCount = 0;
 
+    AdapterContext->DeviceName.Length =
+    AdapterContext->DeviceName.MaximumLength = DeviceName->Length;
+    AdapterContext->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName->Length);
+    if (!AdapterContext->DeviceName.Buffer)
+    {
+        ExFreePool(AdapterContext);
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, DeviceName->Length);
+    
     /* Send the open request */
     NdisOpenAdapter(&Status,
                     &OpenErrorStatus,
@@ -325,18 +342,16 @@ BindAdapterByName(PNDIS_STRING DeviceName, PNDISUIO_ADAPTER_CONTEXT *Context)
     /* Check the final status */
     if (Status != NDIS_STATUS_SUCCESS)
     {
-        DPRINT1("Failed to open adapter for bind with status 0x%x\n", *Status);
+        DPRINT1("Failed to open adapter for bind with status 0x%x\n", Status);
         ExFreePool(AdapterContext);
-        return;
+        return Status;
     }
     
     /* Add the adapter context to the global list */
     ExInterlockedInsertTailList(&GlobalAdapterList,
                                 &AdapterContext->ListEntry,
                                 &GlobalAdapterListLock);
-    
-    /* Return the context */
-    *Context = AdapterContext;
+
     return STATUS_SUCCESS;
 }
 

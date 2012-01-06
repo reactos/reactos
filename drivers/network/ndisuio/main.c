@@ -13,12 +13,16 @@
 
 PDEVICE_OBJECT GlobalDeviceObject;
 NDIS_HANDLE GlobalProtocolHandle;
+KSPIN_LOCK GlobalAdapterListLock;
+LIST_ENTRY GlobalAdapterList;
+NDIS_HANDLE GlobalPacketPoolHandle;
+NDIS_HANDLE GlobalBufferPoolHandle;
+
+NDIS_STRING ProtocolName = RTL_CONSTANT_STRING(L"NDISUIO");
 
 VOID NTAPI NduUnload(PDRIVER_OBJECT DriverObject)
-{
-    IoDeleteDevice(GlobalDeviceObject);
-    
-    DPRINT("NDISUIO: Unloaded\n");
+{    
+    DPRINT1("NDISUIO: Unloaded\n");
 }
 
 NTSTATUS
@@ -26,8 +30,10 @@ NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
-    NTSTATUS Status;
+    NDIS_STATUS Status;
     NDIS_PROTOCOL_CHARACTERISTICS Chars;
+    UNICODE_STRING NtDeviceName = RTL_CONSTANT_STRING(NDISUIO_DEVICE_NAME_NT);
+    UNICODE_STRING DosDeviceName = RTL_CONSTANT_STRING(NDISUIO_DEVICE_NAME_DOS);
 
     /* Setup dispatch functions */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = NduDispatchCreate;
@@ -36,13 +42,17 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_READ] = NduDispatchRead;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = NduDispatchWrite;
     DriverObject->DriverUnload = NduUnload;
+    
+    /* Setup global state */
+    InitializeListHead(&GlobalAdapterList);
+    KeInitializeSpinLock(&GlobalAdapterListLock);
 
     /* Create the NDISUIO device object */
     Status = IoCreateDevice(DriverObject,
                             0,
-                            NULL, // FIXME
-                            NDISUIO_DEVICE_NAME,
+                            &NtDeviceName,
                             FILE_DEVICE_SECURE_OPEN,
+                            0,
                             FALSE,
                             &GlobalDeviceObject);
     if (!NT_SUCCESS(Status))
@@ -51,6 +61,41 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         return Status;
     }
     
+    /* Create a symbolic link into the DOS devices namespace */
+    Status = IoCreateSymbolicLink(&DosDeviceName, &NtDeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create symbolic link with status 0x%x\n", Status);
+        IoDeleteDevice(GlobalDeviceObject);
+        return Status;
+    }
+
+    /* Create the buffer pool */
+    NdisAllocateBufferPool(&Status,
+                           &GlobalBufferPoolHandle,
+                           100);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("Failed to allocate buffer pool with status 0x%x\n", Status);
+        IoDeleteSymbolicLink(&DosDeviceName);
+        IoDeleteDevice(GlobalDeviceObject);
+        return Status;
+    }
+
+    /* Create the packet pool */
+    NdisAllocatePacketPool(&Status,
+                           &GlobalPacketPoolHandle,
+                           50,
+                           0);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        DPRINT1("Failed to allocate packet pool with status 0x%x\n", Status);
+        NdisFreeBufferPool(GlobalBufferPoolHandle);
+        IoDeleteSymbolicLink(&DosDeviceName);
+        IoDeleteDevice(GlobalDeviceObject);
+        return Status;
+    }
+
     /* Register the protocol with NDIS */
     RtlZeroMemory(&Chars, sizeof(Chars));
     Chars.MajorNdisVersion = NDIS_MAJOR_VERSION;
@@ -62,14 +107,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     Chars.ResetCompleteHandler = NduResetComplete;
     Chars.RequestCompleteHandler = NduRequestComplete;
     Chars.ReceiveHandler = NduReceive;
-    Chars.ReceiveComplete = NduReceiveComplete;
+    Chars.ReceiveCompleteHandler = NduReceiveComplete;
     Chars.StatusHandler = NduStatus;
     Chars.StatusCompleteHandler = NduStatusComplete;
-    Chars.Name = NULL; //FIXME
-    Chars.ReceivePacketHandler = NULL; //NduReceivePacket
+    Chars.Name = ProtocolName;
     Chars.BindAdapterHandler = NduBindAdapter;
     Chars.UnbindAdapterHandler = NduUnbindAdapter;
-    Chars.PnPEventHandler = NduPnPEvent;
     
     NdisRegisterProtocol(&Status,
                          &GlobalProtocolHandle,
@@ -78,11 +121,14 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("Failed to register protocol with status 0x%x\n", Status);
+        NdisFreePacketPool(GlobalPacketPoolHandle);
+        NdisFreeBufferPool(GlobalBufferPoolHandle);
+        IoDeleteSymbolicLink(&DosDeviceName);
         IoDeleteDevice(GlobalDeviceObject);
         return Status;
     }
 
-    DPRINT("NDISUIO: Loaded\n");
+    DPRINT1("NDISUIO: Loaded\n");
 
     return STATUS_SUCCESS;
 }
