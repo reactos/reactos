@@ -31,7 +31,7 @@
 #ifdef _PREFAST_
 
 #ifndef _USE_DECLSPECS_FOR_SAL
-#define _USE_DECLSPECS_FOR_SAL 0
+#define _USE_DECLSPECS_FOR_SAL 1
 #endif
 
 #if !defined(_USE_ATTRIBUTES_FOR_SAL) || _USE_DECLSPECS_FOR_SAL
@@ -192,6 +192,8 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define __count_c_impl(size) ValidElementsConst=size
 #define __count_impl(size) ValidElements=NL_(size)
 #define __count_x_impl(size) ValidElements="\n@"#size
+#define __inner_exceptthat [SAL_except]
+#define __inner_typefix(ctype) [SAL_typefix(p1=_SA_SPECSTRIZE(ctype))]
 #define __maybenull_impl Null=SA_Maybe
 #define __maybenull_impl_notref Null=SA_Maybe,Notref=1
 #define __maybevalid_impl Valid=SA_Maybe
@@ -210,9 +212,6 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define __writeaccess_impl Access=SA_Write
 #define __writeaccess_impl_notref Access=SA_Write,Notref=1
 #define __zterm_impl NullTerminated=SA_Yes
-
-#define __inner_exceptthat [SAL_except]
-#define __inner_typefix(ctype) [SAL_typefix(p1=_SA_SPECSTRIZE(ctype))]
 #define _Check_return_impl_ [returnvalue:SA_Post(MustCheck=SA_Yes)]
 #define _Deref_in_bound_impl_ [SA_PreBound(Deref=1)]
 #define _Deref_in_range_impl_(min,max) [SA_PreRange(Deref=1,MinVal=#min,MaxVal=#max)]
@@ -234,6 +233,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Deref2_ret1_impl_(p1) [returnvalue:SA_Post(Deref=2,Notref=1,p1)]
 #define _In_bound_impl_ [SA_PreBound(Deref=0)]
 #define _In_range_impl_(min,max) [SA_PreRange(MinVal=#min,MaxVal=#max)]
+#define _Notref_impl_ _SA_annotes0(SAL_notref)
 #define _Out_bound_impl_ [SA_PostBound(Deref=0)]
 #define _Out_range_impl_(min,max) [SA_PostRange(MinVal=#min,MaxVal=#max)]
 #define _Post1_impl_(p1) [SA_Post(p1)]
@@ -258,9 +258,93 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 
 #else /* #if _USE_DECLSPECS_FOR_SAL */
 
-#error unimplemented
+#define __bytecap_c_impl(size) _SA_annotes1(SAL_writableTo,byteCount(size))
+#define __bytecap_impl(size) _SA_annotes1(SAL_writableTo,byteCount(size))
+#define __bytecap_x_impl(size) _SA_annotes1(SAL_writableTo,inexpressibleCount(#size))
+#define __bytecount_c_impl(size) _SA_annotes1(SAL_readableTo,byteCount(size))
+#define __bytecount_impl(size) _SA_annotes1(SAL_readableTo,byteCount(size))
+#define __bytecount_x_impl(size) _SA_annotes1(SAL_readableTo,inexpressibleCount(#size))
+#define __cap_c_impl(size) _SA_annotes1(SAL_writableTo,elementCount(size))
+#define __cap_c_one_notref_impl _Notref_ _SA_annotes1(SAL_writableTo,elementCount(1))
+#define __cap_for_impl(param) _SA_annotes1(SAL_writableTo,inexpressibleCount(sizeof(param)))
+#define __cap_impl(size) _SA_annotes1(SAL_writableTo,elementCount(size))
+#define __cap_x_impl(size) _SA_annotes1(SAL_writableTo,inexpressibleCount(#size))
+#define __count_c_impl(size) _SA_annotes1(SAL_readableTo,elementCount(size))
+#define __count_impl(size) _SA_annotes1(SAL_readableTo,elementCount(size))
+#define __count_x_impl(size) _SA_annotes1(SAL_readableTo,inexpressibleCount(#size))
+#define __inner_exceptthat _SA_annotes0(SAL_except)
+#define __inner_typefix(ctype) _SA_annotes1(SAL_typefix, ctype)
+#define __maybenull_impl _SA_annotes0(SAL_maybenull)
+#define __maybenull_impl_notref _Notref_ _Maybenull_impl_
+#define __maybevalid_impl _SA_annotes0(SAL_maybevalid) // _SA_annotes1(SAL_valid, __maybe)
+#define __maybezterm_impl _SA_annotes1(SAL_nullTerminated, __maybe)
+#define __maybzterm_impl _SA_annotes1(SAL_nullTerminated, __maybe)
+#define __mult_impl(mult,size) _SA_annotes1(SAL_writableTo,(mult)*(size))
+#define __notnull_impl _SA_annotes0(SAL_notnull) // _SA_annotes1(SAL_null, __no)
+#define __notnull_impl_notref _Notref_ _Notnull_impl_
+#define __notvalid_impl _SA_annotes0(SAL_notvalid) // _SA_annotes1(SAL_valid, __no)
+#define __null_impl _SA_annotes0(SAL_null) // _SA_annotes1(SAL_null, __yes)
+#define __null_impl_notref _Notref_ _Null_impl_
+#define __notzterm_impl _SA_annotes1(SAL_nullTerminated, __no)
+#define __readaccess_impl _SA_annotes0(SAL_readonly) //_SA_annotes1(SAL_access, 0x1)
+#define __readaccess_impl_notref _Notref_ _SA_annotes0(SAL_readonly) //_SA_annotes1(SAL_access, 0x1)
+#define __valid_impl _SA_annotes0(SAL_valid) // _SA_annotes1(SAL_valid, __yes)
+#define __writeaccess_impl _SA_annotes0(SAL_notreadonly) // _SA_annotes1(SAL_access, 0x2)
+#define __writeaccess_impl_notref _Notref_ _SA_annotes0(SAL_notreadonly) // _SA_annotes1(SAL_access, 0x2)
+#define __zterm_impl _SA_annotes1(SAL_nullTerminated, __yes)
+#define _Check_return_impl_ __post _SA_annotes0(SAL_checkReturn)
+#define _Deref_in_bound_impl_ _Deref_pre_impl_ _Bound_impl_
+#define _Deref_in_range_impl_(min,max) _Deref_pre_impl_ _Range_impl_(min,max)
+#define _Deref_out_bound_impl_ _Deref_post_impl_ _Bound_impl_
+#define _Deref_out_range_impl_(min,max) _Deref_post_impl_ _Range_impl_(min,max)
+#define _Deref_post_impl_ _Post_impl_ _Notref_impl_  _Deref_impl_
+#define _Deref_post1_impl_(p1) _Deref_post_impl_ p1
+#define _Deref_post2_impl_(p1,p2) _Deref_post_impl_ p1 _Deref_post_impl_ p2
+#define _Deref_post3_impl_(p1,p2,p3) _Deref_post_impl_ p1 _Deref_post_impl_ p2 _Deref_post_impl_ p3
+#define _Deref_pre_impl_ _Pre_impl_  _Notref_impl_  _Deref_impl_
+#define _Deref_pre1_impl_(p1) _Deref_pre_impl_ p1
+#define _Deref_pre2_impl_(p1,p2) _Deref_pre_impl_ p1 _Deref_pre_impl_ p2
+#define _Deref_pre3_impl_(p1,p2,p3) _Deref_pre_impl_ p1 _Deref_pre_impl_ p2 _Deref_pre_impl_ p3
+#define _Deref_ret_bound_impl_ _Deref_post_impl_ _Bound_impl_
+#define _Deref_ret_range_impl_(min,max) _Deref_post_impl_ _Range_impl_(min,max)
+#define _Deref_ret1_impl_(p1) _Deref_post_impl_ p1
+#define _Deref_ret2_impl_(p1,p2) _Deref_post_impl_ p1 _Deref_post_impl_ p2
+#define _Deref_ret3_impl_(p1,p2,p3) _Deref_post_impl_ p1 _Deref_post_impl_ p2 _Deref_post_impl_ p3
+#define _Deref2_post1_impl_(p1) _Deref_post_impl_ _Notref_impl_ _Deref_impl_ p1
+#define _Deref2_pre1_impl_(p1) _Deref_pre_impl_ _Notref_impl_ _Deref_impl_ p1
+#define _Deref2_ret1_impl_(p1)       _Deref_post_impl_ _Notref_impl_ _Deref_impl_ p1
+#define _In_bound_impl_ _Pre_impl_ _Bound_impl_
+#define _In_range_impl_(min,max) _Pre_impl_ _Range_impl_(min,max)
+#if (_MSC_VER > 1600) // CHECKME: doesn't work with WDK 7600
+#define _Notref_impl_ _SA_annotes0(SAL_notref)
+#else
+#define _Notref_impl_
+#endif
+#define _Out_bound_impl_ _Post_impl_ _Bound_impl_
+#define _Out_range_impl_(min,max) _Post_impl_ _Range_impl_(min,max)
+#define _Post1_impl_(p1) _Post_impl_ p1
+#define _Post2_impl_(p1,p2) _Post_impl_ p1 _Post_impl_ p2
+#define _Post3_impl_(p1,p2,p3) _Post_impl_ p1 _Post_impl_ p2 _Post_impl_ p3
+#define _Pre1_impl_(p1) _Pre_impl_ p1
+#define _Pre2_impl_(p1,p2) _Pre_impl_ p1 _Pre_impl_ p2
+#define _Pre3_impl_(p1,p2,p3) _Pre_impl_ p1 _Pre_impl_ p2 _Pre_impl_ p3
+#define _Printf_format_string_impl_ _SA_annotes1(SAL_IsFormatString, "printf")
+#define _Ret_bound_impl_ _Post_impl_ _Bound_impl_
+#define _Ret_range_impl_(min,max) _Post_impl_ _Range_impl_(min,max)
+#define _Ret1_impl_(p1) _Post_impl_ p1
+#define _Ret2_impl_(p1,p2) _Post_impl_ p1 _Post_impl_ p2
+#define _Ret3_impl_(p1,p2,p3) _Post_impl_ p1 _Post_impl_ p2 _Post_impl_ p3
+#define _SA_annotes0(n) __declspec(#n)
+#define _SA_annotes1(n,pp1) __declspec(#n "(" _SA_SPECSTRIZE(pp1) ")" )
+#define _SA_annotes2(n,pp1,pp2) __declspec(#n "(" _SA_SPECSTRIZE(pp1) "," _SA_SPECSTRIZE(pp2) ")")
+#define _SA_annotes3(n,pp1,pp2,pp3) __declspec(#n "(" _SA_SPECSTRIZE(pp1) "," _SA_SPECSTRIZE(pp2) "," _SA_SPECSTRIZE(pp3) ")")
+#define _Scanf_format_string_impl_ _SA_annotes1(SAL_IsFormatString, "scanf")
+#define _Scanf_s_format_string_impl_ _SA_annotes1(SAL_IsFormatString, "scanf_s")
+#define _Use_decl_anno_impl_ __declspec("SAL_useHeader()") // this is a special case!
 
 #endif
+
+#define _SA_SPECSTRIZE(x) #x
 
 /* Common definitions */
 #define _At_(target, annos) _At_impl_(target, annos _SAL_nop_impl_)
@@ -279,7 +363,6 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Must_inspect_impl_ _Post_impl_ _SA_annotes0(SAL_mustInspect)
 #define _Notliteral_impl_ _SA_annotes1(SAL_constant, __no)
 #define _Notnull_impl_ _SA_annotes1(SAL_null, __no)
-#define _Notref_impl_ _SA_annotes0(SAL_notref)
 #define _Notvalid_impl_ _SA_annotes1(SAL_valid, __no)
 #define _Null_impl_ _SA_annotes1(SAL_null, __yes)
 #define _Null_terminated_impl_ _SA_annotes1(SAL_nullTerminated, __yes)
@@ -1560,5 +1643,5 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define	_Writable_bytes_(size)
 #define	_Writable_elements_(size)
 
-#endif /* _USE_ATTRIBUTES_FOR_SAL || _USE_ATTRIBUTES_FOR_SAL */
+#endif /* _USE_ATTRIBUTES_FOR_SAL || _USE_DECLSPECS_FOR_SAL */
 
