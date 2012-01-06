@@ -13,8 +13,7 @@
 VOID
 KbdHid_DispatchInputData(
     IN PKBDHID_DEVICE_EXTENSION DeviceExtension,
-    IN PKEYBOARD_INPUT_DATA InputData,
-    IN ULONG InputDataLength)
+    IN PKEYBOARD_INPUT_DATA InputData)
 {
     KIRQL OldIrql;
     ULONG InputDataConsumed;
@@ -30,11 +29,37 @@ KbdHid_DispatchInputData(
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     /* dispatch input data */
-    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassService)(DeviceExtension->ClassDeviceObject, InputData, InputData + InputDataLength + 1, &InputDataConsumed);
+    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassService)(DeviceExtension->ClassDeviceObject, InputData, InputData + 1, &InputDataConsumed);
 
     /* lower irql to previous level */
     KeLowerIrql(OldIrql);
 }
+
+BOOLEAN
+NTAPI
+KbdHid_InsertScanCodes(
+    IN PVOID  Context,
+    IN PCHAR  NewScanCodes,
+    IN ULONG  Length)
+{
+    KEYBOARD_INPUT_DATA InputData;
+    ULONG Index;
+
+    for(Index = 0; Index < Length; Index++)
+    {
+        DPRINT1("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
+        //
+        // TODO: set up input data
+        //
+        //KbdHid_DispatchInputData((PKBDHID_DEVICE_EXTENSION)Context, &InputData);
+    }
+
+    //
+    // done
+    //
+    return TRUE;
+}
+
 
 NTSTATUS
 NTAPI
@@ -44,6 +69,8 @@ KbdHid_ReadCompletion(
     IN PVOID  Context)
 {
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    ULONG ButtonLength;
 
     /* get device extension */
     DeviceExtension = (PKBDHID_DEVICE_EXTENSION)Context;
@@ -67,11 +94,27 @@ KbdHid_ReadCompletion(
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
-    UNIMPLEMENTED
-    ASSERT(FALSE);
+    /* get current usages */
+    ButtonLength = DeviceExtension->UsageListLength;
+    Status = HidP_GetUsagesEx(HidP_Input, HIDP_LINK_COLLECTION_UNSPECIFIED, DeviceExtension->CurrentUsageList, &ButtonLength, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
 
-    /* dispatch mouse action */
-    //KbdHid_DispatchInputData(DeviceExtension, &InputData);
+    /* FIXME check if needs mapping */
+
+    /* get usage difference */
+    Status = HidP_UsageAndPageListDifference(DeviceExtension->PreviousUsageList, DeviceExtension->CurrentUsageList, DeviceExtension->BreakUsageList, DeviceExtension->MakeUsageList, DeviceExtension->UsageListLength);
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+    /* replace previous usage list with current list */
+    RtlMoveMemory(DeviceExtension->PreviousUsageList, DeviceExtension->CurrentUsageList, sizeof(USAGE_AND_PAGE) * DeviceExtension->UsageListLength);
+
+    /* translate break usage list */
+    HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->BreakUsageList, DeviceExtension->UsageListLength, HidP_Keyboard_Break, &DeviceExtension->ModifierState, KbdHid_InsertScanCodes, DeviceExtension);
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+    /* translate new usage list */
+    HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->MakeUsageList, DeviceExtension->UsageListLength, HidP_Keyboard_Make, &DeviceExtension->ModifierState, KbdHid_InsertScanCodes, DeviceExtension);
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
 
     /* re-init read */
     KbdHid_InitiateRead(DeviceExtension);

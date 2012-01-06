@@ -67,7 +67,7 @@ typedef struct
     //
     // preparsed data
     //
-    PVOID PreparsedData;
+    PHIDP_PREPARSED_DATA PreparsedData;
 
     //
     // mdl for reading input report
@@ -77,7 +77,7 @@ typedef struct
     //
     // input report buffer
     //
-    PUCHAR Report;
+    PCHAR Report;
 
     //
     // input report length
@@ -103,6 +103,11 @@ typedef struct
     // keyboard attributes
     //
     KEYBOARD_ATTRIBUTES Attributes;
+
+    //
+    // keyboard modifier state
+    //
+    HIDP_KEYBOARD_MODIFIER_STATE ModifierState;
 
 }KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
 
