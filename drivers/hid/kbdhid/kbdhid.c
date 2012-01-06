@@ -249,6 +249,8 @@ KbdHid_InternalDeviceControl(
 {
     PIO_STACK_LOCATION IoStack;
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
+    PCONNECT_DATA Data;
+    PKEYBOARD_ATTRIBUTES Attributes;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -258,9 +260,131 @@ KbdHid_InternalDeviceControl(
     /* get device extension */
     DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    DPRINT1("[KBDHID] Unknown DeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_ATTRIBUTES)
+    {
+        /* verify output buffer length */
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
+        {
+            /* invalid request */
+            DPRINT1("[MOUHID] IOCTL_MOUSE_QUERY_ATTRIBUTES Buffer too small\n");
+            Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_BUFFER_TOO_SMALL;
+        }
 
-    ASSERT(FALSE);
+        /* get output buffer */
+        Attributes = (PKEYBOARD_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer;
+
+        /* copy attributes */
+        RtlCopyMemory(Attributes, &DeviceExtension->Attributes, sizeof(KEYBOARD_ATTRIBUTES));
+
+         /* complete request */
+         Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
+         Irp->IoStatus.Status = STATUS_SUCCESS;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_KEYBOARD_CONNECT)
+    {
+         /* verify input buffer length */
+         if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(CONNECT_DATA))
+         {
+             /* invalid request */
+             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_INVALID_PARAMETER;
+         }
+
+         /* is it already connected */
+         if (DeviceExtension->ClassService)
+         {
+             /* already connected */
+             Irp->IoStatus.Status = STATUS_SHARING_VIOLATION;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_SHARING_VIOLATION;
+         }
+
+         /* get connect data */
+         Data = (PCONNECT_DATA)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+         /* store connect details */
+         DeviceExtension->ClassDeviceObject = Data->ClassDeviceObject;
+         DeviceExtension->ClassService = Data->ClassService;
+
+         /* completed successfully */
+         Irp->IoStatus.Status = STATUS_SUCCESS;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_KEYBOARD_DISCONNECT)
+    {
+        /* not implemented */
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_KEYBOARD_ENABLE)
+    {
+        /* not supported */
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_KEYBOARD_DISABLE)
+    {
+        /* not supported */
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_INDICATORS)
+    {
+        /* not implemented */
+        DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATORS not implemented\n");
+        ASSERT(FALSE);
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_TYPEMATIC)
+    {
+        /* not implemented */
+        DPRINT1("IOCTL_KEYBOARD_QUERY_TYPEMATIC not implemented\n");
+        ASSERT(FALSE);
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_INDICATORS)
+    {
+        /* not implemented */
+        DPRINT1("IOCTL_KEYBOARD_SET_INDICATORS not implemented\n");
+        ASSERT(FALSE);
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_TYPEMATIC)
+    {
+        /* not implemented */
+        DPRINT1("IOCTL_KEYBOARD_SET_TYPEMATIC not implemented\n");
+        ASSERT(FALSE);
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION)
+    {
+        /* not implemented */
+        DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION not implemented\n");
+        ASSERT(FALSE);
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* unknown control code */
+    DPRINT1("[KBDHID] Unknown DeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
     /* unknown request not supported */
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -624,6 +748,20 @@ KbdHid_AddDevice(
     /* init device extension */
     DeviceExtension->NextDeviceObject = NextDeviceObject;
     KeInitializeEvent(&DeviceExtension->ReadCompletionEvent, NotificationEvent, FALSE);
+
+    /* init keyboard attributes */
+    DeviceExtension->Attributes.KeyboardIdentifier.Type = KEYBOARD_TYPE_UNKNOWN;
+    DeviceExtension->Attributes.KeyboardIdentifier.Subtype = MICROSOFT_KBD_101_TYPE;
+    DeviceExtension->Attributes.NumberOfFunctionKeys = MICROSOFT_KBD_FUNC;
+    DeviceExtension->Attributes.NumberOfIndicators = 3; // caps, num lock, scroll lock
+    DeviceExtension->Attributes.NumberOfKeysTotal = 101;
+    DeviceExtension->Attributes.InputDataQueueLength = 1;
+    DeviceExtension->Attributes.KeyRepeatMinimum.Rate = KEYBOARD_TYPEMATIC_RATE_MINIMUM;
+    DeviceExtension->Attributes.KeyRepeatMinimum.Delay = KEYBOARD_TYPEMATIC_DELAY_MINIMUM;
+    DeviceExtension->Attributes.KeyRepeatMaximum.Rate = KEYBOARD_TYPEMATIC_RATE_DEFAULT;
+    DeviceExtension->Attributes.KeyRepeatMaximum.Delay = KEYBOARD_TYPEMATIC_DELAY_MAXIMUM;
+
+    /* allocate irp */
     DeviceExtension->Irp = IoAllocateIrp(NextDeviceObject->StackSize, FALSE);
 
     /* FIXME handle allocation error */

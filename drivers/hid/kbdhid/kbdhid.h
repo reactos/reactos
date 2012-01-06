@@ -6,8 +6,9 @@
 #include <hidpddi.h>
 #include <hidpi.h>
 #include <debug.h>
-#include <ntddmou.h>
 #include <kbdmou.h>
+//#include <kbd.h>
+#include <ntddkbd.h>
 #include <debug.h>
 
 
@@ -98,9 +99,30 @@ typedef struct
     //
     UCHAR StopReadReport;
 
+    //
+    // keyboard attributes
+    //
+    KEYBOARD_ATTRIBUTES Attributes;
+
 }KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
+
+/* defaults from kbfiltr.h */
+#define KEYBOARD_TYPEMATIC_RATE_MINIMUM 2 
+#define KEYBOARD_TYPEMATIC_RATE_MAXIMUM 30 
+#define KEYBOARD_TYPEMATIC_RATE_DEFAULT 30 
+#define KEYBOARD_TYPEMATIC_DELAY_MINIMUM 250 
+#define KEYBOARD_TYPEMATIC_DELAY_MAXIMUM 1000 
+#define KEYBOARD_TYPEMATIC_DELAY_DEFAULT 250 
+
+/* FIXME: write kbd.h */
+#define MICROSOFT_KBD_FUNC              12
+#define KEYBOARD_TYPE_UNKNOWN   (0x51)
+#define MICROSOFT_KBD_101_TYPE           0
+
+
 
 
 NTSTATUS
 KbdHid_InitiateRead(
     IN PKBDHID_DEVICE_EXTENSION DeviceExtension);
+
