@@ -41,3 +41,8 @@ This settings is disabled (0) by default.")
 set(USERMODE TRUE CACHE BOOL
 "Whether to compile any usermode parts. This is while kernel mode is under
  heavy development and usermode part not relevant for bootcd.")
+
+if(MSVC)
+set(_PREFAST_ FALSE CACHE BOOL
+"Whether to enable PREFAST while compiling.")
+endif()
