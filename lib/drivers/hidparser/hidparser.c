@@ -14,8 +14,29 @@ NTSTATUS
 TranslateHidParserStatus(
     IN HIDPARSER_STATUS Status)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    switch(Status)
+    {
+        case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
+             return HIDP_STATUS_INTERNAL_ERROR;
+        case HIDPARSER_STATUS_NOT_IMPLEMENTED:
+            return HIDP_STATUS_NOT_IMPLEMENTED;
+        case HIDPARSER_STATUS_REPORT_NOT_FOUND:
+            return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
+        case HIDPARSER_STATUS_INVALID_REPORT_LENGTH:
+            return HIDP_STATUS_INVALID_REPORT_LENGTH;
+        case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
+            return HIDP_STATUS_INVALID_REPORT_TYPE;
+        case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
+            return HIDP_STATUS_BUFFER_TOO_SMALL;
+        case HIDPARSER_STATUS_USAGE_NOT_FOUND:
+            return HIDP_STATUS_USAGE_NOT_FOUND;
+        case HIDPARSER_STATUS_I8042_TRANS_UNKNOWN:
+            return HIDP_STATUS_I8042_TRANS_UNKNOWN;
+        case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
+            return HIDP_STATUS_NOT_IMPLEMENTED; //FIXME
+    }
+    DPRINT1("TranslateHidParserStatus Status %ld not implemented\n", Status);
+    return HIDP_STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -635,6 +656,77 @@ HidParser_GetScaledUsageValue(
 HIDAPI
 NTSTATUS
 NTAPI
+HidParser_TranslateUsageAndPagesToI8042ScanCodes(
+   IN PHID_PARSER Parser,
+   IN PUSAGE_AND_PAGE  ChangedUsageList,
+   IN ULONG  UsageListLength,
+   IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+   IN PVOID  InsertCodesContext)
+{
+    ULONG Index;
+    HIDPARSER_STATUS Status = HIDPARSER_STATUS_SUCCESS;
+
+    for(Index = 0; Index < UsageListLength; Index++)
+    {
+        //
+        // check current usage
+        //
+        if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_KEYBOARD)
+        {
+            //
+            // process usage
+            //
+            Status = HidParser_TranslateUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+        }
+        else if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_CONSUMER)
+        {
+            //
+            // FIXME: implement me
+            //
+            UNIMPLEMENTED
+            Status = HIDPARSER_STATUS_NOT_IMPLEMENTED;
+        }
+        else
+        {
+            //
+            // invalid page
+            //
+            DPRINT1("[HIDPARSE] Error unexpected usage page %x\n", ChangedUsageList[Index].UsagePage);
+            return HIDP_STATUS_I8042_TRANS_UNKNOWN;
+        }
+
+        //
+        // check status
+        //
+        if (Status != HIDPARSER_STATUS_SUCCESS)
+        {
+            //
+            // failed
+            //
+            return TranslateHidParserStatus(Status);
+        }
+    }
+
+    if (Status != HIDPARSER_STATUS_SUCCESS)
+    {
+        //
+        // failed
+        //
+        return TranslateHidParserStatus(Status);
+    }
+
+    //
+    // done
+    //
+    return HIDP_STATUS_SUCCESS;
+}
+
+
+HIDAPI
+NTSTATUS
+NTAPI
 HidParser_GetUsagesEx(
     IN PHID_PARSER Parser,
     IN HIDP_REPORT_TYPE  ReportType,
@@ -928,22 +1020,6 @@ HidParser_TranslateUsagesToI8042ScanCodes(
   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
   IN PVOID  InsertCodesContext)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidParser_TranslateUsageAndPagesToI8042ScanCodes(
-   IN PUSAGE_AND_PAGE  ChangedUsageList,
-   IN ULONG  UsageListLength,
-   IN HIDP_KEYBOARD_DIRECTION  KeyAction,
-   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
-   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
-   IN PVOID  InsertCodesContext)
 {
     UNIMPLEMENTED
     ASSERT(FALSE);

@@ -322,6 +322,37 @@ HidP_GetScaledUsageValue(
 HIDAPI
 NTSTATUS
 NTAPI
+HidP_TranslateUsageAndPagesToI8042ScanCodes(
+   IN PUSAGE_AND_PAGE  ChangedUsageList,
+   IN ULONG  UsageListLength,
+   IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+   IN PVOID  InsertCodesContext)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, NULL, &Parser);
+
+    //
+    // translate usage pages
+    //
+    return HidParser_TranslateUsageAndPagesToI8042ScanCodes(Parser, UsageListLength, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+}
+
+
+
+HIDAPI
+NTSTATUS
+NTAPI
 HidP_GetButtonCaps(
     HIDP_REPORT_TYPE ReportType,
     PHIDP_BUTTON_CAPS ButtonCaps,
@@ -482,22 +513,6 @@ HidP_TranslateUsagesToI8042ScanCodes(
   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
   IN PVOID  InsertCodesContext)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_TranslateUsageAndPagesToI8042ScanCodes(
-   IN PUSAGE_AND_PAGE  ChangedUsageList,
-   IN ULONG  UsageListLength,
-   IN HIDP_KEYBOARD_DIRECTION  KeyAction,
-   IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
-   IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
-   IN PVOID  InsertCodesContext)
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
