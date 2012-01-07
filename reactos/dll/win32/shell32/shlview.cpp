@@ -1682,7 +1682,12 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 if (pSF2Parent)
                 {
                     SHELLDETAILS sd;
-                    pSF2Parent->GetDetailsOf(pidl, lpdi->item.iSubItem, &sd);
+                    if (FAILED(pSF2Parent->GetDetailsOf(pidl, lpdi->item.iSubItem, &sd)))
+                    {
+                        FIXME("failed to get details\n");
+                        break;
+                    }
+
                     if (lpnmh->code == LVN_GETDISPINFOA)
                     {
                         /* shouldn't happen */
