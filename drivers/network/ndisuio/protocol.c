@@ -8,10 +8,8 @@
 
 #include "ndisuio.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
-
-PNDIS_MEDIUM SupportedMedia = {NdisMedium802_3};
 
 VOID
 NTAPI
@@ -118,9 +116,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     PNDIS_PACKET Packet;
     NDIS_STATUS Status;
     UINT BytesTransferred;
-    
-    DPRINT("Received a %d byte packet on %wZ\n", PacketSize + HeaderBufferSize, &AdapterContext->DeviceName);
-    
+
     /* Discard if nobody is waiting for it */
     if (AdapterContext->OpenCount == 0)
         return NDIS_STATUS_NOT_ACCEPTED;
@@ -171,8 +167,8 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
        but not the pool because we still need it */
     CleanupAndFreePacket(Packet, FALSE);
 
-    /* Allocate a packet entry from paged pool */
-    PacketEntry = ExAllocatePool(PagedPool, sizeof(NDISUIO_PACKET_ENTRY) + BytesTransferred + HeaderBufferSize - 1);
+    /* Allocate a packet entry from pool */
+    PacketEntry = ExAllocatePool(NonPagedPool, sizeof(NDISUIO_PACKET_ENTRY) + BytesTransferred + HeaderBufferSize - 1);
     if (!PacketEntry)
     {
         ExFreePool(PacketBuffer);
@@ -183,7 +179,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     PacketEntry->PacketLength = BytesTransferred + HeaderBufferSize;
     RtlCopyMemory(&PacketEntry->PacketData[0], PacketBuffer, PacketEntry->PacketLength);
     
-    /* Free the old non-paged buffer */
+    /* Free the old buffer */
     ExFreePool(PacketBuffer);
 
     /* Insert the packet on the adapter's packet list */
@@ -313,11 +309,10 @@ BindAdapterByName(PNDIS_STRING DeviceName)
 {
     NDIS_STATUS OpenErrorStatus;
     PNDISUIO_ADAPTER_CONTEXT AdapterContext;
+    NDIS_MEDIUM SupportedMedia[1] = {NdisMedium802_3};
     UINT SelectedMedium;
     NDIS_STATUS Status;
-    
-    DPRINT("Binding adapter %wZ\n", &AdapterContext->DeviceName);
-    
+
     /* Allocate the adapter context */
     AdapterContext = ExAllocatePool(NonPagedPool, sizeof(*AdapterContext));
     if (!AdapterContext)
@@ -345,6 +340,8 @@ BindAdapterByName(PNDIS_STRING DeviceName)
 
     /* Copy the device name into the adapter context */
     RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, DeviceName->Length);
+    
+    DPRINT("Binding adapter %wZ\n", &AdapterContext->DeviceName);
 
     /* Create the buffer pool */
     NdisAllocateBufferPool(&Status,
@@ -377,7 +374,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
                     &OpenErrorStatus,
                     &AdapterContext->BindingHandle,
                     &SelectedMedium,
-                    &SupportedMedia[0],
+                    SupportedMedia,
                     1,
                     GlobalProtocolHandle,
                     AdapterContext,

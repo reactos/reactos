@@ -8,7 +8,7 @@
 
 #include "ndisuio.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 static
@@ -57,6 +57,7 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         if (i == QueryBinding->BindingIndex)
         {
             AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
+            DPRINT("Query binding for index %d is adapter %wZ\n", i, &AdapterContext->DeviceName);
             if (AdapterContext->DeviceName.Length <= QueryBinding->DeviceNameLength)
             {
                 BytesCopied += AdapterContext->DeviceName.Length;
@@ -156,6 +157,8 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         Request.DATA.SET_INFORMATION.InformationBuffer = SetOidRequest->Data;
         Request.DATA.SET_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
 
+        DPRINT("Setting OID 0x%x on adapter %wZ\n", SetOidRequest->Oid, &AdapterContext->DeviceName);
+
         /* Dispatch the request */
         NdisRequest(&Status,
                     AdapterContext->BindingHandle,
@@ -209,6 +212,8 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         Request.DATA.QUERY_INFORMATION.Oid = QueryOidRequest->Oid;
         Request.DATA.QUERY_INFORMATION.InformationBuffer = QueryOidRequest->Data;
         Request.DATA.QUERY_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
+        
+        DPRINT("Querying OID 0x%x on adapter %wZ\n", QueryOidRequest->Oid, &AdapterContext->DeviceName);
         
         /* Dispatch the request */
         NdisRequest(&Status,
@@ -264,6 +269,8 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         AdapterContext = FindAdapterContextByName(&DeviceName);
         if (AdapterContext != NULL)
         {
+            DPRINT("Binding file object 0x%x to device %wZ\n", FileObject, &AdapterContext->DeviceName);
+
             /* Reference the adapter context */
             KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
             if (AdapterContext->OpenCount != 0)

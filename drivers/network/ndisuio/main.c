@@ -8,7 +8,7 @@
 
 #include "ndisuio.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 PDEVICE_OBJECT GlobalDeviceObject;
@@ -20,7 +20,7 @@ NDIS_STRING ProtocolName = RTL_CONSTANT_STRING(L"NDISUIO");
 
 VOID NTAPI NduUnload(PDRIVER_OBJECT DriverObject)
 {    
-    DPRINT1("NDISUIO: Unloaded\n");
+    DPRINT("NDISUIO: Unloaded\n");
 }
 
 NTSTATUS
@@ -98,7 +98,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
-    DPRINT1("NDISUIO: Loaded\n");
+    DPRINT("NDISUIO: Loaded\n");
 
     return STATUS_SUCCESS;
 }

@@ -8,7 +8,7 @@
 
 #include "ndisuio.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -19,6 +19,8 @@ NduDispatchCreate(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     ASSERT(DeviceObject == GlobalDeviceObject);
+    
+    DPRINT("Created file object 0x%x\n", IrpSp->FileObject);
 
     /* This is associated with an adapter during IOCTL_NDISUIO_OPEN_(WRITE_)DEVICE */
     IrpSp->FileObject->FsContext = NULL;
@@ -43,11 +45,15 @@ NduDispatchClose(PDEVICE_OBJECT DeviceObject,
     PNDISUIO_OPEN_ENTRY OpenEntry = IrpSp->FileObject->FsContext2;
     
     ASSERT(DeviceObject == GlobalDeviceObject);
+    
+    DPRINT("Closing file object 0x%x\n", IrpSp->FileObject);
 
     /* Check if this handle was ever associated with an adapter */
     if (AdapterContext != NULL)
     {
         ASSERT(OpenEntry != NULL);
+        
+        DPRINT("Removing binding to adapter %wZ\n", &AdapterContext->DeviceName);
 
         /* Call the our helper */
         DereferenceAdapterContextWithOpenEntry(AdapterContext, OpenEntry);
