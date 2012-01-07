@@ -397,9 +397,9 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         MiNumberDescriptors++;
 
         /* Check if this is invisible memory */
-        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) &&
-            (Descriptor->MemoryType == LoaderSpecialMemory) &&
-            (Descriptor->MemoryType == LoaderHALCachedMemory) &&
+        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
+            (Descriptor->MemoryType == LoaderSpecialMemory) ||
+            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
             (Descriptor->MemoryType == LoaderBBTMemory))
         {
             /* Skip this descriptor */
