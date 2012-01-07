@@ -510,13 +510,13 @@ LsapGetObjectAttribute(PLSA_DB_OBJECT DbObject,
     if (AttributeData == NULL || *AttributeSize == 0)
     {
         *AttributeSize = ValueSize;
-        Status == STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         goto Done;
     }
     else if (*AttributeSize < ValueSize)
     {
         *AttributeSize = ValueSize;
-        Status == STATUS_BUFFER_OVERFLOW;
+        Status = STATUS_BUFFER_OVERFLOW;
         goto Done;
     }
 
