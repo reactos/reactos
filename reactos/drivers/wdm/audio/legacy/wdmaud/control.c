@@ -334,7 +334,7 @@ WdmAudDeviceControl(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
-    if (!IoStack->FileObject)
+    if (!IoStack->FileObject || !IoStack->FileObject->FsContext)
     {
         /* file object parameter */
         DPRINT1("Error: file object is not attached\n");
