@@ -218,7 +218,7 @@ WlanConnect(HANDLE hAdapter)
         return FALSE;
 
     SetOid->Oid = OID_802_11_SSID;
-    Ssid = SetOid->Data;
+    Ssid = (PNDIS_802_11_SSID)SetOid->Data;
     
     /* Fill the OID data buffer */
     RtlCopyMemory(Ssid->Ssid, sSsid, strlen(sSsid));
@@ -246,7 +246,7 @@ WlanScan(HANDLE hAdapter)
     NDISUIO_SET_OID SetOid;
     PNDISUIO_QUERY_OID QueryOid;
     DWORD QueryOidSize;
-    PNDIS_802_11_BSSID_LIST_EX BssidList;
+    PNDIS_802_11_BSSID_LIST BssidList;
     DWORD i, j;
 
     SetOid.Oid = OID_802_11_BSSID_LIST_SCAN;
@@ -264,13 +264,13 @@ WlanScan(HANDLE hAdapter)
         return FALSE;
     
     /* Allocate space for 15 networks to be returned */
-    QueryOidSize = sizeof(NDISUIO_QUERY_OID) + (sizeof(NDIS_WLAN_BSSID_EX) * 15);
+    QueryOidSize = sizeof(NDISUIO_QUERY_OID) + (sizeof(NDIS_WLAN_BSSID) * 15);
     QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
     if (!QueryOid)
         return FALSE;
     
     QueryOid->Oid = OID_802_11_BSSID_LIST;
-    BssidList = QueryOid->Data;
+    BssidList = (PNDIS_802_11_BSSID_LIST)QueryOid->Data;
 
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_QUERY_OID_VALUE,
@@ -294,12 +294,11 @@ WlanScan(HANDLE hAdapter)
     {
         for (i = 0; i < BssidList->NumberOfItems; i++)
         {
-            PNDIS_WLAN_BSSID_EX BssidInfo = BssidList->Bssid[i];
+            PNDIS_WLAN_BSSID BssidInfo = &BssidList->Bssid[i];
             PNDIS_802_11_SSID Ssid = &BssidInfo->Ssid;
-            UCHAR SupportedRates[16] = &BssidInfo->SupportedRates;
             NDIS_802_11_RSSI Rssi = BssidInfo->Rssi;
             NDIS_802_11_NETWORK_INFRASTRUCTURE NetworkType = BssidInfo->InfrastructureMode;
-            CHAR SsidBuffer[33];
+            CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
 
             /* SSID member is a non-null terminated ASCII string */
             RtlCopyMemory(SsidBuffer, Ssid->Ssid, Ssid->SsidLength);
@@ -315,12 +314,12 @@ WlanScan(HANDLE hAdapter)
                         NetworkType == Ndis802_11IBSS ? "Adhoc" : "Infrastructure",
                         (int)Rssi);
             
-            for (j = 0; j < 16; j++)
+            for (j = 0; j < NDIS_802_11_LENGTH_RATES; j++)
             {
-                if (SupportedRates[j] != 0)
+                if (BssidInfo->SupportedRates[j] != 0)
                 {
                     /* SupportedRates are in units of .5 */
-                    _tprintf(_T("%d "), (SupportedRates[j] << 2));
+                    _tprintf(_T("%d "), (BssidInfo->SupportedRates[j] << 2));
                 }
             }
             _tprintf(_T("\n"));
