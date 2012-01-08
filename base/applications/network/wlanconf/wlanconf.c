@@ -116,23 +116,31 @@ OpenAdapterHandle(DWORD Index)
     HANDLE hDriver;
     BOOL bSuccess;
     DWORD dwBytesReturned;
-    char Buffer[1024];
-    PNDISUIO_QUERY_BINDING QueryBinding = (PNDISUIO_QUERY_BINDING)Buffer;
+    DWORD QueryBindingSize = sizeof(NDISUIO_QUERY_BINDING) + (1024 * sizeof(WCHAR));
+    PNDISUIO_QUERY_BINDING QueryBinding;
     
     /* Open the driver handle */
     hDriver = OpenDriverHandle();
     if (hDriver == INVALID_HANDLE_VALUE)
         return INVALID_HANDLE_VALUE;
+    
+    /* Allocate the binding struct */
+    QueryBinding = HeapAlloc(GetProcessHeap(), 0, QueryBindingSize);
+    if (!QueryBinding)
+    {
+        CloseHandle(hDriver);
+        return INVALID_HANDLE_VALUE;
+    }
 
     /* Query for bindable adapters */
     QueryBinding->BindingIndex = 0;
     do {
         bSuccess = DeviceIoControl(hDriver,
                                    IOCTL_NDISUIO_QUERY_BINDING,
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   0,
+                                   QueryBinding,
+                                   QueryBindingSize,
+                                   QueryBinding,
+                                   QueryBindingSize,
                                    &dwBytesReturned,
                                    NULL);
         if (QueryBinding->BindingIndex == Index)
@@ -142,6 +150,7 @@ OpenAdapterHandle(DWORD Index)
 
     if (!bSuccess)
     {
+        HeapFree(GetProcessHeap(), 0, QueryBinding);
         CloseHandle(hDriver);
         return INVALID_HANDLE_VALUE;
     }
@@ -155,6 +164,8 @@ OpenAdapterHandle(DWORD Index)
                                0,
                                &dwBytesReturned,
                                NULL);
+    HeapFree(GetProcessHeap(), 0, QueryBinding);
+
     if (!bSuccess)
     {
         CloseHandle(hDriver);

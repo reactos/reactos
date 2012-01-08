@@ -19,6 +19,7 @@ WaitForBind(PIRP Irp, PIO_STACK_LOCATION IrpSp)
      * no official documentation on it. I'm just implementing it as a no-op
      * right now because I don't see any reason we need it. We handle an open
      * and bind just fine with IRP_MJ_CREATE and IOCTL_NDISUIO_OPEN_DEVICE */
+    DPRINT("Wait for bind complete\n");
     
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -33,14 +34,14 @@ NTSTATUS
 QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext;
-    PNDISUIO_QUERY_BINDING QueryBinding = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PNDISUIO_QUERY_BINDING QueryBinding = Irp->AssociatedIrp.SystemBuffer;
     ULONG BindingLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     NTSTATUS Status;
     PLIST_ENTRY CurrentEntry;
     KIRQL OldIrql;
     ULONG i;
     ULONG BytesCopied = 0;
-    
+
     if (QueryBinding && BindingLength >= sizeof(NDISUIO_QUERY_BINDING))
     {
         KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
@@ -58,15 +59,19 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         {
             AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
             DPRINT("Query binding for index %d is adapter %wZ\n", i, &AdapterContext->DeviceName);
-            if (AdapterContext->DeviceName.Length <= QueryBinding->DeviceNameLength)
+            BytesCopied = sizeof(NDISUIO_QUERY_BINDING);
+            if (AdapterContext->DeviceName.Length <= BindingLength - BytesCopied)
             {
                 BytesCopied += AdapterContext->DeviceName.Length;
+
+                QueryBinding->DeviceNameOffset = BytesCopied;
+                QueryBinding->DeviceNameLength = AdapterContext->DeviceName.Length;
                 RtlCopyMemory((PUCHAR)QueryBinding + QueryBinding->DeviceNameOffset,
                               AdapterContext->DeviceName.Buffer,
-                              BytesCopied);
-                QueryBinding->DeviceNameLength = AdapterContext->DeviceName.Length;
+                              QueryBinding->DeviceNameLength);
 
                 /* FIXME: Copy description too */
+                QueryBinding->DeviceDescrOffset = BytesCopied;
                 QueryBinding->DeviceDescrLength = 0;
                 
                 /* Successful */
@@ -147,7 +152,7 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     
     Irp->IoStatus.Information = 0;
     
-    SetOidRequest = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    SetOidRequest = Irp->AssociatedIrp.SystemBuffer;
     RequestLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     if (SetOidRequest && RequestLength >= sizeof(NDIS_OID))
     {
@@ -203,7 +208,7 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 
     Irp->IoStatus.Information = 0;
 
-    QueryOidRequest = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    QueryOidRequest = Irp->AssociatedIrp.SystemBuffer;
     RequestLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     if (QueryOidRequest && RequestLength >= sizeof(NDIS_OID))
     {
@@ -263,7 +268,7 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     if (NameLength != 0)
     {
         DeviceName.MaximumLength = DeviceName.Length = NameLength;
-        DeviceName.Buffer = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        DeviceName.Buffer = Irp->AssociatedIrp.SystemBuffer;
 
         /* Check if this already has a context */
         AdapterContext = FindAdapterContextByName(&DeviceName);
@@ -357,7 +362,7 @@ OpenDeviceWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     if (NameLength != 0)
     {
         DeviceName.MaximumLength = DeviceName.Length = NameLength;
-        DeviceName.Buffer = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        DeviceName.Buffer = Irp->AssociatedIrp.SystemBuffer;
         
         /* Check if this already has a context */
         AdapterContext = FindAdapterContextByName(&DeviceName);
