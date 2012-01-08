@@ -791,8 +791,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     /* Call WH_KEYBOARD_LL hook */
     if (co_CallLowLevelKeyboardHook(wVk, wScanCode, dwFlags, bInjected, dwTime, dwExtraInfo))
     {
-        ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-            Msg.message, Msg.wParam, Msg.lParam);
+        ERR("Kbd msg dropped by WH_KEYBOARD_LL hook\n");
         bPostMsg = FALSE;
     }
 
