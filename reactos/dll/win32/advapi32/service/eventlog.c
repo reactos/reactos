@@ -551,35 +551,63 @@ HANDLE WINAPI
 OpenBackupEventLogA(IN LPCSTR lpUNCServerName,
                     IN LPCSTR lpFileName)
 {
-    ANSI_STRING FileName;
-    IELF_HANDLE LogHandle;
+    ANSI_STRING UNCServerNameA;
+    UNICODE_STRING UNCServerNameW;
+    ANSI_STRING FileNameA;
+    UNICODE_STRING FileNameW;
+    HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", lpUNCServerName, lpFileName);
 
-    RtlInitAnsiString(&FileName, lpFileName);
-
-    RpcTryExcept
+    /* Convert the server name to unicode */
+    if (lpUNCServerName == NULL)
     {
-        Status = ElfrOpenBELA((LPSTR)lpUNCServerName,
-                              (PRPC_STRING)&FileName,
-                              1,
-                              1,
-                              &LogHandle);
+        RtlInitUnicodeString(&UNCServerNameW, NULL);
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
+        RtlInitAnsiString(&UNCServerNameA, lpUNCServerName);
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return NULL;
+        Status = RtlAnsiStringToUnicodeString(&UNCServerNameW,
+                                              &UNCServerNameA,
+                                              TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return NULL;
+        }
     }
 
-    return (HANDLE)LogHandle;
+    /* Convert the file name to unicode */
+    if (lpFileName == NULL)
+    {
+        RtlInitUnicodeString(&FileNameW, NULL);
+    }
+    else
+    {
+        RtlInitAnsiString(&FileNameA, lpFileName);
+
+        Status = RtlAnsiStringToUnicodeString(&FileNameW,
+                                              &FileNameA,
+                                              TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeUnicodeString(&UNCServerNameW);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return NULL;
+        }
+    }
+
+    /* Call the unicode function */
+    LogHandle = OpenBackupEventLogW(UNCServerNameW.Buffer,
+                                    FileNameW.Buffer);
+
+    /* Free the unicode strings */
+    RtlFreeUnicodeString(&UNCServerNameW);
+    RtlFreeUnicodeString(&FileNameW);
+
+    return LogHandle;
 }
 
 
@@ -594,18 +622,30 @@ HANDLE WINAPI
 OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
                     IN LPCWSTR lpFileName)
 {
-    UNICODE_STRING FileName;
+    UNICODE_STRING FileNameW;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpFileName));
 
-    RtlInitUnicodeString(&FileName, lpFileName);
+    if (lpFileName == NULL)
+    {
+        RtlInitUnicodeString(&FileNameW, NULL);
+    }
+    else
+    {
+        if (!RtlDosPathNameToNtPathName_U(lpFileName, &FileNameW,
+                                          NULL, NULL))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return NULL;
+        }
+    }
 
     RpcTryExcept
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
-                              (PRPC_UNICODE_STRING)&FileName,
+                              (PRPC_UNICODE_STRING)&FileNameW,
                               1,
                               1,
                               &LogHandle);
@@ -615,6 +655,9 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (FileNameW.Buffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameW.Buffer);
 
     if (!NT_SUCCESS(Status))
     {
