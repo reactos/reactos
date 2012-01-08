@@ -1,6 +1,3 @@
-
-set_unicode()
-
 spec2def(ntlmssp.dll ntlmssp.spec)
 
 list(APPEND SOURCE
@@ -23,10 +20,11 @@ list(APPEND SOURCE
 
 add_library(ntlmssp SHARED ${SOURCE})
 
-set_module_type(ntlmssp win32dll)
+set_module_type(ntlmssp win32dll UNICODE)
 
 target_link_libraries(ntlmssp wine)
 
-add_importlibs(ntlmssp advapi32 crypt32 kernel32 msvcrt netapi32 ntdll)
+add_importlibs(ntlmssp advapi32 crypt32 netapi32 msvcrt kernel32 ntdll)
 
 add_cd_file(TARGET ntlmssp DESTINATION reactos/system32 FOR all)
+add_importlib_target(ntlmssp.spec)
