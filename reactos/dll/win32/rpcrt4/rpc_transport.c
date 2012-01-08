@@ -36,6 +36,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <ndk/ntndk.h>
+#include <wininet.h>
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 # include <ws2tcpip.h>
@@ -1868,7 +1869,7 @@ typedef struct _RpcHttpAsyncData
 {
     LONG refs;
     HANDLE completion_event;
-    INTERNET_BUFFERSA inet_buffers;
+    INTERNET_BUFFERS inet_buffers;
     void *destination_buffer; /* the address that inet_buffers.lpvBuffer will be
                                * copied into when the call completes */
     CRITICAL_SECTION cs;

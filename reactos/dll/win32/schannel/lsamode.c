@@ -30,6 +30,10 @@
 #include "ntsecpkg.h"
 #include "schannel.h"
 
+#define SCHANNEL_COMMENT_A "Schannel Security Package\0"
+#define SCHANNEL_COMMENT_W L"Schannel Security Package\0"
+#define SCHANNEL_COMMENT __MINGW_NAME_UAW(SCHANNEL_COMMENT)
+
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(schannel);
@@ -37,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(schannel);
 /***********************************************************************
  *              SpGetInfoUnified
  */
-static NTSTATUS WINAPI SpGetInfoUnified(PSecPkgInfoW PackageInfo)
+static NTSTATUS NTAPI SpGetInfoUnified(PSecPkgInfo PackageInfo)
 {
     TRACE("(%p)\n", PackageInfo);
 
@@ -49,19 +53,16 @@ static NTSTATUS WINAPI SpGetInfoUnified(PSecPkgInfoW PackageInfo)
     PackageInfo->wVersion   = 1;
     PackageInfo->wRPCID     = UNISP_RPC_ID;
     PackageInfo->cbMaxToken = 0x4000;
-    PackageInfo->Name       = (LPWSTR)UNISP_NAME_W;
-    PackageInfo->Comment    = (LPWSTR)UNISP_NAME_W;
+    PackageInfo->Name       = UNISP_NAME;
+    PackageInfo->Comment    = UNISP_NAME;
 
     return STATUS_SUCCESS;
 }
 
-static SEC_WCHAR schannelCommentW[] = { 'S','c','h','a','n','n','e','l',
-     ' ','S','e','c','u','r','i','t','y',' ','P','a','c','k','a','g','e',0 };
-
 /***********************************************************************
  *              SpGetInfoSChannel
  */
-static NTSTATUS WINAPI SpGetInfoSChannel(PSecPkgInfoW PackageInfo)
+static NTSTATUS NTAPI SpGetInfoSChannel(PSecPkgInfo PackageInfo)
 {
     TRACE("(%p)\n", PackageInfo);
 
@@ -73,8 +74,8 @@ static NTSTATUS WINAPI SpGetInfoSChannel(PSecPkgInfoW PackageInfo)
     PackageInfo->wVersion   = 1;
     PackageInfo->wRPCID     = UNISP_RPC_ID;
     PackageInfo->cbMaxToken = 0x4000;
-    PackageInfo->Name       = (LPWSTR)SCHANNEL_NAME_W;
-    PackageInfo->Comment    = schannelCommentW;
+    PackageInfo->Name       = SCHANNEL_NAME;
+    PackageInfo->Comment    = SCHANNEL_COMMENT;
 
     return STATUS_SUCCESS;
 }
