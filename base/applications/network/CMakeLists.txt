@@ -14,3 +14,5 @@ if(NOT MSVC)
 endif()
 add_subdirectory(tracert)
 add_subdirectory(whois)
+add_subdirectory(wlanconf)
+
