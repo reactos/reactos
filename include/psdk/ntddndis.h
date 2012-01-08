@@ -42,6 +42,22 @@ typedef enum _NDIS_DEVICE_POWER_STATE {
   NdisDeviceStateMaximum
 } NDIS_DEVICE_POWER_STATE, *PNDIS_DEVICE_POWER_STATE;
 
+typedef enum _NDIS_802_11_WEP_STATUS
+{
+    Ndis802_11WEPEnabled,
+    Ndis802_11WEPDisabled,
+    Ndis802_11WEPKeyAbsent,
+    Ndis802_11WEPNotSupported
+} NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS;
+
+typedef enum _NDIS_802_11_AUTHENTICATION_MODE
+{
+    Ndis802_11AuthModeOpen,
+    Ndis802_11AuthModeShared,
+    Ndis802_11AuthModeAutoSwitch,
+    Ndis802_11AuthModeMax
+} NDIS_802_11_AUTHENTICATION_MODE, *PNDIS_802_11_AUTHENTICATION_MODE;
+
 typedef enum _NDIS_802_11_NETWORK_INFRASTRUCTURE
 {
     Ndis802_11IBSS,
@@ -116,6 +132,14 @@ typedef struct _NDIS_802_11_BSSID_LIST
     ULONG NumberOfItems;
     NDIS_WLAN_BSSID Bssid[1];
 } NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
+
+typedef struct _NDIS_802_11_WEP
+{
+    ULONG Length;
+    ULONG KeyIndex;
+    ULONG KeyLength;
+    UCHAR KeyMaterial[1];
+} NDIS_802_11_WEP, *PNDIS_802_11_WEP;
 
 typedef struct _NDIS_PM_WAKE_UP_CAPABILITIES {
   NDIS_DEVICE_POWER_STATE  MinMagicPacketWakeUp;

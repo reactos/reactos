@@ -17,6 +17,8 @@ BOOL bScan = FALSE;
 
 BOOL bConnect = FALSE;
 char* sSsid = NULL;
+char* sWepKey = NULL;
+BOOL bAdhoc = FALSE;
 
 BOOL bDisconnect = FALSE;
 
@@ -205,29 +207,204 @@ WlanDisconnect(HANDLE hAdapter)
     return bSuccess;
 }
 
+static
+UCHAR
+CharToHex(CHAR Char)
+{
+    Char = toupper(Char);
+    
+    switch (Char)
+    {
+        case '0':
+            return 0x0;
+        case '1':
+            return 0x1;
+        case '2':
+            return 0x2;
+        case '3':
+            return 0x3;
+        case '4':
+            return 0x4;
+        case '5':
+            return 0x5;
+        case '6':
+            return 0x6;
+        case '7':
+            return 0x7;
+        case '8':
+            return 0x8;
+        case '9':
+            return 0x9;
+        case 'A':
+            return 0xA;
+        case 'B':
+            return 0xB;
+        case 'C':
+            return 0xC;
+        case 'D':
+            return 0xD;
+        case 'E':
+            return 0xE;
+        case 'F':
+            return 0xF;
+        default:
+            return 0;
+    }
+}
+
 BOOL
 WlanConnect(HANDLE hAdapter)
 {
     BOOL bSuccess;
-    DWORD dwBytesReturned;
+    DWORD dwBytesReturned, SetOidSize;
     PNDISUIO_SET_OID SetOid;
     PNDIS_802_11_SSID Ssid;
-
-    SetOid = HeapAlloc(GetProcessHeap(), 0, sizeof(NDISUIO_SET_OID) + sizeof(NDIS_802_11_SSID));
+    DWORD i;
+    
+    SetOidSize = sizeof(NDISUIO_SET_OID);
+    SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
     if (!SetOid)
         return FALSE;
 
+    /* Set the network mode */
+    SetOid->Oid = OID_802_11_INFRASTRUCTURE_MODE;
+    *(PULONG)SetOid->Data = bAdhoc ? Ndis802_11IBSS : Ndis802_11Infrastructure;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_SET_OID_VALUE,
+                               SetOid,
+                               SetOidSize,
+                               NULL,
+                               0,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, SetOid);
+        return FALSE;
+    }
+
+    /* Set the authentication mode */
+    SetOid->Oid = OID_802_11_AUTHENTICATION_MODE;
+    *(PULONG)SetOid->Data = sWepKey ? Ndis802_11AuthModeShared : Ndis802_11AuthModeOpen;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_SET_OID_VALUE,
+                               SetOid,
+                               SetOidSize,
+                               NULL,
+                               0,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, SetOid);
+        return FALSE;
+    }
+    
+    if (sWepKey)
+    {
+        PNDIS_802_11_WEP WepData;
+        
+        HeapFree(GetProcessHeap(), 0, SetOid);
+
+        SetOidSize = sizeof(NDISUIO_SET_OID) + FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) +
+                     (strlen(sWepKey) >> 2);
+        SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
+        if (!SetOid)
+            return FALSE;
+        
+        /* Add the WEP key */
+        SetOid->Oid = OID_802_11_ADD_WEP;
+        WepData = (PNDIS_802_11_WEP)SetOid->Data;
+
+        WepData->KeyIndex = 0x80000000;
+        WepData->KeyLength = strlen(sWepKey) >> 2;
+        WepData->Length = FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) + WepData->KeyLength;
+        
+        /* Assemble the hex key */
+        i = 0;
+        while (sWepKey[i << 2] != '\0')
+        {
+            WepData->KeyMaterial[i] = CharToHex(sWepKey[i << 2]) << 4;
+            WepData->KeyMaterial[i] |= CharToHex(sWepKey[(i << 2) + 1]);
+            i++;
+        }
+        
+        bSuccess = DeviceIoControl(hAdapter,
+                                   IOCTL_NDISUIO_SET_OID_VALUE,
+                                   SetOid,
+                                   SetOidSize,
+                                   NULL,
+                                   0,
+                                   &dwBytesReturned,
+                                   NULL);
+        if (!bSuccess)
+        {
+            HeapFree(GetProcessHeap(), 0, SetOid);
+            return FALSE;
+        }
+    }
+
+    /* Set the encryption status */
+    SetOid->Oid = OID_802_11_WEP_STATUS;
+    *(PULONG)SetOid->Data = sWepKey ? Ndis802_11WEPEnabled : Ndis802_11WEPDisabled;
+
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_SET_OID_VALUE,
+                               SetOid,
+                               SetOidSize,
+                               NULL,
+                               0,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, SetOid);
+        return FALSE;
+    }
+    
+    HeapFree(GetProcessHeap(), 0, SetOid);
+    SetOidSize = sizeof(NDISUIO_SET_OID) + sizeof(NDIS_802_11_MAC_ADDRESS);
+    SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
+    if (!SetOid)
+        return FALSE;
+    
+    /* Set the BSSID */
+    SetOid->Oid = OID_802_11_BSSID;
+    RtlFillMemory(SetOid->Data, sizeof(NDIS_802_11_MAC_ADDRESS), 0xFF);
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_SET_OID_VALUE,
+                               SetOid,
+                               SetOidSize,
+                               NULL,
+                               0,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, SetOid);
+        return FALSE;
+    }
+    
+    HeapFree(GetProcessHeap(), 0, SetOid);
+    SetOidSize = sizeof(NDISUIO_SET_OID) + sizeof(NDIS_802_11_SSID);
+    SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
+    if (!SetOid)
+        return FALSE;
+    
+    /* Finally, set the SSID */
     SetOid->Oid = OID_802_11_SSID;
     Ssid = (PNDIS_802_11_SSID)SetOid->Data;
     
-    /* Fill the OID data buffer */
     RtlCopyMemory(Ssid->Ssid, sSsid, strlen(sSsid));
     Ssid->SsidLength = strlen(sSsid);
     
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
-                               &SetOid,
-                               sizeof(SetOid),
+                               SetOid,
+                               SetOidSize,
                                NULL,
                                0,
                                &dwBytesReturned,
@@ -292,9 +469,9 @@ WlanScan(HANDLE hAdapter)
     }
     else
     {
+        PNDIS_WLAN_BSSID BssidInfo = BssidList->Bssid;
         for (i = 0; i < BssidList->NumberOfItems; i++)
         {
-            PNDIS_WLAN_BSSID BssidInfo = &BssidList->Bssid[i];
             PNDIS_802_11_SSID Ssid = &BssidInfo->Ssid;
             NDIS_802_11_RSSI Rssi = BssidInfo->Rssi;
             NDIS_802_11_NETWORK_INFRASTRUCTURE NetworkType = BssidInfo->InfrastructureMode;
@@ -307,8 +484,8 @@ WlanScan(HANDLE hAdapter)
             _tprintf(_T("\nSSID: %s\n"
                         "Encrypted: %s"
                         "Network Type: %s\n"
-                        "RSSI: %i\n"
-                        "Supported Rates: "),
+                        "RSSI: %i dBm\n"
+                        "Supported Rates (Mbps): "),
                         SsidBuffer,
                         BssidInfo->Privacy == 0 ? "No" : "Yes",
                         NetworkType == Ndis802_11IBSS ? "Adhoc" : "Infrastructure",
@@ -323,6 +500,9 @@ WlanScan(HANDLE hAdapter)
                 }
             }
             _tprintf(_T("\n"));
+            
+            /* Move to the next entry */
+            BssidInfo = (PNDIS_WLAN_BSSID)((PUCHAR)BssidInfo + BssidInfo->Length);
         }
     }
     
@@ -334,8 +514,10 @@ WlanScan(HANDLE hAdapter)
 VOID Usage()
 {
     _tprintf(_T("\nConfigures a WLAN adapter.\n\n"
-    "WLANCONF [-c SSID] [-d] [-s]\n\n"
+    "WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n"
     "  -c SSID       Connects to a supplied SSID.\n"
+    "     -w WEP     Specifies a WEP key to use.\n"
+    "     -a         Specifies the target network is ad-hoc\n"
     "  -d            Disconnects from the current AP.\n"
     "  -s            Scans and displays a list of access points in range.\n"));
 }
@@ -355,15 +537,21 @@ BOOL ParseCmdline(int argc, char* argv[])
             {
                 switch (c)
                 {
-                    case 's' :
+                    case 's':
                         bScan = TRUE;
                         break;
-                    case 'd' :
+                    case 'd':
                         bDisconnect = TRUE;
                         break;
-                    case 'c' :
+                    case 'c':
                         bConnect = TRUE;
                         sSsid = argv[++i];
+                        break;
+                    case 'w':
+                        sWepKey = argv[++i];
+                        break;
+                    case 'a':
+                        bAdhoc = TRUE;
                         break;
                     default :
                         Usage();
