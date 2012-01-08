@@ -55,7 +55,7 @@ OpenDriverHandle(VOID)
     DWORD dwBytesReturned;
     BOOL bSuccess;
 
-    /* Open a handle to this NDISUIO driver */
+    /* Open a handle to the NDISUIO driver */
     hDriver = CreateFileW(NDISUIO_DEVICE_NAME,
                           GENERIC_READ | GENERIC_WRITE,
                           0,
