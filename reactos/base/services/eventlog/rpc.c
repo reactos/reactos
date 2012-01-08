@@ -44,12 +44,17 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
-PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
+
+static NTSTATUS
+ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
+                        LPCWSTR Name,
+                        BOOL Create)
 {
     PLOGHANDLE lpLogHandle;
     PLOGFILE currentLogFile = NULL;
     INT i, LogsActive;
     PEVENTSOURCE pEventSource;
+    NTSTATUS Status;
 
     DPRINT("ElfCreateEventLogHandle(Name: %S)\n", Name);
 
@@ -58,7 +63,7 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
     if (!lpLogHandle)
     {
         DPRINT1("Failed to allocate Heap!\n");
-        return NULL;
+        return STATUS_NO_MEMORY;
     }
 
     wcscpy(lpLogHandle->szName, Name);
@@ -68,7 +73,8 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
     if (LogsActive == 0)
     {
         DPRINT1("EventLog service reports no log files!\n");
-        goto Cleanup;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Done;
     }
 
     /* If Creating, default to the Application Log in case we fail, as documented on MSDN */
@@ -114,18 +120,32 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
     }
 
     if (!lpLogHandle->LogFile)
-        goto Cleanup;
+        Status = STATUS_UNSUCCESSFUL;
 
-    /* Append log handle */
-    InsertTailList(&LogHandleListHead, &lpLogHandle->LogHandleListEntry);
+Done:
+    if (NT_SUCCESS(Status))
+    {
+        /* Append log handle */
+        InsertTailList(&LogHandleListHead, &lpLogHandle->LogHandleListEntry);
+        *LogHandle = lpLogHandle;
+    }
+    else
+    {
+        HeapFree(GetProcessHeap(), 0, lpLogHandle);
+    }
 
-    return lpLogHandle;
-
-Cleanup:
-    HeapFree(GetProcessHeap(), 0, lpLogHandle);
-
-    return NULL;
+    return Status;
 }
+
+
+static NTSTATUS
+ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
+                         PUNICODE_STRING FileName)
+{
+    DPRINT("ElfCreateBackupLogHandle(FileName: %wZ)\n", FileName);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 {
@@ -141,18 +161,19 @@ PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
     return lpLogHandle;
 }
 
-BOOL ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
+
+static NTSTATUS
+ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
 {
     PLOGHANDLE lpLogHandle = (PLOGHANDLE)EventLogHandle;
+
     if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
-    {
-        return FALSE;
-    }
+        return STATUS_INVALID_HANDLE;
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     HeapFree(GetProcessHeap(),0,lpLogHandle);
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* Function 0 */
@@ -199,12 +220,7 @@ NTSTATUS ElfrBackupELFW(
 NTSTATUS ElfrCloseEL(
     IELF_HANDLE *LogHandle)
 {
-    if (!ElfDeleteEventLogHandle(*LogHandle))
-    {
-        return STATUS_INVALID_HANDLE;
-    }
-
-    return STATUS_SUCCESS;
+    return ElfDeleteEventLogHandle(*LogHandle);
 }
 
 
@@ -212,12 +228,7 @@ NTSTATUS ElfrCloseEL(
 NTSTATUS ElfrDeregisterEventSource(
     IELF_HANDLE *LogHandle)
 {
-    if (!ElfDeleteEventLogHandle(*LogHandle))
-    {
-        return STATUS_INVALID_HANDLE;
-    }
-
-    return STATUS_SUCCESS;
+    return ElfDeleteEventLogHandle(*LogHandle);
 }
 
 
@@ -307,14 +318,9 @@ NTSTATUS ElfrOpenELW(
 
     /*FIXME: Must verify that caller has read access */
 
-    *LogHandle = ElfCreateEventLogHandle(ModuleName->Buffer, FALSE);
-
-    if (*LogHandle == NULL)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    return STATUS_SUCCESS;
+    return ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
+                                   ModuleName->Buffer,
+                                   FALSE);
 }
 
 
@@ -342,9 +348,9 @@ NTSTATUS ElfrRegisterEventSourceW(
 
     /*FIXME: Must verify that caller has write access */
 
-    *LogHandle = ElfCreateEventLogHandle(ModuleName->Buffer, TRUE);
-
-    return STATUS_SUCCESS;
+    return ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
+                                   ModuleName->Buffer,
+                                   TRUE);
 }
 
 
@@ -356,8 +362,17 @@ NTSTATUS ElfrOpenBELW(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("ElfrOpenBELW(%wZ)\n", BackupFileName);
+
+    if ((MajorVersion != 1) || (MinorVersion != 1))
+        return STATUS_INVALID_PARAMETER;
+
+    /*FIXME: UNCServerName must specify the server */
+
+    /*FIXME: Must verify that caller has read access */
+
+    return ElfCreateBackupLogHandle((PLOGHANDLE *)LogHandle,
+                                    (PUNICODE_STRING)BackupFileName);
 }
 
 
@@ -605,16 +620,13 @@ NTSTATUS ElfrOpenELA(
 
     /* FIXME: Must verify that caller has read access */
 
-    *LogHandle = ElfCreateEventLogHandle(ModuleNameW.Buffer, FALSE);
+    Status = ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
+                                     ModuleNameW.Buffer,
+                                     FALSE);
 
     RtlFreeUnicodeString(&ModuleNameW);
 
-    if (*LogHandle == NULL)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -654,12 +666,13 @@ NTSTATUS ElfrRegisterEventSourceA(
 
     /* FIXME: Must verify that caller has write access */
 
-    *LogHandle = ElfCreateEventLogHandle(ModuleNameW.Buffer,
-                                         TRUE);
+    Status = ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
+                                     ModuleNameW.Buffer,
+                                     TRUE);
 
     RtlFreeUnicodeString(&ModuleNameW);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -671,8 +684,36 @@ NTSTATUS ElfrOpenBELA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING BackupFileNameW;
+    NTSTATUS Status;
+
+    DPRINT("ElfrOpenBELA(%Z)\n", BackupFileName);
+
+    Status = RtlAnsiStringToUnicodeString(&BackupFileNameW,
+                                          (PANSI_STRING)BackupFileName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAnsiStringToUnicodeString failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if ((MajorVersion != 1) || (MinorVersion != 1))
+    {
+        RtlFreeUnicodeString(&BackupFileNameW);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /*FIXME: UNCServerName must specify the server */
+
+    /*FIXME: Must verify that caller has read access */
+
+    Status = ElfCreateBackupLogHandle((PLOGHANDLE *)LogHandle,
+                                      &BackupFileNameW);
+
+    RtlFreeUnicodeString(&BackupFileNameW);
+
+    return Status;
 }
 
 
