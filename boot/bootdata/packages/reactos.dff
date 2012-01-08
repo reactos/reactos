@@ -76,6 +76,7 @@ base\applications\network\route\route.exe               1
 base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
+base\applications\network\wlanconf\wlanconf.exe         1
 base\applications\notepad\notepad.exe                   1
 base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
