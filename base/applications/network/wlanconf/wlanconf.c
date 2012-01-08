@@ -482,13 +482,14 @@ WlanScan(HANDLE hAdapter)
             NDIS_802_11_RSSI Rssi = BssidInfo->Rssi;
             NDIS_802_11_NETWORK_INFRASTRUCTURE NetworkType = BssidInfo->InfrastructureMode;
             CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
+            UINT Rate;
 
             /* SSID member is a non-null terminated ASCII string */
             RtlCopyMemory(SsidBuffer, Ssid->Ssid, Ssid->SsidLength);
             SsidBuffer[Ssid->SsidLength] = 0;
             
             _tprintf(_T("\nSSID: %s\n"
-                        "Encrypted: %s"
+                        "Encrypted: %s\n"
                         "Network Type: %s\n"
                         "RSSI: %i dBm\n"
                         "Supported Rates (Mbps): "),
@@ -499,10 +500,13 @@ WlanScan(HANDLE hAdapter)
             
             for (j = 0; j < NDIS_802_11_LENGTH_RATES; j++)
             {
-                if (BssidInfo->SupportedRates[j] != 0)
+                Rate = BssidInfo->SupportedRates[j];
+                if (Rate != 0)
                 {
                     /* SupportedRates are in units of .5 */
-                    _tprintf(_T("%d "), (BssidInfo->SupportedRates[j] << 2));
+                    Rate = Rate << 2;
+
+                    _tprintf(_T("%u "), Rate);
                 }
             }
             _tprintf(_T("\n"));
