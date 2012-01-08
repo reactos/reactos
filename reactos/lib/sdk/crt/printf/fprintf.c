@@ -11,14 +11,13 @@
 
 int
 _cdecl
-fprintf(FILE *stream, const char *format, ...)
+fprintf(FILE *file, const char *format, ...)
 {
     va_list argptr;
     int result;
 
     va_start(argptr, format);
-    result = vfprintf(stream, format, argptr);
+    result = vfprintf(file, format, argptr);
     va_end(argptr);
     return result;
 }
-

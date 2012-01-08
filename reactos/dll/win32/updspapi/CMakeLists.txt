@@ -10,7 +10,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/updspapi.def)
 
 add_library(updspapi SHARED ${SOURCE})
-set_entrypoint(updspapi 0)
+set_module_type(updspapi win32dll ENTRYPOINT 0 )
 
 target_link_libraries(updspapi wine)
 

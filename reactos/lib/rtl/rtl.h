@@ -22,7 +22,19 @@
 
 /* PSDK/NDK Headers */
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kdfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/ldrfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
+#include <ndk/umfuncs.h>
 
 /* Internal RTL header */
 #include "rtlp.h"

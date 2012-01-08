@@ -126,8 +126,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Версия "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Версия ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Данная версия ReactOS зарегистрирована на:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -366,10 +371,10 @@ BEGIN
 	LTEXT "Выберите программу для открытия этого файла.", -1, 44, 12, 211, 10
 	LTEXT "Файл:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "Программы", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Использовать ее для всех файлов такого типа", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Обзор...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Отмена", 14006, 206, 236, 50, 14
 END
 
@@ -709,6 +714,8 @@ BEGIN
 	
 	IDS_OPEN_WITH               "Открыть с помощью"
 	IDS_OPEN_WITH_CHOOSE        "Выбрать программу..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Авторы"
 	IDS_SHELL_ABOUT_BACK        "< &Назад"
@@ -760,4 +767,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Файлы с расширением '%s' имеют тип '%s'. Для изменения параметров всех файлов '%s', нажмите 'Дополнительно'."
 	IDS_FILE_TYPES              "Типы файлов"
 	IDS_COLUMN_EXTENSION        "Расширения"
+	IDS_BYTES_FORMAT            "bytes"
 END

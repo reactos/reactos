@@ -1154,7 +1154,7 @@ static INT CopyCompAttrIMEtoClient(InputContextData *data, LPBYTE source, INT sl
     return rc;
 }
 
-static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource, INT sslen,
+static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
                                      LPBYTE target, INT tlen, BOOL unicode )
 {
     INT rc;
@@ -1265,13 +1265,13 @@ static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
     case GCS_COMPCLAUSE:
         TRACE("GCS_COMPCLAUSE\n");
         rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwCompClauseOffset,compstr->dwCompClauseLen,
-                                       compdata + compstr->dwCompStrOffset, compstr->dwCompStrLen,
+                                       compdata + compstr->dwCompStrOffset,
                                        lpBuf, dwBufLen, unicode);
         break;
     case GCS_RESULTCLAUSE:
         TRACE("GCS_RESULTCLAUSE\n");
         rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwResultClauseOffset,compstr->dwResultClauseLen,
-                                       compdata + compstr->dwResultStrOffset, compstr->dwResultStrLen,
+                                       compdata + compstr->dwResultStrOffset,
                                        lpBuf, dwBufLen, unicode);
         break;
     case GCS_RESULTREADSTR:
@@ -1281,7 +1281,7 @@ static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
     case GCS_RESULTREADCLAUSE:
         TRACE("GCS_RESULTREADCLAUSE\n");
         rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwResultReadClauseOffset,compstr->dwResultReadClauseLen,
-                                       compdata + compstr->dwResultStrOffset, compstr->dwResultStrLen,
+                                       compdata + compstr->dwResultStrOffset,
                                        lpBuf, dwBufLen, unicode);
         break;
     case GCS_COMPREADSTR:
@@ -1297,7 +1297,7 @@ static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
     case GCS_COMPREADCLAUSE:
         TRACE("GCS_COMPREADCLAUSE\n");
         rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwCompReadClauseOffset,compstr->dwCompReadClauseLen,
-                                       compdata + compstr->dwCompStrOffset, compstr->dwCompStrLen,
+                                       compdata + compstr->dwCompStrOffset,
                                        lpBuf, dwBufLen, unicode);
         break;
     case GCS_CURSORPOS:
@@ -1360,9 +1360,15 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
  */
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
-    HIMC rc = NULL;
+    HIMC rc;
 
     TRACE("%p\n", hWnd);
+
+    if (!IsWindow(hWnd))
+    {
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        return NULL;
+    }
     if (!IMM_GetThreadData()->defaultContext)
         IMM_GetThreadData()->defaultContext = ImmCreateContext();
 
@@ -1769,6 +1775,7 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
   if ( data )
       return data->lastVK;
 
+  version.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
   GetVersionExA( &version );
   switch(version.dwPlatformId)
   {
@@ -1884,21 +1891,20 @@ BOOL WINAPI ImmIsUIMessageA(
 
     TRACE("(%p, %x, %ld, %ld)\n", hWndIME, msg, wParam, lParam);
     if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
-        (msg >= WM_IME_SETCONTEXT && msg <= WM_IME_KEYUP) ||
-        (msg == WM_MSIME_SERVICE) ||
-        (msg == WM_MSIME_RECONVERTOPTIONS) ||
-        (msg == WM_MSIME_MOUSE) ||
-        (msg == WM_MSIME_RECONVERTREQUEST) ||
-        (msg == WM_MSIME_RECONVERT) ||
-        (msg == WM_MSIME_QUERYPOSITION) ||
-        (msg == WM_MSIME_DOCUMENTFEED))
-
+            (msg == WM_IME_SETCONTEXT) ||
+            (msg == WM_IME_NOTIFY) ||
+            (msg == WM_IME_COMPOSITIONFULL) ||
+            (msg == WM_IME_SELECT) ||
+            (msg == 0x287 /* FIXME: WM_IME_SYSTEM */) ||
+            (msg == WM_MSIME_RECONVERTOPTIONS) ||
+            (msg == WM_MSIME_MOUSE) ||
+            (msg == WM_MSIME_RECONVERTREQUEST) ||
+            (msg == WM_MSIME_RECONVERT) ||
+            (msg == WM_MSIME_QUERYPOSITION) ||
+            (msg == WM_MSIME_DOCUMENTFEED))
     {
-        if (!IMM_GetThreadData()->hwndDefault)
-            ImmGetDefaultIMEWnd(NULL);
-
-        if (hWndIME == NULL)
-            PostMessageA(IMM_GetThreadData()->hwndDefault, msg, wParam, lParam);
+        if (hWndIME)
+            SendMessageA(hWndIME, msg, wParam, lParam);
 
         rc = TRUE;
     }
@@ -1912,17 +1918,26 @@ BOOL WINAPI ImmIsUIMessageW(
   HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     BOOL rc = FALSE;
-    TRACE("(%p, %d, %ld, %ld):\n", hWndIME, msg, wParam, lParam);
+
+    TRACE("(%p, %x, %ld, %ld)\n", hWndIME, msg, wParam, lParam);
     if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
-        (msg >= WM_IME_SETCONTEXT && msg <= WM_IME_KEYUP) ||
-        (msg == WM_MSIME_SERVICE) ||
-        (msg == WM_MSIME_RECONVERTOPTIONS) ||
-        (msg == WM_MSIME_MOUSE) ||
-        (msg == WM_MSIME_RECONVERTREQUEST) ||
-        (msg == WM_MSIME_RECONVERT) ||
-        (msg == WM_MSIME_QUERYPOSITION) ||
-        (msg == WM_MSIME_DOCUMENTFEED))
+            (msg == WM_IME_SETCONTEXT) ||
+            (msg == WM_IME_NOTIFY) ||
+            (msg == WM_IME_COMPOSITIONFULL) ||
+            (msg == WM_IME_SELECT) ||
+            (msg == 0x287 /* FIXME: WM_IME_SYSTEM */) ||
+            (msg == WM_MSIME_RECONVERTOPTIONS) ||
+            (msg == WM_MSIME_MOUSE) ||
+            (msg == WM_MSIME_RECONVERTREQUEST) ||
+            (msg == WM_MSIME_RECONVERT) ||
+            (msg == WM_MSIME_QUERYPOSITION) ||
+            (msg == WM_MSIME_DOCUMENTFEED))
+    {
+        if (hWndIME)
+            SendMessageW(hWndIME, msg, wParam, lParam);
+
         rc = TRUE;
+    }
     return rc;
 }
 
@@ -2816,6 +2831,16 @@ BOOL WINAPI ImmProcessKey(HWND hwnd, HKL hKL, UINT vKey, LPARAM lKeyData, DWORD 
 *		ImmDisableTextFrameService(IMM32.@)
 */
 BOOL WINAPI ImmDisableTextFrameService(DWORD idThread)
+{
+    FIXME("Stub\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *              ImmEnumInputContext(IMM32.@)
+ */
+
+BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
 {
     FIXME("Stub\n");
     return FALSE;

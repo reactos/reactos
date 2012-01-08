@@ -45,13 +45,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
 add_library(dbghelp SHARED ${SOURCE})
-
+allow_warnings(dbghelp)
 set_module_type(dbghelp win32dll)
-target_link_libraries(dbghelp
-    wine
-    ${PSEH_LIB}
-    oldnames)
-
-add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
+target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
+add_delay_importlibs(dbghelp version)
+add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
+add_pch(dbghelp dbghelp_private.h)
 add_importlib_target(dbghelp.spec)
 add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)

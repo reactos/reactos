@@ -14,4 +14,5 @@
 	<file>utl.c</file>
 	<file>winmain.c</file>
 	<file>resource.rc</file>
+	<pch>calc.h</pch>
 </module>

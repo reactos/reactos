@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Fatih Aþýcý
+ * Copyright 2006 Fatih AÅŸÄ±cÄ±
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,10 +20,10 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Bü&yük Simgeler",    FCIDM_SHVIEW_BIGICON
-	MENUITEM "Kü&çük Simgeler",    FCIDM_SHVIEW_SMALLICON
+	MENUITEM "BÃ¼&yÃ¼k Simgeler",    FCIDM_SHVIEW_BIGICON
+	MENUITEM "KÃ¼&Ã§Ã¼k Simgeler",    FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Liste",             FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "&Ayrýntýlý",         FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "&AyrÄ±ntÄ±lÄ±",         FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -31,31 +31,31 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&Görünüm"
+		POPUP "&GÃ¶rÃ¼nÃ¼m"
 		BEGIN
-			MENUITEM "Bü&yük Simgeler",   FCIDM_SHVIEW_BIGICON
-			MENUITEM "Kü&çük Simgeler",   FCIDM_SHVIEW_SMALLICON
+			MENUITEM "BÃ¼&yÃ¼k Simgeler",   FCIDM_SHVIEW_BIGICON
+			MENUITEM "KÃ¼&Ã§Ã¼k Simgeler",   FCIDM_SHVIEW_SMALLICON
 			MENUITEM "&Liste",            FCIDM_SHVIEW_LISTVIEW
-			MENUITEM "&Ayrýntýlý",        FCIDM_SHVIEW_REPORTVIEW
+			MENUITEM "&AyrÄ±ntÄ±lÄ±",        FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "&Simgeleri Düzenle"
+		POPUP "&Simgeleri DÃ¼zenle"
 		BEGIN
-			MENUITEM "&Ada Göre",         0x30  /* column 0 */
-			MENUITEM "&Türe Göre",        0x32  /* column 2 */
-			MENUITEM "&Boyuta Göre",      0x31  /* ... */
-			MENUITEM "&Zamana Göre",      0x33
+			MENUITEM "&Ada GÃ¶re",         0x30  /* column 0 */
+			MENUITEM "&TÃ¼re GÃ¶re",        0x32  /* column 2 */
+			MENUITEM "&Boyuta GÃ¶re",      0x31  /* ... */
+			MENUITEM "&Zamana GÃ¶re",      0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Otomatik Düzenle", FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "&Otomatik DÃ¼zenle", FCIDM_SHVIEW_AUTOARRANGE
 		END
 		MENUITEM "Izgaraya Uydur",      FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
 		MENUITEM "Yenile",              FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Yapýþtýr",            FCIDM_SHVIEW_INSERT
-		MENUITEM "Kýsayol Yapýþtýr",    FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "YapÄ±ÅŸtÄ±r",            FCIDM_SHVIEW_INSERT
+		MENUITEM "KÄ±sayol YapÄ±ÅŸtÄ±r",    FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Özellikler",          FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Ã–zellikler",          FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -64,27 +64,27 @@ MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "A&raþtýr",            FCIDM_SHVIEW_EXPLORE
-		MENUITEM "&Aç",                 FCIDM_SHVIEW_OPEN
+		MENUITEM "A&raÅŸtÄ±r",            FCIDM_SHVIEW_EXPLORE
+		MENUITEM "&AÃ§",                 FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
 		MENUITEM "&Kes",                FCIDM_SHVIEW_CUT
 		MENUITEM "K&opyala",            FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "Kýsayol O&luþtur",    FCIDM_SHVIEW_CREATELINK
+		MENUITEM "KÄ±sayol O&luÅŸtur",    FCIDM_SHVIEW_CREATELINK
 		MENUITEM "&Sil",                FCIDM_SHVIEW_DELETE
-		MENUITEM "&Yeniden Adlandýr",   FCIDM_SHVIEW_RENAME
+		MENUITEM "&Yeniden AdlandÄ±r",   FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "&Özellikler",         FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "&Ã–zellikler",         FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Dizine Gözat"
+CAPTION "Dizine GÃ¶zat"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "Tamam", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Ýptal", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ä°ptal", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -92,7 +92,7 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Dizine Gözat"
+CAPTION "Dizine GÃ¶zat"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
@@ -102,7 +102,7 @@ BEGIN
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "Tamam", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Ýptal", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ä°ptal", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -120,13 +120,19 @@ END
 
 IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "%s Hakkýnda"
+CAPTION "%s HakkÄ±nda"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+	LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -143,7 +149,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS'ý size sunan geliþtiriciler:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "ReactOS'Ä± size sunan geliÅŸtiriciler:", IDC_STATIC, 0, 0, 180, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -153,12 +159,12 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Herhangi bir program, dizin, belge veya Internet kaynaðý seçin ve Wine sizin için açsýn.", 12289, 36, 11, 182, 18
-	LTEXT "&Aç:", 12305, 7, 39, 24, 10
+	LTEXT "Herhangi bir program, dizin, belge veya Internet kaynaÄŸÄ± seÃ§in ve Wine sizin iÃ§in aÃ§sÄ±n.", 12289, 36, 11, 182, 18
+	LTEXT "&AÃ§:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "Tamam", IDOK, 62, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "Ýptal", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "&Gözat...", 12288, 170, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "Ä°ptal", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "&GÃ¶zat...", 12288, 170, 63, 50, 14, WS_TABSTOP
 END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
@@ -366,10 +372,10 @@ BEGIN
 	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
 	LTEXT "File:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
 END
 
@@ -596,18 +602,18 @@ BEGIN
 	/* columns in the shellview */
 	IDS_SHV_COLUMN1             "Dosya"
 	IDS_SHV_COLUMN2             "Boyut"
-	IDS_SHV_COLUMN3             "Tür"
-	IDS_SHV_COLUMN4             "Düzenlenme"
-	IDS_SHV_COLUMN5             "Öznitelikler"
+	IDS_SHV_COLUMN3             "TÃ¼r"
+	IDS_SHV_COLUMN4             "DÃ¼zenlenme"
+	IDS_SHV_COLUMN5             "Ã–znitelikler"
 	IDS_SHV_COLUMN6             "Boyut"
-	IDS_SHV_COLUMN7             "Kullanýlabilir Alan"
+	IDS_SHV_COLUMN7             "KullanÄ±labilir Alan"
 	IDS_SHV_COLUMN8             "Ad"
-	IDS_SHV_COLUMN9             "Açýklamalar"
+	IDS_SHV_COLUMN9             "AÃ§Ä±klamalar"
 	IDS_SHV_COLUMN10            "Sahip"
 	IDS_SHV_COLUMN11            "Grup"
 	IDS_SHV_COLUMN12            "Filename"
 	IDS_SHV_COLUMN13            "Category"
-	IDS_SHV_COLUMN_DELFROM      "Özgün konum"
+	IDS_SHV_COLUMN_DELFROM      "Ã–zgÃ¼n konum"
 	IDS_SHV_COLUMN_DELDATE      "Silinme tarihi"
 	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
 	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
@@ -619,46 +625,46 @@ BEGIN
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
-	IDS_DESKTOP                 "Masaüstü"
-	IDS_MYCOMPUTER              "Bilgisayarým"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Çöp"
+	IDS_DESKTOP                 "MasaÃ¼stÃ¼"
+	IDS_MYCOMPUTER              "BilgisayarÄ±m"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Ã‡Ã¶p"
 	IDS_CONTROLPANEL            "Control Panel"
 	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "Bü&yük Simgeler"
-	IDS_VIEW_SMALL              "Kü&çük Simgeler"
+	IDS_VIEW_LARGE              "BÃ¼&yÃ¼k Simgeler"
+	IDS_VIEW_SMALL              "KÃ¼&Ã§Ã¼k Simgeler"
 	IDS_VIEW_LIST               "&Liste"
-	IDS_VIEW_DETAILS            "&Ayrýntýlý"
-	IDS_SELECT                  "Seç"
-	IDS_OPEN                    "Aç"
-	IDS_CREATELINK              "Kýsayol O&luþtur"
+	IDS_VIEW_DETAILS            "&AyrÄ±ntÄ±lÄ±"
+	IDS_SELECT                  "SeÃ§"
+	IDS_OPEN                    "AÃ§"
+	IDS_CREATELINK              "KÄ±sayol O&luÅŸtur"
 	IDS_COPY                    "K&opyala"
 	IDS_DELETE                  "&Sil"
-	IDS_PROPERTIES              "&Özellikler"
+	IDS_PROPERTIES              "&Ã–zellikler"
 	IDS_CUT                     "&Kes"
 	IDS_RESTORE                 "Restore"
 	IDS_FORMATDRIVE             "Format..."
 	IDS_RENAME                  "Rename"
 	IDS_INSERT                  "Insert"
 
-	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
-	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"
+	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluÅŸturulamÄ±yor: EriÅŸim engellendi."
+	IDS_CREATEFOLDER_CAPTION    "Dizin oluÅŸturma sÄ±rasÄ±nda hata"
 	IDS_DELETEITEM_CAPTION      "Dosya silmeyi onayla"
 	IDS_DELETEFOLDER_CAPTION    "Dizin silmeyi onayla"
-	IDS_DELETEITEM_TEXT         "'%1' öðesini silmek istediðinizden emin misiniz?"
-	IDS_DELETEMULTIPLE_TEXT     "Bu %1 öðeyi silmek istediðinizden emin misiniz?"
-	IDS_DELETESELECTED_TEXT     "Seçili öðeleri silmek istediðinizden emin misiniz?"
-	IDS_TRASHITEM_TEXT          "'%1' adlý öðeyi çöpe göndermek istediðinizden emin misiniz?"
-	IDS_TRASHFOLDER_TEXT        "'%1' adlý öðeyi ve tüm içeriðini çöpe göndermek istediðinizden emin misiniz?"
-	IDS_TRASHMULTIPLE_TEXT      "Bu %1 öðeyi çöpe göndermek istediðinizden emin misiniz?"
-	IDS_CANTTRASH_TEXT          "'%1' adlý öðe çöpe gönderilemiyor. Tamamen silmek ister misiniz?"
+	IDS_DELETEITEM_TEXT         "'%1' Ã¶ÄŸesini silmek istediÄŸinizden emin misiniz?"
+	IDS_DELETEMULTIPLE_TEXT     "Bu %1 Ã¶ÄŸeyi silmek istediÄŸinizden emin misiniz?"
+	IDS_DELETESELECTED_TEXT     "SeÃ§ili Ã¶ÄŸeleri silmek istediÄŸinizden emin misiniz?"
+	IDS_TRASHITEM_TEXT          "'%1' adlÄ± Ã¶ÄŸeyi Ã§Ã¶pe gÃ¶ndermek istediÄŸinizden emin misiniz?"
+	IDS_TRASHFOLDER_TEXT        "'%1' adlÄ± Ã¶ÄŸeyi ve tÃ¼m iÃ§eriÄŸini Ã§Ã¶pe gÃ¶ndermek istediÄŸinizden emin misiniz?"
+	IDS_TRASHMULTIPLE_TEXT      "Bu %1 Ã¶ÄŸeyi Ã§Ã¶pe gÃ¶ndermek istediÄŸinizden emin misiniz?"
+	IDS_CANTTRASH_TEXT          "'%1' adlÄ± Ã¶ÄŸe Ã§Ã¶pe gÃ¶nderilemiyor. Tamamen silmek ister misiniz?"
 	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-	IDS_OVERWRITEFILE_CAPTION   "Dosya Üzerine Yazmayý Onayla"
+	IDS_OVERWRITEFILE_CAPTION   "Dosya Ãœzerine YazmayÄ± Onayla"
 	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Yeniden Baþlat"
+	IDS_RESTART_TITLE           "Yeniden BaÅŸlat"
 	IDS_RESTART_PROMPT          "Do you want to restart the system?"
 	IDS_SHUTDOWN_TITLE          "Oturumu Kapat"
 	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
@@ -674,13 +680,13 @@ BEGIN
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programlar"
 	IDS_PERSONAL                "Belgelerim"
-	IDS_FAVORITES               "Sýk Kullanýlanlar"
-	IDS_STARTUP                 "Start Menu\\Programlar\\Baþlangýç"
+	IDS_FAVORITES               "SÄ±k KullanÄ±lanlar"
+	IDS_STARTUP                 "Start Menu\\Programlar\\BaÅŸlangÄ±Ã§"
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Start Menu"
-	IDS_MYMUSIC                 "Belgelerim\\Müziðim"
-	IDS_MYVIDEO                 "Belgelerim\\Vidyolarým"
+	IDS_MYMUSIC                 "Belgelerim\\MÃ¼ziÄŸim"
+	IDS_MYVIDEO                 "Belgelerim\\VidyolarÄ±m"
 	IDS_DESKTOPDIRECTORY        "Desktop"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
@@ -694,10 +700,10 @@ BEGIN
 	IDS_MYPICTURES              "Belgelerim\\Resimlerim"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Belgeler"
-	IDS_ADMINTOOLS              "Start Menu\\Programlar\\Yönetimsel Araçlar"
-	IDS_COMMON_MUSIC            "Belgeler\\Müziðim"
+	IDS_ADMINTOOLS              "Start Menu\\Programlar\\YÃ¶netimsel AraÃ§lar"
+	IDS_COMMON_MUSIC            "Belgeler\\MÃ¼ziÄŸim"
 	IDS_COMMON_PICTURES         "Belgeler\\Resimlerim"
-	IDS_COMMON_VIDEO            "Belgeler\\Videolarým"
+	IDS_COMMON_VIDEO            "Belgeler\\VideolarÄ±m"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "My Network Places"
 
@@ -707,14 +713,17 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Open With"
 	IDS_OPEN_WITH_CHOOSE        "Select Program"
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
 	FCIDM_SHVIEW_NEW 	    "Yeni"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Yeni &Dizin"
-	FCIDM_SHVIEW_NEWLINK 	    "Yeni &Kýsayol"
+	FCIDM_SHVIEW_NEWLINK 	    "Yeni &KÄ±sayol"
 	IDS_FOLDER_OPTIONS          "Folder Options"
 	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
 	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
@@ -760,4 +769,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

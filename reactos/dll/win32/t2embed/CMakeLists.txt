@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -13,7 +12,7 @@ list(APPEND SOURCE
 
 add_library(t2embed SHARED ${SOURCE})
 
-set_module_type(t2embed win32dll)
+set_module_type(t2embed win32dll UNICODE)
 
 target_link_libraries(t2embed wine)
 

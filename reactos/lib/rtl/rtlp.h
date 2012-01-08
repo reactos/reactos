@@ -63,7 +63,7 @@ typedef struct _DISPATCHER_CONTEXT
 PVOID
 NTAPI
 RtlpAllocateMemory(
-    ULONG Bytes,
+    SIZE_T Bytes,
     ULONG Tag);
 
 VOID
@@ -86,19 +86,19 @@ RtlpCaptureStackLimits(
 
 NTSTATUS
 NTAPI
-RtlDeleteHeapLock(PHEAP_LOCK Lock);
+RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock);
 
 NTSTATUS
 NTAPI
-RtlEnterHeapLock(PHEAP_LOCK Lock);
+RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive);
 
 NTSTATUS
 NTAPI
-RtlInitializeHeapLock(PHEAP_LOCK Lock);
+RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock);
 
 NTSTATUS
 NTAPI
-RtlLeaveHeapLock(PHEAP_LOCK Lock);
+RtlLeaveHeapLock(IN OUT PHEAP_LOCK Lock);
 
 BOOLEAN
 NTAPI

@@ -54,6 +54,7 @@
 	<file>upgrade.c</file>
 	<file>where.c</file>
 	<file>msi.rc</file>
+	<pch>msipriv.h</pch>
 	<include base="msi" root="intermediate">.</include>
 	<library>wine</library>
 	<library>uuid</library>

@@ -488,7 +488,7 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
     BATTERY_INFORMATION BatteryInfo;
     BATTERY_REPORTING_SCALE BatteryGranularity[4];
     PWCHAR BatteryName = L"Composite Battery";
-    BATTERY_MANUFACTURE_DATE Date;
+    //BATTERY_MANUFACTURE_DATE Date;
     ULONG Dummy, Time;
     PVOID QueryData = NULL;
     ULONG QueryLength = 0;
@@ -557,9 +557,9 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
         case BatteryManufactureDate:
         
             /* Static data */
-            Date.Day = 26;
-            Date.Month = 06;
-            Date.Year = 1997;
+            //Date.Day = 26;
+            //Date.Month = 06;
+            //Date.Year = 1997;
             break;
 
         case BatteryTemperature:
@@ -572,7 +572,6 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
             break;
             
         default:
-        
             /* Everything else is unknown */
             Status = STATUS_INVALID_PARAMETER;
             break;

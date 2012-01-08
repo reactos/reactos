@@ -1,13 +1,15 @@
 <group>
-<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" crt="msvcrt">
+<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec" />
-	<include base="shell32">.</include>
 	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="atlnew">.</include>
 	<define name="_SHELL32_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="_WINE" />
+	<define name="UNICODE" />
+	<define name="_UNICODE" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<library>wine</library>
 	<library>uuid</library>
@@ -18,66 +20,70 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
+	<library>shdocvw</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<library>version</library>
 	<library>devmgr</library>
 	<library>winspool</library>
 	<library>winmm</library>
+	<library>msvcrt</library>
+	<library>atlnew</library>
 	<pch>precomp.h</pch>
-	<file>authors.c</file>
-	<file>autocomplete.c</file>
-	<file>brsfolder.c</file>
-	<file>changenotify.c</file>
-	<file>classes.c</file>
-	<file>clipboard.c</file>
-	<file>control.c</file>
-	<file>dataobject.c</file>
-	<file>dde.c</file>
-	<file>debughlp.c</file>
-	<file>desktop.c</file>
-	<file>dialogs.c</file>
-	<file>dragdrophelper.c</file>
-	<file>enumidlist.c</file>
-	<file>extracticon.c</file>
-	<file>folders.c</file>
-	<file>iconcache.c</file>
-	<file>pidl.c</file>
-	<file>regsvr.c</file>
-	<file>shell32_main.c</file>
-	<file>shellitem.c</file>
-	<file>shelllink.c</file>
-	<file>shellole.c</file>
-	<file>shellord.c</file>
-	<file>shellpath.c</file>
-	<file>shellreg.c</file>
-	<file>shellstring.c</file>
-	<file>shfldr_desktop.c</file>
-	<file>shfldr_fs.c</file>
-	<file>shfldr_mycomp.c</file>
-	<file>shfldr_mydocuments.c</file>
-	<file>shfldr_printers.c</file>
-	<file>shfldr_admintools.c</file>
-	<file>shfldr_netplaces.c</file>
-	<file>shfldr_fonts.c</file>
-	<file>shfldr_cpanel.c</file>
-	<file>shfldr_recyclebin.c</file>
-	<file>shlexec.c</file>
-	<file>shlfileop.c</file>
-	<file>shlfolder.c</file>
-	<file>shlfsbind.c</file>
-	<file>shlmenu.c</file>
-	<file>shlview.c</file>
-	<file>shpolicy.c</file>
-	<file>shv_def_cmenu.c</file>
-	<file>startmenu.c</file>
-	<file>stubs.c</file>
-	<file>ros-systray.c</file>
-	<file>fprop.c</file>
-	<file>drive.c</file>
-	<file>she_ocmenu.c</file>
-	<file>shv_item_new.c</file>
-	<file>folder_options.c</file>
+	<file>authors.cpp</file>
+	<file>autocomplete.cpp</file>
+	<file>brsfolder.cpp</file>
+	<file>changenotify.cpp</file>
+	<file>classes.cpp</file>
+	<file>clipboard.cpp</file>
+	<file>control.cpp</file>
+	<file>dataobject.cpp</file>
+	<file>dde.cpp</file>
+	<file>debughlp.cpp</file>
+	<file>desktop.cpp</file>
+	<file>dialogs.cpp</file>
+	<file>dragdrophelper.cpp</file>
+	<file>enumidlist.cpp</file>
+	<file>extracticon.cpp</file>
+	<file>folders.cpp</file>
+	<file>iconcache.cpp</file>
+	<file>pidl.cpp</file>
+	<file>shell32_main.cpp</file>
+	<file>shellitem.cpp</file>
+	<file>shelllink.cpp</file>
+	<file>shellole.cpp</file>
+	<file>shellord.cpp</file>
+	<file>shellpath.cpp</file>
+	<file>shellreg.cpp</file>
+	<file>shellstring.cpp</file>
+	<directory name="folders">
+		<file>desktop.cpp</file>
+		<file>fs.cpp</file>
+		<file>mycomp.cpp</file>
+		<file>mydocuments.cpp</file>
+		<file>printers.cpp</file>
+		<file>admintools.cpp</file>
+		<file>netplaces.cpp</file>
+		<file>fonts.cpp</file>
+		<file>cpanel.cpp</file>
+		<file>recyclebin.cpp</file>
+	</directory>
+	<file>shlexec.cpp</file>
+	<file>shlfileop.cpp</file>
+	<file>shlfolder.cpp</file>
+	<file>shlfsbind.cpp</file>
+	<file>shlmenu.cpp</file>
+	<file>shlview.cpp</file>
+	<file>shpolicy.cpp</file>
+	<file>stubs.cpp</file>
+	<file>systray.cpp</file>
+	<file>fprop.cpp</file>
+	<file>drive.cpp</file>
+	<file>defcontextmenu.cpp</file>
+	<file>startmenu.cpp</file>
+	<file>openwithmenu.cpp</file>
+	<file>newmenu.cpp</file>
+	<file>folder_options.cpp</file>
 	<file>shell32.rc</file>
 </module>
 <module name="shobjidl_local_interface" type="idlinterface">

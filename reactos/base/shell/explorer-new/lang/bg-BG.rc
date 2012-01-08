@@ -1,4 +1,3 @@
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU DISCARDABLE
@@ -6,10 +5,10 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Задачен управител", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR	
-        MENUITEM "&Заключване на задачната лента", ID_LOCKTASKBAR
-        MENUITEM "С&войства", ID_SHELL_CMD_PROPERTIES
+        MENUITEM "&Р—Р°РєР»СЋС‡РІР°РЅРµ РЅР° Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°", ID_LOCKTASKBAR
+        MENUITEM "РЎ&РІРѕР№СЃС‚РІР°", ID_SHELL_CMD_PROPERTIES
     END
 END
 
@@ -18,41 +17,41 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "&Приложения", IDM_PROGRAMS
+        POPUP "&РџСЂРёР»РѕР¶РµРЅРёСЏ", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Празно)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РџСЂР°Р·РЅРѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Любимки", IDM_FAVORITES
+        POPUP "&Р›СЋР±РёРјРєРё", IDM_FAVORITES
         BEGIN
-            MENUITEM "(Празно)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РџСЂР°Р·РЅРѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Документи", IDM_DOCUMENTS
+        POPUP "&Р”РѕРєСѓРјРµРЅС‚Рё", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Празно)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РџСЂР°Р·РЅРѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "На&стройки", IDM_SETTINGS
+        POPUP "РќР°&СЃС‚СЂРѕР№РєРё", IDM_SETTINGS
         BEGIN
-            MENUITEM "&Крило за управление", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "&РљСЂРёР»Рѕ Р·Р° СѓРїСЂР°РІР»РµРЅРёРµ", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Сигурност...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Мрежови връзки", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Печатачи и факсове", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Задачна лента и изборник „Пуск“", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РЎРёРіСѓСЂРЅРѕСЃС‚...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РњСЂРµР¶РѕРІРё РІСЂСЉР·РєРё", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РџРµС‡Р°С‚Р°С‡Рё Рё С„Р°РєСЃРѕРІРµ", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Р—Р°РґР°С‡РЅР° Р»РµРЅС‚Р° Рё РёР·Р±РѕСЂРЅРёРє вЂћРџСѓСЃРєвЂњ", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Търсене", IDM_SEARCH
+        POPUP "&РўСЉСЂСЃРµРЅРµ", IDM_SEARCH
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "&Помощ и поддръжка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Изпълнение...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РџРѕРјРѕС‰ Рё РїРѕРґРґСЂСЉР¶РєР°", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РР·РїСЉР»РЅРµРЅРёРµ...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "&Съгласуване", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Изход %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Откачване...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РЎСЉРіР»Р°СЃСѓРІР°РЅРµ", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РР·С…РѕРґ %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РћС‚РєР°С‡РІР°РЅРµ...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
 /* undock computer*/
-/* неясно */
-        MENUITEM "От&гнездване на компютъра", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Изключване...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+/* РЅРµСЏСЃРЅРѕ */
+        MENUITEM "РћС‚&РіРЅРµР·РґРІР°РЅРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&РР·РєР»СЋС‡РІР°РЅРµ...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -62,71 +61,71 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Taskbar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Облик на задачната лента", IDC_STATIC, 6,6,240,121
+    GROUPBOX        "РћР±Р»РёРє РЅР° Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°", IDC_STATIC, 6,6,240,121
     CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
-    AUTOCHECKBOX    "За&ключванена задачната лента", IDC_TASKBARPROP_LOCK, 13,45,200,10
-    AUTOCHECKBOX    "Задачната лента се крие &сама", IDC_TASKBARPROP_HIDE, 13,58,200,10
-    AUTOCHECKBOX    "Задачната лента стои &върху останалите прозорци", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX    "&Скупчване на сходните бутони в задачната лента", IDC_TASKBARPROP_GROUP, 13,84,200,10
-    AUTOCHECKBOX    "Показване на &бърз пуск", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
-    AUTOCHECKBOX    "&Показване на преглед на прозорците (изображенийца)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
+    AUTOCHECKBOX    "Р—Р°&РєР»СЋС‡РІР°РЅРµРЅР° Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "Р—Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р° СЃРµ РєСЂРёРµ &СЃР°РјР°", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "Р—Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р° СЃС‚РѕРё &РІСЉСЂС…Сѓ РѕСЃС‚Р°РЅР°Р»РёС‚Рµ РїСЂРѕР·РѕСЂС†Рё", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&РЎРєСѓРїС‡РІР°РЅРµ РЅР° СЃС…РѕРґРЅРёС‚Рµ Р±СѓС‚РѕРЅРё РІ Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "РџРѕРєР°Р·РІР°РЅРµ РЅР° &Р±СЉСЂР· РїСѓСЃРє", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "&РџРѕРєР°Р·РІР°РЅРµ РЅР° РїСЂРµРіР»РµРґ РЅР° РїСЂРѕР·РѕСЂС†РёС‚Рµ (РёР·РѕР±СЂР°Р¶РµРЅРёР№С†Р°)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Пусков изборник"
+CAPTION "РџСѓСЃРєРѕРІ РёР·Р±РѕСЂРЅРёРє"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Пусков изборник", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "Този изборник ви дава лесне достъп до папките ви, любимите ви приложения и търсенето.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "На&гласяване...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "Класически пусков из&борник", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Този изглед на изборника ви осигурява класически облик и начин на работа.",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "На&гласяване...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
-    GROUPBOX        "Поверителност",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Съхраняване и показване на списък от отваряни скоро &файлове", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Съхраняване и показване на списък от отваряни скоро &приложения",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTORADIOBUTTON "&РџСѓСЃРєРѕРІ РёР·Р±РѕСЂРЅРёРє", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    LTEXT           "РўРѕР·Рё РёР·Р±РѕСЂРЅРёРє РІРё РґР°РІР° Р»РµСЃРЅРµ РґРѕСЃС‚СЉРї РґРѕ РїР°РїРєРёС‚Рµ РІРё, Р»СЋР±РёРјРёС‚Рµ РІРё РїСЂРёР»РѕР¶РµРЅРёСЏ Рё С‚СЉСЂСЃРµРЅРµС‚Рѕ.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    PUSHBUTTON      "РќР°&РіР»Р°СЃСЏРІР°РЅРµ...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
+    AUTORADIOBUTTON "РљР»Р°СЃРёС‡РµСЃРєРё РїСѓСЃРєРѕРІ РёР·&Р±РѕСЂРЅРёРє", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "РўРѕР·Рё РёР·РіР»РµРґ РЅР° РёР·Р±РѕСЂРЅРёРєР° РІРё РѕСЃРёРіСѓСЂСЏРІР° РєР»Р°СЃРёС‡РµСЃРєРё РѕР±Р»РёРє Рё РЅР°С‡РёРЅ РЅР° СЂР°Р±РѕС‚Р°.",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "РќР°&РіР»Р°СЃСЏРІР°РЅРµ...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    GROUPBOX        "РџРѕРІРµСЂРёС‚РµР»РЅРѕСЃС‚",IDC_STATIC, 7,100,238,42
+    AUTOCHECKBOX    "РЎСЉС…СЂР°РЅСЏРІР°РЅРµ Рё РїРѕРєР°Р·РІР°РЅРµ РЅР° СЃРїРёСЃСЉРє РѕС‚ РѕС‚РІР°СЂСЏРЅРё СЃРєРѕСЂРѕ &С„Р°Р№Р»РѕРІРµ", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "РЎСЉС…СЂР°РЅСЏРІР°РЅРµ Рё РїРѕРєР°Р·РІР°РЅРµ РЅР° СЃРїРёСЃСЉРє РѕС‚ РѕС‚РІР°СЂСЏРЅРё СЃРєРѕСЂРѕ &РїСЂРёР»РѕР¶РµРЅРёСЏ",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Уведомителка"
+CAPTION "РЈРІРµРґРѕРјРёС‚РµР»РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
-    GROUPBOX        "Значета", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "Можете да поддържате уведомителката подредена, като скривате значетата, върху които не сте цъкали скоро.", IDC_STATIC, 13,48,223,16, WS_DISABLED
-    AUTOCHECKBOX    "С&криване на бездейните значета", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
-    PUSHBUTTON      "На&гласяване...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
-    GROUPBOX        "Системи значета", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Изберете кои значета да се показват винаги.", IDC_STATIC, 13,112,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Часовник", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Сила", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Мрежа", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
-    AUTOCHECKBOX    "За&хранване", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
+    GROUPBOX        "Р—РЅР°С‡РµС‚Р°", IDC_STATIC, 6,33,240,58, WS_DISABLED
+    LTEXT           "РњРѕР¶РµС‚Рµ РґР° РїРѕРґРґСЉСЂР¶Р°С‚Рµ СѓРІРµРґРѕРјРёС‚РµР»РєР°С‚Р° РїРѕРґСЂРµРґРµРЅР°, РєР°С‚Рѕ СЃРєСЂРёРІР°С‚Рµ Р·РЅР°С‡РµС‚Р°С‚Р°, РІСЉСЂС…Сѓ РєРѕРёС‚Рѕ РЅРµ СЃС‚Рµ С†СЉРєР°Р»Рё СЃРєРѕСЂРѕ.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    AUTOCHECKBOX    "РЎ&РєСЂРёРІР°РЅРµ РЅР° Р±РµР·РґРµР№РЅРёС‚Рµ Р·РЅР°С‡РµС‚Р°", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
+    PUSHBUTTON      "РќР°&РіР»Р°СЃСЏРІР°РЅРµ...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
+    GROUPBOX        "РЎРёСЃС‚РµРјРё Р·РЅР°С‡РµС‚Р°", IDC_STATIC, 6,97,240,84, WS_DISABLED
+    LTEXT           "РР·Р±РµСЂРµС‚Рµ РєРѕРё Р·РЅР°С‡РµС‚Р° РґР° СЃРµ РїРѕРєР°Р·РІР°С‚ РІРёРЅР°РіРё.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&Р§Р°СЃРѕРІРЅРёРє", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&РЎРёР»Р°", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&РњСЂРµР¶Р°", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "Р—Р°&С…СЂР°РЅРІР°РЅРµ", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
 
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Инструментални ленти"
+CAPTION "РРЅСЃС‚СЂСѓРјРµРЅС‚Р°Р»РЅРё Р»РµРЅС‚Рё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Изберете коя инструментална лента да добавите към задачната лента.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    LTEXT           "РР·Р±РµСЂРµС‚Рµ РєРѕСЏ РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°Р»РЅР° Р»РµРЅС‚Р° РґР° РґРѕР±Р°РІРёС‚Рµ РєСЉРј Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_START             "Пуск"
-    IDS_PROPERTIES        "&Свойства"
-    IDS_OPEN_ALL_USERS    "&Отваряне на всички потребители"
-    IDS_EXPLORE_ALL_USERS "&Разлистване на всички потребители"
-    IDS_STARTUP_ERROR     "Уредбата не  може да пусне изследователя, понеже понеже регистърът е увреден или недостъпен."
+    IDS_START             "РџСѓСЃРє"
+    IDS_PROPERTIES        "&РЎРІРѕР№СЃС‚РІР°"
+    IDS_OPEN_ALL_USERS    "&РћС‚РІР°СЂСЏРЅРµ РЅР° РІСЃРёС‡РєРё РїРѕС‚СЂРµР±РёС‚РµР»Рё"
+    IDS_EXPLORE_ALL_USERS "&Р Р°Р·Р»РёСЃС‚РІР°РЅРµ РЅР° РІСЃРёС‡РєРё РїРѕС‚СЂРµР±РёС‚РµР»Рё"
+    IDS_STARTUP_ERROR     "РЈСЂРµРґР±Р°С‚Р° РЅРµ  РјРѕР¶Рµ РґР° РїСѓСЃРЅРµ РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ, РїРѕРЅРµР¶Рµ РїРѕРЅРµР¶Рµ СЂРµРіРёСЃС‚СЉСЂСЉС‚ Рµ СѓРІСЂРµРґРµРЅ РёР»Рё РЅРµРґРѕСЃС‚СЉРїРµРЅ."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Свойства на задачната лента и на пусковия изборник"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "РЎРІРѕР№СЃС‚РІР° РЅР° Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р° Рё РЅР° РїСѓСЃРєРѕРІРёСЏ РёР·Р±РѕСЂРЅРёРє"
 END

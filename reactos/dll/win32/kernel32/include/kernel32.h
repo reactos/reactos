@@ -21,9 +21,13 @@
 #define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
 #define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
 
-#define debugstr_a  
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+
+#define debugstr_a
 #define debugstr_w
-#define wine_dbgstr_w  
+#define wine_dbgstr_w
 #define debugstr_guid
 
 #include "wine/unicode.h"
@@ -66,8 +70,6 @@
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
-  
-#define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
 
 typedef struct _CODEPAGE_ENTRY
 {
@@ -78,17 +80,53 @@ typedef struct _CODEPAGE_ENTRY
    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
 
+typedef struct tagLOADPARMS32 {
+  LPSTR lpEnvAddress;
+  LPSTR lpCmdLine;
+  WORD  wMagicValue;
+  WORD  wCmdShow;
+  DWORD dwReserved;
+} LOADPARMS32;
+
+typedef enum _BASE_SEARCH_PATH_TYPE
+{
+    BaseSearchPathInvalid,
+    BaseSearchPathDll,
+    BaseSearchPathApp,
+    BaseSearchPathDefault,
+    BaseSearchPathEnv,
+    BaseSearchPathCurrent,
+    BaseSearchPathMax
+} BASE_SEARCH_PATH_TYPE, *PBASE_SEARCH_PATH_TYPE;
+
+typedef enum _BASE_CURRENT_DIR_PLACEMENT
+{
+    BaseCurrentDirPlacementInvalid = -1,
+    BaseCurrentDirPlacementDefault,
+    BaseCurrentDirPlacementSafe,
+    BaseCurrentDirPlacementMax
+} BASE_CURRENT_DIR_PLACEMENT;
+
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
+
+
+extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+
 typedef
 DWORD
 (*WaitForInputIdleType)(
     HANDLE hProcess,
     DWORD dwMilliseconds);
 
+
+extern BOOLEAN InWindows;
+extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
+
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;
-extern HANDLE hProcessHeap;
-extern HANDLE hBaseDir;
 extern HMODULE hCurrentModule;
 
 extern RTL_CRITICAL_SECTION BaseDllDirectoryLock;
@@ -100,7 +138,15 @@ extern PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
+extern BOOLEAN BaseRunningInServerProcess;
+
 /* FUNCTION PROTOTYPES *******************************************************/
+
+VOID
+NTAPI
+BaseDllInitializeMemoryManager(VOID);
 
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
 
@@ -131,27 +177,32 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapFree RtlFreeHeap
 #define _lread  (_readfun)_hread
 
+PLARGE_INTEGER
+WINAPI
+BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
+                  IN DWORD dwMilliseconds);
+
 POBJECT_ATTRIBUTES
 WINAPI
-BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
+BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
                              IN PUNICODE_STRING ObjectName);
-                             
+
 NTSTATUS
 WINAPI
-BasepCreateStack(HANDLE hProcess,
+BaseCreateStack(HANDLE hProcess,
                  SIZE_T StackReserve,
                  SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb);
-                 
+
 VOID
 WINAPI
-BasepInitializeContext(IN PCONTEXT Context,
+BaseInitializeContext(IN PCONTEXT Context,
                        IN PVOID Parameter,
                        IN PVOID StartAddress,
                        IN PVOID StackAddress,
                        IN ULONG ContextType);
-                
+
 VOID
 WINAPI
 BaseThreadStartupThunk(VOID);
@@ -159,17 +210,17 @@ BaseThreadStartupThunk(VOID);
 VOID
 WINAPI
 BaseProcessStartThunk(VOID);
-        
+
 __declspec(noreturn)
 VOID
 WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter);
-                  
+
 VOID
 WINAPI
-BasepFreeStack(HANDLE hProcess,
-               PINITIAL_TEB InitialTeb);
+BaseFreeThreadStack(IN HANDLE hProcess,
+                    IN PINITIAL_TEB InitialTeb);
 
 __declspec(noreturn)
 VOID
@@ -181,16 +232,16 @@ typedef UINT (WINAPI *PPROCESS_START_ROUTINE)(VOID);
 VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
-                  
-BOOLEAN
+
+PVOID
 WINAPI
-BasepCheckRealTimePrivilege(VOID);
+BasepIsRealtimeAllowed(IN BOOLEAN Keep);
 
 VOID
 WINAPI
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
                                    OUT LPWSTR* UnicodeString);
-                                   
+
 PUNICODE_STRING
 WINAPI
 Basep8BitStringToStaticUnicodeString(IN LPCSTR AnsiString);
@@ -199,14 +250,38 @@ BOOLEAN
 WINAPI
 Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                       IN LPCSTR String);
- 
-#define BasepUnicodeStringTo8BitString RtlUnicodeStringToAnsiString
 
 typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
                                               IN PANSI_STRING AnsiString,
                                               IN BOOLEAN AllocateMemory);
-                                                
+
+typedef ULONG (NTAPI *PRTL_COUNT_STRING)(IN PUNICODE_STRING UnicodeString);
+
+typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRINGA)(IN PANSI_STRING AnsiString,
+                                              IN PCUNICODE_STRING UnicodeString,
+                                              IN BOOLEAN AllocateMemory);
+
+typedef ULONG (NTAPI *PRTL_COUNT_STRINGA)(IN PANSI_STRING UnicodeString);
+
+ULONG
+NTAPI
+BasepUnicodeStringToAnsiSize(IN PUNICODE_STRING String);
+
+ULONG
+NTAPI
+BasepAnsiStringToUnicodeSize(IN PANSI_STRING String);
+
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+extern PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString;
+extern PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize;
+extern PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize;
+
+extern UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
+extern HANDLE BaseNamedObjectDirectory;
+
+HANDLE
+WINAPI
+BaseGetNamedObjectDirectory(VOID);
 
 NTSTATUS
 WINAPI
@@ -214,17 +289,15 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
              IN PUNICODE_STRING ApplicationName);
 
-LPWSTR
-WINAPI
-BasepGetDllPath(LPWSTR FullPath,
-                PVOID Environment);
-
-
 PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage);
 
 LPWSTR
-GetDllLoadPath(LPCWSTR lpModule);
+WINAPI
+BaseComputeProcessDllPath(
+    IN LPWSTR FullPath,
+    IN PVOID Environment
+);
 
 VOID
 WINAPI
@@ -236,3 +309,21 @@ BaseSetLastNTError(IN NTSTATUS Status);
 
 /* FIXME */
 WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
+
+HANDLE
+WINAPI
+DuplicateConsoleHandle(HANDLE hConsole,
+                       DWORD dwDesiredAccess,
+                       BOOL	bInheritHandle,
+                       DWORD dwOptions);
+
+VOID
+NTAPI
+BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
+                       IN PVOID Context,
+                       OUT BOOLEAN *StopEnumeration);
+
+VOID
+WINAPI
+BaseMarkFileForDelete(IN HANDLE FileHandle,
+                      IN ULONG FileAttributes);

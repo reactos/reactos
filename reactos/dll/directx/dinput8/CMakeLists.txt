@@ -1,5 +1,4 @@
 
-set_unicode()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -14,7 +13,7 @@ add_library(dinput8 SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dinput8.def)
 
-set_entrypoint(dinput8 0)
+set_module_type(dinput8 win32dll UNICODE ENTRYPOINT 0)
 
 target_link_libraries(dinput8
     dxguid

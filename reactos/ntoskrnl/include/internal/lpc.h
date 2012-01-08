@@ -46,7 +46,7 @@
     }
 #endif
 #else
-#define LPCTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define LPCTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //

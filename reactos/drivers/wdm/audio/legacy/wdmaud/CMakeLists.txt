@@ -20,7 +20,6 @@ target_link_libraries(wdmaud
     libcntpr
     ${PSEH_LIB})
 
+add_pch(wdmaud wdmaud.h)
 add_importlibs(wdmaud ntoskrnl ks hal)
-
-
 add_cd_file(TARGET wdmaud DESTINATION reactos/system32/drivers FOR all)

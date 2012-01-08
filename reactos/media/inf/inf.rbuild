@@ -11,6 +11,7 @@
 	<installfile installbase="inf">display.inf</installfile>
 	<installfile installbase="inf">fdc.inf</installfile>
 	<installfile installbase="inf">font.inf</installfile>
+	<installfile installbase="inf">hal.inf</installfile>
 	<installfile installbase="inf">hdc.inf</installfile>
 	<installfile installbase="inf">intl.inf</installfile>
 	<installfile installbase="inf">keyboard.inf</installfile>

@@ -81,7 +81,7 @@ RtlpGetLengthOfRunClear(
     BitScanForward(&BitPos, Value);
 
     /* Calculate length up to where we read */
-    Length = (Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
+    Length = (ULONG)(Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
     Length += BitPos - 32;
 
     /* Make sure we don't go past the last bit */
@@ -130,7 +130,7 @@ RtlpGetLengthOfRunSet(
     BitScanForward(&BitPos, InvValue);
 
     /* Calculate length up to where we read */
-    Length = (Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
+    Length = (ULONG)(Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
     Length += BitPos - 32;
 
     /* Make sure we don't go past the last bit */

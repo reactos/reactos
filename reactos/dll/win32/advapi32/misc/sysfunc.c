@@ -12,7 +12,6 @@
  */
 
 #include <advapi32.h>
-#include <crypt/crypt.h>
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
@@ -577,6 +576,8 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
     DWORD dwSeed;
     PBYTE pBuffer;
     ULONG uPseudoRandom;
+    LARGE_INTEGER time;
+    static ULONG uCounter = 17;
 
     if(!pbBuffer || !dwLen)
     {
@@ -584,8 +585,9 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
         return TRUE;
     }
 
-    /* Get the first seed from the tick count */
-    dwSeed = GetTickCount();
+    /* Get the first seed from the performance counter */
+    QueryPerformanceCounter(&time);
+    dwSeed = time.LowPart ^ time.HighPart ^ RtlUlongByteSwap(uCounter++);
 
     /* We will access the buffer bytewise */
     pBuffer = (PBYTE)pbBuffer;

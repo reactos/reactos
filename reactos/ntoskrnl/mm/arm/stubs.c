@@ -35,7 +35,7 @@ MiUnmapPageTable(IN PMMPTE PointerPde)
         //
         return TRUE;
     }
-    
+
     //
     // FIXME-USER: Shouldn't get here yet
     //
@@ -74,7 +74,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
     MMPTE TempPte;
     NTSTATUS Status;
     PFN_NUMBER Pfn;
-    
+
     //
     // Check if this is a user-mode, non-kernel or non-current address
     //
@@ -87,13 +87,13 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
         //
         ASSERT(FALSE);
     }
-    
+
     //
     // Get our templates
     //
     TempPde = MiArmTemplatePde;
     TempPte = MiArmTemplatePte;
-    
+
     //
     // Get the PDE
     //
@@ -104,7 +104,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
         // Invalid PDE, is this a kernel address?
         //
         if (Address >= MmSystemRangeStart)
-        {            
+        {
             //
             // Does it exist in the kernel page directory?
             //
@@ -118,31 +118,31 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             kernelHack:
                 DPRINT1("Must create a page for: %p PDE: %p\n", // Offset: %lx!\n",
                         Address, PointerPde);//, PdeOffset);
-                
+
                 //
                 // Allocate a non paged pool page for the PDE
                 //
                 Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status)) return NULL;
-                
+
                 //
                 // Setup the PFN
                 //
                 TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn << PAGE_SHIFT) >> CPT_SHIFT;
-                
+
                 //
                 // Write the PDE
                 //
                 ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
                 ASSERT(TempPde.u.Hard.Coarse.Valid == 1);
                 *PointerPde = TempPde;
-                
+
                 //
                 // Save it
                 //
                 //MmGlobalKernelPageDirectory[PdeOffset] = TempPde.u.Hard.AsUlong;
                 //DPRINT1("KPD: %p PDEADDR: %p\n", &MmGlobalKernelPageDirectory[PdeOffset], MiGetPdeAddress(Address));
-                
+
                 //
                 // FIXFIX: Double check with Felix tomorrow
                 //
@@ -152,12 +152,12 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 //
                 PointerPte = MiGetPteAddress(MiGetPteAddress(Address));
                 DPRINT1("PointerPte: %p\n", PointerPte);
-                
+
                 //
                 // Write the PFN of the PDE
                 //
                 TempPte.u.Hard.PageFrameNumber = Pfn;
-                
+
                 //
                 // Write the PTE
                 //
@@ -166,7 +166,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 *PointerPte = TempPte;
 /////
             }
-            
+
             //
             // Now set the actual PDE
             //
@@ -178,31 +178,31 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             // Is this a create operation? If not, fail
             //
             if (Create == FALSE) return NULL;
-            
+
             //
             // THIS WHOLE PATH IS TODO
             //
             goto kernelHack;
             ASSERT(FALSE);
-         
+
             //
             // Allocate a non paged pool page for the PDE
             //
             Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
             if (!NT_SUCCESS(Status)) return NULL;
-            
+
             //
             // Make the entry valid
             //
             TempPde.u.Hard.AsUlong = 0xDEADBEEF;
-            
+
             //
             // Set it
             //
             *PointerPde = TempPde;
         }
     }
-    
+
     //
     // Return the PTE
     //
@@ -217,7 +217,7 @@ MiGetPageEntryForProcess(IN PEPROCESS Process,
     PMMPTE PointerPte;
     MMPTE Pte;
     Pte.u.Hard.AsUlong = 0;
-    
+
     //
     // Get the PTE
     //
@@ -243,13 +243,13 @@ MmDeletePageTable(IN PEPROCESS Process,
                   IN PVOID Address)
 {
     PMMPDE_HARDWARE PointerPde;
-    
+
     //
     // Not valid for kernel addresses
     //
     DPRINT("MmDeletePageTable(%p, %p)\n", Process, Address);
     ASSERT(Address < MmSystemRangeStart);
-    
+
     //
     // Check if this is for a different process
     //
@@ -260,12 +260,12 @@ MmDeletePageTable(IN PEPROCESS Process,
         //
         ASSERT(FALSE);
     }
-    
+
     //
     // Get the PDE
     //
     PointerPde = MiGetPdeAddress(Address);
-    
+
     //
     // On ARM, we use a section mapping for the original low-memory mapping
     //
@@ -276,13 +276,13 @@ MmDeletePageTable(IN PEPROCESS Process,
         //
         ASSERT(PointerPde->u.Hard.Coarse.Valid == 1);
     }
-    
+
     //
     // Clear the PDE
     //
     PointerPde->u.Hard.AsUlong = 0;
     ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
-    
+
     //
     // Invalidate the TLB entry
     //
@@ -301,12 +301,12 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     PMMPDE_HARDWARE PageDirectory, PointerPde;
     MMPDE_HARDWARE TempPde;
     ASSERT(FALSE);
-    
+
     //
     // Loop two tables (Hyperspace and TTB). Each one is 16KB
     //
     //
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < sizeof(Pfn) / sizeof(Pfn[0]); i++)
     {
         //
         // Allocate a page
@@ -314,40 +314,40 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
         if (!NT_SUCCESS(Status)) ASSERT(FALSE);
     }
-    
+
     //
     // Map the base
     //
     PageDirectory = MmCreateHyperspaceMapping(Pfn[0]);
-    
+
     //
     // Copy the PDEs for kernel-mode
     //
     RtlCopyMemory(PageDirectory + MiGetPdeOffset(MmSystemRangeStart),
                   MmGlobalKernelPageDirectory + MiGetPdeOffset(MmSystemRangeStart),
                   (1024 - MiGetPdeOffset(MmSystemRangeStart)) * sizeof(ULONG));
-    
-    
+
+
     //
     // Setup the PDE for the table base
     //
     TempPde = MiArmTemplatePde;
     TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[0] << PAGE_SHIFT) >> CPT_SHIFT;
     PointerPde = &PageDirectory[MiGetPdeOffset(PTE_BASE)];
-    
+
     //
     // Write the PDE
     //
     ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
     ASSERT(TempPde.u.Hard.Coarse.Valid == 1);
     *PointerPde = TempPde;
-    
+
     //
     // Setup the PDE for the hyperspace
     //
     TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[1] << PAGE_SHIFT) >> CPT_SHIFT;
     PointerPde = &PageDirectory[MiGetPdeOffset(HYPER_SPACE)];
-    
+
     //
     // Write the PDE
     //
@@ -359,7 +359,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     // Unmap the page directory
     //
     MmDeleteHyperspaceMapping(PageDirectory);
-    
+
     //
     // Return the page table base
     //
@@ -430,12 +430,12 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
     ULONG OldPdeOffset, PdeOffset, i;
     DPRINT("[KMAP]: %p %d\n", Address, PageCount);
     //ASSERT(Address >= MmSystemRangeStart);
-    
+
     //
     // Get our template PTE
     //
     TempPte = MiArmTemplatePte;
-    
+
     //
     // Loop every page
     //
@@ -453,7 +453,7 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
             // Get rid of the old L2 Table, if this was the last PTE on it
             //
             MiUnmapPageTable(PointerPte);
-            
+
             //
             // Get the PTE for this address, and create the PDE for it
             //
@@ -468,30 +468,30 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
             ASSERT(PointerPte);
             PointerPte++;
         }
-        
+
         //
         // Save the current PDE
         //
         OldPdeOffset = PdeOffset;
-        
+
         //
         // Set the PFN
         //
         TempPte.u.Hard.PageFrameNumber = *Pages++;
-        
+
         //
         // Write the PTE
         //
         ASSERT(PointerPte->u.Hard.Valid == 0);
         ASSERT(TempPte.u.Hard.Valid == 1);
         *PointerPte = TempPte;
-        
+
         //
         // Move to the next page
         //
         Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE);
     }
-    
+
     //
     // All done
     //
@@ -539,7 +539,7 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                                               PageCount,
                                               TRUE);
     }
-    
+
     //
     // FIXME-USER: Support user-mode mappings
     //
@@ -556,7 +556,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN ULONG PageCount)
 {
     ULONG i;
-    
+
     //
     // Loop each page
     //
@@ -567,7 +567,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
         //
         ASSERT(MmIsPageInUse(Pages[i]));
     }
-    
+
     //
     // Call the unsafe version
     //
@@ -583,7 +583,7 @@ NTAPI
 MmRawDeleteVirtualMapping(IN PVOID Address)
 {
     PMMPTE PointerPte;
-    
+
     //
     // Get the PTE
     //
@@ -594,7 +594,7 @@ MmRawDeleteVirtualMapping(IN PVOID Address)
         // Destroy it
         //
         PointerPte->u.Hard.AsUlong = 0;
-    
+
         //
         // Flush the TLB
         //
@@ -613,35 +613,35 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
     PMMPTE PointerPte;
     MMPTE Pte;
     PFN_NUMBER Pfn = 0;
-    
+
     //
     // Get the PTE
     //
     PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
     if (PointerPte)
-    {       
+    {
         //
         // Save and destroy the PTE
         //
         Pte = *PointerPte;
         PointerPte->u.Hard.AsUlong = 0;
-        
+
         //
         // Flush the TLB
         //
         MiFlushTlb(PointerPte, Address);
-        
+
         //
         // Unmap the PFN
         //
         Pfn = Pte.u.Hard.PageFrameNumber;
-        
+
         //
         // Release the PFN if it was ours
         //
         if ((FreePage) && (Pfn)) MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
     }
-    
+
     //
     // Return if the page was dirty
     //
@@ -682,13 +682,13 @@ MmGetPfnForProcess(IN PEPROCESS Process,
                    IN PVOID Address)
 {
     MMPTE Pte;
-    
+
     //
     // Get the PTE
     //
     Pte = MiGetPageEntryForProcess(Process, Address);
     if (Pte.u.Hard.Valid == 0) return 0;
-    
+
     //
     // Return PFN
     //
@@ -749,12 +749,12 @@ MmIsPageSwapEntry(IN PEPROCESS Process,
                   IN PVOID Address)
 {
     MMPTE Pte;
-    
+
     //
     // Get the PTE
     //
     Pte = MiGetPageEntryForProcess(Process, Address);
-    
+
     //
     // Make sure it exists, but is faulting
     //
@@ -790,14 +790,14 @@ MmInitGlobalKernelPageDirectory(VOID)
 {
     ULONG i;
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
-    
+
     //
     // Good place to setup template PTE/PDEs.
     // We are lazy and pick a known-good PTE
     //
     MiArmTemplatePte = *MiGetPteAddress(0x80000000);
     MiArmTemplatePde = *MiGetPdeAddress(0x80000000);
-    
+
     //
     // Loop the 2GB of address space which belong to the kernel
     //
@@ -827,7 +827,7 @@ MiInitPageDirectoryMap(VOID)
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID BaseAddress;
     NTSTATUS Status;
-    
+
     //
     // Create memory area for the PTE area
     //
@@ -843,7 +843,7 @@ MiInitPageDirectoryMap(VOID)
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(NT_SUCCESS(Status));
-    
+
     //
     // Create memory area for the PDE area
     //
@@ -858,7 +858,7 @@ MiInitPageDirectoryMap(VOID)
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(NT_SUCCESS(Status));
-    
+
     //
     // And finally, hyperspace
     //
@@ -903,7 +903,7 @@ MmGetPhysicalAddress(IN PVOID Address)
         PhysicalAddress.LowPart += BYTE_OFFSET(Address);
         return PhysicalAddress;
     }
-    
+
     //
     // Get the PTE
     //
@@ -924,7 +924,7 @@ MmGetPhysicalAddress(IN PVOID Address)
         //
         PhysicalAddress.QuadPart = 0;
     }
-    
+
     //
     // Return the physical address
     //

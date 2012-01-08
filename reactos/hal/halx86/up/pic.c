@@ -44,7 +44,7 @@
  *   IRQ2 since the line was asserted by the slave when it received the spurious
  *   IRQ15!
  *
- * - When the 80287/80387 math co-processor generates an FPU/NPX trap, this is 
+ * - When the 80287/80387 math co-processor generates an FPU/NPX trap, this is
  *   connected to IRQ13, so we have to clear the busy latch on the NPX port.
  */
 PHAL_DISMISS_INTERRUPT HalpSpecialDismissTable[16] =
@@ -507,9 +507,36 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
         }
     }
     
+    /* Register IRQ 2 */
+    HalpRegisterVector(IDT_INTERNAL,
+                       PRIMARY_VECTOR_BASE + 2,
+                       PRIMARY_VECTOR_BASE + 2,
+                       HIGH_LEVEL);
+
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
     __writeeflags(EFlags);
+}
+
+UCHAR
+FASTCALL
+HalpIrqToVector(UCHAR Irq)
+{
+    return (PRIMARY_VECTOR_BASE + Irq);
+}
+
+UCHAR
+FASTCALL
+HalpVectorToIrq(UCHAR Vector)
+{
+    return (Vector - PRIMARY_VECTOR_BASE);
+}
+
+KIRQL
+FASTCALL
+HalpVectorToIrql(UCHAR Vector)
+{
+    return (PROFILE_LEVEL - (Vector - PRIMARY_VECTOR_BASE));
 }
 
 /* IRQL MANAGEMENT ************************************************************/
@@ -638,26 +665,30 @@ KfLowerIrql(IN KIRQL OldIrql)
 
     /* Set old IRQL */
     Pcr->Irql = OldIrql;
-    
-    /* Check for pending software interrupts and compare with current IRQL */
-    PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[OldIrql];
-    if (PendingIrqlMask)
+
+    /* Make sure interrupts were enabled */
+    if (EFlags & EFLAGS_INTERRUPT_MASK)
     {
-        /* Check if pending IRQL affects hardware state */
-        BitScanReverse(&PendingIrql, PendingIrqlMask);
-        if (PendingIrql > DISPATCH_LEVEL)
+        /* Check for pending software interrupts and compare with current IRQL */
+        PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[OldIrql];
+        if (PendingIrqlMask)
         {
-            /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
-            __outbyte(PIC1_DATA_PORT, Mask.Master);
-            __outbyte(PIC2_DATA_PORT, Mask.Slave);
-            
-            /* Clear IRR bit */
-            Pcr->IRR ^= (1 << PendingIrql);
+            /* Check if pending IRQL affects hardware state */
+            BitScanReverse(&PendingIrql, PendingIrqlMask);
+            if (PendingIrql > DISPATCH_LEVEL)
+            {
+                /* Set new PIC mask */
+                Mask.Both = Pcr->IDR & 0xFFFF;
+                __outbyte(PIC1_DATA_PORT, Mask.Master);
+                __outbyte(PIC2_DATA_PORT, Mask.Slave);
+
+                /* Clear IRR bit */
+                Pcr->IRR ^= (1 << PendingIrql);
+            }
+
+            /* Now handle pending interrupt */
+            SWInterruptHandlerTable[PendingIrql]();
         }
-    
-        /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
     }
 
     /* Restore interrupt state */
@@ -730,7 +761,7 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
         if (PendingIrql > DISPATCH_LEVEL)
         {
             /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
+            Mask.Both = Pcr->IDR & 0xFFFF;
             __outbyte(PIC1_DATA_PORT, Mask.Master);
             __outbyte(PIC2_DATA_PORT, Mask.Slave);
 
@@ -784,7 +815,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
         if (Irq > 8)
         {
             /* Send the EOI for the IRQ */
-            __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | (Irq - 8));
+            __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | ((Irq - 8) & 0xFF));
     
             /* Send the EOI for IRQ2 on the master because this was cascaded */
             __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | 2);
@@ -792,7 +823,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
         else
         {
             /* Send the EOI for the IRQ */
-            __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | Irq);
+            __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | (Irq &0xFF));
         }
     
         /* Enable interrupts and return success */
@@ -804,7 +835,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
     Pcr->IRR |= (1 << (Irq + 4));
     
     /* Set new PIC mask to real IRQL level, since the optimization is lost now */
-    Mask.Both = KiI8259MaskTable[CurrentIrql] | Pcr->IDR;
+    Mask.Both = (KiI8259MaskTable[CurrentIrql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, Mask.Master);
     __outbyte(PIC2_DATA_PORT, Mask.Slave);
     
@@ -910,7 +941,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     PKPCR Pcr = KeGetPcr();
 
     /* Update the PIC */
-    Mask.Both = KiI8259MaskTable[Irql] | Pcr->IDR;
+    Mask.Both = (KiI8259MaskTable[Irql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, Mask.Master);
     __outbyte(PIC2_DATA_PORT, Mask.Slave);
     
@@ -928,7 +959,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     if (Irq > 8)
     {
         /* Send the EOI for the IRQ */
-        __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | (Irq - 8));
+        __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | ((Irq - 8) & 0xFF));
 
         /* Send the EOI for IRQ2 on the master because this was cascaded */
         __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | 2);
@@ -936,7 +967,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     else
     {
         /* Send the EOI for the IRQ */
-        __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | Irq);
+        __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | (Irq & 0xFF));
     }
 
     /* Check if this interrupt should be allowed to happen */
@@ -1069,7 +1100,7 @@ HalpHardwareInterruptLevel(VOID)
  */
 BOOLEAN
 NTAPI
-HalEnableSystemInterrupt(IN UCHAR Vector,
+HalEnableSystemInterrupt(IN ULONG Vector,
                          IN KIRQL Irql,
                          IN KINTERRUPT_MODE InterruptMode)
 {
@@ -1098,7 +1129,7 @@ HalEnableSystemInterrupt(IN UCHAR Vector,
     Pcr->IDR &= ~(1 << Irq);
 
     /* Set new PIC mask */
-    PicMask.Both = KiI8259MaskTable[Pcr->Irql] | Pcr->IDR;
+    PicMask.Both = (KiI8259MaskTable[Pcr->Irql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, PicMask.Master);
     __outbyte(PIC2_DATA_PORT, PicMask.Slave);
     
@@ -1112,7 +1143,7 @@ HalEnableSystemInterrupt(IN UCHAR Vector,
  */
 VOID
 NTAPI
-HalDisableSystemInterrupt(IN UCHAR Vector,
+HalDisableSystemInterrupt(IN ULONG Vector,
                           IN KIRQL Irql)
 {
     ULONG IrqMask;
@@ -1148,7 +1179,7 @@ HalDisableSystemInterrupt(IN UCHAR Vector,
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(IN KIRQL Irql,
-                        IN UCHAR Vector,
+                        IN ULONG Vector,
                         OUT PKIRQL OldIrql)
 {
     ULONG Irq;
@@ -1188,24 +1219,24 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
             if (PendingIrql > DISPATCH_LEVEL)
             {
                 /* Set new PIC mask */
-                Mask.Both = Pcr->IDR;
+                Mask.Both = Pcr->IDR & 0xFFFF;
                 __outbyte(PIC1_DATA_PORT, Mask.Master);
                 __outbyte(PIC2_DATA_PORT, Mask.Slave);
-            
+                
                 /* Now check if this specific interrupt is already in-service */
                 PendingIrqMask = (1 << PendingIrql);
                 if (Pcr->IrrActive & PendingIrqMask) return;
-                    
+                
                 /* Set active bit otherwise, and clear it from IRR */
                 Pcr->IrrActive |= PendingIrqMask;
                 Pcr->IRR ^= PendingIrqMask;
-            
+                
                 /* Handle delayed hardware interrupt */
                 SWInterruptHandlerTable[PendingIrql]();
-            
+                
                 /* Handling complete */
                 Pcr->IrrActive ^= PendingIrqMask;
-            
+                
                 /* Check if there's still interrupts pending */
                 PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[Pcr->Irql];
                 if (!PendingIrqlMask) break;
@@ -1248,7 +1279,7 @@ _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     HalpEndSoftwareInterrupt(CurrentIrql, TrapFrame);
 
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame); 
+    KiEoiHelper(TrapFrame);
 }
 
 VOID
@@ -1340,14 +1371,14 @@ HalpDispatchInterrupt2(VOID)
         if (PendingIrql > DISPATCH_LEVEL)
         {
             /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
+            Mask.Both = Pcr->IDR & 0xFFFF;
             __outbyte(PIC1_DATA_PORT, Mask.Master);
             __outbyte(PIC2_DATA_PORT, Mask.Slave);
             
             /* Clear IRR bit */
             Pcr->IRR ^= (1 << PendingIrql);
         }
-    
+
         /* Now handle pending interrupt */
         SWInterruptHandlerTable[PendingIrql]();
     }

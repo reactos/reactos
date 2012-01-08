@@ -1,38 +1,15 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/* $Id$
- *
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Various Polygon Filling routines for Polygon()
- * FILE:              subsys/win32k/objects/polyfill.c
+ * FILE:              subsystems/win32/win32k/objects/polyfill.c
  * PROGRAMER:         Mark Tempel
- * REVISION HISTORY:
- *                 21/2/2003: Created
  */
 
 #include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
-
-INT __cdecl abs(INT nm);
 
 #define FILL_EDGE_ALLOC_TAG 0x45465044
 
@@ -41,7 +18,7 @@ INT __cdecl abs(INT nm);
 */
 typedef struct _tagFILL_EDGE
 {
-  /*Basic line information*/
+  /* Basic line information */
   int FromX;
   int FromY;
   int ToX;
@@ -52,13 +29,13 @@ typedef struct _tagFILL_EDGE
   int x, y;
   int xmajor;
 
-  /*Active Edge List information*/
+  /* Active Edge List information */
   int XIntercept[2];
   int Error;
   int ErrorMax;
   int XDirection, YDirection;
 
-  /* The next edge in the active Edge List*/
+  /* The next edge in the active Edge List */
   struct _tagFILL_EDGE * pNext;
 } FILL_EDGE;
 
@@ -129,7 +106,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     return NULL;
 
   //DPRINT1("Making Edge: (%d, %d) to (%d, %d)\n", From.x, From.y, To.x, To.y);
-  //Now Fill the struct.
+  // Now fill the struct.
   if ( To.y < From.y )
   {
     rc->FromX = To.x;
@@ -138,7 +115,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToY = From.y;
     rc->YDirection = -1;
 
-    // lines that go up get walked backwards, so need to be offset
+    // Lines that go up get walked backwards, so need to be offset
     // by -1 in order to make the walk identically on a pixel-level
     rc->Error = -1;
   }
@@ -275,7 +252,7 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
     if ( !e )
       goto fail;
 
-    // if a straight horizontal line - who cares?
+    // If a straight horizontal line - who cares?
     if ( !e->absdy )
       EngFreeMem ( e );
     else
@@ -321,11 +298,11 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 
     ASSERT ( pEdge->y == Scanline );
 
-    // now shoot to end of scanline collision
+    // Now shoot to end of scanline collision
     steps = (pEdge->ErrorMax-pEdge->Error-1)/pEdge->absdy;
     if ( steps )
     {
-      // record first collision with scanline
+      // Record first collision with scanline
       int x1 = pEdge->x;
       pEdge->x += steps * pEdge->XDirection;
       pEdge->Error += steps * pEdge->absdy;
@@ -339,17 +316,17 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
       pEdge->XIntercept[1] = pEdge->x;
     }
 
-    // we should require exactly 1 step to step onto next scanline...
+    // We should require exactly 1 step to step onto next scanline...
     ASSERT ( (pEdge->ErrorMax-pEdge->Error-1) / pEdge->absdy == 0 );
     pEdge->x += pEdge->XDirection;
     pEdge->Error += pEdge->absdy;
     ASSERT ( pEdge->Error >= pEdge->ErrorMax );
 
-    // now step onto next scanline...
+    // Now step onto next scanline...
     pEdge->Error -= pEdge->absdx;
     pEdge->y++;
   }
-  else // then this is a y-major line
+  else // Then this is a y-major line
   {
     pEdge->XIntercept[0] = pEdge->x;
     pEdge->XIntercept[1] = pEdge->x;
@@ -370,8 +347,8 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 }
 
 /*
-** This method updates the Active edge collection for the scanline Scanline.
-*/
+ * This method updates the Active edge collection for the scanline Scanline.
+ */
 static
 void
 APIENTRY
@@ -437,8 +414,8 @@ POLYGONFILL_FillScanLineAlternate(
                    ScanLine,
                    x2,
                    ScanLine,
-                   &BoundRect, // Bounding rectangle
-                   RopMode); // MIX
+                   &BoundRect,  // Bounding rectangle
+                   RopMode);    // MIX
     }
     pLeft = pRight->pNext;
     pRight = pLeft ? pLeft->pNext : NULL;
@@ -471,7 +448,7 @@ POLYGONFILL_FillScanLineWinding(
   pRight = pLeft->pNext;
   ASSERT(pRight);
 
-  // setup first line...
+  // Setup first line...
   x1 = pLeft->XIntercept[0];
   x2 = pRight->XIntercept[1];
 
@@ -485,20 +462,20 @@ POLYGONFILL_FillScanLineWinding(
     int newx2 = pRight->XIntercept[1];
     if ( winding )
     {
-      // check and see if this new line touches the previous...
+      // Check and see if this new line touches the previous...
       if ( (newx1 >= x1 && newx1 <= x2)
 	|| (newx2 >= x1 && newx2 <= x2)
 	|| (x1 >= newx1 && x1 <= newx2)
 	|| (x2 >= newx2 && x2 <= newx2)
 	)
       {
-	// yup, just tack it on to our existing line
+	// Yup, just tack it on to our existing line
 	x1 = min(x1,newx1);
 	x2 = max(x2,newx2);
       }
       else
       {
-	// nope - render the old line..
+	// Nope - render the old line..
 	BoundRect.left = x1;
 	BoundRect.right = x2;
 
@@ -510,8 +487,8 @@ POLYGONFILL_FillScanLineWinding(
                      ScanLine,
                      x2,
                      ScanLine,
-                     &BoundRect, // Bounding rectangle
-                     RopMode); // MIX
+                     &BoundRect,  // Bounding rectangle
+                     RopMode);    // MIX
 
 	x1 = newx1;
 	x2 = newx2;
@@ -521,7 +498,7 @@ POLYGONFILL_FillScanLineWinding(
     pRight = pLeft->pNext;
     winding += pLeft->YDirection;
   }
-  // there will always be a line left-over, render it now...
+  // There will always be a line left-over, render it now...
   BoundRect.left = x1;
   BoundRect.right = x2;
 
@@ -533,18 +510,18 @@ POLYGONFILL_FillScanLineWinding(
                ScanLine,
                x2,
                ScanLine,
-               &BoundRect, // Bounding rectangle
-               RopMode); // MIX
+               &BoundRect,  // Bounding rectangle
+               RopMode);    // MIX
 }
 
-//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
-//even-numbered polygon sides on each scan line. That is, GDI fills the area between the
-//first and second side, between the third and fourth side, and so on.
+// When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
+// even-numbered polygon sides on each scan line. That is, GDI fills the area between the
+// first and second side, between the third and fourth side, and so on.
 
-//WINDING Selects winding mode (fills any region with a nonzero winding value).
-//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
-//This value is defined as the number of times a pen used to draw the polygon would go around the region.
-//The direction of each edge of the polygon is important.
+// WINDING Selects winding mode (fills any region with a nonzero winding value).
+// When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
+// This value is defined as the number of times a pen used to draw the polygon would go around the region.
+// The direction of each edge of the polygon is important.
 
 BOOL
 APIENTRY
@@ -580,7 +557,7 @@ FillPolygon(
 
   if ( WINDING == pdcattr->jFillMode )
     FillScanLine = POLYGONFILL_FillScanLineWinding;
-  else /* default */
+  else /* Default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;
 
   /* For each Scanline from BoundRect.bottom to BoundRect.top,

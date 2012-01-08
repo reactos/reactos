@@ -481,40 +481,39 @@ NTSTATUS
 NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 {
   PIRP Irp;
-  PDEVICE_OBJECT DeviceObject;
-  PDEVICE_EXTENSION DeviceExtension;
-  LONG BufferLength = 0;
+  //PDEVICE_OBJECT DeviceObject;
+  //PDEVICE_EXTENSION DeviceExtension;
+  //LONG BufferLength = 0;
   PUNICODE_STRING SearchPattern = NULL;
-  FILE_INFORMATION_CLASS FileInformationClass;
+  //FILE_INFORMATION_CLASS FileInformationClass;
   ULONG FileIndex = 0;
   PUCHAR Buffer = NULL;
   PFILE_NAMES_INFORMATION Buffer0 = NULL;
-  PNTFS_FCB Fcb;
+  //PNTFS_FCB Fcb;
   PNTFS_CCB Ccb;
 //  FCB TempFcb;
   BOOLEAN First = FALSE;
   PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
-  NTSTATUS Status = STATUS_SUCCESS;
+  //NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT1("NtfsQueryDirectory() called\n");
 
   ASSERT(IrpContext);
   Irp = IrpContext->Irp;
-  DeviceObject = IrpContext->DeviceObject;
+  //DeviceObject = IrpContext->DeviceObject;
 
-  DeviceExtension = DeviceObject->DeviceExtension;
+  //DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = Stack->FileObject;
 
   Ccb = (PNTFS_CCB)FileObject->FsContext2;
-  Fcb = (PNTFS_FCB)FileObject->FsContext;
+  //Fcb = (PNTFS_FCB)FileObject->FsContext;
 
   /* Obtain the callers parameters */
-  BufferLength = Stack->Parameters.QueryDirectory.Length;
+  //BufferLength = Stack->Parameters.QueryDirectory.Length;
   SearchPattern = Stack->Parameters.QueryDirectory.FileName;
-  FileInformationClass =
-    Stack->Parameters.QueryDirectory.FileInformationClass;
+  //FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
 
 
@@ -664,7 +663,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
   if (FileIndex > 0)
   {
-    Status = STATUS_SUCCESS;
+    //Status = STATUS_SUCCESS;
   }
 
 //  return(Status);

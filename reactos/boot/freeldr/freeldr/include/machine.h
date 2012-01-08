@@ -1,5 +1,4 @@
-/* $Id$
- *
+/* 
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,8 +57,8 @@ typedef struct tagMACHVTBL
   VOID (*Beep)(VOID);
   VOID (*PrepareForReactOS)(IN BOOLEAN Setup);
 
-  MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(MEMORY_DESCRIPTOR* Current);
-  ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+  FREELDR_MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(FREELDR_MEMORY_DESCRIPTOR* Current);
+  PFREELDR_MEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
   BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);

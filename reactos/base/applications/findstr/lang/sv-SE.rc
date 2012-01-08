@@ -3,15 +3,15 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Skriver ut alla rader i en fil som innehÂller en str‰ng.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""str‰ng"" [ fil... ]\n\
-    /C  R‰kna antalet linjer som innehÂller en str‰ngen\n\
-    /I  Ignorera skiftl‰ge\n\
-    /N  Antal visade rader, bˆrjar pÂ 1\n\
-    /V  Skriver ut rader som inte innehÂller str‰ngen"
+IDS_USAGE, "FIND: Skriver ut alla rader i en fil som inneh√•ller en str√§ng.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""str√§ng"" [ fil... ]\n\
+    /C  R√§kna antalet linjer som inneh√•ller en str√§ngen\n\
+    /I  Ignorera skiftl√§ge\n\
+    /N  Antal visade rader, b√∂rjar p√• 1\n\
+    /V  Skriver ut rader som inte inneh√•ller str√§ngen"
 
 IDS_NO_SUCH_FILE, "FIND: %s: Ingen sorts fil\n"
 
-IDS_CANNOT_OPEN, "FIND: %s: Kan inte ˆppna filen\n"
+IDS_CANNOT_OPEN, "FIND: %s: Kan inte √∂ppna filen\n"
 
 END

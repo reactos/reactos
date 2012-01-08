@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="actxprxy" type="win32dll" baseaddress="${BASEADDRESS_ACTXPRXY}" installbase="system32" entrypoint="0" installname="actxprxy.dll" allowwarnings="true">
+<module name="actxprxy" type="win32dll" baseaddress="${BASEADDRESS_ACTXPRXY}" installbase="system32" installname="actxprxy.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="actxprxy.spec" />
 	<include base="actxprxy">.</include>
@@ -30,6 +30,7 @@
 	<file>actxprxy_objsafe.idl</file>
 	<file>actxprxy_ocmm.idl</file>
 	<file>actxprxy_servprov.idl</file>
+	<file>actxprxy_shldisp.idl</file>
 	<file>actxprxy_shobjidl.idl</file>
 	<file>actxprxy_urlhist.idl</file>
 </module>

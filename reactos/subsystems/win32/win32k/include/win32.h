@@ -30,6 +30,7 @@
 #define W32PF_NOWINDOWGHOSTING       (0x01000000)
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
+#define W32PF_APIHOOKLOADED          (0x08000000)
 
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
@@ -40,7 +41,7 @@ extern BOOL RegisteredSysClasses;
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
 #include <pshpack1.h>
-// FIXME! Move to ntuser.h
+// FIXME: Move to ntuser.h
 typedef struct _TL
 {
     struct _TL* next;
@@ -68,7 +69,7 @@ typedef struct _THREADINFO
     PTL                 ptl;
     PPROCESSINFO        ppi;
     struct _USER_MESSAGE_QUEUE* MessageQueue;
-    struct _KBL*        KeyboardLayout;
+    struct tagKL*       KeyboardLayout;
     PCLIENTTHREADINFO   pcti;
     struct _DESKTOP*    rpdesk;
     PDESKTOPINFO        pDeskInfo;
@@ -187,9 +188,13 @@ typedef struct _PROCESSINFO
   LIST_ENTRY PrivateFontListHead;
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
-  struct _KBL* KeyboardLayout; // THREADINFO only
+  struct tagKL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
   struct _GDI_POOL *pPoolDcAttr;
   struct _GDI_POOL *pPoolBrushAttr;
   struct _GDI_POOL *pPoolRgnAttr;
+
+#ifdef DBG
+  BYTE DbgChannelLevel[DbgChCount];
+#endif
 } PROCESSINFO;

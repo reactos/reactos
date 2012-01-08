@@ -83,12 +83,12 @@ list(APPEND SOURCE
     ex/event.c
     ex/evtpair.c
     ex/exintrin.c
-    ex/fastinterlck.c
     ex/fmutex.c
     ex/handle.c
     ex/harderr.c
     ex/hdlsterm.c
     ex/init.c
+    ex/interlocked.c
     ex/keyedevt.c
     ex/locale.c
     ex/lookas.c
@@ -214,6 +214,7 @@ list(APPEND SOURCE
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
     mm/ARM3/section.c
+    mm/ARM3/special.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
     mm/ARM3/vadnode.c
@@ -276,7 +277,6 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
         ke/i386/abios.c
@@ -305,7 +305,6 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/amd64/fastinterlck.c
         ke/amd64/boot.S
         ke/amd64/context.c
         ke/amd64/cpu.c
@@ -314,6 +313,7 @@ elseif(ARCH MATCHES amd64)
         ke/amd64/interrupt.c
         ke/amd64/irql.c
         ke/amd64/kiinit.c
+        ke/amd64/krnlinit.c
         ke/amd64/spinlock.c
         ke/amd64/stubs.c
         ke/amd64/thrdini.c
@@ -389,7 +389,8 @@ if(NOT _WINKD_)
     endif()
 
     if(DBG OR KDBG)
-        list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        #list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        list(APPEND SOURCE kdbg/kdb_symbols.c)
     endif()
 
     list(APPEND SOURCE
@@ -423,7 +424,7 @@ endif()
 add_executable(ntoskrnl ${SOURCE})
 
 if (ARCH MATCHES i386)
-  set_entrypoint(ntoskrnl KiSystemStartup@4)
+  set_entrypoint(ntoskrnl KiSystemStartup 4)
 else()
   set_entrypoint(ntoskrnl KiSystemStartup)
 endif()

@@ -4,44 +4,44 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "St‰ng av datorn"
+CAPTION "St√§ng av datorn"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Du kan nu st‰nga av datorn.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Du kan nu st√§nga av datorn.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
     DEFPUSHBUTTON "&Starta om", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Anv‰ndargr‰nssnittet kunde inte starta"
+CAPTION "Anv√§ndargr√§nssnittet kunde inte starta"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DLL-filen %s kunde inte laddas.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Kontakta din systemadministratˆr fˆr att ers‰tta eller Âterst‰lla DLL-filen.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "Kontakta din systemadministrat√∂r f√∂r att ers√§tta eller √•terst√§lla DLL-filen.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Starta om", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Fˆrbereder n‰tverksanslutningar..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Verkst‰ller datorns inst‰llningar..."
-    IDS_RUNNINGSTARTUPSCRIPTS "Kˆr uppstartsskript..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "Kˆr avst‰ngningsskript..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Verkst‰ller dina personliga inst‰llningar..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Kˆr utloggningsskript..."
-    IDS_RUNNINGLOGONSCRIPTS "Kˆr inloggningsskript..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Laddar dina personliga inst‰llningar..."
-    IDS_CLOSINGNETWORKCONNECTIONS "St‰nger n‰tverksanslutningar..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS hÂller pÂ att st‰ngas av..."
-    IDS_PREPARETOSTANDBY "Fˆrbereder fˆr v‰ntel‰ge..."
-    IDS_PREPARETOHIBERNATE "Fˆrbereder fˆr vilol‰ge..."
-    IDS_SAVEYOURSETTINGS "Sparar dina inst‰llningar..."
+    IDS_PREPARENETWORKCONNECTIONS "F√∂rbereder n√§tverksanslutningar..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Verkst√§ller datorns inst√§llningar..."
+    IDS_RUNNINGSTARTUPSCRIPTS "K√∂r uppstartsskript..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "K√∂r avst√§ngningsskript..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Verkst√§ller dina personliga inst√§llningar..."
+    IDS_RUNNINGLOGOFFSCRIPTS "K√∂r utloggningsskript..."
+    IDS_RUNNINGLOGONSCRIPTS "K√∂r inloggningsskript..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Laddar dina personliga inst√§llningar..."
+    IDS_CLOSINGNETWORKCONNECTIONS "St√§nger n√§tverksanslutningar..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS h√•ller p√• att st√§ngas av..."
+    IDS_PREPARETOSTANDBY "F√∂rbereder f√∂r v√§ntel√§ge..."
+    IDS_PREPARETOHIBERNATE "F√∂rbereder f√∂r vilol√§ge..."
+    IDS_SAVEYOURSETTINGS "Sparar dina inst√§llningar..."
     IDS_REACTOSISSTARTINGUP "ReactOS startas..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Winlogon kunde inte ladda anv‰ndarskalet!"
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon kunde inte ladda anv√§ndarskalet!"
 END
 

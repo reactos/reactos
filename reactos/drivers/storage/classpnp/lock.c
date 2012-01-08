@@ -133,7 +133,7 @@ ClassAcquireRemoveLockEx(
             } 
             else {
                 PREMOVE_TRACKING_BLOCK *removeTrackingList =
-                    (PREMOVE_TRACKING_BLOCK)&commonExtension->RemoveTrackingList;
+                    (PREMOVE_TRACKING_BLOCK*)&commonExtension->RemoveTrackingList;
 
                 KIRQL oldIrql;
 
@@ -219,7 +219,7 @@ ClassReleaseRemoveLock(
 
     #if DBG
         PREMOVE_TRACKING_BLOCK *listEntry =
-            (PREMOVE_TRACKING_BLOCK)&commonExtension->RemoveTrackingList;
+            (PREMOVE_TRACKING_BLOCK*)&commonExtension->RemoveTrackingList;
 
         BOOLEAN found = FALSE;
 
@@ -382,7 +382,7 @@ ClassCompleteRequest(
     #if DBG
         PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
         PREMOVE_TRACKING_BLOCK *listEntry =
-            (PREMOVE_TRACKING_BLOCK)&commonExtension->RemoveTrackingList;
+            (PREMOVE_TRACKING_BLOCK*)&commonExtension->RemoveTrackingList;
 
         KIRQL oldIrql;
 

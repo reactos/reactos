@@ -31,7 +31,7 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&N‰kym‰"
+		POPUP "&N√§kym√§"
 		BEGIN
 			MENUITEM "&Pienet Kuvakkeet",          FCIDM_SHVIEW_BIGICON
 			MENUITEM "&Suuret Kuvakkeet",          FCIDM_SHVIEW_SMALLICON
@@ -39,21 +39,21 @@ BEGIN
 			MENUITEM "&Tiedot",                    FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "&J‰rjest‰ Kuvakkeet"
+		POPUP "&J√§rjest√§ Kuvakkeet"
 		BEGIN
 			MENUITEM "&Nimen mukaan",              0x30  /* column 0 */
 			MENUITEM "&Tyypin mukaan",             0x32  /* column 2 */
 			MENUITEM "&Koon mukaan",               0x31  /* ... */
-			MENUITEM "&P‰iv‰m‰‰r‰n mukaan",        0x33
+			MENUITEM "&P√§iv√§m√§√§r√§n mukaan",        0x33
 			MENUITEM SEPARATOR
-			MENUITEM "J‰rjest‰ &Automaattisesti",  FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "J√§rjest√§ &Automaattisesti",  FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "J‰rjest‰ kuvakkeet riviin",    FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "J√§rjest√§ kuvakkeet riviin",    FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "P‰ivit‰",                      FCIDM_SHVIEW_REFRESH
+		MENUITEM "P√§ivit√§",                      FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Liit‰",                        FCIDM_SHVIEW_INSERT
-		MENUITEM "Liit‰ Linkiksi",               FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Liit√§",                        FCIDM_SHVIEW_INSERT
+		MENUITEM "Liit√§ Linkiksi",               FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "Ominaisuudet",                 FCIDM_SHVIEW_PROPERTIES
 	END
@@ -72,7 +72,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Lu&o Linkki",                  FCIDM_SHVIEW_CREATELINK
 		MENUITEM "&Poista",                      FCIDM_SHVIEW_DELETE
-		MENUITEM "&Nime‰ Uudelleen",             FCIDM_SHVIEW_RENAME
+		MENUITEM "&Nime√§ Uudelleen",             FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
 		MENUITEM "&Ominaisuudet",                FCIDM_SHVIEW_PROPERTIES
 	END
@@ -125,8 +125,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+	LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -366,10 +372,10 @@ BEGIN
 	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
 	LTEXT "File:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
 END
 
@@ -600,11 +606,11 @@ BEGIN
 	IDS_SHV_COLUMN4             "Muokattu"
 	IDS_SHV_COLUMN5             "Ominaisuudet"
 	IDS_SHV_COLUMN6             "Koko"
-	IDS_SHV_COLUMN7             "Tilaa j‰ljell‰"
+	IDS_SHV_COLUMN7             "Tilaa j√§ljell√§"
 	IDS_SHV_COLUMN8             "Nimi"
 	IDS_SHV_COLUMN9             "Kommentit"
 	IDS_SHV_COLUMN10            "Omistaja"
-	IDS_SHV_COLUMN11            "Ryhm‰"
+	IDS_SHV_COLUMN11            "Ryhm√§"
 	IDS_SHV_COLUMN12            "Filename"
 	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Original location"
@@ -619,7 +625,7 @@ BEGIN
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
-	IDS_DESKTOP                 "Tyˆpˆyt‰"
+	IDS_DESKTOP                 "Ty√∂p√∂yt√§"
 	IDS_MYCOMPUTER              "Oma Tietokone"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
@@ -642,12 +648,12 @@ BEGIN
 	IDS_RENAME                  "Rename"
 	IDS_INSERT                  "Insert"
 
-	IDS_CREATEFOLDER_DENIED     "Uutta kansiota ei voitu luoda: Oikeudet eiv‰t riit‰."
+	IDS_CREATEFOLDER_DENIED     "Uutta kansiota ei voitu luoda: Oikeudet eiv√§t riit√§."
 	IDS_CREATEFOLDER_CAPTION    "Virhe luotaessa uutta kansiota"
 	IDS_DELETEITEM_CAPTION      "Vahvista tiedoston tuhoaminen"
 	IDS_DELETEFOLDER_CAPTION    "Vahvista kansion tuhoaminen"
 	IDS_DELETEITEM_TEXT         "Haluatko varmasti tuhota '%1':n?"
-	IDS_DELETEMULTIPLE_TEXT     "Haluatko varmasti tuhota n‰m‰ %1?"
+	IDS_DELETEMULTIPLE_TEXT     "Haluatko varmasti tuhota n√§m√§ %1?"
 	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
 	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
 	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
@@ -658,8 +664,8 @@ BEGIN
 	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "K‰ynnist‰ uudestaan"
-	IDS_RESTART_PROMPT          "Haluatko simuloida Windows:n uudelleenk‰ynnist‰mist‰?"
+	IDS_RESTART_TITLE           "K√§ynnist√§ uudestaan"
+	IDS_RESTART_PROMPT          "Haluatko simuloida Windows:n uudelleenk√§ynnist√§mist√§?"
 	IDS_SHUTDOWN_TITLE          "Sammuta"
 	IDS_SHUTDOWN_PROMPT         "Haluatko lopettaa Wine:n istunnon?"
 	IDS_LOGOFF_TITLE            "Log Off"
@@ -672,29 +678,29 @@ BEGIN
 	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
-	IDS_PROGRAMS                "K‰ynnist‰\\Ohjelmat"
+	IDS_PROGRAMS                "K√§ynnist√§\\Ohjelmat"
 	IDS_PERSONAL                "Omat tiedostot"
 	IDS_FAVORITES               "Suosikit"
-	IDS_STARTUP                 "K‰ynnist‰\\Ohjelmat\\K‰ynnistys"
-	IDS_RECENT                  "ƒskett‰in k‰ytetyt"
-	IDS_SENDTO                  "L‰het‰"
-	IDS_STARTMENU               "K‰ynnist‰"
+	IDS_STARTUP                 "K√§ynnist√§\\Ohjelmat\\K√§ynnistys"
+	IDS_RECENT                  "√Ñskett√§in k√§ytetyt"
+	IDS_SENDTO                  "L√§het√§"
+	IDS_STARTMENU               "K√§ynnist√§"
 	IDS_MYMUSIC                 "Omat musiikkitiedostot"
 	IDS_MYVIDEO                 "Omat videotiedostot"
-	IDS_DESKTOPDIRECTORY        "Tyˆpˆyt‰"
-	IDS_NETHOOD                 "Verkkoymp‰ristˆ"
+	IDS_DESKTOPDIRECTORY        "Ty√∂p√∂yt√§"
+	IDS_NETHOOD                 "Verkkoymp√§rist√∂"
 	IDS_TEMPLATES               "Mallit"
 	IDS_APPDATA                 "Ohjelmien Tiedot"
-	IDS_PRINTHOOD               "Tulostinymp‰ristˆ"
+	IDS_PRINTHOOD               "Tulostinymp√§rist√∂"
 	IDS_LOCAL_APPDATA           "Paikalliset Asetukset\\Ohjelmien Tiedot"
-	IDS_INTERNET_CACHE          "Paikalliset Asetukset\\V‰liaikaiset Internet-tiedostot"
-	IDS_COOKIES                 "Ev‰steet"
+	IDS_INTERNET_CACHE          "Paikalliset Asetukset\\V√§liaikaiset Internet-tiedostot"
+	IDS_COOKIES                 "Ev√§steet"
 	IDS_HISTORY                 "Paikalliset Asetukset\\Historia"
 	IDS_PROGRAM_FILES           "Ohjelmat"
 	IDS_MYPICTURES              "Omat kuvatiedostot"
 	IDS_PROGRAM_FILES_COMMON    "Ohjelmat\\Yhteiset Tiedostot"
 	IDS_COMMON_DOCUMENTS        "Dokumentit"
-	IDS_ADMINTOOLS              "K‰ynnistys\\Ohjauspaneeli\\Administrative Tools"
+	IDS_ADMINTOOLS              "K√§ynnistys\\Ohjauspaneeli\\Administrative Tools"
 	IDS_COMMON_MUSIC            "Dokumentit\\Omat musiikkitiedostot"
 	IDS_COMMON_PICTURES         "Dokumentit\\Omat kuvatiedostot"
 	IDS_COMMON_VIDEO            "Dokumentit\\Omat videotiedostot"
@@ -707,8 +713,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Open With"
 	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
@@ -760,4 +769,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

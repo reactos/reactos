@@ -107,14 +107,6 @@ enum directions
 };
 
 /* HELPER FUNCTIONS */
-/* the character type contains the C1_* flags in the low 12 bits */
-/* and the C2_* type in the high 4 bits */
-static __inline unsigned short get_char_typeW( WCHAR ch )
-{
-    WORD CharType;
-    GetStringTypeW(CT_CTYPE1, &ch, 1, &CharType);
-    return CharType;
-}
 
 /* Convert the libwine information to the direction enum */
 static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount, const SCRIPT_CONTROL *c)
@@ -297,11 +289,11 @@ static int resolveExplicit(int level, int dir, WORD *pcls, WORD *plevel, int cch
 
 enum states /* possible states */
 {
-    xa,        /*  arabic letter */
+    xa,        /*  Arabic letter */
     xr,        /*  right letter */
     xl,        /*  left letter */
 
-    ao,        /*  arabic lett. foll by ON */
+    ao,        /*  Arabic lett. foll by ON */
     ro,        /*  right lett. foll by ON */
     lo,        /*  left lett. foll by ON */
 
@@ -309,10 +301,10 @@ enum states /* possible states */
     lt,        /*  ET following L */
 
     cn,        /*  EN, AN following AL */
-    ra,        /*  arabic number foll R */
-    re,        /*  european number foll R */
-    la,        /*  arabic number foll L */
-    le,        /*  european number foll L */
+    ra,        /*  Arabic number foll R */
+    re,        /*  European number foll R */
+    la,        /*  Arabic number foll L */
+    le,        /*  European number foll L */
 
     ac,        /*  CS following cn */
     rc,        /*  CS following ra */
@@ -327,11 +319,11 @@ enum states /* possible states */
 static const int stateWeak[][10] =
 {
     /*    N,  L,  R, AN, EN, AL,NSM, CS, ES, ET */
-/*xa*/ { ao, xl, xr, cn, cn, xa, xa, ao, ao, ao }, /* arabic letter          */
+/*xa*/ { ao, xl, xr, cn, cn, xa, xa, ao, ao, ao }, /* Arabic letter          */
 /*xr*/ { ro, xl, xr, ra, re, xa, xr, ro, ro, rt }, /* right letter           */
 /*xl*/ { lo, xl, xr, la, le, xa, xl, lo, lo, lt }, /* left letter            */
 
-/*ao*/ { ao, xl, xr, cn, cn, xa, ao, ao, ao, ao }, /* arabic lett. foll by ON*/
+/*ao*/ { ao, xl, xr, cn, cn, xa, ao, ao, ao, ao }, /* Arabic lett. foll by ON*/
 /*ro*/ { ro, xl, xr, ra, re, xa, ro, ro, ro, rt }, /* right lett. foll by ON */
 /*lo*/ { lo, xl, xr, la, le, xa, lo, lo, lo, lt }, /* left lett. foll by ON  */
 
@@ -339,10 +331,10 @@ static const int stateWeak[][10] =
 /*lt*/ { lo, xl, xr, la, le, xa, lt, lo, lo, lt }, /* ET following L         */
 
 /*cn*/ { ao, xl, xr, cn, cn, xa, cn, ac, ao, ao }, /* EN, AN following AL    */
-/*ra*/ { ro, xl, xr, ra, re, xa, ra, rc, ro, rt }, /* arabic number foll R   */
-/*re*/ { ro, xl, xr, ra, re, xa, re, rs, rs,ret }, /* european number foll R */
-/*la*/ { lo, xl, xr, la, le, xa, la, lc, lo, lt }, /* arabic number foll L   */
-/*le*/ { lo, xl, xr, la, le, xa, le, ls, ls,let }, /* european number foll L */
+/*ra*/ { ro, xl, xr, ra, re, xa, ra, rc, ro, rt }, /* Arabic number foll R   */
+/*re*/ { ro, xl, xr, ra, re, xa, re, rs, rs,ret }, /* European number foll R */
+/*la*/ { lo, xl, xr, la, le, xa, la, lc, lo, lt }, /* Arabic number foll L   */
+/*le*/ { lo, xl, xr, la, le, xa, le, ls, ls,let }, /* European number foll L */
 
 /*ac*/ { ao, xl, xr, cn, cn, xa, ao, ao, ao, ao }, /* CS following cn        */
 /*rc*/ { ro, xl, xr, ra, re, xa, ro, ro, ro, rt }, /* CS following ra        */
@@ -384,11 +376,11 @@ enum actions /* possible actions */
 static const int actionWeak[][10] =
 {
        /*  N,   L,   R,  AN,  EN,  AL, NSM,  CS,  ES,  ET */
-/*xa*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxR, xxN, xxN, xxN }, /* arabic letter           */
+/*xa*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxR, xxN, xxN, xxN }, /* Arabic letter           */
 /*xr*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxR, xxN, xxN, xIx }, /* right letter            */
 /*xl*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxL, xxN, xxN, xIx }, /* left letter             */
 
-/*ao*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxN, xxN, xxN, xxN }, /* arabic lett. foll by ON */
+/*ao*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxN, xxN, xxN, xxN }, /* Arabic lett. foll by ON */
 /*ro*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxN, xxN, xxN, xIx }, /* right lett. foll by ON  */
 /*lo*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxN, xxN, xxN, xIx }, /* left lett. foll by ON   */
 
@@ -396,10 +388,10 @@ static const int actionWeak[][10] =
 /*lt*/ { Nxx, Nxx, Nxx, Nxx, LxL, NxR, xIx, NxN, NxN, xIx }, /* ET following L         */
 
 /*cn*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxA, xIx, xxN, xxN }, /* EN, AN following  AL    */
-/*ra*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxA, xIx, xxN, xIx }, /* arabic number foll R   */
-/*re*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxE, xIx, xIx, xxE }, /* european number foll R */
-/*la*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxA, xIx, xxN, xIx }, /* arabic number foll L   */
-/*le*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxL, xIx, xIx, xxL }, /* european number foll L */
+/*ra*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxA, xIx, xxN, xIx }, /* Arabic number foll R   */
+/*re*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxE, xIx, xIx, xxE }, /* European number foll R */
+/*la*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxA, xIx, xxN, xIx }, /* Arabic number foll L   */
+/*le*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxL, xIx, xIx, xxL }, /* European number foll L */
 
 /*ac*/ { Nxx, Nxx, Nxx, Axx, AxA, NxR, NxN, NxN, NxN, NxN }, /* CS following cn         */
 /*rc*/ { Nxx, Nxx, Nxx, Axx, NxE, NxR, NxN, NxN, NxN, NIx }, /* CS following ra         */
@@ -758,7 +750,7 @@ BOOL BIDI_DetermineLevels(
 {
     WORD *chartype;
     unsigned baselevel = 0,j;
-    TRACE("%s, %d", debugstr_wn(lpString, uCount), uCount);
+    TRACE("%s, %d\n", debugstr_wn(lpString, uCount), uCount);
 
     chartype = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WORD));
     if (!chartype)
@@ -890,4 +882,43 @@ int BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, B
     }
 
     return ich;
+}
+
+BOOL BIDI_GetStrengths(LPCWSTR lpString, INT uCount, const SCRIPT_CONTROL *c,
+                      WORD* lpStrength)
+{
+    int i;
+    classify(lpString, lpStrength, uCount, c);
+
+    for ( i = 0; i < uCount; i++)
+    {
+        switch(lpStrength[i])
+        {
+            case L:
+            case LRE:
+            case LRO:
+            case R:
+            case AL:
+            case RLE:
+            case RLO:
+                lpStrength[i] = BIDI_STRONG;
+                break;
+            case PDF:
+            case EN:
+            case ES:
+            case ET:
+            case AN:
+            case CS:
+            case BN:
+                lpStrength[i] = BIDI_WEAK;
+                break;
+            case B:
+            case S:
+            case WS:
+            case ON:
+            default: /* Neutrals and NSM */
+                lpStrength[i] = BIDI_NEUTRAL;
+        }
+    }
+    return TRUE;
 }

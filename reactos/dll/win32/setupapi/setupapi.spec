@@ -66,10 +66,10 @@
 @ stdcall CM_Get_Class_Registry_PropertyW(ptr long ptr ptr ptr long ptr)
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
-@ stub CM_Get_DevNode_Custom_PropertyA
-@ stub CM_Get_DevNode_Custom_PropertyW
-@ stub CM_Get_DevNode_Custom_Property_ExA
-@ stub CM_Get_DevNode_Custom_Property_ExW
+@ stdcall CM_Get_DevNode_Custom_PropertyA(long str ptr ptr ptr long)
+@ stdcall CM_Get_DevNode_Custom_PropertyW(long wstr ptr ptr ptr long)
+@ stdcall CM_Get_DevNode_Custom_Property_ExA(long str ptr ptr ptr long ptr)
+@ stdcall CM_Get_DevNode_Custom_Property_ExW(long wstr ptr ptr ptr long ptr)
 @ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long)
 @ stdcall CM_Get_DevNode_Registry_PropertyW(long long ptr ptr ptr long)
 @ stdcall CM_Get_DevNode_Registry_Property_ExA(long long ptr ptr ptr long long)

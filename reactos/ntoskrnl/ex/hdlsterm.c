@@ -205,7 +205,7 @@ HdlspDispatch(
 	OUT PSIZE_T OutputBufferSize
 	)
 {
-	NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+	//NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 	ASSERT(HeadlessGlobals != NULL);
 //	ASSERT(HeadlessGlobals->PageLockHandle != NULL);
 
@@ -236,7 +236,7 @@ HdlspDispatch(
 			/* Validate the existence of an input buffer */
 			if (!InputBuffer)
 			{
-				Status = STATUS_INVALID_PARAMETER;
+				//Status = STATUS_INVALID_PARAMETER;
 				goto Reset;
 			}
 
@@ -249,7 +249,7 @@ HdlspDispatch(
 			}
 
 			/* Return success either way */
-			Status = STATUS_SUCCESS;
+			//Status = STATUS_SUCCESS;
 			break;
 		case HeadlessCmdClearDisplay:
 			break;

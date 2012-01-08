@@ -55,7 +55,7 @@ RtlAssert(
 
 #ifndef assert
 #ifndef NASSERT
-#define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#define assert(x) if (!(x)) {RtlAssert((PVOID)#x,(PVOID)__FILE__,__LINE__, ""); }
 #else
 #define assert(x)
 #endif
@@ -63,7 +63,7 @@ RtlAssert(
 
 #ifndef ASSERT
 #ifndef NASSERT
-#define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#define ASSERT(x) if (!(x)) {RtlAssert((PVOID)#x,(PVOID)__FILE__,__LINE__, ""); }
 #else
 #define ASSERT(x)
 #endif
@@ -71,7 +71,7 @@ RtlAssert(
 
 #ifndef ASSERTMSG
 #ifndef NASSERT
-#define ASSERTMSG(x,m) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, m); }
+#define ASSERTMSG(x,m) if (!(x)) {RtlAssert((PVOID)#x,__FILE__,__LINE__, m); }
 #else
 #define ASSERTMSG(x)
 #endif

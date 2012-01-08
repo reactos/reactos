@@ -76,130 +76,132 @@ InitImageInfo(PIMGINFO ImgInfo)
 
 LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static UINT timerid = 0, top = 0, offset;
-	static HBITMAP hBitmap2;
-	RECT r;
-	NONCLIENTMETRICS ncm;
-	HFONT hfont;
-	BITMAP bitmap;
-	HDC dc, sdc;
-	TCHAR devtext[2048];
-	switch (uMsg)
-	{
-		case WM_LBUTTONDBLCLK:
-			if (wParam & (MK_CONTROL | MK_SHIFT))
-			{
-				if (timerid == 0)
-				{
-					top = 0; // set top
-					
-					// build new bitmap
-					GetObject(pImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
-					dc = CreateCompatibleDC(GetDC(NULL));
-					if (dc == NULL)
-					{
-						break;
-					}
-					sdc = CreateCompatibleDC(dc);
-					if (sdc == NULL)
-					{
-						DeleteDC(dc);
-						break;
-					}
-					ncm.cbSize = sizeof(NONCLIENTMETRICS);
-					SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
+    static UINT timerid = 0, top = 0, offset;
+    static HBITMAP hBitmap2;
+    RECT r;
+    NONCLIENTMETRICS ncm;
+    HFONT hfont;
+    BITMAP bitmap;
+    HDC dc, sdc;
+    TCHAR devtext[2048];
+    switch (uMsg)
+    {
+        case WM_LBUTTONDBLCLK:
+            if (wParam & (MK_CONTROL | MK_SHIFT))
+            {
+                if (timerid == 0)
+                {
+                    top = 0; // Set top
 
-					hfont = CreateFontIndirect(&ncm.lfMessageFont);
-					SelectObject(dc, hfont);
-					SetRect(&r, 0, 0, 0, 0);
-            				LoadString(hApplet, IDS_DEVS, devtext, sizeof(devtext) / sizeof(TCHAR));
-					DrawText(dc, devtext, -1, &r, DT_CALCRECT);
-					hBitmap2 = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + (r.bottom + 1 - r.top), bitmap.bmPlanes, bitmap.bmBitsPixel, NULL);
-					SelectObject(sdc, pImgInfo->hBitmap);
-					SelectObject(dc, hBitmap2);
-					offset = 0;
-					BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
-					offset += bitmap.bmHeight;
+                    // Build new bitmap
+                    GetObject(pImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+                    dc = CreateCompatibleDC(GetDC(NULL));
+                    if (dc == NULL)
+                    {
+                        break;
+                    }
+                    sdc = CreateCompatibleDC(dc);
+                    if (sdc == NULL)
+                    {
+                        DeleteDC(dc);
+                        break;
+                    }
+                    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+                    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 
-					SetRect(&r, 0, offset, bitmap.bmWidth, offset + (r.bottom - r.top) + 1);
-					FillRect(dc, &r, GetSysColorBrush(COLOR_3DFACE));
-					SetBkMode(dc, TRANSPARENT);
-					OffsetRect(&r, 1, 1);
-					SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-					DrawText(dc, devtext, -1, &r, DT_CENTER);
-					OffsetRect(&r, -1, -1);
-					SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-					DrawText(dc, devtext, -1, &r, DT_CENTER);
-					offset += r.bottom - r.top;
+                    hfont = CreateFontIndirect(&ncm.lfMessageFont);
+                    SelectObject(dc, hfont);
+                    SetRect(&r, 0, 0, 0, 0);
+                    LoadString(hApplet, IDS_DEVS, devtext, sizeof(devtext) / sizeof(TCHAR));
+                    DrawText(dc, devtext, -1, &r, DT_CALCRECT);
+                    hBitmap2 = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + (r.bottom + 1 - r.top), bitmap.bmPlanes, bitmap.bmBitsPixel, NULL);
+                    SelectObject(sdc, pImgInfo->hBitmap);
+                    SelectObject(dc, hBitmap2);
+                    offset = 0;
+                    BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
+                    offset += bitmap.bmHeight;
 
-					BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
-					offset += bitmap.bmHeight;
-					DeleteDC(sdc);
-					DeleteDC(dc);
+                    SetRect(&r, 0, offset, bitmap.bmWidth, offset + (r.bottom - r.top) + 1);
+                    FillRect(dc, &r, GetSysColorBrush(COLOR_3DFACE));
+                    SetBkMode(dc, TRANSPARENT);
+                    OffsetRect(&r, 1, 1);
+                    SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
+                    DrawText(dc, devtext, -1, &r, DT_CENTER);
+                    OffsetRect(&r, -1, -1);
+                    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
+                    DrawText(dc, devtext, -1, &r, DT_CENTER);
+                    offset += r.bottom - r.top;
 
-					timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
-				}
-			}
-			break;
-		case WM_LBUTTONDOWN:
-			if (timerid)
-			{
-				KillTimer(hwnd, timerid);
-				top = 0;
-				timerid = 0;
-				DeleteObject(hBitmap2);
-				InvalidateRect(hwnd, NULL, FALSE);
-			}
-			break;
-		case WM_TIMER:
-			top += ANIM_STEP;
-			if (top > offset - pImgInfo->cySource)
-			{
-				KillTimer(hwnd, timerid);
-				top = 0;
-				timerid = 0;
-				DeleteObject(hBitmap2);
-			}
-			InvalidateRect(hwnd, NULL, FALSE);
-			break;
-		case WM_PAINT:
-		{
-			PAINTSTRUCT PS;
-			HDC hdcMem, hdc;
-			LONG left;
-			if (wParam != 0)
-			{
-				hdc = (HDC)wParam;
-			} else
-			{	
-			   hdc = BeginPaint(hwnd,&PS);
-			}
-			GetClientRect(hwnd,&PS.rcPaint);
+                    BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
+                    offset += bitmap.bmHeight;
+                    DeleteDC(sdc);
+                    DeleteDC(dc);
 
-	                /* position image in center of dialog */
-			left = (PS.rcPaint.right - pImgInfo->cxSource) / 2;
-			hdcMem = CreateCompatibleDC(hdc);
-	                
-			if (hdcMem != NULL)
-	                {
-				SelectObject(hdcMem, timerid ? hBitmap2 : pImgInfo->hBitmap);
-                		BitBlt(hdc,
-	                           left,
-        	                   PS.rcPaint.top,
-                	           PS.rcPaint.right - PS.rcPaint.left,
-				   PS.rcPaint.top + pImgInfo->cySource,
-        	                   hdcMem,
-                	           0,
-                        	   top,
-	                           SRCCOPY);
-				DeleteDC(hdcMem);
-			}
-			if (wParam == 0)
-				EndPaint(hwnd,&PS);
-	          break;
-		}
-	}
-	return TRUE;
+                    timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
+                }
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            if (timerid)
+            {
+                KillTimer(hwnd, timerid);
+                top = 0;
+                timerid = 0;
+                DeleteObject(hBitmap2);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+        case WM_TIMER:
+            top += ANIM_STEP;
+            if (top > offset - pImgInfo->cySource)
+            {
+                KillTimer(hwnd, timerid);
+                top = 0;
+                timerid = 0;
+                DeleteObject(hBitmap2);
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        case WM_PAINT:
+        {
+            PAINTSTRUCT PS;
+            HDC hdcMem, hdc;
+            LONG left;
+            if (wParam != 0)
+            {
+                hdc = (HDC)wParam;
+            }
+            else
+            {
+                hdc = BeginPaint(hwnd,&PS);
+            }
+            GetClientRect(hwnd,&PS.rcPaint);
+
+            /* Position image in center of dialog */
+            left = (PS.rcPaint.right - pImgInfo->cxSource) / 2;
+            hdcMem = CreateCompatibleDC(hdc);
+
+            if (hdcMem != NULL)
+            {
+                SelectObject(hdcMem, timerid ? hBitmap2 : pImgInfo->hBitmap);
+                BitBlt(hdc,
+                       left,
+                       PS.rcPaint.top,
+                       PS.rcPaint.right - PS.rcPaint.left,
+                       PS.rcPaint.top + pImgInfo->cySource,
+                       hdcMem,
+                       0,
+                       top,
+                       SRCCOPY);
+                DeleteDC(hdcMem);
+            }
+
+            if (wParam == 0)
+                EndPaint(hwnd,&PS);
+            break;
+        }
+    }
+    return TRUE;
 }
 
 static VOID
@@ -547,7 +549,7 @@ GeneralPageProc(HWND hwndDlg,
                 HDC hdcMem;
                 LONG left;
 
-                /* position image in centre of dialog */
+                /* Position image in centre of dialog */
                 left = (lpDrawItem->rcItem.right - pImgInfo->cxSource) / 2;
 
                 hdcMem = CreateCompatibleDC(lpDrawItem->hDC);

@@ -49,3 +49,4 @@ list(APPEND SOURCE
   src/winfonts/winfnt.c)
 
 add_library(freetype ${SOURCE})
+allow_warnings(freetype)

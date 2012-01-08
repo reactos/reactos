@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -18,7 +17,7 @@ add_library(winspool SHARED ${SOURCE})
 
 set_target_properties(winspool PROPERTIES SUFFIX ".drv")
 
-set_module_type(winspool win32dll)
+set_module_type(winspool win32dll UNICODE)
 target_link_libraries(winspool wine)
 add_importlibs(winspool advapi32 shlwapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET winspool DESTINATION reactos/system32 FOR all)

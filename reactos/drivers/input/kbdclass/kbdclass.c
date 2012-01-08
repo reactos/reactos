@@ -119,7 +119,7 @@ ClassDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PCLASS_DEVICE_EXTENSION DeviceExtension;
+	//PCLASS_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
 	TRACE_(CLASS_NAME, "IRP_MJ_DEVICE_CONTROL\n");
@@ -127,7 +127,7 @@ ClassDeviceControl(
 	if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
-	DeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	//DeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	switch (IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode)
 	{
@@ -227,7 +227,8 @@ ReadRegistryEntries(
 	RTL_QUERY_REGISTRY_TABLE Parameters[4];
 	NTSTATUS Status;
 
-	ULONG DefaultConnectMultiplePorts = 0;
+	/* HACK: We don't support multiple devices with this disabled */
+	ULONG DefaultConnectMultiplePorts = 1;
 	ULONG DefaultDataQueueSize = 0x64;
 	PCWSTR DefaultDeviceBaseName = L"KeyboardClass";
 
@@ -761,6 +762,7 @@ HandleReadIrp(
 {
 	PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 	NTSTATUS Status;
+	KIRQL OldIrql;
 
 	TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -804,8 +806,8 @@ HandleReadIrp(
 	}
 	else
 	{
-		(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
-		if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
+		IoAcquireCancelSpinLock(&OldIrql);
+		if (Irp->Cancel)
 		{
 			DeviceExtension->PendingIrp = NULL;
 			Status = STATUS_CANCELLED;
@@ -814,8 +816,10 @@ HandleReadIrp(
 		{
 			IoMarkIrpPending(Irp);
 			DeviceExtension->PendingIrp = Irp;
+			(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
 			Status = STATUS_PENDING;
 		}
+		IoReleaseCancelSpinLock(OldIrql);
 	}
 	return Status;
 }

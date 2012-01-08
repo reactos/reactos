@@ -296,13 +296,9 @@ SysAudioHandleProperty(
     PKSAUDIO_DEVICE_ENTRY Entry;
     PSYSAUDIO_INSTANCE_INFO InstanceInfo;
     ULONG BytesReturned;
-    PKSOBJECT_CREATE_ITEM CreateItem;
     UNICODE_STRING GuidString;
     PKSP_PIN Pin;
     LPWSTR DeviceName;
-
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 

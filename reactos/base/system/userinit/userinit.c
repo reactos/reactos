@@ -28,6 +28,7 @@
 #include <regstr.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <undocuser.h>
 #include "resource.h"
 #include <wine/debug.h>
 #include <win32k/ntusrtyp.h>
@@ -461,11 +462,6 @@ VOID SetUserSysColors(VOID)
     }
     RegCloseKey(hKey);
 }
-
-DWORD
-WINAPI
-UpdatePerUserSystemParameters(DWORD dw1, BOOL bEnable);
-
 
 static
 VOID SetUserWallpaper(VOID)

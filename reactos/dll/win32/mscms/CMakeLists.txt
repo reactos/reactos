@@ -18,8 +18,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mscms.def)
 
 add_library(mscms SHARED ${SOURCE})
-
 set_module_type(mscms win32dll)
 target_link_libraries(mscms wine)
 add_importlibs(mscms msvcrt advapi32 kernel32 ntdll)
+add_pch(mscms mscms_priv.h)
 add_cd_file(TARGET mscms DESTINATION reactos/system32 FOR all)

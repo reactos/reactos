@@ -40,7 +40,7 @@ ne2000.sys
 AddService = ne2000, 0x00000002, ne2000_Service_Inst
 
 [ne2000_Service_Inst]
-ServiceType   = 3
+ServiceType   = 1
 StartType     = 3
 ErrorControl  = 1
 ServiceBinary = %12%\ne2000.sys
@@ -53,3 +53,9 @@ ReactOS = "ReactOS Team"
 
 RealtekMfg = "Realtek Semiconductor Co., Ltd."
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "RTL-8029(AS)"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"

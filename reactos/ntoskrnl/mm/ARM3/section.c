@@ -181,7 +181,7 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     ASSERT(Session->SystemSpaceBitMap);
     RtlInitializeBitMap(Session->SystemSpaceBitMap,
                         (PULONG)(Session->SystemSpaceBitMap + 1),
-                        MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE);
+                        (ULONG)(MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE));
 
     /* Set system space fully empty to begin with */
     RtlClearAllBits(Session->SystemSpaceBitMap);
@@ -401,7 +401,7 @@ MiLocateSubsection(IN PMMVAD Vad,
 {
     PSUBSECTION Subsection;
     PCONTROL_AREA ControlArea;
-    ULONG PteOffset;
+    ULONG_PTR PteOffset;
 
     /* Get the control area */
     ControlArea = Vad->ControlArea;
@@ -418,7 +418,7 @@ MiLocateSubsection(IN PMMVAD Vad,
     ASSERT(Vad->FirstPrototypePte < &Subsection->SubsectionBase[Subsection->PtesInSubsection]);
 
     /* Compute the PTE offset */
-    PteOffset = (ULONG_PTR)Vpn - Vad->StartingVpn;
+    PteOffset = Vpn - Vad->StartingVpn;
     PteOffset += Vad->FirstPrototypePte - Subsection->SubsectionBase;
 
     /* Again, we only support single-subsection segments */
@@ -619,7 +619,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
     }
 
     /* Get the number of 64K buckets required for this mapping */
-    Buckets = *ViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE;
+    Buckets = (ULONG)(*ViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE);
     if (*ViewSize & (MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) Buckets++;
 
     /* Check if the view is more than 4GB large */
@@ -660,7 +660,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                        IN PSECTION Section,
                        IN SECTION_INHERIT InheritDisposition,
                        IN ULONG ProtectionMask,
-                       IN ULONG CommitSize,
+                       IN SIZE_T CommitSize,
                        IN ULONG_PTR ZeroBits,
                        IN ULONG AllocationType)
 {
@@ -701,7 +701,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     {
         /* The caller did not, so pick a 64K aligned view size based on the offset */
         SectionOffset->LowPart &= ~(_64K - 1);
-        *ViewSize = Section->SizeOfSection.QuadPart - SectionOffset->QuadPart;
+        *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
     }
     else
     {
@@ -719,7 +719,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     if (*ViewSize >= 0x80000000) return STATUS_INVALID_VIEW_SIZE;
 
     /* Within this section, figure out which PTEs will describe the view */
-    PteOffset = SectionOffset->QuadPart >> PAGE_SHIFT;
+    PteOffset = (PFN_NUMBER)(SectionOffset->QuadPart >> PAGE_SHIFT);
 
     /* The offset must be in this segment's PTE chunk and it must be valid */
     ASSERT(PteOffset < Segment->TotalNumberOfPtes);
@@ -778,7 +778,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
     Vad->ControlArea = ControlArea;
     Vad->u.VadFlags.Protection = ProtectionMask;
-    Vad->u2.VadFlags2.FileOffset = SectionOffset->QuadPart >> 16;
+    Vad->u2.VadFlags2.FileOffset = (ULONG)(SectionOffset->QuadPart >> 16);
     Vad->u2.VadFlags2.Inherit = (InheritDisposition == ViewShare);
     if ((AllocationType & SEC_NO_CHANGE) || (Section->u.Flags.NoChange))
     {
@@ -825,7 +825,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                       IN ULONG AllocationAttributes)
 {
     SIZE_T SizeLimit;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPTE PointerPte;
     MMPTE TempPte;
     PCONTROL_AREA ControlArea;
@@ -848,7 +848,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     if (*MaximumSize > SizeLimit) return STATUS_SECTION_TOO_BIG;
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
+    PteCount = (PFN_COUNT)((*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
@@ -914,7 +914,11 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     NewSegment->SegmentPteTemplate.u.Soft.Protection = ProtectionMask;
 
     /* Write out the prototype PTEs, for now they're simply demand zero */
+#ifdef _WIN64
+    RtlFillMemoryUlonglong(PointerPte, PteCount * sizeof(MMPTE), TempPte.u.Long);
+#else
     RtlFillMemoryUlong(PointerPte, PteCount * sizeof(MMPTE), TempPte.u.Long);
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -1246,14 +1250,16 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
 #endif
 
     /* Check if the offset and size would cause an overflow */
-    if ((SectionOffset->QuadPart + *ViewSize) < SectionOffset->QuadPart)
+    if (((ULONG64)SectionOffset->QuadPart + *ViewSize) <
+         (ULONG64)SectionOffset->QuadPart)
     {
         DPRINT1("Section offset overflows\n");
         return STATUS_INVALID_VIEW_SIZE;
     }
 
     /* Check if the offset and size are bigger than the section itself */
-    if ((SectionOffset->QuadPart + *ViewSize) > Section->SizeOfSection.QuadPart)
+    if (((ULONG64)SectionOffset->QuadPart + *ViewSize) >
+         (ULONG64)Section->SizeOfSection.QuadPart)
     {
         DPRINT1("Section offset is larger than section\n");
         return STATUS_INVALID_VIEW_SIZE;
@@ -1263,7 +1269,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     if (!(*ViewSize))
     {
         /* Compute it for the caller */
-        *ViewSize = Section->SizeOfSection.QuadPart - SectionOffset->QuadPart;
+        *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
 
         /* Check if it's larger than 4GB or overflows into kernel-mode */
         if ((*ViewSize > 0xFFFFFFFF) ||
@@ -1282,7 +1288,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     }
 
     /* Check if the view size is larger than the section */
-    if (*ViewSize > Section->SizeOfSection.QuadPart)
+    if (*ViewSize > (ULONG64)Section->SizeOfSection.QuadPart)
     {
         DPRINT1("The view is larger than the section\n");
         return STATUS_INVALID_VIEW_SIZE;
@@ -1679,22 +1685,21 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                                 AllocationType,
                                 Protect);
 
-    /* Check if this is an image for the current process */
-    if ((Section->AllocationAttributes & SEC_IMAGE) &&
-        (Process == PsGetCurrentProcess()) &&
-        ((Status != STATUS_IMAGE_NOT_AT_BASE) ||
-         (Status != STATUS_CONFLICTING_ADDRESSES)))
-    {
-        /* Notify the debugger */
-        DbgkMapViewOfSection(Section,
-                             SafeBaseAddress,
-                             SafeSectionOffset.LowPart,
-                             SafeViewSize);
-    }
-
     /* Return data only on success */
     if (NT_SUCCESS(Status))
     {
+        /* Check if this is an image for the current process */
+        if ((Section->AllocationAttributes & SEC_IMAGE) &&
+            (Process == PsGetCurrentProcess()) &&
+            (Status != STATUS_IMAGE_NOT_AT_BASE))
+        {
+            /* Notify the debugger */
+            DbgkMapViewOfSection(Section,
+                                 SafeBaseAddress,
+                                 SafeSectionOffset.LowPart,
+                                 SafeViewSize);
+        }
+
         /* Enter SEH */
         _SEH2_TRY
         {

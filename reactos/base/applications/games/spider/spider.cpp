@@ -6,13 +6,6 @@
  * PROGRAMMER:   Gregor Schneider
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include <stdlib.h>
-
-#include "resource.h"
-#include "cardlib.h"
 #include "spider.h"
 
 TCHAR szHelpPath[MAX_PATH];
@@ -70,7 +63,7 @@ INT_PTR CALLBACK DifficultyDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
                 dwDifficulty = IDC_DIF_FOURCOLORS;
 
             NewGame();
-            EndDialog(hDlg, TRUE);            
+            EndDialog(hDlg, TRUE);
             return TRUE;
 
         case IDCANCEL:
@@ -143,9 +136,9 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     UpdateWindow(hwnd);
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR1));
-    
+
     DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIFFICULTY), hwnd, DifficultyDlgProc);
-  
+
     while(GetMessage(&msg, NULL,0,0))
     {
         if(!TranslateAccelerator(hwnd, hAccelTable, &msg))
@@ -408,8 +401,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             {
                 int ret;
 
-                ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-                if (ret == IDOK)
+                ret = MessageBox(hwnd, MsgQuit, szAppName, MB_YESNO|MB_ICONQUESTION);
+                if (ret == IDYES)
                 {
                     WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
                     DestroyWindow(hwnd);

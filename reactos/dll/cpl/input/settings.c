@@ -10,7 +10,6 @@
  *      06-09-2007  Created
  */
 
-#include "resource.h"
 #include "input.h"
 
 static HWND MainDlgWnd;
@@ -111,7 +110,6 @@ CreateLayoutIcon(LPTSTR szInd)
     HDC hdc, hdcsrc;
     HBITMAP hBitmap, hBmpNew, hBmpOld;
     RECT rect;
-    DWORD bkColor, bkText;
     HFONT hFont = NULL;
     ICONINFO IconInfo;
     HICON hIcon = NULL;
@@ -132,8 +130,8 @@ CreateLayoutIcon(LPTSTR szInd)
             rect.bottom = 16;
             rect.top = 0;
 
-            bkColor = SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-            bkText  = SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
 
             ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
 
@@ -547,7 +545,7 @@ SaveInputLang(HWND hDlg)
     _ultot(OldLayoutNum, szLayoutNum, 10);
     if (!GetLayoutID(szLayoutNum, szLayoutID)) return;
 
-    // if old layout = selected layout
+    // If old layout = selected layout
     if (_tcscmp(szLayoutID, pts) == 0) return;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,

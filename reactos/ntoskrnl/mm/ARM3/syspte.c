@@ -56,9 +56,6 @@ ULONG MmTotalSystemPtes;
 // being released, which is then inserted in front of the recorded cluster.
 //
 
-/* This definition does not belong here and is most likely platform-dependent */
-#define MM_EMPTY_LIST  (ULONG) (0xFFFFF)
-
 ULONG
 FORCEINLINE
 MI_GET_CLUSTER_SIZE(IN PMMPTE Pte)
@@ -73,7 +70,7 @@ MI_GET_CLUSTER_SIZE(IN PMMPTE Pte)
     // Then read the size from the trailing PTE
     //
     Pte++;
-    return Pte->u.List.NextEntry;
+    return (ULONG)Pte->u.List.NextEntry;
 }
 
 PMMPTE
@@ -101,7 +98,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     //
     PreviousPte = &MmFirstFreeSystemPte[SystemPtePoolType];
 
-    while (PreviousPte->u.List.NextEntry != MM_EMPTY_LIST)
+    while (PreviousPte->u.List.NextEntry != MM_EMPTY_PTE_LIST)
     {
         //
         // Get the next cluster and its size
@@ -124,7 +121,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     //
     // Make sure we didn't reach the end of the cluster list
     //
-    if (PreviousPte->u.List.NextEntry == MM_EMPTY_LIST)
+    if (PreviousPte->u.List.NextEntry == MM_EMPTY_PTE_LIST)
     {
         //
         // Release the System PTE lock and return failure
@@ -185,7 +182,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         //
         PreviousPte = &MmFirstFreeSystemPte[SystemPtePoolType];
 
-        while (PreviousPte->u.List.NextEntry != MM_EMPTY_LIST)
+        while (PreviousPte->u.List.NextEntry != MM_EMPTY_PTE_LIST)
         {
             //
             // Get the next cluster
@@ -270,7 +267,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
 {
     KIRQL OldIrql;
-    ULONG_PTR ClusterSize;
+    ULONG ClusterSize;
     PMMPTE PreviousPte, NextPte, InsertPte;
 
     //
@@ -301,7 +298,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     PreviousPte = &MmFirstFreeSystemPte[SystemPtePoolType];
     InsertPte = NULL;
 
-    while (PreviousPte->u.List.NextEntry != MM_EMPTY_LIST)
+    while (PreviousPte->u.List.NextEntry != MM_EMPTY_PTE_LIST)
     {
         //
         // Get the next cluster and its size
@@ -415,7 +412,7 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     //
     // Make the first entry free and link it
     //
-    StartingPte->u.List.NextEntry = MM_EMPTY_LIST;
+    StartingPte->u.List.NextEntry = MM_EMPTY_PTE_LIST;
     MmFirstFreeSystemPte[PoolType].u.Long = 0;
     MmFirstFreeSystemPte[PoolType].u.List.NextEntry = StartingPte -
                                                       MmSystemPteBase;

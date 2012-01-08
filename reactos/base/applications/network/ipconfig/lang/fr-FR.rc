@@ -30,36 +30,36 @@ BEGIN
                   /showclassid adapteur |\n \
                   /setclassid adapteur [classid] ]\n \
     \n \
-    o˘\n \
+    o√π\n \
         adapteur         Nom de Connection\n \
-                       (jokers * et ? autorisÈs, voir les exemples)\n \
+                       (jokers * et ? autoris√©s, voir les exemples)\n \
     \n \
         Options:\n \
            /?           Affiche ce message d'aide\n \
            /all         Affiche toutes les information de configuration.\n \
-           /release     LibËre l'addresse IP pour l'adapteur spÈcifiÈ.\n \
-           /renew       Renouvelle l'addresse IP pour l'adapteur spÈcifiÈ.\n \
-           /flushdns    Purge le cache de rÈsolution DNS.\n \
-           /registerdns Renouvelle tous les baux DHCP et rÈenregistre les noms DNS.\n \
-           /displaydns  Affiche le contentu du cache de rÈsolution DNS.\n \
-           /showclassid Affiche tous les class IDs dhcp allouÈs pour l'adapteur.\n \
+           /release     Lib√®re l'addresse IP pour l'adapteur sp√©cifi√©.\n \
+           /renew       Renouvelle l'addresse IP pour l'adapteur sp√©cifi√©.\n \
+           /flushdns    Purge le cache de r√©solution DNS.\n \
+           /registerdns Renouvelle tous les baux DHCP et r√©enregistre les noms DNS.\n \
+           /displaydns  Affiche le contentu du cache de r√©solution DNS.\n \
+           /showclassid Affiche tous les class IDs dhcp allou√©s pour l'adapteur.\n \
            /setclassid  Modifie le class id dhcp.\n \
     \n \
-    L'action par dÈfaut est d'afficher seulement l'addresse IP, le masque de\n \
-    sous rÈseau et la passerelle par dÈfaut de chaque adapteur liÈ ‡ TCP/IP.\n \
+    L'action par d√©faut est d'afficher seulement l'addresse IP, le masque de\n \
+    sous r√©seau et la passerelle par d√©faut de chaque adapteur li√© √† TCP/IP.\n \
     \n \
-    Pour Release et Renew, si aucun nom d'adapteur n'est spÈcifiÈ, les baux d'addresse IP\n \
-    pour tous les adapteurs liÈs ‡ TCP/IP seront libÈrÈs ou renouvelÈs.\n \
+    Pour Release et Renew, si aucun nom d'adapteur n'est sp√©cifi√©, les baux d'addresse IP\n \
+    pour tous les adapteurs li√©s √† TCP/IP seront lib√©r√©s ou renouvel√©s.\n \
     \n \
-    Pour Setclassid, si aucun ClassId n'est spÈcifiÈ, le ClassId existant est enlevÈ.\n \
+    Pour Setclassid, si aucun ClassId n'est sp√©cifi√©, le ClassId existant est enlev√©.\n \
     \n \
     Exemples:\n \
         > ipconfig                   ... Affiche les informations.\n \
-        > ipconfig /all              ... Affiche les informations detaillÈes\n \
+        > ipconfig /all              ... Affiche les informations detaill√©es\n \
         > ipconfig /renew            ... Renouvelle tous les adapteurs\n \
         > ipconfig /renew EL*        ... Renouvelle toute connection dont le nom\n \
                                          commence par EL\n \
-        > ipconfig /release *Con*    ... LibËre toutes les connections concernÈes,\n \
-                                         ex. ""Connection au rÈseau local 1"" ou\n \
-                                             ""Connection au rÈseau local 2""\n"
+        > ipconfig /release *Con*    ... Lib√®re toutes les connections concern√©es,\n \
+                                         ex. ""Connection au r√©seau local 1"" ou\n \
+                                             ""Connection au r√©seau local 2""\n"
 END

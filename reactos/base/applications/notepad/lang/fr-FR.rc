@@ -49,8 +49,8 @@ BEGIN
         MENUITEM "&Enregistrer\tCtrl+S",              CMD_SAVE
         MENUITEM "Enregistrer &sous...",              CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Im&primer\tCtrl+P",                 CMD_PRINT
         MENUITEM "&Mise en page...",                  CMD_PAGE_SETUP
+        MENUITEM "Im&primer\tCtrl+P",                 CMD_PRINT
         MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Quitter",                          CMD_EXIT
@@ -69,17 +69,17 @@ BEGIN
         MENUITEM "Remplacer\tCtrl+H",          CMD_REPLACE
         MENUITEM "Atteindre...\tCtrl+G",       CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Tout &sÃ©lectionner\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Heure/Date\tF5",            CMD_TIME_DATE
     END
     POPUP "&Format"
     BEGIN
-        MENUITEM "&Retour à la ligne", CMD_WRAP
+        MENUITEM "&Retour Ã  la ligne", CMD_WRAP
         MENUITEM "&Police...",         CMD_FONT
     END
     POPUP "Affichage"
     BEGIN
-        MENUITEM "Barre d'état", CMD_STATUSBAR
+        MENUITEM "Barre d'Ã©tat", CMD_STATUSBAR
     END
     POPUP "&Aide"
     BEGIN
@@ -87,7 +87,7 @@ BEGIN
         MENUITEM "&Rechercher...",   CMD_HELP_SEARCH
         MENUITEM "&Utiliser l'aide", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&À propos",        CMD_ABOUT
+        MENUITEM "&Ã€ propos",        CMD_ABOUT
         MENUITEM "Inf&o...",         CMD_ABOUT_WINE
     END
 END
@@ -99,7 +99,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Mise en page"
 BEGIN
-LTEXT    "&En-tête :",  0x140,   10, 07, 40, 15
+LTEXT    "&En-tÃªte :",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "&Pied de page :",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
@@ -121,8 +121,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encodage"
 BEGIN
@@ -139,7 +138,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Atteindre..."
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Numéro de ligne :",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "NumÃ©ro de ligne :",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Annuler", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -161,7 +160,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiÃ©e par la Free Software Foundation; dans sa version 2  (ou selon votre prÃ©fÃ©rence) toute version ultÃ©rieure.\r\n\r\nCe programme est distribuÃ© dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans mÃªme une garantie implicite de COMMERCIABILITÃ‰ ou DE CONFORMITÃ‰ Ã€ UNE UTILISATION PARTICULIÃˆRE. \r\n\r\nVoir la Licence Publique GÃ©nÃ©rale GNU pour plus de dÃ©tails. Vous devriez avoir reÃ§u un exemplaire de la Licence Publique GÃ©nÃ©rale GNU avec ce programme ; si ce n'est pas le cas, Ã©crivez Ã  la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -184,17 +183,17 @@ STRING_ALL_FILES,                               "Tous fichiers (*.*)"
 STRING_TEXT_FILES_TXT,                          "Fichiers texte (*.txt)"
 
 STRING_TOOLARGE,                                "Le fichier '%s' est trop grand pour le bloc-notes.\n \
-Veuillez utiliser un autre éditeur."
-STRING_NOTEXT,                                  "Vous n'avez pas entré de texte. \
+Veuillez utiliser un autre Ã©diteur."
+STRING_NOTEXT,                                  "Vous n'avez pas entrÃ© de texte. \
 Veuillez taper quelque chose et recommencer"
 STRING_DOESNOTEXIST,                            "Le fichier '%s'\nn'existe pas.\n\n \
-Voulez-vous créer un nouveau fichier ?"
-STRING_NOTSAVED,                                "Le fichier '%s'\na été modifié\n\n \
+Voulez-vous crÃ©er un nouveau fichier ?"
+STRING_NOTSAVED,                                "Le fichier '%s'\na Ã©tÃ© modifiÃ©\n\n \
 Voulez-vous enregistrer vos modifications ?"
-STRING_NOTFOUND,                                "'%s' non trouvé."
-STRING_OUT_OF_MEMORY,                           "Pas assez de mémoire pour compléter cette \
-tâche. \nFermez une ou plusieurs applications pour libérer\n\
-de la mémoire."
+STRING_NOTFOUND,                                "'%s' non trouvÃ©."
+STRING_OUT_OF_MEMORY,                           "Pas assez de mÃ©moire pour complÃ©ter cette \
+tÃ¢che. \nFermez une ou plusieurs applications pour libÃ©rer\n\
+de la mÃ©moire."
 STRING_CANNOTFIND                               "Impossible de trouver '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"

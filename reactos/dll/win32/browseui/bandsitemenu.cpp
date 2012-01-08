@@ -19,18 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "bandsitemenu.h"
-#include "wine/debug.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 

@@ -19,22 +19,14 @@
 /* $Id$
  *
  * PROJECT:         ReactOS Sample Control Panel
- * FILE:            lib/cpl/main/main.c
+ * FILE:            dll/cpl/main/main.c
  * PURPOSE:         ReactOS Main Control Panel
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
  *      05-01-2004  Created
  */
-#include <windows.h>
-#include <initguid.h>
-#include <devguid.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <cplext.h>
 
 #include "main.h"
-#include "resource.h"
-
 
 #define NUM_APPLETS	(2)
 
@@ -149,4 +141,3 @@ DllMain(HINSTANCE hinstDLL,
 
     return TRUE;
 }
-

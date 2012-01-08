@@ -890,7 +890,7 @@ BOOL
 WINAPI
 MessageBeep(UINT uType)
 {
-    return (BOOL)NtUserCallOneParam(uType, ONEPARAM_ROUTINE_MESSAGEBEEP);
+    return NtUserxMessageBeep(uType);
 }
 
 

@@ -26,12 +26,6 @@
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
 
-#define STACK64ADDR	0x74000	/* The 64-bit stack top will be at 0x74000 */
-
-/* Long mode selectors */
-#define LMODE_CS	0x10
-#define LMODE_DS	0x18
-
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
 #define PtrToPfn(p) \
@@ -41,14 +35,6 @@
 #define VAtoPPI(va) ((((ULONG64)va) >> PPI_SHIFT) & 0x1FF)
 #define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
 #define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
-
-#define HYPERSPACE_BASE             0xfffff70000000000ULL
-#define HAL_BASE                    0xffffffff80000000ULL
-#define APIC_BASE                   0xFFFFFFFFFFFE0000ULL
-
-#define APIC_PHYS_BASE              0xfee00000
-
-#define NUM_PAGES_KERNEL
 
 #ifndef ASM
 

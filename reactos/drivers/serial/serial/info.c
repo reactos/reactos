@@ -14,14 +14,12 @@ SerialQueryInformation(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	PIO_STACK_LOCATION Stack;
 	PVOID SystemBuffer;
 	ULONG BufferLength;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 
-	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 	BufferLength = Stack->Parameters.QueryFile.Length;

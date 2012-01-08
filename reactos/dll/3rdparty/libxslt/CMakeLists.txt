@@ -1,4 +1,6 @@
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 add_definitions(
     -DHAVE_CONFIG_H
     -DWIN32
@@ -40,4 +42,10 @@ if(MSVC)
 endif()
 
 add_dependencies(libxslt psdk)
+add_pch(libxslt libxslt.h)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    add_target_compile_flags(libxslt "-Wno-pointer-sign")
+    allow_warnings(libxslt)
+endif()

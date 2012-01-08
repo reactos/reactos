@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
+#include <precomp.h>
 
 /*
  * @implemented
@@ -9,9 +9,16 @@ long atol(const char *str)
     return (long)_atoi64(str);
 }
 
+/*
+ * @unimplemented
+ */
 int _atoldbl(_LDOUBLE *value, char *str)
 {
-    /* FIXME needs error checking for huge/small values */
-   //*value = strtold(str,0);
-   return -1;
+  /* FIXME needs error checking for huge/small values */
+#if 0
+  long double ld;
+  ld = strtold(str,0);
+  memcpy(value, &ld, 10);
+#endif
+  return 0;
 }

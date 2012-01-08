@@ -34,11 +34,7 @@
 #define HBMMENU_POPUP_MINIMIZE	((HBITMAP) 11)
 #endif
 
-/* winuser.h */
-
-
 /* combo box */
-
 #define ID_CB_LISTBOX           1000
 #define ID_CB_EDIT              1001
 
@@ -92,6 +88,8 @@ extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL );
 #define LB_ADDSTRING_UPPER        0x1AC
 #define LB_ADDSTRING_LOWER        0x1AD
 
+HRGN set_control_clipping( HDC hdc, const RECT *rect );
+
 LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI User32DefWindowProc(HWND,UINT,WPARAM,LPARAM,BOOL);
 BOOL WINAPI RegisterClientPFN(VOID);
@@ -111,6 +109,10 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,WPARAM wParam, LPARAM 
 LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, BOOL unicode);
+LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam );
+LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam );
 LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);

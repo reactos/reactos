@@ -14,7 +14,11 @@
 
 #include <ntddk.h>
 #include <portcls.h>
+
+#ifndef YDEBUG
 #define NDEBUG
+#endif
+
 #include <debug.h>
 
 #include <dmusicks.h>

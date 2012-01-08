@@ -1953,7 +1953,7 @@ RtlFillMemoryUlong (
       if ((Length -= 1) == 0) {
         return;
       }
-    Address += 1;
+      Address += 1;
     }
     __stosq((PULONG64)(Address), Pattern | ((ULONG64)Pattern << 32), Length / 2);
     if ((Length & 1) != 0) Address[Length - 1] = Pattern;

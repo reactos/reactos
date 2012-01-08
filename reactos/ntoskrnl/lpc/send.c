@@ -182,7 +182,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
     PETHREAD Thread = PsGetCurrentThread();
     BOOLEAN Callback = FALSE;
     PKSEMAPHORE Semaphore;
-    ULONG MessageType;
+    USHORT MessageType;
     PAGED_CODE();
 
     Port = (PLPCP_PORT_OBJECT)PortObject;

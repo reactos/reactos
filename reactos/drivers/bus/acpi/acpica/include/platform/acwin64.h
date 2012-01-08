@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Name: acwin.h - OS specific defines, etc.
+ * Name: acwin64.h - OS specific defines, etc.
  *
  *****************************************************************************/
 
@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -118,14 +118,10 @@
 
 /*! [Begin] no source code translation (Keep the include) */
 
-//#include "acintel.h"
-// HACK
-#define INT32 _ACPI_INT32
-#define UINT32 _ACPI_UINT32
-
+#include "acintel.h"
 /*! [End] no source code translation !*/
 
-#define ACPI_MACHINE_WIDTH      64
+#define ACPI_MACHINE_WIDTH          64
 
 #define ACPI_USE_STANDARD_HEADERS
 

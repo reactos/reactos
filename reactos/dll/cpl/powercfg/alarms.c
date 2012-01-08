@@ -10,14 +10,6 @@
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
-
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <stdio.h>
-#include <tchar.h>
-
-#include "resource.h"
 #include "powercfg.h"
 
 static BOOLEAN
@@ -185,8 +177,8 @@ AlarmsDlgProc(HWND hwndDlg,
     case WM_INITDIALOG:
 		if (!Ala_InitData(hwndDlg))
 		{
-			//TODO
-			//handle initialization error
+			// TODO:
+			// Handle initialization error
 		}
 		return TRUE;
 	default:

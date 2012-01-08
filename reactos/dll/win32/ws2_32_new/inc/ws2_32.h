@@ -5,8 +5,6 @@
  * PURPOSE:     WinSock 2.2 Main Header
  */
 
-#pragma once
-
 /* Definitions for NDK Usage */
 #define WIN32_NO_STATUS
 //#define _WIN32_WINNT 0x502
@@ -27,6 +25,8 @@
 
 /* Winsock Helper Header */
 #include <ws2help.h>
+
+#include <nsp_dns.h>
 
 /* Missing definitions */
 #define SO_OPENTYPE                 0x7008

@@ -1,20 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:         ReactOS win32 kernel mode subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/objects/fillshap.c
+ * PURPOSE:         fillshap
+ * PROGRAMMER:
  */
 
 #include <win32k.h>
@@ -25,11 +14,6 @@
 #define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
 #define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
 
-BOOL FASTCALL IntFillEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush);
-BOOL FASTCALL IntDrawEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush);
-BOOL FASTCALL IntFillRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse, PBRUSH pbrush);
-BOOL FASTCALL IntDrawRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse, PBRUSH pbrush);
-
 BOOL FASTCALL
 IntGdiPolygon(PDC    dc,
               PPOINT Points,
@@ -37,7 +21,7 @@ IntGdiPolygon(PDC    dc,
 {
     SURFACE *psurf;
     PBRUSH pbrLine, pbrFill;
-    BOOL ret = FALSE; // default to failure
+    BOOL ret = FALSE; // Default to failure
     RECTL DestRect;
     int CurrentPoint;
     PDC_ATTR pdcattr;
@@ -45,7 +29,7 @@ IntGdiPolygon(PDC    dc,
 //    int Left;
 //    int Top;
 
-    ASSERT(dc); // caller's responsibility to pass a valid dc
+    ASSERT(dc); // Caller's responsibility to pass a valid dc
 
     if (!Points || Count < 2 )
     {
@@ -54,7 +38,7 @@ IntGdiPolygon(PDC    dc,
     }
 
 /*
-    //Find start x, y
+    // Find start x, y
     Left = Points[0].x;
     Top  = Points[0].y;
     for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint) {
@@ -97,7 +81,7 @@ IntGdiPolygon(PDC    dc,
         pbrFill = dc->dclevel.pbrFill;
         pbrLine = dc->dclevel.pbrLine;
         psurf = dc->dclevel.pSurface;
-        /* FIXME - psurf can be NULL!!!! don't assert but handle this case gracefully! */
+        /* FIXME: psurf can be NULL!!!! don't assert but handle this case gracefully! */
         ASSERT(psurf);
 
         /* Now fill the polygon with the current fill brush. */
@@ -132,7 +116,7 @@ IntGdiPolygon(PDC    dc,
                                    &dc->eboLine.BrushObject,
                                    Points[i].x,          /* From */
                                    Points[i].y,
-                                   Points[i+1].x,          /* To */
+                                   Points[i+1].x,        /* To */
                                    Points[i+1].y,
                                    &DestRect,
                                    ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
@@ -307,8 +291,8 @@ NtGdiEllipse(
     else
     {
         RtlCopyMemory(&tmpFillBrushObj, pFillBrushObj, sizeof(tmpFillBrushObj));
-//        tmpFillBrushObj.ptOrigin.x += RectBounds.left - Left;
-//        tmpFillBrushObj.ptOrigin.y += RectBounds.top - Top;
+        //tmpFillBrushObj.ptOrigin.x += RectBounds.left - Left;
+        //tmpFillBrushObj.ptOrigin.y += RectBounds.top - Top;
         tmpFillBrushObj.ptOrigin.x += dc->ptlDCOrig.x;
         tmpFillBrushObj.ptOrigin.y += dc->ptlDCOrig.y;
         ret = IntFillEllipse( dc,
@@ -337,14 +321,14 @@ NtGdiEllipse(
 
 #if 0
 
-//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
-//even-numbered polygon sides on each scan line. That is, GDI fills the area between the
-//first and second side, between the third and fourth side, and so on.
+// When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
+// even-numbered polygon sides on each scan line. That is, GDI fills the area between the
+// first and second side, between the third and fourth side, and so on.
 
-//WINDING Selects winding mode (fills any region with a nonzero winding value).
-//When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
-//This value is defined as the number of times a pen used to draw the polygon would go around the region.
-//The direction of each edge of the polygon is important.
+// WINDING Selects winding mode (fills any region with a nonzero winding value).
+// When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
+// This value is defined as the number of times a pen used to draw the polygon would go around the region.
+// The direction of each edge of the polygon is important.
 
 extern BOOL FillPolygon(PDC dc,
                             SURFOBJ *SurfObj,
@@ -529,13 +513,13 @@ IntRectangle(PDC dc,
 {
     SURFACE *psurf = NULL;
     PBRUSH pbrLine, pbrFill;
-    BOOL       ret = FALSE; // default to failure
+    BOOL       ret = FALSE; // Default to failure
     RECTL      DestRect;
     MIX        Mix;
     PDC_ATTR pdcattr;
     POINTL BrushOrigin;
 
-    ASSERT ( dc ); // caller's responsibility to set this up
+    ASSERT ( dc ); // Caller's responsibility to set this up
 
     pdcattr = dc->pdcattr;
 
@@ -611,7 +595,7 @@ IntRectangle(PDC dc,
 
     // Draw the rectangle with the current pen
 
-    ret = TRUE; // change default to success
+    ret = TRUE; // Change default to success
 
     if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
@@ -663,7 +647,7 @@ NtGdiRectangle(HDC  hDC,
                int  BottomRect)
 {
     DC   *dc;
-    BOOL ret; // default to failure
+    BOOL ret; // Default to failure
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -717,10 +701,10 @@ IntRoundRect(
     PBRUSH   pbrLine, pbrFill;
     RECTL RectBounds;
     LONG PenWidth, PenOrigWidth;
-    BOOL ret = TRUE; // default to success
+    BOOL ret = TRUE; // Default to success
     BRUSH brushTemp;
 
-    ASSERT ( dc ); // caller's responsibility to set this up
+    ASSERT ( dc ); // Caller's responsibility to set this up
 
     if ( PATH_IsPathOpen(dc->dclevel) )
         return PATH_RoundRect ( dc, Left, Top, Right, Bottom,
@@ -834,7 +818,7 @@ NtGdiRoundRect(
     int  Height)
 {
     DC   *dc = DC_LockDc(hDC);
-    BOOL  ret = FALSE; /* default to failure */
+    BOOL  ret = FALSE; /* Default to failure */
 
     DPRINT("NtGdiRoundRect(0x%x,%i,%i,%i,%i,%i,%i)\n",hDC,LeftRect,TopRect,RightRect,BottomRect,Width,Height);
     if ( !dc )
@@ -875,7 +859,7 @@ GreGradientFill(
     ULONG i;
     BOOL bRet;
 
-    /* check parameters */
+    /* Check parameters */
     if (ulMode & GRADIENT_FILL_TRIANGLE)
     {
         PGRADIENT_TRIANGLE pTriangle = (PGRADIENT_TRIANGLE)pMesh;
@@ -924,10 +908,10 @@ GreGradientFill(
     {
         /* Memory DC with no surface selected */
         DC_UnlockDc(pdc);
-        return TRUE; //CHECKME
+        return TRUE; // CHECKME
     }
 
-    /* calculate extent */
+    /* Calculate extent */
     rclExtent.left = rclExtent.right = pVertex->x;
     rclExtent.top = rclExtent.bottom = pVertex->y;
     for (i = 0; i < nVertex; i++)

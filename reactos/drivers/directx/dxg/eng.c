@@ -8,9 +8,7 @@
  *       30/12-2007   Magnus Olsen
  */
 
-
 #include <dxg_int.h>
-
 
 PDD_SURFACE_LOCAL
 NTAPI
@@ -33,22 +31,14 @@ NTAPI
 DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 {
     BOOL retVal = FALSE;
-    PEDD_SURFACE pEDDSurface  = NULL;
+    //PEDD_SURFACE pEDDSurface  = NULL;
 
     if (pSurface)
     {
-        pEDDSurface = (PEDD_SURFACE)( ((PBYTE)pSurface) - sizeof(DD_BASEOBJECT));
+        // pEDDSurface = (PEDD_SURFACE)( ((PBYTE)pSurface) - sizeof(DD_BASEOBJECT));
         // InterlockedDecrement(&pEDDSurface->pobj.cExclusiveLock);
         retVal = TRUE;
     }
 
     return retVal;
 }
-
-
-
-
-
-
-
-

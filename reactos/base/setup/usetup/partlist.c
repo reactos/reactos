@@ -1281,6 +1281,7 @@ PrintDiskData (PPARTLIST List,
                PDISKENTRY DiskEntry)
 {
   PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry;
   CHAR LineBuffer[128];
   COORD coPos;
   DWORD Written;
@@ -1365,8 +1366,11 @@ PrintDiskData (PPARTLIST List,
   PrintEmptyLine (List);
 
   /* Print partition lines*/
-  LIST_FOR_EACH(PartEntry, &DiskEntry->PartListHead, PARTENTRY, ListEntry)
+  Entry = DiskEntry->PartListHead.Flink;
+  while (Entry != &DiskEntry->PartListHead)
   {
+    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
     /* Print disk entry */
     for (i=0; i<4; i++)
     {
@@ -1389,6 +1393,7 @@ PrintDiskData (PPARTLIST List,
                             0);
     }
 
+    Entry = Entry->Flink;
   }
 
   /* Print separator line */
@@ -1596,11 +1601,16 @@ DrawPartitionList (PPARTLIST List)
   /* print list entries */
   List->Line = - List->Offset;
 
-  LIST_FOR_EACH(DiskEntry, &List->DiskListHead, DISKENTRY, ListEntry)
+  Entry = List->DiskListHead.Flink;
+  while (Entry != &List->DiskListHead)
   {
+    DiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
+
     /* Print disk entry */
     PrintDiskData (List,
                    DiskEntry);
+
+    Entry = Entry->Flink;
   }
 }
 

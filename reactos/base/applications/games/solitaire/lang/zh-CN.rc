@@ -13,22 +13,22 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "—°œÓ"
+CAPTION "ÈÄâÈ°π"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "∑≠≈∆", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "∑≠“ª’≈(&O)", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "∑≠»˝’≈(&T)", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "ÁøªÁâå", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "Áøª‰∏ÄÂº†(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Áøª‰∏âÂº†(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "º∆ ±(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "◊¥Ã¨¿∏(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "ËÆ°Êó∂(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Áä∂ÊÄÅÊ†è(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
-    DEFPUSHBUTTON   "»∑∂®", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "»°œ˚", IDCANCEL, 101, 97, 50, 14
+    DEFPUSHBUTTON   "Á°ÆÂÆö", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "ÂèñÊ∂à", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "—°∂®÷Ω≈∆±≥√ÊÕº∞∏"
+CAPTION "ÈÄâÂÆöÁ∫∏ÁâåËÉåÈù¢ÂõæÊ°à"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -37,15 +37,15 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
     CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
-    DEFPUSHBUTTON "»∑∂®", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "»°œ˚", IDCANCEL, 126, 84, 54, 13
+    DEFPUSHBUTTON "Á°ÆÂÆö", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "ÂèñÊ∂à", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -53,11 +53,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "÷Ω≈∆"
-    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Quit the current game?"
-    IDS_SOL_WIN     "Congratulations, you win!!"
-    IDS_SOL_DEAL    "Deal again?"
+    IDS_SOL_NAME    "Á∫∏Áâå"
+    IDS_SOL_ABOUT   "Á∫∏ÁâåÁî± J Brown ÂºÄÂèë\n\nCardLib ÁâàÊú¨ 1.0."
+    IDS_SOL_QUIT    "ÈÄÄÂá∫ÂΩìÂâçÊ∏∏Êàè?"
+    IDS_SOL_WIN     "ÊÅ≠Âñú‰Ω†Ôºå‰Ω†Ëµ¢‰∫Ü!!"
+    IDS_SOL_DEAL    "ÂÜçÁé©‰∏ÄÊ¨°?"
 END
 
 
@@ -65,19 +65,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "”Œœ∑(&G)"
+    POPUP "Ê∏∏Êàè(&G)"
     BEGIN
-        MENUITEM "∑¢≈∆(&D)\tF2",                   IDM_GAME_NEW
+        MENUITEM "ÂèëÁâå(&D)\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "±≥√ÊÕº∞∏(&C)...",                IDM_GAME_DECK
-        MENUITEM "—°œÓ(&O)...",                    IDM_GAME_OPTIONS
+        MENUITEM "ËÉåÈù¢ÂõæÊ°à(&C)...",                IDM_GAME_DECK
+        MENUITEM "ÈÄâÈ°π(&O)...",                    IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "ÕÀ≥ˆ(&X)",                       IDM_GAME_EXIT
+        MENUITEM "ÈÄÄÂá∫(&X)",                       IDM_GAME_EXIT
     END
-    POPUP "∞Ô÷˙(&H)"
+    POPUP "Â∏ÆÂä©(&H)"
     BEGIN
-        MENUITEM "ƒø¬º(&C)\tF1",                   IDM_HELP_CONTENTS
-        MENUITEM "πÿ”⁄÷Ω≈∆(&A)",                   IDM_HELP_ABOUT
+        MENUITEM "ÁõÆÂΩï(&C)\tF1",                   IDM_HELP_CONTENTS
+        MENUITEM "ÂÖ≥‰∫éÁ∫∏Áâå(&A)",                   IDM_HELP_ABOUT
     END
 END
 

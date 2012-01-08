@@ -1,7 +1,8 @@
 /*
- *Spanish Language resource file
+ * Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-21
  */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -10,7 +11,7 @@ BEGIN
   BEGIN
     MENUITEM "&Salir",                   IDC_EXIT
   END
-  POPUP "Acci髇"
+  POPUP "Acci贸n"
   BEGIN
     MENUITEM "Imprimir",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
@@ -21,9 +22,9 @@ BEGIN
   POPUP "Ver"
   BEGIN
     MENUITEM "Dispositivos por tipo",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispositivos por conexi髇",   IDC_STATIC, GRAYED
+    MENUITEM "Dispositivos por conexi贸n",   IDC_STATIC, GRAYED
     MENUITEM "Recursos por tipo",       IDC_STATIC, GRAYED
-    MENUITEM "Recursos por conexi髇", IDC_STATIC, GRAYED
+    MENUITEM "Recursos por conexi贸n", IDC_STATIC, GRAYED
   END
   POPUP "Ayuda"
   BEGIN
@@ -73,11 +74,11 @@ BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Cerrar el programa."
   IDS_HINT_REFRESH      " Actualizar la lista de servicios."
-  IDS_HINT_PROP         " Abre la pesta馻 de propiedades de la selecci髇 actual."
+  IDS_HINT_PROP         " Abre la pesta帽a de propiedades de la selecci贸n actual."
   IDS_HINT_HELP         " Mostrar la ventana de ayuda."
   IDS_HINT_ABOUT        " Acerca del Gestor de Dispositivos de ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Devuelve esta ventana al tama駉 normal."
+  IDS_HINT_SYS_RESTORE  " Devuelve esta ventana al tama帽o normal."
   IDS_HINT_SYS_MOVE     " Mueve esta ventana."
   IDS_HINT_SYS_SIZE     " Redimensiona esta ventana."
   IDS_HINT_SYS_MINIMIZE " Colapsa esta ventana a un icono."

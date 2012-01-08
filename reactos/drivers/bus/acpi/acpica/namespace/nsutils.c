@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -135,118 +135,6 @@ ACPI_NAME
 AcpiNsFindParentName (
     ACPI_NAMESPACE_NODE     *NodeToSearch);
 #endif
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiNsReportError
- *
- * PARAMETERS:  ModuleName          - Caller's module name (for error output)
- *              LineNumber          - Caller's line number (for error output)
- *              InternalName        - Name or path of the namespace node
- *              LookupStatus        - Exception code from NS lookup
- *
- * RETURN:      None
- *
- * DESCRIPTION: Print warning message with full pathname
- *
- ******************************************************************************/
-
-void
-AcpiNsReportError (
-    const char              *ModuleName,
-    UINT32                  LineNumber,
-    const char              *InternalName,
-    ACPI_STATUS             LookupStatus)
-{
-    ACPI_STATUS             Status;
-    UINT32                  BadName;
-    char                    *Name = NULL;
-
-
-    AcpiOsPrintf ("ACPI Error (%s-%04d): ", ModuleName, LineNumber);
-
-    if (LookupStatus == AE_BAD_CHARACTER)
-    {
-        /* There is a non-ascii character in the name */
-
-        ACPI_MOVE_32_TO_32 (&BadName, ACPI_CAST_PTR (UINT32, InternalName));
-        AcpiOsPrintf ("[0x%4.4X] (NON-ASCII)", BadName);
-    }
-    else
-    {
-        /* Convert path to external format */
-
-        Status = AcpiNsExternalizeName (ACPI_UINT32_MAX,
-                    InternalName, NULL, &Name);
-
-        /* Print target name */
-
-        if (ACPI_SUCCESS (Status))
-        {
-            AcpiOsPrintf ("[%s]", Name);
-        }
-        else
-        {
-            AcpiOsPrintf ("[COULD NOT EXTERNALIZE NAME]");
-        }
-
-        if (Name)
-        {
-            ACPI_FREE (Name);
-        }
-    }
-
-    AcpiOsPrintf (" Namespace lookup failure, %s\n",
-        AcpiFormatException (LookupStatus));
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiNsReportMethodError
- *
- * PARAMETERS:  ModuleName          - Caller's module name (for error output)
- *              LineNumber          - Caller's line number (for error output)
- *              Message             - Error message to use on failure
- *              PrefixNode          - Prefix relative to the path
- *              Path                - Path to the node (optional)
- *              MethodStatus        - Execution status
- *
- * RETURN:      None
- *
- * DESCRIPTION: Print warning message with full pathname
- *
- ******************************************************************************/
-
-void
-AcpiNsReportMethodError (
-    const char              *ModuleName,
-    UINT32                  LineNumber,
-    const char              *Message,
-    ACPI_NAMESPACE_NODE     *PrefixNode,
-    const char              *Path,
-    ACPI_STATUS             MethodStatus)
-{
-    ACPI_STATUS             Status;
-    ACPI_NAMESPACE_NODE     *Node = PrefixNode;
-
-
-    AcpiOsPrintf ("ACPI Error (%s-%04d): ", ModuleName, LineNumber);
-
-    if (Path)
-    {
-        Status = AcpiNsGetNode (PrefixNode, Path, ACPI_NS_NO_UPSEARCH,
-                    &Node);
-        if (ACPI_FAILURE (Status))
-        {
-            AcpiOsPrintf ("[Could not get node by pathname]");
-        }
-    }
-
-    AcpiNsPrintNodePathname (Node, Message);
-    AcpiOsPrintf (", %s\n", AcpiFormatException (MethodStatus));
-}
 
 
 /*******************************************************************************
@@ -389,7 +277,7 @@ AcpiNsLocal (
     {
         /* Type code out of range  */
 
-        ACPI_WARNING ((AE_INFO, "Invalid Object Type %X", Type));
+        ACPI_WARNING ((AE_INFO, "Invalid Object Type 0x%X", Type));
         return_UINT32 (ACPI_NS_NORMAL);
     }
 
@@ -965,7 +853,7 @@ AcpiNsOpensScope (
     {
         /* type code out of range  */
 
-        ACPI_WARNING ((AE_INFO, "Invalid Object Type %X", Type));
+        ACPI_WARNING ((AE_INFO, "Invalid Object Type 0x%X", Type));
         return_UINT32 (ACPI_NS_NORMAL);
     }
 
@@ -1057,128 +945,3 @@ Cleanup:
     ACPI_FREE (InternalPath);
     return_ACPI_STATUS (Status);
 }
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiNsGetParentNode
- *
- * PARAMETERS:  Node       - Current table entry
- *
- * RETURN:      Parent entry of the given entry
- *
- * DESCRIPTION: Obtain the parent entry for a given entry in the namespace.
- *
- ******************************************************************************/
-
-ACPI_NAMESPACE_NODE *
-AcpiNsGetParentNode (
-    ACPI_NAMESPACE_NODE     *Node)
-{
-    ACPI_FUNCTION_ENTRY ();
-
-
-    if (!Node)
-    {
-        return (NULL);
-    }
-
-    /*
-     * Walk to the end of this peer list. The last entry is marked with a flag
-     * and the peer pointer is really a pointer back to the parent. This saves
-     * putting a parent back pointer in each and every named object!
-     */
-    while (!(Node->Flags & ANOBJ_END_OF_PEER_LIST))
-    {
-        Node = Node->Peer;
-    }
-
-    return (Node->Peer);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiNsGetNextValidNode
- *
- * PARAMETERS:  Node       - Current table entry
- *
- * RETURN:      Next valid Node in the linked node list. NULL if no more valid
- *              nodes.
- *
- * DESCRIPTION: Find the next valid node within a name table.
- *              Useful for implementing NULL-end-of-list loops.
- *
- ******************************************************************************/
-
-ACPI_NAMESPACE_NODE *
-AcpiNsGetNextValidNode (
-    ACPI_NAMESPACE_NODE     *Node)
-{
-
-    /* If we are at the end of this peer list, return NULL */
-
-    if (Node->Flags & ANOBJ_END_OF_PEER_LIST)
-    {
-        return NULL;
-    }
-
-    /* Otherwise just return the next peer */
-
-    return (Node->Peer);
-}
-
-
-#ifdef ACPI_OBSOLETE_FUNCTIONS
-/*******************************************************************************
- *
- * FUNCTION:    AcpiNsFindParentName
- *
- * PARAMETERS:  *ChildNode             - Named Obj whose name is to be found
- *
- * RETURN:      The ACPI name
- *
- * DESCRIPTION: Search for the given obj in its parent scope and return the
- *              name segment, or "????" if the parent name can't be found
- *              (which "should not happen").
- *
- ******************************************************************************/
-
-ACPI_NAME
-AcpiNsFindParentName (
-    ACPI_NAMESPACE_NODE     *ChildNode)
-{
-    ACPI_NAMESPACE_NODE     *ParentNode;
-
-
-    ACPI_FUNCTION_TRACE (NsFindParentName);
-
-
-    if (ChildNode)
-    {
-        /* Valid entry.  Get the parent Node */
-
-        ParentNode = AcpiNsGetParentNode (ChildNode);
-        if (ParentNode)
-        {
-            ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "Parent of %p [%4.4s] is %p [%4.4s]\n",
-                ChildNode,  AcpiUtGetNodeName (ChildNode),
-                ParentNode, AcpiUtGetNodeName (ParentNode)));
-
-            if (ParentNode->Name.Integer)
-            {
-                return_VALUE ((ACPI_NAME) ParentNode->Name.Integer);
-            }
-        }
-
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-            "Unable to find parent of %p (%4.4s)\n",
-            ChildNode, AcpiUtGetNodeName (ChildNode)));
-    }
-
-    return_VALUE (ACPI_UNKNOWN_NAME);
-}
-#endif
-
-

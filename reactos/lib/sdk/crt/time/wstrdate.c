@@ -21,3 +21,22 @@ wchar_t* _wstrdate(wchar_t* date)
    return date;
 
 }
+
+int CDECL _wstrdate_s(wchar_t* date, size_t size)
+{
+    if(date && size)
+        date[0] = '\0';
+
+    if(!date) {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    if(size < 9) {
+        *_errno() = ERANGE;
+        return ERANGE;
+    }
+
+    _wstrdate(date);
+    return 0;
+}

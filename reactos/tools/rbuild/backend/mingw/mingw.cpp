@@ -152,7 +152,25 @@ MingwBackend::GetFullName ( const FileLocation& file ) const
 }
 
 string
-v2s ( const Backend* backend, const vector<FileLocation>& files, int wrap_at )
+MingwBackend::GetFullNamePrefixSpaces ( const FileLocation& file ) const
+{
+    string fullname = GetFullName ( file );
+
+    size_t pos = 0;
+    while ( true )
+    {
+        pos = fullname.find ( ' ', pos );
+        if ( pos == fullname.npos )
+            break;
+        fullname.replace ( pos, 1, "\\ " );
+        pos += 2;
+	}
+
+    return fullname;
+}
+
+string
+MingwBackend::v2s ( const vector<FileLocation>& files, int wrap_at, bool prefixSpaces ) const
 {
 	if ( !files.size() )
 		return "";
@@ -168,14 +186,16 @@ v2s ( const Backend* backend, const vector<FileLocation>& files, int wrap_at )
 		}
 		else if ( s.size() )
 			s += " ";
-		s += backend->GetFullName ( file );
+        if (prefixSpaces)
+            s += GetFullNamePrefixSpaces ( file );
+        else
+            s += GetFullName ( file );
 	}
 	return s;
 }
 
-
 string
-v2s ( const string_list& v, int wrap_at )
+MingwBackend::v2s ( const string_list& v, int wrap_at ) const
 {
 	if ( !v.size() )
 		return "";
@@ -196,7 +216,6 @@ v2s ( const string_list& v, int wrap_at )
 	}
 	return s;
 }
-
 
 static class MingwFactory : public Backend::Factory
 {
@@ -1252,17 +1271,17 @@ MingwBackend::OutputModuleInstallTargets ()
 }
 
 string
-MingwBackend::GetRegistrySourceFiles ()
+MingwBackend::GetRegistrySourceFiles () const
 {
-	return "boot" + sSep + "bootdata" + sSep + "hivecls_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivedef_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hiveinst_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivesft_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivesys_" + Environment::GetArch() + ".inf ";
+	return "boot" + sSep + "bootdata" + sSep + "hivecls_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivedef_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesft_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesys_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hiveinst_$(ARCH).inf ";
 }
 
 string
-MingwBackend::GetRegistryTargetFiles ()
+MingwBackend::GetRegistryTargetFiles () const
 {
 	string system32ConfigDirectory = "system32" + sSep + "config";
 	FileLocation system32 ( InstallDirectory, system32ConfigDirectory, "" );
@@ -1274,7 +1293,7 @@ MingwBackend::GetRegistryTargetFiles ()
 	registry_files.push_back ( FileLocation ( InstallDirectory, system32ConfigDirectory, "software" ) );
 	registry_files.push_back ( FileLocation ( InstallDirectory, system32ConfigDirectory, "system" ) );
 
-	return v2s( this, registry_files, 6 );
+	return v2s( registry_files, 6, true );
 }
 
 void
@@ -1295,9 +1314,9 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
-	          cSep, GetFullPath ( system32 ).c_str (),
-	          cSep, cSep );
+	          "\t$(mkhive_TARGET) %s %s\n",
+	          GetFullPath ( system32 ).c_str (),
+	          registrySourceFiles.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
 }
@@ -1307,7 +1326,7 @@ MingwBackend::GenerateInstallTarget ()
 {
 	vector<FileLocation> vInstallTargetFiles;
 	GetInstallTargetFiles ( vInstallTargetFiles );
-	string installTargetFiles = v2s ( this, vInstallTargetFiles, 5 );
+	string installTargetFiles = v2s ( vInstallTargetFiles, 5, true );
 	string registryTargetFiles = GetRegistryTargetFiles ();
 
 	fprintf ( fMakefile,

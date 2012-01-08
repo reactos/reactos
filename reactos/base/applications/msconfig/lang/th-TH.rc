@@ -24,14 +24,14 @@ IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "������çẺ�к�"
+CAPTION "โปรแกรมโครงแบบระบบ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,2,2,374,195
-    DEFPUSHBUTTON "��ŧ", IDOK, 211, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&���������", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "¡��ԡ", IDCANCEL, 267, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "��ѹ��", IDC_BTN_APPLY, 323, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "ตกลง", IDOK, 211, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&ช่วยเหลือ", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "ยกเลิก", IDCANCEL, 267, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "ใช้ทันที", IDC_BTN_APPLY, 323, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_STARTUP_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -39,15 +39,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List3",IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
-    PUSHBUTTON      "&��е�鹷�����",IDC_BTN_STARTUP_ACTIVATE,223,155,66,14
-    PUSHBUTTON      "&����е�鹷�����",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
+    PUSHBUTTON      "&กระตุ้นทั้งหมด",IDC_BTN_STARTUP_ACTIVATE,223,155,66,14
+    PUSHBUTTON      "&ไม่กระตุ้นทั้งหมด",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
 END
 
 IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON      "Move &Up", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON      "Move &Down", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
@@ -68,7 +68,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2",IDC_TOOLS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 134
     EDITTEXT IDC_TOOLS_CMDLINE, 1, 139, 360, 12, ES_READONLY
-    PUSHBUTTON "&���Թ�ҹ", IDC_BTN_RUN, 311, 155, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&ดำเนินงาน", IDC_BTN_RUN, 311, 155, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_SERVICES_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -98,20 +98,20 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    LISTBOX         IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-   PUSHBUTTON    "&��Ǩ��û�ء����ͧ�ء��鹷ҧ", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-   PUSHBUTTON    "&��駤���»�����", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
-   PUSHBUTTON    "����͹��� &���", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
-   PUSHBUTTON    "����͹��� &ŧ", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
-   GROUPBOX "������͡��û�ء����ͧ", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
+   PUSHBUTTON    "&ตรวจการปลุกเครื่องทุกเส้นทาง", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
+   PUSHBUTTON    "&ตั้งค่าโดยปริยาย", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+   PUSHBUTTON    "เคลื่อนที่ &ขึ้น", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
+   PUSHBUTTON    "เคลื่อนที่ &ลง", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
+   GROUPBOX "ตัวเลือกการปลุกเครื่อง", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 50, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 55, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "&������͡�дѺ�٧...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
-   LTEXT "&�������:", -1, 280, 91, 30, 10
+   PUSHBUTTON "&ตัวเลือกระดับสูง...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
+   LTEXT "&หมดเวลา:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
-   LTEXT "�Թҷ�", -1, 340, 91, 15, 10
+   LTEXT "วินาที", -1, 340, 91, 15, 10
 END
 
 IDD_FREELDR_ADVANCED_PAGE DIALOGEX DISCARDABLE  0, 0, 175, 175
@@ -127,68 +127,68 @@ BEGIN
    CHECKBOX "/P&ROFILE", IDC_CBX_PROFILE, 10, 55, 50, 10
    CHECKBOX "/&IRQ", IDC_CBX_IRQ, 10, 70, 40, 12
    EDITTEXT IDC_TXT_IRQ, 80, 70, 60, 12, ES_LEFT
-   CHECKBOX "/�&��ش�����ͧ", IDC_CBX_DEBUG, 10, 85, 40, 10
-   CHECKBOX "/&��ͧ�ҧ��ش�����ͧ", IDC_CBX_DEBUG_PORT, 20, 100, 60, 10
+   CHECKBOX "/แ&ก้จุดบกพร่อง", IDC_CBX_DEBUG, 10, 85, 40, 10
+   CHECKBOX "/&ช่องทางแก้จุดบกพร่อง", IDC_CBX_DEBUG_PORT, 20, 100, 60, 10
    COMBOBOX IDC_DRP_DEBUG_PORT, 80, 100, 60, 10, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-   CHECKBOX "/&�ѵ�Һʹ", IDC_CBX_BAUD_RATE, 20, 115, 50, 10
+   CHECKBOX "/&อัตราบอด", IDC_CBX_BAUD_RATE, 20, 115, 50, 10
    COMBOBOX IDC_DRP_DRP_BAUD_RATE, 80, 115, 60, 10, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-   CHECKBOX "/&��ͧ", IDC_CBX_CHANNEL, 20, 130, 50, 10
+   CHECKBOX "/&ช่อง", IDC_CBX_CHANNEL, 20, 130, 50, 10
    EDITTEXT IDC_TXT_CHANNEL, 80, 130, 60, 12, ES_LEFT
    CONTROL "",IDC_SCR_CHANNEL, "msctls_updown32", 0x50000000, 140, 130, 11, 11
-   PUSHBUTTON "��ŧ", IDC_OK, 20, 160, 50, 12
-   PUSHBUTTON "¡��ԡ", IDC_CANCEL, 100, 160, 50, 12
+   PUSHBUTTON "ตกลง", IDC_OK, 20, 160, 50, 12
+   PUSHBUTTON "ยกเลิก", IDC_CANCEL, 100, 160, 50, 12
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_MSCONFIG             "������çẺ�к�"
-    IDS_TAB_GENERAL          "�����"
+    IDS_MSCONFIG             "โปรแกรมโครงแบบระบบ"
+    IDS_TAB_GENERAL          "ทั่วไป"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
     IDS_TAB_FREELDR          "FREELDR.INI"
-    IDS_TAB_SERVICES         "��ԡ��"
-    IDS_TAB_STARTUP          "������ҹ����ͧ"
-    IDS_TAB_TOOLS            "����ͧ���"
+    IDS_TAB_SERVICES         "บริการ"
+    IDS_TAB_STARTUP          "เริ่มงานเครื่อง"
+    IDS_TAB_TOOLS            "เครื่องมือ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_COLUMN_SERVICE "��ԡ��"
-    IDS_SERVICES_COLUMN_REQ     "������ͧ���"
-    IDS_SERVICES_COLUMN_VENDOR  "���᷹"
-    IDS_SERVICES_COLUMN_STATUS  "ʶҹ�"
+    IDS_SERVICES_COLUMN_SERVICE "บริการ"
+    IDS_SERVICES_COLUMN_REQ     "ความต้องการ"
+    IDS_SERVICES_COLUMN_VENDOR  "ตัวแทน"
+    IDS_SERVICES_COLUMN_STATUS  "สถานะ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOOLS_COLUMN_NAME    "����"
-    IDS_TOOLS_COLUMN_DESCR   "��������´"
+    IDS_TOOLS_COLUMN_NAME    "ชื่อ"
+    IDS_TOOLS_COLUMN_DESCR   "รายละเอียด"
 
-    IDS_TOOLS_CMD_NAME       "��ǹ��Ҥ��"
+    IDS_TOOLS_CMD_NAME       "ส่วนเฝ้าคุม"
     IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
-    IDS_TOOLS_INFO_NAME      "��蹷��"
-    IDS_TOOLS_INFO_DESCR     "�ʴ���蹢ͧ������"
+    IDS_TOOLS_INFO_NAME      "รุ่นที่"
+    IDS_TOOLS_INFO_DESCR     "แสดงรุ่นของข้อมูล"
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
-    IDS_TOOLS_REGEDIT_NAME   "�������è�ʵ�"
-    IDS_TOOLS_REGEDIT_DESCR  "�Դ�������è�ʵ�"
+    IDS_TOOLS_REGEDIT_NAME   "ตัวแก้ไขเรจีสตี"
+    IDS_TOOLS_REGEDIT_DESCR  "เปิดตัวแก้ไขเรจีสตี"
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
-    IDS_TOOLS_SYSDM_NAME     "�س���ѵԢͧ�к�"
-    IDS_TOOLS_SYSDM_DESCR    "�ʴ�����������ǡѺ������������"
+    IDS_TOOLS_SYSDM_NAME     "คุณสมบัติของระบบ"
+    IDS_TOOLS_SYSDM_DESCR    "แสดงข้อมูลเกี่ยวกับคอมพิวเตอร์นี้"
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
-    IDS_STARTUP_COLUMN_ELEMENT "��ǹ��Сͺ"
-    IDS_STARTUP_COLUMN_CMD     "�����"
-    IDS_STARTUP_COLUMN_PATH    "��鹷ҧ"
+    IDS_STARTUP_COLUMN_ELEMENT "ส่วนประกอบ"
+    IDS_STARTUP_COLUMN_CMD     "คำสั่ง"
+    IDS_STARTUP_COLUMN_PATH    "เส้นทาง"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "���ѧ���Թ�ҹ"
-    IDS_SERVICES_STATUS_STOPPED "��ش����"
-    IDS_SERVICES_YES "��"
-    IDS_SERVICES_UNKNOWN "����Һ"
+    IDS_SERVICES_STATUS_RUNNING "กำลังดำเนินงาน"
+    IDS_SERVICES_STATUS_STOPPED "หยุดแล้ว"
+    IDS_SERVICES_YES "ใช่"
+    IDS_SERVICES_UNKNOWN "ไม่ทราบ"
 END

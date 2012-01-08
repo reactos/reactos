@@ -25,6 +25,9 @@
 	<directory name="tftpd">
 		<xi:include href="tftpd/tftpd.rbuild" />
 	</directory>
+	<directory name="thmsvc">
+		<xi:include href="thmsvc/thmsvc.rbuild" />
+	</directory>
 	<directory name="umpnpmgr">
 		<xi:include href="umpnpmgr/umpnpmgr.rbuild" />
 	</directory>

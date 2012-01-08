@@ -1,58 +1,108 @@
-OUTPUT_FORMAT(pei-i386)
-ENTRY(_mainCRTStartup)
 SECTIONS
 {
-  .text  __image_base__ + __section_alignment__  : 
+  .text __image_base__ + __section_alignment__ :
   {
-    __text_start__ = .;
-    *(.init)
     *(.text)
-    *(SORT(.text$*))
-    *(.glue_7t)
-    *(.glue_7)
-     ___CTOR_LIST__ = .; __CTOR_LIST__ = . ; 
-			LONG (-1); *(.ctors); *(.ctor); LONG (0); 
-     ___DTOR_LIST__ = .; __DTOR_LIST__ = . ; 
-			LONG (-1); *(.dtors); *(.dtor);  LONG (0); 
-     *(.fini)
-    /* ??? Why is .gcc_exc here?  */
-     *(.gcc_exc)
-     __text_end__ = .;
-    *(.gcc_except_table)
-  }
-  init BLOCK(__section_alignment__) :
-  {
-    __init_start__ = . ;
-    *(init)
-    __init_end__ = . ;
-  }
-  .data BLOCK(__section_alignment__) : 
-  {
-    __data_start__ = . ;
+    *(SORT(.text*))
     *(.data)
-    *(.data2)
-    *(SORT(.data$*))
+    *(SORT(.data*))
     *(.rdata)
-    *(SORT(.rdata$*))
-    *(.eh_frame)
-    __data_end__ = . ;
+    *(SORT(.rdata*))
+  }
+
+  .edata BLOCK(__file_alignment__) :
+  {
+    *(.edata)
+  }
+
+  .bss :
+  {
     __bss_start__ = . ;
     *(.bss)
     *(COMMON)
     __bss_end__ = . ;
   }
+
+  /* DWARF debug sections.
+     Symbols in the DWARF debugging sections are relative to the beginning
+     of the section.  Unlike other targets that fake this by putting the
+     section VMA at 0, the PE format will not allow it.  */
+  /* DWARF 1.1 and DWARF 2.  */
+  .debug_aranges BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_aranges)
+  }
+  .debug_pubnames BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_pubnames)
+  }
+  .debug_pubtypes BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_pubtypes)
+  }
+  /* DWARF 2.  */
+  .debug_info BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_info) *(.gnu.linkonce.wi.*)
+  }
+  .debug_abbrev BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_abbrev)
+  }
+  .debug_line BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_line)
+  }
+  .debug_frame BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_frame*)
+  }
+  .debug_str BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_str)
+  }
+  .debug_loc BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_loc)
+  }
+  .debug_macinfo BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_macinfo)
+  }
+  /* SGI/MIPS DWARF 2 extensions.  */
+  .debug_weaknames BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_weaknames)
+  }
+  .debug_funcnames BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_funcnames)
+  }
+  .debug_typenames BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_typenames)
+  }
+  .debug_varnames BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_varnames)
+  }
+  .debug_macro BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_macro)
+  }
+  /* DWARF 3.  */
+  .debug_ranges BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_ranges)
+  }
+  /* DWARF 4.  */
+  .debug_types BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.debug_types) *(.gnu.linkonce.wt.*)
+  }
+
   /DISCARD/ :
   {
-    *(.drectve)
+    *(*)
   }
-  .stab BLOCK(__section_alignment__) (NOLOAD) :
-  {
-    [ .stab ]
-  }
-  .stabstr BLOCK(__section_alignment__) (NOLOAD) :
-  {
-    [ .stabstr ]
-  }
-
 }
-

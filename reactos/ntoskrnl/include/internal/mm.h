@@ -6,12 +6,13 @@
 
 struct _EPROCESS;
 
-extern PFN_NUMBER MiFreeSwapPages;
-extern PFN_NUMBER MiUsedSwapPages;
+extern PMMSUPPORT MmKernelAddressSpace;
+extern PFN_COUNT MiFreeSwapPages;
+extern PFN_COUNT MiUsedSwapPages;
 extern SIZE_T MmTotalPagedPoolQuota;
 extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-extern PFN_NUMBER MmNumberOfPhysicalPages;
+extern PFN_COUNT MmNumberOfPhysicalPages;
 extern UCHAR MmDisablePagingExecutive;
 extern PFN_NUMBER MmLowestPhysicalPage;
 extern PFN_NUMBER MmHighestPhysicalPage;
@@ -49,7 +50,7 @@ struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 struct _MM_PAGEOP;
-typedef ULONG SWAPENTRY;
+typedef ULONG_PTR SWAPENTRY;
 
 //
 // MmDbgCopyMemory Flags
@@ -87,6 +88,7 @@ typedef ULONG SWAPENTRY;
 #define MM_PAGEOP_PAGEOUT                   (2)
 #define MM_PAGEOP_PAGESYNCH                 (3)
 #define MM_PAGEOP_ACCESSFAULT               (4)
+#define MM_PAGEOP_CHANGEPROTECT             (5)
 
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
@@ -206,7 +208,7 @@ typedef struct _MM_SECTION_SEGMENT
     LONG FileOffset;		/* start offset into the file for image sections */
     ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
     ULONG RawLength;		/* length of the segment which is part of the mapped file */
-    ULONG Length;			/* absolute length of the segment */
+    SIZE_T Length;			/* absolute length of the segment */
     ULONG Protection;
     FAST_MUTEX Lock;		/* lock which protects the page directory */
     ULONG ReferenceCount;
@@ -463,7 +465,7 @@ typedef struct _MM_REGION
 {
     ULONG Type;
     ULONG Protect;
-    ULONG Length;
+    SIZE_T Length;
     LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
 
@@ -471,7 +473,7 @@ typedef struct _MM_REGION
 typedef struct _MMFREE_POOL_ENTRY
 {
     LIST_ENTRY List;
-    PFN_NUMBER Size;
+    PFN_COUNT Size;
     ULONG Signature;
     struct _MMFREE_POOL_ENTRY *Owner;
 } MMFREE_POOL_ENTRY, *PMMFREE_POOL_ENTRY;
@@ -498,7 +500,7 @@ typedef VOID
 (*PMM_ALTER_REGION_FUNC)(
     PMMSUPPORT AddressSpace,
     PVOID BaseAddress,
-    ULONG Length,
+    SIZE_T Length,
     ULONG OldType,
     ULONG OldProtect,
     ULONG NewType,
@@ -544,7 +546,7 @@ MmCreateMemoryArea(
     PMMSUPPORT AddressSpace,
     ULONG Type,
     PVOID *BaseAddress,
-    ULONG_PTR Length,
+    SIZE_T Length,
     ULONG Protection,
     PMEMORY_AREA *Result,
     BOOLEAN FixedAddress,
@@ -593,14 +595,14 @@ NTAPI
 MmLocateMemoryAreaByRegion(
     PMMSUPPORT AddressSpace,
     PVOID Address,
-    ULONG_PTR Length
+    SIZE_T Length
 );
 
 PVOID
 NTAPI
 MmFindGap(
     PMMSUPPORT AddressSpace,
-    ULONG_PTR Length,
+    SIZE_T Length,
     ULONG_PTR Granularity,
     BOOLEAN TopDown
 );
@@ -616,7 +618,7 @@ MmReleaseMemoryAreaIfDecommitted(
 VOID
 NTAPI
 MmMapMemoryArea(PVOID BaseAddress,
-                ULONG Length,
+                SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection);
 
@@ -886,6 +888,36 @@ MmPageFault(
     ULONG ErrorCode
 );
 
+/* special.c *****************************************************************/
+
+VOID
+NTAPI
+MiInitializeSpecialPool();
+
+BOOLEAN
+NTAPI
+MmUseSpecialPool(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag);
+
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddress(
+    IN PVOID P);
+
+PVOID
+NTAPI
+MmAllocateSpecialPool(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag,
+    IN POOL_TYPE PoolType,
+    IN ULONG SpecialType);
+
+VOID
+NTAPI
+MmFreeSpecialPool(
+    IN PVOID P);
+
 /* mm.c **********************************************************************/
 
 NTSTATUS
@@ -904,8 +936,7 @@ NTAPI
 MmNotPresentFaultVirtualMemory(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 NTSTATUS
@@ -939,7 +970,7 @@ MmProtectAnonMem(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
-    ULONG Length,
+    SIZE_T Length,
     ULONG Protect,
     PULONG OldProtect
 );
@@ -1134,7 +1165,7 @@ MiGetPfnEntry(IN PFN_NUMBER Pfn)
 
     /* Make sure the PFN number is valid */
     if (Pfn > MmHighestPhysicalPage) return NULL;
-    
+
     /* Make sure this page actually has a PFN entry */
     if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, (ULONG)Pfn))) return NULL;
 
@@ -1230,8 +1261,8 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
-                             IN PFN_NUMBER NumberOfPages);
+MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
+                      IN PFN_NUMBER NumberOfPages);
 
 VOID
 NTAPI
@@ -1338,7 +1369,7 @@ MmRawDeleteVirtualMapping(PVOID Address);
 VOID
 NTAPI
 MmGetPageFileMapping(
-	struct _EPROCESS *Process, 
+	struct _EPROCESS *Process,
 	PVOID Address,
 	SWAPENTRY* SwapEntry);
 
@@ -1535,7 +1566,7 @@ MmAlterRegion(
     PVOID BaseAddress,
     PLIST_ENTRY RegionListHead,
     PVOID StartAddress,
-    ULONG Length,
+    SIZE_T Length,
     ULONG NewType,
     ULONG NewProtect,
     PMM_ALTER_REGION_FUNC AlterFunc
@@ -1583,7 +1614,7 @@ MmGetFileNameForSection(
 PVOID
 NTAPI
 MmAllocateSection(
-    IN ULONG Length,
+    IN SIZE_T Length,
     PVOID BaseAddress
 );
 
@@ -1602,18 +1633,9 @@ MmProtectSectionView(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
-    ULONG Length,
+    SIZE_T Length,
     ULONG Protect,
     PULONG OldProtect
-);
-
-NTSTATUS
-NTAPI
-MmWritePageSectionView(
-    PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MArea,
-    PVOID Address,
-    PMM_PAGEOP PageOp
 );
 
 NTSTATUS
@@ -1625,8 +1647,7 @@ NTAPI
 MmNotPresentFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 NTSTATUS
@@ -1647,8 +1668,7 @@ NTAPI
 MmAccessFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 VOID
@@ -1735,7 +1755,15 @@ MmCallDllInitialize(
     IN PLIST_ENTRY ListHead
 );
 
-extern PMMSUPPORT MmKernelAddressSpace;
+
+/* procsup.c *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmGrowKernelStack(
+    IN PVOID StackPointer
+);
+
 
 FORCEINLINE
 VOID

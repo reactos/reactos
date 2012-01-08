@@ -34,7 +34,11 @@ int main( int argc, char **argv ) {
 	int i, libstart = argc;
 	FILE *out = fopen("tests/stubs.tst","w");
 
-	if( argc == 1 ) { usage(argv[0]); return 1; }
+	if( argc == 1 ) {
+		if( out ) fclose( out );
+		usage(argv[0]);
+		return 1;
+	}
 
 	if( !out ) {
 		fprintf( stderr, "Could not write file tests/stubs.tst\n" );

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -8,7 +7,8 @@ spec2def(msacm32.drv msacm32.drv.spec)
 add_library(msacm32.drv SHARED wavemap.c wavemap.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
 
-set_entrypoint(msacm32.drv 0)
+set_module_type(msacm32.drv win32dll ENTRYPOINT 0 UNICODE)
+
 set_target_properties(msacm32.drv PROPERTIES SUFFIX "")
 
 target_link_libraries(msacm32.drv wine)

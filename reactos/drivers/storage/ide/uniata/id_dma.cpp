@@ -1607,7 +1607,7 @@ l_ATA_SILICON_IMAGE_ID:
                 { 0xc2, 0x82, 0x042, 0x8a, 0x4a, 0x0a } };
             static const UCHAR cmd_wdma_modes[] = { 0x87, 0x32, 0x3f };
             static const UCHAR cmd_pio_modes[] = { 0xa9, 0x57, 0x44, 0x32, 0x3f };
-            ULONG treg = 0x54 + (dev < 3) ? (dev << 1) : 7;
+            ULONG treg = 0x54 + ((dev < 3) ? (dev << 1) : 7);
 
             udmamode = min(udmamode, 5);
             /* enable UDMA mode */

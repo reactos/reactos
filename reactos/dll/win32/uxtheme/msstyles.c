@@ -18,24 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "vfwmsgs.h"
-#include "uxtheme.h"
-#include "tmschema.h"
-
-#include "msstyles.h"
-
-#include "wine/unicode.h"
+#include "uxthemep.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
@@ -1257,14 +1242,21 @@ static HRESULT MSSTYLES_GetFont (LPCWSTR lpCur, LPCWSTR lpEnd,
         *lpValEnd = lpCur;
         return E_PROP_ID_UNSUPPORTED;
     }
+    if(pointSize > 0)
+    {
+        HDC hdc = GetDC(0);
+        pointSize = -MulDiv(pointSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(0, hdc);
+    }
+
     pFont->lfHeight = pointSize;
     pFont->lfWeight = FW_REGULAR;
     pFont->lfCharSet = DEFAULT_CHARSET;
     while(MSSTYLES_GetNextToken(lpCur, lpEnd, &lpCur, attr, sizeof(attr)/sizeof(attr[0]))) {
         if(!lstrcmpiW(szBold, attr)) pFont->lfWeight = FW_BOLD;
-        else if(!!lstrcmpiW(szItalic, attr)) pFont->lfItalic = TRUE;
-        else if(!!lstrcmpiW(szUnderline, attr)) pFont->lfUnderline = TRUE;
-        else if(!!lstrcmpiW(szStrikeOut, attr)) pFont->lfStrikeOut = TRUE;
+        else if(!lstrcmpiW(szItalic, attr)) pFont->lfItalic = TRUE;
+        else if(!lstrcmpiW(szUnderline, attr)) pFont->lfUnderline = TRUE;
+        else if(!lstrcmpiW(szStrikeOut, attr)) pFont->lfStrikeOut = TRUE;
     }
     *lpValEnd = lpCur;
     return S_OK;
@@ -1278,8 +1270,6 @@ HRESULT MSSTYLES_GetPropertyFont(PTHEME_PROPERTY tp, HDC hdc, LOGFONTW *pFont)
 
     ZeroMemory(pFont, sizeof(LOGFONTW));
     hr = MSSTYLES_GetFont (lpCur, lpEnd, &lpCur, pFont);
-    if (SUCCEEDED (hr))
-        pFont->lfHeight = -MulDiv(pFont->lfHeight, GetDeviceCaps(hdc, LOGPIXELSY), 72);
 
     return hr;
 }

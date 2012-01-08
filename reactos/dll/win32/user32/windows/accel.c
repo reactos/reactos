@@ -43,6 +43,16 @@ typedef struct
     WORD   pad1;
 } PE_ACCEL, *LPPE_ACCEL;
 
+/* Cache entry */
+typedef struct _USER_ACCEL_CACHE_ENTRY
+{
+ struct _USER_ACCEL_CACHE_ENTRY * Next;
+ ULONG_PTR Usage; /* how many times the table has been loaded */
+ HACCEL Object;   /* handle to the NtUser accelerator table object */
+ HGLOBAL Data;    /* base address of the resource data */
+}
+U32_ACCEL_CACHE_ENTRY;
+
 /* FUNCTIONS *****************************************************************/
 
 /* Lock guarding the cache */

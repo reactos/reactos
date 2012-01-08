@@ -1,24 +1,16 @@
-#include "resource.h"
-
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005
- */
-
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_HELP,  "Uso: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
-  [drive:]         Specifica l'unit‡ disco da formattare.\n\
+  [drive:]         Specifica l'unit√† disco da formattare.\n\
   -FS:file-system  Specifica il tipo di filesystem (%s).\n\
   -V:label         Specifica l'etichetta del volume.\n\
   -Q               Esegue una formattazione rapida.\n\
-  -A:size          Altera la dimensione predefinita della unit‡ di allocazione.\n\
+  -A:size          Altera la dimensione predefinita della unit√† di allocazione.\n\
                    Le impostazioni predefinite sono fortemente consigliate per un uso normale\n\
                    NTFS supporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT supporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   NTFS compresso non Ë supportato per unit‡ di allocazione\n\
+                   NTFS compresso non √® supportato per unit√† di allocazione\n\
                    maggiori di 4096.\n\
   -C               I file creati sul nuovo volume saranno compressi.\n\n"
 
@@ -42,11 +34,11 @@ STRING_NO_VOLUME         "Impossibile rilevare il volume"
 
 STRING_NO_VOLUME_SIZE    "Impossibile rilevare la dimensione del volume"
 
-STRING_FILESYSTEM        "Il tipo di file system Ë %s.\n"
+STRING_FILESYSTEM        "Il tipo di file system √® %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Inserire l'etichetta attuale del volume del drive %C: "
 
-STRING_ERROR_LABEL     "L'etichetta del volume inserita per questo drive Ë sbagliata.\n"
+STRING_ERROR_LABEL     "L'etichetta del volume inserita per questo drive √® sbagliata.\n"
 
 STRING_YN_FORMAT       "\nATTENZIONE, TUTTI I DATI SUL DISCO FISSO %C: SARANNO PERSI!\nVuoi procedere (S/N)? "
 
@@ -68,5 +60,5 @@ STRING_NO_LABEL        "Impossibile applicare l'etichetta al volume"
 
 STRING_FREE_SPACE     "\n%I64d bytes totali sul disco.\n%I64d bytes sono liberi.\n"
 
-STRING_SERIAL_NUMBER   "\nVolume Serial Number Ë %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nVolume Serial Number √® %04X-%04X\n"
 END

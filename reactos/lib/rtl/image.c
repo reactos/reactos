@@ -43,7 +43,7 @@ BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
     IN PVOID BaseAddress,
-    IN ULONG ImageSize,
+    IN SIZE_T ImageSize,
     IN ULONG FileLength)
 {
 #if 0
@@ -192,7 +192,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
             DPRINT1("e_lfanew is larger than PE file\n");
             return STATUS_INVALID_IMAGE_FORMAT;
         }
-        
+
         /* It shouldn't be past 4GB either */
         if (DosHeader->e_lfanew >=
             (MAXULONG - sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)))
@@ -201,7 +201,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
             DPRINT1("e_lfanew is larger than 4GB\n");
             return STATUS_INVALID_IMAGE_FORMAT;
         }
-        
+
         /* And the whole file shouldn't overflow past 4GB */
         if ((DosHeader->e_lfanew +
             sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)) >= Size)
@@ -211,7 +211,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
             return STATUS_INVALID_IMAGE_FORMAT;
         }
     }
-    
+
     /* The offset also can't be larger than 256MB, as a hard-coded check */
     if (DosHeader->e_lfanew >= (256 * 1024 * 1024))
     {
@@ -235,7 +235,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
     *OutHeaders = NtHeaders;
     return STATUS_SUCCESS;
 }
-    
+
 /*
  * @implemented
  */
@@ -369,7 +369,7 @@ LdrProcessRelocationBlockLongLong(
 {
     SHORT Offset;
     USHORT Type;
-    USHORT i;
+    ULONG i;
     PUSHORT ShortPtr;
     PULONG LongPtr;
     PULONGLONG LongLongPtr;
@@ -379,7 +379,6 @@ LdrProcessRelocationBlockLongLong(
         Offset = SWAPW(*TypeOffset) & 0xFFF;
         Type = SWAPW(*TypeOffset) >> 12;
         ShortPtr = (PUSHORT)(RVA(Address, Offset));
-
         /*
         * Don't relocate within the relocation section itself.
         * GCC/LD generates sometimes relocation records for the relocation section.
@@ -398,16 +397,16 @@ LdrProcessRelocationBlockLongLong(
             break;
 
         case IMAGE_REL_BASED_HIGH:
-            *ShortPtr = HIWORD(MAKELONG(0, *ShortPtr) + (LONG)Delta);
+            *ShortPtr = HIWORD(MAKELONG(0, *ShortPtr) + (Delta & 0xFFFFFFFF));
             break;
 
         case IMAGE_REL_BASED_LOW:
-            *ShortPtr = SWAPW(*ShortPtr) + LOWORD(Delta);
+            *ShortPtr = SWAPW(*ShortPtr) + LOWORD(Delta & 0xFFFF);
             break;
 
         case IMAGE_REL_BASED_HIGHLOW:
             LongPtr = (PULONG)RVA(Address, Offset);
-            *LongPtr = SWAPD(*LongPtr) + (ULONG)Delta;
+            *LongPtr = SWAPD(*LongPtr) + (Delta & 0xFFFFFFFF);
             break;
 
         case IMAGE_REL_BASED_DIR64:

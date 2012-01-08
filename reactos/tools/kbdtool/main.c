@@ -61,98 +61,100 @@ INT
 main(INT argc,
      PCHAR* argv)
 {
-    ULONG ErrorCode, FailureCode;
+    ULONG i, ErrorCode, FailureCode;
     CHAR Option;
     PCHAR OpenFlags;
     CHAR BuildOptions[16] = {0};
     
     /* Loop for parameter */
-    while (TRUE)
+    for (i = 1; i < argc; ++i)
     {
-        /* Get the options */
-        Option = getopt(argc, argv, "aAeEiIkKmMnNOosSuUvVwWxX?");
-        if (Option != -1)
+        if (argv[i][0] != '/' && argv[i][0] != '-')
+            break;
+        
+        if (argv[i][1] && !argv[i][2])
+            Option = argv[i][1];
+        else
+            Option = 0;
+        
+        /* Check supported options */
+        switch (Option)
         {
-            /* Check supported options */
-            switch (Option)
-            {
-                /* ASCII File */
-                case 'A':
-                case 'a':
-                    UnicodeFile = 0;
-                    continue;
-                    
-                /* UNICODE File */
-                case 'U':
-                case 'u':
-                    UnicodeFile = 1;
-                    continue;
-                    
-                /* Verbose */
-                case 'V':
-                case 'v':
-                    Verbose = 1;
-                    continue;
-                    
-                /* No logo */
-                case 'N':
-                case 'n':
-                    NoLogo = 1;
-                    continue;
-                    
-                /* Fallback driver */
-                case 'K':
-                case 'k':
-                    FallbackDriver = 1;
-                    continue;
-                    
-                /* Sanity Check */
-                case 'W':
-                case 'w':
-                    SanityCheck = 1;
-                    continue;
-                    
-                /* Itanium */
-                case 'I':
-                case 'i':
-                    BuildType = 1;
-                    continue;
-                    
-                /* X86 */
-                case 'X':
-                case 'x':
-                    BuildType = 0;
-                    continue;
-                    
-                /* AMD64 */
-                case 'M':
-                case 'm':
-                    BuildType = 2;
-                    continue;
-                    
-                /* WOW64 */
-                case 'O':
-                case 'o':
-                    BuildType = 3;
-                    continue;
-                 
-                /* Source only */
-                case 'S':
-                case 's':
-                    SourceOnly = 1;
-                    continue;
-                default:
-                    break;
-            }
-
-            /* If you got here, the options are invalid or missing */
-            PrintUsage();
+            /* ASCII File */
+            case 'A':
+            case 'a':
+                UnicodeFile = 0;
+                break;
+            
+            /* UNICODE File */
+            case 'U':
+            case 'u':
+                UnicodeFile = 1;
+                break;
+            
+            /* Verbose */
+            case 'V':
+            case 'v':
+                Verbose = 1;
+                break;
+            
+            /* No logo */
+            case 'N':
+            case 'n':
+                NoLogo = 1;
+                break;
+            
+            /* Fallback driver */
+            case 'K':
+            case 'k':
+                FallbackDriver = 1;
+                break;
+            
+            /* Sanity Check */
+            case 'W':
+            case 'w':
+                SanityCheck = 1;
+                break;
+            
+            /* Itanium */
+            case 'I':
+            case 'i':
+                BuildType = 1;
+                break;
+            
+            /* X86 */
+            case 'X':
+            case 'x':
+                BuildType = 0;
+                break;
+            
+            /* AMD64 */
+            case 'M':
+            case 'm':
+                BuildType = 2;
+                break;
+            
+            /* WOW64 */
+            case 'O':
+            case 'o':
+                BuildType = 3;
+                break;
+            
+            /* Source only */
+            case 'S':
+            case 's':
+                SourceOnly = 1;
+                break;
+            
+            default:
+                /* If you got here, the options are invalid or missing */
+                PrintUsage();
+                break;
         }
-        break;
     }
     
     /* Do we have no options? */
-    if (optind == argc) PrintUsage();
+    if (i == argc) PrintUsage();
 
     /* Should we announce ourselves? */
     if (!NoLogo)
@@ -161,9 +163,9 @@ main(INT argc,
         printf("\nKbdTool v%d.%02d - convert keyboard text file to C file or a keyboard layout DLL\n\n",
                gVersion, gSubVersion);
     }
-     
+    
     /* Save the file name */
-    gpszFileName = argv[optind];
+    gpszFileName = argv[i];
     
     /* Open either as binary or text */
     OpenFlags = "rb";

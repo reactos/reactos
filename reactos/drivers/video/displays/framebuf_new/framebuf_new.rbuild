@@ -12,8 +12,8 @@
 	<file>framebuf_new.rc</file>
 	<if property="ARCH" value="i386">
 		<group compilerset="gcc">
-	        	<compilerflag>-mrtd</compilerflag>
-        		<compilerflag>-fno-builtin</compilerflag>
+			<compilerflag>-mrtd</compilerflag>
+			<compilerflag>-fno-builtin</compilerflag>
 			<compilerflag>-Wno-unused-variable</compilerflag>
 		</group>
 	</if>

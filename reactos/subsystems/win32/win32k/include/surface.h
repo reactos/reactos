@@ -1,8 +1,5 @@
 #pragma once
 
-#include "win32.h"
-#include "gdiobj.h"
-
 #define PDEV_SURFACE              0x80000000
 
 /* GDI surface object */
@@ -102,7 +99,7 @@ typedef struct _SURFACE
 #define  SURFACE_ShareUnlockSurface(pBMObj)  \
   GDIOBJ_vDereferenceObject ((POBJ)pBMObj)
 
-BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
+BOOL NTAPI SURFACE_Cleanup(PVOID ObjectBody);
 
 PSURFACE
 NTAPI

@@ -20,6 +20,15 @@
 
 //////////////////////////////////////////////////////////////////
 
+#include <windows.h>
+#include <scrnsave.h>
+#include <math.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <tchar.h>
+
+#include "resource.h"
+
 extern TCHAR m_Text[MAX_PATH];
 
 VOID LoadSettings(VOID);

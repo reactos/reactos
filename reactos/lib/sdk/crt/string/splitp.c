@@ -21,18 +21,22 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     if (fname) fname[0] = '\0';
     if (ext) ext[0] = '\0';
 
+#if WINVER >= 0x600
     /* Check parameter */
     if (!path)
     {
 #ifndef _LIBCNT_
-        __set_errno(EINVAL);
+        _set_errno(EINVAL);
 #endif
         return;
     }
+#endif
 
+#if WINVER == 0x600
     /* Skip '\\?\' prefix */
     if ((path[0] == '\\') && (path[1] == '\\') &&
         (path[2] == '?') && (path[3] == '\\')) path += 4;
+#endif
 
     if (path[0] == '\0') return;
 
@@ -59,8 +63,10 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     }
 
     /* Check if we got a file name / extension */
-    if (!file_start) file_start = path;
-    if (!ext_start || ext_start < file_start) ext_start = path;
+    if (!file_start)
+        file_start = dir_start;
+    if (!ext_start || ext_start < file_start)
+        ext_start = path;
 
     if (dir)
     {

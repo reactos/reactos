@@ -91,6 +91,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
     CSRSS_DEFINE_API(GET_TEMP_FILE,                CsrGetTempFile),
     CSRSS_DEFINE_API(DEFINE_DOS_DEVICE,            CsrDefineDosDevice),
+    CSRSS_DEFINE_API(SOUND_SENTRY,                 CsrSoundSentry),
     { 0, 0, NULL }
 };
 
@@ -178,17 +179,29 @@ PrivateCsrssManualGuiCheck(LONG Check)
   NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
+DWORD
+WINAPI
+CreateSystemThreads(PVOID pParam)
+{
+    NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    DPRINT1("This thread should not terminate!\n");
+    return 0;
+}
+
 BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRPLUGIN_SERVER_PROCS ServerProcs,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
+    HANDLE ServerThread;
+    CLIENT_ID ClientId;
     NTSTATUS Status;
+
     CsrExports = *Exports;
     Win32CsrApiHeap = CsrssApiHeap;
 
-    Status = NtUserInitialize(0, NULL, NULL);
+    NtUserInitialize(0, NULL, NULL);
 
     PrivateCsrssManualGuiCheck(0);
     CsrInitConsoleSupport();
@@ -199,8 +212,19 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
     ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
-    Status = RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
+    RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
+
+    /* Start Raw Input Threads */
+    Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
+    if (NT_SUCCESS(Status))
+    {
+        NtResumeThread(ServerThread, NULL);
+        NtClose(ServerThread);
+    }
+    else
+        DPRINT1("Cannot start Raw Input Thread!\n");
+
     return TRUE;
 }
 

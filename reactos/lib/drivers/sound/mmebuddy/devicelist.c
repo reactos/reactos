@@ -8,12 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <sndtypes.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 ULONG           SoundDeviceCounts[SOUND_DEVICE_TYPES];
 PSOUND_DEVICE   SoundDeviceListHeads[SOUND_DEVICE_TYPES];

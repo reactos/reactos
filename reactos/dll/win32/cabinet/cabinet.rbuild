@@ -11,6 +11,7 @@
 	<file>fdi.c</file>
 	<file>stubs.c</file>
 	<file>cabinet.rc</file>
+	<pch>cabinet.h</pch>
 	<library>wine</library>
 	<library>ntdll</library>
 </module>

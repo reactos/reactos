@@ -9,10 +9,8 @@
  * UPDATE HISTORY:
  *      24-11-2003  Created
  */
-#include <windows.h>
-#include <winwlx.h>
 
-#include <wine/debug.h>
+#include "msgina.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
@@ -60,20 +58,6 @@ WlxDisplayLockedNotice(
  */
 BOOL WINAPI
 WlxIsLockOk(
-	PVOID pWlxContext)
-{
-  UNREFERENCED_PARAMETER(pWlxContext);
-
-  UNIMPLEMENTED;
-  return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxIsLogoffOk(
 	PVOID pWlxContext)
 {
   UNREFERENCED_PARAMETER(pWlxContext);

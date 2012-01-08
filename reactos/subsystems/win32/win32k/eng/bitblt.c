@@ -1,12 +1,10 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
- * FILE:             subsys/win32k/eng/bitblt.c
+ * FILE:             subsystems/win32/win32k/eng/bitblt.c
  * PROGRAMER:        Jason Filby
  *                   Timo Kreuzer
- * REVISION HISTORY:
- *        2/10/1999: Created
  */
 
 #include <win32k.h>
@@ -237,7 +235,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         }
         else
         {
-            /* FIXME - What to do here? */
+            /* FIXME: What to do here? */
         }
     }
     else
@@ -351,16 +349,7 @@ EngBitBlt(SURFOBJ *DestObj,
     //DPRINT1("Rop4 : 0x%08x\n", Rop4);
 
     OutputRect = *DestRect;
-    if (OutputRect.right < OutputRect.left)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
-    if (OutputRect.bottom < OutputRect.top)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
+    RECTL_vMakeWellOrdered(&OutputRect);
 
     if (UsesSource)
     {
@@ -958,7 +947,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     BOOLEAN ret;
     RECTL OutputRect;
     POINTL InputPoint;
-    SURFACE *psurfDest;
+    //SURFACE *psurfDest;
 
     ASSERT(psoMask);
 
@@ -986,7 +975,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     /* No success yet */
     ret = FALSE;
     ASSERT(psoDest);
-    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    //psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,

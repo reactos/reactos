@@ -1,40 +1,14 @@
 /*
- * Graphics paths (BeginPath, EndPath etc.)
- *
- * Copyright 1997, 1998 Martin Boehme
- *                 1999 Huw D M Davies
- * Copyright 2005 Dmitry Timoshkov
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-/*
- *
- * Addaped for the use in ReactOS.
- *
- */
-/*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/path.c
- * PURPOSE:         Path support
- * PROGRAMMER:
+ * PURPOSE:         Graphics paths (BeginPath, EndPath etc.)
+ * PROGRAMMER:      Copyright 1997, 1998 Martin Boehme
+ *                            1999 Huw D M Davies
+ *                            2005 Dmitry Timoshkov
  */
 
 #include <win32k.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -43,23 +17,23 @@
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
 
-BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
-BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
-BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
-BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
-BOOL FASTCALL PATH_FlattenPath (PPATH pPath);
-VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
-
-BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
-VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
-BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath);
-BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
-
-VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
-
 /***********************************************************************
  * Internal functions
  */
+ 
+/* PATH_DestroyGdiPath
+ *
+ * Destroys a GdiPath structure (frees the memory in the arrays).
+ */
+VOID
+FASTCALL
+PATH_DestroyGdiPath ( PPATH pPath )
+{
+  ASSERT(pPath!=NULL);
+
+  if (pPath->pPoints) ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
+  if (pPath->pFlags) ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
+}
 
 BOOL
 FASTCALL
@@ -88,6 +62,18 @@ IntGdiCloseFigure(PPATH pPath)
       pPath->pFlags[pPath->numEntriesUsed-1]|=PT_CLOSEFIGURE;
       pPath->newStroke=TRUE;
    }
+}
+
+/* MSDN: This fails if the device coordinates exceed 27 bits, or if the converted
+         logical coordinates exceed 32 bits. */
+BOOL
+FASTCALL
+GdiPathDPtoLP(PDC pdc, PPOINT ppt, INT count)
+{
+  XFORMOBJ xo;
+   
+  XFORMOBJ_vInit(&xo, &pdc->dclevel.mxDeviceToWorld);
+  return XFORMOBJ_bApplyXform(&xo, XF_LTOL, count, (PPOINTL)ppt, (PPOINTL)ppt);
 }
 
 /* PATH_FillPath
@@ -183,20 +169,6 @@ PATH_InitGdiPath ( PPATH pPath )
   pPath->pFlags=NULL;
   pPath->numEntriesUsed=0;
   pPath->numEntriesAllocated=0;
-}
-
-/* PATH_DestroyGdiPath
- *
- * Destroys a GdiPath structure (frees the memory in the arrays).
- */
-VOID
-FASTCALL
-PATH_DestroyGdiPath ( PPATH pPath )
-{
-  ASSERT(pPath!=NULL);
-
-  if (pPath->pPoints) ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
-  if (pPath->pFlags) ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
 }
 
 /* PATH_AssignGdiPath
@@ -397,7 +369,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  * Should be called when a call to RoundRect is performed on a DC that has
  * an open path. Returns TRUE if successful, else FALSE.
  *
- * FIXME: it adds the same entries to the path as windows does, but there
+ * FIXME: It adds the same entries to the path as windows does, but there
  * is an error in the bezier drawing code so that there are small pixel-size
  * gaps when the resulting path is drawn by StrokePath()
  */
@@ -762,6 +734,103 @@ PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
 
 BOOL
 FASTCALL
+PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints)
+{
+  PPATH pPath;
+  POINT lastmove, orig_pos;
+  INT i;
+  PDC_ATTR pdcattr;
+  BOOL State = FALSE, Ret = FALSE;
+
+  pPath = PATH_LockPath( dc->dclevel.hPath );
+  if (!pPath) return FALSE;
+
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
+    return FALSE;
+  }
+
+  pdcattr = dc->pdcattr;  
+
+  lastmove.x = orig_pos.x = pdcattr->ptlCurrent.x;
+  lastmove.y = orig_pos.y = pdcattr->ptlCurrent.y;
+
+  for (i = pPath->numEntriesUsed - 1; i >= 0; i--)
+  {
+      if (pPath->pFlags[i] == PT_MOVETO)
+      {
+         lastmove.x = pPath->pPoints[i].x;
+         lastmove.y = pPath->pPoints[i].y;
+         if (!GdiPathDPtoLP(dc, &lastmove, 1))
+         {
+            PATH_UnlockPath( pPath );
+            return FALSE;
+         }
+         break;
+       }
+  }
+
+  for (i = 0; i < cbPoints; i++)
+  {
+      if (types[i] == PT_MOVETO)
+      {
+                pPath->newStroke = TRUE;
+                lastmove.x = pts[i].x;
+                lastmove.y = pts[i].y;
+      }
+      else if((types[i] & ~PT_CLOSEFIGURE) == PT_LINETO)
+      {
+                PATH_LineTo(dc, pts[i].x, pts[i].y);
+      }
+      else if(types[i] == PT_BEZIERTO)
+      {
+          if (!((i + 2 < cbPoints) && (types[i + 1] == PT_BEZIERTO)
+              && ((types[i + 2] & ~PT_CLOSEFIGURE) == PT_BEZIERTO)))
+              goto err;
+          PATH_PolyBezierTo(dc, &(pts[i]), 3);
+          i += 2;
+      }
+      else
+         goto err;
+
+     pdcattr->ptlCurrent.x = pts[i].x;
+     pdcattr->ptlCurrent.y = pts[i].y;
+     State = TRUE;
+
+     if (types[i] & PT_CLOSEFIGURE)
+     {
+        pPath->pFlags[pPath->numEntriesUsed-1] |= PT_CLOSEFIGURE;
+        pPath->newStroke = TRUE;
+        pdcattr->ptlCurrent.x = lastmove.x;
+        pdcattr->ptlCurrent.y = lastmove.y;
+        State = TRUE;
+     }
+  }
+  Ret = TRUE;
+  goto Exit;
+
+err:
+  if ((pdcattr->ptlCurrent.x != orig_pos.x) || (pdcattr->ptlCurrent.y != orig_pos.y))
+  {
+     pPath->newStroke = TRUE;
+     pdcattr->ptlCurrent.x = orig_pos.x;
+     pdcattr->ptlCurrent.y = orig_pos.y;
+     State = TRUE;
+  }
+Exit:
+  if (State) // State change?
+  {
+     pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+     CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+     pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+  }
+  PATH_UnlockPath( pPath );
+  return Ret;
+}
+
+BOOL
+FASTCALL
 PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   POINT   pt;
@@ -902,7 +971,7 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
       if(point == 0) startpt = pt;
         PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
-    /* win98 adds an extra line to close the figure for some reason */
+    /* Win98 adds an extra line to close the figure for some reason */
     PATH_AddEntry(pPath, &startpt, PT_LINETO | PT_CLOSEFIGURE);
   }
   PATH_UnlockPath( pPath );
@@ -1507,7 +1576,7 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
     PPATH pPath, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
@@ -1594,6 +1663,7 @@ PATH_WidenPath(DC *dc)
                 {
                     pStrokes[numStrokes - 1]->state = PATH_Closed;
                 }
+                numOldStrokes = numStrokes;
                 numStrokes++;
                 j = 0;
                 if (numStrokes == 1)
@@ -1603,7 +1673,7 @@ PATH_WidenPath(DC *dc)
                    pOldStrokes = pStrokes; // Save old pointer.
                    pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
                    if (!pStrokes) return FALSE;
-                   RtlCopyMemory(pStrokes, pOldStrokes, numStrokes * sizeof(PPATH));
+                   RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
                    ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
                 }
                 if (!pStrokes) return FALSE;
@@ -1618,7 +1688,7 @@ PATH_WidenPath(DC *dc)
                 PATH_AddEntry(pStrokes[numStrokes - 1], &point, pPath->pFlags[i]);
                 break;
             case PT_BEZIERTO:
-                /* should never happen because of the FlattenPath call */
+                /* Should never happen because of the FlattenPath call */
                 DPRINT1("Should never happen\n");
                 break;
             default:
@@ -1876,7 +1946,7 @@ static inline INT int_from_fixed(FIXED f)
 /**********************************************************************
  *      PATH_BezierTo
  *
- * internally used by PATH_add_outline
+ * Internally used by PATH_add_outline
  */
 static
 VOID
@@ -1949,7 +2019,6 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
      pt.x = x + int_from_fixed(header->pfxStart.x);
      pt.y = y - int_from_fixed(header->pfxStart.y);
-     IntLPtoDP(dc, &pt, 1);
      PATH_AddEntry(pPath, &pt, PT_MOVETO);
 
      curve = (TTPOLYCURVE *)(header + 1);
@@ -1968,7 +2037,6 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
               {
                  pt.x = x + int_from_fixed(curve->apfx[i].x);
                  pt.y = y - int_from_fixed(curve->apfx[i].y);
-                 IntLPtoDP(dc, &pt, 1);
                  PATH_AddEntry(pPath, &pt, PT_LINETO);
               }
               break;
@@ -1987,13 +2055,11 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
               pts[0].x = x + int_from_fixed(ptfx.x);
               pts[0].y = y - int_from_fixed(ptfx.y);
-              IntLPtoDP(dc, &pts[0], 1);
 
               for (i = 0; i < curve->cpfx; i++)
               {
                   pts[i + 1].x = x + int_from_fixed(curve->apfx[i].x);
                   pts[i + 1].y = y - int_from_fixed(curve->apfx[i].y);
-                  IntLPtoDP(dc, &pts[i + 1], 1);
               }
 
               PATH_BezierTo(pPath, pts, curve->cpfx + 1);
@@ -2026,37 +2092,13 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                      LPCWSTR str, UINT count, const INT *dx)
 {
     unsigned int idx;
-    double cosEsc, sinEsc;
-    PDC_ATTR pdcattr;
-    PTEXTOBJ TextObj;
-    LOGFONTW lf;
-    POINTL org;
-    INT offset = 0, xoff = 0, yoff = 0;
+    POINT offset = {0, 0};
 
     if (!count) return TRUE;
 
-    pdcattr = dc->pdcattr;
-
-    TextObj = RealizeFontInit( pdcattr->hlfntNew);
-    if ( !TextObj ) return FALSE;
-
-    FontGetObject( TextObj, sizeof(lf), &lf);
-    TEXTOBJ_UnlockText(TextObj);
-
-    if (lf.lfEscapement != 0)
-    {
-        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
-        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
-    } else
-    {
-        cosEsc = 1;
-        sinEsc = 0;
-    }
-
-    org = dc->ptlDCOrig;
-
     for (idx = 0; idx < count; idx++)
     {
+        MAT2 identity = { {0,1},{0,0},{0,0},{0,1} };
         GLYPHMETRICS gm;
         DWORD dwSize;
         void *outline;
@@ -2067,36 +2109,44 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                                        &gm,
                                        0,
                                        NULL,
-                                       NULL,
+                                       &identity,
                                        TRUE);
-        if (!dwSize) return FALSE;
+        if (dwSize == GDI_ERROR) return FALSE;
 
-        outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
-        if (!outline) return FALSE;
+        /* Add outline only if char is printable */
+        if (dwSize)
+        {
+           outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
+           if (!outline) return FALSE;
 
-        ftGdiGetGlyphOutline( dc,
-                              str[idx],
-                              GGO_GLYPH_INDEX | GGO_NATIVE,
-                              &gm,
-                              dwSize,
-                              outline,
-                              NULL,
-                              TRUE);
+           ftGdiGetGlyphOutline( dc,
+                                 str[idx],
+                                 GGO_GLYPH_INDEX | GGO_NATIVE,
+                                 &gm,
+                                 dwSize,
+                                 outline,
+                                 &identity,
+                                 TRUE);
 
-        PATH_add_outline(dc, org.x + x + xoff, org.x + y + yoff, outline, dwSize);
+           PATH_add_outline(dc, x + offset.x, y + offset.y, outline, dwSize);
 
-        ExFreePoolWithTag(outline, TAG_PATH);
+           ExFreePoolWithTag(outline, TAG_PATH);
+        }
 
         if (dx)
         {
-            offset += dx[idx];
-            xoff = offset * cosEsc;
-            yoff = offset * -sinEsc;
+           if (flags & ETO_PDY)
+           {
+              offset.x += dx[idx * 2];
+              offset.y += dx[idx * 2 + 1];
+           }
+           else
+              offset.x += dx[idx];
         }
         else
         {
-            xoff += gm.gmCellIncX;
-            yoff += gm.gmCellIncY;
+           offset.x += gm.gmCellIncX;
+           offset.y += gm.gmCellIncY;
         }
     }
     return TRUE;
@@ -2204,7 +2254,7 @@ BOOL
 APIENTRY
 NtGdiCloseFigure(HDC hDC)
 {
-  BOOL Ret = FALSE; // default to failure
+  BOOL Ret = FALSE; // Default to failure
   PDC pDc;
   PPATH pPath;
 
@@ -2230,7 +2280,7 @@ NtGdiCloseFigure(HDC hDC)
   }
   else
   {
-     // FIXME: check if lasterror is set correctly
+     // FIXME: Check if lasterror is set correctly
      EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
 
@@ -2452,7 +2502,11 @@ NtGdiGetPath(
          memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
 
          /* Convert the points to logical coordinates */
-         IntDPtoLP(dc, Points, pPath->numEntriesUsed);
+         if (!GdiPathDPtoLP(dc, Points, pPath->numEntriesUsed))
+         {
+            EngSetLastError(ERROR_ARITHMETIC_OVERFLOW);
+            _SEH2_LEAVE;
+         }
 
          ret = pPath->numEntriesUsed;
       }
@@ -2498,7 +2552,7 @@ NtGdiPathToRegion(HDC  hDC)
 
   if (pPath->state!=PATH_Closed)
   {
-     //FIXME: check that setlasterror is being called correctly
+     // FIXME: Check that setlasterror is being called correctly
      EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
   else

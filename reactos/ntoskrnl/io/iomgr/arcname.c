@@ -44,7 +44,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     CHAR Buffer[128];
     ANSI_STRING ArcSystemString, ArcString;
     BOOLEAN SingleDisk;
-    ULONG Length;
+    SIZE_T Length;
     NTSTATUS Status;
     BOOLEAN FoundBoot = FALSE;
 

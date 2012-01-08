@@ -5,7 +5,7 @@
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Proofread 1999 by Jose Marcos Lopez <jose.lopez@upcnet.upc.es>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Copyright 2003,2004 JosÈ Manuel Ferrer Ortiz
+ *  Copyright 2003,2004 Jos√© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,13 +51,13 @@ BEGIN
         MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
         MENUITEM "Guardar &como...",            CMD_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "Configurar &p√°gina...",       CMD_PAGE_SETUP
         MENUITEM "&Imprimir\tCtrl+P",           CMD_PRINT
-        MENUITEM "Configurar &p·gina...",       CMD_PAGE_SETUP
-        MENUITEM "ConfiguraciÛn &impresora...", CMD_PRINTER_SETUP
+        MENUITEM "Configuraci√≥n &impresora...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Salir",                      CMD_EXIT
     END
-    POPUP "&EdiciÛn"
+    POPUP "&Edici√≥n"
     BEGIN
         MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
         MENUITEM SEPARATOR
@@ -76,7 +76,7 @@ BEGIN
     END
     POPUP "F&ormato"
     BEGIN
-        MENUITEM "&Ajuste de lÌnea",  CMD_WRAP
+        MENUITEM "&Ajuste de l√≠nea",  CMD_WRAP
         MENUITEM "Tipo de &letra...", CMD_FONT
     END
     POPUP "&Ver"
@@ -85,12 +85,12 @@ BEGIN
         END
     POPUP "A&yuda"
     BEGIN
-        MENUITEM "Õ&ndice",               CMD_HELP_CONTENTS
+        MENUITEM "√ç&ndice",               CMD_HELP_CONTENTS
         MENUITEM "&Buscar...",            CMD_HELP_SEARCH
         MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Acerca de",            CMD_ABOUT
-        MENUITEM "&InformaciÛn...",       CMD_ABOUT_WINE
+        MENUITEM "&Informaci√≥n...",       CMD_ABOUT_WINE
     END
 END
 
@@ -99,14 +99,14 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Ajuste de p·gina"
+CAPTION "Ajuste de p√°gina"
 BEGIN
 LTEXT    "&Encabezado:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       62, 05,108, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Pie de p·gina:",  0x142,   10, 24, 60, 15
+LTEXT    "&Pie de p√°gina:",  0x142,   10, 24, 60, 15
 EDITTEXT                         0x143,       62, 22,108, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "&M·rgenes:",      0x144,     10, 43,160, 45
+GROUPBOX "&M√°rgenes:",      0x144,     10, 43,160, 45
 LTEXT    "&Izquierda:",        0x145,   19, 55, 32, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       53, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "A&rriba:",         0x148,    19, 73, 30, 10, WS_CHILD
@@ -123,25 +123,24 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "CodificaciÛn"
+CAPTION "Codificaci√≥n"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "CodificaciÛn:",0x155,5,2,41,12
+LTEXT           "Codificaci√≥n:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Fin de lÌnea:",0x156,5,20,41,12
+LTEXT           "Fin de l√≠nea:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,180,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Ir a la lÌnea"
+CAPTION "Ir a la l√≠nea"
 BEGIN
 EDITTEXT        ID_LINENUMBER,89,10,86,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "N˙mero de lÌnea:",0x155,5,12,56,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "N√∫mero de l√≠nea:",0x155,5,12,56,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "Aceptar", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -169,7 +168,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"         /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "P·gina &s"  /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "P√°gina &s"  /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,     "20 mm"      /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"      /* FIXME */
 STRING_PAGESETUP_TOPVALUE,      "25 mm"      /* FIXME */
@@ -178,26 +177,26 @@ STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"      /* FIXME */
 STRING_NOTEPAD,                 "Bloc de notas"
 STRING_ERROR,                   "ERROR"
 STRING_WARNING,                 "ADVERTENCIA"
-STRING_INFO,                    "InformaciÛn"
+STRING_INFO,                    "Informaci√≥n"
 
-STRING_UNTITLED,                "(sin tÌtulo)"
+STRING_UNTITLED,                "(sin t√≠tulo)"
 
 STRING_ALL_FILES,               "Todos los archivos (*.*)"
 STRING_TEXT_FILES_TXT,          "Documentos de texto (*.txt)"
 
 STRING_TOOLARGE,                "El archivo '%s' es demasiado grande para el \
                                  bloc de notas.\n Use otro editor."
-STRING_NOTEXT,                  "No escribiÛ nada. \nPor favor escriba algo e \
-                                 intÈntelo de nuevo"
-STRING_DOESNOTEXIST,            "El archivo '%s'\nno existe\n\n øDesea crear \
+STRING_NOTEXT,                  "No escribi√≥ nada. \nPor favor escriba algo e \
+                                 int√©ntelo de nuevo"
+STRING_DOESNOTEXIST,            "El archivo '%s'\nno existe\n\n ¬øDesea crear \
                                  un nuevo archivo?"
 STRING_NOTSAVED,                "El texto en el archivo '%s' ha cambiado\n\n \
-                                 øDesea guardar los cambios?"
-STRING_NOTFOUND,                "No se encontrÛ '%s'."
+                                 ¬øDesea guardar los cambios?"
+STRING_NOTFOUND,                "No se encontr√≥ '%s'."
 STRING_OUT_OF_MEMORY,           "No hay suficiente memoria para terminar esta \
-                                 tarea. \nCierre una o m·s aplicaciones para \
+                                 tarea. \nCierre una o m√°s aplicaciones para \
                                  aumentar la cantidad \nde memoria libre."
-STRING_CANNOTFIND               "No se encontrÛ '%s'"
+STRING_CANNOTFIND               "No se encontr√≥ '%s'"
 STRING_ANSI,                    "ANSI"
 STRING_UNICODE,                 "Unicode"
 STRING_UNICODE_BE,              "Unicode (big endian)"
@@ -205,6 +204,6 @@ STRING_UTF8,                    "UTF-8"
 STRING_CRLF,                    "Windows"
 STRING_LF,                      "Unix"
 STRING_CR,                      "Mac"
-STRING_LINE_COLUMN,             "LÌnea %d, columna %d"
+STRING_LINE_COLUMN,             "L√≠nea %d, columna %d"
 
 END

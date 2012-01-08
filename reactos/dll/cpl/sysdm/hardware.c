@@ -15,7 +15,7 @@ typedef BOOL (WINAPI *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unkno
 static BOOL
 LaunchDeviceManager(HWND hWndParent)
 {
-/* hack for ROS to start our devmgmt until we have mmc */
+/* Hack for ROS to start our devmgmt until we have MMC */
 #ifdef __REACTOS__
     return ((INT_PTR)ShellExecuteW(NULL, L"open", L"devmgmt.exe", NULL, NULL, SW_SHOWNORMAL) > 32);
 #else
@@ -34,7 +34,7 @@ LaunchDeviceManager(HWND hWndParent)
         return FALSE;
     }
 
-    /* run the Device Manager */
+    /* Run the Device Manager */
     Ret = DevMgrExec(hWndParent, hApplet, NULL /* ??? */, SW_SHOW);
     FreeLibrary(hDll);
     return Ret;

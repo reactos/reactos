@@ -78,7 +78,7 @@ acpi_system_add (
 	if (!device)
 		return_VALUE(-1);
 
-	system = ExAllocatePool(NonPagedPool,sizeof(struct acpi_system));
+	system = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_system),'IPCA');
 	if (!system)
 		return_VALUE(-14);
 	memset(system, 0, sizeof(struct acpi_system));
@@ -118,7 +118,7 @@ acpi_system_add (
 //#endif
 
 	if (result)
-		ExFreePool(system);
+		ExFreePoolWithTag(system, 'IPCA');
 
 	return_VALUE(result);
 }
@@ -146,7 +146,7 @@ acpi_system_remove (
 //#endif
 //
 //
-	ExFreePool(system);
+	ExFreePoolWithTag(system, 'IPCA');
 
 	return 0;
 }

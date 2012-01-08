@@ -75,7 +75,7 @@ CmpIsHiveAlreadyLoaded(IN HANDLE KeyHandle,
      ObDereferenceObject(KeyBody);
      return Loaded;
  }
- 
+
 BOOLEAN
 NTAPI
 CmpDoFlushAll(IN BOOLEAN ForceFlush)
@@ -1099,7 +1099,7 @@ DoAgain:
                                           ResultLength,
                                           &Status);
             if (Result == SearchNeedExclusiveLock)
-            {            
+            {
                 /* Release the value cell */
                 if (CellToRelease != HCELL_NIL)
                 {
@@ -1181,7 +1181,7 @@ DoAgain:
         Kcb->ValueCache.Count = Parent->ValueList.Count;
     }
 
-    /* Make sure the index is valid */    
+    /* Make sure the index is valid */
     if (Index >= Kcb->ValueCache.Count)
     {
         /* Release the cell and fail */
@@ -1552,7 +1552,7 @@ CmDeleteKey(IN PCM_KEY_BODY KeyBody)
             if (Parent)
             {
                 /* Update the maximum name length */
-                Kcb->ParentKcb->KcbMaxNameLen = Parent->MaxNameLen;
+                Kcb->ParentKcb->KcbMaxNameLen = (USHORT)Parent->MaxNameLen;
                 
                 /* Make sure we're dirty */
                 ASSERT(HvIsCellDirty(Hive, ParentCell));
@@ -1787,6 +1787,7 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     }
     else
     {
+        DPRINT1("CmpLinkHiveToMaster failed, Status %lx\n", Status);
         /* FIXME: TODO */
         ASSERT(FALSE);
     }
@@ -1824,9 +1825,8 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
     PCM_KEY_HASH Entry;
     PCM_KEY_CONTROL_BLOCK CachedKcb;
     PCM_KEY_CONTROL_BLOCK ParentKcb;
-    USHORT ParentKeyCount;
-    USHORT j;
-    ULONG i;
+    ULONG ParentKeyCount;
+    ULONG i, j;
     ULONG SubKeys = 0;
 
     DPRINT("CmCountOpenSubKeys() called\n");

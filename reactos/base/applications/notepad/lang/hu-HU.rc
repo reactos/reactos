@@ -43,53 +43,53 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&F·jl"
+    POPUP "&F√°jl"
     BEGIN
-        MENUITEM "⁄&j\tCtrl+N",            CMD_NEW
-        MENUITEM "Meg&nyit·s\tCtrl+O",     CMD_OPEN
-        MENUITEM "&MentÈs\tCtrl+S",        CMD_SAVE
-        MENUITEM "MentÈs m·&skÈnt...",     CMD_SAVE_AS
+        MENUITEM "√ö&j\tCtrl+N",            CMD_NEW
+        MENUITEM "Meg&nyit√°s\tCtrl+O",     CMD_OPEN
+        MENUITEM "&Ment√©s\tCtrl+S",        CMD_SAVE
+        MENUITEM "Ment√©s m√°&sk√©nt...",     CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Oldalbe·llÌt·s...",     CMD_PAGE_SETUP
-        MENUITEM "Nyom&tat·s\tCtrl+P",     CMD_PRINT
-        MENUITEM "NyomtatÛ &be·llÌt·s...", CMD_PRINTER_SETUP
+        MENUITEM "&Oldalbe√°ll√≠t√°s...",     CMD_PAGE_SETUP
+        MENUITEM "Nyom&tat√°s\tCtrl+P",     CMD_PRINT
+        MENUITEM "Nyomtat√≥ &be√°ll√≠t√°s...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "&KilÈpÈs",               CMD_EXIT
+        MENUITEM "&Kil√©p√©s",               CMD_EXIT
     END
-    POPUP "S&zerkesztÈs"
+    POPUP "S&zerkeszt√©s"
     BEGIN
-        MENUITEM "&Visszavon·s\tCtrl+Z",    CMD_UNDO
+        MENUITEM "&Visszavon√°s\tCtrl+Z",    CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "Kiv·&g·s\tCtrl+X",        CMD_CUT
-        MENUITEM "&M·sol·s\tCtrl+C",        CMD_COPY
-        MENUITEM "&BeillesztÈs\tCtrl+V",    CMD_PASTE
-        MENUITEM "Tˆr&lÈs\tDel",            CMD_DELETE
+        MENUITEM "Kiv√°&g√°s\tCtrl+X",        CMD_CUT
+        MENUITEM "&M√°sol√°s\tCtrl+C",        CMD_COPY
+        MENUITEM "&Beilleszt√©s\tCtrl+V",    CMD_PASTE
+        MENUITEM "T√∂r&l√©s\tDel",            CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&KeresÈs...",             CMD_SEARCH
-        MENUITEM "Kˆve&tkezı keresÈse\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Keres√©s...",             CMD_SEARCH
+        MENUITEM "K√∂ve&tkez√µ keres√©se\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace\tCtrl+H",         CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G",        CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "&Az ˆsszes kijelˆlÈse",   CMD_SELECT_ALL
-        MENUITEM "&Idı/d·tum\tF5",          CMD_TIME_DATE
+        MENUITEM "&Az √∂sszes kijel√∂l√©se",   CMD_SELECT_ALL
+        MENUITEM "&Id√µ/d√°tum\tF5",          CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Hossz˙ sorok tˆrdelÈse", CMD_WRAP
+        MENUITEM "&Hossz√∫ sorok t√∂rdel√©se", CMD_WRAP
         MENUITEM "&Font...",                CMD_FONT
     END
     POPUP "&View"
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "&S˙gÛ"
+    POPUP "&S√∫g√≥"
     BEGIN
-        MENUITEM "&TÈmakˆrˆk",     CMD_HELP_CONTENTS
-        MENUITEM "&KeresÈs...",    CMD_HELP_SEARCH
-        MENUITEM "&Haszn·lat",     CMD_HELP_ON_HELP
+        MENUITEM "&T√©mak√∂r√∂k",     CMD_HELP_CONTENTS
+        MENUITEM "&Keres√©s...",    CMD_HELP_SEARCH
+        MENUITEM "&Haszn√°lat",     CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About",         CMD_ABOUT
-        MENUITEM "Inf&orm·ciÛ...", CMD_ABOUT_WINE
+        MENUITEM "Inf&orm√°ci√≥...", CMD_ABOUT_WINE
     END
 END
 
@@ -98,32 +98,31 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Oldalbe·llÌt·s"
+CAPTION "Oldalbe√°ll√≠t√°s"
 BEGIN
-LTEXT    "&FejlÈc:",  0x140,   10, 07, 40, 15
+LTEXT    "&Fejl√©c:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&L·blÈc:",  0x142,   10, 24, 40, 15
+LTEXT    "&L√°bl√©c:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "&MargÛk:",      0x144,     10, 43,160, 45
+GROUPBOX "&Marg√≥k:",      0x144,     10, 43,160, 45
 LTEXT    "&Bal:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Felsı:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "&Fels√µ:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "&Jobb:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&AlsÛ:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "&Als√≥:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "MÈgse",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&S˙gÛ",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "M√©gse",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&S√∫g√≥",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN
@@ -168,33 +167,33 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Oldalsz·m: &s."   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Oldalsz√°m: &s."   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Jegyzettˆmb"
+STRING_NOTEPAD,                                 "Jegyzett√∂mb"
 STRING_ERROR,                                   "HIBA"
-STRING_WARNING,                                 "FIGYELMEZTET…S"
-STRING_INFO,                                    "Inform·ciÛ"
+STRING_WARNING,                                 "FIGYELMEZTET√âS"
+STRING_INFO,                                    "Inform√°ci√≥"
 
-STRING_UNTITLED,                                "(nÈvtelen)"
+STRING_UNTITLED,                                "(n√©vtelen)"
 
-STRING_ALL_FILES,                               "Minden f·jl (*.*)"
-STRING_TEXT_FILES_TXT,                  "Szˆvegf·jlok (*.txt)"
+STRING_ALL_FILES,                               "Minden f√°jl (*.*)"
+STRING_TEXT_FILES_TXT,                  "Sz√∂vegf√°jlok (*.txt)"
 
-STRING_TOOLARGE,                                "'%s' f·jl t˙l nagy mÈret˚.\n \
-KÈrem haszn·ljon m·sik szˆvegszerkesztı programot."
-STRING_NOTEXT,                                  "A szˆveg nem tartalmaz karaktert! \
-\nKÈrem gÈpeljen be nÈh·ny karaktert Ès prÛb·lja ˙jra!"
-STRING_DOESNOTEXIST,                            "A megadott '%s'\nf·jl nem lÈtezik!\n\n \
-KÌv·n lÈtrehozni ˙j f·jlt?"
-STRING_NOTSAVED,                                "'%s' f·jl\nmÛdosult\n\n \
-SzeretnÈ menteni a v·ltoz·sokat?"
-STRING_NOTFOUND,                                        "'%s' nem tal·lhatÛ!"
-STRING_OUT_OF_MEMORY,                   "Nincs elegendı szabad memÛria!\
-\nZ·rjon be nÈh·ny alkalmaz·st, ezzel nˆvelve a szabad memÛria mÈretÈt\
+STRING_TOOLARGE,                                "'%s' f√°jl t√∫l nagy m√©ret√ª.\n \
+K√©rem haszn√°ljon m√°sik sz√∂vegszerkeszt√µ programot."
+STRING_NOTEXT,                                  "A sz√∂veg nem tartalmaz karaktert! \
+\nK√©rem g√©peljen be n√©h√°ny karaktert √©s pr√≥b√°lja √∫jra!"
+STRING_DOESNOTEXIST,                            "A megadott '%s'\nf√°jl nem l√©tezik!\n\n \
+K√≠v√°n l√©trehozni √∫j f√°jlt?"
+STRING_NOTSAVED,                                "'%s' f√°jl\nm√≥dosult\n\n \
+Szeretn√© menteni a v√°ltoz√°sokat?"
+STRING_NOTFOUND,                                        "'%s' nem tal√°lhat√≥!"
+STRING_OUT_OF_MEMORY,                   "Nincs elegend√µ szabad mem√≥ria!\
+\nZ√°rjon be n√©h√°ny alkalmaz√°st, ezzel n√∂velve a szabad mem√≥ria m√©ret√©t\
 !"
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"

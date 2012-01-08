@@ -7,6 +7,9 @@
 	<directory name="bootok">
 		<xi:include href="bootok/bootok.rbuild" />
 	</directory>
+	<directory name="diskpart">
+		<xi:include href="diskpart/diskpart.rbuild" />
+	</directory>
 	<directory name="expand">
 		<xi:include href="expand/expand.rbuild" />
 	</directory>

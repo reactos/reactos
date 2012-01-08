@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -344,7 +344,7 @@ AcpiExResolveNodeToValue (
             /* No named references are allowed here */
 
             ACPI_ERROR ((AE_INFO,
-                "Unsupported Reference type %X",
+                "Unsupported Reference type 0x%X",
                 SourceDesc->Reference.Class));
 
             return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
@@ -357,7 +357,7 @@ AcpiExResolveNodeToValue (
         /* Default case is for unknown types */
 
         ACPI_ERROR ((AE_INFO,
-            "Node %p - Unknown object type %X",
+            "Node %p - Unknown object type 0x%X",
             Node, EntryType));
 
         return_ACPI_STATUS (AE_AML_OPERAND_TYPE);

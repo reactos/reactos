@@ -32,7 +32,7 @@ _wtol(const wchar_t *str)
         str++;
     } /* while */
 
-    return bMinus ? -RunningTotal : RunningTotal;
+    return bMinus ? 0-RunningTotal : RunningTotal;
 }
 
 

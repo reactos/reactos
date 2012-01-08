@@ -1,14 +1,6 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-10)
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-//  Меню
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -243,10 +235,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Хронология загрузки ЦП",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Хронология использования файла подкачки",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Отображение загрузки ЦП",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Отображение использования памяти",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Отображение загрузки ЦП",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Отображение использования памяти",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Хронология загрузки ЦП",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Хронология использования памяти",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -651,22 +641,3 @@ BEGIN
     IDS_Not_Responding            "Не отвечает"
     IDS_Running                   "Работает"
 END
-
-
-#endif    // Russian (RU) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
-
-

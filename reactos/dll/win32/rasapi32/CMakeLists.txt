@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rasapi32.def)
 
 add_library(rasapi32 SHARED ${SOURCE})
-set_entrypoint(rasapi32 0)
+set_module_type(rasapi32 win32dll ENTRYPOINT 0 )
 
 target_link_libraries(rasapi32 wine)
 

@@ -184,7 +184,8 @@ _KiRaiseUserExceptionDispatcher@0:
 
 
 PUBLIC _KiUserExceptionDispatcher@8
-_KiUserExceptionDispatcher@8:
+.PROC _KiUserExceptionDispatcher@8
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Clear direction flag */
     cld
@@ -240,9 +241,11 @@ Exit:
     call _RtlRaiseException@4
     ret 8
 
+.ENDP
 
 PUBLIC _KiIntSystemCall@0
-_KiIntSystemCall@0:
+.PROC _KiIntSystemCall@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Set stack in EDX and do the interrupt */
     lea edx, [esp+8]
@@ -251,21 +254,26 @@ _KiIntSystemCall@0:
     /* Return to caller */
     ret
 
+.ENDP
 
 PUBLIC _KiFastSystemCall@0
-_KiFastSystemCall@0:
+.PROC _KiFastSystemCall@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Put ESP in EDX and do the SYSENTER */
     mov edx, esp
     sysenter
 
+.ENDP
 
 PUBLIC _KiFastSystemCallRet@0
-_KiFastSystemCallRet@0:
+.PROC _KiFastSystemCallRet@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Just return to caller */
     ret
 
+.ENDP
 
 PUBLIC _RtlpGetStackLimits@8
 _RtlpGetStackLimits@8:

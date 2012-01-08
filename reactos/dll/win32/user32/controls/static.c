@@ -55,15 +55,13 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintBitmapfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEnhMetafn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style );
-//static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-//static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 
 /* offsets for GetWindowLong for static private information */
 #define HFONT_GWL_OFFSET    0
 #define HICON_GWL_OFFSET    (sizeof(HFONT))
-#define UISTATE_GWL_OFFSET (HICON_GWL_OFFSET+sizeof(HICON))
+#define UISTATE_GWL_OFFSET (HICON_GWL_OFFSET+sizeof(HICON)) // ReactOS: keep in sync with STATIC_UISTATE_GWL_OFFSET
 #define STATIC_EXTRA_BYTES  (UISTATE_GWL_OFFSET + sizeof(LONG))
 
 typedef void (*pfPaint)( HWND hwnd, HDC hdc, DWORD style );
@@ -107,93 +105,25 @@ const struct builtin_class_descr STATIC_builtin_class =
     0                    /* brush */
 };
 
-/* REACTOS ONLY */
-static __inline void set_ui_state( HWND hwnd, LONG flags )
-{
-    SetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET, flags );
-}
-
-static __inline LONG get_ui_state( HWND hwnd )
-{
-    return GetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET );
-}
-
-/* Retrieve the UI state for the control */
-static BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
-{
-    LONG flags, prevflags;
-
-    if (unicode)
-        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
-    else
-        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
-
-    prevflags = get_ui_state(hwnd);
-
-    if (prevflags != flags)
-    {
-        set_ui_state(hwnd, flags);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-/* END REACTOS ONLY */
-
-static void setup_clipping(HWND hwnd, HDC hdc, HRGN *orig)
-{
-    RECT rc;
-    HRGN hrgn;
-
-    /* Native control has always a clipping region set (this may be because
-     * builtin controls uses CS_PARENTDC) and an application depends on it
-     */
-    hrgn = CreateRectRgn(0, 0, 1, 1);
-    if (GetClipRgn(hdc, hrgn) != 1)
-    {
-        DeleteObject(hrgn);
-        *orig = NULL;
-    } else
-        *orig = hrgn;
-
-    GetClientRect(hwnd, &rc);
-    DPtoLP(hdc, (POINT *)&rc, 2);
-    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
-}
-
-static void restore_clipping(HDC hdc, HRGN hrgn)
-{
-    SelectClipRgn(hdc, hrgn);
-    if (hrgn != NULL)
-        DeleteObject(hrgn);
-}
-
 /***********************************************************************
  *           STATIC_SetIcon
  *
- * Set the icon for an SS_ICON control. Modified for ReactOS
+ * Set the icon for an SS_ICON control.
  */
 static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
 {
     HICON prevIcon;
-    ICONINFO info;
+    SIZE size;
 
     if ((style & SS_TYPEMASK) != SS_ICON) return 0;
-    if (hicon && (!GetIconInfo(hicon, &info))) {
-        WARN("hicon != 0, but info == 0\n");
+    if (hicon && !get_icon_size( hicon, &size ))
+    {
+        WARN("hicon != 0, but invalid\n");
         return 0;
     }
     prevIcon = (HICON)SetWindowLongPtrW( hwnd, HICON_GWL_OFFSET, (LONG_PTR)hicon );
     if (hicon && !(style & SS_CENTERIMAGE) && !(style & SS_REALSIZECONTROL))
     {
-        BITMAP bm;
-
-        if (!GetObjectW(info.hbmColor, sizeof(BITMAP), &bm))
-        {
-            return 0;
-        }
-
         /* Windows currently doesn't implement SS_RIGHTJUST */
         /*
         if ((style & SS_RIGHTJUST) != 0)
@@ -205,8 +135,7 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
         }
         else */
         {
-             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
-                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+            SetWindowPos( hwnd, 0, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
     }
     return prevIcon;
@@ -215,7 +144,7 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
 /***********************************************************************
  *           STATIC_SetBitmap
  *
- * Set the bitmap for an SS_BITMAP control. Modified for ReactOS
+ * Set the bitmap for an SS_BITMAP control.
  */
 static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
 {
@@ -328,13 +257,13 @@ static HICON STATIC_LoadIconW( HINSTANCE hInstance, LPCWSTR name, DWORD style )
 
     if (hInstance && ((ULONG_PTR)hInstance >> 16))
     {
-       if ((style & SS_REALSIZEIMAGE) != 0)
-           hicon = LoadImageW(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
-       else
-       {
-           hicon = LoadIconW( hInstance, name );
-           if (!hicon) hicon = LoadCursorW( hInstance, name );
-       }
+        if ((style & SS_REALSIZEIMAGE) != 0)
+            hicon = LoadImageW(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
+        else
+        {
+            hicon = LoadIconW( hInstance, name );
+            if (!hicon) hicon = LoadCursorW( hInstance, name );
+        }
     }
     if (!hicon) hicon = LoadIconW( 0, name );
     /* Windows doesn't try to load a standard cursor,
@@ -342,7 +271,6 @@ static HICON STATIC_LoadIconW( HINSTANCE hInstance, LPCWSTR name, DWORD style )
        with the IDs for standard icons anyway */
     return hicon;
 }
-
 
 /***********************************************************************
  *           STATIC_TryPaintFcn
@@ -358,32 +286,20 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
     if (!IsRectEmpty(&rc) && IsWindowVisible(hwnd) && staticPaintFunc[style])
     {
 	HDC hdc;
-        HRGN hOrigClipping;
-         
+        HRGN hrgn;
+
 	hdc = GetDC( hwnd );
-        setup_clipping(hwnd, hdc, &hOrigClipping);
+        hrgn = set_control_clipping( hdc, &rc );
 	(staticPaintFunc[style])( hwnd, hdc, full_style );
-	restore_clipping(hdc, hOrigClipping);
+        SelectClipRgn( hdc, hrgn );
+        if (hrgn) DeleteObject( hrgn );
 	ReleaseDC( hwnd, hdc );
     }
 }
 
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
-    HBRUSH hBrush;
-    HWND parent = GetParent(hwnd);
-
-    if (!parent) parent = hwnd;
-    hBrush = (HBRUSH) SendMessageW( parent,
-                    WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
-    if (!hBrush) /* did the app forget to call DefWindowProc ? */
-    {
-        /* FIXME: DefWindowProc should return different colors if a
-                  manifest is present */
-        hBrush = (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC,
-                                        (WPARAM)hdc, (LPARAM)hwnd);
-    }
-    return hBrush;
+    return GetControlBrush( hwnd, hdc, WM_CTLCOLORSTATIC);
 }
 
 static VOID STATIC_InitColours(void)
@@ -417,11 +333,10 @@ static BOOL hasTextStyle( DWORD style )
 /***********************************************************************
  *           StaticWndProc_common
  */
-LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
-                                     LPARAM lParam, BOOL unicode )
+LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
 {
     LRESULT lResult = 0;
-    LONG full_style = GetWindowLongPtrW( hwnd, GWL_STYLE );
+    LONG full_style = GetWindowLongW( hwnd, GWL_STYLE );
     LONG style = full_style & SS_TYPEMASK;
 #ifdef __REACTOS__
     PWND pWnd;
@@ -433,8 +348,18 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
        {
           NtUserSetWindowFNID(hwnd, FNID_STATIC);
        }
-    }    
-#endif    
+       else
+       {
+          if (pWnd->fnid != FNID_STATIC)
+          {
+             ERR("Wrong window class for Static! fnId 0x%x\n",pWnd->fnid);
+             return 0;
+          }
+       }
+    }
+#endif
+
+    if (!IsWindow( hwnd )) return 0;
 
     switch (uMsg)
     {
@@ -444,7 +369,7 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
             ERR("Unknown style 0x%02lx\n", style );
             return -1;
         }
-        STATIC_update_uistate(hwnd, unicode);
+        STATIC_update_uistate(hwnd, unicode); // ReactOS r30727
         STATIC_InitColours();
         break;
 
@@ -467,20 +392,22 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
                               DefWindowProcA(hwnd, uMsg, wParam, lParam);
 
     case WM_ERASEBKGND:
-         /* do all painting in WM_PAINT like Windows does */
-         return 1;
+        /* do all painting in WM_PAINT like Windows does */
+        return 1;
 
     case WM_PRINTCLIENT:
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
+            RECT rect;
             HDC hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
+            GetClientRect( hwnd, &rect );
             if (staticPaintFunc[style])
             {
-                HRGN hOrigClipping;
-                setup_clipping(hwnd, hdc, &hOrigClipping);
+                HRGN hrgn = set_control_clipping( hdc, &rect );
                 (staticPaintFunc[style])( hwnd, hdc, full_style );
-                restore_clipping(hdc, hOrigClipping);
+                SelectClipRgn( hdc, hrgn );
+                if (hrgn) DeleteObject( hrgn );
             }
             if (!wParam) EndPaint(hwnd, &ps);
         }
@@ -507,47 +434,31 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 
     case WM_NCCREATE:
         {
-            LPCSTR textA;
-            LPCWSTR textW;
-            HINSTANCE hInstance;
+            CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
 
             if (full_style & SS_SUNKEN)
-                SetWindowLongPtrW( hwnd, GWL_EXSTYLE,
-                                   GetWindowLongPtrW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
-
-            if(unicode)
-            {
-                textA = NULL;
-                textW = ((LPCREATESTRUCTW)lParam)->lpszName;
-            }
-            else
-            {
-                textA = ((LPCREATESTRUCTA)lParam)->lpszName;
-                textW = NULL;
-                
-            }
-
-            hInstance = (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE );
+                SetWindowLongW( hwnd, GWL_EXSTYLE,
+                                GetWindowLongW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
 
             switch (style) {
             case SS_ICON:
                 {
                     HICON hIcon;
-                    if(unicode )
-                       hIcon = STATIC_LoadIconW(hInstance, textW, full_style);
+                    if (unicode || IS_INTRESOURCE(cs->lpszName))
+                       hIcon = STATIC_LoadIconW(cs->hInstance, cs->lpszName, full_style);
                     else
-                       hIcon = STATIC_LoadIconA(hInstance, textA, full_style);
+                       hIcon = STATIC_LoadIconA(cs->hInstance, (LPCSTR)cs->lpszName, full_style);
                     STATIC_SetIcon(hwnd, hIcon, full_style);
                 }
                 break;
             case SS_BITMAP:
-                if ((ULONG_PTR)hInstance >> 16)
+                if ((ULONG_PTR)cs->hInstance >> 16)
                 {
                     HBITMAP hBitmap;
-                    if(unicode)
-                        hBitmap = LoadBitmapW(hInstance, textW);
+                    if (unicode || IS_INTRESOURCE(cs->lpszName))
+                        hBitmap = LoadBitmapW(cs->hInstance, cs->lpszName);
                     else
-                        hBitmap = LoadBitmapA(hInstance, textA);
+                        hBitmap = LoadBitmapA(cs->hInstance, (LPCSTR)cs->lpszName);
                     STATIC_SetBitmap(hwnd, hBitmap, full_style);
                 }
                 break;
@@ -564,10 +475,10 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 	    if (HIWORD(lParam))
 	    {
 	        if(unicode)
-		     lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
+                    lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
                 else
                     lResult = DefWindowProcA( hwnd, uMsg, wParam, lParam );
-	        STATIC_TryPaintFcn( hwnd, full_style );
+                STATIC_TryPaintFcn( hwnd, full_style );
 	    }
 	}
         break;
@@ -616,16 +527,16 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     case STM_SETIMAGE:
         switch(wParam) {
 	case IMAGE_BITMAP:
-	    if (style != SS_BITMAP) return 0;
+	    if (style != SS_BITMAP) return 0; // ReactOS r43158
 	    lResult = (LRESULT)STATIC_SetBitmap( hwnd, (HBITMAP)lParam, full_style );
 	    break;
 	case IMAGE_ENHMETAFILE:
-	    if (style != SS_ENHMETAFILE) return 0;
+	    if (style != SS_ENHMETAFILE) return 0; // ReactOS r43158
 	    lResult = (LRESULT)STATIC_SetEnhMetaFile( hwnd, (HENHMETAFILE)lParam, full_style );
 	    break;
 	case IMAGE_ICON:
 	case IMAGE_CURSOR:
-	    if (style != SS_ICON) return 0;
+	    if (style != SS_ICON) return 0; // ReactOS r43158
 	    lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)lParam, full_style );
 	    break;
 	default:
@@ -640,6 +551,7 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         STATIC_TryPaintFcn( hwnd, full_style );
         break;
 
+#ifdef __REACTOS__
     case WM_UPDATEUISTATE:
         if (unicode)
             DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -651,6 +563,7 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
             RedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
         }
         break;
+#endif
 
     default:
         return unicode ? DefWindowProcW(hwnd, uMsg, wParam, lParam) :
@@ -680,6 +593,7 @@ LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 {
   DRAWITEMSTRUCT dis;
+  HBRUSH hBrush;
   HFONT font, oldFont = NULL;
   UINT id = (UINT)GetWindowLongPtrW( hwnd, GWLP_ID );
 
@@ -695,7 +609,7 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 
   font = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
   if (font) oldFont = SelectObject( hdc, font );
-  SendMessageW( GetParent(hwnd), WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
+  hBrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
   SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
   if (font) SelectObject( hdc, oldFont );
 }
@@ -742,7 +656,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     if (style & SS_NOPREFIX)
         wFormat |= DT_NOPREFIX;
-    else if (get_ui_state(hwnd) & UISF_HIDEACCEL)
+    else if (GetWindowLongW(hwnd, UISTATE_GWL_OFFSET) & UISF_HIDEACCEL) // ReactOS r30727
         wFormat |= DT_HIDEPREFIX;
 
     if ((style & SS_TYPEMASK) != SS_SIMPLE)
@@ -778,9 +692,9 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     while ((len = InternalGetWindowText( hwnd, text, buf_size )) == buf_size - 1)
     {
-       buf_size *= 2;
-       if (!(text = HeapReAlloc( GetProcessHeap(), 0, text, buf_size * sizeof(WCHAR) )))
-           goto no_TextOut;
+        buf_size *= 2;
+        if (!(text = HeapReAlloc( GetProcessHeap(), 0, text, buf_size * sizeof(WCHAR) )))
+            goto no_TextOut;
     }
 
     if (!len) goto no_TextOut;
@@ -847,6 +761,7 @@ static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style )
     }
     DeleteObject( hBrush );
 }
+
 
 static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
 {
@@ -966,4 +881,3 @@ static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style )
 	    break;
     }
 }
-

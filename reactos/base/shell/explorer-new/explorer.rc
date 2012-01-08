@@ -21,6 +21,8 @@ IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP DISCARDABLE res/nolock_nogroup_noql.b
 IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   BITMAP DISCARDABLE res/nolock_nogroup_ql.bmp
 IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP DISCARDABLE res/nolock_group_ql.bmp
 
+// UTF-8
+#pragma code_page(65001)
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
@@ -33,11 +35,10 @@ IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP DISCARDABLE res/nolock_group_ql.bmp
 #include "lang/lt-LT.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
-#include "lang/ro-RO.rc"
-#include "lang/sk-SK.rc"
-
-// UTF-8
-#pragma code_page(65001)
 #include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
+#include "lang/pt-BR.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"

@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "internal/trap_x.h"
+#include "internal/i386/trap_x.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -51,7 +51,7 @@ KiInitMachineDependent(VOID)
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT1("Large Page support detected but not yet taken advantage of\n");
+        DPRINT("Large Page support detected but not yet taken advantage of\n");
     }
 
     /* Check for global page support */
@@ -314,7 +314,7 @@ KiInitMachineDependent(VOID)
         /* FIXME: TODO */
         DPRINT1("ISR Time Limit not yet supported\n");
     }
-    
+
     /* Set CR0 features based on detected CPU */
     KiSetCR0Bits();
 }
@@ -407,7 +407,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PoInitializePrcb(Prcb);
 
     /* Bugcheck if this is a 386 CPU */
-    if (Prcb->CpuType == 3) KeBugCheckEx(0x5D, 0x386, 0, 0, 0);
+    if (Prcb->CpuType == 3) KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
 
     /* Get the processor features for the CPU */
     FeatureBits = KiGetFeatureBits();
@@ -480,7 +480,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
 
             /* Bugcheck the system. Windows *requires* this */
-            KeBugCheckEx(0x5D,
+            KeBugCheckEx(UNSUPPORTED_PROCESSOR,
                          (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
                          Vendor[0],
                          Vendor[1],
@@ -650,7 +650,7 @@ INIT_FUNCTION
 KiSystemStartupBootStack(VOID)
 {
     PKTHREAD Thread;
-    
+
     /* Initialize the kernel for the current CPU */
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        (PKTHREAD)KeLoaderBlock->Thread,
@@ -658,15 +658,15 @@ KiSystemStartupBootStack(VOID)
                        (PKPRCB)__readfsdword(KPCR_PRCB),
                        KeNumberProcessors - 1,
                        KeLoaderBlock);
-   
+
     /* Set the priority of this thread to 0 */
     Thread = KeGetCurrentThread();
     Thread->Priority = 0;
-    
+
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     _enable();
     KfLowerIrql(DISPATCH_LEVEL);
-    
+
     /* Set the right wait IRQL */
     Thread->WaitIrql = DISPATCH_LEVEL;
 
@@ -687,7 +687,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
-    
+
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
 

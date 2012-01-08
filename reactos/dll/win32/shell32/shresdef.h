@@ -42,7 +42,6 @@
 #define IDS_SHV_COLUMN_DELDATE      19
 
 #define IDS_DESKTOP                 20
-#define IDS_MYCOMPUTER              21
 
 #define IDS_SELECT                  22
 #define IDS_OPEN                    23
@@ -57,7 +56,6 @@
 #define IDS_SHUTDOWN_PROMPT         43
 
 #define IDS_PROGRAMS                45
-#define IDS_PERSONAL                46
 #define IDS_FAVORITES               47
 #define IDS_STARTUP                 48
 #define IDS_RECENT                  49
@@ -86,9 +84,6 @@
 #define IDS_DRIVE_FIXED             72
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
-#define IDS_NETWORKPLACE            75
-#define IDS_FONTS                   76
-#define IDS_PRINTERS                77
 
 #define IDS_LOGOFF_TITLE            78
 #define IDS_LOGOFF_PROMPT           79
@@ -115,7 +110,6 @@
 #define FCIDM_SHVIEW_VIEW           147
 #define IDS_CONTROLPANEL            148
 #define IDS_NEWFOLDER               149
-#define IDS_FOLDER_OPTIONS          150
 #define IDS_COLUMN_EXTENSION        151
 #define IDS_NO_EXTENSION            152
 #define IDS_RECYCLEBIN_LOCATION     153
@@ -142,6 +136,9 @@
 #define IDS_FILE_TYPES              174
 #define IDS_FILE_DETAILS            175
 #define IDS_FILE_DETAILSADV         176
+#define IDS_BYTES_FORMAT            177
+#define IDS_OPEN_WITH_RECOMMENDED   178
+#define IDS_OPEN_WITH_OTHER         179
 
 #define IDS_RUNDLG_ERROR            180
 #define IDS_RUNDLG_BROWSE_ERROR     181
@@ -155,34 +152,40 @@
 #define IDS_FIND_VERB               304
 #define IDS_PRINT_VERB              305
 
-#define IDS_FILE_FOLDER             307
-#define IDS_CREATELINK              308
-#define IDS_INSTALLNEWFONT          309
-#define IDS_SHV_COLUMN_FONTTYPE     310
-#define IDS_SHV_COLUMN12            311
-#define IDS_SHV_COLUMN13            312
-#define IDS_SHV_COLUMN_WORKGROUP    313
-#define IDS_SHV_NETWORKLOCATION     314
-#define IDS_COPY                    315
-#define IDS_DELETE                  316
-#define IDS_PROPERTIES              317
-#define IDS_SHV_COLUMN_DOCUMENTS    318
-#define IDS_SHV_COLUMN_STATUS       319
-#define IDS_SHV_COLUMN_COMMENTS     320
-#define IDS_SHV_COLUMN_LOCATION     321
-#define IDS_SHV_COLUMN_MODEL        322
-#define IDS_CUT                     323
-#define IDS_RESTORE                 324
-#define IDS_DEFAULT_CLUSTER_SIZE    325
-#define IDS_ADMINISTRATIVETOOLS     326
-#define IDS_FORMATDRIVE             327
-#define IDS_RENAME                  328
-#define IDS_INSERT                  329
-#define IDS_DESCRIPTION             330
-#define IDS_COPY_OF                 331
+#define IDS_FILE_FOLDER             308
+#define IDS_CREATELINK              309
+#define IDS_INSTALLNEWFONT          310
+#define IDS_SHV_COLUMN_FONTTYPE     311
+#define IDS_SHV_COLUMN12            312
+#define IDS_SHV_COLUMN13            313
+#define IDS_SHV_COLUMN_WORKGROUP    314
+#define IDS_SHV_NETWORKLOCATION     315
+#define IDS_COPY                    316
+#define IDS_DELETE                  317
+#define IDS_PROPERTIES              318
+#define IDS_SHV_COLUMN_DOCUMENTS    319
+#define IDS_SHV_COLUMN_STATUS       320
+#define IDS_SHV_COLUMN_COMMENTS     321
+#define IDS_SHV_COLUMN_LOCATION     322
+#define IDS_SHV_COLUMN_MODEL        323
+#define IDS_CUT                     324
+#define IDS_RESTORE                 325
+#define IDS_DEFAULT_CLUSTER_SIZE    326
+#define IDS_FORMATDRIVE             328
+#define IDS_RENAME                  329
+#define IDS_INSERT                  330
+#define IDS_DESCRIPTION             331
+#define IDS_COPY_OF                 332
 
-/* Note: this string is referenced from the registry */
-#define IDS_RECYCLEBIN_FOLDER_NAME   8964
+/* Note: those strings are referenced from the registry */
+#define IDS_RECYCLEBIN_FOLDER_NAME  8964
+#define IDS_ADMINISTRATIVETOOLS     22982
+#define IDS_FOLDER_OPTIONS          22985
+#define IDS_FONTS                   22981
+#define IDS_PRINTERS                9319
+#define IDS_MYCOMPUTER              9216
+#define IDS_PERSONAL                9227
+#define IDS_NETWORKPLACE            9217
 
 #define IDD_ICON                    0x4300
 #define IDD_MESSAGE                 0x4301
@@ -450,5 +453,26 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define FCIDM_TB_SMALLICON      0xA003
 #define FCIDM_TB_REPORTVIEW     0xA004
 #define FCIDM_TB_DESKTOP        0xA005  /* FIXME */
+
+/* .rgs files */
+#define IDR_ADMINFOLDERSHORTCUT 128
+#define IDR_AUTOCOMPLETE        129
+#define IDR_CONTROLPANEL        130
+#define IDR_DRAGDROPHELPER      131
+#define IDR_FOLDEROPTIONS       132
+#define IDR_FOLDERSHORTCUT      133
+#define IDR_FONTSFOLDERSHORTCUT 134
+#define IDR_MENUBANDSITE        135
+#define IDR_MYCOMPUTER          136
+#define IDR_MYDOCUMENTS         137
+#define IDR_NETWORKPLACES       138
+#define IDR_NEWMENU             139
+#define IDR_PRINTERS            140
+#define IDR_RECYCLEBIN          141
+#define IDR_SHELLDESKTOP        142
+#define IDR_SHELLFSFOLDER       143
+#define IDR_SHELLLINK           144
+#define IDR_STARTMENU           145
+#define IDR_OPENWITHMENU        146
 
 #endif

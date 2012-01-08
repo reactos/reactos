@@ -30,14 +30,7 @@
 // This is a class designed for use with Brad Johnson's Console Telnet
 // see the file tnconfig.h for more information
 
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#include <memory.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "tnconfig.h"
+#include "precomp.h"
 
 // Turn off the "forcing value to bool 'true' or 'false'" warning
 #ifdef _MSC_VER
@@ -401,8 +394,8 @@ void TConfig::print_vars(char *s) {
 	}
 
 	// See if the group exists
-	int j, flag;
-	for(j = 0, flag = 0; j < MAX_INI_GROUPS; j++)
+	int j;
+	for(j = 0; j < MAX_INI_GROUPS; j++)
 		if(!stricmp(ini_groups[j], s)) break;
 	// If not, print out the value of the variable by that name
 	if(j == MAX_INI_GROUPS) {

@@ -252,6 +252,7 @@ typedef struct _TDI_BUCKET {
    (TCB) in TCP terminology. The FileObject->FsContext2 field holds a pointer
    to this structure */
 typedef struct _CONNECTION_ENDPOINT {
+    PVOID SocketContext;        /* Context for lower layer (MUST be first member in struct) */
     LIST_ENTRY ListEntry;       /* Entry on list */
     LONG RefCount;              /* Reference count */
     OBJECT_FREE_ROUTINE Free;   /* Routine to use to free resources for the object */
@@ -259,7 +260,6 @@ typedef struct _CONNECTION_ENDPOINT {
     KIRQL OldIrql;              /* The old irql is stored here for use in HandleSignalledConnection */
     PVOID ClientContext;        /* Pointer to client context information */
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
-    PVOID SocketContext;        /* Context for lower layer */
 
     /* Requests */
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
@@ -268,12 +268,15 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY SendRequest;    /* Queued send requests */
     LIST_ENTRY ShutdownRequest;/* Queued shutdown requests */
 
-    /* Signals */
-    UINT    SignalState;       /* Active signals from oskit */
+    LIST_ENTRY PacketQueue;    /* Queued received packets waiting to be processed */
     
     /* Disconnect Timer */
     KTIMER DisconnectTimer;
     KDPC DisconnectDpc;
+
+    /* Socket state */
+    BOOLEAN SendShutdown;
+    BOOLEAN ReceiveShutdown;
 
     struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;

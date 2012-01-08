@@ -50,51 +50,15 @@ IntGetMenuObject(HMENU hMenu);
   UserDereferenceObject(MenuObj)
 
 BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, BOOL bRecurse);
-
-BOOL FASTCALL
-IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
-                   BOOL bRecurse);
-
-UINT FASTCALL
-IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
-
-BOOL FASTCALL
 IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess);
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar);
-
-PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source);
-
-BOOL FASTCALL
-IntSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
-
-BOOL FASTCALL
-IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
-
-BOOL FASTCALL
-IntGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
-
-BOOL FASTCALL
-IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 int FASTCALL
 IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
                      PMENU_OBJECT *SubMenu, PMENU_ITEM *MenuItem,
                      PMENU_ITEM *PrevMenuItem);
-
-UINT FASTCALL
-IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
-
-DWORD FASTCALL
-IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
-
-BOOL FASTCALL
-IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECTL *rcRect);
-
-DWORD FASTCALL UserInsertMenuItem(PMENU_OBJECT Menu, UINT uItem, BOOL fByPosition, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
 IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
@@ -103,11 +67,9 @@ BOOL FASTCALL
 IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                   PROSMENUITEMINFO ItemInfo);
 
+PMENU_OBJECT FASTCALL
+IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu);
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitMenuImpl(VOID);
+UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
+UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 
-NTSTATUS FASTCALL
-CleanupMenuImpl(VOID);

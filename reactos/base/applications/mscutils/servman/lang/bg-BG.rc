@@ -2,43 +2,43 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Файл"
+  POPUP "&Р¤Р°Р№Р»"
   BEGIN
-    MENUITEM "Изнасяне...",   ID_EXPORT
+    MENUITEM "РР·РЅР°СЃСЏРЅРµ...",   ID_EXPORT
     MENUITEM SEPARATOR
-    MENUITEM "Из&ход",       ID_EXIT
+    MENUITEM "РР·&С…РѕРґ",       ID_EXIT
   END
-  POPUP "Действие"
+  POPUP "Р”РµР№СЃС‚РІРёРµ"
   BEGIN
-    MENUITEM "Свързване с...", ID_CONNECT, GRAYED
+    MENUITEM "РЎРІСЉСЂР·РІР°РЅРµ СЃ...", ID_CONNECT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Пускане",       ID_START, GRAYED
-    MENUITEM "Спиране",        ID_STOP, GRAYED
-    MENUITEM "Задържане",       ID_PAUSE, GRAYED
-    MENUITEM "Продължаване",      ID_RESUME, GRAYED
-    MENUITEM "Презапуск",     ID_RESTART, GRAYED
+    MENUITEM "РџСѓСЃРєР°РЅРµ",       ID_START, GRAYED
+    MENUITEM "РЎРїРёСЂР°РЅРµ",        ID_STOP, GRAYED
+    MENUITEM "Р—Р°РґСЉСЂР¶Р°РЅРµ",       ID_PAUSE, GRAYED
+    MENUITEM "РџСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ",      ID_RESUME, GRAYED
+    MENUITEM "РџСЂРµР·Р°РїСѓСЃРє",     ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Опресняване",     ID_REFRESH
+    MENUITEM "РћРїСЂРµСЃРЅСЏРІР°РЅРµ",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Обработка...",     ID_EDIT, GRAYED
-    MENUITEM "Създаване...",   ID_CREATE
-    MENUITEM "Изтриване...",   ID_DELETE, GRAYED
+    MENUITEM "РћР±СЂР°Р±РѕС‚РєР°...",     ID_EDIT, GRAYED
+    MENUITEM "РЎСЉР·РґР°РІР°РЅРµ...",   ID_CREATE, GRAYED
+    MENUITEM "РР·С‚СЂРёРІР°РЅРµ...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства...", ID_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°...", ID_PROP, GRAYED
   END
-  POPUP "Изглед"
+  POPUP "РР·РіР»РµРґ"
   BEGIN
-    MENUITEM "Големи значета", ID_VIEW_LARGE
-    MENUITEM "Малки значета", ID_VIEW_SMALL
-    MENUITEM "Списък",        ID_VIEW_LIST
-    MENUITEM "Подробен",     ID_VIEW_DETAILS
+    MENUITEM "Р“РѕР»РµРјРё Р·РЅР°С‡РµС‚Р°", ID_VIEW_LARGE
+    MENUITEM "РњР°Р»РєРё Р·РЅР°С‡РµС‚Р°", ID_VIEW_SMALL
+    MENUITEM "РЎРїРёСЃСЉРє",        ID_VIEW_LIST
+    MENUITEM "РџРѕРґСЂРѕР±РµРЅ",     ID_VIEW_DETAILS
     MENUITEM SEPARATOR
-    MENUITEM "Нагласяване...",ID_VIEW_CUST, GRAYED
+    MENUITEM "РќР°РіР»Р°СЃСЏРІР°РЅРµ...",ID_VIEW_CUST, GRAYED
   END
-  POPUP "Помощ"
+  POPUP "РџРѕРјРѕС‰"
   BEGIN
-    MENUITEM "Помощ",        ID_HELP
-    MENUITEM "За",       ID_ABOUT
+    MENUITEM "РџРѕРјРѕС‰",        ID_HELP
+    MENUITEM "Р—Р°",       ID_ABOUT
   END
 END
 
@@ -46,25 +46,25 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Пускане",       ID_START, GRAYED
-    MENUITEM "Спиране",        ID_STOP, GRAYED
-    MENUITEM "Задържане",       ID_PAUSE, GRAYED
-    MENUITEM "Продължаване",      ID_RESUME, GRAYED
-    MENUITEM "Презапуск",     ID_RESTART, GRAYED
+    MENUITEM "РџСѓСЃРєР°РЅРµ",       ID_START, GRAYED
+    MENUITEM "РЎРїРёСЂР°РЅРµ",        ID_STOP, GRAYED
+    MENUITEM "Р—Р°РґСЉСЂР¶Р°РЅРµ",       ID_PAUSE, GRAYED
+    MENUITEM "РџСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ",      ID_RESUME, GRAYED
+    MENUITEM "РџСЂРµР·Р°РїСѓСЃРє",     ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Опресняване",     ID_REFRESH
+    MENUITEM "РћРїСЂРµСЃРЅСЏРІР°РЅРµ",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Обработка...",     ID_EDIT, GRAYED
-    MENUITEM "Изтриване...",   ID_DELETE, GRAYED
+    MENUITEM "РћР±СЂР°Р±РѕС‚РєР°...",     ID_EDIT, GRAYED
+    MENUITEM "РР·С‚СЂРёРІР°РЅРµ...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства...", ID_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Помощ...",     ID_HELP
+    MENUITEM "РџРѕРјРѕС‰...",     ID_HELP
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "За управителя на устройствата"
+CAPTION "Р—Р° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -75,7 +75,7 @@ BEGIN
 END
 
 IDD_DLG_GENERAL DIALOGEX 6,6,300,225
-CAPTION "Общи"
+CAPTION "РћР±С‰Рё"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -84,39 +84,40 @@ BEGIN
   EDITTEXT IDC_DESCRIPTION, 120, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
   EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
   COMBOBOX IDC_START_TYPE, 120, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-  PUSHBUTTON "Пускане", IDC_START, 6, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "Спиране", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "Задържане", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "Продължаване", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-  LTEXT "Име на услугата:", IDC_STATIC, 4, 11, 110, 11
-  LTEXT "Показвано име:", IDC_STATIC, 4, 29, 110, 11
-  LTEXT "Описание:", IDC_STATIC, 4, 51, 110, 11
-  LTEXT "Път до изпълнимия:", IDC_STATIC, 6, 73, 110, 9
+  PUSHBUTTON "РџСѓСЃРєР°РЅРµ", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "РЎРїРёСЂР°РЅРµ", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Р—Р°РґСЉСЂР¶Р°РЅРµ", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "РџСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "РРјРµ РЅР° СѓСЃР»СѓРіР°С‚Р°:", IDC_STATIC, 4, 11, 110, 11
+  LTEXT "РџРѕРєР°Р·РІР°РЅРѕ РёРјРµ:", IDC_STATIC, 4, 29, 110, 11
+  LTEXT "РћРїРёСЃР°РЅРёРµ:", IDC_STATIC, 4, 51, 110, 11
+  LTEXT "РџСЉС‚ РґРѕ РёР·РїСЉР»РЅРёРјРёСЏ:", IDC_STATIC, 6, 73, 110, 9
 /* startup type*/
-  LTEXT "Пускане:", IDC_STATIC, 6, 108, 110, 11
-  LTEXT "Състояние на услугата:", IDC_STATIC, 4, 138, 110, 11
+  LTEXT "РџСѓСЃРєР°РЅРµ:", IDC_STATIC, 6, 108, 110, 11
+  LTEXT "РЎСЉСЃС‚РѕСЏРЅРёРµ РЅР° СѓСЃР»СѓРіР°С‚Р°:", IDC_STATIC, 4, 138, 110, 11
   LTEXT "", IDC_SERV_STATUS, 120, 138, 176, 11, WS_CHILD | WS_VISIBLE
 /*  LTEXT "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC, 6,177,240,15 */
-  LTEXT "Можете да зададете пускови ключове, които да се приложат при пускане на услугата от тук.",IDC_STATIC, 6,177,290,18
-  LTEXT "Пускови ключове:", IDC_STATIC, 6, 200, 110, 11
+  LTEXT "РњРѕР¶РµС‚Рµ РґР° Р·Р°РґР°РґРµС‚Рµ РїСѓСЃРєРѕРІРё РєР»СЋС‡РѕРІРµ, РєРѕРёС‚Рѕ РґР° СЃРµ РїСЂРёР»РѕР¶Р°С‚ РїСЂРё РїСѓСЃРєР°РЅРµ РЅР° СѓСЃР»СѓРіР°С‚Р° РѕС‚ С‚СѓРє.",IDC_STATIC, 6,177,290,18
+  LTEXT "РџСѓСЃРєРѕРІРё РєР»СЋС‡РѕРІРµ:", IDC_STATIC, 6, 200, 110, 11
   EDITTEXT IDC_START_PARAM, 120, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
-CAPTION "Зависимости"
+CAPTION "Р—Р°РІРёСЃРёРјРѕСЃС‚Рё"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
 /*  LTEXT "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26 */
-  LTEXT "Някои услуги зависят от други услуги, водачи (driver) и зареждат други групи. Ако някоя системна съставка е спряна или не работи правилно, зависимите от нея услуги може да бъдат засегнати.", IDC_STATIC,8, 7, 238, 26
-  LTEXT "Тази услуга зависи от следните съставки", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "РќСЏРєРѕРё СѓСЃР»СѓРіРё Р·Р°РІРёСЃСЏС‚ РѕС‚ РґСЂСѓРіРё СѓСЃР»СѓРіРё, РІРѕРґР°С‡Рё (driver) Рё Р·Р°СЂРµР¶РґР°С‚ РґСЂСѓРіРё РіСЂСѓРїРё. РђРєРѕ РЅСЏРєРѕСЏ СЃРёСЃС‚РµРјРЅР° СЃСЉСЃС‚Р°РІРєР° Рµ СЃРїСЂСЏРЅР° РёР»Рё РЅРµ СЂР°Р±РѕС‚Рё РїСЂР°РІРёР»РЅРѕ, Р·Р°РІРёСЃРёРјРёС‚Рµ РѕС‚ РЅРµСЏ СѓСЃР»СѓРіРё РјРѕР¶Рµ РґР° Р±СЉРґР°С‚ Р·Р°СЃРµРіРЅР°С‚Рё.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "РўР°Р·Рё СѓСЃР»СѓРіР° Р·Р°РІРёСЃРё РѕС‚ СЃР»РµРґРЅРёС‚Рµ СЃСЉСЃС‚Р°РІРєРё", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
-CAPTION "Създаване на услуга"
+CAPTION "РЎСЉР·РґР°РІР°РЅРµ РЅР° СѓСЃР»СѓРіР°"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -125,151 +126,162 @@ BEGIN
   EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
-  LTEXT "*Име на услугата :", IDC_STATIC, 12, 12, 54, 9
-  LTEXT "*Показвано име :", IDC_STATIC, 12, 33, 54, 9
-  LTEXT "*Път до изпълнимия :", IDC_STATIC, 10, 51, 68, 9
-  LTEXT "Описание :", IDC_STATIC, 12, 86, 44, 9
-  PUSHBUTTON "Добре", IDOK, 126, 192, 44, 13
-  PUSHBUTTON "Отказ", IDCANCEL, 176, 192, 46, 13
-  LTEXT "Допълнителни настройки (натиснете „Помощ“ за подробности)", IDC_STATIC, 10, 151, 134, 9
-  PUSHBUTTON "Помощ", ID_CREATE_HELP, 10, 192, 44, 13
+  LTEXT "*РРјРµ РЅР° СѓСЃР»СѓРіР°С‚Р° :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*РџРѕРєР°Р·РІР°РЅРѕ РёРјРµ :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*РџСЉС‚ РґРѕ РёР·РїСЉР»РЅРёРјРёСЏ :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "РћРїРёСЃР°РЅРёРµ :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 176, 192, 46, 13
+  LTEXT "Р”РѕРїСЉР»РЅРёС‚РµР»РЅРё РЅР°СЃС‚СЂРѕР№РєРё (РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРџРѕРјРѕС‰вЂњ Р·Р° РїРѕРґСЂРѕР±РЅРѕСЃС‚Рё)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "РџРѕРјРѕС‰", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
-CAPTION "Изтриване на услуга"
+CAPTION "РР·С‚СЂРёРІР°РЅРµ РЅР° СѓСЃР»СѓРіР°"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "Сигурен ли сте, че искате да изтриете тази услуга? Изтриването е необратимо!", IDC_STATIC, 50, 6, 125, 25
-  LTEXT "Име на услугата:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "РЎРёРіСѓСЂРµРЅ Р»Рё СЃС‚Рµ, С‡Рµ РёСЃРєР°С‚Рµ РґР° РёР·С‚СЂРёРµС‚Рµ С‚Р°Р·Рё СѓСЃР»СѓРіР°? РР·С‚СЂРёРІР°РЅРµС‚Рѕ Рµ РЅРµРѕР±СЂР°С‚РёРјРѕ!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "РРјРµ РЅР° СѓСЃР»СѓРіР°С‚Р°:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
-  PUSHBUTTON "Да", IDOK, 26, 129, 54, 13
-  PUSHBUTTON "Не", IDCANCEL, 102, 129, 54, 13
+  PUSHBUTTON "Р”Р°", IDOK, 26, 129, 54, 13
+  DEFPUSHBUTTON "РќРµ", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stop Other Services"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Do you want to stop these services?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Р”Р°", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "РќРµ", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
-CAPTION "Настройки"
+CAPTION "РќР°СЃС‚СЂРѕР№РєРё"
 FONT 8, "MS Shell Dlg",0,0
 STYLE 0x10CF0000
 BEGIN
   LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
-  PUSHBUTTON "Добре", IDOK, 75, 130, 44, 13
+  PUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 75, 130, 44, 13
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
-CAPTION "Управление на услугите"
+CAPTION "РЈРїСЂР°РІР»РµРЅРёРµ РЅР° СѓСЃР»СѓРіРёС‚Рµ"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-  PUSHBUTTON "&Затваряне", IDOK, 100, 70, 54, 13
+  PUSHBUTTON "&Р—Р°С‚РІР°СЂСЏРЅРµ", IDOK, 100, 70, 54, 13
 END
 
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_FIRSTCOLUMN "Име"
-  IDS_SECONDCOLUMN "Описание"
-  IDS_THIRDCOLUMN "Състояние"
-  IDS_FOURTHCOLUMN "Вид на пускане"
-  IDS_FITHCOLUMN "Влизане като"
+  IDS_FIRSTCOLUMN "РРјРµ"
+  IDS_SECONDCOLUMN "РћРїРёСЃР°РЅРёРµ"
+  IDS_THIRDCOLUMN "РЎСЉСЃС‚РѕСЏРЅРёРµ"
+  IDS_FOURTHCOLUMN "Р’РёРґ РЅР° РїСѓСЃРєР°РЅРµ"
+  IDS_FITHCOLUMN "Р’Р»РёР·Р°РЅРµ РєР°С‚Рѕ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_STARTED "Пуснато"
-  IDS_SERVICES_STOPPED "Спряно"
-  IDS_SERVICES_AUTO "Само"
-  IDS_SERVICES_MAN "Ръчно"
-  IDS_SERVICES_DIS "Изключено"
+  IDS_SERVICES_STARTED "РџСѓСЃРЅР°С‚Рѕ"
+  IDS_SERVICES_STOPPED "РЎРїСЂСЏРЅРѕ"
+  IDS_SERVICES_AUTO "РЎР°РјРѕ"
+  IDS_SERVICES_MAN "Р СЉС‡РЅРѕ"
+  IDS_SERVICES_DIS "РР·РєР»СЋС‡РµРЅРѕ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 /*  IDS_NUM_SERVICES "Num Services: %d" */
-  IDS_NUM_SERVICES "Брой услуги: %d"
-  IDS_STOP_DEPENDS "При спирането на %s, ще спрат и следните услуги"
-  IDS_NO_DEPENDS "<Без зависимости>"
+  IDS_NUM_SERVICES "Р‘СЂРѕР№ СѓСЃР»СѓРіРё: %d"
+  IDS_STOP_DEPENDS "РџСЂРё СЃРїРёСЂР°РЅРµС‚Рѕ РЅР° %s, С‰Рµ СЃРїСЂР°С‚ Рё СЃР»РµРґРЅРёС‚Рµ СѓСЃР»СѓРіРё"
+  IDS_NO_DEPENDS "<Р‘РµР· Р·Р°РІРёСЃРёРјРѕСЃС‚Рё>"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP "Свойства"
-  IDS_TOOLTIP_REFRESH "Опресняване"
-  IDS_TOOLTIP_EXPORT "Износ на списъка"
-  IDS_TOOLTIP_CREATE "Създаване на нова услуга"
-  IDS_TOOLTIP_DELETE "Изтриване на съществуваща услуга"
-  IDS_TOOLTIP_START "Пускане на услугата"
-  IDS_TOOLTIP_STOP "Спиране на услугата"
-  IDS_TOOLTIP_PAUSE "Задържане (пауза) на услугата"
-  IDS_TOOLTIP_RESTART "Презапуск на услугата"
+  IDS_TOOLTIP_PROP "РЎРІРѕР№СЃС‚РІР°"
+  IDS_TOOLTIP_REFRESH "РћРїСЂРµСЃРЅСЏРІР°РЅРµ"
+  IDS_TOOLTIP_EXPORT "РР·РЅРѕСЃ РЅР° СЃРїРёСЃСЉРєР°"
+  IDS_TOOLTIP_CREATE "РЎСЉР·РґР°РІР°РЅРµ РЅР° РЅРѕРІР° СѓСЃР»СѓРіР°"
+  IDS_TOOLTIP_DELETE "РР·С‚СЂРёРІР°РЅРµ РЅР° СЃСЉС‰РµСЃС‚РІСѓРІР°С‰Р° СѓСЃР»СѓРіР°"
+  IDS_TOOLTIP_START "РџСѓСЃРєР°РЅРµ РЅР° СѓСЃР»СѓРіР°С‚Р°"
+  IDS_TOOLTIP_STOP "РЎРїРёСЂР°РЅРµ РЅР° СѓСЃР»СѓРіР°С‚Р°"
+  IDS_TOOLTIP_PAUSE "Р—Р°РґСЉСЂР¶Р°РЅРµ (РїР°СѓР·Р°) РЅР° СѓСЃР»СѓРіР°С‚Р°"
+  IDS_TOOLTIP_RESTART "РџСЂРµР·Р°РїСѓСЃРє РЅР° СѓСЃР»СѓРіР°С‚Р°"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_PROGRESS_INFO_START "РеактОС се опитва да пусне следната услуга"
-  IDS_PROGRESS_INFO_STOP  "РеактОС се опитва да спре следната услуга"
-  IDS_PROGRESS_INFO_PAUSE  "РеактОС се опитва да задържи следната услуга"
-  IDS_PROGRESS_INFO_RESUME "РеактОС се опитва да продължи следната услуга"
-  IDS_CREATE_SUCCESS "Услугата е успешно създадена"
-  IDS_DELETE_SUCCESS "Услугата е успешно изтрита"
-  IDS_CREATE_REQ "Полетата, отбелязани със \nзвездичка са задължителни"
-  IDS_DELETE_STOP "Трябва ръчно да спрете услугата, преди да я изтриете!"
+  IDS_PROGRESS_INFO_START "Р РµР°РєС‚РћРЎ СЃРµ РѕРїРёС‚РІР° РґР° РїСѓСЃРЅРµ СЃР»РµРґРЅР°С‚Р° СѓСЃР»СѓРіР°"
+  IDS_PROGRESS_INFO_STOP  "Р РµР°РєС‚РћРЎ СЃРµ РѕРїРёС‚РІР° РґР° СЃРїСЂРµ СЃР»РµРґРЅР°С‚Р° СѓСЃР»СѓРіР°"
+  IDS_PROGRESS_INFO_PAUSE  "Р РµР°РєС‚РћРЎ СЃРµ РѕРїРёС‚РІР° РґР° Р·Р°РґСЉСЂР¶Рё СЃР»РµРґРЅР°С‚Р° СѓСЃР»СѓРіР°"
+  IDS_PROGRESS_INFO_RESUME "Р РµР°РєС‚РћРЎ СЃРµ РѕРїРёС‚РІР° РґР° РїСЂРѕРґСЉР»Р¶Рё СЃР»РµРґРЅР°С‚Р° СѓСЃР»СѓРіР°"
+  IDS_CREATE_SUCCESS "РЈСЃР»СѓРіР°С‚Р° Рµ СѓСЃРїРµС€РЅРѕ СЃСЉР·РґР°РґРµРЅР°"
+  IDS_DELETE_SUCCESS "РЈСЃР»СѓРіР°С‚Р° Рµ СѓСЃРїРµС€РЅРѕ РёР·С‚СЂРёС‚Р°"
+  IDS_CREATE_REQ "РџРѕР»РµС‚Р°С‚Р°, РѕС‚Р±РµР»СЏР·Р°РЅРё СЃСЉСЃ \nР·РІРµР·РґРёС‡РєР° СЃР° Р·Р°РґСЉР»Р¶РёС‚РµР»РЅРё"
+  IDS_DELETE_STOP "РўСЂСЏР±РІР° СЂСЉС‡РЅРѕ РґР° СЃРїСЂРµС‚Рµ СѓСЃР»СѓРіР°С‚Р°, РїСЂРµРґРё РґР° СЏ РёР·С‚СЂРёРµС‚Рµ!"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
   /*IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"  */
-  IDS_HELP_OPTIONS "СЪЗДАВАНЕ НА ВЪЗМОЖНОСТ:\r\nБЕЛЕЖКА: Името на възможността включва знака за равенство.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (подразбирано = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (подразбирано = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (подразбирано = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (подразбирано = LocalSystem)\r\n password= <password>\r\n"
+  IDS_HELP_OPTIONS "РЎРЄР—Р”РђР’РђРќР• РќРђ Р’РЄР—РњРћР–РќРћРЎРў:\r\nР‘Р•Р›Р•Р–РљРђ: РРјРµС‚Рѕ РЅР° РІСЉР·РјРѕР¶РЅРѕСЃС‚С‚Р° РІРєР»СЋС‡РІР° Р·РЅР°РєР° Р·Р° СЂР°РІРµРЅСЃС‚РІРѕ.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (РїРѕРґСЂР°Р·Р±РёСЂР°РЅРѕ = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (РїРѕРґСЂР°Р·Р±РёСЂР°РЅРѕ = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (РїРѕРґСЂР°Р·Р±РёСЂР°РЅРѕ = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (РїРѕРґСЂР°Р·Р±РёСЂР°РЅРѕ = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXPORT       " Износ на текущия списък във файл."
-  IDS_HINT_EXIT         " Изход от приложението."
+  IDS_HINT_EXPORT       " РР·РЅРѕСЃ РЅР° С‚РµРєСѓС‰РёСЏ СЃРїРёСЃСЉРє РІСЉРІ С„Р°Р№Р»."
+  IDS_HINT_EXIT         " РР·С…РѕРґ РѕС‚ РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ."
 
-  IDS_HINT_CONNECT      " Управление на различен компютър."
-  IDS_HINT_START        " Пускане на избраната услуга."
-  IDS_HINT_STOP         " Спиране на избраната услуга."
-  IDS_HINT_PAUSE        " Задържане на избраната услуга."
-  IDS_HINT_RESUME       " Продължаване на инбраната услуга."
-  IDS_HINT_RESTART      " Спиране и пускане на избраната услуга"
-  IDS_HINT_REFRESH      " Опресняване на списъка с услугите."
-  IDS_HINT_EDIT         " Промяна на свойствата на избраната услуга."
-  IDS_HINT_CREATE       " Създаване на нова услуга."
-  IDS_HINT_DELETE       " Изтриване на избраната услуга."
-  IDS_HINT_PROP         " Отваряне на лист за свойства за текущия избор."
+  IDS_HINT_CONNECT      " РЈРїСЂР°РІР»РµРЅРёРµ РЅР° СЂР°Р·Р»РёС‡РµРЅ РєРѕРјРїСЋС‚СЉСЂ."
+  IDS_HINT_START        " РџСѓСЃРєР°РЅРµ РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_STOP         " РЎРїРёСЂР°РЅРµ РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_PAUSE        " Р—Р°РґСЉСЂР¶Р°РЅРµ РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_RESUME       " РџСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ РЅР° РёРЅР±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_RESTART      " РЎРїРёСЂР°РЅРµ Рё РїСѓСЃРєР°РЅРµ РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°"
+  IDS_HINT_REFRESH      " РћРїСЂРµСЃРЅСЏРІР°РЅРµ РЅР° СЃРїРёСЃСЉРєР° СЃ СѓСЃР»СѓРіРёС‚Рµ."
+  IDS_HINT_EDIT         " РџСЂРѕРјСЏРЅР° РЅР° СЃРІРѕР№СЃС‚РІР°С‚Р° РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_CREATE       " РЎСЉР·РґР°РІР°РЅРµ РЅР° РЅРѕРІР° СѓСЃР»СѓРіР°."
+  IDS_HINT_DELETE       " РР·С‚СЂРёРІР°РЅРµ РЅР° РёР·Р±СЂР°РЅР°С‚Р° СѓСЃР»СѓРіР°."
+  IDS_HINT_PROP         " РћС‚РІР°СЂСЏРЅРµ РЅР° Р»РёСЃС‚ Р·Р° СЃРІРѕР№СЃС‚РІР° Р·Р° С‚РµРєСѓС‰РёСЏ РёР·Р±РѕСЂ."
 
-  IDS_HINT_LARGE        " Показване на предметите с малки значета."
-  IDS_HINT_SMALL        " Показване на предметите с големи значета."
-  IDS_HINT_LIST         " Показване на предметите в списък."
-  IDS_HINT_DETAILS      " Показване на сведения за всеки предмет в прозореца."
-  IDS_HINT_CUST         " Нагаждане на изгледа."
+  IDS_HINT_LARGE        " РџРѕРєР°Р·РІР°РЅРµ РЅР° РїСЂРµРґРјРµС‚РёС‚Рµ СЃ РјР°Р»РєРё Р·РЅР°С‡РµС‚Р°."
+  IDS_HINT_SMALL        " РџРѕРєР°Р·РІР°РЅРµ РЅР° РїСЂРµРґРјРµС‚РёС‚Рµ СЃ РіРѕР»РµРјРё Р·РЅР°С‡РµС‚Р°."
+  IDS_HINT_LIST         " РџРѕРєР°Р·РІР°РЅРµ РЅР° РїСЂРµРґРјРµС‚РёС‚Рµ РІ СЃРїРёСЃСЉРє."
+  IDS_HINT_DETAILS      " РџРѕРєР°Р·РІР°РЅРµ РЅР° СЃРІРµРґРµРЅРёСЏ Р·Р° РІСЃРµРєРё РїСЂРµРґРјРµС‚ РІ РїСЂРѕР·РѕСЂРµС†Р°."
+  IDS_HINT_CUST         " РќР°РіР°Р¶РґР°РЅРµ РЅР° РёР·РіР»РµРґР°."
 
-  IDS_HINT_HELP         " Показва помощен прозорец."
-  IDS_HINT_ABOUT        " За управителя на устройствата на РеактОС."
+  IDS_HINT_HELP         " РџРѕРєР°Р·РІР° РїРѕРјРѕС‰РµРЅ РїСЂРѕР·РѕСЂРµС†."
+  IDS_HINT_ABOUT        " Р—Р° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ."
 
-  IDS_HINT_SYS_RESTORE  " Възстановява прозореца до обичайния му рамер."
-  IDS_HINT_SYS_MOVE     " Премества прозореца."
-  IDS_HINT_SYS_SIZE     " Преоразмерява прозореца."
-  IDS_HINT_SYS_MINIMIZE " Свива прозореца в значка."
-  IDS_HINT_SYS_MAXIMIZE " Разгръща прозореца, докато запълни целия екран."
-  IDS_HINT_SYS_CLOSE    " Затваря прозореца."
+  IDS_HINT_SYS_RESTORE  " Р’СЉР·СЃС‚Р°РЅРѕРІСЏРІР° РїСЂРѕР·РѕСЂРµС†Р° РґРѕ РѕР±РёС‡Р°Р№РЅРёСЏ РјСѓ СЂР°РјРµСЂ."
+  IDS_HINT_SYS_MOVE     " РџСЂРµРјРµСЃС‚РІР° РїСЂРѕР·РѕСЂРµС†Р°."
+  IDS_HINT_SYS_SIZE     " РџСЂРµРѕСЂР°Р·РјРµСЂСЏРІР° РїСЂРѕР·РѕСЂРµС†Р°."
+  IDS_HINT_SYS_MINIMIZE " РЎРІРёРІР° РїСЂРѕР·РѕСЂРµС†Р° РІ Р·РЅР°С‡РєР°."
+  IDS_HINT_SYS_MAXIMIZE " Р Р°Р·РіСЂСЉС‰Р° РїСЂРѕР·РѕСЂРµС†Р°, РґРѕРєР°С‚Рѕ Р·Р°РїСЉР»РЅРё С†РµР»РёСЏ РµРєСЂР°РЅ."
+  IDS_HINT_SYS_CLOSE    " Р—Р°С‚РІР°СЂСЏ РїСЂРѕР·РѕСЂРµС†Р°."
 END
 
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Управление на услугите на РеактОС"
+  IDS_APPNAME "РЈРїСЂР°РІР»РµРЅРёРµ РЅР° СѓСЃР»СѓРіРёС‚Рµ РЅР° Р РµР°РєС‚РћРЎ"
 END
-
-

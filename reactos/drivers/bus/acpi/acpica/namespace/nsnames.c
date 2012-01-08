@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -176,7 +176,7 @@ AcpiNsBuildExternalPath (
         /* Put the name into the buffer */
 
         ACPI_MOVE_32_TO_32 ((NameBuffer + Index), &ParentNode->Name);
-        ParentNode = AcpiNsGetParentNode (ParentNode);
+        ParentNode = ParentNode->Parent;
 
         /* Prefix name with the path separator */
 
@@ -191,7 +191,7 @@ AcpiNsBuildExternalPath (
     if (Index != 0)
     {
         ACPI_ERROR ((AE_INFO,
-            "Could not construct external pathname; index=%X, size=%X, Path=%s",
+            "Could not construct external pathname; index=%u, size=%u, Path=%s",
             (UINT32) Index, (UINT32) Size, &NameBuffer[Size]));
 
         return (AE_BAD_PARAMETER);
@@ -298,7 +298,7 @@ AcpiNsGetPathnameLength (
             return 0;
         }
         Size += ACPI_PATH_SEGMENT_LENGTH;
-        NextNode = AcpiNsGetParentNode (NextNode);
+        NextNode = NextNode->Parent;
     }
 
     if (!Size)

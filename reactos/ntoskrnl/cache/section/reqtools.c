@@ -69,7 +69,7 @@ MiGetOnePage
 		{
 			while (i > 0)
 			{
-				MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[i-1]);
+				MmReleasePageMemoryConsumer(Required->Consumer, Required->Page[i-1]);
 				i--;
 			}
 			return Status;
@@ -127,7 +127,7 @@ MiReadFilePage
 	{
 		DPRINT1("STATUS_NO_MEMORY: %x\n", Status);
 		MmUnlockAddressSpace(MmGetKernelAddressSpace());
-		MmReleasePageMemoryConsumer(MC_CACHE, *Page);
+		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
 		return STATUS_NO_MEMORY;
 	}
 	
@@ -136,7 +136,7 @@ MiReadFilePage
 	{
 		MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
 		MmUnlockAddressSpace(MmGetKernelAddressSpace());
-		MmReleasePageMemoryConsumer(MC_CACHE, *Page);
+		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
 		DPRINT1("Status: %x\n", Status);
 		return Status;
 	}
@@ -161,7 +161,7 @@ MiReadFilePage
 
 	if (!NT_SUCCESS(Status))
 	{
-		MmReleasePageMemoryConsumer(MC_CACHE, *Page);
+		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
 		DPRINT("Status: %x\n", Status);
 		return Status;
 	}

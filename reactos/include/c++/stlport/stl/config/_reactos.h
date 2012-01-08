@@ -302,24 +302,28 @@
 // Calling convention
 #define _STLP_CALL __cdecl
 
-// Include stlport windows specifics
-#include "_windows.h"
-
 #ifdef _M_AMD64
 #ifdef __cplusplus
 extern "C" {
 #endif
+    void * _InterlockedExchangePointer(void * volatile * Target, void * Value);
     _STLP_IMPORT_DECLSPEC void* InterlockedFlushSList(void*);
     _STLP_IMPORT_DECLSPEC void* InterlockedPopEntrySList(void*);
     _STLP_IMPORT_DECLSPEC void* InterlockedPushEntrySList(void*, void*);
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef _BUILD_STLPORT
 #define InterlockedPopEntrySList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedPopEntrySList(list))
 #define InterlockedFlushSList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedFlushSList(list))
+#endif
 
 #undef __cdecl__
 #define __cdecl__
-#endif
+#endif /* _M_AMD64 */
+
+// Include stlport windows specifics
+#include "_windows.h"
 
 #endif

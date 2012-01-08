@@ -439,7 +439,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "X.25-Anmeldeeinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Wählen Sie ihren X.25 Netzwerkanbieter and und geben Sie ihre X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
+	LTEXT "Wählen Sie Ihren X.25 Netzwerkanbieter and und geben Sie Ihre X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
 	LTEXT "&Netzwerk:", 1410, 9, 35, 213, 8, NOT WS_GROUP
 	COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "X.121 &Adresse:", 1407, 9, 66, 213, 8, NOT WS_GROUP

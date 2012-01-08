@@ -64,3 +64,16 @@ BEGIN
     PUSHBUTTON	"מפיצים...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPL_NAME        "Internet Settings"
+    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
+    IDS_SEC_SETTINGS    "Security settings for zone: "
+    IDS_SEC_LEVEL0      "Custom"
+    IDS_SEC_LEVEL1      "Very Low"
+    IDS_SEC_LEVEL2      "Low"
+    IDS_SEC_LEVEL3      "Medium"
+    IDS_SEC_LEVEL4      "Increased"
+    IDS_SEC_LEVEL5      "High"
+END

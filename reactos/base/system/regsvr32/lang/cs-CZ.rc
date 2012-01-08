@@ -1,37 +1,31 @@
-/* FILE:        system/regsvr32/lang/cs-CZ.rc
+/* FILE:        base/system/regsvr32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2008-04-21
- */
-
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_UsageMessage, "%s\n\nPouití: regsvr32 [/u] [/s] [/c] [/n] [/i[:pøíkaz]] názevdll\n\
+IDS_UsageMessage, "%s\n\nPouÅ¾itÃ­: regsvr32 [/u] [/s] [/c] [/n] [/i[:pÅ™Ã­kaz]] nÃ¡zevdll\n\
 /u -	Odregistrovat server\n\
-/s -	Tichı reim; nezobrazuje ádné zprávy\n\
-/c -	Vıstup na konzoli\n\
-/i -	Zavolat DllInstall a pøedat volitelnı [pøíkaz]; pøi pouití s /u volá odinstalaci dll\n\
-/n -	Nevolat DllRegisterServer; tato volba musí bıt pouita s /i"
+/s -	TichÃ½ reÅ¾im; nezobrazuje Å¾Ã¡dnÃ© zprÃ¡vy\n\
+/c -	VÃ½stup na konzoli\n\
+/i -	Zavolat DllInstall a pÅ™edat volitelnÃ½ [pÅ™Ã­kaz]; pÅ™i pouÅ¾itÃ­ s /u volÃ¡ odinstalaci dll\n\
+/n -	Nevolat DllRegisterServer; tato volba musÃ­ bÃ½t pouÅ¾ita s /i"
 
-IDS_NoDllSpecified,  "Nebyl zadán název DLL."
+IDS_NoDllSpecified,  "Nebyl zadÃ¡n nÃ¡zev DLL."
 
-IDS_InvalidFlag,     "Nerozpoznanı pøepínaè: %s"
+IDS_InvalidFlag,     "NerozpoznanÃ½ pÅ™epÃ­naÄ: %s"
 
-IDS_SwitchN_NoI,     "Nerozpoznanı pøepínaè: /n musí bıt pouito s pøepínaèem /i"
+IDS_SwitchN_NoI,     "NerozpoznanÃ½ pÅ™epÃ­naÄ: /n musÃ­ bÃ½t pouÅ¾ito s pÅ™epÃ­naÄem /i"
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') selhalo.\nGetLastError vrací 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') selhalo.\nGetLastError vracÃ­ 0x%08x."
 
-IDS_MissingEntry,    "%s bylo naèteno, ale vstupní bod %s nebyl nalezen.\n\n\
-%s nemusí bıt vyexportováno, nebo v pamìti mùe bıt poškozená verze %s. Zvate pouití PView k nalezení a odstranìní."
+IDS_MissingEntry,    "%s bylo naÄteno, ale vstupnÃ­ bod %s nebyl nalezen.\n\n\
+%s nemusÃ­ bÃ½t vyexportovÃ¡no, nebo v pamÄ›ti mÅ¯Å¾e bÃ½t poÅ¡kozenÃ¡ verze %s. ZvaÅ¾te pouÅ¾itÃ­ PView k nalezenÃ­ a odstranÄ›nÃ­."
 
-IDS_FailureMessage,  "%s v %s selhalo.\nNávratovı kód je: 0x%08x"
+IDS_FailureMessage,  "%s v %s selhalo.\nNÃ¡vratovÃ½ kÃ³d je: 0x%08x"
 
-IDS_SuccessMessage   "%s v %s uspìlo."
+IDS_SuccessMessage,  "%s v %s uspÄ›lo."
 END

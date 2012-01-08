@@ -79,7 +79,7 @@
     #define SND_ERR(...) do {} while ( 0 )
     #define SND_WARN(...) do {} while ( 0 )
     #define SND_TRACE(...) do {} while ( 0 )
-    #define SND_ASSERT(condition) do {} while ( 0 )
+    #define SND_ASSERT(condition) do {(void)(condition);} while ( 0 )
     #define DUMP_WAVEHDR_QUEUE(condition) do {} while ( 0 )
 #endif
 

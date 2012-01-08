@@ -6,13 +6,7 @@
  * PROGRAMMERS: Copyright 2011 Eric Kohl
  */
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <cmtypes.h>
-#include <stdio.h>
-#include <msports.h>
-#include <setupapi.h>
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msports);
 
@@ -672,6 +666,70 @@ InstallPort(IN HDEVINFO DeviceInfoSet,
 }
 
 
+static DWORD
+RemovePort(IN HDEVINFO DeviceInfoSet,
+           IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    PORT_TYPE PortType;
+    HCOMDB hComDB = HCOMDB_INVALID_HANDLE_VALUE;
+    HKEY hKey;
+    LONG lError;
+    DWORD dwPortNumber;
+    DWORD dwPortNameSize;
+    WCHAR szPortName[8];
+
+    /* If we are removing a serial port ... */
+    PortType = GetPortType(DeviceInfoSet, DeviceInfoData);
+    if (PortType == SerialPort)
+    {
+        /* Open the port database */
+        if (ComDBOpen(&hComDB) == ERROR_SUCCESS)
+        {
+            /* Open the device key */
+            hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        DICS_FLAG_GLOBAL,
+                                        0,
+                                        DIREG_DEV,
+                                        KEY_READ);
+            if (hKey != INVALID_HANDLE_VALUE)
+            {
+                /* Query the port name */
+                dwPortNameSize = sizeof(szPortName);
+                lError = RegQueryValueEx(hKey,
+                                         L"PortName",
+                                         NULL,
+                                         NULL,
+                                         (PBYTE)szPortName,
+                                         &dwPortNameSize);
+
+                /* Close the device key */
+                RegCloseKey(hKey);
+
+                /* If we got a valid port name ...*/
+                if (lError == ERROR_SUCCESS)
+                {
+                    /* Get the port number */
+                    dwPortNumber = _wtoi(szPortName + wcslen(pszCom));
+
+                    /* Release the port */
+                    ComDBReleasePort(hComDB, dwPortNumber);
+                }
+            }
+
+            /* Close the port database */
+            ComDBClose(hComDB);
+        }
+    }
+
+    /* Remove the device */
+    if (!SetupDiRemoveDevice(DeviceInfoSet, DeviceInfoData))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
+}
+
+
 DWORD
 WINAPI
 PortsClassInstaller(IN DI_FUNCTION InstallFunction,
@@ -685,6 +743,9 @@ PortsClassInstaller(IN DI_FUNCTION InstallFunction,
     {
         case DIF_INSTALLDEVICE:
             return InstallPort(DeviceInfoSet, DeviceInfoData);
+
+        case DIF_REMOVE:
+            return RemovePort(DeviceInfoSet, DeviceInfoData);
 
         default:
             TRACE("Install function %u ignored\n", InstallFunction);

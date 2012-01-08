@@ -236,7 +236,7 @@ typedef NTSTATUS
     IN KPROCESSOR_MODE AccessMode
 );
 
-typedef NTSTATUS
+typedef BOOLEAN
 (NTAPI *OB_OKAYTOCLOSE_METHOD)(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,

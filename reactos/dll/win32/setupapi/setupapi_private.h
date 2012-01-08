@@ -41,7 +41,9 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <pseh/pseh2.h>
 

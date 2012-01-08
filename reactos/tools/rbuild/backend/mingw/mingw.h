@@ -29,11 +29,6 @@
 class Directory;
 class MingwModuleHandler;
 
-extern std::string
-v2s ( const Backend* backend, const std::vector<FileLocation>& files, int wrap_at );
-extern std::string
-v2s ( const string_list& v, int wrap_at );
-
 
 class MingwBackend : public Backend
 {
@@ -59,6 +54,11 @@ public:
 
 	std::string GetFullName ( const FileLocation& file ) const;
 	std::string GetFullPath ( const FileLocation& file ) const;
+	std::string GetFullNamePrefixSpaces ( const FileLocation& file ) const;
+	std::string GetRegistrySourceFiles () const;
+	std::string GetRegistryTargetFiles () const;
+	std::string v2s ( const std::vector<FileLocation>& files, int wrap_at, bool prefixSpaces = false ) const;
+	std::string v2s ( const string_list& v, int wrap_at ) const;
 
 private:
 	void CreateMakefile ();
@@ -108,8 +108,6 @@ private:
 	void OutputInstallTarget ( const FileLocation& source, const FileLocation& target );
 	void OutputNonModuleInstallTargets ();
 	void OutputModuleInstallTargets ();
-	std::string GetRegistrySourceFiles ();
-	std::string GetRegistryTargetFiles ();
 	void OutputRegistryInstallTarget ();
 	void GenerateInstallTarget ();
 	void GetModuleTestTargets ( std::vector<std::string>& out ) const;

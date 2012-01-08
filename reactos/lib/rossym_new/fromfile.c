@@ -7,15 +7,7 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define NTOSAPI
-#include <ntifs.h>
-#include <ndk/ntndk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include "pe.h"
-#include <ntimage.h>
-
-#include "dwarf.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>

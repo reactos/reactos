@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -400,13 +400,14 @@ AcpiExCreateRegion (
      * range
      */
     if ((RegionSpace >= ACPI_NUM_PREDEFINED_REGIONS) &&
-        (RegionSpace < ACPI_USER_REGION_BEGIN))
+        (RegionSpace < ACPI_USER_REGION_BEGIN) &&
+        (RegionSpace != ACPI_ADR_SPACE_DATA_TABLE))
     {
-        ACPI_ERROR ((AE_INFO, "Invalid AddressSpace type %X", RegionSpace));
+        ACPI_ERROR ((AE_INFO, "Invalid AddressSpace type 0x%X", RegionSpace));
         return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
     }
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "Region Type - %s (%X)\n",
+    ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "Region Type - %s (0x%X)\n",
         AcpiUtGetRegionName (RegionSpace), RegionSpace));
 
     /* Create the region descriptor */
@@ -595,12 +596,10 @@ AcpiExCreateMethod (
     ObjDesc->Method.AmlLength = AmlLength;
 
     /*
-     * Disassemble the method flags. Split off the Arg Count
-     * for efficiency
+     * Disassemble the method flags. Split off the ArgCount, Serialized
+     * flag, and SyncLevel for efficiency.
      */
     MethodFlags = (UINT8) Operand[1]->Integer.Value;
-
-    ObjDesc->Method.MethodFlags = (UINT8) (MethodFlags & ~AML_METHOD_ARG_COUNT);
     ObjDesc->Method.ParamCount = (UINT8) (MethodFlags & AML_METHOD_ARG_COUNT);
 
     /*
@@ -609,6 +608,8 @@ AcpiExCreateMethod (
      */
     if (MethodFlags & AML_METHOD_SERIALIZED)
     {
+        ObjDesc->Method.InfoFlags = ACPI_METHOD_SERIALIZED;
+
         /*
          * ACPI 1.0: SyncLevel = 0
          * ACPI 2.0: SyncLevel = SyncLevel in method declaration

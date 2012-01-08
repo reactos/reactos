@@ -42,29 +42,29 @@ LEDS BITMAP rc/leds.bmp
 MINES BITMAP rc/mines.bmp
 
 /* include localised resources */
+// UTF-8
+#pragma code_page(65001)
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
 #include "lang/fi-FI.rc"
-#include "lang/ko-KR.rc"
-#include "lang/nl-NL.rc"
-#include "lang/no-NO.rc"
-#include "lang/tr-TR.rc"
-
-// UTF-8
-#pragma code_page(65001)
-#include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
+#include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
+#include "lang/nl-NL.rc"
+#include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sv-SE.rc"
+#include "lang/tr-TR.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
+#include "lang/zh-TW.rc"

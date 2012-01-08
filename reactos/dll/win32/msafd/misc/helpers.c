@@ -11,22 +11,20 @@
  */
 #include <msafd.h>
 
-#include <debug.h>
-
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 
 
-INT 
+INT
 SockGetTdiName(
-    PINT AddressFamily, 
-    PINT SocketType, 
-    PINT Protocol, 
-    GROUP Group, 
-    DWORD Flags, 
-    PUNICODE_STRING TransportName, 
-    PVOID *HelperDllContext, 
-    PHELPER_DATA *HelperDllData, 
+    PINT AddressFamily,
+    PINT SocketType,
+    PINT Protocol,
+    GROUP Group,
+    DWORD Flags,
+    PUNICODE_STRING TransportName,
+    PVOID *HelperDllContext,
+    PHELPER_DATA *HelperDllData,
     PDWORD Events)
 {
     PHELPER_DATA        HelperData;
@@ -40,15 +38,15 @@ SockGetTdiName(
 
     /* Check in our Current Loaded Helpers */
     for (Helpers = SockHelpersListHead.Flink;
-         Helpers != &SockHelpersListHead; 
+         Helpers != &SockHelpersListHead;
          Helpers = Helpers->Flink ) {
 
         HelperData = CONTAINING_RECORD(Helpers, HELPER_DATA, Helpers);
 
         /* See if this Mapping works for us */
-        if (SockIsTripleInMapping (HelperData->Mapping, 
-                                   *AddressFamily, 
-                                   *SocketType, 
+        if (SockIsTripleInMapping (HelperData->Mapping,
+                                   *AddressFamily,
+                                   *SocketType,
                                    *Protocol)) {
 
             /* Call the Helper Dll function get the Transport Name */
@@ -88,16 +86,16 @@ SockGetTdiName(
         AFD_DbgPrint(MIN_TRACE, ("Can't get transport list\n"));
         return Status;
     }
-    
+
     /* Loop through each transport until we find one that can satisfy us */
-    for (Transport = Transports; 
-         *Transports != 0; 
+    for (Transport = Transports;
+         *Transports != 0;
          Transport += wcslen(Transport) + 1) {
 	AFD_DbgPrint(MID_TRACE, ("Transport: %S\n", Transports));
 
         /* See what mapping this Transport supports */
         Status = SockLoadTransportMapping(Transport, &Mapping);
-        
+
         /* Check for error */
         if (Status) {
             AFD_DbgPrint(MIN_TRACE, ("Can't get mapping\n"));
@@ -148,7 +146,7 @@ SockGetTdiName(
             /*HeapFree(GlobalHeap, 0, Mapping);*/
             return NO_ERROR;
         }
-        
+
         HeapFree(GlobalHeap, 0, Mapping);
     }
     HeapFree(GlobalHeap, 0, Transports);
@@ -157,7 +155,7 @@ SockGetTdiName(
 
 INT
 SockLoadTransportMapping(
-    PWSTR TransportName, 
+    PWSTR TransportName,
     PWINSOCK_MAPPING *Mapping)
 {
     PWSTR               TransportKey;
@@ -213,7 +211,7 @@ SockLoadTransportMapping(
 
     /* Read the Mapping */
     Status = RegQueryValueExW(KeyHandle, L"Mapping", NULL, NULL, (LPBYTE)*Mapping, &MappingSize);
-    
+
     /* Check for error */
     if (Status) {
         AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
@@ -226,7 +224,7 @@ SockLoadTransportMapping(
     return 0;
 }
 
-INT 
+INT
 SockLoadTransportList(
     PWSTR *TransportList)
 {
@@ -235,12 +233,12 @@ SockLoadTransportList(
     LONG	Status;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
-    
+
     /* Open the Transports Key */
     Status = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-                            L"SYSTEM\\CurrentControlSet\\Services\\Winsock\\Parameters",  
-                            0, 
-                            KEY_READ, 
+                            L"SYSTEM\\CurrentControlSet\\Services\\Winsock\\Parameters",
+                            0,
+                            KEY_READ,
                             &KeyHandle);
 
     /* Check for error */
@@ -248,7 +246,7 @@ SockLoadTransportList(
         AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
         return WSAEINVAL;
     }
-    
+
     /* Get the Transport List Size */
     Status = RegQueryValueExW(KeyHandle,
                               L"Transports",
@@ -273,11 +271,11 @@ SockLoadTransportList(
     }
 
     /* Get the Transports */
-    Status = RegQueryValueExW (KeyHandle, 
-                               L"Transports", 
-                               NULL, 
-                               NULL, 
-                               (LPBYTE)*TransportList, 
+    Status = RegQueryValueExW (KeyHandle,
+                               L"Transports",
+                               NULL,
+                               NULL,
+                               (LPBYTE)*TransportList,
                                &TransportListSize);
 
     /* Check for error */
@@ -294,19 +292,18 @@ SockLoadTransportList(
 
 INT
 SockLoadHelperDll(
-    PWSTR TransportName, 
-    PWINSOCK_MAPPING Mapping, 
+    PWSTR TransportName,
+    PWINSOCK_MAPPING Mapping,
     PHELPER_DATA *HelperDllData)
 {
-    PHELPER_DATA	HelperData;
+    PHELPER_DATA        HelperData;
     PWSTR               HelperDllName;
     PWSTR               FullHelperDllName;
-    ULONG               HelperDllNameSize;
     PWSTR               HelperKey;
     HKEY                KeyHandle;
     ULONG               DataSize;
     LONG                Status;
-    
+
     /* Allocate space for the Helper Structure and TransportName */
     HelperData = HeapAlloc(GlobalHeap, 0, sizeof(*HelperData) + (wcslen(TransportName) + 1) * sizeof(WCHAR));
 
@@ -315,10 +312,10 @@ SockLoadHelperDll(
         AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         return WSAEINVAL;
     }
-    
+
     /* Allocate Space for the Helper DLL Key */
     HelperKey = HeapAlloc(GlobalHeap, 0, (54 + wcslen(TransportName)) * sizeof(WCHAR));
-	
+
     /* Check for error */
     if (HelperKey == NULL) {
         AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
@@ -342,37 +339,37 @@ SockLoadHelperDll(
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
-    
+
     /* Read Size of SockAddr Structures */
     DataSize = sizeof(HelperData->MinWSAddressLength);
     HelperData->MinWSAddressLength = 16;
-    RegQueryValueExW (KeyHandle, 
-                      L"MinSockaddrLength", 
-                      NULL, 
-                      NULL, 
-                      (LPBYTE)&HelperData->MinWSAddressLength, 
+    RegQueryValueExW (KeyHandle,
+                      L"MinSockaddrLength",
+                      NULL,
+                      NULL,
+                      (LPBYTE)&HelperData->MinWSAddressLength,
                       &DataSize);
     DataSize = sizeof(HelperData->MinWSAddressLength);
     HelperData->MaxWSAddressLength = 16;
-    RegQueryValueExW (KeyHandle, 
-                      L"MaxSockaddrLength", 
-                      NULL, 
-                      NULL, 
-                      (LPBYTE)&HelperData->MaxWSAddressLength, 
+    RegQueryValueExW (KeyHandle,
+                      L"MaxSockaddrLength",
+                      NULL,
+                      NULL,
+                      (LPBYTE)&HelperData->MaxWSAddressLength,
                       &DataSize);
 
     /* Size of TDI Structures */
     HelperData->MinTDIAddressLength = HelperData->MinWSAddressLength + 6;
     HelperData->MaxTDIAddressLength = HelperData->MaxWSAddressLength + 6;
-    
+
     /* Read Delayed Acceptance Setting */
     DataSize = sizeof(DWORD);
     HelperData->UseDelayedAcceptance = FALSE;
-    RegQueryValueExW (KeyHandle, 
-                      L"UseDelayedAcceptance", 
-                      NULL, 
-                      NULL, 
-                      (LPBYTE)&HelperData->UseDelayedAcceptance, 
+    RegQueryValueExW (KeyHandle,
+                      L"UseDelayedAcceptance",
+                      NULL,
+                      NULL,
+                      (LPBYTE)&HelperData->UseDelayedAcceptance,
                       &DataSize);
 
     /* Allocate Space for the Helper DLL Names */
@@ -386,7 +383,7 @@ SockLoadHelperDll(
     }
 
     FullHelperDllName = HeapAlloc(GlobalHeap, 0, 512);
-	
+
     /* Check for error */
     if (FullHelperDllName == NULL) {
         AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
@@ -397,11 +394,11 @@ SockLoadHelperDll(
 
     /* Get the name of the Helper DLL*/
     DataSize = 512;
-    Status = RegQueryValueExW (KeyHandle, 
-                               L"HelperDllName", 
-                               NULL, 
-                               NULL, 
-                               (LPBYTE)HelperDllName, 
+    Status = RegQueryValueExW (KeyHandle,
+                               L"HelperDllName",
+                               NULL,
+                               NULL,
+                               (LPBYTE)HelperDllName,
                                &DataSize);
 
     /* Check for error */
@@ -414,9 +411,9 @@ SockLoadHelperDll(
     }
 
     /* Get the Full name, expanding Environment Strings */
-    HelperDllNameSize = ExpandEnvironmentStringsW (HelperDllName,
-                                                   FullHelperDllName, 
-                                                   256);
+    ExpandEnvironmentStringsW (HelperDllName,
+                               FullHelperDllName,
+                               256);
 
     /* Load the DLL */
     HelperData->hInstance = LoadLibraryW(FullHelperDllName);
@@ -446,7 +443,7 @@ SockLoadHelperDll(
     HelperData->WSHNotify = (PWSH_NOTIFY)
 								GetProcAddress(HelperData->hInstance, "WSHNotify");
     HelperData->WSHGetSocketInformation = (PWSH_GET_SOCKET_INFORMATION)
-											GetProcAddress(HelperData->hInstance, 
+											GetProcAddress(HelperData->hInstance,
 											"WSHGetSocketInformation");
     HelperData->WSHSetSocketInformation = (PWSH_SET_SOCKET_INFORMATION)
 											GetProcAddress(HelperData->hInstance,
@@ -487,14 +484,14 @@ SockLoadHelperDll(
 
 BOOL
 SockIsTripleInMapping(
-    PWINSOCK_MAPPING Mapping, 
-    INT AddressFamily, 
-    INT SocketType, 
+    PWINSOCK_MAPPING Mapping,
+    INT AddressFamily,
+    INT SocketType,
     INT Protocol)
 {
     /* The Windows version returns more detailed information on which of the 3 parameters failed...we should do this later */
     ULONG    Row;
-    
+
     AFD_DbgPrint(MID_TRACE,("Called, Mapping rows = %d\n", Mapping->Rows));
 
     /* Loop through Mapping to Find a matching one */
@@ -506,8 +503,8 @@ SockIsTripleInMapping(
 				(INT)Mapping->Mapping[Row].Protocol));
 
         /* Check of all three values Match */
-        if (((INT)Mapping->Mapping[Row].AddressFamily == AddressFamily) && 
-            ((INT)Mapping->Mapping[Row].SocketType == SocketType) && 
+        if (((INT)Mapping->Mapping[Row].AddressFamily == AddressFamily) &&
+            ((INT)Mapping->Mapping[Row].SocketType == SocketType) &&
             ((INT)Mapping->Mapping[Row].Protocol == Protocol)) {
 	    AFD_DbgPrint(MID_TRACE,("Found\n"));
             return TRUE;

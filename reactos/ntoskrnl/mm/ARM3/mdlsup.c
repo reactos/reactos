@@ -318,7 +318,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
 {
     PVOID Base;
     PPFN_NUMBER MdlPages, LastPage;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
     BOOLEAN IsIoMapping;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     PMMPTE PointerPte;
@@ -491,7 +491,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
                    IN PMDL Mdl)
 {
     PVOID Base;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount, ExtraPageCount;
     PPFN_NUMBER MdlPages;
     PMMPTE PointerPte;
 
@@ -538,14 +538,16 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
             //
             // Get the MDL page array
             //
-            MdlPages = (PPFN_NUMBER)(Mdl + 1);
-            MdlPages += PageCount;
+            MdlPages = MmGetMdlPfnArray(Mdl);
+
+            /* Number of extra pages stored after the PFN array */
+            ExtraPageCount = (PFN_COUNT)*(MdlPages + PageCount);
 
             //
             // Do the math
             //
-            PageCount += *MdlPages;
-            PointerPte -= *MdlPages;
+            PageCount += ExtraPageCount;
+            PointerPte -= ExtraPageCount;
             ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
             ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
 
@@ -553,7 +555,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
             // Get the new base address
             //
             BaseAddress = (PVOID)((ULONG_PTR)BaseAddress -
-                                  ((*MdlPages) << PAGE_SHIFT));
+                                  (ExtraPageCount << PAGE_SHIFT));
         }
 
         //
@@ -614,7 +616,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     // Get page and base information
     //
     MdlPages = (PPFN_NUMBER)(Mdl + 1);
-    Base = (PVOID)Mdl->StartVa;
+    Base = Mdl->StartVa;
 
     //
     // Get the addresses and how many pages we span (and need to lock)
@@ -840,7 +842,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                (PointerPte->u.Hard.Valid == 0))
         {
             //
-            // What kind of lock where we using?
+            // What kind of lock were we using?
             //
             if (UsePfnLock)
             {
@@ -859,7 +861,9 @@ MmProbeAndLockPages(IN PMDL Mdl,
             // Access the page
             //
             Address = MiPteToAddress(PointerPte);
-            Status = MmAccessFault(FALSE, Address, KernelMode, NULL);
+
+            //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
+            Status = MmAccessFault(FALSE, Address, KernelMode, (PVOID)0xBADBADA3);
             if (!NT_SUCCESS(Status))
             {
                 //
@@ -870,7 +874,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             }
 
             //
-            // Waht lock should we use?
+            // What lock should we use?
             //
             if (UsePfnLock)
             {
@@ -908,7 +912,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                     if (Address <= MM_HIGHEST_USER_ADDRESS)
                     {
                         //
-                        // What kind of lock where we using?
+                        // What kind of lock were we using?
                         //
                         if (UsePfnLock)
                         {
@@ -926,7 +930,9 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         //
                         // Access the page
                         //
-                        Status = MmAccessFault(TRUE, Address, KernelMode, NULL);
+
+                        //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
+                        Status = MmAccessFault(TRUE, Address, KernelMode, (PVOID)0xBADBADA3);
                         if (!NT_SUCCESS(Status))
                         {
                             //
@@ -1040,7 +1046,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     } while (PointerPte <= LastPte);
 
     //
-    // What kind of lock where we using?
+    // What kind of lock were we using?
     //
     if (UsePfnLock)
     {
@@ -1068,7 +1074,7 @@ CleanupWithLock:
     ASSERT(!NT_SUCCESS(Status));
 
     //
-    // What kind of lock where we using?
+    // What kind of lock were we using?
     //
     if (UsePfnLock)
     {
@@ -1174,7 +1180,7 @@ MmUnlockPages(IN PMDL Mdl)
             // Check if this page is in the PFN database
             //
             Pfn1 = MiGetPfnEntry(*MdlPages);
-            if (Pfn1);
+            if (Pfn1)
             {
                 /* Get the current entry and reference count */
                 OldRefCount = Pfn1->u3.e2.ReferenceCount;
@@ -1189,8 +1195,8 @@ MmUnlockPages(IN PMDL Mdl)
                     ASSERT(Pfn1->u2.ShareCount == 0);
 
                     /* Not supported yet */
-                    ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                            (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
+                    ASSERT((Pfn1->u3.e1.PrototypePte == 0) &&
+                            (Pfn1->OriginalPte.u.Soft.Prototype == 0));
 
                     /* One less page */
                     InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
@@ -1225,8 +1231,8 @@ MmUnlockPages(IN PMDL Mdl)
                             ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
 
                             /* Not supported yet */
-                            ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                                    (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
+                            ASSERT((Pfn1->u3.e1.PrototypePte == 0) &&
+                                    (Pfn1->OriginalPte.u.Soft.Prototype == 0));
 
                             /* But there is one less "locked" page though */
                             InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
@@ -1251,7 +1257,7 @@ MmUnlockPages(IN PMDL Mdl)
             //
             ASSERT(Process->NumberOfLockedPages > 0);
             InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
-                                        -PageCount);
+                                        -(LONG_PTR)PageCount);
         }
 
         //
@@ -1272,7 +1278,7 @@ MmUnlockPages(IN PMDL Mdl)
         //
         ASSERT(Process->NumberOfLockedPages > 0);
         InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
-                                    -PageCount);
+                                    -(LONG_PTR)PageCount);
     }
 
     //
@@ -1307,7 +1313,7 @@ MmUnlockPages(IN PMDL Mdl)
 
         /* Save the PFN entry instead for the secondary loop */
         *MdlPages = (PFN_NUMBER)MiGetPfnEntry(*MdlPages);
-        ASSERT((*MdlPages) != 0);
+        ASSERT(*MdlPages != 0);
     } while (++MdlPages < LastPage);
 
     //
@@ -1322,7 +1328,7 @@ MmUnlockPages(IN PMDL Mdl)
     do
     {
         /* Get the current entry and reference count */
-        Pfn1 = (PMMPFN)(*MdlPages);
+        Pfn1 = (PMMPFN)*MdlPages;
         OldRefCount = Pfn1->u3.e2.ReferenceCount;
         ASSERT(OldRefCount != 0);
 
@@ -1400,8 +1406,8 @@ NTAPI
 MmAdvanceMdl(IN PMDL Mdl,
              IN ULONG NumberOfBytes)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -1414,8 +1420,8 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
                                     IN PMDL MemoryDescriptorList,
                                     IN MEMORY_CACHING_TYPE CacheType)
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
@@ -1427,7 +1433,7 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
                        IN ULONG PoolTag,
                        IN PMDL MemoryDescriptorList)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1438,8 +1444,8 @@ NTAPI
 MmPrefetchPages(IN ULONG NumberOfLists,
                 IN PREAD_LIST *ReadLists)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -1450,8 +1456,8 @@ NTAPI
 MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
                           IN ULONG NewProtect)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -1464,7 +1470,7 @@ MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
                            IN KPROCESSOR_MODE AccessMode,
                            IN LOCK_OPERATION Operation)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -1478,7 +1484,7 @@ MmProbeAndLockSelectedPages(IN OUT PMDL MemoryDescriptorList,
                             IN KPROCESSOR_MODE AccessMode,
                             IN LOCK_OPERATION Operation)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*

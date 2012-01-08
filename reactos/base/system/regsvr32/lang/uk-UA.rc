@@ -1,6 +1,3 @@
-#include "resource.h"
-
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -25,5 +22,5 @@ IDS_MissingEntry,    "%s було запущено, але точка входу
 
 IDS_FailureMessage,  "%s в %s завершилося аварійно.\nКод завершення: 0x%08x"
 
-IDS_SuccessMessage   "%s в %s успішно виконано."
+IDS_SuccessMessage,  "%s в %s успішно виконано."
 END

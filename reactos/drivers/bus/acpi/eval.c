@@ -53,7 +53,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
         ParamList.Count = 1;
 
-        ParamList.Pointer = ExAllocatePool(NonPagedPool, sizeof(ACPI_OBJECT));
+        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'IPCA');
         if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
 
         ParamList.Pointer[0].Type = ACPI_TYPE_INTEGER;
@@ -68,7 +68,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
         ParamList.Count = 1;
 
-        ParamList.Pointer = ExAllocatePool(NonPagedPool, sizeof(ACPI_OBJECT));
+        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'IPCA');
         if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
 
         ParamList.Pointer[0].String.Pointer = (CHAR*)SimpleStr->String;
@@ -86,7 +86,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
                               &RetBuff);
 
   if (ParamList.Count != 0)
-      ExFreePool(ParamList.Pointer);
+      ExFreePoolWithTag(ParamList.Pointer, 'IPCA');
 
   if (ACPI_SUCCESS(Status))
   {
@@ -126,8 +126,8 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
       else
           ExtraParamLength = 0;
 
-      OutputBuf = ExAllocatePool(NonPagedPool, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
-                                               ExtraParamLength);
+      OutputBuf = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
+                                               ExtraParamLength, 'IPCA');
       if (!OutputBuf) return STATUS_INSUFFICIENT_RESOURCES;
 
       OutputBuf->Signature = ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE;
@@ -163,12 +163,12 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
           RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, OutputBuf, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
                                                                     ExtraParamLength);
           Irp->IoStatus.Information = sizeof(ACPI_EVAL_OUTPUT_BUFFER) + ExtraParamLength;
-          ExFreePool(OutputBuf);
+          ExFreePoolWithTag(OutputBuf, 'IPCA');
           return STATUS_SUCCESS;
       }
       else
       {
-          ExFreePool(OutputBuf);
+          ExFreePoolWithTag(OutputBuf, 'IPCA');
           return STATUS_BUFFER_TOO_SMALL;
       }
   }

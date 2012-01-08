@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -193,7 +193,7 @@ AcpiExOpcode_0A_0T_1R (
 
     default:                /*  Unknown opcode  */
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         break;
@@ -268,7 +268,7 @@ AcpiExOpcode_1A_0T_0R (
 
     case AML_SLEEP_OP:      /*  Sleep (MsecTime) */
 
-        Status = AcpiExSystemDoSuspend (Operand[0]->Integer.Value);
+        Status = AcpiExSystemDoSleep (Operand[0]->Integer.Value);
         break;
 
 
@@ -286,7 +286,7 @@ AcpiExOpcode_1A_0T_0R (
 
     default:                /*  Unknown opcode  */
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         break;
@@ -332,7 +332,7 @@ AcpiExOpcode_1A_1T_0R (
 
     default:                        /* Unknown opcode */
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;
@@ -368,8 +368,8 @@ AcpiExOpcode_1A_1T_1R (
     ACPI_OPERAND_OBJECT     *ReturnDesc2 = NULL;
     UINT32                  Temp32;
     UINT32                  i;
-    ACPI_INTEGER            PowerOfTen;
-    ACPI_INTEGER            Digit;
+    UINT64                  PowerOfTen;
+    UINT64                  Digit;
 
 
     ACPI_FUNCTION_TRACE_STR (ExOpcode_1A_1T_1R,
@@ -477,7 +477,7 @@ AcpiExOpcode_1A_1T_1R (
                 /* Sum the digit into the result with the current power of 10 */
 
                 ReturnDesc->Integer.Value +=
-                    (((ACPI_INTEGER) Temp32) * PowerOfTen);
+                    (((UINT64) Temp32) * PowerOfTen);
 
                 /* Shift to next BCD digit */
 
@@ -506,7 +506,7 @@ AcpiExOpcode_1A_1T_1R (
                  * remainder from above
                  */
                 ReturnDesc->Integer.Value |=
-                    (((ACPI_INTEGER) Temp32) << ACPI_MUL_4 (i));
+                    (((UINT64) Temp32) << ACPI_MUL_4 (i));
             }
 
             /* Overflow if there is any data left in Digit */
@@ -514,7 +514,7 @@ AcpiExOpcode_1A_1T_1R (
             if (Digit > 0)
             {
                 ACPI_ERROR ((AE_INFO,
-                    "Integer too large to convert to BCD: %8.8X%8.8X",
+                    "Integer too large to convert to BCD: 0x%8.8X%8.8X",
                     ACPI_FORMAT_UINT64 (Operand[0]->Integer.Value)));
                 Status = AE_AML_NUMERIC_OVERFLOW;
                 goto Cleanup;
@@ -553,7 +553,7 @@ AcpiExOpcode_1A_1T_1R (
 
             /* The object exists in the namespace, return TRUE */
 
-            ReturnDesc->Integer.Value = ACPI_INTEGER_MAX;
+            ReturnDesc->Integer.Value = ACPI_UINT64_MAX;
             goto Cleanup;
 
 
@@ -664,7 +664,7 @@ AcpiExOpcode_1A_1T_1R (
 
     default:                        /* Unknown opcode */
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;
@@ -719,7 +719,7 @@ AcpiExOpcode_1A_0T_1R (
     ACPI_OPERAND_OBJECT     *ReturnDesc = NULL;
     ACPI_STATUS             Status = AE_OK;
     UINT32                  Type;
-    ACPI_INTEGER            Value;
+    UINT64                  Value;
 
 
     ACPI_FUNCTION_TRACE_STR (ExOpcode_1A_0T_1R,
@@ -745,7 +745,7 @@ AcpiExOpcode_1A_0T_1R (
          */
         if (!Operand[0]->Integer.Value)
         {
-            ReturnDesc->Integer.Value = ACPI_INTEGER_MAX;
+            ReturnDesc->Integer.Value = ACPI_UINT64_MAX;
         }
         break;
 
@@ -1116,7 +1116,7 @@ AcpiExOpcode_1A_0T_1R (
                 default:
 
                     ACPI_ERROR ((AE_INFO,
-                        "Unknown Index TargetType %X in reference object %p",
+                        "Unknown Index TargetType 0x%X in reference object %p",
                         Operand[0]->Reference.TargetType, Operand[0]));
                     Status = AE_AML_OPERAND_TYPE;
                     goto Cleanup;
@@ -1143,7 +1143,7 @@ AcpiExOpcode_1A_0T_1R (
 
             default:
                 ACPI_ERROR ((AE_INFO,
-                    "Unknown class in reference(%p) - %2.2X",
+                    "Unknown class in reference(%p) - 0x%2.2X",
                     Operand[0], Operand[0]->Reference.Class));
 
                 Status = AE_TYPE;
@@ -1155,7 +1155,7 @@ AcpiExOpcode_1A_0T_1R (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;

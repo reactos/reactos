@@ -702,12 +702,11 @@ WsAsyncThread(IN PWSASYNCCONTEXT Context)
 {
     PWSASYNCBLOCK AsyncBlock;
     PLIST_ENTRY Entry;
-    FARPROC OldHook;
     HANDLE AsyncEvent = Context->AsyncEvent;
     PLIST_ENTRY ListHead = &Context->AsyncQueue;
 
     /* Set the blocking hook */
-    OldHook = WSASetBlockingHook((FARPROC)WsAsyncThreadBlockingHook);
+    WSASetBlockingHook((FARPROC)WsAsyncThreadBlockingHook);
 
     /* Loop */
     while (TRUE)

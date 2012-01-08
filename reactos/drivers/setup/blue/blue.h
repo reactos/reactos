@@ -8,9 +8,43 @@
 
 /* DEFINITIONS ***************************************************************/
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <ntddk.h>
+
+typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
+
+// Define material that normally comes from PSDK
+// This is mandatory to prevent any inclusion of
+// user-mode stuff.
+typedef struct tagCOORD {
+  SHORT X;
+  SHORT Y;
+} COORD, *PCOORD;
+
+typedef struct tagSMALL_RECT {
+  SHORT Left;
+  SHORT Top;
+  SHORT Right;
+  SHORT Bottom;
+} SMALL_RECT;
+
+typedef struct tagCONSOLE_SCREEN_BUFFER_INFO {
+  COORD      dwSize;
+  COORD      dwCursorPosition;
+  USHORT     wAttributes;
+  SMALL_RECT srWindow;
+  COORD      dwMaximumWindowSize;
+} CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO;
+
+typedef struct tagCONSOLE_CURSOR_INFO {
+  ULONG    dwSize;
+  BOOLEAN  bVisible;
+} CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO;
+
+#define ENABLE_PROCESSED_OUTPUT                 0x0001
+#define ENABLE_WRAP_AT_EOL_OUTPUT               0x0002
+
+#include <blue/ntddblue.h>
+#include <ndk/inbvfuncs.h>
 
 #define TAG_BLUE 'EULB'
 
@@ -79,6 +113,8 @@ typedef struct _CFFILE
 #define ATTRC_INPST1       ((PUCHAR)0x3da)
 
 #define TAB_WIDTH          8
+
+#define MAX_PATH           260
 
 #define MISC         (PUCHAR)0x3c2
 #define SEQ          (PUCHAR)0x3c4

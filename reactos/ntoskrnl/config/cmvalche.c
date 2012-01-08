@@ -49,7 +49,6 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PHHIVE Hive;
     PCACHED_CHILD_LIST ChildList;
     HCELL_INDEX CellToRelease;
-    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *ValueListToRelease = HCELL_NIL;
@@ -58,8 +57,6 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Get the hive and value cache */
     Hive = Kcb->KeyHive;
     ChildList = &Kcb->ValueCache;
-    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
-    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the value is cached */
     if (CmpIsValueCached(ChildList->ValueList))
@@ -78,7 +75,7 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
             /* We need the exclusive lock */
             return SearchNeedExclusiveLock;
         }
-                
+
         /* Select the value list as our cell, and get the actual list array */
         CellToRelease = ChildList->ValueList;
         *CellData = (PCELL_DATA)HvGetCell(Hive, CellToRelease);
@@ -212,7 +209,6 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     BOOLEAN IndexIsCached;
     ULONG i = 0;
     HCELL_INDEX Cell = HCELL_NIL;
-    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *CellToRelease = HCELL_NIL;
@@ -221,8 +217,6 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Get the hive and child list */
     Hive = Kcb->KeyHive;
     ChildList = &Kcb->ValueCache;
-    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
-    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the child list has any entries */
     if (ChildList->Count != 0)
@@ -694,7 +688,7 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PVOID Buffer;
     HCELL_INDEX ValueCellToRelease = HCELL_NIL, CellToRelease = HCELL_NIL;
     BOOLEAN IsSmall;
-    ULONG CompareResult;
+    ULONG_PTR CompareResult;
     PAGED_CODE();
 
     /* Check if this is a symlink */

@@ -1,6 +1,4 @@
-#include "resource.h"
-/* Start move all hard code string to En.rc
- * By Magnus Olsen  2005
+/*
  * Greek Version by Dj Apal
  */
 
@@ -8,6 +6,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_USERINIT_FAIL, "H Userinit δε μπόρεσε να εκκινήσει το κέλυφος!\n"
+STRING_USERINIT_FAIL, "H Userinit Ξ΄Ξµ ΞΌΟ€ΟΟΞµΟƒΞµ Ξ½Ξ± ΞµΞΊΞΊΞΉΞ½Ξ®ΟƒΞµΞΉ Ο„ΞΏ ΞΊΞ­Ξ»Ο…Ο†ΞΏΟ‚!\n"
 
 END

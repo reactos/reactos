@@ -10,8 +10,6 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh2.h>
-
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
@@ -122,6 +120,7 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    PCONNECTION_ENDPOINT Connection;
     BOOLEAN DequeuedIrp = TRUE;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
@@ -173,7 +172,16 @@ VOID NTAPI DispCancelRequest(
         break;
             
     case TDI_DISCONNECT:
+        Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        if (DequeuedIrp)
+        {
+            if (KeCancelTimer(&Connection->DisconnectTimer))
+            {
+                DereferenceObject(Connection);
+            }
+        }
         break;
 
     default:
@@ -436,11 +444,9 @@ NTSTATUS DispTdiDisassociateAddress(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection, LastConnection;
+  PCONNECTION_ENDPOINT Connection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  KIRQL OldIrql;
-  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -460,52 +466,9 @@ NTSTATUS DispTdiDisassociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  LockObject(Connection, &OldIrql);
+  /* NO-OP because we need the address to deallocate the port when the connection closes */
 
-  if (!Connection->AddressFile) {
-    UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  LockObjectAtDpcLevel(Connection->AddressFile);
-
-  /* Unlink this connection from the address file */
-  if (Connection->AddressFile->Connection == Connection)
-  {
-      Connection->AddressFile->Connection = Connection->Next;
-      DereferenceObject(Connection);
-      Status = STATUS_SUCCESS;
-  }
-  else
-  {
-      LastConnection = Connection->AddressFile->Connection;
-      while (LastConnection->Next != Connection && LastConnection->Next != NULL)
-         LastConnection = LastConnection->Next;
-      if (LastConnection->Next == Connection)
-      {
-          LastConnection->Next = Connection->Next;
-          DereferenceObject(Connection);
-          Status = STATUS_SUCCESS;
-      }
-      else
-      {
-          Status = STATUS_INVALID_PARAMETER;
-      }
-  }
-
-  UnlockObjectFromDpcLevel(Connection->AddressFile);
-
-  if (Status == STATUS_SUCCESS)
-  {
-      /* Remove the address file from this connection */
-      DereferenceObject(Connection->AddressFile);
-      Connection->AddressFile = NULL;
-  }
-
-  UnlockObject(Connection, OldIrql);
-
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -545,15 +508,22 @@ NTSTATUS DispTdiDisconnect(
     Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
+    
+  Status = DispPrepareIrpForCancel
+    (TranContext->Handle.ConnectionContext,
+     Irp,
+     (PDRIVER_CANCEL)DispCancelRequest);
 
-  Status = TCPDisconnect(
-      TranContext->Handle.ConnectionContext,
-      DisReq->RequestFlags,
-      DisReq->RequestSpecific,
-      DisReq->RequestConnectionInformation,
-      DisReq->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+  if (NT_SUCCESS(Status))
+  {
+      Status = TCPDisconnect(TranContext->Handle.ConnectionContext,
+                             DisReq->RequestFlags,
+                             DisReq->RequestSpecific,
+                             DisReq->RequestConnectionInformation,
+                             DisReq->ReturnConnectionInformation,
+                             DispDataRequestComplete,
+                             Irp);
+  }
 
 done:
    if (Status != STATUS_PENDING) {
@@ -638,6 +608,7 @@ NTSTATUS DispTdiListen(
 	  Status = STATUS_NO_MEMORY;
 
       if( NT_SUCCESS(Status) ) {
+          ReferenceObject(Connection->AddressFile);
 	  Connection->AddressFile->Listener->AddressFile =
 	      Connection->AddressFile;
 
@@ -759,51 +730,44 @@ NTSTATUS DispTdiQueryInformation(
 
     case TDI_QUERY_CONNECTION_INFO:
       {
-        PTDI_CONNECTION_INFORMATION AddressInfo;
-        PADDRESS_FILE AddrFile;
-        PCONNECTION_ENDPOINT Endpoint = NULL;
+        PTDI_CONNECTION_INFO ConnectionInfo;
+        //PCONNECTION_ENDPOINT Endpoint;
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
-             sizeof(PVOID))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+        if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*ConnectionInfo)) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_TOO_SMALL;
         }
 
-        AddressInfo = (PTDI_CONNECTION_INFORMATION)
+        ConnectionInfo = (PTDI_CONNECTION_INFO)
           MmGetSystemAddressForMdl(Irp->MdlAddress);
 
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-          case TDI_TRANSPORT_ADDRESS_FILE:
-            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-            Endpoint = AddrFile ? AddrFile->Connection : NULL;
-            break;
-
           case TDI_CONNECTION_FILE:
-            Endpoint =
-              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-            break;
+            //Endpoint = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            RtlZeroMemory(ConnectionInfo, sizeof(*ConnectionInfo));
+            return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
             return STATUS_INVALID_PARAMETER;
         }
-
-        if (!Endpoint) {
-          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
 
       case TDI_QUERY_MAX_DATAGRAM_INFO:
       {
-         PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
+          PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
+          
+          if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*MaxDatagramInfo)) {
+              TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+              return STATUS_BUFFER_TOO_SMALL;
+          }
+          
+          MaxDatagramInfo = (PTDI_MAX_DATAGRAM_INFO)
+            MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-         MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
+          MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
 
-         return STATUS_SUCCESS;
+          return STATUS_SUCCESS;
      }
   }
 
@@ -1552,14 +1516,11 @@ NTSTATUS DispTdiSetInformationEx(
         return Irp->IoStatus.Status;
     }
 
-    Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
-    if (NT_SUCCESS(Status)) {
-        Request.RequestNotifyObject = DispDataRequestComplete;
-        Request.RequestContext      = Irp;
+    Request.RequestNotifyObject = NULL;
+    Request.RequestContext      = NULL;
 
-        Status = InfoTdiSetInformationEx(&Request, &Info->ID,
+    Status = InfoTdiSetInformationEx(&Request, &Info->ID,
             &Info->Buffer, Info->BufferSize);
-    }
 
     return Status;
 }

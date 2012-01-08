@@ -19,4 +19,7 @@
 	<file>string.c</file>
 	<file>table.c</file>
 	<file>utf8.c</file>
+	<directory name="inc">
+		<pch>precomp.h</pch>
+	</directory>
 </module>

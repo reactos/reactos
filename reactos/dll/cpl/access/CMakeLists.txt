@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(access.cpl access.spec)
@@ -14,7 +13,7 @@ add_library(access SHARED
     access.rc
      ${CMAKE_CURRENT_BINARY_DIR}/access.def)
 
-set_module_type(access cpl)
+set_module_type(access cpl UNICODE)
 
 add_importlibs(access
     msvcrt
@@ -24,4 +23,5 @@ add_importlibs(access
     comctl32
     kernel32)
 
+add_pch(access access.h)
 add_cd_file(TARGET access DESTINATION reactos/system32 FOR all)

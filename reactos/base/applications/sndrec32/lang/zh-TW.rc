@@ -1,0 +1,62 @@
+/*
+ * PROJECT:         ReactOS Sound Recorder
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/applications/sndrec32/lang/zh-TW.rc
+ * PURPOSE:         Chinese (Traditional) resource file
+ * TRANSLATOR:      Elton Chung aka MfldElton <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "關於 ReactOS 錄音機"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SNDREC32,-1,19,14,21,20
+    LTEXT           "ReactOS 錄音機，版本 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "版權所有 (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "確定",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "檔案"
+    BEGIN
+        MENUITEM "新增",                       ID_NEW
+        MENUITEM "開啟...",                    ID_FILE_OPEN
+        MENUITEM "儲存",                       ID_FILE_SAVE, GRAYED
+        MENUITEM "另存為...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "結束",                       ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "說明"
+    BEGIN
+        MENUITEM "關於...",                    ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "錄音機"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "位置：%.2f 秒"
+    IDS_STRDUR              "長度：%.2f 秒"
+    IDS_STRBUF              "緩衝區：%.2f KB"
+    IDS_STRFMT              "%.1f kHz %u 位元"
+    IDS_STRMONO             "單聲道"
+    IDS_STRSTEREO           "立體聲"
+    IDS_STRCHAN             "%s"
+END

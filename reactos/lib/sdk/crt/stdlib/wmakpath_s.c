@@ -44,9 +44,9 @@ int CDECL _wmakepath_s(wchar_t *path, size_t size, const wchar_t *drive,
 
     if (directory && directory[0])
     {
-        unsigned int len = strlenW(directory);
+        size_t len = strlenW(directory);
         unsigned int needs_separator = directory[len - 1] != '/' && directory[len - 1] != '\\';
-        unsigned int copylen = min(size - 1, len);
+        size_t copylen = min(size - 1, len);
 
         if (size < 2)
             goto range;
@@ -71,8 +71,8 @@ int CDECL _wmakepath_s(wchar_t *path, size_t size, const wchar_t *drive,
 
     if (filename && filename[0])
     {
-        unsigned int len = strlenW(filename);
-        unsigned int copylen = min(size - 1, len);
+        size_t len = strlenW(filename);
+        size_t copylen = min(size - 1, len);
 
         if (size < 2)
             goto range;
@@ -88,9 +88,9 @@ int CDECL _wmakepath_s(wchar_t *path, size_t size, const wchar_t *drive,
 
     if (extension && extension[0])
     {
-        unsigned int len = strlenW(extension);
+        size_t len = strlenW(extension);
         unsigned int needs_period = extension[0] != '.';
-        unsigned int copylen;
+        size_t copylen;
 
         if (size < 2)
             goto range;

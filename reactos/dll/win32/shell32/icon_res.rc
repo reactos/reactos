@@ -23,6 +23,8 @@ IDI_SHELL_CONTROL_PANEL     ICON "res/icons/22.ico"
 IDI_SHELL_SEARCH            ICON "res/icons/23.ico"
 IDI_SHELL_HELP              ICON "res/icons/24.ico"
 IDI_SHELL_RUN               ICON "res/icons/25.ico"
+26                          ICON "res/icons/1.ico"
+27                          ICON "res/icons/1.ico"
 IDI_SHELL_SHUTDOWN          ICON "res/icons/28.ico"
 IDI_SHELL_SHARE             ICON "res/icons/29.ico"
 IDI_SHELL_SHORTCUT          ICON "res/icons/30.ico"
@@ -45,7 +47,9 @@ IDI_SHELL_FIND_IN_FILE      ICON "res/icons/134.ico"
 IDI_SHELL_OPEN_WITH         ICON "res/icons/135.ico"
 IDI_SHELL_CONTROL_PANEL3    ICON "res/icons/137.ico"
 IDI_SHELL_PRINTER2          ICON "res/icons/138.ico"
-/* TODO: 139.ico, 140.ico, 141.ico, 142.ico, 143.ico, 144,ico, 145.ico, 146.ico, 147.ico, 148.ico */
+/* TODO: 139.ico, 140.ico, 141.ico */
+IDI_SHELL_TRASH_FILE        ICON "res/icons/33.ico" //142
+/* TODO 143.ico, 144,ico, 145.ico, 146.ico, 147.ico, 148.ico */
 IDI_SHELL_INF_FILE          ICON "res/icons/151.ico"
 IDI_SHELL_TEXT_FILE         ICON "res/icons/152.ico"
 IDI_SHELL_BAT_FILE          ICON "res/icons/153.ico"

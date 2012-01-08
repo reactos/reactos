@@ -20,6 +20,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(WARNING);
+
 VOID NTAPI HalpInitializePciStubs(VOID);
 VOID NTAPI HalpInitBusHandler(VOID);
 
@@ -33,7 +35,7 @@ VOID BootMain(LPSTR CmdLine)
 
 	DebugInit();
 
-	DPRINTM(DPRINT_WARNING, "BootMain() called.\n");
+	TRACE("BootMain() called.\n");
 
 	if (!UiInitialize(FALSE))
 	{

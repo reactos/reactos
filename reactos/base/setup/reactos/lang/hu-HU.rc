@@ -4,11 +4,11 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítõ"
+CAPTION "ReactOS telepÃ­tÃµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Nem tudod feltelepíteni a ReactOS rendszert így! Kérlek indítsd újra a számítógépet ezzel a CD-vel, hogy feltudjad telepíteni a ReactOS rendszert.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Nem tudod feltelepÃ­teni a ReactOS rendszert Ã­gy! KÃ©rlek indÃ­tsd Ãºjra a szÃ¡mÃ­tÃ³gÃ©pet ezzel a CD-vel, hogy feltudjad telepÃ­teni a ReactOS rendszert.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Click Finish to exit the Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 

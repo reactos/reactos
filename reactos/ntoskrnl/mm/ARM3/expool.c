@@ -469,6 +469,18 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ASSERT(PoolDesc != NULL);
 
     //
+    // Check if this is a special pool allocation
+    //
+    if (MmUseSpecialPool(NumberOfBytes, Tag))
+    {
+        //
+        // Try to allocate using special pool
+        //
+        Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
+        if (Entry) return Entry;
+    }
+
+    //
     // Check if this is a big page allocation
     //
     if (NumberOfBytes > POOL_MAX_ALLOC)
@@ -674,7 +686,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // There were no free entries left, so we have to allocate a new fresh page
     //
     Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
-    ASSERT(Entry != NULL);
+    if (Entry == NULL)
+        return NULL;
+
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
     Entry->PoolType = PoolType + 1;
@@ -756,6 +770,18 @@ ExFreePoolWithTag(IN PVOID P,
     BOOLEAN Combined = FALSE;
 
     //
+    // Check if it was allocated from a special pool
+    //
+    if (MmIsSpecialPoolAddress(P))
+    {
+        //
+        // It is, so handle it via special pool free routine
+        //
+        MmFreeSpecialPool(P);
+        return;
+    }
+
+    //
     // Quickly deal with big page allocations
     //
     if (PAGE_ALIGN(P) == P)
@@ -794,8 +820,8 @@ ExFreePoolWithTag(IN PVOID P,
     //
     if (TagToFree && TagToFree != Entry->PoolTag)
     {
-    	DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Entry->PoolTag);
-    	KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Entry->PoolTag, TagToFree);
+        DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Entry->PoolTag);
+        KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Entry->PoolTag, TagToFree);
     }
 
     //

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -282,7 +282,7 @@ AcpiUtAllocateZeroedAndTrack (
         /* Report allocation error */
 
         ACPI_ERROR ((Module, Line,
-            "Could not allocate size %X", (UINT32) Size));
+            "Could not allocate size %u", (UINT32) Size));
         return (NULL);
     }
 
@@ -436,6 +436,11 @@ AcpiUtTrackAllocation (
     ACPI_FUNCTION_TRACE_PTR (UtTrackAllocation, Allocation);
 
 
+    if (AcpiGbl_DisableMemTracking)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
+
     MemList = AcpiGbl_GlobalList;
     Status = AcpiUtAcquireMutex (ACPI_MTX_MEMORY);
     if (ACPI_FAILURE (Status))
@@ -517,6 +522,11 @@ AcpiUtRemoveAllocation (
 
     ACPI_FUNCTION_TRACE (UtRemoveAllocation);
 
+
+    if (AcpiGbl_DisableMemTracking)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
 
     MemList = AcpiGbl_GlobalList;
     if (NULL == MemList->ListHead)
@@ -644,10 +654,16 @@ AcpiUtDumpAllocations (
     ACPI_DEBUG_MEM_BLOCK    *Element;
     ACPI_DESCRIPTOR         *Descriptor;
     UINT32                  NumOutstanding = 0;
+    UINT8                   DescriptorType;
 
 
     ACPI_FUNCTION_TRACE (UtDumpAllocations);
 
+
+    if (AcpiGbl_DisableMemTracking)
+    {
+        return;
+    }
 
     /*
      * Walk the allocation list.
@@ -663,43 +679,86 @@ AcpiUtDumpAllocations (
         if ((Element->Component & Component) &&
             ((Module == NULL) || (0 == ACPI_STRCMP (Module, Element->Module))))
         {
-            /* Ignore allocated objects that are in a cache */
-
             Descriptor = ACPI_CAST_PTR (ACPI_DESCRIPTOR, &Element->UserSpace);
-            if (ACPI_GET_DESCRIPTOR_TYPE (Descriptor) != ACPI_DESC_TYPE_CACHED)
+
+            if (Element->Size < sizeof (ACPI_COMMON_DESCRIPTOR))
             {
-                AcpiOsPrintf ("%p Len %04X %9.9s-%d [%s] ",
+                AcpiOsPrintf ("%p Length 0x%04X %9.9s-%u "
+                    "[Not a Descriptor - too small]\n",
                     Descriptor, Element->Size, Element->Module,
-                    Element->Line, AcpiUtGetDescriptorName (Descriptor));
-
-                /* Most of the elements will be Operand objects. */
-
-                switch (ACPI_GET_DESCRIPTOR_TYPE (Descriptor))
-                {
-                case ACPI_DESC_TYPE_OPERAND:
-                    AcpiOsPrintf ("%12.12s R%hd",
-                        AcpiUtGetTypeName (Descriptor->Object.Common.Type),
-                        Descriptor->Object.Common.ReferenceCount);
-                    break;
-
-                case ACPI_DESC_TYPE_PARSER:
-                    AcpiOsPrintf ("AmlOpcode %04hX",
-                        Descriptor->Op.Asl.AmlOpcode);
-                    break;
-
-                case ACPI_DESC_TYPE_NAMED:
-                    AcpiOsPrintf ("%4.4s",
-                        AcpiUtGetNodeName (&Descriptor->Node));
-                    break;
-
-                default:
-                    break;
-                }
-
-                AcpiOsPrintf ( "\n");
-                NumOutstanding++;
+                    Element->Line);
             }
+            else
+            {
+                /* Ignore allocated objects that are in a cache */
+
+                if (ACPI_GET_DESCRIPTOR_TYPE (Descriptor) != ACPI_DESC_TYPE_CACHED)
+                {
+                    AcpiOsPrintf ("%p Length 0x%04X %9.9s-%u [%s] ",
+                        Descriptor, Element->Size, Element->Module,
+                        Element->Line, AcpiUtGetDescriptorName (Descriptor));
+
+                    /* Validate the descriptor type using Type field and length */
+
+                    DescriptorType = 0; /* Not a valid descriptor type */
+
+                    switch (ACPI_GET_DESCRIPTOR_TYPE (Descriptor))
+                    {
+                    case ACPI_DESC_TYPE_OPERAND:
+                        if (Element->Size == sizeof (ACPI_DESC_TYPE_OPERAND))
+                        {
+                            DescriptorType = ACPI_DESC_TYPE_OPERAND;
+                        }
+                        break;
+
+                    case ACPI_DESC_TYPE_PARSER:
+                        if (Element->Size == sizeof (ACPI_DESC_TYPE_PARSER))
+                        {
+                            DescriptorType = ACPI_DESC_TYPE_PARSER;
+                        }
+                        break;
+
+                    case ACPI_DESC_TYPE_NAMED:
+                        if (Element->Size == sizeof (ACPI_DESC_TYPE_NAMED))
+                        {
+                            DescriptorType = ACPI_DESC_TYPE_NAMED;
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    /* Display additional info for the major descriptor types */
+
+                    switch (DescriptorType)
+                    {
+                    case ACPI_DESC_TYPE_OPERAND:
+                        AcpiOsPrintf ("%12.12s  RefCount 0x%04X\n",
+                            AcpiUtGetTypeName (Descriptor->Object.Common.Type),
+                            Descriptor->Object.Common.ReferenceCount);
+                        break;
+
+                    case ACPI_DESC_TYPE_PARSER:
+                        AcpiOsPrintf ("AmlOpcode 0x%04hX\n",
+                            Descriptor->Op.Asl.AmlOpcode);
+                        break;
+
+                    case ACPI_DESC_TYPE_NAMED:
+                        AcpiOsPrintf ("%4.4s\n",
+                            AcpiUtGetNodeName (&Descriptor->Node));
+                        break;
+
+                    default:
+                        AcpiOsPrintf ( "\n");
+                        break;
+                    }
+                }
+            }
+
+            NumOutstanding++;
         }
+
         Element = Element->Next;
     }
 
@@ -709,13 +768,11 @@ AcpiUtDumpAllocations (
 
     if (!NumOutstanding)
     {
-        ACPI_INFO ((AE_INFO,
-            "No outstanding allocations"));
+        ACPI_INFO ((AE_INFO, "No outstanding allocations"));
     }
     else
     {
-        ACPI_ERROR ((AE_INFO,
-            "%d(%X) Outstanding allocations",
+        ACPI_ERROR ((AE_INFO, "%u(0x%X) Outstanding allocations",
             NumOutstanding, NumOutstanding));
     }
 

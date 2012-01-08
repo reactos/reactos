@@ -19,18 +19,12 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/date.c
+ * FILE:            dll/cpl/intl/date.c
  * PURPOSE:         Date property page
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 /* GLOBALS ******************************************************************/
 
@@ -44,7 +38,7 @@ static HWND hwndEnum = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-/* if char is 'y' or 'M' or 'd' return TRUE, else FALSE */
+/* If char is 'y' or 'M' or 'd' return TRUE, else FALSE */
 BOOL
 isDateCompAl(TCHAR alpha)
 {
@@ -179,7 +173,7 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
         return FALSE;
     }
 
-    /* substring replacement of separator */
+    /* Substring replacement of separator */
     _tcscpy(szFindedDateSep, FindDateSep(szShortDateFmt));
     pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFindedDateSep);
     _tcscpy(szShortDateFmt, pszResultStr);
@@ -284,7 +278,7 @@ InitShortDateSepSamples(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szShortDateSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
@@ -348,7 +342,7 @@ InitShortDateCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szShortDateFmt);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
@@ -397,7 +391,7 @@ InitLongDateCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szLongDateFmt);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new value to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),

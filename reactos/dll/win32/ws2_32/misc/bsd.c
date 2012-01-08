@@ -7,7 +7,8 @@
  * REVISIONS:
  *   CSH 15/06-2001 Created
  */
-#include <ws2_32.h>
+
+#include "ws2_32.h"
 
 /*
  * @implemented

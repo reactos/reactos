@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <reactos/buildno.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -210,7 +211,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
-    ULONG NlsTableSizes[3]; /* 3 NLS tables */
+    SIZE_T NlsTableSizes[3]; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -417,8 +418,8 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     }
 
     /* Setup the basic header, and give the process the low 1MB to itself */
-    ProcessParams->Length = Size;
-    ProcessParams->MaximumLength = Size;
+    ProcessParams->Length = (ULONG)Size;
+    ProcessParams->MaximumLength = (ULONG)Size;
     ProcessParams->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED |
                            RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
 
@@ -749,9 +750,9 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG Count, Length;
     PWCHAR Name;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    BOOLEAN OverFlow = FALSE;
     CHAR NameBuffer[256];
     STRING SymbolString;
+    NTSTATUS Status;
 
     /* Loop the driver list */
     NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -774,7 +775,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
                 {
                     /* It's too long */
-                    OverFlow = TRUE;
+                    Status = STATUS_BUFFER_OVERFLOW;
                 }
                 else
                 {
@@ -788,33 +789,21 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
                     /* Null-terminate */
                     NameBuffer[Count] = ANSI_NULL;
+                    Status = STATUS_SUCCESS;
                 }
             }
             else
             {
-                /* This should be a driver, check if it fits */
-                if (sizeof(NameBuffer) <
-                    (sizeof("\\System32\\Drivers\\") +
-                     NtSystemRoot.Length / sizeof(WCHAR) - sizeof(UNICODE_NULL) +
-                     LdrEntry->BaseDllName.Length / sizeof(WCHAR) +
-                     sizeof(ANSI_NULL)))
-                {
-                    /* Buffer too small */
-                    OverFlow = TRUE;
-                    while (TRUE);
-                }
-                else
-                {
-                    /* Otherwise build the name. HACKED for GCC :( */
-                    sprintf(NameBuffer,
-                            "%S\\System32\\Drivers\\%S",
-                            &SharedUserData->NtSystemRoot[2],
-                            LdrEntry->BaseDllName.Buffer);
-                }
+                /* Safely print the string into our buffer */
+                Status = RtlStringCbPrintfA(NameBuffer,
+                                            sizeof(NameBuffer),
+                                            "%S\\System32\\Drivers\\%wZ",
+                                            &SharedUserData->NtSystemRoot[2],
+                                            &LdrEntry->BaseDllName);
             }
 
             /* Check if the buffer was ok */
-            if (!OverFlow)
+            if (NT_SUCCESS(Status))
             {
                 /* Initialize the STRING for the debugger */
                 RtlInitString(&SymbolString, NameBuffer);
@@ -836,7 +825,7 @@ VOID
 NTAPI
 INIT_FUNCTION
 ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-             IN ULONG PagesToDestroy,
+             IN ULONG_PTR PagesToDestroy,
              IN TYPE_OF_MEMORY MemoryType)
 {
     PLIST_ENTRY ListEntry;
@@ -992,10 +981,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
     NlsData = LoaderBlock->NlsData;
     ExpNlsTableBase = NlsData->AnsiCodePageData;
     ExpAnsiCodePageDataOffset = 0;
-    ExpOemCodePageDataOffset = ((ULONG_PTR)NlsData->OemCodePageData -
-                                (ULONG_PTR)NlsData->AnsiCodePageData);
-    ExpUnicodeCaseTableDataOffset = ((ULONG_PTR)NlsData->UnicodeCodePageData -
-                                     (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
+                                       (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
+                                            (ULONG_PTR)NlsData->AnsiCodePageData);
 
     /* Initialize the NLS Tables */
     RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
@@ -1083,8 +1072,13 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Set system ranges */
+#ifdef _M_AMD64
+    SharedUserData->Reserved1 = MM_HIGHEST_USER_ADDRESS_WOW64;
+    SharedUserData->Reserved3 = MM_SYSTEM_RANGE_START_WOW64;
+#else
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
     SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
+#endif
 
     /* Make a copy of the NLS Tables */
     ExpInitNls(LoaderBlock);
@@ -1917,9 +1911,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 
-    /* Clean the screen */
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
-
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
@@ -1957,6 +1948,9 @@ Phase1InitializationDiscard(IN PVOID Context)
                         (PVOID*)&ProcessParameters,
                         &Size,
                         MEM_RELEASE);
+
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
 
     /* Increase init phase */
     ExpInitializationPhase++;

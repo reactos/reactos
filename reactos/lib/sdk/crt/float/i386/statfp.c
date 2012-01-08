@@ -26,9 +26,12 @@ unsigned int CDECL _statusfp(void)
 {
   unsigned int retVal = 0;
   unsigned int fpword;
-#if defined(__GNUC__)
+
+#ifdef _M_AMD64
+    fpword = _mm_getcsr();
+#elif defined(__GNUC__)
   __asm__ __volatile__( "fstsw %0" : "=m" (fpword) : );
-#else
+#else // _MSC_VER
   __asm fstsw [fpword];
 #endif
   if (fpword & 0x1)  retVal |= _SW_INVALID;

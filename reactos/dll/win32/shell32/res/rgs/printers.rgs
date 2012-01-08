@@ -1,0 +1,53 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {2227A280-3AEA-1069-A2DE-08002B30309D} = s 'Printers and Faxes'
+		{
+			val '{305CA226-D286-468e-B848-2B2E8E697B74} 2' = d '2'
+			val 'InfoTip' = e '@%%SystemRoot%%\system32\SHELL32.dll,-12696'
+			val 'IntroText' = e '@%%SystemRoot%%\system32\SHELL32.dll,-31757'
+			val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-9319'
+			DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,-138'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'ShellFolder'
+			{
+				val 'Attributes' = d '&H20000004'
+			}
+		}
+	}
+}
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+					NoRemove Explorer
+					{
+						NoRemove ControlPanel
+						{
+							NoRemove NameSpace
+							{
+								Printers = s '{2227A280-3AEA-1069-A2DE-08002B30309D}'
+								{
+									val 'IconIndex' = d '&H0000012C'
+									val 'Info' = s 'Adds, removes and changes settings for printers.'
+									val 'Module' = e '%%SystemRoot%%\system32\main.cpl'
+									val 'Name' = s 'Printers and Faxes'
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

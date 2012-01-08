@@ -1,4 +1,12 @@
-#pragma once
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+#include <prsht.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <tchar.h>
+
+#include "resource.h"
 
 typedef LONG (CALLBACK *APPLET_INITPROC)(VOID);
 
@@ -13,7 +21,7 @@ typedef struct _APPLET
 
 typedef struct _GLOBAL_DATA
 {
-    /* keyboard page */
+    /* Keyboard page */
     STICKYKEYS stickyKeys;
     STICKYKEYS oldStickyKeys;
     FILTERKEYS filterKeys;
@@ -22,11 +30,11 @@ typedef struct _GLOBAL_DATA
     TOGGLEKEYS oldToggleKeys;
     BOOL bKeyboardPref;
 
-    /* sound page */
+    /* Sound page */
     SOUNDSENTRY ssSoundSentry;
     BOOL bShowSounds;
 
-    /* display page */
+    /* Display page */
     HIGHCONTRAST highContrast;
     UINT uCaretBlinkTime;
     UINT uCaretWidth;
@@ -34,10 +42,10 @@ typedef struct _GLOBAL_DATA
     RECT rcCaret;
     RECT rcOldCaret;
 
-    /* mouse page */
+    /* Mouse page */
     MOUSEKEYS mouseKeys;
 
-    /* general page */
+    /* General page */
     ACCESSTIMEOUT accessTimeout;
     SERIALKEYS serialKeys;
     TCHAR szActivePort[MAX_PATH];

@@ -9,4 +9,5 @@
 	<file>autodial.c</file>
 	<file>init.c</file>
 	<file>winsock.c</file>
+	<pch>precomp.h</pch>
 </module>

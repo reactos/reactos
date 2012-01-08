@@ -34,6 +34,7 @@
 #include "servprov.h"
 #include "comcat.h"
 #include "docobj.h"
+#include "shobjidl.h"
 
 #include "wine/debug.h"
 
@@ -167,4 +168,46 @@ HRESULT __RPC_STUB IEnumOleDocumentViews_Next_Stub(
 {
     TRACE("(%p)\n", This);
     return IEnumOleDocumentViews_Next( This, cViews, rgpView, pcFetched );
+}
+
+HRESULT CALLBACK IEnumShellItems_Next_Proxy(
+    IEnumShellItems *This,
+    ULONG celt,
+    IShellItem **rgelt,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumShellItems_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumShellItems_Next_Stub(
+    IEnumShellItems *This,
+    ULONG celt,
+    IShellItem **rgelt,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumShellItems_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+HRESULT CALLBACK IModalWindow_Show_Proxy(
+    IModalWindow *This,
+    HWND hwndOwner)
+{
+    TRACE("(%p)->(%p)\n", This, hwndOwner);
+    return IModalWindow_RemoteShow_Proxy(This, hwndOwner);
+}
+
+HRESULT __RPC_STUB IModalWindow_Show_Stub(
+    IModalWindow *This,
+    HWND hwndOwner)
+{
+    TRACE("(%p)->(%p)\n", This, hwndOwner);
+    return IModalWindow_Show(This, hwndOwner);
 }

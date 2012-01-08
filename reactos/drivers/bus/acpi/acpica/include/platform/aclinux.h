@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -147,7 +147,6 @@
 #define ACPI_CACHE_T                struct kmem_cache
 #define ACPI_SPINLOCK               spinlock_t *
 #define ACPI_CPU_FLAGS              unsigned long
-#define ACPI_THREAD_ID              struct task_struct *
 
 #else /* !__KERNEL__ */
 
@@ -160,17 +159,18 @@
 /* Host-dependent types and defines for user-space ACPICA */
 
 #define ACPI_FLUSH_CPU_CACHE()
-#define ACPI_THREAD_ID              pthread_t
 
 #if defined(__ia64__) || defined(__x86_64__)
 #define ACPI_MACHINE_WIDTH          64
 #define COMPILER_DEPENDENT_INT64    long
 #define COMPILER_DEPENDENT_UINT64   unsigned long
+#define ACPI_CAST_PTHREAD_T(pthread) ((ACPI_THREAD_ID) (pthread))
 #else
 #define ACPI_MACHINE_WIDTH          32
 #define COMPILER_DEPENDENT_INT64    long long
 #define COMPILER_DEPENDENT_UINT64   unsigned long long
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_CAST_PTHREAD_T(pthread) ((ACPI_THREAD_ID) (UINT32) (void *) (pthread))
 #endif
 
 #ifndef __cdecl

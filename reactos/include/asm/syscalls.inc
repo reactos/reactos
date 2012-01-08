@@ -3,12 +3,14 @@
 #define KUSER_SHARED_SYSCALL HEX(7ffe0300)
 #define KGDT_R0_CODE 8
 MACRO(STUBCODE_U, SyscallId, StackBytes)
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     mov eax, SyscallId
     mov ecx, KUSER_SHARED_SYSCALL
     call dword ptr [ecx]
     ret StackBytes
 ENDM
 MACRO(STUBCODE_K, SyscallId, StackBytes)
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     mov eax, SyscallId
     lea edx, [esp + 4]
     pushfd
@@ -18,12 +20,14 @@ MACRO(STUBCODE_K, SyscallId, StackBytes)
 ENDM
 #elif defined(_M_AMD64)
 MACRO(STUBCODE_U, SyscallId, StackBytes)
+    .ENDPROLOG
     mov eax, SyscallId
     mov r10, rcx
     syscall
     ret StackBytes
 ENDM
 MACRO(STUBCODE_K, SyscallId, StackBytes)
+    .ENDPROLOG
     mov eax, SyscallId
     call KiSystemService
     ret StackBytes
@@ -71,24 +75,34 @@ MACRO(MAKE_LABEL, Name, Stackbytes)
     PUBLIC _&Name&@&Stackbytes
     _&Name&@&Stackbytes:
 ENDM
+MACRO(START_PROC, Name, Stackbytes)
+    PUBLIC _&Name&@&Stackbytes
+    .PROC _&Name&@&Stackbytes
+ENDM
 #else
 MACRO(MAKE_LABEL, Name, Stackbytes)
     PUBLIC &Name
     &Name:
+ENDM
+MACRO(START_PROC, Name, Stackbytes)
+    PUBLIC &Name
+    .PROC &Name
 ENDM
 #endif
 
 MACRO(STUB_U, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
     MAKE_LABEL Zw&Name, %Stackbytes
-    MAKE_LABEL Nt&Name, %Stackbytes
+    START_PROC Nt&Name, %Stackbytes
     STUBCODE_U SyscallId, %Stackbytes
+    .ENDP
     SyscallId = SyscallId + 1
 ENDM
 
 MACRO(STUB_K, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
-    MAKE_LABEL Zw&Name, %Stackbytes
+    START_PROC Zw&Name, %Stackbytes
     STUBCODE_K SyscallId, %Stackbytes
+    .ENDP
     SyscallId = SyscallId + 1
 ENDM

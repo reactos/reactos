@@ -9,19 +9,8 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include <commctrl.h>
 //#include <htmlhelp.h>
-#include <stdio.h>
-#include <tchar.h>
-#include "definitions.h"
-#include "globalvar.h"
-#include "dialogs.h"
-#include "dib.h"
-#include "drawing.h"
-#include "history.h"
-#include "mouse.h"
-#include "registry.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -493,7 +482,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPaintingL(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom,
+                    startPaintingL(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom,
                                    fgColor, bgColor);
                 }
                 else
@@ -503,7 +492,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom < 8000))
-                    zoomTo(zoom * 2, LOWORD(lParam), HIWORD(lParam));
+                    zoomTo(zoom * 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             }
             break;
 
@@ -514,7 +503,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPaintingR(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom,
+                    startPaintingR(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom,
                                    fgColor, bgColor);
                 }
                 else
@@ -524,7 +513,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom > 125))
-                    zoomTo(zoom / 2, LOWORD(lParam), HIWORD(lParam));
+                    zoomTo(zoom / 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             }
             break;
 
@@ -533,13 +522,13 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 ReleaseCapture();
                 drawing = FALSE;
-                endPaintingL(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom, fgColor,
+                endPaintingL(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom, fgColor,
                              bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
-                        GetPixel(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom);
+                        GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         fgColor = tempColor;
                     SendMessage(hPalWin, WM_PAINT, 0, 0);
@@ -553,13 +542,13 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 ReleaseCapture();
                 drawing = FALSE;
-                endPaintingR(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom, fgColor,
+                endPaintingR(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom, fgColor,
                              bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
-                        GetPixel(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom);
+                        GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         bgColor = tempColor;
                     SendMessage(hPalWin, WM_PAINT, 0, 0);
@@ -589,8 +578,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             if (hwnd == hImageArea)
             {
-                LONG xNow = LOWORD(lParam) * 1000 / zoom;
-                LONG yNow = HIWORD(lParam) * 1000 / zoom;
+                LONG xNow = GET_X_LPARAM(lParam) * 1000 / zoom;
+                LONG yNow = GET_Y_LPARAM(lParam) * 1000 / zoom;
                 if ((!drawing) || (activeTool <= TOOL_AIRBRUSH))
                 {
                     TRACKMOUSEEVENT tme;
@@ -598,7 +587,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (activeTool == TOOL_ZOOM)
                     {
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
-                        drawZoomFrame(LOWORD(lParam), HIWORD(lParam));
+                        drawZoomFrame(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
                     }
 
                     tme.cbSize = sizeof(TRACKMOUSEEVENT);

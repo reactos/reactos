@@ -86,7 +86,7 @@ UpdateLanStatusUiDlg(
     }
     else
     {
-        if (LoadStringW(netshell_hInstance, IDS_FORMAT_KBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
+        if (LoadStringW(netshell_hInstance, IDS_FORMAT_GBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
             swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
@@ -179,7 +179,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
             pContext->Status = 3;
         }
     }
-    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_UNREACHABLE || MIB_IF_OPER_STATUS_DISCONNECTED)
+    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_UNREACHABLE || IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_DISCONNECTED)
     {
         if (pContext->Status != 4)
         {
@@ -187,7 +187,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
             pContext->Status = 4;
         }
     }
-    else if (MIB_IF_OPER_STATUS_NON_OPERATIONAL)
+    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_NON_OPERATIONAL)
     {
         if (pContext->Status != 5)
         {
@@ -251,6 +251,9 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     }
 
     Shell_NotifyIconW(NIM_MODIFY, &nid);
+
+    if (nid.uFlags & NIF_ICON)
+        DestroyIcon(nid.hIcon);
 
     pContext->dwInOctets = IfEntry.dwInOctets;
     pContext->dwOutOctets = IfEntry.dwOutOctets;
@@ -1002,7 +1005,7 @@ InitializeNetTaskbarNotifications(
                 ZeroMemory(&nid, sizeof(nid));
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
-                nid.uFlags = NIF_ICON | NIF_MESSAGE;
+                nid.uFlags = NIF_MESSAGE;
                 nid.u.uVersion = 3;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
@@ -1022,6 +1025,8 @@ InitializeNetTaskbarNotifications(
                     else if (pProps->Status == NCS_CONNECTED)
                         nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
 
+                    if (nid.hIcon)
+                        nid.uFlags |= NIF_ICON;
 
                     wcscpy(nid.szTip, pProps->pszwName);
                     nid.uFlags |= NIF_TIP;
@@ -1043,6 +1048,9 @@ InitializeNetTaskbarNotifications(
                 {
                     CoTaskMemFree(pItem);
                 }
+
+                if (nid.uFlags & NIF_ICON)
+                    DestroyIcon(nid.hIcon);
             }
         }
     }while(hr == S_OK);

@@ -35,11 +35,6 @@
 #endif
 
 #include "wine/unicode.h"
-//#include "wine/debug.h"
-
-
-//WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
-
 #undef sprintf
 #undef wsprintf
 #undef snprintf
@@ -60,7 +55,7 @@ wchar_t* CDECL _wcsdup( const wchar_t* str )
   wchar_t* ret = NULL;
   if (str)
   {
-    int size = (strlenW(str) + 1) * sizeof(wchar_t);
+    size_t size = (strlenW(str) + 1) * sizeof(wchar_t);
     ret = malloc( size );
     if (ret) memcpy( ret, str, size );
   }
@@ -124,7 +119,7 @@ INT CDECL _wcsupr_s( wchar_t* str, size_t n )
   if (!str || !n)
   {
     if (str) *str = '\0';
-    __set_errno(EINVAL);
+    _set_errno(EINVAL);
     return EINVAL;
   }
 
@@ -138,7 +133,7 @@ INT CDECL _wcsupr_s( wchar_t* str, size_t n )
   /* MSDN claims that the function should return and set errno to
    * ERANGE, which doesn't seem to be true based on the tests. */
   *str = '\0';
-  __set_errno(EINVAL);
+  _set_errno(EINVAL);
   return EINVAL;
 }
 
@@ -239,25 +234,6 @@ wchar_t* CDECL wcspbrk( const wchar_t* str, const wchar_t* accept )
 }
 
 #ifndef _LIBCNT_
-/*********************************************************************
- *		wcstok  (MSVCRT.@)
- */
-wchar_t * CDECL wcstok( wchar_t *str, const wchar_t *delim )
-{
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
-    wchar_t *ret;
-
-    if (!str)
-        if (!(str = data->wcstok_next)) return NULL;
-
-    while (*str && strchrW( delim, *str )) str++;
-    if (!*str) return NULL;
-    ret = str++;
-    while (*str && !strchrW( delim, *str )) str++;
-    if (*str) *str++ = 0;
-    data->wcstok_next = str;
-    return ret;
-}
 
 /*********************************************************************
  *		wctomb (MSVCRT.@)
@@ -285,7 +261,7 @@ INT CDECL wctomb(char *mbchar, wchar_t wchar)
     /* If the default character was used, set errno to EILSEQ and return -1. */
     if(bUsedDefaultChar)
     {
-        __set_errno(EILSEQ);
+        _set_errno(EILSEQ);
         return -1;
     }
 
@@ -386,7 +362,7 @@ size_t CDECL wcstombs(char *mbstr, const wchar_t *wcstr, size_t count)
  */
 INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
 {
-    INT size = 0;
+    size_t size = 0;
 
     if(!wcDest || !numElement)
         return EINVAL;
@@ -441,4 +417,85 @@ INT CDECL wcsncpy_s( wchar_t* wcDest, size_t numElement, const wchar_t *wcSrc,
     return 0;
 }
 
+/******************************************************************
+ *		wcscat_s (MSVCRT.@)
+ *
+ */
+INT CDECL wcscat_s(wchar_t* dst, size_t elem, const wchar_t* src)
+{
+    wchar_t* ptr = dst;
+
+    if (!dst || elem == 0) return EINVAL;
+    if (!src)
+    {
+        dst[0] = '\0';
+        return EINVAL;
+    }
+
+    /* seek to end of dst string (or elem if no end of string is found */
+    while (ptr < dst + elem && *ptr != '\0') ptr++;
+    while (ptr < dst + elem)
+    {
+        if ((*ptr++ = *src++) == '\0') return 0;
+    }
+    /* not enough space */
+    dst[0] = '\0';
+    return ERANGE;
+}
+
+/*********************************************************************
+ *  wcsncat_s (MSVCRT.@)
+ *
+ */
+INT CDECL wcsncat_s(wchar_t *dst, size_t elem,
+        const wchar_t *src, size_t count)
+{
+    size_t srclen;
+    wchar_t dststart;
+    INT ret = 0;
+
+    if (!MSVCRT_CHECK_PMT(dst != NULL) || !MSVCRT_CHECK_PMT(elem > 0))
+    {
+#ifndef _LIBCNT_
+        _set_errno(EINVAL);
+#endif
+        return EINVAL;
+    }
+    if (!MSVCRT_CHECK_PMT(src != NULL || count == 0))
+        return EINVAL;
+    if (count == 0)
+        return 0;
+
+    for (dststart = 0; dststart < elem; dststart++)
+    {
+        if (dst[dststart] == '\0')
+            break;
+    }
+    if (dststart == elem)
+    {
+        MSVCRT_INVALID_PMT("dst[elem] is not NULL terminated\n");
+        return EINVAL;
+    }
+
+    if (count == _TRUNCATE)
+    {
+        srclen = strlenW(src);
+        if (srclen >= (elem - dststart))
+        {
+            srclen = elem - dststart - 1;
+            ret = STRUNCATE;
+        }
+    }
+    else
+        srclen = min(strlenW(src), count);
+    if (srclen < (elem - dststart))
+    {
+        memcpy(&dst[dststart], src, srclen*sizeof(wchar_t));
+        dst[dststart+srclen] = '\0';
+        return ret;
+    }
+    MSVCRT_INVALID_PMT("dst[elem] is too small");
+    dst[0] = '\0';
+    return ERANGE;
+}
 

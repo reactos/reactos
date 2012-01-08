@@ -1,0 +1,17 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Finaliza uma sessão.\n\n\
+  /v\t\tExibe informações a cerca de ações efetuadas.\n\
+  /?\t\tExibe esta informações.\n\n"
+
+IDS_LOGOFF_REMOTE, "Finalizando sessão em máquina remota."
+IDS_LOGOFF_LOCAL,  "Finalizando a sessão atual nesta máquina."
+
+IDS_ILLEGAL_PARAM, "Parâmetro(s) inválido(s)\n"
+END
+/* EOF */

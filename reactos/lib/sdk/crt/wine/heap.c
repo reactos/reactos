@@ -35,12 +35,13 @@
     ((((DWORD_PTR)((char *)ptr + alignment + sizeof(void *) + offset)) & \
       ~(alignment - 1)) - offset))
 
-typedef void (*MSVCRT_new_handler_func)(size_t size);
+
+typedef int (CDECL *MSVCRT_new_handler_func)(size_t size);
 
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static int MSVCRT_new_mode;
 
-/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */ 
+/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */
 static unsigned int MSVCRT_amblksiz = 16;
 /* FIXME - According to documentation it should be 480 bytes, at runtime default is 0 */
 static size_t MSVCRT_sbh_threshold = 0;
@@ -50,14 +51,28 @@ static size_t MSVCRT_sbh_threshold = 0;
  */
 void* CDECL MSVCRT_operator_new(size_t size)
 {
-  void *retval = HeapAlloc(GetProcessHeap(), 0, size);
-  TRACE("(%ld) returning %p\n", size, retval);
-  if(retval) return retval;
-  LOCK_HEAP;
-  if(MSVCRT_new_handler)
-    (*MSVCRT_new_handler)(size);
-  UNLOCK_HEAP;
-  return retval;
+  void *retval;
+  int freed;
+
+  do
+  {
+    retval = HeapAlloc(GetProcessHeap(), 0, size);
+    if(retval)
+    {
+      TRACE("(%ld) returning %p\n", size, retval);
+      return retval;
+    }
+
+    LOCK_HEAP;
+    if(MSVCRT_new_handler)
+      freed = (*MSVCRT_new_handler)(size);
+    else
+      freed = 0;
+    UNLOCK_HEAP;
+  } while(freed);
+
+  TRACE("(%ld) out of memory\n", size);
+  return NULL;
 }
 
 
@@ -158,7 +173,7 @@ int CDECL _heapchk(void)
 {
   if (!HeapValidate( GetProcessHeap(), 0, NULL))
   {
-    __set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return _HEAPBADNODE;
   }
   return _HEAPOK;
@@ -172,7 +187,7 @@ int CDECL _heapmin(void)
   if (!HeapCompact( GetProcessHeap(), 0 ))
   {
     if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
-      __set_errno(GetLastError());
+      _dosmaperr(GetLastError());
     return -1;
   }
   return 0;
@@ -187,14 +202,14 @@ int CDECL _heapwalk(_HEAPINFO* next)
 
   LOCK_HEAP;
   phe.lpData = next->_pentry;
-  phe.cbData = next->_size;
+  phe.cbData = (DWORD)next->_size;
   phe.wFlags = next->_useflag == _USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
 
   if (phe.lpData && phe.wFlags & PROCESS_HEAP_ENTRY_BUSY &&
       !HeapValidate( GetProcessHeap(), 0, phe.lpData ))
   {
     UNLOCK_HEAP;
-   __set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return _HEAPBADNODE;
   }
 
@@ -205,7 +220,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       UNLOCK_HEAP;
       if (GetLastError() == ERROR_NO_MORE_ITEMS)
          return _HEAPEND;
-      __set_errno(GetLastError());
+      _dosmaperr(GetLastError());
       if (!phe.lpData)
         return _HEAPBADBEGIN;
       return _HEAPBADNODE;
@@ -273,7 +288,7 @@ size_t CDECL _msize(void* mem)
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL calloc(size_t size,size_t count)
+void* CDECL calloc(size_t size, size_t count)
 {
   return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size * count );
 }
@@ -568,8 +583,8 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
     if(!count)
         return 0;
 
-    if(!dest || !src || !numberOfElements) {
-        _invalid_parameter(NULL, NULL, NULL, 0, 0);
+    if (!MSVCRT_CHECK_PMT(dest != NULL) || !MSVCRT_CHECK_PMT(src != NULL) ||
+        !MSVCRT_CHECK_PMT(numberOfElements != 0)) {
         *_errno() = EINVAL;
         return EINVAL;
     }
@@ -587,7 +602,7 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
         return 0;
     }
 
-    _invalid_parameter(NULL, NULL, NULL, 0, 0);
+    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small");
     dest[0] = '\0';
     *_errno() = EINVAL;
     return EINVAL;

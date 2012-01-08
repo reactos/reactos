@@ -123,7 +123,7 @@ acpi_button_add (
 	if (!device)
 		return_VALUE(-1);
 
-	button = ExAllocatePool(NonPagedPool,sizeof(struct acpi_button));
+	button = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_button), 'IPCA');
 	if (!button)
 		return_VALUE(-4);
 	memset(button, 0, sizeof(struct acpi_button));
@@ -187,7 +187,7 @@ acpi_button_add (
 		if (!power_button)
 			power_button = device;
 		else {
-			ExFreePool(button);
+			ExFreePoolWithTag(button, 'IPCA');
 			return_VALUE(-15);
 		}
 		break;
@@ -196,7 +196,7 @@ acpi_button_add (
 		if (!sleep_button)
 			sleep_button = device;
 		else {
-			ExFreePool(button);
+			ExFreePoolWithTag(button, 'IPCA');
 			return_VALUE(-15);
 		}
 		break;
@@ -204,7 +204,7 @@ acpi_button_add (
 		if (!lid_button)
 			lid_button = device;
 		else {
-			ExFreePool(button);
+			ExFreePoolWithTag(button, 'IPCA');
 			return_VALUE(-15);
 		}
 		break;
@@ -250,7 +250,7 @@ acpi_button_add (
 
 end:
 	if (result) {
-		ExFreePool(button);
+		ExFreePoolWithTag(button, 'IPCA');
 	}
 
 	return_VALUE(result);
@@ -294,7 +294,7 @@ acpi_button_remove (struct acpi_device *device, int type)
 		ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
 			"Error removing notify handler\n"));
 
-	ExFreePool(button);
+	ExFreePoolWithTag(button, 'IPCA');
 
 	return_VALUE(0);
 }

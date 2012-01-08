@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -216,7 +216,7 @@ static ACPI_EXDUMP_INFO     AcpiExDumpEvent[2] =
 static ACPI_EXDUMP_INFO     AcpiExDumpMethod[9] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpMethod),         NULL},
-    {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Method.MethodFlags),           "Method Flags"},
+    {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Method.InfoFlags),             "Info Flags"},
     {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Method.ParamCount),            "Parameter Count"},
     {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Method.SyncLevel),             "Sync Level"},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Method.Mutex),                 "Mutex"},
@@ -864,7 +864,7 @@ AcpiExDumpOperands (
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-        "**** Start operand dump for opcode [%s], %d operands\n",
+        "**** Start operand dump for opcode [%s], %u operands\n",
         OpcodeName, NumOperands));
 
     if (NumOperands == 0)
@@ -948,7 +948,7 @@ AcpiExDumpNamespaceNode (
     AcpiOsPrintf ("%20s : %4.4s\n", "Name", AcpiUtGetNodeName (Node));
     AcpiExOutString  ("Type", AcpiUtGetTypeName (Node->Type));
     AcpiExOutPointer ("Attached Object", AcpiNsGetAttachedObject (Node));
-    AcpiExOutPointer ("Parent", AcpiNsGetParentNode (Node));
+    AcpiExOutPointer ("Parent", Node->Parent);
 
     AcpiExDumpObject (ACPI_CAST_PTR (ACPI_OPERAND_OBJECT, Node),
         AcpiExDumpNode);
@@ -1096,7 +1096,7 @@ AcpiExDumpPackageObj (
 
     case ACPI_TYPE_PACKAGE:
 
-        AcpiOsPrintf ("[Package] Contains %d Elements:\n",
+        AcpiOsPrintf ("[Package] Contains %u Elements:\n",
             ObjDesc->Package.Count);
 
         for (i = 0; i < ObjDesc->Package.Count; i++)

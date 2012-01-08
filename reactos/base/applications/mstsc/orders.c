@@ -943,6 +943,7 @@ process_bmpcache(STREAM s)
 	in_uint8p(s, data, size);
 
 	DEBUG(("BMPCACHE(cx=%d,cy=%d,id=%d,idx=%d,bpp=%d,size=%d,pad1=%d,bufsize=%d,pad2=%d,rs=%d,fs=%d)\n", width, height, cache_id, cache_idx, bpp, size, pad1, bufsize, pad2, row_size, final_size));
+	(void)pad1; (void)pad2;
 
 	bmpdata = (uint8 *) xmalloc(width * height * Bpp);
 

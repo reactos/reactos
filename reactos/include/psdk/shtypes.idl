@@ -66,7 +66,7 @@ typedef struct _STRRET
     {
     [case(STRRET_WSTR)][string] LPWSTR    pOleStr;        /* OLESTR that will be freed */
     [case(STRRET_OFFSET)]       UINT      uOffset;        /* Offset into SHITEMID (ANSI) */
-    [case(STRRET_CSTR)]         char      cStr[MAX_PATH]; /* ANSI Buffer */
+    [case(STRRET_CSTR)]         CHAR      cStr[MAX_PATH]; /* ANSI Buffer */
     } DUMMYUNIONNAME;
 } STRRET, *LPSTRRET;
 cpp_quote("#include <poppack.h>")
@@ -79,6 +79,12 @@ typedef struct
     STRRET str;
 } SHELLDETAILS, *LPSHELLDETAILS;
 cpp_quote("#include <poppack.h>")
+
+typedef struct _COMDLG_FILTERSPEC
+{
+    [string] LPCWSTR pszName;
+    [string] LPCWSTR pszSpec;
+} COMDLG_FILTERSPEC;
 
 typedef [v1_enum] enum tagSHCOLSTATE
 {
@@ -105,3 +111,27 @@ typedef [v1_enum] enum tagSHCOLSTATE
 } SHCOLSTATE;
 
 typedef DWORD SHCOLSTATEF;
+
+typedef GUID KNOWNFOLDERID;
+
+cpp_quote("#if 0")
+typedef KNOWNFOLDERID *REFKNOWNFOLDERID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID &")
+cpp_quote("#else")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID * __MIDL_CONST")
+cpp_quote("#endif")
+
+typedef GUID FOLDERTYPEID;
+
+cpp_quote("#if 0")
+typedef FOLDERTYPEID *REFFOLDERTYPEID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID &")
+cpp_quote("#else")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID * __MIDL_CONST")
+cpp_quote("#endif")

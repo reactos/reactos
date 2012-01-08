@@ -1,66 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-#include "bitmaps.h"
-#include "pen.h"
-
-#define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
-#define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
-
-#define HANDLEENTRY_INDESTROY 1
-
-typedef struct _USER_HANDLE_ENTRY
-{
-    void          *ptr;          /* pointer to object */
-    union
-    {
-        PVOID pi;
-        PTHREADINFO pti;          // pointer to Win32ThreadInfo
-        PPROCESSINFO ppi;         // pointer to W32ProcessInfo
-    };
-    unsigned char  type;         /* object type (0 if free) */
-    unsigned char  flags;
-    unsigned short generation;   /* generation counter */
-} USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
-
-
-
-typedef struct _USER_HANDLE_TABLE
-{
-   PUSER_HANDLE_ENTRY handles;
-   PUSER_HANDLE_ENTRY freelist;
-   int nb_handles;
-   int allocated_handles;
-} USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
-
-
-
-typedef enum _USER_OBJECT_TYPE
-{
-  otFree = 0,
-  otWindow,
-  otMenu,
-  otCursorIcon,
-  otSMWP,
-  otHook,
-  otClipBoardData,
-  otCallProc,
-  otAccel,
-  otDDEaccess,
-  otDDEconv,
-  otDDExact,
-  otMonitor,
-  otKBDlayout,
-  otKBDfile,
-  otEvent,
-  otTimer,
-  otInputContext,
-  otHidData,
-  otDeviceInfo,
-  otTouchInput,
-  otGestureInfo
-} USER_OBJECT_TYPE;
-
 typedef struct _USER_REFERENCE_ENTRY
 {
    SINGLE_LIST_ENTRY Entry;
@@ -97,13 +36,7 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj);
 PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
 BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
-HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
-BOOL FASTCALL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
-PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 BOOL FASTCALL UserCreateHandleTable(VOID);
-VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
-
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
@@ -136,10 +69,5 @@ UserDerefObjectCo(PVOID obj)
     ASSERT(obj == UserReferenceEntry->obj);
     UserDereferenceObject(obj);
 }
-
-VOID  FASTCALL CreateStockObjects (VOID);
-VOID  FASTCALL CreateSysColorObjects (VOID);
-
-PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 /* EOF */

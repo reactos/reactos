@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           GDI Palette Functions
- * FILE:              subsys/win32k/eng/palette.c
+ * FILE:              subsystems/win32/win32k/objects/palette.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  */
@@ -12,15 +12,15 @@
 #define NDEBUG
 #include <debug.h>
 
-static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
+static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* The program need save the pallete and restore it */
 
 PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
 PPALETTE appalSurfaceDefault[11];
 
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
-  // first 10 entries in the system palette
-  // red  green blue  flags
+  // First 10 entries in the system palette
+  // Red  Green Blue  Flags
   { 0x00, 0x00, 0x00, PC_SYS_USED },
   { 0x80, 0x00, 0x00, PC_SYS_USED },
   { 0x00, 0x80, 0x00, PC_SYS_USED },
@@ -45,7 +45,7 @@ const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0x00, 0x00, 0xff, PC_SYS_USED },
   { 0xff, 0x00, 0xff, PC_SYS_USED },
   { 0x00, 0xff, 0xff, PC_SYS_USED },
-  { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
+  { 0xff, 0xff, 0xff, PC_SYS_USED }     // Last 10
 };
 
 unsigned short GetNumberOfBits(unsigned int dwMask)
@@ -66,7 +66,7 @@ InitPaletteImpl()
     HPALETTE hpalette;
     PLOGPALETTE palPtr;
 
-    // create default palette (20 system colors)
+    // Create default palette (20 system colors)
     palPtr = ExAllocatePoolWithTag(PagedPool,
                                    sizeof(LOGPALETTE) +
                                        (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)),
@@ -285,7 +285,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     return NewPalette;
 }
 
-BOOL INTERNAL_CALL
+BOOL NTAPI
 PALETTE_Cleanup(PVOID ObjectBody)
 {
     PPALETTE pPal = (PPALETTE)ObjectBody;
@@ -362,7 +362,7 @@ ULONG
 NTAPI
 PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG ulColor)
 {
-    if (ppal->flFlags & PAL_INDEXED) // use fl & PALINDEXED
+    if (ppal->flFlags & PAL_INDEXED) // Use fl & PALINDEXED
         return PALETTE_ulGetNearestPaletteIndex(ppal, ulColor);
     else
         return PALETTE_ulGetNearestBitFieldsIndex(ppal, ulColor);
@@ -523,7 +523,7 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
     }
     else
     {
-        /* FIXME - Handle PalGDI == NULL!!!! */
+        /* FIXME: Handle PalGDI == NULL!!!! */
         DPRINT1("PalGDI is NULL\n");
     }
   return NewPalette;
@@ -542,7 +542,7 @@ HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
     Palette.NumberOfEntries = 256;
     if (IntGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
     {
-        /* from wine, more that 256 color math */
+        /* From WINE, more that 256 color math */
         Palette.NumberOfEntries = 20;
         for (i = 0; i < Palette.NumberOfEntries; i++)
         {
@@ -556,7 +556,7 @@ HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
         Palette.aEntries[0].peBlue=0x00;
         Palette.aEntries[0].peGreen=0x00;
 
-        /* the first 6 */
+        /* The first 6 */
         for (i=1; i <= 6; i++)
         {
             Palette.aEntries[i].peRed=(i%2)?0x80:0;
@@ -787,13 +787,13 @@ IntGdiRealizePalette(HDC hDC)
 
     if(!(ppalSurf->flFlags & PAL_INDEXED))
     {
-        // FIXME : set error?
+        // FIXME: Set error?
         goto cleanup;
     }
 
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
-    // FIXME : should we resize ppalSurf if it's too small?
+    // FIXME: Should we resize ppalSurf if it's too small?
     realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
     for(i=0; i<realize; i++)

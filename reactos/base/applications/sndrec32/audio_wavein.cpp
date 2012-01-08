@@ -619,8 +619,6 @@ audio_wavein::stop_recording( void )
         
 
     MMRESULT err;
-    DWORD wait;
-
 
     if ( status != WAVEIN_RECORDING )
         return;
@@ -650,9 +648,7 @@ audio_wavein::stop_recording( void )
 
 
     if ( data_flushed_event )
-        wait = WaitForSingleObject( 
-                        data_flushed_event, INFINITE 
-                    );
+        WaitForSingleObject(data_flushed_event, INFINITE);
 
 
 
@@ -709,7 +705,6 @@ audio_wavein::recording_procedure( LPVOID arg )
 
     MSG msg;
     WAVEHDR * phdr;
-    DWORD wait;
     audio_wavein * _this = ( audio_wavein * ) arg;
 
     
@@ -731,9 +726,7 @@ audio_wavein::recording_procedure( LPVOID arg )
     //
 
     if ( _this->wakeup_recthread )
-        wait = WaitForSingleObject( 
-                        _this->wakeup_recthread, INFINITE 
-                    );
+        WaitForSingleObject(_this->wakeup_recthread, INFINITE);
 
 
 
@@ -842,9 +835,8 @@ audio_wavein::recording_procedure( LPVOID arg )
                         // recording thread can go to sleep!
                         //
 
-                        wait = WaitForSingleObject( 
-                                    _this->wakeup_recthread, INFINITE );
-                            
+                        WaitForSingleObject(_this->wakeup_recthread, INFINITE);
+
                     }
 
 

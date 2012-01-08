@@ -1,47 +1,38 @@
 #pragma once
 
-/* monitor object */
+/* Monitor object */
 typedef struct _MONITOR
 {
     HEAD head;
-//
-    FAST_MUTEX     Lock;       /* R/W lock */
-    UNICODE_STRING DeviceName; /* name of the monitor */
-    PDEVOBJ     *GdiDevice;    /* pointer to the GDI device to
-	                          which this monitor is attached */
-// This is the structure Windows uses:
-//    struct _MONITOR* pMonitorNext;
-    union  {        
-    DWORD   dwMONFlags;
-    struct {
-    DWORD   IsVisible:1;
-    DWORD   IsPalette:1;
-    DWORD   IsPrimary:1;  /* wether this is the primary monitor */
-    };};
+    struct _MONITOR* pMonitorNext;
+    union
+    {
+        DWORD   dwMONFlags;
+        struct
+        {
+            DWORD   IsVisible: 1;
+            DWORD   IsPalette: 1;
+            DWORD   IsPrimary: 1; /* Whether this is the primary monitor */
+        };
+    };
     RECT    rcMonitor;
     RECT    rcWork;
     HRGN    hrgnMonitor;
-    SHORT   Spare0;
+    SHORT   cFullScreen;
     SHORT   cWndStack;
     HDEV    hDev;
-    HDEV    hDevReal;
-//    BYTE    DockTargets[4][7];
-// Use LIST_ENTRY
-    struct _MONITOR* Next; //Flink;
-    struct _MONITOR* Prev; //Blink;
-} MONITOR, *PMONITOR;
 
-/* functions */
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitMonitorImpl(VOID);
-NTSTATUS CleanupMonitorImpl(VOID);
+    // ReactOS specific fields:
+    UNICODE_STRING DeviceName;  /* Name of the monitor */
+    PDEVOBJ        *GdiDevice;  /* Pointer to the GDI device to
+                                   which this monitor is attached */
+} MONITOR, *PMONITOR;
 
 NTSTATUS IntAttachMonitor(PDEVOBJ *pGdiDevice, ULONG DisplayNumber);
 NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
 NTSTATUS IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice);
 PMONITOR FASTCALL UserGetMonitorObject(IN HMONITOR);
 PMONITOR FASTCALL IntGetPrimaryMonitor(VOID);
+PMONITOR FASTCALL IntMonitorFromRect(PRECTL,DWORD);
 
 /* EOF */

@@ -21,6 +21,7 @@
 
 #include "miniport.h"
 #include "protocol.h"
+#include "efilter.h"
 #include "buffer.h"
 
 /* Exported functions */
@@ -29,7 +30,7 @@
 #endif
 
 /* the version of NDIS we claim to be */
-#define NDIS_VERSION 0x00050000
+#define NDIS_VERSION 0x00050001
 
 #define NDIS_TAG  0x4e4d4953
 

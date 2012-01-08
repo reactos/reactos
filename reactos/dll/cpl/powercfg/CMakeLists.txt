@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(powercfg.cpl powercfg.spec)
@@ -13,7 +12,7 @@ add_library(powercfg SHARED
     powercfg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
 
-set_module_type(powercfg cpl)
+set_module_type(powercfg cpl UNICODE)
 
 add_importlibs(powercfg
     msvcrt
@@ -25,4 +24,5 @@ add_importlibs(powercfg
     kernel32
     ntdll)
 
+add_pch(powercfg powercfg.h)
 add_cd_file(TARGET powercfg DESTINATION reactos/system32 FOR all)

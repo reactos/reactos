@@ -86,7 +86,7 @@ VGAtoDIB(
     UCHAR *GDIpos, *initial;
 
     /* Used by the temporary DFB */
-    DEVSURF DestDevSurf;
+    //DEVSURF DestDevSurf;
 
     /* FIXME: Optimize to retrieve entire bytes at a time (see ../vgavideo/vgavideo.c:vgaGetByte) */
 
@@ -97,11 +97,10 @@ VGAtoDIB(
     if (ColorTranslation == NULL)
     {
         /* Prepare a Dest Dev Target and copy from the DFB to the DIB */
-        DestDevSurf.NextScan = Dest->lDelta;
-        DestDevSurf.StartBmp = Dest->pvScan0;
+        //DestDevSurf.NextScan = Dest->lDelta;
+        //DestDevSurf.StartBmp = Dest->pvScan0;
 
         DIB_BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvScan0, Dest->lDelta);
-
     }
     else
     {

@@ -11,4 +11,5 @@
 	<file>kmixer.c</file>
 	<file>filter.c</file>
 	<file>pin.c</file>
+	<pch>kmixer.h</pch>
 </module>

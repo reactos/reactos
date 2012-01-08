@@ -17,7 +17,6 @@
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
-#pragma code_page(936)  /* FIXME: default for CHINESE_TRADITIONAL is 950 */
 
 MENU_001 MENU DISCARDABLE
 BEGIN
@@ -121,13 +120,19 @@ END
 
 IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ÍPÏ∂ %s"
+CAPTION "ÈóúÊñº %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+	LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -135,7 +140,7 @@ BEGIN
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
 	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
 	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
-	DEFPUSHBUTTON "¥_∂®", IDOK, 220, 178, 50, 14
+	DEFPUSHBUTTON "Á¢∫ÂÆö", IDOK, 220, 178, 50, 14
 	
 	PUSHBUTTON "", IDC_SHELL_ABOUT_AUTHORS, 5, 178, 70, 14
 END
@@ -367,10 +372,10 @@ BEGIN
 	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
 	LTEXT "File:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
 END
 
@@ -595,13 +600,13 @@ END
 STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 BEGIN
 	/* columns in the shellview */
-	IDS_SHV_COLUMN1             "ôn∞∏"
-	IDS_SHV_COLUMN2             "¥Û–°"
-	IDS_SHV_COLUMN3             "Óê–Õ"
-	IDS_SHV_COLUMN4             "“—–ﬁ∏ƒ"
-	IDS_SHV_COLUMN5             "åŸ–‘"
-	IDS_SHV_COLUMN6             " π”√ø’Èg"
-	IDS_SHV_COLUMN7             " £Nø’Èg"
+	IDS_SHV_COLUMN1             "Ê™îÊ°à"
+	IDS_SHV_COLUMN2             "Â§ßÂ∞è"
+	IDS_SHV_COLUMN3             "È°ûÂûã"
+	IDS_SHV_COLUMN4             "Â∑≤‰øÆÊîπ"
+	IDS_SHV_COLUMN5             "Â±¨ÊÄß"
+	IDS_SHV_COLUMN6             "‰ΩøÁî®Á©∫Èñì"
+	IDS_SHV_COLUMN7             "Ââ©È§òÁ©∫Èñì"
 	IDS_SHV_COLUMN8             "Name"
 	IDS_SHV_COLUMN9             "Comments"
 	IDS_SHV_COLUMN10            "Owner"
@@ -708,8 +713,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Open With"
 	IDS_OPEN_WITH_CHOOSE        "Select Program"
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
@@ -761,6 +769,6 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END
 
-#pragma code_page(default)

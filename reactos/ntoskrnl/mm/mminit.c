@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
  * PURPOSE:         Memory Manager Initialization
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/
@@ -43,7 +43,7 @@ MiInitSystemMemoryAreas()
     PMEMORY_AREA MArea;
     NTSTATUS Status;
     BoundaryAddressMultiple.QuadPart = 0;
-    
+
     //
     // Create the memory area to define the PTE base
     //
@@ -58,7 +58,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // Create the memory area to define Hyperspace
     //
@@ -73,7 +73,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // Protect the PFN database
     //
@@ -88,7 +88,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // ReactOS requires a memory area to keep the initial NP area off-bounds
     //
@@ -103,7 +103,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // And we need one more for the system NP
     //
@@ -119,7 +119,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // We also need one for system view space
     //
@@ -134,7 +134,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // And another for session space
     //
@@ -150,7 +150,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // One more for ARM paged pool
     //
@@ -165,7 +165,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // Next, the KPCR
     //
@@ -180,7 +180,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-    
+
     //
     // Now the KUSER_SHARED_DATA
     //
@@ -252,7 +252,7 @@ MiDbgDumpAddressSpace(VOID)
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MiSystemViewStart,
             (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
-            "System View Space");        
+            "System View Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmSessionBase,
             MiSessionSpaceEnd,
@@ -304,9 +304,9 @@ MmMpwThreadMain(PVOID Ignored)
       PagesWritten = 0;
 
 #ifndef NEWCC
-	  // XXX arty -- we flush when evicting pages or destorying cache
-	  // sections.
-      CcRosFlushDirtyPages(128, &PagesWritten);
+      // XXX arty -- we flush when evicting pages or destorying cache
+      // sections.
+      CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
 #endif
    }
 }
@@ -319,7 +319,7 @@ MmInitMpwThread(VOID)
    KPRIORITY Priority;
    NTSTATUS Status;
    CLIENT_ID MpwThreadId;
-   
+
    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
 
    Status = PsCreateSystemThread(&MpwThreadHandle,
@@ -377,7 +377,7 @@ MmInitSystem(IN ULONG Phase,
     PMMPTE PointerPte;
     MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameNumber;
-    
+
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
     KeInitializeGuardedMutex(&PsIdleProcess->AddressCreationLock);
@@ -396,7 +396,7 @@ MmInitSystem(IN ULONG Phase,
     MmInitializePageOp();
     MmInitSectionImplementation();
     MmInitPagingFile();
-    
+
     //
     // Create a PTE to double-map the shared data section. We allocate it
     // from paged pool so that we can't fault when trying to touch the PTE
@@ -407,34 +407,34 @@ MmInitSystem(IN ULONG Phase,
                                                 sizeof(MMPTE),
                                                 '  mM');
     if (!MmSharedUserDataPte) return FALSE;
-    
+
     //
     // Now get the PTE for shared data, and read the PFN that holds it
     //
     PointerPte = MiAddressToPte((PVOID)KI_USER_SHARED_DATA);
     ASSERT(PointerPte->u.Hard.Valid == 1);
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
-    
+
     /* Build the PTE and write it */
     MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte,
                                 PointerPte,
                                 MM_READONLY,
                                 PageFrameNumber);
     *MmSharedUserDataPte = TempPte;
-    
+
     /* Setup the memory threshold events */
     if (!MiInitializeMemoryEvents()) return FALSE;
-    
+
     /*
      * Unmap low memory
      */
     MiInitBalancerThread();
-    
+
     /*
      * Initialise the modified page writer.
      */
     MmInitMpwThread();
-    
+
     /* Initialize the balance set manager */
     MmInitBsmThread();
 

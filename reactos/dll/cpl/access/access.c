@@ -8,12 +8,6 @@
  *                  Copyright 2007 Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include "resource.h"
 #include "access.h"
 
 #define NUM_APPLETS	(1)
@@ -82,7 +76,7 @@ ReadSettings(PGLOBAL_DATA pGlobalData)
 
     pGlobalData->uCaretBlinkTime = GetCaretBlinkTime();
 
-    /* get sound settings */
+    /* Get sound settings */
     pGlobalData->ssSoundSentry.cbSize = sizeof(SOUNDSENTRY);
     SystemParametersInfo(SPI_GETSOUNDSENTRY,
                          sizeof(SOUNDSENTRY),

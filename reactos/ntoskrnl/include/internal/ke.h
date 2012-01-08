@@ -87,9 +87,9 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
 extern ULONGLONG KeBootTimeBias;
 extern BOOLEAN ExCmosClockIsSane;
-extern ULONG KeProcessorArchitecture;
-extern ULONG KeProcessorLevel;
-extern ULONG KeProcessorRevision;
+extern USHORT KeProcessorArchitecture;
+extern USHORT KeProcessorLevel;
+extern USHORT KeProcessorRevision;
 extern ULONG KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
@@ -125,13 +125,14 @@ extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
-extern ULONG KiIdleSummary;
+extern ULONG_PTR KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
+extern BOOLEAN KiTimeAdjustmentEnabled;
 extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
@@ -146,17 +147,6 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define AFFINITY_MASK(Id) KiMask32Array[Id]
 #define PRIORITY_MASK(Id) KiMask32Array[Id]
 
-/* The following macro initializes a dispatcher object's header */
-#define KeInitializeDispatcherHeader(Header, t, s, State)                   \
-{                                                                           \
-    (Header)->Type = t;                                                     \
-    (Header)->Absolute = 0;                                                 \
-    (Header)->Size = s;                                                     \
-    (Header)->Inserted = 0;                                                 \
-    (Header)->SignalState = State;                                          \
-    InitializeListHead(&((Header)->WaitListHead));                          \
-}
-
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
 
@@ -164,7 +154,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define TIMER_WAIT_BLOCK 0x3L
 
 #ifdef _M_ARM // FIXME: remove this once our headers are cleaned up
-// 
+//
 // A system call ID is formatted as such:
 // .________________________________________________________________.
 // | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
@@ -187,7 +177,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 //
 // NB. From assembly code, the table number must be computed as an offset into
 //     the service descriptor table.
-//     
+//
 //     Each entry into the table is 16 bytes long on 32-bit architectures, and
 //     32 bytes long on 64-bit architectures.
 //
@@ -277,6 +267,34 @@ NTAPI
 KeSetDisableBoostThread(
     IN OUT PKTHREAD Thread,
     IN BOOLEAN Disable
+);
+
+BOOLEAN
+NTAPI
+KeSetDisableBoostProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Disable
+);
+
+BOOLEAN
+NTAPI
+KeSetAutoAlignmentProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Enable
+);
+
+KAFFINITY
+NTAPI
+KeSetAffinityProcess(
+    IN PKPROCESS Process,
+    IN KAFFINITY Affinity
+);
+
+VOID
+NTAPI
+KeBoostPriorityThread(
+    IN PKTHREAD Thread,
+    IN KPRIORITY Increment
 );
 
 VOID
@@ -450,7 +468,7 @@ KeInitializeProfile(
     struct _KPROFILE* Profile,
     struct _KPROCESS* Process,
     PVOID ImageBase,
-    ULONG ImageSize,
+    SIZE_T ImageSize,
     ULONG BucketSize,
     KPROFILE_SOURCE ProfileSource,
     KAFFINITY Affinity
@@ -628,7 +646,7 @@ VOID
 FASTCALL
 KiUnlinkThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus
+    IN LONG_PTR WaitStatus
 );
 
 VOID
@@ -653,7 +671,7 @@ KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
     KAFFINITY Affinity,
-    PULONG DirectoryTableBase,
+    PULONG_PTR DirectoryTableBase,
     IN BOOLEAN Enable
 );
 
@@ -864,7 +882,7 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-                              
+
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
@@ -1020,12 +1038,6 @@ KiCallUserMode(
     IN PULONG OutputLength
 );
 
-PULONG
-NTAPI
-KiGetUserModeStackAddress(
-    VOID
-);
-
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
@@ -1038,12 +1050,6 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
 VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
-
-BOOLEAN
-NTAPI
-KeDisableInterrupts(
-    VOID
-);
 
 VOID
 FASTCALL

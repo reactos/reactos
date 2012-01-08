@@ -70,7 +70,7 @@ ULONG
 FASTCALL
 KiUpdateDr7(IN ULONG Dr7)
 {
-    ULONG DebugMask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
+    ULONG DebugMask = KeGetCurrentThread()->Header.DebugActive;
 
     /* Check if debugging is enabled */
     if (DebugMask & DR_MASK(DR7_OVERRIDE_V))
@@ -97,7 +97,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
     if (!DrMask)
     {
         /* He didn't, use the one from the thread */
-        Mask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
+        Mask = KeGetCurrentThread()->Header.DebugActive;
     }
     else
     {
@@ -153,7 +153,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
         if (Mask != NewMask)
         {
             /* Update it */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive =
+            KeGetCurrentThread()->Header.DebugActive =
                 (BOOLEAN)NewMask;
         }
     }
@@ -611,7 +611,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         if (PreviousMode != KernelMode)
         {
             /* Save the mask */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive = DrMask;
+            KeGetCurrentThread()->Header.DebugActive = (DrMask != 0);
         }
     }
 

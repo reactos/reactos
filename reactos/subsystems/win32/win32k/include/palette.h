@@ -1,7 +1,5 @@
 #pragma once
 
-#include <include/dc.h>
-
 #define PALETTE_FIXED    0x0001 /* read-only colormap - have to use XAllocColor (if not virtual) */
 #define PALETTE_VIRTUAL  0x0002 /* no mapping needed - pixel == pixel color */
 
@@ -72,7 +70,7 @@ HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
 #define  PALETTE_ShareUnlockPalette(ppal)  \
   GDIOBJ_vDereferenceObject(&ppal->BaseObject)
 
-BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
+BOOL NTAPI PALETTE_Cleanup(PVOID ObjectBody);
 INIT_FUNCTION NTSTATUS NTAPI InitPaletteImpl(VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);

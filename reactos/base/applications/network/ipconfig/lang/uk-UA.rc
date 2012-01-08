@@ -5,6 +5,7 @@
  * PURPOSE:     Ukraianian Language File for IpConfig Network Command
  * PROGRAMMERS: Rostislav Zabolotny
  */
+
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
@@ -69,5 +70,5 @@ BEGIN
         > ipconfig /release *Con*    ... Звільнити (скинути динамічну конфігурацію)\n \
 					всі з'єднання, які містять у назві ""Сon""\n \
                                          напр.""Local Area Connection 1"" чи\n \
-                                             ""Local Area Connection 2""\n"
+                                                  ""Local Area Connection 2""\n"
 END

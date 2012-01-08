@@ -370,7 +370,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                                 OUT PMMADDRESS_NODE *Parent)
 {
     PMMADDRESS_NODE Node, LowestNode, Child;
-    ULONG LowVpn, HighVpn;
+    ULONG_PTR LowVpn, HighVpn;
     PFN_NUMBER PageCount;
 
     /* Sanity checks */
@@ -393,11 +393,11 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     /* Calculate the initial upper margin */
     HighVpn = BoundaryAddress >> PAGE_SHIFT;
 
-    /* Starting from the root, go down until the right-most child,
-       trying to stay below the boundary. */
+    /* Starting from the root, go down until the right-most child
+     * which is just behind the boundary*/
     LowestNode = Node = RtlRightChildAvl(&Table->BalancedRoot);
-    while ( (Child = RtlRightChildAvl(Node)) &&
-             Child->EndingVpn < HighVpn ) Node = Child;
+    while (((Child = RtlRightChildAvl(Node)) != 0 )
+            && (Node->EndingVpn < HighVpn )) Node = Child;
 
     /* Now loop the Vad nodes */
     while (Node)

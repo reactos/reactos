@@ -33,13 +33,12 @@ PFN_NUMBER MmAvailablePages;
 PFN_NUMBER MmResidentAvailablePages;
 PFN_NUMBER MmResidentAvailableAtInit;
 
-SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommittedPages;
 SIZE_T MmSharedCommit;
 SIZE_T MmDriverCommit;
 SIZE_T MmProcessCommit;
 SIZE_T MmPagedPoolCommit;
-SIZE_T MmPeakCommitment; 
+SIZE_T MmPeakCommitment;
 SIZE_T MmtotalCommitLimitMaximum;
 
 static RTL_BITMAP MiUserPfnBitMap;
@@ -51,7 +50,7 @@ NTAPI
 MiInitializeUserPfnBitmap(VOID)
 {
     PVOID Bitmap;
-    
+
     /* Allocate enough buffer for the PFN bitmap and align it on 32-bits */
     Bitmap = ExAllocatePoolWithTag(NonPagedPool,
                                    (((MmHighestPhysicalPage + 1) + 31) / 32) * 4,
@@ -61,7 +60,7 @@ MiInitializeUserPfnBitmap(VOID)
     /* Initialize it and clear all the bits to begin with */
     RtlInitializeBitMap(&MiUserPfnBitMap,
                         Bitmap,
-                        MmHighestPhysicalPage + 1);
+                        (ULONG)MmHighestPhysicalPage + 1);
     RtlClearAllBits(&MiUserPfnBitMap);
 }
 
@@ -71,13 +70,13 @@ MmGetLRUFirstUserPage(VOID)
 {
     ULONG Position;
     KIRQL OldIrql;
-    
+
     /* Find the first user page */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     Position = RtlFindSetBits(&MiUserPfnBitMap, 1, 0);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     if (Position == 0xFFFFFFFF) return 0;
-    
+
     /* Return it */
     ASSERT(Position != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
@@ -93,8 +92,9 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     /* Set the page as a user page */
     ASSERT(Pfn != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
+    ASSERT(!RtlCheckBit(&MiUserPfnBitMap, (ULONG)Pfn));
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    RtlSetBit(&MiUserPfnBitMap, Pfn);
+    RtlSetBit(&MiUserPfnBitMap, (ULONG)Pfn);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
@@ -104,13 +104,13 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
 {
     ULONG Position;
     KIRQL OldIrql;
-    
+
     /* Find the next user page */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, PreviousPfn + 1);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, (ULONG)PreviousPfn + 1);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     if (Position == 0xFFFFFFFF) return 0;
-    
+
     /* Return it */
     ASSERT(Position != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
@@ -121,10 +121,15 @@ VOID
 NTAPI
 MmRemoveLRUUserPage(PFN_NUMBER Page)
 {
+    KIRQL OldIrql;
+
     /* Unset the page as a user page */
     ASSERT(Page != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
-    RtlClearBit(&MiUserPfnBitMap, Page);
+    ASSERT(RtlCheckBit(&MiUserPfnBitMap, (ULONG)Page));
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    RtlClearBit(&MiUserPfnBitMap, (ULONG)Page);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
 BOOLEAN
@@ -162,24 +167,24 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     PPHYSICAL_PAGE Pfn1;
     INT LookForZeroedPages;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    
+
     //
     // Convert the low address into a PFN
     //
     LowPage = (PFN_NUMBER)(LowAddress.QuadPart >> PAGE_SHIFT);
-    
+
     //
     // Convert, and normalize, the high address into a PFN
     //
-    HighPage = (PFN_NUMBER)(HighAddress.QuadPart >> PAGE_SHIFT);    
+    HighPage = (PFN_NUMBER)(HighAddress.QuadPart >> PAGE_SHIFT);
     if (HighPage > MmHighestPhysicalPage) HighPage = MmHighestPhysicalPage;
-    
+
     //
     // Validate skipbytes and convert them into pages
     //
     if (BYTE_OFFSET(SkipBytes.LowPart)) return NULL;
     SkipPages = (PFN_NUMBER)(SkipBytes.QuadPart >> PAGE_SHIFT);
-    
+
     /* This isn't supported at all */
     if (SkipPages) DPRINT1("WARNING: Caller requesting SkipBytes, MDL might be mismatched\n");
 
@@ -194,7 +199,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         Mdl = MmCreateMdl(NULL, NULL, PageCount << PAGE_SHIFT);
         if (Mdl) break;
-        
+
         //
         // This function is not required to return the amount of pages requested
         // In fact, it can return as little as 1 page, and callers are supposed
@@ -203,22 +208,22 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         PageCount -= (PageCount >> 4);
     } while (PageCount);
-    
+
     //
     // Wow, not even a single page was around!
     //
     if (!Mdl) return NULL;
-    
+
     //
     // This is where the page array starts....
     //
     MdlPage = (PPFN_NUMBER)(Mdl + 1);
-    
+
     //
     // Lock the PFN database
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     //
     // Are we looking for any pages, without discriminating?
     //
@@ -239,15 +244,15 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 ASSERT(PagesFound);
                 break;
             }
-            
+
             /* Grab the page entry for it */
             Pfn1 = MiGetPfnEntry(Page);
-            
+
             //
             // Make sure it's really free
             //
             ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-            
+
             /* Now setup the page and mark it */
             Pfn1->u3.e2.ReferenceCount = 1;
             Pfn1->u2.ShareCount = 1;
@@ -256,7 +261,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
             Pfn1->u4.VerifierAllocation = 0;
-            
+
             //
             // Save it into the MDL
             //
@@ -281,24 +286,24 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 //
                 Pfn1 = MiGetPfnEntry(Page);
                 ASSERT(Pfn1);
-                
+
                 //
                 // Make sure it's free and if this is our first pass, zeroed
                 //
                 if (MiIsPfnInUse(Pfn1)) continue;
                 if ((Pfn1->u3.e1.PageLocation == ZeroedPageList) != LookForZeroedPages) continue;
-                
+
                 /* Remove the page from the free or zero list */
                 ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
                 MI_SET_USAGE(MI_USAGE_MDL);
                 MI_SET_PROCESS2("Kernel");
                 MiUnlinkFreeOrZeroedPage(Pfn1);
-                
+
                 //
                 // Sanity checks
                 //
                 ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-                
+
                 //
                 // Now setup the page and mark it
                 //
@@ -316,19 +321,19 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 *MdlPage++ = Page;
                 if (++PagesFound == PageCount) break;
             }
-            
+
             //
             // If the first pass was enough, don't keep going, otherwise, go again
             //
             if (PagesFound == PageCount) break;
         }
     }
-    
+
     //
     // Now release the PFN count
     //
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    
+
     //
     // We might've found less pages, but not more ;-)
     //
@@ -342,17 +347,17 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         ExFreePool(Mdl);
         return NULL;
     }
-    
+
     //
     // Write out how many pages we found
     //
     Mdl->ByteCount = (ULONG)(PagesFound << PAGE_SHIFT);
-    
+
     //
     // Terminate the MDL array if there's certain missing pages
     //
     if (PagesFound != PageCount) *MdlPage = LIST_HEAD;
-    
+
     //
     // Now go back and loop over all the MDL pages
     //
@@ -365,7 +370,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         Page = *MdlPage++;
         if (Page == LIST_HEAD) break;
-        
+
         //
         // Get the PFN entry for the page and check if we should zero it out
         //
@@ -374,12 +379,12 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         if (Pfn1->u3.e1.PageLocation != ZeroedPageList) MiZeroPhysicalPage(Page);
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
     }
-    
+
     //
     // We're done, mark the pages as locked
     //
     Mdl->Process = NULL;
-    Mdl->MdlFlags |= MDL_PAGES_LOCKED; 
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
     return Mdl;
 }
 
@@ -389,7 +394,7 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
 {
     KIRQL oldIrql;
     PMMPFN Pfn1;
-    
+
     oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
@@ -399,7 +404,7 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
     {
         /* Should not be trying to insert an RMAP for a non-active page */
         ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
-        
+
         /* Set the list head address */
         MI_GET_ROS_DATA(Pfn1)->RmapListHead = ListHead;
     }
@@ -407,13 +412,13 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
     {
         /* ReactOS semantics dictate the page is STILL active right now */
         ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
-        
+
         /* In this case, the RMAP is actually being removed, so clear field */
         MI_GET_ROS_DATA(Pfn1)->RmapListHead = NULL;
 
         /* ReactOS semantics will now release the page, which will make it free and enter a colored list */
     }
-    
+
     KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
@@ -432,13 +437,13 @@ MmGetRmapListHeadPage(PFN_NUMBER Pfn)
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
-    
+
     /* Get the list head */
     ListHead = MI_GET_ROS_DATA(Pfn1)->RmapListHead;
-  
+
     /* Should not have an RMAP for a non-active page */
     ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
-   
+
     /* Release PFN database and return rmap list head */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
     return ListHead;
@@ -450,11 +455,11 @@ MmSetSavedSwapEntryPage(PFN_NUMBER Pfn,  SWAPENTRY SwapEntry)
 {
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
-   
+
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
-   
+
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
    MI_GET_ROS_DATA(Page)->SwapEntry = SwapEntry;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
@@ -467,7 +472,7 @@ MmGetSavedSwapEntryPage(PFN_NUMBER Pfn)
    SWAPENTRY SwapEntry;
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
-   
+
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
@@ -495,7 +500,7 @@ MmReferencePage(PFN_NUMBER Pfn)
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
-   
+
    Page->u3.e2.ReferenceCount++;
 }
 
@@ -537,13 +542,13 @@ MmDereferencePage(PFN_NUMBER Pfn)
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
-   
+
    Page->u3.e2.ReferenceCount--;
    if (Page->u3.e2.ReferenceCount == 0)
    {
         /* Mark the page temporarily as valid, we're going to make it free soon */
         Page->u3.e1.PageLocation = ActiveAndValid;
-        
+
         /* It's not a ROS PFN anymore */
         Page->u4.AweAllocation = FALSE;
         ExFreePool(MI_GET_ROS_DATA(Page));
@@ -561,7 +566,7 @@ MmAllocPage(ULONG Type)
 {
    PFN_NUMBER PfnOffset;
    PMMPFN Pfn1;
-   
+
    PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
 
    if (!PfnOffset)
@@ -574,17 +579,17 @@ MmAllocPage(ULONG Type)
    Pfn1 = MiGetPfnEntry(PfnOffset);
    Pfn1->u3.e2.ReferenceCount = 1;
    Pfn1->u3.e1.PageLocation = ActiveAndValid;
-   
+
    /* This marks the PFN as a ReactOS PFN */
    Pfn1->u4.AweAllocation = TRUE;
-   
+
    /* Allocate the extra ReactOS Data and zero it out */
    Pfn1->RosMmData = (LONG)ExAllocatePoolWithTag(NonPagedPool, sizeof(MMROSPFN), 'RsPf');
    ASSERT(MI_GET_ROS_DATA(Pfn1) != NULL);
    ASSERT_IS_ROS_PFN(Pfn1);
    MI_GET_ROS_DATA(Pfn1)->SwapEntry = 0;
    MI_GET_ROS_DATA(Pfn1)->RmapListHead = NULL;
-   
+
    return PfnOffset;
 }
 

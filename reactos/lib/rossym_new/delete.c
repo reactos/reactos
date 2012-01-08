@@ -7,17 +7,7 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include <ntimage.h>
-
-#define NDEBUG
-#include <debug.h>
-
-#include "rossympriv.h"
-#include "pe.h"
-#include "dwarf.h"
+#include <precomp.h>
 
 VOID
 RosSymDelete(PROSSYM_INFO RosSymInfo)

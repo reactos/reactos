@@ -37,7 +37,7 @@
 #define NDEBUG
 #include <debug.h>
 
-// move to gdidbg.h
+// Move to gdidbg.h
 #if DBG
 #define DBG_INCREASE_LOCK_COUNT(pti, hobj) \
     if (pti) ((PTHREADINFO)pti)->acExclusiveLockCount[((ULONG_PTR)hobj >> 16) & 0x1f]++;
@@ -62,7 +62,7 @@
 
 #define MmMapViewInSessionSpace MmMapViewInSystemSpace
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 #define InterlockedOr16 _InterlockedOr16
 #endif
 
@@ -87,7 +87,7 @@ ULONG gulFirstFree;
 ULONG gulFirstUnused;
 static PPAGED_LOOKASIDE_LIST gpaLookasideList;
 
-static BOOL INTERNAL_CALL GDIOBJ_Cleanup(PVOID ObjectBody);
+static BOOL NTAPI GDIOBJ_Cleanup(PVOID ObjectBody);
 
 static const
 GDICLEANUPPROC
@@ -130,7 +130,7 @@ apfnCleanup[] =
 /* INTERNAL FUNCTIONS ********************************************************/
 
 static
-BOOL INTERNAL_CALL
+BOOL NTAPI
 GDIOBJ_Cleanup(PVOID ObjectBody)
 {
     return TRUE;
@@ -160,7 +160,7 @@ InitGdiHandleTable(void)
     SIZE_T cjViewSize = 0;
 
     /* Create a section for the shared handle table */
-    liSize.QuadPart = sizeof(GDI_HANDLE_TABLE);//GDI_HANDLE_COUNT * sizeof(ENTRY);
+    liSize.QuadPart = sizeof(GDI_HANDLE_TABLE); // GDI_HANDLE_COUNT * sizeof(ENTRY);
     status = MmCreateSection(&gpvGdiHdlTblSection,
                              SECTION_ALL_ACCESS,
                              NULL,
@@ -207,6 +207,8 @@ InitGdiHandleTable(void)
     gpaLookasideList = ExAllocatePoolWithTag(NonPagedPool,
                            GDIObjTypeTotal * sizeof(PAGED_LOOKASIDE_LIST),
                            TAG_GDIHNDTBLE);
+    if(!gpaLookasideList)
+        return STATUS_NO_MEMORY;
 
     InitLookasideList(GDIObjType_DC_TYPE, sizeof(DC));
     InitLookasideList(GDIObjType_RGN_TYPE, sizeof(REGION));
@@ -260,7 +262,7 @@ ENTRY_pentPopFreeEntry(VOID)
             /* Check if we have unused entries left */
             if (iFirst >= GDI_HANDLE_COUNT)
             {
-                DPRINT1("No more gdi handles left!\n");
+                DPRINT1("No more GDI handles left!\n");
                 return 0;
             }
 
@@ -351,14 +353,14 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
         /* Check if the slot is deleted */
         if ((cOldRefs & REF_MASK_VALID) == 0)
         {
-            DPRINT("GDIOBJ: slot not valid: 0x%lx, hobh=%p\n", cOldRefs, hobj);
+            DPRINT("GDIOBJ: Slot is not valid: 0x%lx, hobh=%p\n", cOldRefs, hobj);
             return NULL;
         }
 
         /* Check if the unique value matches */
         if (pentry->FullUnique != (USHORT)((ULONG_PTR)hobj >> 16))
         {
-            DPRINT("GDIOBJ: wrong unique value. Handle: 0x%4x, entry: 0x%4x\n",
+            DPRINT("GDIOBJ: Wrong unique value. Handle: 0x%4x, entry: 0x%4x\n",
                    (USHORT)((ULONG_PTR)hobj >> 16, pentry->FullUnique));
             return NULL;
         }
@@ -534,7 +536,7 @@ GDIOBJ_ReferenceObjectByHandle(
     ASSERT_SHARED_OBJECT_TYPE(objt);
     if ((((ULONG_PTR)hobj >> 16) & 0x1f) != objt)
     {
-        DPRINT("GDIOBJ: wrong type. handle=%p, type=%x\n", hobj, objt);
+        DPRINT("GDIOBJ: Wrong type. handle=%p, type=%x\n", hobj, objt);
         return NULL;
     }
 
@@ -542,7 +544,7 @@ GDIOBJ_ReferenceObjectByHandle(
     pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
     if (!pentry)
     {
-        DPRINT("GDIOBJ: requested handle 0x%p is not valid.\n", hobj);
+        DPRINT("GDIOBJ: Requested handle 0x%p is not valid.\n", hobj);
         return NULL;
     }
 
@@ -604,7 +606,7 @@ GDIOBJ_LockObject(
     ASSERT_EXCLUSIVE_OBJECT_TYPE(objt);
     if ((((ULONG_PTR)hobj >> 16) & 0x1f) != objt)
     {
-        DPRINT("wrong object type: hobj=0x%p, objt=0x%x\n", hobj, objt);
+        DPRINT("Wrong object type: hobj=0x%p, objt=0x%x\n", hobj, objt);
         return NULL;
     }
 
@@ -612,7 +614,7 @@ GDIOBJ_LockObject(
     pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
     if (!pentry)
     {
-        DPRINT("GDIOBJ: requested handle 0x%p is not valid.\n", hobj);
+        DPRINT("GDIOBJ: Requested handle 0x%p is not valid.\n", hobj);
         return NULL;
     }
 
@@ -685,7 +687,7 @@ GDIOBJ_hInsertObject(
     pentry = ENTRY_pentPopFreeEntry();
     if (!pentry)
     {
-        DPRINT1("GDIOBJ: could not get a free entry.\n");
+        DPRINT1("GDIOBJ: Could not get a free entry.\n");
         return NULL;
     }
 
@@ -728,7 +730,7 @@ GDIOBJ_vSetObjectOwner(
 {
     PENTRY pentry;
 
-    /* This is a ugly hack, need to fix IntGdiSetDCOwnerEx */
+    /* This is a ugly HACK, needed to fix IntGdiSetDCOwnerEx */
     if (GDI_HANDLE_IS_STOCKOBJ(pobj->hHmgr))
     {
         DPRINT("Trying to set ownership of stock object %p to %lx\n", pobj->hHmgr, ulOwner);
@@ -972,7 +974,7 @@ GreSetObjectOwner(
     /* Check for stock objects */
     if (GDI_HANDLE_IS_STOCKOBJ(hobj))
     {
-        DPRINT("GreSetObjectOwner: got stock object %p\n", hobj);
+        DPRINT("GreSetObjectOwner: Got stock object %p\n", hobj);
         return FALSE;
     }
 
@@ -980,7 +982,7 @@ GreSetObjectOwner(
     pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
     if (!pentry)
     {
-        DPRINT("GreSetObjectOwner: invalid handle 0x%p.\n", hobj);
+        DPRINT("GreSetObjectOwner: Invalid handle 0x%p.\n", hobj);
         return FALSE;
     }
 
@@ -1011,7 +1013,7 @@ GreGetObject(
         objt != GDIObjType_LFONT_TYPE &&
         objt != GDIObjType_PAL_TYPE)
     {
-        DPRINT1("GreGetObject: invalid object type\n");
+        DPRINT1("GreGetObject: Invalid object type\n");
         return 0;
     }
 
@@ -1141,7 +1143,7 @@ NtGdiCreateClientObj(
     handle = GDIOBJ_hInsertObject(pObject, GDI_OBJ_HMGR_POWNED);
     if (!handle)
     {
-        DPRINT1("NtGdiCreateClientObj Could not create a handle.\n");
+        DPRINT1("NtGdiCreateClientObj: Could not create a handle.\n");
         GDIOBJ_vFreeObject(pObject);
         return NULL;
     }
@@ -1175,7 +1177,7 @@ NtGdiDeleteClientObj(
 
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 
-PGDIOBJ INTERNAL_CALL
+PGDIOBJ NTAPI
 GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
 {
     if (ExpectedType == GDI_OBJECT_TYPE_DONTCARE)
@@ -1187,7 +1189,7 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
 // That shouldn't be a problem, since we don't have any processes yet,
 // that could delete the handle
 BOOL
-INTERNAL_CALL
+NTAPI
 GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
 {
     PENTRY pentry;
@@ -1197,7 +1199,7 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
     pentry = ENTRY_ReferenceEntryByHandle(*phObj, 0);
     if (!pentry)
     {
-        DPRINT1("GDIOBJ: requested handle 0x%p is not valid.\n", *phObj);
+        DPRINT1("GDIOBJ: Requested handle 0x%p is not valid.\n", *phObj);
         return FALSE;
     }
 
@@ -1220,7 +1222,7 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
     return TRUE;
 }
 
-POBJ INTERNAL_CALL
+POBJ NTAPI
 GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
 {
     POBJ pobj;
@@ -1245,7 +1247,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
     return pobj;
 }
 
-PVOID INTERNAL_CALL
+PVOID NTAPI
 GDI_MapHandleTable(PEPROCESS pProcess)
 {
     PVOID pvMappedView = NULL;
@@ -1275,7 +1277,7 @@ GDI_MapHandleTable(PEPROCESS pProcess)
     return pvMappedView;
 }
 
-BOOL INTERNAL_CALL
+BOOL NTAPI
 GDI_CleanupForProcess(struct _EPROCESS *Process)
 {
     PENTRY pentry;
@@ -1338,3 +1340,4 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     return TRUE;
 }
 
+/* EOF */

@@ -40,9 +40,6 @@
 	<directory name="newinflib">
 		<xi:include href="newinflib/inflib.rbuild" />
 	</directory>
-	<directory name="nls">
-		<xi:include href="nls/nls.rbuild" />
-	</directory>
 	<directory name="ppcmmu">
 		<xi:include href="ppcmmu/ppcmmu.rbuild" />
 	</directory>

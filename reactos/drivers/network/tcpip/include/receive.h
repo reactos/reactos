@@ -9,13 +9,15 @@
 
 #include <ip.h>
 
-/* Number of timeout ticks before destroying the IPDR */
-#define MAX_TIMEOUT_COUNT 10
+/* Number of seconds before destroying the IPDR */
+#define MAX_TIMEOUT_COUNT 3
 
 /* IP datagram fragment descriptor. Used to store IP datagram fragments */
 typedef struct IP_FRAGMENT {
     LIST_ENTRY ListEntry; /* Entry on list */
-    PVOID Data;           /* Pointer to fragment data */
+    PNDIS_PACKET Packet;  /* NDIS packet containing fragment data */
+    BOOLEAN ReturnPacket; /* States whether to call NdisReturnPackets */
+    UINT PacketOffset;    /* Offset into NDIS packet where data is */
     UINT Offset;          /* Offset into datagram where this fragment is */
     UINT Size;            /* Size of this fragment */
 } IP_FRAGMENT, *PIP_FRAGMENT;
@@ -36,7 +38,7 @@ typedef struct IPDATAGRAM_REASSEMBLY {
     IP_ADDRESS DstAddr;          /* Destination address */
     UCHAR Protocol;              /* Internet Protocol number */
     USHORT Id;                   /* Identification number */
-    IP_HEADER IPv4Header;        /* Pointer to IP header */
+    PIP_HEADER IPv4Header;       /* Pointer to IP header */
     UINT HeaderSize;             /* Length of IP header */
     LIST_ENTRY FragmentListHead; /* IP fragment list */
     LIST_ENTRY HoleListHead;     /* IP datagram hole list */

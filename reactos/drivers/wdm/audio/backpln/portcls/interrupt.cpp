@@ -73,6 +73,8 @@ CInterruptSync::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    UNICODE_STRING GuidString;
+
     DPRINT("CInterruptSync::QueryInterface: this %p\n", this);
 
     if (IsEqualGUIDAligned(refiid, IID_IInterruptSync) ||
@@ -83,7 +85,13 @@ CInterruptSync::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-    DPRINT("CInterruptSync::QueryInterface: this %p UNKNOWN interface requested\n", this);
+
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("CInterruptSync::QueryInterface: no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 

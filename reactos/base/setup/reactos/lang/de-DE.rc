@@ -1,5 +1,3 @@
-/* $Id$ */
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -33,7 +31,7 @@ BEGIN
     CONTROL "Setuptyp", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     CONTROL "Installiere ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
     CONTROL "Repariere oder aktualisiere ein installiertes ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Klicken Sie auf Weiter um die Geräte einzustellen.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Klicken Sie auf Weiter um die GerÃ¤te einzustellen.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -41,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Geräteeinstellungen", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "GerÃ¤teeinstellungen", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "Computer:", IDC_STATIC, 20,15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 180, 80
     LTEXT "Anzeige:", IDC_STATIC, 20,35, 80, 10
@@ -56,13 +54,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Partition für die ReactOS-Installation", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
+    CONTROL "Partition fÃ¼r die ReactOS-Installation", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
     PUSHBUTTON "&Erstellen", IDC_PARTCREATE, 20,155,50,15
-    PUSHBUTTON "&Löschen", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "&LÃ¶schen", IDC_PARTDELETE, 76,155,50,15
     PUSHBUTTON "&Treiber", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "E&rweiterte Optionen...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Klicken Sie auf Weiter um die Zusammenfassung zu überprüfen.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Klicken Sie auf Weiter um die Zusammenfassung zu Ã¼berprÃ¼fen.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
@@ -72,7 +70,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
     CONTROL "Erstelle und formatiere Partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT "Größe:",IDC_STATIC, 13,24,27,9
+    LTEXT "GrÃ¶ÃŸe:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
     LTEXT "GB",IDC_UNIT, 117,24,14,9
     LTEXT "Dateisystem:",IDC_STATIC,13,46,35,9
@@ -122,10 +120,10 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Vervollständige ReactOS-Setup"
+CAPTION "VervollstÃ¤ndige ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Abschließen der ersten Stufe der ReactOS-Installation", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "AbschlieÃŸen der ersten Stufe der ReactOS-Installation", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "Sie haben die erste Stufe des ReactOS-Setup erfolgreich abgeschlossen.", IDC_STATIC, 20, 50, 277, 10
  
     LTEXT "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 20, 80, 277, 10
@@ -137,11 +135,11 @@ END
 STRINGTABLE
 BEGIN
 	IDS_LANGTITLE		"Sprachauswahl"
-	IDS_LANGSUBTITLE	"Wählen Sie eine Sprache für das Setup und das Endsystem aus."
+	IDS_LANGSUBTITLE	"WÃ¤hlen Sie eine Sprache fÃ¼r das Setup und das Endsystem aus."
 	IDS_TYPETITLE		"Willkommen zum ReactOS-Setup"
-	IDS_TYPESUBTITLE	"Wählen Sie einen Setuptyp."
-	IDS_DEVICETITLE		"Einstellen der Basisgeräte"
-	IDS_DEVICESUBTITLE	"Einstellungen der Anzeigegeräte und der Tastatur."
+	IDS_TYPESUBTITLE	"WÃ¤hlen Sie einen Setuptyp."
+	IDS_DEVICETITLE		"Einstellen der BasisgerÃ¤te"
+	IDS_DEVICESUBTITLE	"Einstellungen der AnzeigegerÃ¤te und der Tastatur."
 	IDS_DRIVETITLE		"Richte Installationspartition und Systemverzeichnis ein"
 	IDS_DRIVESUBTITLE	"Vorbereiten von Installationspartition, Systemverzeichnis und Bootloader."
 	IDS_PROCESSTITLE	"Richte Partition ein, kopiere Dateien und richte System ein."
@@ -149,8 +147,8 @@ BEGIN
 	IDS_RESTARTTITLE	"Erste Stufe des Setup wurde abgeschlossen."
 	IDS_RESTARTSUBTITLE	"Die erste Stufe des Setup wurde abgeschlossen, starten Sie den Rechner neu, um mit der zweiten Stufe fortzufahren."
 	IDS_SUMMARYTITLE	"Installationszusammenfassung"
-	IDS_SUMMARYSUBTITLE	"Liste alle Installationseinstellungen vor Anwendung auf die Geräte auf"
-	IDS_ABORTSETUP		"ReactOS ist nicht vollständig auf Ihrem Computer installiert. Wenn Sie das Setup verlassen, dann müssen Sie das Setup nochmals ausführen, um ReactOS zu installieren. Wirklich beenden?"
+	IDS_SUMMARYSUBTITLE	"Liste alle Installationseinstellungen vor Anwendung auf die GerÃ¤te auf"
+	IDS_ABORTSETUP		"ReactOS ist nicht vollstÃ¤ndig auf Ihrem Computer installiert. Wenn Sie das Setup verlassen, dann mÃ¼ssen Sie das Setup nochmals ausfÃ¼hren, um ReactOS zu installieren. Wirklich beenden?"
 	IDS_ABORTSETUP2		"Installation abbrechen?"
 END
 /* EOF */

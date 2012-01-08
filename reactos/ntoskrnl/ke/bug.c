@@ -235,7 +235,8 @@ FASTCALL
 KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
                          IN ULONG FrameCount)
 {
-    ULONG i, Addr;
+    ULONG i;
+    ULONG_PTR Addr;
     BOOLEAN InSystem;
     PVOID p;
 
@@ -438,6 +439,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
     ULONG_PTR MessageEntry;
     PCHAR BugCode;
     BOOLEAN Result = FALSE;
+    USHORT Length;
 
     /* Make sure we're not bugchecking too early */
     if (!KiBugCodeMessages) return Result;
@@ -464,16 +466,16 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
 
             /* Get the final Code */
             BugCode = (PCHAR)((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
-            i = strlen(BugCode);
+            Length = (USHORT)strlen(BugCode);
 
-            /* Handle newlines */
-            while ((i > 0) && ((BugCode[i] == '\n') ||
-                               (BugCode[i] == '\r') ||
-                               (BugCode[i] == ANSI_NULL)))
+            /* Handle trailing newlines */
+            while ((Length > 0) && ((BugCode[Length] == '\n') ||
+                                    (BugCode[Length] == '\r') ||
+                                    (BugCode[Length] == ANSI_NULL)))
             {
                 /* Check if we have a string to return */
-                if (!OutputString) BugCode[i] = ANSI_NULL;
-                i--;
+                if (!OutputString) BugCode[Length] = ANSI_NULL;
+                Length--;
             }
 
             /* Check if caller wants an output string */
@@ -481,8 +483,8 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             {
                 /* Return it in the OutputString */
                 OutputString->Buffer = BugCode;
-                OutputString->Length = (USHORT)i + 1;
-                OutputString->MaximumLength = (USHORT)i + 1;
+                OutputString->Length = Length + 1;
+                OutputString->MaximumLength = Length + 1;
             }
             else
             {
@@ -724,7 +726,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     if (MessageId == BUGCODE_PSS_MESSAGE)
     {
         /* It is, so get the bug code string as well */
-        KeGetBugMessageText(KiBugCheckData[0], NULL);
+        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
         InbvDisplayString("\r\n\r\n");
     }
 
@@ -796,7 +798,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     /* Check if this is power failure simulation */
     if (BugCheckCode == POWER_FAILURE_SIMULATE)
     {
-        /* Call the Callbacks and reboot */;
+        /* Call the Callbacks and reboot */
         KiDoBugCheckCallbacks();
         HalReturnToFirmware(HalRebootRoutine);
     }
@@ -1414,7 +1416,7 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
 NTSTATUS
 NTAPI
 KeDeregisterNmiCallback(PVOID Handle)
-{      
+{
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }

@@ -1,16 +1,13 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Native User stubs
- * FILE:             subsys/win32k/ntuser/stubs.c
+ * FILE:             subsystems/win32/win32k/ntuser/ntstubs.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *       04-06-2001  CSH  Created
  */
-#include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+#include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 DWORD
 APIENTRY
@@ -19,7 +16,7 @@ NtUserAssociateInputContext(
     DWORD dwUnknown2,
     DWORD dwUnknown3)
 {
-    UNIMPLEMENTED
+    STUB
     return 0;
 }
 
@@ -105,32 +102,8 @@ NtUserBuildHimcList(
     DWORD dwUnknown3,
     DWORD dwUnknown4)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
-}
-
-DWORD
-APIENTRY
-NtUserConvertMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-APIENTRY
-NtUserCreateLocalMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 BOOL
@@ -140,7 +113,7 @@ NtUserDdeGetQualityOfService(
    IN HWND hWndServer,
    OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -154,7 +127,7 @@ NtUserDdeInitialize(
    DWORD Unknown3,
    DWORD Unknown4)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -166,7 +139,7 @@ NtUserDdeSetQualityOfService(
    IN  PSECURITY_QUALITY_OF_SERVICE pqosNew,
    OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -181,7 +154,7 @@ NtUserDragObject(
    HCURSOR hc1
 )
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -194,7 +167,7 @@ NtUserDrawAnimatedRects(
    RECT *lprcFrom,
    RECT *lprcTo)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -204,7 +177,7 @@ APIENTRY
 NtUserEvent(
    DWORD Unknown0)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -215,7 +188,7 @@ NtUserExcludeUpdateRgn(
   HDC hDC,
   HWND hWnd)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -230,36 +203,7 @@ NtUserGetAltTabInfo(
    UINT   cchItemText,
    BOOL   Ansi)
 {
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-HBRUSH
-APIENTRY
-NtUserGetControlBrush(
-   HWND hwnd,
-   HDC  hdc,
-   UINT ctlType)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
- * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
- */
-HBRUSH
-APIENTRY
-NtUserGetControlColor(
-   HWND hwndParent,
-   HWND hwnd,
-   HDC hdc,
-   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
-{
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -272,7 +216,7 @@ NtUserGetImeHotKey(
    DWORD Unknown2,
    DWORD Unknown3)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -283,7 +227,7 @@ NtUserImpersonateDdeClientWindow(
    HWND hWndClient,
    HWND hWndServer)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -297,7 +241,7 @@ NtUserInitializeClientPfnArrays(
   HINSTANCE hmodUser)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   DPRINT("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
+   TRACE("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
 
    if (ClientPfnInit) return Status;
 
@@ -312,7 +256,7 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
-      //// FIXME! HAX! Temporary until server side is finished.
+      //// FIXME: HAX! Temporary until server side is finished.
       //// Copy the client side procs for now.
       RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
 
@@ -327,7 +271,7 @@ NtUserInitializeClientPfnArrays(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed reading Client Pfns from user space.\n");
+      ERR("Failed reading Client Pfns from user space.\n");
       SetLastNtError(Status);
    }
 
@@ -351,7 +295,7 @@ NtUserInitTask(
    DWORD Unknown10,
    DWORD Unknown11)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -360,7 +304,7 @@ BOOL
 APIENTRY
 NtUserLockWorkStation(VOID)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -369,7 +313,7 @@ DWORD
 APIENTRY
 NtUserMNDragLeave(VOID)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -380,7 +324,7 @@ NtUserMNDragOver(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -391,7 +335,7 @@ NtUserModifyUserStartupInfoFlags(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -403,7 +347,7 @@ NtUserNotifyIMEStatus(
    DWORD Unknown1,
    DWORD Unknown2)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -417,7 +361,7 @@ NtUserQueryUserCounters(
    DWORD Unknown3,
    DWORD Unknown4)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -427,7 +371,7 @@ APIENTRY
 NtUserRegisterTasklist(
    DWORD Unknown0)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -438,7 +382,7 @@ NtUserSetConsoleReserveKeys(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -449,7 +393,7 @@ NtUserSetDbgTag(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -463,7 +407,7 @@ NtUserSetImeHotKey(
    DWORD Unknown3,
    DWORD Unknown4)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -475,7 +419,7 @@ NtUserSetRipFlags(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -534,7 +478,7 @@ NtUserUpdateInputContext(
    DWORD Unknown1,
    DWORD Unknown2)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -546,7 +490,7 @@ NtUserUpdateInstance(
    DWORD Unknown1,
    DWORD Unknown2)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -558,7 +502,7 @@ NtUserUserHandleGrantAccess(
    IN HANDLE hJob,
    IN BOOL bGrant)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -568,7 +512,7 @@ APIENTRY
 NtUserWaitForMsgAndEvent(
    DWORD Unknown0)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -583,7 +527,7 @@ NtUserWin32PoolAllocationStats(
    DWORD Unknown4,
    DWORD Unknown5)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -592,7 +536,7 @@ DWORD
 APIENTRY
 NtUserYieldTask(VOID)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -604,7 +548,7 @@ NtUserCheckImeHotKey(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -615,7 +559,7 @@ NtUserConsoleControl(
     DWORD dwUnknown2,
     DWORD dwUnknown3)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -624,7 +568,7 @@ APIENTRY
 NtUserCreateInputContext(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -633,7 +577,7 @@ APIENTRY
 NtUserDestroyInputContext(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -642,7 +586,7 @@ APIENTRY
 NtUserDisableThreadIme(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -651,17 +595,7 @@ APIENTRY
 NtUserGetAppImeLevel(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetAtomName(
-    ATOM nAtom,
-    LPWSTR lpBuffer)
-{
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -671,7 +605,7 @@ NtUserGetImeInfoEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -682,7 +616,7 @@ NtUserGetRawInputBuffer(
     PUINT pcbSize,
     UINT cbSizeHeader)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -695,7 +629,7 @@ NtUserGetRawInputData(
     PUINT pcbSize,
     UINT cbSizeHeader)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -708,7 +642,7 @@ NtUserGetRawInputDeviceInfo(
     PUINT pcbSize
 )
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -719,7 +653,7 @@ NtUserGetRawInputDeviceList(
     PUINT puiNumDevices,
     UINT cbSize)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -730,7 +664,7 @@ NtUserGetRegisteredRawInputDevices(
     PUINT puiNumDevices,
     UINT cbSize)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -741,56 +675,8 @@ NtUserHardErrorControl(
     DWORD dwUnknown2,
     DWORD dwUnknown3)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
-}
-
-DWORD
-APIENTRY
-NtUserMinMaximize(
-    HWND hWnd,
-    UINT cmd, // Wine SW_ commands
-    BOOL Hide)
-{
-  RECTL NewPos;
-  UINT SwFlags;
-  PWND pWnd;
-
-  DPRINT("Enter NtUserMinMaximize\n");
-  UserEnterExclusive();
-
-  pWnd = UserGetWindowObject(hWnd);
-  if ( !pWnd ||                          // FIXME:
-        pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-        pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
-  {
-     goto Exit;
-  }
-
-  if ( cmd > SW_MAX || pWnd->state2 & WNDS2_INDESTROY)
-  {
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     goto Exit;
-  }
-
-  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
-
-  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
-
-  co_WinPosSetWindowPos( pWnd,
-                         NULL,
-                         NewPos.left,
-                         NewPos.top,
-                         NewPos.right,
-                         NewPos.bottom,
-                         SwFlags);
-
-  co_WinPosShowWindow(pWnd, cmd);
-
-Exit:
-  DPRINT("Leave NtUserMinMaximize\n");
-  UserLeave();
-  return 0; // Always NULL?
 }
 
 DWORD
@@ -801,7 +687,7 @@ NtUserNotifyProcessCreate(
     DWORD dwUnknown3,
     DWORD dwUnknown4)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -813,7 +699,7 @@ NtUserProcessConnect(
     DWORD Size)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-  DPRINT("NtUserProcessConnect\n");
+  TRACE("NtUserProcessConnect\n");
   if (pUserConnect && ( Size == sizeof(USERCONNECT) ))
   {
      PPROCESSINFO W32Process;
@@ -851,7 +737,7 @@ NtUserQueryInformationThread(
     DWORD dwUnknown4,
     DWORD dwUnknown5)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -861,7 +747,7 @@ NtUserQueryInputContext(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -875,7 +761,7 @@ NtUserRealInternalGetMessage(
     UINT wRemoveMsg,
     BOOL bGMSG)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -885,21 +771,7 @@ NtUserRealWaitMessageEx(
     DWORD dwWakeMask,
     UINT uTimeout)
 {
-    UNIMPLEMENTED;
-    return 0;
-}
-
-BOOL
-APIENTRY
-NtUserRegisterUserApiHook(
-    PUNICODE_STRING m_dllname1,
-    PUNICODE_STRING m_funname1,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
-{
-    UserEnterExclusive();
-    UNIMPLEMENTED;
-    UserLeave();
+    STUB;
     return 0;
 }
 
@@ -910,7 +782,7 @@ NtUserRegisterRawInputDevices(
     IN UINT uiNumDevices,
     IN UINT cbSize)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -922,7 +794,7 @@ NtUserResolveDesktop(
     DWORD dwUnknown3,
     DWORD dwUnknown4)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -932,7 +804,7 @@ NtUserSetAppImeLevel(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -941,7 +813,7 @@ APIENTRY
 NtUserSetImeInfoEx(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -953,7 +825,7 @@ NtUserSetInformationProcess(
     DWORD dwUnknown3,
     DWORD dwUnknown4)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -967,15 +839,15 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 {
     if (ThreadInformationClass == UserThreadInitiateShutdown)
     {
-        DPRINT1("Shutdown initiated\n");
+        ERR("Shutdown initiated\n");
     }
     else if (ThreadInformationClass == UserThreadEndShutdown)
     {
-        DPRINT1("Shutdown ended\n");
+        ERR("Shutdown ended\n");
     }
     else
     {
-        UNIMPLEMENTED;
+        STUB;
     }
 
     return STATUS_SUCCESS;
@@ -987,7 +859,7 @@ NtUserSetThreadLayoutHandles(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -995,7 +867,7 @@ BOOL
 APIENTRY
 NtUserSoundSentry(VOID)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1004,7 +876,7 @@ APIENTRY
 NtUserTestForInteractiveUser(
     DWORD dwUnknown1)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1018,7 +890,7 @@ NtUserCalcMenuBar(
     DWORD dwUnknown4,
     DWORD dwUnknown5)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1032,15 +904,7 @@ NtUserPaintMenuBar(
     DWORD dwUnknown5,
     DWORD dwUnknown6)
 {
-    UNIMPLEMENTED;
-    return 0;
-}
-
-BOOL
-APIENTRY
-NtUserUnregisterUserApiHook(VOID)
-{
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1052,25 +916,8 @@ NtUserGetLayeredWindowAttributes(
     BYTE *pbAlpha,
     DWORD *pdwFlags)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
-}
-
-BOOL
-APIENTRY
-NtUserValidateTimerCallback(
-    HWND hWnd,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-  BOOL Ret = FALSE;
-
-  UserEnterShared();
-
-  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), lParam);
-
-  UserLeave();
-  return Ret;
 }
 
 DWORD
@@ -1080,7 +927,7 @@ NtUserRemoteConnect(
     DWORD dwUnknown2,
     DWORD dwUnknown3)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1092,7 +939,7 @@ NtUserRemoteRedrawRectangle(
     DWORD dwUnknown3,
     DWORD dwUnknown4)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1100,7 +947,7 @@ DWORD
 APIENTRY
 NtUserRemoteRedrawScreen(VOID)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1108,7 +955,7 @@ DWORD
 APIENTRY
 NtUserRemoteStopScreenUpdates(VOID)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1119,7 +966,7 @@ NtUserCtxDisplayIOCtl(
     DWORD dwUnknown2,
     DWORD dwUnknown3)
 {
-    UNIMPLEMENTED;
+    STUB;
     return 0;
 }
 
@@ -1135,8 +982,8 @@ NtUserDrawMenuBarTemp(
    HMENU hMenu,
    HFONT hFont)
 {
-   /* we'll use this function just for caching the menu bar */
-   UNIMPLEMENTED
+   /* We'll use this function just for caching the menu bar */
+   STUB
    return 0;
 }
 
@@ -1152,7 +999,7 @@ NtUserFillWindow(HWND hWndPaint,
                  HDC  hDC,
                  HBRUSH hBrush)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1161,20 +1008,9 @@ NtUserFillWindow(HWND hWndPaint,
  * @unimplemented
  */
 BOOL APIENTRY
-NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
-{
-   UNIMPLEMENTED
-
-   return 1;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
 NtUserLockWindowUpdate(HWND hWnd)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1187,7 +1023,7 @@ NtUserRealChildWindowFromPoint(HWND Parent,
                                LONG x,
                                LONG y)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1199,22 +1035,7 @@ DWORD APIENTRY
 NtUserSetImeOwnerWindow(DWORD Unknown0,
                         DWORD Unknown1)
 {
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetInternalWindowPos(
-   HWND    hwnd,
-   UINT    showCmd,
-   LPRECT  rect,
-   LPPOINT pt)
-{
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1228,7 +1049,7 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 			   BYTE bAlpha,
 			   DWORD dwFlags)
 {
-  UNIMPLEMENTED;
+  STUB;
   return FALSE;
 }
 
@@ -1249,7 +1070,7 @@ NtUserUpdateLayeredWindow(
    DWORD dwFlags,
    RECT *prcDirty)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1260,7 +1081,7 @@ NtUserUpdateLayeredWindow(
 HWND APIENTRY
 NtUserWindowFromPhysicalPoint(POINT Point)
 {
-   UNIMPLEMENTED
+   STUB
 
    return NULL;
 }
@@ -1275,7 +1096,7 @@ NtUserWindowFromPhysicalPoint(POINT Point)
 DWORD APIENTRY
 NtUserResolveDesktopForWOW(DWORD Unknown0)
 {
-   UNIMPLEMENTED
+   STUB
    return 0;
 }
 
@@ -1285,7 +1106,7 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
 BOOL APIENTRY
 NtUserEndMenu(VOID)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1303,7 +1124,7 @@ NtUserTrackPopupMenuEx(
    HWND hWnd,
    LPTPMPARAMS lptpm)
 {
-   UNIMPLEMENTED
+   STUB
 
    return FALSE;
 }
@@ -1311,7 +1132,7 @@ NtUserTrackPopupMenuEx(
 DWORD APIENTRY
 NtUserQuerySendMessage(DWORD Unknown0)
 {
-    UNIMPLEMENTED;
+    STUB;
 
     return 0;
 }
@@ -1324,7 +1145,7 @@ NtUserAlterWindowStyle(DWORD Unknown0,
                        DWORD Unknown1,
                        DWORD Unknown2)
 {
-   UNIMPLEMENTED
+   STUB
 
    return(0);
 }
@@ -1343,7 +1164,7 @@ NtUserSetWindowStationUser(
    DWORD Unknown2,
    DWORD Unknown3)
 {
-   UNIMPLEMENTED
+   STUB
 
    return 0;
 }
@@ -1352,7 +1173,7 @@ BOOL APIENTRY NtUserAddClipboardFormatListener(
     HWND hwnd
 )
 {
-    UNIMPLEMENTED;
+    STUB;
     return FALSE;
 }
 
@@ -1360,7 +1181,7 @@ BOOL APIENTRY NtUserRemoveClipboardFormatListener(
     HWND hwnd
 )
 {
-    UNIMPLEMENTED;
+    STUB;
     return FALSE;
 }
 
@@ -1370,22 +1191,22 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
     PUINT pcFormatsOut
 )
 {
-    UNIMPLEMENTED;
+    STUB;
     return FALSE;
 }
 
 /*
  * @unimplemented
  */
-DWORD
-APIENTRY
+HCURSOR
+NTAPI
 NtUserGetCursorFrameInfo(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3)
+    HCURSOR hCursor,
+    DWORD istep,
+    PDWORD rate_jiffies,
+    INT *num_steps)
 {
-    UNIMPLEMENTED
+    STUB
 
     return 0;
 }

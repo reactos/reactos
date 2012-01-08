@@ -149,10 +149,11 @@ KeInitializeQueue(IN PKQUEUE Queue,
                   IN ULONG Count OPTIONAL)
 {
     /* Initialize the Header */
-    KeInitializeDispatcherHeader(&Queue->Header,
-                                 QueueObject,
-                                 sizeof(KQUEUE) / sizeof(ULONG),
-                                 0);
+    Queue->Header.Type = QueueObject;
+    Queue->Header.Abandoned = 0;
+    Queue->Header.Size = sizeof(KQUEUE) / sizeof(ULONG);
+    Queue->Header.SignalState = 0;
+    InitializeListHead(&(Queue->Header.WaitListHead));
 
     /* Initialize the Lists */
     InitializeListHead(&Queue->EntryListHead);

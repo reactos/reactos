@@ -18,4 +18,5 @@
 	<file>audio.c</file>
 	<file>voice.c</file>
 	<file>mmsys.rc</file>
+	<pch>mmsys.h</pch>
 </module>

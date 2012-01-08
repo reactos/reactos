@@ -9,7 +9,6 @@
 #include <ntdef.h>
 #include <dderror.h>
 #include <miniport.h>
-#include <ntddvdeo.h>
 #include <video.h>
 #include "vmx_regs.h"
 

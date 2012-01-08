@@ -1,20 +1,13 @@
-/* $Id$
- *
+/* 
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
- * FILE:             subsys/win32k/ntuser/caret.c
+ * FILE:             subsystems/win32/win32k/ntuser/caret.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       10/15/2003  Created
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserCaret);
 
 /* DEFINES *****************************************************************/
 
@@ -70,7 +63,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PWINSTATION_OBJECT WinStaObject = pti->rpdesk->rpwinstaParent;
 
-   /* windows doesn't do this check */
+   /* Windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -164,11 +157,11 @@ IntGetCaretBlinkTime(VOID)
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)
    {
-      /* load it from the registry the first call only! */
+      /* Load it from the registry the first call only! */
       Ret = WinStaObject->CaretBlinkRate = IntQueryCaretBlinkRate();
    }
 
-   /* windows doesn't do this check */
+   /* Windows doesn't do this check */
    if((Ret < MIN_CARETBLINKRATE) || (Ret > MAX_CARETBLINKRATE))
    {
       Ret = DEFAULT_CARETBLINKRATE;
@@ -226,7 +219,7 @@ IntSwitchCaretShowing(PVOID Info)
    return FALSE;
 }
 
-#if 0 //unused
+#if 0 // Unused
 static
 VOID FASTCALL
 co_IntDrawCaret(HWND hWnd)
@@ -336,7 +329,7 @@ NtUserCreateCaret(
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserCreateCaret\n");
+   TRACE("Enter NtUserCreateCaret\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
@@ -385,7 +378,7 @@ NtUserCreateCaret(
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserCreateCaret, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCreateCaret, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -396,13 +389,13 @@ NtUserGetCaretBlinkTime(VOID)
 {
    DECLARE_RETURN(UINT);
 
-   DPRINT("Enter NtUserGetCaretBlinkTime\n");
+   TRACE("Enter NtUserGetCaretBlinkTime\n");
    UserEnterShared();
 
    RETURN(IntGetCaretBlinkTime());
 
 CLEANUP:
-   DPRINT("Leave NtUserGetCaretBlinkTime, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetCaretBlinkTime, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -417,7 +410,7 @@ NtUserGetCaretPos(
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetCaretPos\n");
+   TRACE("Enter NtUserGetCaretPos\n");
    UserEnterShared();
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -433,7 +426,7 @@ NtUserGetCaretPos(
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetCaretPos, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetCaretPos, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -447,7 +440,7 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
-   DPRINT("Enter NtUserShowCaret\n");
+   TRACE("Enter NtUserShowCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
@@ -464,7 +457,7 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserShowCaret, ret=%i\n",_ret_);
+   TRACE("Leave NtUserShowCaret, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -478,7 +471,7 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
-   DPRINT("Enter NtUserHideCaret\n");
+   TRACE("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
@@ -495,7 +488,7 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserHideCaret, ret=%i\n",_ret_);
+   TRACE("Leave NtUserHideCaret, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

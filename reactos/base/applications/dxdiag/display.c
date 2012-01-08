@@ -9,8 +9,6 @@
 
 #include "precomp.h"
 #include <d3d9.h>
-#include <initguid.h>
-#include <devguid.h>
 
 BOOL
 GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)

@@ -20,13 +20,13 @@ FUNC __chkstk
     .endprolog
     UNIMPLEMENTED chkstk
     ret
-ENDFUNC __chkstk
+ENDFUNC
 
 FUNC __alloca_probe
     .endprolog
     UNIMPLEMENTED alloca_probe
     ret
-ENDFUNC __alloca_probe
+ENDFUNC
 
 END
 /* EOF */

@@ -1,6 +1,6 @@
 
 #ifdef __GNUC__
-/* Hack, for bug in ld.  Will be removed soon.  */
+/* HACK, for bug in ld.  Will be removed soon.  */
 #define __ImageBase _image_base__
 #endif
 extern IMAGE_DOS_HEADER __ImageBase;

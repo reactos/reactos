@@ -193,7 +193,7 @@ static ULONG queue_get_timeout(struct timer_queue *q)
         if (t->expire != EXPIRE_NEVER)
         {
             ULONGLONG time = queue_current_time();
-            timeout = t->expire < time ? 0 : t->expire - time;
+            timeout = t->expire < time ? 0 : (ULONG)(t->expire - time);
         }
     }
     RtlLeaveCriticalSection(&q->cs);

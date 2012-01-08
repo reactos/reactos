@@ -117,7 +117,7 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
         {
             /* Get the last wait block */
             LastWaitBlock = WaitBlock->Last;
-        
+
             /* Check if we found it */
             if (LastWaitBlock)
             {
@@ -534,7 +534,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                 WaitBlock->Last = WaitBlock;
 
                 /* Set the share count */
-                WaitBlock->ShareCount = OldValue.Shared;
+                WaitBlock->ShareCount = (LONG)OldValue.Shared;
 
                 /* Check if someone is sharing this pushlock */
                 if (OldValue.Shared > 1)
@@ -879,7 +879,7 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                 }
             }
             
-            /* 
+            /*
              * If nobody was waiting on the block, then we possibly reduced the number
              * of times the pushlock was shared, and we unlocked it.
              * If someone was waiting, and more then one person is waiting, then we
@@ -1015,7 +1015,7 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
         if (InterlockedDecrement(&WaitBlock->ShareCount) > 0) return;
     }
 
-    /* 
+    /*
      * If nobody was waiting on the block, then we possibly reduced the number
      * of times the pushlock was shared, and we unlocked it.
      * If someone was waiting, and more then one person is waiting, then we

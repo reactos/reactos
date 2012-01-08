@@ -1,5 +1,3 @@
-/////////////////////////////////////////////////////////////////////////////
-// Swedish (SE) resources
 /*
  * Copyright 2005 David Nordenberg
  *
@@ -18,32 +16,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_SWE)
-#ifdef _WIN32
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Arkiv"
     BEGIN
-        MENUITEM "&Ny Aktivitet (Kör...)",          ID_FILE_NEW
+        MENUITEM "&Ny Aktivitet (KÃ¶r...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta Aktivitetshanteraren",          ID_FILE_EXIT
     END
     POPUP "&Alternativ"
     BEGIN
-        MENUITEM "&Alltid överst",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Alltid Ã¶verst",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "&Minimera vid användning",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "&Minimera vid anvÃ¤ndning",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Göm minimerad",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&GÃ¶m minimerad",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
         MENUITEM "&Visa 16-bitarsaktiviteter",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
@@ -53,39 +42,39 @@ BEGIN
         MENUITEM "&Uppdatera",                ID_VIEW_REFRESH
         POPUP "U&ppdateringshastighet"
         BEGIN
-            MENUITEM "&Hög",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&HÃ¶g",                       ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normal",                     ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "&Låg",                        ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&LÃ¥g",                        ID_VIEW_UPDATESPEED_LOW
             MENUITEM "&Fryst",                     ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
         MENUITEM "&Stora ikoner",                ID_VIEW_LARGE
-        MENUITEM "S&må ikoner",                ID_VIEW_SMALL
+        MENUITEM "S&mÃ¥ ikoner",                ID_VIEW_SMALL
         MENUITEM "&Detaljer",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Välj kolumner...",          ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&VÃ¤lj kolumner...",          ID_VIEW_SELECTCOLUMNS
         POPUP "&CPU Historik"
         BEGIN
-            MENUITEM "En visare för &alla processorer",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "En visare fÃ¶r &alla processorer",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
             MENUITEM "&En visare per processor",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
         MENUITEM "&Visa kernel-tider",          ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Fönster"
+    POPUP "&FÃ¶nster"
     BEGIN
         MENUITEM "Ordna &horizontellt",          ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Ordna &vertikalt",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimera",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximera",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Överlappande",                    ID_WINDOWS_CASCADE
-        MENUITEM "&För till förgrunden",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Ã–verlappande",                    ID_WINDOWS_CASCADE
+        MENUITEM "&FÃ¶r till fÃ¶rgrunden",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "&Hjälp"
+    POPUP "&HjÃ¤lp"
     BEGIN
-        MENUITEM "Aktivitetshanteraren &hjälpavsnitt",   ID_HELP_TOPICS
+        MENUITEM "Aktivitetshanteraren &hjÃ¤lpavsnitt",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Om Aktivitetshanteraren",         ID_HELP_ABOUT
     END
@@ -97,18 +86,18 @@ BEGIN
     MENUITEM "Ordna &vertikalt",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimera",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximera",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Överlappande",                    ID_WINDOWS_CASCADE
-    MENUITEM "&För till förgrunden",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "&Ã–verlappande",                    ID_WINDOWS_CASCADE
+    MENUITEM "&FÃ¶r till fÃ¶rgrunden",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Ny aktivitet (Kör...)",          ID_FILE_NEW
+        MENUITEM "&Ny aktivitet (KÃ¶r...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Stora ikoner",                ID_VIEW_LARGE
-        MENUITEM "S&må ikoner",                ID_VIEW_SMALL
+        MENUITEM "S&mÃ¥ ikoner",                ID_VIEW_SMALL
         MENUITEM "&Detaljer",                    ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -117,17 +106,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Växla till",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&För till förgrunden",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&VÃ¤xla till",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&FÃ¶r till fÃ¶rgrunden",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
         MENUITEM "Ordna &horizontellt",          ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Ordna &vertikalt",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimera",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximera",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Överlappande",                    ID_WINDOWS_CASCADE
+        MENUITEM "&Ã–verlappande",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta aktiviteten",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Gå till process",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&GÃ¥ till process",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -136,10 +125,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Återställ",                    ID_RESTORE
-        MENUITEM "&Stäng",                      ID_FILE_EXIT
+        MENUITEM "&Ã…terstÃ¤ll",                    ID_RESTORE
+        MENUITEM "&StÃ¤ng",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Alltid överst",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Alltid Ã¶verst",              ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -148,27 +137,27 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Avsluta process",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Avsluta process&träd",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Avsluta process&trÃ¤d",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
-        MENUITEM "&Felsök",                      ID_PROCESS_PAGE_DEBUG
+        MENUITEM "&FelsÃ¶k",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Ändra &prioritet"
+        POPUP "Ã„ndra &prioritet"
         BEGIN
             MENUITEM "&Realtid",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "&Hög",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&HÃ¶g",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "&Över normal",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Ã–ver normal",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
             MENUITEM "&Normal",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
             MENUITEM "&Under normal",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "&Låg",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&LÃ¥g",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Välj &källa (FIXME)...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Ändra felsökningskanaler...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "VÃ¤lj &kÃ¤lla (FIXME)...",            ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "Ã„ndra felsÃ¶kningskanaler...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -197,7 +186,7 @@ BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Ny aktivitet...",IDC_NEWTASK,175,189,65,14
-    PUSHBUTTON      "&Växla till",IDC_SWITCHTO,120,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&VÃ¤xla till",IDC_SWITCHTO,120,189,53,14,WS_DISABLED
     PUSHBUTTON      "&Avsluta aktiviteten",IDC_ENDTASK,34,189,83,14,WS_DISABLED
 END
 
@@ -209,7 +198,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Avsluta process",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "&Visa processer från alla användare",IDC_SHOWALLPROCESSES,
+    CONTROL         "&Visa processer frÃ¥n alla anvÃ¤ndare",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,156,10
 END
 
@@ -225,7 +214,7 @@ BEGIN
     GROUPBOX        "Fysiskt minne (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Kernel minne (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "Referenser",IDS_TOTALS_HANDLE_COUNT,12,131,41,8
-    LTEXT           "Trådar",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "TrÃ¥dar",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Processer",IDS_TOTALS_PROCESS_COUNT,12,149,36,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -234,7 +223,7 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totalt",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Gräns",IDS_COMMIT_CHARGE_LIMIT,12,184,21,8,NOT WS_BORDER
+    LTEXT           "GrÃ¤ns",IDS_COMMIT_CHARGE_LIMIT,12,184,21,8,NOT WS_BORDER
     LTEXT           "Topp",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -243,7 +232,7 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totalt",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Tillgängligt",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,46,8
+    LTEXT           "TillgÃ¤ngligt",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,46,8
     LTEXT           "Systemcache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -262,10 +251,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Processorhistorik",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Minneshistorik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Processoranvändning",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Minnesanvändning",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "ProcessoranvÃ¤ndning",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "MinnesanvÃ¤ndning",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Processorhistorik",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Minneshistorik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -274,23 +261,23 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Felsökningskanaler"
+CAPTION "FelsÃ¶kningskanaler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Stäng",IDOK,171,189,69,14
+    PUSHBUTTON      "StÃ¤ng",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Processorsamhörighet"
+CAPTION "ProcessorsamhÃ¶righet"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,174,133,50,14
-    LTEXT           "Processorsamhörighets-inställningen bestämmer vilka processorer processen tillåts exekvera på",
+    LTEXT           "ProcessorsamhÃ¶righets-instÃ¤llningen bestÃ¤mmer vilka processorer processen tillÃ¥ts exekvera pÃ¥",
                     IDC_STATIC,5,5,220,16
     CONTROL         "Processor 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     6,28,55,10
@@ -360,52 +347,52 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 275, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Välj kolumner"
+CAPTION "VÃ¤lj kolumner"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,138,178,50,14
-    LTEXT           "Välj de kolumner som skall synas på process-sidan i Aktivitetshanteraren.",
+    LTEXT           "VÃ¤lj de kolumner som skall synas pÃ¥ process-sidan i Aktivitetshanteraren.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Processnamn",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,60,10
     CONTROL         "P&ID (Processidentifierare)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,119,10
-    CONTROL         "Processoranvändnin&g",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ProcessoranvÃ¤ndnin&g",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,89,10
     CONTROL         "Pro&cessortid",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,62,10
-    CONTROL         "&Minnesanvändning",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&MinnesanvÃ¤ndning",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,77,10
-    CONTROL         "Minnesanvändnings&förändring",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "MinnesanvÃ¤ndnings&fÃ¶rÃ¤ndring",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,121,10
-    CONTROL         "T&oppvärde minnesanvändning",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "T&oppvÃ¤rde minnesanvÃ¤ndning",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,121,10
     CONTROL         "&Sidfel",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,56,10
     CONTROL         "&USER Objekt",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,64,10
-    CONTROL         "Antal I/O-l&äsningar",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Antal I/O-l&Ã¤sningar",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,88,10
-    CONTROL         "I/O, anta&l tecken lästa",IDC_IOREADBYTES,"Button",
+    CONTROL         "I/O, anta&l tecken lÃ¤sta",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,119,10
     CONTROL         "Sessions-I&D",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,58,10
-    CONTROL         "Användar&namn",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "AnvÃ¤ndar&namn",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,62,10
-    CONTROL         "Sidfelsf&örändring",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "Sidfelsf&Ã¶rÃ¤ndring",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,28,82,10
     CONTROL         "Storl&ek i virtuella minnet",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,39,116,10
-    CONTROL         "Växlings&bar pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "VÃ¤xlings&bar pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,133,50,76,10
-    CONTROL         "Ic&ke växlingsbar pool",IDC_NONPAGEDPOOL,"Button",
+    CONTROL         "Ic&ke vÃ¤xlingsbar pool",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,61,96,10
     CONTROL         "&Basprioritet",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,72,60,10
     CONTROL         "Antal referenser (&handles)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,133,83,117,10
-    CONTROL         "Antal tr&ådar",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Antal tr&Ã¥dar",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,133,94,60,10
     CONTROL         "GDI-ob&jekt",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,133,105,52,10
@@ -413,9 +400,9 @@ BEGIN
                     WS_TABSTOP,133,116,97,10
     CONTROL         "I/O, &antal tecken skrivna",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,127,113,10
-    CONTROL         "And&ra I/O åtgärder",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "And&ra I/O Ã¥tgÃ¤rder",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,133,138,89,10
-    CONTROL         "Antal tecken, andra I/O åtgärder",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "Antal tecken, andra I/O Ã¥tgÃ¤rder",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,133,149,141,10
 END
 
@@ -547,65 +534,65 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Kör ett nytt program"
-    ID_OPTIONS_ALWAYSONTOP  "Aktivitetshanteraren förblir i förgrunden om den inte minimeras"
+    ID_FILE_NEW             "KÃ¶r ett nytt program"
+    ID_OPTIONS_ALWAYSONTOP  "Aktivitetshanteraren fÃ¶rblir i fÃ¶rgrunden om den inte minimeras"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Aktivitetshanteraren minimeras när en Växla till operation utförs"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Göm Aktivitetshanteraren när den minimeras"
-    ID_VIEW_REFRESH         "Tvinga Aktivitetshanteraren att uppdatera nu, oavsätt vald uppdateringshastighet"
+                            "Aktivitetshanteraren minimeras nÃ¤r en VÃ¤xla till operation utfÃ¶rs"
+    ID_OPTIONS_HIDEWHENMINIMIZED "GÃ¶m Aktivitetshanteraren nÃ¤r den minimeras"
+    ID_VIEW_REFRESH         "Tvinga Aktivitetshanteraren att uppdatera nu, oavsÃ¤tt vald uppdateringshastighet"
     ID_VIEW_LARGE           "Visa aktiviteter med stora ikoner"
-    ID_VIEW_SMALL           "Visa aktiviteter med små ikoner"
+    ID_VIEW_SMALL           "Visa aktiviteter med smÃ¥ ikoner"
     ID_VIEW_DETAILS         "Visa information om varje aktivitet"
-    ID_VIEW_UPDATESPEED_HIGH "Uppdaterar värden två gånger per sekund"
-    ID_VIEW_UPDATESPEED_NORMAL "Uppdaterar värden varannan sekund"
-    ID_VIEW_UPDATESPEED_LOW "Uppdaterar värden var 4:e sekund"
+    ID_VIEW_UPDATESPEED_HIGH "Uppdaterar vÃ¤rden tvÃ¥ gÃ¥nger per sekund"
+    ID_VIEW_UPDATESPEED_NORMAL "Uppdaterar vÃ¤rden varannan sekund"
+    ID_VIEW_UPDATESPEED_LOW "Uppdaterar vÃ¤rden var 4:e sekund"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Uppdaterar inte automatiskt"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Ordna fönstren horizontellt på skrivbordet"
-    ID_WINDOWS_TILEVERTICALLY "Ordna fönstren vertikalt på skrivbordet"
-    ID_WINDOWS_MINIMIZE     "Minimerar fönstret"
-    ID_WINDOWS_MAXIMIZE     "Maximerar fönstret"
-    ID_WINDOWS_CASCADE      "Ordna fönstren diagonalt överlappande på skrivbordet"
-    ID_WINDOWS_BRINGTOFRONT "För fönstret till förgrunden men växla inte till det"
-    ID_HELP_TOPICS          "Visa Aktivitetshanterarens hjälpavsnitt"
-    ID_HELP_ABOUT           "Visa programinformation, versionsnummer, och upphovsrätt"
+                            "Ordna fÃ¶nstren horizontellt pÃ¥ skrivbordet"
+    ID_WINDOWS_TILEVERTICALLY "Ordna fÃ¶nstren vertikalt pÃ¥ skrivbordet"
+    ID_WINDOWS_MINIMIZE     "Minimerar fÃ¶nstret"
+    ID_WINDOWS_MAXIMIZE     "Maximerar fÃ¶nstret"
+    ID_WINDOWS_CASCADE      "Ordna fÃ¶nstren diagonalt Ã¶verlappande pÃ¥ skrivbordet"
+    ID_WINDOWS_BRINGTOFRONT "FÃ¶r fÃ¶nstret till fÃ¶rgrunden men vÃ¤xla inte till det"
+    ID_HELP_TOPICS          "Visa Aktivitetshanterarens hjÃ¤lpavsnitt"
+    ID_HELP_ABOUT           "Visa programinformation, versionsnummer, och upphovsrÃ¤tt"
     ID_FILE_EXIT            "Avsluta Aktivitetshanteraren"
     ID_OPTIONS_SHOW16BITTASKS
-                            "Visa 16-bitarsprocesser under tillhörande ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS   "Välj de kolumner som ska synas på process-sidan"
+                            "Visa 16-bitarsprocesser under tillhÃ¶rande ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS   "VÃ¤lj de kolumner som ska synas pÃ¥ process-sidan"
     ID_VIEW_SHOWKERNELTIMES "Visar kernel-tider i prestandagrafer"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "En enda historik-graf visar totala processoranvändningen"
+                            "En enda historik-graf visar totala processoranvÃ¤ndningen"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Varje processor har sin egen historik-graf"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "För aktiviteten till förgrunden och växla till den"
+                            "FÃ¶r aktiviteten till fÃ¶rgrunden och vÃ¤xla till den"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_ENDTASK              "Ber de valda aktiviteterna att avslutas"
-    ID_GOTOPROCESS          "Ändrar fokus till den valda aktivitetens process"
-    ID_RESTORE              "Återställer Aktivitetshanteraren från sitt gömda tillstånd"
-    ID_PROCESS_PAGE_ENDPROCESS "Tar bort processen från systemet"
+    ID_GOTOPROCESS          "Ã„ndrar fokus till den valda aktivitetens process"
+    ID_RESTORE              "Ã…terstÃ¤ller Aktivitetshanteraren frÃ¥n sitt gÃ¶mda tillstÃ¥nd"
+    ID_PROCESS_PAGE_ENDPROCESS "Tar bort processen frÃ¥n systemet"
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "Tar bort den här processen och underprocesser från systemet"
-    ID_PROCESS_PAGE_DEBUG   "Kopplar felsökaren till den här processen"
+                            "Tar bort den hÃ¤r processen och underprocesser frÃ¥n systemet"
+    ID_PROCESS_PAGE_DEBUG   "Kopplar felsÃ¶karen till den hÃ¤r processen"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Kontrollerar vilka processorer processen tillåts att köras på"
+                            "Kontrollerar vilka processorer processen tillÃ¥ts att kÃ¶ras pÃ¥"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "Ändrar processens prioritet till realtidsläge"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Ändrar processens prioritet till hög"
+                            "Ã„ndrar processens prioritet till realtidslÃ¤ge"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Ã„ndrar processens prioritet till hÃ¶g"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Ändrar processens prioritet till över normal"
+                            "Ã„ndrar processens prioritet till Ã¶ver normal"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Ändrar processens prioritet till normal"
+                            "Ã„ndrar processens prioritet till normal"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Ändrar processens prioritet till under normal"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Ändrar processens prioritet till låg"
+                            "Ã„ndrar processens prioritet till under normal"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Ã„ndrar processens prioritet till lÃ¥g"
 END
 
 
@@ -618,59 +605,55 @@ BEGIN
     IDS_TAB_STATUS                "Status"
     IDS_TAB_IMAGENAME             "Processnamn"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Användarnamn"
+    IDS_TAB_USERNAME              "AnvÃ¤ndarnamn"
     IDS_TAB_SESSIONID             "Sessions-ID"
     IDS_TAB_CPU                   "Processor"
     IDS_TAB_CPUTIME               "Processortid"
-    IDS_TAB_MEMUSAGE              "Minnesanvändning"
-    IDS_TAB_PEAKMEMUSAGE          "Toppvärde minne"
-    IDS_TAB_MEMDELTA              "Minnesvärdesförändring"
+    IDS_TAB_MEMUSAGE              "MinnesanvÃ¤ndning"
+    IDS_TAB_PEAKMEMUSAGE          "ToppvÃ¤rde minne"
+    IDS_TAB_MEMDELTA              "MinnesvÃ¤rdesfÃ¶rÃ¤ndring"
     IDS_TAB_PAGEFAULT             "Sidfel"
-    IDS_TAB_PFDELTA               "Sidfelsförändring"
+    IDS_TAB_PFDELTA               "SidfelsfÃ¶rÃ¤ndring"
     IDS_TAB_VMSIZE                "VM Storlek"
-    IDS_TAB_PAGEDPOOL             "Växlingsbar pool"
-    IDS_TAB_NPPOOL                "Oväxlingsbar pool"
+    IDS_TAB_PAGEDPOOL             "VÃ¤xlingsbar pool"
+    IDS_TAB_NPPOOL                "OvÃ¤xlingsbar pool"
     IDS_TAB_BASEPRI               "Basprioritet"
     IDS_TAB_HANDLES               "Referenser"
-    IDS_TAB_THREADS               "Trådar"
+    IDS_TAB_THREADS               "TrÃ¥dar"
     IDS_TAB_USERPBJECTS           "USER Objekt"
     IDS_TAB_GDIOBJECTS            "GDI Objekt"
-    IDS_TAB_IOREADS               "I/O-läsningar"
+    IDS_TAB_IOREADS               "I/O-lÃ¤sningar"
     IDS_TAB_IOWRITES              "I/O-skrivningar"
-    IDS_TAB_IOOTHER               "I/O-övriga"
-    IDS_TAB_IOREADBYTES           "Antal tecken lästa, andra I/O-åtgärder"
-    IDS_TAB_IOWRITESBYTES         "Antal tecken skrivna, andra I/O-åtgärder"
+    IDS_TAB_IOOTHER               "I/O-Ã¶vriga"
+    IDS_TAB_IOREADBYTES           "Antal tecken lÃ¤sta, andra I/O-Ã¥tgÃ¤rder"
+    IDS_TAB_IOWRITESBYTES         "Antal tecken skrivna, andra I/O-Ã¥tgÃ¤rder"
     IDS_TAB_IOOTHERBYTES          "I/O, antal tecken"
-    IDS_MENU_SELECTCOLUMNS        "&Välj kolumner..."
+    IDS_MENU_SELECTCOLUMNS        "&VÃ¤lj kolumner..."
     IDS_MENU_16BITTASK            "&Visa 16-bitsprocesser"
-    IDS_MENU_WINDOWS              "&Fönster"
+    IDS_MENU_WINDOWS              "&FÃ¶nster"
     IDS_MENU_LARGEICONS           "&Stora ikoner"
-    IDS_MENU_SMALLICONS           "S&må ikoner"
+    IDS_MENU_SMALLICONS           "S&mÃ¥ ikoner"
     IDS_MENU_DETAILS              "&Detaljer"
-    IDS_MENU_ONEGRAPHALLCPUS      "En visare för &alla processorer"
+    IDS_MENU_ONEGRAPHALLCPUS      "En visare fÃ¶r &alla processorer"
     IDS_MENU_ONEGRAPHPERCPU       "&En visare per processor"
     IDS_MENU_CPUHISTORY           "&Processorhistorik"
     IDS_MENU_SHOWKERNELTIMES      "&Visa kerneltider"
     IDS_CREATENEWTASK             "Ny aktivitet"
-    IDS_CREATENEWTASK_DESC        "Skriv namnet på ett program, en mapp, en web-adress eller ett dokument för att öppna det."
-    IDS_MSG_ACCESSPROCESSAFF      "Kunde inte komma åt eller ändra processorsamhörigheten"
-    IDS_MSG_PROCESSONEPRO         "Processen måste ha samhörighet med minst en processor."
+    IDS_CREATENEWTASK_DESC        "Skriv namnet pÃ¥ ett program, en mapp, en web-adress eller ett dokument fÃ¶r att Ã¶ppna det."
+    IDS_MSG_ACCESSPROCESSAFF      "Kunde inte komma Ã¥t eller Ã¤ndra processorsamhÃ¶righeten"
+    IDS_MSG_PROCESSONEPRO         "Processen mÃ¥ste ha samhÃ¶righet med minst en processor."
     IDS_MSG_INVALIDOPTION         "Ogiltigt val"
-    IDS_MSG_UNABLEDEBUGPROCESS    "Kunde inte felsöka processen"
-    IDS_MSG_WARNINGDEBUG          "VARNING: Felsökning av den här processen kan resultera i förlorad data.\nÄr du säker på att du vill ansluta felsökaren?"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Kunde inte felsÃ¶ka processen"
+    IDS_MSG_WARNINGDEBUG          "VARNING: FelsÃ¶kning av den hÃ¤r processen kan resultera i fÃ¶rlorad data.\nÃ„r du sÃ¤ker pÃ¥ att du vill ansluta felsÃ¶karen?"
     IDS_MSG_TASKMGRWARNING        "Aktivitetshanteraren varning"
-    IDS_MSG_WARNINGTERMINATING    "VARNING: Ett avslutande av en process kan orsaka\noönskade effekter och påverka systemets stabilitet. Processen\nkommer inte att ges chans att spara sitt arbete innan\nden avslutas. Är du säker på att du vill avsluta processen?"
+    IDS_MSG_WARNINGTERMINATING    "VARNING: Ett avslutande av en process kan orsaka\noÃ¶nskade effekter och pÃ¥verka systemets stabilitet. Processen\nkommer inte att ges chans att spara sitt arbete innan\nden avslutas. Ã„r du sÃ¤ker pÃ¥ att du vill avsluta processen?"
     IDS_MSG_UNABLETERMINATEPRO    "Kunde inte avsluta processen"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Kunde inte ändra prioritet"
-    IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Processoranvändning: %d%%"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Kunde inte Ã¤ndra prioritet"
+    IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ã„ndring av prioritetsklassen hos den hÃ¤r processen kan\norsaka oÃ¶nskade effekter och pÃ¥verka systemets stabilitet. Ã„r du\nsÃ¤ker pÃ¥ att du vill Ã¤ndra prioritetsklassen?"
+    IDS_MSG_TRAYICONCPUUSAGE      "ProcessoranvÃ¤ndning: %d%%"
     IDS_STATUS_MEMUSAGE           "Minnesanv: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Processoranv: %3d%%"
     IDS_STATUS_PROCESSES          "Processer: %d"
     IDS_Not_Responding            "Svarar inte"
-    IDS_Running                   "Igång"
+    IDS_Running                   "IgÃ¥ng"
 END
-
-
-#endif    // Swedish (SE) resources
-/////////////////////////////////////////////////////////////////////////////

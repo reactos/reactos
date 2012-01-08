@@ -881,7 +881,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status, VpbStatus;
     PDEVICE_OBJECT FileSystemDeviceObject;
     PVPB Vpb, NewVpb;
-    BOOLEAN WasNotMounted = TRUE;
+    //BOOLEAN WasNotMounted = TRUE;
 
     /* Wait on the device lock */
     Status = KeWaitForSingleObject(&DeviceObject->DeviceLock,
@@ -898,7 +898,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
         /* Find the actual File System DO */
-        WasNotMounted = FALSE;
+        //WasNotMounted = FALSE;
         FileSystemDeviceObject = DeviceObject->Vpb->DeviceObject;
         while (FileSystemDeviceObject->AttachedDevice)
         {

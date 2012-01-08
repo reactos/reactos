@@ -321,11 +321,11 @@ ITrayWindowImpl_CalculateValidSize(IN OUT ITrayWindowImpl *This,
                                    IN OUT RECT *pRect)
 {
     RECT rcScreen;
-    BOOL Horizontal;
+    //BOOL Horizontal;
     HMONITOR hMon;
     SIZE szMax, szWnd;
 
-    Horizontal = ITrayWindowImpl_IsPosHorizontal(This);
+    //Horizontal = ITrayWindowImpl_IsPosHorizontal(This);
 
     szWnd.cx = pRect->right - pRect->left;
     szWnd.cy = pRect->bottom - pRect->top;
@@ -644,7 +644,7 @@ static VOID
 ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
 {
     RECT rcTray,rcWorkArea;
-    
+
     /* If monitor has changed then fix the previous monitors work area */
     if(This->PreviousMonitor!=This->Monitor)
     {
@@ -792,7 +792,7 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
         rcScreen.left = 0;
         rcScreen.top = 0;
         rcScreen.right = GetSystemMetrics(SM_CXSCREEN);
-        rcScreen.right = GetSystemMetrics(SM_CYSCREEN);
+        rcScreen.bottom = GetSystemMetrics(SM_CYSCREEN);
         ITrayWindowImpl_GetScreenRectFromRect(This,
                                               &rcScreen,
                                               MONITOR_DEFAULTTOPRIMARY);

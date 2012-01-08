@@ -1,30 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/* $Id$
- *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Clipping Functions
- * FILE:              subsys/win32k/eng/clip.c
+ * FILE:              subsystems/win32/win32k/eng/clip.c
  * PROGRAMER:         Jason Filby
- * REVISION HISTORY:
- *                 21/8/1999: Created
  */
 
 #include <win32k.h>
@@ -367,7 +346,7 @@ CLIPOBJ_bEnum(
     ULONG nCopy, i;
     ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
 
-    //calculate how many rectangles we should copy
+    // Calculate how many rectangles we should copy
     nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
             min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
             (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
@@ -377,7 +356,7 @@ CLIPOBJ_bEnum(
         return FALSE;
     }
 
-    /* copy rectangles */
+    /* Copy rectangles */
     src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
     for(i = 0, dest = pERects->arcl; i < nCopy; i++, dest++, src++)
     {
@@ -389,104 +368,6 @@ CLIPOBJ_bEnum(
     ClipGDI->EnumPos+=nCopy;
 
     return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
-}
-
-BOOLEAN FASTCALL
-ClipobjToSpans(
-    PSPAN *Spans,
-    UINT *Count,
-    CLIPOBJ *ClipRegion,
-    PRECTL Boundary)
-{
-    BOOL EnumMore;
-    UINT i, NewCount;
-    RECT_ENUM RectEnum;
-    PSPAN NewSpans;
-    RECTL *Rect;
-
-    ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
-
-    *Count = Boundary->bottom - Boundary->top;
-    if (*Count > 0)
-    {
-        *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), GDITAG_CLIPOBJ);
-        if (NULL == *Spans)
-        {
-            *Count = 0;
-            return FALSE;
-        }
-    }
-
-    if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
-    {
-        if (0 != *Count)
-        {
-            for (i = 0; i < Boundary->bottom - Boundary->top; i++)
-            {
-                (*Spans)[i].X = Boundary->left;
-                (*Spans)[i].Y = Boundary->top + i;
-                (*Spans)[i].Width = Boundary->right - Boundary->left;
-            }
-        }
-      return TRUE;
-    }
-
-    *Count = 0;
-    CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
-    do
-    {
-        EnumMore = CLIPOBJ_bEnum(ClipRegion, (ULONG) sizeof(RECT_ENUM), (PVOID) &RectEnum);
-
-        NewCount = *Count;
-        for (i = 0; i < RectEnum.c; i++)
-        {
-            NewCount += RectEnum.arcl[i].bottom - RectEnum.arcl[i].top;
-        }
-        if (NewCount != *Count)
-        {
-            NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), GDITAG_CLIPOBJ);
-            if (NULL == NewSpans)
-            {
-                if (NULL != *Spans)
-                {
-                    ExFreePoolWithTag(*Spans, GDITAG_CLIPOBJ);
-                    *Spans = NULL;
-                }
-                *Count = 0;
-                return FALSE;
-            }
-            if (0 != *Count)
-            {
-                PSPAN dest, src;
-                UINT i = *Count;
-                for(dest = NewSpans, src = *Spans;i > 0; i--)
-                {
-                    *dest++ = *src++;
-                }
-                ExFreePoolWithTag(*Spans, GDITAG_CLIPOBJ);
-            }
-            *Spans = NewSpans;
-        }
-        for (Rect = RectEnum.arcl; Rect < RectEnum.arcl + RectEnum.c; Rect++)
-        {
-            for (i = 0; i < Rect->bottom - Rect->top; i++)
-            {
-                (*Spans)[*Count].X = Rect->left;
-                (*Spans)[*Count].Y = Rect->top + i;
-                (*Spans)[*Count].Width = Rect->right - Rect->left;
-                (*Count)++;
-            }
-        }
-        ASSERT(*Count == NewCount);
-    }
-    while (EnumMore);
-
-    if (0 != *Count)
-    {
-        EngSort((PBYTE) *Spans, sizeof(SPAN), *Count, (SORTCOMP) CompareSpans);
-    }
-
-    return TRUE;
 }
 
 /* EOF */

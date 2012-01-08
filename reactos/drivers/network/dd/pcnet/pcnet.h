@@ -25,7 +25,9 @@
  *     - this assumes 32-bit physical addresses
  */
 
-#pragma once
+#include <ndis.h>
+#include "pci.h"
+#include "pcnethw.h"
 
 /* statistics struct */
 typedef struct _ADAPTER_STATS
@@ -95,6 +97,10 @@ typedef struct _ADAPTER
   PCHAR ReceiveBufferPtrVirt;
   PCHAR ReceiveBufferPtrPhys;
 
+  /* buffer count */
+  ULONG BufferCount;
+  ULONG LogBufferCount;
+
   ADAPTER_STATS Statistics;
 } ADAPTER, *PADAPTER;
 
@@ -150,12 +156,6 @@ MiGetMediaDuplex(PADAPTER Adapter);
 
 /* Maximum number of interrupts handled per call to MiniportHandleInterrupt */
 #define INTERRUPT_LIMIT 10
-
-#if DBG
-#define BREAKPOINT DbgBreakPoint();
-#else
-#define BREAKPOINT
-#endif
 
 /* memory pool tag */
 #define PCNET_TAG 'tNcP'

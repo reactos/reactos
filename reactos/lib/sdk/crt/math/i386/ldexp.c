@@ -19,11 +19,25 @@
    Boston, MA 02110-1301, USA.
 */
 
+#include <precomp.h>
 #include <math.h>
+#include <float.h>
 
 double ldexp (double value, int exp)
 {
     register double result;
+#ifndef __GNUC__
+    register double __dy = (double)exp;
+#endif
+
+    /* Check for value correctness
+     * and set errno if required
+     */
+    if (_isnan(value))
+    {
+        errno = EDOM;
+    }
+
 #ifdef __GNUC__
 #if defined(__clang__)
     asm ("fild %[exp]\n"
@@ -33,20 +47,19 @@ double ldexp (double value, int exp)
          : [value] "0" (value), [exp] "m" (exp));
 #else
     asm ("fscale"
-        : "=t" (result)
+         : "=t" (result)
          : "0" (value), "u" ((double)exp)
          : "1");
 #endif
 #else /* !__GNUC__ */
-  register double __dy = (double)exp;
-  __asm
-  {
-    fld __dy
-    fld value
-    fscale
-    fstp result
-  }
+    __asm
+    {
+        fld __dy
+        fld value
+        fscale
+        fstp result
+    }
 #endif /* !__GNUC__ */
-  return result;
+    return result;
 }
 

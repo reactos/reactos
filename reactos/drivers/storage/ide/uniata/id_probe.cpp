@@ -1716,6 +1716,7 @@ UniataFindBusMasterController(
 
         AtapiDmaAlloc(HwDeviceExtension, ConfigInfo, c);
 #else //UNIATA_CORE
+        }
         found = TRUE;
 #endif //UNIATA_CORE
     } // end for(channel)

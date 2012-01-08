@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -129,7 +129,7 @@
 
 static UINT32
 AcpiExConvertToAscii (
-    ACPI_INTEGER            Integer,
+    UINT64                  Integer,
     UINT16                  Base,
     UINT8                   *String,
     UINT8                   MaxLength);
@@ -158,7 +158,7 @@ AcpiExConvertToInteger (
 {
     ACPI_OPERAND_OBJECT     *ReturnDesc;
     UINT8                   *Pointer;
-    ACPI_INTEGER            Result;
+    UINT64                  Result;
     UINT32                  i;
     UINT32                  Count;
     ACPI_STATUS             Status;
@@ -247,7 +247,7 @@ AcpiExConvertToInteger (
              * Little endian is used, meaning that the first byte of the buffer
              * is the LSB of the integer
              */
-            Result |= (((ACPI_INTEGER) Pointer[i]) << (i * 8));
+            Result |= (((UINT64) Pointer[i]) << (i * 8));
         }
         break;
 
@@ -389,12 +389,12 @@ AcpiExConvertToBuffer (
 
 static UINT32
 AcpiExConvertToAscii (
-    ACPI_INTEGER            Integer,
+    UINT64                  Integer,
     UINT16                  Base,
     UINT8                   *String,
     UINT8                   DataWidth)
 {
-    ACPI_INTEGER            Digit;
+    UINT64                  Digit;
     UINT32                  i;
     UINT32                  j;
     UINT32                  k = 0;
@@ -659,7 +659,7 @@ AcpiExConvertToString (
         for (i = 0; i < ObjDesc->Buffer.Length; i++)
         {
             NewBuf += AcpiExConvertToAscii (
-                        (ACPI_INTEGER) ObjDesc->Buffer.Pointer[i], Base,
+                        (UINT64) ObjDesc->Buffer.Pointer[i], Base,
                         NewBuf, 1);
             *NewBuf++ = Separator; /* each separated by a comma or space */
         }
@@ -786,7 +786,7 @@ AcpiExConvertToTargetType (
 
 
         default:
-            ACPI_ERROR ((AE_INFO, "Bad destination type during conversion: %X",
+            ACPI_ERROR ((AE_INFO, "Bad destination type during conversion: 0x%X",
                 DestinationType));
             Status = AE_AML_INTERNAL;
             break;
@@ -803,7 +803,7 @@ AcpiExConvertToTargetType (
 
     default:
         ACPI_ERROR ((AE_INFO,
-            "Unknown Target type ID 0x%X AmlOpcode %X DestType %s",
+            "Unknown Target type ID 0x%X AmlOpcode 0x%X DestType %s",
             GET_CURRENT_ARG_TYPE (WalkState->OpInfo->RuntimeArgs),
             WalkState->Opcode, AcpiUtGetTypeName (DestinationType)));
         Status = AE_AML_INTERNAL;

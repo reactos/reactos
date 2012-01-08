@@ -1,31 +1,13 @@
 /*
- * Server-side USER handles
- *
- * Copyright (C) 2001 Alexandre Julliard
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * PURPOSE:          User handle manager
+ * FILE:             subsystems/win32/win32k/ntuser/object.c
+ * PROGRAMER:        Copyright (C) 2001 Alexandre Julliard
  */
 
-
-
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserObj);
 
 //int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
@@ -55,7 +37,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-   DPRINT("handles used %i\n",gpsi->cHandleEntries);
+   TRACE("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
@@ -67,13 +49,13 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       return entry;
    }
 
-   if (ht->nb_handles >= ht->allocated_handles)  /* need to grow the array */
+   if (ht->nb_handles >= ht->allocated_handles)  /* Need to grow the array */
    {
 /**/
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
           iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0, iEvent = 0, iSMWP = 0;
  /**/
-      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
+      ERR("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 //#if 0
       for(i = 0; i < ht->nb_handles; i++)
       {
@@ -115,13 +97,13 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
             break;
          }
       }
-      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d Event = %d SMWP = %d\n",
+      ERR("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d Event = %d SMWP = %d\n",
       iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor, iTimer, iEvent, iSMWP );
 //#endif
       return NULL;
 #if 0
       PUSER_HANDLE_ENTRY new_handles;
-      /* grow array by 50% (but at minimum 32 entries) */
+      /* Grow array by 50% (but at minimum 32 entries) */
       int growth = max( 32, ht->allocated_handles / 2 );
       int new_size = min( ht->allocated_handles + growth, (LAST_USER_HANDLE-FIRST_USER_HANDLE+1) >> 1 );
       if (new_size <= ht->allocated_handles)
@@ -237,7 +219,7 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 }
 
 
-/* get the full handle (32bit) for a possibly truncated (16bit) handle */
+/* Get the full handle (32bit) for a possibly truncated (16bit) handle */
 HANDLE get_user_full_handle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 {
    PUSER_HANDLE_ENTRY entry;
@@ -250,7 +232,7 @@ HANDLE get_user_full_handle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 }
 
 
-/* same as get_user_object plus set the handle to the full 32-bit value */
+/* Same as get_user_object plus set the handle to the full 32-bit value */
 void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry;
@@ -261,42 +243,18 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
    return entry->ptr;
 }
 
-/* return the next user handle after 'handle' that is of a given type */
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type )
-{
-   PUSER_HANDLE_ENTRY entry;
 
-   if (!*handle)
-      entry = ht->handles;
-   else
-   {
-      int index = (((unsigned int)*handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
-      if (index < 0 || index >= ht->nb_handles)
-         return NULL;
-      entry = ht->handles + index + 1;  /* start from the next one */
-   }
-   while (entry < ht->handles + ht->nb_handles)
-   {
-      if (!type || entry->type == type)
-      {
-         *handle = entry_to_handle(ht, entry );
-         return entry->ptr;
-      }
-      entry++;
-   }
-   return NULL;
-}
 
 BOOL FASTCALL UserCreateHandleTable(VOID)
 {
 
    PVOID mem;
 
-   //FIXME: dont alloc all at once! must be mapped into umode also...
+   // FIXME: Don't alloc all at once! Must be mapped into umode also...
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
-      DPRINT1("Failed creating handle table\n");
+      ERR("Failed creating handle table\n");
       return FALSE;
    }
 
@@ -304,11 +262,11 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    if (gHandleTable == NULL)
    {
        UserHeapFree(mem);
-       DPRINT1("Failed creating handle table\n");
+       ERR("Failed creating handle table\n");
        return FALSE;
    }
 
-   //FIXME: make auto growable
+   // FIXME: Make auto growable
    UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
@@ -383,7 +341,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
         case otMenu:
         case otCallProc:
             ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
-            ((PPROCDESKHEAD)Object)->pSelf = Object;            
+            ((PPROCDESKHEAD)Object)->pSelf = Object;
             break;
 
         case otCursorIcon:
@@ -395,7 +353,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    }
    /* Now set default headers. */
    ((PHEAD)Object)->h = hi;
-   ((PHEAD)Object)->cLockObj = 2; // we need this, because we create 2 refs: handle and pointer!
+   ((PHEAD)Object)->cLockObj = 2; // We need this, because we create 2 refs: handle and pointer!
 
    if (h)
       *h = hi;
@@ -418,10 +376,10 @@ UserDereferenceObject(PVOID object)
 
      if (!entry)
      {
-        DPRINT1("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        ERR("Warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
         return FALSE;
      }
-     DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
+     TRACE("Warning! Dereference to zero! Obj -> 0x%x\n", object);
 
      ((PHEAD)object)->cLockObj = 0;
 
@@ -469,7 +427,7 @@ FASTCALL
 UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
 {
    PVOID body = UserGetObject(gHandleTable, h, type);
-   
+
    if (!body) return FALSE;
 
    ASSERT( ((PHEAD)body)->cLockObj >= 1);
@@ -498,4 +456,83 @@ UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
        UserReferenceObject(object);
     }
     return object;
+}
+
+/*
+ * NtUserValidateHandleSecure
+ *
+ * Status
+ *    @implemented
+ */
+
+BOOL
+APIENTRY
+NtUserValidateHandleSecure(
+   HANDLE handle,
+   BOOL Restricted)
+{
+   if(!Restricted)
+   {
+     UINT uType;
+     {
+       PUSER_HANDLE_ENTRY entry;
+       if (!(entry = handle_to_entry(gHandleTable, handle )))
+       {
+          EngSetLastError(ERROR_INVALID_HANDLE);
+          return FALSE;
+       }
+       uType = entry->type;
+     }
+     switch (uType)
+     {
+       case otWindow:
+       {
+         PWND Window;
+         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMenu:
+       {
+         PMENU_OBJECT Menu;
+         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
+         return FALSE;
+       }
+       case otAccel:
+       {
+         PACCELERATOR_TABLE Accel;
+         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCursorIcon:
+       {
+         PCURICON_OBJECT Cursor;
+         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otHook:
+       {
+         PHOOK Hook;
+         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMonitor:
+       {
+         PMONITOR Monitor;
+         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCallProc:
+       {
+         WNDPROC_INFO Proc;
+         return UserGetCallProcInfo( handle, &Proc );
+       }
+       default:
+         EngSetLastError(ERROR_INVALID_HANDLE);
+     }
+   }
+   else
+   { /* Is handle entry restricted? */
+     STUB
+   }
+   return FALSE;
 }

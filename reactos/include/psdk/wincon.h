@@ -5,6 +5,10 @@
 extern "C" {
 #endif
 
+#if (_WIN32_WINNT >= 0x0600) && !defined(NOGDI)
+#  include "wingdi.h"
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4820)
@@ -137,6 +141,7 @@ typedef struct _INPUT_RECORD {
 #if (_WIN32_WINNT >= 0x0600)
 #define HISTORY_NO_DUP_FLAG 0x1
 #define CONSOLE_OVERSTRIKE  0x1
+
 typedef struct _CONSOLE_HISTORY_INFO {
     UINT cbSize;
     UINT HistoryBufferSize;
@@ -155,6 +160,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFOEX {
     COLORREF ColorTable[16];
 } CONSOLE_SCREEN_BUFFER_INFOEX, *PCONSOLE_SCREEN_BUFFER_INFOEX;
 
+#ifndef NOGDI
 typedef struct _CONSOLE_FONT_INFOEX {
     ULONG cbSize;
     DWORD nFont;
@@ -163,6 +169,7 @@ typedef struct _CONSOLE_FONT_INFOEX {
     UINT FontWeight;
     WCHAR FaceName[LF_FACESIZE];
 } CONSOLE_FONT_INFOEX, *PCONSOLE_FONT_INFOEX;
+#endif
 #endif
 
 BOOL WINAPI AllocConsole(void);
@@ -194,6 +201,8 @@ DWORD WINAPI GetConsoleTitleA(LPSTR,DWORD);
 DWORD WINAPI GetConsoleTitleW(LPWSTR,DWORD);
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(void);
+WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(OUT LPDWORD lpModeFlags);
+BOOL APIENTRY SetConsoleDisplayMode(IN HANDLE hConsoleOutput,IN DWORD dwFlags, OUT PCOORD lpNewScreenBufferDimensions);
 #endif
 COORD WINAPI GetLargestConsoleWindowSize(HANDLE);
 BOOL WINAPI GetNumberOfConsoleInputEvents(HANDLE,PDWORD);
@@ -232,6 +241,11 @@ BOOL WINAPI WriteConsoleOutputW(HANDLE,const CHAR_INFO*,COORD,COORD,PSMALL_RECT)
 BOOL WINAPI WriteConsoleOutputAttribute(HANDLE,const WORD*,DWORD,COORD,PDWORD);
 BOOL WINAPI WriteConsoleOutputCharacterA(HANDLE,LPCSTR,DWORD,COORD,PDWORD);
 BOOL WINAPI WriteConsoleOutputCharacterW(HANDLE,LPCWSTR,DWORD,COORD,PDWORD);
+
+#define CONSOLE_FULLSCREEN 1
+#define CONSOLE_FULLSCREEN_HARDWARE 2
+#define CONSOLE_FULLSCREEN_MODE 1
+#define CONSOLE_WINDOWED_MODE 2
 
 #ifdef UNICODE
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterW

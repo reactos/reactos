@@ -262,7 +262,7 @@ RegWriteUserSetting(
     WCHAR awcBuffer[MAX_PATH];
     HKEY hkey;
 
-    // FIXME: logged in user versus current process user?
+    // FIXME: Logged in user versus current process user?
     /* Get the path of the current user's profile */
     Status = RtlFormatCurrentUserKeyPath(&usCurrentUserKey);
     if (!NT_SUCCESS(Status))

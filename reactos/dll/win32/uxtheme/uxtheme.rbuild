@@ -6,14 +6,18 @@
 	<include base="uxtheme">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<pch>uxthemep.h</pch>
 	<file>buffer.c</file>
 	<file>draw.c</file>
 	<file>main.c</file>
 	<file>metric.c</file>
 	<file>msstyles.c</file>
+	<file>ncscrollbar.c</file>
+	<file>nonclient.c</file>
 	<file>property.c</file>
 	<file>stylemap.c</file>
 	<file>system.c</file>
+	<file>themehooks.c</file>
 	<file>uxini.c</file>
 	<file>version.rc</file>
 	<library>wine</library>

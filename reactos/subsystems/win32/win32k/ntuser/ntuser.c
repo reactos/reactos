@@ -3,24 +3,19 @@
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
  *  FILE:             subsystems/win32/win32k/ntuser/ntuser.c
- *  REVISION HISTORY:
- *       16 July 2005   Created (hardon)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
-
-BOOL InitSysParams();
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* GLOBALS *******************************************************************/
 
+PTHREADINFO gptiCurrent = NULL;
 ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
 ATOM AtomWndObj;  // Window Object atom.
+ATOM AtomLayer;   // Window Layer atom.
+ATOM AtomFlashWndState; // Window Flash State atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
@@ -46,7 +41,14 @@ InitUserAtoms(VOID)
   /* System Context Help Id Atom */
   gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
+  gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
+  gpsi->atomIconProp = IntAddGlobalAtom(L"SysIC", TRUE);
+
+  gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
+  
   AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
+  AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
+  AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
 
   return STATUS_SUCCESS;
 }
@@ -64,14 +66,14 @@ InitUserImpl(VOID)
 
    if (!UserCreateHandleTable())
    {
-      DPRINT1("Failed creating handle table\n");
+      ERR("Failed creating handle table\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
    Status = InitSessionImpl();
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Error init session impl.\n");
+      ERR("Error init session impl.\n");
       return Status;
    }
 
@@ -152,7 +154,7 @@ NtUserInitialize(
 {
     NTSTATUS Status;
 
-    DPRINT1("Enter NtUserInitialize(%lx, %p, %p)\n",
+    ERR("Enter NtUserInitialize(%lx, %p, %p)\n",
             dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
     /* Check the Windows version */
@@ -223,6 +225,7 @@ VOID FASTCALL UserEnterExclusive(VOID)
    ASSERT_NOGDILOCKS();
    KeEnterCriticalRegion();
    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
+   gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
 VOID FASTCALL UserLeave(VOID)

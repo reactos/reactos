@@ -94,6 +94,7 @@ static int is_signed_integer_type(const type_t *type)
         case TYPE_BASIC_HANDLE:
             return FALSE;
         }
+        /* FALLTHROUGH */
     default:
         return FALSE;
     }
@@ -648,6 +649,10 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         check_scalar_type(expr_loc, cont_type, result_first.type);
         result_second = resolve_expression(expr_loc, cont_type, e->u.ext);
         result_third = resolve_expression(expr_loc, cont_type, e->ext2);
+        check_scalar_type(expr_loc, cont_type, result_second.type);
+        check_scalar_type(expr_loc, cont_type, result_third.type);
+        if (!is_ptr(result_second.type) ^ !is_ptr(result_third.type))
+            error_loc_info(&expr_loc->v->loc_info, "type mismatch in ?: expression\n" );
         /* FIXME: determine the correct return type */
         result = result_second;
         result.is_variable = FALSE;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-
 /* Type definitions ***********************************************************/
 
 /* Internal region data.
@@ -31,7 +29,7 @@ INT FASTCALL REGION_GetRgnBox(PROSRGNDATA Rgn, RECTL *pRect);
 BOOL FASTCALL REGION_RectInRegion(PROSRGNDATA Rgn, const RECTL *rc);
 BOOL FASTCALL REGION_CropAndOffsetRegion(PROSRGNDATA rgnDst, PROSRGNDATA rgnSrc, const RECTL *rect, const POINT *off);
 VOID FASTCALL REGION_SetRectRgn(PROSRGNDATA pRgn, INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
-BOOL INTERNAL_CALL REGION_Cleanup(PVOID ObjectBody);
+BOOL NTAPI REGION_Cleanup(PVOID ObjectBody);
 
 extern PROSRGNDATA prgnDefault;
 extern HRGN        hrgnDefault;

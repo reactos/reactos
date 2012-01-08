@@ -62,4 +62,5 @@
 	<file>unregister.cpp</file>
 	<file>version.cpp</file>
 	<file>portcls.rc</file>
+	<pch>private.hpp</pch>
 </module>

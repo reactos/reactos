@@ -1,98 +1,86 @@
-/////////////////////////////////////////////////////////////////////////////
-// Bulgarian (Bg) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Нова задача (изпълнение...)",          ID_FILE_NEW
+        MENUITEM "&РќРѕРІР° Р·Р°РґР°С‡Р° (РёР·РїСЉР»РЅРµРЅРёРµ...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход от задачния управител",          ID_FILE_EXIT
+        MENUITEM "РР·&С…РѕРґ РѕС‚ Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»",          ID_FILE_EXIT
     END
-    POPUP "На&стройки"
+    POPUP "РќР°&СЃС‚СЂРѕР№РєРё"
     BEGIN
-        MENUITEM "&Винаги отгоре",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Р’РёРЅР°РіРё РѕС‚РіРѕСЂРµ",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "С&маляване при употреба",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "РЎ&РјР°Р»СЏРІР°РЅРµ РїСЂРё СѓРїРѕС‚СЂРµР±Р°",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Скриване при смаляване",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&РЎРєСЂРёРІР°РЅРµ РїСЂРё СЃРјР°Р»СЏРІР°РЅРµ",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "&Показване на 16-битово задачи",          ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "&РџРѕРєР°Р·РІР°РЅРµ РЅР° 16-Р±РёС‚РѕРІРѕ Р·Р°РґР°С‡Рё",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
-    POPUP "Из&глед"
+    POPUP "РР·&РіР»РµРґ"
     BEGIN
-        MENUITEM "О&пресняване веднага",                ID_VIEW_REFRESH
-        POPUP "&Скорост на обновяване"
+        MENUITEM "Рћ&РїСЂРµСЃРЅСЏРІР°РЅРµ РІРµРґРЅР°РіР°",                ID_VIEW_REFRESH
+        POPUP "&РЎРєРѕСЂРѕСЃС‚ РЅР° РѕР±РЅРѕРІСЏРІР°РЅРµ"
         BEGIN
-            MENUITEM "&Висока",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "&Обичайна",                     ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "&Р’РёСЃРѕРєР°",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&РћР±РёС‡Р°Р№РЅР°",                     ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "&Ниска",                        ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Задържане",                     ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "&РќРёСЃРєР°",                        ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Р—Р°РґСЉСЂР¶Р°РЅРµ",                     ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Големи значета",                ID_VIEW_LARGE
-        MENUITEM "&Малки значета",                ID_VIEW_SMALL
-        MENUITEM "&Подробен",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Избор на стълбове...",          ID_VIEW_SELECTCOLUMNS
-        POPUP "Дневник на &ЦПУ"
+        MENUITEM "&Р“РѕР»РµРјРё Р·РЅР°С‡РµС‚Р°",                ID_VIEW_LARGE
+        MENUITEM "&РњР°Р»РєРё Р·РЅР°С‡РµС‚Р°",                ID_VIEW_SMALL
+        MENUITEM "&РџРѕРґСЂРѕР±РµРЅ",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&РР·Р±РѕСЂ РЅР° СЃС‚СЉР»Р±РѕРІРµ...",          ID_VIEW_SELECTCOLUMNS
+        POPUP "Р”РЅРµРІРЅРёРє РЅР° &Р¦РџРЈ"
         BEGIN
-            MENUITEM "&Една графика за всички ЦПУ",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&Р•РґРЅР° РіСЂР°С„РёРєР° Р·Р° РІСЃРёС‡РєРё Р¦РџРЈ",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "По графика за &всеки ЦПУ",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "РџРѕ РіСЂР°С„РёРєР° Р·Р° &РІСЃРµРєРё Р¦РџРЈ",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "&Показване на времената на ядрото",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&РџРѕРєР°Р·РІР°РЅРµ РЅР° РІСЂРµРјРµРЅР°С‚Р° РЅР° СЏРґСЂРѕС‚Рѕ",          ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Прозорци"
+    POPUP "&РџСЂРѕР·РѕСЂС†Рё"
     BEGIN
-        MENUITEM "Водоравно настелване",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Отвесно настелване",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "С&маляване",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "У&големяване",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "На&дипляне",                    ID_WINDOWS_CASCADE
-        MENUITEM "Изваждане &отпред ",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "Р’РѕРґРѕСЂР°РІРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&РћС‚РІРµСЃРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "РЎ&РјР°Р»СЏРІР°РЅРµ",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "РЈ&РіРѕР»РµРјСЏРІР°РЅРµ",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "РќР°&РґРёРїР»СЏРЅРµ",                    ID_WINDOWS_CASCADE
+        MENUITEM "РР·РІР°Р¶РґР°РЅРµ &РѕС‚РїСЂРµРґ ",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "Съдържание на помо&щта за задачния управител",   ID_HELP_TOPICS
+        MENUITEM "РЎСЉРґСЉСЂР¶Р°РЅРёРµ РЅР° РїРѕРјРѕ&С‰С‚Р° Р·Р° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&За задачния управител",         ID_HELP_ABOUT
+        MENUITEM "&Р—Р° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»",         ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Водоравно настелване",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "&Отвесно настелване",            ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "С&маляване",                   ID_WINDOWS_MINIMIZE
-    MENUITEM "У&големяване",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "На&дипляне",                    ID_WINDOWS_CASCADE
-    MENUITEM "Изваждане &отпред ",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "Р’РѕРґРѕСЂР°РІРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "&РћС‚РІРµСЃРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "РЎ&РјР°Р»СЏРІР°РЅРµ",                   ID_WINDOWS_MINIMIZE
+    MENUITEM "РЈ&РіРѕР»РµРјСЏРІР°РЅРµ",                   ID_WINDOWS_MAXIMIZE
+    MENUITEM "РќР°&РґРёРїР»СЏРЅРµ",                    ID_WINDOWS_CASCADE
+    MENUITEM "РР·РІР°Р¶РґР°РЅРµ &РѕС‚РїСЂРµРґ ",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Нова задача (Изпълнение...)",          ID_FILE_NEW
+        MENUITEM "&РќРѕРІР° Р·Р°РґР°С‡Р° (РР·РїСЉР»РЅРµРЅРёРµ...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Големи значета",                ID_VIEW_LARGE
-        MENUITEM "&Малки значета",                ID_VIEW_SMALL
-        MENUITEM "&Подробен",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Р“РѕР»РµРјРё Р·РЅР°С‡РµС‚Р°",                ID_VIEW_LARGE
+        MENUITEM "&РњР°Р»РєРё Р·РЅР°С‡РµС‚Р°",                ID_VIEW_SMALL
+        MENUITEM "&РџРѕРґСЂРѕР±РµРЅ",                    ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -100,17 +88,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Превключване на",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "Изваждане &отпред ",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&РџСЂРµРІРєР»СЋС‡РІР°РЅРµ РЅР°",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "РР·РІР°Р¶РґР°РЅРµ &РѕС‚РїСЂРµРґ ",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Водоравно настелване",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Отвесно настелване",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "С&маляване",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "У&големяване",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "На&дипляне",                    ID_WINDOWS_CASCADE
+        MENUITEM "Р’РѕРґРѕСЂР°РІРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&РћС‚РІРµСЃРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "РЎ&РјР°Р»СЏРІР°РЅРµ",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "РЈ&РіРѕР»РµРјСЏРІР°РЅРµ",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "РќР°&РґРёРїР»СЏРЅРµ",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&Прекратяване на задачата",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Отиване на действието",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&РџСЂРµРєСЂР°С‚СЏРІР°РЅРµ РЅР° Р·Р°РґР°С‡Р°С‚Р°",                   ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "&РћС‚РёРІР°РЅРµ РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -119,10 +107,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Възстановяване",                    ID_RESTORE
-        MENUITEM "&Затваряне",                      ID_FILE_EXIT
+        MENUITEM "&Р’СЉР·СЃС‚Р°РЅРѕРІСЏРІР°РЅРµ",                    ID_RESTORE
+        MENUITEM "&Р—Р°С‚РІР°СЂСЏРЅРµ",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Винаги отгоре",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Р’РёРЅР°РіРё РѕС‚РіРѕСЂРµ",              ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,28 +118,28 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Прекратяването на действието",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "&Прекратяването на дърво от действия",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&РџСЂРµРєСЂР°С‚СЏРІР°РЅРµС‚Рѕ РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ",                ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "&РџСЂРµРєСЂР°С‚СЏРІР°РЅРµС‚Рѕ РЅР° РґСЉСЂРІРѕ РѕС‚ РґРµР№СЃС‚РІРёСЏ",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
-        MENUITEM "Обез&бубяване",                      ID_PROCESS_PAGE_DEBUG
+        MENUITEM "РћР±РµР·&Р±СѓР±СЏРІР°РЅРµ",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Установяване на &първенство"
+        POPUP "РЈСЃС‚Р°РЅРѕРІСЏРІР°РЅРµ РЅР° &РїСЉСЂРІРµРЅСЃС‚РІРѕ"
         BEGIN
-            MENUITEM "&Свръхвисоко",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&РЎРІСЂСЉС…РІРёСЃРѕРєРѕ",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "&Високо",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&Р’РёСЃРѕРєРѕ",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "&Над обичайното",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&РќР°Рґ РѕР±РёС‡Р°Р№РЅРѕС‚Рѕ",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
-            MENUITEM "&Обичайно",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "&РћР±РёС‡Р°Р№РЅРѕ",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "&Под обичайното",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&РџРѕРґ РѕР±РёС‡Р°Р№РЅРѕС‚Рѕ",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "&Ниско",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&РќРёСЃРєРѕ",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Установяване на с&родство...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Обработка на обезбубяващите &канали...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "РЈСЃС‚Р°РЅРѕРІСЏРІР°РЅРµ РЅР° СЃ&СЂРѕРґСЃС‚РІРѕ...",            ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "РћР±СЂР°Р±РѕС‚РєР° РЅР° РѕР±РµР·Р±СѓР±СЏРІР°С‰РёС‚Рµ &РєР°РЅР°Р»Рё...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -166,7 +154,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Задачен управител"
+CAPTION "Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -179,9 +167,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Нова задача...",IDC_NEWTASK,176,189,66,14
-    PUSHBUTTON      "Пре&включване на...",IDC_SWITCHTO,102,189,75,14,WS_DISABLED
-    PUSHBUTTON      "&Прекратяване на задача",IDC_ENDTASK,7,189,95,14,WS_DISABLED
+    PUSHBUTTON      "&РќРѕРІР° Р·Р°РґР°С‡Р°...",IDC_NEWTASK,176,189,66,14
+    PUSHBUTTON      "РџСЂРµ&РІРєР»СЋС‡РІР°РЅРµ РЅР°...",IDC_SWITCHTO,102,189,75,14,WS_DISABLED
+    PUSHBUTTON      "&РџСЂРµРєСЂР°С‚СЏРІР°РЅРµ РЅР° Р·Р°РґР°С‡Р°",IDC_ENDTASK,7,189,95,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 220
@@ -191,8 +179,8 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Прекратяване на задачата",IDC_ENDPROCESS,144,203,100,14
-    CONTROL         "&Показване на действията на всички потребители",IDC_SHOWALLPROCESSES,
+    PUSHBUTTON      "&РџСЂРµРєСЂР°С‚СЏРІР°РЅРµ РЅР° Р·Р°РґР°С‡Р°С‚Р°",IDC_ENDPROCESS,144,203,100,14
+    CONTROL         "&РџРѕРєР°Р·РІР°РЅРµ РЅР° РґРµР№СЃС‚РІРёСЏС‚Р° РЅР° РІСЃРёС‡РєРё РїРѕС‚СЂРµР±РёС‚РµР»Рё",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,190,10
 END
 
@@ -201,184 +189,182 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Заетост на ЦПУ",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Заета памет",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
-    GROUPBOX        "Общо",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Заделена памет (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Действителна памет (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Памет на ядрото (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Описатели",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
-    LTEXT           "Нишки",IDS_TOTALS_THREAD_COUNT,12,140,27,8
-    LTEXT           "Действия",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
+    GROUPBOX        "Р—Р°РµС‚РѕСЃС‚ РЅР° Р¦РџРЈ",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Р—Р°РµС‚Р° РїР°РјРµС‚",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "РћР±С‰Рѕ",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Р—Р°РґРµР»РµРЅР° РїР°РјРµС‚ (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Р”РµР№СЃС‚РІРёС‚РµР»РЅР° РїР°РјРµС‚ (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "РџР°РјРµС‚ РЅР° СЏРґСЂРѕС‚Рѕ (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    LTEXT           "РћРїРёСЃР°С‚РµР»Рё",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
+    LTEXT           "РќРёС€РєРё",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "Р”РµР№СЃС‚РІРёСЏ",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Общо",IDS_COMMIT_CHARGE_TOTAL,12,175,45,8
-    LTEXT           "Ограничение",IDS_COMMIT_CHARGE_LIMIT,12,184,45,8,NOT WS_BORDER
-    LTEXT           "Върхово",IDS_COMMIT_CHARGE_PEAK,12,193,45,8
+    LTEXT           "РћР±С‰Рѕ",IDS_COMMIT_CHARGE_TOTAL,12,175,45,8
+    LTEXT           "РћРіСЂР°РЅРёС‡РµРЅРёРµ",IDS_COMMIT_CHARGE_LIMIT,12,184,45,8,NOT WS_BORDER
+    LTEXT           "Р’СЉСЂС…РѕРІРѕ",IDS_COMMIT_CHARGE_PEAK,12,193,45,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Общо",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Налична",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,60,8
-    LTEXT           "Системен склад",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,65,8
+    LTEXT           "РћР±С‰Рѕ",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
+    LTEXT           "РќР°Р»РёС‡РЅР°",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,60,8
+    LTEXT           "РЎРёСЃС‚РµРјРµРЅ СЃРєР»Р°Рґ",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,65,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Общо",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Странирана",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
-    LTEXT           "Нестранирана",IDS_KERNEL_MEMORY_NONPAGED,137,193,50,8
+    LTEXT           "РћР±С‰Рѕ",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
+    LTEXT           "РЎС‚СЂР°РЅРёСЂР°РЅР°",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
+    LTEXT           "РќРµСЃС‚СЂР°РЅРёСЂР°РЅР°",IDS_KERNEL_MEMORY_NONPAGED,137,193,50,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "Дневник на ЦПУ",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Дневник на паметта",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Показване заетостта на паметта",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Дневник на ЦПУ",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    GROUPBOX        "Р”РЅРµРІРЅРёРє РЅР° Р¦РџРЈ",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Р”РЅРµРІРЅРёРє РЅР° РїР°РјРµС‚С‚Р°",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "РџРѕРєР°Р·РІР°РЅРµ Р·Р°РµС‚РѕСЃС‚С‚Р° РЅР° РїР°РјРµС‚С‚Р°",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Р”РЅРµРІРЅРёРє РЅР° Р¦РџРЈ",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Дневник на паметта",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "Р”РЅРµРІРЅРёРє РЅР° РїР°РјРµС‚С‚Р°",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Обезбубяващи канали"
+CAPTION "РћР±РµР·Р±СѓР±СЏРІР°С‰Рё РєР°РЅР°Р»Рё"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Затваряне",IDOK,171,189,69,14
+    PUSHBUTTON      "Р—Р°С‚РІР°СЂСЏРЅРµ",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Процесорно сродство"
+CAPTION "РџСЂРѕС†РµСЃРѕСЂРЅРѕ СЃСЂРѕРґСЃС‚РІРѕ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Добре",IDOK,120,133,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,174,133,50,14
-    LTEXT           "Настройката на сродството на процесора указва на кои ЦПУта е разрешено изпълнението да действието.",
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ",IDOK,120,133,50,14
+    PUSHBUTTON      "РћС‚РєР°Р·",IDCANCEL,174,133,50,14
+    LTEXT           "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° СЃСЂРѕРґСЃС‚РІРѕС‚Рѕ РЅР° РїСЂРѕС†РµСЃРѕСЂР° СѓРєР°Р·РІР° РЅР° РєРѕРё Р¦РџРЈС‚Р° Рµ СЂР°Р·СЂРµС€РµРЅРѕ РёР·РїСЉР»РЅРµРЅРёРµС‚Рѕ РґР° РґРµР№СЃС‚РІРёРµС‚Рѕ.",
                     IDC_STATIC,5,5,220,16
-    CONTROL         "ЦПУ 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+    CONTROL         "Р¦РџРЈ 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
-    CONTROL         "ЦПУ 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,41,37,10
-    CONTROL         "ЦПУ 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,54,37,10
-    CONTROL         "ЦПУ 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,67,37,10
-    CONTROL         "ЦПУ 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,80,37,10
-    CONTROL         "ЦПУ 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,93,37,10
-    CONTROL         "ЦПУ 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,106,37,10
-    CONTROL         "ЦПУ 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,119,37,10
-    CONTROL         "ЦПУ 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,28,37,10
-    CONTROL         "ЦПУ 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "Р¦РџРЈ 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,41,37,10
-    CONTROL         "ЦПУ 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,54,41,10
-    CONTROL         "ЦПУ 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,67,41,10
-    CONTROL         "ЦПУ 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,80,41,10
-    CONTROL         "ЦПУ 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,93,41,10
-    CONTROL         "ЦПУ 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,106,41,10
-    CONTROL         "ЦПУ 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,119,41,10
-    CONTROL         "ЦПУ 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,28,41,10
-    CONTROL         "ЦПУ 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,41,41,10
-    CONTROL         "ЦПУ 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,54,41,10
-    CONTROL         "ЦПУ 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,67,41,10
-    CONTROL         "ЦПУ 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,80,41,10
-    CONTROL         "ЦПУ 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,93,41,10
-    CONTROL         "ЦПУ 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,106,41,10
-    CONTROL         "ЦПУ 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,119,41,10
-    CONTROL         "ЦПУ 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,28,41,10
-    CONTROL         "ЦПУ 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,41,41,10
-    CONTROL         "ЦПУ 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,54,41,10
-    CONTROL         "ЦПУ 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,67,41,10
-    CONTROL         "ЦПУ 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,80,41,10
-    CONTROL         "ЦПУ 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,93,41,10
-    CONTROL         "ЦПУ 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,106,41,10
-    CONTROL         "ЦПУ 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р¦РџРЈ 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 240, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Избор на стълбове"
+CAPTION "РР·Р±РѕСЂ РЅР° СЃС‚СЉР»Р±РѕРІРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Добре",IDOK,84,178,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,138,178,50,14
-    LTEXT           "Избор на стълбове, които да се появяват в страницата с действията на задачния управител.",
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ",IDOK,84,178,50,14
+    PUSHBUTTON      "РћС‚РєР°Р·",IDCANCEL,138,178,50,14
+    LTEXT           "РР·Р±РѕСЂ РЅР° СЃС‚СЉР»Р±РѕРІРµ, РєРѕРёС‚Рѕ РґР° СЃРµ РїРѕСЏРІСЏРІР°С‚ РІ СЃС‚СЂР°РЅРёС†Р°С‚Р° СЃ РґРµР№СЃС‚РІРёСЏС‚Р° РЅР° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР».",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "Име на &изображението",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "РРјРµ РЅР° &РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,115,10
     CONTROL         "&PID (Process Identifier)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,115,10
-    CONTROL         "Натоварване на &ЦПУ",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "РќР°С‚РѕРІР°СЂРІР°РЅРµ РЅР° &Р¦РџРЈ",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,115,10
-    CONTROL         "&Време на ЦПУ",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Р’СЂРµРјРµ РЅР° Р¦РџРЈ",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,115,10
-    CONTROL         "Заета на &памет",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р—Р°РµС‚Р° РЅР° &РїР°РјРµС‚",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,115,10
-    CONTROL         "&Промяна заетостта на паметта",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "&РџСЂРѕРјСЏРЅР° Р·Р°РµС‚РѕСЃС‚С‚Р° РЅР° РїР°РјРµС‚С‚Р°",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,115,10
-    CONTROL         "Върхова заетост на паметта",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "Р’СЉСЂС…РѕРІР° Р·Р°РµС‚РѕСЃС‚ РЅР° РїР°РјРµС‚С‚Р°",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,115,10
-    CONTROL         "Грешки на &страници",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р“СЂРµС€РєРё РЅР° &СЃС‚СЂР°РЅРёС†Рё",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,115,10
     CONTROL         "&USER Objects",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,115,10
-    CONTROL         "Брой четения",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р‘СЂРѕР№ С‡РµС‚РµРЅРёСЏ",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,115,10
-    CONTROL         "Прочетени байтове",IDC_IOREADBYTES,"Button",
+    CONTROL         "РџСЂРѕС‡РµС‚РµРЅРё Р±Р°Р№С‚РѕРІРµ",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,115,10
-    CONTROL         "&Означение на срока",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&РћР·РЅР°С‡РµРЅРёРµ РЅР° СЃСЂРѕРєР°",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,115,10
-    CONTROL         "Потребителско &име",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "РџРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ &РёРјРµ",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,115,10
-    CONTROL         "Грешки на &страниците- отклонение",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "Р“СЂРµС€РєРё РЅР° &СЃС‚СЂР°РЅРёС†РёС‚Рµ- РѕС‚РєР»РѕРЅРµРЅРёРµ",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,28,115,10
-    CONTROL         "&Размер на привидната памет",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "&Р Р°Р·РјРµСЂ РЅР° РїСЂРёРІРёРґРЅР°С‚Р° РїР°РјРµС‚",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,39,115,10
     CONTROL         "Pa&ged Pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,50,115,10
@@ -386,19 +372,19 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,61,115,10
     CONTROL         "Base P&riority",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,72,115,10
-    CONTROL         "&Брой описатели",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Р‘СЂРѕР№ РѕРїРёСЃР°С‚РµР»Рё",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,83,115,10
-    CONTROL         "Брой &нишки",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р‘СЂРѕР№ &РЅРёС€РєРё",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,94,115,10
     CONTROL         "GDI Objects",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,105,115,10
-    CONTROL         "В/И писанета",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р’/Р РїРёСЃР°РЅРµС‚Р°",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,116,115,10
-    CONTROL         "В/И байтове за писане",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "Р’/Р Р±Р°Р№С‚РѕРІРµ Р·Р° РїРёСЃР°РЅРµ",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,127,65,10
-    CONTROL         "Други В/И",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р”СЂСѓРіРё Р’/Р",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,138,115,10
-    CONTROL         "Други В/И байтове",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "Р”СЂСѓРіРё Р’/Р Р±Р°Р№С‚РѕРІРµ",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,149,115,10
 END
 
@@ -523,150 +509,133 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Задачен управител"
-    IDC_TASKMGR             "Задачен управител"
-    IDS_IDLE_PROCESS        "Бездействия"
+    IDS_APP_TITLE           "Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»"
+    IDC_TASKMGR             "Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»"
+    IDS_IDLE_PROCESS        "Р‘РµР·РґРµР№СЃС‚РІРёСЏ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Изпълнява ново приложение"
-    ID_OPTIONS_ALWAYSONTOP  "Задачният управител остава над всички други прозорци, ако не е смален."
+    ID_FILE_NEW             "РР·РїСЉР»РЅСЏРІР° РЅРѕРІРѕ РїСЂРёР»РѕР¶РµРЅРёРµ"
+    ID_OPTIONS_ALWAYSONTOP  "Р—Р°РґР°С‡РЅРёСЏС‚ СѓРїСЂР°РІРёС‚РµР» РѕСЃС‚Р°РІР° РЅР°Рґ РІСЃРёС‡РєРё РґСЂСѓРіРё РїСЂРѕР·РѕСЂС†Рё, Р°РєРѕ РЅРµ Рµ СЃРјР°Р»РµРЅ."
     ID_OPTIONS_MINIMIZEONUSE
-                            "Задачният управител се смалява, когато се изпълнява действие Превключване (SwitchTo)"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Скриване на задачния управител при смаляването му"
-    ID_VIEW_REFRESH         "Насилване на задачния управител да опресни веднага, независимо от настройките за време наопресняване"
-    ID_VIEW_LARGE           "Показва задачите с големи значета"
-    ID_VIEW_SMALL           "Показва задачите с малки значета"
-    ID_VIEW_DETAILS         "Показва сведения за всички задачи"
-    ID_VIEW_UPDATESPEED_HIGH "Обновяване на екрана два пъти в секунда"
-    ID_VIEW_UPDATESPEED_NORMAL "Обновяване на екрана на две секунди"
-    ID_VIEW_UPDATESPEED_LOW "Обновяване на екрана четири секунди"
+                            "Р—Р°РґР°С‡РЅРёСЏС‚ СѓРїСЂР°РІРёС‚РµР» СЃРµ СЃРјР°Р»СЏРІР°, РєРѕРіР°С‚Рѕ СЃРµ РёР·РїСЉР»РЅСЏРІР° РґРµР№СЃС‚РІРёРµ РџСЂРµРІРєР»СЋС‡РІР°РЅРµ (SwitchTo)"
+    ID_OPTIONS_HIDEWHENMINIMIZED "РЎРєСЂРёРІР°РЅРµ РЅР° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР» РїСЂРё СЃРјР°Р»СЏРІР°РЅРµС‚Рѕ РјСѓ"
+    ID_VIEW_REFRESH         "РќР°СЃРёР»РІР°РЅРµ РЅР° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР» РґР° РѕРїСЂРµСЃРЅРё РІРµРґРЅР°РіР°, РЅРµР·Р°РІРёСЃРёРјРѕ РѕС‚ РЅР°СЃС‚СЂРѕР№РєРёС‚Рµ Р·Р° РІСЂРµРјРµ РЅР°РѕРїСЂРµСЃРЅСЏРІР°РЅРµ"
+    ID_VIEW_LARGE           "РџРѕРєР°Р·РІР° Р·Р°РґР°С‡РёС‚Рµ СЃ РіРѕР»РµРјРё Р·РЅР°С‡РµС‚Р°"
+    ID_VIEW_SMALL           "РџРѕРєР°Р·РІР° Р·Р°РґР°С‡РёС‚Рµ СЃ РјР°Р»РєРё Р·РЅР°С‡РµС‚Р°"
+    ID_VIEW_DETAILS         "РџРѕРєР°Р·РІР° СЃРІРµРґРµРЅРёСЏ Р·Р° РІСЃРёС‡РєРё Р·Р°РґР°С‡Рё"
+    ID_VIEW_UPDATESPEED_HIGH "РћР±РЅРѕРІСЏРІР°РЅРµ РЅР° РµРєСЂР°РЅР° РґРІР° РїСЉС‚Рё РІ СЃРµРєСѓРЅРґР°"
+    ID_VIEW_UPDATESPEED_NORMAL "РћР±РЅРѕРІСЏРІР°РЅРµ РЅР° РµРєСЂР°РЅР° РЅР° РґРІРµ СЃРµРєСѓРЅРґРё"
+    ID_VIEW_UPDATESPEED_LOW "РћР±РЅРѕРІСЏРІР°РЅРµ РЅР° РµРєСЂР°РЅР° С‡РµС‚РёСЂРё СЃРµРєСѓРЅРґРё"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Без самообновяване"
+    ID_VIEW_UPDATESPEED_PAUSED "Р‘РµР· СЃР°РјРѕРѕР±РЅРѕРІСЏРІР°РЅРµ"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Настелва прозорците водоравно върху работната площ"
-    ID_WINDOWS_TILEVERTICALLY "Настелва прозорците отвесно върху работната площ"
-    ID_WINDOWS_MINIMIZE     "Смалява прозорците"
-    ID_WINDOWS_MAXIMIZE     "Уголемява прозорците"
-    ID_WINDOWS_CASCADE      "Надипля прозорците диагонално на работната площ"
-    ID_WINDOWS_BRINGTOFRONT "Извежда прозореца отпред, но не превключва на него."
-    ID_HELP_TOPICS          "Показва помощ за задачния управител"
-    ID_HELP_ABOUT           "Показва сведения за приложението, версията и възпроизводственото право."
-    ID_FILE_EXIT            "Излиза от задачния управител"
+                            "РќР°СЃС‚РµР»РІР° РїСЂРѕР·РѕСЂС†РёС‚Рµ РІРѕРґРѕСЂР°РІРЅРѕ РІСЉСЂС…Сѓ СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
+    ID_WINDOWS_TILEVERTICALLY "РќР°СЃС‚РµР»РІР° РїСЂРѕР·РѕСЂС†РёС‚Рµ РѕС‚РІРµСЃРЅРѕ РІСЉСЂС…Сѓ СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
+    ID_WINDOWS_MINIMIZE     "РЎРјР°Р»СЏРІР° РїСЂРѕР·РѕСЂС†РёС‚Рµ"
+    ID_WINDOWS_MAXIMIZE     "РЈРіРѕР»РµРјСЏРІР° РїСЂРѕР·РѕСЂС†РёС‚Рµ"
+    ID_WINDOWS_CASCADE      "РќР°РґРёРїР»СЏ РїСЂРѕР·РѕСЂС†РёС‚Рµ РґРёР°РіРѕРЅР°Р»РЅРѕ РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
+    ID_WINDOWS_BRINGTOFRONT "РР·РІРµР¶РґР° РїСЂРѕР·РѕСЂРµС†Р° РѕС‚РїСЂРµРґ, РЅРѕ РЅРµ РїСЂРµРІРєР»СЋС‡РІР° РЅР° РЅРµРіРѕ."
+    ID_HELP_TOPICS          "РџРѕРєР°Р·РІР° РїРѕРјРѕС‰ Р·Р° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»"
+    ID_HELP_ABOUT           "РџРѕРєР°Р·РІР° СЃРІРµРґРµРЅРёСЏ Р·Р° РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ, РІРµСЂСЃРёСЏС‚Р° Рё РІСЉР·РїСЂРѕРёР·РІРѕРґСЃС‚РІРµРЅРѕС‚Рѕ РїСЂР°РІРѕ."
+    ID_FILE_EXIT            "РР·Р»РёР·Р° РѕС‚ Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»"
     ID_OPTIONS_SHOW16BITTASKS
-                            "Показва 16-разрядните задачи под свързания ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS   "Избор кои стълбове да се виждат в страницата за действията"
-    ID_VIEW_SHOWKERNELTIMES "Показва времето на ядрото в графиките за изпълнителността"
+                            "РџРѕРєР°Р·РІР° 16-СЂР°Р·СЂСЏРґРЅРёС‚Рµ Р·Р°РґР°С‡Рё РїРѕРґ СЃРІСЉСЂР·Р°РЅРёСЏ ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS   "РР·Р±РѕСЂ РєРѕРё СЃС‚СЉР»Р±РѕРІРµ РґР° СЃРµ РІРёР¶РґР°С‚ РІ СЃС‚СЂР°РЅРёС†Р°С‚Р° Р·Р° РґРµР№СЃС‚РІРёСЏС‚Р°"
+    ID_VIEW_SHOWKERNELTIMES "РџРѕРєР°Р·РІР° РІСЂРµРјРµС‚Рѕ РЅР° СЏРґСЂРѕС‚Рѕ РІ РіСЂР°С„РёРєРёС‚Рµ Р·Р° РёР·РїСЉР»РЅРёС‚РµР»РЅРѕСЃС‚С‚Р°"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Единствена графика показва общата заетост на ЦПУ"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Всяко ЦПУ има собствена графика"
+                            "Р•РґРёРЅСЃС‚РІРµРЅР° РіСЂР°С„РёРєР° РїРѕРєР°Р·РІР° РѕР±С‰Р°С‚Р° Р·Р°РµС‚РѕСЃС‚ РЅР° Р¦РџРЈ"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Р’СЃСЏРєРѕ Р¦РџРЈ РёРјР° СЃРѕР±СЃС‚РІРµРЅР° РіСЂР°С„РёРєР°"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "Извеждане на задача отпред"
+                            "РР·РІРµР¶РґР°РЅРµ РЅР° Р·Р°РґР°С‡Р° РѕС‚РїСЂРµРґ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "Казва на избраните задачи да се затворят"
+    ID_ENDTASK              "РљР°Р·РІР° РЅР° РёР·Р±СЂР°РЅРёС‚Рµ Р·Р°РґР°С‡Рё РґР° СЃРµ Р·Р°С‚РІРѕСЂСЏС‚"
     ID_GOTOPROCESS          "Switches the focus to the process of the selected task"
-    ID_RESTORE              "Възстановявява задачния управител от скрито състояние"
-    ID_PROCESS_PAGE_ENDPROCESS "Премахва действието от системата"
+    ID_RESTORE              "Р’СЉР·СЃС‚Р°РЅРѕРІСЏРІСЏРІР° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР» РѕС‚ СЃРєСЂРёС‚Рѕ СЃСЉСЃС‚РѕСЏРЅРёРµ"
+    ID_PROCESS_PAGE_ENDPROCESS "РџСЂРµРјР°С…РІР° РґРµР№СЃС‚РІРёРµС‚Рѕ РѕС‚ СЃРёСЃС‚РµРјР°С‚Р°"
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "Премахва процеса и всичките му наследници от системата"
-    ID_PROCESS_PAGE_DEBUG   "Прикача бубочистач към това действие"
+                            "РџСЂРµРјР°С…РІР° РїСЂРѕС†РµСЃР° Рё РІСЃРёС‡РєРёС‚Рµ РјСѓ РЅР°СЃР»РµРґРЅРёС†Рё РѕС‚ СЃРёСЃС‚РµРјР°С‚Р°"
+    ID_PROCESS_PAGE_DEBUG   "РџСЂРёРєР°С‡Р° Р±СѓР±РѕС‡РёСЃС‚Р°С‡ РєСЉРј С‚РѕРІР° РґРµР№СЃС‚РІРёРµ"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Определя на кои процесори е позволено да бъде изпълнявано действието"
+                            "РћРїСЂРµРґРµР»СЏ РЅР° РєРѕРё РїСЂРѕС†РµСЃРѕСЂРё Рµ РїРѕР·РІРѕР»РµРЅРѕ РґР° Р±СЉРґРµ РёР·РїСЉР»РЅСЏРІР°РЅРѕ РґРµР№СЃС‚РІРёРµС‚Рѕ"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "Дава на действието ПРЕДЕЛНО първенство"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Дава на действието ВИСОКО първенство"
+                            "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ РџР Р•Р”Р•Р›РќРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ Р’РРЎРћРљРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Дава на действието ПОВИШЕНО първенство"
+                            "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ РџРћР’РРЁР•РќРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Дава на действието ОБИКНОВЕНО първенство"
+                            "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ РћР‘РРљРќРћР’Р•РќРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Дава на действието ПОНИЖЕНО първенство"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Дава на действието НИСКО първенство"
+                            "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ РџРћРќРР–Р•РќРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Р”Р°РІР° РЅР° РґРµР№СЃС‚РІРёРµС‚Рѕ РќРРЎРљРћ РїСЉСЂРІРµРЅСЃС‚РІРѕ"
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TAB_APPS                  "Приложения"
-    IDS_TAB_PROCESSES             "Действия"
-    IDS_TAB_PERFORMANCE           "Производителност"
-    IDS_TAB_TASK                  "Задача"
-    IDS_TAB_STATUS                "Състояние"
-    IDS_TAB_IMAGENAME             "Име на образа"
+    IDS_TAB_APPS                  "РџСЂРёР»РѕР¶РµРЅРёСЏ"
+    IDS_TAB_PROCESSES             "Р”РµР№СЃС‚РІРёСЏ"
+    IDS_TAB_PERFORMANCE           "РџСЂРѕРёР·РІРѕРґРёС‚РµР»РЅРѕСЃС‚"
+    IDS_TAB_TASK                  "Р—Р°РґР°С‡Р°"
+    IDS_TAB_STATUS                "РЎСЉСЃС‚РѕСЏРЅРёРµ"
+    IDS_TAB_IMAGENAME             "РРјРµ РЅР° РѕР±СЂР°Р·Р°"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Потребителско име"
+    IDS_TAB_USERNAME              "РџРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РёРјРµ"
     IDS_TAB_SESSIONID             "Session ID"
-    IDS_TAB_CPU                   "ЦПУ"
-    IDS_TAB_CPUTIME               "ЦПУ време"
-    IDS_TAB_MEMUSAGE              "Използвана памет"
-    IDS_TAB_PEAKMEMUSAGE          "Върхова заетост на памет"
-    IDS_TAB_MEMDELTA              "Отклонение на паметта"
-    IDS_TAB_PAGEFAULT             "Грешка на страниците"
-    IDS_TAB_PFDELTA               "Отклонение на PF"
-    IDS_TAB_VMSIZE                "Размер на привидната памет"
+    IDS_TAB_CPU                   "Р¦РџРЈ"
+    IDS_TAB_CPUTIME               "Р¦РџРЈ РІСЂРµРјРµ"
+    IDS_TAB_MEMUSAGE              "РР·РїРѕР»Р·РІР°РЅР° РїР°РјРµС‚"
+    IDS_TAB_PEAKMEMUSAGE          "Р’СЉСЂС…РѕРІР° Р·Р°РµС‚РѕСЃС‚ РЅР° РїР°РјРµС‚"
+    IDS_TAB_MEMDELTA              "РћС‚РєР»РѕРЅРµРЅРёРµ РЅР° РїР°РјРµС‚С‚Р°"
+    IDS_TAB_PAGEFAULT             "Р“СЂРµС€РєР° РЅР° СЃС‚СЂР°РЅРёС†РёС‚Рµ"
+    IDS_TAB_PFDELTA               "РћС‚РєР»РѕРЅРµРЅРёРµ РЅР° PF"
+    IDS_TAB_VMSIZE                "Р Р°Р·РјРµСЂ РЅР° РїСЂРёРІРёРґРЅР°С‚Р° РїР°РјРµС‚"
     IDS_TAB_PAGEDPOOL             "Paged Pool"
     IDS_TAB_NPPOOL                "NP Pool"
     IDS_TAB_BASEPRI               "Base Pri"
-    IDS_TAB_HANDLES               "Описатели"
-    IDS_TAB_THREADS               "Нишки"
-    IDS_TAB_USERPBJECTS           "Потребителски предмети"
-    IDS_TAB_GDIOBJECTS            "Предмети на GDI"
-    IDS_TAB_IOREADS               "В/И четенета"
-    IDS_TAB_IOWRITES              "В/И писания"
-    IDS_TAB_IOOTHER               "В/И други"
-    IDS_TAB_IOREADBYTES           "В/И прочетени байтове"
-    IDS_TAB_IOWRITESBYTES         "В/И записани байтове"
-    IDS_TAB_IOOTHERBYTES          "В/И други байтове"
-    IDS_MENU_SELECTCOLUMNS        "&Избор на стълбове..."
-    IDS_MENU_16BITTASK            "&Показване на 16битови задачи"
-    IDS_MENU_WINDOWS              "&Прозорци"
-    IDS_MENU_LARGEICONS           "&Големи значета"
-    IDS_MENU_SMALLICONS           "&Малки значета"
-    IDS_MENU_DETAILS              "&Подробен"
-    IDS_MENU_ONEGRAPHALLCPUS      "&Една графика за всички ЦПУ"
-    IDS_MENU_ONEGRAPHPERCPU       "По една графика на &всеки ЦПУ"
-    IDS_MENU_CPUHISTORY           "Дневник на &ЦПУ"
-    IDS_MENU_SHOWKERNELTIMES      "&Показване времената на ядрата"
-    IDS_CREATENEWTASK             "Създаване на нова задача"
+    IDS_TAB_HANDLES               "РћРїРёСЃР°С‚РµР»Рё"
+    IDS_TAB_THREADS               "РќРёС€РєРё"
+    IDS_TAB_USERPBJECTS           "РџРѕС‚СЂРµР±РёС‚РµР»СЃРєРё РїСЂРµРґРјРµС‚Рё"
+    IDS_TAB_GDIOBJECTS            "РџСЂРµРґРјРµС‚Рё РЅР° GDI"
+    IDS_TAB_IOREADS               "Р’/Р С‡РµС‚РµРЅРµС‚Р°"
+    IDS_TAB_IOWRITES              "Р’/Р РїРёСЃР°РЅРёСЏ"
+    IDS_TAB_IOOTHER               "Р’/Р РґСЂСѓРіРё"
+    IDS_TAB_IOREADBYTES           "Р’/Р РїСЂРѕС‡РµС‚РµРЅРё Р±Р°Р№С‚РѕРІРµ"
+    IDS_TAB_IOWRITESBYTES         "Р’/Р Р·Р°РїРёСЃР°РЅРё Р±Р°Р№С‚РѕРІРµ"
+    IDS_TAB_IOOTHERBYTES          "Р’/Р РґСЂСѓРіРё Р±Р°Р№С‚РѕРІРµ"
+    IDS_MENU_SELECTCOLUMNS        "&РР·Р±РѕСЂ РЅР° СЃС‚СЉР»Р±РѕРІРµ..."
+    IDS_MENU_16BITTASK            "&РџРѕРєР°Р·РІР°РЅРµ РЅР° 16Р±РёС‚РѕРІРё Р·Р°РґР°С‡Рё"
+    IDS_MENU_WINDOWS              "&РџСЂРѕР·РѕСЂС†Рё"
+    IDS_MENU_LARGEICONS           "&Р“РѕР»РµРјРё Р·РЅР°С‡РµС‚Р°"
+    IDS_MENU_SMALLICONS           "&РњР°Р»РєРё Р·РЅР°С‡РµС‚Р°"
+    IDS_MENU_DETAILS              "&РџРѕРґСЂРѕР±РµРЅ"
+    IDS_MENU_ONEGRAPHALLCPUS      "&Р•РґРЅР° РіСЂР°С„РёРєР° Р·Р° РІСЃРёС‡РєРё Р¦РџРЈ"
+    IDS_MENU_ONEGRAPHPERCPU       "РџРѕ РµРґРЅР° РіСЂР°С„РёРєР° РЅР° &РІСЃРµРєРё Р¦РџРЈ"
+    IDS_MENU_CPUHISTORY           "Р”РЅРµРІРЅРёРє РЅР° &Р¦РџРЈ"
+    IDS_MENU_SHOWKERNELTIMES      "&РџРѕРєР°Р·РІР°РЅРµ РІСЂРµРјРµРЅР°С‚Р° РЅР° СЏРґСЂР°С‚Р°"
+    IDS_CREATENEWTASK             "РЎСЉР·РґР°РІР°РЅРµ РЅР° РЅРѕРІР° Р·Р°РґР°С‡Р°"
     IDS_CREATENEWTASK_DESC        "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you."
-    IDS_MSG_ACCESSPROCESSAFF      "Невъзможен достъп или установяване на сродство на процесите."
-    IDS_MSG_PROCESSONEPRO         "Действието трябва да има сродство поне с един процесор."
-    IDS_MSG_INVALIDOPTION         "Неправилна настройка"
-    IDS_MSG_UNABLEDEBUGPROCESS    "Неспособен да обезбуби действието"
-    IDS_MSG_WARNINGDEBUG          "ВНИМАНИЕ: Проследяването на това действие може да доведе до загуба на данни.\nСигурен ли сте, че искате да го закачите към обезбубителя?"
-    IDS_MSG_TASKMGRWARNING        "Предупреждение на задачния управител"
-    IDS_MSG_WARNINGTERMINATING    "ВНИМАНИЕ: Прекратяването на действие може да доведе до нежелани\nпоследствия, включително до загуба на данни и неусточйивост на системата.\nДействието няма да има възможност да запише състоянието и\nданните си, преди да приключи. Сигурен ли сте, че искате да\nпрекратите действието?"
-    IDS_MSG_UNABLETERMINATEPRO    "Невъзможно прекратяване на действие"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Невъзможно намаляване на първенство"
-    IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE           "Заета памет: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "Заетост на ЦПУ: %3d%%"
-    IDS_STATUS_PROCESSES          "Действия: %d"
-    IDS_Not_Responding            "Не отговаря"
-    IDS_Running                   "Работи"
+    IDS_MSG_ACCESSPROCESSAFF      "РќРµРІСЉР·РјРѕР¶РµРЅ РґРѕСЃС‚СЉРї РёР»Рё СѓСЃС‚Р°РЅРѕРІСЏРІР°РЅРµ РЅР° СЃСЂРѕРґСЃС‚РІРѕ РЅР° РїСЂРѕС†РµСЃРёС‚Рµ."
+    IDS_MSG_PROCESSONEPRO         "Р”РµР№СЃС‚РІРёРµС‚Рѕ С‚СЂСЏР±РІР° РґР° РёРјР° СЃСЂРѕРґСЃС‚РІРѕ РїРѕРЅРµ СЃ РµРґРёРЅ РїСЂРѕС†РµСЃРѕСЂ."
+    IDS_MSG_INVALIDOPTION         "РќРµРїСЂР°РІРёР»РЅР° РЅР°СЃС‚СЂРѕР№РєР°"
+    IDS_MSG_UNABLEDEBUGPROCESS    "РќРµСЃРїРѕСЃРѕР±РµРЅ РґР° РѕР±РµР·Р±СѓР±Рё РґРµР№СЃС‚РІРёРµС‚Рѕ"
+    IDS_MSG_WARNINGDEBUG          "Р’РќРРњРђРќРР•: РџСЂРѕСЃР»РµРґСЏРІР°РЅРµС‚Рѕ РЅР° С‚РѕРІР° РґРµР№СЃС‚РІРёРµ РјРѕР¶Рµ РґР° РґРѕРІРµРґРµ РґРѕ Р·Р°РіСѓР±Р° РЅР° РґР°РЅРЅРё.\nРЎРёРіСѓСЂРµРЅ Р»Рё СЃС‚Рµ, С‡Рµ РёСЃРєР°С‚Рµ РґР° РіРѕ Р·Р°РєР°С‡РёС‚Рµ РєСЉРј РѕР±РµР·Р±СѓР±РёС‚РµР»СЏ?"
+    IDS_MSG_TASKMGRWARNING        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РЅР° Р·Р°РґР°С‡РЅРёСЏ СѓРїСЂР°РІРёС‚РµР»"
+    IDS_MSG_WARNINGTERMINATING    "Р’РќРРњРђРќРР•: РџСЂРµРєСЂР°С‚СЏРІР°РЅРµС‚Рѕ РЅР° РґРµР№СЃС‚РІРёРµ РјРѕР¶Рµ РґР° РґРѕРІРµРґРµ РґРѕ РЅРµР¶РµР»Р°РЅРё\nРїРѕСЃР»РµРґСЃС‚РІРёСЏ, РІРєР»СЋС‡РёС‚РµР»РЅРѕ РґРѕ Р·Р°РіСѓР±Р° РЅР° РґР°РЅРЅРё Рё РЅРµСѓСЃС‚РѕС‡Р№РёРІРѕСЃС‚ РЅР° СЃРёСЃС‚РµРјР°С‚Р°.\nР”РµР№СЃС‚РІРёРµС‚Рѕ РЅСЏРјР° РґР° РёРјР° РІСЉР·РјРѕР¶РЅРѕСЃС‚ РґР° Р·Р°РїРёС€Рµ СЃСЉСЃС‚РѕСЏРЅРёРµС‚Рѕ Рё\nРґР°РЅРЅРёС‚Рµ СЃРё, РїСЂРµРґРё РґР° РїСЂРёРєР»СЋС‡Рё. РЎРёРіСѓСЂРµРЅ Р»Рё СЃС‚Рµ, С‡Рµ РёСЃРєР°С‚Рµ РґР°\nРїСЂРµРєСЂР°С‚РёС‚Рµ РґРµР№СЃС‚РІРёРµС‚Рѕ?"
+    IDS_MSG_UNABLETERMINATEPRO    "РќРµРІСЉР·РјРѕР¶РЅРѕ РїСЂРµРєСЂР°С‚СЏРІР°РЅРµ РЅР° РґРµР№СЃС‚РІРёРµ"
+    IDS_MSG_UNABLECHANGEPRIORITY  "РќРµРІСЉР·РјРѕР¶РЅРѕ РЅР°РјР°Р»СЏРІР°РЅРµ РЅР° РїСЉСЂРІРµРЅСЃС‚РІРѕ"
+    IDS_MSG_WARNINGCHANGEPRIORITY "Р’РќРРњРђРќРР•: РџСЂРѕРјСЏРЅР°С‚Р° РЅР° РїСЉСЂРІРµРЅСЃС‚РІРѕС‚Рѕ РЅР° С‚РѕРІР° РґРµР№СЃС‚РІРёРµ РјРѕР¶Рµ РґР°\nРїСЂРёС‡РёРЅРё РЅРµР¶РµР»Р°РЅРё РїРѕСЃР»РµРґСЃС‚РІРёСЏ, РІРєР»СЋС‡РёС‚РµР»РЅРѕ РЅРµСѓСЃС‚РѕР№С‡РёРІРѕСЃС‚ РЅР° СЃРёСЃС‚РµРјР°С‚Р°. РЎРёРіСѓСЂРµРЅ Р»Рё СЃС‚Рµ, \nС‡Рµ РёСЃРєР°С‚Рµ РґР° СЃРјРµРЅРёС‚Рµ СЃС‚Р°СЂС€РёРЅСЃС‚РІРѕС‚Рѕ?"
+    IDS_MSG_TRAYICONCPUUSAGE      "Р—Р°РµС‚РѕСЃС‚ РЅР° Р¦РџРЈ: %d%%"
+    IDS_STATUS_MEMUSAGE           "Р—Р°РµС‚Р° РїР°РјРµС‚: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "Р—Р°РµС‚РѕСЃС‚ РЅР° Р¦РџРЈ: %3d%%"
+    IDS_STATUS_PROCESSES          "Р”РµР№СЃС‚РІРёСЏ: %d"
+    IDS_Not_Responding            "РќРµ РѕС‚РіРѕРІР°СЂСЏ"
+    IDS_Running                   "Р Р°Р±РѕС‚Рё"
 END
-
-
-#endif    // Bulgarian (BG) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

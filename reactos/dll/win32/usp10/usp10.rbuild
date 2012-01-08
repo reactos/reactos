@@ -7,11 +7,17 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>bidi.c</file>
+	<file>breaking.c</file>
 	<file>usp10.c</file>
+	<file>indic.c</file>
+	<file>linebreak.c</file>
+	<file>indicsyllable.c</file>
 	<file>mirror.c</file>
 	<file>shape.c</file>
 	<file>shaping.c</file>
 	<library>wine</library>
+	<library>advapi32</library>
+	<library>user32</library>
 	<library>gdi32</library>
 	<library>ntdll</library>
 	<library>msvcrt</library>

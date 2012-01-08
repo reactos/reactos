@@ -171,7 +171,7 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
     if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->ErrCode, &OldIrql))
     {
         /* Warn user */
-        DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
+        DPRINT1("\n\x7\x7!!! Unexpected Interrupt 0x%02lx !!!\n", TrapFrame->ErrCode);
         
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, FALSE);
@@ -228,7 +228,7 @@ VOID
 FASTCALL
 KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                   IN PKINTERRUPT Interrupt)
-{   
+{
     KIRQL OldIrql;
     BOOLEAN Handled;
     PLIST_ENTRY NextEntry, ListHead;
@@ -245,7 +245,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
         ListHead = &Interrupt->InterruptListEntry;
         NextEntry = ListHead; /* The head is an entry! */
         while (TRUE)
-        {            
+        {
             /* Check if this interrupt's IRQL is higher than the current one */
             if (Interrupt->SynchronizeIrql > Interrupt->Irql)
             {
@@ -304,7 +304,7 @@ VOID
 FASTCALL
 KiInterruptTemplateHandler(IN PKTRAP_FRAME TrapFrame,
                            IN PKINTERRUPT Interrupt)
-{   
+{
     /* Enter interrupt frame */
     KiEnterInterruptTrap(TrapFrame);
 
@@ -572,7 +572,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
                        IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
                        IN PVOID SynchronizeContext OPTIONAL)
 {
-    NTSTATUS Status;
+    BOOLEAN Success;
     KIRQL OldIrql;
     
     /* Raise IRQL */
@@ -582,7 +582,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
     
     /* Call the routine */
-    Status = SynchronizeRoutine(SynchronizeContext);
+    Success = SynchronizeRoutine(SynchronizeContext);
     
     /* Release lock */
     KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
@@ -591,7 +591,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KfLowerIrql(OldIrql);
     
     /* Return status */
-    return Status;
+    return Success;
 }
 
 /* EOF */

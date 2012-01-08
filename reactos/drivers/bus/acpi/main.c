@@ -163,7 +163,7 @@ Bus_AddDevice(
 
 End:
     if (deviceName){
-        ExFreePool(deviceName);
+        ExFreePoolWithTag(deviceName, 'IPCA');
     }
     if (!NT_SUCCESS(status) && deviceObject){
         if (deviceData && deviceData->NextLowerDriver){

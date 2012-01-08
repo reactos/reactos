@@ -21,6 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _SHFLDR_H_
+#define _SHFLDR_H_
+
 #define CHARS_IN_GUID 39
 
 typedef struct {
@@ -51,9 +54,9 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
     return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            guid->Data1, guid->Data2, guid->Data3,
-            guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
-            guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+            guid.Data1, guid.Data2, guid.Data3,
+            guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+            guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
 static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
@@ -64,10 +67,12 @@ static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
      '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
      '%','0','2','x','%','0','2','x','}',0 };
     return swprintf(str, fmtW,
-            guid->Data1, guid->Data2, guid->Data3,
-            guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
-            guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+            guid.Data1, guid.Data2, guid.Data3,
+            guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+            guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
+
+#endif // _SHFLDR_H_

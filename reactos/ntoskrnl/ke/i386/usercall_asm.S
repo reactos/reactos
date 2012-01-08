@@ -17,19 +17,10 @@ EXTERN _KeUserCallbackDispatcher:DWORD
 EXTERN @KiServiceExit@8:PROC
 EXTERN _KeGetCurrentIrql@0:PROC
 EXTERN _KeBugCheckEx@20:PROC
+EXTERN @KiUserModeCallout@4:PROC
 
 /* FUNCTIONS ****************************************************************/
 .code
-
-PUBLIC _KiGetUserModeStackAddress@0
-_KiGetUserModeStackAddress@0:
-
-    /* Get the current thread's trapframe and return the esp */
-    mov eax, fs:[KPCR_CURRENT_THREAD]
-    mov eax, [eax+KTHREAD_TRAP_FRAME]
-    lea eax, [eax+KTRAP_FRAME_ESP]
-    ret
-
 
 /*++
  * @name KiCallUserMode
@@ -58,166 +49,23 @@ _KiGetUserModeStackAddress@0:
 PUBLIC _KiCallUserMode@8
 _KiCallUserMode@8:
 
-    /* Save volatile registers */
+    /* Push non-volatile registers on the stack.
+       This is part of the KCALLOUT_FRAME */
     push ebp
     push ebx
     push esi
     push edi
 
-    /* Get the current thread */
-    mov ebx, fs:[KPCR_CURRENT_THREAD]
+    /* load the address of the callout frame into ecx */
+    lea ecx, [esp - 12]
 
-    /* Make sure we're at passive */
-#if DBG
-    call _KeGetCurrentIrql@0
-    or al, al
-    jz AtPassive
+    /* Allocate space for the inital stack */
+    sub esp, 12 + NPX_FRAME_LENGTH + KTRAP_FRAME_LENGTH + 16
 
-    /* We're not, bugcheck! */
-    push 0
-    push 0
-    push eax
-    push 0
-    push IRQL_GT_ZERO_AT_SYSTEM_SERVICE
-    call _KeBugCheckEx@20
+    call @KiUserModeCallout@4
 
-AtPassive:
+    add esp, 12 + NPX_FRAME_LENGTH + KTRAP_FRAME_LENGTH + 16
 
-    /* Make sure that we are not attached and that APCs are not disabled */
-    movzx eax, byte ptr [ebx+KTHREAD_APC_STATE_INDEX]
-    mov edx, [ebx+KTHREAD_COMBINED_APC_DISABLE]
-    or eax, eax
-    jnz InvalidIndex
-    or edx, edx
-    jz ApcsEnabled
-
-InvalidIndex:
-
-    push 0
-    push edx
-    push eax
-    push 0
-    push APC_INDEX_MISMATCH
-    call _KeBugCheckEx@20
-ApcsEnabled:
-#endif
-
-    /* Get the lowest stack limit and check if we can handle it */
-    lea eax, [esp-HEX(3000)]
-    cmp eax, [ebx+KTHREAD_STACK_LIMIT]
-    jnb StackOk
-
-    /* We can't, we'll have to grow our stack */
-    push esp
-    call _MmGrowKernelStack@4
-
-    /* Quit if we failed */
-    or eax, eax
-    jnz GrowFailed
-
-    /* Save the current callback stack */
-StackOk:
-    push [ebx+KTHREAD_CALLBACK_STACK]
-
-    /* Get and save the trap frame */
-    mov edx, [ebx+KTHREAD_TRAP_FRAME]
-    push edx
-
-    /* Get and save the initial stack */
-    mov esi, [ebx+KTHREAD_INITIAL_STACK]
-    push esi
-
-    /* Set the new callback stack */
-    mov [ebx+KTHREAD_CALLBACK_STACK], esp
-
-    /* Align stack on 16-byte boundary */
-    and esp, NOT 15
-    mov edi, esp
-
-    /* Set destination and origin NPX Areas */
-    sub esp, NPX_FRAME_LENGTH
-    sub esi, NPX_FRAME_LENGTH
-
-    /* Disable interrupts so we can fill the NPX State */
-    cli
-
-    /* Now copy the NPX State */
-    mov ecx, [esi+FP_CONTROL_WORD]
-    mov [esp+FP_CONTROL_WORD], ecx
-    mov ecx, [esi+FP_STATUS_WORD]
-    mov [esp+FP_STATUS_WORD], ecx
-    mov ecx, [esi+FP_TAG_WORD]
-    mov [esp+FP_TAG_WORD], ecx
-    mov ecx, [esi+FP_DATA_SELECTOR]
-    mov [esp+FP_DATA_SELECTOR], ecx
-    mov ecx, [esi+FN_CR0_NPX_STATE]
-    mov [esp+FN_CR0_NPX_STATE], ecx
-
-    /* Get TSS */
-    mov esi, fs:[KPCR_TSS]
-
-    /* Set the stack address */
-    mov [ebx+KTHREAD_INITIAL_STACK], edi
-
-    /* Bias the stack for V86 mode */
-    mov ecx, esp
-    sub esp, 16
-    test dword ptr [edx+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz DontBias
-    mov ecx, esp
-
-DontBias:
-    /* Set new stack address in TSS */
-    mov [esi+KTSS_ESP0], ecx
-
-    /* Allocate the trap frame and set it */
-    sub esp, KTRAP_FRAME_V86_ES
-    mov ebp, esp
-
-    /* Set copy iterator and dest/origin parameters and do the copy */
-    mov ecx, (KTRAP_FRAME_V86_ES - KTRAP_FRAME_FS) / 4
-    lea edi, [esp+KTRAP_FRAME_FS]
-    lea esi, [edx+KTRAP_FRAME_FS]
-    rep movsd
-
-    /* Copy DR7 */
-    mov edi, [edx+KTRAP_FRAME_DR7]
-    test edi, NOT DR7_RESERVED_MASK
-    mov [esp+KTRAP_FRAME_DR7], edi
-
-    /* Check if we need to save debug registers */
-    jnz SaveDebug
-
-    /* Get user-mode dispatcher address and set it as EIP */
-SetEip:
-    mov eax, dword ptr [_KeUserCallbackDispatcher]
-    mov [esp+KTRAP_FRAME_EIP], eax
-
-    /* Set the exception list */
-    mov eax, fs:[KPCR_EXCEPTION_LIST]
-    mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
-
-    /* Set the previous mode */
-    mov eax, [edx+KTRAP_FRAME_PREVIOUS_MODE]
-    mov [esp+KTRAP_FRAME_PREVIOUS_MODE], eax
-
-    /* Bring interrupts back */
-    sti
-
-    /* Exit to user-mode */
-    mov ecx, esp
-    jmp @KiServiceExit@8
-
-SaveDebug:
-
-    /* Copy all 5 DRs */
-    mov ecx, 5
-    lea edi, [esp+KTRAP_FRAME_DR0]
-    lea esi, [edx+KTRAP_FRAME_DR0]
-    rep movsd
-    jmp SetEip
-
-GrowFailed:
     /* Restore registers */
     pop edi
     pop esi

@@ -348,7 +348,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PDEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;
-    ULONG DirectoryTableBase[2] = {0,0};
+    ULONG_PTR DirectoryTableBase[2] = {0,0};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
     PETHREAD CurrentThread = PsGetCurrentThread();
@@ -958,7 +958,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         FoundThread = CidEntry->Object;
 
         /* Make sure it's really a thread and this process' */
-        if ((FoundThread->Tcb.DispatcherHeader.Type == ThreadObject) &&
+        if ((FoundThread->Tcb.Header.Type == ThreadObject) &&
             (FoundThread->Cid.UniqueProcess == Cid->UniqueProcess))
         {
             /* Safe Reference and return it */

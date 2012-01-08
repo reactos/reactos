@@ -19,19 +19,12 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/inplocale.c
+ * FILE:            dll/cpl/intl/inplocale.c
  * PURPOSE:         Input Locale property page
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <cpl.h>
-
 #include "intl.h"
-#include "resource.h"
-
 
 /* Property page dialog callback */
 INT_PTR CALLBACK

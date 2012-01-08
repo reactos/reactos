@@ -1,5 +1,23 @@
-#ifndef _WINERROR_H
-#define _WINERROR_H
+/*
+ * Copyright (C) the Wine project
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef __WINE_WINERROR_H
+#define __WINE_WINERROR_H
 
 #define FACILITY_NULL                         0
 #define FACILITY_RPC                          1
@@ -116,6 +134,7 @@
 #define ERROR_SHARING_VIOLATION                            32
 #define ERROR_LOCK_VIOLATION                               33
 #define ERROR_WRONG_DISK                                   34
+#define ERROR_FCB_UNAVAILABLE                              35
 #define ERROR_SHARING_BUFFER_EXCEEDED                      36
 #define ERROR_HANDLE_EOF                                   38
 #define ERROR_HANDLE_DISK_FULL                             39
@@ -295,7 +314,161 @@
 #define ERROR_ARITHMETIC_OVERFLOW                          534
 #define ERROR_PIPE_CONNECTED                               535
 #define ERROR_PIPE_LISTENING                               536
+#define ERROR_INVALID_LDT_SIZE                             561
+#define ERROR_INVALID_LDT_OFFSET                           563
+#define ERROR_INVALID_LDT_DESCRIPTOR                       564
+#define ERROR_TOO_MANY_THREADS                             565
+#define ERROR_THREAD_NOT_IN_PROCESS                        566
+#define ERROR_PAGEFILE_QUOTA_EXCEEDED                      567
+#define ERROR_LOGON_SERVER_CONFLICT                        568
+#define ERROR_SYNCHRONIZATION_REQUIRED                     569
+#define ERROR_NET_OPEN_FAILED                              570
+#define ERROR_IO_PRIVILEGE_FAILED                          571
+#define ERROR_CONTROL_C_EXIT                               572
+#define ERROR_MISSING_SYSTEMFILE                           573
+#define ERROR_UNHANDLED_EXCEPTION                          574
+#define ERROR_APP_INIT_FAILURE                             575
+#define ERROR_PAGEFILE_CREATE_FAILED                       576
+#define ERROR_INVALID_IMAGE_HASH                           577
+#define ERROR_NO_PAGEFILE                                  578
+#define ERROR_ILLEGAL_FLOAT_CONTEXT                        579
+#define ERROR_NO_EVENT_PAIR                                580
+#define ERROR_DOMAIN_CTRLR_CONFIG_ERROR                    581
+#define ERROR_ILLEGAL_CHARACTER                            582
+#define ERROR_UNDEFINED_CHARACTER                          583
+#define ERROR_FLOPPY_VOLUME                                584
+#define ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT             585
+#define ERROR_BACKUP_CONTROLLER                            586
+#define ERROR_MUTANT_LIMIT_EXCEEDED                        587
+#define ERROR_FS_DRIVER_REQUIRED                           588
+#define ERROR_CANNOT_LOAD_REGISTRY_FILE                    589
+#define ERROR_DEBUG_ATTACH_FAILED                          590
+#define ERROR_SYSTEM_PROCESS_TERMINATED                    591
+#define ERROR_DATA_NOT_ACCEPTED                            592
+#define ERROR_VDM_HARD_ERROR                               593
+#define ERROR_DRIVER_CANCEL_TIMEOUT                        594
+#define ERROR_REPLY_MESSAGE_MISMATCH                       595
+#define ERROR_LOST_WRITEBEHIND_DATA                        596
+#define ERROR_CLIENT_SERVER_PARAMETERS_INVALID             597
+#define ERROR_NOT_TINY_STREAM                              598
+#define ERROR_STACK_OVERFLOW_READ                          599
+#define ERROR_CONVERT_TO_LARGE                             600
+#define ERROR_FOUND_OUT_OF_SCOPE                           601
+#define ERROR_ALLOCATE_BUCKET                              602
+#define ERROR_MARSHALL_OVERFLOW                            603
+#define ERROR_INVALID_VARIANT                              604
+#define ERROR_BAD_COMPRESSION_BUFFER                       605
+#define ERROR_AUDIT_FAILED                                 606
+#define ERROR_TIMER_RESOLUTION_NOT_SET                     607
+#define ERROR_INSUFFICIENT_LOGON_INFO                      608
+#define ERROR_BAD_DLL_ENTRYPOINT                           609
+#define ERROR_BAD_SERVICE_ENTRYPOINT                       610
+#define ERROR_IP_ADDRESS_CONFLICT1                         611
+#define ERROR_IP_ADDRESS_CONFLICT2                         612
+#define ERROR_REGISTRY_QUOTA_LIMIT                         613
+#define ERROR_NO_CALLBACK_ACTIVE                           614
+#define ERROR_PWD_TOO_SHORT                                615
+#define ERROR_PWD_TOO_RECENT                               616
+#define ERROR_PWD_HISTORY_CONFLICT                         617
+#define ERROR_UNSUPPORTED_COMPRESSION                      618
+#define ERROR_INVALID_HW_PROFILE                           619
+#define ERROR_INVALID_PLUGPLAY_DEVICE_PATH                 620
+#define ERROR_QUOTA_LIST_INCONSISTENT                      621
+#define ERROR_EVALUATION_EXPIRATION                        622
+#define ERROR_ILLEGAL_DLL_RELOCATION                       623
+#define ERROR_DLL_INIT_FAILED_LOGOFF                       624
+#define ERROR_VALIDATE_CONTINUE                            625
+#define ERROR_NO_MORE_MATCHES                              626
+#define ERROR_RANGE_LIST_CONFLICT                          627
+#define ERROR_SERVER_SID_MISMATCH                          628
+#define ERROR_CANT_ENABLE_DENY_ONLY                        629
+#define ERROR_FLOAT_MULTIPLE_FAULTS                        630
+#define ERROR_FLOAT_MULTIPLE_TRAPS                         631
+#define ERROR_NOINTERFACE                                  632
+#define ERROR_DRIVER_FAILED_SLEEP                          633
+#define ERROR_CORRUPT_SYSTEM_FILE                          634
+#define ERROR_COMMITMENT_MINIMUM                           635
+#define ERROR_PNP_RESTART_ENUMERATION                      636
+#define ERROR_SYSTEM_IMAGE_BAD_SIGNATURE                   637
+#define ERROR_PNP_REBOOT_REQUIRED                          638
+#define ERROR_INSUFFICIENT_POWER                           639
+#define ERROR_MULTIPLE_FAULT_VIOLATION                     640
+#define ERROR_SYSTEM_SHUTDOWN                              641
+#define ERROR_PORT_NOT_SET                                 642
+#define ERROR_DS_VERSION_CHECK_FAILURE                     643
+#define ERROR_RANGE_NOT_FOUND                              644
+#define ERROR_NOT_SAFE_MODE_DRIVER                         646
+#define ERROR_FAILED_DRIVER_ENTRY                          647
+#define ERROR_DEVICE_ENUMERATION_ERROR                     648
+#define ERROR_MOUNT_POINT_NOT_RESOLVED                     649
+#define ERROR_INVALID_DEVICE_OBJECT_PARAMETER              650
+#define ERROR_MCA_OCCURED                                  651
+#define ERROR_DRIVER_DATABASE_ERROR                        652
+#define ERROR_SYSTEM_HIVE_TOO_LARGE                        653
+#define ERROR_DRIVER_FAILED_PRIOR_UNLOAD                   654
+#define ERROR_VOLSNAP_PREPARE_HIBERNATE                    655
+#define ERROR_HIBERNATION_FAILURE                          656
+#define ERROR_FILE_SYSTEM_LIMITATION                       665
+#define ERROR_ASSERTION_FAILURE                            668
+#define ERROR_ACPI_ERROR                                   669
+#define ERROR_WOW_ASSERTION                                670
+#define ERROR_PNP_BAD_MPS_TABLE                            671
+#define ERROR_PNP_TRANSLATION_FAILED                       672
+#define ERROR_PNP_IRQ_TRANSLATION_FAILED                   673
+#define ERROR_PNP_INVALID_ID                               674
+#define ERROR_WAKE_SYSTEM_DEBUGGER                         675
 #define ERROR_HANDLES_CLOSED                               676
+#define ERROR_EXTRANEOUS_INFORMATION                       677
+#define ERROR_RXACT_COMMIT_NECESSARY                       678
+#define ERROR_MEDIA_CHECK                                  679
+#define ERROR_GUID_SUBSTITUTION_MADE                       680
+#define ERROR_STOPPED_ON_SYMLINK                           681
+#define ERROR_LONGJUMP                                     682
+#define ERROR_PLUGPLAY_QUERY_VETOED                        683
+#define ERROR_UNWIND_CONSOLIDATE                           684
+#define ERROR_REGISTRY_HIVE_RECOVERED                      685
+#define ERROR_DLL_MIGHT_BE_INSECURE                        686
+#define ERROR_DLL_MIGHT_BE_INCOMPATIBLE                    687
+#define ERROR_DBG_EXCEPTION_NOT_HANDLED                    688
+#define ERROR_DBG_REPLY_LATER                              689
+#define ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE                 690
+#define ERROR_DBG_TERMINATE_THREAD                         691
+#define ERROR_DBG_TERMINATE_PROCESS                        692
+#define ERROR_DBG_CONTROL_C                                693
+#define ERROR_DBG_PRINTEXCEPTION_C                         694
+#define ERROR_DBG_RIPEXCEPTION                             695
+#define ERROR_DBG_CONTROL_BREAK                            696
+#define ERROR_DBG_COMMAND_EXCEPTION                        697
+#define ERROR_OBJECT_NAME_EXISTS                           698
+#define ERROR_THREAD_WAS_SUSPENDED                         699
+#define ERROR_IMAGE_NOT_AT_BASE                            700
+#define ERROR_RXACT_STATE_CREATED                          701
+#define ERROR_SEGMENT_NOTIFICATION                         702
+#define ERROR_BAD_CURRENT_DIRECTORY                        703
+#define ERROR_FT_READ_RECOVERY_FROM_BACKUP                 704
+#define ERROR_FT_WRITE_RECOVERY                            705
+#define ERROR_IMAGE_MACHINE_TYPE_MISMATCH                  706
+#define ERROR_RECEIVE_PARTIAL                              707
+#define ERROR_RECEIVE_EXPEDITED                            708
+#define ERROR_RECEIVE_PARTIAL_EXPEDITED                    709
+#define ERROR_EVENT_DONE                                   710
+#define ERROR_EVENT_PENDING                                711
+#define ERROR_CHECKING_FILE_SYSTEM                         712
+#define ERROR_FATAL_APP_EXIT                               713
+#define ERROR_PREDEFINED_HANDLE                            714
+#define ERROR_WAS_UNLOCKED                                 715
+#define ERROR_SERVICE_NOTIFICATION                         716
+#define ERROR_WAS_LOCKED                                   717
+#define ERROR_LOG_HARD_ERROR                               718
+#define ERROR_ALREADY_WIN32                                719
+#define ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE              720
+#define ERROR_NO_YIELD_PERFORMED                           721
+#define ERROR_TIMER_RESUME_IGNORED                         722
+#define ERROR_ARBITRATION_UNHANDLED                        723
+#define ERROR_CARDBUS_NOT_SUPPORTED                        724
+#define ERROR_MP_PROCESSOR_MISMATCH                        725
+#define ERROR_HIBERNATED                                   726
+#define ERROR_RESUME_HIBERNATION                           727
 #define ERROR_EA_ACCESS_DENIED                             994
 #define ERROR_OPERATION_ABORTED                            995
 #define ERROR_IO_INCOMPLETE                                996
@@ -669,6 +842,9 @@
 #define ERROR_EVENTLOG_CANT_START                          1501
 #define ERROR_LOG_FILE_FULL                                1502
 #define ERROR_EVENTLOG_FILE_CHANGED                        1503
+#define ERROR_INVALID_TASK_NAME                            1550
+#define ERROR_INVALID_TASK_INDEX                           1551
+#define ERROR_THREAD_ALREADY_IN_TASK                       1552
 #define ERROR_INSTALL_SERVICE_FAILURE                      1601
 #define ERROR_INSTALL_USEREXIT                             1602
 #define ERROR_INSTALL_FAILURE                              1603
@@ -714,7 +890,13 @@
 #define ERROR_PATCH_PACKAGE_REJECTED                       1643
 #define ERROR_INSTALL_TRANSFORM_REJECTED                   1644
 #define ERROR_INSTALL_REMOTE_PROHIBITED                    1645
+#define ERROR_PATCH_REMOVAL_UNSUPPORTED                    1646
 #define ERROR_UNKNOWN_PATCH                                1647
+#define ERROR_PATCH_NO_SEQUENCE                            1648
+#define ERROR_PATCH_REMOVAL_DISALLOWED                     1649
+#define ERROR_INVALID_PATCH_XML                            1650
+#define ERROR_PATCH_MANAGED_ADVERTISED_PRODUCT             1651
+#define ERROR_INSTALL_SERVICE_SAFEBOOT                     1652
 #define RPC_S_INVALID_STRING_BINDING                       1700
 #define RPC_S_WRONG_KIND_OF_BINDING                        1701
 #define RPC_S_INVALID_BINDING                              1702
@@ -1861,18 +2043,18 @@
 #define ERROR_SXS_ROOT_MANIFEST_DEPENDENCY_NOT_INSTALLED   14015
 #define ERROR_SXS_LEAF_MANIFEST_DEPENDENCY_NOT_INSTALLED   14016
 #define ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE      14017
-#define ERROR_SXS_MANIFEST_MISSING_REQUIRED_DEFAULT_NAMESPACE 14018
-#define ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE 14019
-#define ERROR_SXS_PRIVATE_MANIFEST_CROSS_PATH_WITH_REPARSE_POINT 14020
+#define ERROR_SXS_MANIFEST_MISSING_REQUIRED_DEFAULT_NAMESPACE       14018
+#define ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE       14019
+#define ERROR_SXS_PRIVATE_MANIFEST_CROSS_PATH_WITH_REPARSE_POINT    14020
 #define ERROR_SXS_DUPLICATE_DLL_NAME                       14021
-#define ERROR_SXS_DUPLICATE_WINDOWCLASS_NAME 14022L
-#define ERROR_SXS_DUPLICATE_CLSID 14023L
-#define ERROR_SXS_DUPLICATE_IID 14024L
-#define ERROR_SXS_DUPLICATE_TLBID 14025L
-#define ERROR_SXS_DUPLICATE_PROGID 14026L
-#define ERROR_SXS_DUPLICATE_ASSEMBLY_NAME 14027L
-#define ERROR_SXS_FILE_HASH_MISMATCH 14028L
-#define ERROR_SXS_POLICY_PARSE_ERROR 14029L
+#define ERROR_SXS_DUPLICATE_WINDOWCLASS_NAME               14022
+#define ERROR_SXS_DUPLICATE_CLSID                          14023
+#define ERROR_SXS_DUPLICATE_IID                            14024
+#define ERROR_SXS_DUPLICATE_TLBID                          14025
+#define ERROR_SXS_DUPLICATE_PROGID                         14026
+#define ERROR_SXS_DUPLICATE_ASSEMBLY_NAME                  14027
+#define ERROR_SXS_FILE_HASH_MISMATCH                       14028
+#define ERROR_SXS_POLICY_PARSE_ERROR                       14029
 #define ERROR_SXS_XML_E_MISSINGQUOTE 14030L
 #define ERROR_SXS_XML_E_COMMENTSYNTAX 14031L
 #define ERROR_SXS_XML_E_BADSTARTNAMECHAR 14032L
@@ -1923,7 +2105,38 @@
 #define ERROR_SXS_UNTRANSLATABLE_HRESULT 14077L
 #define ERROR_SXS_PROTECTION_CATALOG_FILE_MISSING 14078L
 #define ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE 14079L
-#define ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME  14080
+#define ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME 14080
+#define ERROR_SXS_ASSEMBLY_MISSING                         14081
+#define ERROR_SXS_CORRUPT_ACTIVATION_STACK                 14082
+#define ERROR_SXS_CORRUPTION                               14083
+#define ERROR_SXS_EARLY_DEACTIVATION                       14084
+#define ERROR_SXS_INVALID_DEACTIVATION                     14085
+#define ERROR_SXS_MULTIPLE_DEACTIVATION                    14086
+#define ERROR_SXS_PROCESS_TERMINATION_REQUESTED            14087
+#define ERROR_SXS_RELEASE_ACTIVATION_CONTEXT               14088
+#define ERROR_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY  14089
+#define ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE         14090
+#define ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME          14091
+#define ERROR_SXS_IDENTITY_DUPLICATE_ATTRIBUTE             14092
+#define ERROR_SXS_IDENTITY_PARSE_ERROR                     14093
+#define ERROR_SXS_IDENTITY_PARSE_ERROR                     14093
+#define ERROR_MALFORMED_SUBSTITUTION_STRING                14094
+#define ERROR_SXS_INCORRECT_PUBLIC_KEY_TOKEN               14095
+#define ERROR_UNMAPPED_SUBSTITUTION_STRING                 14096
+#define ERROR_SXS_ASSEMBLY_NOT_LOCKED                      14097
+#define ERROR_SXS_COMPONENT_STORE_CORRUPT                  14098
+#define ERROR_ADVANCED_INSTALLER_FAILED                    14099
+#define ERROR_XML_ENCODING_MISMATCH                        14100
+#define ERROR_SXS_MANIFEST_IDENTITY_SAME_BUT_CONTENTS_DIFFERENT     14101
+#define ERROR_SXS_IDENTITIES_DIFFERENT                     14102
+#define ERROR_SXS_ASSEMBLY_IS_NOT_A_DEPLOYMENT             14103
+#define ERROR_SXS_FILE_NOT_PART_OF_ASSEMBLY                14104
+#define ERROR_SXS_MANIFEST_TOO_BIG                         14105
+#define ERROR_SXS_SETTING_NOT_REGISTERED                   14106
+#define ERROR_SXS_TRANSACTION_CLOSURE_INCOMPLETE           14107
+#define ERROR_SMI_PRIMITIVE_INSTALLER_FAILED               14108
+#define ERROR_GENERIC_COMMAND_FAILED                       14109
+#define ERROR_SXS_FILE_HASH_MISSING                        14110
 
 #define ERROR_MUI_FILE_NOT_FOUND                           15100
 #define ERROR_MUI_INVALID_FILE                             15101
@@ -2863,6 +3076,4 @@
 #define ERROR_AUDITING_DISABLED                            _HRESULT_TYPEDEF_(0xC0090001L)
 #define ERROR_ALL_SIDS_FILTERED                            _HRESULT_TYPEDEF_(0xC0090002L)
 
-
-
-#endif
+#endif  /* __WINE_WINERROR_H */

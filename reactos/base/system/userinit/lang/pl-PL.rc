@@ -5,8 +5,6 @@
  *      UTF-8 conversion by Caemyr (May, 2011)
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN

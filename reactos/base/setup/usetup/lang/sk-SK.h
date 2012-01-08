@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  05-09-2010
+ * LastChange:  22-05-2011
  */
 
 #pragma once
@@ -1673,7 +1673,7 @@ MUI_STRING skSKStrings[] =
     {STRING_KEEPFORMAT,
     " Ponechaœ s£Ÿasnì syst‚m s£borov (bez zmeny) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
+    "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
     {STRING_HDDINFOUNK1,
     "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
@@ -1691,7 +1691,7 @@ MUI_STRING skSKStrings[] =
     {STRING_HDDINFOUNK5,
     "%c%c  typ %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
+    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,
     "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,

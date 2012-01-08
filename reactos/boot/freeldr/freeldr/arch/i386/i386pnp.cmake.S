@@ -120,7 +120,7 @@ _PnpBiosGetDeviceNodeCount:
 	mov esi, [ebp + 12]
 	mov ax, [BSS_PnpNodeCount]
 	movzx ecx, ax
-	mov [esi], eax
+	mov [esi], ecx
 
 	pop es
 	popa
@@ -140,7 +140,6 @@ _PnpBiosGetDeviceNodeCount:
  */
 PUBLIC _PnpBiosGetDeviceNode
 _PnpBiosGetDeviceNode:
-	.code32
 
 	push ebp
 	mov ebp, esp

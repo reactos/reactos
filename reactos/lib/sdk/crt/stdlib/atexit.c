@@ -1,69 +1,98 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+/* taken from wine exit.c */
 #include <precomp.h>
 
-void _atexit_cleanup(void)
+_onexit_t *atexit_table = NULL;
+int atexit_table_size = 0;
+int atexit_registered = 0; /* Points to free slot */
+
+/* INTERNAL: call atexit functions */
+void __call_atexit(void)
 {
-  struct __atexit *next, *a = __atexit_ptr;
-  __atexit_ptr = 0; /* to prevent infinite loops */
-  while (a)
+  /* Note: should only be called with the exit lock held */
+  TRACE("%d atext functions to call\n", atexit_registered);
+  /* Last registered gets executed first */
+  while (atexit_registered > 0)
   {
-    (a->__function)();
-    next = a->__next;
-    free(a);
-    a = next;
+    atexit_registered--;
+    TRACE("next is %p\n",atexit_table[atexit_registered]);
+    if (atexit_table[atexit_registered])
+      (*atexit_table[atexit_registered])();
+    TRACE("returned\n");
   }
 }
 
-/*
- * @implemented
- *
- * Ported from WINE
- * Copyright (C) 2000 Jon Griffiths
+/*********************************************************************
+ *		__dllonexit (MSVCRT.@)
  */
-_onexit_t __dllonexit(_onexit_t func, _onexit_t **start, _onexit_t **end)
+_onexit_t CDECL __dllonexit(_onexit_t func, _onexit_t **start, _onexit_t **end)
 {
    _onexit_t *tmp;
-   int len;
+   size_t len;
 
-   if (!start || !*start || !end || !*end)
-      return NULL;
+  TRACE("(%p,%p,%p)\n", func, start, end);
 
-   len = (*end - *start);
-   if (++len <= 0)
-      return NULL;
+  if (!start || !*start || !end || !*end)
+  {
+   FIXME("bad table\n");
+   return NULL;
+  }
 
-   tmp = (_onexit_t *)realloc(*start, len * sizeof(tmp));
-   if (!tmp)
-      return NULL;
+  len = (*end - *start);
 
-   *start = tmp;
-   *end = tmp + len;
-   tmp[len - 1] = func;
+  TRACE("table start %p-%p, %d entries\n", *start, *end, len);
 
-   return func;
-}
-
-/*
- * @implemented
- */
-_onexit_t _onexit(_onexit_t a)
-{
-  struct __atexit *ap;
-  if (a == 0)
+  if (++len <= 0)
     return NULL;
-  ap = (struct __atexit *)malloc(sizeof(struct __atexit));
-  if (!ap)
+
+  tmp = realloc(*start, len * sizeof(tmp));
+  if (!tmp)
     return NULL;
-  ap->__next = __atexit_ptr;
-  ap->__function = (void (*)(void))a;
-  __atexit_ptr = ap;
-  return a;
+  *start = tmp;
+  *end = tmp + len;
+  tmp[len - 1] = func;
+  TRACE("new table start %p-%p, %d entries\n", *start, *end, len);
+  return func;
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_onexit (MSVCRT.@)
  */
-int atexit(void (*a)(void))
+_onexit_t CDECL _onexit(_onexit_t func)
 {
-  return _onexit((_onexit_t)a) == (_onexit_t)a ? 0 : -1;
+  TRACE("(%p)\n",func);
+
+  if (!func)
+    return NULL;
+
+  LOCK_EXIT;
+  if (atexit_registered > atexit_table_size - 1)
+  {
+    _onexit_t *newtable;
+    TRACE("expanding table\n");
+    newtable = calloc(sizeof(void *),atexit_table_size + 32);
+    if (!newtable)
+    {
+      TRACE("failed!\n");
+      UNLOCK_EXIT;
+      return NULL;
+    }
+    memcpy (newtable, atexit_table, atexit_table_size);
+    atexit_table_size += 32;
+    free (atexit_table);
+    atexit_table = newtable;
+  }
+  atexit_table[atexit_registered] = func;
+  atexit_registered++;
+  UNLOCK_EXIT;
+  return func;
 }
+
+/*********************************************************************
+ *		atexit (MSVCRT.@)
+ */
+int CDECL atexit(void (*func)(void))
+{
+  TRACE("(%p)\n", func);
+  return _onexit((_onexit_t)func) == (_onexit_t)func ? 0 : -1;
+}
+

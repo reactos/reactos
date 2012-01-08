@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
     output = fopen(argv[2], "w");
     if (!output)
     {
+        fclose(input);
         fprintf(stderr, "Could not open output file '%s'\n", argv[2]);
         return -1;
     }

@@ -190,13 +190,13 @@ void AdapterInit() {
 }
 
 int
-InterfaceConnected(MIB_IFROW IfEntry)
+InterfaceConnected(const MIB_IFROW* IfEntry)
 {
-    if (IfEntry.dwOperStatus == IF_OPER_STATUS_CONNECTED ||
-        IfEntry.dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
+    if (IfEntry->dwOperStatus == IF_OPER_STATUS_CONNECTED ||
+        IfEntry->dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
         return 1;
 
-    DH_DbgPrint(MID_TRACE,("Interface %d is down\n", IfEntry.dwIndex));
+    DH_DbgPrint(MID_TRACE,("Interface %d is down\n", IfEntry->dwIndex));
     return 0;
 }
 
@@ -241,7 +241,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
             if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
             {
                 /* This is an existing adapter */
-                if (InterfaceConnected(Table->table[i])) {
+                if (InterfaceConnected(&Table->table[i])) {
                     /* We're still active so we stay in the list */
                     ifi = &Adapter->DhclientInfo;
                 } else {
@@ -259,7 +259,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
-            if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(Table->table[i])) {
+            if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(&Table->table[i])) {
                 memcpy( &Adapter->IfMib, &Table->table[i],
                         sizeof(Adapter->IfMib) );
                 Adapter->DhclientInfo.client = &Adapter->DhclientState;

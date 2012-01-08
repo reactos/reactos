@@ -48,6 +48,7 @@
 	<file>updown.c</file>
 	<file>stubs.c</file>
 	<file>rsrc.rc</file>
+	<pch>comctl32.h</pch>
 	<library>uuid</library>
 	<library>wine</library>
 	<library>user32</library>

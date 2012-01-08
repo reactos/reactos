@@ -78,7 +78,25 @@ NdisMPciAssignResources(
   return NDIS_STATUS_SUCCESS;
 }
 
-
+/*
+ * @implemented
+ */
+NDIS_STATUS
+EXPORT
+NdisPciAssignResources(
+    IN  NDIS_HANDLE         NdisMacHandle,
+    IN  NDIS_HANDLE         NdisWrapperHandle,
+    IN  NDIS_HANDLE         WrapperConfigurationContext,
+    IN  ULONG               SlotNumber,
+    OUT PNDIS_RESOURCE_LIST *AssignedResources)
+{
+    PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+    PLOGICAL_ADAPTER Adapter = WrapperContext->DeviceObject->DeviceExtension;
+
+	return NdisMPciAssignResources(Adapter,
+                                   SlotNumber,
+                                   AssignedResources);
+}
 /*
  * @implemented
  */

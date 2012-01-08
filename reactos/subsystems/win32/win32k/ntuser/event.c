@@ -7,9 +7,7 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserEvent);
 
 typedef struct _EVENTPACK
 {
@@ -62,7 +60,7 @@ FASTCALL
 IntSetSrvEventMask( UINT EventMin, UINT EventMax)
 {
    UINT event;
-   DPRINT("SetSrvEventMask 1\n");
+   TRACE("SetSrvEventMask 1\n");
    for ( event = EventMin; event <= EventMax; event++)
    {
       if ((event >= EVENT_SYSTEM_SOUND && event <= EVENT_SYSTEM_MINIMIZEEND) ||
@@ -90,7 +88,7 @@ IntSetSrvEventMask( UINT EventMin, UINT EventMax)
    }
    if (!gpsi->dwInstalledEventHooks)
       gpsi->dwInstalledEventHooks |= SRV_EVENT_RUNNING; // Set something.
-   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->dwInstalledEventHooks);
+   TRACE("SetSrvEventMask 2 : %x\n", gpsi->dwInstalledEventHooks);
 }
 
 static
@@ -113,7 +111,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
    pEP->idObject = idObject;
    pEP->idChild = idChild;
 
-   /* FIXME should get timeout from
+   /* FIXME: Should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
    Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
                                hwnd,
@@ -138,7 +136,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
 {
    if (pEH)
    {
-      DPRINT("IntRemoveEvent pEH 0x%x\n",pEH);
+      TRACE("IntRemoveEvent pEH 0x%x\n",pEH);
       KeEnterCriticalRegion();
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
@@ -226,7 +224,7 @@ IntNotifyWinEvent(
    PLIST_ENTRY pLE;
    PTHREADINFO pti, ptiCurrent;
 
-   DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
+   TRACE("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
 
    if (!GlobalEvents || !GlobalEvents->Counts) return;
 
@@ -248,8 +246,8 @@ IntNotifyWinEvent(
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
      {
-// if all process || all thread || other thread same process
-// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
+// If all process || all thread || other thread same process
+// If ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         if ( (!pEH->idProcess || pEH->idProcess == PtrToUint(pti->pEThread->Cid.UniqueProcess)) &&
              (!(pEH->Flags & WINEVENT_SKIPOWNPROCESS) || pEH->head.pti->ppi != pti->ppi) &&
              (!pEH->idThread  || pEH->idThread == PtrToUint(pti->pEThread->Cid.UniqueThread)) &&
@@ -259,7 +257,7 @@ IntNotifyWinEvent(
            // Send message to the thread if pEH is not current.
            if (pEH->head.pti != ptiCurrent)
            {
-              DPRINT1("Global Event 0x%x, idObject %d\n", Event, idObject);
+              ERR("Global Event 0x%x, idObject %d\n", Event, idObject);
               IntCallLowLevelEvent( pEH,
                                     Event,
                                     UserHMGetHandle(pWnd),
@@ -268,7 +266,7 @@ IntNotifyWinEvent(
            }
            else
            {
-              DPRINT1("Local Event 0x%x, idObject %d\n", Event, idObject);
+              ERR("Local Event 0x%x, idObject %d\n", Event, idObject);
               co_IntCallEventProc( UserHMGetHandle(pEH),
                                    Event,
                                    UserHMGetHandle(pWnd),
@@ -336,7 +334,7 @@ NtUserSetWinEventHook(
    HANDLE Handle;
    PETHREAD Thread = NULL;
 
-   DPRINT("NtUserSetWinEventHook hmod 0x%x, pfn 0x%x\n",hmodWinEventProc, lpfnWinEventProc);
+   TRACE("NtUserSetWinEventHook hmod 0x%x, pfn 0x%x\n",hmodWinEventProc, lpfnWinEventProc);
 
    UserEnterExclusive();
 

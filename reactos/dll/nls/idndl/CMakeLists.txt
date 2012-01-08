@@ -11,7 +11,7 @@ add_library(idndl SHARED
 set_entrypoint(idndl 0)
 
 if(NOT MSVC)
-    set_target_properties(idndl PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+    add_target_compile_flags(idndl "-fno-exceptions -fno-rtti")
 endif(NOT MSVC)
 
 add_importlibs(idndl kernel32)

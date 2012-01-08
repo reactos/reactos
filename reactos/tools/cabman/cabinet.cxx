@@ -1155,12 +1155,14 @@ ULONG CCabinet::ExtractFile(char* FileName)
     if (Offset == INVALID_SET_FILE_POINTER)
     {
         DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", (UINT)GetLastError()));
+        CloseFile(DestFile);
         return CAB_STATUS_INVALID_CAB;
     }
 #else
     if (fseek(FileHandle, (off_t)File->DataBlock->AbsoluteOffset, SEEK_SET) != 0)
     {
         DPRINT(MIN_TRACE, ("fseek() failed.\n"));
+        CloseFile(DestFile);
         return CAB_STATUS_FAILURE;
     }
     Offset = ftell(FileHandle);
@@ -2039,6 +2041,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_NOMEMORY;
     }
 
@@ -2051,6 +2054,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read from file.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2058,6 +2062,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read file times.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2065,6 +2070,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read file attributes.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 

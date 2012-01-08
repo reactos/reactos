@@ -27,21 +27,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
-#include <srb.h>
-#include <scsi.h>
-#include <ntddscsi.h>
-#include <ntddstor.h>
-#include <ntdddisk.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include "precomp.h"
 
 #ifndef NDEBUG
 #define NDEBUG
 #endif
 #include <debug.h>
-
-#include "scsiport_int.h"
 
 ULONG InternalDebugLevel = 0x00;
 
@@ -589,37 +580,35 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
-    UNIMPLEMENTED;
-#if 0
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PLIST_ENTRY Entry;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
 
-  DPRINT("ScsiPortGetLogicalUnit() called\n");
+    DPRINT("ScsiPortGetLogicalUnit() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
-  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
-    return NULL;
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  Entry = DeviceExtension->LunExtensionListHead.Flink;
-  while (Entry != &DeviceExtension->LunExtensionListHead)
+    /* Check the extension size */
+    if (!DeviceExtension->LunExtensionSize)
     {
-      LunExtension = CONTAINING_RECORD(Entry,
-				       SCSI_PORT_LUN_EXTENSION,
-				       List);
-      if (LunExtension->PathId == PathId &&
-	  LunExtension->TargetId == TargetId &&
-	  LunExtension->Lun == Lun)
-	{
-	  return (PVOID)&LunExtension->MiniportLunExtension;
-	}
-
-      Entry = Entry->Flink;
+        /* They didn't want one */
+        return NULL;
     }
-#endif
-  return NULL;
+
+    LunExtension = SpiGetLunExtension(DeviceExtension,
+                                      PathId,
+                                      TargetId,
+                                      Lun);
+    /* Check that the logical unit exists */
+    if (!LunExtension)
+    {
+        /* Nope, return NULL */
+        return NULL;
+    }
+
+    /* Return the logical unit miniport extension */
+    return (LunExtension + 1);
 }
 
 
@@ -1064,7 +1053,6 @@ ScsiPortInitialize(IN PVOID Argument1,
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ScsiPortDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
     /* Obtain configuration information */
@@ -1546,12 +1534,12 @@ CreatePortConfig:
                                                    &Dirql[i],
                                                    &Affinity[i]);
           }
-          
+
           if (DeviceExtension->InterruptCount == 1 || Dirql[0] > Dirql[1])
               MaxDirql = Dirql[0];
           else
               MaxDirql = Dirql[1];
-          
+
           for (i = 0; i < DeviceExtension->InterruptCount; i++)
           {
               /* Determing IRQ sharability as usual */
@@ -1585,7 +1573,7 @@ CreatePortConfig:
                   break;
               }
           }
-          
+
           if (!NT_SUCCESS(Status))
               break;
       }
@@ -1648,7 +1636,7 @@ CreatePortConfig:
 
       /* Initialize bus scanning information */
       DeviceExtension->BusesConfig = ExAllocatePoolWithTag(PagedPool,
-          sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
           + sizeof(ULONG), TAG_SCSIPORT);
 
       if (!DeviceExtension->BusesConfig)
@@ -1660,7 +1648,7 @@ CreatePortConfig:
 
       /* Zero it */
       RtlZeroMemory(DeviceExtension->BusesConfig,
-          sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
           + sizeof(ULONG));
 
       /* Store number of buses there */
@@ -1845,13 +1833,11 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN ULONG ErrorCode,
 		 IN ULONG UniqueId)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  //PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT1("ScsiPortLogError() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+  //DeviceExtension = CONTAINING_RECORD(HwDeviceExtension, SCSI_PORT_DEVICE_EXTENSION, MiniPortDeviceExtension);
 
 
   DPRINT("ScsiPortLogError() done\n");
@@ -2017,7 +2003,7 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
       case BusChangeDetected:
           DPRINT1("UNIMPLEMENTED SCSI Notification called: BusChangeDetected!\n");
           break;
-      
+
       default:
 	DPRINT1 ("Unsupported notification from WMI: %lu\n", NotificationType);
 	break;
@@ -2192,7 +2178,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         PortConfig->DmaPort != SP_UNINITIALIZED_VALUE)
     {
         Dma = 1;
-        
+
         if (PortConfig->DmaChannel2 != SP_UNINITIALIZED_VALUE ||
             PortConfig->DmaPort2 != SP_UNINITIALIZED_VALUE)
             Dma++;
@@ -2297,7 +2283,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         ResourceDescriptor->u.Dma.Channel = (Dma == 2) ? PortConfig->DmaChannel2 : PortConfig->DmaChannel;
         ResourceDescriptor->u.Dma.Port = (Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort;
         ResourceDescriptor->Flags = 0;
-        
+
         if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width8Bits)
             ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8;
         else if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width16Bits)
@@ -2310,7 +2296,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
         if (((Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort) == SP_UNINITIALIZED_VALUE)
             ResourceDescriptor->u.Dma.Port = 0;
-        
+
         ResourceDescriptor++;
         Dma--;
     }
@@ -2336,12 +2322,11 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
     CHAR VendorIdString[8];
     CHAR DeviceIdString[8];
     UNICODE_STRING UnicodeStr;
-    PCM_RESOURCE_LIST ResourceList;
+    PCM_RESOURCE_LIST ResourceList = NULL;
     NTSTATUS Status;
 
     DPRINT ("SpiGetPciConfiguration() called\n");
 
-	RtlZeroMemory(&ResourceList, sizeof(PCM_RESOURCE_LIST));
     SlotNumber.u.AsULONG = 0;
 
     /* Loop through all devices */
@@ -4219,7 +4204,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     LONG Result;
     PIRP Irp;
-    ULONG SequenceNumber;
+    //ULONG SequenceNumber;
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
@@ -4319,7 +4304,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     /* Save transfer length in the IRP */
     Irp->IoStatus.Information = Srb->DataTransferLength;
 
-    SequenceNumber = SrbInfo->SequenceNumber;
+    //SequenceNumber = SrbInfo->SequenceNumber;
     SrbInfo->SequenceNumber = 0;
 
     /* Decrement the queue count */
@@ -4587,7 +4572,6 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
             IN PVOID ServiceContext)
 {
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    BOOLEAN Result;
 
     DPRINT("ScsiPortIsr() called!\n");
 
@@ -4598,7 +4582,7 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
         return FALSE;
 
     /* Call miniport's HwInterrupt routine */
-    Result = DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+    DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
 
     /* If flag of notification is set - queue a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
@@ -5952,7 +5936,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
 
     KeyValueInformation = (PKEY_VALUE_FULL_INFORMATION) Buffer;
 
@@ -6241,7 +6225,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     break;
 
                 case CmResourceTypeInterrupt:
-  
+
                     if (Interrupt == 0)
                     {
                         ConfigInfo->BusInterruptLevel =
@@ -6262,7 +6246,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
                         ConfigInfo->InterruptMode2 = (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
                     }
-                        
+
                     Interrupt++;
                     break;
 
@@ -6272,7 +6256,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     {
                         ConfigInfo->DmaChannel = PartialDescriptor->u.Dma.Channel;
                         ConfigInfo->DmaPort = PartialDescriptor->u.Dma.Port;
-                        
+
                         if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
                             ConfigInfo->DmaWidth = Width8Bits;
                         else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
@@ -6285,7 +6269,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     {
                         ConfigInfo->DmaChannel2 = PartialDescriptor->u.Dma.Channel;
                         ConfigInfo->DmaPort2 = PartialDescriptor->u.Dma.Port;
-                        
+
                         if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
                             ConfigInfo->DmaWidth2 = Width8Bits;
                         else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
@@ -6294,7 +6278,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                         else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
                             ConfigInfo->DmaWidth2 = Width32Bits;
                     }
- 
+
                     Dma++;
                     break;
 

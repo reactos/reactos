@@ -21,7 +21,6 @@
 
 
 #include "videoprt.h"
-#include <wdmguid.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -360,7 +359,7 @@ IntVideoPortFindAdapter(
    WCHAR SymlinkBuffer[20];
    UNICODE_STRING SymlinkName;
    BOOL LegacyDetection = FALSE;
-   ULONG DeviceNumber, DisplayNumber;
+   ULONG DeviceNumber;
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    DeviceNumber = DeviceExtension->DeviceNumber;
@@ -412,7 +411,7 @@ IntVideoPortFindAdapter(
    {
       ULONG BusNumber, MaxBuses;
 
-      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? 8 : 1;
+      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? PCI_MAX_BRIDGE_NUMBER : 1;
 
       for (BusNumber = 0; BusNumber < MaxBuses; BusNumber++)
       {
@@ -481,30 +480,12 @@ IntVideoPortFindAdapter(
    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
    /* Create symbolic link "\??\DISPLAYx" */
-
-   /* HACK: We need this to find the first available display to
-    * use. We can't use the device number because then we could
-    * end up with \Device\Video0 being non-functional because
-    * HwFindAdapter returned an error. \Device\Video1 would be
-    * the correct primary display but it would be set to DISPLAY2
-    * so it would never be used and ROS would bugcheck on boot.
-    * By doing it this way, we ensure that DISPLAY1 is always
-    * functional. Another idea would be letting the IO manager
-    * give our video devices names then getting those names
-    * somehow and creating symbolic links to \Device\VideoX
-    * and \??\DISPLAYX once we know that HwFindAdapter has succeeded.
-    */
-   DisplayNumber = 0;
-   do
-   {
-      DisplayNumber++;
-      swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DisplayNumber);
-      RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
-   }
-   while (IoCreateSymbolicLink(&SymlinkName, &DeviceName) != STATUS_SUCCESS);
+   swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+   RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
    /* Add entry to DEVICEMAP\VIDEO key in registry. */
-   swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DisplayNumber - 1);
+   swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
    RtlWriteRegistryValue(
       RTL_REGISTRY_DEVICEMAP,
       L"VIDEO",

@@ -128,7 +128,7 @@ typedef CCHAR KPROCESSOR_MODE;
 //
 // Dereferencable pointer to KUSER_SHARED_DATA in User-Mode
 //
-#define SharedUserData                  ((KUSER_SHARED_DATA *CONST)USER_SHARED_DATA)
+#define SharedUserData                  ((KUSER_SHARED_DATA *)USER_SHARED_DATA)
 
 //
 // Maximum WOW64 Entries in KUSER_SHARED_DATA
@@ -554,7 +554,11 @@ typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
     ULONG_PTR DpcLock;
+#ifdef _M_AMD64
+    volatile LONG DpcQueueDepth;
+#else
     volatile ULONG DpcQueueDepth;
+#endif
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
@@ -677,7 +681,7 @@ typedef struct _KEXECUTE_OPTIONS
 //
 typedef struct _KTHREAD
 {
-    DISPATCHER_HEADER DispatcherHeader;
+    DISPATCHER_HEADER Header;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG CycleTime;
     ULONG HighCycleTime;
@@ -925,7 +929,7 @@ typedef struct _KTHREAD
 } KTHREAD;
 
 #define ASSERT_THREAD(object) \
-    ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ThreadObject))
 
 //
 // Kernel Process (KPROCESS)
@@ -935,10 +939,10 @@ typedef struct _KPROCESS
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG DirectoryTableBase;
+    ULONG_PTR DirectoryTableBase;
     ULONG Unused0;
 #else
-    ULONG DirectoryTableBase[2];
+    ULONG_PTR DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;

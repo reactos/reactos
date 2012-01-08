@@ -113,7 +113,8 @@ typedef enum {
 	if_elif,
 	if_elsefalse,
 	if_elsetrue,
-	if_ignore
+	if_ignore,
+	if_error
 } pp_if_state_t;
 
 
@@ -201,12 +202,12 @@ void *pp_xmalloc(size_t);
 void *pp_xrealloc(void *, size_t);
 char *pp_xstrdup(const char *str);
 pp_entry_t *pplookup(const char *ident);
-void pp_push_define_state(void);
+int pp_push_define_state(void);
 void pp_pop_define_state(void);
-pp_entry_t *pp_add_define(char *def, char *text);
+pp_entry_t *pp_add_define(const char *def, const char *text);
 pp_entry_t *pp_add_macro(char *ident, marg_t *args[], int nargs, mtext_t *exp);
 void pp_del_define(const char *name);
-FILE *pp_open_include(const char *name, const char *parent_name, char **newpath);
+void *pp_open_include(const char *name, const char *parent_name, char **newpath);
 void pp_push_if(pp_if_state_t s);
 void pp_next_if_state(int);
 pp_if_state_t pp_pop_if(void);
@@ -217,6 +218,8 @@ int pp_get_if_depth(void);
 #define __attribute__(x)  /*nothing*/
 #endif
 
+extern const struct wpp_callbacks *wpp_callbacks;
+
 int ppy_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
 int ppy_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void pp_internal_error(const char *file, int line, const char *s, ...) __attribute__((format (printf, 3, 4)));
@@ -226,8 +229,10 @@ void pp_internal_error(const char *file, int line, const char *s, ...) __attribu
 struct pp_status
 {
     const char *input;  /* current input file name */
+    void *file;         /* current input file descriptor */
     int line_number;    /* current line number */
     int char_number;    /* current char number in line */
+    int state;          /* current error state */
     int pedantic;       /* pedantic option */
     int debug;          /* debug messages flag */
 };
@@ -249,6 +254,7 @@ void pp_do_include(char *fname, int type);
 void pp_push_ignore_state(void);
 void pp_pop_ignore_state(void);
 
+void pp_writestring(const char *format, ...) __attribute__((format (printf, 1, 2)));
 
 /*
  * From ppy.y

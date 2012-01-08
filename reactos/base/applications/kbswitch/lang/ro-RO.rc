@@ -1,0 +1,18 @@
+/*
+ * FILE:             base/applications/kbswitch/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-21  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Preferințe…",  ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire",         ID_EXIT
+    END
+END

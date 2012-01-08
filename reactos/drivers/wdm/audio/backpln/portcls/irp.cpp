@@ -159,10 +159,9 @@ PortClsPnp(
     }
 
     DPRINT("unhandled function %u\n", IoStack->MinorFunction);
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Status = Irp->IoStatus.Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 }
 
 VOID

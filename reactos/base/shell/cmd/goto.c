@@ -39,7 +39,6 @@
 INT cmd_goto (LPTSTR param)
 {
 	LPTSTR tmp, tmp2;
-	LONG   lNewPosHigh = 0;
 
 	TRACE ("cmd_goto (\'%s\')\n", debugstr_aw(param));
 
@@ -67,9 +66,6 @@ INT cmd_goto (LPTSTR param)
 	while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))
 		tmp++;
 	*(tmp) = _T('\0');
-
-	/* set file pointer to the beginning of the batch file */
-	lNewPosHigh = 0;
 
 	/* jump to end of the file */
 	if ( _tcsicmp( param, _T(":eof"))==0)

@@ -43,6 +43,7 @@
 	<file>volume.c</file>
 	<file>wined3d_main.c</file>
 	<file>version.rc</file>
+	<pch>wined3d_private.h</pch>
 	<if property="ARCH" value="amd64">
 		<file>powf.c</file>
 		<file>sqrtf.c</file>

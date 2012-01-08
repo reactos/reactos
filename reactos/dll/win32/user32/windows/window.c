@@ -65,7 +65,7 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 HDWP WINAPI
 BeginDeferWindowPos(int nNumWindows)
 {
-    return (HDWP)NtUserCallOneParam((DWORD_PTR)nNumWindows, ONEPARAM_ROUTINE_BEGINDEFERWNDPOS);
+    return NtUserxBeginDeferWindowPos(nNumWindows);
 }
 
 
@@ -168,13 +168,14 @@ User32CreateWindowEx(DWORD dwExStyle,
                      HMENU hMenu,
                      HINSTANCE hInstance,
                      LPVOID lpParam,
-                     BOOL Unicode)
+                     DWORD dwFlags)
 {
     LARGE_STRING WindowName;
     LARGE_STRING lstrClassName, *plstrClassName;
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
+    BOOL Unicode;
     HWND Handle = NULL;
 
 #if 0
@@ -186,6 +187,8 @@ User32CreateWindowEx(DWORD dwExStyle,
        ERR("User32CreateWindowEx RegisterSystemControls\n");
        RegisterSystemControls();
     }
+
+    Unicode = !(dwFlags & NUCWE_ANSI);
 
     if (IS_ATOM(lpClassName))
     {
@@ -278,7 +281,7 @@ User32CreateWindowEx(DWORD dwExStyle,
                                   hMenu,
                                   hInstance,
                                   lpParam,
-                                  0,
+                                  dwFlags,
                                   NULL);
 
 #if 0
@@ -417,7 +420,7 @@ CreateWindowExA(DWORD dwExStyle,
                                 hMenu,
                                 hInstance,
                                 lpParam,
-                                FALSE);
+                                NUCWE_ANSI);
     return hwnd;
 }
 
@@ -540,7 +543,7 @@ CreateWindowExW(DWORD dwExStyle,
                                 hMenu,
                                 hInstance,
                                 lpParam,
-                                TRUE);
+                                0);
     return hwnd;
 }
 
@@ -955,15 +958,33 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 {
     PWND Wnd = ValidateHwnd(hWnd);
 
-    if (Wnd != NULL)
+    if (!Wnd) return FALSE;
+    if (Wnd->style & WS_MINIMIZED)
     {
-        lpRect->left = lpRect->top = 0;
+       lpRect->left = lpRect->top = 0;
+       lpRect->right = GetSystemMetrics(SM_CXMINIMIZED);
+       lpRect->bottom = GetSystemMetrics(SM_CYMINIMIZED);
+       return TRUE;
+    }
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+    {
+/*        lpRect->left = lpRect->top = 0;
         lpRect->right = Wnd->rcClient.right - Wnd->rcClient.left;
         lpRect->bottom = Wnd->rcClient.bottom - Wnd->rcClient.top;
-        return TRUE;
+*/
+        *lpRect = Wnd->rcClient;
+        OffsetRect(lpRect, -Wnd->rcClient.left, -Wnd->rcClient.top);
     }
-
-    return FALSE;
+    else
+    {
+        lpRect->left = lpRect->top = 0;
+        lpRect->right = Wnd->rcClient.right;
+        lpRect->bottom = Wnd->rcClient.bottom;
+/* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
+        lpRect->right = GetSystemMetrics(SM_CXSCREEN);
+        lpRect->bottom = GetSystemMetrics(SM_CYSCREEN);
+*/    } 
+    return TRUE;
 }
 
 
@@ -1242,13 +1263,21 @@ GetWindowRect(HWND hWnd,
 {
     PWND Wnd = ValidateHwnd(hWnd);
 
-    if (Wnd != NULL)
+    if (!Wnd) return FALSE;
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
         *lpRect = Wnd->rcWindow;
-        return TRUE;
     }
-
-    return FALSE;
+    else
+    {
+        lpRect->left = lpRect->top = 0;
+        lpRect->right = Wnd->rcWindow.right;
+        lpRect->bottom = Wnd->rcWindow.bottom;
+/* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
+        lpRect->right = GetSystemMetrics(SM_CXSCREEN);
+        lpRect->bottom = GetSystemMetrics(SM_CYSCREEN);
+*/    }
+    return TRUE;
 }
 
 
@@ -1668,7 +1697,7 @@ RealChildWindowFromPoint(HWND hwndParent,
 BOOL WINAPI
 SetForegroundWindow(HWND hWnd)
 {
-    return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
+    return NtUserxSetForegroundWindow(hWnd);
 }
 
 
@@ -1693,26 +1722,19 @@ BOOL WINAPI
 SetWindowTextA(HWND hWnd,
                LPCSTR lpString)
 {
-    DWORD ProcessId;
-    if(!GetWindowThreadProcessId(hWnd, &ProcessId))
-    {
-        return FALSE;
-    }
+  PWND pwnd;
 
-    if(ProcessId != GetCurrentProcessId())
-    {
+  pwnd = ValidateHwnd(hWnd);
+  if (pwnd)
+  {
+     if (!TestWindowProcess(pwnd))
+     {
         /* do not send WM_GETTEXT messages to other processes */
-
-        DefSetText(hWnd, (PCWSTR)lpString, TRUE);
-
-        if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-        {
-            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-        }
-        return TRUE;
-    }
-
-    return SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
+        return (DefWindowProcA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString) >= 0);
+     }
+     return (SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString) >= 0);
+  }
+  return FALSE;
 }
 
 
@@ -1723,26 +1745,19 @@ BOOL WINAPI
 SetWindowTextW(HWND hWnd,
                LPCWSTR lpString)
 {
-    DWORD ProcessId;
-    if(!GetWindowThreadProcessId(hWnd, &ProcessId))
-    {
-        return FALSE;
-    }
+  PWND pwnd;
 
-    if(ProcessId != GetCurrentProcessId())
-    {
+  pwnd = ValidateHwnd(hWnd);
+  if (pwnd)
+  {
+     if (!TestWindowProcess(pwnd))
+     {
         /* do not send WM_GETTEXT messages to other processes */
-
-        DefSetText(hWnd, lpString, FALSE);
-
-        if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-        {
-            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-        }
-        return TRUE;
-    }
-
-    return SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
+        return (DefWindowProcW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString) >= 0);
+     }
+     return (SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString) >= 0);
+  }
+  return FALSE;
 }
 
 
@@ -1750,10 +1765,9 @@ SetWindowTextW(HWND hWnd,
  * @implemented
  */
 BOOL WINAPI
-ShowOwnedPopups(HWND hWnd,
-                BOOL fShow)
+ShowOwnedPopups(HWND hWnd, BOOL fShow)
 {
-    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
+    return NtUserxShowOwnedPopups(hWnd, fShow);
 }
 
 
@@ -1792,7 +1806,7 @@ BOOL WINAPI
 UpdateLayeredWindowIndirect(HWND hwnd,
                             const UPDATELAYEREDWINDOWINFO *info)
 {
-  if (info && info->cbSize == sizeof(info))
+  if (info && info->cbSize == sizeof(*info))
   {
      return NtUserUpdateLayeredWindow( hwnd,
                                        info->hdcDst,
@@ -1816,7 +1830,7 @@ BOOL WINAPI
 SetWindowContextHelpId(HWND hwnd,
                        DWORD dwContextHelpId)
 {
-    return NtUserSetWindowContextHelpId(hwnd, dwContextHelpId);
+    return NtUserxSetWindowContextHelpId(hwnd, dwContextHelpId);
 }
 
 /*
@@ -1825,7 +1839,7 @@ SetWindowContextHelpId(HWND hwnd,
 DWORD WINAPI
 GetWindowContextHelpId(HWND hwnd)
 {
-    return NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
+    return NtUserxGetWindowContextHelpId(hwnd);
 }
 
 /*
@@ -1879,7 +1893,7 @@ GetRealWindowOwner(HWND hwnd)
 HWND WINAPI
 SetTaskmanWindow(HWND hWnd)
 {
-    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
+    return NtUserxSetTaskmanWindow(hWnd);
 }
 
 /*
@@ -1888,7 +1902,7 @@ SetTaskmanWindow(HWND hWnd)
 HWND WINAPI
 SetProgmanWindow(HWND hWnd)
 {
-    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETPROGMANWINDOW);
+    return NtUserxSetProgmanWindow(hWnd);
 }
 
 /*
@@ -1992,7 +2006,7 @@ IsWindowInDestroy(HWND hWnd)
 VOID WINAPI
 DisableProcessWindowsGhosting(VOID)
 {
-    NtUserEnableProcessWindowGhosting(FALSE);
+    NtUserxEnableProcessWindowGhosting(FALSE);
 }
 
 /* EOF */

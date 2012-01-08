@@ -19,15 +19,8 @@
 static char sccsid[] = "@(#)ruserpass.c	5.1 (Berkeley) 3/1/89";
 #endif /* not lint */
 
-#include <sys/types.h>
-#include <stdio.h>
+#include "precomp.h"
 //#include <utmp.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include "ftp_var.h"
-#include "prototypes.h"
-#include <winsock.h>
 
 struct	utmp *getutmp();
 static	FILE *cfile;

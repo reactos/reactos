@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -125,14 +125,30 @@
 #define BLOCK_COMMA_LIST        4
 #define ACPI_DEFAULT_RESNAME    *(UINT32 *) "__RD"
 
+/*
+ * Raw table data header. Used by disassembler and data table compiler.
+ * Do not change.
+ */
+#define ACPI_RAW_TABLE_DATA_HEADER      "Raw Table Data"
+
 
 typedef const struct acpi_dmtable_info
 {
     UINT8                       Opcode;
     UINT8                       Offset;
     char                        *Name;
+    UINT8                       Flags;
 
 } ACPI_DMTABLE_INFO;
+
+#define DT_LENGTH                       0x01    /* Field is a subtable length */
+#define DT_FLAG                         0x02    /* Field is a flag value */
+#define DT_NON_ZERO                     0x04    /* Field must be non-zero */
+
+/* TBD: Not used at this time */
+
+#define DT_OPTIONAL                     0x08
+#define DT_COUNT                        0x10
 
 /*
  * Values for Opcode above.
@@ -173,17 +189,36 @@ typedef const struct acpi_dmtable_info
 #define ACPI_DMT_FADTPM                 32
 #define ACPI_DMT_BUF16                  33
 #define ACPI_DMT_IVRS                   34
-
+#define ACPI_DMT_BUFFER                 35
+#define ACPI_DMT_PCI_PATH               36
+#define ACPI_DMT_EINJACT                37
+#define ACPI_DMT_EINJINST               38
+#define ACPI_DMT_ERSTACT                39
+#define ACPI_DMT_ERSTINST               40
+#define ACPI_DMT_ACCWIDTH               41
+#define ACPI_DMT_UNICODE                42
+#define ACPI_DMT_UUID                   43
+#define ACPI_DMT_DEVICE_PATH            44
+#define ACPI_DMT_LABEL                  45
+#define ACPI_DMT_BUF7                   46
+#define ACPI_DMT_BUF128                 47
+#define ACPI_DMT_SLIC                   48
 
 typedef
 void (*ACPI_DMTABLE_HANDLER) (
     ACPI_TABLE_HEADER       *Table);
+
+typedef
+ACPI_STATUS (*ACPI_CMTABLE_HANDLER) (
+    void                    **PFieldList);
 
 typedef struct acpi_dmtable_data
 {
     char                    *Signature;
     ACPI_DMTABLE_INFO       *TableInfo;
     ACPI_DMTABLE_HANDLER    TableHandler;
+    ACPI_CMTABLE_HANDLER    CmTableHandler;
+    const unsigned char     *Template;
     char                    *Name;
 
 } ACPI_DMTABLE_DATA;
@@ -200,11 +235,18 @@ typedef struct acpi_op_walk_info
 
 } ACPI_OP_WALK_INFO;
 
+/*
+ * TBD - another copy of this is in asltypes.h, fix
+ */
+#ifndef ASL_WALK_CALLBACK_DEFINED
 typedef
 ACPI_STATUS (*ASL_WALK_CALLBACK) (
     ACPI_PARSE_OBJECT           *Op,
     UINT32                      Level,
     void                        *Context);
+#define ASL_WALK_CALLBACK_DEFINED
+#endif
+
 
 typedef struct acpi_resource_tag
 {
@@ -246,6 +288,7 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEcdt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEinj[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEinj0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoErst[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoErst0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFacs[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt2[];
@@ -286,12 +329,15 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt10[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadtHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMcfg[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMcfg0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMchi[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoRsdp1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoRsdp2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSbst[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlicHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlit[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSpcr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSpmi[];
@@ -305,12 +351,27 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoUefi[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWaet[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWddt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdrt[];
+
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoGeneric[][2];
 
 
 /*
  * dmtable
  */
+extern ACPI_DMTABLE_DATA        AcpiDmTableData[];
+
+UINT8
+AcpiDmGenerateChecksum (
+    void                    *Table,
+    UINT32                  Length,
+    UINT8                   OriginalChecksum);
+
+ACPI_DMTABLE_DATA *
+AcpiDmGetTableData (
+    char                    *Signature);
+
 void
 AcpiDmDumpDataTable (
     ACPI_TABLE_HEADER       *Table);
@@ -390,6 +451,10 @@ AcpiDmDumpRsdp (
 
 void
 AcpiDmDumpRsdt (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpSlic (
     ACPI_TABLE_HEADER       *Table);
 
 void
@@ -538,6 +603,15 @@ AcpiDmIsStringBuffer (
 /*
  * dmextern
  */
+
+ACPI_STATUS
+AcpiDmAddToExternalFileList (
+    char                    *PathList);
+
+void
+AcpiDmClearExternalFileList (
+    void);
+
 void
 AcpiDmAddToExternalList (
     ACPI_PARSE_OBJECT       *Op,
@@ -753,5 +827,14 @@ void
 AcpiDmCheckResourceReference (
     ACPI_PARSE_OBJECT       *Op,
     ACPI_WALK_STATE         *WalkState);
+
+
+/*
+ * acdisasm
+ */
+void
+AdDisassemblerHeader (
+    char                    *Filename);
+
 
 #endif  /* __ACDISASM_H__ */

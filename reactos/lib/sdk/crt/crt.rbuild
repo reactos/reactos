@@ -5,6 +5,7 @@
 	<directory name="except">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>chkesp.s</file>
 				<file>chkstk_asm.s</file>
 				<file>chkstk_ms.s</file>
 			</directory>
@@ -30,24 +31,35 @@
 
 	<directory name="printf">
 		<file>_cprintf.c</file>
+		<file>_cwprintf.c</file>
 		<file>_snprintf.c</file>
 		<file>_snwprintf.c</file>
 		<file>_vcprintf.c</file>
+		<file>_vcwprintf.c</file>
 		<file>_vsnprintf.c</file>
 		<file>_vsnwprintf.c</file>
+		<file>_vsprintf_p.c</file>
 		<file>fprintf.c</file>
+		<file>fprintf_s.c</file>
 		<file>fwprintf.c</file>
+		<file>fwprintf_s.c</file>
 		<file>printf.c</file>
+		<file>printf_s.c</file>
 		<file>sprintf.c</file>
 		<file>streamout.c</file>
 		<file>swprintf.c</file>
 		<file>vfprintf.c</file>
+		<file>vfprintf_s.c</file>
 		<file>vfwprintf.c</file>
+		<file>vfwprintf_s.c</file>
 		<file>vprintf.c</file>
+		<file>vprintf_s.c</file>
 		<file>vsprintf.c</file>
 		<file>vswprintf.c</file>
 		<file>vwprintf.c</file>
+		<file>vwprintf_s.c</file>
 		<file>wprintf.c</file>
+		<file>wprintf_s.c</file>
 		<file>wstreamout.c</file>
 	</directory>
 
@@ -76,12 +88,11 @@
 		<file>wrmdir.c</file>
 	</directory>
 	<directory name="except">
-		<file>abnorter.c</file>
-		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
 		<file>except.c</file>
 		<file>matherr.c</file>
+		<file>stack.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>prolog.s</file>
@@ -98,6 +109,7 @@
 			<directory name="amd64">
 				<file>seh.s</file>
 				<file>chkstk_asm.s</file>
+				<file>ehandler.c</file>
 			</directory>
 		</if>
 		<file>xcptfil.c</file>
@@ -144,6 +156,9 @@
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
+        <file>j0_y0.c</file>
+        <file>j1_y1.c</file>
+        <file>jn_yn.c</file>
 		<file>ldiv.c</file>
 		<file>logf.c</file>
 		<file>modf.c</file>
@@ -154,6 +169,12 @@
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>powl.c</file>
+
+		<directory name="ieee754">
+			<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>
+		</directory>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -190,10 +211,6 @@
 				<file>ldexp.c</file>
 				<file>sqrtf.c</file>
 			</directory>
-			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
-			<!--<file>j0_y0.c</file>
-			<file>j1_y1.c</file>
-			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
 			<file>cos.c</file>
@@ -218,10 +235,6 @@
 				<file>sqrtf.S</file>
 				<file>tan.S</file>
 			</directory>
-			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
-			<!--<file>j0_y0.c</file>
-			<file>j1_y1.c</file>
-			<file>jn_yn.c</file>-->
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>stubs.c</file>
@@ -310,6 +323,7 @@
 		<file>amsg.c</file>
 		<file>assert.c</file>
 		<file>environ.c</file>
+		<file>fltused.c</file>
 		<file>getargs.c</file>
 		<file>i10output.c</file>
 		<file>initterm.c</file>
@@ -370,7 +384,6 @@
 		<file>wpopen.c</file>
 		<file>wstat.c</file>
 		<file>wstat64.c</file>
-		<file>lock_file.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
@@ -453,7 +466,6 @@
 		<file>ctype.c</file>
 		<file>itoa.c</file>
 		<file>itow.c</file>
-		<file>lasttok.c</file>
 		<file>scanf.c</file>
 		<file>splitp.c</file>
 		<file>strcoll.c</file>
@@ -516,7 +528,6 @@
 		<file>time64.c</file>
 		<file>time.c</file>
 		<file>timezone.c</file>
-		<file>tzname.c</file>
 		<file>utime32.c</file>
 		<file>utime64.c</file>
 		<file>utime.c</file>
@@ -542,7 +553,6 @@
 		<file>wcstok.c</file>
 		<file>wcsupr.c</file>
 		<file>wcsxfrm.c</file>
-		<file>wlasttok.c</file>
 	</directory>
 	<directory name="wine">
 		<file>heap.c</file>

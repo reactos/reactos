@@ -19,7 +19,7 @@ int _cwait(int* pnStatus, int hProc, int nAction)
 
 	nAction = 0;
 	if (WaitForSingleObject((void*)ULongToPtr(hProc), INFINITE) != WAIT_OBJECT_0) {
-		__set_errno(ECHILD);
+		_set_errno(ECHILD);
 		return -1;
 	}
 

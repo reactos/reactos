@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -335,8 +335,8 @@
  * MASK_BITS_ABOVE creates a mask starting AT the position and above
  * MASK_BITS_BELOW creates a mask starting one bit BELOW the position
  */
-#define ACPI_MASK_BITS_ABOVE(position)      (~((ACPI_INTEGER_MAX) << ((UINT32) (position))))
-#define ACPI_MASK_BITS_BELOW(position)      ((ACPI_INTEGER_MAX) << ((UINT32) (position)))
+#define ACPI_MASK_BITS_ABOVE(position)      (~((ACPI_UINT64_MAX) << ((UINT32) (position))))
+#define ACPI_MASK_BITS_BELOW(position)      ((ACPI_UINT64_MAX) << ((UINT32) (position)))
 
 /* Bitfields within ACPI registers */
 
@@ -400,8 +400,8 @@
  * the plist contains a set of parens to allow variable-length lists.
  * These macros are used for both the debug and non-debug versions of the code.
  */
-#define ACPI_ERROR_NAMESPACE(s, e)      AcpiNsReportError (AE_INFO, s, e);
-#define ACPI_ERROR_METHOD(s, n, p, e)   AcpiNsReportMethodError (AE_INFO, s, n, p, e);
+#define ACPI_ERROR_NAMESPACE(s, e)      AcpiUtNamespaceError (AE_INFO, s, e);
+#define ACPI_ERROR_METHOD(s, n, p, e)   AcpiUtMethodError (AE_INFO, s, n, p, e);
 #define ACPI_WARN_PREDEFINED(plist)     AcpiUtPredefinedWarning plist
 #define ACPI_INFO_PREDEFINED(plist)     AcpiUtPredefinedInfo plist
 
@@ -473,16 +473,16 @@
                                             AcpiUtPtrExit (ACPI_DEBUG_PARAMETERS, (UINT8 *) _s); \
                                             return (_s); })
 #define return_VALUE(s)                 ACPI_DO_WHILE0 ({ \
-                                            register ACPI_INTEGER _s = (s); \
+                                            register UINT64 _s = (s); \
                                             AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, _s); \
                                             return (_s); })
 #define return_UINT8(s)                 ACPI_DO_WHILE0 ({ \
                                             register UINT8 _s = (UINT8) (s); \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (ACPI_INTEGER) _s); \
+                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) _s); \
                                             return (_s); })
 #define return_UINT32(s)                ACPI_DO_WHILE0 ({ \
                                             register UINT32 _s = (UINT32) (s); \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (ACPI_INTEGER) _s); \
+                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) _s); \
                                             return (_s); })
 #else /* Use original less-safe macros */
 
@@ -493,7 +493,7 @@
                                             AcpiUtPtrExit (ACPI_DEBUG_PARAMETERS, (UINT8 *) (s)); \
                                             return((s)); })
 #define return_VALUE(s)                 ACPI_DO_WHILE0 ({ \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (ACPI_INTEGER) (s)); \
+                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) (s)); \
                                             return((s)); })
 #define return_UINT8(s)                 return_VALUE(s)
 #define return_UINT32(s)                return_VALUE(s)

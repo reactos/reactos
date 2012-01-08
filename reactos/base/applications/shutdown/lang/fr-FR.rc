@@ -5,10 +5,10 @@ BEGIN
 
 IDS_USAGE, "Utilisation: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Aucun argument ou -?\tAffiche ce message\n\
-  -l\t\t\tSe dÈconnecter\n\
-  -s\t\t\t…teindre l'ordinateur\n\
-  -r\t\t\t…teindre et redÈmarrer l'ordinateur\n\
-  -f\t\t\tForce les applications en cours de fonctionnement ‡ se fermer sans avertissements\n\
-    \t\t\tSi vous ne spÈcifiez aucun autre paramËtre, cette option\n\
-    \t\t\tprovoquera aussi une dÈconnexion"
+  -l\t\t\tSe d√©connecter\n\
+  -s\t\t\t√âteindre l'ordinateur\n\
+  -r\t\t\t√âteindre et red√©marrer l'ordinateur\n\
+  -f\t\t\tForce les applications en cours de fonctionnement √† se fermer sans avertissements\n\
+    \t\t\tSi vous ne sp√©cifiez aucun autre param√®tre, cette option\n\
+    \t\t\tprovoquera aussi une d√©connexion"
 END

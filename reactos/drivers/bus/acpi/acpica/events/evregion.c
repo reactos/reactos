@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -132,6 +132,10 @@ static BOOLEAN
 AcpiEvHasDefaultHandler (
     ACPI_NAMESPACE_NODE     *Node,
     ACPI_ADR_SPACE_TYPE     SpaceId);
+
+static void
+AcpiEvOrphanEcRegMethod (
+    void);
 
 static ACPI_STATUS
 AcpiEvRegRun (
@@ -334,6 +338,8 @@ AcpiEvInitializeOpRegions (
         }
     }
 
+    AcpiGbl_RegMethodsExecuted = TRUE;
+
     (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
     return_ACPI_STATUS (Status);
 }
@@ -442,7 +448,7 @@ Cleanup1:
  *              RegionOffset        - Where in the region to read or write
  *              BitWidth            - Field width in bits (8, 16, 32, or 64)
  *              Value               - Pointer to in or out value, must be
- *                                    full 64-bit ACPI_INTEGER
+ *                                    a full 64-bit integer
  *
  * RETURN:      Status
  *
@@ -457,7 +463,7 @@ AcpiEvAddressSpaceDispatch (
     UINT32                  Function,
     UINT32                  RegionOffset,
     UINT32                  BitWidth,
-    ACPI_INTEGER            *Value)
+    UINT64                  *Value)
 {
     ACPI_STATUS             Status;
     ACPI_ADR_SPACE_HANDLER  Handler;
@@ -681,7 +687,7 @@ AcpiEvDetachRegion(
 
             /* Now stop region accesses by executing the _REG method */
 
-            Status = AcpiEvExecuteRegMethod (RegionObj, 0);
+            Status = AcpiEvExecuteRegMethod (RegionObj, ACPI_REG_DISCONNECT);
             if (ACPI_FAILURE (Status))
             {
                 ACPI_EXCEPTION ((AE_INFO, Status, "from region _REG, [%s]",
@@ -1212,6 +1218,13 @@ AcpiEvExecuteRegMethods (
                 ACPI_NS_WALK_UNLOCK, AcpiEvRegRun, NULL,
                 &SpaceId, NULL);
 
+    /* Special case for EC: handle "orphan" _REG methods with no region */
+
+    if (SpaceId == ACPI_ADR_SPACE_EC)
+    {
+        AcpiEvOrphanEcRegMethod ();
+    }
+
     return_ACPI_STATUS (Status);
 }
 
@@ -1278,7 +1291,122 @@ AcpiEvRegRun (
         return (AE_OK);
     }
 
-    Status = AcpiEvExecuteRegMethod (ObjDesc, 1);
+    Status = AcpiEvExecuteRegMethod (ObjDesc, ACPI_REG_CONNECT);
     return (Status);
 }
 
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiEvOrphanEcRegMethod
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Execute an "orphan" _REG method that appears under the EC
+ *              device. This is a _REG method that has no corresponding region
+ *              within the EC device scope. The orphan _REG method appears to
+ *              have been enabled by the description of the ECDT in the ACPI
+ *              specification: "The availability of the region space can be
+ *              detected by providing a _REG method object underneath the
+ *              Embedded Controller device."
+ *
+ *              To quickly access the EC device, we use the EC_ID that appears
+ *              within the ECDT. Otherwise, we would need to perform a time-
+ *              consuming namespace walk, executing _HID methods to find the
+ *              EC device.
+ *
+ ******************************************************************************/
+
+static void
+AcpiEvOrphanEcRegMethod (
+    void)
+{
+    ACPI_TABLE_ECDT         *Table;
+    ACPI_STATUS             Status;
+    ACPI_OBJECT_LIST        Args;
+    ACPI_OBJECT             Objects[2];
+    ACPI_NAMESPACE_NODE     *EcDeviceNode;
+    ACPI_NAMESPACE_NODE     *RegMethod;
+    ACPI_NAMESPACE_NODE     *NextNode;
+
+
+    ACPI_FUNCTION_TRACE (EvOrphanEcRegMethod);
+
+
+    /* Get the ECDT (if present in system) */
+
+    Status = AcpiGetTable (ACPI_SIG_ECDT, 0,
+        ACPI_CAST_INDIRECT_PTR (ACPI_TABLE_HEADER, &Table));
+    if (ACPI_FAILURE (Status))
+    {
+        return_VOID;
+    }
+
+    /* We need a valid EC_ID string */
+
+    if (!(*Table->Id))
+    {
+        return_VOID;
+    }
+
+    /* Namespace is currently locked, must release */
+
+    (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
+
+    /* Get a handle to the EC device referenced in the ECDT */
+
+    Status = AcpiGetHandle (NULL,
+        ACPI_CAST_PTR (char, Table->Id),
+        ACPI_CAST_PTR (ACPI_HANDLE, &EcDeviceNode));
+    if (ACPI_FAILURE (Status))
+    {
+        goto Exit;
+    }
+
+    /* Get a handle to a _REG method immediately under the EC device */
+
+    Status = AcpiGetHandle (EcDeviceNode,
+        METHOD_NAME__REG, ACPI_CAST_PTR (ACPI_HANDLE, &RegMethod));
+    if (ACPI_FAILURE (Status))
+    {
+        goto Exit;
+    }
+
+    /*
+     * Execute the _REG method only if there is no Operation Region in
+     * this scope with the Embedded Controller space ID. Otherwise, it
+     * will already have been executed. Note, this allows for Regions
+     * with other space IDs to be present; but the code below will then
+     * execute the _REG method with the EC space ID argument.
+     */
+    NextNode = AcpiNsGetNextNode (EcDeviceNode, NULL);
+    while (NextNode)
+    {
+        if ((NextNode->Type == ACPI_TYPE_REGION) &&
+            (NextNode->Object) &&
+            (NextNode->Object->Region.SpaceId == ACPI_ADR_SPACE_EC))
+        {
+            goto Exit; /* Do not execute _REG */
+        }
+        NextNode = AcpiNsGetNextNode (EcDeviceNode, NextNode);
+    }
+
+    /* Evaluate the _REG(EC,Connect) method */
+
+    Args.Count = 2;
+    Args.Pointer = Objects;
+    Objects[0].Type = ACPI_TYPE_INTEGER;
+    Objects[0].Integer.Value = ACPI_ADR_SPACE_EC;
+    Objects[1].Type = ACPI_TYPE_INTEGER;
+    Objects[1].Integer.Value = ACPI_REG_CONNECT;
+
+    Status = AcpiEvaluateObject (RegMethod, NULL, &Args, NULL);
+
+Exit:
+    /* We ignore all errors from above, don't care */
+
+    Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
+    return_VOID;
+}

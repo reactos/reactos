@@ -722,12 +722,12 @@ MmFreeMemoryArea(
    PMEMORY_AREA *ParentReplace;
    ULONG_PTR Address;
    PVOID EndAddress;
-   
+
    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
    {
        PEPROCESS CurrentProcess = PsGetCurrentProcess();
        PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-        
+
        if (Process != NULL &&
            Process != CurrentProcess)
        {
@@ -768,18 +768,21 @@ MmFreeMemoryArea(
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
            ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-           
+
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
            if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
            {
                MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
            }
-           
+
            ExFreePoolWithTag(MemoryArea->Vad, TAG_MVAD);
            MemoryArea->Vad = NULL;
        }
     }
+
+    /* There must be no page ops in progress */
+    ASSERT(MemoryArea->PageOpCount == 0);
 
    /* Remove the tree item. */
    {
@@ -881,7 +884,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 {
    PVOID EndAddress;
    ULONG Granularity;
-   ULONG tmpLength;
+   ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
 
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
@@ -893,7 +896,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
-      tmpLength = PAGE_ROUND_UP(Length);
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
@@ -908,6 +911,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    {
       tmpLength = Length + ((ULONG_PTR) *BaseAddress
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(tmpLength, Granularity);
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
@@ -935,7 +939,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
          return STATUS_CONFLICTING_ADDRESSES;
       }
    }
-    
+
     //
     // Is this a static memory area?
     //
@@ -980,12 +984,14 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
 VOID NTAPI
 MmMapMemoryArea(PVOID BaseAddress,
-                ULONG Length,
+                SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection)
 {
    ULONG i;
    NTSTATUS Status;
+
+   ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
 
    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
    {

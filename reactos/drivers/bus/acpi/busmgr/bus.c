@@ -60,6 +60,8 @@ LIST_HEAD(acpi_bus_event_list);
 KEVENT AcpiEventQueue;
 KDPC event_dpc;
 
+int ProcessorCount, PowerDeviceCount, PowerButtonCount, FixedPowerButtonCount;
+int FixedSleepButtonCount, SleepButtonCount, ThermalZoneCount;
 
 static int
 acpi_device_register (
@@ -401,9 +403,9 @@ acpi_bus_get_power_flags (
 		char		object_name[5] = {'_','P','R','0'+i,'\0'};
 
 		/* Evaluate "_PRx" to se if power resources are referenced */
-		acpi_evaluate_reference(device->handle, object_name, NULL,
+		status = acpi_evaluate_reference(device->handle, object_name, NULL,
 			&ps->resources);
-		if (ps->resources.count) {
+		if (ACPI_SUCCESS(status) && ps->resources.count) {
 			device->power.flags.power_resources = 1;
 			ps->flags.valid = 1;
 		}
@@ -468,7 +470,7 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
     ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
     
-    event = ExAllocatePool(NonPagedPool,sizeof(struct acpi_bus_event));
+    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'IPCA');
 	if (!event)
 		return;
     
@@ -552,7 +554,7 @@ acpi_bus_receive_event (
 
 	memcpy(event, entry, sizeof(struct acpi_bus_event));
 
-	ExFreePool(entry);
+	ExFreePoolWithTag(entry, 'IPCA');
 	return_VALUE(0);
 }
 
@@ -1145,11 +1147,12 @@ acpi_bus_add (
 	char			*uid = NULL;
 	ACPI_DEVICE_ID_LIST *cid_list = NULL;
 	int			i = 0;
+	char			static_uid_buffer[5];
 
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
 
-	device = ExAllocatePool(NonPagedPool,sizeof(struct acpi_device));
+	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'IPCA');
 	if (!device) {
 		DPRINT1("Memory allocation error\n");
 		return_VALUE(-12);
@@ -1192,6 +1195,15 @@ acpi_bus_add (
 		}
 		sprintf(device->pnp.bus_id, "%s", bus_id);
 		buffer.Pointer = NULL;
+
+        /* HACK: Skip HPET */
+        if (strstr(device->pnp.bus_id, "HPET"))
+        {
+            DPRINT1("Using HPET hack\n");
+            result = -1;
+            goto end;
+        }
+
 		break;
 	}
 
@@ -1256,7 +1268,7 @@ acpi_bus_add (
 			uid = info->UniqueId.String;
 		if (info->Valid & ACPI_VALID_CID) {
 			cid_list = &info->CompatibleIdList;
-			device->pnp.cid_list = ExAllocatePool(NonPagedPool,cid_list->ListSize);
+			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'IPCA');
 			if (device->pnp.cid_list)
 				memcpy(device->pnp.cid_list, cid_list, cid_list->ListSize);
 			else
@@ -1269,27 +1281,41 @@ acpi_bus_add (
 		break;
 	case ACPI_BUS_TYPE_POWER:
 		hid = ACPI_POWER_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerDeviceCount++));
 		break;
 	case ACPI_BUS_TYPE_PROCESSOR:
 		hid = ACPI_PROCESSOR_HID;
+		uid = static_uid_buffer;
+		sprintf(uid, "%d", (ProcessorCount++));
 		break;
 	case ACPI_BUS_TYPE_SYSTEM:
 		hid = ACPI_SYSTEM_HID;
 		break;
 	case ACPI_BUS_TYPE_THERMAL:
 		hid = ACPI_THERMAL_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (ThermalZoneCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTON:
 		hid = ACPI_BUTTON_HID_POWER;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTONF:
 		hid = ACPI_BUTTON_HID_POWERF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedPowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
 		hid = ACPI_BUTTON_HID_SLEEP;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (SleepButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 		hid = ACPI_BUTTON_HID_SLEEPF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedSleepButtonCount++));
 		break;
 	}
 
@@ -1411,9 +1437,9 @@ acpi_bus_add (
 end:
 	if (result) {
 		if (device->pnp.cid_list) {
-			ExFreePool(device->pnp.cid_list);
+			ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
 		}
-		ExFreePool(device);
+		ExFreePoolWithTag(device, 'IPCA');
 		return_VALUE(result);
 	}
 	*child = device;
@@ -1434,10 +1460,10 @@ acpi_bus_remove (
 	acpi_device_unregister(device);
 
 	if (device && device->pnp.cid_list)
-		ExFreePool(device->pnp.cid_list);
+		ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
 
 	if (device)
-		ExFreePool(device);
+		ExFreePoolWithTag(device, 'IPCA');
 
 	return_VALUE(0);
 }
@@ -1624,7 +1650,7 @@ acpi_bus_init (void)
 	//result = acpi_ec_ecdt_probe();
 	/* Ignore result. Not having an ECDT is not fatal. */
 
-	status = AcpiInitializeObjects(ACPI_NO_DEVICE_INIT | ACPI_NO_OBJECT_INIT);
+	status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
 	if (ACPI_FAILURE(status)) {
 		DPRINT1("Unable to initialize ACPI objects\n");
 		goto error1;

@@ -1,6 +1,7 @@
 /*
- *  Spanish language file by Javier Remacha <2007-09-21>
+ * Spanish language file by Javier Remacha <2007-09-21>
  */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDC_MAGNIFIER MENU
@@ -41,10 +42,10 @@ BEGIN
     LTEXT           "Nivel de aumento:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Rastreando",IDC_STATIC,7,25,139,59
-    GROUPBOX        "PresentaciÛn",IDC_STATIC,7,87,139,57
-    CONTROL         "Seguir el cursor del ratÛn",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    GROUPBOX        "Presentaci√≥n",IDC_STATIC,7,87,139,57
+    CONTROL         "Seguir el cursor del rat√≥n",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
     CONTROL         "Seguir el foco del teclado",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "Seguir la ediciÛn de texto",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Seguir la edici√≥n de texto",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
     CONTROL         "Invertir colores",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
     CONTROL         "Comenzar minimizado",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
     CONTROL         "Mostrar Magnifier",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
@@ -57,12 +58,11 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Magnifier est· pensada para proporcionar un nivel mÌnimo de funcionalidad para usuarios con pequeÒas deficiencias visuales. La mayorÌa de los usuarios con deficiencias visuales necesitar·n una utilidad de mayor ampliaciÛn para el uso diario.",IDC_STATIC,36,7,207,33
+    LTEXT           "Magnifier est√° pensada para proporcionar un nivel m√≠nimo de funcionalidad para usuarios con peque√±as deficiencias visuales. La mayor√≠a de los usuarios con deficiencias visuales necesitar√°n una utilidad de mayor ampliaci√≥n para el uso diario.",IDC_STATIC,36,7,207,33
     CONTROL         "No volver a mostrar este mensaje",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Magnifier"
-    IDC_MAGNIFIER           "MAGNIFIER"
 END

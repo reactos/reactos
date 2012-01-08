@@ -398,7 +398,7 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
         /* Read the partition table */
         Status = IoReadPartitionTable(DeviceObject,
             DiskGeometry.BytesPerSector,
-            FALSE,
+            TRUE,
             LayoutInfo);
     }
 
@@ -1365,16 +1365,17 @@ NTAPI
 FstubFixupEfiPartition(IN PPARTITION_DESCRIPTOR PartitionDescriptor,
                        IN ULONGLONG MaxOffset)
 {
-    ULONG PartitionLength;
+    ULONG PartitionMaxOffset, PartitionLength;
     PAGED_CODE();
 
     /* Compute partition length (according to MBR entry) */
-    PartitionLength = PartitionDescriptor->StartingSectorLsb0 + PartitionDescriptor->PartitionLengthLsb0;
+    PartitionMaxOffset = GET_STARTING_SECTOR(PartitionDescriptor) + GET_PARTITION_LENGTH(PartitionDescriptor);
     /* In case the partition length goes beyond disk size... */
-    if (PartitionLength > MaxOffset)
+    if (PartitionMaxOffset > MaxOffset)
     {
         /* Resize partition to its maximum real length */
-        PartitionDescriptor->PartitionLengthLsb0 = MaxOffset - PartitionDescriptor->StartingSectorLsb0;
+        PartitionLength = (ULONG)(PartitionMaxOffset - GET_STARTING_SECTOR(PartitionDescriptor));
+        SET_PARTITION_LENGTH(PartitionDescriptor, PartitionLength);
     }
 }
 

@@ -41,7 +41,6 @@ list(APPEND SOURCE
     ppb.c
     process.c
     propvar.c
-    qsort.c
     random.c
     rangelist.c
     registry.c
@@ -71,24 +70,26 @@ if(ARCH MATCHES i386)
         i386/except.c
         i386/interlck.S
         i386/rtlmem.s
+        i386/rtlswap.S
         i386/res_asm.s
         i386/thread.c)
 elseif(ARCH MATCHES amd64)
     list(APPEND SOURCE
+        byteswap.c
         amd64/debug_asm.S
         amd64/except_asm.S
         amd64/slist.S
         amd64/unwind.c
         amd64/stubs.c
-        mem.c
-        memgen.c)
+        mem.c)
 elseif(ARCH MATCHES arm)
     list(APPEND SOURCE
+        byteswap.c
         arm/debug_asm.S
-        mem.c
-        memgen.c)
+        mem.c)
 elseif(ARCH MATCHES powerpc)
     list(APPEND SOURCE
+        byteswap.c
         powerpc/debug.c
         powerpc/except.c
         powerpc/interlocked.c

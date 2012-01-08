@@ -8,11 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 DWORD WINAPI
 SoundThreadMain(

@@ -633,6 +633,8 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
     if (joliet_length > 64)
       error_exit ( "'%s' is not Joliet, aborting...", filename );
     d->joliet_name = malloc(joliet_length + 1);
+    if (d->joliet_name == NULL)
+      error_exit("Insufficient memory");
     strcpy(d->joliet_name, filename);
   }
 }

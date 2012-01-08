@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -183,7 +183,7 @@ AcpiExGetObjectReference (
 
         default:
 
-            ACPI_ERROR ((AE_INFO, "Unknown Reference Class %2.2X",
+            ACPI_ERROR ((AE_INFO, "Unknown Reference Class 0x%2.2X",
                 ObjDesc->Reference.Class));
             return_ACPI_STATUS (AE_AML_INTERNAL);
         }
@@ -201,7 +201,7 @@ AcpiExGetObjectReference (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Invalid descriptor type %X",
+        ACPI_ERROR ((AE_INFO, "Invalid descriptor type 0x%X",
             ACPI_GET_DESCRIPTOR_TYPE (ObjDesc)));
         return_ACPI_STATUS (AE_TYPE);
     }
@@ -373,7 +373,7 @@ AcpiExDoConcatenate (
         break;
 
     default:
-        ACPI_ERROR ((AE_INFO, "Invalid object type: %X",
+        ACPI_ERROR ((AE_INFO, "Invalid object type: 0x%X",
             Operand0->Common.Type));
         Status = AE_AML_INTERNAL;
     }
@@ -475,7 +475,7 @@ AcpiExDoConcatenate (
 
         /* Invalid object type, should not happen here */
 
-        ACPI_ERROR ((AE_INFO, "Invalid object type: %X",
+        ACPI_ERROR ((AE_INFO, "Invalid object type: 0x%X",
             Operand0->Common.Type));
         Status =AE_AML_INTERNAL;
         goto Cleanup;
@@ -508,11 +508,11 @@ Cleanup:
  *
  ******************************************************************************/
 
-ACPI_INTEGER
+UINT64
 AcpiExDoMathOp (
     UINT16                  Opcode,
-    ACPI_INTEGER            Integer0,
-    ACPI_INTEGER            Integer1)
+    UINT64                  Integer0,
+    UINT64                  Integer1)
 {
 
     ACPI_FUNCTION_ENTRY ();
@@ -615,8 +615,8 @@ AcpiExDoMathOp (
 ACPI_STATUS
 AcpiExDoLogicalNumericOp (
     UINT16                  Opcode,
-    ACPI_INTEGER            Integer0,
-    ACPI_INTEGER            Integer1,
+    UINT64                  Integer0,
+    UINT64                  Integer1,
     BOOLEAN                 *LogicalResult)
 {
     ACPI_STATUS             Status = AE_OK;
@@ -690,8 +690,8 @@ AcpiExDoLogicalOp (
     BOOLEAN                 *LogicalResult)
 {
     ACPI_OPERAND_OBJECT     *LocalOperand1 = Operand1;
-    ACPI_INTEGER            Integer0;
-    ACPI_INTEGER            Integer1;
+    UINT64                  Integer0;
+    UINT64                  Integer1;
     UINT32                  Length0;
     UINT32                  Length1;
     ACPI_STATUS             Status = AE_OK;

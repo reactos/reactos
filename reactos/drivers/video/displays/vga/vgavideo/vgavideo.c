@@ -163,14 +163,13 @@ get_masks(int x, int w)
 VOID vgaPutPixel(INT x, INT y, UCHAR c)
 {
     ULONG offset;
-    UCHAR a;
 
     offset = xconv[x]+y80[y];
 
     WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);
     WRITE_PORT_UCHAR((PUCHAR)GRA_D,maskbit[x]);
 
-    a = READ_REGISTER_UCHAR(vidmem + offset);
+    READ_REGISTER_UCHAR(vidmem + offset);
     WRITE_REGISTER_UCHAR(vidmem + offset, c);
 }
 
@@ -231,9 +230,8 @@ INT vgaGetPixel(
 
 BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 {
-    UCHAR a;
-    ULONG pre1;
-    ULONG orgpre1, orgx, midpre1;
+    ULONG orgx, pre1, midpre1;
+    //ULONG orgpre1;
     LONG ileftpix, imidpix, irightpix;
 
     orgx = x;
@@ -252,7 +250,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
     imidpix = (len-ileftpix-irightpix) / 8;
 
     pre1 = xconv[(x-1)&~7] + y80[y];
-    orgpre1=pre1;
+    //orgpre1=pre1;
 
     /* check for overlap ( very short line ) */
     if ( (ileftpix+irightpix) > len )
@@ -262,7 +260,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
         WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
         WRITE_PORT_UCHAR((PUCHAR)GRA_D,mask);
 
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
+        READ_REGISTER_UCHAR(vidmem + pre1);
         WRITE_REGISTER_UCHAR(vidmem + pre1, c);
 
         return TRUE;
@@ -275,7 +273,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
         WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
         WRITE_PORT_UCHAR((PUCHAR)GRA_D,startmasks[ileftpix]);
 
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
+        READ_REGISTER_UCHAR(vidmem + pre1);
         WRITE_REGISTER_UCHAR(vidmem + pre1, c);
 
         /* Prepare new x for the middle */
@@ -300,7 +298,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
         /* Write right pixels */
         WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask bits
         WRITE_PORT_UCHAR((PUCHAR)GRA_D, endmasks[irightpix]);
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
+        READ_REGISTER_UCHAR(vidmem + pre1);
         WRITE_REGISTER_UCHAR(vidmem + pre1, c);
     }
 
@@ -310,7 +308,6 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 {
     INT offset, i;
-    UCHAR a;
 
     offset = xconv[x]+y80[y];
 
@@ -323,7 +320,7 @@ BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 
     for(i=y; i<y+len; i++)
     {
-        a = READ_REGISTER_UCHAR(vidmem + offset);
+        READ_REGISTER_UCHAR(vidmem + offset);
         WRITE_REGISTER_UCHAR(vidmem + offset, c);
         offset += 80;
     }
@@ -453,7 +450,6 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int St
     LONG x2 = x + w;
     LONG y2 = y + h;
     ULONG offset;
-    UCHAR a;
 
     for (i = x; i < x2; i++)
     {
@@ -467,7 +463,7 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int St
         {
             for (j = y; j < y2; j++)
             {
-                a = READ_REGISTER_UCHAR(vidmem + offset);
+                READ_REGISTER_UCHAR(vidmem + offset);
                 WRITE_REGISTER_UCHAR(vidmem + offset, (*pb & 0xf0) >> 4);
                 offset += 80;
                 pb += Source_lDelta;
@@ -477,7 +473,7 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int St
         {
             for (j = y; j < y2; j++)
             {
-                a = READ_REGISTER_UCHAR(vidmem + offset);
+                READ_REGISTER_UCHAR(vidmem + offset);
                 WRITE_REGISTER_UCHAR(vidmem + offset, *pb & 0x0f);
                 offset += 80;
                 pb += Source_lDelta;
@@ -498,7 +494,6 @@ void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelt
     ULONG x2 = x + w;
     ULONG y2 = y + h;
     ULONG offset;
-    UCHAR a;
 
     for (i = x; i < x2; i++)
     {
@@ -512,7 +507,7 @@ void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelt
         {
             for (j = y; j < y2; j++)
             {
-                a = READ_REGISTER_UCHAR(vidmem + offset);
+                READ_REGISTER_UCHAR(vidmem + offset);
                 WRITE_REGISTER_UCHAR(vidmem + offset, XLATEOBJ_iXlate(Xlate, (*pb & 0xf0) >> 4));
                 offset += 80;
                 pb += Source_lDelta;
@@ -522,7 +517,7 @@ void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelt
         {
             for (j = y; j < y2; j++)
             {
-                a = READ_REGISTER_UCHAR(vidmem + offset);
+                READ_REGISTER_UCHAR(vidmem + offset);
                 WRITE_REGISTER_UCHAR(vidmem + offset, XLATEOBJ_iXlate(Xlate, *pb & 0x0f));
                 offset += 80;
                 pb += Source_lDelta;
@@ -660,15 +655,15 @@ vgaWriteScan ( int x, int y, int w, void *b )
 {
     unsigned char *bp;
     unsigned char *vp;
-    unsigned char init_mask;
+    //unsigned char init_mask;
     volatile unsigned char dummy;
-    int byte_per_line;
+    //int byte_per_line;
     int i, j, off, init_off = x&7;
 
     bp = b;
     ASSIGNVP4(x, y, vp)
-    ASSIGNMK4(x, y, init_mask)
-    byte_per_line = SCREEN_X >> 3;
+    //ASSIGNMK4(x, y, init_mask)
+    //byte_per_line = SCREEN_X >> 3;
 
     WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
@@ -795,7 +790,7 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
     unsigned char *bp, *bpX;
     unsigned char *vp, *vpX;
     unsigned char mask;
-    volatile unsigned char dummy;
+    //volatile unsigned char dummy;
     int byte_per_line;
     int i, j;
 
@@ -817,7 +812,7 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
         vp = vpX;
         for (j = h; j > 0; j--)
         {
-            dummy = *vp;
+            //dummy = *vp;
             *vp = *bp;
             bp += bw;
             vp += byte_per_line;
@@ -838,7 +833,7 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw, char 
     unsigned char *bp, *bpX;
     unsigned char *vp, *vpX;
     unsigned char mask;
-    volatile unsigned char dummy;
+    //volatile unsigned char dummy;
     int byte_per_line;
     int i, j;
 
@@ -862,7 +857,7 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw, char 
         {
             if (*bp != Trans)
             {
-                dummy = *vp;
+                //dummy = *vp;
                 *vp = *bp;
             }
             bp += bw;

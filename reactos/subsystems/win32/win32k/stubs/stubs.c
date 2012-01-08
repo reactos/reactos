@@ -892,7 +892,7 @@ NtGdiFontIsLinked(IN HDC hdc)
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -911,7 +911,7 @@ NtGdiCheckBitmapBits(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBITMAP
@@ -924,7 +924,7 @@ NtGdiClearBitmapAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -941,7 +941,7 @@ NtGdiGetUFI(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBRUSH
@@ -954,7 +954,7 @@ NtGdiClearBrushAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -971,7 +971,7 @@ NtGdiColorCorrectPalette(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 HANDLE
@@ -990,7 +990,7 @@ NtGdiCreateColorTransform(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1001,7 +1001,7 @@ NtGdiComputeXformCoefficients(IN HDC hdc)
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1016,7 +1016,7 @@ NtGdiConsoleTextOut(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1029,7 +1029,7 @@ NtGdiDeleteColorTransform(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1042,7 +1042,7 @@ NtGdiGetPerBandInfo(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1057,7 +1057,7 @@ NtGdiDoBanding(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1073,7 +1073,7 @@ NtGdiEnumFontChunk(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1085,7 +1085,7 @@ NtGdiEnumFontClose(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG_PTR
@@ -1103,7 +1103,7 @@ NtGdiEnumFontOpen(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1121,7 +1121,7 @@ NtGdiEudcLoadUnloadLink(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1134,7 +1134,7 @@ NtGdiForceUFIMapping(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 NTSTATUS
@@ -1150,7 +1150,7 @@ NtGdiFullscreenControl(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1163,7 +1163,7 @@ NtGdiGetCharWidthInfo(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG_PTR
@@ -1175,7 +1175,7 @@ NtGdiGetColorSpaceforBitmap(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1188,7 +1188,7 @@ NtGdiGetETM(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1202,7 +1202,7 @@ NtGdiGetEudcTimeStampEx(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1213,7 +1213,7 @@ NtGdiInitSpool()
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 INT
@@ -1226,7 +1226,7 @@ NtGdiQueryFonts( OUT PUNIVERSAL_FONT_ID pufiFontList,
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 INT
@@ -1236,12 +1236,12 @@ NtGdiGetSpoolMessage( DWORD u1,
                       DWORD u3,
                       DWORD u4)
 {
-    /* FIXME the prototypes */
+    /* FIXME: The prototypes */
     UNIMPLEMENTED;
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 DWORD
@@ -1258,7 +1258,7 @@ NtGdiGetGlyphIndicesWInternal(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 INT
@@ -1272,7 +1272,7 @@ NtGdiGetLinkedUFIs(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBITMAP
@@ -1285,7 +1285,7 @@ NtGdiGetObjectBitmapHandle(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1299,7 +1299,7 @@ NtGdiGetMonitorID(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1313,17 +1313,18 @@ NtGdiDrawStream(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiUpdateTransform(IN HDC hdc)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1335,7 +1336,7 @@ NtGdiQueryFontAssocInfo(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 UINT
@@ -1351,7 +1352,7 @@ NtGdiGetStringBitmapW(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1362,7 +1363,8 @@ NtGdiRemoveFontMemResourceEx(
     UNIMPLEMENTED;
     return FALSE;
 }
- /*
+
+/*
  * @unimplemented
  */
 BOOL
@@ -1379,7 +1381,7 @@ NtGdiRemoveFontResourceW(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1394,7 +1396,7 @@ NtGdiPolyTextOutW(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 NTSTATUS
@@ -1424,7 +1426,7 @@ NtGdiSetupPublicCFONT(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBRUSH
@@ -1437,7 +1439,7 @@ NtGdiSetBrushAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1455,7 +1457,7 @@ NtGdiGetEmbUFI(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1476,7 +1478,7 @@ NtGdiGetUFIPathname(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1488,7 +1490,7 @@ NtGdiGetEmbedFonts(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1501,7 +1503,7 @@ NtGdiChangeGhostFont(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1514,7 +1516,7 @@ NtGdiAddEmbFontToDC(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1532,7 +1534,7 @@ NtGdiGetWidthTable(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1551,7 +1553,7 @@ NtGdiIcmBrushInfo(
     return FALSE;
 }
 
- /*
+/*
  * @implemented
  */
 BOOL
@@ -1561,7 +1563,7 @@ NtGdiInit()
     return TRUE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1577,7 +1579,7 @@ NtGdiMakeFontDir(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1589,7 +1591,7 @@ NtGdiMonoBitmap(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBITMAP
@@ -1602,7 +1604,7 @@ NtGdiSetBitmapAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -1614,7 +1616,7 @@ NtGdiSetFontEnumeration(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1628,7 +1630,7 @@ NtGdiSetFontXform(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1642,7 +1644,7 @@ NtGdiSetLinkedUFIs(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1656,7 +1658,7 @@ NtGdiSetMagicColors(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1669,7 +1671,7 @@ NtGdiUnloadPrinterDriver(
     return FALSE;
 }
 
- /*
+/*
  * @implemented
  */
 BOOL
@@ -1731,3 +1733,5 @@ EngNineGrid(IN SURFOBJ* pDestSurfaceObj,
     UNIMPLEMENTED;
     return FALSE;
 }
+
+/* EOF */

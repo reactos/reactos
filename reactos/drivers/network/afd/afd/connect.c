@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 NTSTATUS NTAPI
 AfdGetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -23,7 +20,10 @@ AfdGetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->ConnectOptionsSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->ConnectOptions);
 
@@ -60,7 +60,8 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FCB->ConnectOptions = ExAllocatePool(PagedPool, ConnectOptionsSize);
-    if (!FCB->ConnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    if (!FCB->ConnectOptions)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     RtlCopyMemory(FCB->ConnectOptions,
                   ConnectOptions,
@@ -87,7 +88,10 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->ConnectOptions)
     {
@@ -115,7 +119,10 @@ AfdGetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->ConnectDataSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->ConnectData);
 
@@ -179,7 +186,10 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
     
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->ConnectData)
     {
@@ -201,7 +211,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     NTSTATUS Status;
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        AFD_DbgPrint(MIN_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
 
@@ -501,7 +511,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
 
     default:
-	AFD_DbgPrint(MID_TRACE,("Inappropriate socket state %d for connect\n",
+	AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %d for connect\n",
 				FCB->State));
 	break;
     }

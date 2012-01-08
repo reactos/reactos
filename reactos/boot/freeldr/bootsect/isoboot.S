@@ -144,7 +144,11 @@ relocate:
     jc .boot_cdrom          // could not read hdd
 
     push ax
+#ifdef ROS_REGTEST // this change is taken from the original isobtrt.asm
+    mov ax, word ptr ds:[trackbuf+510]
+#else
     mov ax, word ptr ds:[trackbuf]
+#endif
     cmp ax, 0
     je .boot_cdrom // no boot sector found (hopefully there are no weird bootsectors which begin with 0)
     pop ax
@@ -360,10 +364,13 @@ get_fs_structures:
     call crlf
 #endif
 
-    mov bx, FREELDR_BASE            // bx = load address
+// use high segment, as some bios can fail, when offset is too big
+    mov bx, FREELDR_BASE / 16 // es = load segment
+    mov es, bx
+    xor ebx, ebx              // bx = load offset
     mov si, di                // restore file pointer
-    mov cx, HEX(0FFFF)            // load the whole file
-    call getfssec            // get the whole file
+    mov cx, HEX(0FFFF)        // load the whole file
+    call getfssec             // get the whole file
 
 #ifdef DEBUG_MESSAGES
     mov si, offset startldr_msg
@@ -807,10 +814,14 @@ getonesec:
 //    BP    - Sector count
 //
 getlinsec:
+    push es // save es, we reset it later to 0
+
     mov si, offset dapa            // Load up the DAPA
     mov word ptr ds:[si+4], bx
     mov bx, es
     mov word ptr ds:[si+6], bx
+    xor bx, bx // reset es to 0, some bioses (KVM) require that
+    mov es, bx
     mov dword ptr ds:[si+8], eax
 .loop2:
     push bp                // Sectors left
@@ -833,6 +844,8 @@ getlinsec:
     and bp, bp
     jnz .loop2
     mov eax, dword ptr ds:[si+8]            // Next sector
+
+    pop es
     ret
 
     // INT 13h with retry

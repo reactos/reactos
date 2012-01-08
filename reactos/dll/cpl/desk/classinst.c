@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/classinst.c
+ * FILE:            dll/cpl/desk/classinst.c
  * PURPOSE:         Display class installer
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

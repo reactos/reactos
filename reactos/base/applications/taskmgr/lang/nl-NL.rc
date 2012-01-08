@@ -1,16 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////
-// Dutch resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -50,9 +38,9 @@ BEGIN
         MENUITEM "&Kolommen selecteren...",             ID_VIEW_SELECTCOLUMNS
         POPUP "&Geschiedenis van CPU"
         BEGIN
-            MENUITEM "&Eén grafiek, alle CPU's",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&EÃ©n grafiek, alle CPU's",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Eén grafiek &per CPU",            ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "EÃ©n grafiek &per CPU",            ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
         MENUITEM "&Kerneltijden weergeven",             ID_VIEW_SHOWKERNELTIMES
@@ -109,7 +97,7 @@ BEGIN
         MENUITEM "&Maximaliseren",                      ID_WINDOWS_MAXIMIZE
         MENUITEM "&Trapsgewijs",                        ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "Taa&k beëindigen",                    ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Taa&k beÃ«indigen",                    ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Ga naar proces",                     ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
@@ -130,8 +118,8 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Proces beëindigen",                  ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Process&tructuur beëindigen",         ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Proces beÃ«indigen",                  ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Process&tructuur beÃ«indigen",         ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Fouten opsporen",                    ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
@@ -181,7 +169,7 @@ BEGIN
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Nieuwe Taak...",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Activeren",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "Taa&k beëindigen",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "Taa&k beÃ«indigen",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -191,7 +179,7 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Proces beëindigen",IDC_ENDPROCESS,171,189,69,14
+    PUSHBUTTON      "&Proces beÃ«indigen",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "Processen van &alle gebruikers weergeven",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,151,10
 END
@@ -245,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Geschiedenis van wisselbestandsgebruik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Weergave van CPU-gebruik",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Weergave van wisselbestandsgebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Weergave van CPU-gebruik",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Weergave van wisselbestandsgebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Geschiedenis van wisselbestandsgebruik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -262,8 +248,8 @@ CAPTION "Debug kanalen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING,
-                    7,7,233,177
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+                    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Sluit",IDOK,171,189,69,14
 END
 
@@ -559,7 +545,7 @@ BEGIN
     ID_OPTIONS_SHOW16BITTASKS "16-bits taken weergeven van de bijbehorende ntvdm.exe"
     ID_VIEW_SELECTCOLUMNS   "De kolommen selecteren die moeten worden weergegeven op de pagina Proces"
     ID_VIEW_SHOWKERNELTIMES "De kerneltijden in de prestatiegrafiek weergeven"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Eén grafiek geeft het totale CPU-gebruik weer"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "EÃ©n grafiek geeft het totale CPU-gebruik weer"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Elke CPU heeft zijn eigen grafiek"
     ID_APPLICATION_PAGE_SWITCHTO "Venster naar de voorgrond brengen en actief maken"
 END
@@ -620,20 +606,20 @@ BEGIN
     IDS_MENU_LARGEICONS           "&Grote pictogrammen"
     IDS_MENU_SMALLICONS           "&Kleine pictogrammen"
     IDS_MENU_DETAILS              "&Details"
-    IDS_MENU_ONEGRAPHALLCPUS      "&Eén grafiek, alle CPU's"
-    IDS_MENU_ONEGRAPHPERCPU       "Eén grafiek &per CPU"
+    IDS_MENU_ONEGRAPHALLCPUS      "&EÃ©n grafiek, alle CPU's"
+    IDS_MENU_ONEGRAPHPERCPU       "EÃ©n grafiek &per CPU"
     IDS_MENU_CPUHISTORY           "&Geschiedenis van de CPU"
     IDS_MENU_SHOWKERNELTIMES      "&Kerneltijden weergeven"
     IDS_CREATENEWTASK             "Nieuwe taak maken"
     IDS_CREATENEWTASK_DESC        "Geef de naam van een programma, map of document op, of geef een Internet-adres op. Wat u opgeeft, wordt vervolgens in Windows geopend."
     IDS_MSG_ACCESSPROCESSAFF      "Kan procesaffiniteit niet opvragen of instellen"
-    IDS_MSG_PROCESSONEPRO         "Het proces moet affiniteit hebben met ten minste één processor."
+    IDS_MSG_PROCESSONEPRO         "Het proces moet affiniteit hebben met ten minste Ã©Ã©n processor."
     IDS_MSG_INVALIDOPTION         "Ongeldige optie"
     IDS_MSG_UNABLEDEBUGPROCESS    "Kan de debugger niet gebruiken"
     IDS_MSG_WARNINGDEBUG          "Waarschuwing: het opsporen van fouten in dit proces kan verlies van gegevens als resultaat hebben.\nWeet u zeker dat u de debugger wilt gebruiken?"
     IDS_MSG_TASKMGRWARNING        "Waarschuwing van Taakbeheer"
-    IDS_MSG_WARNINGTERMINATING    "Waarschuwing: het beëindigen van een proces kan tot\nonverwachte resultaten leiden, zoals verlies van gegevens\nof een instabiel systeem, omdat de status of de gegevens\nniet meer kunnen worden opgeslagen. Weet u zeker dat\nu het proces wilt beëindigen?"
-    IDS_MSG_UNABLETERMINATEPRO    "Kan het proces niet beëindigen"
+    IDS_MSG_WARNINGTERMINATING    "Waarschuwing: het beÃ«indigen van een proces kan tot\nonverwachte resultaten leiden, zoals verlies van gegevens\nof een instabiel systeem, omdat de status of de gegevens\nniet meer kunnen worden opgeslagen. Weet u zeker dat\nu het proces wilt beÃ«indigen?"
+    IDS_MSG_UNABLETERMINATEPRO    "Kan het proces niet beÃ«indigen"
     IDS_MSG_UNABLECHANGEPRIORITY  "Kan de prioriteit niet wijzigen"
     IDS_MSG_WARNINGCHANGEPRIORITY "Waarschuwing: het wijzigen van de prioriteitsklasse van dit proces\nkan ongewenste resultaten hebben, zoals een instabiel systeem. Weet u\nzeker dat u de prioriteitsklasse wilt wijzigen?"
     IDS_MSG_TRAYICONCPUUSAGE      "CPU-gebruik: %d%%"
@@ -643,17 +629,3 @@ BEGIN
     IDS_Not_Responding            "Reageert niet"
     IDS_Running                   "Geactiveerd"
 END
-
-
-#endif
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED

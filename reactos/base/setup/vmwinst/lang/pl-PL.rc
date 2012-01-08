@@ -21,7 +21,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalacja sterownika grafiki"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Program konfiguracyjny ReactOS nie zawiera sterownika SVGA VMware(r).\n\nMusisz więc otworzyć  'VM' w menu Twojej stacji VMware(r) i kliknąć na 'Install VMware tools...'\n\n\nNaciśnij 'Dalej', aby kontynuować albo 'Anuluj', by pominąć instalację sterownika SVGA.",-1,25,25,225,85
+  LTEXT "ReactOS nie zawiera sterownika SVGA VMware(r).\n\nMusisz więc otworzyć  'VM' w menu Twojej stacji VMware(r) i kliknąć na 'Install VMware tools...'\n\n\nNaciśnij 'Dalej', aby kontynuować albo 'Anuluj', by pominąć instalację sterownika SVGA.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

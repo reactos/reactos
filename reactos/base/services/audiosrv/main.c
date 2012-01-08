@@ -6,9 +6,6 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
-#include <windows.h>
-
-#include <audiosrv/audiosrv.h>
 #include "audiosrv.h"
 
 SERVICE_STATUS_HANDLE service_status_handle;

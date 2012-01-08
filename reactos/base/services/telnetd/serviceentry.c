@@ -62,7 +62,6 @@ static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_
 static void WINAPI serv_main(DWORD argc, LPWSTR *argv)
 {
     SERVICE_STATUS status;
-    int retval;
 
     WINE_TRACE( "starting service\n" );
 
@@ -82,7 +81,7 @@ static void WINAPI serv_main(DWORD argc, LPWSTR *argv)
     SetServiceStatus( service_handle, &status );
 
     /* Argument Ignored for now */
-    retval = kickoff_telnetd();
+    kickoff_telnetd();
 
     WaitForSingleObject( stop_event, INFINITE );
 

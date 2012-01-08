@@ -24,6 +24,8 @@
 
 #define NO_FILE ((ULONG)-1)
 
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
+
 static IP4 _ServerIP = { 0, };
 static ULONG _OpenFile = NO_FILE;
 static ULONG _FileSize = 0;
@@ -61,7 +63,7 @@ FindPxeStructure(VOID)
         if (Checksum != 0)
             continue;
 
-        DPRINTM(DPRINT_FILESYSTEM, "!PXE structure found at %p\n", Ptr);
+        TRACE("!PXE structure found at %p\n", Ptr);
         return Ptr;
     }
 
@@ -94,19 +96,19 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     {
         // HACK: this delay shouldn't be necessary
         KeStallExecutionProcessor(100 * 1000); // 100 ms
-        DPRINTM(DPRINT_FILESYSTEM, "PxeCall(0x%x, %p)\n", Service, Parameter);
+        ERR("PxeCall(0x%x, %p)\n", Service, Parameter);
     }
 
     exit = PxeCallApi(pxe->EntryPointSP.segment, pxe->EntryPointSP.offset, Service, Parameter);
     if (exit != PXENV_EXIT_SUCCESS)
     {
-        DPRINTM(DPRINT_FILESYSTEM, "PxeCall(0x%x, %p) failed with exit=%d status=0x%x\n",
+        ERR("PxeCall(0x%x, %p) failed with exit=%d status=0x%x\n",
                 Service, Parameter, exit, *(PXENV_STATUS*)Parameter);
         return FALSE;
     }
     if (*(PXENV_STATUS*)Parameter != PXENV_STATUS_SUCCESS)
     {
-        DPRINTM(DPRINT_FILESYSTEM, "PxeCall(0x%x, %p) succeeded, but returned error status 0x%x\n",
+        ERR("PxeCall(0x%x, %p) succeeded, but returned error status 0x%x\n",
                 Service, Parameter, *(PXENV_STATUS*)Parameter);
         return FALSE;
     }
@@ -291,7 +293,7 @@ static LONG PxeDiskClose(ULONG FileId)
 
 static LONG PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    // Not implemented
+    UNIMPLEMENTED;
     return EINVAL;
 }
 
@@ -303,13 +305,13 @@ static LONG PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 static LONG PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-    // Not implemented
+    UNIMPLEMENTED;
     return EINVAL;
 }
 
 static LONG PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    // Not implemented
+    UNIMPLEMENTED;
     return EINVAL;
 }
 

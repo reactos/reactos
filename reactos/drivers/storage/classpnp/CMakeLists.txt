@@ -38,9 +38,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/class.def)
 
 add_library(classpnp SHARED ${SOURCE})
+add_pch(classpnp classp.h)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
-
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)
-
 add_cd_file(TARGET classpnp DESTINATION reactos/system32/drivers NO_CAB FOR all)

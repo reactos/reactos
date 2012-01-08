@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32 kernelmode subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI stretch blt functions
  * FILE:             subsystems/win32/win32k/eng/stretchblt.c
  * PROGRAMER:        Jason Filby
@@ -62,7 +62,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
         }
         else
         {
-            /* FIXME - What to do here? */
+            /* FIXME: What to do here? */
         }
     }
     else
@@ -392,7 +392,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     COLORADJUSTMENT ca;
     POINTL MaskOrigin = {0, 0};
     SURFACE *psurfDest;
-    SURFACE *psurfSource = NULL;
+    //SURFACE *psurfSource = NULL;
     RECTL InputClippedRect;
     RECTL InputRect;
     RECTL OutputRect;
@@ -469,7 +469,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     if (UsesSource)
     {
-        psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+        //psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
     }
 
     /* Prepare color adjustment */
@@ -560,3 +560,4 @@ NtGdiEngStretchBlt(
     return EngStretchBlt(psoDest, psoSource, Mask, ClipRegion, ColorTranslation, &ca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
 }
 
+/* EOF */

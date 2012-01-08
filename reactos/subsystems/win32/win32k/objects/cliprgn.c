@@ -1,20 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Clip region functions
+ * FILE:             subsystems/win32/win32k/objects/cliprgn.c
+ * PROGRAMER:        Unknown
  */
 
 #include <win32k.h>
@@ -26,14 +15,14 @@ int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
-   HRGN hRgnVis;
+   //HRGN hRgnVis;
    PREGION prgnClip, prgnGCClip;
 
-    // would prefer this, but the rest of the code sucks
-//    ASSERT(Dc->rosdc.hGCClipRgn);
-//    ASSERT(Dc->rosdc.hClipRgn);
+    /* Would prefer this, but the rest of the code sucks... */
+    //ASSERT(Dc->rosdc.hGCClipRgn);
+    //ASSERT(Dc->rosdc.hClipRgn);
    ASSERT(Dc->prgnVis);
-   hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
+   //hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
 
    if (Dc->rosdc.hGCClipRgn == NULL)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
@@ -45,7 +34,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, NULL, RGN_COPY);
    else
    {
-      prgnClip = REGION_LockRgn(Dc->rosdc.hClipRgn); // FIXME: locking order, ugh
+      prgnClip = REGION_LockRgn(Dc->rosdc.hClipRgn); // FIXME: Locking order, ugh!
       IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, prgnClip, RGN_AND);
       REGION_UnlockRgn(prgnClip);
    }
@@ -118,7 +107,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
                                  HRGN hrgn,
                                  int fnMode)
 {
-  //  dc->fs &= ~DC_FLAG_DIRTY_RAO;
+  // dc->fs &= ~DC_FLAG_DIRTY_RAO;
 
   if (!hrgn)
   {
@@ -143,7 +132,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
       RECTL rect;
       if(dc->prgnVis)
       {
-		REGION_GetRgnBox(dc->prgnVis, &rect);
+        REGION_GetRgnBox(dc->prgnVis, &rect);
         dc->rosdc.hClipRgn = IntSysCreateRectRgnIndirect(&rect);
       }
       else
@@ -188,14 +177,14 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    INT retval;
    PDC dc;
    PROSRGNDATA pRgnNew, pRgn = NULL;
-   BOOL Unlock = FALSE; //Small hack
+   BOOL Unlock = FALSE; // Small HACK
 
    if (!(dc = DC_LockDc(hDC)))
    {
       return ERROR;
    }
 
-   /* FIXME! Rao and Vis only! */
+   /* FIXME: Rao and Vis only! */
    if (dc->prgnAPI) // APIRGN
    {
       pRgn = dc->prgnAPI;

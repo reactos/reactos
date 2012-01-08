@@ -19,7 +19,7 @@
 #include <lpcfuncs.h>
 #include <rtlfuncs.h>
 #include <obfuncs.h>
-#include <iotypes.h>
+#include <iofuncs.h>
 #include <debug.h>
 #include "eventlogrpc_s.h"
 
@@ -42,7 +42,7 @@ typedef struct _IO_ERROR_LPC
  */
 #define ELF_LOGFILE_HEADER_DIRTY 1
 #define ELF_LOGFILE_HEADER_WRAP 2
-#define ELF_LOGGFILE_LOGFULL_WRITTEN 4
+#define ELF_LOGFILE_LOGFULL_WRITTEN 4
 #define ELF_LOGFILE_ARCHIVE_SET 8
 
 /* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
@@ -88,7 +88,7 @@ typedef struct _LOGFILE
     EVENTLOGHEADER Header;
     WCHAR *LogName;
     WCHAR *FileName;
-    CRITICAL_SECTION cs;
+    RTL_RESOURCE Lock;
     PEVENT_OFFSET_INFO OffsetInfo;
     ULONG OffsetInfoSize;
     ULONG OffsetInfoNext;
@@ -134,11 +134,20 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
-                   DWORD * BytesNeeded);
+                   DWORD * BytesNeeded,
+                   BOOL Ansi);
 
 BOOL LogfWriteData(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer);
+
+NTSTATUS
+LogfClearFile(PLOGFILE LogFile,
+              PUNICODE_STRING BackupFileName);
+
+NTSTATUS
+LogfBackupFile(PLOGFILE LogFile,
+               PUNICODE_STRING BackupFileName);
 
 PLOGFILE LogfCreate(WCHAR * LogName,
                     WCHAR * FileName);

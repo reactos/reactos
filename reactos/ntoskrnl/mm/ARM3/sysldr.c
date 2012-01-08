@@ -95,7 +95,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     KAPC_STATE ApcState;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     BOOLEAN LoadSymbols = FALSE;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPTE PointerPte, LastPte;
     PVOID DriverBase;
     MMPTE TempPte;
@@ -150,6 +150,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     if (!NT_SUCCESS(Status))
     {
         /* Detach and return */
+        DPRINT1("MmMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         return Status;
     }
@@ -157,7 +158,12 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     /* Reserve system PTEs needed */
     PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
-    if (!PointerPte) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!PointerPte)
+    {
+        DPRINT1("MiReserveSystemPtes failed\n");
+        KeUnstackDetachProcess(&ApcState);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* New driver base */
     LastPte = PointerPte + PteCount;
@@ -324,7 +330,7 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     if (wcschr(ImportName.Buffer, L'.'))
     {
         /* Remove the extension */
-        ImportName.Length = (wcschr(ImportName.Buffer, L'.') -
+        ImportName.Length = (USHORT)(wcschr(ImportName.Buffer, L'.') -
             ImportName.Buffer) * sizeof(WCHAR);
     }
 
@@ -690,7 +696,7 @@ MiSnapThunk(IN PVOID DllBase,
     ULONG ForwardExportSize;
     PIMAGE_EXPORT_DIRECTORY ForwardExportDirectory;
     PIMAGE_IMPORT_BY_NAME ForwardName;
-    ULONG ForwardLength;
+    SIZE_T ForwardLength;
     IMAGE_THUNK_DATA ForwardThunk;
     PAGED_CODE();
 
@@ -712,7 +718,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Copy the procedure name */
         RtlStringCbCopyA(*MissingApi,
                          MAXIMUM_FILENAME_LENGTH,
-						 (PCHAR)&NameImport->Name[0]);
+                         (PCHAR)&NameImport->Name[0]);
 
         /* Setup name tables */
         DPRINT("Import name: %s\n", NameImport->Name);
@@ -797,9 +803,9 @@ MiSnapThunk(IN PVOID DllBase,
 
             /* Build the forwarder name */
             DllName.Buffer = (PCHAR)Address->u1.Function;
-            DllName.Length = strchr(DllName.Buffer, '.') -
-                             DllName.Buffer +
-                             sizeof(ANSI_NULL);
+            DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') -
+                                      DllName.Buffer) +
+                                      sizeof(ANSI_NULL);
             DllName.MaximumLength = DllName.Length;
 
             /* Convert it */
@@ -1185,6 +1191,8 @@ CheckDllState:
                     *MissingDriver = DllName.Buffer;
                     *(PULONG)MissingDriver |= 1;
                     *MissingApi = NULL;
+
+                    DPRINT1("Failed to load dependency: %wZ\n", &DllName);
                 }
             }
             else
@@ -1200,7 +1208,7 @@ CheckDllState:
                 Loaded = TRUE;
 
                 /* Sanity check */
-                ASSERT(DllBase = DllEntry->DllBase);
+                ASSERT(DllBase == DllEntry->DllBase);
 
                 /* Call the initialization routines */
                 Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
@@ -1208,6 +1216,7 @@ CheckDllState:
                 {
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
+                    DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
                     while (TRUE);
                     Loaded = FALSE;
                 }
@@ -1377,7 +1386,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
     PMMPTE PointerPte, StartPte, LastPte;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPFN Pfn1;
     MMPTE TempPte, OldPte;
 
@@ -1666,7 +1675,7 @@ MiBuildImportsForBootDrivers(VOID)
         /* Scan the thunks */
         for (i = 0, DllBase = 0, DllEnd = 0; i < ImportSize; i++, ImageThunk++)
 #else
-        i = DllBase = DllEnd = 0;
+        DllBase = DllEnd = i = 0;
         while ((ImportDescriptor->Name) &&
                (ImportDescriptor->OriginalFirstThunk))
         {
@@ -2277,7 +2286,8 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
 {
     PVOID ImageBase;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PFN_NUMBER PageCount = 0, PageFrameIndex;
+    PFN_COUNT PageCount = 0;
+    PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
 
@@ -2442,7 +2452,11 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
                              PAGE_EXECUTE,
                              SEC_IMAGE,
                              ImageHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+        return Status;
+    }
 
     /* Make sure we're in the system process */
     KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
@@ -2461,6 +2475,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     if (!NT_SUCCESS(Status))
     {
         /* We failed, close the handle and return */
+        DPRINT1("ZwMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         ZwClose(SectionHandle);
         return Status;
@@ -2702,7 +2717,11 @@ LoaderScan:
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_DELETE,
                             0);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwOpenFile failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Validate it */
         Status = MmCheckSystemImage(FileHandle, FALSE);
@@ -2741,7 +2760,11 @@ LoaderScan:
                                  PAGE_EXECUTE,
                                  SEC_IMAGE,
                                  FileHandle);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Now get the section pointer */
         Status = ObReferenceObjectByHandle(SectionHandle,
@@ -2800,7 +2823,11 @@ LoaderScan:
     }
 
     /* Check for failure of the load earlier */
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiLoadImageSection failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Relocate the driver */
     Status = LdrRelocateImageWithBias(ModuleLoadBase,
@@ -2809,8 +2836,11 @@ LoaderScan:
                                       STATUS_SUCCESS,
                                       STATUS_CONFLICTING_ADDRESSES,
                                       STATUS_INVALID_IMAGE_FORMAT);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrRelocateImageWithBias failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
@@ -2899,6 +2929,8 @@ LoaderScan:
                                       &LoadedImports);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
+
         /* Fail */
         MiProcessLoaderEntry(LdrEntry, FALSE);
 

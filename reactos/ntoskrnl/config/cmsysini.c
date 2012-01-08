@@ -121,6 +121,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 IN KPROCESSOR_MODE PreviousMode)
 {
     PUNICODE_STRING KeyName;
+    ULONG BytesToCopy;
     NTSTATUS Status = STATUS_SUCCESS;
     PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
     PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
@@ -155,16 +156,32 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     /* Set the returned length */
     *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
 
-    /* Check if it fits into the provided buffer */
-    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
-        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    /* Calculate amount of bytes to copy into the buffer */
+    BytesToCopy = KeyName->Length + sizeof(WCHAR);
+
+    /* Check if the provided buffer is too small to fit even anything */
+    if ((Length <= sizeof(OBJECT_NAME_INFORMATION)) ||
+        ((Length < (*ReturnLength)) && (BytesToCopy < sizeof(WCHAR))))
     {
         /* Free the buffer allocated by CmpConstructName */
         ExFreePool(KeyName);
 
-        /* Return buffer length failure */
+        /* Return buffer length failure without writing anything there because nothing fits */
         return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+    /* Check if the provided buffer can be partially written */
+    if (Length < (*ReturnLength))
+    {
+        /* Yes, indicate so in the return status */
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+
+        /* Calculate amount of bytes which the provided buffer could handle */
+        BytesToCopy = Length - sizeof(OBJECT_NAME_INFORMATION);
+    }
+
+    /* Remove the null termination character from the size */
+    BytesToCopy -= sizeof(WCHAR);
 
     /* Fill in the result */
     _SEH2_TRY
@@ -177,7 +194,10 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         /* Copy string content*/
         RtlCopyMemory(ObjectNameInfo->Name.Buffer,
                       KeyName->Buffer,
-                      *ReturnLength);
+                      BytesToCopy);
+
+        /* Null terminate it */
+        ObjectNameInfo->Name.Buffer[BytesToCopy / sizeof(WCHAR)] = 0;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1078,7 +1098,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
 {
     WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
-    ULONG FileStart, RegStart, i, ErrorResponse, WorkerCount, Length;
+    ULONG FileStart, i, ErrorResponse, WorkerCount, Length;
+    //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
     HANDLE PrimaryHandle, LogHandle;
@@ -1106,10 +1127,9 @@ CmpLoadHiveThread(IN PVOID StartContext)
     /* And build the registry root path */
     RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
-    RegStart = RegName.Length;
+    //RegStart = RegName.Length;
 
     /* Build the base name */
-    RegName.Length = RegStart;
     RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
 
@@ -1933,9 +1953,13 @@ VOID
 NTAPI
 CmShutdownSystem(VOID)
 {
-    /* Kill the workers and flush all hives */
+    /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
+
+    /* Flush all hives */
+    CmpLockRegistryExclusive();
     CmpDoFlushAll(TRUE);
+    CmpUnlockRegistry();
 }
 
 VOID

@@ -19,21 +19,12 @@
 /* $Id$
  *
  * PROJECT:         ReactOS Main Control Panel
- * FILE:            lib/cpl/main/keyboard.c
+ * FILE:            dll/cpl/main/keyboard.c
  * PURPOSE:         Keyboard Control Panel
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <devguid.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <shlobj.h>
-#include <cpl.h>
-#include <regstr.h>
-
 #include "main.h"
-#include "resource.h"
 
 #define ID_BLINK_TIMER 345
 

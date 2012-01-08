@@ -1,5 +1,3 @@
-/* $Id$ */
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 /* String Tables */
@@ -9,7 +7,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Velkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Velkommen til ReactOs operativ System.\n\nKlik på et emne til venstre."
+    IDS_DEFAULTTOPICDESC    "Velkommen til ReactOs operativ System.\n\nKlik pÃ¥ et emne til venstre."
 //    IDS_CHECKTEXT           "Vis denne dialog igen ved opstart"
 //    IDS_CLOSETEXT           "Afslut"
 END
@@ -47,9 +45,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Opret en ny ReactOS installation på din computer eller opgradere en eksisterende installation."
+    IDS_TOPICDESC0          "Opret en ny ReactOS installation pÃ¥ din computer eller opgradere en eksisterende installation."
     IDS_TOPICDESC1          "Gennemse Reactos Installations Cdrom"
-    IDS_TOPICDESC2          "Klik på Afslut for at lukke."
+    IDS_TOPICDESC2          "Klik pÃ¥ Afslut for at lukke."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."

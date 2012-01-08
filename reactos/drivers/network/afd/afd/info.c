@@ -8,10 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
-#include "pseh/pseh2.h"
 
 NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -88,13 +84,13 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         break;
 
 	default:
-	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
+	    AFD_DbgPrint(MIN_TRACE,("Unknown info id %x\n",
 				    InfoReq->InformationClass));
 	    Status = STATUS_INVALID_PARAMETER;
 	    break;
 	}
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	AFD_DbgPrint(MID_TRACE,("Exception executing GetInfo\n"));
+	AFD_DbgPrint(MIN_TRACE,("Exception executing GetInfo\n"));
 	Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -183,6 +179,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
           break;
       }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      AFD_DbgPrint(MIN_TRACE,("Exception executing SetInfo\n"));
       Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -235,56 +232,27 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS NTAPI
 AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp ) {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PMDL Mdl = NULL;
-    PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
 
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    if (FCB->RemoteAddress == NULL || FCB->Connection.Object == NULL) {
+    if (FCB->RemoteAddress == NULL) {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
-    if(NT_SUCCESS(Status = TdiBuildNullConnectionInfo
-                      (&ConnInfo,
-                       FCB->RemoteAddress->Address[0].AddressType)))
+    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(FCB->RemoteAddress))
     {
-        Mdl = IoAllocateMdl(ConnInfo, 
-                            sizeof(TDI_CONNECTION_INFORMATION) + 
-                                   TaLengthOfTransportAddress(ConnInfo->RemoteAddress),
-                            FALSE,
-                            FALSE,
-                            NULL);
-
-        if (Mdl)
-        {
-            _SEH2_TRY {
-               MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	       AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	       Status = _SEH2_GetExceptionCode();
-	    } _SEH2_END;
-
-            if (NT_SUCCESS(Status))
-            {
-                Status = TdiQueryInformation(FCB->Connection.Object,
-                          TDI_QUERY_CONNECTION_INFO,
-                          Mdl);
-
-                if (NT_SUCCESS(Status))
-                {
-                    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(ConnInfo->RemoteAddress))
-                        RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress(ConnInfo->RemoteAddress));
-                    else
-                        Status = STATUS_BUFFER_TOO_SMALL;
-                }
-            }
-         }
-
-         ExFreePool(ConnInfo);
+        RtlCopyMemory(Irp->UserBuffer, FCB->RemoteAddress, TaLengthOfTransportAddress(FCB->RemoteAddress));
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
+        Status = STATUS_BUFFER_TOO_SMALL;
     }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );

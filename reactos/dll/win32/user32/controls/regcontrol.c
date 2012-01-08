@@ -19,12 +19,33 @@ static PFNCLIENT pfnClientA;
 static PFNCLIENT pfnClientW;
 static PFNCLIENTWORKER pfnClientWorker;
 
-//
-// FIXME!
-// These are not "System Classes" but Global Classes that are registered
-// every time a process is created, so these can be unregistered as the msdn
-// documents states.
-//
+
+/***********************************************************************
+ *           set_control_clipping
+ *
+ * Set clipping for a builtin control that uses CS_PARENTDC.
+ * Return the previous clip region if any.
+ */
+HRGN set_control_clipping( HDC hdc, const RECT *rect )
+{
+    RECT rc = *rect;
+    HRGN hrgn = CreateRectRgn( 0, 0, 0, 0 );
+
+    if (GetClipRgn( hdc, hrgn ) != 1)
+    {
+        DeleteObject( hrgn );
+        hrgn = 0;
+    }
+    DPtoLP( hdc, (POINT *)&rc, 2 );
+    if (GetLayout( hdc ) & LAYOUT_RTL)  /* compensate for the shifting done by IntersectClipRect */
+    {
+        rc.left++;
+        rc.right++;
+    }
+    IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
+    return hrgn;
+}
+
 static const struct
 {
     const struct builtin_class_descr *desc;

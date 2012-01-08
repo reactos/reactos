@@ -85,7 +85,7 @@
 @ stdcall LdrFindResource_U(long ptr long ptr)
 //@ stdcall LdrFlushAlternateResourceModules
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
-//@ stdcall LdrGetDllHandleEx
+@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 //@ stdcall LdrHotPatchRoutine
 //@ stdcall LdrInitShimEngineDynamic
@@ -413,12 +413,13 @@
 //@ stdcall RtlAbortRXact
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
+@ stdcall RtlAcquirePrivilege(ptr long long ptr)
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
 @ stdcall RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
-//@ stdcall RtlActivateActivationContextEx
+@ stdcall RtlActivateActivationContextEx(long ptr ptr ptr)
 @ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
@@ -573,7 +574,7 @@
 @ stdcall RtlDosPathNameToRelativeNtPathName_U(ptr ptr ptr ptr) // CHECKME
 //@ stdcall RtlDosPathNameToRelativeNtPathName_U_WithStatus
 @ stdcall RtlDosSearchPath_U(wstr wstr wstr long ptr ptr)
-//@ stdcall RtlDosSearchPath_Ustr
+@ stdcall RtlDosSearchPath_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDowncaseUnicodeChar(long)
 @ stdcall RtlDowncaseUnicodeString(ptr ptr long)
 @ stdcall RtlDumpResource(ptr)
@@ -663,7 +664,7 @@
 @ stdcall RtlGetFirstRange(ptr ptr ptr)
 //@ stdcall RtlGetFrame
 @ stdcall RtlGetFullPathName_U(wstr long ptr ptr)
-//@ stdcall RtlGetFullPathName_UstrEx
+@ stdcall RtlGetFullPathName_UstrEx(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlGetGroupSecurityDescriptor(ptr ptr ptr)
 @ stdcall RtlGetLastNtStatus()
 @ stdcall RtlGetLastWin32Error()
@@ -725,6 +726,7 @@
 @ stdcall RtlInt64ToUnicodeString(double long ptr)
 @ stdcall RtlIntegerToChar(long long long ptr)
 @ stdcall RtlIntegerToUnicodeString(long long ptr)
+@ stdcall -arch=win32 -ret64 RtlInterlockedCompareExchange64(ptr double double)
 @ stdcall -arch=i386,x86_64 RtlInterlockedFlushSList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPopEntrySList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPushEntrySList(ptr ptr)
@@ -847,6 +849,8 @@
 @ stdcall RtlReleaseActivationContext(ptr)
 //@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
+@ stdcall RtlReleasePrivilege(ptr)
+@ stdcall RtlReleaseRelativeName(ptr)
 @ stdcall RtlReleaseResource(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
@@ -969,8 +973,8 @@
 @ stdcall -arch=x86_64 RtlVirtualUnwind(long long long ptr ptr ptr ptr ptr)
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWalkHeap(long ptr)
-//@ stdcall RtlWow64EnableFsRedirection(long)
-//@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
+@ stdcall RtlWow64EnableFsRedirection(long)
+@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
 //@ stdcall RtlWriteMemoryStream

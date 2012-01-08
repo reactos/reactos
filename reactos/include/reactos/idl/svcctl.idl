@@ -297,7 +297,8 @@ typedef struct _STRING_PTRSW {
 [
   uuid(367abb81-9844-35f1-ad32-98f038001003),
   version(2.0),
-  pointer_default(unique)
+  pointer_default(unique),
+  endpoint("ncacn_np:[\\pipe\\ntsvcs]")
 ]
 interface svcctl
 {

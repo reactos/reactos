@@ -68,26 +68,110 @@ WinPosActivateOtherWindow(HWND hwnd)
     if (!SetActiveWindow( hwndTo )) SetActiveWindow(0);
 }
 
-
+#define EMPTYPOINT(pt) ((pt).x == -1 && (pt).y == -1)
 
 UINT WINAPI
-WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
-		  POINT* MinTrack, POINT* MaxTrack)
+WinPosGetMinMaxInfo(HWND hwnd, POINT* maxSize, POINT* maxPos,
+		  POINT* minTrack, POINT* maxTrack)
 {
-  MINMAXINFO MinMax;
+    MINMAXINFO MinMax;
+    HMONITOR monitor;
+    INT xinc, yinc;
+    LONG style = GetWindowLongW( hwnd, GWL_STYLE );
+    LONG adjustedStyle;
+    LONG exstyle = GetWindowLongW( hwnd, GWL_EXSTYLE );
+    RECT rc;
+    WND *win;
 
-  if(NtUserGetMinMaxInfo(hWnd, &MinMax, TRUE))
-  {
-    MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
-				  MinMax.ptMinTrackSize.x);
-    MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
-				  MinMax.ptMinTrackSize.y);
+    /* Compute default values */
 
-    if (MaxSize) *MaxSize = MinMax.ptMaxSize;
-    if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
-    if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
-    if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
-  }
+    GetWindowRect(hwnd, &rc);
+    MinMax.ptReserved.x = rc.left;
+    MinMax.ptReserved.y = rc.top;
+
+    if ((style & WS_CAPTION) == WS_CAPTION)
+        adjustedStyle = style & ~WS_BORDER; /* WS_CAPTION = WS_DLGFRAME | WS_BORDER */
+    else
+        adjustedStyle = style;
+
+    GetClientRect(GetAncestor(hwnd,GA_PARENT), &rc);
+    AdjustWindowRectEx(&rc, adjustedStyle, ((style & WS_POPUP) && GetMenu(hwnd)), exstyle);
+
+    xinc = -rc.left;
+    yinc = -rc.top;
+
+    MinMax.ptMaxSize.x = rc.right - rc.left;
+    MinMax.ptMaxSize.y = rc.bottom - rc.top;
+    if (style & (WS_DLGFRAME | WS_BORDER))
+    {
+        MinMax.ptMinTrackSize.x = GetSystemMetrics(SM_CXMINTRACK);
+        MinMax.ptMinTrackSize.y = GetSystemMetrics(SM_CYMINTRACK);
+    }
+    else
+    {
+        MinMax.ptMinTrackSize.x = 2 * xinc;
+        MinMax.ptMinTrackSize.y = 2 * yinc;
+    }
+    MinMax.ptMaxTrackSize.x = GetSystemMetrics(SM_CXMAXTRACK);
+    MinMax.ptMaxTrackSize.y = GetSystemMetrics(SM_CYMAXTRACK);
+    MinMax.ptMaxPosition.x = -xinc;
+    MinMax.ptMaxPosition.y = -yinc;
+
+    if ((win = ValidateHwnd( hwnd )) )//&& win != WND_DESKTOP && win != WND_OTHER_PROCESS)
+    {
+        if (!EMPTYPOINT(win->InternalPos.MaxPos)) MinMax.ptMaxPosition = win->InternalPos.MaxPos;
+    }
+
+    SendMessageW( hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax );
+
+    /* if the app didn't change the values, adapt them for the current monitor */
+
+    if ((monitor = MonitorFromWindow( hwnd, MONITOR_DEFAULTTOPRIMARY )))
+    {
+        RECT rc_work;
+        MONITORINFO mon_info;
+
+        mon_info.cbSize = sizeof(mon_info);
+        GetMonitorInfoW( monitor, &mon_info );
+
+        rc_work = mon_info.rcMonitor;
+
+        if (style & WS_MAXIMIZEBOX)
+        {
+            if ((style & WS_CAPTION) == WS_CAPTION || !(style & (WS_CHILD | WS_POPUP)))
+                rc_work = mon_info.rcWork;
+        }
+
+        if (MinMax.ptMaxSize.x == GetSystemMetrics(SM_CXSCREEN) + 2 * xinc &&
+            MinMax.ptMaxSize.y == GetSystemMetrics(SM_CYSCREEN) + 2 * yinc)
+        {
+            MinMax.ptMaxSize.x = (rc_work.right - rc_work.left) + 2 * xinc;
+            MinMax.ptMaxSize.y = (rc_work.bottom - rc_work.top) + 2 * yinc;
+        }
+        if (MinMax.ptMaxPosition.x == -xinc && MinMax.ptMaxPosition.y == -yinc)
+        {
+            MinMax.ptMaxPosition.x = rc_work.left - xinc;
+            MinMax.ptMaxPosition.y = rc_work.top - yinc;
+        }
+    }
+
+      /* Some sanity checks */
+
+    TRACE("%d %d / %d %d / %d %d / %d %d\n",
+                      MinMax.ptMaxSize.x, MinMax.ptMaxSize.y,
+                      MinMax.ptMaxPosition.x, MinMax.ptMaxPosition.y,
+                      MinMax.ptMaxTrackSize.x, MinMax.ptMaxTrackSize.y,
+                      MinMax.ptMinTrackSize.x, MinMax.ptMinTrackSize.y);
+    MinMax.ptMaxTrackSize.x = max( MinMax.ptMaxTrackSize.x,
+                                   MinMax.ptMinTrackSize.x );
+    MinMax.ptMaxTrackSize.y = max( MinMax.ptMaxTrackSize.y,
+                                   MinMax.ptMinTrackSize.y );
+
+    if (maxSize) *maxSize = MinMax.ptMaxSize;
+    if (maxPos) *maxPos = MinMax.ptMaxPosition;
+    if (minTrack) *minTrack = MinMax.ptMinTrackSize;
+    if (maxTrack) *maxTrack = MinMax.ptMaxTrackSize;
+
   return 0; //FIXME: what does it return?
 }
 
@@ -108,7 +192,7 @@ GetActiveWindow(VOID)
 UINT WINAPI
 ArrangeIconicWindows(HWND hWnd)
 {
-  return NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
+  return NtUserxArrangeIconicWindows( hWnd );
 }
 
 /*
@@ -151,7 +235,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
     Delta.x = Delta.y = 0;
     mirror_from = mirror_to = FALSE;
 
-    if (FromWnd && FromWnd->fnid != FNID_DESKTOP)
+    if (FromWnd && hWndFrom != GetDesktopWindow()) // FromWnd->fnid != FNID_DESKTOP)
     {
        if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -163,7 +247,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
        Delta.y = FromWnd->rcClient.top;
     }
 
-    if (ToWnd && ToWnd->fnid != FNID_DESKTOP)
+    if (ToWnd && hWndTo != GetDesktopWindow()) // ToWnd->fnid != FNID_DESKTOP)
     {
        if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -207,7 +291,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
     if (!Wnd)
         return FALSE;
 
-    if (Wnd->fnid != FNID_DESKTOP)
+    if (hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
        if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
           lpPoint->x = Wnd->rcClient.right - lpPoint->x;
@@ -231,7 +315,7 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
     if (!Wnd)
         return FALSE;
 
-    if (Wnd->fnid != FNID_DESKTOP)
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
        if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
           lpPoint->x = Wnd->rcClient.right - lpPoint->x;

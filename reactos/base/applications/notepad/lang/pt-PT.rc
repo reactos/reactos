@@ -50,8 +50,8 @@ BEGIN
         MENUITEM "&Salvar\tCtrl+S",           CMD_SAVE
         MENUITEM "Salvar &como...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "C&onfigurar p√°gina...",     CMD_PAGE_SETUP
         MENUITEM "&Imprimir\tCtrl+P",         CMD_PRINT
-        MENUITEM "C&onfigurar p·gina...",     CMD_PAGE_SETUP
         MENUITEM "Configurar i&mpressora...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "Sai&r",                     CMD_EXIT
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM "E&xcluir\tDel",          CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...",          CMD_SEARCH
-        MENUITEM "Localizar &prÛxima\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Localizar &pr√≥xima\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace\tCtrl+H",        CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G",       CMD_GOTO
         MENUITEM SEPARATOR
@@ -75,7 +75,7 @@ BEGIN
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Quebrar autom·tica de linha", CMD_WRAP
+        MENUITEM "&Quebrar autom√°tica de linha", CMD_WRAP
         MENUITEM "&Fonte...",                    CMD_FONT
     END
     POPUP "&View"
@@ -84,12 +84,12 @@ BEGIN
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Conte˙do",       CMD_HELP_CONTENTS
+        MENUITEM "&Conte√∫do",       CMD_HELP_CONTENTS
         MENUITEM "&Procurar...",    CMD_HELP_SEARCH
         MENUITEM "&Ajuda na ajuda", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About",          CMD_ABOUT
-        MENUITEM "&InformaÁıes...", CMD_ABOUT_WINE
+        MENUITEM "&Informa√ß√µes...", CMD_ABOUT_WINE
     END
 END
 
@@ -98,11 +98,11 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Configurar p·gina"
+CAPTION "Configurar p√°gina"
 BEGIN
-LTEXT    "&CabeÁalho:",  0x140,   10, 07, 40, 15
+LTEXT    "&Cabe√ßalho:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&RodapÈ:",  0x142,   10, 24, 40, 15
+LTEXT    "&Rodap√©:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Margens:",      0x144,     10, 43,160, 45
@@ -122,8 +122,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN
@@ -167,7 +166,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,    "P·gina &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,    "P√°gina &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,        "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,        "25 mm"     /* FIXME */
@@ -176,24 +175,24 @@ STRING_PAGESETUP_BOTTOMVALUE,    "25 mm"     /* FIXME */
 STRING_NOTEPAD,                    "Notepad"
 STRING_ERROR,                    "ERRO"
 STRING_WARNING,                    "AVISO"
-STRING_INFO,                    "InformaÁ„o"
+STRING_INFO,                    "Informa√ß√£o"
 
 STRING_UNTITLED,                "(sem nome)"
 
 STRING_ALL_FILES,                "Todos os arquivos (*.*)"
 STRING_TEXT_FILES_TXT,            "Arquivos texto (*.txt)"
 
-STRING_TOOLARGE,                "Arquivo '%s' È muito longo para o notepad.\n \
+STRING_TOOLARGE,                "Arquivo '%s' √© muito longo para o notepad.\n \
 Por favor use um editor diferente."
-STRING_NOTEXT,                    "VocÍ n„o digitou nenhum texto. \
+STRING_NOTEXT,                    "Voc√™ n√£o digitou nenhum texto. \
 \nPor favor digite alguma coisa e tente novamente"
-STRING_DOESNOTEXIST,                "Arquivo '%s'\nn„o existe\n\n \
-VocÍ deseja criar um novo arquivo?"
+STRING_DOESNOTEXIST,                "Arquivo '%s'\nn√£o existe\n\n \
+Voc√™ deseja criar um novo arquivo?"
 STRING_NOTSAVED,                "Arquivo '%s'\nfoi modificado\n\n \
-Gostaria de salvar as alteraÁ’es?"
-STRING_NOTFOUND,                    "'%s' n„o pode ser encontrado."
-STRING_OUT_OF_MEMORY,            "N„o h· memÛria suficiente para completar essa \
-tarefa. \nFeche uma ou mais aplicaÁıes para aumentar a quantidade de memÛria livre."
+Gostaria de salvar as altera√ß√ïes?"
+STRING_NOTFOUND,                    "'%s' n√£o pode ser encontrado."
+STRING_OUT_OF_MEMORY,            "N√£o h√° mem√≥ria suficiente para completar essa \
+tarefa. \nFeche uma ou mais aplica√ß√µes para aumentar a quantidade de mem√≥ria livre."
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"

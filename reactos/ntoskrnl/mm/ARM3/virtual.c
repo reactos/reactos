@@ -107,16 +107,17 @@ MiMakeSystemAddressValidPfn(IN PVOID VirtualAddress,
     return LockChange;
 }
 
-PFN_NUMBER
+PFN_COUNT
 NTAPI
 MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                          IN PFN_NUMBER PageCount,
                          IN ULONG Flags,
                          OUT PPFN_NUMBER ValidPages)
 {
-    PFN_NUMBER ActualPages = 0;
+    PFN_COUNT ActualPages = 0;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PMMPFN Pfn1, Pfn2;
+    PMMPFN Pfn1;
+    //PMMPFN Pfn2;
     PFN_NUMBER PageFrameIndex, PageTableIndex;
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -149,7 +150,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
-                Pfn2 = MiGetPfnEntry(PageTableIndex);
+                //Pfn2 = MiGetPfnEntry(PageTableIndex);
 
                 /* Lock the PFN database */
                 OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -2349,7 +2350,8 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     PMMVAD Vad = NULL;
     PVOID Address, NextAddress;
     BOOLEAN Found = FALSE;
-    ULONG NewProtect, NewState, BaseVpn;
+    ULONG NewProtect, NewState;
+    ULONG_PTR BaseVpn;
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -2665,7 +2667,7 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-                SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+                SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
                 RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
                 if (ReturnLength) *ReturnLength = ModuleFileName.Length;
@@ -2680,7 +2682,7 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
         else
         {
             RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-            SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+            SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
             RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
             if (ReturnLength) *ReturnLength = ModuleFileName.Length;

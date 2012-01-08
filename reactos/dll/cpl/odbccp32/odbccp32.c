@@ -1,7 +1,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS ODBC Control Panel Applet
- * FILE:            lib/cpl/main/main.c
+ * FILE:            dll/cpl/main/main.c
  * PURPOSE:         applet initialization
  * PROGRAMMER:      Johannes Anderwald
  */
@@ -77,4 +77,3 @@ DllMain(HINSTANCE hinstDLL,
 
   return TRUE;
 }
-

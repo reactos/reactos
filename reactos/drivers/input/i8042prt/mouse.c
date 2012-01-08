@@ -361,12 +361,8 @@ i8042DpcRoutineMouseTimeout(
 
 	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
 
-	WARN_(I8042PRT, "Mouse initialization timeout! (substate %x). Disabling mouse.\n",
+	WARN_(I8042PRT, "Mouse initialization timeout! (substate %x)\n",
 		DeviceExtension->MouseResetState);
-
-	i8042Flush(PortDeviceExtension);
-	i8042ChangeMode(PortDeviceExtension, CCB_MOUSE_INT_ENAB, CCB_MOUSE_DISAB);
-	i8042Flush(PortDeviceExtension);
 
 	PortDeviceExtension->Flags &= ~MOUSE_PRESENT;
 
@@ -458,7 +454,7 @@ i8042MouInternalDeviceControl(
 
 			IoMarkIrpPending(Irp);
 			DeviceExtension->MouseState = MouseResetting;
-			DeviceExtension->MouseResetState = 1100;
+			DeviceExtension->MouseResetState = ExpectingReset;
 			DeviceExtension->MouseHook.IsrWritePort = i8042MouIsrWritePort;
 			DeviceExtension->MouseHook.QueueMousePacket = i8042MouQueuePacket;
 			DeviceExtension->MouseHook.CallContext = DeviceExtension;
@@ -633,17 +629,33 @@ i8042MouResetIsr(
 	if (i8042MouCallIsrHook(DeviceExtension, Status, Value, &ToReturn))
 		return ToReturn;
 
-	if (MouseResetting != DeviceExtension->MouseState)
+	if (MouseIdle == DeviceExtension->MouseState)
+	{
+		/* Magic packet value that indicates a reset */
+		if (0xAA == Value)
+		{
+			WARN_(I8042PRT, "Hot plugged mouse!\n");
+			DeviceExtension->MouseState = MouseResetting;
+			DeviceExtension->MouseResetState = ExpectingReset;
+		}
+		else
+			return FALSE;
+	}
+	else if (MouseResetting != DeviceExtension->MouseState)
 		return FALSE;
+
 	DeviceExtension->MouseTimeoutState = TimeoutStart;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	switch ((ULONG)DeviceExtension->MouseResetState)
 	{
-		case 1100: /* the first ack, drop it. */
-			DeviceExtension->MouseResetState = ExpectingReset;
-			return TRUE;
 		case ExpectingReset:
+			if (MOUSE_ACK == Value)
+			{
+				WARN_(I8042PRT, "Dropping extra ACK\n");
+				return TRUE;
+			}
+
 			/* First, 0xFF is sent. The mouse is supposed to say AA00 if ok, FC00 if not. */
 			if (0xAA == Value)
 			{
@@ -657,6 +669,12 @@ i8042MouResetIsr(
 			}
 			return TRUE;
 		case ExpectingResetId:
+			if (MOUSE_ACK == Value)
+			{
+				WARN_(I8042PRT, "Dropping extra ACK #2\n");
+				return TRUE;
+			}
+
 			if (0x00 == Value)
 			{
 				DeviceExtension->MouseResetState++;
@@ -861,6 +879,7 @@ i8042MouResetIsr(
 			DeviceExtension->MouseResetState = ExpectingEnableACK;
 			return TRUE;
 		case ExpectingEnableACK:
+			PortDeviceExtension->Flags |= MOUSE_PRESENT;
 			DeviceExtension->MouseState = MouseIdle;
 			DeviceExtension->MouseTimeoutState = TimeoutCancel;
 			INFO_(I8042PRT, "Mouse type = %u\n", DeviceExtension->MouseType);

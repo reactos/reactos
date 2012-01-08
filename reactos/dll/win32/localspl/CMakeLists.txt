@@ -33,3 +33,7 @@ add_importlibs(localspl
     ntdll)
 
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(localspl)
+endif()

@@ -19,10 +19,11 @@ FASTCALL
 KeInitializeGate(IN PKGATE Gate)
 {
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Gate->Header,
-                                 GateObject,
-                                 sizeof(KGATE) / sizeof(ULONG),
-                                 0);
+    Gate->Header.Type = GateObject;
+    Gate->Header.Signalling = FALSE;
+    Gate->Header.Size = sizeof(KGATE) / sizeof(ULONG);
+    Gate->Header.SignalState = 0;
+    InitializeListHead(&(Gate->Header.WaitListHead));
 }
 
 VOID
@@ -34,7 +35,7 @@ KeWaitForGate(IN PKGATE Gate,
     KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread = KeGetCurrentThread();
     PKWAIT_BLOCK GateWaitBlock;
-    NTSTATUS Status;
+    LONG_PTR Status;
     PKQUEUE Queue;
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);

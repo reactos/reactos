@@ -20,6 +20,9 @@
 #define IMAGE_LOADER_FLAGS_COMPLUS 0x00000001
 #define IMAGE_LOADER_FLAGS_SYSTEM_GLOBAL 0x01000000
 
+/* Page heap flags */
+#define DPH_FLAG_DLL_NOTIFY 0x40
+
 typedef struct _LDRP_TLS_DATA
 {
     LIST_ENTRY TlsLinks;
@@ -43,6 +46,7 @@ extern ULONG LdrpActiveUnloadCount;
 extern BOOLEAN LdrpShutdownInProgress;
 extern UNICODE_STRING LdrpKnownDllPath;
 extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache, LdrpLoadedDllHandleCache;
+extern ULONG RtlpDphGlobalFlags;
 
 /* ldrinit.c */
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
@@ -55,6 +59,7 @@ BOOLEAN NTAPI LdrpCallInitRoutine(PDLL_INIT_ROUTINE EntryPoint, PVOID BaseAddres
 NTSTATUS NTAPI LdrpInitializeProcess(PCONTEXT Context, PVOID SystemArgument1);
 VOID NTAPI LdrpInitFailure(NTSTATUS Status);
 VOID NTAPI LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry);
+VOID NTAPI LdrpEnsureLoaderLockIsHeld();
 
 /* ldrpe.c */
 NTSTATUS

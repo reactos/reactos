@@ -1,7 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2003 Marcelo Duarte
- * Copyright 2006-2007 AmÈrico JosÈ Melo
+ * Copyright 2006-2007 Am√©rico Jos√© Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,8 +22,8 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Õcones &grandes",    FCIDM_SHVIEW_BIGICON
-	MENUITEM "Õcones &pequenos",   FCIDM_SHVIEW_SMALLICON
+	MENUITEM "√çcones &grandes",    FCIDM_SHVIEW_BIGICON
+	MENUITEM "√çcones &pequenos",   FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Lista",             FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Detalhes",          FCIDM_SHVIEW_REPORTVIEW
 END
@@ -35,13 +35,13 @@ BEGIN
 	BEGIN
 		POPUP "&Exibir"
 		BEGIN
-			MENUITEM "Õcones &grandes",   FCIDM_SHVIEW_BIGICON
-			MENUITEM "Õcones &pequenos",  FCIDM_SHVIEW_SMALLICON
+			MENUITEM "√çcones &grandes",   FCIDM_SHVIEW_BIGICON
+			MENUITEM "√çcones &pequenos",  FCIDM_SHVIEW_SMALLICON
 			MENUITEM "&Lista",            FCIDM_SHVIEW_LISTVIEW
 			MENUITEM "&Detalhes",         FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "O&rganizar Ìcones"
+		POPUP "O&rganizar √≠cones"
 		BEGIN
 			MENUITEM "Por &nome",         0x30  /* column 0 */
 			MENUITEM "Por &tipo",         0x32  /* column 2 */
@@ -50,7 +50,7 @@ BEGIN
 			MENUITEM SEPARATOR
 			MENUITEM "Auto organi&zar",   FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Alin&har Ìcones",     FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Alin&har √≠cones",     FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
 		MENUITEM "&Atualizar",          FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
@@ -127,8 +127,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+	LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -155,7 +161,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Digite o nome do programa, pasta, documento, ou endereÁo Internet, que o Wine ir· abrÌ-lo para vocÍ.", 12289, 36, 11, 182, 18
+	LTEXT "Digite o nome do programa, pasta, documento, ou endere√ßo Internet, que o Wine ir√° abr√≠-lo para voc√™.", 12289, 36, 11, 182, 18
 	LTEXT "&Abrir:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -368,10 +374,10 @@ BEGIN
 	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
 	LTEXT "File:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	DEFPUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
 END
 
@@ -602,9 +608,9 @@ BEGIN
 	IDS_SHV_COLUMN4             "Modificado"
 	IDS_SHV_COLUMN5             "Atributos"
 	IDS_SHV_COLUMN6             "Tamanho"
-	IDS_SHV_COLUMN7             "DisponÌvel"
+	IDS_SHV_COLUMN7             "Dispon√≠vel"
 	IDS_SHV_COLUMN8             "Nome"
-	IDS_SHV_COLUMN9             "Coment·rios"
+	IDS_SHV_COLUMN9             "Coment√°rios"
 	IDS_SHV_COLUMN10            "Dono"
 	IDS_SHV_COLUMN11            "Grupo"
 	IDS_SHV_COLUMN12            "Filename"
@@ -621,15 +627,15 @@ BEGIN
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
-	IDS_DESKTOP                 "¡rea de trabalho"
+	IDS_DESKTOP                 "√Årea de trabalho"
 	IDS_MYCOMPUTER              "Meu computador"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
 	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "Õcones &grandes"
-	IDS_VIEW_SMALL              "Õcones &pequenos"
+	IDS_VIEW_LARGE              "√çcones &grandes"
+	IDS_VIEW_SMALL              "√çcones &pequenos"
 	IDS_VIEW_LIST               "&Lista"
 	IDS_VIEW_DETAILS            "&Detalhes"
 	IDS_SELECT                  "Selecionar"
@@ -644,12 +650,12 @@ BEGIN
 	IDS_RENAME                  "Rename"
 	IDS_INSERT                  "Insert"
 
-	IDS_CREATEFOLDER_DENIED     "N„o pode criar nova pasta: Permiss„o negada."
-	IDS_CREATEFOLDER_CAPTION    "Erro durante a criaÁ„o da nova pasta"
-	IDS_DELETEITEM_CAPTION      "Confirmar exclus„o de arquivo"
-	IDS_DELETEFOLDER_CAPTION    "Confirmar exclus„o de pasta"
-	IDS_DELETEITEM_TEXT         "VocÍ tem certeza que deseja excluir '%1'?"
-	IDS_DELETEMULTIPLE_TEXT     "VocÍ tem certeza que deseja excluir estes %1 itens?"
+	IDS_CREATEFOLDER_DENIED     "N√£o pode criar nova pasta: Permiss√£o negada."
+	IDS_CREATEFOLDER_CAPTION    "Erro durante a cria√ß√£o da nova pasta"
+	IDS_DELETEITEM_CAPTION      "Confirmar exclus√£o de arquivo"
+	IDS_DELETEFOLDER_CAPTION    "Confirmar exclus√£o de pasta"
+	IDS_DELETEITEM_TEXT         "Voc√™ tem certeza que deseja excluir '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "Voc√™ tem certeza que deseja excluir estes %1 itens?"
 	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
 	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
 	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
@@ -661,9 +667,9 @@ BEGIN
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"
-	IDS_RESTART_PROMPT          "VocÍ quer simular a reinicializaÁ„o do Windows?"
+	IDS_RESTART_PROMPT          "Voc√™ quer simular a reinicializa√ß√£o do Windows?"
 	IDS_SHUTDOWN_TITLE          "Desligar"
-	IDS_SHUTDOWN_PROMPT         "VocÍ quer finalizar a sess„o no Wine?"
+	IDS_SHUTDOWN_PROMPT         "Voc√™ quer finalizar a sess√£o no Wine?"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
@@ -681,26 +687,26 @@ BEGIN
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Menu Iniciar"
-	IDS_MYMUSIC                 "Minhas M˙sicas"
-	IDS_MYVIDEO                 "Meus VÌdeos"
+	IDS_MYMUSIC                 "Minhas M√∫sicas"
+	IDS_MYVIDEO                 "Meus V√≠deos"
 	IDS_DESKTOPDIRECTORY        "Desktop"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
 	IDS_APPDATA                 "Application Data"
 	IDS_PRINTHOOD               "PrintHood"
-	IDS_LOCAL_APPDATA           "ConfiguraÁıes locais\\Dados de aplicativos"
-	IDS_INTERNET_CACHE          "ConfiguraÁıes locais\\Temporary Internet Files"
+	IDS_LOCAL_APPDATA           "Configura√ß√µes locais\\Dados de aplicativos"
+	IDS_INTERNET_CACHE          "Configura√ß√µes locais\\Temporary Internet Files"
 	IDS_COOKIES                 "Cookies"
-	IDS_HISTORY                 "ConfiguraÁıes locais\\HistÛrico"
+	IDS_HISTORY                 "Configura√ß√µes locais\\Hist√≥rico"
 	IDS_PROGRAM_FILES           "Arquivos de programas"
 	IDS_MYPICTURES              "Minhas Imagens"
 	IDS_PROGRAM_FILES_COMMON    "Arquivos de programas\\Arquivos comuns"
 	IDS_COMMON_DOCUMENTS        "Documentos"
 	IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
-	IDS_COMMON_MUSIC            "Documentos\\Minhas M˙sicas"
+	IDS_COMMON_MUSIC            "Documentos\\Minhas M√∫sicas"
 	IDS_COMMON_PICTURES         "Documentos\\Minhas Imagens"
-	IDS_COMMON_VIDEO            "Documentos\\Meus VÌdeos"
-	IDS_CDBURN_AREA             "ConfiguraÁıes locais\\Dados de aplicativos\\Microsoft\\CD Burning"
+	IDS_COMMON_VIDEO            "Documentos\\Meus V√≠deos"
+	IDS_CDBURN_AREA             "Configura√ß√µes locais\\Dados de aplicativos\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "My Network Places"
 
 	IDS_NEWFOLDER               "New Folder"
@@ -709,8 +715,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
 
+	/* Open With */
 	IDS_OPEN_WITH               "Open With"
 	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
+	IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
+	IDS_OPEN_WITH_OTHER         "Other Programs:"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
@@ -762,4 +771,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

@@ -22,19 +22,7 @@
 Implements the logo band of a cabinet window. Most remarkable feature is the
 animation.
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <exdisp.h>
-#include <exdispid.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "brandband.h"
+#include "precomp.h"
 
 /*
 TODO:
@@ -78,6 +66,7 @@ CBrandBand::CBrandBand()
 	fCurrentFrame = 0;
 	fMaxFrameCount = 0;
 	fImageBitmap = NULL;
+	fBitmapSize = 0;
 	fAdviseCookie = 0;
 }
 

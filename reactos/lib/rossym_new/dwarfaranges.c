@@ -2,16 +2,10 @@
  * Dwarf address ranges parsing code.
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "dwarf.h"
 
 int
 dwarfaddrtounit(Dwarf *d, ulong addr, ulong *unit)

@@ -152,7 +152,7 @@ HandlePhysicalConnection(
 {
     PKSP_PIN Pin;
     PLIST_ENTRY Entry;
-    PKSPIN_PHYSICALCONNECTION Connection;
+    //PKSPIN_PHYSICALCONNECTION Connection;
     PPHYSICAL_CONNECTION_ENTRY ConEntry;
 
     // get pin
@@ -180,7 +180,7 @@ HandlePhysicalConnection(
 
         if (ConEntry->FromPin == Pin->PinId)
         {
-            Connection = (PKSPIN_PHYSICALCONNECTION)Data;
+            //Connection = (PKSPIN_PHYSICALCONNECTION)Data;
             DPRINT("FoundEntry %S Size %u\n", ConEntry->Connection.SymbolicLinkName, ConEntry->Connection.Size);
             IoStatus->Information = ConEntry->Connection.Size;
 

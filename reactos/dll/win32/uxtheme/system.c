@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "vfwmsgs.h"
-#include "uxtheme.h"
-#include "tmschema.h"
-
-#include "uxthemedll.h"
-#include "msstyles.h"
-
+#include "uxthemep.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
@@ -61,9 +45,10 @@ HINSTANCE hDllInst;
 ATOM atDialogThemeEnabled;
 
 static DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
-static ATOM atWindowTheme;
+ATOM atWindowTheme;
 static ATOM atSubAppName;
 static ATOM atSubIdList;
+ATOM atWndContrext;
 
 static BOOL bThemeActive = FALSE;
 static WCHAR szCurrentTheme[MAX_PATH];
@@ -79,7 +64,7 @@ static BOOL CALLBACK UXTHEME_broadcast_msg_enumchild (HWND hWnd, LPARAM msg)
 }
 
 /* Broadcast a message to *all* windows, including children */
-static BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
+BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
 {
     if (hWnd == NULL)
     {
@@ -140,7 +125,6 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
     }
   }
 
-  RegCloseKey(hKey);
   return dwRet;
 }
 
@@ -149,7 +133,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
  *
  * Set the current active theme from the registry
  */
-static void UXTHEME_LoadTheme(void)
+void UXTHEME_LoadTheme(BOOL bLoad)
 {
     HKEY hKey;
     DWORD buffsize;
@@ -157,29 +141,36 @@ static void UXTHEME_LoadTheme(void)
     WCHAR tmp[10];
     PTHEME_FILE pt;
 
-    /* Get current theme configuration */
-    if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
-        TRACE("Loading theme config\n");
-        buffsize = sizeof(tmp)/sizeof(tmp[0]);
-        if(!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) {
-            bThemeActive = (tmp[0] != '0');
+    if(bLoad == TRUE) 
+    {
+        /* Get current theme configuration */
+        if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
+            TRACE("Loading theme config\n");
+            buffsize = sizeof(tmp)/sizeof(tmp[0]);
+            if(!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) {
+                bThemeActive = (tmp[0] != '0');
+            }
+            else {
+                bThemeActive = FALSE;
+                TRACE("Failed to get ThemeActive: %d\n", GetLastError());
+            }
+            buffsize = sizeof(szCurrentColor)/sizeof(szCurrentColor[0]);
+            if(RegQueryValueExW(hKey, szColorName, NULL, NULL, (LPBYTE)szCurrentColor, &buffsize))
+                szCurrentColor[0] = '\0';
+            buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
+            if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
+                szCurrentSize[0] = '\0';
+            if (query_reg_path (hKey, szDllName, szCurrentTheme))
+                szCurrentTheme[0] = '\0';
+            RegCloseKey(hKey);
         }
-        else {
-            bThemeActive = FALSE;
-            TRACE("Failed to get ThemeActive: %d\n", GetLastError());
-        }
-        buffsize = sizeof(szCurrentColor)/sizeof(szCurrentColor[0]);
-        if(RegQueryValueExW(hKey, szColorName, NULL, NULL, (LPBYTE)szCurrentColor, &buffsize))
-            szCurrentColor[0] = '\0';
-        buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
-        if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
-            szCurrentSize[0] = '\0';
-        if (query_reg_path (hKey, szDllName, szCurrentTheme))
-            szCurrentTheme[0] = '\0';
-        RegCloseKey(hKey);
+        else
+            TRACE("Failed to open theme registry key\n");
     }
     else
-        TRACE("Failed to open theme registry key\n");
+    {
+        bThemeActive = FALSE;
+    }
 
     if(bThemeActive) {
         /* Make sure the theme requested is actually valid */
@@ -543,8 +534,7 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
     atSubAppName         = GlobalAddAtomW(szSubAppName);
     atSubIdList          = GlobalAddAtomW(szSubIdList);
     atDialogThemeEnabled = GlobalAddAtomW(szDialogThemeEnabled);
-
-    UXTHEME_LoadTheme();
+    atWndContrext        = GlobalAddAtomW(L"ux_WndContext");
 }
 
 /***********************************************************************
@@ -973,7 +963,7 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
  *     Success: S_OK
  *     Failure: HRESULT error-code
  */
-HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
+HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, ENUMTHEMEPROC callback,
                           LPVOID lpData)
 {
     WCHAR szDir[MAX_PATH];
@@ -1171,7 +1161,7 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
  * any other purpose
  */
 HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
-                                 ParseThemeIniFileProc callback, LPVOID lpData)
+                                 PARSETHEMEINIFILEPROC callback, LPVOID lpData)
 {
     FIXME("%s %s: stub\n", debugstr_w(pszIniFileName), debugstr_w(pszUnknown));
     return ERROR_CALL_NOT_IMPLEMENTED;

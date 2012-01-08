@@ -63,6 +63,14 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
+
+            /* Stop listening to incoming RPC messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -84,6 +92,11 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -482,7 +495,7 @@ VOID PRINT_HEADER(PEVENTLOGHEADER header)
     DPRINT("Flags: ");
     if (header->Flags & ELF_LOGFILE_HEADER_DIRTY)  DPRINT("ELF_LOGFILE_HEADER_DIRTY");
     if (header->Flags & ELF_LOGFILE_HEADER_WRAP)  DPRINT("| ELF_LOGFILE_HEADER_WRAP ");
-    if (header->Flags & ELF_LOGGFILE_LOGFULL_WRITTEN)  DPRINT("| ELF_LOGGFILE_LOGFULL_WRITTEN ");
+    if (header->Flags & ELF_LOGFILE_LOGFULL_WRITTEN)  DPRINT("| ELF_LOGFILE_LOGFULL_WRITTEN ");
     if (header->Flags & ELF_LOGFILE_ARCHIVE_SET)  DPRINT("| ELF_LOGFILE_ARCHIVE_SET ");
     DPRINT("\n");
 }

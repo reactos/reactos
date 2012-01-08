@@ -9,4 +9,5 @@
 	<file>misc.c</file>
 	<file>setup.c</file>
 	<file>kbdclass.rc</file>
+	<pch>kbdclass.h</pch>
 </module>

@@ -31,7 +31,7 @@ DWORD PipeSend( COMM_DHCP_REPLY *Reply ) {
 }
 
 DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
-    DWORD BytesRead, BytesWritten;
+    DWORD BytesRead;
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     BOOL Result, Connected;
@@ -51,34 +51,34 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
         if( Result ) {
             switch( Req.Type ) {
             case DhcpReqQueryHWInfo:
-                BytesWritten = DSQueryHWInfo( PipeSend, &Req );
+                DSQueryHWInfo( PipeSend, &Req );
                 break;
 
             case DhcpReqLeaseIpAddress:
-                BytesWritten = DSLeaseIpAddress( PipeSend, &Req );
+                DSLeaseIpAddress( PipeSend, &Req );
                 break;
 
             case DhcpReqReleaseIpAddress:
-                BytesWritten = DSReleaseIpAddressLease( PipeSend, &Req );
+                DSReleaseIpAddressLease( PipeSend, &Req );
                 break;
 
             case DhcpReqRenewIpAddress:
-                BytesWritten = DSRenewIpAddressLease( PipeSend, &Req );
+                DSRenewIpAddressLease( PipeSend, &Req );
                 break;
 
             case DhcpReqStaticRefreshParams:
-                BytesWritten = DSStaticRefreshParams( PipeSend, &Req );
+                DSStaticRefreshParams( PipeSend, &Req );
                 break;
 
             case DhcpReqGetAdapterInfo:
-                BytesWritten = DSGetAdapterInfo( PipeSend, &Req );
+                DSGetAdapterInfo( PipeSend, &Req );
                 break;
 
             default:
                 DPRINT1("Unrecognized request type %d\n", Req.Type);
                 ZeroMemory( &Reply, sizeof( COMM_DHCP_REPLY ) );
                 Reply.Reply = 0;
-                BytesWritten = PipeSend( &Reply );
+                PipeSend( &Reply );
                 break;
             }
         }

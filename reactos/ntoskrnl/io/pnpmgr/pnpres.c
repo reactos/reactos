@@ -47,7 +47,7 @@ IopFindBusNumberResource(
    ASSERT(IoDesc->Type == CmResourceTypeBusNumber);
 
    for (Start = IoDesc->u.BusNumber.MinBusNumber;
-        Start < IoDesc->u.BusNumber.MaxBusNumber;
+        Start <= IoDesc->u.BusNumber.MaxBusNumber;
         Start++)
    {
         CmDesc->u.BusNumber.Length = IoDesc->u.BusNumber.Length;
@@ -72,22 +72,26 @@ IopFindMemoryResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   ULONGLONG Start;
+   LONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypeMemory);
 
+   /* HACK */
+   if (IoDesc->u.Memory.Alignment == 0) IoDesc->u.Memory.Alignment = 1;
+
    for (Start = IoDesc->u.Memory.MinimumAddress.QuadPart;
-        Start < IoDesc->u.Memory.MaximumAddress.QuadPart;
-        Start++)
+        Start <= IoDesc->u.Memory.MaximumAddress.QuadPart;
+        Start += IoDesc->u.Memory.Alignment)
    {
         CmDesc->u.Memory.Length = IoDesc->u.Memory.Length;
         CmDesc->u.Memory.Start.QuadPart = Start;
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Memory.Start.QuadPart + ConflictingDesc.u.Memory.Length;
+            Start += ConflictingDesc.u.Memory.Start.QuadPart +
+                     ConflictingDesc.u.Memory.Length;
         }
         else
         {
@@ -104,15 +108,18 @@ IopFindPortResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   ULONGLONG Start;
+   LONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypePort);
+    
+   /* HACK */
+   if (IoDesc->u.Port.Alignment == 0) IoDesc->u.Port.Alignment = 1;
 
    for (Start = IoDesc->u.Port.MinimumAddress.QuadPart;
-        Start < IoDesc->u.Port.MaximumAddress.QuadPart;
-        Start++)
+        Start <= IoDesc->u.Port.MaximumAddress.QuadPart;
+        Start += IoDesc->u.Port.Alignment)
    {
         CmDesc->u.Port.Length = IoDesc->u.Port.Length;
         CmDesc->u.Port.Start.QuadPart = Start;
@@ -142,7 +149,7 @@ IopFindDmaResource(
    ASSERT(IoDesc->Type == CmResourceTypeDma);
 
    for (Channel = IoDesc->u.Dma.MinimumChannel;
-        Channel < IoDesc->u.Dma.MaximumChannel;
+        Channel <= IoDesc->u.Dma.MaximumChannel;
         Channel++)
    {
         CmDesc->u.Dma.Channel = Channel;
@@ -167,7 +174,7 @@ IopFindInterruptResource(
    ASSERT(IoDesc->Type == CmResourceTypeInterrupt);
 
    for (Vector = IoDesc->u.Interrupt.MinimumVector;
-        Vector < IoDesc->u.Interrupt.MaximumVector;
+        Vector <= IoDesc->u.Interrupt.MaximumVector;
         Vector++)
    {
         CmDesc->u.Interrupt.Vector = Vector;
@@ -217,6 +224,7 @@ IopCreateResourceListFromRequirements(
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PIO_RESOURCE_DESCRIPTOR ReqDesc = &ResList->Descriptors[ii];
+         BOOLEAN FoundResource = TRUE;
 
          /* FIXME: Handle alternate ranges */
          if (ReqDesc->Option == IO_RESOURCE_ALTERNATIVE)
@@ -240,13 +248,15 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
             case CmResourceTypePort:
               if (!IopFindPortResource(ReqDesc, ResDesc))
               {
-                  DPRINT1("Failed to find an available port resource (0x%x to 0x%x length: 0x%x)\n",
+                  DPRINT1("Failed to find an available port resource (0x%I64x to 0x%I64x length: 0x%x)\n",
                           ReqDesc->u.Port.MinimumAddress.QuadPart, ReqDesc->u.Port.MaximumAddress.QuadPart,
                           ReqDesc->u.Port.Length);
 
@@ -256,13 +266,15 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
             case CmResourceTypeMemory:
               if (!IopFindMemoryResource(ReqDesc, ResDesc))
               {
-                  DPRINT1("Failed to find an available memory resource (0x%x to 0x%x length: 0x%x)\n",
+                  DPRINT1("Failed to find an available memory resource (0x%I64x to 0x%I64x length: 0x%x)\n",
                           ReqDesc->u.Memory.MinimumAddress.QuadPart, ReqDesc->u.Memory.MaximumAddress.QuadPart,
                           ReqDesc->u.Memory.Length);
 
@@ -272,6 +284,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -288,6 +302,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -303,16 +319,22 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
             default:
               DPRINT1("Unsupported resource type: %x\n", ReqDesc->Type);
+              FoundResource = FALSE;
               break;
          }
 
-         (*ResourceList)->List[0].PartialResourceList.Count++;
-         ResDesc++;
+         if (FoundResource)
+         {
+             (*ResourceList)->List[0].PartialResourceList.Count++;
+             ResDesc++;
+         }
       }
    }
 
@@ -357,7 +379,7 @@ IopCheckResourceDescriptor(
                  {
                       if (!Silent)
                       {
-                          DPRINT1("Resource conflict: Memory (0x%x to 0x%x vs. 0x%x to 0x%x)\n",
+                          DPRINT1("Resource conflict: Memory (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
                                   ResDesc->u.Memory.Start.QuadPart, ResDesc->u.Memory.Start.QuadPart +
                                   ResDesc->u.Memory.Length, ResDesc2->u.Memory.Start.QuadPart,
                                   ResDesc2->u.Memory.Start.QuadPart + ResDesc2->u.Memory.Length);
@@ -378,7 +400,7 @@ IopCheckResourceDescriptor(
                  {
                       if (!Silent)
                       {
-                          DPRINT1("Resource conflict: Port (0x%x to 0x%x vs. 0x%x to 0x%x)\n",
+                          DPRINT1("Resource conflict: Port (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
                                   ResDesc->u.Port.Start.QuadPart, ResDesc->u.Port.Start.QuadPart +
                                   ResDesc->u.Port.Length, ResDesc2->u.Port.Start.QuadPart,
                                   ResDesc2->u.Port.Start.QuadPart + ResDesc2->u.Port.Length);
@@ -509,7 +531,7 @@ IopUpdateControlKeyWithResources(IN PDEVICE_NODE DeviceNode)
    ZwClose(ControlKey);
 
    if (!NT_SUCCESS(Status))
-       return Status; 
+       return Status;
 
    return STATUS_SUCCESS;
 }
@@ -532,10 +554,10 @@ IopFilterResourceRequirements(IN PDEVICE_NODE DeviceNode)
       &Stack);
    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_SUPPORTED)
    {
-      DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+      DPRINT1("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
    }
-   else if (NT_SUCCESS(Status))
+   else if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
    }
@@ -632,7 +654,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           }
           
           NameU.Length = 0;
-          NameU.MaximumLength = OldLength + TranslatedSuffix.Length;
+          NameU.MaximumLength = (USHORT)OldLength + TranslatedSuffix.Length;
           
           Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                        DevicePropertyPhysicalDeviceObjectName,
@@ -658,7 +680,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           ASSERT(FALSE);
       }
       
-      NameU.Length = OldLength;
+      NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
 
@@ -676,7 +698,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       }
 
       /* "Remove" the suffix by setting the length back to what it used to be */
-      NameU.Length = OldLength;
+      NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &TranslatedSuffix);
 
@@ -761,9 +783,12 @@ IopTranslateDeviceResources(
                 
                if (AddressSpace == 0)
                {
-                   /* This is actually a memory resource */
-                   DescriptorRaw->Type = CmResourceTypeMemory;
-                   DescriptorTranslated->Type = CmResourceTypeMemory;
+                   DPRINT1("Guessed incorrect address space: 1 -> 0\n");
+
+                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are 
+                    * invalid for this state but I'm not 100% sure */
+                   DescriptorRaw->Flags =
+                   DescriptorTranslated->Flags = CM_RESOURCE_PORT_MEMORY;
                }
                break;
             }
@@ -797,15 +822,16 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Memory.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
+                  DPRINT1("Failed to translate memory resource (Start: 0x%I64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
                }
 
                if (AddressSpace != 0)
                {
-                   /* This is actually an I/O port resource */
-                   DescriptorRaw->Type = CmResourceTypePort;
-                   DescriptorTranslated->Type = CmResourceTypePort;
+                   DPRINT1("Guessed incorrect address space: 0 -> 1\n");
+
+                   /* This should never happen for memory space */
+                   ASSERT(FALSE);
                }
             }
 
@@ -970,7 +996,6 @@ IopCheckForResourceConflict(
       }
    }
 
-        
 ByeBye:
 
    return Result;
@@ -1021,7 +1046,7 @@ IopDetectResourceConflict(
               goto cleanup;
           }
 
-          Status = ZwEnumerateKey(ResourceMapKey, 
+          Status = ZwEnumerateKey(ResourceMapKey,
                                   ChildKeyIndex1,
                                   KeyBasicInformation,
                                   KeyInformation,
@@ -1035,7 +1060,7 @@ IopDetectResourceConflict(
           goto cleanup;
 
       KeyName.Buffer = KeyInformation->Name;
-      KeyName.MaximumLength = KeyName.Length = KeyInformation->NameLength;
+      KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
       InitializeObjectAttributes(&ObjectAttributes,
                                  &KeyName,
                                  OBJ_CASE_INSENSITIVE,
@@ -1048,7 +1073,7 @@ IopDetectResourceConflict(
 
       while (TRUE)
       {
-          Status = ZwEnumerateKey(ChildKey2, 
+          Status = ZwEnumerateKey(ChildKey2,
                                   ChildKeyIndex2,
                                   KeyBasicInformation,
                                   NULL,
@@ -1080,7 +1105,7 @@ IopDetectResourceConflict(
               goto cleanup;
 
           KeyName.Buffer = KeyInformation->Name;
-          KeyName.MaximumLength = KeyName.Length = KeyInformation->NameLength;
+          KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
           InitializeObjectAttributes(&ObjectAttributes,
                                      &KeyName,
                                      OBJ_CASE_INSENSITIVE,

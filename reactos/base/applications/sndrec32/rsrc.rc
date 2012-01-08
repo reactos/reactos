@@ -16,6 +16,8 @@ IDB_BITMAP2_REC_DIS     BITMAP                  "resources/but_rec_dis.bmp"
 IDB_BITMAP2_START_DIS   BITMAP                  "resources/but_start_dis.bmp"
 IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 
+// UTF-8
+#pragma code_page(65001)
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
@@ -23,10 +25,10 @@ IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
+#include "lang/pl-PL.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
-
-// UTF-8
-#pragma code_page(65001)
-#include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
+#include "lang/zh-TW.rc"

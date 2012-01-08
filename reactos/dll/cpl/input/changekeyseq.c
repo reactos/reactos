@@ -8,7 +8,6 @@
  *      06-09-2007  Created
  */
 
-#include "resource.h"
 #include "input.h"
 
 BOOL
@@ -184,7 +183,7 @@ ChangeKeySeqDlgProc(HWND hDlg,
                         }
                     }
                     break;
-                
+
                 case IDC_SWITCH_KBLAYOUTS_CB:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {

@@ -1,10 +1,8 @@
-/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
-
-#include "resource.h"
+/* Translation by Vytis 'CMan' GirdÅ¾ijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DllNotLoaded,   "LoadLibrary nepavyko paleisti '%s'"
-    IDS_MissingEntry,   "Trûksta áëjimo taðko:%s\nIn %s"
+    IDS_MissingEntry,   "TrÅ«ksta Ä¯Ä—jimo taÅ¡ko:%s\nIn %s"
 END

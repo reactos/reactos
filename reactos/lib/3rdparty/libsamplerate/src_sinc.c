@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002-2008 Erik de Castro Lopo <erikd@mega-nerd.com>
+** Copyright (C) 2002-2011 Erik de Castro Lopo <erikd@mega-nerd.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 */
 
 /*
-** This code is part of Secret Rabibt Code aka libsamplerate. A commercial
+** This code is part of Secret Rabbit Code aka libsamplerate. A commercial
 ** use license for this code is available, please see:
 **		http://www.mega-nerd.com/SRC/procedure.html
 */
@@ -48,10 +48,8 @@ typedef int32_t increment_t ;
 typedef float	coeff_t ;
 
 #include "fastest_coeffs.h"
-#ifdef HIGH_QUALITY
 #include "mid_qual_coeffs.h"
 #include "high_qual_coeffs.h"
-#endif
 
 typedef struct
 {	int		sinc_magic_marker ;
@@ -206,7 +204,7 @@ sinc_set_converter (SRC_PRIVATE *psrc, int src_enum)
 				temp_filter.coeff_half_len = ARRAY_LEN (fastest_coeffs.coeffs) - 1 ;
 				temp_filter.index_inc = fastest_coeffs.increment ;
 				break ;
-#if HIGH_QUALITY
+
 		case SRC_SINC_MEDIUM_QUALITY :
 				temp_filter.coeffs = slow_mid_qual_coeffs.coeffs ;
 				temp_filter.coeff_half_len = ARRAY_LEN (slow_mid_qual_coeffs.coeffs) - 1 ;
@@ -218,7 +216,7 @@ sinc_set_converter (SRC_PRIVATE *psrc, int src_enum)
 				temp_filter.coeff_half_len = ARRAY_LEN (slow_high_qual_coeffs.coeffs) - 1 ;
 				temp_filter.index_inc = slow_high_qual_coeffs.increment ;
 				break ;
-#endif
+
 		default :
 				return SRC_ERR_BAD_CONVERTER ;
 		} ;
@@ -1168,7 +1166,7 @@ prepare_data (SINC_FILTER *filter, SRC_DATA *data, int half_filter_chan_len)
 	len = MIN (filter->in_count - filter->in_used, len) ;
 	len -= (len % filter->channels) ;
 
-	if  (len < 0 || filter->b_end + len > filter->b_len)
+	if (len < 0 || filter->b_end + len > filter->b_len)
 		return SRC_ERR_SINC_PREPARE_DATA_BAD_LEN ;
 
 	memcpy (filter->buffer + filter->b_end, data->data_in + filter->in_used,
@@ -1195,6 +1193,9 @@ prepare_data (SINC_FILTER *filter, SRC_DATA *data, int half_filter_chan_len)
 
 		filter->b_real_end = filter->b_end ;
 		len = half_filter_chan_len + 5 ;
+
+		if (len < 0 || filter->b_end + len > filter->b_len)
+			len = filter->b_len - filter->b_end ;
 
 		memset (filter->buffer + filter->b_end, 0, len * sizeof (filter->buffer [0])) ;
 		filter->b_end += len ;

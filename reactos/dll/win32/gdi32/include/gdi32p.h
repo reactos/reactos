@@ -298,7 +298,7 @@ GdiAllocBatchCommand(
     USHORT Cmd)
 {
     PTEB pTeb;
-    ULONG ulSize;
+    USHORT cjSize;
     PGDIBATCHHDR pHdr;
 
     /* Get a pointer to the TEB */
@@ -318,45 +318,23 @@ GdiAllocBatchCommand(
     }
 
     /* Get the size of the entry */
-    switch(Cmd)
-    {
-    case GdiBCPatBlt:
-        ulSize = 0;
-        break;
-    case GdiBCPolyPatBlt:
-        ulSize = 0;
-        break;
-    case GdiBCTextOut:
-        ulSize = 0;
-        break;
-    case GdiBCExtTextOut:
-        ulSize = 0;
-        break;
-    case GdiBCSetBrushOrg:
-        ulSize = 0;
-        break;
-    case GdiBCExtSelClipRgn:
-        ulSize = 0;
-        break;
-    case GdiBCSelObj:
-        ulSize = sizeof(GDIBSOBJECT);
-        break;
-    case GdiBCDelRgn:
-        ulSize = sizeof(GDIBSOBJECT);
-        break;
-    case GdiBCDelObj:
-        ulSize = sizeof(GDIBSOBJECT);
-        break;
-    default:
-        return NULL;
-    }
+    if      (Cmd == GdiBCPatBlt) cjSize = 0;
+    else if (Cmd == GdiBCPolyPatBlt) cjSize = 0;
+    else if (Cmd == GdiBCTextOut) cjSize = 0;
+    else if (Cmd == GdiBCExtTextOut) cjSize = 0;
+    else if (Cmd == GdiBCSetBrushOrg) cjSize = 0;
+    else if (Cmd == GdiBCExtSelClipRgn) cjSize = 0;
+    else if (Cmd == GdiBCSelObj) cjSize = sizeof(GDIBSOBJECT);
+    else if (Cmd == GdiBCDelRgn) cjSize = sizeof(GDIBSOBJECT);
+    else if (Cmd == GdiBCDelObj) cjSize = sizeof(GDIBSOBJECT);
+    else cjSize = 0;
 
     /* Unsupported operation */
-    if (ulSize == 0) return NULL;
+    if (cjSize == 0) return NULL;
 
     /* Check if the buffer is full */
     if ((pTeb->GdiBatchCount >= GDI_BatchLimit) ||
-            ((pTeb->GdiTebBatch.Offset + ulSize) > GDIBATCHBUFSIZE))
+            ((pTeb->GdiTebBatch.Offset + cjSize) > GDIBATCHBUFSIZE))
     {
         /* Call win32k, the kernel will call NtGdiFlushUserBatch to flush
            the current batch */
@@ -367,12 +345,12 @@ GdiAllocBatchCommand(
     pHdr = (PVOID)((PUCHAR)pTeb->GdiTebBatch.Buffer + pTeb->GdiTebBatch.Offset);
 
     /* Update Offset and batch count */
-    pTeb->GdiTebBatch.Offset += ulSize;
+    pTeb->GdiTebBatch.Offset += cjSize;
     pTeb->GdiBatchCount++;
 
     /* Fill in the core fields */
     pHdr->Cmd = Cmd;
-    pHdr->Size = ulSize;
+    pHdr->Size = cjSize;
 
     return pHdr;
 }

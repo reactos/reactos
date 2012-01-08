@@ -368,7 +368,8 @@ end:
 		//ExFreePool(list->handles);
 	}
 
-	AcpiOsFree(buffer.Pointer);
+    if (buffer.Pointer)
+        AcpiOsFree(buffer.Pointer);
 
 	return_ACPI_STATUS(status);
 }

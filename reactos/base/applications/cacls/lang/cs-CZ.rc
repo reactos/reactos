@@ -2,7 +2,6 @@
  * FILE:             base/applications/cacls/lang/cs-CZ.rc
  * TRANSLATOR:       Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:          2008-02-29
- * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -10,37 +9,37 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Zobrazí nebo zmìní seznamy øízení pøístupu (ACL) k souborùm\n\n\
-CACLS názvu [/T] [/E] [/C] [/G uživatel:oprávnìní [...]] [/R uživatel [...]]\n\
-               [/P uživatel:oprávnìní [...]] [/D uživatel [...]]\n\
+IDS_HELP, "Zobrazí nebo změní seznamy řízení přístupu (ACL) k souborům\n\n\
+CACLS názvu [/T] [/E] [/C] [/G uživatel:oprávnění [...]] [/R uživatel [...]]\n\
+               [/P uživatel:oprávnění [...]] [/D uživatel [...]]\n\
    názvu_soubori Zobrazí ACL.\n\
-   /T            Zmìní ACL urèených souborù\n\
-                 v aktuálním adresáøi a všech podadresáøích.\n\
+   /T            Změní ACL určených souborů\n\
+                 v aktuálním adresáři a všech podadresářích.\n\
    /E            Místo nahrazení ACL jej upraví.\n\
-   /C            Pøi chybách odmítnutí pøístupu pokraèuje.\n\
-   /G uživatel:oprávnìní  Udìlí urèenému uživateli pøístupová oprávnìní.\n\
-                 Oprávnìní mùže být: R  Èíst\n\
+   /C            Při chybách odmítnutí přístupu pokračuje.\n\
+   /G uživatel:oprávnění  Udělí určenému uživateli přístupová oprávnění.\n\
+                 Oprávnění může být: R  Číst\n\
                                      W  Zapisovat\n\
-                                     C  Mìnit (zapisovat)\n\
-                                     F  Úplné øízení\n\
-   /R uživatel   Odvolá pøístupová oprávnìní urèeného uživatele\n\
+                                     C  Měnit (zapisovat)\n\
+                                     F  Úplné řízení\n\
+   /R uživatel   Odvolá přístupová oprávnění určeného uživatele\n\
                  (platné pouze s parametrem /E).\n\
-   /P uživatel:oprávnìní  Nahradí pøístupová oprávnìní urèeného uživatele.\n\
-                 Oprávnìní mùže být: N  Žádné\n\
-                                     R  Èíst\n\
+   /P uživatel:oprávnění  Nahradí přístupová oprávnění určeného uživatele.\n\
+                 Oprávnění může být: N  Žádné\n\
+                                     R  Číst\n\
                                      W  Zapisovat\n\
-                                     C  Mìnit (zapisovat)\n\
-                                     F  Úplné øízení\n\
-   /D uživatel   Odepøe pøístup urèenému uživateli.\n\
-Pro urèení více než jednoho souboru mohou být v pøíkazu použity zástupné znaky.\n\
-V pøíkazu mùžete urèit více než jednoho uživatele.\n\n\
+                                     C  Měnit (zapisovat)\n\
+                                     F  Úplné řízení\n\
+   /D uživatel   Odepře přístup určenému uživateli.\n\
+Pro určení více než jednoho souboru mohou být v příkazu použity zástupné znaky.\n\
+V příkazu můžete určit více než jednoho uživatele.\n\n\
 Zkratky:\n\
-   CI - Dìdit kontejner.\n\
-        ACE bude dìdìno adresáøi.\n\
-   OI - Dìdit objekt.\n\
-        ACE bude dìdìno soubory.\n\
-   IO - Pouze dìdit.\n\
-        ACE se nepoužije na aktuální adresáø èi soubor.\n"
+   CI - Dědit kontejner.\n\
+        ACE bude děděno adresáři.\n\
+   OI - Dědit objekt.\n\
+        ACE bude děděno soubory.\n\
+   IO - Pouze dědit.\n\
+        ACE se nepoužije na aktuální adresář či soubor.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -52,7 +51,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(DENY)"
-IDS_SPECIAL_ACCESS, "(zvláštní pøístup:)"
+IDS_SPECIAL_ACCESS, "(zvláštní přístup:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"

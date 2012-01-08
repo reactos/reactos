@@ -243,6 +243,7 @@ create_cache(int force, int skipImageBase)
         l2l_dbg(0, "Cannot list directory %s\n", opt_dir);
         l2l_dbg(1, "Failed to execute: '%s'\n", Line);
         remove(tmp_name);
+        free(Line);
         return 2;
     }
     l2l_dbg(0, "Creating cache ...");

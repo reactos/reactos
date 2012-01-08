@@ -65,7 +65,7 @@ extern POBJECT_TYPE NTSYSAPI ExTimerType;
 //
 // Exported NT Build Number
 //
-extern ULONG NtBuildNumber;
+extern ULONG NTSYSAPI NtBuildNumber;
 
 //
 // Invalid Handle Value Constant
@@ -175,7 +175,9 @@ typedef enum _HARDERROR_RESPONSE_OPTION
     OptionRetryCancel,
     OptionYesNo,
     OptionYesNoCancel,
-    OptionShutdownSystem
+    OptionShutdownSystem,
+    OptionOkNoWait,
+    OptionCancelTryContinue
 } HARDERROR_RESPONSE_OPTION, *PHARDERROR_RESPONSE_OPTION;
 
 typedef enum _HARDERROR_RESPONSE
@@ -586,7 +588,7 @@ typedef struct _HANDLE_TABLE_ENTRY
 typedef struct _HANDLE_TABLE
 {
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-    ULONG TableCode;
+    ULONG_PTR TableCode;
 #else
     PHANDLE_TABLE_ENTRY **Table;
 #endif
@@ -1090,10 +1092,10 @@ typedef struct _SYSTEM_POOLTAG
     };
     ULONG PagedAllocs;
     ULONG PagedFrees;
-    ULONG PagedUsed;
+    SIZE_T PagedUsed;
     ULONG NonPagedAllocs;
     ULONG NonPagedFrees;
-    ULONG NonPagedUsed;
+    SIZE_T NonPagedUsed;
 } SYSTEM_POOLTAG, *PSYSTEM_POOLTAG;
 typedef struct _SYSTEM_POOLTAG_INFORMATION
 {
@@ -1329,10 +1331,10 @@ typedef struct _SYSTEM_VERIFIER_INFORMATION
    ULONG CurrentNonPagedPoolAllocations;
    ULONG PeakPagedPoolAllocations;
    ULONG PeakNonPagedPoolAllocations;
-   ULONG PagedPoolUsageInBytes;
-   ULONG NonPagedPoolUsageInBytes;
-   ULONG PeakPagedPoolUsageInBytes;
-   ULONG PeakNonPagedPoolUsageInBytes;
+   SIZE_T PagedPoolUsageInBytes;
+   SIZE_T NonPagedPoolUsageInBytes;
+   SIZE_T PeakPagedPoolUsageInBytes;
+   SIZE_T PeakNonPagedPoolUsageInBytes;
 } SYSTEM_VERIFIER_INFORMATION, *PSYSTEM_VERIFIER_INFORMATION;
 
 // FIXME: Class 52

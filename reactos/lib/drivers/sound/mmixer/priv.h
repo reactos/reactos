@@ -1,5 +1,3 @@
-#pragma once
-
 #include <pseh/pseh2.h>
 #include <ntddk.h>
 
@@ -525,3 +523,6 @@ MMixerGetConnectedFromLogicalTopologyPins(
     IN ULONG NodeIndex,
     OUT PULONG OutPinCount,
     OUT PULONG OutPins);
+
+VOID
+MMixerPrintTopology();

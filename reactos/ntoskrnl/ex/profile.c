@@ -489,7 +489,7 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     }
 
     /* Query the Interval */
-    ReturnInterval = KeQueryIntervalProfile(ProfileSource);
+    ReturnInterval = (ULONG)KeQueryIntervalProfile(ProfileSource);
 
     /* Enter SEH block for return */
     _SEH2_TRY

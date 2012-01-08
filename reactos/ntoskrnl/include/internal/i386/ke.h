@@ -164,6 +164,31 @@ typedef struct _KV8086_STACK_FRAME
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
 
+/* Diable interrupts and return whether they were enabled before */
+FORCEINLINE
+BOOLEAN
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+/* Restore previous interrupt state */
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Registers an interrupt handler with an IDT vector
 //
@@ -439,7 +464,7 @@ extern PVOID Ki386IopmSaveArea;
 extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
-extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
+extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR+1];
 extern KDESCRIPTOR KiIdtDescriptor;
 extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern ULONG KeI386NpxPresent;
@@ -468,7 +493,7 @@ extern CHAR KiSystemCallExit2[];
 //
 // Trap Macros
 //
-#include "../trap_x.h"
+#include "trap_x.h"
 
 //
 // Returns a thread's FPU save area
@@ -734,13 +759,12 @@ KiConvertToGuiThread(VOID)
      */
     __asm__ __volatile__
     (
-        "movl %%ebp, %1\n"
-        "subl %%esp, %1\n"
-        "call _PsConvertToGuiThread@0\n"
-        "addl %%esp, %1\n"
-        "movl %1, %%ebp\n"
-        "movl %%eax, %0\n"
-        : "=r"(Result), "=r"(StackFrame)
+        "movl %%ebp, %1\n\t"
+        "subl %%esp, %1\n\t"
+        "call _PsConvertToGuiThread@0\n\t"
+        "addl %%esp, %1\n\t"
+        "movl %1, %%ebp"
+        : "=a"(Result), "=r"(StackFrame)
         :
         : "%esp", "%ecx", "%edx", "memory"
     );
@@ -844,6 +868,13 @@ Ki386PerfEnd(VOID)
              KeGetCurrentPrcb()->InterruptCount,
              KeGetCurrentPrcb()->KeSystemCalls,
              KeGetContextSwitches(KeGetCurrentPrcb()));
+}
+
+FORCEINLINE
+PULONG
+KiGetUserModeStackAddress(void)
+{
+    return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
 
 #endif

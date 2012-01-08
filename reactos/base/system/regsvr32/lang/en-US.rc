@@ -1,4 +1,3 @@
-#include "resource.h"
 /*
  * Moved all hardcoded strings to En.rc.
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
@@ -28,5 +27,5 @@ IDS_MissingEntry,    "%s was loaded, but the %s entry point was not found.\n\n\
 
 IDS_FailureMessage,  "%s in %s failed.\nReturn code was: 0x%08x"
 
-IDS_SuccessMessage   "%s in %s succeeded."
+IDS_SuccessMessage,  "%s in %s succeeded."
 END

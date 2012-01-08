@@ -35,8 +35,8 @@ typedef struct _ROSSYM_KM_OWN_CONTEXT {
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
-static PROSSYM_INFO KdbpRosSymInfo;
-static ULONG_PTR KdbpImageBase;
+//static PROSSYM_INFO KdbpRosSymInfo;
+//static ULONG_PTR KdbpImageBase;
 BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
@@ -178,7 +178,9 @@ KdbSymPrintAddress(
 	PMEMORY_AREA MemoryArea = NULL;
 	PROS_SECTION_OBJECT SectionObject;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+#if 0
     PROSSYM_KM_OWN_CONTEXT FileContext;
+#endif
     ULONG_PTR RelativeAddress;
     NTSTATUS Status;
 	ROSSYM_LINEINFO LineInfo = {0};
@@ -199,8 +201,11 @@ KdbSymPrintAddress(
 
     if (Context)
     {
+#if 0
+        // Disable arguments for now
         DPRINT("Has Context %x (EBP %x)\n", Context, Context->Ebp);
         LineInfo.Flags = ROSSYM_LINEINFO_HAS_REGISTERS;
+#endif
 
         for (i = 0; i < sizeof(regmap) / sizeof(regmap[0]); i++) {
             memcpy
@@ -224,7 +229,7 @@ KdbSymPrintAddress(
     {
         DbgPrint("<%wZ:%x (%s:%d (%s))>",
             &LdrEntry->BaseDllName, RelativeAddress, LineInfo.FileName, LineInfo.LineNumber, LineInfo.FunctionName);
-        if (Context)
+        if (Context && LineInfo.NumParams)
         {
             int i;
             char *comma = "";
@@ -249,8 +254,10 @@ KdbSymPrintAddress(
 		{
 			goto end;
 		}
+
 		SectionObject = MemoryArea->Data.SectionData.Section;
 		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
+#if 0
 		if (MemoryArea->StartingAddress != (PVOID)KdbpImageBase)
 		{
 			if (KdbpRosSymInfo)
@@ -287,7 +294,7 @@ KdbSymPrintAddress(
 					 LineInfo.LineNumber,
 					 LineInfo.FunctionName);
 
-                if (Context)
+                if (Context && LineInfo.NumParams)
                 {
                     int i;
                     char *comma = "";
@@ -306,6 +313,7 @@ KdbSymPrintAddress(
 				return TRUE;
 			}
 		}
+#endif
 	}
 
 end:
@@ -593,7 +601,7 @@ KdbSymProcessSymbols(
         UNICODE_STRING ModuleNameCopy;
         RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\system32\\Drivers\\");
         ModuleNameCopy.Length = 0;
-        ModuleNameCopy.MaximumLength = 
+        ModuleNameCopy.MaximumLength =
             LdrEntry->BaseDllName.MaximumLength + SystemRoot.MaximumLength;
         ModuleNameCopy.Buffer = ExAllocatePool(NonPagedPool, SystemRoot.MaximumLength + LdrEntry->BaseDllName.MaximumLength);
         RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);
@@ -645,7 +653,7 @@ static VOID KdbpSymFreeMem(PVOID Area)
 	return ExFreePool(Area);
 }
 
-static BOOLEAN KdbpSymReadMem(PVOID FileContext, PVOID TargetDebug, PVOID SourceMem, ULONG Size)
+static BOOLEAN KdbpSymReadMem(PVOID FileContext, ULONG_PTR* TargetDebug, PVOID SourceMem, ULONG Size)
 {
 	return NT_SUCCESS(KdbpSafeReadMemory(TargetDebug, SourceMem, Size));
 }

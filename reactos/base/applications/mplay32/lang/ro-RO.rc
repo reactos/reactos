@@ -1,0 +1,37 @@
+/*
+ * FILE:             base/applications/mplay32/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * LAST CHANGE:      2011-12-19  minor changes
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Fișier"
+	BEGIN
+		MENUITEM "&Deschidere…", IDM_OPEN_FILE
+		MENUITEM "Î&nchide",     IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "I&eșire",      IDM_EXIT
+	END
+	POPUP "&?"
+	BEGIN
+		MENUITEM "&Despre…",     IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER  "Toate admisibile (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY      "Redare conținut multimedia"
+	IDS_TOOLTIP_STOP      "Oprirea lecturii"
+	IDS_TOOLTIP_EJECT     "Scoate"
+	IDS_TOOLTIP_BACKWARD  "Salt la precedent"
+	IDS_TOOLTIP_SEEKBACK  "Derulează înapoi"
+	IDS_TOOLTIP_SEEKFORW  "Derulează înainte"
+	IDS_TOOLTIP_FORWARD   "Salt la următor"
+	IDS_APPTITLE          "Lector multimedia"
+	IDS_PLAY              "Lecturare"
+END

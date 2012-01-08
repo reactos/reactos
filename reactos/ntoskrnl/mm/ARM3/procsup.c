@@ -220,7 +220,8 @@ MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
     PMMPTE PointerPte;
-    PFN_NUMBER StackPages, PageFrameNumber;//, PageTableFrameNumber;
+    PFN_NUMBER PageFrameNumber;//, PageTableFrameNumber;
+    PFN_COUNT StackPages;
     PMMPFN Pfn1;//, Pfn2;
     ULONG i;
     KIRQL OldIrql;
@@ -293,7 +294,7 @@ NTAPI
 MmCreateKernelStack(IN BOOLEAN GuiStack,
                     IN UCHAR Node)
 {
-    PFN_NUMBER StackPtes, StackPages;
+    PFN_COUNT StackPtes, StackPages;
     PMMPTE PointerPte, StackPte;
     PVOID BaseAddress;
     MMPTE TempPte, InvalidPte;
@@ -578,12 +579,6 @@ MmCreatePeb(IN PEPROCESS Process,
     KeAttachProcess(&Process->Pcb);
 
     //
-    // Allocate the PEB
-    //
-    Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
-    ASSERT(NT_SUCCESS(Status));
-
-    //
     // Map NLS Tables
     //
     Status = MmMapViewOfSection(ExpNlsSectionPointer,
@@ -596,7 +591,25 @@ MmCreatePeb(IN PEPROCESS Process,
                                 ViewShare,
                                 MEM_TOP_DOWN,
                                 PAGE_READONLY);
-    if (!NT_SUCCESS(Status)) return Status;
+    DPRINT("NLS Tables at: %p\n", TableBase);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and exit */
+        KeDetachProcess();
+        return Status;
+    }
+
+    //
+    // Allocate the PEB
+    //
+    Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
+    DPRINT("PEB at: %p\n", Peb);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and exit */
+        KeDetachProcess();
+        return Status;
+    }
 
     //
     // Use SEH in case we can't load the PEB
@@ -636,7 +649,7 @@ MmCreatePeb(IN PEPROCESS Process,
         // Heap and Debug Data
         //
         Peb->NumberOfProcessors = KeNumberProcessors;
-        Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL ? TRUE : FALSE);
+        Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL);
         Peb->NtGlobalFlag = NtGlobalFlag;
         /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
          Peb->HeapSegmentCommit = MmHeapSegmentCommit;
@@ -730,34 +743,20 @@ MmCreatePeb(IN PEPROCESS Process,
                 Peb->OSMinorVersion = (NtHeaders->OptionalHeader.Win32VersionValue >> 8) & 0xFF;
                 Peb->OSBuildNumber = (NtHeaders->OptionalHeader.Win32VersionValue >> 16) & 0x3FFF;
                 Peb->OSPlatformId = (NtHeaders->OptionalHeader.Win32VersionValue >> 30) ^ 2;
-            }
 
-            //
-            // Process the image config data overrides if specfied
-            //
-            if (ImageConfigData != NULL)
-            {
-                //
-                // Process CSD version override
-                //
-                if (ImageConfigData->CSDVersion)
+                /* Process CSD version override */
+                if ((ImageConfigData) && (ImageConfigData->CSDVersion))
                 {
-                    //
-                    // Set new data
-                    //
+                    /* Take the value from the image configuration directory */
                     Peb->OSCSDVersion = ImageConfigData->CSDVersion;
                 }
+            }
 
-                //
-                // Process affinity mask ovverride
-                //
-                if (ImageConfigData->ProcessAffinityMask)
-                {
-                    //
-                    // Set new data
-                    //
-                    ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
-                }
+            /* Process optional process affinity mask override */
+            if ((ImageConfigData) && (ImageConfigData->ProcessAffinityMask))
+            {
+                /* Take the value from the image configuration directory */
+                ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
             }
 
             //
@@ -767,6 +766,7 @@ MmCreatePeb(IN PEPROCESS Process,
                 //
                 // Force it to use CPU 0
                 //
+                /* FIXME: this should use the MmRotatingUniprocessorNumber */
                 Peb->ImageProcessAffinityMask = 0;
             }
             else
@@ -1114,7 +1114,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     PMMPFN Pfn1;
 
     /* Choose a process color */
-    Process->NextPageColor = RtlRandom(&MmProcessColorSeed);
+    Process->NextPageColor = (USHORT)RtlRandom(&MmProcessColorSeed);
 
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);

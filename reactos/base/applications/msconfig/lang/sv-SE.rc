@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS APPS
- * FILE:            \base\applications\msconfig\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:      ReactOS MSCONFIG
+ * FILE:         base\applications\msconfig\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
@@ -15,9 +16,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,2,2,374,195
     DEFPUSHBUTTON "OK", IDOK, 211, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Hj‰lp", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Hj√§lp", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Avbryt", IDCANCEL, 267, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Verkst‰ll", IDC_BTN_APPLY, 323, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Verkst√§ll", IDC_BTN_APPLY, 323, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_STARTUP_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -33,14 +34,14 @@ IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON      "Flytta &upp", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON      "Flytta &ner", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
     PUSHBUTTON      "&Aktivera", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
     PUSHBUTTON      "I&naktivera", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
 
-    PUSHBUTTON      "&Sˆk", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
+    PUSHBUTTON      "&S√∂k", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON      "&Ny", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON      "Re&digera", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
 
@@ -54,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2",IDC_TOOLS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 134
     EDITTEXT IDC_TOOLS_CMDLINE, 1, 139, 360, 12, ES_READONLY
-    PUSHBUTTON "&Kˆr", IDC_BTN_RUN, 311, 155, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&K√∂r", IDC_BTN_RUN, 311, 155, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_SERVICES_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -71,11 +72,11 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Uppstartsval", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
- CONTROL "&Normal uppstart - ladda in alla drivrutiner och tj‰nster", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 236, 10
- CONTROL "&Diagnostisk uppstart - ladda bara in grundl‰ggande drivrutiner och tj‰nster", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 236, 10
+ CONTROL "&Normal uppstart - ladda in alla drivrutiner och tj√§nster", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 236, 10
+ CONTROL "&Diagnostisk uppstart - ladda bara in grundl√§ggande drivrutiner och tj√§nster", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 236, 10
  CONTROL "&Selektiv uppstart", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
  AUTOCHECKBOX "L&adda in SYSTEM.INI Filen", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
- AUTOCHECKBOX "&Ladda in Systemtj‰nster", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
+ AUTOCHECKBOX "&Ladda in Systemtj√§nster", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
  AUTOCHECKBOX "La&dda in uppstartsprylar", IDC_CBX_STARTUP_ITEM, 30, 110, 105, 10
 END
 
@@ -84,17 +85,17 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    LISTBOX         IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-   PUSHBUTTON    "&Undersˆk alla bootv‰gar", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 75, 12
-   PUSHBUTTON    "&S‰tt som standard", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+   PUSHBUTTON    "&Unders√∂k alla bootv√§gar", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 75, 12
+   PUSHBUTTON    "&S√§tt som standard", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
    PUSHBUTTON    "Flytta &upp", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
    PUSHBUTTON    "Flytta &ner", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
    GROUPBOX "Uppstarts alternativ", -1, 10, 80, 250, 95,0,WS_EX_TRANSPARENT
-   CHECKBOX "/S‰&ker uppstart", IDC_CBX_SAFE_BOOT, 15, 90, 95, 10
+   CHECKBOX "/S√§&ker uppstart", IDC_CBX_SAFE_BOOT, 15, 90, 95, 10
    CHECKBOX "/&Ingen grafisk uppstart", IDC_CBX_NO_GUI_BOOT, 15, 105, 95, 10
    CHECKBOX "/&Uppstartslogg", IDC_CBX_BOOT_LOG, 15, 120, 80, 10
    CHECKBOX "/Enkel &grafik", IDC_CBX_BASE_VIDEO, 15, 135, 95, 10
-   CHECKBOX "/H&j‰lp", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "Av&ancerade alternativ...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 93, 12 
+   CHECKBOX "/H&j√§lp", IDC_CBX_SOS, 15, 150, 50, 10
+   PUSHBUTTON "Av&ancerade alternativ...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 93, 12
    LTEXT "&Timeout:", -1, 280, 91, 70, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 280, 100, 25, 12, ES_LEFT
    LTEXT "sekunder", -1, 310, 100, 85, 10
@@ -130,15 +131,15 @@ BEGIN
     IDS_MSCONFIG             "Systemkonfiguration"
     IDS_TAB_GENERAL          "Generellt"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Tj‰nster" 
-    IDS_TAB_STARTUP          "Uppstart" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Tj√§nster"
+    IDS_TAB_STARTUP          "Uppstart"
     IDS_TAB_TOOLS            "Verktyg"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_COLUMN_SERVICE "Tj‰nst"
+    IDS_SERVICES_COLUMN_SERVICE "Tj√§nst"
     IDS_SERVICES_COLUMN_REQ     "Viktigt"
     IDS_SERVICES_COLUMN_VENDOR  "Tillverkare"
     IDS_SERVICES_COLUMN_STATUS  "Status"
@@ -150,7 +151,7 @@ BEGIN
     IDS_TOOLS_COLUMN_DESCR   "Beskrivning"
 
     IDS_TOOLS_CMD_NAME       "Kommando prompt"
-    IDS_TOOLS_CMD_DESCR      "Kommando tolk fˆr att kontrollera systemet"
+    IDS_TOOLS_CMD_DESCR      "Kommando tolk f√∂r att kontrollera systemet"
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
     IDS_TOOLS_INFO_NAME      "Version"
@@ -158,7 +159,7 @@ BEGIN
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Registereditor"
-    IDS_TOOLS_REGEDIT_DESCR  "÷ppna registereditorn."
+    IDS_TOOLS_REGEDIT_DESCR  "√ñppna registereditorn."
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Systemegenskaper"
@@ -173,8 +174,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Kˆrs"
+    IDS_SERVICES_STATUS_RUNNING "K√∂rs"
     IDS_SERVICES_STATUS_STOPPED "Stoppad"
     IDS_SERVICES_YES "Ja"
-    IDS_SERVICES_UNKNOWN "Ok‰nt" 
+    IDS_SERVICES_UNKNOWN "Ok√§nt"
 END

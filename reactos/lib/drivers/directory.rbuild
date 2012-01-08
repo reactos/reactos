@@ -7,8 +7,8 @@
 	<directory name="ip">
 		<xi:include href="ip/ip.rbuild" />
 	</directory>
-	<directory name="oskittcp">
-		<xi:include href="oskittcp/oskittcp.rbuild" />
+	<directory name="lwip">
+		<xi:include href="lwip/lwip.rbuild" />
 	</directory>
 	<directory name="chew">
 		<xi:include href="chew/chew.rbuild" />

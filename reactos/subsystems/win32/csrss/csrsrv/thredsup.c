@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsys/csr/csrsrv/procsup.c
+ * FILE:            subsystems/win32/csrss/csrsrv/thredsup.c
  * PURPOSE:         CSR Process Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu
@@ -214,17 +214,16 @@ CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess,
                 IN HANDLE hThread,
                 IN PCLIENT_ID ClientId)
 {
-    NTSTATUS Status;
     PCSR_THREAD CsrThread;
     //PCSRSS_PROCESS_DATA CurrentProcess;
-    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
-    CLIENT_ID CurrentCid;
+    //PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    //CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;
 
 //    DPRINT1("CSRSRV: %s called\n", __FUNCTION__);
 
     /* Get the current thread and CID */
-    CurrentCid = CurrentThread->ClientId;
+    //CurrentCid = CurrentThread->ClientId;
 //    DPRINT1("CALLER PID/TID: %lx/%lx\n", CurrentCid.UniqueProcess, CurrentCid.UniqueThread);
 
     /* Acquire the Process Lock */
@@ -243,11 +242,11 @@ CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess,
     }
 #endif
     /* Get the Thread Create Time */
-    Status = NtQueryInformationThread(hThread,
-                                      ThreadTimes,
-                                      (PVOID)&KernelTimes,
-                                      sizeof(KernelTimes),
-                                      NULL);
+    NtQueryInformationThread(hThread,
+                             ThreadTimes,
+                             (PVOID)&KernelTimes,
+                             sizeof(KernelTimes),
+                             NULL);
 
     /* Allocate a CSR Thread Structure */
     if (!(CsrThread = CsrAllocateThread(CsrProcess)))

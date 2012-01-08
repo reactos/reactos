@@ -84,6 +84,7 @@ CreateInMemoryStructure(
 	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
 	if (!Key->KeyCell)
 	{
+        free(Key->Name);
 		free(Key);
 		return NULL;
 	}
@@ -447,6 +448,9 @@ RegSetValueExW(
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->Data, FALSE);
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
+
+    if (cbData > Key->KeyCell->MaxValueDataLen)
+        Key->KeyCell->MaxValueDataLen = cbData;
 
 	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset, FALSE);
 

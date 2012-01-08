@@ -4,28 +4,20 @@ Signature="$ReactOS$
 [AddReg]
 HKLM,"SOFTWARE\Classes",,0x00000010
 
-
 ; Default key
 HKCR,"*","",0x00000000,""
-HKCR,"*\shellex\ContextMenuHandlers\Open With","",0x00000000,"{09799AFB-AD67-11d1-ABCD-00C04FC30936}"
+HKCR,"SystemFileAssociations","",0x00000000,""
 
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"
-;HKCR,"Folder\Defaulticon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
+;HKCR,"Folder\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
 HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
-HKCR,"Folder\shell\rootexplore","",0x00000000,"Explore from here"
-HKCR,"Folder\shell\rootexplore\command","",0x00000000,"explorer.exe /e,/root,""%1"""
 
 ; Drive property page
 HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}","",0x00000000,"Drive Property Page Extension"
 HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","",0x00000000,"shell32.dll"
 HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-
-; New Object Service
-HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}","",0x00000000,"ReactOS New Object Service"
-HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
 ; Rich Text Files
 HKCR,".rtf","",0x00000000,"rtffile"
@@ -290,71 +282,12 @@ HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.e
 HKCR,"CLSID",,0x00000012
 
 ; For Shell32.dll
-HKCR,"CLSID\{00021400-0000-0000-C000-000000000046}","",0x00000000,"Desktop"
-HKCR,"CLSID\{00021400-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{00021400-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{00021401-0000-0000-C000-000000000046}","",0x00000000,"Shortcut"
-HKCR,"CLSID\{00021401-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{00021401-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{00021401-0000-0000-C000-000000000046}\shellex\MayChangeDefaultMenu","",0x00000000,""
-HKCR,"CLSID\{000214E6-0000-0000-C000-000000000046}","",0x00000000,"Shellfolder"
-HKCR,"CLSID\{000214E6-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{000214E6-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{000214EE-0000-0000-C000-000000000046}","",0x00000000,"IShellLinkA"
-HKCR,"CLSID\{000214EE-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{000214EE-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{000214F9-0000-0000-C000-000000000046}","",0x00000000,"IShellLinkW"
-HKCR,"CLSID\{000214F9-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{000214F9-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}","",0x00000000,"Computer Search Results Folder"
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}","LocalizedString",0x00020000,"@%SystemRoot%\system32\shell32.dll,-30521"
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-135"
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 HKCR,"CLSID\{1F4DE370-D627-11D1-BA4F-00A0C91EEDBA}\ShellFolder","Attributes",0x00010001,0x20180000
-
-HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}","",0x00000000,"Shell Drag and Drop helper"
-HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
-HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-
-HKCR,"CLSID\{4622AD11-FF23-11D0-8D34-00A0C90F2719}","",0x00000000,"Shell Start Menu"
-HKCR,"CLSID\{4622AD11-FF23-11D0-8D34-00A0C90F2719}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
-HKCR,"CLSID\{4622AD11-FF23-11D0-8D34-00A0C90F2719}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-
-; Folder Options CPL
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}","",0x00000000,"Folder Options"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}","LocalizedString",0x00020000,"@%SystemRoot%\system32\shell32.dll,-150"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-210"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\shell\Open\command","",0x00000000,"rundll32.exe shell32.dll,Options_RunDLL 0"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\shell\RunAs\command","",0x00000000,"rundll32.exe shell32.dll,Options_RunDLL 0"
-HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\ShellFolder","Attributes",0x00010001,0x00000000
-
-; Open With shell extension
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}","",0x00000000,"Open With Context Menu Handler"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\shellex\MayChangeDefaultMenu","",0x00000000,""
-HKCR,"SystemFileAssociations","",0x00000000,""
-HKCR,"Applications","",0x00000000,""
-
-; Recycle bin is not implemented 
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","",0x00000000,"Recycle Bin"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","LocalizedString",0x00020000,"@%SystemRoot%\system32\shell32.dll,-8964"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","InfoTip",0x00020000,"@%SystemRoot%\system32\shell32.dll,-22915"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","IntroText",0x00020000,"@%SystemRoot%\system32\shell32.dll,-31748"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","SortOrderIndex",0x00010001,0x00000060
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,31"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Empty",0x00020000,"%SystemRoot%\system32\shell32.dll,31"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Full",0x00020000,"%SystemRoot%\system32\shell32.dll,32"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\ShellFolder","Attributes",0x00010001,0x20000140
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\ShellFolder","CallForAttributes",0x00010001,0x00000040
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\ContextMenuHandlers\{645FF040-5081-101B-9F08-00AA002F954E}","",0x00000000,""
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\PropertySheetHandlers\{645FF040-5081-101B-9F08-00AA002F954E}","",0x00000000,""
 
 ; deskadp.dll shell extension
 HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}","",0x00000000,"Display Adapter CPL Extension"
@@ -383,6 +316,10 @@ HKCR,"NDS\Clsid","",0x00000002,"{323991f0-7bad-11cf-b03d-00aa006e0975}"
 
 HKCR,"WinNT\Clsid","",0x00000002,"{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
 
+; Applications
+HKCR,"Applications\notepad.exe\shell\open\command","",0x00000002,"notepad.exe %1"
+HKCR,"Applications\mspaint.exe\shell\open\command","",0x00000002,"mspaint.exe %1"
+HKCR,"Applications\wordpad.exe\shell\open\command","",0x00000002,"wordpad.exe %1"
 
 ; For language support:
 
@@ -460,6 +397,7 @@ HKCR,"MIME\Database\Rfc1766","0421",0x00000000,"in;Indonesian"
 HKCR,"MIME\Database\Rfc1766","0410",0x00000000,"it;Italian (Italy)"
 HKCR,"MIME\Database\Rfc1766","0810",0x00000000,"it-ch;Italian (Switzerland)"
 HKCR,"MIME\Database\Rfc1766","0411",0x00000000,"ja;Japanese"
+HKCR,"MIME\Database\Rfc1766","043F",0x00000000,"kk;Kazakh"
 HKCR,"MIME\Database\Rfc1766","0412",0x00000000,"ko;Korean"
 HKCR,"MIME\Database\Rfc1766","0426",0x00000000,"lv;Latvian"
 HKCR,"MIME\Database\Rfc1766","0427",0x00000000,"lt;Lithuanian"

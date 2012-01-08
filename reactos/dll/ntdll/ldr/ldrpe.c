@@ -14,11 +14,22 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG LdrpFatalHardErrorCount;
 PVOID LdrpManifestProberRoutine;
 ULONG LdrpNormalSnap;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+AVrfPageHeapDllNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    /* Check if page heap dll notification is turned on */
+    if (!(RtlpDphGlobalFlags & DPH_FLAG_DLL_NOTIFY))
+        return;
+
+    /* We don't support this flag currently */
+    UNIMPLEMENTED;
+}
 
 NTSTATUS
 NTAPI
@@ -759,8 +770,8 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             /* Check if Page Heap was enabled */
             if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
             {
-                /* FIXME */
-                DPRINT1("We don't support Page Heaps yet!\n");
+                /* Initialize target DLL */
+                AVrfPageHeapDllNotification(LdrEntry);
             }
 
             /* Check if Application Verifier was enabled */

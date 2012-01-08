@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystem/win32/win32k/objects/dcobjs.c
+ * FILE:              subsystems/win32/win32k/objects/dcobjs.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -149,7 +149,7 @@ GdiSelectPalette(
     HPALETTE oldPal = NULL;
     PPALETTE ppal;
 
-    // FIXME: mark the palette as a [fore\back]ground pal
+    // FIXME: Mark the palette as a [fore\back]ground pal
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
@@ -357,7 +357,7 @@ NtGdiSelectBitmap(
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 
-    /* FIXME; improve by using a region without a handle and selecting it */
+    /* FIXME: Improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
                                    0,
                                    sizlBitmap.cx,
@@ -493,21 +493,21 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
     return SelObject;
 }
 
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
-
-   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
-
-   The intersection of the clip with the meta region is not Rao it's API!
-   Go back and read 7.2 Clipping pages 418-19:
-   Rao = API & Vis:
-   1) The Rao region is the intersection of the API region and the system region,
-      named after the Microsoft engineer who initially proposed it.
-   2) The Rao region can be calculated from the API region and the system region.
-
-   API:
-      API region is the intersection of the meta region and the clipping region,
-      clearly named after the fact that it is controlled by GDI API calls.
-*/
+/* See WINE, MSDN, OSR and Feng Yuan - Windows Graphics Programming Win32 GDI and DirectDraw
+ *
+ * 1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+ *
+ * The intersection of the clip with the meta region is not Rao it's API!
+ * Go back and read 7.2 Clipping pages 418-19:
+ * Rao = API & Vis:
+ * 1) The Rao region is the intersection of the API region and the system region,
+ *    named after the Microsoft engineer who initially proposed it.
+ * 2) The Rao region can be calculated from the API region and the system region.
+ *
+ * API:
+ *    API region is the intersection of the meta region and the clipping region,
+ *    clearly named after the fact that it is controlled by GDI API calls.
+ */
 INT
 APIENTRY
 NtGdiGetRandomRgn(
@@ -583,3 +583,4 @@ NtGdiEnumObjects(
     return 0;
 }
 
+/* EOF */

@@ -10,13 +10,7 @@
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include "resource.h"
 #include "powercfg.h"
-#include "stdio.h"
 
 UINT Sec[]=
 {
@@ -203,7 +197,7 @@ LoadConfig(HWND hwndDlg)
 					   i-2,
 					   (LPARAM)0);
 		}
-		if (Sec[i]==pp.user.SpindownTimeoutDc)//IdleTimeoutDc)
+		if (Sec[i]==pp.user.SpindownTimeoutDc) // IdleTimeoutDc)
 		{
 			SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
 					   CB_SETCURSEL,
@@ -258,8 +252,8 @@ callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
 	{
 		if (guiIndex >= MAX_POWER_POLICY)
 		{
-			//FIXME
-			//implement store power policy dynamically
+			// FIXME:
+			// Implement store power policy dynamically
 			return FALSE;
 		}
 
@@ -481,17 +475,17 @@ DelScheme(HWND hwnd)
 	if (MessageBox(hwnd, (LPCTSTR)szBuf, (LPCTSTR)szBufT, MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
 	{
 		UINT Current;
-		
+
 		if (GetActivePwrScheme(&Current))
 		{
 			SendMessage(hList, CB_SETCURSEL, (WPARAM)0, 0);
 			SendMessage(hList, CB_DELETESTRING, (WPARAM)iCurSel, 0);
 			if (Current == DelScheme) Pos_SaveData(hwnd);
 		}
-		
+
 		if (DeletePwrScheme(DelScheme) != 0) return TRUE;
 	}
-	
+
 	return FALSE;
 }
 
@@ -527,8 +521,8 @@ CreateEnergyList(HWND hwnd)
 
 	if (CanUserWritePwrScheme())
 	{
-		//TODO
-		// enable write / delete powerscheme button
+		// TODO:
+		// Enable write / delete powerscheme button
 	}
 
 	Pos_InitPage(GetParent(hwnd));
@@ -537,7 +531,7 @@ CreateEnergyList(HWND hwnd)
 		return FALSE;
 
 	retval = EnumPwrSchemes(callback_EnumPwrScheme, aps);
-	
+
     if(SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0)
     {
         EnableWindow(GetDlgItem(hwndDialog, IDC_DELETE_BTN),TRUE);
@@ -564,17 +558,17 @@ PowerSchemesDlgProc(
 		hwndDialog = hwndDlg;
 	    if (!Pos_InitData())
 		{
-			//TODO
-			// initialization failed
-			// handle error
+			// TODO:
+			// Initialization failed
+			// Handle error
 			MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
 
 		}
 		if (!CreateEnergyList(GetDlgItem(hwndDlg, IDC_ENERGYLIST)))
 		{
-			//TODO
-			// initialization failed
-			// handle error
+			// TODO:
+			// Initialization failed
+			// Handle error
 			MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
 		}
 		return TRUE;
@@ -595,7 +589,7 @@ PowerSchemesDlgProc(
 		break;
 		case IDC_SAVEAS_BTN:
 		{
-		
+
 		}
 		break;
 		case IDC_MONITORACLIST:

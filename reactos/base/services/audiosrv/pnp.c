@@ -6,15 +6,6 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
-#include <windows.h>
-#include <winuser.h>
-#include <dbt.h>
-#include <setupapi.h>
-
-#include <ks.h>
-#include <ksmedia.h>
-
-#include <audiosrv/audiosrv.h>
 #include "audiosrv.h"
 
 static HDEVNOTIFY device_notification_handle = NULL;

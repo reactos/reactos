@@ -303,7 +303,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                                    TRUE);
 
             /* Now call ACPI to inherit its PnP Device State */
-            Status = IoCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
             if (Status == STATUS_PENDING)
             {
                 /* Wait for completion */
@@ -443,7 +443,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                                    TRUE);
 
             /* Now call ACPI */
-            Status = IoCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
             if (Status == STATUS_PENDING)
             {
                 /* Wait for completion */

@@ -9,7 +9,8 @@
 #define USER32_CALLBACK_EVENTPROC             (5)
 #define USER32_CALLBACK_LOADMENU              (6)
 #define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
-#define USER32_CALLBACK_MAXIMUM               (7)
+#define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
+#define USER32_CALLBACK_MAXIMUM               (8)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -76,6 +77,14 @@ typedef struct _LOADMENU_CALLBACK_ARGUMENTS
   WCHAR MenuName[1];
 } LOADMENU_CALLBACK_ARGUMENTS, *PLOADMENU_CALLBACK_ARGUMENTS;
 
+typedef struct _CLIENT_LOAD_LIBRARY_ARGUMENTS
+{
+    UNICODE_STRING strLibraryName;
+    UNICODE_STRING strInitFuncName;
+    BOOL Unload;
+    BOOL ApiHook;
+} CLIENT_LOAD_LIBRARY_ARGUMENTS, *PCLIENT_LOAD_LIBRARY_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -92,5 +101,6 @@ NTSTATUS WINAPI
 User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength);
-
+NTSTATUS WINAPI
+User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */

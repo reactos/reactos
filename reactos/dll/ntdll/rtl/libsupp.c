@@ -112,32 +112,30 @@ RtlGetNtGlobalFlags(VOID)
 
 NTSTATUS
 NTAPI
-RtlDeleteHeapLock(
-    PHEAP_LOCK Lock)
+RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     return RtlDeleteCriticalSection(&Lock->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlEnterHeapLock(
-    PHEAP_LOCK Lock)
+RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
 {
+    UNREFERENCED_PARAMETER(Exclusive);
+
     return RtlEnterCriticalSection(&Lock->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlInitializeHeapLock(
-    PHEAP_LOCK Lock)
+RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-     return RtlInitializeCriticalSection(&Lock->CriticalSection);
+    return RtlInitializeCriticalSection(&(*Lock)->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlLeaveHeapLock(
-    PHEAP_LOCK Lock)
+RtlLeaveHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     return RtlLeaveCriticalSection(&Lock->CriticalSection);
 }
@@ -520,21 +518,48 @@ RtlPcToFileHeader(IN PVOID PcValue,
     return ImageBase;
 }
 
+/*
+ * @unimplemented
+ */
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlDosApplyFileIsolationRedirection_Ustr(
-    IN BOOLEAN Unknown,
-    IN PUNICODE_STRING OriginalName,
-    IN PUNICODE_STRING Extension,
-    IN OUT PUNICODE_STRING RedirectedName,
-    IN OUT PUNICODE_STRING RedirectedName2,
-    IN OUT PUNICODE_STRING *OriginalName2,
-    IN PVOID Unknown1,
-    IN PVOID Unknown2,
-    IN PVOID Unknown3
-)
+RtlDosApplyFileIsolationRedirection_Ustr(IN ULONG Flags,
+                                         IN PUNICODE_STRING OriginalName,
+                                         IN PUNICODE_STRING Extension,
+                                         IN OUT PUNICODE_STRING StaticString,
+                                         IN OUT PUNICODE_STRING DynamicString,
+                                         IN OUT PUNICODE_STRING *NewName,
+                                         IN PULONG NewFlags,
+                                         IN PSIZE_T FileNameSize,
+                                         IN PSIZE_T RequiredLength)
 {
     return STATUS_SXS_KEY_NOT_FOUND;
 }
 
+/*
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirection(IN BOOLEAN Wow64FsEnableRedirection)
+{
+    /* This is what Windows returns on x86 */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirectionEx(IN PVOID Wow64FsEnableRedirection,
+                              OUT PVOID *OldFsRedirectionLevel)
+{
+    /* This is what Windows returns on x86 */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/* EOF */

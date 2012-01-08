@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -157,12 +157,6 @@ unsigned short OSPMReleaseGlobalLock (void *);
     n_hi = (unsigned long)((val >> 32 ) & 0xffffffff ); \
     n_lo = (unsigned long)(val & 0xffffffff); \
 }
-
-/* IBM VAC does not have inline */
-
-#if __IBMC__ || __IBMCPP__
-#define inline
-#endif
 
 #ifndef ACPI_ASL_COMPILER
 #define ACPI_USE_LOCAL_CACHE

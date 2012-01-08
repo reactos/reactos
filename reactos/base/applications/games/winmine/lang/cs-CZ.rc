@@ -1,5 +1,4 @@
-/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
- *
+/*
  * WineMine
  * Czech Language Support
  *
@@ -24,8 +23,6 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-/* Czech strings in CP1250 */
-
 STRINGTABLE BEGIN
      IDS_APPNAME, "WineMine"
      IDS_NOBODY,  "Nikdo"
@@ -34,32 +31,32 @@ END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "N&astavenÌ" BEGIN
-        MENUITEM "&Nov·\tF2",       IDM_NEW
+    POPUP "N&astaven√≠" BEGIN
+        MENUITEM "&Nov√°\tF2",       IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&OznaËovat nerozhodnutÈ", IDM_MARKQ
+        MENUITEM "&Oznaƒçovat nerozhodnut√©", IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&ZaË·teËnÌk",      IDM_BEGINNER
-        MENUITEM "&PokroËil˝",      IDM_ADVANCED
+        MENUITEM "&Zaƒç√°teƒçn√≠k",      IDM_BEGINNER
+        MENUITEM "&Pokroƒçil√Ω",      IDM_ADVANCED
         MENUITEM "&Expert",        IDM_EXPERT
         MENUITEM "&Dle libosti",        IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "&Konec\tAlt+K",   IDM_EXIT
     END
     POPUP "&Informace" BEGIN
-        MENUITEM "Ne&jlepöÌ Ëasy",    IDM_TIMES
+        MENUITEM "Ne&jlep≈°√≠ ƒçasy",    IDM_TIMES
         MENUITEM "&O aplikaci",         IDM_ABOUT
     END
 END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "NejlepöÌ Ëasy"
+CAPTION "Nejlep≈°√≠ ƒçasy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "NejlepöÌ Ëasy", -1,  10,  10, 140,  45
-    LTEXT           "ZaË·teËnÌk",      -1,  20,  20,  40,   8
-    LTEXT           "PokroËil˝",      -1,  20,  30,  40,   8
+    GROUPBOX        "Nejlep≈°√≠ ƒçasy", -1,  10,  10, 140,  45
+    LTEXT           "Zaƒç√°teƒçn√≠k",      -1,  20,  20,  40,   8
+    LTEXT           "Pokroƒçil√Ω",      -1,  20,  30,  40,   8
     LTEXT           "Expert",        -1,  20,  40,  40,   8
     LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
     LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
@@ -75,17 +72,17 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Gratulujeme !"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "ProsÌm, zadejte svÈ jmÈno", -1,  10,  10, 150,  10
+    LTEXT           "Pros√≠m, zadejte sv√© jm√©no", -1,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
     DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
 END
 
 DLG_CUSTOM DIALOGEX  0, 0, 100, 100
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "VlastnÌ hra"
+CAPTION "Vlastn√≠ hra"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "ÿ·dky",   -1,   5,   5,  30,  10
+    LTEXT           "≈ò√°dky",   -1,   5,   5,  30,  10
     LTEXT           "Sloupce",   -1,   5,  35,  30,  10
     LTEXT           "Miny",  -1,   5,  65,  30,  10
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER

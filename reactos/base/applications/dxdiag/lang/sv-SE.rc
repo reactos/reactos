@@ -1,10 +1,11 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\dxdiag\lang\sv-SE.rc
+ * PROJECT:         ReactX Diagnosis Application
+ * FILE:            base/applications/dxdiag/lang/sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
- LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
@@ -14,8 +15,8 @@ CAPTION "ReactX-diagnos program"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
-    PUSHBUTTON "&Hj‰lp", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "&N‰sta sida", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Hj√§lp", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&N√§sta sida", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Spara all information...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Avsluta", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
@@ -24,19 +25,19 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Detta verktyget rapporterar detaljerad information om ReactX komponenter och enheter som ‰r installerade pÂ ditt system.", -1, 10, 10, 443, 17
-    LTEXT "Om du vet vilket omrÂde som skapar problem, kan du klicka pÂ motsvarande flik ovanfˆr. Om inte, kan du anv‰nda knappen ""N‰sta sida"" nedanfˆr fˆr att besˆka alla sidorna sekventiellt.", -1, 10, 30, 443, 25
+    LTEXT "Detta verktyget rapporterar detaljerad information om ReactX komponenter och enheter som √§r installerade p√• ditt system.", -1, 10, 10, 443, 17
+    LTEXT "Om du vet vilket omr√•de som skapar problem, kan du klicka p√• motsvarande flik ovanf√∂r. Om inte, kan du anv√§nda knappen ""N√§sta sida"" nedanf√∂r f√∂r att bes√∂ka alla sidorna sekventiellt.", -1, 10, 30, 443, 25
     GROUPBOX "System Information", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Aktuellt Datum/Tid:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Datornamn:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "Operativsystem:", -1, 70, 90, 80, 10, SS_RIGHT
-    LTEXT "SprÂk:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "Spr√•k:", -1, 70, 100, 80, 10, SS_RIGHT
     LTEXT "Systemtillverkare:", -1, 70, 110, 80, 10, SS_RIGHT
     LTEXT "Systemmodell:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Processor:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Minne:", -1, 70, 150, 80, 10, SS_RIGHT
-    LTEXT "V‰xlingsfil:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "V√§xlingsfil:", -1, 70, 160, 80, 10, SS_RIGHT
     LTEXT "ReactX-version:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
@@ -61,8 +62,8 @@ BEGIN
     RTEXT "Chip typ:", -1, 20, 45, 70, 10
     RTEXT "DAC type:", -1, 20, 55, 70, 10
     RTEXT "Uppskattat total minne:", -1, 20, 65, 70, 10
-    RTEXT "Aktuellt Bildsk‰rmsl‰ge:", -1, 20, 75, 70, 10
-    RTEXT "Bildsk‰rm:", -1, 20, 85, 70, 10
+    RTEXT "Aktuellt Bildsk√§rmsl√§ge:", -1, 20, 75, 70, 10
+    RTEXT "Bildsk√§rm:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
@@ -98,9 +99,9 @@ BEGIN
     PUSHBUTTON "Aktiverad", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "Aktiverad", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testa DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Testa Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Testa Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
-    GROUPBOX "Anm‰rkningar", -1, 10, 180, 450, 40
+    GROUPBOX "Anm√§rkningar", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
@@ -128,7 +129,7 @@ BEGIN
     RTEXT "Datum:", -1, 275, 45, 55, 10
     RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
     RTEXT "Andra filer:", -1, 275, 65, 55, 10
-    RTEXT "Leverantˆr:", -1, 275, 75, 55, 10
+    RTEXT "Leverant√∂r:", -1, 275, 75, 55, 10
     LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
@@ -137,9 +138,9 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX-Funktioner", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Maskinvara ljud\nAccelerationsnivÂ:", -1, 20, 135, 90, 20
+    RTEXT "Maskinvara ljud\nAccelerationsniv√•:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testa DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
-    GROUPBOX "Anm‰rkningar", -1, 10, 180, 450, 40
+    GROUPBOX "Anm√§rkningar", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
@@ -166,7 +167,7 @@ IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Registad DirectPlay tj‰nesteleverantˆr", -1, 10, 10, 452, 80
+    GROUPBOX "Registad DirectPlay tj√§nesteleverant√∂r", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
 END
 
@@ -180,20 +181,20 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_MAIN_DIALOG "ReactX diagnostikverktyg"
 	IDS_SYSTEM_DIALOG "System"
-	IDS_DISPLAY_DIALOG "Sk‰rm"
+	IDS_DISPLAY_DIALOG "Sk√§rm"
 	IDS_SOUND_DIALOG "Ljud"
 	IDS_MUSIC_DIALOG "Musik"
 	IDS_INPUT_DIALOG "Indata"
-	IDS_NETWORK_DIALOG "N‰tverk"
-	IDS_HELP_DIALOG "Hj‰lp"
+	IDS_NETWORK_DIALOG "N√§tverk"
+	IDS_HELP_DIALOG "Hj√§lp"
 	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB anv‰nt, %I64u MB tillg‰ngligt"
+	IDS_FORMAT_SWAP "%I64u MB anv√§nt, %I64u MB tillg√§ngligt"
 	IDS_FORMAT_UNIPROC "%s (%u processor)"
 	IDS_FORMAT_MPPROC  "%s (%u procesorer)"
-	IDS_VERSION_UNKNOWN "Ok‰nd version"
+	IDS_VERSION_UNKNOWN "Ok√§nd version"
 	IDS_DEVICE_STATUS_ATTACHED "Ansluten"
 	IDS_DEVICE_STATUS_MISSING "Saknas"
-	IDS_DEVICE_STATUS_UNKNOWN "Ok‰nd"
+	IDS_DEVICE_STATUS_UNKNOWN "Ok√§nd"
 	IDS_DEVICE_NAME "Enhetsnamn"
 	IDS_DEVICE_STATUS "Status"
 	IDS_DEVICE_CONTROLLER "Kontroller ID"
@@ -210,23 +211,23 @@ BEGIN
 	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
 	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
 	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
-	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling fˆr DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "IPX koppling fˆr DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Modemkoppling fˆr DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Seriell kopplig fˆr DirectPlay"
+	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling f√∂r DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "IPX koppling f√∂r DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "Modemkoppling f√∂r DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "Seriell kopplig f√∂r DirectPlay"
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Fel"
 	IDS_DDTEST_ERROR "Testet misslyckes!"
-	IDS_DDTEST_DESCRIPTION "Detta kommer att starta DirecDraw enhetstest. Forts‰tta?"
-	IDS_DDPRIMARY_DESCRIPTION "Denna testen kommer att anv‰nda DirectDraw fˆr att rita svarta och vita rektangular prim‰ra ytan. Forts‰tta?"
-	IDS_DDPRIMARY_RESULT "SÂg du svarta och vite rektanglar?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Denna testen kommer att anv‰nda DirectDraw fˆr att rita i en offscreen buffert. En animerad vit rektangel kommer att ritas. Forts‰tta?"
-	IDS_DDOFFSCREEN_RESULT "SÂg du en vit animerad rektangel?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Denna testen kommer att anv‰nda DirectDraw fˆr att rita i fullsk‰rmsl‰ge. En animerad vit rektangel kommer att ritas. Forts‰tta?"
-	IDS_DDFULLSCREEN_RESULT "SÂg du en vit animerad rektangel i fullsk‰rmsl‰ge?"
+	IDS_DDTEST_DESCRIPTION "Detta kommer att starta DirecDraw enhetstest. Forts√§tta?"
+	IDS_DDPRIMARY_DESCRIPTION "Denna testen kommer att anv√§nda DirectDraw f√∂r att rita svarta och vita rektangular prim√§ra ytan. Forts√§tta?"
+	IDS_DDPRIMARY_RESULT "S√•g du svarta och vite rektanglar?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Denna testen kommer att anv√§nda DirectDraw f√∂r att rita i en offscreen buffert. En animerad vit rektangel kommer att ritas. Forts√§tta?"
+	IDS_DDOFFSCREEN_RESULT "S√•g du en vit animerad rektangel?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Denna testen kommer att anv√§nda DirectDraw f√∂r att rita i fullsk√§rmsl√§ge. En animerad vit rektangel kommer att ritas. Forts√§tta?"
+	IDS_DDFULLSCREEN_RESULT "S√•g du en vit animerad rektangel i fullsk√§rmsl√§ge?"
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "Nej"
-	IDS_D3DTEST_DESCRIPTION "Detta kommer att starta Direct3D enhetstest. Forts‰tt?"
-	IDS_D3DTEST_D3Dx "Detta testet kommer att anv‰nda hÂrdvaruaccellererad Direct3D %u enheten."
+	IDS_D3DTEST_DESCRIPTION "Detta kommer att starta Direct3D enhetstest. Forts√§tt?"
+	IDS_D3DTEST_D3Dx "Detta testet kommer att anv√§nda h√•rdvaruaccellererad Direct3D %u enheten."
 END

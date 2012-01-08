@@ -142,7 +142,6 @@ UUID *parse_uuid(const char *u)
                                 error_loc("Malformed '#...' line-directive; missing terminating \"\n");
                             *cptr = '\0';
                             line_number = lineno - 1;  /* We didn't read the newline */
-                            free( input_name );
                             input_name = xstrdup(fname);
                         }
 <INITIAL,ATTR>\"	yy_push_state(QUOTE); cbufidx = 0;

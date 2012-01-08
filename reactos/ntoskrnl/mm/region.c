@@ -32,13 +32,13 @@ InsertAfterEntry(PLIST_ENTRY Previous,
 
 static PMM_REGION
 MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
-              PVOID StartAddress, ULONG Length, ULONG NewType,
+              PVOID StartAddress, SIZE_T Length, ULONG NewType,
               ULONG NewProtect, PMMSUPPORT AddressSpace,
               PMM_ALTER_REGION_FUNC AlterFunc)
 {
    PMM_REGION NewRegion1;
    PMM_REGION NewRegion2;
-   ULONG InternalLength;
+   SIZE_T InternalLength;
 
    /* Allocate this in front otherwise the failure case is too difficult. */
    NewRegion2 = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_REGION),
@@ -106,7 +106,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
 NTSTATUS
 NTAPI
 MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
-              PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length,
+              PLIST_ENTRY RegionListHead, PVOID StartAddress, SIZE_T Length,
               ULONG NewType, ULONG NewProtect, PMM_ALTER_REGION_FUNC AlterFunc)
 {
    PMM_REGION InitialRegion;
@@ -115,7 +115,7 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion = NULL;
    PVOID CurrentBaseAddress;
-   ULONG RemainingLength;
+   SIZE_T RemainingLength;
 
    /*
     * Find the first region containing part of the range of addresses to
@@ -143,7 +143,7 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
    else
    {
       NewRegion = InitialRegion;
-      if(((ULONG_PTR)InitialBaseAddress + NewRegion->Length) < 
+      if(((ULONG_PTR)InitialBaseAddress + NewRegion->Length) <
             ((ULONG_PTR)StartAddress + Length))
          RemainingLength = ((ULONG_PTR)StartAddress + Length) - ((ULONG_PTR)InitialBaseAddress + NewRegion->Length);
       else
@@ -230,9 +230,6 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
          ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
       }
    }
-   
-   if(NewRegion->Length < Length)
-      return(STATUS_NO_MEMORY);
 
    return(STATUS_SUCCESS);
 }

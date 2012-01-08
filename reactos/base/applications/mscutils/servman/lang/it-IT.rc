@@ -24,7 +24,7 @@ BEGIN
     MENUITEM "Crea...",      ID_CREATE, GRAYED
     MENUITEM "Cancella...",  ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriet‡...", ID_PROP, GRAYED
+    MENUITEM "Propriet√†...", ID_PROP, GRAYED
   END
   POPUP "Visualizzazione"
   BEGIN
@@ -57,7 +57,7 @@ BEGIN
     MENUITEM "Modifica...",  ID_EDIT, GRAYED
     MENUITEM "Cancella...",  ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriet‡...", ID_PROP, GRAYED
+    MENUITEM "Propriet√†...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Aiuto...",     ID_HELP
   END
@@ -95,7 +95,7 @@ BEGIN
   LTEXT "Tipo di avvio:", IDC_STATIC, 6, 108, 53, 11
   LTEXT "Stato del servizio:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-  LTEXT "Puoi indicarei parametri in uso quando il servizio Ë avviato da qui.",IDC_STATIC, 6,177,240,15
+  LTEXT "Puoi indicarei parametri in uso quando il servizio √® avviato da qui.",IDC_STATIC, 6,177,240,15
   LTEXT "Parametri di avvio:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
@@ -139,7 +139,7 @@ FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "Sei sicuro di voler cancellare il seguente servizio ? Non potr‡ essere ripristinato!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Sei sicuro di voler cancellare il seguente servizio ? Non potr√† essere ripristinato!", IDC_STATIC, 50, 6, 125, 25
   LTEXT "Nome del servizio:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
@@ -206,12 +206,12 @@ BEGIN
   IDS_NUM_SERVICES "Numero Servizi: %d"
   IDS_STOP_DEPENDS "Quando %s si ferma, Questi altri sevizi si fermeranno"
   IDS_NO_DEPENDS "<Nessuna dipendenza>"
-  IDS_LICENSE "Questo programma Ë software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma Ë distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT¿ o UTILIZZABILIT¿ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non Ë cosi' scrivete a 'Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.."
+  IDS_LICENSE "Questo programma √® software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma √® distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT√Ä o UTILIZZABILIT√Ä PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non √® cosi' scrivete a 'Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP "Propriet‡"
+  IDS_TOOLTIP_PROP "Propriet√†"
   IDS_TOOLTIP_REFRESH "Aggiorna"
   IDS_TOOLTIP_EXPORT "Lista di esportazione"
   IDS_TOOLTIP_CREATE "Crea un nuovo servizio"
@@ -256,7 +256,7 @@ BEGIN
   IDS_HINT_EDIT         " Modifica le proprieta del servizio selezionato."
   IDS_HINT_CREATE       " Crea un nuovo servizio."
   IDS_HINT_DELETE       " Cancella il servizio selezionato."
-  IDS_HINT_PROP         " Presenta le propriet‡ per la selezione."
+  IDS_HINT_PROP         " Presenta le propriet√† per la selezione."
 
   IDS_HINT_LARGE        " Visualizza gli elementi usando icone grandi."
   IDS_HINT_SMALL        " Visualizza gli elementi usando icone piccole."

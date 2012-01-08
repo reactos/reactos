@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 add_executable(find find.c find.rc)
 
 set_module_type(find win32cui)

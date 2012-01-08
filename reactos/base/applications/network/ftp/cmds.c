@@ -24,26 +24,8 @@ static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
  */
 //#include <sys/param.h>
 //#include <sys/wait.h>
-#include <sys/stat.h>
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <arpa/ftp.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#else
-#include <winsock.h>
-#endif
 
-#include <signal.h>
-#include <direct.h>
-#include <stdio.h>
-#include <errno.h>
-#include <ctype.h>
-#include <time.h>
-
-#include "ftp_var.h"
-#include "pathnames.h"
-#include "prototypes.h"
+#include "precomp.h"
 
 extern	char *globerr;
 extern	char home[];

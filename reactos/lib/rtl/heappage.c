@@ -24,8 +24,8 @@ typedef struct _DPH_BLOCK_INFORMATION
 {
      ULONG StartStamp;
      PVOID Heap;
-     ULONG RequestedSize;
-     ULONG ActualSize;
+     SIZE_T RequestedSize;
+     SIZE_T ActualSize;
      union
      {
           LIST_ENTRY FreeQueue;
@@ -46,10 +46,10 @@ typedef struct _DPH_HEAP_BLOCK
      };
      PUCHAR pUserAllocation;
      PUCHAR pVirtualBlock;
-     ULONG nVirtualBlockSize;
-     ULONG nVirtualAccessSize;
-     ULONG nUserRequestedSize;
-     ULONG nUserActualSize;
+     SIZE_T nVirtualBlockSize;
+     SIZE_T nVirtualAccessSize;
+     SIZE_T nUserRequestedSize;
+     SIZE_T nUserActualSize;
      PVOID UserValue;
      ULONG UserFlags;
      PRTL_TRACE_BLOCK StackTrace;
@@ -67,30 +67,30 @@ typedef struct _DPH_HEAP_ROOT
      PDPH_HEAP_BLOCK pVirtualStorageListHead;
      PDPH_HEAP_BLOCK pVirtualStorageListTail;
      ULONG nVirtualStorageRanges;
-     ULONG nVirtualStorageBytes;
+     SIZE_T nVirtualStorageBytes;
 
      RTL_AVL_TABLE BusyNodesTable;
      PDPH_HEAP_BLOCK NodeToAllocate;
      ULONG nBusyAllocations;
-     ULONG nBusyAllocationBytesCommitted;
+     SIZE_T nBusyAllocationBytesCommitted;
 
      PDPH_HEAP_BLOCK pFreeAllocationListHead;
      PDPH_HEAP_BLOCK pFreeAllocationListTail;
      ULONG nFreeAllocations;
-     ULONG nFreeAllocationBytesCommitted;
+     SIZE_T nFreeAllocationBytesCommitted;
 
      LIST_ENTRY AvailableAllocationHead;
      ULONG nAvailableAllocations;
-     ULONG nAvailableAllocationBytesCommitted;
+     SIZE_T nAvailableAllocationBytesCommitted;
 
      PDPH_HEAP_BLOCK pUnusedNodeListHead;
      PDPH_HEAP_BLOCK pUnusedNodeListTail;
      ULONG nUnusedNodes;
-     ULONG nBusyAllocationBytesAccessible;
+     SIZE_T nBusyAllocationBytesAccessible;
      PDPH_HEAP_BLOCK pNodePoolListHead;
      PDPH_HEAP_BLOCK pNodePoolListTail;
      ULONG nNodePools;
-     ULONG nNodePoolBytes;
+     SIZE_T nNodePoolBytes;
 
      LIST_ENTRY NextHeap;
      ULONG ExtraFlags;
@@ -117,7 +117,7 @@ UNICODE_STRING RtlpDphTargetDllsUnicode;
 RTL_CRITICAL_SECTION RtlpDphDelayedFreeQueueLock;
 LIST_ENTRY RtlpDphDelayedFreeQueue;
 SLIST_HEADER RtlpDphDelayedTemporaryPushList;
-ULONG RtlpDphMemoryUsedByDelayedFreeBlocks;
+SIZE_T RtlpDphMemoryUsedByDelayedFreeBlocks;
 ULONG RtlpDphNumberOfDelayedFreeBlocks;
 
 /* Counters */
@@ -429,7 +429,7 @@ RtlpDphWritePageHeapBlockInformation(PDPH_HEAP_ROOT DphRoot, PVOID UserAllocatio
     RtlFillMemory(FillPtr, ROUND_UP(FillPtr, PAGE_SIZE) - (ULONG_PTR)FillPtr, DPH_FILL_SUFFIX);
 
     /* FIXME: Check if logging stack traces is turned on */
-    //if (DphRoot->ExtraFlags & 
+    //if (DphRoot->ExtraFlags &
 
     return TRUE;
 }
@@ -758,7 +758,7 @@ RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtu
     ULONG NodeCount, i;
 
     //NodeCount = (Size >> 6) - 1;
-    NodeCount = (Size / sizeof(DPH_HEAP_BLOCK));
+    NodeCount = (ULONG)(Size / sizeof(DPH_HEAP_BLOCK));
     DphStartNode = Virtual;
 
     /* Set pNextAlloc for all blocks */
@@ -909,14 +909,13 @@ RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG
     ULONG Protection;
     PVOID Base;
 
-    // FIXME: Check this, when we should add up usersize and when we shouldn't!
-    if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
+    if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
     {
-        Base = VirtualBlock;
+        Base = VirtualBlock + PAGE_SIZE;
     }
     else
     {
-        Base = VirtualBlock + PAGE_SIZE;
+        Base = VirtualBlock;
     }
 
     // FIXME: It should be different, but for now it's fine
@@ -928,6 +927,8 @@ RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG
 NTSTATUS NTAPI
 RtlpDphSetProtectionAfterUse(PDPH_HEAP_ROOT DphRoot, /*PUCHAR VirtualBlock*/PDPH_HEAP_BLOCK Node)
 {
+    ASSERT((Node->nVirtualAccessSize + PAGE_SIZE) <= Node->nVirtualBlockSize);
+
     // FIXME: Bring stuff here
     if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
     {
@@ -1195,7 +1196,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
 
     /* Traverse the list */
     Current = RtlpDphDelayedFreeQueue.Flink;
-    while (Current != &RtlpDphDelayedFreeQueue);
+    while (Current != &RtlpDphDelayedFreeQueue)
     {
         /* Get the next entry pointer */
         Next = Current->Flink;
@@ -1649,9 +1650,9 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
                      IN SIZE_T Size)
 {
     PDPH_HEAP_ROOT DphRoot;
-    PDPH_HEAP_BLOCK Node, AllocatedNode;
+    PDPH_HEAP_BLOCK AvailableNode, BusyNode;
     BOOLEAN Biased = FALSE;
-    ULONG TotalSize, AccessSize;
+    ULONG AllocateSize, AccessSize;
     NTSTATUS Status;
     SIZE_T UserActualSize;
     PVOID Ptr;
@@ -1679,7 +1680,6 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
     if (!DphRoot) return NULL;
 
     /* Acquire the heap lock */
-    //RtlpDphEnterCriticalSection(DphRoot, Flags);
     RtlpDphPreProcessing(DphRoot, Flags);
 
     /* Perform internal validation if specified by flags */
@@ -1705,11 +1705,11 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
 
     /* Calculate sizes */
     AccessSize = ROUND_UP(Size + sizeof(DPH_BLOCK_INFORMATION), PAGE_SIZE);
-    TotalSize = AccessSize + PAGE_SIZE;
+    AllocateSize = AccessSize + PAGE_SIZE;
 
-    // RtlpDphAllocateNode(DphRoot);
-    Node = RtlpDphFindAvailableMemory(DphRoot, TotalSize, TRUE);
-    if (!Node)
+    // FIXME: Move RtlpDphAllocateNode(DphRoot) to this place
+    AvailableNode = RtlpDphFindAvailableMemory(DphRoot, AllocateSize, TRUE);
+    if (!AvailableNode)
     {
         DPRINT1("Page heap: Unable to allocate virtual memory\n");
         DbgBreakPoint();
@@ -1719,35 +1719,39 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
 
         return NULL;
     }
-    ASSERT(Node->nVirtualBlockSize >= TotalSize);
+    ASSERT(AvailableNode->nVirtualBlockSize >= AllocateSize);
 
     /* Set protection */
-    Status = RtlpDphSetProtectionBeforeUse(DphRoot, Node->pVirtualBlock, AccessSize);
+    Status = RtlpDphSetProtectionBeforeUse(DphRoot,
+                                           AvailableNode->pVirtualBlock,
+                                           AccessSize);
     if (!NT_SUCCESS(Status))
     {
         ASSERT(FALSE);
     }
 
-    Ptr = Node->pVirtualBlock;
+    /* Save available node pointer */
+    Ptr = AvailableNode->pVirtualBlock;
 
     /* Check node's size */
-    if (Node->nVirtualBlockSize > TotalSize)
+    if (AvailableNode->nVirtualBlockSize > AllocateSize)
     {
         /* The block contains too much free space, reduce it */
-        Node->pVirtualBlock += TotalSize;
-        Node->nVirtualBlockSize -= TotalSize;
-        DphRoot->nAvailableAllocationBytesCommitted -= TotalSize;
+        AvailableNode->pVirtualBlock += AllocateSize;
+        AvailableNode->nVirtualBlockSize -= AllocateSize;
+        DphRoot->nAvailableAllocationBytesCommitted -= AllocateSize;
 
-        AllocatedNode = RtlpDphAllocateNode(DphRoot);
-        ASSERT(AllocatedNode != NULL);
-        AllocatedNode->pVirtualBlock = Ptr;
-        AllocatedNode->nVirtualBlockSize = TotalSize;
+        /* Allocate a new node which will be our busy node */
+        BusyNode = RtlpDphAllocateNode(DphRoot);
+        ASSERT(BusyNode != NULL);
+        BusyNode->pVirtualBlock = Ptr;
+        BusyNode->nVirtualBlockSize = AllocateSize;
     }
     else
     {
         /* The block's size fits exactly */
-        RtlpDphRemoveFromAvailableList(DphRoot, Node);
-        AllocatedNode = Node;
+        RtlpDphRemoveFromAvailableList(DphRoot, AvailableNode);
+        BusyNode = AvailableNode;
     }
 
     /* Calculate actual user size  */
@@ -1757,34 +1761,37 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
         UserActualSize = ROUND_UP(Size, 8);
 
     /* Set up the block */
-    AllocatedNode->nVirtualAccessSize = AccessSize;
-    AllocatedNode->nUserActualSize = UserActualSize;
-    AllocatedNode->nUserRequestedSize = Size;
+    BusyNode->nVirtualAccessSize = AccessSize;
+    BusyNode->nUserActualSize = UserActualSize;
+    BusyNode->nUserRequestedSize = Size;
 
     if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
-        AllocatedNode->pUserAllocation = AllocatedNode->pVirtualBlock + PAGE_SIZE;
+        BusyNode->pUserAllocation = BusyNode->pVirtualBlock + PAGE_SIZE;
     else
-        AllocatedNode->pUserAllocation = AllocatedNode->pVirtualBlock + AllocatedNode->nVirtualAccessSize - UserActualSize;
+        BusyNode->pUserAllocation = BusyNode->pVirtualBlock + BusyNode->nVirtualAccessSize - UserActualSize;
 
-    AllocatedNode->UserValue = NULL;
-    AllocatedNode->UserFlags = Flags & HEAP_SETTABLE_USER_FLAGS;
+    BusyNode->UserValue = NULL;
+    BusyNode->UserFlags = Flags & HEAP_SETTABLE_USER_FLAGS;
 
     // FIXME: Don't forget about stack traces if such flag was set
-    AllocatedNode->StackTrace = NULL;
+    BusyNode->StackTrace = NULL;
 
     /* Place it on busy list */
-    RtlpDphPlaceOnBusyList(DphRoot, AllocatedNode);
+    RtlpDphPlaceOnBusyList(DphRoot, BusyNode);
 
     /* Zero or patter-fill memory depending on flags */
     if (Flags & HEAP_ZERO_MEMORY)
-        RtlZeroMemory(AllocatedNode->pUserAllocation, Size);
+        RtlZeroMemory(BusyNode->pUserAllocation, Size);
     else
-        RtlFillMemory(AllocatedNode->pUserAllocation, Size, DPH_FILL_INFIX);
+        RtlFillMemory(BusyNode->pUserAllocation, Size, DPH_FILL_INFIX);
 
     /* Write DPH info */
     if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
     {
-        RtlpDphWritePageHeapBlockInformation(DphRoot, AllocatedNode->pUserAllocation, Size, AccessSize);
+        RtlpDphWritePageHeapBlockInformation(DphRoot,
+                                             BusyNode->pUserAllocation,
+                                             Size,
+                                             AccessSize);
     }
 
     /* Finally allocation is done, perform validation again if required */
@@ -1796,10 +1803,10 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
     /* Release the lock */
     RtlpDphPostProcessing(DphRoot);
 
-    DPRINT("Allocated user block pointer: %p\n", AllocatedNode->pUserAllocation);
+    DPRINT("Allocated user block pointer: %p\n", BusyNode->pUserAllocation);
 
     /* Return pointer to user allocation */
-    return AllocatedNode->pUserAllocation;
+    return BusyNode->pUserAllocation;
 }
 
 BOOLEAN NTAPI
@@ -1874,7 +1881,7 @@ RtlpPageHeapFree(HANDLE HeapPtr,
     }
 
     /* Set new protection */
-    RtlpDphSetProtectionAfterUse(DphRoot, Node);
+    //RtlpDphSetProtectionAfterUse(DphRoot, Node);
 
     /* Remove it from the list of busy nodes */
     RtlpDphRemoveFromBusyList(DphRoot, Node);
@@ -1903,7 +1910,8 @@ RtlpPageHeapReAllocate(HANDLE HeapPtr,
     PDPH_HEAP_ROOT DphRoot;
     PDPH_HEAP_BLOCK Node = NULL, AllocatedNode;
     BOOLEAN Biased = FALSE, UseNormalHeap = FALSE, OldBlockPageHeap = TRUE;
-    ULONG DataSize, ValidationInfo;
+    ULONG ValidationInfo;
+    SIZE_T DataSize;
     PVOID NewAlloc = NULL;
 
     /* Check requested size */

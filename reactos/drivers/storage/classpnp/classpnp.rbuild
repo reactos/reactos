@@ -34,4 +34,5 @@
 	<file>obsolete.c</file>
 	<file>debug.c</file>
  	<file>class.rc</file>
+ 	<pch>classp.h</pch>
 </module>

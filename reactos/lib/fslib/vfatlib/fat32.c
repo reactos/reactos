@@ -357,7 +357,6 @@ Fat32Format(IN HANDLE FileHandle,
 {
     FAT32_BOOT_SECTOR BootSector;
     OEM_STRING VolumeLabel;
-    ULONG RootDirSectors;
     ULONG TmpVal1;
     ULONG TmpVal2;
     NTSTATUS Status;
@@ -425,9 +424,6 @@ Fat32Format(IN HANDLE FileHandle,
     }
 
     memcpy(&BootSector.SysType[0], "FAT32   ", 8);
-
-    RootDirSectors = ((BootSector.RootEntries * 32) +
-        (BootSector.BytesPerSector - 1)) / BootSector.BytesPerSector;
 
     /* Calculate number of FAT sectors */
     /* (BytesPerSector / 4) FAT entries (32bit) fit into one sector */

@@ -1,20 +1,14 @@
 /*
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            lib/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
  *                  Dmitry Chapyshev <dmitry@reactos.org>
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include <stdio.h>
 #include "mmsys.h"
-#include "resource.h"
 
 /* Voice property page dialog callback */
 INT_PTR CALLBACK

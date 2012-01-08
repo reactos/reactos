@@ -31,6 +31,11 @@ if(CMAKE_USE_WDK_ENV)
         endif()
     endif()
 
+    # Force C/C++ Compilers
+    include(CMakeForceCompiler)
+    CMAKE_FORCE_C_COMPILER(cl MSVC)
+    CMAKE_FORCE_CXX_COMPILER(cl MSVC)
+
     # Add library directories
     STRING(REPLACE * ${ARCH} ATL_LIB_PATH $ENV{ATL_LIB_PATH})
     STRING(REPLACE * ${ARCH} CRT_LIB_PATH $ENV{CRT_LIB_PATH})

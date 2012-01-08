@@ -29,12 +29,12 @@
 #define START_UNIT_TIMEOUT  30
 
 /* Disk layout used by Windows NT4 and earlier versions. */
-#define DEFAULT_SECTORS_PER_TRACK    32
-#define DEFAULT_TRACKS_PER_CYLINDER  64
+//#define DEFAULT_SECTORS_PER_TRACK    32
+//#define DEFAULT_TRACKS_PER_CYLINDER  64
 
 /* Disk layout used by Windows 2000 and later versions. */
-//#define DEFAULT_SECTORS_PER_TRACK    63
-//#define DEFAULT_TRACKS_PER_CYLINDER 255
+#define DEFAULT_SECTORS_PER_TRACK    63
+#define DEFAULT_TRACKS_PER_CYLINDER 255
 
 NTSTATUS
 NTAPI

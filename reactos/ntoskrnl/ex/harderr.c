@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/error.c
+ * FILE:            ntoskrnl/ex/harderr.c
  * PURPOSE:         Error Functions and Status/Exception Dispatching/Raising
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
@@ -158,52 +158,27 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
         }
     }
 
-    /* Check if we have an exception port */
-    if (Process->ExceptionPort)
+    /* Enable hard error processing if it is enabled for the process
+     * or if the exception status forces it */
+    if ((Process->DefaultHardErrorProcessing & 1) ||
+        (ErrorStatus & 0x10000000))
     {
-        /* Check if hard errors should be processed */
-        if (Process->DefaultHardErrorProcessing & 1)
+        /* Check if we have an exception port */
+        if (Process->ExceptionPort)
         {
             /* Use the port */
             PortHandle = Process->ExceptionPort;
         }
         else
         {
-            /* It's disabled, check if the error overrides it */
-            if (ErrorStatus & 0x10000000)
-            {
-                /* Use the port anyway */
-                PortHandle = Process->ExceptionPort;
-            }
-            else
-            {
-                /* No such luck */
-                PortHandle = NULL;
-            }
+            /* Use our default system port */
+            PortHandle = ExpDefaultErrorPort;
         }
     }
     else
     {
-        /* Check if hard errors are enabled */
-        if (Process->DefaultHardErrorProcessing & 1)
-        {
-            /* Use our default system port */
-            PortHandle = ExpDefaultErrorPort;
-        }
-        else
-        {
-            /* It's disabled, check if the error overrides it */
-            if (ErrorStatus & 0x10000000)
-            {
-                /* Use the port anyway */
-                PortHandle = ExpDefaultErrorPort;
-            }
-            else
-            {
-                /* No such luck */
-                PortHandle = NULL;
-            }
-        }
+        /* Don't process the error */
+        PortHandle = NULL;
     }
 
     /* If hard errors are disabled, do nothing */
@@ -390,8 +365,8 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     SIZE_T Size;
     UNICODE_STRING CapturedParams[MAXIMUM_HARDERROR_PARAMETERS];
     ULONG i;
-    PULONG_PTR UserData = NULL, ParameterBase;
-    PUNICODE_STRING StringBase;
+    PVOID UserData = NULL;
+    PHARDERROR_USER_PARAMETERS UserParams;
     PWSTR BufferBase;
     ULONG SafeResponse;
     NTSTATUS Status;
@@ -403,9 +378,8 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
         /* Check if we have strings */
         if (UnicodeStringParameterMask)
         {
-            /* Add the maximum possible size */
-            Size = (sizeof(ULONG_PTR) + sizeof(UNICODE_STRING)) *
-                    MAXIMUM_HARDERROR_PARAMETERS + sizeof(UNICODE_STRING);
+            /* Calculate the required size */
+            Size = FIELD_OFFSET(HARDERROR_USER_PARAMETERS, Buffer[0]);
 
             /* Loop each parameter */
             for (i = 0; i < NumberOfParameters; i++)
@@ -415,7 +389,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                 {
                     /* Copy it */
                     RtlMoveMemory(&CapturedParams[i],
-                                  &Parameters[i],
+                                  (PVOID)Parameters[i],
                                   sizeof(UNICODE_STRING));
 
                     /* Increase the size */
@@ -425,21 +399,16 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
 
             /* Allocate the user data region */
             Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                             (PVOID*)&UserData,
+                                             &UserData,
                                              0,
                                              &Size,
                                              MEM_COMMIT,
                                              PAGE_READWRITE);
             if (!NT_SUCCESS(Status)) return Status;
 
-            /* Set the pointers to our various data */
-            ParameterBase = UserData;
-            StringBase = (PVOID)((ULONG_PTR)UserData +
-                                 sizeof(ULONG_PTR) *
-                                 MAXIMUM_HARDERROR_PARAMETERS);
-            BufferBase = (PVOID)((ULONG_PTR)StringBase +
-                                 sizeof(UNICODE_STRING) *
-                                 MAXIMUM_HARDERROR_PARAMETERS);
+            /* Set the pointers to our data */
+            UserParams = UserData;
+            BufferBase = UserParams->Buffer;
 
             /* Loop parameters again */
             for (i = 0; i < NumberOfParameters; i++)
@@ -448,7 +417,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                 if (UnicodeStringParameterMask & (1 << i))
                 {
                     /* Update the base */
-                    ParameterBase[i] = (ULONG_PTR)&StringBase[i];
+                    UserParams->Parameters[i] = (ULONG_PTR)&UserParams->Strings[i];
 
                     /* Copy the string buffer */
                     RtlMoveMemory(BufferBase,
@@ -459,9 +428,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                     CapturedParams[i].Buffer = BufferBase;
 
                     /* Copy the string structure */
-                    RtlMoveMemory(&StringBase[i],
-                                  &CapturedParams[i],
-                                  sizeof(UNICODE_STRING));
+                    UserParams->Strings[i] = CapturedParams[i];
 
                     /* Update the pointer */
                     BufferBase += CapturedParams[i].MaximumLength;
@@ -469,7 +436,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                 else
                 {
                     /* No need to copy any strings */
-                    ParameterBase[i] = Parameters[i];
+                    UserParams->Parameters[i] = Parameters[i];
                 }
             }
         }
@@ -494,7 +461,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
         /* We did! Delete it */
         Size = 0;
         ZwFreeVirtualMemory(NtCurrentProcess(),
-                            (PVOID*)&UserData,
+                            &UserData,
                             &Size,
                             MEM_RELEASE);
     }
@@ -609,7 +576,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 /* Copy them */
                 RtlCopyMemory(SafeParams, Parameters, ParamSize);
 
-                /* Nowo check if there's strings in it */
+                /* Now check if there's strings in it */
                 if (UnicodeStringParameterMask)
                 {
                     /* Loop every string */

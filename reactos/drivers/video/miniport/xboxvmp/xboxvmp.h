@@ -29,7 +29,6 @@
 #include "dderror.h"
 #include "devioctl.h"
 #include "miniport.h"
-#include "ntddvdeo.h"
 #include "video.h"
 
 /* FIXME: NDK not compatible with miniport drivers */

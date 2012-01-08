@@ -81,7 +81,25 @@ static inline void call_copy_ctor( void *func, void *this, void *src, int has_vb
 {
     TRACE( "calling copy ctor %p object %p src %p\n", func, this, src );
 #ifdef _MSC_VER
-#pragma message ("call_copy_ctor is unimplemented for MSC")
+    if (has_vbase)
+    {
+        __asm
+        {
+            mov ecx, this
+            push 1
+            push src
+            call func
+        }
+    }
+    else
+    {
+        __asm
+        {
+            mov ecx, this
+            push src
+            call func
+        }
+    }
 #else
     if (has_vbase)
         /* in that case copy ctor takes an extra bool indicating whether to copy the base class */
@@ -97,23 +115,42 @@ static inline void call_copy_ctor( void *func, void *this, void *src, int has_vb
 static inline void call_dtor( void *func, void *object )
 {
 #ifdef _MSC_VER
-#pragma message ("call_dtor is unimplemented for MSC")
+    __asm
+    {
+        mov ecx, object
+        call func
+    }
 #else
     __asm__ __volatile__("call *%0" : : "r" (func), "c" (object) : "eax", "edx", "memory" );
 #endif
 }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4731)
+/* continue execution to the specified address after exception is caught */
+__forceinline void DECLSPEC_NORETURN continue_after_catch( cxx_exception_frame* frame, void *addr )
+{
+    __asm
+    {
+        mov eax, addr
+        mov edx, frame
+        mov esp, [edx-4]
+        lea ebp, [edx+12]
+        jmp eax
+    }
+    for (;;) ; /* unreached */
+}
+#pragma warning(pop)
+#else
 /* continue execution to the specified address after exception is caught */
 static inline void DECLSPEC_NORETURN continue_after_catch( cxx_exception_frame* frame, void *addr )
 {
-#ifdef _MSC_VER
-#pragma message ("continue_after_catch is unimplemented for MSC")
-#else
     __asm__ __volatile__("movl -4(%0),%%esp; leal 12(%0),%%ebp; jmp *%1"
                          : : "r" (frame), "a" (addr) );
-#endif
     for (;;) ; /* unreached */
 }
+#endif
 
 static inline void dump_type( const cxx_type_info *type )
 {
@@ -235,7 +272,7 @@ static void cxx_local_unwind( cxx_exception_frame* frame, const cxx_function_des
 
     while (trylevel != last_level)
     {
-        if (trylevel < 0 || trylevel >= descr->unwind_count)
+        if (trylevel < 0 || (unsigned)trylevel >= descr->unwind_count)
         {
             ERR( "invalid trylevel %d\n", trylevel );
             MSVCRT_terminate();
@@ -315,7 +352,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame 
     void *addr, *object = (void *)rec->ExceptionInformation[1];
     struct catch_func_nested_frame nested_frame;
     int trylevel = frame->trylevel;
-    MSVCRT_thread_data *thread_data = msvcrt_get_thread_data();
+    thread_data_t *thread_data = msvcrt_get_thread_data();
     DWORD save_esp = ((DWORD*)frame)[-1];
 
     for (i = 0; i < descr->tryblock_count; i++)
@@ -448,11 +485,22 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 extern DWORD CDECL __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
                                       PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch );
 #ifdef _MSC_VER
-#pragma message ("__CxxFrameHandler is unimplemented for MSC")
-DWORD CDECL __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
+DWORD _declspec(naked) __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
                                       PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch )
 {
-    return 0;
+    __asm
+    {
+        push 0
+        push 0
+        push eax
+        push [esp + 28]
+        push [esp + 28]
+        push [esp + 28]
+        push [esp + 28]
+        call cxx_frame_handler
+        add esp, 28
+        ret
+    }
 }
 #else
 __ASM_GLOBAL_FUNC( __CxxFrameHandler,
@@ -481,7 +529,7 @@ __ASM_GLOBAL_FUNC( __CxxFrameHandler,
  *
  * Callback meant to be used as UnwindFunc for setjmp/longjmp.
  */
-void __stdcall __CxxLongjmpUnwind( const struct MSVCRT___JUMP_BUFFER *buf )
+void __stdcall __CxxLongjmpUnwind( const struct __JUMP_BUFFER *buf )
 {
     cxx_exception_frame *frame = (cxx_exception_frame *)buf->Registration;
     const cxx_function_descr *descr = (const cxx_function_descr *)buf->UnwindData[0];

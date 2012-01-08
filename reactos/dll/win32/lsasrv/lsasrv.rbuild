@@ -9,9 +9,12 @@
 	<library>ntdll</library>
 	<library>pseh</library>
 	<file>authport.c</file>
+	<file>database.c</file>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
+	<file>policy.c</file>
 	<file>privileges.c</file>
 	<file>sids.c</file>
 	<file>lsasrv.rc</file>
+	<pch>lsasrv.h</pch>
 </module>

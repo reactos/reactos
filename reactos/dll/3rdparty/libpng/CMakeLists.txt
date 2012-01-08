@@ -30,5 +30,8 @@ add_library(libpng SHARED
 set_entrypoint(libpng 0)
 target_link_libraries(libpng zlib)
 add_importlibs(libpng msvcrt kernel32)
+if(ARCH MATCHES amd64)
+    add_importlibs(libpng ntdll)
+endif()
 add_dependencies(libpng psdk)
 add_cd_file(TARGET libpng DESTINATION reactos/system32 FOR all)

@@ -27,7 +27,7 @@ char * _tzname[2] = {
 /******************************************************************************
  * \var _daylight
  */
-int _daylight = 1;
+int _daylight = 0;
 
 /******************************************************************************
  * \name __p__daylight
@@ -65,7 +65,7 @@ long _dstbias = 0;
  * \name __p__dstbias
  * \brief Returns a pointer to the _dstbias variable;
  */
-long * 
+long *
 __p__dstbias(void)
 {
     return &_dstbias;
@@ -103,7 +103,7 @@ _tzset(void)
     if (str && str[0] != 0)
     {
         long hour = 0, min = 0, sec = 0;
-        int len = strnlen(str, 16);
+        size_t len = strnlen(str, 16);
         int sign = 1;
 
         dst_begin = 0;
@@ -143,7 +143,7 @@ _tzset(void)
 
             /* Copy DST name */
             strncpy(tz_dst_name, str, 3);
-            
+
             // FIXME: set dst_begin etc
 
             /* We are finished */
@@ -151,7 +151,7 @@ _tzset(void)
         }
 
         _timezone = sign * (((hour * 60) + min) * 60 + sec);
-        
+
     }
     else
     {
@@ -163,7 +163,7 @@ _tzset(void)
         {
             return;
         }
-        
+
         ret = WideCharToMultiByte(CP_ACP,
                                   0,
                                   tzi.StandardName,
@@ -196,13 +196,13 @@ _tzset(void)
             _tm.tm_hour = tzi.DaylightDate.wHour;
             _tm.tm_min = tzi.DaylightDate.wMinute;
             _tm.tm_sec = tzi.DaylightDate.wSecond;
-            dst_begin = _mkgmtime(&_tm);
+            dst_begin = (long)_mkgmtime(&_tm);
             _tm.tm_mon = tzi.StandardDate.wMonth - 1;
             _tm.tm_mday = tzi.StandardDate.wDay;
             _tm.tm_hour = tzi.StandardDate.wHour;
             _tm.tm_min = tzi.StandardDate.wMinute;
             _tm.tm_sec = tzi.StandardDate.wSecond;
-            dst_end = _mkgmtime(&_tm);
+            dst_end = (long)_mkgmtime(&_tm);
         }
         else
         {
@@ -214,3 +214,36 @@ _tzset(void)
     _tz_is_set = 1;
 }
 
+/*********************************************************************
+ *		_get_tzname (MSVCRT.@)
+ */
+int CDECL _get_tzname(size_t *ret, char *buf, size_t bufsize, int index)
+{
+    char *timezone;
+
+    switch(index)
+    {
+    case 0:
+        timezone = tz_name;
+        break;
+    case 1:
+        timezone = tz_dst_name;
+        break;
+    default:
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    if(!ret || (!buf && bufsize > 0) || (buf && !bufsize))
+    {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    *ret = strlen(timezone)+1;
+    if(!buf && !bufsize)
+        return 0;
+
+    strcpy(buf, timezone);
+    return 0;
+}

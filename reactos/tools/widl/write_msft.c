@@ -82,7 +82,7 @@ typedef struct _msft_typelib_t
     typelib_t *typelib;
     MSFT_Header typelib_header;
     MSFT_pSeg typelib_segdir[MSFT_SEG_MAX];
-    char *typelib_segment_data[MSFT_SEG_MAX];
+    unsigned char *typelib_segment_data[MSFT_SEG_MAX];
     int typelib_segment_block_length[MSFT_SEG_MAX];
 
     INT typelib_typeinfo_offsets[0x200]; /* Hope that's enough. */
@@ -397,7 +397,7 @@ static int ctl2_alloc_segment(
     }
 
     while ((typelib->typelib_segdir[segment].length + size) > typelib->typelib_segment_block_length[segment]) {
-	char *block;
+	unsigned char *block;
 
 	block_size = typelib->typelib_segment_block_length[segment];
 	block = xrealloc(typelib->typelib_segment_data[segment], block_size << 1);
@@ -407,7 +407,7 @@ static int ctl2_alloc_segment(
 	    msft_typeinfo_t *typeinfo;
 
 	    for (typeinfo = typelib->typeinfos; typeinfo; typeinfo = typeinfo->next_typeinfo) {
-		typeinfo->typeinfo = (void *)&block[((char *)typeinfo->typeinfo) - typelib->typelib_segment_data[segment]];
+		typeinfo->typeinfo = (void *)&block[((unsigned char *)typeinfo->typeinfo) - typelib->typelib_segment_data[segment]];
 	    }
 	}
 
@@ -568,14 +568,14 @@ static int ctl2_alloc_string(
 {
     int length;
     int offset;
-    char *string_space;
+    unsigned char *string_space;
     char *encoded_string;
 
     length = ctl2_encode_string(string, &encoded_string);
 
     for (offset = 0; offset < typelib->typelib_segdir[MSFT_SEG_STRING].length;
-	 offset += ((((typelib->typelib_segment_data[MSFT_SEG_STRING][offset + 1] << 8) & 0xff)
-	     | (typelib->typelib_segment_data[MSFT_SEG_STRING][offset + 0] & 0xff)) + 5) & ~3) {
+	 offset += (((typelib->typelib_segment_data[MSFT_SEG_STRING][offset + 1] << 8) |
+	      typelib->typelib_segment_data[MSFT_SEG_STRING][offset + 0]) + 5) & ~3) {
 	if (!memcmp(encoded_string, typelib->typelib_segment_data[MSFT_SEG_STRING] + offset, length)) return offset;
     }
 
@@ -651,8 +651,8 @@ static int alloc_importfile(
     encoded_string[0] |= 1;
 
     for (offset = 0; offset < typelib->typelib_segdir[MSFT_SEG_IMPORTFILES].length;
-	 offset += ((((typelib->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xd] << 8) & 0xff)
-	     | (typelib->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xc] & 0xff)) >> 2) + 0xc) {
+	 offset += (((typelib->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xd] << 8) |
+	              typelib->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xc]) >> 2) + 0xc) {
 	if (!memcmp(encoded_string, typelib->typelib_segment_data[MSFT_SEG_IMPORTFILES] + offset + 0xc, length)) return offset;
     }
 
@@ -909,7 +909,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -947,7 +947,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1129,7 +1129,7 @@ static int encode_var(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -1265,7 +1265,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
     int decoded_size, extra_attr = 0;
     int num_params = 0, num_optional = 0, num_defaults = 0;
     var_t *arg;
-    char *namedata;
+    unsigned char *namedata;
     const attr_t *attr;
     unsigned int funcflags = 0, callconv = 4 /* CC_STDCALL */;
     unsigned int funckind, invokekind = 1 /* INVOKE_FUNC */;
@@ -1548,7 +1548,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
     }
 
     /* update the index data */
-    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id;
+    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id; 
     typeinfo->func_offsets[typeinfo->typeinfo->cElement & 0xffff] = offset;
     typeinfo->func_names[typeinfo->typeinfo->cElement & 0xffff] = name_offset;
 
@@ -1605,11 +1605,11 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     INT *typedata;
     int var_datawidth;
     int var_alignment;
-    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */;
+    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */; 
     int alignment;
     int varflags = 0;
     const attr_t *attr;
-    char *namedata;
+    unsigned char *namedata;
     int var_num = (typeinfo->typeinfo->cElement >> 16) & 0xffff;
 
     chat("add_var_desc(%d, %s)\n", index, var->name);
@@ -2540,7 +2540,14 @@ static void save_all_changes(msft_typelib_t *typelib)
     ctl2_write_segment( typelib, MSFT_SEG_CUSTDATAGUID );
 
     ctl2_write_typeinfos(typelib);
-    flush_output_buffer( typelib->typelib->filename );
+
+    if (strendswith( typelib_name, ".res" ))  /* create a binary resource file */
+    {
+        add_output_to_resources( "TYPELIB", "#1" );
+        output_typelib_regscript( typelib->typelib );
+        flush_output_resources( typelib_name );
+    }
+    else flush_output_buffer( typelib_name );
 }
 
 int create_msft_typelib(typelib_t *typelib)
@@ -2551,8 +2558,8 @@ int create_msft_typelib(typelib_t *typelib)
     time_t cur_time;
     char *time_override;
     unsigned int version = 5 << 24 | 1 << 16 | 164; /* 5.01.0164 */
-    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
-    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
+    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
+    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
 
     pointer_size = (typelib_kind == SYS_WIN64) ? 8 : 4;
 
@@ -2594,7 +2601,7 @@ int create_msft_typelib(typelib_t *typelib)
     set_help_context(msft);
     set_help_string_dll(msft);
     set_help_string_context(msft);
-
+    
     /* midl adds two sets of custom data to the library: the current unix time
        and midl's version number */
     time_override = getenv( "WIDL_TIME_OVERRIDE");

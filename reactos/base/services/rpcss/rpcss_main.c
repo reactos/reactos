@@ -51,8 +51,8 @@
 #define NONAMELESSSTRUCT
 #include "rpcss.h"
 #include "winnt.h"
-#include "irot.h"
-#include "epm.h"
+#include "irot_s.h"
+#include "epm_s.h"
 
 #include "wine/debug.h"
 

@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.5.2 - March 31, 2011
+ * libpng version 1.5.5 - September 22, 2011
  *
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -164,7 +164,9 @@
  *                       'type', compiler specific.
  *
  * PNG_DLL_EXPORT Set to the magic to use during a libpng build to
- *                make a symbol exported from the DLL.
+ *                make a symbol exported from the DLL.  Not used in the
+ *                public header files; see pngpriv.h for how it is used
+ *                in the libpng build.
  *
  * PNG_DLL_IMPORT Set to the magic to force the libpng symbols to come
  *                from a DLL - used to define PNG_IMPEXP when
@@ -258,25 +260,14 @@
 #  define PNGAPI PNGCAPI
 #endif
 
-/* The default for PNG_IMPEXP depends on whether the library is
- * being built or used.
+/* PNG_IMPEXP may be set on the compilation system command line or (if not set)
+ * then in an internal header file when building the library, otherwise (when
+ * using the library) it is set here.
  */
 #ifndef PNG_IMPEXP
-#  ifdef PNGLIB_BUILD
-    /* Building the library */
-#    if (defined(DLL_EXPORT)/*from libtool*/ ||\
-        defined(_WINDLL) || defined(_DLL) || defined(__DLL__) ||\
-        defined(_USRDLL) ||\
-        defined(PNG_BUILD_DLL)) && defined(PNG_DLL_EXPORT)
-      /* Building a DLL. */
-#      define PNG_IMPEXP PNG_DLL_EXPORT
-#    endif /* DLL */
-#  else
-    /* Using the library */
-#    if defined(PNG_USE_DLL) && defined(PNG_DLL_IMPORT)
-      /* This forces use of a DLL, disallowing static linking */
-#      define PNG_IMPEXP PNG_DLL_IMPORT
-#    endif
+#  if defined(PNG_USE_DLL) && defined(PNG_DLL_IMPORT)
+     /* This forces use of a DLL, disallowing static linking */
+#    define PNG_IMPEXP PNG_DLL_IMPORT
 #  endif
 
 #  ifndef PNG_IMPEXP
@@ -353,48 +344,21 @@
 #    ifndef PNG_NORETURN
 #      define PNG_NORETURN   __attribute__((__noreturn__))
 #    endif
-#    ifndef PNG_PTR_NORETURN
-       /* It's not enough to have the compiler be the correct compiler at
-        * this point - it's necessary for the library (which defines
-        * the type of the library longjmp) to also be the GNU library.
-        * This is because many systems use the GNU compiler with a
-        * non-GNU libc implementation.  Min/GW headers are also compatible
-        * with GCC as well as uclibc, so it seems best to exclude known
-        * problem libcs here rather than just including known libcs.
-        *
-        * NOTE: this relies on the only use of PNG_PTR_NORETURN being with
-        * the system longjmp.  If the same type is used elsewhere then this
-        * will need to be changed.
-        */
-#      if !defined(__CYGWIN__)
-#         define PNG_PTR_NORETURN   __attribute__((__noreturn__))
-#      endif
-#    endif
 #    ifndef PNG_ALLOCATED
 #      define PNG_ALLOCATED  __attribute__((__malloc__))
 #    endif
-
-    /* This specifically protects structure members that should only be
-     * accessed from within the library, therefore should be empty during
-     * a library build.
-     */
-#    ifndef PNGLIB_BUILD
-#      ifndef PNG_DEPRECATED
-#        define PNG_DEPRECATED __attribute__((__deprecated__))
+#    ifndef PNG_DEPRECATED
+#      define PNG_DEPRECATED __attribute__((__deprecated__))
+#    endif
+#    ifndef PNG_PRIVATE
+#      if 0 /* Doesn't work so we use deprecated instead*/
+#        define PNG_PRIVATE \
+          __attribute__((warning("This function is not exported by libpng.")))
+#      else
+#        define PNG_PRIVATE \
+          __attribute__((__deprecated__))
 #      endif
-#      ifndef PNG_DEPSTRUCT
-#        define PNG_DEPSTRUCT  __attribute__((__deprecated__))
-#      endif
-#      ifndef PNG_PRIVATE
-#        if 0 /* Doesn't work so we use deprecated instead*/
-#          define PNG_PRIVATE \
-            __attribute__((warning("This function is not exported by libpng.")))
-#        else
-#          define PNG_PRIVATE \
-            __attribute__((__deprecated__))
-#        endif
-#      endif
-#    endif /* PNGLIB_BUILD */
+#    endif
 #  endif /* __GNUC__ */
 
 #  if defined(_MSC_VER)  && (_MSC_VER >= 1300)
@@ -404,28 +368,17 @@
 #    ifndef PNG_NORETURN
 #      define PNG_NORETURN   __declspec(noreturn)
 #    endif
-#    ifndef PNG_PTR_NORETURN
-#      define PNG_PTR_NORETURN /* not supported */
-#    endif
 #    ifndef PNG_ALLOCATED
-#      define PNG_ALLOCATED __declspec(restrict)
+#      if defined(_MSC_VER)  && (_MSC_VER >= 1300)
+#        define PNG_ALLOCATED __declspec(restrict)
+#      endif
 #    endif
-
-    /* This specifically protects structure members that should only be
-     * accessed from within the library, therefore should be empty during
-     * a library build.
-     */
-#    ifndef PNGLIB_BUILD
-#      ifndef PNG_DEPRECATED
-#        define PNG_DEPRECATED __declspec(deprecated)
-#      endif
-#      ifndef PNG_DEPSTRUCT
-#        define PNG_DEPSTRUCT  __declspec(deprecated)
-#      endif
-#      ifndef PNG_PRIVATE
-#        define PNG_PRIVATE __declspec(deprecated)
-#      endif
-#    endif /* PNGLIB_BUILD */
+#    ifndef PNG_DEPRECATED
+#      define PNG_DEPRECATED __declspec(deprecated)
+#    endif
+#    ifndef PNG_PRIVATE
+#      define PNG_PRIVATE __declspec(deprecated)
+#    endif
 #  endif /* _MSC_VER */
 #endif /* PNG_PEDANTIC_WARNINGS */
 
@@ -438,14 +391,8 @@
 #ifndef PNG_NORETURN
 #  define PNG_NORETURN    /* This function does not return */
 #endif
-#ifndef PNG_PTR_NORETURN
-#  define PNG_PTR_NORETURN /* This function does not return */
-#endif
 #ifndef PNG_ALLOCATED
 #  define PNG_ALLOCATED   /* The result of the function is new memory */
-#endif
-#ifndef PNG_DEPSTRUCT
-#  define PNG_DEPSTRUCT   /* Access to this struct member is deprecated */
 #endif
 #ifndef PNG_PRIVATE
 #  define PNG_PRIVATE     /* This is a private libpng function */

@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -11,7 +10,7 @@ list(APPEND SOURCE
 
 add_executable(charmap ${SOURCE})
 
-set_module_type(charmap win32gui)
+set_module_type(charmap win32gui UNICODE)
 
 add_importlibs(charmap msvcrt user32 gdi32 comctl32 kernel32)
 

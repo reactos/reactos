@@ -2,29 +2,29 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
+	POPUP "&Р¤Р°Р№Р»"
 	BEGIN
-		MENUITEM "&Отваряне...", IDM_OPEN_FILE
-		MENUITEM "&Затваряне", IDM_CLOSE_FILE
+		MENUITEM "&РћС‚РІР°СЂСЏРЅРµ...", IDM_OPEN_FILE
+		MENUITEM "&Р—Р°С‚РІР°СЂСЏРЅРµ", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "Из&ход", IDM_EXIT
+		MENUITEM "РР·&С…РѕРґ", IDM_EXIT
 	END
-	POPUP "Помо&щ"
+	POPUP "РџРѕРјРѕ&С‰"
 	BEGIN
-		MENUITEM "&За...", IDM_ABOUT
+		MENUITEM "&Р—Р°...", IDM_ABOUT
 	END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Всички поддържани (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Пускане"
-	IDS_TOOLTIP_STOP "Спиране"
-	IDS_TOOLTIP_EJECT "Изваждане"
-	IDS_TOOLTIP_BACKWARD "Прескачане назад"
-	IDS_TOOLTIP_SEEKBACK "Търсене назад"
-	IDS_TOOLTIP_SEEKFORW "Търсене напред"
-	IDS_TOOLTIP_FORWARD "Търсене напред"
-    IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
-	IDS_PLAY "Възпроизвеждане"
+	IDS_ALL_TYPES_FILTER "Р’СЃРёС‡РєРё РїРѕРґРґСЉСЂР¶Р°РЅРё (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "РџСѓСЃРєР°РЅРµ"
+	IDS_TOOLTIP_STOP "РЎРїРёСЂР°РЅРµ"
+	IDS_TOOLTIP_EJECT "РР·РІР°Р¶РґР°РЅРµ"
+	IDS_TOOLTIP_BACKWARD "РџСЂРµСЃРєР°С‡Р°РЅРµ РЅР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKBACK "РўСЉСЂСЃРµРЅРµ РЅР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKFORW "РўСЉСЂСЃРµРЅРµ РЅР°РїСЂРµРґ"
+	IDS_TOOLTIP_FORWARD "РўСЉСЂСЃРµРЅРµ РЅР°РїСЂРµРґ"
+    IDS_APPTITLE "РњСѓР»С‚РёРјРµРґРёР№РЅРёСЏС‚ РІСЉР·РїСЂРѕРёР·РІРѕРґРёС‚РµР» РЅР° Р РµР°РєС‚РћРЎ"
+	IDS_PLAY "Р’СЉР·РїСЂРѕРёР·РІРµР¶РґР°РЅРµ"
 END

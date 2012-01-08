@@ -10,7 +10,8 @@ add_library(framebuf SHARED
     framebuf.rc
     ${CMAKE_CURRENT_BINARY_DIR}/framebuf.def)
 
-set_entrypoint(framebuf DrvEnableDriver@12)
+add_pch(framebuf framebuf.h)
+set_entrypoint(framebuf DrvEnableDriver 12)
 set_subsystem(framebuf native)
 set_image_base(framebuf 0x00010000)
 target_link_libraries(framebuf libcntpr)

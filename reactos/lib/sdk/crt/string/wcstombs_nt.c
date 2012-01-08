@@ -34,7 +34,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 	ULONG Size;
 	ULONG Length;
 
-	Length = wcslen (wcstr);
+	Length = (ULONG)wcslen (wcstr);
 
 	if (mbstr == NULL)
 	{
@@ -46,7 +46,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 	}
 
 	Status = RtlUnicodeToMultiByteN (mbstr,
-	                                 count,
+	                                 (ULONG)count,
 	                                 &Size,
 	                                 (wchar_t*)((size_t)wcstr),
 	                                 Length * sizeof(WCHAR));

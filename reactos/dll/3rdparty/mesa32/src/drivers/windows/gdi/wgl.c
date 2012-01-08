@@ -35,8 +35,8 @@
 
 #include <stdarg.h>
 #include <windef.h>
-#include <wincon.h>
 #include <winbase.h>
+#include <wincon.h>
 
 #  if defined(BUILD_GL32)
 #    define WINGDIAPI __declspec(dllexport)	

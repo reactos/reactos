@@ -4,7 +4,7 @@ IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Utilitaire de configuration système"
+CAPTION "Utilitaire de configuration systÃ¨me"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,2,2,374,195
@@ -20,26 +20,26 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List3",IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
     PUSHBUTTON      "&Activer tout",IDC_BTN_STARTUP_ACTIVATE,223,155,66,14
-    PUSHBUTTON      "&Désactiver tout",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
+    PUSHBUTTON      "&DÃ©sactiver tout",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
 END
 
 IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON      "Monter", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON      "&Descendre", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
     PUSHBUTTON      "Activ&er", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
-    PUSHBUTTON      "Désact&iver", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
+    PUSHBUTTON      "DÃ©sact&iver", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
 
     PUSHBUTTON      "Rechercher", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON      "&Nouveau", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON      "M&odifier", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
 
     PUSHBUTTON      "Activer tout", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
-    PUSHBUTTON      "Désactiver tout",IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
+    PUSHBUTTON      "DÃ©sactiver tout",IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -57,20 +57,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List1",IDC_SERVICES_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,2,1,360,148
     PUSHBUTTON      "&Activer tout",IDC_BTN_SERVICES_ACTIVATE,223,155,66,14
-    PUSHBUTTON      "&Désactiver tout",IDC_BTN_SERVICES_DEACTIVATE,295,155,66,14
+    PUSHBUTTON      "&DÃ©sactiver tout",IDC_BTN_SERVICES_DEACTIVATE,295,155,66,14
 END
 
 IDD_GENERAL_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Sélection du mode de démarrage ", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
- CONTROL "Démarrage &normal - charge tous les pilotes et tous les services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 185, 10
- CONTROL "Démarrage en mode &diagnostic - charge les périphériques de base et les services seulement", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
- CONTROL "Démarrage &sélectif", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 75, 10
+ GROUPBOX "SÃ©lection du mode de dÃ©marrage ", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
+ CONTROL "DÃ©marrage &normal - charge tous les pilotes et tous les services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 185, 10
+ CONTROL "DÃ©marrage en mode &diagnostic - charge les pÃ©riphÃ©riques de base et les services seulement", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+ CONTROL "DÃ©marrage &sÃ©lectif", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 75, 10
  AUTOCHECKBOX "T&raiter le fichier System.ini", IDC_CBX_SYSTEM_INI, 30, 80, 100, 10
- AUTOCHECKBOX "&Charger les Services Système", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
- AUTOCHECKBOX "Charger les éléments de démarrage", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+ AUTOCHECKBOX "&Charger les Services SystÃ¨me", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
+ AUTOCHECKBOX "Charger les Ã©lÃ©ments de dÃ©marrage", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -78,18 +78,18 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    LISTBOX         IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-   PUSHBUTTON    "&Vérifier les chemins de démarrage", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-   PUSHBUTTON    "&Par Défaut", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+   PUSHBUTTON    "&VÃ©rifier les chemins de dÃ©marrage", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
+   PUSHBUTTON    "&Par DÃ©faut", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
    PUSHBUTTON    "&Monter", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
    PUSHBUTTON    "&Descendre", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
-   GROUPBOX "Options de démarrage", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
+   GROUPBOX "Options de dÃ©marrage", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "Options A&vancées...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
-   LTEXT "&Délai:", -1, 280, 91, 30, 10
+   PUSHBUTTON "Options A&vancÃ©es...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
+   LTEXT "&DÃ©lai:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "secondes", -1, 340, 91, 15, 10
 END
@@ -121,12 +121,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_MSCONFIG             "Utilitaire de configuration système"
-    IDS_TAB_GENERAL          "Général"
+    IDS_MSCONFIG             "Utilitaire de configuration systÃ¨me"
+    IDS_TAB_GENERAL          "GÃ©nÃ©ral"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
     IDS_TAB_FREELDR          "FREELDR.INI"
     IDS_TAB_SERVICES         "Services"
-    IDS_TAB_STARTUP          "Démarrage"
+    IDS_TAB_STARTUP          "DÃ©marrage"
     IDS_TAB_TOOLS            "Outils"
 END
 
@@ -135,7 +135,7 @@ BEGIN
     IDS_SERVICES_COLUMN_SERVICE "Service"
     IDS_SERVICES_COLUMN_REQ     "Essentiel"
     IDS_SERVICES_COLUMN_VENDOR  "Fabricant"
-    IDS_SERVICES_COLUMN_STATUS  "État"
+    IDS_SERVICES_COLUMN_STATUS  "Ã‰tat"
 END
 
 STRINGTABLE DISCARDABLE
@@ -152,23 +152,23 @@ BEGIN
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Editeur du Registre"
-    IDS_TOOLS_REGEDIT_DESCR  "Ouvre l'éditeur du Registre"
+    IDS_TOOLS_REGEDIT_DESCR  "Ouvre l'Ã©diteur du Registre"
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
-    IDS_TOOLS_SYSDM_NAME     "Propriétés système"
-    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des informations à propos de l'ordinateur."
+    IDS_TOOLS_SYSDM_NAME     "PropriÃ©tÃ©s systÃ¨me"
+    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des informations Ã  propos de l'ordinateur."
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
-    IDS_STARTUP_COLUMN_ELEMENT "Élément"
+    IDS_STARTUP_COLUMN_ELEMENT "Ã‰lÃ©ment"
     IDS_STARTUP_COLUMN_CMD     "Commande"
     IDS_STARTUP_COLUMN_PATH    "Chemin"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "En cours d'exécution"
-    IDS_SERVICES_STATUS_STOPPED "Arrêté"
+    IDS_SERVICES_STATUS_RUNNING "En cours d'exÃ©cution"
+    IDS_SERVICES_STATUS_STOPPED "ArrÃªtÃ©"
     IDS_SERVICES_YES "Oui"
     IDS_SERVICES_UNKNOWN "Inconnu"
 END

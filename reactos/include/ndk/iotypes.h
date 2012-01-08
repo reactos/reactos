@@ -847,7 +847,7 @@ typedef struct _EXTENDED_DEVOBJ_EXTENSION
     USHORT Size;
     PDEVICE_OBJECT DeviceObject;
     ULONG PowerFlags;
-    struct DEVICE_OBJECT_POWER_EXTENSION *Dope;
+    struct _DEVICE_OBJECT_POWER_EXTENSION *Dope;
     ULONG ExtensionFlags;
     struct _DEVICE_NODE *DeviceNode;
     PDEVICE_OBJECT AttachedTo;

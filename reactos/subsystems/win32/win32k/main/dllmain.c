@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Driver entry and initialization of win32k
  * FILE:             subsystems/win32/win32k/main/main.c
  * PROGRAMER:
@@ -14,8 +14,8 @@
 
 HANDLE hModuleWin;
 
-PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
-BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
+PGDI_HANDLE_TABLE NTAPI GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
+BOOL NTAPI GDI_CleanupForProcess (struct _EPROCESS *Process);
 
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
@@ -46,17 +46,17 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     /* Allocate one if needed */
     if (!Win32Process)
     {
-        /* FIXME - lock the process */
+        /* FIXME: Lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
                                              sizeof(PROCESSINFO),
-                                             'p23W');
+                                             USERTAG_PROCESSINFO);
 
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
         RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
         PsSetProcessWin32Process(Process, Win32Process);
-        /* FIXME - unlock the process */
+        /* FIXME: Unlock the process */
     }
 
     if (Create)
@@ -67,6 +67,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         PRTL_USER_PROCESS_PARAMETERS pParams = NULL;
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
+
+#ifdef DBG
+        DbgInitDebugChannels();
+#endif
+
+        TRACE_PPI(Win32Process, UserProcess,"Allocated ppi for PID:%d\n", Process->UniqueProcessId);
+
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
         /* map the global heap into the process */
@@ -150,9 +157,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
                 DPRINT1("Shell process is exiting (%d)\n", ExitCode);
 
-                UserPostMessage(hwndSAS, 
-                                WM_LOGONNOTIFY, 
-                                LN_SHELL_EXITED, 
+                UserPostMessage(hwndSAS,
+                                WM_LOGONNOTIFY,
+                                LN_SHELL_EXITED,
                                 ExitCode);
             }
         }
@@ -165,7 +172,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         IntCleanupMenus(Process, Win32Process);
         IntCleanupCurIcons(Process, Win32Process);
-        CleanupMonitorImpl();
 
         /* no process windows should exist at this point, or the function will assert! */
         DestroyProcessClasses(Win32Process);
@@ -196,6 +202,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         GdiPoolDestroy(Win32Process->pPoolDcAttr);
         GdiPoolDestroy(Win32Process->pPoolBrushAttr);
         GdiPoolDestroy(Win32Process->pPoolRgnAttr);
+
+        /* Ftee the PROCESSINFO */
+        PsSetProcessWin32Process(Process, NULL);
+        ExFreePoolWithTag(Win32Process, USERTAG_PROCESSINFO);
     }
 
     RETURN( STATUS_SUCCESS);
@@ -213,9 +223,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
 {
     struct _EPROCESS *Process;
-    PTHREADINFO Win32Thread;
+    PTHREADINFO ptiCurrent;
     int i;
-    DECLARE_RETURN(NTSTATUS);
+    NTSTATUS Status;
 
     DPRINT("Enter Win32kThreadCallback\n");
     UserEnterExclusive();
@@ -223,59 +233,65 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     Process = Thread->ThreadsProcess;
 
     /* Get the Win32 Thread */
-    Win32Thread = PsGetThreadWin32Thread(Thread);
+    ptiCurrent = PsGetThreadWin32Thread(Thread);
 
     /* Allocate one if needed */
-    if (!Win32Thread)
+    if (!ptiCurrent)
     {
-        /* FIXME - lock the process */
-        Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(THREADINFO),
-                                            't23W');
+        /* FIXME: Lock the process */
+        ptiCurrent = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(THREADINFO),
+                                           USERTAG_THREADINFO);
 
-        if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
+        if (ptiCurrent == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto leave;
+        }
 
-        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
+        RtlZeroMemory(ptiCurrent, sizeof(THREADINFO));
 
-        PsSetThreadWin32Thread(Thread, Win32Thread);
-        /* FIXME - unlock the process */
+        PsSetThreadWin32Thread(Thread, ptiCurrent);
+        /* FIXME: Unlock the process */
     }
+
     if (Type == PsW32ThreadCalloutInitialize)
     {
         HWINSTA hWinSta = NULL;
         PTEB pTeb;
         HDESK hDesk = NULL;
-        NTSTATUS Status;
         PUNICODE_STRING DesktopPath;
         PDESKTOP pdesk;
         PRTL_USER_PROCESS_PARAMETERS ProcessParams = (Process->Peb ? Process->Peb->ProcessParameters : NULL);
 
         DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
-        InitializeListHead(&Win32Thread->WindowListHead);
-        InitializeListHead(&Win32Thread->W32CallbackListHead);
-        InitializeListHead(&Win32Thread->PtiLink);
+        InitializeListHead(&ptiCurrent->WindowListHead);
+        InitializeListHead(&ptiCurrent->W32CallbackListHead);
+        InitializeListHead(&ptiCurrent->PtiLink);
         for (i = 0; i < NB_HOOKS; i++)
         {
-            InitializeListHead(&Win32Thread->aphkStart[i]);
+            InitializeListHead(&ptiCurrent->aphkStart[i]);
         }
 
-        Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
-        co_IntDestroyCaret(Win32Thread);
-        Win32Thread->ppi = PsGetCurrentProcessWin32Process();
-        Win32Thread->ptiSibling = Win32Thread->ppi->ptiList;
-        Win32Thread->ppi->ptiList = Win32Thread;
-        Win32Thread->ppi->cThreads++;
-        if (Win32Thread->rpdesk && !Win32Thread->pDeskInfo)
+        ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
+        co_IntDestroyCaret(ptiCurrent);
+        ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
+        ptiCurrent->ptiSibling = ptiCurrent->ppi->ptiList;
+        ptiCurrent->ppi->ptiList = ptiCurrent;
+        ptiCurrent->ppi->cThreads++;
+        if (ptiCurrent->rpdesk && !ptiCurrent->pDeskInfo)
         {
-           Win32Thread->pDeskInfo = Win32Thread->rpdesk->pDeskInfo;
+           ptiCurrent->pDeskInfo = ptiCurrent->rpdesk->pDeskInfo;
         }
-        Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
-        Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
-        Win32Thread->pEThread = Thread;
+        ptiCurrent->MessageQueue = MsqCreateMessageQueue(Thread);
+        ptiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
+        if (ptiCurrent->KeyboardLayout)
+            UserReferenceObject(ptiCurrent->KeyboardLayout);
+        ptiCurrent->pEThread = Thread;
 
         /* HAAAAAAAACK! This should go to Win32kProcessCallback */
-        if(Win32Thread->ppi->hdeskStartup == NULL)
+        if(ptiCurrent->ppi->hdeskStartup == NULL)
         {
             /*
              * inherit the thread desktop and process window station (if not yet inherited) from the process startup
@@ -306,8 +322,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
                     if(NT_SUCCESS(Status))
                     {
-                        Win32Thread->ppi->hdeskStartup = hDesk;
-                        Win32Thread->ppi->rpdeskStartup = pdesk;
+                        ptiCurrent->ppi->hdeskStartup = hDesk;
+                        ptiCurrent->ppi->rpdeskStartup = pdesk;
                     }
                 }
             }
@@ -317,9 +333,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
             }
         }
 
-        if (Win32Thread->ppi->hdeskStartup != NULL)
+        if (ptiCurrent->ppi->hdeskStartup != NULL)
         {
-            if (!IntSetThreadDesktop(Win32Thread->ppi->hdeskStartup, FALSE))
+            if (!IntSetThreadDesktop(ptiCurrent->ppi->hdeskStartup, FALSE))
             {
                 DPRINT1("Unable to set thread desktop\n");
             }
@@ -329,20 +345,21 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         if (pTeb)
         { /* Attempt to startup client support which should have been initialized in IntSetThreadDesktop. */
            PCLIENTINFO pci = (PCLIENTINFO)pTeb->Win32ClientInfo;
-           Win32Thread->pClientInfo = pci;
-           pci->ppi = Win32Thread->ppi;
-           pci->fsHooks = Win32Thread->fsHooks;
-           if (Win32Thread->KeyboardLayout) pci->hKL = Win32Thread->KeyboardLayout->hkl;
-           pci->dwTIFlags = Win32Thread->TIF_flags;
+           ptiCurrent->pClientInfo = pci;
+           pci->ppi = ptiCurrent->ppi;
+           pci->fsHooks = ptiCurrent->fsHooks;
+           if (ptiCurrent->KeyboardLayout) pci->hKL = ptiCurrent->KeyboardLayout->hkl;
+           pci->dwTIFlags = ptiCurrent->TIF_flags;
+
            /* CI may not have been initialized. */
-           if (!pci->pDeskInfo && Win32Thread->pDeskInfo)
+           if (!pci->pDeskInfo && ptiCurrent->pDeskInfo)
            {
               if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
 
-              pci->pDeskInfo = (PVOID)((ULONG_PTR)Win32Thread->pDeskInfo - pci->ulClientDelta);
+              pci->pDeskInfo = (PVOID)((ULONG_PTR)ptiCurrent->pDeskInfo - pci->ulClientDelta);
            }
-           if (Win32Thread->pcti && pci->pDeskInfo)
-              pci->pClientThreadInfo = (PVOID)((ULONG_PTR)Win32Thread->pcti - pci->ulClientDelta);
+           if (ptiCurrent->pcti && pci->pDeskInfo)
+              pci->pClientThreadInfo = (PVOID)((ULONG_PTR)ptiCurrent->pcti - pci->ulClientDelta);
            else
               pci->pClientThreadInfo = NULL;
         }
@@ -350,73 +367,91 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         {
            DPRINT1("No TEB for this Thread!\n");
            // System thread running! Now SendMessage should be okay.
-           Win32Thread->pcti = &Win32Thread->cti;
+           ptiCurrent->pcti = &ptiCurrent->cti;
         }
         GetW32ThreadInfo();
     }
     else
     {
-        PTHREADINFO pti;
-        PSINGLE_LIST_ENTRY e;
+        PTHREADINFO *ppti;
+        PSINGLE_LIST_ENTRY psle;
+        PPROCESSINFO ppiCurrent;
 
         DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
-        Win32Thread->TIF_flags |= TIF_INCLEANUP;
-        pti = Win32Thread->ppi->ptiList;
-        if (pti == Win32Thread)
+        ppiCurrent = ptiCurrent->ppi;
+        ptiCurrent->TIF_flags |= TIF_INCLEANUP;
+
+        /* Find the THREADINFO in the PROCESSINFO's list */
+        ppti = &ppiCurrent->ptiList;
+        while (*ppti != NULL && *ppti != ptiCurrent)
         {
-           Win32Thread->ppi->ptiList = Win32Thread->ptiSibling;
-           Win32Thread->ppi->cThreads--;
+            ppti = &((*ppti)->ptiSibling);
         }
-        else
+
+        /* we must have found it */
+        ASSERT(*ppti == ptiCurrent);
+
+        /* Remove it from the list */
+        *ppti = ptiCurrent->ptiSibling;
+
+        /* Decrement thread count and check if its 0 */
+        ppiCurrent->cThreads--;
+
+        /* Do now some process cleanup that requires a valid win32 thread */
+        if(ptiCurrent->ppi->cThreads == 0)
         {
-           do
-           {
-               if (pti->ptiSibling == Win32Thread)
-               {
-                  pti->ptiSibling = Win32Thread->ptiSibling;
-                  Win32Thread->ppi->cThreads--;
-                  break;
-               }
-               pti = pti->ptiSibling;
-           }
-           while (pti);
+            /* Check if we have registered the user api hook */
+            if(ptiCurrent->ppi == ppiUahServer)
+            {
+                /* Unregister the api hook without blocking */
+                UserUnregisterUserApiHook();
+            }
         }
-        DceFreeThreadDCE(Win32Thread);
+
+        DceFreeThreadDCE(ptiCurrent);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
+
         /* Cleanup timers */
-        DestroyTimersForThread(Win32Thread);
-        KeSetEvent(Win32Thread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+        DestroyTimersForThread(ptiCurrent);
+        KeSetEvent(ptiCurrent->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
         UnregisterThreadHotKeys(Thread);
+
         /* what if this co_ func crash in umode? what will clean us up then? */
         co_DestroyThreadWindows(Thread);
-        IntBlockInput(Win32Thread, FALSE);
-        MsqDestroyMessageQueue(Win32Thread->MessageQueue);
-        IntCleanupThreadCallbacks(Win32Thread);
+        IntBlockInput(ptiCurrent, FALSE);
+        MsqDestroyMessageQueue(ptiCurrent->MessageQueue);
+        IntCleanupThreadCallbacks(ptiCurrent);
+        if (ptiCurrent->KeyboardLayout)
+            UserDereferenceObject(ptiCurrent->KeyboardLayout);
 
         /* cleanup user object references stack */
-        e = PopEntryList(&Win32Thread->ReferencesList);
-        while (e)
+        psle = PopEntryList(&ptiCurrent->ReferencesList);
+        while (psle)
         {
-            PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry);
+            PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(psle, USER_REFERENCE_ENTRY, Entry);
             DPRINT("thread clean: remove reference obj 0x%x\n",ref->obj);
             UserDereferenceObject(ref->obj);
 
-            e = PopEntryList(&Win32Thread->ReferencesList);
+            psle = PopEntryList(&ptiCurrent->ReferencesList);
         }
 
         IntSetThreadDesktop(NULL, TRUE);
 
+
+        /* Free the THREADINFO */
         PsSetThreadWin32Thread(Thread, NULL);
+        ExFreePoolWithTag(ptiCurrent, USERTAG_THREADINFO);
     }
 
-    RETURN( STATUS_SUCCESS);
+    Status = STATUS_SUCCESS;
 
-CLEANUP:
+leave:
     UserLeave();
-    DPRINT("Leave Win32kThreadCallback, ret=%i\n",_ret_);
-    END_CLEANUP;
+    DPRINT("Leave Win32kThreadCallback, Status=0x%lx\n",Status);
+
+    return Status;
 }
 
 NTSTATUS
@@ -428,14 +463,14 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
     if (Process->Win32Process == NULL)
     {
-        /* FIXME - lock the process */
+        /* FIXME: Lock the process */
         Process->Win32Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(PROCESSINFO), USERTAG_PROCESSINFO);
 
         if (Process->Win32Process == NULL)
             return STATUS_NO_MEMORY;
 
         RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
-        /* FIXME - unlock the process */
+        /* FIXME: Unlock the process */
 
         Win32kProcessCallback(Process, TRUE);
     }
@@ -454,7 +489,9 @@ Win32kInitWin32Thread(PETHREAD Thread)
     return(STATUS_SUCCESS);
 }
 
+#ifdef _M_IX86
 C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
+#endif
 
 // Return on failure
 #define NT_ROF(x) \
@@ -520,7 +557,7 @@ DriverEntry(
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,
-                                    1 * 1024 * 1024); /* FIXME - 1 MB for now... */
+                                    1 * 1024 * 1024); /* FIXME: 1 MB for now... */
     if (GlobalUserHeap == NULL)
     {
         DPRINT1("Failed to initialize the global heap!\n");
@@ -546,7 +583,6 @@ DriverEntry(
     CreateStockObjects();
     CreateSysColorObjects();
 
-    NT_ROF(InitXlateImpl());
     NT_ROF(InitPDEVImpl());
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
@@ -555,15 +591,10 @@ DriverEntry(
     NT_ROF(InitHotkeyImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
-    NT_ROF(InitWindowImpl());
-    NT_ROF(InitMenuImpl());
     NT_ROF(InitInputImpl());
     NT_ROF(InitKeyboardImpl());
-    NT_ROF(InitMonitorImpl());
     NT_ROF(MsqInitializeImpl());
     NT_ROF(InitTimerImpl());
-    NT_ROF(InitAcceleratorImpl());
-    NT_ROF(InitGuiCheckImpl());
 
     /* Initialize FreeType library */
     if (!InitFontSupport())

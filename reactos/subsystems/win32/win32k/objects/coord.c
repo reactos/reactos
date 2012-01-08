@@ -2,7 +2,7 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Coordinate systems
- * FILE:             subsys/win32k/objects/coord.c
+ * FILE:             subsystems/win32/win32k/objects/coord.c
  * PROGRAMER:        Unknown
  */
 
@@ -117,7 +117,7 @@ DC_vUpdateViewportExt(PDC pdc)
     }
 }
 
-// FIXME: don't use floating point in the kernel! use XFORMOBJ function
+// FIXME: Don't use floating point in the kernel! use XFORMOBJ function
 BOOL FASTCALL
 IntGdiCombineTransform(
     LPXFORM XFormResult,
@@ -145,7 +145,7 @@ IntGdiCombineTransform(
     return TRUE;
 }
 
-// FIXME: should be XFORML and use XFORMOBJ functions
+// FIXME: Should be XFORML and use XFORMOBJ functions
 BOOL
 APIENTRY
 NtGdiCombineTransform(
@@ -313,7 +313,7 @@ NtGdiTransformPoints(
 
     _SEH2_TRY
     {
-        /* pointer was already probed! */
+        /* Pointer was already probed! */
         RtlCopyMemory(UnsafePtOut, Points, Size);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -385,7 +385,7 @@ NtGdiModifyWorldTransform(
     DWORD Mode)
 {
     PDC dc;
-    XFORM SafeXForm; //FIXME: use XFORML
+    XFORM SafeXForm; // FIXME: Use XFORML
     BOOL Ret = TRUE;
 
     dc = DC_LockDc(hDC);
@@ -587,7 +587,7 @@ NtGdiScaleViewportExtEx(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
+            ProbeForWrite(pSize, sizeof(SIZE), 1);
 
             pSize->cx = pdcattr->szlViewportExt.cx;
             pSize->cy = pdcattr->szlViewportExt.cy;
@@ -633,7 +633,7 @@ NtGdiScaleWindowExtEx(
 
         _SEH2_TRY
         {
-            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
+            ProbeForWrite(pSize, sizeof(SIZE), 1);
 
             X = pdcattr->szlWindowExt.cx;
             if (pdcattr->dwLayout & LAYOUT_RTL) X = -X;

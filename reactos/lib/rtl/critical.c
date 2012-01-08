@@ -299,7 +299,7 @@ VOID
 NTAPI
 RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 {
-    ULONG EntryId;
+    SIZE_T EntryId;
 
     /* Is it part of our cached entries? */
     if ((DebugInfo >= RtlpStaticDebugInfo) &&
@@ -310,7 +310,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 
         /* Mark as free */
         EntryId = (DebugInfo - RtlpStaticDebugInfo);
-        DPRINT("Freeing from Buffer: %p. Entry: %lu inside Process: %p\n",
+        DPRINT("Freeing from Buffer: %p. Entry: %Iu inside Process: %p\n",
                DebugInfo,
                EntryId,
                NtCurrentTeb()->ClientId.UniqueProcess);
@@ -407,7 +407,7 @@ NTAPI
 RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                ULONG SpinCount)
 {
-    ULONG OldCount = CriticalSection->SpinCount;
+    ULONG OldCount = (ULONG)CriticalSection->SpinCount;
 
     /* Set to parameter if MP, or to 0 if this is Uniprocessor */
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;

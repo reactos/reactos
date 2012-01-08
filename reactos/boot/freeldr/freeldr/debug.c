@@ -30,19 +30,17 @@
 #define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+ULONG   DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
 		                 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
-		                 DPRINT_LINUX | DPRINT_HWDETECT;
+		                 DPRINT_LINUX | DPRINT_HWDETECT | DPRINT_PELOADER | DPRINT_WINDOWS;
 #elif defined (DEBUG_INIFILE)
-ULONG		DebugPrintMask = DPRINT_INIFILE;
+ULONG   DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
-ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
+ULONG   DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING |
-		                 DPRINT_UI | DPRINT_CACHE | DPRINT_REACTOS |
-		                 DPRINT_LINUX;
+ULONG   DebugPrintMask = DPRINT_WARNING | DPRINT_WINDOWS;
 #else //#elif defined (DEBUG_NONE)
-ULONG		DebugPrintMask = 0;
+ULONG   DebugPrintMask = 0;
 #endif
 
 #define	SCREEN				1
@@ -129,93 +127,45 @@ DbgPrint(const char *Format, ...)
 	return 0;
 }
 
-VOID DebugPrintHeader(ULONG Mask)
-{
-  /* No header */
-  if (Mask == 0)
-    return;
-
-	switch (Mask)
-	{
-	case DPRINT_WARNING:
-	    DbgPrint("WARNING: ");
-		break;
-	case DPRINT_MEMORY:
-	    DbgPrint("MEMORY: ");
-		break;
-	case DPRINT_FILESYSTEM:
-	    DbgPrint("FILESYS: ");
-		break;
-	case DPRINT_INIFILE:
-	    DbgPrint("INIFILE: ");
-		break;
-	case DPRINT_UI:
-	    DbgPrint("UI: ");
-		break;
-	case DPRINT_DISK:
-	    DbgPrint("DISK: ");
-		break;
-	case DPRINT_CACHE:
-	    DbgPrint("CACHE: ");
-		break;
-	case DPRINT_REGISTRY:
-	    DbgPrint("REGISTRY: ");
-		break;
-	case DPRINT_REACTOS:
-	    DbgPrint("REACTOS: ");
-		break;
-	case DPRINT_LINUX:
-	    DbgPrint("LINUX: ");
-		break;
-	case DPRINT_WINDOWS:
-	    DbgPrint("WINLDR: ");
-		break;
-	case DPRINT_HWDETECT:
-	    DbgPrint("HWDETECT: ");
-		break;
-	case DPRINT_PELOADER:
-	    DbgPrint("PELOADER: ");
-		break;
-	case DPRINT_SCSIPORT:
-	    DbgPrint("SCSIPORT: ");
-		break;
-	default:
-	    DbgPrint("UNKNOWN: ");
-		break;
-	}
-}
-
-char* g_file;
-int g_line;
-
-VOID DbgPrintMask(ULONG Mask, char *format, ...)
+VOID
+DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...)
 {
 	va_list ap;
 	char Buffer[2096];
 	char *ptr = Buffer;
 
 	// Mask out unwanted debug messages
-	if (!(Mask & DebugPrintMask))
+	if (Level >= WARN_LEVEL && !(Mask & DebugPrintMask))
 	{
 		return;
-	}
-
-	// Disable file/line for scsiport messages
-	if (Mask & DPRINT_SCSIPORT)
-	{
-		DebugStartOfLine = FALSE;
 	}
 
 	// Print the header if we have started a new line
 	if (DebugStartOfLine)
 	{
-		DbgPrint("(%s:%d) ", g_file, g_line);
-		DebugPrintHeader(Mask);
+		DbgPrint("(%s:%lu) ", File, Line);
+
+		switch (Level)
+	    {
+	        case ERR_LEVEL:
+                DbgPrint("err: ");
+                break;
+	        case FIXME_LEVEL:
+                DbgPrint("fixme: ");
+                break;
+	        case WARN_LEVEL:
+                DbgPrint("warn: ");
+                break;
+	        case TRACE_LEVEL:
+                DbgPrint("trace: ");
+                break;
+	    }
+
 		DebugStartOfLine = FALSE;
 	}
 
-	va_start(ap, format);
-	vsprintf(Buffer, format, ap);
+	va_start(ap, Format);
+	vsprintf(Buffer, Format, ap);
 	va_end(ap);
 
 	while (*ptr)
@@ -224,7 +174,8 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	}
 }
 
-VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
+VOID
+DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 {
 	PUCHAR	BufPtr = (PUCHAR)Buffer;
 	ULONG		Idx;
@@ -237,7 +188,7 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 
 	DebugStartOfLine = FALSE; // We don't want line headers
-	DbgPrintMask(Mask, "Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
+	DbgPrint("Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
 
 	for (Idx=0; Idx<Length; )
 	{
@@ -245,65 +196,62 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 
 		if (Idx < 0x0010)
 		{
-			DbgPrintMask(Mask, "000%x:\t", Idx);
+			DbgPrint("000%x:\t", Idx);
 		}
 		else if (Idx < 0x0100)
 		{
-			DbgPrintMask(Mask, "00%x:\t", Idx);
+			DbgPrint("00%x:\t", Idx);
 		}
 		else if (Idx < 0x1000)
 		{
-			DbgPrintMask(Mask, "0%x:\t", Idx);
+			DbgPrint("0%x:\t", Idx);
 		}
 		else
 		{
-			DbgPrintMask(Mask, "%x:\t", Idx);
+			DbgPrint("%x:\t", Idx);
 		}
 
 		for (Idx2=0; Idx2<16; Idx2++,Idx++)
 		{
 			if (BufPtr[Idx] < 0x10)
 			{
-				DbgPrintMask(Mask, "0");
+				DbgPrint("0");
 			}
-			DbgPrintMask(Mask, "%x", BufPtr[Idx]);
+			DbgPrint("%x", BufPtr[Idx]);
 
 			if (Idx2 == 7)
 			{
-				DbgPrintMask(Mask, "-");
+				DbgPrint("-");
 			}
 			else
 			{
-				DbgPrintMask(Mask, " ");
+				DbgPrint(" ");
 			}
 		}
 
 		Idx -= 16;
-		DbgPrintMask(Mask, " ");
+		DbgPrint(" ");
 
 		for (Idx2=0; Idx2<16; Idx2++,Idx++)
 		{
 			if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
 			{
-				DbgPrintMask(Mask, "%c", BufPtr[Idx]);
+				DbgPrint("%c", BufPtr[Idx]);
 			}
 			else
 			{
-				DbgPrintMask(Mask, ".");
+				DbgPrint(".");
 			}
 		}
 
-		DbgPrintMask(Mask, "\n");
+		DbgPrint("\n");
 	}
 }
 
 #else
 
-VOID DbgPrintMask(ULONG Mask, char *format, ...)
-{
-}
-
-ULONG DbgPrint(PCCH Format, ...)
+ULONG
+DbgPrint(PCCH Format, ...)
 {
     return 0;
 }
@@ -341,7 +289,6 @@ MsgBoxPrint(const char *Format, ...)
 }
 
 //DECLSPEC_NORETURN
-NTKERNELAPI
 VOID
 NTAPI
 KeBugCheckEx(

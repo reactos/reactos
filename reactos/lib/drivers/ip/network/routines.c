@@ -54,89 +54,13 @@ static VOID DisplayIPHeader(
       ((IPHeader->DstAddr >> 16) & 0xFF), ((IPHeader->DstAddr >> 24) & 0xFF));
 }
 
-static VOID DisplayTCPHeader(
-    PCHAR Header,
-    UINT Length)
-{
-    /* FIXME: IPv4 only */
-    PIPv4_HEADER IPHeader = (PIPv4_HEADER)Header;
-    PTCPv4_HEADER TCPHeader;
-
-    if (IPHeader->Protocol != IPPROTO_TCP) {
-        DbgPrint("This is not a TCP datagram. Protocol is %d\n", IPHeader->Protocol);
-        return;
-    }
-
-    TCPHeader = (PTCPv4_HEADER)((PCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
-
-    DbgPrint("TCP header:\n");
-    DbgPrint("  SourcePort: %d\n", WN2H(TCPHeader->SourcePort));
-    DbgPrint("  DestinationPort: %d\n", WN2H(TCPHeader->DestinationPort));
-    DbgPrint("  SequenceNumber: 0x%x\n", DN2H(TCPHeader->SequenceNumber));
-    DbgPrint("  AckNumber: 0x%x\n", DN2H(TCPHeader->AckNumber));
-    DbgPrint("  DataOffset: 0x%x (0x%x) 32-bit words\n", TCPHeader->DataOffset, TCPHeader->DataOffset >> 4);
-    DbgPrint("  Flags: 0x%x (0x%x)\n", TCPHeader->Flags, TCPHeader->Flags & 0x3F);
-    if ((TCPHeader->Flags & TCP_URG) > 0) DbgPrint("    TCP_URG - Urgent Pointer field significant\n");
-    if ((TCPHeader->Flags & TCP_ACK) > 0) DbgPrint("    TCP_ACK - Acknowledgement field significant\n");
-    if ((TCPHeader->Flags & TCP_PSH) > 0) DbgPrint("    TCP_PSH - Push Function\n");
-    if ((TCPHeader->Flags & TCP_RST) > 0) DbgPrint("    TCP_RST - Reset the connection\n");
-    if ((TCPHeader->Flags & TCP_SYN) > 0) DbgPrint("    TCP_SYN - Synchronize sequence numbers\n");
-    if ((TCPHeader->Flags & TCP_FIN) > 0) DbgPrint("    TCP_FIN - No more data from sender\n");
-    DbgPrint("  Window: 0x%x\n", WN2H(TCPHeader->Window));
-    DbgPrint("  Checksum: 0x%x\n", WN2H(TCPHeader->Checksum));
-    DbgPrint("  Urgent: 0x%x\n", WN2H(TCPHeader->Urgent));
-}
-
-
-VOID DisplayTCPPacket(
-    PIP_PACKET IPPacket)
-{
-    UINT Length;
-    PCHAR Buffer;
-
-    if ((DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) != TRUE) ||
-        (DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_TCP | DPFLTR_MASK) != TRUE)) {
-        return;
-    }
-
-    if (!IPPacket) {
-        TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
-        return;
-    }
-
-    DisplayIPPacket(IPPacket);
-
-	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
-    TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
-    TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
-    TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
-    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
-    TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
-
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
-        Buffer = ExAllocatePool(NonPagedPool, Length);
-        if (Buffer) {
-            Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, 0, Length);
-            DisplayTCPHeader(Buffer, Length);
-            ExFreePool(Buffer);
-        }
-    } else {
-        Buffer = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-        DisplayTCPHeader(Buffer, Length);
-    }
-}
 #endif
 
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
 #if DBG
-    PCHAR p;
     UINT Length;
-    PNDIS_BUFFER Buffer;
-    PNDIS_BUFFER NextBuffer;
     PCHAR CharBuffer;
 
     if ((DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) != TRUE) ||
@@ -149,28 +73,14 @@ VOID DisplayIPPacket(
         return;
     }
 
-	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
+    TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
     TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
     TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
     TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
-    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
     TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
 
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
-        for (; Buffer != NULL; Buffer = NextBuffer) {
-            NdisGetNextBuffer(Buffer, &NextBuffer);
-            NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
-	    //OskitDumpBuffer( p, Length );
-        }
-    } else {
-        p      = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-	//OskitDumpBuffer( p, Length );
-    }
-
     CharBuffer = IPPacket->Header;
-    Length = IPPacket->ContigSize;
+    Length = IPPacket->HeaderSize;
     DisplayIPHeader(CharBuffer, Length);
 #endif
 }

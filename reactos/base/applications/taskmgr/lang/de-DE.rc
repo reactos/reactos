@@ -1,23 +1,12 @@
-/////////////////////////////////////////////////////////////////////////////
-// Deutsch
-// resource file by Klemens Friedl   (frik85@reactos.at; http://frik85.reactos.at)
+// Deutsch resource file by Klemens Friedl (frik85@reactos.at; http://frik85.reactos.at)
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Neuer Task (Ausführen...)",  ID_FILE_NEW
+        MENUITEM "&Neuer Task (AusfÃ¼hren...)",  ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Beenden",  ID_FILE_EXIT
     END
@@ -45,15 +34,16 @@ BEGIN
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Große Symbole",                ID_VIEW_LARGE
+        MENUITEM "&GroÃŸe Symbole",                ID_VIEW_LARGE
         MENUITEM "K&leine Symbole",               ID_VIEW_SMALL
         MENUITEM "&Details",                      ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Spalten auswählen...",      ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&Spalten auswÃ¤hlen...",      ID_VIEW_SELECTCOLUMNS
         POPUP "&CPU-Verlauf"
         BEGIN
             MENUITEM "&Alle CPUs in einem Diagramm",  ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "&Ein Diagramm pro CPU",         ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "&Ein Diagramm pro CPU",         ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
         END
         MENUITEM "K&ernel-Zeiten anzeigen",           ID_VIEW_SHOWKERNELTIMES
     END
@@ -63,7 +53,7 @@ BEGIN
         MENUITEM "&Nebeneinander",      ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimieren",         ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximieren",         ID_WINDOWS_MAXIMIZE
-        MENUITEM "Übe&rlappend",        ID_WINDOWS_CASCADE
+        MENUITEM "Ãœbe&rlappend",        ID_WINDOWS_CASCADE
         MENUITEM "&In Vordergrund",     ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&?"
@@ -80,7 +70,7 @@ BEGIN
     MENUITEM "&Nebeneinander",       ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimieren",          ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximieren",          ID_WINDOWS_MAXIMIZE
-    MENUITEM "Übe&rlappend",         ID_WINDOWS_CASCADE
+    MENUITEM "Ãœbe&rlappend",         ID_WINDOWS_CASCADE
     MENUITEM "&In Vordergrund",      ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -88,9 +78,9 @@ IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Neuer Task (Ausführen...)",    ID_FILE_NEW
+        MENUITEM "&Neuer Task (AusfÃ¼hren...)",    ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Große Symbole",                ID_VIEW_LARGE
+        MENUITEM "&GroÃŸe Symbole",                ID_VIEW_LARGE
         MENUITEM "K&leine Symbole",               ID_VIEW_SMALL
         MENUITEM "&Details",                      ID_VIEW_DETAILS, CHECKED
     END
@@ -107,7 +97,7 @@ BEGIN
         MENUITEM "&Nebeneinander",         ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimieren",            ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximieren",            ID_WINDOWS_MAXIMIZE
-        MENUITEM "Übe&rlappend",           ID_WINDOWS_CASCADE
+        MENUITEM "Ãœbe&rlappend",           ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Task beenden",          ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Zu Prozess wechseln",   ID_APPLICATION_PAGE_GOTOPROCESS
@@ -120,7 +110,7 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Wiederherstellen",         ID_RESTORE
-        MENUITEM "&Schließen",                ID_FILE_EXIT
+        MENUITEM "&SchlieÃŸen",                ID_FILE_EXIT
         MENUITEM SEPARATOR
         MENUITEM "&Immer im Vordergrund",     ID_OPTIONS_ALWAYSONTOP
     END
@@ -135,13 +125,13 @@ BEGIN
 
         MENUITEM "&Debuggen",                       ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Pr&iorität festlegen"
+        POPUP "Pr&ioritÃ¤t festlegen"
         BEGIN
             MENUITEM "&Echtzeit",               ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
             MENUITEM "&Hoch",                   ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "Höher &als Normal",       ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "HÃ¶her &als Normal",       ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
             MENUITEM "&Normal",                 ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
@@ -150,8 +140,8 @@ BEGIN
             MENUITEM "N&iedrig",                ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "&Zugehörigkeit festlegen...", ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Debu&g-Kanäle ändern...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "&ZugehÃ¶rigkeit festlegen...", ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "Debu&g-KanÃ¤le Ã¤ndern...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -170,8 +160,7 @@ CAPTION "Task-Manager"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL
-"Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
+    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -179,8 +168,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP,7,7,233,177
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Neuer Task...",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Wechseln zu",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
     PUSHBUTTON      "&Task beenden",IDC_ENDTASK,75,189,53,14,WS_DISABLED
@@ -228,7 +216,7 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,71,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Insgesamt",IDS_PHYSICAL_MEMORY_TOTAL,133,131,50,8 //27
-    LTEXT           "Verfügbar",IDS_PHYSICAL_MEMORY_AVAILABLE,133,140,50,8 //30
+    LTEXT           "VerfÃ¼gbar",IDS_PHYSICAL_MEMORY_AVAILABLE,133,140,50,8 //30
     LTEXT           "Systemcache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,133,149,46,8 //46
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,192,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -257,24 +245,23 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug-Kanäle"
+CAPTION "Debug-KanÃ¤le"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP |
-		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Schließen",IDOK,171,189,69,14
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+                    LVS_SORTASCENDING,7,7,233,177
+    PUSHBUTTON      "SchlieÃŸen",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Prozessorzugehörigkeit"
+CAPTION "ProzessorzugehÃ¶rigkeit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
     PUSHBUTTON      "Abbrechen",IDCANCEL,174,133,50,14
-    LTEXT           "Die Prozessorzugehörigkeit steuert, auf welchen CPUs der Prozess ausgeführt werden darf.",
+    LTEXT           "Die ProzessorzugehÃ¶rigkeit steuert, auf welchen CPUs der Prozess ausgefÃ¼hrt werden darf.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -344,12 +331,12 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 240, 199 //0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Spalten auswählen"
+CAPTION "Spalten auswÃ¤hlen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,124,178,50,14 //84
     PUSHBUTTON      "Abbrechen",IDCANCEL,178,178,50,14 //138
-    LTEXT           "Wählen Sie die Spalten aus, die auf der Registerkarte Prozesse angezeigt werden sollen.",
+    LTEXT           "WÃ¤hlen Sie die Spalten aus, die auf der Registerkarte Prozesse angezeigt werden sollen.",
                     IDC_STATIC,7,7,221,17 //181
     CONTROL         "&Name",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
@@ -361,7 +348,7 @@ BEGIN
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Speicherauslastung",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,90,10 //63
-    CONTROL         "Verän&d. der Speicherauslastung",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "VerÃ¤n&d. der Speicherauslastung",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,120,10 //82
     CONTROL         "&Maximale Speicherauslastung",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,115,10 //82
@@ -377,15 +364,15 @@ BEGIN
                     WS_TABSTOP,7,149,70,10 //50
     CONTROL         "Benut&zername",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,70,10 //51
-    CONTROL         "Veränderung der Seiten&fehler",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "VerÃ¤nderung der Seiten&fehler",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,28,120,10 //107,60
-    CONTROL         "Größe des &virtuelle Speichers",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "GrÃ¶ÃŸe des &virtuelle Speichers",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,39,120,10 //107,60
     CONTROL         "&Ausgelagerter Pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,50,80,10  //107,53
     CONTROL         "Nicht ausgelagerter P&ool",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,61,115,10 //107
-    CONTROL         "&Basispriorität",IDC_BASEPRIORITY,"Button",
+    CONTROL         "&BasisprioritÃ¤t",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,72,80,10 //107
     CONTROL         "&Handleanzahl",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,83,59,10 //107
@@ -543,7 +530,7 @@ BEGIN
             VALUE "FileDescription", "Task Manager von Brian Palmer\0"
             VALUE "FileVersion", "1.0.0.1\0"
             VALUE "InternalName", "taskmgr\0"
-            VALUE "LegalCopyright", "Copyright © Brian Palmer 2000\0"
+            VALUE "LegalCopyright", "Copyright Â© Brian Palmer 2000\0"
             VALUE "OriginalFilename", "taskmgr.exe\0"
             VALUE "ProductName", "Task Manager von Brian Palmer\0"
             VALUE "ProductVersion", "1.0.0.1\0"
@@ -571,15 +558,15 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Führt ein neues Programm aus."
+    ID_FILE_NEW             "FÃ¼hrt ein neues Programm aus."
     ID_OPTIONS_ALWAYSONTOP  "Task-Manager bleibt im Vordergrund, wenn nicht minimiert."
     ID_OPTIONS_MINIMIZEONUSE
-                            "Task-Manager wird minimiert, wenn ein SwitchTo-Vorgang durchgeführt wird."
+                            "Task-Manager wird minimiert, wenn ein SwitchTo-Vorgang durchgefÃ¼hrt wird."
     ID_OPTIONS_HIDEWHENMINIMIZED "Blendet den Task-Manager aus, wenn er minimiert ist."
-    ID_VIEW_REFRESH         "Veranlasst den Task-Manager zur sofortigen Aktualisierung, unabhängig von der Geschwindigkeitseinstellung."
-    ID_VIEW_LARGE           "Zeigt Tasks als große Symbole an."
+    ID_VIEW_REFRESH         "Veranlasst den Task-Manager zur sofortigen Aktualisierung, unabhÃ¤ngig von der Geschwindigkeitseinstellung."
+    ID_VIEW_LARGE           "Zeigt Tasks als groÃŸe Symbole an."
     ID_VIEW_SMALL           "Zeigt Tasks als kleine Symbole an."
-    ID_VIEW_DETAILS         "Zeigt Informationen über jeden Task an."
+    ID_VIEW_DETAILS         "Zeigt Informationen Ã¼ber jeden Task an."
     ID_VIEW_UPDATESPEED_HIGH "Aktualisiert die Anzeige zweimal pro Sekunde."
     ID_VIEW_UPDATESPEED_NORMAL "Aktualisiert die Anzeige alle zwei Sekunden."
     ID_VIEW_UPDATESPEED_LOW "Aktualisiert die Anzeige alle vier Sekunden."
@@ -593,17 +580,17 @@ BEGIN
     ID_WINDOWS_TILEVERTICALLY "Ordnet die Fenster vertikal auf dem Desktop an."
     ID_WINDOWS_MINIMIZE     "Minimiert die Fenster"
     ID_WINDOWS_MAXIMIZE     "Maximiert die Fenster"
-    ID_WINDOWS_CASCADE      "Ordnet die Fenster diagonal überlappend auf den Desktop an."
+    ID_WINDOWS_CASCADE      "Ordnet die Fenster diagonal Ã¼berlappend auf den Desktop an."
     ID_WINDOWS_BRINGTOFRONT "Zeigt das Fenster im Vordergrund an, aber wechselt nicht zu diesem."
     ID_HELP_TOPICS          "Zeigt die Hilfethemen des Taskmanagers an."
     ID_HELP_ABOUT           "Zeigt Programminformationen, Versionsnummer und Copyright an."
     ID_FILE_EXIT            "Beendet den Taskmanager."
     ID_OPTIONS_SHOW16BITTASKS
-                            "Zeigt die 16-Bit-Tasks unter der zugehörigen ntvdm.exe an."
+                            "Zeigt die 16-Bit-Tasks unter der zugehÃ¶rigen ntvdm.exe an."
     ID_VIEW_SELECTCOLUMNS   "Legt fest welche Spalten auf der Registerkarte Prozesse angezeigt werden."
     ID_VIEW_SHOWKERNELTIMES "Zeigt die Kernel-Zeiten in den Systemmonitordiagrammen an."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Zeigt für jede CPU-Auslastung ein Verlaufsdiagramm an."
+                            "Zeigt fÃ¼r jede CPU-Auslastung ein Verlaufsdiagramm an."
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Zeigt die gesamte CPU-Auslastung in einem Verlaufsdiagramm an."
     ID_APPLICATION_PAGE_SWITCHTO
                             "Zeigt das Fenster im Vordergrund an und wechselt zu diesem Task."
@@ -611,25 +598,25 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "Schließt den markierten Task."
+    ID_ENDTASK              "SchlieÃŸt den markierten Task."
     ID_GOTOPROCESS          "Wechselt den Fokus zu dem markierten Task."
     ID_RESTORE              "Wiederherstellen des Task-Managers."
     ID_PROCESS_PAGE_ENDPROCESS "Beendet den Prozess."
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "Beendet den Prozess und seine Abhängigkeiten."
-    ID_PROCESS_PAGE_DEBUG   "Hängt den Debugger in diesen Prozess ein."
+                            "Beendet den Prozess und seine AbhÃ¤ngigkeiten."
+    ID_PROCESS_PAGE_DEBUG   "HÃ¤ngt den Debugger in diesen Prozess ein."
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Steuert die Prozessorzugehörigkeit, auf welchen CPUs der Prozess ausgeführt werden darf."
+                            "Steuert die ProzessorzugehÃ¶rigkeit, auf welchen CPUs der Prozess ausgefÃ¼hrt werden darf."
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "Legt die Priorität auf ECHTZEIT fest."
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Legt die Priorität auf HOCH fest."
+                            "Legt die PrioritÃ¤t auf ECHTZEIT fest."
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Legt die PrioritÃ¤t auf HOCH fest."
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Legt die Priorität auf HÖHER ALS NORMAL fest."
+                            "Legt die PrioritÃ¤t auf HÃ–HER ALS NORMAL fest."
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Legt die Priorität auf NORMAL fest."
+                            "Legt die PrioritÃ¤t auf NORMAL fest."
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Legt die Priorität auf NIEDRIGER ALS NORMAL fest."
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Legt die Priorität auf NIEDRIG fest."
+                            "Legt die PrioritÃ¤t auf NIEDRIGER ALS NORMAL fest."
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Legt die PrioritÃ¤t auf NIEDRIG fest."
 END
 
 STRINGTABLE DISCARDABLE
@@ -646,11 +633,11 @@ BEGIN
     IDS_TAB_CPU                   "CPU-Auslastung"
     IDS_TAB_CPUTIME               "CPU-Zeit"
     IDS_TAB_MEMUSAGE              "Speicherauslastung"
-    IDS_TAB_PEAKMEMUSAGE          "Veränd. der Speicherauslastung"
+    IDS_TAB_PEAKMEMUSAGE          "VerÃ¤nd. der Speicherauslastung"
     IDS_TAB_MEMDELTA              "Maximale Speicherauslastung"
     IDS_TAB_PAGEFAULT             "Seitenfehler"
     IDS_TAB_PFDELTA               "Maximale Seitenfehler"
-    IDS_TAB_VMSIZE                "Virtuelle Arbeitsspeichergröße"
+    IDS_TAB_VMSIZE                "Virtuelle ArbeitsspeichergrÃ¶ÃŸe"
     IDS_TAB_PAGEDPOOL             "Paged Pool"
     IDS_TAB_NPPOOL                "NP Pool"
     IDS_TAB_BASEPRI               "Basispri"
@@ -664,10 +651,10 @@ BEGIN
     IDS_TAB_IOREADBYTES           "E/A-Bytes (Lesen)"
     IDS_TAB_IOWRITESBYTES         "E/A-Bytes (Schreiben)"
     IDS_TAB_IOOTHERBYTES          "E/A-Bytes (Andere)"
-    IDS_MENU_SELECTCOLUMNS        "&Spalten auswählen..."
+    IDS_MENU_SELECTCOLUMNS        "&Spalten auswÃ¤hlen..."
     IDS_MENU_16BITTASK            "&16-Bit-Tasks anzeigen"
     IDS_MENU_WINDOWS              "&Fenster"
-    IDS_MENU_LARGEICONS           "&Große Symbole"
+    IDS_MENU_LARGEICONS           "&GroÃŸe Symbole"
     IDS_MENU_SMALLICONS           "Kl&eine Symbole"
     IDS_MENU_DETAILS              "&Details"
     IDS_MENU_ONEGRAPHALLCPUS      "&Alle CPUs in einem Diagramm"
@@ -675,25 +662,21 @@ BEGIN
     IDS_MENU_CPUHISTORY           "&CPU Verlauf"
     IDS_MENU_SHOWKERNELTIMES      "&Kernel-Zeiten anzeigen"
     IDS_CREATENEWTASK             "Neuen Task erstellen"
-    IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geöffnet werden sollen."
-    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozessaffinität nicht möglich"
-    IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine Zugehörigkeit zu mindestens einem Prozessor aufweisen."
-    IDS_MSG_INVALIDOPTION         "Ungültige Auswahl"
+    IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geÃ¶ffnet werden sollen."
+    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Ã„nderung der ProzessaffinitÃ¤t nicht mÃ¶glich"
+    IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine ZugehÃ¶rigkeit zu mindestens einem Prozessor aufweisen."
+    IDS_MSG_INVALIDOPTION         "UngÃ¼ltige Auswahl"
     IDS_MSG_UNABLEDEBUGPROCESS    "Kann Prozess nicht debuggen"
-    IDS_MSG_WARNINGDEBUG          "WARNUNG: Das Debuggen dieses Prozesses kann zu Datenverlust führen.\nSind Sie sicher, dass Sie diesen Prozess debuggen möchten?"
+    IDS_MSG_WARNINGDEBUG          "WARNUNG: Das Debuggen dieses Prozesses kann zu Datenverlust fÃ¼hren.\nSind Sie sicher, dass Sie diesen Prozess debuggen mÃ¶chten?"
     IDS_MSG_TASKMGRWARNING        "Warnung vom Task-Manager"
-    IDS_MSG_WARNINGTERMINATING    "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwünschten Ergebnissen, einschließlich Datenverlust und\nSysteminstabilität, führen. Zustand und Daten des Prozesses\nwerden nicht mehr gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen möchten?"
+    IDS_MSG_WARNINGTERMINATING    "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwÃ¼nschten Ergebnissen, einschlieÃŸlich Datenverlust und\nSysteminstabilitÃ¤t, fÃ¼hren. Zustand und Daten des Prozesses\nwerden nicht mehr gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen mÃ¶chten?"
     IDS_MSG_UNABLETERMINATEPRO    "Kann den Prozess nicht beenden"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Kann die Priorität nicht ändern"
-    IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie sie ändern möchten?"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Kann die PrioritÃ¤t nicht Ã¤ndern"
+    IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ã„ndern der PrioritÃ¤tsklasse dieses Prozesses\nkann zu unerwÃ¼nschten Ergebnissen, einschl. SysteminstabilitÃ¤t, fÃ¼hren.\nSind Sie sicher, dass Sie sie Ã¤ndern mÃ¶chten?"
     IDS_MSG_TRAYICONCPUUSAGE      "CPU-Auslastung: %d%%"
     IDS_STATUS_MEMUSAGE           "zugesicherter Speicher: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "CPU-Auslastung: %3d%%"
     IDS_STATUS_PROCESSES          "Prozesse: %d"
-    IDS_Not_Responding            "Keine Rückmeldung"
-    IDS_Running                   "Wird ausgeführt"
-
+    IDS_Not_Responding            "Keine RÃ¼ckmeldung"
+    IDS_Running                   "Wird ausgefÃ¼hrt"
 END
-
-#endif
-/////////////////////////////////////////////////////////////////////////////

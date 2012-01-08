@@ -4,9 +4,7 @@ add_subdirectory(appwiz)
 add_subdirectory(console)#Warning: console\\/lang/cs-CZ.rc:143: unrecognized escape sequence
 add_subdirectory(desk)
 add_subdirectory(hdwwiz)
-if(NOT MSVC)
-    add_subdirectory(inetcpl) # FIXME: msvc build.
-endif()
+add_subdirectory(inetcpl)
 add_subdirectory(input)
 add_subdirectory(intl)
 add_subdirectory(joy)

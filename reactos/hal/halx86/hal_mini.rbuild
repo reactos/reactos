@@ -9,16 +9,6 @@
 		<define name="_BLDR_" />
 		<define name="_MINIHAL_" />
 		<directory name="generic">
-			<directory name="legacy">
-				<directory name="bus">
-					<file>bushndlr.c</file>
-					<file>cmosbus.c</file>
-					<file>isabus.c</file>
-					<file>pcibus.c</file>
-					<file>sysbus.c</file>
-				</directory>
-				<file>bussupp.c</file>
-			</directory>
 			<file>beep.c</file>
 			<file>bios.c</file>
 			<file>cmos.c</file>
@@ -32,13 +22,21 @@
 			<file>sysinfo.c</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
-			<directory name="i386">
-				<file>portio.c</file>
-				<file>systimer.S</file>
+			<file>portio.c</file>
+			<file>systimer.S</file>
+		</directory>
+		<directory name="legacy">
+			<directory name="bus">
+				<file>bushndlr.c</file>
+				<file>cmosbus.c</file>
+				<file>isabus.c</file>
+				<file>pcibus.c</file>
+				<file>sysbus.c</file>
 			</directory>
+			<file>bussupp.c</file>
 		</directory>
 		<directory name="up">
-			<file>halinit_up.c</file>
+			<file>halinit_mini.c</file>
 			<file>pic.c</file>
 			<file>processor.c</file>
 		</directory>

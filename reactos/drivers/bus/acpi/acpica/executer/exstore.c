@@ -1,4 +1,3 @@
-
 /******************************************************************************
  *
  * Module Name: exstore - AML Interpreter object store support
@@ -9,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -129,229 +128,11 @@
 
 /* Local prototypes */
 
-static void
-AcpiExDoDebugObject (
-    ACPI_OPERAND_OBJECT     *SourceDesc,
-    UINT32                  Level,
-    UINT32                  Index);
-
 static ACPI_STATUS
 AcpiExStoreObjectToIndex (
     ACPI_OPERAND_OBJECT     *ValDesc,
     ACPI_OPERAND_OBJECT     *DestDesc,
     ACPI_WALK_STATE         *WalkState);
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiExDoDebugObject
- *
- * PARAMETERS:  SourceDesc          - Value to be stored
- *              Level               - Indentation level (used for packages)
- *              Index               - Current package element, zero if not pkg
- *
- * RETURN:      None
- *
- * DESCRIPTION: Handles stores to the Debug Object.
- *
- ******************************************************************************/
-
-static void
-AcpiExDoDebugObject (
-    ACPI_OPERAND_OBJECT     *SourceDesc,
-    UINT32                  Level,
-    UINT32                  Index)
-{
-    UINT32                  i;
-
-
-    ACPI_FUNCTION_TRACE_PTR (ExDoDebugObject, SourceDesc);
-
-
-    /* Print line header as long as we are not in the middle of an object display */
-
-    if (!((Level > 0) && Index == 0))
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[ACPI Debug] %*s",
-            Level, " "));
-    }
-
-    /* Display index for package output only */
-
-    if (Index > 0)
-    {
-       ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT,
-           "(%.2u) ", Index -1));
-    }
-
-    if (!SourceDesc)
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[Null Object]\n"));
-        return_VOID;
-    }
-
-    if (ACPI_GET_DESCRIPTOR_TYPE (SourceDesc) == ACPI_DESC_TYPE_OPERAND)
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "%s ",
-            AcpiUtGetObjectTypeName (SourceDesc)));
-
-        if (!AcpiUtValidInternalObject (SourceDesc))
-        {
-           ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT,
-               "%p, Invalid Internal Object!\n", SourceDesc));
-           return_VOID;
-        }
-    }
-    else if (ACPI_GET_DESCRIPTOR_TYPE (SourceDesc) == ACPI_DESC_TYPE_NAMED)
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "%s: %p\n",
-            AcpiUtGetTypeName (((ACPI_NAMESPACE_NODE *) SourceDesc)->Type),
-            SourceDesc));
-        return_VOID;
-    }
-    else
-    {
-        return_VOID;
-    }
-
-    /* SourceDesc is of type ACPI_DESC_TYPE_OPERAND */
-
-    switch (SourceDesc->Common.Type)
-    {
-    case ACPI_TYPE_INTEGER:
-
-        /* Output correct integer width */
-
-        if (AcpiGbl_IntegerByteWidth == 4)
-        {
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "0x%8.8X\n",
-                (UINT32) SourceDesc->Integer.Value));
-        }
-        else
-        {
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "0x%8.8X%8.8X\n",
-                ACPI_FORMAT_UINT64 (SourceDesc->Integer.Value)));
-        }
-        break;
-
-    case ACPI_TYPE_BUFFER:
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[0x%.2X]\n",
-            (UINT32) SourceDesc->Buffer.Length));
-        ACPI_DUMP_BUFFER (SourceDesc->Buffer.Pointer,
-            (SourceDesc->Buffer.Length < 256) ? SourceDesc->Buffer.Length : 256);
-        break;
-
-    case ACPI_TYPE_STRING:
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[0x%.2X] \"%s\"\n",
-            SourceDesc->String.Length, SourceDesc->String.Pointer));
-        break;
-
-    case ACPI_TYPE_PACKAGE:
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[Contains 0x%.2X Elements]\n",
-            SourceDesc->Package.Count));
-
-        /* Output the entire contents of the package */
-
-        for (i = 0; i < SourceDesc->Package.Count; i++)
-        {
-            AcpiExDoDebugObject (SourceDesc->Package.Elements[i],
-                Level+4, i+1);
-        }
-        break;
-
-    case ACPI_TYPE_LOCAL_REFERENCE:
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "[%s] ",
-            AcpiUtGetReferenceName (SourceDesc)));
-
-        /* Decode the reference */
-
-        switch (SourceDesc->Reference.Class)
-        {
-        case ACPI_REFCLASS_INDEX:
-
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "0x%X\n",
-                SourceDesc->Reference.Value));
-            break;
-
-        case ACPI_REFCLASS_TABLE:
-
-            /* Case for DdbHandle */
-
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "Table Index 0x%X\n",
-                SourceDesc->Reference.Value));
-            return;
-
-        default:
-            break;
-        }
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "  "));
-
-        /* Check for valid node first, then valid object */
-
-        if (SourceDesc->Reference.Node)
-        {
-            if (ACPI_GET_DESCRIPTOR_TYPE (SourceDesc->Reference.Node) !=
-                    ACPI_DESC_TYPE_NAMED)
-            {
-                ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT,
-                    " %p - Not a valid namespace node\n",
-                    SourceDesc->Reference.Node));
-            }
-            else
-            {
-                ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "Node %p [%4.4s] ",
-                    SourceDesc->Reference.Node, (SourceDesc->Reference.Node)->Name.Ascii));
-
-                switch ((SourceDesc->Reference.Node)->Type)
-                {
-                /* These types have no attached object */
-
-                case ACPI_TYPE_DEVICE:
-                    AcpiOsPrintf ("Device\n");
-                    break;
-
-                case ACPI_TYPE_THERMAL:
-                    AcpiOsPrintf ("Thermal Zone\n");
-                    break;
-
-                default:
-                    AcpiExDoDebugObject ((SourceDesc->Reference.Node)->Object,
-                        Level+4, 0);
-                    break;
-                }
-            }
-        }
-        else if (SourceDesc->Reference.Object)
-        {
-            if (ACPI_GET_DESCRIPTOR_TYPE (SourceDesc->Reference.Object) ==
-                    ACPI_DESC_TYPE_NAMED)
-            {
-                AcpiExDoDebugObject (((ACPI_NAMESPACE_NODE *)
-                    SourceDesc->Reference.Object)->Object,
-                    Level+4, 0);
-            }
-            else
-            {
-                AcpiExDoDebugObject (SourceDesc->Reference.Object, Level+4, 0);
-            }
-        }
-        break;
-
-    default:
-
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DEBUG_OBJECT, "%p\n",
-            SourceDesc));
-        break;
-    }
-
-    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC, "\n"));
-    return_VOID;
-}
 
 
 /*******************************************************************************
@@ -487,13 +268,13 @@ AcpiExStore (
             "**** Write to Debug Object: Object %p %s ****:\n\n",
             SourceDesc, AcpiUtGetObjectTypeName (SourceDesc)));
 
-        AcpiExDoDebugObject (SourceDesc, 0, 0);
+        ACPI_DEBUG_OBJECT (SourceDesc, 0, 0);
         break;
 
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Unknown Reference Class %2.2X",
+        ACPI_ERROR ((AE_INFO, "Unknown Reference Class 0x%2.2X",
             RefDesc->Reference.Class));
         ACPI_DUMP_ENTRY (RefDesc, ACPI_LV_INFO);
 

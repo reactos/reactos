@@ -34,10 +34,6 @@ ArcGetConfigurationData(
     VOID* ConfigurationData,
     CONFIGURATION_COMPONENT* Component);
 
-/* mm.c */
-const MEMORY_DESCRIPTOR*
-ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current);
-
 /* time.c */
 TIMEINFO* ArcGetTime(VOID);
 ULONG ArcGetRelativeTime(VOID);

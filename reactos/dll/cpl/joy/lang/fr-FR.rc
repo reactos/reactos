@@ -75,7 +75,7 @@ BEGIN
 	COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	IDS_CPLSYSTEMNAME "Contrôleurs de jeu"
 	IDS_CPLSYSTEMDESCRIPTION "Ajouter, supprimer, et configurer le matériel de contrôle de jeu comme les joysticks et les manettes de jeu."

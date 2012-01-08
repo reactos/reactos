@@ -19,7 +19,9 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
+#include <reactos/buildno.h>
 
+DBG_DEFAULT_CHANNEL(UI);
 
 ULONG	UiScreenWidth;							// Screen Width
 ULONG	UiScreenHeight;							// Screen Height
@@ -94,8 +96,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		return TRUE;
 	}
 
-	DPRINTM(DPRINT_UI, "Initializing User Interface.\n");
-	DPRINTM(DPRINT_UI, "Reading in UI settings from [Display] section.\n");
+	TRACE("Initializing User Interface.\n");
+	TRACE("Reading in UI settings from [Display] section.\n");
 
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
@@ -219,7 +221,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
 
-	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
+	TRACE("UiInitialize() returning TRUE.\n");
 	return TRUE;
 }
 
@@ -255,7 +257,7 @@ BOOLEAN SetupUiInitialize(VOID)
 	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
 	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
 
-	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
+	TRACE("UiInitialize() returning TRUE.\n");
 
 	return TRUE;
 }

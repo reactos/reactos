@@ -52,13 +52,7 @@
  * TODO: Figure out specify timings
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "csqrtns.h"
-#include "hardware.h"
-#include "readwrite.h"
+#include "precomp.h"
 
 
 static IO_ALLOCATION_ACTION NTAPI

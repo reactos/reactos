@@ -1,4 +1,3 @@
-#include "resource.h"
 /*
  * Moved all hardcoded strings to En.rc.
  * By Magnus Olsen  2005

@@ -71,7 +71,7 @@ int wexpand(wchar_t* name, int expand_wildcards)
    HANDLE hFile;
    BOOLEAN first = TRUE;
    wchar_t buffer[256];
-   int pos;
+   uintptr_t pos;
 
    if (expand_wildcards && (s = wcspbrk(name, L"*?")))
    {
@@ -136,7 +136,7 @@ int aexpand(char* name, int expand_wildcards)
    HANDLE hFile;
    BOOLEAN first = TRUE;
    char buffer[256];
-   int pos;
+   uintptr_t pos;
 
    if (expand_wildcards && (s = strpbrk(name, "*?")))
    {
@@ -181,7 +181,8 @@ int aexpand(char* name, int expand_wildcards)
  */
 void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, int* new_mode)
 {
-   int i, afterlastspace, ignorespace, len, doexpand;
+   int i, afterlastspace, ignorespace, doexpand;
+   size_t len;
 
    /* missing threading init */
 
@@ -262,7 +263,8 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
                     int expand_wildcards, int* new_mode)
 {
-   int i, afterlastspace, ignorespace, len, doexpand;
+   int i, afterlastspace, ignorespace, doexpand;
+   size_t len;
 
    /* missing threading init */
 

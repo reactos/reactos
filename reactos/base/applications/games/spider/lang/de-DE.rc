@@ -5,16 +5,13 @@
  * PURPOSE:      German Language File for Spider Solitaire
  * TRANSLATOR:   Gregor Schneider
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Kartenhintergrund w‰hlen"
+CAPTION "Kartenhintergrund w√§hlen"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -23,7 +20,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -36,7 +33,7 @@ END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 120, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Schwierigkeitsgrad w‰hlen"
+CAPTION "Schwierigkeitsgrad w√§hlen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Einfach: &Eine Farbe", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
@@ -54,7 +51,7 @@ BEGIN
     IDS_SPI_NAME    "Spider"
     IDS_SPI_ABOUT   "Spider Solitaire von Gregor Schneider\n\nCardLib Version 1.0"
     IDS_SPI_QUIT    "Laufendes Spiel beenden?"
-    IDS_SPI_WIN     "Gl¸ckwunsch, Sie haben gewonnen!"
+    IDS_SPI_WIN     "Gl√ºckwunsch, Sie haben gewonnen!"
     IDS_SPI_DEAL    "Neu geben?"
 END
 

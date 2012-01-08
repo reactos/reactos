@@ -6,13 +6,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 static BOOL bSortPage = FALSE;
 static LCID userLcid;

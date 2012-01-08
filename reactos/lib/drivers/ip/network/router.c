@@ -252,7 +252,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
-    UCHAR State, BestState = 0;
+    UCHAR State;
     UINT Length, BestLength = 0, MaskLength;
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
@@ -281,7 +281,6 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
-	    BestState  = State;
 	    TI_DbgPrint(DEBUG_ROUTER,("Route selected\n"));
 	}
 
@@ -383,8 +382,8 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
     }
 
     if( Found ) {
-	TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
-	DestroyFIBE( Current );
+        TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
+        DestroyFIBE( Current );
     }
 
     RouterDumpRoutes();
@@ -428,18 +427,18 @@ PFIB_ENTRY RouterCreateRoute(
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
-	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+        Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
 
         NCE   = Current->Router;
 
-	if( AddrIsEqual(NetworkAddress, &Current->NetworkAddress) &&
-	    AddrIsEqual(Netmask, &Current->Netmask) ) {
-	    TI_DbgPrint(DEBUG_ROUTER,("Attempting to add duplicate route to %s\n", A2S(NetworkAddress)));
-	    TcpipReleaseSpinLock(&FIBLock, OldIrql);
-	    return NULL;
-	}
+        if( AddrIsEqual(NetworkAddress, &Current->NetworkAddress) &&
+           AddrIsEqual(Netmask, &Current->Netmask) ) {
+            TI_DbgPrint(DEBUG_ROUTER,("Attempting to add duplicate route to %s\n", A2S(NetworkAddress)));
+            TcpipReleaseSpinLock(&FIBLock, OldIrql);
+            return NULL;
+        }
 
-	CurrentEntry = NextEntry;
+        CurrentEntry = NextEntry;
     }
 
     TcpipReleaseSpinLock(&FIBLock, OldIrql);

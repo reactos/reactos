@@ -1100,7 +1100,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                ObpTypeObjectType,
                                sizeof(OBJECT_TYPE),
                                KernelMode,
-                               (POBJECT_HEADER*)&Header);
+                               &Header);
     if (!NT_SUCCESS(Status))
     {
         /* Free the name and fail */

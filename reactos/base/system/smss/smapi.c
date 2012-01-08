@@ -189,8 +189,6 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
     PSM_CLIENT_DATA  ClientData = NULL;
     HANDLE           hClientDataApiPort = (HANDLE) 0;
     PHANDLE          ClientDataApiPort = & hClientDataApiPort;
-    HANDLE           hClientDataApiPortThread = (HANDLE) 0;
-    PHANDLE          ClientDataApiPortThread = & hClientDataApiPortThread;
     PVOID            Context = NULL;
 
     DPRINT("SM: %s called:\n  SubSystemID=%d\n  SbName=\"%S\"\n",
@@ -207,7 +205,6 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
              */
             DPRINT("SM: %s: simple request\n", __FUNCTION__);
             ClientDataApiPort = & hClientDataApiPort;
-            ClientDataApiPortThread = & hClientDataApiPortThread;
             Accept = TRUE;
         } else {
             DPRINT("SM: %s: request to register an image set\n", __FUNCTION__);
@@ -232,7 +229,6 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
                      * willing to manage a free image type.
                      */
                     ClientDataApiPort = & ClientData->ApiPort;
-                    ClientDataApiPortThread = & ClientData->ApiPortThread;
                     /*
                      * Call back the candidate environment subsystem
                      * server (use the port name sent in in the

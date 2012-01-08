@@ -13,6 +13,14 @@
 #include <debug.h>
 
 VOID
+NTAPI
+KiDispatchInterrupt(VOID)
+{
+    UNIMPLEMENTED;
+    __debugbreak();
+}
+
+VOID
 FASTCALL
 KeZeroPages(IN PVOID Address,
             IN ULONG Size)
@@ -28,6 +36,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
               IN NTSTATUS Status)
 {
     UNIMPLEMENTED;
+    __debugbreak();
 }
 
 VOID
@@ -36,6 +45,7 @@ DECLSPEC_NORETURN
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
     UNIMPLEMENTED;
+    __debugbreak();
 }
 
 BOOLEAN
@@ -43,6 +53,7 @@ NTAPI
 KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return FALSE;
 }
 
@@ -62,6 +73,7 @@ KeSynchronizeExecution(
     IN PVOID SynchronizeContext)
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return FALSE;
 }
 
@@ -74,6 +86,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                    OUT PULONG ResultLength)
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -94,6 +107,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PVOID SystemArgument2)
 {
     UNIMPLEMENTED;
+    __debugbreak();
 }
 
 VOID
@@ -102,6 +116,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
               IN PKPROCESS OldProcess)
 {
     UNIMPLEMENTED;
+    __debugbreak();
 }
 
 VOID
@@ -110,6 +125,7 @@ KiSystemService(IN PKTHREAD Thread,
                 IN ULONG Instruction)
 {
     UNIMPLEMENTED;
+    __debugbreak();
 }
 
 NTSYSAPI
@@ -119,6 +135,7 @@ NtCallbackReturn
 ( IN PVOID Result OPTIONAL, IN ULONG ResultLength, IN NTSTATUS Status )
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -137,6 +154,7 @@ NtVdmControl(IN ULONG ControlCode,
              IN PVOID ControlData)
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -147,6 +165,7 @@ KiCallUserMode(
     IN PULONG OutputLength)
 {
     UNIMPLEMENTED;
+    __debugbreak();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -160,29 +179,6 @@ ExQueryDepthSList(IN PSLIST_HEADER ListHead)
 
 
 ULONG ProcessCount;
-
-#ifdef _MSC_VER
-void
-__GSHandlerCheck()
-{
-}
-
-int __security_cookie;
-
-void
-__security_check_cookie()
-{
-}
-
 BOOLEAN CcPfEnablePrefetcher;
 
-unsigned long __readfsdword(const unsigned long Offset)
-{
-    return 0;
-}
 
-void main()
-{
-}
-
-#endif

@@ -13,10 +13,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)
 
 add_library(samlib SHARED ${SOURCE})
-
 set_module_type(samlib win32dll)
-
 add_importlibs(samlib advapi32 msvcrt kernel32 ntdll)
-
+add_pch(samlib precomp.h)
 add_cd_file(TARGET samlib DESTINATION reactos/system32 FOR all)
 add_importlib_target(samlib.spec)

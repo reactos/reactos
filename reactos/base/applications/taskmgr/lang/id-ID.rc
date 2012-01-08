@@ -1,15 +1,6 @@
-/////////////////////////////////////////////////////////////////////////////
 // Indonesian resource file by Zaenal Mutaqin  (ade999@gmail.com)
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -244,10 +235,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Histori Pemakaian CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Histori Pemakaian Memori",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Tampilan Pemakaian CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Tampilan Pemakaian MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Tampilan Pemakaian CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Tampilan Pemakaian MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Histori Pemakaian CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Histori Pemakaian MEM",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -652,20 +641,3 @@ BEGIN
     IDS_Not_Responding            "Tidak Merespon"
     IDS_Running                   "Berjalan"
 END
-
-
-#endif    // Indonesian resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

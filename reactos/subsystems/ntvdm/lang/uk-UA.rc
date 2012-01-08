@@ -6,8 +6,6 @@
  * TRANSLATOR:  Artem Reznikov
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE

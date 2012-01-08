@@ -22,7 +22,7 @@
 #include <win32k.h>
 
 /*
- * FIXME! Is there a better algorithm. like FT_MulDiv
+ * FIXME: Is there a better algorithm, like FT_MulDiv?
  *
  * @implemented
  */

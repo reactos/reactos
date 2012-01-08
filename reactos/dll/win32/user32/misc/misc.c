@@ -42,9 +42,7 @@ BOOL
 WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-  return NtUserCallTwoParam(dwProcessId,
-			    (DWORD_PTR)bRegister,
-			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
+  return NtUserxRegisterLogonProcess(dwProcessId,bRegister);
 }
 
 /*
@@ -259,22 +257,6 @@ TestWindowProcess(PWND Wnd)
               (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
-BOOL
-FASTCALL
-IsMetaFile(HDC hDc)
-{
-  DWORD Type = GetObjectType((HGDIOBJ) hDc);
-  switch(Type)
-  {
-    case OBJ_METADC:
-    case OBJ_METAFILE:
-    case OBJ_ENHMETADC:
-    case OBJ_ENHMETAFILE:
-      return TRUE;
-  }
-  return FALSE;
-}
-
 PUSER_HANDLE_ENTRY
 FASTCALL
 GetUser32Handle(HANDLE handle)
@@ -301,24 +283,24 @@ GetUser32Handle(HANDLE handle)
 /*
  * Decide whether an object is located on the desktop or shared heap
  */
-static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_EVENT + 1] =
+static const BOOL g_ObjectHeapTypeShared[otEvent + 1] =
 {
-    FALSE, /* VALIDATE_TYPE_FREE (not used) */
-    FALSE, /* VALIDATE_TYPE_WIN */
-    TRUE, /* VALIDATE_TYPE_MENU  FALSE */
-    TRUE, /* VALIDATE_TYPE_CURSOR */
-    TRUE, /* VALIDATE_TYPE_MWPOS */
-    FALSE, /* VALIDATE_TYPE_HOOK */
+    FALSE, /* otFree (not used) */
+    FALSE, /* otWindow */
+    TRUE,  /* otMenu  FALSE */
+    TRUE,  /* otCursorIcon */
+    TRUE,  /* otSMWP */
+    FALSE, /* otHook */
     FALSE, /* (not used) */
-    FALSE, /* VALIDATE_TYPE_CALLPROC */
-    TRUE, /* VALIDATE_TYPE_ACCEL */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    TRUE, /* VALIDATE_TYPE_MONITOR */
+    FALSE, /* otCallProc */
+    TRUE,  /* otAccel */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
-    TRUE  /* VALIDATE_TYPE_EVENT */
+    FALSE, /* (not used) */
+    TRUE,  /* otMonitor */
+    FALSE, /* (not used) */
+    FALSE, /* (not used) */
+    TRUE   /* otEvent */
 };
 
 //
@@ -331,7 +313,7 @@ ValidateHandle(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= VALIDATE_TYPE_EVENT);
+  ASSERT(uType <= otEvent);
 
   pEntry = GetUser32Handle(handle);
 
@@ -346,22 +328,22 @@ ValidateHandle(HANDLE handle, UINT uType)
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
-        case VALIDATE_TYPE_WIN:
+        case otWindow:
           SetLastError(ERROR_INVALID_WINDOW_HANDLE);
           break;
-        case VALIDATE_TYPE_MENU:
+        case otMenu:
           SetLastError(ERROR_INVALID_MENU_HANDLE);
           break;
-        case VALIDATE_TYPE_CURSOR:
+        case otCursorIcon:
           SetLastError(ERROR_INVALID_CURSOR_HANDLE);
           break;
-        case VALIDATE_TYPE_MWPOS:
+        case otSMWP:
           SetLastError(ERROR_INVALID_DWP_HANDLE);
           break;
-        case VALIDATE_TYPE_HOOK:
+        case otHook:
           SetLastError(ERROR_INVALID_HOOK_HANDLE);
           break;
-        case VALIDATE_TYPE_ACCEL:
+        case otAccel:
           SetLastError(ERROR_INVALID_ACCEL_HANDLE);
           break;
         default:
@@ -389,7 +371,7 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= VALIDATE_TYPE_EVENT);
+  ASSERT(uType <= otEvent);
 
   pEntry = GetUser32Handle(handle);
 
@@ -417,7 +399,7 @@ ValidateCallProc(HANDLE hCallProc)
 {
   PUSER_HANDLE_ENTRY pEntry;
 
-  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, otCallProc);
 
   pEntry = GetUser32Handle(hCallProc);
 
@@ -443,7 +425,7 @@ ValidateHwnd(HWND hwnd)
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
+    Wnd = ValidateHandle((HANDLE)hwnd, otWindow);
     if (Wnd != NULL)
     {
         return Wnd;
@@ -467,7 +449,7 @@ ValidateHwndNoErr(HWND hwnd)
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandleNoErr((HANDLE)hwnd, VALIDATE_TYPE_WIN);
+    Wnd = ValidateHandleNoErr((HANDLE)hwnd, otWindow);
     if (Wnd != NULL)
     {
         return Wnd;

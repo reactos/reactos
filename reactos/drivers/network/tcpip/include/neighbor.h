@@ -42,11 +42,14 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
 #define NUD_PERMANENT  0x02
 #define NUD_STALE      0x04
 
+/* Timeout for incomplete NCE ARP requests */
+#define ARP_INCOMPLETE_TIMEOUT 5
+
 /* Number of seconds between ARP transmissions */
 #define ARP_RATE 900
 
 /* Number of seconds before the NCE times out */
-#define ARP_TIMEOUT ARP_RATE + 15
+#define ARP_COMPLETE_TIMEOUT (ARP_RATE + 15)
 
 /* Number of seconds before retransmission */
 #define ARP_TIMEOUT_RETRANSMISSION 5

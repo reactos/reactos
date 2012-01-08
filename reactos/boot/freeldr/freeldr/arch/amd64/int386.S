@@ -18,157 +18,67 @@
  */
 
 #include <asm.inc>
-
-
-	.intel_syntax noprefix
-	.text
-	.code16
-
 #include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
+.code64
 
+EXTERN CallRealMode:PROC
 
-Int386_REGS:
+/* int Int386(int ivec<ecx>, REGS* in<rdx>, REGS* out<r8>); */
+PUBLIC Int386
+Int386:
 
-Int386_eax:
-	.long 0
-Int386_ebx:
-	.long 0
-Int386_ecx:
-	.long 0
-Int386_edx:
-	.long 0
+    /* Save home registers */
+    mov r11, rsp
+    mov qword ptr [r11 + 8], rcx
+    mov qword ptr [r11 + 16], rdx
+    mov qword ptr [r11 + 24], r8
 
-Int386_esi:
-	.long 0
-Int386_edi:
-	.long 0
-
-Int386_ds:
-	.word 0
-Int386_es:
-	.word 0
-Int386_fs:
-	.word 0
-Int386_gs:
-	.word 0
-
-Int386_eflags:
-	.long 0
-
-Int386_vector:
-	.quad 0
-Int386_regsin:
-	.quad 0
-Int386_regsout:
-	.quad 0
-
-/*
- * int Int386(int ivec, REGS* in, REGS* out);
- */
-EXTERN(Int386)
-	.code64
-
-	/* Get the function parameters */
-	mov Int386_vector, rcx
-	mov Int386_vector_opcode, cl
-	mov Int386_regsin, rdx
-	mov Int386_regsout, r8
-
-	/* Save all registers + segment registers */
-//	push ds
-//	push es
-	push fs
-	push gs
+	/* Save non-volatile registers */
 	push rbx
-	push rcx
-	push rdx
+	push rbp
 	push rsi
 	push rdi
 
-	/* Copy the input regs to our variables */
-	lea rdi, Int386_REGS
-	mov esi, Int386_regsin
-	mov ecx, 0x24
-	rep movsb
+    /* Alloc stack space for home registers */
+	sub rsp, 40
+    //.ENDPROLOG
 
-	call x86_64_SwitchToReal
-	.code16
+int386_2:
+	/* Copy the int vector to shared memory */
+    mov dword ptr [BSS_IntVector], ecx
 
-	/* Setup the registers */
-	mov ax, cs:Int386_ds
-	mov ds, ax					/* DS register */
-	mov ax, cs:Int386_es
-	mov es, ax					/* ES register */
-	mov ax, cs:Int386_fs
-	mov fs, ax					/* FS register */
-	mov ax, cs:Int386_gs
-	mov gs, ax					/* GS register */
+    /* Copy input registers */
+    mov rsi, rdx
+    mov rdi, BSS_RegisterSet
+    mov rcx, REGS_SIZE / 4
+    rep movsd
 
-	mov eax, cs:Int386_eax		/* EAX register */
-	mov ebx, cs:Int386_ebx		/* EBX register */
-	mov ecx, cs:Int386_ecx		/* ECX register */
-	mov edx, cs:Int386_edx		/* EDX register */
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+    xor rbp, rbp
+    xor rsi, rsi
+    xor rdi, rdi
 
-	mov esi, cs:Int386_esi		/* ESI register */
-	mov edi, cs:Int386_edi		/* EDI register */
+    /* Set the function ID and call real mode */
+    mov bx, FNID_Int386
+    call CallRealMode
 
-	/* Do not set the flags register */
-	/* only return its value in regsout */
-	//pushl	Int386_eflags
-	//popfl							/* EFLAGS register */
+    /* Copy output registers */
+    mov rsi, BSS_RegisterSet
+    mov rdi, [r11 + 24]
+    mov rcx, REGS_SIZE / 4
+    rep movsd
 
-	/* Call the interrupt vector */
-	/*int		Int386_vector*/
-Int386_int_opcode:
-	.byte	0xcd
-Int386_vector_opcode:
-	.byte	0x00
+    /* cleanup and return */
+    add rsp, 40
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rbx
+    ret
 
-	/* Save the registers */
-	mov cs:Int386_eax, eax		/* EAX register */
-	mov cs:Int386_ebx, ebx		/* EBX register */
-	mov cs:Int386_ecx, ecx		/* ECX register */
-	mov cs:Int386_edx, edx		/* EDX register */
-
-	mov cs:Int386_esi, esi		/* ESI register */
-	mov cs:Int386_edi, edi		/* EDI register */
-
-	mov ax, ds					/* DS register */
-	mov cs:Int386_ds, ax
-	mov ax, es					/* ES register */
-	mov cs:Int386_es, ax
-	mov ax, fs					/* FS register */
-	mov cs:Int386_fs, ax
-	mov ax, gs					/* GS register */
-	mov cs:Int386_gs, ax
-
-	pushf
-	pop cs:Int386_eflags		/* EFLAGS register */
-
-	call	x86_16_SwitchToLong
-	.code64
-
-	/* Copy the variables to the output regs */
-	lea rsi, Int386_REGS
-	mov rdi, Int386_regsout
-	mov rcx, 0x24
-	rep movsb
-
-	/* Restore segment and all other registers */
-	pop rdi
-	pop rsi
-	pop rdx
-	pop rcx
-	pop rbx
-	pop gs
-	pop fs
-//	pop es
-//	pop ds
-
-	/* Get return value */
-	xor rax, rax
-	mov eax, Int386_eax
-
-	ret
 
 END

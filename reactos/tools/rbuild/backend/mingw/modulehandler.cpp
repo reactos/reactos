@@ -281,7 +281,7 @@ MingwModuleHandler::GetCompilationUnitDependencies (
 		const File& file = *compilationUnit.GetFiles ()[i];
 		sourceFiles.push_back ( backend->GetFullName ( file.file ) );
 	}
-	return string ( " " ) + v2s ( sourceFiles, 10 );
+	return string ( " " ) + backend->v2s ( sourceFiles, 10 );
 }
 
 /* caller needs to delete the returned object */
@@ -322,7 +322,7 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
-	          "\t${cp} %s %s 1>$(NUL)\n",
+	          "\t${cp} \"%s\" \"%s\" 1>$(NUL)\n",
 	          backend->GetFullName ( source ).c_str (),
 	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
 }
@@ -333,12 +333,12 @@ MingwModuleHandler::OutputCopyCommandSingle ( const FileLocation& source,
 {
 	fprintf ( fMakefile,
 	          "%s : %s\n",
-	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str (),
-	          backend->GetFullName ( source ).c_str () );
+	          backend->GetFullNamePrefixSpaces ( *PassThruCacheDirectory ( &destination ) ).c_str (),
+	          backend->GetFullNamePrefixSpaces ( source ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
-	          "\t${cp} %s %s 1>$(NUL)\n",
+	          "\t${cp} \"%s\" \"%s\" 1>$(NUL)\n",
 	          backend->GetFullName ( source ).c_str (),
 	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
 }
@@ -364,6 +364,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
 			else if ( GetExtension ( *objectFilename ) == ".rc" )
 				dep += ssprintf ( " $(%s_MCHEADERS)", importedModule.name.c_str () );
+			delete objectFilename;
 		}
 	}
 	else
@@ -507,7 +508,7 @@ MingwModuleHandler::GenerateCleanTarget () const
 	fprintf ( fMakefile,
 	          "%s: %s\n\t-@${rm}",
 	          GetModuleCleanTarget ( module ).c_str(),
-	          v2s ( referencedModuleNames, 10 ).c_str () );
+	          backend->v2s ( referencedModuleNames, 10 ).c_str () );
 	for ( size_t i = 0; i < clean_files.size(); i++ )
 	{
 		if ( ( i + 1 ) % 10 == 9 )
@@ -1195,7 +1196,7 @@ MingwModuleHandler::GenerateGccCommand (
 	vector<FileLocation> rpcDependencies;
 	GetRpcHeaderDependencies ( rpcDependencies );
 	if ( rpcDependencies.size () > 0 )
-		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
+		dependencies += " " + backend->v2s ( rpcDependencies, 5 );
 
 	rule->Execute ( fMakefile, backend, module, sourceFile, clean_files, dependencies );
 }
@@ -1535,7 +1536,7 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
 		if ( rpcDependencies.size () > 0 )
-			dependencies = " " + v2s ( backend, rpcDependencies, 5 );
+			dependencies = " " + backend->v2s ( rpcDependencies, 5 );
 
 		if ( module.cplusplus )
 			pchCxxRule.Execute ( fMakefile, backend, module, module.pch->file, clean_files, dependencies );
@@ -2787,7 +2788,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf( fMakefile,
 	         "\n%s_OBJS := %s\n\n",
 	         module.name.c_str (),
-	         v2s ( backend, sourceFiles, 5 ).c_str () );
+	         backend->v2s ( sourceFiles, 5, true ).c_str () );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
@@ -2915,8 +2916,78 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory,
 }
 
 void
+MingwLiveIsoModuleHandler::OutputMakeLinkCommand ( const string name,
+                                                   const string application,
+                                                   const string &path,
+                                                   vector<FileLocation>& destinations )
+{
+    FileLocation location ( OutputDirectory, path, name + ".lnk" );
+    fprintf ( fMakefile,
+              "%s : $(mkshelllink_TARGET)\n",
+              backend->GetFullNamePrefixSpaces ( *PassThruCacheDirectory ( &location ) ).c_str () );
+    fprintf ( fMakefile,
+	          "\t$(Q)$(mkshelllink_TARGET) -o \"%s\" -g {450D8FBA-AD25-11D0-98A8-0800361B1103} -c %s -i %s -m livecd_start.cmd\n",
+	          backend->GetFullName ( location ).c_str (),
+	          application.c_str (),
+	          application.c_str () );
+    destinations.push_back ( location );
+}
+
+void
+MingwLiveIsoModuleHandler::OutputShortcutCommands ( string& livecdDirectory,
+                                                    vector<FileLocation>& destinations )
+{
+    string allUsersDir = livecdDirectory + sSep + "Profiles" + sSep + "All Users";
+    string defaultUserDir = livecdDirectory + sSep + "Profiles" + sSep + "Default User";
+    FileLocation helperSource ( SourceDirectory, "boot" + sSep + "bootdata", "livecd_start.cmd" );
+	FileLocation helperDest ( OutputDirectory, defaultUserDir + sSep + "My Documents", "livecd_start.cmd" );
+	OutputCopyCommandSingle ( helperSource, helperDest );
+	destinations.push_back ( helperDest );
+
+    string desktopDir = allUsersDir + sSep + "Desktop";
+    OutputMakeLinkCommand ( "Command Prompt", "cmd.exe", desktopDir, destinations );
+
+    string startMenuDir = allUsersDir + sSep + "Start Menu";
+    OutputMakeLinkCommand ( "ReactOS Explorer", "explorer.exe", startMenuDir + sSep + "Programs", destinations );
+
+    string adminToolsDir = startMenuDir + sSep + "Programs" + sSep + "Administrative Tools";
+    OutputMakeLinkCommand ( "Device Manager", "devmgmt.exe", adminToolsDir, destinations );
+    OutputMakeLinkCommand ( "Event Viewer", "eventvwr.exe", adminToolsDir, destinations );
+    OutputMakeLinkCommand ( "Service Manager", "servman.exe", adminToolsDir, destinations );
+    OutputMakeLinkCommand ( "System Configuration", "msconfig.exe", adminToolsDir, destinations );
+
+    string accessibilityDir = startMenuDir + sSep + "Programs" + sSep + "Accessibility";
+    OutputMakeLinkCommand ( "Magnify", "magnify.exe", accessibilityDir, destinations );
+
+    string accessoriesDir = startMenuDir + sSep + "Programs" + sSep + "Accessories";
+    OutputMakeLinkCommand ( "Calculator", "calc.exe", accessoriesDir, destinations );
+    OutputMakeLinkCommand ( "Command Prompt", "cmd.exe", accessoriesDir, destinations );
+    OutputMakeLinkCommand ( "Paint", "mspaint.exe", accessoriesDir, destinations );
+    OutputMakeLinkCommand ( "Notepad", "notepad.exe", accessoriesDir, destinations );
+    OutputMakeLinkCommand ( "Remote desktop", "mstsc.exe", accessoriesDir, destinations );
+    OutputMakeLinkCommand ( "WordPad", "wordpad.exe", accessoriesDir, destinations );
+
+    string entertainmentDir = startMenuDir + sSep + "Programs" + sSep + "Entertainment";
+    OutputMakeLinkCommand ( "Audiorecorder", "sndrec32.exe", entertainmentDir, destinations );
+    OutputMakeLinkCommand ( "Multimedia Player", "mplay32.exe", entertainmentDir, destinations );
+    OutputMakeLinkCommand ( "Volume Control", "sndvol32.exe", entertainmentDir, destinations );
+
+    string gamesDir = startMenuDir + sSep + "Programs" + sSep + "Games";
+    OutputMakeLinkCommand ( "Solitaire", "sol.exe", gamesDir, destinations );
+    OutputMakeLinkCommand ( "Spider Solitaire", "spider.exe", gamesDir, destinations );
+    OutputMakeLinkCommand ( "WineMine", "winmine.exe", gamesDir, destinations );
+
+    string sysToolsDir = startMenuDir + sSep + "Programs" + sSep + "System Tools";
+    OutputMakeLinkCommand ( "Character Map", "charmap.exe", sysToolsDir, destinations );
+    OutputMakeLinkCommand ( "Keyboard Layout Switcher", "kbswitch.exe", sysToolsDir, destinations );
+    OutputMakeLinkCommand ( "ReactX Diagnostic", "dxdiag.exe", sysToolsDir, destinations );
+    OutputMakeLinkCommand ( "Regedit", "regedit.exe", sysToolsDir, destinations );
+}
+
+void
 MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 {
+	string registrySourceFiles = backend->GetRegistrySourceFiles ();
 	fprintf ( fMakefile, "# REGISTRY COMMANDS\n" );
 	FileLocation reactosSystem32ConfigDirectory ( OutputDirectory,
 	                                              livecdDirectory + sSep + "reactos" + sSep + "system32" + sSep + "config",
@@ -2924,9 +2995,10 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst_$(ARCH).inf\n",
-	          cSep, backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
-	          cSep, cSep, cSep, cSep );
+	          "\t$(Q)$(mkhive_TARGET) %s %s boot%cbootdata%clivecd.inf\n",
+	          backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
+	          registrySourceFiles.c_str(),
+	          cSep, cSep );
 }
 
 void
@@ -2973,11 +3045,12 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	                              sourceFiles );
 	OutputProfilesDirectoryCommands ( livecdDirectory, sourceFiles );
 	OutputLoaderCommands ( livecdDirectory, sourceFiles );
+	OutputShortcutCommands ( livecdDirectory, sourceFiles );
 
 	fprintf( fMakefile,
 	         "\n%s_OBJS := %s\n\n",
 	         module.name.c_str (),
-	         v2s ( backend, sourceFiles, 5 ).c_str () );
+	         backend->v2s ( sourceFiles, 5, true ).c_str () );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());

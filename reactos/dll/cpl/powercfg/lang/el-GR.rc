@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Αποθήκευση ως...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -158,10 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "σε 4 ώρες"
   IDS_TIMEOUT15 "σε 5 ώρες"
   IDS_TIMEOUT16 "Ποτέ"
-  
+
   IDS_DEL_SCHEME "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτόν τον συνδιασμό τροφοδοσίας;"
   IDS_DEL_SCHEME_TITLE "Διαγραφή συνδιασμού"
 END
-
-
-

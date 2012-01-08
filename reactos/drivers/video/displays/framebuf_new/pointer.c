@@ -410,8 +410,8 @@ BOOL bInitPointer(PPDEV ppdev, DEVINFO *pdevinfo)
 
     if (EngDeviceIoControl(ppdev->hDriver,
                            IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES,
-                           &ppdev->ulMode,
-                           sizeof(PVIDEO_MODE),
+                           NULL,
+                           0,
                            &ppdev->PointerCapabilities,
                            sizeof(ppdev->PointerCapabilities),
                            &returnedDataLength))

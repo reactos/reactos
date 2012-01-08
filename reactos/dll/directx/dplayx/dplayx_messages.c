@@ -58,6 +58,7 @@ DWORD CreateLobbyMessageReceptionThread( HANDLE hNotifyEvent, HANDLE hStart,
 {
   DWORD           dwMsgThreadId;
   LPMSGTHREADINFO lpThreadInfo;
+  HANDLE          hThread;
 
   lpThreadInfo = HeapAlloc( GetProcessHeap(), 0, sizeof( *lpThreadInfo ) );
   if( lpThreadInfo == NULL )
@@ -83,21 +84,20 @@ DWORD CreateLobbyMessageReceptionThread( HANDLE hNotifyEvent, HANDLE hStart,
   lpThreadInfo->hDeath       = hDeath;
   lpThreadInfo->hSettingRead = hConnRead;
 
-  if( !CreateThread( NULL,                  /* Security attribs */
-                     0,                     /* Stack */
-                     DPL_MSG_ThreadMain,    /* Msg reception function */
-                     lpThreadInfo,          /* Msg reception func parameter */
-                     0,                     /* Flags */
-                     &dwMsgThreadId         /* Updated with thread id */
-                   )
-    )
+  hThread = CreateThread( NULL,                  /* Security attribs */
+                          0,                     /* Stack */
+                          DPL_MSG_ThreadMain,    /* Msg reception function */
+                          lpThreadInfo,          /* Msg reception func parameter */
+                          0,                     /* Flags */
+                          &dwMsgThreadId         /* Updated with thread id */
+                        );
+  if ( hThread == NULL )
   {
     ERR( "Unable to create msg thread\n" );
     goto error;
   }
 
-  /* FIXME: Should I be closing the handle to the thread or does that
-            terminate the thread? */
+  CloseHandle(hThread);
 
   return dwMsgThreadId;
 

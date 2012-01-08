@@ -1801,7 +1801,15 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
      {
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1844,10 +1852,13 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
+
+#ifdef __REACTOS__
+    case WM_NCDESTROY:
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+      break;
+#endif
 
     case WM_SHOWWINDOW:
       if (0 != wParam)
@@ -1888,9 +1899,21 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
   {
      if (!pWnd->fnid)
      {
+        if (Message != WM_NCCREATE)
+        {
+           return DefWindowProcW(Wnd, Message, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1933,9 +1956,6 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
 
     case WM_SHOWWINDOW:
@@ -2915,7 +2935,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk, UINT wFlags)
       if (NewWnd != Mt->OwnerWnd)
         {
           Mt->OwnerWnd = NewWnd;
-          (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd); // 1
+          NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd); // 1
           SetCapture(Mt->OwnerWnd);                                          // 2
         }
 
@@ -3206,13 +3226,13 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
     /* owner may not be visible when tracking a popup, so use the menu itself */
     capture_win = (wFlags & TPM_POPUPMENU) ? MenuInfo.Wnd : mt.OwnerWnd;
-    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
+    NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
     SetCapture(capture_win);                                          // 2
 
     while (! fEndMenu)
     {
         BOOL ErrorExit = FALSE;
-        PVOID menu = ValidateHandle(mt.CurrentMenu, VALIDATE_TYPE_MENU);
+        PVOID menu = ValidateHandle(mt.CurrentMenu, otMenu);
         if (!menu) /* sometimes happens if I do a window manager close */
            break;
 
@@ -3464,7 +3484,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         else mt.TrackFlags &= ~TF_SKIPREMOVE;
     }
 
-    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
+    NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
     SetCapture(NULL);  /* release the capture */
 
     /* If dropdown is still painted and the close box is clicked on
@@ -4072,7 +4092,7 @@ HMENU WINAPI
 CreateMenu(VOID)
 {
   MenuLoadBitmaps();
-  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
+  return NtUserxCreateMenu();
 }
 
 
@@ -4083,7 +4103,7 @@ HMENU WINAPI
 CreatePopupMenu(VOID)
 {
   MenuLoadBitmaps();
-  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
+  return NtUserxCreatePopupMenu();
 }
 
 
@@ -4093,7 +4113,7 @@ CreatePopupMenu(VOID)
 BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
-//  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
+//  return NtUserxDrawMenuBar(hWnd);
   ROSMENUINFO MenuInfo;
   HMENU hMenu;
   hMenu = GetMenu(hWnd);
@@ -4344,7 +4364,7 @@ GetMenuItemInfoA(
          {
             AnsiBuffer[miiW.cch] = 0;
          }
-         mii->cch = mii->cch;
+         mii->cch = miiW.cch;
       }
    }
    else
@@ -4720,7 +4740,7 @@ WINAPI
 IsMenu(
   HMENU Menu)
 {
-  if (ValidateHandle(Menu, VALIDATE_TYPE_MENU)) return TRUE;
+  if (ValidateHandle(Menu, otMenu)) return TRUE;
   return FALSE;
 }
 

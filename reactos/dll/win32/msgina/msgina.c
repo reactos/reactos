@@ -26,8 +26,6 @@
 
 #include "msgina.h"
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
 HINSTANCE hDllInstance;
@@ -574,6 +572,9 @@ DoAutoLogon(
 			goto cleanup;
 
 		result = DoLoginTasks(pgContext, UserName, DomainName, Password);
+
+		if (result == TRUE)
+			NotifyBootConfigStatus(TRUE);
 	}
 
 cleanup:
@@ -679,6 +680,18 @@ WlxWkstaLockedSAS(
 	UNREFERENCED_PARAMETER(dwSasType);
 
 	return pGinaUI->LockedSAS(pgContext);
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxIsLogoffOk(
+	PVOID pWlxContext)
+{
+    TRACE("WlxIsLogoffOk()\n");
+    UNREFERENCED_PARAMETER(pWlxContext);
+    return TRUE;
 }
 
 BOOL WINAPI

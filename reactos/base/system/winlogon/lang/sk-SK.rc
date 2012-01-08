@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  24-04-2008
  * LAST CHANGE:  18-09-2008
  */
@@ -7,44 +7,44 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Vypnutie poËÌtaËa"
+CAPTION "Vypnutie poƒç√≠taƒça"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Teraz mÙûete poËÌtaË bezpeËne vypn˙ù.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Teraz m√¥≈æete poƒç√≠taƒç bezpeƒçne vypn√∫≈•.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "&Reötartovaù", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&Re≈°tartova≈•", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Zlyhanie pouûÌvateæskÈho rozhrania"
+CAPTION "Zlyhanie pou≈æ√≠vateƒæsk√©ho rozhrania"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "DLL kniûnicu %s prihlasovacieho pouûÌvateæskÈho rozhrania sa nepodarilo naËÌtaù.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Obr·ùte sa na spr·vcu systÈmu, aby DLL kniûnicu nahradil alebo obnovil pÙvodn˙.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Reötartovaù", 1, 80, 91, 68, 14
+    LTEXT "DLL kni≈ænicu %s prihlasovacieho pou≈æ√≠vateƒæsk√©ho rozhrania sa nepodarilo naƒç√≠ta≈•.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Obr√°≈•te sa na spr√°vcu syst√©mu, aby DLL kni≈ænicu nahradil alebo obnovil p√¥vodn√∫.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Re≈°tartova≈•", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Pripravuj˙ sa sieùovÈ pripojenia..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Aplikuj˙ sa nastavenia poËÌtaËa..."
-    IDS_RUNNINGSTARTUPSCRIPTS "Sp˙öùaj˙ sa sp˙öùacie skripty..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "Sp˙öùaj˙ sa vypÌnacie skripty..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Aplikuj˙ sa osobnÈ nastavenia..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Sp˙öùaj˙ sa odhlasovacie skripty..."
-    IDS_RUNNINGLOGONSCRIPTS "Sp˙öùaj˙ sa prihlasovacie skripty..."
-    IDS_LOADINGYOURPERSONALSETTINGS "NaËÌtavaj˙ sa Vaöe osobnÈ nastavenia..."
-    IDS_CLOSINGNETWORKCONNECTIONS "UkonËuj˙ sa sieùovÈ pripojenia..."
-    IDS_REACTOSISSHUTTINGDOWN "SystÈm ReactOS sa vypÌna..."
-    IDS_PREPARETOSTANDBY "SystÈm sa pripravuje na prechod do ˙spornÈho reûimu..."
-    IDS_PREPARETOHIBERNATE "SystÈm sa pripravuje na prechod do reûimu dlhodobÈho sp·nku..."
-    IDS_SAVEYOURSETTINGS "SystÈm uklad· Vaöe nastavenia..."
-    IDS_REACTOSISSTARTINGUP "SystÈm ReactOS sa sp˙öùa..."
+    IDS_PREPARENETWORKCONNECTIONS "Pripravuj√∫ sa sie≈•ov√© pripojenia..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Aplikuj√∫ sa nastavenia poƒç√≠taƒça..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Sp√∫≈°≈•aj√∫ sa sp√∫≈°≈•acie skripty..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Sp√∫≈°≈•aj√∫ sa vyp√≠nacie skripty..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Aplikuj√∫ sa osobn√© nastavenia..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Sp√∫≈°≈•aj√∫ sa odhlasovacie skripty..."
+    IDS_RUNNINGLOGONSCRIPTS "Sp√∫≈°≈•aj√∫ sa prihlasovacie skripty..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Naƒç√≠tavaj√∫ sa Va≈°e osobn√© nastavenia..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Ukonƒçuj√∫ sa sie≈•ov√© pripojenia..."
+    IDS_REACTOSISSHUTTINGDOWN "Syst√©m ReactOS sa vyp√≠na..."
+    IDS_PREPARETOSTANDBY "Syst√©m sa pripravuje na prechod do √∫sporn√©ho re≈æimu..."
+    IDS_PREPARETOHIBERNATE "Syst√©m sa pripravuje na prechod do re≈æimu dlhodob√©ho sp√°nku..."
+    IDS_SAVEYOURSETTINGS "Syst√©m uklad√° Va≈°e nastavenia..."
+    IDS_REACTOSISSTARTINGUP "Syst√©m ReactOS sa sp√∫≈°≈•a..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Program Winlogon zlyhal pri aktiv·cii shellu!"
+    IDS_FAILEDACTIVATEUSERSHELL "Program Winlogon zlyhal pri aktiv√°cii shellu!"
 END
 

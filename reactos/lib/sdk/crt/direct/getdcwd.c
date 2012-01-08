@@ -36,7 +36,7 @@ _TCHAR* _tgetdcwd(int drive, _TCHAR * buf, int size)
     drivespec[0] += drive - 1;
     if (GetDriveType(drivespec) < DRIVE_REMOVABLE)
     {
-      __set_errno(EACCES);
+      _set_errno(EACCES);
       return NULL;
     }
 
@@ -46,7 +46,7 @@ _TCHAR* _tgetdcwd(int drive, _TCHAR * buf, int size)
     dir_len = GetFullPathName(drivespec,MAX_PATH,dir,&dummy);
     if (dir_len >= size || dir_len < 1)
     {
-      __set_errno(ERANGE);
+      _set_errno(ERANGE);
       return NULL; /* buf too small */
     }
 

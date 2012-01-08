@@ -67,7 +67,7 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 }
 
 static NTSTATUS WINAPI
-CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
+CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
 {
     NTSTATUS Status;
     SECURITY_ATTRIBUTES SecurityAttributes;
@@ -140,9 +140,9 @@ CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
             GuiMode = TRUE;
         }
     }
-    if (GuiMode)
+    else /* GuiMode */
     {
-        Status = GuiInitConsole(Console, Visible);
+        Status = GuiInitConsole(Console, ShowCmd);
         if (! NT_SUCCESS(Status))
         {
             HeapFree(Win32CsrApiHeap,0, NewBuffer);
@@ -217,7 +217,7 @@ CSR_API(CsrAllocConsole)
         /* insert process data required for GUI initialization */
         InsertHeadList(&Console->ProcessList, &ProcessData->ProcessEntry);
         /* Initialize the Console */
-        Status = CsrInitConsole(Console, Request->Data.AllocConsoleRequest.Visible);
+        Status = CsrInitConsole(Console, Request->Data.AllocConsoleRequest.ShowCmd);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console init failed\n");
@@ -286,7 +286,7 @@ CSR_API(CsrAllocConsole)
                          FALSE,
                          0))
     {
-        DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
+        DPRINT1("DuplicateHandle() failed: %lu\n", GetLastError());
         ConioDeleteConsole((Object_t *) Console);
         if (NewConsole || !ProcessData->bInheritHandles)
         {

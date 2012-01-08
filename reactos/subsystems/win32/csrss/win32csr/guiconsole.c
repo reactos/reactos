@@ -215,8 +215,8 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
     if (!GetTokenInformation(hProcessToken, TokenUser, (PVOID)Buffer, sizeof(Buffer), &Length))
     {
         DPRINT("Error: GetTokenInformation failed(0x%x)\n",GetLastError());
-        CloseHandle(hProcess);
         CloseHandle(hProcessToken);
+        CloseHandle(hProcess);
         return FALSE;
     }
 
@@ -224,6 +224,8 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
     if (!NT_SUCCESS(RtlConvertSidToUnicodeString(&SidName, TokUser, TRUE)))
     {
         DPRINT("Error: RtlConvertSidToUnicodeString failed(0x%x)\n", GetLastError());
+        CloseHandle(hProcessToken);
+        CloseHandle(hProcess);
         return FALSE;
     }
 
@@ -231,15 +233,18 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
     RtlFreeUnicodeString(&SidName);
 
     CloseHandle(hProcessToken);
+    if (res != ERROR_SUCCESS)
+    {
+        CloseHandle(hProcess);
+        return FALSE;
+    }
+
     if (hProcHandle)
         *hProcHandle = hProcess;
     else
         CloseHandle(hProcess);
 
-    if (res != ERROR_SUCCESS)
-        return FALSE;
-    else
-        return TRUE;
+    return TRUE;
 }
 
 static BOOL
@@ -285,7 +290,7 @@ GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSu
 
     if (!fLength)
     {
-        DPRINT("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
+        DPRINT("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(), ProcessId);
         return FALSE;
     }
     /*
@@ -2097,10 +2102,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (NULL != NewWindow)
         {
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
-            if (wParam)
-              {
-                ShowWindow(NewWindow, SW_SHOW);
-              }
+            ShowWindow(NewWindow, (int)wParam);
         }
         return (LRESULT) NewWindow;
     case PM_DESTROY_CONSOLE:
@@ -2280,7 +2282,7 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
 };
 
 NTSTATUS FASTCALL
-GuiInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
+GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
 {
     HANDLE GraphicsStartupEvent;
     HANDLE ThreadHandle;
@@ -2313,7 +2315,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
                                     NULL);
         if (NULL == ThreadHandle)
         {
-            NtClose(GraphicsStartupEvent);
+            CloseHandle(GraphicsStartupEvent);
             DPRINT1("Win32Csr: Failed to create graphics console thread. Expect problems\n");
             return STATUS_UNSUCCESSFUL;
         }
@@ -2347,7 +2349,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
      */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     /* create console */
-    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, Visible, (LPARAM) Console);
+    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, ShowCmd, (LPARAM) Console);
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);

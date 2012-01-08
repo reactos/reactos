@@ -10,7 +10,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
 
 add_library(ntdsapi SHARED ${SOURCE})
-set_entrypoint(ntdsapi 0)
+set_module_type(ntdsapi win32dll ENTRYPOINT 0 )
 
 target_link_libraries(ntdsapi wine)
 

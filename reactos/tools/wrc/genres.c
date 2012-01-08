@@ -33,18 +33,11 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <ctype.h>
-
 #include "wrc.h"
 #include "genres.h"
 #include "utils.h"
-#include "wine/unicode.h"
 
-/* Fix 64-bit host, re: put_dword */
-#if defined(unix) && defined(__x86_64__)
-typedef unsigned int HOST_DWORD;
-#else
-typedef unsigned long HOST_DWORD;
-#endif
+#include "wine/unicode.h"
 
 #define SetResSize(res, tag)	set_dword((res), (tag), (res)->size - get_dword((res), (tag)))
 
@@ -315,11 +308,17 @@ static void put_string(res_t *res, const string_t *str, enum str_e type, int ist
         if (str->type == str_char)
         {
             if (!check_unicode_conversion( str, newstr, codepage ))
+            {
+                print_location( &str->loc );
                 error( "String %s does not convert identically to Unicode and back in codepage %d. "
                        "Try using a Unicode string instead\n", str->str.cstr, codepage );
+            }
             if (check_valid_utf8( str, codepage ))
+            {
+                print_location( &str->loc );
                 warning( "string \"%s\" seems to be UTF-8 but codepage %u is in use.\n",
                          str->str.cstr, codepage );
+            }
         }
         if (!isterm) put_word(res, newstr->size);
         for(cnt = 0; cnt < newstr->size; cnt++)
@@ -563,8 +562,25 @@ static res_t *dialog2res(name_id_t *name, dialog_t *dlg)
 	{
 		restag = put_res_header(res, WRC_RT_DIALOG, NULL, name, dlg->memopt, &(dlg->lvc));
 
-		put_dword(res, dlg->style->or_mask);
-		put_dword(res, dlg->gotexstyle ? dlg->exstyle->or_mask : 0);
+		if (dlg->is_ex)
+		{
+			/* FIXME: MS doc says that the first word must contain 0xffff
+			 * and the second 0x0001 to signal a DLGTEMPLATEEX. Borland's
+			 * compiler reverses the two words.
+			 * I don't know which one to choose, but I write it as Mr. B
+			 * writes it.
+			 */
+			put_word(res, 1);		/* Signature */
+			put_word(res, 0xffff);		/* DlgVer */
+			put_dword(res, dlg->gothelpid ? dlg->helpid : 0);
+			put_dword(res, dlg->gotexstyle ? dlg->exstyle->or_mask : 0);
+			put_dword(res, dlg->gotstyle ? dlg->style->or_mask : WS_POPUPWINDOW);
+		}
+		else
+		{
+			put_dword(res, dlg->style->or_mask);
+			put_dword(res, dlg->gotexstyle ? dlg->exstyle->or_mask : 0);
+		}
 		tag_nctrl = res->size;
 		put_word(res, 0);		/* Number of controls */
 		put_word(res, dlg->x);
@@ -586,20 +602,42 @@ static res_t *dialog2res(name_id_t *name, dialog_t *dlg)
 		if(dlg->font)
 		{
 			put_word(res, dlg->font->size);
+			if (dlg->is_ex)
+			{
+				put_word(res, dlg->font->weight);
+				/* FIXME: ? TRUE should be sufficient to say that it's
+				 * italic, but Borland's compiler says it's 0x0101.
+				 * I just copy it here, and hope for the best.
+				 */
+				put_word(res, dlg->font->italic ? 0x0101 : 0);
+			}
 			put_string(res, dlg->font->name, str_unicode, TRUE, dlg->lvc.language);
 		}
 
 		put_pad(res);
 		while(ctrl)
 		{
-			/* FIXME: what is default control style? */
-			put_dword(res, ctrl->gotstyle ? ctrl->style->or_mask: WS_CHILD);
-			put_dword(res, ctrl->gotexstyle ? ctrl->exstyle->or_mask : 0);
+			if (dlg->is_ex)
+			{
+				put_dword(res, ctrl->gothelpid ? ctrl->helpid : 0);
+				put_dword(res, ctrl->gotexstyle ? ctrl->exstyle->or_mask : 0);
+				/* FIXME: what is default control style? */
+				put_dword(res, ctrl->gotstyle ? ctrl->style->or_mask : WS_CHILD | WS_VISIBLE);
+			}
+			else
+			{
+				/* FIXME: what is default control style? */
+				put_dword(res, ctrl->gotstyle ? ctrl->style->or_mask: WS_CHILD);
+				put_dword(res, ctrl->gotexstyle ? ctrl->exstyle->or_mask : 0);
+			}
 			put_word(res, ctrl->x);
 			put_word(res, ctrl->y);
 			put_word(res, ctrl->width);
 			put_word(res, ctrl->height);
-			put_word(res, ctrl->id);
+			if (dlg->is_ex)
+				put_dword(res, ctrl->id);
+			else
+				put_word(res, ctrl->id);
 			if(ctrl->ctlclass)
 				put_name_id(res, ctrl->ctlclass, TRUE, dlg->lvc.language);
 			else
@@ -696,124 +734,6 @@ static res_t *dialog2res(name_id_t *name, dialog_t *dlg)
 
 /*
  *****************************************************************************
- * Function	: dialogex2res
- * Syntax	: res_t *dialogex2res(name_id_t *name, dialogex_t *dlgex)
- * Input	:
- *	name	- Name/ordinal of the resource
- *	dlgex	- The dialogex descriptor
- * Output	: New .res format structure
- * Description	:
- * Remarks	:
- *****************************************************************************
-*/
-static res_t *dialogex2res(name_id_t *name, dialogex_t *dlgex)
-{
-	int restag;
-	res_t *res;
-	control_t *ctrl;
-	int tag_nctrl;
-	int nctrl = 0;
-	assert(name != NULL);
-	assert(dlgex != NULL);
-
-	ctrl = dlgex->controls;
-	res = new_res();
-	if(win32)
-	{
-		restag = put_res_header(res, WRC_RT_DIALOG, NULL, name, dlgex->memopt, &(dlgex->lvc));
-
-		/* FIXME: MS doc says that the first word must contain 0xffff
-		 * and the second 0x0001 to signal a DLGTEMPLATEEX. Borland's
-		 * compiler reverses the two words.
-		 * I don't know which one to choose, but I write it as Mr. B
-		 * writes it.
-		 */
-		put_word(res, 1);		/* Signature */
-		put_word(res, 0xffff);		/* DlgVer */
-		put_dword(res, dlgex->gothelpid ? dlgex->helpid : 0);
-		put_dword(res, dlgex->gotexstyle ? dlgex->exstyle->or_mask : 0);
-		put_dword(res, dlgex->gotstyle ? dlgex->style->or_mask : WS_POPUPWINDOW);
-		tag_nctrl = res->size;
-		put_word(res, 0);		/* Number of controls */
-		put_word(res, dlgex->x);
-		put_word(res, dlgex->y);
-		put_word(res, dlgex->width);
-		put_word(res, dlgex->height);
-		if(dlgex->menu)
-			put_name_id(res, dlgex->menu, TRUE, dlgex->lvc.language);
-		else
-			put_word(res, 0);
-		if(dlgex->dlgclass)
-			put_name_id(res, dlgex->dlgclass, TRUE, dlgex->lvc.language);
-		else
-			put_word(res, 0);
-		if(dlgex->title)
-			put_string(res, dlgex->title, str_unicode, TRUE, dlgex->lvc.language);
-		else
-			put_word(res, 0);
-		if(dlgex->font)
-		{
-			put_word(res, dlgex->font->size);
-			put_word(res, dlgex->font->weight);
-			/* FIXME: ? TRUE should be sufficient to say that it's
-			 * italic, but Borland's compiler says it's 0x0101.
-			 * I just copy it here, and hope for the best.
-			 */
-			put_word(res, dlgex->font->italic ? 0x0101 : 0);
-			put_string(res, dlgex->font->name, str_unicode, TRUE, dlgex->lvc.language);
-		}
-
-		put_pad(res);
-		while(ctrl)
-		{
-			put_dword(res, ctrl->gothelpid ? ctrl->helpid : 0);
-			put_dword(res, ctrl->gotexstyle ? ctrl->exstyle->or_mask : 0);
-			/* FIXME: what is default control style? */
-			put_dword(res, ctrl->gotstyle ? ctrl->style->or_mask : WS_CHILD | WS_VISIBLE);
-			put_word(res, ctrl->x);
-			put_word(res, ctrl->y);
-			put_word(res, ctrl->width);
-			put_word(res, ctrl->height);
-			put_dword(res, ctrl->id);
-			if(ctrl->ctlclass)
-				put_name_id(res, ctrl->ctlclass, TRUE, dlgex->lvc.language);
-			else
-				internal_error(__FILE__, __LINE__, "Control has no control-class\n");
-			if(ctrl->title)
-				put_name_id(res, ctrl->title, FALSE, dlgex->lvc.language);
-			else
-				put_word(res, 0);
-			if(ctrl->extra)
-			{
-				put_pad(res);
-				put_word(res, ctrl->extra->size);
-				put_raw_data(res, ctrl->extra, 0);
-			}
-			else
-				put_word(res, 0);
-
-			put_pad(res);
-			nctrl++;
-			ctrl = ctrl->next;
-		}
-		/* Set number of controls */
-		set_word(res, tag_nctrl, (WORD)nctrl);
-		/* Set ResourceSize */
-		SetResSize(res, restag);
-		put_pad(res);
-	}
-	else /* win16 */
-	{
-		/* Do not generate anything in 16-bit mode */
-		free(res->data);
-		free(res);
-		return NULL;
-	}
-	return res;
-}
-
-/*
- *****************************************************************************
  * Function	: menuitem2res
  * Syntax	: void menuitem2res(res_t *res, menu_item_t *item)
  * Input	:
@@ -862,37 +782,6 @@ static void menuitem2res(res_t *res, menu_item_t *menitem, const language_t *lan
 
 /*
  *****************************************************************************
- * Function	: menu2res
- * Syntax	: res_t *menu2res(name_id_t *name, menu_t *men)
- * Input	:
- *	name	- Name/ordinal of the resource
- *	men	- The menu descriptor
- * Output	: New .res format structure
- * Description	:
- * Remarks	:
- *****************************************************************************
-*/
-static res_t *menu2res(name_id_t *name, menu_t *men)
-{
-	int restag;
-	res_t *res;
-	assert(name != NULL);
-	assert(men != NULL);
-
-	res = new_res();
-	restag = put_res_header(res, WRC_RT_MENU, NULL, name, men->memopt, win32 ? &(men->lvc) : NULL);
-
-	put_dword(res, 0);		/* Menuheader: Version and HeaderSize */
-	menuitem2res(res, men->items, win32 ? men->lvc.language : NULL);
-	/* Set ResourceSize */
-	SetResSize(res, restag);
-	if(win32)
-		put_pad(res);
-	return res;
-}
-
-/*
- *****************************************************************************
  * Function	: menuexitem2res
  * Syntax	: void menuexitem2res(res_t *res, menuex_item_t *item)
  * Input	:
@@ -901,9 +790,9 @@ static res_t *menu2res(name_id_t *name, menu_t *men)
  * Remarks	: Self recursive
  *****************************************************************************
 */
-static void menuexitem2res(res_t *res, menuex_item_t *menitem, const language_t *lang)
+static void menuexitem2res(res_t *res, menu_item_t *menitem, const language_t *lang)
 {
-	menuex_item_t *itm = menitem;
+	menu_item_t *itm = menitem;
 	assert(win32 != 0);
 	while(itm)
 	{
@@ -928,8 +817,8 @@ static void menuexitem2res(res_t *res, menuex_item_t *menitem, const language_t 
 
 /*
  *****************************************************************************
- * Function	: menuex2res
- * Syntax	: res_t *menuex2res(name_id_t *name, menuex_t *menex)
+ * Function	: menu2res
+ * Syntax	: res_t *menu2res(name_id_t *name, menu_t *men)
  * Input	:
  *	name	- Name/ordinal of the resource
  *	menex	- The menuex descriptor
@@ -938,33 +827,43 @@ static void menuexitem2res(res_t *res, menuex_item_t *menitem, const language_t 
  * Remarks	:
  *****************************************************************************
 */
-static res_t *menuex2res(name_id_t *name, menuex_t *menex)
+static res_t *menu2res(name_id_t *name, menu_t *men)
 {
 	int restag;
 	res_t *res;
 	assert(name != NULL);
-	assert(menex != NULL);
+	assert(men != NULL);
 
 	res = new_res();
 	if(win32)
 	{
-		restag = put_res_header(res, WRC_RT_MENU, NULL, name, menex->memopt, &(menex->lvc));
+		restag = put_res_header(res, WRC_RT_MENU, NULL, name, men->memopt, &(men->lvc));
 
-		put_word(res, 1);		/* Menuheader: Version */
-		put_word(res, 4);		/* Offset */
-		put_dword(res, 0);		/* HelpId */
-		put_pad(res);
-		menuexitem2res(res, menex->items, menex->lvc.language);
+		if (men->is_ex)
+		{
+			put_word(res, 1);		/* Menuheader: Version */
+			put_word(res, 4);		/* Offset */
+			put_dword(res, 0);		/* HelpId */
+			put_pad(res);
+			menuexitem2res(res, men->items, men->lvc.language);
+		}
+		else
+		{
+			put_dword(res, 0);		/* Menuheader: Version and HeaderSize */
+			menuitem2res(res, men->items, men->lvc.language);
+		}
 		/* Set ResourceSize */
 		SetResSize(res, restag);
 		put_pad(res);
 	}
 	else /* win16 */
 	{
-		/* Do not generate anything in 16-bit mode */
-		free(res->data);
-		free(res);
-		return NULL;
+		restag = put_res_header(res, WRC_RT_MENU, NULL, name, men->memopt, NULL);
+
+		put_dword(res, 0);		/* Menuheader: Version and HeaderSize */
+		menuitem2res(res, men->items, NULL);
+		/* Set ResourceSize */
+		SetResSize(res, restag);
 	}
 	return res;
 }
@@ -1844,23 +1743,8 @@ char *prep_nid_for_label(const name_id_t *nid)
 */
 char *make_c_name(const char *base, const name_id_t *nid, const language_t *lan)
 {
-	int nlen;
-	char *buf;
-	char *ret;
-	char lanbuf[6];
-
-	sprintf(lanbuf, "%d", lan ? MAKELANGID(lan->id, lan->sub) : 0);
-	buf = prep_nid_for_label(nid);
-	nlen = strlen(buf) + strlen(lanbuf);
-	nlen += strlen(base) + 4; /* three time '_' and '\0' */
-	ret = xmalloc(nlen);
-	strcpy(ret, "_");
-	strcat(ret, base);
-	strcat(ret, "_");
-	strcat(ret, buf);
-	strcat(ret, "_");
-	strcat(ret, lanbuf);
-	return ret;
+	char *buf = prep_nid_for_label(nid);
+	return strmake( "_%s_%s_%d", base, buf, lan ? MAKELANGID(lan->id, lan->sub) : 0);
 }
 
 /*
@@ -1884,14 +1768,12 @@ const char *get_c_typename(enum res_e type)
 	case res_bmp:	return "Bmp";
 	case res_cur:	return "Cur";
 	case res_curg:	return "CurGrp";
-	case res_dlg:
-	case res_dlgex:	return "Dlg";
+	case res_dlg:	return "Dlg";
 	case res_fnt:	return "Fnt";
 	case res_fntdir:return "FntDir";
 	case res_ico:	return "Ico";
 	case res_icog:	return "IcoGrp";
-	case res_men:
-	case res_menex:	return "Men";
+	case res_men:	return "Men";
 	case res_rdt:	return "RCDat";
 	case res_stt:	return "StrTab";
 	case res_usr:	return "Usr";
@@ -1940,10 +1822,6 @@ void resources2res(resource_t *top)
 			if(!top->binres)
 				top->binres = dialog2res(top->name, top->res.dlg);
 			break;
-		case res_dlgex:
-			if(!top->binres)
-				top->binres = dialogex2res(top->name, top->res.dlgex);
-			break;
 		case res_fnt:
 			if(!top->binres)
 				top->binres = font2res(top->name, top->res.fnt);
@@ -1963,10 +1841,6 @@ void resources2res(resource_t *top)
 		case res_men:
 			if(!top->binres)
 				top->binres = menu2res(top->name, top->res.men);
-			break;
-		case res_menex:
-			if(!top->binres)
-				top->binres = menuex2res(top->name, top->res.menex);
 			break;
 		case res_html:
 			if(!top->binres)

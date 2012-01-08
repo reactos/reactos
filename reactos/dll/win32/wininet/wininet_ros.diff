@@ -92,3 +92,41 @@ Index: dll/win32/wininet/urlcache.c
      for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
      {
          WCHAR wszCachePath[MAX_PATH];
+Index: dll/win32/wininet/http.c
+===================================================================
+--- dll/win32/wininet/http.c	(revision 54234)
++++ dll/win32/wininet/http.c	(working copy)
+@@ -245,8 +245,17 @@
+     if(InterlockedDecrement(&server->ref))
+         return;
+ 
++#ifndef __REACTOS__
+     if(!server->ref)
+         server->keep_until = (DWORD64)GetTickCount() + COLLECT_TIME;
++#else
++    EnterCriticalSection(&connection_pool_cs);
++    list_remove(&server->entry);
++    LeaveCriticalSection(&connection_pool_cs);
++    
++    heap_free(server->name);
++    heap_free(server);
++#endif
+ }
+ 
+ static server_t *get_server(const WCHAR *name, INTERNET_PORT port)
+@@ -1861,6 +1870,7 @@
+     if(!req->netconn)
+         return;
+ 
++#ifndef __REACTOS__
+     if(reuse && req->netconn->keep_alive) {
+         BOOL run_collector;
+ 
+@@ -1893,6 +1903,7 @@
+         }
+         return;
+     }
++#endif
+ 
+     INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,
+                           INTERNET_STATUS_CLOSING_CONNECTION, 0, 0);

@@ -24,15 +24,6 @@ typedef struct TCPv4_HEADER {
   USHORT Urgent;            /* Pointer to urgent data */
 } TCPv4_HEADER, *PTCPv4_HEADER;
 
-/* TCPv4 header flags */
-#define TCP_URG   0x20
-#define TCP_ACK   0x10
-#define TCP_PSH   0x08
-#define TCP_RST   0x04
-#define TCP_SYN   0x02
-#define TCP_FIN   0x01
-
-
 #define TCPOPT_END_OF_LIST  0x0
 #define TCPOPT_NO_OPERATION 0x1
 #define TCPOPT_MAX_SEG_SIZE 0x2
@@ -79,6 +70,19 @@ typedef struct _CLIENT_DATA {
 /* Delay variance factor */
 #define TCP_BETA_RETRANSMISSION_TIMEOUT(x)(((x)*16)/10)   /* 1.6 */
 
+#define SEL_CONNECT 1
+#define SEL_FIN     2
+#define SEL_RST     4
+#define SEL_ABRT    8
+#define SEL_READ    16
+#define SEL_WRITE   32
+#define SEL_ACCEPT  64
+#define SEL_OOB     128
+#define SEL_ERROR   256
+#define SEL_FINOUT  512
+
+#define	FREAD		0x0001
+#define	FWRITE		0x0002
 
 /* Datagram/segment send request flags */
 
@@ -93,9 +97,8 @@ extern LONG TCP_IPIdentification;
 extern CLIENT_DATA ClientInfo;
 
 /* accept.c */
-NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
-				    PCONNECTION_ENDPOINT Connection,
-				    PTDI_REQUEST_KERNEL Request );
+NTSTATUS TCPCheckPeerForAccept(PVOID Context,
+                               PTDI_REQUEST_KERNEL Request);
 NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog );
 BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 			         PCONNECTION_ENDPOINT Connection );
@@ -164,11 +167,11 @@ NTSTATUS TCPSendData(
 
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
-NTSTATUS TCPTranslateError( int OskitError );
+NTSTATUS TCPTranslateError( const INT8 err );
 
-UINT TCPAllocatePort( UINT HintPort );
+UINT TCPAllocatePort( const UINT HintPort );
 
-VOID TCPFreePort( UINT Port );
+VOID TCPFreePort( const UINT Port );
 
 NTSTATUS TCPGetSockAddress
 ( PCONNECTION_ENDPOINT Connection,
@@ -182,3 +185,29 @@ NTSTATUS TCPShutdown(
   VOID);
 
 BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
+
+VOID
+TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF);
+
+VOID
+TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF);
+
+VOID
+FlushListenQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
+
+VOID
+FlushConnectQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
+
+VOID
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);
+
+VOID CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous);

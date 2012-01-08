@@ -27,8 +27,8 @@ BEGIN
         MENUITEM "&Gorde\tCtrl+S",              CMD_SAVE
         MENUITEM "Gorde &honela...",            CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Inprimatu\tCtrl+P",          CMD_PRINT
         MENUITEM "Prestatu &orrialdea...",      CMD_PAGE_SETUP
+        MENUITEM "&Inprimatu\tCtrl+P",          CMD_PRINT
         MENUITEM "Inprimatzeko &aurrebista...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Irten",                      CMD_EXIT
@@ -61,7 +61,7 @@ BEGIN
         END
     POPUP "Laguntza"
     BEGIN
-        MENUITEM "Õ&ndizea",                  CMD_HELP_CONTENTS
+        MENUITEM "√ç&ndizea",                  CMD_HELP_CONTENTS
         MENUITEM "&Bilatu...",                CMD_HELP_SEARCH
         MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
@@ -99,8 +99,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Kodifikazioa"
 BEGIN
@@ -165,10 +164,10 @@ STRING_TOOLARGE,                "'%s' fitxategia handiegia da\
                                  ohar-blokarentzat.\n Erabili beste editore bat."
 STRING_NOTEXT,                  "Ez duzu ezer idatzi. \nMesedez zerbait idatzi e \
                                  berriz saiatu"
-STRING_DOESNOTEXIST,            "'%s'\nFitxategia ez dago\n\n øFitxategi berri bat \
+STRING_DOESNOTEXIST,            "'%s'\nFitxategia ez dago\n\n ¬øFitxategi berri bat \
                                  sortu nahi duzu?"
 STRING_NOTSAVED,                "'%s'Fitxategiaren testua  aldatu egin da\n\n \
-                                 øAldaketak gorde nahi dituzu?"
+                                 ¬øAldaketak gorde nahi dituzu?"
 STRING_NOTFOUND,                "Ez da aurkitu '%s'."
 STRING_OUT_OF_MEMORY,           "Ez dago memoria nahikorik lan hau\
                                  amaitzeko. \nItxi aplikazio bat edo gehiago \

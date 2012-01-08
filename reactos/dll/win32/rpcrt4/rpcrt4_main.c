@@ -40,6 +40,7 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 
+#include "ntsecapi.h"
 #include "iptypes.h"
 #include "iphlpapi.h"
 #include "wine/unicode.h"
@@ -50,6 +51,7 @@
 #include "rpcproxy.h"
 
 #include "rpc_binding.h"
+#include "rpc_server.h"
 
 #include "wine/debug.h"
 
@@ -132,6 +134,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         break;
 
     case DLL_PROCESS_DETACH:
+        RPCRT4_destroy_all_protseqs();
+        RPCRT4_ServerFreeAllRegisteredAuthInfo();
         break;
     }
 
@@ -277,6 +281,38 @@ RPC_STATUS WINAPI UuidCreateNil(UUID *Uuid)
   return RPC_S_OK;
 }
 
+/*************************************************************************
+ *           UuidCreate   [RPCRT4.@]
+ *
+ * Creates a 128bit UUID.
+ *
+ * RETURNS
+ *
+ *  RPC_S_OK if successful.
+ *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
+ *
+ * NOTES
+ *
+ *  Follows RFC 4122, section 4.4 (Algorithms for Creating a UUID from
+ *  Truly Random or Pseudo-Random Numbers)
+ */
+RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
+{
+    RtlGenRandom(Uuid, sizeof(*Uuid));
+    /* Clear the version bits and set the version (4) */
+    Uuid->Data3 &= 0x0fff;
+    Uuid->Data3 |= (4 << 12);
+    /* Set the topmost bits of Data4 (clock_seq_hi_and_reserved) as
+     * specified in RFC 4122, section 4.4.
+     */
+    Uuid->Data4[0] &= 0x3f;
+    Uuid->Data4[0] |= 0x80;
+
+    TRACE("%s\n", debugstr_guid(Uuid));
+
+    return RPC_S_OK;
+}
+
 /* Number of 100ns ticks per clock tick. To be safe, assume that the clock
    resolution is at least 1000 * 100 * (1/1000000) = 1/10 of a second */
 #define TICKS_PER_CLOCK_TICK 1000
@@ -296,7 +332,7 @@ static void RPC_UuidGetSystemTime(ULONGLONG *time)
     *time += TICKS_15_OCT_1582_TO_1601;
 }
 
-/* Assume that a hardware address is at least 6 bytes long */ 
+/* Assume that a hardware address is at least 6 bytes long */
 #define ADDRESS_BYTES_NEEDED 6
 
 static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
@@ -320,10 +356,7 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
     /* We can't get a hardware address, just use random numbers.
        Set the multicast bit to prevent conflicts with real cards. */
     else {
-        for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
-            address[i] = rand() & 0xff;
-        }
-
+        RtlGenRandom(address, ADDRESS_BYTES_NEEDED);
         address[0] |= 0x01;
         status = RPC_S_UUID_LOCAL_ONLY;
     }
@@ -333,7 +366,7 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
 }
 
 /*************************************************************************
- *           UuidCreate   [RPCRT4.@]
+ *           UuidCreateSequential   [RPCRT4.@]
  *
  * Creates a 128bit UUID.
  *
@@ -343,12 +376,12 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
  *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
  *
  *  FIXME: No compensation for changes across reloading
- *         this dll or across reboots (e.g. clock going 
+ *         this dll or across reboots (e.g. clock going
  *         backwards and swapped network cards). The RFC
- *         suggests using NVRAM for storing persistent 
+ *         suggests using NVRAM for storing persistent
  *         values.
  */
-RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
+RPC_STATUS WINAPI UuidCreateSequential(UUID *Uuid)
 {
     static int initialised, count;
 
@@ -396,7 +429,7 @@ RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
 
     /* Pack the information into the UUID structure. */
 
-    Uuid->Data1  = (unsigned long)(time & 0xffffffff);
+    Uuid->Data1  = (ULONG)(time & 0xffffffff);
     Uuid->Data2  = (unsigned short)((time >> 32) & 0xffff);
     Uuid->Data3  = (unsigned short)((time >> 48) & 0x0fff);
 
@@ -406,35 +439,13 @@ RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
     Uuid->Data4[0]  = sequence & 0xff;
     Uuid->Data4[1]  = (sequence & 0x3f00) >> 8;
     Uuid->Data4[1] |= 0x80;
-
-    Uuid->Data4[2] = address[0];
-    Uuid->Data4[3] = address[1];
-    Uuid->Data4[4] = address[2];
-    Uuid->Data4[5] = address[3];
-    Uuid->Data4[6] = address[4];
-    Uuid->Data4[7] = address[5];
+    memcpy(&Uuid->Data4[2], address, ADDRESS_BYTES_NEEDED);
 
     LeaveCriticalSection(&uuid_cs);
 
     TRACE("%s\n", debugstr_guid(Uuid));
 
     return status;
-}
-
-/*************************************************************************
- *           UuidCreateSequential   [RPCRT4.@]
- *
- * Creates a 128bit UUID.
- *
- * RETURNS
- *
- *  RPC_S_OK if successful.
- *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
- *
- */
-RPC_STATUS WINAPI UuidCreateSequential(UUID *Uuid)
-{
-   return UuidCreate(Uuid);
 }
 
 

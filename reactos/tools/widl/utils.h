@@ -58,6 +58,8 @@ extern size_t output_buffer_size;
 
 extern void init_output_buffer(void);
 extern void flush_output_buffer( const char *name );
+extern void add_output_to_resources( const char *type, const char *name );
+extern void flush_output_resources( const char *name );
 extern void put_data( const void *data, size_t size );
 extern void put_byte( unsigned char val );
 extern void put_word( unsigned short val );

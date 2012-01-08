@@ -27,16 +27,10 @@ KTSS64 KiBootTss;
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
-ULONG KeProcessorArchitecture;
-ULONG KeProcessorLevel;
-ULONG KeProcessorRevision;
-ULONG KeFeatureBits;
 ULONG KeI386MachineType;
 ULONG KeI386NpxPresent = 1;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
-CHAR KeNumberProcessors = 0;
-KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiSMTProcessorsPresent;
 
 /* Freeze data */
@@ -371,41 +365,6 @@ KiGetCacheInformation(VOID)
 }
 
 VOID
-FASTCALL
-KiInitializeTss(IN PKTSS64 Tss,
-                IN UINT64 Stack)
-{
-    PKGDTENTRY64 TssEntry;
-
-    /* Get pointer to the GDT entry */
-    TssEntry = KiGetGdtEntry(KeGetPcr()->GdtBase, KGDT64_SYS_TSS);
-
-    /* Initialize the GDT entry */
-    KiInitGdtEntry(TssEntry, (ULONG64)Tss, sizeof(KTSS64), AMD64_TSS, 0);
-
-    /* Zero out the TSS */
-    RtlZeroMemory(Tss, sizeof(KTSS64));
-
-    /* FIXME: I/O Map? */
-    Tss->IoMapBase = 0x68;
-
-    /* Setup ring 0 stack pointer */
-    Tss->Rsp0 = Stack;
-
-    /* Setup a stack for Double Fault Traps */
-    Tss->Ist[1] = (ULONG64)KiDoubleFaultStack;
-
-    /* Setup a stack for CheckAbort Traps */
-    Tss->Ist[2] = (ULONG64)KiDoubleFaultStack;
-
-    /* Setup a stack for NMI Traps */
-    Tss->Ist[3] = (ULONG64)KiDoubleFaultStack;
-
-    /* Load the task register */
-    __ltr(KGDT64_SYS_TSS);
-}
-
-VOID
 NTAPI
 KeFlushCurrentTb(VOID)
 {
@@ -481,11 +440,11 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
 //    __stmxcsr(&ProcessorState->SpecialRegisters.MxCsr);
-//    ProcessorState->SpecialRegisters.DebugControl = 
-//    ProcessorState->SpecialRegisters.LastBranchToRip = 
-//    ProcessorState->SpecialRegisters.LastBranchFromRip = 
-//    ProcessorState->SpecialRegisters.LastExceptionToRip = 
-//    ProcessorState->SpecialRegisters.LastExceptionFromRip = 
+//    ProcessorState->SpecialRegisters.DebugControl =
+//    ProcessorState->SpecialRegisters.LastBranchToRip =
+//    ProcessorState->SpecialRegisters.LastBranchFromRip =
+//    ProcessorState->SpecialRegisters.LastExceptionToRip =
+//    ProcessorState->SpecialRegisters.LastExceptionFromRip =
 
     /* Save MSRs */
     ProcessorState->SpecialRegisters.MsrGsBase = __readmsr(X86_MSR_GSBASE);
@@ -528,18 +487,18 @@ KeQueryActiveProcessors(VOID)
 
 NTSTATUS
 NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+KxSaveFloatingPointState(OUT PKFLOATING_SAVE FloatingState)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    UNREFERENCED_PARAMETER(FloatingState);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+KxRestoreFloatingPointState(IN PKFLOATING_SAVE FloatingState)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    UNREFERENCED_PARAMETER(FloatingState);
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN

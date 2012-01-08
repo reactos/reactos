@@ -1,4 +1,3 @@
-#include "resource.h"
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -6,13 +5,13 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER2 "Parametro errato - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Unit‡ gi‡ sostituita\n"
+    IDS_DRIVE_ALREAD_SUBSTED "Unit√† gi√† sostituita\n"
     IDS_FAILED_WITH_ERROCODE "Interruzione con codice di errore 0x%x: %s\n"
-    IDS_USAGE "Associa un percorso ad una lettera di unit‡.\n\n\
-SUBST [unit‡1: [unit‡2:]percorso]\n\
-SUBST unit‡1: /D\n\n\
-  unit‡1:           Specifica un'unit‡ virtuale alla quale assegnare un percorso.\n\
-  [unit‡2:]percorso Specifica un'unit‡ fisica e un percorso da assegnare ad una\n                  unit‡ virtuale.\n\
-  /D                Elimina un'unit‡ (virtuale) sostituita.\n\n\
-Digitare SUBST senza parametri per mostrare un elenco delle unit‡ virtuali attuali.\n"
+    IDS_USAGE "Associa un percorso ad una lettera di unit√†.\n\n\
+SUBST [unit√†1: [unit√†2:]percorso]\n\
+SUBST unit√†1: /D\n\n\
+  unit√†1:           Specifica un'unit√† virtuale alla quale assegnare un percorso.\n\
+  [unit√†2:]percorso Specifica un'unit√† fisica e un percorso da assegnare ad una\n                  unit√† virtuale.\n\
+  /D                Elimina un'unit√† (virtuale) sostituita.\n\n\
+Digitare SUBST senza parametri per mostrare un elenco delle unit√† virtuali attuali.\n"
 END

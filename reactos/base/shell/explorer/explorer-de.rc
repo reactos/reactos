@@ -231,7 +231,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Auswahl des Explorerfenster-Modus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Bitte wählen Sie ihr bevorzugtes Explorer Userinterface:",
+    LTEXT           "Bitte wählen Sie Ihr bevorzugtes Explorer Userinterface:",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10

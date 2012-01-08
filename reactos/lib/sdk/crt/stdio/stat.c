@@ -9,10 +9,10 @@
     buf->st_uid   = (buf64)->st_uid;   \
     buf->st_gid   = (buf64)->st_gid;   \
     buf->st_rdev  = (buf64)->st_rdev;  \
-    buf->st_size  = (buf64)->st_size;  \
-    buf->st_atime = (buf64)->st_atime; \
-    buf->st_mtime = (buf64)->st_mtime; \
-    buf->st_ctime = (buf64)->st_ctime; \
+    buf->st_size  = (_off_t)(buf64)->st_size;  \
+    buf->st_atime = (time_t)(buf64)->st_atime; \
+    buf->st_mtime = (time_t)(buf64)->st_mtime; \
+    buf->st_ctime = (time_t)(buf64)->st_ctime; \
 
 int CDECL _tstat(const _TCHAR* path, struct _stat * buf)
 {

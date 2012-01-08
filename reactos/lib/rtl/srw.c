@@ -630,7 +630,7 @@ RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock)
                     /* There are no wait blocks so far, we need to add ourselves as the first
                        wait block. We need to keep the shared count! */
                     StackWaitBlock.Exclusive = TRUE;
-                    StackWaitBlock.SharedCount = CurrentValue >> RTL_SRWLOCK_BITS;
+                    StackWaitBlock.SharedCount = (LONG)(CurrentValue >> RTL_SRWLOCK_BITS);
                     StackWaitBlock.Next = NULL;
                     StackWaitBlock.Last = &StackWaitBlock;
                     StackWaitBlock.Wake = 0;

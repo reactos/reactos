@@ -1,32 +1,26 @@
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
- */
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_UsageMessage, "%s\n\nŽg—p–@: regsvr32 [/u] [/s] [/c] [/n] [/i[:ƒRƒ}ƒ“ƒh ƒ‰ƒCƒ“]] DLL–¼\n\
-/u -	ƒT[ƒo[‚ð“o˜^‰ðœ‚·‚é\n\
-/s -	ƒTƒCƒŒƒ“ƒg; ƒƒbƒZ[ƒW ƒ{ƒbƒNƒX‚ð•\\Ž¦‚µ‚È‚¢\n\
-/c -	ƒRƒ“ƒ\\[ƒ‹o—Í\n\
-/i -	È—ª‰Â”\\‚È [ƒRƒ}ƒ“ƒh ƒ‰ƒCƒ“] ‚ðˆø”‚Æ‚µ‚Ä DllInstall ‚ðŒÄ‚Ño‚·; /u ‚Æ•¹—p‚µ‚½ê‡‚Í dll uninstall ‚ðŒÄ‚Ño‚·\n\
-/n -	DllRegisterServer ‚ðŒÄ‚Ño‚³‚È‚¢; ‚±‚ÌƒIƒvƒVƒ‡ƒ“‚Í /i ‚Æ•¹—p‚·‚é•K—v‚ª‚ ‚é"
+IDS_UsageMessage, "%s\n\nä½¿ç”¨æ³•: regsvr32 [/u] [/s] [/c] [/n] [/i[:ã‚³ãƒžãƒ³ãƒ‰ ãƒ©ã‚¤ãƒ³]] DLLå\n\
+/u -	ã‚µãƒ¼ãƒãƒ¼ã‚’ç™»éŒ²è§£é™¤ã™ã‚‹\n\
+/s -	ã‚µã‚¤ãƒ¬ãƒ³ãƒˆ; ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒœãƒƒã‚¯ã‚¹ã‚’è¡¨\ç¤ºã—ãªã„\n\
+/c -	ã‚³ãƒ³ã‚½\ãƒ¼ãƒ«å‡ºåŠ›\n\
+/i -	çœç•¥å¯èƒ½\ãª [ã‚³ãƒžãƒ³ãƒ‰ ãƒ©ã‚¤ãƒ³] ã‚’å¼•æ•°ã¨ã—ã¦ DllInstall ã‚’å‘¼ã³å‡ºã™; /u ã¨ä½µç”¨ã—ãŸå ´åˆã¯ dll uninstall ã‚’å‘¼ã³å‡ºã™\n\
+/n -	DllRegisterServer ã‚’å‘¼ã³å‡ºã•ãªã„; ã“ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã¯ /i ã¨ä½µç”¨ã™ã‚‹å¿…è¦ãŒã‚ã‚‹"
 
-IDS_NoDllSpecified,  "DLL –¼‚ªŽw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB"
+IDS_NoDllSpecified,  "DLL åãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚"
 
-IDS_InvalidFlag,     "ƒtƒ‰ƒO‚ð”FŽ¯‚Å‚«‚Ü‚¹‚ñ: %s"
+IDS_InvalidFlag,     "ãƒ•ãƒ©ã‚°ã‚’èªè­˜ã§ãã¾ã›ã‚“: %s"
 
-IDS_SwitchN_NoI,     "ƒtƒ‰ƒO‚ð”FŽ¯‚Å‚«‚Ü‚¹‚ñ: /n ‚ðŽw’è‚·‚éê‡‚É‚Í /u ‚àŽw’è‚µ‚È‚­‚Ä‚Í‚È‚è‚Ü‚¹‚ñB"
+IDS_SwitchN_NoI,     "ãƒ•ãƒ©ã‚°ã‚’èªè­˜ã§ãã¾ã›ã‚“: /n ã‚’æŒ‡å®šã™ã‚‹å ´åˆã«ã¯ /u ã‚‚æŒ‡å®šã—ãªãã¦ã¯ãªã‚Šã¾ã›ã‚“ã€‚"
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') ‚ÉŽ¸”s‚µ‚Ü‚µ‚½B\nGetLastError ‚Í 0x%08x ‚ð•Ô‚µ‚Ü‚µ‚½B"
+IDS_DllNotLoaded,    "LoadLibrary('%s') ã«å¤±æ•—ã—ã¾ã—ãŸã€‚\nGetLastError ã¯ 0x%08x ã‚’è¿”ã—ã¾ã—ãŸã€‚"
 
-IDS_MissingEntry,    "%s ‚ð“Ç‚Ýž‚Ý‚Ü‚µ‚½‚ªA%s ƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½B\n\n\
-%s ‚ÍƒGƒNƒXƒ|[ƒg‚³‚ê‚Ä‚¢‚È‚¢‚©A%s ‚Ì•s³‚Èƒo[ƒWƒ‡ƒ“‚ªƒƒ‚ƒŠã‚É‚ ‚é‰Â”\\«‚ª‚ ‚è‚Ü‚·BŒŸo‚âíœ‚ð‚·‚é‚½‚ßAPView ‚ÌŽg—p‚ðŒŸ“¢‚µ‚Ä‚­‚¾‚³‚¢B"
+IDS_MissingEntry,    "%s ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸãŒã€%s ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸã€‚\n\n\
+%s ã¯ã‚¨ã‚¯ã‚¹ãƒãƒ¼ãƒˆã•ã‚Œã¦ã„ãªã„ã‹ã€%s ã®ä¸æ­£ãªãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒãƒ¡ãƒ¢ãƒªä¸Šã«ã‚ã‚‹å¯èƒ½\æ€§ãŒã‚ã‚Šã¾ã™ã€‚æ¤œå‡ºã‚„å‰Šé™¤ã‚’ã™ã‚‹ãŸã‚ã€PView ã®ä½¿ç”¨ã‚’æ¤œè¨Žã—ã¦ãã ã•ã„ã€‚"
 
-IDS_FailureMessage,  "%s (%s ‚Ì) ‚ÉŽ¸”s‚µ‚Ü‚µ‚½B\n•Ô‚Á‚Ä‚«‚½ƒR[ƒh: 0x%08x"
+IDS_FailureMessage,  "%s (%s ã®) ã«å¤±æ•—ã—ã¾ã—ãŸã€‚\nè¿”ã£ã¦ããŸã‚³ãƒ¼ãƒ‰: 0x%08x"
 
-IDS_SuccessMessage   "%s (%s ‚Ì) ‚É¬Œ÷‚µ‚Ü‚µ‚½B"
+IDS_SuccessMessage,  "%s (%s ã®) ã«æˆåŠŸã—ã¾ã—ãŸã€‚"
 END

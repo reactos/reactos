@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
+#include "precomp.h"
 
 /* FIXME: Move to a common header! */
 struct _CTE_DELAYED_EVENT;

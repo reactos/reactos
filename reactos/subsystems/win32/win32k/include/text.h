@@ -1,7 +1,5 @@
 #pragma once
 
-#include <include/engobjects.h>
-
 #define TAG_FINF        'FNIF'
 //
 // EXSTROBJ flags.
@@ -110,6 +108,7 @@ BOOL NTAPI GreExtTextOutW(IN HDC,IN INT,IN INT,IN UINT,IN OPTIONAL RECTL*,
 DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);
 BOOL FASTCALL GreGetTextExtentW(HDC,LPWSTR,INT,LPSIZE,UINT);
 BOOL FASTCALL GreGetTextExtentExW(HDC,LPWSTR,ULONG,ULONG,PULONG,PULONG,LPSIZE,FLONG);
+DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

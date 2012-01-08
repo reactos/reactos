@@ -125,7 +125,8 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
                            IN USHORT MaxMinor)
 {
     PPCI_PDO_EXTENSION PdoDeviceExtension;
-    ULONG BreakMask, DebugLevel = 0;
+    ULONG BreakMask;
+    //ULONG DebugLevel = 0;
     PCHAR IrpString;
 
     /* Only two functions are recognized */
@@ -161,11 +162,11 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         /* Choose the correct debug level based on which function this is */
         if (IoStackLocation->MajorFunction == IRP_MJ_POWER)
         {
-            DebugLevel = 0x500;
+            //DebugLevel = 0x500;
         }
         else if (IoStackLocation->MajorFunction == IRP_MJ_PNP)
         {
-            DebugLevel = 0x200;
+            //DebugLevel = 0x200;
         }
 
         /* For a PDO, print out the bus, device, and function number */
@@ -181,11 +182,11 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         /* Choose the correct debug level based on which function this is */
         if (IoStackLocation->MajorFunction == IRP_MJ_POWER)
         {
-            DebugLevel = 0x400;
+            //DebugLevel = 0x400;
         }
         else if (IoStackLocation->MajorFunction == IRP_MJ_PNP)
         {
-            DebugLevel = 0x100;
+            //DebugLevel = 0x100;
         }
 
         /* For an FDO, just dump the extension pointer and IRP string */

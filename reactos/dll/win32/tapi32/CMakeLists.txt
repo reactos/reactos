@@ -14,7 +14,7 @@ list(APPEND SOURCE
 
 add_library(tapi32 SHARED ${SOURCE})
 
-set_entrypoint(tapi32 0)
+set_module_type(tapi32 win32dll ENTRYPOINT 0 )
 
 target_link_libraries(tapi32 wine)
 

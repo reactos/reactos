@@ -1,5 +1,4 @@
-/* $Id$
- *
+/* 
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/process/system.c
@@ -45,7 +44,7 @@ int system(const char *command)
     return -1;
 
 // should return 127 or 0 ( MS ) if the shell is not found
-// __set_errno(ENOENT);
+// _set_errno(ENOENT);
 
   if (szComSpec == NULL)
   {
@@ -62,7 +61,7 @@ int system(const char *command)
   szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
-     __set_errno(ENOMEM);
+     _set_errno(ENOMEM);
      return -1;
   }
 

@@ -247,8 +247,17 @@ void server_release(server_t *server)
     if(InterlockedDecrement(&server->ref))
         return;
 
+#ifndef __REACTOS__
     if(!server->ref)
         server->keep_until = (DWORD64)GetTickCount() + COLLECT_TIME;
+#else
+    EnterCriticalSection(&connection_pool_cs);
+    list_remove(&server->entry);
+    LeaveCriticalSection(&connection_pool_cs);
+    
+    heap_free(server->name);
+    heap_free(server);
+#endif
 }
 
 static server_t *get_server(const WCHAR *name, INTERNET_PORT port)
@@ -1863,6 +1872,7 @@ static void http_release_netconn(http_request_t *req, BOOL reuse)
     if(!req->netconn)
         return;
 
+#ifndef __REACTOS__
     if(reuse && req->netconn->keep_alive) {
         BOOL run_collector;
 
@@ -1892,9 +1902,12 @@ static void http_release_netconn(http_request_t *req, BOOL reuse)
                 if(module)
                     FreeLibrary(module);
             }
+            else
+                CloseHandle(thread);
         }
         return;
     }
+#endif
 
     INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,
                           INTERNET_STATUS_CLOSING_CONNECTION, 0, 0);

@@ -16,23 +16,6 @@
  */
 VOID
 EXPORT
-NdisCompleteDmaTransfer(
-    OUT PNDIS_STATUS    Status,
-    IN  PNDIS_HANDLE    NdisDmaHandle,
-    IN  PNDIS_BUFFER    Buffer,
-    IN  ULONG           Offset,
-    IN  ULONG           Length,
-    IN  BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
 ArcFilterDprIndicateReceive(
     IN  PARC_FILTER Filter,
     IN  PUCHAR      pRawHeader,
@@ -84,39 +67,6 @@ FddiFilterDprIndicateReceiveComplete(
     IN  PFDDI_FILTER    Filter)
 {
     UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisAllocateDmaChannel(
-    OUT PNDIS_STATUS            Status,
-    OUT PNDIS_HANDLE            NdisDmaHandle,
-    IN  NDIS_HANDLE             NdisAdapterHandle,
-    IN  PNDIS_DMA_DESCRIPTION   DmaDescription,
-    IN  ULONG                   MaximumLength)
-{
-    UNIMPLEMENTED
-}
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisPciAssignResources(
-    IN  NDIS_HANDLE         NdisMacHandle,
-    IN  NDIS_HANDLE         NdisWrapperHandle,
-    IN  NDIS_HANDLE         WrapperConfigurationContext,
-    IN  ULONG               SlotNumber,
-    OUT PNDIS_RESOURCE_LIST *AssignedResources)
-{
-    UNIMPLEMENTED
-
-	return NDIS_STATUS_FAILURE;
 }
 
 

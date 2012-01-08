@@ -18,7 +18,7 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dit hulpprogramma geeft gedetailleerde information over de op dit systeem geïnstalleerde ReactX-onderdelen en stuurprogrammas.", -1, 10, 10, 443, 17
+    LTEXT "Dit hulpprogramma geeft gedetailleerde information over de op dit systeem geÃ¯nstalleerde ReactX-onderdelen en stuurprogrammas.", -1, 10, 10, 443, 17
     LTEXT "Als u weet welk gebied het probleem veroorzaakt, kunt u hierboven op het desbetreffende tabblad klikken. Weet u dit niet, dan klikt u op de knop ""Volgende pagina"" om elke pagina te bekijken.", -1, 10, 30, 443, 25
     GROUPBOX "Systeeminfo", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Huidige Datum/Tijd:", -1, 70, 70, 80, 10, SS_RIGHT
@@ -92,7 +92,7 @@ BEGIN
     PUSHBUTTON "Inschakelen", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "Inschakelen", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "DirectDraw testen", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Direct3D testen", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Direct3D testen", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "Opmerkingen", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -221,4 +221,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "Nee"
+	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

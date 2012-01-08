@@ -32,7 +32,7 @@ PcRegisterAdapterPowerManagement(
     Status = pUnknown->QueryInterface(IID_IAdapterPowerManagement, (PVOID*)&pPower);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("PcRegisterAdapterPowerManagement no IAdapterPowerManagement interface %x\n", Status);
+        DPRINT1("PcRegisterAdapterPowerManagement no IAdapterPowerManagement interface %x\n", Status);
         DeviceExt->AdapterPowerManagement = NULL;
         return STATUS_SUCCESS;
     }

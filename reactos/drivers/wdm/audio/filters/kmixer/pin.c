@@ -76,7 +76,7 @@ PerformSampleRateConversion(
     State = src_new(SRC_SINC_FASTEST, NumChannels, &error);
     if (!State)
     {
-        DPRINT1("KeSaveFloatingPointState failed with %x\n", Status);
+        DPRINT1("src_new failed with %x\n", error);
         KeRestoreFloatingPointState(&FloatSave);
         ExFreePool(FloatIn);
         ExFreePool(FloatOut);

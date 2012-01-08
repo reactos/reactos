@@ -214,7 +214,7 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     FILE_INFORMATION_CLASS FileInformationClass;
     PFILE_OBJECT FileObject;
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     PVOID SystemBuffer;
@@ -225,7 +225,7 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
     IoStack = IoGetCurrentIrpStackLocation (Irp);
     FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = (PNPFS_CCB)FileObject->FsContext2;
     Fcb = Ccb->Fcb;

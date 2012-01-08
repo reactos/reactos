@@ -1,16 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -34,7 +22,7 @@ BEGIN
     POPUP "&Visualizza"
     BEGIN
         MENUITEM "&Aggiorna",                ID_VIEW_REFRESH
-        POPUP "&Velocit‡ aggiornamento"
+        POPUP "&Velocit√† aggiornamento"
         BEGIN
             MENUITEM "&Alta",                      ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normale",                   ID_VIEW_UPDATESPEED_NORMAL
@@ -135,7 +123,7 @@ BEGIN
 
         MENUITEM "&Debug",                          ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Imposta la &Priorit‡"
+        POPUP "Imposta la &Priorit√†"
         BEGIN
             MENUITEM "&Realtime",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
@@ -150,7 +138,7 @@ BEGIN
             MENUITEM "&Bassa",                      ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Definisci &Affinit‡...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Definisci &Affinit√†...", ID_PROCESS_PAGE_SETAFFINITY
 	MENUITEM "Modifica Debug &Channels...",	    ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
@@ -245,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Storico uso CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Storico uso Memoria",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Visualizzazione uso CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Visualizzazione uso MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Visualizzazione uso CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Visualizzazione uso MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Storico uso CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Storico uso MEM",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -384,7 +370,7 @@ BEGIN
                     WS_TABSTOP,107,50,61,10
     CONTROL         "Pool N&on-paginato",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,73,10
-    CONTROL         "P&riorit‡ base",IDC_BASEPRIORITY,"Button",
+    CONTROL         "P&riorit√† base",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
     CONTROL         "Numero &Handle",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,65,10
@@ -533,8 +519,8 @@ BEGIN
     ID_FILE_NEW             "Esegue un nuovo programma"
     ID_OPTIONS_ALWAYSONTOP  "Task Manager rimane di fronte a ogni altra finestra a meno che sia minimizzato"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Task Manager Ë minimizzato quando viene eseguita una operazione PassaA"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Task Manager Quando Ë minimizzato"
+                            "Task Manager √® minimizzato quando viene eseguita una operazione PassaA"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Task Manager Quando √® minimizzato"
     ID_VIEW_REFRESH         "Costringe Task Manager a effettuare un aggiornamneto, indipendentemente dalla frequenza di aggiornamento impostata"
     ID_VIEW_LARGE           "Visualizza i task usando icone grandi"
     ID_VIEW_SMALL           "Visualizza i task usando icone piccole"
@@ -565,7 +551,7 @@ BEGIN
                             "Un singolo grafico mostra l'uso di cpu totale"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Ogni CPU ha il suo grafico"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "Porta un task in vista e gli d‡ il focus"
+                            "Porta un task in vista e gli d√† il focus"
 END
 
 STRINGTABLE DISCARDABLE
@@ -580,15 +566,15 @@ BEGIN
     ID_PROCESS_PAGE_SETAFFINITY
                             "Controlla quali processori potranno eseguire il processo"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "Assegna al processo la classe di priorit‡ REALTIME"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Assegna al processo la classe di priorit‡ HIGH"
+                            "Assegna al processo la classe di priorit√† REALTIME"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Assegna al processo la classe di priorit√† HIGH"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Assegna al processo la classe di priorit‡ ABOVE NORMAL"
+                            "Assegna al processo la classe di priorit√† ABOVE NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Assegna al processo la classe di priorit‡ NORMAL"
+                            "Assegna al processo la classe di priorit√† NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Assegna al processo la classe di priorit‡ BELOW NORMAL"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Assegna al processo la classe di priorit‡ LOW"
+                            "Assegna al processo la classe di priorit√† BELOW NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Assegna al processo la classe di priorit√† LOW"
 END
 
 
@@ -635,17 +621,17 @@ BEGIN
     IDS_MENU_CPUHISTORY           "&CPU History"
     IDS_MENU_SHOWKERNELTIMES      "&Mostra tempo di Kernel"
     IDS_CREATENEWTASK             "Create Nuovo Task"
-    IDS_CREATENEWTASK_DESC        "Scrivi il nome di un programma, Cartella, documento o risorsa internet e Task Manager lo aprir‡."
+    IDS_CREATENEWTASK_DESC        "Scrivi il nome di un programma, Cartella, documento o risorsa internet e Task Manager lo aprir√†."
     IDS_MSG_ACCESSPROCESSAFF      "Impossibile accedere o impostare la 'Process Affinity'"
     IDS_MSG_PROCESSONEPRO         "Il processo deve avere affinity con almeno un processore."
     IDS_MSG_INVALIDOPTION         "Opzione non valida"
     IDS_MSG_UNABLEDEBUGPROCESS    "Impossibile usare Debug per il processo Process"
-    IDS_MSG_WARNINGDEBUG          "ATTENZIONE: Il debug di questo processo puÚ portare alla perdita di dati.\nSei sicuro di voler attivare il debugger?"
+    IDS_MSG_WARNINGDEBUG          "ATTENZIONE: Il debug di questo processo pu√≤ portare alla perdita di dati.\nSei sicuro di voler attivare il debugger?"
     IDS_MSG_TASKMGRWARNING        "Segnalazione di Task Manager"
-    IDS_MSG_WARNINGTERMINATING    "ATTENZIONE: Arrestare un processo puÚ provocare\n effetti indesiderati compresa la perdita di dati o l'instabilit‡ del sistema. \nIl processo non potr‡ salvare il prorio stato o i dati\nprima del suo arresto.\nSei sicuro di voler procedere?"
+    IDS_MSG_WARNINGTERMINATING    "ATTENZIONE: Arrestare un processo pu√≤ provocare\n effetti indesiderati compresa la perdita di dati o l'instabilit√† del sistema. \nIl processo non potr√† salvare il prorio stato o i dati\nprima del suo arresto.\nSei sicuro di voler procedere?"
     IDS_MSG_UNABLETERMINATEPRO    "Impossibile arrestare il Processo"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Impossibile cambiare la Priorit‡"
-    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorit‡ puÚ provocare\n effetti indesiderati compresa la perdita di dati o l'instabilit‡ del sistema.\nSei sicuro di voler procedere?"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Impossibile cambiare la Priorit√†"
+    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorit√† pu√≤ provocare\n effetti indesiderati compresa la perdita di dati o l'instabilit√† del sistema.\nSei sicuro di voler procedere?"
     IDS_MSG_TRAYICONCPUUSAGE      "Uso CPU: %d%%"
     IDS_STATUS_MEMUSAGE           "Uso Mem: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Uso CPU: %3d%%"
@@ -653,21 +639,3 @@ BEGIN
     IDS_Not_Responding            "Non risponde"
     IDS_Running                   "In esecuzione"
 END
-
-
-#endif    // Italian resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
-

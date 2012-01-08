@@ -38,6 +38,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "14." > NUL && set BUILD_ENVIRONMENT=VS8
     cl 2>&1 | find "15." > NUL && set BUILD_ENVIRONMENT=VS9
     cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
+    cl 2>&1 | find "17." > NUL && set BUILD_ENVIRONMENT=VS11
     if not defined BUILD_ENVIRONMENT (
         echo Error: Visual Studio version too old or version detection failed.
         exit /b
@@ -62,6 +63,12 @@ if defined ROS_ARCH (
                 set CMAKE_GENERATOR="Visual Studio 10 Win64"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 10"
+            )
+        ) else if "%BUILD_ENVIRONMENT%" == "VS11" (
+            if "%ARCH%" == "amd64" (
+                set CMAKE_GENERATOR="Visual Studio 11 Win64"
+            ) else (
+                set CMAKE_GENERATOR="Visual Studio 11"
             )
         )
     ) else (
@@ -139,7 +146,7 @@ if EXIST CMakeCache.txt (
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "WDK" (
     cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else (

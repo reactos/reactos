@@ -31,10 +31,11 @@
 #define HEAP_GLOBAL_TAG                 0x0800
 #define HEAP_PSEUDO_TAG_FLAG            0x8000
 #define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
+#define HEAP_TAGS_MASK                 (HEAP_TAG_MASK ^ (0xFF << HEAP_TAG_SHIFT))
 
 #define HEAP_EXTRA_FLAGS_MASK (HEAP_CAPTURE_STACK_BACKTRACES | \
                                HEAP_SETTABLE_USER_VALUE | \
-                               (HEAP_TAG_MASK ^ (0xFF << HEAP_TAG_SHIFT)))
+                               HEAP_TAGS_MASK)
 
 /* Heap entry flags */
 #define HEAP_ENTRY_BUSY           0x01
@@ -151,15 +152,15 @@ typedef struct _HEAP_PSEUDO_TAG_ENTRY
 {
     ULONG Allocs;
     ULONG Frees;
-    ULONG Size;
+    SIZE_T Size;
 } HEAP_PSEUDO_TAG_ENTRY, *PHEAP_PSEUDO_TAG_ENTRY;
 
 typedef struct _HEAP_COUNTERS
 {
-    ULONG TotalMemoryReserved;
-    ULONG TotalMemoryCommitted;
-    ULONG TotalMemoryLargeUCR;
-    ULONG TotalSizeInVirtualBlocks;
+    SIZE_T TotalMemoryReserved;
+    SIZE_T TotalMemoryCommitted;
+    SIZE_T TotalMemoryLargeUCR;
+    SIZE_T TotalSizeInVirtualBlocks;
     ULONG TotalSegments;
     ULONG TotalUCRs;
     ULONG CommittOps;
@@ -173,13 +174,13 @@ typedef struct _HEAP_COUNTERS
     ULONG CompactHeapCalls;
     ULONG CompactedUCRs;
     ULONG InBlockDeccommits;
-    ULONG InBlockDeccomitSize;
+    SIZE_T InBlockDeccomitSize;
 } HEAP_COUNTERS, *PHEAP_COUNTERS;
 
 typedef struct _HEAP_TUNING_PARAMETERS
 {
     ULONG CommittThresholdShift;
-    ULONG MaxPreCommittThreshold;
+    SIZE_T MaxPreCommittThreshold;
 } HEAP_TUNING_PARAMETERS, *PHEAP_TUNING_PARAMETERS;
 
 typedef struct _HEAP_LIST_LOOKUP
@@ -217,16 +218,16 @@ typedef struct _HEAP
     ULONG CompatibilityFlags;
     ULONG EncodeFlagMask;
     HEAP_ENTRY Encoding;
-    ULONG PointerKey;
+    ULONG_PTR PointerKey;
     ULONG Interceptor;
     ULONG VirtualMemoryThreshold;
     ULONG Signature;
-    ULONG SegmentReserve;
-    ULONG SegmentCommit;
-    ULONG DeCommitFreeBlockThreshold;
-    ULONG DeCommitTotalFreeThreshold;
-    ULONG TotalFreeSize;
-    ULONG MaximumAllocationSize;
+    SIZE_T SegmentReserve;
+    SIZE_T SegmentCommit;
+    SIZE_T DeCommitFreeBlockThreshold;
+    SIZE_T DeCommitTotalFreeThreshold;
+    SIZE_T TotalFreeSize;
+    SIZE_T MaximumAllocationSize;
     USHORT ProcessHeapsListIndex;
     USHORT HeaderValidateLength;
     PVOID HeaderValidateCopy;
@@ -235,8 +236,8 @@ typedef struct _HEAP
     PHEAP_TAG_ENTRY TagEntries;
     LIST_ENTRY UCRList;
     LIST_ENTRY UCRSegments; // FIXME: non-Vista
-    ULONG AlignRound;
-    ULONG AlignMask;
+    ULONG_PTR AlignRound;
+    ULONG_PTR AlignMask;
     LIST_ENTRY VirtualAllocdBlocks;
     LIST_ENTRY SegmentList;
     struct _HEAP_SEGMENT *Segments[HEAP_SEGMENTS]; //FIXME: non-Vista
@@ -284,7 +285,7 @@ typedef struct _HEAP_UCR_DESCRIPTOR
     LIST_ENTRY ListEntry;
     LIST_ENTRY SegmentEntry;
     PVOID Address;
-    ULONG Size;
+    SIZE_T Size;
 } HEAP_UCR_DESCRIPTOR, *PHEAP_UCR_DESCRIPTOR;
 
 typedef struct _HEAP_UCR_SEGMENT
@@ -314,13 +315,13 @@ typedef struct _HEAP_VIRTUAL_ALLOC_ENTRY
 {
     LIST_ENTRY Entry;
     HEAP_ENTRY_EXTRA ExtraStuff;
-    ULONG CommitSize;
-    ULONG ReserveSize;
+    SIZE_T CommitSize;
+    SIZE_T ReserveSize;
     HEAP_ENTRY BusyBlock;
 } HEAP_VIRTUAL_ALLOC_ENTRY, *PHEAP_VIRTUAL_ALLOC_ENTRY;
 
 /* Global variables */
-extern HEAP_LOCK RtlpProcessHeapsListLock;
+extern RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
 extern BOOLEAN RtlpPageHeapEnabled;
 
 /* Functions declarations */

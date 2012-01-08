@@ -836,7 +836,6 @@ handle_exception (int exceptionVector)
   int sigval, stepping;
   int addr, length;
   char *ptr;
-  int newPC;
 
 #ifndef WIN32 //MF
   gdb_i386vector = exceptionVector;
@@ -977,8 +976,6 @@ handle_exception (int exceptionVector)
 		  /* try to read optional parameter, pc unchanged if no parm */
 		  if (hexToInt (&ptr, &addr))
 			registers[PC] = addr;
-
-		  newPC = registers[PC];
 
 		  /* clear the trace bit */
 		  registers[PS] &= 0xfffffeff;

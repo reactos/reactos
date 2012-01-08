@@ -22,24 +22,32 @@ PUBLIC _RtlpBreakWithStatusInstruction@0
 
 .code
 
-_DbgBreakPointNoBugCheck@0:
+FUNC _DbgBreakPointNoBugCheck@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret
+ENDFUNC
 
-_DbgBreakPoint@0:
 _DbgUserBreakPoint@0:
+FUNC _DbgBreakPoint@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret
+ENDFUNC
 
-_DbgBreakPointWithStatus@4:
+FUNC _DbgBreakPointWithStatus@4
+    FPO 0, 1, 0, 0, 0, FRAME_FPO
     mov eax, [esp+4]
+ENDFUNC
 
-_RtlpBreakWithStatusInstruction@0:
+FUNC _RtlpBreakWithStatusInstruction@0
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret 4
+ENDFUNC
 
-
-_DebugService2@12:
+FUNC _DebugService2@12
+    FPO 0, 3, 3, 0, 1, FRAME_NONFPO
 
     /* Setup the stack */
     push ebp
@@ -55,18 +63,19 @@ _DebugService2@12:
     /* Restore stack */
     pop ebp
     ret 12
+ENDFUNC
 
-
-_DebugService@20:
+FUNC _DebugService@20
+    FPO 0, 5, 3, 0, 1, FRAME_NONFPO
 
     /* Setup the stack */
     push ebp
     mov ebp, esp
- 
+
     /* Save the registers */
     push ebx
     push edi
- 
+
     /* Call the Interrupt */
     mov eax, [ebp+8]
     mov ecx, [ebp+12]
@@ -75,13 +84,14 @@ _DebugService@20:
     mov edi, [ebp+24]
     int HEX(2D)
     int 3
- 
+
     /* Restore registers */
     pop edi
     pop ebx
- 
+
     /* Return */
     pop ebp
     ret 20
+ENDFUNC
 
 END

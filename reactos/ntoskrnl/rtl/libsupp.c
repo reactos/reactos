@@ -156,36 +156,49 @@ RtlGetCurrentPeb(VOID)
 
 NTSTATUS
 NTAPI
-RtlDeleteHeapLock(
-    PHEAP_LOCK Lock)
+RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
-    ExDeleteResource(&Lock->Resource);
+    ExDeleteResourceLite(&Lock->Resource);
+    ExFreePool(Lock);
+
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-RtlEnterHeapLock(
-    PHEAP_LOCK Lock)
+RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
 {
-    return ExAcquireResourceExclusive(&Lock->Resource, TRUE);
-}
+    KeEnterCriticalRegion();
 
-NTSTATUS
-NTAPI
-RtlInitializeHeapLock(
-    PHEAP_LOCK Lock)
-{
-    ExInitializeResource(&Lock->Resource);
+    if (Exclusive)
+        ExAcquireResourceExclusiveLite(&Lock->Resource, TRUE);
+    else
+        ExAcquireResourceSharedLite(&Lock->Resource, TRUE);
+
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-RtlLeaveHeapLock(
-    PHEAP_LOCK Lock)
+RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-    ExReleaseResource(&Lock->Resource);
+    PHEAP_LOCK HeapLock = ExAllocatePool(NonPagedPool, sizeof(HEAP_LOCK));
+    if (HeapLock == NULL)
+        return STATUS_NO_MEMORY;
+
+    ExInitializeResourceLite(&HeapLock->Resource);
+    *Lock = HeapLock;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RtlLeaveHeapLock(IN OUT PHEAP_LOCK Lock)
+{
+    ExReleaseResourceLite(&Lock->Resource);
+    KeLeaveCriticalRegion();
+
     return STATUS_SUCCESS;
 }
 

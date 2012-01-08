@@ -1,4 +1,12 @@
-#pragma once
+
+#include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "resource.h"
+#include "cardlib.h"
+
 
 #define DIFFICULTY_ONE_COLOR     1
 #define DIFFICULTY_TWO_COLORS    2

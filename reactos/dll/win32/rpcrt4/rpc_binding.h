@@ -25,7 +25,14 @@
 #define SECURITY_WIN32
 #include "security.h"
 #include "wine/list.h"
+#include "rpc_defs.h"
 
+
+enum secure_packet_direction
+{
+  SECURE_PACKET_SEND,
+  SECURE_PACKET_RECEIVE
+};
 
 typedef struct _RpcAuthInfo
 {
@@ -67,6 +74,7 @@ typedef struct _RpcConnection
   TimeStamp exp;
   ULONG attr;
   RpcAuthInfo *AuthInfo;
+  ULONG auth_context_id;
   ULONG encryption_auth_len;
   ULONG signature_auth_len;
   RpcQualityOfService *QOS;
@@ -75,6 +83,7 @@ typedef struct _RpcConnection
   struct list conn_pool_entry;
   ULONG assoc_group_id; /* association group returned during binding */
   RPC_ASYNC_STATE *async_state;
+  struct _RpcAssoc *assoc; /* association this connection is part of */
 
   /* server-only */
   /* The active interface bound to server. */
@@ -97,6 +106,13 @@ struct connection_ops {
   int (*wait_for_incoming_data)(RpcConnection *conn);
   size_t (*get_top_of_tower)(unsigned char *tower_data, const char *networkaddr, const char *endpoint);
   RPC_STATUS (*parse_top_of_tower)(const unsigned char *tower_data, size_t tower_size, char **networkaddr, char **endpoint);
+  RPC_STATUS (*receive_fragment)(RpcConnection *conn, RpcPktHdr **Header, void **Payload);
+  BOOL (*is_authorized)(RpcConnection *conn);
+  RPC_STATUS (*authorize)(RpcConnection *conn, BOOL first_time, unsigned char *in_buffer, unsigned int in_len, unsigned char *out_buffer, unsigned int *out_len);
+  RPC_STATUS (*secure_packet)(RpcConnection *Connection, enum secure_packet_direction dir, RpcPktHdr *hdr, unsigned int hdr_size, unsigned char *stub_data, unsigned int stub_data_size, RpcAuthVerifier *auth_hdr, unsigned char *auth_value, unsigned int auth_value_size);
+  RPC_STATUS (*impersonate_client)(RpcConnection *conn);
+  RPC_STATUS (*revert_to_self)(RpcConnection *conn);
+  RPC_STATUS (*inquire_auth_client)(RpcConnection *, RPC_AUTHZ_HANDLE *, RPC_WSTR *, ULONG *, ULONG *, ULONG *, ULONG);
 };
 
 /* don't know what MS's structure looks like */
@@ -120,35 +136,36 @@ typedef struct _RpcBinding
   RpcQualityOfService *QOS;
 } RpcBinding;
 
-LPSTR RPCRT4_strndupA(LPCSTR src, INT len);
-LPWSTR RPCRT4_strndupW(LPCWSTR src, INT len);
-LPSTR RPCRT4_strdupWtoA(LPCWSTR src);
-LPWSTR RPCRT4_strdupAtoW(LPCSTR src);
-void RPCRT4_strfree(LPSTR src);
+LPSTR RPCRT4_strndupA(LPCSTR src, INT len) DECLSPEC_HIDDEN;
+LPWSTR RPCRT4_strndupW(LPCWSTR src, INT len) DECLSPEC_HIDDEN;
+LPSTR RPCRT4_strdupWtoA(LPCWSTR src) DECLSPEC_HIDDEN;
+LPWSTR RPCRT4_strdupAtoW(LPCSTR src) DECLSPEC_HIDDEN;
+void RPCRT4_strfree(LPSTR src) DECLSPEC_HIDDEN;
 
 #define RPCRT4_strdupA(x) RPCRT4_strndupA((x),-1)
 #define RPCRT4_strdupW(x) RPCRT4_strndupW((x),-1)
 
-ULONG RpcAuthInfo_AddRef(RpcAuthInfo *AuthInfo);
-ULONG RpcAuthInfo_Release(RpcAuthInfo *AuthInfo);
-BOOL RpcAuthInfo_IsEqual(const RpcAuthInfo *AuthInfo1, const RpcAuthInfo *AuthInfo2);
-ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos);
-ULONG RpcQualityOfService_Release(RpcQualityOfService *qos);
-BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2);
+RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc, CredHandle cred, TimeStamp exp, ULONG cbMaxToken, RPC_AUTH_IDENTITY_HANDLE identity, RpcAuthInfo **ret) DECLSPEC_HIDDEN;
+ULONG RpcAuthInfo_AddRef(RpcAuthInfo *AuthInfo) DECLSPEC_HIDDEN;
+ULONG RpcAuthInfo_Release(RpcAuthInfo *AuthInfo) DECLSPEC_HIDDEN;
+BOOL RpcAuthInfo_IsEqual(const RpcAuthInfo *AuthInfo1, const RpcAuthInfo *AuthInfo2) DECLSPEC_HIDDEN;
+ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
+ULONG RpcQualityOfService_Release(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
+BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2) DECLSPEC_HIDDEN;
 
-RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo, RpcQualityOfService *QOS);
-RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection);
-RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection);
-RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection);
+RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo, RpcQualityOfService *QOS) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 
-RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint);
-RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid);
-RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection);
-void       RPCRT4_AddRefBinding(RpcBinding* Binding);
-RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding);
+RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection) DECLSPEC_HIDDEN;
+void       RPCRT4_AddRefBinding(RpcBinding* Binding) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
-                              const RPC_SYNTAX_IDENTIFIER *TransferSyntax, const RPC_SYNTAX_IDENTIFIER *InterfaceId);
-RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection);
+                              const RPC_SYNTAX_IDENTIFIER *TransferSyntax, const RPC_SYNTAX_IDENTIFIER *InterfaceId) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection) DECLSPEC_HIDDEN;
 
 static inline const char *rpcrt4_conn_get_name(const RpcConnection *Connection)
 {
@@ -182,15 +199,55 @@ static inline RPC_STATUS rpcrt4_conn_handoff(RpcConnection *old_conn, RpcConnect
   return old_conn->ops->handoff(old_conn, new_conn);
 }
 
-/* floors 3 and up */
-RPC_STATUS RpcTransport_GetTopOfTower(unsigned char *tower_data, size_t *tower_size, const char *protseq, const char *networkaddr, const char *endpoint);
-RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data, size_t tower_size, char **protseq, char **networkaddr, char **endpoint);
+static inline BOOL rpcrt4_conn_is_authorized(RpcConnection *Connection)
+{
+    return Connection->ops->is_authorized(Connection);
+}
 
-void RPCRT4_SetThreadCurrentConnection(RpcConnection *Connection);
-void RPCRT4_SetThreadCurrentCallHandle(RpcBinding *Binding);
-RpcBinding *RPCRT4_GetThreadCurrentCallHandle(void);
-void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext);
-void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext);
-NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void);
+static inline RPC_STATUS rpcrt4_conn_authorize(
+    RpcConnection *conn, BOOL first_time, unsigned char *in_buffer,
+    unsigned int in_len, unsigned char *out_buffer, unsigned int *out_len)
+{
+    return conn->ops->authorize(conn, first_time, in_buffer, in_len, out_buffer, out_len);
+}
+
+static inline RPC_STATUS rpcrt4_conn_secure_packet(
+    RpcConnection *conn, enum secure_packet_direction dir,
+    RpcPktHdr *hdr, unsigned int hdr_size, unsigned char *stub_data,
+    unsigned int stub_data_size, RpcAuthVerifier *auth_hdr,
+    unsigned char *auth_value, unsigned int auth_value_size)
+{
+    return conn->ops->secure_packet(conn, dir, hdr, hdr_size, stub_data, stub_data_size, auth_hdr, auth_value, auth_value_size);
+}
+
+static inline RPC_STATUS rpcrt4_conn_impersonate_client(
+    RpcConnection *conn)
+{
+    return conn->ops->impersonate_client(conn);
+}
+
+static inline RPC_STATUS rpcrt4_conn_revert_to_self(
+    RpcConnection *conn)
+{
+    return conn->ops->revert_to_self(conn);
+}
+
+static inline RPC_STATUS rpcrt4_conn_inquire_auth_client(
+    RpcConnection *conn, RPC_AUTHZ_HANDLE *privs, RPC_WSTR *server_princ_name,
+    ULONG *authn_level, ULONG *authn_svc, ULONG *authz_svc, ULONG flags)
+{
+    return conn->ops->inquire_auth_client(conn, privs, server_princ_name, authn_level, authn_svc, authz_svc, flags);
+}
+
+/* floors 3 and up */
+RPC_STATUS RpcTransport_GetTopOfTower(unsigned char *tower_data, size_t *tower_size, const char *protseq, const char *networkaddr, const char *endpoint) DECLSPEC_HIDDEN;
+RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data, size_t tower_size, char **protseq, char **networkaddr, char **endpoint) DECLSPEC_HIDDEN;
+
+void RPCRT4_SetThreadCurrentConnection(RpcConnection *Connection) DECLSPEC_HIDDEN;
+void RPCRT4_SetThreadCurrentCallHandle(RpcBinding *Binding) DECLSPEC_HIDDEN;
+RpcBinding *RPCRT4_GetThreadCurrentCallHandle(void) DECLSPEC_HIDDEN;
+void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext) DECLSPEC_HIDDEN;
+void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext) DECLSPEC_HIDDEN;
+NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void) DECLSPEC_HIDDEN;
 
 #endif

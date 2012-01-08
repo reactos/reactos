@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
     pData = malloc(nFileSize);
     if (!pData)
     {
+        fclose(pSourceFile);
         fprintf(stderr, "Failed to allocate %ld bytes\n", nFileSize);
         return -3;
     }
@@ -104,6 +105,8 @@ int main(int argc, char *argv[])
     /* Read the whole source file */
     if (!fread(pData, nFileSize, 1, pSourceFile))
     {
+        free(pData);
+        fclose(pSourceFile);
         fprintf(stderr, "Failed to read source file: %ld\n", nFileSize);
         return -4;
     }
@@ -113,8 +116,9 @@ int main(int argc, char *argv[])
 
     /* Open the destination file */
     pDestFile = fopen(pszDestFile, "wb");
-    if (!pszDestFile)
+    if (!pDestFile)
     {
+        free(pData);
         fprintf(stderr, "Couldn't open dest file '%s'\n", pszDestFile);
         return -5;
     }
@@ -140,6 +144,8 @@ int main(int argc, char *argv[])
             if (!fwrite(pData + pSectionHeader->PointerToRawData,
                         pSectionHeader->SizeOfRawData, 1, pDestFile))
             {
+                free(pData);
+                fclose(pDestFile);
                 fprintf(stderr, "Failed to write data %ld\n",
                         pSectionHeader->SizeOfRawData);
                 return -6;
@@ -151,6 +157,7 @@ int main(int argc, char *argv[])
         pSectionHeader++;
     }
 
+    free(pData);
     fclose(pDestFile);
 
     return 0;

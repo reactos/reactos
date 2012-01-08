@@ -218,14 +218,8 @@
 	<directory name="ex">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>interlck_asm.S</file>
 				<file>fastinterlck_asm.S</file>
 				<file>ioport.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="amd64">
-			<directory name="amd64">
-				<file>fastinterlck.c</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
@@ -235,12 +229,12 @@
 		<file>event.c</file>
 		<file>evtpair.c</file>
 		<file>exintrin.c</file>
-		<file>fastinterlck.c</file>
 		<file>fmutex.c</file>
 		<file>handle.c</file>
 		<file>harderr.c</file>
 		<file>hdlsterm.c</file>
 		<file>init.c</file>
+		<file>interlocked.c</file>
 		<file>keyedevt.c</file>
 		<file>locale.c</file>
 		<file>lookas.c</file>
@@ -482,6 +476,7 @@
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>section.c</file>
+			<file>special.c</file>
 			<file>sysldr.c</file>
 			<file>syspte.c</file>
 			<file>vadnode.c</file>

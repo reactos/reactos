@@ -1,7 +1,5 @@
 
-add_typelib(jsglobal jsglobal.idl)
-
-add_dependencies(jsglobal stdole2)
+add_typelib(jsglobal.idl)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -59,5 +57,13 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
-add_dependencies(jscript jsglobal)
+add_pch(jscript jscript.h)
+# jsglobal.tlb needs stdole2.tlb
+add_dependencies(jscript stdole2)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(jscript)
+endif()
+
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/jsglobal.tlb)

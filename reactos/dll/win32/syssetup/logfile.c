@@ -25,12 +25,7 @@
  */
 
 /* INCLUDES *****************************************************************/
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include <syssetup/syssetup.h>
+#include "precomp.h"
 
 /* GLOBALS ******************************************************************/
 
@@ -96,7 +91,6 @@ SYSSETUP_LogItem(IN const LPSTR lpFileName,
                  IN DWORD dwSeverity,
                  IN LPWSTR lpMessageText)
 {
-    const LPCSTR lpNewLine = "\r\n";
     LPCSTR lpSeverityString;
     LPSTR lpMessageString;
     DWORD dwMessageLength;
@@ -190,11 +184,7 @@ SYSSETUP_LogItem(IN const LPSTR lpFileName,
               NULL);
 
     /* Write newline */
-    WriteFile(hLogFile,
-              lpNewLine,
-              sizeof(lpNewLine),
-              &dwWritten,
-              NULL);
+    WriteFile(hLogFile, "\r\n", 2, &dwWritten, NULL);
 
     HeapFree(GetProcessHeap(),
              0,

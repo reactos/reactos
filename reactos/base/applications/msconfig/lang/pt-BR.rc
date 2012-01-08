@@ -1,8 +1,6 @@
-
 /*
-	Translated by:
-	   Mateus de Lima (aka wavemaster) <mateusloliveira [@] hotmail.com>
-*/
+ * Translated by: Mateus de Lima (aka wavemaster) <mateusloliveira [@] hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -10,7 +8,7 @@ IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Programa de configuraÁ„o do sistema"
+CAPTION "Programa de configura√ß√£o do sistema"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,2,2,374,195
@@ -33,7 +31,7 @@ IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON      "&Mover p/ cima", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON      "M&over p/ baixo", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
@@ -70,13 +68,13 @@ IDD_GENERAL_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "SeleÁ„o de inicializaÁ„o", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
- CONTROL "&InicializaÁ„o normal - carregar todos os drivers de dispositivo e serviÁos", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
- CONTROL "I&nicializaÁ„o de diagnÛstico - carregar apenas dispositivos e serviÁos b·sicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
- CONTROL "Ini&cializaÁ„o seletiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
+ GROUPBOX "Sele√ß√£o de inicializa√ß√£o", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
+ CONTROL "&Inicializa√ß√£o normal - carregar todos os drivers de dispositivo e servi√ßos", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
+ CONTROL "I&nicializa√ß√£o de diagn√≥stico - carregar apenas dispositivos e servi√ßos b√°sicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
+ CONTROL "Ini&cializa√ß√£o seletiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
  AUTOCHECKBOX "&Processar o arquivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
- AUTOCHECKBOX "Carr&egar serviÁos do sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
- AUTOCHECKBOX "Carregar i&tens de inicializaÁ„o", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+ AUTOCHECKBOX "Carr&egar servi√ßos do sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
+ AUTOCHECKBOX "Carregar i&tens de inicializa√ß√£o", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -84,17 +82,17 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    LISTBOX         IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-   PUSHBUTTON    "Verificar camin&hos de inicializaÁ„o", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-   PUSHBUTTON    "&Definir como padr„o", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+   PUSHBUTTON    "Verificar camin&hos de inicializa√ß√£o", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
+   PUSHBUTTON    "&Definir como padr√£o", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
    PUSHBUTTON    "Mo&ver para cima", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
    PUSHBUTTON    "Mover para bai&xo", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
-   GROUPBOX "OpÁıes de inicializaÁ„o", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
+   GROUPBOX "Op√ß√µes de inicializa√ß√£o", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "OpÁıe&s avanÁadas...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
+   PUSHBUTTON "Op√ß√µe&s avan√ßadas...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
    LTEXT "&Tempo limite:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "segundos", -1, 340, 91, 15, 10
@@ -127,18 +125,18 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_MSCONFIG             "Programa de configuraÁ„o do sistema"
+    IDS_MSCONFIG             "Programa de configura√ß√£o do sistema"
     IDS_TAB_GENERAL          "Geral"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
     IDS_TAB_FREELDR          "FREELDR.INI"
-    IDS_TAB_SERVICES         "ServiÁos"
+    IDS_TAB_SERVICES         "Servi√ßos"
     IDS_TAB_STARTUP          "Inicializar"
     IDS_TAB_TOOLS            "Ferramentas"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_COLUMN_SERVICE "ServiÁo"
+    IDS_SERVICES_COLUMN_SERVICE "Servi√ßo"
     IDS_SERVICES_COLUMN_REQ     "Essencial"
     IDS_SERVICES_COLUMN_VENDOR  "Fabricante"
     IDS_SERVICES_COLUMN_STATUS  "Status"
@@ -147,14 +145,14 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TOOLS_COLUMN_NAME    "Nome"
-    IDS_TOOLS_COLUMN_DESCR   "DescriÁ„o"
+    IDS_TOOLS_COLUMN_DESCR   "Descri√ß√£o"
 
     IDS_TOOLS_CMD_NAME       "Console"
     IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
-    IDS_TOOLS_INFO_NAME      "Vers„o"
-    IDS_TOOLS_INFO_DESCR     "Mostra informaÁ„o sobre a vers„o."
+    IDS_TOOLS_INFO_NAME      "Vers√£o"
+    IDS_TOOLS_INFO_DESCR     "Mostra informa√ß√£o sobre a vers√£o."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Editor do Registro"
@@ -162,18 +160,18 @@ BEGIN
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Propriedades do sistema"
-    IDS_TOOLS_SYSDM_DESCR    "Mostra informaÁıes sobre este computador."
+    IDS_TOOLS_SYSDM_DESCR    "Mostra informa√ß√µes sobre este computador."
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
-    IDS_STARTUP_COLUMN_ELEMENT "Item de inicializaÁ„o"
+    IDS_STARTUP_COLUMN_ELEMENT "Item de inicializa√ß√£o"
     IDS_STARTUP_COLUMN_CMD     "Comando"
     IDS_STARTUP_COLUMN_PATH    "Local"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Em execuÁ„o"
+    IDS_SERVICES_STATUS_RUNNING "Em execu√ß√£o"
     IDS_SERVICES_STATUS_STOPPED "Parado"
     IDS_SERVICES_YES "Sim"
     IDS_SERVICES_UNKNOWN "Desconhecido"

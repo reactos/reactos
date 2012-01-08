@@ -11,7 +11,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>wined3d</library>
 
 	<file>d3dx9_28_main.c</file>
 	<file>version.rc</file>

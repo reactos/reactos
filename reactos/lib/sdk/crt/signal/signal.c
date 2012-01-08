@@ -37,14 +37,14 @@ __p_sig_fn_t signal(int sig, __p_sig_fn_t func)
          break;
 
       default:
-         __set_errno(EINVAL);
+         _set_errno(EINVAL);
          return SIG_ERR;
    }
 
    // check with IsBadCodePtr
    if ( (uintptr_t)func < 4096 && func != SIG_DFL && func != SIG_IGN)
    {
-      __set_errno(EINVAL);
+      _set_errno(EINVAL);
       return SIG_ERR;
    }
 
@@ -59,7 +59,7 @@ __p_sig_fn_t signal(int sig, __p_sig_fn_t func)
    }
 
    /* should be impossible to get here */
-   __set_errno(EINVAL);
+   _set_errno(EINVAL);
    return SIG_ERR;
 }
 

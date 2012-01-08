@@ -1,4 +1,6 @@
 
+add_rpc_files(client epm.idl)
+
 list(APPEND SOURCE
     cproxy.c
     cpsf.c
@@ -20,6 +22,7 @@ list(APPEND SOURCE
     rpc_server.c
     rpc_transport.c
     unix_func.c
+    ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
@@ -35,23 +38,19 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
 spec2def(rpcrt4.dll rpcrt4.spec)
 
 add_library(rpcrt4 SHARED ${SOURCE})
-
 set_module_type(rpcrt4 win32dll)
+target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_BINARY_DIR}/include/reactos/wine)
-
-target_link_libraries(rpcrt4
-    wine
-    uuid
-    epmrpc
-    ${PSEH_LIB})
-
-add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
-add_dependencies(rpcrt4 winesdk)
+add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
+add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
 add_importlib_target(rpcrt4.spec)
+
+if(NOT MSVC)
+    allow_warnings(rpcrt4)
+endif()

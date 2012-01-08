@@ -29,4 +29,5 @@ add_importlibs(objsel
     kernel32
     ntdll)
 
+add_pch(objsel objsel_private.h)
 add_cd_file(TARGET objsel DESTINATION reactos/system32 FOR all)

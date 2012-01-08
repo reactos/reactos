@@ -77,7 +77,7 @@ FUNC _setjmp
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-ENDFUNC _setjmp
+ENDFUNC
 
 /*!
  * int _setjmpex(jmp_buf _Buf,void *_Ctx);
@@ -119,7 +119,7 @@ FUNC _setjmpex
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-ENDFUNC _setjmpex
+ENDFUNC
 
 
 /*!
@@ -164,6 +164,6 @@ FUNC longjmp
     jnz l2
     inc rax
 l2: jmp r8
-ENDFUNC longjmp
+ENDFUNC
 
 END

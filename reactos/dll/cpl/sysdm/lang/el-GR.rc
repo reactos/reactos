@@ -2,46 +2,71 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Γενικά"
+CAPTION "Ξ“ΞµΞ½ΞΉΞΊΞ¬"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT       "Σύστημα:", IDC_STATIC, 4, 132, 32, 9
+    LTEXT       "Ξ£ΟΟƒΟ„Ξ·ΞΌΞ±:", IDC_STATIC, 4, 132, 32, 9
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
-    LTEXT       "Έκδοση ", IDC_STATIC, 10, 153, 25, 9
+    LTEXT       "ΞΞΊΞ΄ΞΏΟƒΞ· ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
-    LTEXT       "Υπολογιστής:", IDC_STATIC, 124, 132, 44, 9
+    LTEXT       "Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®Ο‚:", IDC_STATIC, 124, 132, 44, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
     LTEXT       "", IDC_MACHINELINE2, 130, 153, 118, 9
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 180, 93, 8
-    PUSHBUTTON  "&Προβολή άδειας...", IDC_LICENCE, 170, 199, 78, 13
+    CONTROL     "Ξ•Ο€ΞΉΟƒΞΊΞµΟ…Ο„ΞµΞ―Ο„Ξµ Ο„Ξ·Ξ½ <A HREF=""http://www.reactos.org/"">Ξ™ΟƒΟ„ΞΏΟƒΞµΞ»Ξ―Ξ΄Ξ± Ο„ΞΏΟ… ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 180, 93, 10
+    PUSHBUTTON  "&Ξ ΟΞΏΞ²ΞΏΞ»Ξ® Ξ¬Ξ΄ΞµΞΉΞ±Ο‚...", IDC_LICENCE, 170, 199, 78, 13
 END
 
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Υλικό"
+CAPTION "Ξ¥Ξ»ΞΉΞΊΟ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Διαχείριση Συσκευών", IDC_STATIC, 6, 7, 244, 63
+    GROUPBOX    "Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞΉΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½", IDC_STATIC, 6, 7, 244, 63
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Η Διαχείριση Συσκευών προβάλλει μια λίστα με όλες τις συσκευές που είναι εγκατεστημένες στον υπολογιστή σας. Μπορείτε να χρησιμοποιήσετε τη Διαχείριση Συσκευών για να αλλάξετε τις ιδιότητες για κάθε συσκευή.", IDC_STATIC, 42, 16, 204, 33
-    PUSHBUTTON  "&Διαχείριση Συσκευών...", IDC_HARDWARE_DEVICE_MANAGER, 148, 51, 98, 15
+    LTEXT       "Ξ— Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞΉΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½ Ο€ΟΞΏΞ²Ξ¬Ξ»Ξ»ΞµΞΉ ΞΌΞΉΞ± Ξ»Ξ―ΟƒΟ„Ξ± ΞΌΞµ ΟΞ»ΞµΟ‚ Ο„ΞΉΟ‚ ΟƒΟ…ΟƒΞΊΞµΟ…Ξ­Ο‚ Ο€ΞΏΟ… ΞµΞ―Ξ½Ξ±ΞΉ ΞµΞ³ΞΊΞ±Ο„ΞµΟƒΟ„Ξ·ΞΌΞ­Ξ½ΞµΟ‚ ΟƒΟ„ΞΏΞ½ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® ΟƒΞ±Ο‚. ΞΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± Ο‡ΟΞ·ΟƒΞΉΞΌΞΏΟ€ΞΏΞΉΞ®ΟƒΞµΟ„Ξµ Ο„Ξ· Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞΉΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½ Ξ³ΞΉΞ± Ξ½Ξ± Ξ±Ξ»Ξ»Ξ¬ΞΎΞµΟ„Ξµ Ο„ΞΉΟ‚ ΞΉΞ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚ Ξ³ΞΉΞ± ΞΊΞ¬ΞΈΞµ ΟƒΟ…ΟƒΞΊΞµΟ…Ξ®.", IDC_STATIC, 42, 16, 204, 33
+    PUSHBUTTON  "&Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞΉΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½...", IDC_HARDWARE_DEVICE_MANAGER, 148, 51, 98, 15
 
-    GROUPBOX    "Οδηγός προσθήκης υλικού", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX    "ΞΞ΄Ξ·Ξ³ΟΟ‚ Ο€ΟΞΏΟƒΞΈΞ®ΞΊΞ·Ο‚ Ο…Ξ»ΞΉΞΊΞΏΟ", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Ο Οδηγός προσθήκης υλικού σας βοηθά να εγκαταστήσετε, απεγκαταστήσετε, επιδιώρθώσετε και να ρυθμίσετε υλικό.", IDC_STATIC, 42, 92, 204, 24
-    PUSHBUTTON  "&Οδηγός προσθήκης υλικού...", IDC_HARDWARE_WIZARD, 148, 120, 98, 15
+    LTEXT       "Ξ ΞΞ΄Ξ·Ξ³ΟΟ‚ Ο€ΟΞΏΟƒΞΈΞ®ΞΊΞ·Ο‚ Ο…Ξ»ΞΉΞΊΞΏΟ ΟƒΞ±Ο‚ Ξ²ΞΏΞ·ΞΈΞ¬ Ξ½Ξ± ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ®ΟƒΞµΟ„Ξµ, Ξ±Ο€ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ®ΟƒΞµΟ„Ξµ, ΞµΟ€ΞΉΞ΄ΞΉΟΟΞΈΟΟƒΞµΟ„Ξµ ΞΊΞ±ΞΉ Ξ½Ξ± ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟ„Ξµ Ο…Ξ»ΞΉΞΊΟ.", IDC_STATIC, 42, 92, 204, 24
+    PUSHBUTTON  "&ΞΞ΄Ξ·Ξ³ΟΟ‚ Ο€ΟΞΏΟƒΞΈΞ®ΞΊΞ·Ο‚ Ο…Ξ»ΞΉΞΊΞΏΟ...", IDC_HARDWARE_WIZARD, 148, 120, 98, 15
 
-    GROUPBOX    "Προφίλ υλικού", IDC_STATIC, 6, 149, 244, 61
+    GROUPBOX    "Ξ ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "Τα προφίλ υλικού σάς δίνουν τη δυνατότητα να εγκαταστήσετε και να αποθηκεύσετε ρυθμίσεις για διαφορετικές συσκευές.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&Προφίλ υλικού...", IDC_HARDWARE_PROFILE, 148, 190, 98, 15
+    LTEXT       "Ξ¤Ξ± Ο€ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ ΟƒΞ¬Ο‚ Ξ΄Ξ―Ξ½ΞΏΟ…Ξ½ Ο„Ξ· Ξ΄Ο…Ξ½Ξ±Ο„ΟΟ„Ξ·Ο„Ξ± Ξ½Ξ± ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ®ΟƒΞµΟ„Ξµ ΞΊΞ±ΞΉ Ξ½Ξ± Ξ±Ο€ΞΏΞΈΞ·ΞΊΞµΟΟƒΞµΟ„Ξµ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ξ³ΞΉΞ± Ξ΄ΞΉΞ±Ο†ΞΏΟΞµΟ„ΞΉΞΊΞ­Ο‚ ΟƒΟ…ΟƒΞΊΞµΟ…Ξ­Ο‚.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON  "&Ξ ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ...", IDC_HARDWARE_PROFILE, 148, 190, 98, 15
 END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ξ•ΞΉΞ΄ΞΉΞΊΞ­Ο‚ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Ξ ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± Ξ­Ο‡ΞµΟ„Ξµ ΟƒΟ…Ξ½Ξ΄ΞµΞΈΞµΞ― Ο‰Ο‚ Ξ΄ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ®Ο‚ Ξ³ΞΉΞ± Ο„Ξ·Ξ½ Ο€ΟΞ±Ξ³ΞΌΞ±Ο„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· Ο„Ο‰Ξ½ Ο€ΞµΟΞΉΟƒΟƒΟΟ„ΞµΟΟ‰Ξ½ Ξ±Ο€Ο Ξ±Ο…Ο„Ξ­Ο‚ Ο„ΞΉΟ‚ Ξ±Ξ»Ξ»Ξ±Ξ³Ξ­Ο‚.", IDC_STATIC, 12, 3, 236, 16
+    GROUPBOX    "Ξ•Ο€ΞΉΞ΄ΟΟƒΞµΞΉΟ‚", IDC_STATIC, 6, 20, 244, 50
+    LTEXT       "ΞΞΉ ΞµΟ€ΞΉΞ»ΞΏΞ³Ξ­Ο‚ ΞµΟ€ΞΉΞ΄ΟΟƒΞµΟ‰Ξ½ ΞµΞ»Ξ­Ξ³Ο‡ΞΏΟ…Ξ½ Ο„ΞΏΞ½ Ο„ΟΟΟ€ΞΏ Ο‡ΟΞ®ΟƒΞ·Ο‚ Ο„Ξ·Ο‚ ΞΌΞ½Ξ®ΞΌΞ·Ο‚ Ξ±Ο€Ο Ο„ΞΉΟ‚ ΞµΟ†Ξ±ΟΞΌΞΏΞ³Ξ­Ο‚ ΞµΟ€Ξ·ΟΞµΞ¬Ξ¶ΞΏΞ½Ο„Ξ±Ο‚ Ο„Ξ·Ξ½ Ο„Ξ±Ο‡ΟΟ„Ξ·Ο„Ξ± Ο„ΞΏΟ… Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®.", IDC_STATIC, 16, 29, 210, 24
+    PUSHBUTTON  "Ξ΅Ο…&ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚", IDC_PERFOR, 194, 48, 50, 15
+
+    GROUPBOX    "Ξ ΟΞΏΟ†Ξ―Ξ» Ο‡ΟΞ·ΟƒΟ„ΟΞ½", IDC_STATIC, 6,75,244,48
+    LTEXT       "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΞµΟ€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ±Ο‚ ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚ ΟƒΟ‡ΞµΟ„ΞΉΞΊΞ­Ο‚ ΞΌΞµ Ο„ΞΏΞ½ Ο‡ΟΞ®ΟƒΟ„Ξ· ΟƒΞ±Ο‚.", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON  "Ξ΅Ο…ΞΈΞΌΞ―&ΟƒΞµΞΉΟ‚", IDC_USERPROFILE, 194, 103, 50, 15
+
+    GROUPBOX    "Ξ•ΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ· ΞΊΞ±ΞΉ Ξ±Ο€ΞΏΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Ξ— Ξ•ΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ· ΞΊΞ±ΞΉ Ξ±Ο€ΞΏΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΟΟ…ΞΈΞΌΞ―Ξ¶ΞµΞΉ Ο„ΞΏ Ο€ΟΟ‚ ΞΈΞ± ΞΎΞµΞΊΞΉΞ½Ξ¬ ΞΏ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®Ο‚ Ξ±Ξ»Ξ»Ξ¬ ΞΊΞ±ΞΉ Ο„ΞΏΞ½ Ο„ΟΟΟ€ΞΏ Ξ±Ξ½Ο„ΞΉΞΌΞµΟ„ΟΟ€Ξ·ΟƒΞ·Ο‚ ΟƒΟ†Ξ±Ξ»ΞΌΞ¬Ο„Ο‰Ξ½ Ο€ΞΏΟ… ΞΈΞ± Ο„ΞΏΞ½ ΞΊΞ¬Ξ½ΞΏΟ…Ξ½ Ξ½Ξ± ΟƒΟ„Ξ±ΞΌΞ±Ο„Ξ®ΟƒΞµΞΉ.", IDC_STATIC, 16, 144, 210, 24
+    PUSHBUTTON  "Ξ΅&Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚", IDC_STAREC, 194, 162, 50, 15
+
+    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
+    PUSHBUTTON  "&ΞΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ­Ο‚ Ο€ΞµΟΞΉΞ²Ξ¬Ξ»Ξ»ΞΏΞ½Ο„ΞΏΟ‚", IDC_ENVVAR, 70, 192, 96, 15
+    PUSHBUTTON  "Ξ‘Ξ½Ξ±Ο†ΞΏ&ΟΞ¬ ΟƒΟ†Ξ±Ξ»ΞΌΞ¬Ο„Ο‰Ξ½", IDC_ERRORREPORT, 170, 192, 80, 15
+END
+
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
@@ -54,210 +79,199 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ειδικές ρυθμίσεις"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    LTEXT       "Πρέπει να έχετε συνδεθεί ως διαχειριστής για την πραγματοποίηση των περισσότερων από αυτές τις αλλαγές.", IDC_STATIC, 12, 3, 236, 16
-    GROUPBOX    "Επιδόσεις", IDC_STATIC, 6, 20, 244, 50
-    LTEXT       "Οι επιλογές επιδόσεων ελέγχουν τον τρόπο χρήσης της μνήμης από τις εφαρμογές επηρεάζοντας την ταχύτητα του υπολογιστή.", IDC_STATIC, 16, 29, 210, 24
-    PUSHBUTTON  "Ρυ&θμίσεις", IDC_PERFOR, 194, 48, 50, 15
-
-    GROUPBOX    "Προφίλ χρηστών", IDC_STATIC, 6,75,244,48
-    LTEXT       "Ρυθμίσεις επιφάνειας εργασίας σχετικές με τον χρήστη σας.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Ρυθμί&σεις", IDC_USERPROFILE, 194, 103, 50, 15
-
-    GROUPBOX    "Εκκίνηση και αποκατάσταση", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Η Εκκίνηση και αποκατάσταση ρυθμίζει το πώς θα ξεκινά ο υπολογιστής αλλά και τον τρόπο αντιμετόπησης σφαλμάτων που θα τον κάνουν να σταματήσει.", IDC_STATIC, 16, 144, 210, 24
-    PUSHBUTTON  "Ρ&υθμίσεις", IDC_STAREC, 194, 162, 50, 15
-
-    PUSHBUTTON  "&Μεταβλητές περιβάλλοντος", IDC_ENVVAR, 70, 192, 96, 15
-    PUSHBUTTON  "Αναφο&ρά σφαλμάτων", IDC_ERRORREPORT, 170, 192, 80, 15
-END
-
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Προφίλ υλικού"
+CAPTION "Ξ ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Μπορείτε να εγκαταστήσετε προφίλ για διαφορετικές παραμέτρους υλικού. Κατά την εκκίνηση, μπορείτε να επιλέξετε το προφίλ το οποίο θέλετε να χρησιμοποιήσετε.", IDC_STATIC, 46, 11, 188, 25
-    LTEXT       "Διαθέσιμα προφίλ &υλικού:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "ΞΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ®ΟƒΞµΟ„Ξµ Ο€ΟΞΏΟ†Ξ―Ξ» Ξ³ΞΉΞ± Ξ΄ΞΉΞ±Ο†ΞΏΟΞµΟ„ΞΉΞΊΞ­Ο‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο…Ξ»ΞΉΞΊΞΏΟ. ΞΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·, ΞΌΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± ΞµΟ€ΞΉΞ»Ξ­ΞΎΞµΟ„Ξµ Ο„ΞΏ Ο€ΟΞΏΟ†Ξ―Ξ» Ο„ΞΏ ΞΏΟ€ΞΏΞ―ΞΏ ΞΈΞ­Ξ»ΞµΟ„Ξµ Ξ½Ξ± Ο‡ΟΞ·ΟƒΞΉΞΌΞΏΟ€ΞΏΞΉΞ®ΟƒΞµΟ„Ξµ.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "Ξ”ΞΉΞ±ΞΈΞ­ΟƒΞΉΞΌΞ± Ο€ΟΞΏΟ†Ξ―Ξ» &Ο…Ξ»ΞΉΞΊΞΏΟ:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15
-    PUSHBUTTON  "Ι&διότητες", IDC_HRDPROFPROP, 8, 106, 50, 14
-    PUSHBUTTON  "Αντι&γραφή", IDC_HRDPROFCOPY, 63, 106, 50, 14
-    PUSHBUTTON  "&Μετονομασία", IDC_HRDPROFRENAME, 118, 106, 50, 14
-    PUSHBUTTON  "Διαγρα&φή", IDC_HRDPROFDEL, 173, 106, 50, 14
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15, BS_ICON | WS_DISABLED
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15, BS_ICON | WS_DISABLED
+    PUSHBUTTON  "Ξ™&Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON  "Ξ‘Ξ½Ο„ΞΉ&Ξ³ΟΞ±Ο†Ξ®", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON  "&ΞΞµΟ„ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ±", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON  "Ξ”ΞΉΞ±Ξ³ΟΞ±&Ο†Ξ®", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
 
-    GROUPBOX    "Επιλογή προφίλ υλικού", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Όταν ξεκινά το ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
-    //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    CONTROL     "Α&ναμονή όσπου να επιλέξω προφίλ υλικού", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 200, 8
-    CONTROL     "Επιλογή του πρώτου προφίλ στη λίστα εάν δεν επι&λέξω ένα σε", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 213, 8
-    LTEXT       "δευτερόλεπτα", IDC_STATIC, 65, 187, 47, 8
+    GROUPBOX    "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ο€ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "ΞΟ„Ξ±Ξ½ ΞΎΞµΞΊΞΉΞ½Ξ¬ Ο„ΞΏ ReactOS:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "Ξ‘&Ξ½Ξ±ΞΌΞΏΞ½Ξ® ΟΟƒΟ€ΞΏΟ… Ξ½Ξ± ΞµΟ€ΞΉΞ»Ξ­ΞΎΟ‰ Ο€ΟΞΏΟ†Ξ―Ξ» Ο…Ξ»ΞΉΞΊΞΏΟ", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
+    AUTORADIOBUTTON "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ο„ΞΏΟ… Ο€ΟΟΟ„ΞΏΟ… Ο€ΟΞΏΟ†Ξ―Ξ» ΟƒΟ„Ξ· Ξ»Ξ―ΟƒΟ„Ξ± ΞµΞ¬Ξ½ Ξ΄ΞµΞ½ ΞµΟ€ΞΉ&Ξ»Ξ­ΞΎΟ‰ Ξ­Ξ½Ξ± ΟƒΞµ", IDC_HRDPROFSELECT, 14, 173, 213, 8
+    LTEXT       "Ξ΄ΞµΟ…Ο„ΞµΟΟΞ»ΞµΟ€Ο„Ξ±", IDC_STATIC, 65, 187, 47, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 
     DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 197, 213, 50, 14
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 197, 213, 50, 14
+END
+
+
+IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Copy Profile"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
+    LTEXT        "To:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT     IDC_COPYPROFILETO, 30, 30, 160, 12
+
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON   "Cancel", IDCANCEL, 199, 30, 50, 14
 END
 
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Μετονομασία του προφίλ"
+CAPTION "ΞΞµΟ„ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± Ο„ΞΏΟ… Ο€ΟΞΏΟ†Ξ―Ξ»"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT        "Από:", IDC_STATIC, 5, 10, 20, 8
+   LTEXT        "Ξ‘Ο€Ο:", IDC_STATIC, 5, 10, 20, 8
    LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-   LTEXT        "Προς:", IDC_STATIC, 5, 30, 20, 8
+   LTEXT        "Ξ ΟΞΏΟ‚:", IDC_STATIC, 5, 30, 20, 8
    EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-   PUSHBUTTON   "Άκυρο", IDCANCEL, 196, 24, 50, 14
+   PUSHBUTTON   "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 196, 24, 50, 14
 END
 
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Προφίλ χρηστών"
+CAPTION "Ξ ΟΞΏΟ†Ξ―Ξ» Ο‡ΟΞ·ΟƒΟ„ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Στα προφίλ χρήστη αποθηκεύονται ρυθμίσεις για την επιφάνεια εργασίας και άλλες πληροφορίες σχετικές με το λογαριασμό χρήστη σας. Μπορείτε να δημιουργήσετε ένα διαφορετικό προφίλ για κάθε υπολογιστή που χρησιμοποιείτε ή μπορείτε να επιλέξετε ένα προφίλ περιαγωγής το οποίο είναι το ίδιο σε κάθε υπολογιστή που χρησιμοποιείτε.",
+    LTEXT       "Ξ£Ο„Ξ± Ο€ΟΞΏΟ†Ξ―Ξ» Ο‡ΟΞ®ΟƒΟ„Ξ· Ξ±Ο€ΞΏΞΈΞ·ΞΊΞµΟΞΏΞ½Ο„Ξ±ΞΉ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ξ³ΞΉΞ± Ο„Ξ·Ξ½ ΞµΟ€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ± ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚ ΞΊΞ±ΞΉ Ξ¬Ξ»Ξ»ΞµΟ‚ Ο€Ξ»Ξ·ΟΞΏΟ†ΞΏΟΞ―ΞµΟ‚ ΟƒΟ‡ΞµΟ„ΞΉΞΊΞ­Ο‚ ΞΌΞµ Ο„ΞΏ Ξ»ΞΏΞ³Ξ±ΟΞΉΞ±ΟƒΞΌΟ Ο‡ΟΞ®ΟƒΟ„Ξ· ΟƒΞ±Ο‚. ΞΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ®ΟƒΞµΟ„Ξµ Ξ­Ξ½Ξ± Ξ΄ΞΉΞ±Ο†ΞΏΟΞµΟ„ΞΉΞΊΟ Ο€ΟΞΏΟ†Ξ―Ξ» Ξ³ΞΉΞ± ΞΊΞ¬ΞΈΞµ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® Ο€ΞΏΟ… Ο‡ΟΞ·ΟƒΞΉΞΌΞΏΟ€ΞΏΞΉΞµΞ―Ο„Ξµ Ξ® ΞΌΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± ΞµΟ€ΞΉΞ»Ξ­ΞΎΞµΟ„Ξµ Ξ­Ξ½Ξ± Ο€ΟΞΏΟ†Ξ―Ξ» Ο€ΞµΟΞΉΞ±Ξ³Ο‰Ξ³Ξ®Ο‚ Ο„ΞΏ ΞΏΟ€ΞΏΞ―ΞΏ ΞµΞ―Ξ½Ξ±ΞΉ Ο„ΞΏ Ξ―Ξ΄ΞΉΞΏ ΟƒΞµ ΞΊΞ¬ΞΈΞµ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® Ο€ΞΏΟ… Ο‡ΟΞ·ΟƒΞΉΞΌΞΏΟ€ΞΏΞΉΞµΞ―Ο„Ξµ.",
                     IDC_STATIC, 40, 3, 204, 40
-    LTEXT       "Απο&θηκευμένα προφίλ σε αυτόν τον υπολογιστή:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT       "Ξ‘Ο€ΞΏ&ΞΈΞ·ΞΊΞµΟ…ΞΌΞ­Ξ½Ξ± Ο€ΟΞΏΟ†Ξ―Ξ» ΟƒΞµ Ξ±Ο…Ο„ΟΞ½ Ο„ΞΏΞ½ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Α&λλαγή τύπου", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
-    PUSHBUTTON  "Διαγρα&φή", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
-    PUSHBUTTON  "&Αντιγραφή σε", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+    PUSHBUTTON  "Ξ‘&Ξ»Ξ»Ξ±Ξ³Ξ® Ο„ΟΟ€ΞΏΟ…", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
+    PUSHBUTTON  "Ξ”ΞΉΞ±Ξ³ΟΞ±&Ο†Ξ®", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
+    PUSHBUTTON  "&Ξ‘Ξ½Ο„ΞΉΞ³ΟΞ±Ο†Ξ® ΟƒΞµ", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
-    CONTROL     "Για τη δημιουργία νέων λογαριασμών χρηστών, ανοίξτε το εικονίδιο <A>Λογαριασμοί χρηστών</A> του Πίνακα Ελέγχου", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 228, 16
+    CONTROL     "Ξ“ΞΉΞ± Ο„Ξ· Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± Ξ½Ξ­Ο‰Ξ½ Ξ»ΞΏΞ³Ξ±ΟΞΉΞ±ΟƒΞΌΟΞ½ Ο‡ΟΞ·ΟƒΟ„ΟΞ½, Ξ±Ξ½ΞΏΞ―ΞΎΟ„Ξµ Ο„ΞΏ ΞµΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞΏ <A>Ξ›ΞΏΞ³Ξ±ΟΞΉΞ±ΟƒΞΌΞΏΞ― Ο‡ΟΞ·ΟƒΟ„ΟΞ½</A> Ο„ΞΏΟ… Ξ Ξ―Ξ½Ξ±ΞΊΞ± Ξ•Ξ»Ξ­Ξ³Ο‡ΞΏΟ…", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 228, 16
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 196, 200, 54, 13
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 196, 200, 54, 13
 END
 
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εκκίνηση και αποκατάσταση"
+CAPTION "Ξ•ΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ· ΞΊΞ±ΞΉ Ξ±Ο€ΞΏΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX    "Εκκίνηση συστήματος", IDC_STATIC, 7, 12, 238, 95
-    LTEXT       "Προεπιλεγμένο λειτουργικό &σύστημα:", IDC_STATIC, 14, 26, 100, 8
+    GROUPBOX    "Ξ•ΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ· ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚", IDC_STATIC, 7, 12, 238, 95
+    LTEXT       "Ξ ΟΞΏΞµΟ€ΞΉΞ»ΞµΞ³ΞΌΞ­Ξ½ΞΏ Ξ»ΞµΞΉΟ„ΞΏΟ…ΟΞ³ΞΉΞΊΟ &ΟƒΟΟƒΟ„Ξ·ΞΌΞ±:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    //CHECKBOX    "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
-    CONTROL     "Διάρκεια προβο&λής λίστας :", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
+    AUTOCHECKBOX "Ξ”ΞΉΞ¬ΟΞΊΞµΞΉΞ± Ο€ΟΞΏΞ²ΞΏ&Ξ»Ξ®Ο‚ Ξ»Ξ―ΟƒΟ„Ξ±Ο‚ :", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "δευτ.", IDC_STATIC, 215, 56, 25, 8
-    CONTROL     "Διάρκεια προ&βολής επιλογών αποκατάστασης:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
+    LTEXT       "Ξ΄ΞµΟ…Ο„.", IDC_STATIC, 215, 56, 25, 8
+    AUTOCHECKBOX "Ξ”ΞΉΞ¬ΟΞΊΞµΞΉΞ± Ο€ΟΞΏ&Ξ²ΞΏΞ»Ξ®Ο‚ ΞµΟ€ΞΉΞ»ΞΏΞ³ΟΞ½ Ξ±Ο€ΞΏΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·Ο‚:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "δευτ.", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Για μη αυτόματη επεξεργασία των επιλογών εκκίνησης, κάντε κλικ στο κουμπί Επεξεργασία.", IDC_STATIC, 14, 89, 187, 8
-    PUSHBUTTON  "Επε&ξεργασία", IDC_STRRECEDIT, 188, 87, 50, 14
+    LTEXT       "Ξ΄ΞµΟ…Ο„.", IDC_STATIC, 215, 70, 25, 8
+    LTEXT       "Ξ“ΞΉΞ± ΞΌΞ· Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ· ΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± Ο„Ο‰Ξ½ ΞµΟ€ΞΉΞ»ΞΏΞ³ΟΞ½ ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·Ο‚, ΞΊΞ¬Ξ½Ο„Ξµ ΞΊΞ»ΞΉΞΊ ΟƒΟ„ΞΏ ΞΊΞΏΟ…ΞΌΟ€Ξ― Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±.", IDC_STATIC, 14, 89, 187, 8
+    PUSHBUTTON  "Ξ•Ο€Ξµ&ΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±", IDC_STRRECEDIT, 188, 87, 50, 14
 
-    GROUPBOX    "Αποτυχία συστήματος", IDC_STATIC, 7, 111, 238, 140
-    CONTROL     "Εγγραφή του συμβάντος στο αρχείο &καταγραφής συστήματος", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 158, 10
-    CONTROL     "&Αποστολή ειδοποίησης διαχειριστή", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
-    CONTROL     "Α&υτόματη επανεκκίνηση", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
-
-    GROUPBOX    "Εγγραφή πληροφοριών εντοπισμού σφαλμάτων", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Ξ‘Ο€ΞΏΟ„Ο…Ο‡Ξ―Ξ± ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "Ξ•Ξ³Ξ³ΟΞ±Ο†Ξ® Ο„ΞΏΟ… ΟƒΟ…ΞΌΞ²Ξ¬Ξ½Ο„ΞΏΟ‚ ΟƒΟ„ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ &ΞΊΞ±Ο„Ξ±Ξ³ΟΞ±Ο†Ξ®Ο‚ ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚", IDC_STRRECWRITEEVENT, 14, 124, 158, 10
+    AUTOCHECKBOX "&Ξ‘Ο€ΞΏΟƒΟ„ΞΏΞ»Ξ® ΞµΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚ Ξ΄ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ®", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "Ξ‘&Ο…Ο„ΟΞΌΞ±Ο„Ξ· ΞµΟ€Ξ±Ξ½ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·", IDC_STRRECRESTART, 14, 152, 145, 10
+    GROUPBOX    "Ξ•Ξ³Ξ³ΟΞ±Ο†Ξ® Ο€Ξ»Ξ·ΟΞΏΟ†ΞΏΟΞΉΟΞ½ ΞµΞ½Ο„ΞΏΟ€ΞΉΟƒΞΌΞΏΟ ΟƒΟ†Ξ±Ξ»ΞΌΞ¬Ο„Ο‰Ξ½", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT       "Αρχείο έν&δειξης σφαλμάτων:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT       "Ξ‘ΟΟ‡ΞµΞ―ΞΏ Ξ­Ξ½&Ξ΄ΞµΞΉΞΎΞ·Ο‚ ΟƒΟ†Ξ±Ξ»ΞΌΞ¬Ο„Ο‰Ξ½:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    CONTROL     "Α&ντικατάσταση κάθε αρχείου", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
+    AUTOCHECKBOX "Ξ‘&Ξ½Ο„ΞΉΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΊΞ¬ΞΈΞµ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 195, 259, 50, 14
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 195, 259, 50, 14
 END
 
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εικονική μνήμη"
+CAPTION "Ξ•ΞΉΞΊΞΏΞ½ΞΉΞΊΞ® ΞΌΞ½Ξ®ΞΌΞ·"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Μονάδα  [Ετικέτα τόμου]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Μέγεθος αρχείου σελιδοποίησης (σε MB)", IDC_STATIC, 105, 5, 106, 9
-    CONTROL     "", IDC_PAGEFILELIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP,  10, 16, 204, 52, WS_EX_CLIENTEDGE
-    GROUPBOX    "Μέγεθος αρχείου σελιδοποίησης μνήμης", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Μονάδα δίσκου:", IDC_STATIC, 20, 80, 35, 8
+    LTEXT       "ΞΞΏΞ½Ξ¬Ξ΄Ξ±  [Ξ•Ο„ΞΉΞΊΞ­Ο„Ξ± Ο„ΟΞΌΞΏΟ…]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT       "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… ΟƒΞµΞ»ΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚ (ΟƒΞµ MB)", IDC_STATIC, 105, 5, 106, 9
+    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX    "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… ΟƒΞµΞ»ΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚ ΞΌΞ½Ξ®ΞΌΞ·Ο‚", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "ΞΞΏΞ½Ξ¬Ξ΄Ξ± Ξ΄Ξ―ΟƒΞΊΞΏΟ…:", IDC_STATIC, 20, 80, 35, 8
     LTEXT       "", IDC_DRIVE, 90, 81, 100, 9
-    LTEXT       "Διαθέσιμος χώρος:", IDC_STATIC, 20, 92, 66, 9
+    LTEXT       "Ξ”ΞΉΞ±ΞΈΞ­ΟƒΞΉΞΌΞΏΟ‚ Ο‡ΟΟΞΏΟ‚:", IDC_STATIC, 20, 92, 66, 9
     LTEXT       "", IDC_SPACEAVAIL, 90, 92, 104, 9
-    LTEXT       "&Αρχικό μέγεθος (MB):", -1, 22, 118, 68, 9
-    LTEXT       "Μέγιστο μέ&γεθος (MB):", -1, 22, 131, 68, 9
-    CONTROL     "&Προσαρμογή μεγέ&θους", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
-    CONTROL     "Δια&χείριση μεγέθους από το σύστημα", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
-    CONTROL     "Χωρίς αρχείο σε&λιδοποίησης", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 106,9
+    LTEXT       "&Ξ‘ΟΟ‡ΞΉΞΊΟ ΞΌΞ­Ξ³ΞµΞΈΞΏΟ‚ (MB):", -1, 22, 118, 68, 9
+    LTEXT       "ΞΞ­Ξ³ΞΉΟƒΟ„ΞΏ ΞΌΞ­&Ξ³ΞµΞΈΞΏΟ‚ (MB):", -1, 22, 131, 68, 9
+    AUTORADIOBUTTON "&Ξ ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ® ΞΌΞµΞ³Ξ­&ΞΈΞΏΟ…Ο‚", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "Ξ”ΞΉΞ±&Ο‡ΞµΞ―ΟΞΉΟƒΞ· ΞΌΞµΞ³Ξ­ΞΈΞΏΟ…Ο‚ Ξ±Ο€Ο Ο„ΞΏ ΟƒΟΟƒΟ„Ξ·ΞΌΞ±", IDC_SYSMANSIZE, 20, 145, 100, 9
+    AUTORADIOBUTTON "Ξ§Ο‰ΟΞ―Ο‚ Ξ±ΟΟ‡ΞµΞ―ΞΏ ΟƒΞµ&Ξ»ΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚", IDC_NOPAGEFILE, 20, 158, 106, 9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Ορισμός", IDC_SET, 158, 155, 50, 13
+    PUSHBUTTON  "&ΞΟΞΉΟƒΞΌΟΟ‚", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Συνολικό μέγεθος αρχείου σελιδοποίησης", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Ελάχιστο επιτρεπόμενο:", IDC_STATIC, 18, 188, 68, 9
+    GROUPBOX    "Ξ£Ο…Ξ½ΞΏΞ»ΞΉΞΊΟ ΞΌΞ­Ξ³ΞµΞΈΞΏΟ‚ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… ΟƒΞµΞ»ΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "Ξ•Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏ ΞµΟ€ΞΉΟ„ΟΞµΟ€ΟΞΌΞµΞ½ΞΏ:", IDC_STATIC, 18, 188, 68, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 110, 9
-    LTEXT       "Προτείνεται:", IDC_STATIC, 18, 199, 52, 9
+    LTEXT       "Ξ ΟΞΏΟ„ΞµΞ―Ξ½ΞµΟ„Ξ±ΞΉ:", IDC_STATIC, 18, 199, 52, 9
     LTEXT       "", IDC_RECOMMENDED, 88, 197, 110, 9
-    LTEXT       "Τρέχον μέγεθος:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "Ξ¤ΟΞ­Ο‡ΞΏΞ½ ΞΌΞ­Ξ³ΞµΞΈΞΏΟ‚:", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 88, 208, 110, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 168, 232, 48, 13
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 168, 232, 48, 13
 END
 
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Μεταβλητές περιβάλλοντος"
+CAPTION "ΞΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ­Ο‚ Ο€ΞµΟΞΉΞ²Ξ¬Ξ»Ξ»ΞΏΞ½Ο„ΞΏΟ‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Μεταβλητές χρήστη", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX    "ΞΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ­Ο‚ Ο‡ΟΞ®ΟƒΟ„Ξ·", IDC_STATIC, 7, 12, 238, 100
 
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Δημιουργία...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
-    PUSHBUTTON  "Επε&ξεργασία...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
-    PUSHBUTTON  "Διαγρα&φή", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX    "&Μεταβλητές συστήματος", IDC_STATIC, 7, 116, 238, 100
+    PUSHBUTTON  "&Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ±...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
+    PUSHBUTTON  "Ξ•Ο€Ξµ&ΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON  "Ξ”ΞΉΞ±Ξ³ΟΞ±&Ο†Ξ®", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    GROUPBOX    "&ΞΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ­Ο‚ ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚", IDC_STATIC, 7, 116, 238, 100
 
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Δ&ημιουργία...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
-    PUSHBUTTON  "&Επεξεργασία...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
-    PUSHBUTTON  "Διαγ&ραφή", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    PUSHBUTTON  "Ξ”&Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ±...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
+    PUSHBUTTON  "&Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON  "Ξ”ΞΉΞ±Ξ³&ΟΞ±Ο†Ξ®", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
     DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 195, 224, 50, 14
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 195, 224, 50, 14
 END
 
 
 IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Επεξεργασία μεταβλητής"
+CAPTION "Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®Ο‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Όνομα μεταβλητής:", IDC_STATIC, 5, 14, 65, 8
+    LTEXT       "ΞΞ½ΞΏΞΌΞ± ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®Ο‚:", IDC_STATIC, 5, 14, 65, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "Τιμή μεταβλητής:", IDC_STATIC, 5, 32, 60, 8
+    LTEXT       "Ξ¤ΞΉΞΌΞ® ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®Ο‚:", IDC_STATIC, 5, 32, 60, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON  "Άκυρο", IDCANCEL, 170, 50, 50, 14
+    PUSHBUTTON  "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 170, 50, 50, 14
 END
 
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
-CAPTION "Άδεια"
+CAPTION "Ξ†Ξ΄ΞµΞΉΞ±"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE DS_SHELLFONT | WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
@@ -268,26 +282,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Σύστημα"
-    IDS_CPLSYSTEMDESCRIPTION "Δείτε πληροφορίες για το σύστημα του υπολογιστή σας και αλλάξτε ρυθμίσεις υλικού, επιδόσεων και αυτόματης ενημέρωσης."
-    IDS_MEGABYTE "MB μνήμης RAM"
-    IDS_GIGABYTE "GB μνήμης RAM"
-    IDS_TERABYTE "TB μνήμης RAM"
-    IDS_PETABYTE "PB μνήμης RAM"
-    IDS_VARIABLE "Μεταβλητή"
-    IDS_VALUE    "Τιμή"
-    IDS_NO_DUMP "(Κανένα)"
-    IDS_MINI_DUMP "Ένδειξη μειωμένης μνήμης(64KB)"
-    IDS_KERNEL_DUMP "Ένδειξη μνήμης πυρήνα"
-    IDS_FULL_DUMP "Ένδειξη πλήρους μνήμης"
-    IDS_USERPROFILE_NAME "Όνομα"
-    IDS_USERPROFILE_SIZE "Μέγεθος"
-    IDS_USERPROFILE_TYPE "Τύπος"
-    IDS_USERPROFILE_STATUS "Κατάσταση"
-    IDS_USERPROFILE_MODIFIED "Τροποποιήθηκε"
+    IDS_CPLSYSTEMNAME "Ξ£ΟΟƒΟ„Ξ·ΞΌΞ±"
+    IDS_CPLSYSTEMDESCRIPTION "Ξ”ΞµΞ―Ο„Ξµ Ο€Ξ»Ξ·ΟΞΏΟ†ΞΏΟΞ―ΞµΟ‚ Ξ³ΞΉΞ± Ο„ΞΏ ΟƒΟΟƒΟ„Ξ·ΞΌΞ± Ο„ΞΏΟ… Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® ΟƒΞ±Ο‚ ΞΊΞ±ΞΉ Ξ±Ξ»Ξ»Ξ¬ΞΎΟ„Ξµ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ο…Ξ»ΞΉΞΊΞΏΟ, ΞµΟ€ΞΉΞ΄ΟΟƒΞµΟ‰Ξ½ ΞΊΞ±ΞΉ Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ·Ο‚ ΞµΞ½Ξ·ΞΌΞ­ΟΟ‰ΟƒΞ·Ο‚."
+    IDS_MEGABYTE "MB ΞΌΞ½Ξ®ΞΌΞ·Ο‚ RAM"
+    IDS_GIGABYTE "GB ΞΌΞ½Ξ®ΞΌΞ·Ο‚ RAM"
+    IDS_TERABYTE "TB ΞΌΞ½Ξ®ΞΌΞ·Ο‚ RAM"
+    IDS_PETABYTE "PB ΞΌΞ½Ξ®ΞΌΞ·Ο‚ RAM"
+    IDS_VARIABLE "ΞΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®"
+    IDS_VALUE    "Ξ¤ΞΉΞΌΞ®"
+    IDS_NO_DUMP "(ΞΞ±Ξ½Ξ­Ξ½Ξ±)"
+    IDS_MINI_DUMP "ΞΞ½Ξ΄ΞµΞΉΞΎΞ· ΞΌΞµΞΉΟ‰ΞΌΞ­Ξ½Ξ·Ο‚ ΞΌΞ½Ξ®ΞΌΞ·Ο‚(64KB)"
+    IDS_KERNEL_DUMP "ΞΞ½Ξ΄ΞµΞΉΞΎΞ· ΞΌΞ½Ξ®ΞΌΞ·Ο‚ Ο€Ο…ΟΞ®Ξ½Ξ±"
+    IDS_FULL_DUMP "ΞΞ½Ξ΄ΞµΞΉΞΎΞ· Ο€Ξ»Ξ®ΟΞΏΟ…Ο‚ ΞΌΞ½Ξ®ΞΌΞ·Ο‚"
+    IDS_USERPROFILE_NAME "ΞΞ½ΞΏΞΌΞ±"
+    IDS_USERPROFILE_SIZE "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚"
+    IDS_USERPROFILE_TYPE "Ξ¤ΟΟ€ΞΏΟ‚"
+    IDS_USERPROFILE_STATUS "ΞΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·"
+    IDS_USERPROFILE_MODIFIED "Ξ¤ΟΞΏΟ€ΞΏΟ€ΞΏΞΉΞ®ΞΈΞ·ΞΊΞµ"
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
     IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
+    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervΓ© Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas BlΓΌmel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGΓ© van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
 END

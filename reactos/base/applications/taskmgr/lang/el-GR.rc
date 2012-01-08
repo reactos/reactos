@@ -1,76 +1,66 @@
-/////////////////////////////////////////////////////////////////////////////
 // Greek (GR) resources by Dj Apal
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
-    POPUP "&Αρχείο"
+    POPUP "&Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
     BEGIN
-        MENUITEM "&Νέα Διεργασία (Εκτέλεση...)",           ID_FILE_NEW
+        MENUITEM "&ΞΞ­Ξ± Ξ”ΞΉΞµΟΞ³Ξ±ΟƒΞ―Ξ± (Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·...)",           ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος από τον Διαχειριστή Διεργασιών", ID_FILE_EXIT
+        MENUITEM "Ξ&ΞΎΞΏΞ΄ΞΏΟ‚ Ξ±Ο€Ο Ο„ΞΏΞ½ Ξ”ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ® Ξ”ΞΉΞµΟΞ³Ξ±ΟƒΞΉΟΞ½", ID_FILE_EXIT
     END
-    POPUP "&Επιλογές"
+    POPUP "&Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚"
     BEGIN
-        MENUITEM "&Πάντα Μπροστά",                    ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Ξ Ξ¬Ξ½Ο„Ξ± ΞΟ€ΟΞΏΟƒΟ„Ξ¬",                    ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "&Σμίκρυνση κατά τη Χρήση",          ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "&Ξ£ΞΌΞ―ΞΊΟΟ…Ξ½ΟƒΞ· ΞΊΞ±Ο„Ξ¬ Ο„Ξ· Ξ§ΟΞ®ΟƒΞ·",          ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Απόκρυψη όταν είναι σε Σμίκρυνση", ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Ξ‘Ο€ΟΞΊΟΟ…ΟΞ· ΟΟ„Ξ±Ξ½ ΞµΞ―Ξ½Ξ±ΞΉ ΟƒΞµ Ξ£ΞΌΞ―ΞΊΟΟ…Ξ½ΟƒΞ·", ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "&Εμφάνιση 16-bit διεργασιών",       ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ· 16-bit Ξ΄ΞΉΞµΟΞ³Ξ±ΟƒΞΉΟΞ½",       ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·"
     BEGIN
-        MENUITEM "&Ανανέωση Τώρα",                ID_VIEW_REFRESH
-        POPUP "&Ανανέωση Ταχύτητας"
+        MENUITEM "&Ξ‘Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ· Ξ¤ΟΟΞ±",                ID_VIEW_REFRESH
+        POPUP "&Ξ‘Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ· Ξ¤Ξ±Ο‡ΟΟ„Ξ·Ο„Ξ±Ο‚"
         BEGIN
-            MENUITEM "&Υψηλή",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "&Κανονική",                    ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "&Ξ¥ΟΞ·Ξ»Ξ®",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&ΞΞ±Ξ½ΞΏΞ½ΞΉΞΊΞ®",                    ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "&Χαμηλή",                      ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Σε Διακοπή",                  ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "&Ξ§Ξ±ΞΌΞ·Ξ»Ξ®",                      ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Ξ£Ξµ Ξ”ΞΉΞ±ΞΊΞΏΟ€Ξ®",                  ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "Με&γάλα Εικονίδια",           ID_VIEW_LARGE
-        MENUITEM "Μι&κρά Εικονίδια",            ID_VIEW_SMALL
-        MENUITEM "&Λεπτομέρειες",               ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Επιλογή Στηλών...",          ID_VIEW_SELECTCOLUMNS
-        POPUP "&Ιστορικό Επεξεργαστή"
+        MENUITEM "ΞΞµ&Ξ³Ξ¬Ξ»Ξ± Ξ•ΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞ±",           ID_VIEW_LARGE
+        MENUITEM "ΞΞΉ&ΞΊΟΞ¬ Ξ•ΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞ±",            ID_VIEW_SMALL
+        MENUITEM "&Ξ›ΞµΟ€Ο„ΞΏΞΌΞ­ΟΞµΞΉΞµΟ‚",               ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ξ£Ο„Ξ·Ξ»ΟΞ½...",          ID_VIEW_SELECTCOLUMNS
+        POPUP "&Ξ™ΟƒΟ„ΞΏΟΞΉΞΊΟ Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΟ„Ξ®"
         BEGIN
             MENUITEM "&One Graph, All CPUs",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
             MENUITEM "One Graph &Per CPU",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "&Εμφάνιση Χρόνων Επεξεργαστή",    ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ· Ξ§ΟΟΞ½Ο‰Ξ½ Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΟ„Ξ®",    ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Παράθυρα"
+    POPUP "&Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞ±"
     BEGIN
         MENUITEM "Tile &Horizontally",          ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Tile &Vertically",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Σμίκρυνση",                  ID_WINDOWS_MINIMIZE
-        MENUITEM "Με&γέθυνση",                  ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Ξ£ΞΌΞ―ΞΊΟΟ…Ξ½ΟƒΞ·",                  ID_WINDOWS_MINIMIZE
+        MENUITEM "ΞΞµ&Ξ³Ξ­ΞΈΟ…Ξ½ΟƒΞ·",                  ID_WINDOWS_MAXIMIZE
         MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
         MENUITEM "&Bring To Front",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "&Βοήθεια"
+    POPUP "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
     BEGIN
-        MENUITEM "Θέματα &Βοήθειας του Διαχειριστή Διεργασιών",   ID_HELP_TOPICS
+        MENUITEM "ΞΞ­ΞΌΞ±Ο„Ξ± &Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±Ο‚ Ο„ΞΏΟ… Ξ”ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ® Ξ”ΞΉΞµΟΞ³Ξ±ΟƒΞΉΟΞ½",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετικά με τον Διαχειριστή Διεργασιών",         ID_HELP_ABOUT
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ Ξ”ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ® Ξ”ΞΉΞµΟΞ³Ξ±ΟƒΞΉΟΞ½",         ID_HELP_ABOUT
     END
 END
 
@@ -245,10 +235,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU Usage History",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Memory Usage History",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "MEM Usage Display",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "MEM Usage Display",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU Usage History",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "MEM Usage History",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -653,20 +641,3 @@ BEGIN
     IDS_Not_Responding            "Not Responding"
     IDS_Running                   "Running"
 END
-
-
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

@@ -1,4 +1,3 @@
-#include "resource.h"
 /*
  * Hungarian resource file for ntvdm
  * Moved all hardcoded strings to En.rc.

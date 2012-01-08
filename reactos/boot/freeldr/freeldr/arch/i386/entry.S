@@ -19,6 +19,7 @@
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
 
 EXTERN _BootMain:PROC
 EXTERN _InitIdt:PROC
@@ -70,8 +71,22 @@ _FrldrStartup:
     /* Initialize the idt */
     call _InitIdt
 
+#ifndef _USE_ML
+    /* Clean out bss */
+    xor eax, eax
+    mov edi, offset __bss_start__
+    mov ecx, offset __bss_end__ + 3
+    sub ecx, edi
+    shr ecx, 2
+    rep stosd
+
+    /* Pass the command line to BootMain */
+    mov eax, offset cmdline
+#else
+    xor eax, eax
+#endif
+
 	/* GO! */
-	xor eax, eax
 	push eax
 	call _BootMain
 
@@ -110,7 +125,7 @@ _Int386:
     /* Copy input registers */
     mov esi, dword ptr [Int386_regsin]
     mov edi, BSS_RegisterSet
-    mov ecx, 9
+    mov ecx, REGS_SIZE / 4
     rep movsd
 
     /* Set the function ID */
@@ -125,7 +140,7 @@ Int386_return:
     /* Copy output registers */
     mov esi, BSS_RegisterSet
     mov edi, dword ptr [Int386_regsout]
-    mov ecx, 9
+    mov ecx, REGS_SIZE / 4
     rep movsd
 
     popa

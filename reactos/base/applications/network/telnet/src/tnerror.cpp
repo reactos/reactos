@@ -42,13 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tnerror.h"
-#include "ttelhndl.h"			// Paul Brannan 5/25/98
-#include "tnconfig.h"		// Paul Brannan 5/25/98
-#include <time.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
+#include "precomp.h"
 
 #ifndef LANG_USER_DEFAULT
 #define LANG_USER_DEFAULT 400

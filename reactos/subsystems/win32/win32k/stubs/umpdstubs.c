@@ -4,7 +4,7 @@
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
 BOOL
-//APIENTRY
+APIENTRY
 NtGdiUMPDEngFreeUserMem(
     IN KERNEL_PVOID *ppv)
 {
@@ -13,7 +13,7 @@ NtGdiUMPDEngFreeUserMem(
 }
 
 BOOL
-//APIENTRY
+APIENTRY
 NtGdiSetPUMPDOBJ(
     IN HUMPD humpd,
     IN BOOL bStoreID,
@@ -62,7 +62,7 @@ NtGdiBRUSHOBJ_ulGetBrushColor(
 }
 
 BOOL
-//APIENTRY
+APIENTRY
 NtGdiBRUSHOBJ_DeleteRbrush(
     IN BRUSHOBJ *pbo,
     IN BRUSHOBJ *pboB)

@@ -15,7 +15,7 @@
 
 .code64
 
-/* 
+/*
  * VOID NTAPI
  * RtlCaptureContext(
  *     PCONTEXT ContextRecord); <rcx>
@@ -96,7 +96,7 @@ PUBLIC RtlCaptureContext
     /* Cleanup stack and return */
     add rsp, 8
     ret
-.ENDP RtlCaptureContext
+.ENDP
 
 END
 

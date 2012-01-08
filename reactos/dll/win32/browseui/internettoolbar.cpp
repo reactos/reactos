@@ -22,20 +22,7 @@
 Implements a class that knows how to hold and manage the menu band, brand band,
 toolbar, and address band for an explorer window
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <exdisp.h>
-#include <exdispid.h>
-#include <objbase.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "internettoolbar.h"
+#include "precomp.h"
 
 // navigation controls and menubar just send a message to parent window
 /*
@@ -148,6 +135,8 @@ CDockSite::CDockSite()
 	fToolbar = NULL;
 	fRebarWindow = NULL;
 	fChildWindow = NULL;
+	fBandID = 0;
+	fFlags = 0;
 	fInitialized = false;
 	memset(&fDeskBandInfo, 0, sizeof(fDeskBandInfo));
 }
@@ -163,7 +152,6 @@ HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser
 	CComPtr<IDeskBand>						deskBand;
 	TCHAR									textBuffer[40];
 	REBARBANDINFOW							bandInfo;
-	int										bandCount;
 	HRESULT									hResult;
 
 	hResult = containedBand->QueryInterface(IID_IObjectWithSite, (void **)&site);
@@ -193,7 +181,7 @@ HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser
 	bandInfo.cch = sizeof(textBuffer) / sizeof(TCHAR);
 	hResult = GetRBBandInfo(bandInfo);
 
-	bandCount = (int)SendMessage(fRebarWindow, RB_GETBANDCOUNT, 0, 0);
+	SendMessage(fRebarWindow, RB_GETBANDCOUNT, 0, 0);
 	SendMessage(fRebarWindow, RB_INSERTBANDW, -1, (LPARAM)&bandInfo);
 	fInitialized = true;
 	return S_OK;

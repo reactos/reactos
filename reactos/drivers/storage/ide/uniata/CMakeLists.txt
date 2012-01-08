@@ -1,5 +1,7 @@
 
-include_directories(inc)
+include_directories(
+    BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
+    inc)
 
 #add_definitions(-D_DEBUG)
 
@@ -17,7 +19,8 @@ add_library(uniata SHARED
     idedma.rc
     ros_glue/ros_glue.cpp)
 
+allow_warnings(uniata)
+add_pch(uniata stdafx.h)
 set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)
-
 add_cd_file(TARGET uniata DESTINATION reactos/system32/drivers NO_CAB FOR all)

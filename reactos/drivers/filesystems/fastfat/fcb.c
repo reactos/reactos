@@ -29,7 +29,8 @@ static ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
 	PWCHAR curr;
 	register WCHAR c;
 
-	ASSERT(NameU->Buffer[0] != L'.');
+	// LFN could start from "."
+	//ASSERT(NameU->Buffer[0] != L'.');
 	curr = NameU->Buffer;
 	last = NameU->Buffer + NameU->Length / sizeof(WCHAR);
 
@@ -603,8 +604,7 @@ vfatDirFindFile (
 		DPRINT ("  Index:%d  longName:%wZ\n",
 			DirContext.DirIndex,
 			&DirContext.LongNameU);
-		DirContext.LongNameU.Buffer[DirContext.LongNameU.Length / sizeof(WCHAR)] = 0;
-		DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
+
 		if (!ENTRY_VOLUME(pDeviceExt, &DirContext.DirEntry))
 		{
 			FoundLong = RtlEqualUnicodeString(FileToFindU, &DirContext.LongNameU, TRUE);

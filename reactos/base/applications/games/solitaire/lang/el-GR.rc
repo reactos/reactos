@@ -12,18 +12,18 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Επιλογές"
+CAPTION "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Κάρτες", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Ρίξε Έ&να", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Ρίξε &Τρία", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "ΞΞ¬ΟΟ„ΞµΟ‚", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "Ξ΅Ξ―ΞΎΞµ Ξ&Ξ½Ξ±", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Ξ΅Ξ―ΞΎΞµ &Ξ¤ΟΞ―Ξ±", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Εμφάνιση Ώρας", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Γ&ραμμή κατάστασης", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ· ΞΟΞ±Ο‚", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Ξ“&ΟΞ±ΞΌΞΌΞ® ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·Ο‚", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Ακύρωση", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "Ξ‘ΞΊΟΟΟ‰ΟƒΞ·", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
@@ -36,7 +36,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -52,10 +52,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Πασιέντζα"
+    IDS_SOL_NAME    "Ξ Ξ±ΟƒΞΉΞ­Ξ½Ο„Ξ¶Ξ±"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Τερματισμός του πιαχνιδιού αυτού;"
-    IDS_SOL_WIN     "Συγχαρητήρια, κερδίσατε!!"
+    IDS_SOL_QUIT    "Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚ Ο„ΞΏΟ… Ο€ΞΉΞ±Ο‡Ξ½ΞΉΞ΄ΞΉΞΏΟ Ξ±Ο…Ο„ΞΏΟ;"
+    IDS_SOL_WIN     "Ξ£Ο…Ξ³Ο‡Ξ±ΟΞ·Ο„Ξ®ΟΞΉΞ±, ΞΊΞµΟΞ΄Ξ―ΟƒΞ±Ο„Ξµ!!"
     IDS_SOL_DEAL    "Deal again?"
 END
 
@@ -64,19 +64,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Παιχνίδι"
+    POPUP "&Ξ Ξ±ΞΉΟ‡Ξ½Ξ―Ξ΄ΞΉ"
     BEGIN
         MENUITEM "&Deal\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "De&ck...",                    IDM_GAME_DECK
-        MENUITEM "&Επιλογές...",                IDM_GAME_OPTIONS
+        MENUITEM "&Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚...",                IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος",                     IDM_GAME_EXIT
+        MENUITEM "Ξ&ΞΎΞΏΞ΄ΞΏΟ‚",                     IDM_GAME_EXIT
     END
-    POPUP "&Βοήθεια"
+    POPUP "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
     BEGIN
-        MENUITEM "&Περιεχόμενα\tF1",            IDM_HELP_CONTENTS
-        MENUITEM "&Σχετικά",                    IDM_HELP_ABOUT
+        MENUITEM "&Ξ ΞµΟΞΉΞµΟ‡ΟΞΌΞµΞ½Ξ±\tF1",            IDM_HELP_CONTENTS
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬",                    IDM_HELP_ABOUT
     END
 END
 

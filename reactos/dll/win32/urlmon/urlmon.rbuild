@@ -30,6 +30,7 @@
 	<file>urlmon_main.c</file>
 	<file>usrmarshal.c</file>
 	<file>rsrc.rc</file>
+	<pch>urlmon_main.h</pch>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>rpcrt4</library>

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002-2008 Erik de Castro Lopo <erikd@mega-nerd.com>
+** Copyright (C) 2002-2011 Erik de Castro Lopo <erikd@mega-nerd.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 */
 
 /*
-** This code is part of Secret Rabibt Code aka libsamplerate. A commercial
+** This code is part of Secret Rabbit Code aka libsamplerate. A commercial
 ** use license for this code is available, please see:
 **		http://www.mega-nerd.com/SRC/procedure.html
 */

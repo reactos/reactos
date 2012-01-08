@@ -1,20 +1,13 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window painting function
  *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
- *  REVISION HISTORY:
- *       06/06/2001   Created (?)
- *       18/11/2003   Complete rewrite
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserPainting);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -313,7 +306,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
    BOOL HadPaintMessage, HadNCPaintMessage;
    BOOL HasPaintMessage, HasNCPaintMessage;
 
-   DPRINT("IntInvalidateWindows start\n");
+   TRACE("IntInvalidateWindows start\n");
    /*
     * If the nonclient is not to be redrawn, clip the region to the client
     * rect
@@ -465,7 +458,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
       else
          MsqIncPaintCountQueue(Wnd->head.pti->MessageQueue);
    }
-   DPRINT("IntInvalidateWindows exit\n");
+   TRACE("IntInvalidateWindows exit\n");
 }
 
 /*
@@ -511,7 +504,7 @@ co_UserRedrawWindow(
    ULONG Flags)
 {
    HRGN hRgn = NULL;
-   DPRINT("co_UserRedrawWindow start\n");
+   TRACE("co_UserRedrawWindow start\n");
 
    /*
     * Step 1.
@@ -593,7 +586,7 @@ co_UserRedrawWindow(
    {
       GreDeleteObject(hRgn);
    }
-   DPRINT("co_UserRedrawWindow exit\n");
+   TRACE("co_UserRedrawWindow exit\n");
 
    return TRUE;
 }
@@ -667,7 +660,7 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
+      ERR("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
       Thread->cPaintsReady = 0;
       return FALSE;
@@ -704,7 +697,7 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 
    WndCaret = UserGetWindowObject(hWndCaret);
 
-   //fix: check for WndCaret can be null
+   // FIXME: Check for WndCaret can be NULL
    if (WndCaret == Window ||
          ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window, WndCaret)))
    {
@@ -783,6 +776,31 @@ IntPrintWindow(
     return TRUE;
 }
 
+BOOL
+FASTCALL 
+IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
+{
+   PPROPERTY pprop;
+   DWORD FlashState;
+   BOOL Ret = FALSE;
+
+   pprop = IntGetProp(pWnd, AtomFlashWndState);
+   if (!pprop)
+   {
+      FlashState = pfwi->dwFlags;
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
+      return TRUE;
+   }
+
+   FlashState = (DWORD)pprop->Data;
+   if ( pfwi->dwFlags == FLASHW_STOP )
+   {
+      IntRemoveProp(pWnd, AtomFlashWndState);
+      Ret = TRUE;
+   }
+   return Ret;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -801,7 +819,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    DECLARE_RETURN(HDC);
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserBeginPaint\n");
+   TRACE("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -893,7 +911,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserBeginPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBeginPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 
@@ -915,7 +933,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    USER_REFERENCE_ENTRY Ref;
    HDC hdc = NULL;
 
-   DPRINT("Enter NtUserEndPaint\n");
+   TRACE("Enter NtUserEndPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -947,11 +965,52 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserEndPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
 
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
+{
+   PWND pWnd;
+   FLASHWINFO finfo = {0};
+   BOOL Ret = TRUE;
+
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead(pfwi, sizeof(FLASHWINFO), sizeof(ULONG));
+      RtlCopyMemory(&finfo, pfwi, sizeof(FLASHWINFO));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      Ret = FALSE;
+   }
+   _SEH2_END
+
+   if (!Ret) goto Exit;
+
+   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+        finfo.cbSize != sizeof(FLASHWINFO) ||
+        finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      goto Exit;
+   }
+
+   Ret = IntFlashWindowEx(pWnd, &finfo);
+
+Exit:
+   UserLeave();
+   return Ret;
+}
 
 INT FASTCALL
 co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
@@ -997,7 +1056,7 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
    INT ret;
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserGetUpdateRgn\n");
+   TRACE("Enter NtUserGetUpdateRgn\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1012,7 +1071,7 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1034,7 +1093,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetUpdateRect\n");
+   TRACE("Enter NtUserGetUpdateRect\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1096,7 +1155,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    RETURN(!RECTL_bIsEmptyRect(&Rect));
 
 CLEANUP:
-   DPRINT("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1122,7 +1181,7 @@ NtUserRedrawWindow(
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserRedrawWindow\n");
+   TRACE("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
@@ -1170,7 +1229,7 @@ NtUserRedrawWindow(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1310,7 +1369,7 @@ NtUserScrollDC(
    NTSTATUS Status = STATUS_SUCCESS;
    DWORD Result;
 
-   DPRINT("Enter NtUserScrollDC\n");
+   TRACE("Enter NtUserScrollDC\n");
    UserEnterExclusive();
 
    _SEH2_TRY
@@ -1376,7 +1435,7 @@ NtUserScrollDC(
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserScrollDC, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollDC, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1409,7 +1468,7 @@ NtUserScrollWindowEx(
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
 
-   DPRINT("Enter NtUserScrollWindowEx\n");
+   TRACE("Enter NtUserScrollWindowEx\n");
    UserEnterExclusive();
 
    Window = UserGetWindowObject(hWnd);
@@ -1574,51 +1633,9 @@ CLEANUP:
    if (Window)
       UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-BOOL
-UserDrawSysMenuButton(
-   PWND pWnd,
-   HDC hDc,
-   RECTL *lpRc,
-   BOOL Down)
-{
-   HICON hIcon;
-   PCURICON_OBJECT pIcon;
-
-   ASSERT(pWnd && lpRc);
-
-   /* Get the icon to draw. We don't care about WM_GETICON here. */
-
-   hIcon = pWnd->pcls->hIconSm;
-
-   if(!hIcon)
-   {
-      DPRINT("Wnd class has no small icon.\n");
-      hIcon = pWnd->pcls->hIcon;
-   }
-
-   if(!hIcon)
-   {
-      DPRINT("Wnd class hasn't any icon.\n");
-      //FIXME: Draw "winlogo" icon.
-      return FALSE;
-   }
-
-   if(!(pIcon = UserGetCurIconObject(hIcon)))
-   {
-      DPRINT1("UserGetCurIconObject() failed!\n");
-      return FALSE;
-   }
-
-   return UserDrawIconEx(hDc, lpRc->left, lpRc->top, pIcon,
-                        UserGetSystemMetrics(SM_CXSMICON),
-                        UserGetSystemMetrics(SM_CYSMICON),
-                        0, NULL, DI_NORMAL);
 }
 
 BOOL
@@ -1626,63 +1643,68 @@ UserDrawCaptionText(
    HDC hDc,
    const PUNICODE_STRING Text,
    const RECTL *lpRc,
-   UINT uFlags)
+   UINT uFlags,
+   HFONT hFont)
 {
-   HFONT hOldFont = NULL, hFont = NULL;
+   HFONT hOldFont = NULL;
    COLORREF OldTextColor;
    NONCLIENTMETRICSW nclm;
    NTSTATUS Status;
-   #ifndef NDEBUG
-   INT i;
-   DPRINT("%s:", __FUNCTION__);
-   for(i = 0; i < Text->Length/sizeof(WCHAR); i++)
-      DbgPrint("%C", Text->Buffer[i]);
-   DbgPrint(", %d\n", Text->Length/sizeof(WCHAR));
-   #endif
+   BOOLEAN bDeleteFont = FALSE;
+   SIZE Size;
+
+   TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
    if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
       sizeof(NONCLIENTMETRICS), &nclm, 0))
    {
-      DPRINT1("%s: UserSystemParametersInfo() failed!\n", __FUNCTION__);
+      ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;
+   }
+
+   if (!hFont)
+   {
+      if(uFlags & DC_SMALLCAP)
+         Status = TextIntCreateFontIndirect(&nclm.lfSmCaptionFont, &hFont);
+      else
+         Status = TextIntCreateFontIndirect(&nclm.lfCaptionFont, &hFont);
+
+      if(!NT_SUCCESS(Status))
+      {
+         ERR("TextIntCreateFontIndirect() failed! Status: 0x%x\n", Status);
+         return FALSE;
+      }
+
+      bDeleteFont = TRUE;
    }
 
    IntGdiSetBkMode(hDc, TRANSPARENT);
 
-   if(uFlags & DC_SMALLCAP)
-      Status = TextIntCreateFontIndirect(&nclm.lfSmCaptionFont, &hFont);
-   else Status = TextIntCreateFontIndirect(&nclm.lfCaptionFont, &hFont);
-
-   if(!NT_SUCCESS(Status))
-   {
-      DPRINT1("%s: TextIntCreateFontIndirect() failed! Status: 0x%x\n",
-         __FUNCTION__, Status);
-      return FALSE;
-   }
-
    hOldFont = NtGdiSelectFont(hDc, hFont);
    if(!hOldFont)
    {
-      DPRINT1("%s: SelectFont() failed!\n", __FUNCTION__);
-      GreDeleteObject(hFont);
-      return FALSE;
+      ERR("SelectFont() failed!\n");
+      /* Don't fail */
    }
 
    if(uFlags & DC_INBUTTON)
       OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(COLOR_BTNTEXT));
-   else OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
+   else
+      OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
          ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
-   //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
-
-   GreExtTextOutW(hDc, lpRc->left,
-      lpRc->top, 0, NULL, Text->Buffer,
-      Text->Length/sizeof(WCHAR), NULL, 0);
+   // FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
+   GreGetTextExtentW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), &Size, 0);
+   GreExtTextOutW(hDc,
+                  lpRc->left, (lpRc->top + lpRc->bottom)/2 - Size.cy/2,
+                  0, NULL, Text->Buffer, Text->Length/sizeof(WCHAR), NULL, 0);
 
    IntGdiSetTextColor(hDc, OldTextColor);
-   NtGdiSelectFont(hDc, hOldFont);
-   GreDeleteObject(hFont);
+   if (hOldFont)
+      NtGdiSelectFont(hDc, hOldFont);
+   if (bDeleteFont)
+      GreDeleteObject(hFont);
 
    return TRUE;
 }
@@ -1693,51 +1715,17 @@ BOOL UserDrawCaption(
    RECTL *lpRc,
    HFONT hFont,
    HICON hIcon,
-   const PUNICODE_STRING str,
+   const PUNICODE_STRING Str,
    UINT uFlags)
 {
    BOOL Ret = FALSE;
-   HBITMAP hMemBmp = NULL, hOldBmp = NULL;
-   HBRUSH hOldBrush = NULL;
-   HDC hMemDc = NULL;
-   ULONG Height;
-   UINT VCenter = 0, Padding = 0;
-   RECTL r = *lpRc;
-   LONG ButtonWidth, IconWidth;
+   HBRUSH hBgBrush, hOldBrush = NULL;
+   RECTL Rect = *lpRc;
    BOOL HasIcon;
 
-   //ASSERT(pWnd != NULL);
-
    RECTL_vMakeWellOrdered(lpRc);
-   hMemBmp = NtGdiCreateCompatibleBitmap(hDc,
-      lpRc->right - lpRc->left,
-      lpRc->bottom - lpRc->top);
 
-   if(!hMemBmp)
-   {
-      DPRINT1("%s: NtGdiCreateCompatibleBitmap() failed!\n", __FUNCTION__);
-      return FALSE;
-   }
-
-   hMemDc = NtGdiCreateCompatibleDC(hDc);
-   if(!hMemDc)
-   {
-      DPRINT1("%s: NtGdiCreateCompatibleDC() failed!\n", __FUNCTION__);
-      goto cleanup;
-   }
-
-   hOldBmp = NtGdiSelectBitmap(hMemDc, hMemBmp);
-   if(!hOldBmp)
-   {
-      DPRINT1("%s: NtGdiSelectBitmap() failed!\n", __FUNCTION__);
-      goto cleanup;
-   }
-
-   Height = UserGetSystemMetrics(SM_CYCAPTION) - 1;
-   VCenter = (lpRc->bottom - lpRc->top) / 2;
-   Padding = VCenter - (Height / 2);
-
-   if ((!hIcon) && (pWnd != NULL))
+   if (!hIcon && pWnd != NULL)
    {
      HasIcon = (uFlags & DC_ICON) && (pWnd->style & WS_SYSMENU)
         && !(uFlags & DC_SMALLCAP) && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME)
@@ -1746,203 +1734,114 @@ BOOL UserDrawCaption(
    else
      HasIcon = (hIcon != 0);
 
-   IconWidth = UserGetSystemMetrics(SM_CXSIZE) + Padding;
-
-   r.left = Padding;
-   r.right = r.left + (lpRc->right - lpRc->left);
-   r.top = Padding;
-   r.bottom = r.top + (Height / 2);
-
    // Draw the caption background
-   if(uFlags & DC_INBUTTON)
+   if((uFlags & DC_GRADIENT) && !(uFlags & DC_INBUTTON))
    {
-      hOldBrush = NtGdiSelectBrush(hMemDc,
-         IntGetSysColorBrush(COLOR_3DFACE));
+      static GRADIENT_RECT gcap = {0, 1};
+      TRIVERTEX Vertices[2];
+      COLORREF Colors[2];
 
-      if(!hOldBrush)
+      Colors[0] = IntGetSysColor((uFlags & DC_ACTIVE) ?
+            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
+
+      Colors[1] = IntGetSysColor((uFlags & DC_ACTIVE) ?
+            COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
+
+      Vertices[0].x = Rect.left;
+      Vertices[0].y = Rect.top;
+      Vertices[0].Red = (WORD)Colors[0]<<8;
+      Vertices[0].Green = (WORD)Colors[0] & 0xFF00;
+      Vertices[0].Blue = (WORD)(Colors[0]>>8) & 0xFF00;
+      Vertices[0].Alpha = 0;
+
+      Vertices[1].x = Rect.right;
+      Vertices[1].y = Rect.bottom;
+      Vertices[1].Red = (WORD)Colors[1]<<8;
+      Vertices[1].Green = (WORD)Colors[1] & 0xFF00;
+      Vertices[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
+      Vertices[1].Alpha = 0;
+
+      if(!GreGradientFill(hDc, Vertices, 2, &gcap, 1, GRADIENT_FILL_RECT_H))
       {
-         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
+         ERR("GreGradientFill() failed!\n");
          goto cleanup;
       }
-
-      if(!NtGdiPatBlt(hMemDc, 0, 0,
-         lpRc->right - lpRc->left,
-         lpRc->bottom - lpRc->top,
-         PATCOPY))
-      {
-         DPRINT1("%s: NtGdiPatBlt() failed!\n", __FUNCTION__);
-         goto cleanup;
-      }
-
-      if(HasIcon) r.left+=IconWidth;
    }
    else
    {
-      r.right = (lpRc->right - lpRc->left);
-      if(uFlags & DC_SMALLCAP)
-         ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
-      else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
+      if(uFlags & DC_INBUTTON)
+         hBgBrush = IntGetSysColorBrush(COLOR_3DFACE);
+      else if(uFlags & DC_ACTIVE)
+         hBgBrush = IntGetSysColorBrush(COLOR_ACTIVECAPTION);
+      else
+         hBgBrush = IntGetSysColorBrush(COLOR_INACTIVECAPTION);
 
-      hOldBrush = NtGdiSelectBrush(hMemDc,
-         IntGetSysColorBrush(uFlags & DC_ACTIVE ?
-            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
+      hOldBrush = NtGdiSelectBrush(hDc, hBgBrush);
 
       if(!hOldBrush)
       {
-         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
+         ERR("NtGdiSelectBrush() failed!\n");
          goto cleanup;
       }
 
-      if(HasIcon && (uFlags & DC_GRADIENT))
+      if(!NtGdiPatBlt(hDc, Rect.left, Rect.top,
+         Rect.right - Rect.left,
+         Rect.bottom - Rect.top,
+         PATCOPY))
       {
-         NtGdiPatBlt(hMemDc, 0, 0,
-            IconWidth+1,
-            lpRc->bottom - lpRc->top,
-            PATCOPY);
-         r.left+=IconWidth;
+         ERR("NtGdiPatBlt() failed!\n");
+         goto cleanup;
       }
-      else
-      {
-         NtGdiPatBlt(hMemDc, 0, 0,
-            lpRc->right - lpRc->left,
-            lpRc->bottom - lpRc->top,
-            PATCOPY);
-      }
-
-      if(uFlags & DC_GRADIENT)
-      {
-         static GRADIENT_RECT gcap = {0, 1};
-         TRIVERTEX vert[2];
-         COLORREF Colors[2];
-
-		 if (pWnd != NULL)
-		 {
-			 if(pWnd->style & WS_SYSMENU)
-			 {
-				r.right -= 3 + ButtonWidth;
-				if(!(uFlags & DC_SMALLCAP))
-				{
-				   if(pWnd->style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-					  r.right -= 2 + 2 * ButtonWidth;
-				   else r.right -= 2;
-				   r.right -= 2;
-				}
-
-				//Draw buttons background
-				if(!NtGdiSelectBrush(hMemDc,
-				   IntGetSysColorBrush(uFlags & DC_ACTIVE ?
-					  COLOR_GRADIENTACTIVECAPTION:COLOR_GRADIENTINACTIVECAPTION)))
-				{
-				   DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
-				   goto cleanup;
-				}
-
-				NtGdiPatBlt(hMemDc,
-				   r.right,
-				   0,
-				   lpRc->right - lpRc->left - r.right,
-				   lpRc->bottom - lpRc->top,
-				   PATCOPY);
-			 }
-		 }
-
-         Colors[0] = IntGetSysColor((uFlags & DC_ACTIVE) ?
-            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
-
-         Colors[1] = IntGetSysColor((uFlags & DC_ACTIVE) ?
-            COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
-
-         vert[0].x = r.left;
-         vert[0].y = 0;
-         vert[0].Red = (WORD)Colors[0]<<8;
-         vert[0].Green = (WORD)Colors[0] & 0xFF00;
-         vert[0].Blue = (WORD)(Colors[0]>>8) & 0xFF00;
-         vert[0].Alpha = 0;
-
-         vert[1].x = r.right;
-         vert[1].y = lpRc->bottom - lpRc->top;
-         vert[1].Red = (WORD)Colors[1]<<8;
-         vert[1].Green = (WORD)Colors[1] & 0xFF00;
-         vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
-         vert[1].Alpha = 0;
-
-         if(!GreGradientFill(hMemDc, vert, 2, &gcap,
-            1, GRADIENT_FILL_RECT_H))
-         {
-            DPRINT1("%s: IntGdiGradientFill() failed!\n", __FUNCTION__);
-         }
-
-      } //if(uFlags & DC_GRADIENT)
    }
 
-   if(HasIcon)
+   /* Draw icon */
+   if (HasIcon)
    {
-      r.top ++;
-      r.left -= --IconWidth;
-	  /* FIXME: Draw the Icon when pWnd == NULL but  hIcon is valid */
-	  if (pWnd != NULL)
-		UserDrawSysMenuButton(pWnd, hMemDc, &r, FALSE);
+      PCURICON_OBJECT pIcon = NULL;
 
-      r.left += IconWidth;
-      r.top --;
+      if (!hIcon && pWnd)
+      {
+          hIcon = pWnd->pcls->hIconSm; // FIXME: Windows does not do that
+          if(!hIcon)
+             hIcon = pWnd->pcls->hIcon;
+      }
+
+      if (hIcon)
+         pIcon = UserGetCurIconObject(hIcon);
+
+      if (pIcon)
+      {
+         LONG cx = UserGetSystemMetrics(SM_CXSMICON);
+         LONG cy = UserGetSystemMetrics(SM_CYSMICON);
+         LONG x = Rect.left - cx/2 + 1 + (Rect.bottom - Rect.top)/2; // this is really what Window does
+         LONG y = (Rect.top + Rect.bottom)/2 - cy/2; // center
+         UserDrawIconEx(hDc, x, y, pIcon, cx, cy, 0, NULL, DI_NORMAL);
+      }
    }
 
-   r.top ++;
-   r.left += 2;
-
-   r.bottom = r.top + Height;
+   if (hIcon)
+      Rect.left += Rect.bottom - Rect.top;
 
    if((uFlags & DC_TEXT))
    {
-      if(!(uFlags & DC_GRADIENT))
-      {
-         r.right = (lpRc->right - lpRc->left);
+      Rect.left += 2;
 
-         if(uFlags & DC_SMALLCAP)
-            ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
-         else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
-
-         if ((pWnd != NULL) && (pWnd->style & WS_SYSMENU))
-         {
-            r.right -= 3 + ButtonWidth;
-            if(! (uFlags & DC_SMALLCAP))
-            {
-               if(pWnd->style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-                  r.right -= 2 + 2 * ButtonWidth;
-               else r.right -= 2;
-               r.right -= 2;
-            }
-         }
-      }
-
-	  /* FIXME: hFont isn't handled */
-      if (str)
-         UserDrawCaptionText(hMemDc, str, &r, uFlags);
-      else if (pWnd != NULL)
+      if (Str)
+         UserDrawCaptionText(hDc, Str, &Rect, uFlags, hFont);
+      else if (pWnd != NULL) // FIXME: Windows does not do that
       {
          UNICODE_STRING ustr;
          ustr.Buffer = pWnd->strName.Buffer;
          ustr.Length = pWnd->strName.Length;
          ustr.MaximumLength = pWnd->strName.MaximumLength;
-         UserDrawCaptionText(hMemDc, &ustr, &r, uFlags);
+         UserDrawCaptionText(hDc, &ustr, &Rect, uFlags, hFont);
       }
-   }
-
-   if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,
-      lpRc->right - lpRc->left, lpRc->bottom - lpRc->top,
-      hMemDc, 0, 0, SRCCOPY, 0, 0))
-   {
-      DPRINT1("%s: NtGdiBitBlt() failed!\n", __FUNCTION__);
-      goto cleanup;
    }
 
    Ret = TRUE;
 
 cleanup:
-   if (hOldBrush) NtGdiSelectBrush(hMemDc, hOldBrush);
-   if (hOldBmp) NtGdiSelectBitmap(hMemDc, hOldBmp);
-   if (hMemBmp) GreDeleteObject(hMemBmp);
-   if (hMemDc) NtGdiDeleteObjectApp(hMemDc);
+   if (hOldBrush) NtGdiSelectBrush(hDc, hOldBrush);
 
    return Ret;
 }

@@ -584,7 +584,8 @@ cpp_quote("#endif")
 [
   uuid(12345778-1234-abcd-ef00-0123456789ab),
   version(0.0),
-  pointer_default(unique)
+  pointer_default(unique),
+  endpoint("ncacn_np:[\\pipe\\lsarpc]")
   #ifndef __midl
   ,explicit_handle
   #endif

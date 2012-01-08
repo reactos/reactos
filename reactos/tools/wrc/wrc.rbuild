@@ -6,6 +6,7 @@
 	<file>dumpres.c</file>
 	<file>genres.c</file>
 	<file>newstruc.c</file>
+	<file>po.c</file>
 	<file>readres.c</file>
 	<file>translation.c</file>
 	<file>utils.c</file>

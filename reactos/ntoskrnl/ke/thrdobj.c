@@ -46,7 +46,6 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-
 BOOLEAN
 NTAPI
 KeReadStateThread(IN PKTHREAD Thread)
@@ -54,7 +53,7 @@ KeReadStateThread(IN PKTHREAD Thread)
     ASSERT_THREAD(Thread);
 
     /* Return signal state */
-    return (BOOLEAN)Thread->DispatcherHeader.SignalState;
+    return (BOOLEAN)Thread->Header.SignalState;
 }
 
 KPRIORITY
@@ -223,6 +222,53 @@ KeAlertThread(IN PKTHREAD Thread,
 
     /* Return the old state */
     return PreviousState;
+}
+
+VOID
+NTAPI
+KeBoostPriorityThread(IN PKTHREAD Thread,
+                      IN KPRIORITY Increment)
+{
+    KIRQL OldIrql;
+    KPRIORITY Priority;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the Dispatcher Database */
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Only threads in the dynamic range get boosts */
+    if (Thread->Priority < LOW_REALTIME_PRIORITY)
+    {
+        /* Lock the thread */
+        KiAcquireThreadLock(Thread);
+        
+        /* Check again, and make sure there's not already a boost */
+        if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
+            !(Thread->PriorityDecrement))
+        {
+            /* Compute the new priority and see if it's higher */
+            Priority = Thread->BasePriority + Increment;
+            if (Priority > Thread->Priority)
+            {
+                if (Priority >= LOW_REALTIME_PRIORITY)
+                {
+                    Priority = LOW_REALTIME_PRIORITY - 1;
+                }
+
+                /* Reset the quantum */
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Set the new Priority */
+                KiSetPriorityThread(Thread, Priority);
+            }
+        }
+
+        /* Release thread lock */
+        KiReleaseThreadLock(Thread);
+    }
+    
+    /* Release the dispatcher lokc */
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 ULONG
@@ -726,10 +772,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     NTSTATUS Status;
 
     /* Initalize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
-                                 ThreadObject,
-                                 sizeof(KTHREAD) / sizeof(LONG),
-                                 FALSE);
+    Thread->Header.Type = ThreadObject;
+    Thread->Header.ThreadControlFlags = 0;
+    Thread->Header.DebugActive = FALSE;
+    Thread->Header.SignalState = 0;
+    InitializeListHead(&(Thread->Header.WaitListHead));
 
     /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
@@ -1381,11 +1428,11 @@ KeTerminateThread(IN KPRIORITY Increment)
     }
 
     /* Signal the thread */
-    Thread->DispatcherHeader.SignalState = TRUE;
-    if (!IsListEmpty(&Thread->DispatcherHeader.WaitListHead))
+    Thread->Header.SignalState = TRUE;
+    if (!IsListEmpty(&Thread->Header.WaitListHead))
     {
         /* Unwait the threads */
-        KxUnwaitThread(&Thread->DispatcherHeader, Increment);
+        KxUnwaitThread(&Thread->Header, Increment);
     }
 
     /* Remove the thread from the list */

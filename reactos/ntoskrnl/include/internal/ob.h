@@ -31,7 +31,7 @@
     if (x & ObpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define OBTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define OBTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //
@@ -57,7 +57,7 @@
 // Identifies a Kernel Handle
 //
 #define KERNEL_HANDLE_FLAG                              \
-    (1 << ((sizeof(HANDLE) * 8) - 1))
+    ((ULONG_PTR)1 << ((sizeof(HANDLE) * 8) - 1))
 #define ObIsKernelHandle(Handle, ProcessorMode)         \
     (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&      \
     ((ProcessorMode) == KernelMode))

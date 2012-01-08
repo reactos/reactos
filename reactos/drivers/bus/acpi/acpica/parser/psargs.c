@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -514,7 +514,7 @@ AcpiPsGetNextSimpleArg (
         /* Get 1 byte from the AML stream */
 
         Opcode = AML_BYTE_OP;
-        Arg->Common.Value.Integer = (ACPI_INTEGER) *Aml;
+        Arg->Common.Value.Integer = (UINT64) *Aml;
         Length = 1;
         break;
 
@@ -577,7 +577,7 @@ AcpiPsGetNextSimpleArg (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Invalid ArgType %X", ArgType));
+        ACPI_ERROR ((AE_INFO, "Invalid ArgType 0x%X", ArgType));
         return_VOID;
     }
 
@@ -883,7 +883,7 @@ AcpiPsGetNextArg (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Invalid ArgType: %X", ArgType));
+        ACPI_ERROR ((AE_INFO, "Invalid ArgType: 0x%X", ArgType));
         Status = AE_AML_OPERAND_TYPE;
         break;
     }

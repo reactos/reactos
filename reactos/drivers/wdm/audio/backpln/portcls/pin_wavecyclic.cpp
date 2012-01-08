@@ -818,14 +818,13 @@ NTAPI
 CPortPinWaveCyclic::RequestService()
 {
     ULONG Position;
-    NTSTATUS Status;
     ULONGLONG OldOffset, NewOffset;
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
     if (m_State == KSSTATE_RUN && m_ResetState == KSRESET_END)
     {
-        Status = m_Stream->GetPosition(&Position);
+        m_Stream->GetPosition(&Position);
 
         OldOffset = m_Position.PlayOffset;
 
@@ -1161,7 +1160,7 @@ CPortPinWaveCyclic::Init(
 {
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
-    PDEVICE_OBJECT DeviceObject;
+    //PDEVICE_OBJECT DeviceObject;
     BOOLEAN Capture;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
     //IDrmAudioStream * DrmAudio = NULL;
@@ -1170,7 +1169,7 @@ CPortPinWaveCyclic::Init(
     m_ConnectDetails = ConnectDetails;
     m_Miniport = GetWaveCyclicMiniport(Port);
 
-    DeviceObject = GetDeviceObject(Port);
+    //DeviceObject = GetDeviceObject(Port);
 
     DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
 

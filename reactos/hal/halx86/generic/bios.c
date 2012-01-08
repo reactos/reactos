@@ -377,7 +377,7 @@ VOID
 NTAPI
 HalpStoreAndClearIopm(VOID)
 {
-    ULONG i, j;
+    USHORT i, j;
     PUSHORT Entry = HalpSavedIoMap;
 
     //
@@ -396,6 +396,7 @@ HalpStoreAndClearIopm(VOID)
             ASSERT(j < 32);
             HalpSavedIoMapData[j][0] = i;
             HalpSavedIoMapData[j][1] = *Entry;
+            j++;
         }
 
         //
@@ -424,7 +425,7 @@ HalpRestoreIopm(VOID)
     //
     // Set default state
     //
-    RtlFillMemory(HalpSavedIoMap, 0xFF, IOPM_FULL_SIZE);
+    RtlFillMemory(HalpSavedIoMap, IOPM_FULL_SIZE, 0xFF);
 
     //
     // Restore the backed up copy, and initialize it
@@ -656,7 +657,7 @@ HalpBiosDisplayReset(VOID)
     // invalid op-code handler.
     //
     IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
-    RestoreWriteProtection = IdtPte->Write;
+    RestoreWriteProtection = IdtPte->Write != 0;
     IdtPte->Write = 1;
 
     //

@@ -7,7 +7,9 @@
 	<file>config.c</file>
 	<file>debug_ros.c</file>
 	<file>loader.c</file>
-	<file>string.c</file>
+	<file>wctype.c</file>
+	<file>register.c</file>
+	<!--file>string.c</file-->
 </module>
 <module name="wineldr" type="staticlibrary">
 	<include base="ReactOS">include/reactos/wine</include>

@@ -1,5 +1,5 @@
 /*
- * reactos/subsys/csrss/api/process.c
+ * subsystems/win32/csrss/csrsrv/api/process.c
  *
  * "\windows\ApiPort" port process management functions
  *
@@ -105,6 +105,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
                                 PROCESS_ALL_ACCESS,
                                 &ObjectAttributes,
                                 &ClientId);
+         DPRINT("CSR Process: %p Handle: %p\n", pProcessData, pProcessData->Process);
          if (!NT_SUCCESS(Status))
          {
             ProcessData[hash] = pProcessData->next;
@@ -206,7 +207,6 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
-   NTSTATUS Status;
 
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -223,7 +223,7 @@ CSR_API(CsrCreateProcess)
        NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
        if (Request->Data.CreateProcessRequest.bInheritHandles)
          {
-           Status = CallProcessInherit(ProcessData, NewProcessData);
+           CallProcessInherit(ProcessData, NewProcessData);
          }
      }
 

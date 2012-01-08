@@ -23,7 +23,7 @@
 
 typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ aka HDEV aka PDEV. */
 {
-  /* private GDI pointer handling information, required for software emulation */
+  /* Private GDI pointer handling information, required for software emulation */
   BOOL     Enabled;
   SIZEL    Size;
   POINTL   HotSpot;
@@ -32,8 +32,8 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
   SURFACE  *psurfMask;
   SURFACE  *psurfSave;
 
-  /* public pointer information */
-  RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
+  /* Public pointer information */
+  RECTL    Exclude; /* Required publicly for SPS_ACCEPT_EXCLUDE */
 } GDIPOINTER, *PGDIPOINTER;
 
 typedef struct _DEVMODEINFO
@@ -44,7 +44,7 @@ typedef struct _DEVMODEINFO
     DEVMODEW adevmode[1];
 } DEVMODEINFO, *PDEVMODEINFO;
 
-typedef struct
+typedef struct _DEVMODEENTRY
 {
     DWORD dwFlags;
     PDEVMODEW pdm;

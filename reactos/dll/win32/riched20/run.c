@@ -440,7 +440,7 @@ int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run)
   int fit = 0;
   HGDIOBJ hOldFont;
   SIZE sz;
-  if (!run->strText->nLen)
+  if (!run->strText->nLen || cx <= 0)
     return 0;
 
   if (run->nFlags & MERF_TAB ||
@@ -498,7 +498,7 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   ME_Context c;
   HGDIOBJ hOldFont;
   SIZE sz, sz2, sz3;
-  if (!run->strText->nLen)
+  if (!run->strText->nLen || cx <= 0)
     return 0;
 
   if (run->nFlags & (MERF_TAB | MERF_ENDCELL))

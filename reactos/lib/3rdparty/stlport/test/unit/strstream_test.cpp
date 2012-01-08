@@ -43,7 +43,7 @@ void StrstreamTest::input()
     is >> rval;
     CPPUNIT_ASSERT( rval == -652208307 );
   }
-}
 #  endif
+}
 
 #endif

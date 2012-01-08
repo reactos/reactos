@@ -8,10 +8,7 @@
  *      10-06-2008  Created
  */
 
-#include <windows.h>
-#include <ole2.h>
-
-#include <fontext.h>
+#include "fontext.h"
 
 static HRESULT
 REGSVR_RegisterServer()

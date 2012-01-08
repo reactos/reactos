@@ -20,3 +20,22 @@ char* _strtime(char* time)
 
    return time;
 }
+
+int CDECL _strtime_s(char* time, size_t size)
+{
+    if(time && size)
+        time[0] = '\0';
+
+    if(!time) {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    if(size < 9) {
+        *_errno() = ERANGE;
+        return ERANGE;
+    }
+
+    _strtime(time);
+    return 0;
+}

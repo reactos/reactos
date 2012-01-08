@@ -8,15 +8,15 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_USAGE, "Zobrazí výstup po jednotlivých stránkách na obrazovku.\n\n\
-  MORE < [Jednotka:][Cesta]Název souboru\n\
-  Pøíkaz | MORE \n\
-  MORE [Jednotka:][Cesta]Název souboru\n\n\
-  [Jednotka:][Cesta]Název souboru    Soubor, jehož obsah bude zobrazen.\n\
-  Pøíkaz\t\t     Pøíkaz, jehož výstup bude zobrazen.\n\n\
-  Pøi výzvì ""-- Pokraèovat --"" lze stisknout libovolnou klávesu\n\
-  pro zobrazení další stránky.\n"
+  IDS_USAGE, "ZobrazÃ­ vÃ½stup po jednotlivÃ½ch strÃ¡nkÃ¡ch na obrazovku.\n\n\
+  MORE < [Jednotka:][Cesta]NÃ¡zev souboru\n\
+  PÅ™Ã­kaz | MORE \n\
+  MORE [Jednotka:][Cesta]NÃ¡zev souboru\n\n\
+  [Jednotka:][Cesta]NÃ¡zev souboru    Soubor, jehoÅ¾ obsah bude zobrazen.\n\
+  PÅ™Ã­kaz\t\t     PÅ™Ã­kaz, jehoÅ¾ vÃ½stup bude zobrazen.\n\n\
+  PÅ™i vÃ½zvÄ› ""-- PokraÄovat --"" lze stisknout libovolnou klÃ¡vesu\n\
+  pro zobrazenÃ­ dalÅ¡Ã­ strÃ¡nky.\n"
 
-  IDS_CONTINUE, " -- Pokraèovat (100%) -- "
-  IDS_FILE_ACCESS, "Nelze získat pøístup k souboru %s."
+  IDS_CONTINUE, " -- PokraÄovat (100%) -- "
+  IDS_FILE_ACCESS, "Nelze zÃ­skat pÅ™Ã­stup k souboru %s."
 END

@@ -7,10 +7,6 @@
 	<define name="_NTDLLBUILD_" />
 	<include base="rtl">.</include>
 
-	<if property="NEWSPRINTF" value="1">
-		<define name="USE_NEW_SPRINTF" />
-	</if>
-
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>debug_asm.S</file>
@@ -24,6 +20,7 @@
 		</directory>
 	</if>
 	<if property="ARCH" value="powerpc">
+		<file>byteswap.c</file>
 	<directory name="powerpc">
 		<file>debug.c</file>
 		<file>except.c</file>
@@ -34,13 +31,14 @@
 	</directory>
 	</if>
 	<if property="ARCH" value="arm">
+		<file>byteswap.c</file>
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
 		<file>mem.c</file>
-		<file>memgen.c</file>
 	</if>
 	<if property="ARCH" value="amd64">
+		<file>byteswap.c</file>
 		<directory name="amd64">
 			<file>debug_asm.S</file>
 			<file>except_asm.S</file>
@@ -49,7 +47,6 @@
 			<file>stubs.c</file>
 		</directory>
 		<file>mem.c</file>
-		<file>memgen.c</file>
 	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
@@ -86,7 +83,6 @@
 	<file>ppb.c</file>
 	<file>process.c</file>
 	<file>propvar.c</file>
-	<file>qsort.c</file>
 	<file>random.c</file>
 	<file>rangelist.c</file>
 	<file>registry.c</file>

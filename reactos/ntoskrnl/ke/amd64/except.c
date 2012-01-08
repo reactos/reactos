@@ -277,8 +277,8 @@ KiGeneralProtectionFaultHandler(
 
     /* Check for RDMSR/WRMSR */
     if ((Instructions[0] == 0xF) &&            // 2-byte opcode
-        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
-         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
+        ((Instructions[1] == 0x30) ||        // RDMSR
+         (Instructions[1] == 0x32)))         // WRMSR
     {
         /* Unknown CPU MSR, so raise an access violation */
         return STATUS_ACCESS_VIOLATION;

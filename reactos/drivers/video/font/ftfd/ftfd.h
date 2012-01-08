@@ -50,7 +50,7 @@ typedef struct
 /** Function prototypes *******************************************************/
 
 ULONG
-DbgPrint(IN PCHAR Format, IN ...);
+DbgPrint(IN PCCH Format, IN ...);
 
 DHPDEV
 APIENTRY

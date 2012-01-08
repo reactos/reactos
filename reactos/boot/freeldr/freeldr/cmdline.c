@@ -21,14 +21,14 @@ VOID
 CmdLineParse(IN PCHAR CmdLine)
 {
     PCHAR End, Setting;
-    ULONG Length, Offset = 0;
+    ULONG_PTR Length, Offset = 0;
 
     //
     // Set defaults
     //
     CmdLineInfo.DefaultOperatingSystem = NULL;
     CmdLineInfo.TimeOut = -1;
-    
+
     //
     // Get timeout
     //
@@ -49,14 +49,14 @@ CmdLineParse(IN PCHAR CmdLine)
         Setting += sizeof("defaultos=") + sizeof(ANSI_NULL);
         End = strstr(Setting, " ");
         if (End) Length = End - Setting; else Length = sizeof(DefaultOs);
-        
+
         //
         // Copy the default OS
         //
         strncpy(DefaultOs, Setting, Length);
         CmdLineInfo.DefaultOperatingSystem = DefaultOs;
     }
-    
+
     //
     // Get ramdisk base address
     //
@@ -66,7 +66,7 @@ CmdLineParse(IN PCHAR CmdLine)
                                                sizeof(ANSI_NULL),
                                                NULL,
                                                0);
-    
+
     //
     // Get ramdisk size
     //

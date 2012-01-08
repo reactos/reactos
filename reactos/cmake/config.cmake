@@ -55,3 +55,8 @@ set(BUILD_MP TRUE CACHE BOOL
 
 set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a graphml dependency of dlls.")
+
+if(MSVC)
+set(_PREFAST_ FALSE CACHE BOOL
+"Whether to enable PREFAST while compiling.")
+endif()

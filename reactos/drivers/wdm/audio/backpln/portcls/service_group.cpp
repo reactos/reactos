@@ -91,7 +91,7 @@ CServiceGroup::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT("CServiceGroup::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT1("CServiceGroup::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
