@@ -33,7 +33,7 @@ static
 NTSTATUS
 QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
-    PNDISUIO_ADAPTER_CONTEXT AdapterContext;
+    PNDISUIO_ADAPTER_CONTEXT AdapterContext = NULL;
     PNDISUIO_QUERY_BINDING QueryBinding = Irp->AssociatedIrp.SystemBuffer;
     ULONG BindingLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     NTSTATUS Status;
@@ -50,14 +50,16 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         while (CurrentEntry != &GlobalAdapterList)
         {
             if (i == QueryBinding->BindingIndex)
+            {
+                AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
                 break;
+            }
             i++;
             CurrentEntry = CurrentEntry->Flink;
         }
         KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
-        if (i == QueryBinding->BindingIndex)
+        if (AdapterContext)
         {
-            AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
             DPRINT("Query binding for index %d is adapter %wZ\n", i, &AdapterContext->DeviceName);
             BytesCopied = sizeof(NDISUIO_QUERY_BINDING);
             if (AdapterContext->DeviceName.Length <= BindingLength - BytesCopied)

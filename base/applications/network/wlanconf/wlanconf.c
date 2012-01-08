@@ -132,21 +132,16 @@ OpenAdapterHandle(DWORD Index)
         return INVALID_HANDLE_VALUE;
     }
 
-    /* Query for bindable adapters */
-    QueryBinding->BindingIndex = 0;
-    do {
-        bSuccess = DeviceIoControl(hDriver,
-                                   IOCTL_NDISUIO_QUERY_BINDING,
-                                   QueryBinding,
-                                   QueryBindingSize,
-                                   QueryBinding,
-                                   QueryBindingSize,
-                                   &dwBytesReturned,
-                                   NULL);
-        if (QueryBinding->BindingIndex == Index)
-            break;
-        QueryBinding->BindingIndex++;
-    } while (bSuccess);
+    /* Query the adapter binding information */
+    QueryBinding->BindingIndex = Index;
+    bSuccess = DeviceIoControl(hDriver,
+                               IOCTL_NDISUIO_QUERY_BINDING,
+                               QueryBinding,
+                               QueryBindingSize,
+                               QueryBinding,
+                               QueryBindingSize,
+                               &dwBytesReturned,
+                               NULL);
 
     if (!bSuccess)
     {
@@ -540,35 +535,46 @@ BOOL ParseCmdline(int argc, char* argv[])
     
     for (i = 1; i < argc; i++)
     {
-        if ((argc > 1) && (argv[i][0] == '-'))
+        if (argv[i][0] == '-')
         {
-            TCHAR c;
-            
-            while ((c = *++argv[i]) != '\0')
+            switch (argv[i][1])
             {
-                switch (c)
-                {
-                    case 's':
-                        bScan = TRUE;
-                        break;
-                    case 'd':
-                        bDisconnect = TRUE;
-                        break;
-                    case 'c':
-                        bConnect = TRUE;
-                        sSsid = argv[++i];
-                        break;
-                    case 'w':
-                        sWepKey = argv[++i];
-                        break;
-                    case 'a':
-                        bAdhoc = TRUE;
-                        break;
-                    default :
+                case 's':
+                    bScan = TRUE;
+                    break;
+                case 'd':
+                    bDisconnect = TRUE;
+                    break;
+                case 'c':
+                    if (i == argc - 1)
+                    {
                         Usage();
                         return FALSE;
-                }
+                    }
+                    bConnect = TRUE;
+                    sSsid = argv[++i];
+                    break;
+                case 'w':
+                    if (i == argc - 1)
+                    {
+                        Usage();
+                        return FALSE;
+                    }
+                    sWepKey = argv[++i];
+                    break;
+                case 'a':
+                    bAdhoc = TRUE;
+                    break;
+                default :
+                    Usage();
+                    return FALSE;
             }
+
+        }
+        else
+        {
+            Usage();
+            return FALSE;
         }
     }
 
