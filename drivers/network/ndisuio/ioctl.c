@@ -62,13 +62,12 @@ QueryBinding(PIRP Irp, PIO_STACK_LOCATION IrpSp)
             BytesCopied = sizeof(NDISUIO_QUERY_BINDING);
             if (AdapterContext->DeviceName.Length <= BindingLength - BytesCopied)
             {
-                BytesCopied += AdapterContext->DeviceName.Length;
-
                 QueryBinding->DeviceNameOffset = BytesCopied;
                 QueryBinding->DeviceNameLength = AdapterContext->DeviceName.Length;
                 RtlCopyMemory((PUCHAR)QueryBinding + QueryBinding->DeviceNameOffset,
                               AdapterContext->DeviceName.Buffer,
                               QueryBinding->DeviceNameLength);
+                BytesCopied += AdapterContext->DeviceName.Length;
 
                 /* FIXME: Copy description too */
                 QueryBinding->DeviceDescrOffset = BytesCopied;
