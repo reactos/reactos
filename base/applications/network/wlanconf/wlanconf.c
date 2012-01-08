@@ -315,7 +315,7 @@ WlanConnect(HANDLE hAdapter)
         HeapFree(GetProcessHeap(), 0, SetOid);
 
         SetOidSize = sizeof(NDISUIO_SET_OID) + FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) +
-                     (strlen(sWepKey) >> 2);
+                     (strlen(sWepKey) >> 1);
         SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
         if (!SetOid)
             return FALSE;
@@ -325,15 +325,15 @@ WlanConnect(HANDLE hAdapter)
         WepData = (PNDIS_802_11_WEP)SetOid->Data;
 
         WepData->KeyIndex = 0x80000000;
-        WepData->KeyLength = strlen(sWepKey) >> 2;
+        WepData->KeyLength = strlen(sWepKey) >> 1;
         WepData->Length = FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) + WepData->KeyLength;
         
         /* Assemble the hex key */
         i = 0;
-        while (sWepKey[i << 2] != '\0')
+        while (sWepKey[i << 1] != '\0')
         {
-            WepData->KeyMaterial[i] = CharToHex(sWepKey[i << 2]) << 4;
-            WepData->KeyMaterial[i] |= CharToHex(sWepKey[(i << 2) + 1]);
+            WepData->KeyMaterial[i] = CharToHex(sWepKey[i << 1]) << 4;
+            WepData->KeyMaterial[i] |= CharToHex(sWepKey[(i << 1) + 1]);
             i++;
         }
         
@@ -503,8 +503,11 @@ WlanScan(HANDLE hAdapter)
                 Rate = BssidInfo->SupportedRates[j];
                 if (Rate != 0)
                 {
+                    /* Bit 7 is the basic rates bit */
+                    Rate = Rate & 0x7F;
+
                     /* SupportedRates are in units of .5 */
-                    Rate = Rate << 2;
+                    Rate = Rate << 1;
 
                     _tprintf(_T("%u "), Rate);
                 }
