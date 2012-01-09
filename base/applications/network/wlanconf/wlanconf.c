@@ -514,9 +514,16 @@ WlanScan(HANDLE hAdapter)
                     Rate = Rate & 0x7F;
 
                     /* SupportedRates are in units of .5 */
-                    Rate = Rate >> 1;
-
-                    _tprintf(_T("%u "), Rate);
+                    if (Rate & 0x01)
+                    {
+                        /* Bit 0 is set so we need to add 0.5 */
+                        _tprintf(_T("%u.5 "), (Rate >> 1));
+                    }
+                    else
+                    {
+                        /* Bit 0 is clear so just print the conversion */
+                        _tprintf(_T("%u "), (Rate >> 1));
+                    }
                 }
             }
             _tprintf(_T("\n"));
