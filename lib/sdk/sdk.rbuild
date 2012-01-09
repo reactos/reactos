@@ -14,6 +14,9 @@
 	<directory name="ioevent">
 		<xi:include href="ioevent/ioevent.rbuild" />
 	</directory>
+  <directory name="mmc">
+    <xi:include href="mmc/mmc.rbuild" />
+  </directory>
 	<directory name="nt">
 		<xi:include href="nt/nt.rbuild" />
 	</directory>
