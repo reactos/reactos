@@ -3,6 +3,7 @@
  *
  * Copyright 2007 Johannes Anderwald <janderwald@reactos.org>
  * Copyright 2009 Andrew Hill
+ * Copyright 2012 Rafal Harabien
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

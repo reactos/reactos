@@ -3,6 +3,7 @@
  *
  * Copyright 2007 Johannes Anderwald (janderwald@reactos.org)
  * Copyright 2009 Andrew Hill
+ * Copyright 2012 Rafal Harabien
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,26 +44,28 @@ private:
 	{
 		SHELLNEW_TYPE Type;
 		LPWSTR pwszExt;
-		LPWSTR pwszTarget;
+		PBYTE pData;
+		ULONG cbData;
 		LPWSTR pwszDesc;
-		LPWSTR pwszIcon;
+		HBITMAP hBitmap;
 		SHELLNEW_ITEM *pNext;
 	};
 
     LPWSTR m_wszPath;
-    SHELLNEW_ITEM *m_pShellItems;
+    SHELLNEW_ITEM *m_pItems;
+    SHELLNEW_ITEM *m_pLinkItem;
     IUnknown *m_pSite;
     HMENU m_hSubMenu;
+    HBITMAP m_hbmFolder, m_hbmLink;
 
-    void CleanupMenu();
-    static BOOL GetKeyDescription(LPCWSTR pwszExt, LPWSTR pwszResult);
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
     void UnloadItem(SHELLNEW_ITEM *pItem);
-	void UnloadShellItems();
-	BOOL LoadShellNewItems();
+	void UnloadAllItems();
+	BOOL LoadAllItems();
 	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
-	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv);
-	void CreateNewFolder(IShellView *psv);
+	SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
+	HRESULT CreateNewFolder(IShellView *psv);
+	HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv);
 
 public:
 	CNewMenu();
