@@ -507,7 +507,7 @@ WlanScan(HANDLE hAdapter)
                     Rate = Rate & 0x7F;
 
                     /* SupportedRates are in units of .5 */
-                    Rate = Rate << 1;
+                    Rate = Rate >> 1;
 
                     _tprintf(_T("%u "), Rate);
                 }
