@@ -300,7 +300,17 @@ extern "C" {
   _CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,va_list _Args);
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
   _CRTIMP int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...);
-  __CRT_INLINE int __cdecl vsnwprintf (wchar_t* s, size_t n, const wchar_t* format, va_list arg) { return _vsnwprintf(s,n,format,arg); }
+  __CRT_INLINE int __cdecl vsnwprintf (wchar_t* s, size_t n, const wchar_t* format, va_list arg)
+  {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28719) /* disable banned api usage warning */
+#endif /* _MSC_VER */
+      return _vsnwprintf(s,n,format,arg);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif /* _MSC_VER */
+  }
   _CRTIMP int __cdecl vwscanf (const wchar_t *, va_list);
   _CRTIMP int __cdecl vfwscanf (FILE *,const wchar_t *,va_list);
   _CRTIMP int __cdecl vswscanf (const wchar_t *,const wchar_t *,va_list);

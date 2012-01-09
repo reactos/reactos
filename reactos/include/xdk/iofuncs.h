@@ -2658,9 +2658,16 @@ IoInitializeThreadedDpcRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIO_DPC_ROUTINE DpcRoutine)
 {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28128)
+#endif
   KeInitializeThreadedDpc(&DeviceObject->Dpc,
                           (PKDEFERRED_ROUTINE) DpcRoutine,
                           DeviceObject );
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 }
 #endif
 

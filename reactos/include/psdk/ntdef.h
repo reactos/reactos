@@ -26,6 +26,7 @@
 #include <basetsd.h>
 #include <excpt.h>
 #include <sdkddkver.h>
+#include <specstrings.h>
 
 // FIXME: Shouldn't be included!
 #include <stdarg.h>
@@ -167,12 +168,19 @@
 #define UNALIGNED64
 #endif
 
+#if defined(_WIN64) || defined(_M_ALPHA)
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 16
+#else
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 8
+#endif
+
 #if defined(_M_MRX000) && !(defined(MIDL_PASS) || defined(RC_INVOKED)) && defined(ENABLE_RESTRICTED)
 #define RESTRICTED_POINTER __restrict
 #else
 #define RESTRICTED_POINTER
 #endif
-
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \
   ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
@@ -195,6 +203,14 @@
 #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
 #define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif
+
+#if defined(_AMD64_) || defined(_X86_)
+#define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
+#elif defined(_IA64_) || defined(_ARM_)
+#define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(ULONG))
+#else
+#error "unknown architecture"
 #endif
 
 /* Calling Conventions */
@@ -358,11 +374,11 @@ typedef LONGLONG USN;
 /* ANSI (Multi-byte Character) types */
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
-typedef CHAR *NPSTR, *LPSTR, *PSTR;
-typedef PSTR *PZPSTR;
-typedef CONST PSTR *PCZPSTR;
-typedef CONST CHAR *LPCSTR, *PCSTR;
-typedef PCSTR *PZPCSTR;
+typedef _Null_terminated_ CHAR *NPSTR, *LPSTR, *PSTR;
+typedef _Null_terminated_ PSTR *PZPSTR;
+typedef _Null_terminated_ CONST PSTR *PCZPSTR;
+typedef _Null_terminated_ CONST CHAR *LPCSTR, *PCSTR;
+typedef _Null_terminated_ PCSTR *PZPCSTR;
 
 /* Pointer to an Asciiz string */
 typedef CHAR *PSZ;
@@ -372,13 +388,13 @@ typedef CONST char *PCSZ;
 typedef wchar_t WCHAR;
 typedef WCHAR *PWCHAR, *LPWCH, *PWCH;
 typedef CONST WCHAR *LPCWCH, *PCWCH;
-typedef WCHAR *NWPSTR, *LPWSTR, *PWSTR;
-typedef PWSTR *PZPWSTR;
-typedef CONST PWSTR *PCZPWSTR;
-typedef WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
-typedef CONST WCHAR *LPCWSTR, *PCWSTR;
-typedef PCWSTR *PZPCWSTR;
-typedef CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
+typedef _Null_terminated_ WCHAR *NWPSTR, *LPWSTR, *PWSTR;
+typedef _Null_terminated_ PWSTR *PZPWSTR;
+typedef _Null_terminated_ CONST PWSTR *PCZPWSTR;
+typedef _Null_terminated_ WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
+typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
+typedef _Null_terminated_ PCWSTR *PZPCWSTR;
+typedef _Null_terminated_ CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
 
 /* Cardinal Data Types */
 typedef char CCHAR, *PCCHAR;
@@ -488,8 +504,8 @@ typedef struct _STRING32 {
     USHORT   Length;
     USHORT   MaximumLength;
     ULONG  Buffer;
-} STRING32, *PSTRING32, 
-  UNICODE_STRING32, *PUNICODE_STRING32, 
+} STRING32, *PSTRING32,
+  UNICODE_STRING32, *PUNICODE_STRING32,
   ANSI_STRING32, *PANSI_STRING32;
 
 typedef struct _STRING64 {
@@ -497,7 +513,7 @@ typedef struct _STRING64 {
     USHORT   MaximumLength;
     ULONGLONG  Buffer;
 } STRING64, *PSTRING64,
-  UNICODE_STRING64, *PUNICODE_STRING64, 
+  UNICODE_STRING64, *PUNICODE_STRING64,
   ANSI_STRING64, *PANSI_STRING64;
 
 /* LangID and NLS */
