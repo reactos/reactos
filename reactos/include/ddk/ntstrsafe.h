@@ -2069,9 +2069,6 @@ NTSTRSAFEAPI RtlStringLengthWorkerW(STRSAFE_LPCWSTR psz,size_t cchMax,size_t *pc
 
 #ifdef _MSC_VER
 #pragma warning(pop)
-#ifdef _PREFAST_
-#pragma prefast(pop)
-#endif /* _PREFAST_ */
 #endif /* _MSC_VER */
 
 #endif /* _NTSTRSAFE_H_INCLUDED_ */
