@@ -361,14 +361,13 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 }
 
 HANDLE StartAdapterDiscovery(VOID) {
-    HANDLE /* ThreadHandle, */ EventHandle;
+    HANDLE ThreadHandle, EventHandle;
 
     EventHandle = CreateEvent(NULL,
                               FALSE,
                               FALSE,
                               NULL);
 
-#if 0
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
@@ -380,9 +379,6 @@ HANDLE StartAdapterDiscovery(VOID) {
         return NULL;
 
     CloseHandle(ThreadHandle);
-#else
-    AdapterDiscoveryThread((LPVOID)EventHandle);
-#endif
 
     return EventHandle;
 }
