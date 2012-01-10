@@ -217,7 +217,7 @@ BEGIN
 	LTEXT         "Tip fișier:",  14004, 8, 35, 50, 10
 	LTEXT         "Dosar",        14005, 68, 35, 160, 10
 	LTEXT         "Locație:",     14006, 8, 53, 50, 10
-	EDITTEXT                      14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT                      14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL
 	LTEXT         "Mărime:",      14008, 8, 72, 45, 10
 	EDITTEXT                      14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT         "Conține:",     14010, 8, 93, 45, 10
@@ -241,7 +241,7 @@ BEGIN
 	LTEXT     "Se deschide cu:", 14006, 8, 53, 50, 10
 	EDITTEXT                     14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT     "Locație:",        14008, 8, 72, 45, 10
-	EDITTEXT                     14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT                     14009, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL
 	LTEXT     "Mărime:",         14010, 8, 93, 45, 10
 	EDITTEXT                     14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT     "Creat:",          14014, 8, 118, 45, 10

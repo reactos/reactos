@@ -33,7 +33,7 @@ typedef struct _LANGANDCODEPAGE_
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
 static LONG
-SH_GetAssociatedApplication(WCHAR *pwszFileExt, WCHAR *pwszAssocApp)
+SH_GetAssociatedApplication(LPCWSTR pwszFileExt, WCHAR *pwszAssocApp)
 {
     WCHAR wszBuf[MAX_PATH] = {0};
     LONG result;
@@ -61,7 +61,7 @@ SH_GetAssociatedApplication(WCHAR *pwszFileExt, WCHAR *pwszAssocApp)
 }
 
 static LONG
-SH_FileGeneralOpensWith(HWND hwndDlg, WCHAR *fileext)
+SH_FileGeneralOpensWith(HWND hwndDlg, LPCWSTR fileext)
 {
     LONG result;
     WCHAR wAppName[MAX_PATH] = {0};
@@ -238,19 +238,14 @@ SH_CreatePropertySheetPage(LPCSTR pszResName, DLGPROC pfnDlgProc, LPARAM lParam,
  */
 
 static BOOL
-SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR *filext)
+SH_FileGeneralSetFileType(HWND hwndDlg, LPCWSTR pwszPath)
 {
-    WCHAR name[MAX_PATH];
-    WCHAR value[MAX_PATH];
-    DWORD lname = MAX_PATH;
-    DWORD lvalue = MAX_PATH;
-    HKEY hKey;
-    LONG result;
     HWND hDlgCtrl;
+    WCHAR wszBuf[256];
 
-    TRACE("fileext %s\n", debugstr_w(filext));
+    TRACE("path %s\n", debugstr_w(pwszPath));
 
-    if (filext == NULL)
+    if (pwszPath == NULL || !pwszPath[0])
         return FALSE;
 
     hDlgCtrl = GetDlgItem(hwndDlg, 14005);
@@ -258,96 +253,42 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR *filext)
     if (hDlgCtrl == NULL)
         return FALSE;
 
-    if (RegOpenKeyW(HKEY_CLASSES_ROOT, filext, &hKey) != ERROR_SUCCESS)
+    LPCWSTR pwszExt = PathFindExtensionW(pwszPath);
+
+    SHFILEINFO fi;
+    if (!SHGetFileInfoW(pwszPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME|SHGFI_ICON))
     {
-        /* the file extension is unknown, so default to string "FileExtension File" */
-        SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)value);
-        swprintf(name, L"%s %s", &filext[1], value);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)name);
-        return TRUE;
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", pwszPath, GetLastError());
+        fi.szTypeName[0] = L'\0';
+        fi.hIcon = NULL;
     }
 
-    result = RegEnumValueW(hKey, 0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
-    RegCloseKey(hKey);
-
-    if (result != ERROR_SUCCESS)
-        return FALSE;
-
-    if (RegOpenKeyW(HKEY_CLASSES_ROOT, value, &hKey) == ERROR_SUCCESS)
+    if (pwszExt[0])
     {
-        if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", value, MAX_PATH, NULL, 0, NULL) != ERROR_SUCCESS)
+        if (!fi.szTypeName[0])
         {
-            lvalue = lname = MAX_PATH;
-            result = RegEnumValueW(hKey, 0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
+            /* the file extension is unknown, so default to string "FileExtension File" */
+            size_t cchRemaining = 0;
+            LPWSTR pwszEnd = NULL;
+
+            StringCchPrintfExW(wszBuf, _countof(wszBuf), &pwszEnd, &cchRemaining, 0, L"%s ", pwszExt + 1);
+            SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)cchRemaining, (LPARAM)pwszEnd);
+
+            SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wszBuf);
         }
-
-        lname = MAX_PATH;
-
-        if (RegGetValueW(hKey, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, name, &lname) == ERROR_SUCCESS)
+        else
         {
-            UINT IconIndex;
-            WCHAR szBuffer[MAX_PATH];
-            WCHAR *Offset;
-            HICON hIcon = 0;
-            HRSRC hResource;
-            LPVOID pResource = NULL;
-            HGLOBAL hGlobal;
-            HINSTANCE hLibrary;
-            Offset = wcsrchr(name, L',');
-
-            if (Offset)
-            {
-                IconIndex = _wtoi(Offset + 2);
-                *Offset = L'\0';
-                name[MAX_PATH - 1] = L'\0';
-
-                if (ExpandEnvironmentStringsW(name, szBuffer, MAX_PATH))
-                {
-                    szBuffer[MAX_PATH - 1] = L'\0';
-                    hLibrary = LoadLibraryExW(szBuffer, NULL, LOAD_LIBRARY_AS_DATAFILE);
-                    if (hLibrary)
-                    {
-                        hResource = FindResourceW(hLibrary, MAKEINTRESOURCEW(IconIndex), (LPCWSTR)RT_ICON);
-                        if (hResource)
-                        {
-                            hGlobal = LoadResource(shell32_hInstance, hResource);
-                            if (hGlobal)
-                            {
-                                pResource = LockResource(hGlobal);
-                                if (pResource != NULL)
-                                {
-                                    hIcon = CreateIconFromResource((LPBYTE)pResource, SizeofResource(shell32_hInstance, hResource), TRUE, 0x00030000);
-                                    TRACE("hIcon %p,- szBuffer %s IconIndex %u error %u icon %p hResource %p pResource %p\n",
-                                          hIcon,
-                                          debugstr_w(szBuffer),
-                                          IconIndex,
-                                          MAKEINTRESOURCEW(IconIndex),
-                                          hResource,
-                                          pResource);
-                                    SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIcon, 0);
-                                }
-                            }
-                        }
-                        FreeLibrary(hLibrary);
-                    }
-                }
-            }
+            /* file extension type */
+            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt);
+            SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wszBuf);
         }
-        RegCloseKey(hKey);
     }
 
-    /* file extension type */
-    value[MAX_PATH - 1] = L'\0';
-    lvalue = wcslen(value);
-    lname = wcslen(filext);
-    if (MAX_PATH - lvalue - lname - 3 > 0)
-    {
-        wcscat(value, L" (");
-        wcscat(value, filext);
-        wcscat(value, L")");
-    }
-
-    SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)value);
+    /* file icon */
+    if (fi.hIcon)
+        SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)fi.hIcon, 0);
+    else
+        ERR("No icon %ls\n", pwszPath);
 
     return TRUE;
 }
@@ -389,41 +330,28 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR *lpResult)
  */
 
 static BOOL
-SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
+SH_FileGeneralSetText(HWND hwndDlg, LPCWSTR pwszPath)
 {
-    int flength;
-    int plength;
-    WCHAR *lpdir;
-    WCHAR buff[MAX_PATH];
-
-    if (lpstr == NULL)
+    if (pwszPath == NULL)
         return FALSE;
 
-    lpdir = wcsrchr(lpstr, L'\\');        /* find the last occurence of '\\' */
+    /* find the filename position */
+    WCHAR *pwszFilename = PathFindFileNameW(pwszPath);
 
-    plength = wcslen(lpstr);
-    flength = wcslen(lpdir);
-
-    if (lpdir)
+    if (pwszFilename > pwszPath)
     {
         /* location text field */
-        wcsncpy(buff, lpstr, plength - flength);
-        buff[plength - flength] = UNICODE_NULL;
+        WCHAR wszLocation[MAX_PATH];
+        StringCchCopyNW(wszLocation, _countof(wszLocation), pwszPath, pwszFilename - pwszPath - 1);
 
-        if (wcslen(buff) == 2)
-        {
-            wcscat(buff, L"\\");
-        }
+        if (PathIsRootW(wszLocation))
+            wcscat(wszLocation, L"\\");
 
-        SetDlgItemTextW(hwndDlg, 14009, buff);
+        SetDlgItemTextW(hwndDlg, 14009, wszLocation);
     }
 
-    if (flength > 1)
-    {
-        /* text filename field */
-        wcsncpy(buff, &lpdir[1], flength);
-        SetDlgItemTextW(hwndDlg, 14001, buff);
-    }
+    /* text filename field */
+    SetDlgItemTextW(hwndDlg, 14001, pwszFilename);
 
     return TRUE;
 }
@@ -437,7 +365,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
  */
 
 static BOOL
-SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER lpfilesize)
+SH_FileGeneralSetFileSizeTime(HWND hwndDlg, LPCWSTR lpfilename, PULARGE_INTEGER lpfilesize)
 {
     BOOL result;
     HANDLE hFile;
@@ -748,25 +676,26 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
 
             TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %S\n", hwndDlg, lParam, ppsp->lParam);
 
-            WCHAR *pwszFilename = (WCHAR *)ppsp->lParam;
-
-            if (pwszFilename == NULL)
+            LPCWSTR pwszPath = (WCHAR *)ppsp->lParam;
+            if (pwszPath == NULL)
             {
                 ERR("no filename\n");
                 break;
             }
+            
+            LPCWSTR pwszExt = PathFindExtensionW(pwszPath);
 
             /* set general text properties filename filelocation and icon */
-            SH_FileGeneralSetText(hwndDlg, pwszFilename);
+            SH_FileGeneralSetText(hwndDlg, pwszPath);
 
             /* enumerate file extension from registry and application which opens it */
-            SH_FileGeneralSetFileType(hwndDlg, wcsrchr(pwszFilename, L'.'));
+            SH_FileGeneralSetFileType(hwndDlg, pwszPath);
 
             /* set opens with */
-            SH_FileGeneralOpensWith(hwndDlg, wcsrchr(pwszFilename, L'.'));
+            SH_FileGeneralOpensWith(hwndDlg, pwszExt);
 
             /* set file time create/modfied/accessed */
-            SH_FileGeneralSetFileSizeTime(hwndDlg, pwszFilename, NULL);
+            SH_FileGeneralSetFileSizeTime(hwndDlg, pwszPath, NULL);
 
             return TRUE;
         }
