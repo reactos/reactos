@@ -345,15 +345,12 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                 DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
                                        Table->table[i].dwIndex));
         }
-        Error = NotifyAddrChange(NULL, NULL);
 #if 0
+        Error = NotifyAddrChange(NULL, NULL);
         if (Error != NO_ERROR)
             break;
 #else
-        if (AdapterCount)
-            break;
-        else
-            Sleep(3000);
+        Sleep(3000);
 #endif
     } while (TRUE);
 
