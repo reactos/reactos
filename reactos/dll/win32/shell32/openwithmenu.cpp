@@ -909,7 +909,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
 
         /* Add filename to label */
         cchBuf = GetDlgItemTextW(hwnd, 14001, wszBuf, _countof(wszBuf));
-        StringCchCopyW(wszBuf + cchBuf, _countof(wszBuf) - cchBuf, m_pInfo->pcszFile);
+        StringCchCopyW(wszBuf + cchBuf, _countof(wszBuf) - cchBuf, PathFindFileNameW(m_pInfo->pcszFile));
         SetDlgItemTextW(hwnd, 14001, wszBuf);
 
         /* Load applications from registry */
