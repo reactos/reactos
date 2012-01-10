@@ -49,7 +49,7 @@ static LONG SH_GetAssociatedApplication(WCHAR *pwszFileExt, WCHAR *pwszAssocApp)
            notepad.exe "%1"
            %systemroot%\notepad.exe "%1"
            etc
-           Maybe there is code to do that somewhere? 
+           Maybe there is code to do that somewhere?
            dll\win32\shell32\shlexec.c for example? */
     }
 
@@ -64,13 +64,13 @@ static LONG SH_FileGeneralOpensWith(HWND hwndDlg, WCHAR *fileext)
     LONG result;
     WCHAR wAppName[MAX_PATH] = {0};
     WCHAR wAssocApp[MAX_PATH] = {0};
-    
+
     result = SH_GetAssociatedApplication(fileext, wAssocApp);
-    
+
     if (result == ERROR_SUCCESS)
     {
         _wsplitpath(wAssocApp, NULL, NULL, wAppName, NULL);
-    
+
         SetDlgItemTextW(hwndDlg, 14007, wAppName);
     }
 
@@ -112,8 +112,8 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
     swprintf(szNumber, L"%I64u", lpQwSize->QuadPart);
 
     // Get system strings for decimal and thousand separators.
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSep, sizeof(szDecimalSep)/sizeof(*szDecimalSep));
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szThousandSep, sizeof(szThousandSep)/sizeof(*szThousandSep));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSep, sizeof(szDecimalSep) / sizeof(*szDecimalSep));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szThousandSep, sizeof(szThousandSep) / sizeof(*szThousandSep));
 
     // Initialize format for printing the number in bytes
     ZeroMemory(&nf, sizeof(nf));
@@ -128,7 +128,7 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
     Len = GetLocaleInfoW(LOCALE_USER_DEFAULT,
                          LOCALE_SGROUPING,
                          szGrouping,
-                         sizeof(szGrouping)/sizeof(*szGrouping));
+                         sizeof(szGrouping) / sizeof(*szGrouping));
 
     // Convert grouping specs from string to integer
     for (i = 0; i < Len; i++)
@@ -189,16 +189,14 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
  */
 
 HPROPSHEETPAGE
-SH_CreatePropertySheetPage(LPCSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
+SH_CreatePropertySheetPage(LPCSTR pszResName, DLGPROC pfnDlgProc, LPARAM lParam, LPWSTR pwszTitle)
 {
     HRSRC hRes;
-    LPVOID lpsztemplate;
-    PROPSHEETPAGEW ppage;
 
-    if (resname == NULL)
+    if (pszResName == NULL)
         return (HPROPSHEETPAGE)0;
 
-    hRes = FindResourceA(shell32_hInstance, resname, (LPSTR)RT_DIALOG);
+    hRes = FindResourceA(shell32_hInstance, pszResName, (LPSTR)RT_DIALOG);
 
     if (hRes == NULL)
     {
@@ -206,25 +204,24 @@ SH_CreatePropertySheetPage(LPCSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWST
         return (HPROPSHEETPAGE)0;
     }
 
-    lpsztemplate = LoadResource(shell32_hInstance, hRes);
+    LPVOID pTemplate = LoadResource(shell32_hInstance, hRes);
 
-    if (lpsztemplate == NULL)
+    if (pTemplate == NULL)
         return (HPROPSHEETPAGE)0;
 
-    memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
-    ppage.dwSize = sizeof(PROPSHEETPAGEW);
-    ppage.dwFlags = PSP_DLGINDIRECT;
-    ppage.pResource = (DLGTEMPLATE *)lpsztemplate;
-    ppage.pfnDlgProc = dlgproc;
-    ppage.lParam = lParam;
-    ppage.pszTitle = szTitle;
+    PROPSHEETPAGEW Page;
+    memset(&Page, 0x0, sizeof(PROPSHEETPAGEW));
+    Page.dwSize = sizeof(PROPSHEETPAGEW);
+    Page.dwFlags = PSP_DLGINDIRECT;
+    Page.pResource = (DLGTEMPLATE *)pTemplate;
+    Page.pfnDlgProc = pfnDlgProc;
+    Page.lParam = lParam;
+    Page.pszTitle = pwszTitle;
 
-    if (szTitle)
-    {
-        ppage.dwFlags |= PSP_USETITLE;
-    }
+    if (pwszTitle)
+        Page.dwFlags |= PSP_USETITLE;
 
-    return CreatePropertySheetPageW(&ppage);
+    return CreatePropertySheetPageW(&Page);
 }
 
 /*************************************************************************
@@ -364,10 +361,6 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR *lpResult)
 {
     FILETIME ft;
     SYSTEMTIME dt;
-    WORD wYear;
-    static const WCHAR wFormat[] = {
-        '%', '0', '2', 'd', '/', '%', '0', '2', 'd', '/', '%', '0', '4', 'd',
-        ' ', ' ', '%', '0', '2', 'd', ':', '%', '0', '2', 'u', 0 };
 
     if (lpFileTime == NULL || lpResult == NULL)
         return FALSE;
@@ -377,10 +370,8 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR *lpResult)
 
     FileTimeToSystemTime(&ft, &dt);
 
-    wYear = dt.wYear;
-
     /* ddmmyy */
-    swprintf(lpResult, wFormat, dt.wDay, dt.wMonth, wYear, dt.wHour, dt.wMinute);
+    swprintf(lpResult, L"%02hu/%02hu/%04hu  %02hu:%02hu", dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
 
     TRACE("result %s\n", debugstr_w(lpResult));
     return TRUE;
@@ -405,7 +396,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
     if (lpstr == NULL)
         return FALSE;
 
-    lpdir = wcsrchr(lpstr, '\\');        /* find the last occurence of '\\' */
+    lpdir = wcsrchr(lpstr, L'\\');        /* find the last occurence of '\\' */
 
     plength = wcslen(lpstr);
     flength = wcslen(lpdir);
@@ -551,30 +542,27 @@ SH_FileVersionQuerySetText(HWND hwndDlg, DWORD dlgId, LPVOID pInfo, WCHAR *text,
  */
 
 BOOL
-SH_FileVersionQuerySetListText(HWND hwndDlg, LPVOID pInfo, const WCHAR *text, WCHAR **resptr, WORD lang, WORD code)
+SH_FileVersionQuerySetListText(HWND hwndDlg, LPVOID pInfo, LPCWSTR pwszProp, WORD wLang, WORD wCode)
 {
-    UINT reslen;
     HWND hDlgCtrl;
-    UINT index;
-    static const WCHAR wFormat[] = {
-        '\\', 'S', 't', 'r', 'i', 'n', 'g', 'F', 'i', 'l', 'e', 'I', 'n', 'f', 'o',
-        '\\', '%', '0', '4', 'x', '%', '0', '4', 'x', '\\', '%', 's', 0 };
-    WCHAR buff[256];
+    UINT Index;
+    UINT cbResult;
+    WCHAR buff[256], *pwszResult = NULL;
 
-    TRACE("text %s, resptr %p hwndDlg %p\n", debugstr_w(text), resptr, hwndDlg);
+    TRACE("pwszProp %s, hwndDlg %p\n", debugstr_w(pwszProp), hwndDlg);
 
-    if (hwndDlg == NULL || resptr == NULL || text == NULL)
+    if (hwndDlg == NULL || pwszProp == NULL)
         return FALSE;
 
-    swprintf(buff, wFormat, lang, code, text);
+    swprintf(buff, L"\\StringFileInfo\\%04x%04x\\%s", wLang, wCode, pwszProp);
 
-    if (VerQueryValueW(pInfo, buff, (LPVOID *)resptr, &reslen))
+    if (VerQueryValueW(pInfo, buff, (LPVOID *)&pwszResult, &cbResult))
     {
         /* listbox name property */
         hDlgCtrl = GetDlgItem(hwndDlg, 14009);
-        TRACE("%s :: %s\n", debugstr_w(text), debugstr_w(*resptr));
-        index = SendMessageW(hDlgCtrl, LB_ADDSTRING, (WPARAM)-1, (LPARAM)text);
-        SendMessageW(hDlgCtrl, LB_SETITEMDATA, (WPARAM)index, (LPARAM)(WCHAR *)*resptr);
+        TRACE("%s :: %s\n", debugstr_w(pwszProp), debugstr_w(pwszResult));
+        Index = SendMessageW(hDlgCtrl, LB_ADDSTRING, (WPARAM) -1, (LPARAM)pwszProp);
+        SendMessageW(hDlgCtrl, LB_SETITEMDATA, (WPARAM)Index, (LPARAM)(WCHAR *)pwszResult);
         return TRUE;
     }
 
@@ -589,7 +577,7 @@ SH_FileVersionQuerySetListText(HWND hwndDlg, LPVOID pInfo, const WCHAR *text, WC
  */
 
 BOOL
-SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
+SH_FileVersionInitialize(HWND hwndDlg, LPCWSTR pwszFilename)
 {
     LPVOID pBuf;
     DWORD versize;
@@ -602,37 +590,11 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
     WORD code = 0;
     LPLANGANDCODEPAGE lplangcode;
     WCHAR *str;
-    static const WCHAR wVersionFormat[] = {
-        '%', 'd', '.', '%', 'd', '.', '%', 'd', '.', '%', 'd', 0 };
-    static const WCHAR wFileDescriptionFormat[] = {
-        '\\', 'S', 't', 'r', 'i', 'n', 'g', 'F', 'i', 'l', 'e', 'I', 'n', 'f', 'o',
-        '\\', '%', '0', '4', 'x', '%', '0', '4', 'x',
-        '\\', 'F', 'i', 'l', 'e', 'D', 'e', 's', 'c', 'r', 'i', 'p', 't', 'i', 'o', 'n', 0 };
-    static const WCHAR wLegalCopyrightFormat[] = {
-        '\\', 'S', 't', 'r', 'i', 'n', 'g', 'F', 'i', 'l', 'e', 'I', 'n', 'f', 'o',
-        '\\', '%', '0', '4', 'x', '%', '0', '4', 'x',
-        '\\', 'L', 'e', 'g', 'a', 'l', 'C', 'o', 'p', 'y', 'r', 'i', 'g', 'h', 't', 0 };
-    static const WCHAR wTranslation[] = {
-        'V', 'a', 'r', 'F', 'i', 'l', 'e', 'I', 'n', 'f', 'o',
-        '\\', 'T', 'r', 'a', 'n', 's', 'l', 'a', 't', 'i', 'o', 'n', 0 };
-    static const WCHAR wCompanyName[] = {
-        'C', 'o', 'm', 'p', 'a', 'n', 'y', 'N', 'a', 'm', 'e', 0 };
-    static const WCHAR wFileVersion[] = {
-        'F', 'i', 'l', 'e', 'V', 'e', 'r', 's', 'i', 'o', 'n', 0 };
-    static const WCHAR wInternalName[] = {
-        'I', 'n', 't', 'e', 'r', 'n', 'a', 'l', 'N', 'a', 'm', 'e', 0 };
-    static const WCHAR wOriginalFilename[] = {
-        'O', 'r', 'i', 'g', 'i', 'n', 'a', 'l', 'F', 'i', 'l', 'e', 'n', 'a', 'm', 'e', 0 };
-    static const WCHAR wProductName[] = {
-        'P', 'r', 'o', 'd', 'u', 'c', 't', 'N', 'a', 'm', 'e', 0 };
-    static const WCHAR wProductVersion[] = {
-        'P', 'r', 'o', 'd', 'u', 'c', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', 0 };
-    static const WCHAR wSlash[] = { '\\', 0 };
 
-    if (lpfilename == 0)
+    if (pwszFilename == 0)
         return FALSE;
 
-    if (!(versize = GetFileVersionInfoSizeW(lpfilename, &handle)))
+    if (!(versize = GetFileVersionInfoSizeW(pwszFilename, &handle)))
     {
         WARN("GetFileVersionInfoSize failed\n");
         return FALSE;
@@ -644,24 +606,24 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
         return FALSE;
     }
 
-    if (!GetFileVersionInfoW(lpfilename, handle, versize, pBuf))
+    if (!GetFileVersionInfoW(pwszFilename, handle, versize, pBuf))
     {
         HeapFree(GetProcessHeap(), 0, pBuf);
         return FALSE;
     }
 
-    if (VerQueryValueW(pBuf, const_cast<LPWSTR>(wSlash), &info, &infolen))
+    if (VerQueryValueW(pBuf, L"\\", &info, &infolen))
     {
         VS_FIXEDFILEINFO *inf = (VS_FIXEDFILEINFO *)info;
-        swprintf(buff, wVersionFormat, HIWORD(inf->dwFileVersionMS),
-                                       LOWORD(inf->dwFileVersionMS),
-                                       HIWORD(inf->dwFileVersionLS),
-                                       LOWORD(inf->dwFileVersionLS));
+        swprintf(buff, L"%u.%u.%u.%u", HIWORD(inf->dwFileVersionMS),
+                 LOWORD(inf->dwFileVersionMS),
+                 HIWORD(inf->dwFileVersionLS),
+                 LOWORD(inf->dwFileVersionLS));
         TRACE("MS %x LS %x res %s \n", inf->dwFileVersionMS, inf->dwFileVersionLS, debugstr_w(buff));
         SetDlgItemTextW(hwndDlg, 14001, buff);
     }
 
-    if (VerQueryValueW(pBuf, const_cast<LPWSTR>(wTranslation), (LPVOID *)&lplangcode, &infolen))
+    if (VerQueryValueW(pBuf, L"VarFileInfo\\Translation", (LPVOID *)&lplangcode, &infolen))
     {
         /* FIXME find language from current locale / if not available,
          * default to english
@@ -671,22 +633,22 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
         code = lplangcode->code;
     }
 
-    swprintf(buff, wFileDescriptionFormat, lang, code);
+    swprintf(buff, L"\\StringFileInfo\\%04x%04x\\FileDescription", lang, code);
     SH_FileVersionQuerySetText(hwndDlg, 14003, pBuf, buff, &str);
 
-    swprintf(buff, wLegalCopyrightFormat, lang, code);
+    swprintf(buff, L"\\StringFileInfo\\%04x%04x\\LegalCopyright", lang, code);
     SH_FileVersionQuerySetText(hwndDlg, 14005, pBuf, buff, &str);
 
     /* listbox properties */
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wCompanyName, &str, lang, code);
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wFileVersion, &str, lang, code);
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wInternalName, &str, lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"CompanyName", lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"FileVersion", lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"InternalName", lang, code);
 
     /* FIXME insert language identifier */
 
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wOriginalFilename, &str, lang, code);
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductName, &str, lang, code);
-    SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductVersion, &str, lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"OriginalFilename", lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"ProductName", lang, code);
+    SH_FileVersionQuerySetListText(hwndDlg, pBuf, L"ProductVersion", lang, code);
     SetWindowLongPtr(hwndDlg, DWL_USER, (LONG_PTR)pBuf);
 
     /* select first item */
@@ -746,7 +708,7 @@ SH_FileVersionDlgProc(HWND hwndDlg,
                 if (lresult == LB_ERR)
                     break;
 
-                str = (WCHAR *) SendMessageW(hDlgCtrl, LB_GETITEMDATA, (WPARAM)lresult, (LPARAM)NULL);
+                str = (WCHAR *)SendMessageW(hDlgCtrl, LB_GETITEMDATA, (WPARAM)lresult, (LPARAM)NULL);
 
                 if (str == NULL)
                     break;
@@ -756,7 +718,7 @@ SH_FileVersionDlgProc(HWND hwndDlg,
 
                 return TRUE;
             }
-        break;
+            break;
 
         case WM_DESTROY:
             buf = (LPVOID) GetWindowLongPtr(hwndDlg, DWL_USER);
@@ -810,10 +772,10 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
             SH_FileGeneralSetText(hwndDlg, lpstr);
 
             /* enumerate file extension from registry and application which opens it */
-            SH_FileGeneralSetFileType(hwndDlg, wcsrchr(lpstr, '.'));
+            SH_FileGeneralSetFileType(hwndDlg, wcsrchr(lpstr, L'.'));
 
             /* set opens with */
-            SH_FileGeneralOpensWith(hwndDlg, wcsrchr(lpstr, '.'));
+            SH_FileGeneralOpensWith(hwndDlg, wcsrchr(lpstr, L'.'));
 
             /* set file time create/modfied/accessed */
             SH_FileGeneralSetFileSizeTime(hwndDlg, lpstr, NULL);
@@ -829,14 +791,13 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
 
 BOOL
 CALLBACK
-AddShellPropSheetExCallback(HPROPSHEETPAGE hPage,
-                            LPARAM lParam)
+AddShellPropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 {
-    PROPSHEETHEADERW *pinfo = (PROPSHEETHEADERW *)lParam;
+    PROPSHEETHEADERW *pInfo = (PROPSHEETHEADERW *)lParam;
 
-    if (pinfo->nPages < MAX_PROPERTY_SHEET_PAGE)
+    if (pInfo->nPages < MAX_PROPERTY_SHEET_PAGE)
     {
-        pinfo->phpage[pinfo->nPages++] = hPage;
+        pInfo->phpage[pInfo->nPages++] = hPage;
         return TRUE;
     }
 
@@ -844,7 +805,7 @@ AddShellPropSheetExCallback(HPROPSHEETPAGE hPage,
 }
 
 int
-EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA *hpsxa, IDataObject *pDataObj)
+EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pInfo, int NumPages, HPSXA *phpsxa, IDataObject *pDataObj)
 {
     WCHAR szName[MAX_PATH] = { 0 };
     WCHAR *pOffset;
@@ -884,13 +845,13 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
 
     TRACE("EnumPropSheetExt szName %s\n", debugstr_w(szName));
 
-    hpsxa[0] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages, pDataObj);
-    Pages = SHAddFromPropSheetExtArray(hpsxa[0], AddShellPropSheetExCallback, (LPARAM)pinfo);
+    phpsxa[0] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages, pDataObj);
+    Pages = SHAddFromPropSheetExtArray(phpsxa[0], AddShellPropSheetExCallback, (LPARAM)pInfo);
 
-    hpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"*", NumPages-Pages, pDataObj);
-    Pages += SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)pinfo);
+    phpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"*", NumPages - Pages, pDataObj);
+    Pages += SHAddFromPropSheetExtArray(phpsxa[1], AddShellPropSheetExCallback, (LPARAM)pInfo);
 
-    hpsxa[2] = NULL;
+    phpsxa[2] = NULL;
 
     if (pOffset)
     {
@@ -901,8 +862,8 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
         {
             TRACE("EnumPropSheetExt szName %s, pOffset %s\n", debugstr_w(szName), debugstr_w(pOffset));
             szName[(sizeof(szName) / sizeof(WCHAR)) - 1] = L'\0';
-            hpsxa[2] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
-            Pages += SHAddFromPropSheetExtArray(hpsxa[2], AddShellPropSheetExCallback, (LPARAM)pinfo);
+            phpsxa[2] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
+            Pages += SHAddFromPropSheetExtArray(phpsxa[2], AddShellPropSheetExCallback, (LPARAM)pInfo);
         }
     }
 
@@ -915,16 +876,16 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
  *
  * called from ShellExecuteExW32
  *
- * lpf contains (quoted) path of folder/file
+ * pwszPath contains (quoted) path of folder/file
  *
  * TODO: provide button change application type if file has registered type
  *       make filename field editable and apply changes to filename on close
  */
 
 BOOL
-SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
+SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
 {
-    PROPSHEETHEADERW pinfo;
+    PROPSHEETHEADERW Info;
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     WCHAR wFileName[MAX_PATH];
     DWORD dwHandle = 0;
@@ -935,30 +896,30 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     HRESULT hResult;
     DWORD wLength;
 
-    TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));
+    TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(pwszPath));
 
-    if (lpf == NULL)
+    if (pwszPath == NULL)
         return FALSE;
 
-    if (!wcslen(lpf))
+    if (!wcslen(pwszPath))
         return FALSE;
 
     memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
 
-    if (lpf[0] == '"')
+    if (pwszPath[0] == L'"')
     {
-        /* remove quotes from lpf */
-        LPCWSTR src = lpf + 1;
+        /* remove quotes from pwszPath */
+        LPCWSTR src = pwszPath + 1;
         LPWSTR dst = wFileName;
 
-        while (*src && *src != '"')
+        while (*src && *src != L'"')
             *dst++ = *src++;
 
-        *dst = '\0';
+        *dst = L'\0';
     }
     else
     {
-        wcscpy(wFileName, lpf);
+        wcscpy(wFileName, pwszPath);
     }
 
     //
@@ -984,33 +945,33 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     }
 
 
-    pFileName = wcsrchr(wFileName, '\\');
+    pFileName = wcsrchr(wFileName, L'\\');
 
     if (!pFileName)
         pFileName = wFileName;
     else
         pFileName++;
 
-    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
-    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
-    pinfo.phpage = hppages;
-    pinfo.pszCaption = pFileName;
+    memset(&Info, 0x0, sizeof(PROPSHEETHEADERW));
+    Info.dwSize = sizeof(PROPSHEETHEADERW);
+    Info.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+    Info.phpage = hppages;
+    Info.pszCaption = pFileName;
 
-    hppages[pinfo.nPages] =
+    hppages[Info.nPages] =
         SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG",
                                    SH_FileGeneralDlgProc,
                                    (LPARAM)wFileName,
                                    NULL);
 
-    if (hppages[pinfo.nPages])
-        pinfo.nPages++;
+    if (hppages[Info.nPages])
+        Info.nPages++;
 
     hResult = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (LPVOID *)&pDataObj);
 
     if (hResult == S_OK)
     {
-        if (!EnumPropSheetExt(wFileName, &pinfo, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj))
+        if (!EnumPropSheetExt(wFileName, &Info, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj))
         {
             hpsxa[0] = NULL;
             hpsxa[1] = NULL;
@@ -1018,18 +979,18 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
         }
     }
 
-    if (GetFileVersionInfoSizeW(lpf, &dwHandle))
+    if (GetFileVersionInfoSizeW(pwszPath, &dwHandle))
     {
-        hppages[pinfo.nPages] =
+        hppages[Info.nPages] =
             SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",
                                        SH_FileVersionDlgProc,
                                        (LPARAM)wFileName,
                                        NULL);
-        if (hppages[pinfo.nPages])
-            pinfo.nPages++;
+        if (hppages[Info.nPages])
+            Info.nPages++;
     }
 
-    res = PropertySheetW(&pinfo);
+    res = PropertySheetW(&Info);
 
     if (hResult == S_OK)
     {
