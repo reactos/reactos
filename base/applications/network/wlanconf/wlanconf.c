@@ -91,30 +91,23 @@ IsWlanAdapter(HANDLE hAdapter)
 {
     BOOL bSuccess;
     DWORD dwBytesReturned;
-    PNDISUIO_QUERY_OID QueryOid;
-    DWORD QueryOidSize;
+    NDISUIO_QUERY_OID QueryOid;
 
-    QueryOidSize = FIELD_OFFSET(NDISUIO_QUERY_OID, Data) + sizeof(NDIS_802_11_SSID);
-    QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
-    if (!QueryOid)
-        return FALSE;
-
-    /* We're just going to do a OID_802_11_SSID query. WLAN drivers should
-     * always succeed this query (returning SsidLength = 0 if not associated) */
-    QueryOid->Oid = OID_802_11_SSID;
+    /* WLAN drivers must support this OID */
+    QueryOid.Oid = OID_GEN_PHYSICAL_MEDIUM;
 
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_QUERY_OID_VALUE,
-                               QueryOid,
-                               QueryOidSize,
-                               QueryOid,
-                               QueryOidSize,
+                               &QueryOid,
+                               sizeof(QueryOid),
+                               &QueryOid,
+                               sizeof(QueryOid),
                                &dwBytesReturned,
                                NULL);
+    if (!bSuccess || *(PULONG)QueryOid.Data != NdisPhysicalMediumWirelessLan)
+        return FALSE;
 
-    HeapFree(GetProcessHeap(), 0, QueryOid);
-
-    return bSuccess;
+    return TRUE;
 }
 
 HANDLE
