@@ -781,4 +781,5 @@ BEGIN
 	IDS_FILE_TYPES              "Tipi di file"
 	IDS_COLUMN_EXTENSION        "Estensioni"
 	IDS_BYTES_FORMAT            "byte"
+	IDS_UNKNOWN_APP             "Unknown application"
 END

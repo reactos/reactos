@@ -768,4 +768,5 @@ BEGIN
 	IDS_FILE_TYPES              "Типы файлов"
 	IDS_COLUMN_EXTENSION        "Расширения"
 	IDS_BYTES_FORMAT            "bytes"
+	IDS_UNKNOWN_APP             "Unknown application"
 END

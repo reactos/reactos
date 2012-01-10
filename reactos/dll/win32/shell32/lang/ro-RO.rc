@@ -789,5 +789,6 @@ BEGIN
 	IDS_FILE_TYPES              "Tipuri"
 	IDS_COLUMN_EXTENSION        "Extensii"
 	IDS_BYTES_FORMAT            "octeți"
+	IDS_UNKNOWN_APP             "Unknown application"
 END
 

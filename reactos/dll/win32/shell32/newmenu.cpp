@@ -135,7 +135,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     {
         /* Note: We are using ANSI function because strings can be treated as data */
         cbData = 0;
-        DWORD dwFlags = Types[i].bStr ? RRF_RT_REG_SZ|RRF_RT_REG_EXPAND_SZ : RRF_RT_ANY;
+        DWORD dwFlags = Types[i].bStr ? RRF_RT_REG_SZ : RRF_RT_ANY;
         if (RegGetValueA(hKey, NULL, Types[i].pszName, dwFlags, NULL, NULL, &cbData) == ERROR_SUCCESS)
         {
             if (Types[i].bNeedData && cbData > 0)

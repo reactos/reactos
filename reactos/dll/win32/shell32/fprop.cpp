@@ -31,52 +31,39 @@ typedef struct _LANGANDCODEPAGE_
 } LANGANDCODEPAGE, *LPLANGANDCODEPAGE;
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
+BOOL PathIsExeW(LPCWSTR lpszPath);
 
-static LONG
-SH_GetAssociatedApplication(LPCWSTR pwszFileExt, WCHAR *pwszAssocApp)
+static VOID
+SH_FileGeneralOpensWith(HWND hwndDlg, LPCWSTR pwszExt)
 {
-    WCHAR wszBuf[MAX_PATH] = {0};
-    LONG result;
+    WCHAR wszBuf[MAX_PATH] = L"";
+    WCHAR wszBuf2[MAX_PATH] = L"";
     DWORD dwSize = sizeof(wszBuf);
 
-    result = RegGetValueW(HKEY_CLASSES_ROOT, pwszFileExt, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
-
-    if (result == ERROR_SUCCESS)
+    if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) == ERROR_SUCCESS)
     {
-        StringCbCat(wszBuf, sizeof(wszBuf), L"\\shell\\open\\command");
-        dwSize = MAX_PATH * sizeof(WCHAR);
-        result = RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"", RRF_RT_REG_SZ, NULL, pwszAssocApp, &dwSize);
-        /* FIXME: Make it return full path instead of
-           notepad.exe "%1"
-           %systemroot%\notepad.exe "%1"
-           etc
-           Maybe there is code to do that somewhere?
-           dll\win32\shell32\shlexec.c for example? */
-    }
+        StringCbCatW(wszBuf, sizeof(wszBuf), L"\\shell\\open\\command");
+        dwSize = sizeof(wszBuf2);
+        if (RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"", RRF_RT_REG_SZ, NULL, wszBuf2, &dwSize) == ERROR_SUCCESS)
+        {
+            /* Get path from command line */
+            ExpandEnvironmentStringsW(wszBuf2, wszBuf, _countof(wszBuf));
+            PathRemoveArgs(wszBuf);
+            PathUnquoteSpacesW(wszBuf);
+            PathRemoveExtension(wszBuf);
+            LPWSTR pwszFilename = PathFindFileNameW(wszBuf);
+            pwszFilename[0] = towupper(pwszFilename[0]);
+            SetDlgItemTextW(hwndDlg, 14007, pwszFilename);
+            //PathSearchAndQualify(wAssocAppFullPath, wAssocAppFullPath, MAX_PATH);
+            return;
+        } else
+            WARN("RegGetValueW %ls failed\n", wszBuf);
+    } else
+        WARN("RegGetValueW %ls failed\n", pwszExt);
 
-    if (result != ERROR_SUCCESS)
-        pwszAssocApp[0] = '\0';
-
-    return result;
-}
-
-static LONG
-SH_FileGeneralOpensWith(HWND hwndDlg, LPCWSTR fileext)
-{
-    LONG result;
-    WCHAR wAppName[MAX_PATH] = {0};
-    WCHAR wAssocApp[MAX_PATH] = {0};
-
-    result = SH_GetAssociatedApplication(fileext, wAssocApp);
-
-    if (result == ERROR_SUCCESS)
-    {
-        _wsplitpath(wAssocApp, NULL, NULL, wAppName, NULL);
-
-        SetDlgItemTextW(hwndDlg, 14007, wAppName);
-    }
-
-    return result;
+    /* Unknown application */
+    LoadStringW(shell32_hInstance, IDS_UNKNOWN_APP, wszBuf, _countof(wszBuf));
+    SetDlgItemTextW(hwndDlg, 14007, wszBuf);
 }
 
 /*************************************************************************
@@ -365,20 +352,21 @@ SH_FileGeneralSetText(HWND hwndDlg, LPCWSTR pwszPath)
  */
 
 static BOOL
-SH_FileGeneralSetFileSizeTime(HWND hwndDlg, LPCWSTR lpfilename, PULARGE_INTEGER lpfilesize)
+SH_FileGeneralSetFileSizeTime(HWND hwndDlg, LPCWSTR pwszPath)
 {
-    BOOL result;
     HANDLE hFile;
-    FILETIME create_time;
-    FILETIME accessed_time;
-    FILETIME write_time;
-    WCHAR resultstr[MAX_PATH];
-    LARGE_INTEGER file_size;
+    FILETIME CreateTime;
+    FILETIME AccessedTime;
+    FILETIME WriteTime;
+    WCHAR wszBuf[MAX_PATH];
+    LARGE_INTEGER FileSize;
 
-    if (lpfilename == NULL)
+    if (pwszPath == NULL)
         return FALSE;
 
-    hFile = CreateFileW(lpfilename,
+    TRACE("SH_FileGeneralSetFileSizeTime %ls\n", pwszPath);
+
+    hFile = CreateFileW(pwszPath,
                         GENERIC_READ,
                         FILE_SHARE_READ,
                         NULL,
@@ -388,34 +376,18 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, LPCWSTR lpfilename, PULARGE_INTEGER 
 
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        WARN("failed to open file %s\n", debugstr_w(lpfilename));
+        WARN("failed to open file %s\n", debugstr_w(pwszPath));
         return FALSE;
     }
 
-    result = GetFileTime(hFile, &create_time, &accessed_time, &write_time);
-
-    if (!result)
+    if (!GetFileTime(hFile, &CreateTime, &AccessedTime, &WriteTime))
     {
         WARN("GetFileTime failed\n");
+        CloseHandle(hFile);
         return FALSE;
     }
 
-    if (SHFileGeneralGetFileTimeString(&create_time, resultstr))
-    {
-        SetDlgItemTextW(hwndDlg, 14015, resultstr);
-    }
-
-    if (SHFileGeneralGetFileTimeString(&accessed_time, resultstr))
-    {
-        SetDlgItemTextW(hwndDlg, 14019, resultstr);
-    }
-
-    if (SHFileGeneralGetFileTimeString(&write_time, resultstr))
-    {
-        SetDlgItemTextW(hwndDlg, 14017, resultstr);
-    }
-
-    if (!GetFileSizeEx(hFile, &file_size))
+    if (!GetFileSizeEx(hFile, &FileSize))
     {
         WARN("GetFileSize failed\n");
         CloseHandle(hFile);
@@ -424,16 +396,21 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, LPCWSTR lpfilename, PULARGE_INTEGER 
 
     CloseHandle(hFile);
 
-    if (!SH_FormatFileSizeWithBytes((PULARGE_INTEGER)&file_size,
-                                    resultstr,
-                                    sizeof(resultstr) / sizeof(WCHAR)))
-        return FALSE;
+    if (SHFileGeneralGetFileTimeString(&CreateTime, wszBuf))
+        SetDlgItemTextW(hwndDlg, 14015, wszBuf);
 
-    TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
-    SetDlgItemTextW(hwndDlg, 14011, resultstr);
+    if (SHFileGeneralGetFileTimeString(&AccessedTime, wszBuf))
+        SetDlgItemTextW(hwndDlg, 14019, wszBuf);
 
-    if (lpfilesize)
-        lpfilesize->QuadPart = (ULONGLONG)file_size.QuadPart;
+    if (SHFileGeneralGetFileTimeString(&WriteTime, wszBuf))
+        SetDlgItemTextW(hwndDlg, 14017, wszBuf);
+
+    if (SH_FormatFileSizeWithBytes((PULARGE_INTEGER)&FileSize,
+                                    wszBuf,
+                                    sizeof(wszBuf) / sizeof(WCHAR)))
+    {
+        SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+    }
 
     return TRUE;
 }
@@ -679,11 +656,9 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
             LPCWSTR pwszPath = (WCHAR *)ppsp->lParam;
             if (pwszPath == NULL)
             {
-                ERR("no filename\n");
+                ERR("no path\n");
                 break;
             }
-            
-            LPCWSTR pwszExt = PathFindExtensionW(pwszPath);
 
             /* set general text properties filename filelocation and icon */
             SH_FileGeneralSetText(hwndDlg, pwszPath);
@@ -692,10 +667,11 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
             SH_FileGeneralSetFileType(hwndDlg, pwszPath);
 
             /* set opens with */
-            SH_FileGeneralOpensWith(hwndDlg, pwszExt);
+            if (!PathIsExeW(pwszPath))
+                SH_FileGeneralOpensWith(hwndDlg, PathFindExtensionW(pwszPath));
 
             /* set file time create/modfied/accessed */
-            SH_FileGeneralSetFileSizeTime(hwndDlg, pwszPath, NULL);
+            SH_FileGeneralSetFileSizeTime(hwndDlg, pwszPath);
 
             return TRUE;
         }
@@ -800,32 +776,24 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     WCHAR wszPath[MAX_PATH];
     StringCbCopyW(wszPath, sizeof(wszPath), pwszPath);
 
-    //
-    // get length
-    //
-    INT cchPath = wcslen(wszPath);
-    if (cchPath > 3 && wszPath[cchPath-1] == L'\\')
-    {
-        //
-        // remove trailing \\ at the end of path
-        //
-        wszPath[cchPath-1] = L'\0';
-    }
+    /* remove trailing \\ at the end of path */
+    PathRemoveBackslashW(wszPath);
 
+    /* Handle drives */
     if (PathIsRootW(wszPath))
         return SH_ShowDriveProperties(wszPath, pidlFolder, apidl);
 
+    /* Handle folders */
     if (PathIsDirectoryW(wszPath))
         return SH_ShowFolderProperties(wszPath, pidlFolder, apidl);
 
-    LPCWSTR pwszFilename = PathFindFileNameW(wszPath);
-
+    /* Handle files */
     PROPSHEETHEADERW Info;
     memset(&Info, 0x0, sizeof(PROPSHEETHEADERW));
     Info.dwSize = sizeof(PROPSHEETHEADERW);
     Info.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
     Info.phpage = hppages;
-    Info.pszCaption = pwszFilename;
+    Info.pszCaption = PathFindFileNameW(wszPath);
 
     hppages[Info.nPages] =
         SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG",

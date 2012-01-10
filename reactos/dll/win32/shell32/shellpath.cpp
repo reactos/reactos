@@ -177,7 +177,7 @@ static BOOL PathIsExeA (LPCSTR lpszPath)
 /*************************************************************************
  *  PathIsExeW        [internal]
  */
-static BOOL PathIsExeW (LPCWSTR lpszPath)
+BOOL PathIsExeW (LPCWSTR lpszPath)
 {
     LPCWSTR lpszExtension = PathGetExtensionW(lpszPath);
         int i;

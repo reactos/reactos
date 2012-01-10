@@ -29,6 +29,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 // "NoInternetOpenWith"=dword:00000001
 //
 
+BOOL PathIsExeW(LPCWSTR lpszPath);
+
 class COpenWithList
 {
     public:
@@ -1350,9 +1352,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
     pwszExt = PathFindExtensionW(m_wszPath);
-    if (!_wcsicmp(pwszExt, L".exe") || !_wcsicmp(pwszExt, L".com") ||
-        !_wcsicmp(pwszExt, L".scr") || !_wcsicmp(pwszExt, L".bat") ||
-        !_wcsicmp(pwszExt, L".cmd") || !_wcsicmp(pwszExt, L".lnk"))
+    if (PathIsExeW(pwszExt) || !_wcsicmp(pwszExt, L".lnk"))
     {
         TRACE("file is a executable or shortcut\n");
         return E_FAIL;
