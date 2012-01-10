@@ -36,6 +36,9 @@ typedef struct _NDISUIO_ADAPTER_CONTEXT
     /* Receive packet list */
     LIST_ENTRY PacketList;
     KEVENT PacketReadEvent;
+    
+    /* Mac options */
+    ULONG MacOptions;
 
     /* Device name */
     UNICODE_STRING DeviceName;

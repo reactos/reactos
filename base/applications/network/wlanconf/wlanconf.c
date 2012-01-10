@@ -94,7 +94,7 @@ IsWlanAdapter(HANDLE hAdapter)
     PNDISUIO_QUERY_OID QueryOid;
     DWORD QueryOidSize;
 
-    QueryOidSize = sizeof(NDISUIO_QUERY_OID) + sizeof(NDIS_802_11_SSID);
+    QueryOidSize = FIELD_OFFSET(NDISUIO_QUERY_OID, Data) + sizeof(NDIS_802_11_SSID);
     QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
     if (!QueryOid)
         return FALSE;
@@ -216,8 +216,11 @@ WlanDisconnect(HANDLE hAdapter)
                                0,
                                &dwBytesReturned,
                                NULL);
+    if (!bSuccess)
+        return FALSE;
 
-    return bSuccess;
+    _tprintf(_T("The operation completed successfully.\n"));
+    return TRUE;
 }
 
 static
@@ -263,6 +266,263 @@ CharToHex(CHAR Char)
         default:
             return 0;
     }
+}
+
+BOOL
+WlanPrintCurrentStatus(HANDLE hAdapter)
+{
+    PNDISUIO_QUERY_OID QueryOid;
+    DWORD QueryOidSize;
+    BOOL bSuccess;
+    DWORD dwBytesReturned;
+    PNDIS_802_11_SSID SsidInfo;
+    CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
+    DWORD i;
+    
+    QueryOidSize = FIELD_OFFSET(NDISUIO_QUERY_OID, Data) + sizeof(NDIS_802_11_SSID);
+    QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
+    if (!QueryOid)
+        return FALSE;
+    
+    QueryOid->Oid = OID_802_11_SSID;
+    SsidInfo = (PNDIS_802_11_SSID)QueryOid->Data;
+
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, QueryOid);
+        return FALSE;
+    }
+
+    if (SsidInfo->SsidLength == 0)
+    {
+        _tprintf(_T("\nWLAN disconnected\n"));
+        HeapFree(GetProcessHeap(), 0, QueryOid);
+        return TRUE;
+    }
+    else
+    {
+        _tprintf(_T("\nCurrent wireless association information:\n\n"));
+    }
+    
+    /* Copy the SSID to our internal buffer and terminate it */
+    RtlCopyMemory(SsidBuffer, SsidInfo->Ssid, SsidInfo->SsidLength);
+    SsidBuffer[SsidInfo->SsidLength] = 0;
+    
+    _tprintf(_T("SSID: %s\n"), SsidBuffer);
+
+    HeapFree(GetProcessHeap(), 0, QueryOid);
+    QueryOidSize = FIELD_OFFSET(NDISUIO_QUERY_OID, Data) + sizeof(NDIS_802_11_MAC_ADDRESS);
+    QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
+    if (!QueryOid)
+        return FALSE;
+
+    QueryOid->Oid = OID_802_11_BSSID;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, QueryOid);
+        return FALSE;
+    }
+
+    _tprintf(_T("BSSID: "));
+    for (i = 0; i < sizeof(NDIS_802_11_MAC_ADDRESS); i++)
+    {
+        UINT BssidData = QueryOid->Data[i];
+
+        _tprintf(_T("%.2x"), BssidData);
+
+        if (i != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
+            _tprintf(_T(":"));
+    }
+    _tprintf(_T("\n"));
+    
+    HeapFree(GetProcessHeap(), 0, QueryOid);
+    QueryOidSize = sizeof(NDISUIO_QUERY_OID);
+    QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
+    if (!QueryOid)
+        return FALSE;
+    
+    QueryOid->Oid = OID_802_11_INFRASTRUCTURE_MODE;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, QueryOid);
+        return FALSE;
+    }
+    
+    _tprintf(_T("Network mode: %s\n"), (*(PUINT)QueryOid->Data == Ndis802_11IBSS) ? "Adhoc" : "Infrastructure");
+    
+    QueryOid->Oid = OID_802_11_WEP_STATUS;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (!bSuccess)
+    {
+        HeapFree(GetProcessHeap(), 0, QueryOid);
+        return FALSE;
+    }
+    
+    _tprintf(_T("WEP enabled: %s\n"), (*(PUINT)QueryOid->Data == Ndis802_11WEPEnabled) ? "Yes" : "No");
+    
+    _tprintf("\n");
+    QueryOid->Oid = OID_802_11_RSSI;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        /* This OID is optional */
+        _tprintf(_T("RSSI: %i dBm\n"), *(PINT)QueryOid->Data);
+    }
+    
+    QueryOid->Oid = OID_802_11_TX_POWER_LEVEL;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        /* This OID is optional */
+        _tprintf(_T("Transmission power: %d mW\n"), *(PUINT)QueryOid->Data);
+    }
+    
+    _tprintf(_T("\n"));
+    
+    QueryOid->Oid = OID_802_11_NUMBER_OF_ANTENNAS;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        /* This OID is optional */
+        _tprintf(_T("Antenna count: %d\n"), *(PUINT)QueryOid->Data);
+    }
+    
+    QueryOid->Oid = OID_802_11_TX_ANTENNA_SELECTED;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        UINT TransmitAntenna = *(PUINT)QueryOid->Data;
+        
+        if (TransmitAntenna != 0xFFFFFFFF)
+            _tprintf(_T("Transmit antenna: %d\n"), TransmitAntenna);
+        else
+            _tprintf(_T("Transmit antenna: Any\n"));
+    }
+    
+    QueryOid->Oid = OID_802_11_RX_ANTENNA_SELECTED;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        UINT ReceiveAntenna = *(PUINT)QueryOid->Data;
+        
+        if (ReceiveAntenna != 0xFFFFFFFF)
+            _tprintf(_T("Receive antenna: %d\n"), ReceiveAntenna);
+        else
+            _tprintf(_T("Receive antenna: Any\n"));
+    }
+    
+    _tprintf(_T("\n"));
+    
+    QueryOid->Oid = OID_802_11_FRAGMENTATION_THRESHOLD;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        /* This OID is optional */
+        _tprintf(_T("Fragmentation threshold: %d bytes\n"), *(PUINT)QueryOid->Data);
+    }
+    
+    QueryOid->Oid = OID_802_11_RTS_THRESHOLD;
+    
+    bSuccess = DeviceIoControl(hAdapter,
+                               IOCTL_NDISUIO_QUERY_OID_VALUE,
+                               QueryOid,
+                               QueryOidSize,
+                               QueryOid,
+                               QueryOidSize,
+                               &dwBytesReturned,
+                               NULL);
+    if (bSuccess)
+    {
+        /* This OID is optional */
+        _tprintf(_T("RTS threshold: %d bytes\n"), *(PUINT)QueryOid->Data);
+    }
+    
+    HeapFree(GetProcessHeap(), 0, QueryOid);
+    
+    _tprintf(_T("\n"));
+    return TRUE;
 }
 
 BOOL
@@ -321,7 +581,8 @@ WlanConnect(HANDLE hAdapter)
         
         HeapFree(GetProcessHeap(), 0, SetOid);
 
-        SetOidSize = sizeof(NDISUIO_SET_OID) + FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) +
+        SetOidSize = FIELD_OFFSET(NDISUIO_SET_OID, Data) +
+                     FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) +
                      (strlen(sWepKey) >> 1);
         SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
         if (!SetOid)
@@ -378,7 +639,7 @@ WlanConnect(HANDLE hAdapter)
     }
     
     HeapFree(GetProcessHeap(), 0, SetOid);
-    SetOidSize = sizeof(NDISUIO_SET_OID) + sizeof(NDIS_802_11_MAC_ADDRESS);
+    SetOidSize = FIELD_OFFSET(NDISUIO_SET_OID, Data) + sizeof(NDIS_802_11_MAC_ADDRESS);
     SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
     if (!SetOid)
         return FALSE;
@@ -402,7 +663,7 @@ WlanConnect(HANDLE hAdapter)
     }
     
     HeapFree(GetProcessHeap(), 0, SetOid);
-    SetOidSize = sizeof(NDISUIO_SET_OID) + sizeof(NDIS_802_11_SSID);
+    SetOidSize = FIELD_OFFSET(NDISUIO_SET_OID, Data) + sizeof(NDIS_802_11_SSID);
     SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
     if (!SetOid)
         return FALSE;
@@ -425,7 +686,11 @@ WlanConnect(HANDLE hAdapter)
     
     HeapFree(GetProcessHeap(), 0, SetOid);
     
-    return bSuccess;
+    if (!bSuccess)
+        return FALSE;
+
+    _tprintf(_T("The operation completed successfully.\n"));
+    return TRUE;
 }
 
 BOOL
@@ -546,7 +811,8 @@ VOID Usage()
     "     -w WEP     Specifies a WEP key to use.\n"
     "     -a         Specifies the target network is ad-hoc\n"
     "  -d            Disconnects from the current AP.\n"
-    "  -s            Scans and displays a list of access points in range.\n"));
+    "  -s            Scans and displays a list of access points in range.\n\n"
+    " Passing no parameters will print information about the current WLAN connection\n"));
 }
 
 
@@ -599,12 +865,6 @@ BOOL ParseCmdline(int argc, char* argv[])
         }
     }
 
-    if (!bScan && !bDisconnect && !bConnect)
-    {
-        Usage();
-        return FALSE;
-    }
-
     return TRUE;
 }
 
@@ -640,9 +900,18 @@ int main(int argc, char* argv[])
             return -1;
         }
     }
-    else
+    else if (bConnect)
     {
         if (!WlanConnect(hAdapter))
+        {
+            DoFormatMessage(GetLastError());
+            CloseHandle(hAdapter);
+            return -1;
+        }
+    }
+    else
+    {
+        if (!WlanPrintCurrentStatus(hAdapter))
         {
             DoFormatMessage(GetLastError());
             CloseHandle(hAdapter);

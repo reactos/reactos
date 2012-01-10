@@ -116,13 +116,15 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     PNDIS_PACKET Packet;
     NDIS_STATUS Status;
     UINT BytesTransferred;
+    
+    DPRINT("Received a %d byte packet\n", PacketSize);
 
     /* Discard if nobody is waiting for it */
     if (AdapterContext->OpenCount == 0)
         return NDIS_STATUS_NOT_ACCEPTED;
     
     /* Allocate a buffer to hold the packet data and header */
-    PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize);
+    PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize + HeaderBufferSize);
     if (!PacketBuffer)
         return NDIS_STATUS_NOT_ACCEPTED;
 
@@ -137,27 +139,38 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     }
 
     /* Transfer the packet data into our data buffer */
-    NdisTransferData(&Status,
-                     AdapterContext->BindingHandle,
-                     MacReceiveContext,
-                     0,
-                     PacketSize,
-                     Packet,
-                     &BytesTransferred);
-    if (Status == NDIS_STATUS_PENDING)
+    if (LookaheadBufferSize == PacketSize)
     {
-        KeWaitForSingleObject(&AdapterContext->AsyncEvent,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        Status = AdapterContext->AsyncStatus;
+        NdisCopyLookaheadData((PVOID)((PUCHAR)PacketBuffer + HeaderBufferSize),
+                              LookAheadBuffer,
+                              PacketSize,
+                              AdapterContext->MacOptions);
+        BytesTransferred = PacketSize;
     }
-    if (Status != NDIS_STATUS_SUCCESS)
+    else
     {
-        DPRINT1("Failed to transfer data with status 0x%x\n", Status);
-        CleanupAndFreePacket(Packet, TRUE);
-        return NDIS_STATUS_NOT_ACCEPTED;
+        NdisTransferData(&Status,
+                         AdapterContext->BindingHandle,
+                         MacReceiveContext,
+                         0,
+                         PacketSize,
+                         Packet,
+                         &BytesTransferred);
+        if (Status == NDIS_STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&AdapterContext->AsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+            Status = AdapterContext->AsyncStatus;
+        }
+        if (Status != NDIS_STATUS_SUCCESS)
+        {
+            DPRINT1("Failed to transfer data with status 0x%x\n", Status);
+            CleanupAndFreePacket(Packet, TRUE);
+            return NDIS_STATUS_NOT_ACCEPTED;
+        }
     }
     
     /* Copy the header data */
@@ -177,7 +190,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
 
     /* Initialize the packet entry and copy in packet data */
     PacketEntry->PacketLength = BytesTransferred + HeaderBufferSize;
-    RtlCopyMemory(&PacketEntry->PacketData[0], PacketBuffer, PacketEntry->PacketLength);
+    RtlCopyMemory(PacketEntry->PacketData, PacketBuffer, PacketEntry->PacketLength);
     
     /* Free the old buffer */
     ExFreePool(PacketBuffer);
@@ -312,6 +325,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     NDIS_MEDIUM SupportedMedia[1] = {NdisMedium802_3};
     UINT SelectedMedium;
     NDIS_STATUS Status;
+    NDIS_REQUEST Request;
 
     /* Allocate the adapter context */
     AdapterContext = ExAllocatePool(NonPagedPool, sizeof(*AdapterContext));
@@ -397,6 +411,51 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     if (Status != NDIS_STATUS_SUCCESS)
     {
         DPRINT1("Failed to open adapter for bind with status 0x%x\n", Status);
+        NdisFreePacketPool(AdapterContext->PacketPoolHandle);
+        NdisFreeBufferPool(AdapterContext->BufferPoolHandle);
+        RtlFreeUnicodeString(&AdapterContext->DeviceName);
+        ExFreePool(AdapterContext);
+        return Status;
+    }
+    
+    /* Get the MAC options */
+    Request.RequestType = NdisRequestQueryInformation;
+    Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_MAC_OPTIONS;
+    Request.DATA.QUERY_INFORMATION.InformationBuffer = &AdapterContext->MacOptions;
+    Request.DATA.QUERY_INFORMATION.InformationBufferLength = sizeof(ULONG);
+    NdisRequest(&Status,
+                AdapterContext->BindingHandle,
+                &Request);
+
+    /* Wait for a pending request */
+    if (Status == NDIS_STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&AdapterContext->AsyncEvent,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = AdapterContext->AsyncStatus;
+    }
+    
+    /* Check the final status */
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        NDIS_STATUS CloseStatus;
+
+        DPRINT1("Failed to get MAC options with status 0x%x\n", Status);
+
+        NdisCloseAdapter(&CloseStatus,
+                         AdapterContext->BindingHandle);
+        if (CloseStatus == NDIS_STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&AdapterContext->AsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+        }
+
         NdisFreePacketPool(AdapterContext->PacketPoolHandle);
         NdisFreeBufferPool(AdapterContext->BufferPoolHandle);
         RtlFreeUnicodeString(&AdapterContext->DeviceName);

@@ -160,8 +160,16 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         /* Setup the NDIS request */
         Request.RequestType = NdisRequestSetInformation;
         Request.DATA.SET_INFORMATION.Oid = SetOidRequest->Oid;
-        Request.DATA.SET_INFORMATION.InformationBuffer = SetOidRequest->Data;
         Request.DATA.SET_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
+        if (Request.DATA.SET_INFORMATION.InformationBufferLength != 0)
+        {
+            Request.DATA.SET_INFORMATION.InformationBuffer = SetOidRequest->Data;
+        }
+        else
+        {
+            Request.DATA.SET_INFORMATION.InformationBuffer = NULL;
+        }
+        Request.DATA.SET_INFORMATION.BytesRead = 0;
 
         DPRINT("Setting OID 0x%x on adapter %wZ\n", SetOidRequest->Oid, &AdapterContext->DeviceName);
 
@@ -182,7 +190,9 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes read */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = Request.DATA.SET_INFORMATION.BytesRead;
+        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.SET_INFORMATION.BytesRead;
+
+        DPRINT("Final request status: 0x%x (%d)\n", Status, Irp->IoStatus.Information);
     }
     else
     {
@@ -216,9 +226,17 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         /* Setup the NDIS request */
         Request.RequestType = NdisRequestQueryInformation;
         Request.DATA.QUERY_INFORMATION.Oid = QueryOidRequest->Oid;
-        Request.DATA.QUERY_INFORMATION.InformationBuffer = QueryOidRequest->Data;
         Request.DATA.QUERY_INFORMATION.InformationBufferLength = RequestLength - sizeof(NDIS_OID);
-        
+        if (Request.DATA.QUERY_INFORMATION.InformationBufferLength != 0)
+        {
+            Request.DATA.QUERY_INFORMATION.InformationBuffer = QueryOidRequest->Data;
+        }
+        else
+        {
+            Request.DATA.QUERY_INFORMATION.InformationBuffer = NULL;
+        }
+        Request.DATA.QUERY_INFORMATION.BytesWritten = 0;
+
         DPRINT("Querying OID 0x%x on adapter %wZ\n", QueryOidRequest->Oid, &AdapterContext->DeviceName);
         
         /* Dispatch the request */
@@ -238,7 +256,9 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes written */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = Request.DATA.QUERY_INFORMATION.BytesWritten;
+        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.QUERY_INFORMATION.BytesWritten;
+
+        DPRINT("Final request status: 0x%x (%d)\n", Status, Irp->IoStatus.Information);
     }
     else
     {
