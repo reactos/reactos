@@ -26,8 +26,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
-static const WCHAR wszShell[] = L"\\shell\\";
-static const WCHAR wszFolder[] = L"Folder";
 
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
@@ -602,7 +600,7 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpOperation, LPWSTR key, LPW
     RegCloseKey(hkeyClass);
 
     /* Looking for ...buffer\shell\<verb>\command */
-    wcscat(filetype, wszShell);
+    wcscat(filetype, L"\\shell\\");
     wcscat(filetype, verb);
     wcscat(filetype, wCommand);
 
@@ -705,7 +703,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
     attribs = GetFileAttributesW(lpFile);
     if (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY))
     {
-        wcscpy(filetype, wszFolder);
+        wcscpy(filetype, L"Folder");
         filetypelen = 6;    /* strlen("Folder") */
     }
     else
@@ -1466,7 +1464,7 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
             attribs = GetFileAttributesW(buffer);
             if (attribs != INVALID_FILE_ATTRIBUTES &&
                     (attribs & FILE_ATTRIBUTE_DIRECTORY) &&
-                    HCR_GetExecuteCommandW(0, wszFolder,
+                    HCR_GetExecuteCommandW(0, L"Folder",
                                            sei->lpVerb,
                                            buffer, sizeof(buffer))) {
                 SHELL_ArgifyW(wszApplicationName, dwApplicationNameLen,
