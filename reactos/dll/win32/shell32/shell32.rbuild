@@ -29,6 +29,7 @@
 	<library>winmm</library>
 	<library>msvcrt</library>
 	<library>atlnew</library>
+	<library>fmifs</library>
 	<pch>precomp.h</pch>
 	<file>authors.cpp</file>
 	<file>autocomplete.cpp</file>

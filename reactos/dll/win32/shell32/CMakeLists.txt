@@ -85,7 +85,7 @@ target_link_libraries(shell32
     uuid
     recyclebin)
 
-add_delay_importlibs(shell32 ole32 version)
+add_delay_importlibs(shell32 ole32 version fmifs)
 
 add_importlibs(shell32
     advapi32

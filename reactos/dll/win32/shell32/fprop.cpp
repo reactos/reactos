@@ -98,6 +98,7 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     HRESULT hr;
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     HPSXA hpsxa[3] = {NULL, NULL, NULL};
+    CComObject<CFileDefExt> *pFileDefExt = NULL;
 
     TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(pwszPath));
 
@@ -134,7 +135,6 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
 
     if (SUCCEEDED(hr))
     {
-        CComObject<CFileDefExt> *pFileDefExt;
         ATLTRY(pFileDefExt = new CComObject<CFileDefExt>);
         if (pFileDefExt)
         {
@@ -146,8 +146,6 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
                     ERR("AddPages failed\n");
             } else
                 ERR("Initialize failed\n");
-                
-            pFileDefExt->Release();
         }
 
         LoadPropSheetHandlers(wszPath, &Header, MAX_PROPERTY_SHEET_PAGE - 1, hpsxa, pDataObj);
@@ -158,6 +156,8 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     for (UINT i = 0; i < 3; ++i)
         if (hpsxa[i])
             SHDestroyPropSheetExtArray(hpsxa[i]);
+    if (pFileDefExt)
+        pFileDefExt->Release();
 
     return (Result != -1);
 }
