@@ -69,6 +69,8 @@ list(APPEND SOURCE
     newmenu.cpp
     startmenu.cpp
     folder_options.cpp
+    filedefext.cpp
+    drvdefext.cpp
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)

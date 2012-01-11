@@ -84,6 +84,8 @@
 	<file>openwithmenu.cpp</file>
 	<file>newmenu.cpp</file>
 	<file>folder_options.cpp</file>
+	<file>filedefext.cpp</file>
+	<file>drvdefext.cpp</file>
 	<file>shell32.rc</file>
 </module>
 <module name="shobjidl_local_interface" type="idlinterface">
