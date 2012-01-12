@@ -785,7 +785,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
     /* Allocate a new bitmap with the same dimensions as the source bmp */
     hbmNew = GreCreateBitmapEx(psurfSrc->SurfObj.sizlBitmap.cx,
                                psurfSrc->SurfObj.sizlBitmap.cy,
-                               psurfSrc->SurfObj.lDelta,
+                               abs(psurfSrc->SurfObj.lDelta),
                                psurfSrc->SurfObj.iBitmapFormat,
                                psurfSrc->SurfObj.fjBitmap,
                                psurfSrc->SurfObj.cjBits,
