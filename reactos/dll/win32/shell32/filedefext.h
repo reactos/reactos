@@ -26,16 +26,20 @@ class CFileVersionInfo
     private:
         PVOID m_pInfo;
         WORD m_wLang, m_wCode;
+        WCHAR m_wszLang[64];
         
         typedef struct _LANGANDCODEPAGE_
         {
-            WORD lang;
-            WORD code;
+            WORD wLang;
+            WORD wCode;
         } LANGANDCODEPAGE, *LPLANGANDCODEPAGE;
 
     public:
         inline CFileVersionInfo():
-            m_pInfo(NULL), m_wLang(0), m_wCode(0) {}
+            m_pInfo(NULL), m_wLang(0), m_wCode(0)
+        {
+            m_wszLang[0] = L'\0';
+        }
 
         inline ~CFileVersionInfo()
         {
@@ -44,10 +48,9 @@ class CFileVersionInfo
         }
 
         BOOL Load(LPCWSTR pwszPath);
-
         LPCWSTR GetString(LPCWSTR pwszName);
-        
         VS_FIXEDFILEINFO *GetFixedInfo();
+        LPCWSTR GetLangName();
 };
 
 class CFileDefExt :

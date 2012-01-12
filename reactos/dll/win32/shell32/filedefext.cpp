@@ -49,18 +49,20 @@ BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
 
     LPLANGANDCODEPAGE lpLangCode;
     UINT cBytes;
-    if (!VerQueryValueW(m_pInfo, L"VarFileInfo\\Translation", (LPVOID *)&lpLangCode, &cBytes))
+    if (!VerQueryValueW(m_pInfo, L"\\VarFileInfo\\Translation", (LPVOID *)&lpLangCode, &cBytes) || cBytes < sizeof(LANGANDCODEPAGE))
     {
         ERR("VerQueryValueW failed\n");
         return FALSE;
     }
 
-            /* FIXME: find language from current locale / if not available,
-             * default to english
-             * for now default to first available language
-             */
-    m_wLang = lpLangCode->lang;
-    m_wCode = lpLangCode->code;
+    /* FIXME: find language from current locale / if not available,
+     * default to english
+     * for now default to first available language
+     */
+    m_wLang = lpLangCode->wLang;
+    m_wCode = lpLangCode->wCode;
+    TRACE("Lang %hx Code %hu\n", m_wLang, m_wCode);
+
     return TRUE;
 }
 
@@ -72,10 +74,24 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
     WCHAR wszBuf[256];
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", m_wLang, m_wCode, pwszName);
 
+    /* Query string in version block */
     LPCWSTR pwszResult = NULL;
     UINT cBytes = 0;
     if (!VerQueryValueW(m_pInfo, wszBuf, (LPVOID *)&pwszResult, &cBytes))
-        return NULL;
+        pwszResult = NULL;
+
+    if (!m_wLang && !m_wCode)
+    {
+        /* Try US English */
+        swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 1252, pwszName);
+        if (!VerQueryValueW(m_pInfo, wszBuf, (LPVOID *)&pwszResult, &cBytes))
+            pwszResult = NULL;
+    }
+
+    if (!pwszResult)
+        ERR("VerQueryValueW %ls failed\n", pwszName);
+    else
+        TRACE("%ls: %ls\n", pwszName, pwszResult);
 
     return pwszResult;
 }
@@ -90,6 +106,20 @@ VS_FIXEDFILEINFO *CFileVersionInfo::GetFixedInfo()
     if (!VerQueryValueW(m_pInfo, L"\\", (PVOID*)&pInfo, &cBytes))
         return NULL;
     return pInfo;
+}
+
+LPCWSTR CFileVersionInfo::GetLangName()
+{
+    if (!m_pInfo)
+        return NULL;
+
+    if (!m_wszLang[0])
+    {
+        if (!VerLanguageNameW(m_wLang, m_wszLang, _countof(m_wszLang)))
+            ERR("VerLanguageNameW failed\n");
+    }
+
+    return m_wszLang;
 }
 
 /*************************************************************************
@@ -499,9 +529,13 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
         InitOpensWithField(hwndDlg);
     else
     {
+        SetDlgItemTextW(hwndDlg, 14006, L"Description:"); // FIXME
+        ShowWindow(GetDlgItem(hwndDlg, 140062), SW_HIDE);
         LPCWSTR pwszDescr = m_VerInfo.GetString(L"FileDescription");
         if (pwszDescr)
             SetDlgItemTextW(hwndDlg, 14007, pwszDescr);
+        else
+            SetDlgItemTextW(hwndDlg, 14007, PathFindFileNameW(m_wszPath));
     }
 
     /* Set file created/modfied/accessed time */
@@ -571,7 +605,13 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
 
     /* Add items to listbox */
     AddVersionString(hwndDlg, L"CompanyName");
-    /* FIXME insert language identifier */
+    LPCWSTR pwszLang = m_VerInfo.GetLangName();
+    if (pwszLang)
+    {
+        HWND hDlgCtrl = GetDlgItem(hwndDlg, 14009);
+        UINT Index = SendMessageW(hDlgCtrl, LB_ADDSTRING, (WPARAM)-1, (LPARAM)L"Language");
+        SendMessageW(hDlgCtrl, LB_SETITEMDATA, (WPARAM)Index, (LPARAM)(WCHAR *)pwszLang);
+    }
     AddVersionString(hwndDlg, L"ProductName");
     AddVersionString(hwndDlg, L"InternalName");
     AddVersionString(hwndDlg, L"OriginalFilename");
@@ -584,8 +624,9 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     /* Select first item */
     HWND hDlgCtrl = GetDlgItem(hwndDlg, 14009);
     SendMessageW(hDlgCtrl, LB_SETCURSEL, 0, 0);
-    LPCWSTR pwszText = (WCHAR *)SendMessageW(hDlgCtrl, LB_GETITEMDATA, (WPARAM)0, (LPARAM)NULL);
-    SetDlgItemTextW(hwndDlg, 14010, pwszText);
+    LPCWSTR pwszText = (LPCWSTR)SendMessageW(hDlgCtrl, LB_GETITEMDATA, (WPARAM)0, (LPARAM)NULL);
+    if (pwszText && pwszText != (LPCWSTR)LB_ERR)
+        SetDlgItemTextW(hwndDlg, 14010, pwszText);
 
     return TRUE;
 }
@@ -594,7 +635,7 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
  *
  * CFileDefExt::SetVersionLabel [Internal]
  *
- *
+ * retrieves a version string and uses it to set label text
  */
 
 BOOL
@@ -620,7 +661,6 @@ CFileDefExt::SetVersionLabel(HWND hwndDlg, DWORD idCtrl, LPCWSTR pwszName)
  * CFileDefExt::AddVersionString [Internal]
  *
  * retrieves a version string and adds it to listbox
- *
  */
 
 BOOL
