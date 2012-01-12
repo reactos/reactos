@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define _USE_MATH_DEFINES
 #include <precomp.h>
+#include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -204,30 +206,55 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
     }
     else if (pDrawItem->CtlID == 14015)
     {
-        HBRUSH hBlueBrush;
-        HBRUSH hMagBrush;
-        RECT rect;
-        LONG horzsize;
-        LONGLONG Result;
-        WCHAR szBuffer[20];
+        HBRUSH hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
+        HBRUSH hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
+        HPEN hDarkBluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 128));
+        HPEN hDarkMagPen = CreatePen(PS_SOLID, 1, RGB(128, 0, 128));
 
-        hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
-        hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
+        WCHAR wszBuf[20];
+        GetDlgItemTextW(hwndDlg, 14006, wszBuf, _countof(wszBuf));
+        UINT cFreeSpace = _wtoi(wszBuf);
 
-        GetDlgItemTextW(hwndDlg, 14006, szBuffer, 20);
-        Result = _wtoi(szBuffer);
+        INT xCenter = (pDrawItem->rcItem.left + pDrawItem->rcItem.right)/2;
+        INT yCenter = (pDrawItem->rcItem.top + pDrawItem->rcItem.bottom - 10)/2;
+        INT cx = pDrawItem->rcItem.right - pDrawItem->rcItem.left;
+        INT cy = pDrawItem->rcItem.bottom - pDrawItem->rcItem.top - 10;
+        TRACE("cFreeSpace %d a %f cx %d\n", cFreeSpace, M_PI+cFreeSpace/100.0f*M_PI*2.0f, cx);
 
-        CopyRect(&rect, &pDrawItem->rcItem);
-        horzsize = rect.right - rect.left;
-        Result = (Result * horzsize) / 100;
+        HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
+        INT xRadial = xCenter + (INT)(cosf(M_PI+cFreeSpace/100.0f*M_PI*2.0f)*cx/2);
+        INT yRadial = yCenter - (INT)(sinf(M_PI+cFreeSpace/100.0f*M_PI*2.0f)*cy/2);
+        Pie(pDrawItem->hDC,
+            pDrawItem->rcItem.left, pDrawItem->rcItem.top,
+            pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
+            pDrawItem->rcItem.left, yCenter,
+            xRadial, yRadial);
 
-        rect.right = pDrawItem->rcItem.right - Result;
-        FillRect(pDrawItem->hDC, &rect, hBlueBrush);
-        rect.left = rect.right;
-        rect.right = pDrawItem->rcItem.right;
-        FillRect(pDrawItem->hDC, &rect, hMagBrush);
+        SelectObject(pDrawItem->hDC, hBlueBrush);
+        Pie(pDrawItem->hDC,
+            pDrawItem->rcItem.left, pDrawItem->rcItem.top,
+            pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
+            xRadial, yRadial,
+            pDrawItem->rcItem.left, yCenter);
+        SelectObject(pDrawItem->hDC, hbrOld);
+
+        HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkBluePen);
+        for (INT x = pDrawItem->rcItem.left; x < pDrawItem->rcItem.right; ++x)
+        {
+            if (cFreeSpace < 50 && x == xRadial)
+                SelectObject(pDrawItem->hDC, hDarkMagPen);
+
+            float cos_val = (x - xCenter)*2.0f/cx;
+            INT y = yCenter+sinf(acosf(cos_val))*cy/2;
+            MoveToEx(pDrawItem->hDC, x, y, NULL);
+            LineTo(pDrawItem->hDC, x, y + 10);
+        }
+        SelectObject(pDrawItem->hDC, hOldPen);
+
         DeleteObject(hBlueBrush);
         DeleteObject(hMagBrush);
+        DeleteObject(hDarkBluePen);
+        DeleteObject(hDarkMagPen);
     }
 }
 
@@ -298,11 +325,24 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
             }
         }
     }
-    /* set drive description */
+
+    /* Set drive description */
     WCHAR wszFormat[50];
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
-    swprintf(wszBuf, wszFormat, m_wszDrive);
+    swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
+
+    /* Set drive icon */
+    UINT IconId;
+    switch (DriveType)
+    {
+        case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; break;
+        case DRIVE_REMOVABLE: IconId = IDI_SHELL_FLOPPY; break;
+        case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
+        default: IconId = IDI_SHELL_DRIVE;
+    }
+    HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
+    SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
 }
 
 INT_PTR CALLBACK
@@ -336,7 +376,8 @@ CDrvDefExt::GeneralPageProc(
             }
             break;
         }
-
+        case WM_PAINT:
+            break;
         case WM_COMMAND:
             if (LOWORD(wParam) == 14010) /* Disk Cleanup */
             {

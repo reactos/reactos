@@ -304,7 +304,7 @@ BEGIN
 
 	CONTROL   "",           14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT       "Partiție %s",     14009, 100, 170, 40, 10
+	LTEXT       "Partiție %c",     14009, 100, 170, 40, 10
 	PUSHBUTTON  "Curățare disc…",  14010, 165, 175, 65, 15, WS_TABSTOP
 	CHECKBOX    "Comprimă pentru a economisi spațiu", 14011, 15, 200, 180, 10, WS_DISABLED
 	CHECKBOX    "Permite „Serviciu de indexare”, pentru accelerarea căutărilor", 14012, 15, 215, 200, 10, WS_DISABLED
