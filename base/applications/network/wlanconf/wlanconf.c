@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <ntddndis.h>
 #include <nuiouser.h>
+#include <iphlpapi.h>
 
 BOOL bScan = FALSE;
 
@@ -110,26 +111,28 @@ IsWlanAdapter(HANDLE hAdapter)
     return TRUE;
 }
 
-HANDLE
-OpenAdapterHandle(DWORD Index)
+BOOL
+OpenAdapterHandle(DWORD Index, HANDLE *hAdapter, IP_ADAPTER_INDEX_MAP *IpInfo)
 {
     HANDLE hDriver;
     BOOL bSuccess;
     DWORD dwBytesReturned;
     DWORD QueryBindingSize = sizeof(NDISUIO_QUERY_BINDING) + (1024 * sizeof(WCHAR));
     PNDISUIO_QUERY_BINDING QueryBinding;
+    DWORD dwStatus, dwSize, i;
+    PIP_INTERFACE_INFO InterfaceInfo = NULL;
     
     /* Open the driver handle */
     hDriver = OpenDriverHandle();
     if (hDriver == INVALID_HANDLE_VALUE)
-        return INVALID_HANDLE_VALUE;
+        return FALSE;
     
     /* Allocate the binding struct */
     QueryBinding = HeapAlloc(GetProcessHeap(), 0, QueryBindingSize);
     if (!QueryBinding)
     {
         CloseHandle(hDriver);
-        return INVALID_HANDLE_VALUE;
+        return FALSE;
     }
 
     /* Query the adapter binding information */
@@ -147,7 +150,7 @@ OpenAdapterHandle(DWORD Index)
     {
         HeapFree(GetProcessHeap(), 0, QueryBinding);
         CloseHandle(hDriver);
-        return INVALID_HANDLE_VALUE;
+        return FALSE;
     }
     
     /* Bind to the adapter */
@@ -159,48 +162,89 @@ OpenAdapterHandle(DWORD Index)
                                0,
                                &dwBytesReturned,
                                NULL);
-    HeapFree(GetProcessHeap(), 0, QueryBinding);
 
     if (!bSuccess)
     {
+        HeapFree(GetProcessHeap(), 0, QueryBinding);
         CloseHandle(hDriver);
-        return INVALID_HANDLE_VALUE;
+        return FALSE;
+    }
+
+    /* Get interface info from the IP helper */
+    dwSize = sizeof(IP_INTERFACE_INFO);
+    do {
+        if (InterfaceInfo) HeapFree(GetProcessHeap(), 0, InterfaceInfo);
+        InterfaceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(IP_INTERFACE_INFO));
+        if (!InterfaceInfo)
+        {
+            HeapFree(GetProcessHeap(), 0, QueryBinding);
+            CloseHandle(hDriver);
+            return FALSE;
+        }
+        dwStatus = GetInterfaceInfo(InterfaceInfo, &dwSize);
+    } while (dwStatus == ERROR_INSUFFICIENT_BUFFER);
+    
+    if (dwStatus != NO_ERROR)
+    {
+        HeapFree(GetProcessHeap(), 0, QueryBinding);
+        HeapFree(GetProcessHeap(), 0, InterfaceInfo);
+        return FALSE;
     }
     
-    return hDriver;
+    for (i = 0; i < InterfaceInfo->NumAdapters; i++)
+    {
+        if (wcsstr((PWCHAR)((PUCHAR)QueryBinding + QueryBinding->DeviceNameOffset),
+                   InterfaceInfo->Adapter[i].Name))
+        {
+            *IpInfo = InterfaceInfo->Adapter[i];
+            *hAdapter = hDriver;
+            
+            HeapFree(GetProcessHeap(), 0, QueryBinding);
+            HeapFree(GetProcessHeap(), 0, InterfaceInfo);
+            
+            return TRUE;
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, QueryBinding);
+    HeapFree(GetProcessHeap(), 0, InterfaceInfo);
+    CloseHandle(hDriver);
+
+    return FALSE;
 }
 
 /* Only works with the first adapter for now */
-HANDLE
-OpenWlanAdapter(VOID)
+BOOL
+OpenWlanAdapter(HANDLE *hAdapter, IP_ADAPTER_INDEX_MAP *IpInfo)
 {
     DWORD dwCurrentIndex;
-    HANDLE hCurrentAdapter;
 
     for (dwCurrentIndex = 0; ; dwCurrentIndex++)
     {
-        hCurrentAdapter = OpenAdapterHandle(dwCurrentIndex);
-        if (hCurrentAdapter == INVALID_HANDLE_VALUE)
+        if (!OpenAdapterHandle(dwCurrentIndex, hAdapter, IpInfo))
             break;
         
-        if (IsWlanAdapter(hCurrentAdapter))
-            return hCurrentAdapter;
+        if (IsWlanAdapter(*hAdapter))
+            return TRUE;
         else
-            CloseHandle(hCurrentAdapter);
+            CloseHandle(*hAdapter);
     }
 
-    return INVALID_HANDLE_VALUE;
+    return FALSE;
 }
 
 BOOL
-WlanDisconnect(HANDLE hAdapter)
+WlanDisconnect(HANDLE hAdapter, PIP_ADAPTER_INDEX_MAP IpInfo)
 {
     BOOL bSuccess;
     DWORD dwBytesReturned;
     NDISUIO_SET_OID SetOid;
     
+    /* Release this IP address */
+    IpReleaseAddress(IpInfo);
+
+    /* Disassociate from the AP */
     SetOid.Oid = OID_802_11_DISASSOCIATE;
-    
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
                                &SetOid,
@@ -519,7 +563,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
 }
 
 BOOL
-WlanConnect(HANDLE hAdapter)
+WlanConnect(HANDLE hAdapter, PIP_ADAPTER_INDEX_MAP IpInfo)
 {
     BOOL bSuccess;
     DWORD dwBytesReturned, SetOidSize;
@@ -681,6 +725,10 @@ WlanConnect(HANDLE hAdapter)
     
     if (!bSuccess)
         return FALSE;
+    
+    /* Update our IP address */
+    IpReleaseAddress(IpInfo);
+    IpRenewAddress(IpInfo);
 
     _tprintf(_T("The operation completed successfully.\n"));
     return TRUE;
@@ -864,12 +912,12 @@ BOOL ParseCmdline(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     HANDLE hAdapter;
+    IP_ADAPTER_INDEX_MAP IpInfo;
 
     if (!ParseCmdline(argc, argv))
         return -1;
     
-    hAdapter = OpenWlanAdapter();
-    if (hAdapter == INVALID_HANDLE_VALUE)
+    if (!OpenWlanAdapter(&hAdapter, &IpInfo))
     {
         DoFormatMessage(GetLastError());
         return -1;
@@ -886,7 +934,7 @@ int main(int argc, char* argv[])
     }
     else if (bDisconnect)
     {
-        if (!WlanDisconnect(hAdapter))
+        if (!WlanDisconnect(hAdapter, &IpInfo))
         {
             DoFormatMessage(GetLastError());
             CloseHandle(hAdapter);
@@ -895,7 +943,7 @@ int main(int argc, char* argv[])
     }
     else if (bConnect)
     {
-        if (!WlanConnect(hAdapter))
+        if (!WlanConnect(hAdapter, &IpInfo))
         {
             DoFormatMessage(GetLastError());
             CloseHandle(hAdapter);
