@@ -775,9 +775,10 @@ BOOLEAN CDefView::LV_RenameItem(LPCITEMIDLIST pidlOld, LPCITEMIDLIST pidlNew)
         SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
 
         SHFree((LPITEMIDLIST)lvItem.lParam);
-        lvItem.mask = LVIF_PARAM;
+        lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
         lvItem.iItem = nItem;
         lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidlNew));    /* set the item's data */
+        lvItem.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidlNew, 0);
         SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
         SendMessageW(hWndList, LVM_UPDATE, nItem, 0);
         return TRUE;                    /* FIXME: better handling */
@@ -1783,9 +1784,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                 if (SUCCEEDED(hr) && pidl)
                 {
-                    lvItem.mask = LVIF_PARAM;
+                    lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
                     lvItem.lParam = (LPARAM)pidl;
+                    lvItem.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidl, 0);
                     SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
+                    SendMessageW(hWndList, LVM_UPDATE, lpdi->item.iItem, 0);
 
                     return TRUE;
                 }
