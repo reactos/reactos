@@ -118,15 +118,15 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     /* Find first valid value */
     struct
     {
-        LPCSTR pszName;
+        LPCWSTR pszName;
         SHELLNEW_TYPE Type;
         BOOL bNeedData;
         BOOL bStr;
     } Types[] = {
-        {"FileName", SHELLNEW_TYPE_FILENAME, TRUE, TRUE},
-        {"Command", SHELLNEW_TYPE_COMMAND, TRUE, TRUE},
-        {"Data", SHELLNEW_TYPE_DATA, TRUE, FALSE},
-        {"NullFile", SHELLNEW_TYPE_NULLFILE, FALSE},
+        {L"FileName", SHELLNEW_TYPE_FILENAME, TRUE, TRUE},
+        {L"Command", SHELLNEW_TYPE_COMMAND, TRUE, TRUE},
+        {L"Data", SHELLNEW_TYPE_DATA, TRUE, FALSE},
+        {L"NullFile", SHELLNEW_TYPE_NULLFILE, FALSE},
         {NULL}
     };
     UINT i;
@@ -136,12 +136,20 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
         /* Note: We are using ANSI function because strings can be treated as data */
         cbData = 0;
         DWORD dwFlags = Types[i].bStr ? RRF_RT_REG_SZ : RRF_RT_ANY;
-        if (RegGetValueA(hKey, NULL, Types[i].pszName, dwFlags, NULL, NULL, &cbData) == ERROR_SUCCESS)
+        DWORD dwType;
+        if (RegGetValueW(hKey, NULL, Types[i].pszName, dwFlags, NULL, NULL, &cbData) == ERROR_SUCCESS)
         {
             if (Types[i].bNeedData && cbData > 0)
             {
                 pData = (BYTE*)malloc(cbData);
-                RegGetValueA(hKey, NULL, Types[i].pszName, dwFlags, NULL, pData, &cbData);
+                RegGetValueW(hKey, NULL, Types[i].pszName, dwFlags, &dwType, pData, &cbData);
+                if (!Types[i].bStr && (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
+                {
+                    PBYTE pData2 = (PBYTE)malloc(cbData);
+                    cbData = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)pData, -1, (LPSTR)pData2, cbData, NULL, NULL);
+                    free(pData);
+                    pData = pData2;
+                }
             }
             break;
         }
@@ -494,7 +502,8 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             if (pItem->Type == SHELLNEW_TYPE_FILENAME)
             {
                 /* Copy file */
-                bSuccess = CopyFileW((LPWSTR)pItem->pData, wszPath, FALSE);
+                if (!CopyFileW((LPWSTR)pItem->pData, wszPath, FALSE))
+                    ERR("Copy file failed: %ls\n", (LPWSTR)pItem->pData);
             }
 
             /* Show message if we failed */
