@@ -266,7 +266,7 @@ MiniportQueryInformation(
 
     case OID_GEN_MEDIA_CONNECT_STATUS:
         {
-          GenericULONG = Adapter->MediaState;
+          GenericULONG = (ULONG)NdisMediaStateConnected; /* Adapter->MediaState */
           break;
         }
 

@@ -1,6 +1,6 @@
 #include "rosdhcp.h"
 
-static SOCKET DhcpSocket = INVALID_SOCKET;
+SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
 
@@ -209,6 +209,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PDHCP_ADAPTER Adapter = NULL;
     HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
+    struct protocol *proto;
     int i, AdapterCount = 0, Broadcast;
 
     /* FIXME: Kill this thread when the service is stopped */
@@ -245,6 +246,10 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                     /* We're still active so we stay in the list */
                     ifi = &Adapter->DhclientInfo;
                 } else {
+                    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+                    if (proto)
+                        remove_protocol(proto);
+
                     /* We've lost our link so out we go */
                     RemoveEntryList(&Adapter->ListEntry);
                     free(Adapter);
@@ -330,7 +335,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                                      Adapter->DhclientInfo.rfdesc,
                                      got_one, &Adapter->DhclientInfo);
 
-	                state_init(&Adapter->DhclientInfo);
+                        state_init(&Adapter->DhclientInfo);
                     }
 
                     ApiLock();
@@ -345,15 +350,12 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                 DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
                                        Table->table[i].dwIndex));
         }
-        Error = NotifyAddrChange(NULL, NULL);
 #if 0
+        Error = NotifyAddrChange(NULL, NULL);
         if (Error != NO_ERROR)
             break;
 #else
-        if (AdapterCount)
-            break;
-        else
-            Sleep(3000);
+        Sleep(3000);
 #endif
     } while (TRUE);
 
@@ -364,14 +366,13 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 }
 
 HANDLE StartAdapterDiscovery(VOID) {
-    HANDLE /* ThreadHandle, */ EventHandle;
+    HANDLE ThreadHandle, EventHandle;
 
     EventHandle = CreateEvent(NULL,
                               FALSE,
                               FALSE,
                               NULL);
 
-#if 0
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
@@ -383,9 +384,6 @@ HANDLE StartAdapterDiscovery(VOID) {
         return NULL;
 
     CloseHandle(ThreadHandle);
-#else
-    AdapterDiscoveryThread((LPVOID)EventHandle);
-#endif
 
     return EventHandle;
 }

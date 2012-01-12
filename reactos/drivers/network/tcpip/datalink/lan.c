@@ -185,7 +185,9 @@ NTSTATUS TcpipLanGetDwordOid
     case OID_GEN_HARDWARE_STATUS:
         *Result = NdisHardwareStatusReady;
         return STATUS_SUCCESS;
-
+    case OID_GEN_MEDIA_CONNECT_STATUS:
+        *Result = NdisMediaStateConnected;
+        return STATUS_SUCCESS;
     default:
         return STATUS_INVALID_PARAMETER;
     }
