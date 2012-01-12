@@ -427,7 +427,6 @@ typedef struct _DRIVEROBJ {
 #define INDEX_DrvReserved11               92L
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #define INDEX_DrvRenderHint               93L
-#define INDEX_LAST                        93L
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 #define INDEX_DrvCreateDeviceBitmapEx     94L
 #define INDEX_DrvDeleteDeviceBitmapEx     95L
