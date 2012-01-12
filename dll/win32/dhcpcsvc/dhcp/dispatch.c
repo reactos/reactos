@@ -367,9 +367,7 @@ remove_protocol(struct protocol *proto)
                 t->next = q->next;
             else
                 timeouts = q->next;
-            
-            DbgPrint("Disposing timeout 0x%x\n", q);
-            
+                        
             /* Advance to the next timeout */
             u = q->next;
             
