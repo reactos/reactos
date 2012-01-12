@@ -1003,12 +1003,12 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                     pThis->Browse();
                     return TRUE;
                 }
-                case 14005: /* ok */
+                case IDOK: /* ok */
                 {
                     pThis->Accept();
                     return TRUE;
                 }
-                case 14006: /* cancel */
+                case IDCANCEL: /* cancel */
                     DestroyWindow(hwndDlg);
                     return TRUE;
                 default:
@@ -1019,7 +1019,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
              switch (((LPNMHDR)lParam)->code)
              {
                 case TVN_SELCHANGED:
-                    EnableWindow(GetDlgItem(hwndDlg, 14005), pThis->GetCurrentApp() ? TRUE : FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDOK), pThis->GetCurrentApp() ? TRUE : FALSE);
                     break;
                 case NM_DBLCLK:
                 case NM_RETURN:

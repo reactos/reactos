@@ -291,6 +291,26 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
             PathUnquoteSpacesW(wszBuf);
             PathSearchAndQualify(wszBuf, wszPath, _countof(wszPath));
 
+            HICON hIcon;
+            if (ExtractIconExW(wszPath, 0, NULL, &hIcon, 1))
+            {
+                HWND hIconCtrl = GetDlgItem(hwndDlg, 14025);
+                HWND hDescrCtrl = GetDlgItem(hwndDlg, 14007);
+                ShowWindow(hIconCtrl, SW_SHOW);
+                RECT rcIcon, rcDescr;
+                GetWindowRect(hIconCtrl, &rcIcon);
+                MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcIcon, 2);
+                GetWindowRect(hDescrCtrl, &rcDescr);
+                MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcDescr, 2);
+                INT cxOffset = rcIcon.right + 2 - rcDescr.left;
+                SetWindowPos(hDescrCtrl, NULL,
+                             rcDescr.left + cxOffset, rcDescr.top,
+                             rcDescr.right - rcDescr.left - cxOffset, rcDescr.bottom - rcDescr.top,
+                             SWP_NOZORDER);
+                SendMessageW(hIconCtrl, STM_SETICON, (WPARAM)hIcon, 0);
+            } else
+                ERR("Failed to extract icon\n");
+
             if (PathFileExistsW(wszPath))
             {
                 /* Get file description */
@@ -529,13 +549,19 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
         InitOpensWithField(hwndDlg);
     else
     {
-        SetDlgItemTextW(hwndDlg, 14006, L"Description:"); // FIXME
-        ShowWindow(GetDlgItem(hwndDlg, 140062), SW_HIDE);
+        WCHAR wszBuf[MAX_PATH];
+        LoadStringW(shell32_hInstance, IDS_EXE_DESCRIPTION, wszBuf, _countof(wszBuf));
+        SetDlgItemTextW(hwndDlg, 14006, wszBuf);
+        ShowWindow(GetDlgItem(hwndDlg, 14024), SW_HIDE);
         LPCWSTR pwszDescr = m_VerInfo.GetString(L"FileDescription");
         if (pwszDescr)
             SetDlgItemTextW(hwndDlg, 14007, pwszDescr);
         else
-            SetDlgItemTextW(hwndDlg, 14007, PathFindFileNameW(m_wszPath));
+        {
+            StringCbCopyW(wszBuf, sizeof(wszBuf), PathFindFileNameW(m_wszPath));
+            PathRemoveExtension(wszBuf);
+            SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+        }
     }
 
     /* Set file created/modfied/accessed time */
@@ -567,8 +593,21 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %S\n", hwndDlg, lParam, ppsp->lParam);
 
             CFileDefExt *pFileDefExt = (CFileDefExt*)ppsp->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pFileDefExt);
             pFileDefExt->InitGeneralPage(hwndDlg);
+            break;
         }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 14024) /* Opens With - Change */
+            {
+                CFileDefExt *pFileDefExt = (CFileDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                OPENASINFO oainfo;
+                oainfo.pcszFile = pFileDefExt->m_wszPath;
+                oainfo.pcszClass = NULL;
+                oainfo.oaifInFlags = OAIF_REGISTER_EXT|OAIF_FORCE_REGISTRATION;
+                return SUCCEEDED(SHOpenWithDialog(hwndDlg, &oainfo));
+            }
+            break;
         default:
             break;
     }

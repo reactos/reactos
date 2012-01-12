@@ -146,6 +146,7 @@
 #define IDS_RUNDLG_BROWSE_FILTER    183
 
 #define IDS_UNKNOWN_APP             190
+#define IDS_EXE_DESCRIPTION         191
 
 #define IDS_OPEN_VERB               300
 #define IDS_EXPLORE_VERB            301

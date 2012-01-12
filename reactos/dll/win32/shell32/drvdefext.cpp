@@ -219,7 +219,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
         INT yCenter = (pDrawItem->rcItem.top + pDrawItem->rcItem.bottom - 10)/2;
         INT cx = pDrawItem->rcItem.right - pDrawItem->rcItem.left;
         INT cy = pDrawItem->rcItem.bottom - pDrawItem->rcItem.top - 10;
-        TRACE("cFreeSpace %d a %f cx %d\n", cFreeSpace, M_PI+cFreeSpace/100.0f*M_PI*2.0f, cx);
+        TRACE("FreeSpace %u a %f cx %d\n", cFreeSpace, M_PI+cFreeSpace/100.0f*M_PI*2.0f, cx);
 
         HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
         INT xRadial = xCenter + (INT)(cosf(M_PI+cFreeSpace/100.0f*M_PI*2.0f)*cx/2);
