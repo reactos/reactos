@@ -1499,6 +1499,7 @@ dev_mgr_remove_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp)
 }
 
 VOID
+NTAPI
 dev_mgr_cancel_irp(PDEVICE_OBJECT dev_obj, PIRP pirp)
 {
     PUSB_DEV_MANAGER dev_mgr;

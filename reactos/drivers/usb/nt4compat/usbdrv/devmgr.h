@@ -276,6 +276,6 @@ VOID dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULON
 LONG dev_mgr_score_driver_for_dev(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_DEVICE_DESC pdev_desc);
 NTSTATUS dev_mgr_destroy_usb_config(PUSB_CONFIGURATION pcfg);
 BOOLEAN dev_mgr_start_select_driver(PUSB_DEV pdev);
-VOID dev_mgr_cancel_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
+VOID NTAPI dev_mgr_cancel_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
 
 #endif
