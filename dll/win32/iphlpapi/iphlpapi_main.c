@@ -639,6 +639,7 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
                ptr->IpAddressList.IpAddress.String);
               toIPAddressString(getInterfaceMaskByIndex(table->indexes[ndx]),
                ptr->IpAddressList.IpMask.String);
+              ptr->IpAddressList.Context = ptr->Index;
               toIPAddressString(getInterfaceGatewayByIndex(table->indexes[ndx]),
                ptr->GatewayList.IpAddress.String);
               getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
