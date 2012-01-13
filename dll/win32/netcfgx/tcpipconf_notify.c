@@ -3230,28 +3230,25 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                 }
             }
 
-            if (pOldConfig->Gw)
+            dwSize = 0;
+            if (GetIpForwardTable(NULL, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
             {
-                dwSize = 0;
-                if (GetIpForwardTable(NULL, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
+                DWORD Index;
+                PMIB_IPFORWARDTABLE pIpForwardTable = (PMIB_IPFORWARDTABLE)CoTaskMemAlloc(dwSize);
+                if (pIpForwardTable)
                 {
-                    DWORD Index;
-                    PMIB_IPFORWARDTABLE pIpForwardTable = (PMIB_IPFORWARDTABLE)CoTaskMemAlloc(dwSize);
-                    if (pIpForwardTable)
+                    if (GetIpForwardTable(pIpForwardTable, &dwSize, FALSE) == NO_ERROR)
                     {
-                        if (GetIpForwardTable(pIpForwardTable, &dwSize, FALSE) == NO_ERROR)
+                        for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
                         {
-                            for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
+                            if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index &&
+                                pIpForwardTable->table[Index].dwForwardDest == 0)
                             {
-                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index &&
-                                    pIpForwardTable->table[Index].dwForwardDest == 0)
-                                {
-                                    DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
-                                }
+                                DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
                             }
                         }
-                        CoTaskMemFree(pIpForwardTable);
                     }
+                    CoTaskMemFree(pIpForwardTable);
                 }
             }
 
