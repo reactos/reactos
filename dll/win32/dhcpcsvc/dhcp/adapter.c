@@ -210,10 +210,11 @@ IsReconnectHackNeeded(PDHCP_ADAPTER Adapter, const MIB_IFROW* IfEntry)
 
     proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
 
-    if (!proto)
+    if (Adapter->DhclientInfo.client->state == S_BOUND && !proto)
         return FALSE;
 
-    if (Adapter->DhclientInfo.client->state != S_BOUND)
+    if (Adapter->DhclientInfo.client->state != S_BOUND &&
+        Adapter->DhclientInfo.client->state != S_STATIC)
         return FALSE;
     
     ApiUnlock();
@@ -331,7 +332,8 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                     {
                         /* This handles a disconnect/reconnect */
 
-                        remove_protocol(proto);
+                        if (proto)
+                            remove_protocol(proto);
                         Adapter->DhclientInfo.client->state = S_INIT;
 
                         /* These are already invalid since the media state change */
