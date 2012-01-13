@@ -64,18 +64,24 @@ class CFileDefExt :
 private:
     VOID InitOpensWithField(HWND hwndDlg);
     BOOL InitFileType(HWND hwndDlg);
-    static BOOL GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult);
     BOOL InitFilePath(HWND hwndDlg);
-    BOOL InitFileSizeTime(HWND hwndDlg);
+    static BOOL GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult);
+    BOOL InitFileAttr(HWND hwndDlg);
     BOOL InitGeneralPage(HWND hwndDlg);
     BOOL SetVersionLabel(HWND hwndDlg, DWORD idCtrl, LPCWSTR pwszName);
     BOOL AddVersionString(HWND hwndDlg, LPCWSTR pwszName);
     BOOL InitVersionPage(HWND hwndDlg);
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	BOOL CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax);
 
 	WCHAR m_wszPath[MAX_PATH];
 	CFileVersionInfo m_VerInfo;
+	BOOL m_bDir;
+
+	DWORD m_cFiles;
+    DWORD m_cFolders;
+    ULARGE_INTEGER m_DirSize;
 
 public:
 	CFileDefExt();

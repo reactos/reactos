@@ -216,16 +216,18 @@ BEGIN
 	EDITTEXT                      14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
 	LTEXT         "Tip fișier:",  14004, 8, 35, 50, 10
 	LTEXT         "Dosar",        14005, 68, 35, 160, 10
-	LTEXT         "Locație:",     14006, 8, 53, 50, 10
-	EDITTEXT                      14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL
-	LTEXT         "Mărime:",      14008, 8, 72, 45, 10
-	EDITTEXT                      14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT         "Conține:",     14010, 8, 93, 45, 10
-	EDITTEXT                      14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	LTEXT         "Locație:",     14008, 8, 53, 50, 10
+	EDITTEXT                      14009, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL
+	LTEXT         "Mărime:",      140010, 8, 72, 45, 10
+	EDITTEXT                      140011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	LTEXT         "Conține:",     14026, 8, 93, 45, 10
+	EDITTEXT                      14027, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT         "Creat:",       14014, 8, 118, 45, 10
 	EDITTEXT                      14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	AUTOCHECKBOX  "&Doar-citire", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX  "Asc&uns",      14022, 126, 150, 50, 10
+	LTEXT         "Atribute:",    14020, 8, 189, 45, 10
+	AUTOCHECKBOX  "&Doar-citire", 14021, 58, 189, 67, 10
+	AUTOCHECKBOX  "Asc&uns",      14022, 126, 189, 50, 10
+	AUTOCHECKBOX  "Ar&hivă",      14023, 181, 189, 49, 10
 END
 
 
@@ -253,9 +255,9 @@ BEGIN
 	LTEXT     "Accesat:",        14018, 8, 160, 45, 10
 	EDITTEXT                     14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT     "Atribute:",       14020, 8, 189, 45, 10
-	CHECKBOX  "&Doar-citire",    14021, 58, 189, 67, 10
-	CHECKBOX  "Asc&uns",         14022, 126, 189, 50, 10
-	CHECKBOX  "Ar&hivă",         14023, 181, 189, 49, 10
+	AUTOCHECKBOX "&Doar-citire", 14021, 58, 189, 67, 10
+	AUTOCHECKBOX "Asc&uns",      14022, 126, 189, 50, 10
+	AUTOCHECKBOX "Ar&hivă",      14023, 181, 189, 49, 10
 END
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215

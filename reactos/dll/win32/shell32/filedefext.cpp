@@ -416,7 +416,37 @@ CFileDefExt::InitFileType(HWND hwndDlg)
 
 /*************************************************************************
  *
- * SHFileGeneralGetFileTimeString [Internal]
+ * CFileDefExt::InitFilePath [Internal]
+ *
+ * sets file path string and filename string
+ *
+ */
+
+BOOL
+CFileDefExt::InitFilePath(HWND hwndDlg)
+{
+    /* Find the filename */
+    WCHAR *pwszFilename = PathFindFileNameW(m_wszPath);
+
+    if (pwszFilename > m_wszPath)
+    {
+        /* Location field */
+        WCHAR wszLocation[MAX_PATH];
+        StringCchCopyNW(wszLocation, _countof(wszLocation), m_wszPath, pwszFilename - m_wszPath);
+        PathRemoveBackslashW(wszLocation);
+
+        SetDlgItemTextW(hwndDlg, 14009, wszLocation);
+    }
+
+    /* Filename field */
+    SetDlgItemTextW(hwndDlg, 14001, pwszFilename);
+
+    return TRUE;
+}
+
+/*************************************************************************
+ *
+ * CFileDefExt::GetFileTimeString [Internal]
  *
  * formats a given LPFILETIME struct into readable user format
  */
@@ -453,95 +483,67 @@ CFileDefExt::GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cc
 
 /*************************************************************************
  *
- * SH_FileGeneralSetText [Internal]
- *
- * sets file path string and filename string
- *
- */
-
-BOOL
-CFileDefExt::InitFilePath(HWND hwndDlg)
-{
-    /* Find the filename */
-    WCHAR *pwszFilename = PathFindFileNameW(m_wszPath);
-
-    if (pwszFilename > m_wszPath)
-    {
-        /* Location field */
-        WCHAR wszLocation[MAX_PATH];
-        StringCchCopyNW(wszLocation, _countof(wszLocation), m_wszPath, pwszFilename - m_wszPath);
-        PathRemoveBackslashW(wszLocation);
-
-        SetDlgItemTextW(hwndDlg, 14009, wszLocation);
-    }
-
-    /* Filename field */
-    SetDlgItemTextW(hwndDlg, 14001, pwszFilename);
-
-    return TRUE;
-}
-
-/*************************************************************************
- *
- * SH_FileGeneralSetFileSizeTime [Internal]
+ * CFileDefExt::InitFileAttr [Internal]
  *
  * retrieves file information from file and sets in dialog
  *
  */
 
 BOOL
-CFileDefExt::InitFileSizeTime(HWND hwndDlg)
+CFileDefExt::InitFileAttr(HWND hwndDlg)
 {
     WCHAR wszBuf[MAX_PATH];
 
-    TRACE("SH_FileGeneralSetFileSizeTime %ls\n", m_wszPath);
+    TRACE("InitFileAttr %ls\n", m_wszPath);
 
-    HANDLE hFile = CreateFileW(m_wszPath,
-                        GENERIC_READ,
-                        FILE_SHARE_READ,
-                        NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
-
-    if (hFile == INVALID_HANDLE_VALUE)
+    WIN32_FILE_ATTRIBUTE_DATA FileInfo;
+    if (GetFileAttributesExW(m_wszPath, GetFileExInfoStandard, &FileInfo))
     {
-        WARN("failed to open file %s\n", debugstr_w(m_wszPath));
-        return FALSE;
+        /* Update attribute checkboxes */
+        if (FileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+            SendDlgItemMessage(hwndDlg, 14021, BM_SETCHECK, BST_CHECKED, 0);
+        if (FileInfo.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+            SendDlgItemMessage(hwndDlg, 14022, BM_SETCHECK, BST_CHECKED, 0);
+        if (FileInfo.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+            SendDlgItemMessage(hwndDlg, 14023, BM_SETCHECK, BST_CHECKED, 0);
+
+        /* Update creation time */
+        if (GetFileTimeString(&FileInfo.ftCreationTime, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14015, wszBuf);
+
+        /* For files display last access and last write time */
+        if (!m_bDir)
+        {
+            if (GetFileTimeString(&FileInfo.ftLastAccessTime, wszBuf, _countof(wszBuf)))
+                SetDlgItemTextW(hwndDlg, 14019, wszBuf);
+
+            if (GetFileTimeString(&FileInfo.ftLastWriteTime, wszBuf, _countof(wszBuf)))
+                SetDlgItemTextW(hwndDlg, 14017, wszBuf);
+
+            /* Update size of file */
+            ULARGE_INTEGER FileSize;
+            FileSize.u.LowPart = FileInfo.nFileSizeLow;
+            FileSize.u.HighPart = FileInfo.nFileSizeHigh;
+            if (SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf)))
+                SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+        }
     }
 
-    FILETIME CreateTime, AccessedTime, WriteTime;
-    if (!GetFileTime(hFile, &CreateTime, &AccessedTime, &WriteTime))
+    if (m_bDir)
     {
-        WARN("GetFileTime failed\n");
-        CloseHandle(hFile);
-        return FALSE;
-    }
+        /* For directories files have to be counted */
+        StringCchCopyW(wszBuf, _countof(wszBuf), m_wszPath);
+        CountFolderAndFiles(wszBuf, _countof(wszBuf));
 
-    LARGE_INTEGER FileSize;
-    if (!GetFileSizeEx(hFile, &FileSize))
-    {
-        WARN("GetFileSize failed\n");
-        CloseHandle(hFile);
-        return FALSE;
-    }
+        /* Update size filed */
+        if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14011, wszBuf);
 
-    CloseHandle(hFile);
-
-    if (GetFileTimeString(&CreateTime, wszBuf, _countof(wszBuf)))
-        SetDlgItemTextW(hwndDlg, 14015, wszBuf);
-
-    if (GetFileTimeString(&AccessedTime, wszBuf, _countof(wszBuf)))
-        SetDlgItemTextW(hwndDlg, 14019, wszBuf);
-
-    if (GetFileTimeString(&WriteTime, wszBuf, _countof(wszBuf)))
-        SetDlgItemTextW(hwndDlg, 14017, wszBuf);
-
-    if (SH_FormatFileSizeWithBytes((PULARGE_INTEGER)&FileSize,
-                                    wszBuf,
-                                    sizeof(wszBuf) / sizeof(WCHAR)))
-    {
-        SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+        /* Display files and folders count */
+        WCHAR wszFormat[256];
+        LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
+        StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
+        SetDlgItemTextW(hwndDlg, 14027, wszBuf);
     }
 
     return TRUE;
@@ -564,35 +566,30 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
     InitFileType(hwndDlg);
 
     /* Set open with application */
-    if (!PathIsExeW(m_wszPath))
-        InitOpensWithField(hwndDlg);
-    else
+    if (!m_bDir)
     {
-        WCHAR wszBuf[MAX_PATH];
-        LoadStringW(shell32_hInstance, IDS_EXE_DESCRIPTION, wszBuf, _countof(wszBuf));
-        SetDlgItemTextW(hwndDlg, 14006, wszBuf);
-        ShowWindow(GetDlgItem(hwndDlg, 14024), SW_HIDE);
-        LPCWSTR pwszDescr = m_VerInfo.GetString(L"FileDescription");
-        if (pwszDescr)
-            SetDlgItemTextW(hwndDlg, 14007, pwszDescr);
+        if (!PathIsExeW(m_wszPath))
+            InitOpensWithField(hwndDlg);
         else
         {
-            StringCbCopyW(wszBuf, sizeof(wszBuf), PathFindFileNameW(m_wszPath));
-            PathRemoveExtension(wszBuf);
-            SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+            WCHAR wszBuf[MAX_PATH];
+            LoadStringW(shell32_hInstance, IDS_EXE_DESCRIPTION, wszBuf, _countof(wszBuf));
+            SetDlgItemTextW(hwndDlg, 14006, wszBuf);
+            ShowWindow(GetDlgItem(hwndDlg, 14024), SW_HIDE);
+            LPCWSTR pwszDescr = m_VerInfo.GetString(L"FileDescription");
+            if (pwszDescr)
+                SetDlgItemTextW(hwndDlg, 14007, pwszDescr);
+            else
+            {
+                StringCbCopyW(wszBuf, sizeof(wszBuf), PathFindFileNameW(m_wszPath));
+                PathRemoveExtension(wszBuf);
+                SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+            }
         }
     }
 
-    /* Set file created/modfied/accessed time */
-    InitFileSizeTime(hwndDlg);
-
-    DWORD dwAttr = GetFileAttributesW(m_wszPath);
-    if (dwAttr & FILE_ATTRIBUTE_READONLY)
-        SendDlgItemMessage(hwndDlg, 14021, BM_SETCHECK, BST_CHECKED, 0);
-    if (dwAttr & FILE_ATTRIBUTE_HIDDEN)
-        SendDlgItemMessage(hwndDlg, 14022, BM_SETCHECK, BST_CHECKED, 0);
-    if (dwAttr & FILE_ATTRIBUTE_ARCHIVE)
-        SendDlgItemMessage(hwndDlg, 14023, BM_SETCHECK, BST_CHECKED, 0);
+    /* Set file created/modfied/accessed time, size and attributes */
+    InitFileAttr(hwndDlg);
 
     return TRUE;
 }
@@ -634,7 +631,33 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 oainfo.oaifInFlags = OAIF_REGISTER_EXT|OAIF_FORCE_REGISTRATION;
                 return SUCCEEDED(SHOpenWithDialog(hwndDlg, &oainfo));
             }
+            else if (LOWORD(wParam) == 14021 || LOWORD(wParam) == 14022 || LOWORD(wParam) == 14023) /* checkboxes */
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
+        case WM_NOTIFY:
+        {
+            CFileDefExt *pFileDefExt = (CFileDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                DWORD dwAttr = GetFileAttributesW(pFileDefExt->m_wszPath);
+                if (dwAttr)
+                {
+                    dwAttr &= ~(FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_ARCHIVE);
+
+                    if (BST_CHECKED == SendDlgItemMessageW(hwndDlg, 14021, BM_GETCHECK, 0, 0))
+                        dwAttr |= FILE_ATTRIBUTE_READONLY;
+                    if (BST_CHECKED == SendDlgItemMessageW(hwndDlg, 14022, BM_GETCHECK, 0, 0))
+                        dwAttr |= FILE_ATTRIBUTE_HIDDEN;
+                    if (BST_CHECKED == SendDlgItemMessageW(hwndDlg, 14023, BM_GETCHECK, 0, 0))
+                        dwAttr |= FILE_ATTRIBUTE_ARCHIVE;
+
+                    SetFileAttributesW(pFileDefExt->m_wszPath, dwAttr);
+                }
+                return TRUE;
+            }
+            break;
+        }
         default:
             break;
     }
@@ -803,9 +826,11 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
-CFileDefExt::CFileDefExt()
+CFileDefExt::CFileDefExt():
+    m_bDir(FALSE), m_cFiles(0), m_cFolders(0)
 {
     m_wszPath[0] = L'\0';
+    m_DirSize.QuadPart = 0ull;
 }
 
 CFileDefExt::~CFileDefExt()
@@ -843,8 +868,11 @@ CFileDefExt::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pDataObj, HKEY hk
     }
 
     ReleaseStgMedium(&stgm);
+
     TRACE("File properties %ls\n", m_wszPath);
-    m_VerInfo.Load(m_wszPath);
+    m_bDir = PathIsDirectoryW(m_wszPath) ? TRUE : FALSE;
+    if (!m_bDir)
+        m_VerInfo.Load(m_wszPath);
 
     return S_OK;
 }
@@ -874,15 +902,16 @@ HRESULT WINAPI
 CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
+    LPCSTR pszRes = m_bDir ? "SHELL_FOLDER_GENERAL_DLG" : "SHELL_FILE_GENERAL_DLG";
 
-    hPage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG",
-                                   GeneralPageProc,
-                                   (LPARAM)this,
-                                   NULL);
+    hPage = SH_CreatePropertySheetPage(pszRes,
+                                       GeneralPageProc,
+                                       (LPARAM)this,
+                                       NULL);
     if (hPage)
         pfnAddPage(hPage, lParam);
 
-    if (GetFileVersionInfoSizeW(m_wszPath, NULL))
+    if (!m_bDir && GetFileVersionInfoSizeW(m_wszPath, NULL))
     {
         hPage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",
                                             VersionPageProc,
@@ -914,4 +943,55 @@ CFileDefExt::GetSite(REFIID iid, void **ppvSite)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
+}
+
+BOOL
+CFileDefExt::CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax)
+{
+    /* Find filename position */
+    UINT cchBuf = wcslen(pwszBuf);
+    WCHAR *pwszFilename = pwszBuf + cchBuf;
+    size_t cchFilenameMax = cchBufMax - cchBuf;
+    if (!cchFilenameMax)
+        return FALSE;
+    *(pwszFilename++) = '\\';
+    --cchFilenameMax;
+
+    /* Find all files, FIXME: shouldn't be "*"? */
+    StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
+
+    WIN32_FIND_DATAW wfd;
+    HANDLE hFind = FindFirstFileW(pwszBuf, &wfd);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ERR("FindFirstFileW %ls failed\n", pwszBuf);
+        return FALSE;
+    }
+
+    do
+    {
+        if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            /* Don't process "." and ".." items */
+            if (!wcscmp(wfd.cFileName, L".") || !wcscmp(wfd.cFileName, L".."))
+                continue;
+
+            ++m_cFolders;
+
+            StringCchCopyW(pwszFilename, cchFilenameMax, wfd.cFileName);
+            CountFolderAndFiles(pwszBuf, cchBufMax);
+        }
+        else
+        {
+            m_cFiles++;
+
+            ULARGE_INTEGER FileSize;
+            FileSize.u.LowPart  = wfd.nFileSizeLow;
+            FileSize.u.HighPart = wfd.nFileSizeHigh;
+            m_DirSize.QuadPart += FileSize.QuadPart;
+        }
+    } while(FindNextFileW(hFind, &wfd));
+
+    FindClose(hFind);
+    return TRUE;
 }

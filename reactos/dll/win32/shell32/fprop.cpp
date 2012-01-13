@@ -48,12 +48,14 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
     UINT cPages = 0, i = 0;
 
     LPWSTR pwszFilename = PathFindFileNameW(pwszPath);
+    BOOL bDir = PathIsDirectoryW(pwszPath);
 
-    if (pwszFilename[0] == L'{')
+    if (bDir)
     {
-        /* Load class property sheet handlers */
-        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"CLSID\\%s", pwszFilename);
-        phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, wszBuf, cMaxPages - cPages, pDataObj);
+        phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Folder", cMaxPages - cPages, pDataObj);
+        cPages += SHAddFromPropSheetExtArray(phpsxa[i++], AddPropSheetPageCallback, (LPARAM)pHeader);
+
+        phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Directory", cMaxPages - cPages, pDataObj);
         cPages += SHAddFromPropSheetExtArray(phpsxa[i++], AddPropSheetPageCallback, (LPARAM)pHeader);
     }
     else
@@ -71,11 +73,11 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
             phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, wszBuf, cMaxPages - cPages, pDataObj);
             cPages += SHAddFromPropSheetExtArray(phpsxa[i++], AddPropSheetPageCallback, (LPARAM)pHeader);
         }
-    }
 
-    /* Add property sheet handlers from "*" key */
-    phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"*", cMaxPages - cPages, pDataObj);
-    cPages += SHAddFromPropSheetExtArray(phpsxa[i++], AddPropSheetPageCallback, (LPARAM)pHeader);
+        /* Add property sheet handlers from "*" key */
+        phpsxa[i] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"*", cMaxPages - cPages, pDataObj);
+        cPages += SHAddFromPropSheetExtArray(phpsxa[i++], AddPropSheetPageCallback, (LPARAM)pHeader);
+    }
 
     return cPages;
 }
@@ -118,11 +120,7 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     if (PathIsRootW(wszPath))
         return SH_ShowDriveProperties(wszPath, pidlFolder, apidl);
 
-    /* Handle folders */
-    if (PathIsDirectoryW(wszPath))
-        return SH_ShowFolderProperties(wszPath, pidlFolder, apidl);
-
-    /* Handle files */
+    /* Handle files and folders */
     PROPSHEETHEADERW Header;
     memset(&Header, 0x0, sizeof(PROPSHEETHEADERW));
     Header.dwSize = sizeof(PROPSHEETHEADERW);
