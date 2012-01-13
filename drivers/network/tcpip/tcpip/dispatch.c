@@ -1596,7 +1596,7 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = 0;
-            IF->StaticNetmask = IF->StaticNetmask;
+            IF->StaticNetmask = IF->Netmask;
 
             IF->Broadcast.Type = IP_ADDRESS_V4;
             IF->Broadcast.Address.IPv4Address = 0;

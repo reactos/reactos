@@ -3243,7 +3243,8 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                         {
                             for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
                             {
-                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index)
+                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index &&
+                                    pIpForwardTable->table[Index].dwForwardDest == 0)
                                 {
                                     DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
                                 }

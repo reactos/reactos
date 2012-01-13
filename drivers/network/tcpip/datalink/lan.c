@@ -709,14 +709,14 @@ BOOLEAN ReconfigureAdapter(PLAN_ADAPTER Adapter, BOOLEAN FinishedReset)
             Interface->Broadcast.Type = IP_ADDRESS_V4;
             Interface->Broadcast.Address.IPv4Address = Interface->Unicast.Address.IPv4Address |
                                                       ~Interface->Netmask.Address.IPv4Address;
+            
+            /* Add the interface route for a static IP */
+            if (!AddrIsUnspecified(&Interface->Unicast))
+                IPAddInterfaceRoute(Interface);
 
             /* Add the default route */
             if (!AddrIsUnspecified(&Interface->StaticRouter))
                 RouterCreateRoute(&DefaultMask, &DefaultMask, &Interface->StaticRouter, Interface, 1);
-
-            /* Add the interface route for a static IP */
-            if (!AddrIsUnspecified(&Interface->Unicast))
-                IPAddInterfaceRoute(Interface);
         }
     }
     else if (!FinishedReset)
