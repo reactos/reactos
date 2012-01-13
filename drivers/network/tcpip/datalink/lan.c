@@ -638,9 +638,6 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                              TRUE);
                 
                 AddrInitIPv4(&Interface->Unicast, inet_addr(RegistryDataA.Buffer));
-
-                if (!AddrIsUnspecified(&Interface->Unicast))
-                    IPAddInterfaceRoute(Interface);
                 
                 RtlFreeAnsiString(&RegistryDataA);
             }
@@ -663,6 +660,13 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                 
                 RtlFreeAnsiString(&RegistryDataA);
             }
+            
+            /* We have to wait until both IP address and subnet mask
+             * are read to add the interface route, but we must do it
+             * before we add the default gateway */
+            if (!AddrIsUnspecified(&Interface->Unicast) &&
+                !AddrIsUnspecified(&Interface->Netmask))
+                IPAddInterfaceRoute(Interface);
             
             /* Read default gateway info */
             Status = ZwQueryValueKey(ParameterHandle,
