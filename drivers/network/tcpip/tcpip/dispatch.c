@@ -1552,8 +1552,12 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
+            IF->StaticUnicast = IF->Unicast;
+
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+            IF->StaticNetmask = IF->Netmask;
+            
             IF->Broadcast.Type = IP_ADDRESS_V4;
 	    IF->Broadcast.Address.IPv4Address =
 		IF->Unicast.Address.IPv4Address |
@@ -1587,8 +1591,12 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IPRemoveInterfaceRoute( IF );
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = 0;
+            IF->StaticUnicast = IF->Unicast;
+
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = 0;
+            IF->StaticNetmask = IF->StaticNetmask;
+
             IF->Broadcast.Type = IP_ADDRESS_V4;
             IF->Broadcast.Address.IPv4Address = 0;
             Status = STATUS_SUCCESS;
