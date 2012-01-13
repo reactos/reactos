@@ -214,6 +214,7 @@ PIP_INTERFACE IPCreateInterface(
 	IF->PointToPoint.Type = IP_ADDRESS_V4;
 	IF->Netmask.Type = IP_ADDRESS_V4;
 	IF->Broadcast.Type = IP_ADDRESS_V4;
+    IF->StaticRouter.Type = IP_ADDRESS_V4;
 
     TcpipInitializeSpinLock(&IF->Lock);
 
