@@ -817,6 +817,12 @@ typedef struct _SECURITY_CLIENT_CONTEXT {
 typedef enum _OBJECT_INFORMATION_CLASS {
   ObjectBasicInformation = 0,
   ObjectTypeInformation = 2,
+  /* Not for public use */
+  ObjectNameInformation = 1,
+  ObjectTypesInformation = 3,
+  ObjectHandleFlagInformation = 4,
+  ObjectSessionInformation = 5,
+  MaxObjectInfoClass
 } OBJECT_INFORMATION_CLASS;
 
 

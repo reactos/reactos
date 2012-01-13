@@ -139,14 +139,14 @@ typedef enum _OBJECT_INFORMATION_CLASS {
   ObjectBasicInformation = 0,
   ObjectTypeInformation = 2,
 $endif (_NTIFS_)
-$if (_PRIVATE_)
+$if (_NTIFS_) // we should remove these, but the kernel needs them :-/
   /* Not for public use */
   ObjectNameInformation = 1,
   ObjectTypesInformation = 3,
   ObjectHandleFlagInformation = 4,
   ObjectSessionInformation = 5,
   MaxObjectInfoClass
-$endif (_PRIVATE_)
+$endif (_NTIFS_)
 $if (_NTIFS_)
 } OBJECT_INFORMATION_CLASS;
 
