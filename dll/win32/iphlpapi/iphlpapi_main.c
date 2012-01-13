@@ -1189,7 +1189,7 @@ DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSi
           pIpForwardTable->dwNumEntries = table->numRoutes;
           for (ndx = 0; ndx < numRoutes; ndx++) {
             pIpForwardTable->table[ndx].dwForwardIfIndex =
-             table->routes[ndx].ifIndex + 1;
+             table->routes[ndx].ifIndex;
             pIpForwardTable->table[ndx].dwForwardDest =
              table->routes[ndx].dest;
             pIpForwardTable->table[ndx].dwForwardMask =
