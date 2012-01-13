@@ -563,7 +563,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
 }
 
 BOOL
-WlanConnect(HANDLE hAdapter, PIP_ADAPTER_INDEX_MAP IpInfo)
+WlanConnect(HANDLE hAdapter)
 {
     BOOL bSuccess;
     DWORD dwBytesReturned, SetOidSize;
@@ -725,10 +725,6 @@ WlanConnect(HANDLE hAdapter, PIP_ADAPTER_INDEX_MAP IpInfo)
     
     if (!bSuccess)
         return FALSE;
-    
-    /* Update our IP address */
-    IpReleaseAddress(IpInfo);
-    IpRenewAddress(IpInfo);
 
     _tprintf(_T("The operation completed successfully.\n"));
     return TRUE;
@@ -943,7 +939,7 @@ int main(int argc, char* argv[])
     }
     else if (bConnect)
     {
-        if (!WlanConnect(hAdapter, &IpInfo))
+        if (!WlanConnect(hAdapter))
         {
             DoFormatMessage(GetLastError());
             CloseHandle(hAdapter);
