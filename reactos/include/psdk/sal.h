@@ -391,6 +391,10 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Struct_size_bytes_(size)       _Writable_bytes_(size)
 #define _Unchanged_(e)                  _At_(e, _Post_equal_to_(_Old_(e)) _Const_)
 #define _Analysis_noreturn_             _SA_annotes0(SAL_terminates)
+#define _Function_class_(x)             _SA_annotes1(SAL_functionClassNew, #x)
+#define _Raises_SEH_exception_          _Group_(_Pre_ _SA_annotes1(SAL_inTry,__yes) _Analysis_noreturn_)
+#define _Maybe_raises_SEH_exception_    _Pre_ _SA_annotes1(SAL_inTry,__yes)
+#define _Interlocked_operand_           _Pre_ _SA_annotes0(SAL_interlocked)
 
 #define _Field_size_(size)              _Notnull_ _Writable_elements_(size)
 #define _Field_size_bytes_(size)        _Notnull_ _Writable_bytes_(size)
@@ -1185,6 +1189,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Field_size_part_(size, count)
 #define _Field_size_part_opt_(size, count)
 #define _Field_z_
+#define _Function_class_(x)
 #define _Group_(annos)
 #define _In_
 #define _In_bound_
@@ -1291,9 +1296,11 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Inout_z_cap_x_(size)
 #define _Inout_z_count_(size)
 #define _Inout_z_count_c_(size)
+#define _Interlocked_operand_
 #define _Literal_
 #define _Maybenull_
 #define _Maybevalid_
+#define _Maybe_raises_SEH_exception
 #define _Must_inspect_result_
 #define _Notliteral_
 #define _Notnull_
@@ -1549,6 +1556,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Prepost_valid_
 #define _Prepost_z_
 #define _Printf_format_string_
+#define _Raises_SEH_exception_
 #define _Readable_bytes_(size)
 #define _Readable_elements_(size)
 #define _Reserved_

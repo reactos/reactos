@@ -24,6 +24,7 @@
 #define SPECSTRINGS_H
 
 #include <sal.h>
+#include <driverspecs.h>
 
 #define __field_bcount(size) __notnull __byte_writableTo(size)
 #define __field_ecount(size) __notnull __elem_writableTo(size)
@@ -43,5 +44,7 @@
 #define __out_awcount(expr,size)
 #define __in_awcount(expr,size)
 #define __nullnullterminated
-#define __analysis_assume(expr)
+#define __in_data_source(src_sym)
+#define __analysis_noreturn
+#define __kernel_entry
 
