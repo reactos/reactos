@@ -2,7 +2,7 @@ $if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 
@@ -214,7 +214,7 @@ $if (_NTDDK_)
 #define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
 #define DO_DISALLOW_EXECUTE               0x00800000
 
-$endif
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 /* DEVICE_OBJECT.Flags */
 #define DO_VERIFY_VOLUME                  0x00000002
@@ -254,12 +254,12 @@ $if (_WDMDDK_)
 #define FILE_256_BYTE_ALIGNMENT         0x000000ff
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
-$endif
+$endif (_NTDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 /* DEVICE_OBJECT.DeviceType */
 #define DEVICE_TYPE ULONG
 
-$endif
+$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
 typedef struct _DEVICE_OBJECT {
   CSHORT Type;

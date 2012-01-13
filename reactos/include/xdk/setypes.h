@@ -303,7 +303,7 @@ typedef struct _SE_ADT_PARAMETER_ARRAY {
 
 #endif /* !_NTLSA_AUDIT_ */
 #endif /* !_NTLSA_IFS_ */
-$endif
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 #define SE_UNSOLICITED_INPUT_PRIVILEGE    6
 
@@ -392,7 +392,7 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinConsoleLogonSid = 81,
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
-$endif
+$endif (_NTDDK_)
 $if (_NTIFS_)
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
@@ -1131,4 +1131,14 @@ typedef struct _SE_EXPORTS {
 typedef NTSTATUS
 (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
   IN PLUID LogonId);
+
+typedef struct _SECURITY_CLIENT_CONTEXT {
+  SECURITY_QUALITY_OF_SERVICE SecurityQos;
+  PACCESS_TOKEN ClientToken;
+  BOOLEAN DirectlyAccessClientToken;
+  BOOLEAN DirectAccessEffectiveOnly;
+  BOOLEAN ServerIsRemote;
+  TOKEN_CONTROL ClientTokenControl;
+} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
+
 $endif (_NTIFS_)

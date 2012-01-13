@@ -62,18 +62,9 @@ typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
 
 $include (setypes.h)
+$include (obtypes.h)
 $include (rtltypes.h)
 $include (rtlfuncs.h)
-
-typedef enum _OBJECT_INFORMATION_CLASS {
-  ObjectBasicInformation = 0,
-  ObjectNameInformation = 1, /* FIXME, not in WDK */
-  ObjectTypeInformation = 2,
-  ObjectTypesInformation = 3, /* FIXME, not in WDK */
-  ObjectHandleFlagInformation = 4, /* FIXME, not in WDK */
-  ObjectSessionInformation = 5, /* FIXME, not in WDK */
-  MaxObjectInfoClass /* FIXME, not in WDK */
-} OBJECT_INFORMATION_CLASS;
 
 NTSYSCALLAPI
 NTSTATUS
@@ -1031,38 +1022,10 @@ typedef struct _PUBLIC_OBJECT_TYPE_INFORMATION {
   ULONG Reserved [22];
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
-typedef struct _SECURITY_CLIENT_CONTEXT {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;
-  PACCESS_TOKEN ClientToken;
-  BOOLEAN DirectlyAccessClientToken;
-  BOOLEAN DirectAccessEffectiveOnly;
-  BOOLEAN ServerIsRemote;
-  TOKEN_CONTROL ClientTokenControl;
-} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
-
 #define SYSTEM_PAGE_PRIORITY_BITS       3
 #define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
 
-typedef struct _KAPC_STATE {
-  LIST_ENTRY ApcListHead[MaximumMode];
-  PKPROCESS Process;
-  BOOLEAN KernelApcInProgress;
-  BOOLEAN KernelApcPending;
-  BOOLEAN UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-
-#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
-
-#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
-
-typedef struct _KQUEUE {
-  DISPATCHER_HEADER Header;
-  LIST_ENTRY EntryListHead;
-  volatile ULONG CurrentCount;
-  ULONG MaximumCount;
-  LIST_ENTRY ThreadListHead;
-} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
-
+$include (ketypes.h)
 $include (kefuncs.h)
 $include (extypes.h)
 $include (exfuncs.h)
@@ -1268,6 +1231,9 @@ typedef struct _QUERY_PATH_RESPONSE {
 #endif
 
 #include "csq.h"
+
+extern PACL                         SePublicDefaultDacl;
+extern PACL                         SeSystemDefaultDacl;
 
 #define FS_LFN_APIS                             0x00004000
 

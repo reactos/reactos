@@ -2,7 +2,7 @@ $if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1

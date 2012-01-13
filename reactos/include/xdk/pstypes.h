@@ -38,7 +38,7 @@ $if (_WDMDDK_)
 #define HIGH_PRIORITY                     31
 #define MAXIMUM_PRIORITY                  32
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 #define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
@@ -447,5 +447,5 @@ typedef struct _PROCESS_HANDLE_TRACING_QUERY {
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
 

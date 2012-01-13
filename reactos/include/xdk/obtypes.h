@@ -2,6 +2,7 @@
  *                            Object Manager Types                            *
  ******************************************************************************/
 
+$if (_WDMDDK_)
 #define MAXIMUM_FILENAME_LENGTH           256
 #define OBJ_NAME_PATH_SEPARATOR           ((WCHAR)L'\\')
 
@@ -131,4 +132,23 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
+
+$endif (_WDMDDK_)
+$if (_NTIFS_)
+typedef enum _OBJECT_INFORMATION_CLASS {
+  ObjectBasicInformation = 0,
+  ObjectTypeInformation = 2,
+$endif (_NTIFS_)
+$if (_PRIVATE_)
+  /* Not for public use */
+  ObjectNameInformation = 1,
+  ObjectTypesInformation = 3,
+  ObjectHandleFlagInformation = 4,
+  ObjectSessionInformation = 5,
+  MaxObjectInfoClass
+$endif (_PRIVATE_)
+$if (_NTIFS_)
+} OBJECT_INFORMATION_CLASS;
+
+$endif (_NTIFS_)
 

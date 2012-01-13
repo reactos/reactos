@@ -1,4 +1,3 @@
-$if (_WDMDDK_)
 #ifndef _NTTMAPI_
 #define _NTTMAPI_
 
@@ -649,4 +648,3 @@ NtPropagationFailed(
 #endif /* NTDDI_VERSION >= NTDDI_VISTA */
 
 #endif /* !_NTTMAPI_ */
-$endif

@@ -815,7 +815,7 @@ $endif (_NTIFS_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 
 NTKERNELAPI
@@ -872,7 +872,7 @@ InterlockedPushListSList(
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)

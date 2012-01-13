@@ -7561,6 +7561,7 @@ extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
 
+
 /******************************************************************************
  *                           Process Manager Types                            *
  ******************************************************************************/
@@ -7896,6 +7897,7 @@ FORCEINLINE
 VOID
 KeMemoryBarrier(VOID)
 {
+  // FIXME: Do we really need lfence after the __faststorefence ?
   FastFence();
   LFENCE_ACQUIRE();
 }
@@ -10351,12 +10353,14 @@ KeQueryMaximumProcessorCount(VOID);
 #if (NTDDI_VERSION >= NTDDI_WS08)
 
 PVOID
+NTAPI
 KeRegisterProcessorChangeCallback(
   IN PPROCESSOR_CALLBACK_FUNCTION CallbackFunction,
   IN PVOID CallbackContext OPTIONAL,
   IN ULONG Flags);
 
 VOID
+NTAPI
 KeDeregisterProcessorChangeCallback(
   IN PVOID CallbackHandle);
 
@@ -14756,6 +14760,7 @@ HalGetDmaAlignment(
 #endif /* USE_DMA_MACROS ... */
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 #ifndef _NTTMAPI_
 #define _NTTMAPI_

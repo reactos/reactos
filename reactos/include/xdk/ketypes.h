@@ -999,7 +999,7 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
@@ -1182,5 +1182,27 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
+$if (_NTIFS_)
+typedef struct _KAPC_STATE {
+  LIST_ENTRY ApcListHead[MaximumMode];
+  PKPROCESS Process;
+  BOOLEAN KernelApcInProgress;
+  BOOLEAN KernelApcPending;
+  BOOLEAN UserApcPending;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
+
+#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
+
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
+
+typedef struct _KQUEUE {
+  DISPATCHER_HEADER Header;
+  LIST_ENTRY EntryListHead;
+  volatile ULONG CurrentCount;
+  ULONG MaximumCount;
+  LIST_ENTRY ThreadListHead;
+} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
+$endif (_NTIFS_)
 

@@ -9,7 +9,7 @@ DbgPrompt(
   IN PCCH Prompt,
   OUT PCH Response,
   IN ULONG MaximumResponseLength);
-$endif
+$endif (_NTDDK_)
 
 $if (_WDMDDK_)
 #ifndef _DBGNT_
@@ -189,4 +189,4 @@ KdChangeOption(
   OUT PVOID OutBuffer,
   OUT PULONG OutBufferNeeded OPTIONAL);
 #endif
-$endif
+$endif (_WDMDDK_)

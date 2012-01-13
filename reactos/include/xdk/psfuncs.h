@@ -211,7 +211,7 @@ $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 $if (_NTDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
 NTKERNELAPI
@@ -274,7 +274,7 @@ PsIsSystemThread(
 $endif (_NTIFS_)
 $if (_NTDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)

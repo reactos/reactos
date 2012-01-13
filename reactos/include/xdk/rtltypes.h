@@ -553,4 +553,4 @@ typedef struct _COMPRESSED_DATA_INFO {
   ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 #endif
-$endif
+$endif (_NTIFS_)

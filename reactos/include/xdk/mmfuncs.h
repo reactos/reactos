@@ -591,7 +591,7 @@ $endif (_NTIFS_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 
 $if (_WDMDDK_)
 NTKERNELAPI
@@ -664,10 +664,10 @@ $endif (_NTIFS_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 LOGICAL
@@ -685,7 +685,7 @@ MmCreateMirror(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI
@@ -699,7 +699,7 @@ MmAllocatePagesForMdlEx(
   IN MEMORY_CACHING_TYPE CacheType,
   IN ULONG Flags);
 #endif
-$endif
+$endif (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)

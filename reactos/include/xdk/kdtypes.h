@@ -91,4 +91,4 @@ typedef ULONG
   IN PVOID Buffer,
   IN ULONG Offset,
   IN ULONG Length);
-$endif
+$endif (_NTDDK_)

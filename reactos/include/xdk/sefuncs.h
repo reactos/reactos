@@ -378,7 +378,7 @@ $endif (_WDMDDK_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 NTKERNELAPI
 ULONG
@@ -481,7 +481,7 @@ SeAuditTransactionStateChange(
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA || (NTDDI_VERSION >= NTDDI_WINXPSP2 && NTDDI_VERSION < NTDDI_WS03))

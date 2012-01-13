@@ -2051,7 +2051,7 @@ IoValidateDeviceIoControlAccess(
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTDDK_)
 NTKERNELAPI
 IO_PAGING_PRIORITY
@@ -2084,10 +2084,10 @@ IoCsqInsertIrpEx(
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
 BOOLEAN
@@ -2111,7 +2111,7 @@ IoEnumerateRegisteredFiltersList(
 $endif (_NTIFS_)
 $if (_NTDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)

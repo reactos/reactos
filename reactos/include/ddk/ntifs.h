@@ -800,6 +800,26 @@ typedef struct _SE_EXPORTS {
 typedef NTSTATUS
 (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
   IN PLUID LogonId);
+
+typedef struct _SECURITY_CLIENT_CONTEXT {
+  SECURITY_QUALITY_OF_SERVICE SecurityQos;
+  PACCESS_TOKEN ClientToken;
+  BOOLEAN DirectlyAccessClientToken;
+  BOOLEAN DirectAccessEffectiveOnly;
+  BOOLEAN ServerIsRemote;
+  TOKEN_CONTROL ClientTokenControl;
+} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
+
+/******************************************************************************
+ *                            Object Manager Types                            *
+ ******************************************************************************/
+
+typedef enum _OBJECT_INFORMATION_CLASS {
+  ObjectBasicInformation = 0,
+  ObjectTypeInformation = 2,
+} OBJECT_INFORMATION_CLASS;
+
+
 /******************************************************************************
  *                           Runtime Library Types                            *
  ******************************************************************************/
@@ -1886,16 +1906,6 @@ RtlCreateVirtualAccountSid(
 
 #define RtlOffsetToPointer(B,O) ((PCHAR)(((PCHAR)(B)) + ((ULONG_PTR)(O))))
 #define RtlPointerToOffset(B,P) ((ULONG)(((PCHAR)(P)) - ((PCHAR)(B))))
-
-typedef enum _OBJECT_INFORMATION_CLASS {
-  ObjectBasicInformation = 0,
-  ObjectNameInformation = 1, /* FIXME, not in WDK */
-  ObjectTypeInformation = 2,
-  ObjectTypesInformation = 3, /* FIXME, not in WDK */
-  ObjectHandleFlagInformation = 4, /* FIXME, not in WDK */
-  ObjectSessionInformation = 5, /* FIXME, not in WDK */
-  MaxObjectInfoClass /* FIXME, not in WDK */
-} OBJECT_INFORMATION_CLASS;
 
 NTSYSCALLAPI
 NTSTATUS
@@ -4737,18 +4747,12 @@ typedef struct _PUBLIC_OBJECT_TYPE_INFORMATION {
   ULONG Reserved [22];
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
-typedef struct _SECURITY_CLIENT_CONTEXT {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;
-  PACCESS_TOKEN ClientToken;
-  BOOLEAN DirectlyAccessClientToken;
-  BOOLEAN DirectAccessEffectiveOnly;
-  BOOLEAN ServerIsRemote;
-  TOKEN_CONTROL ClientTokenControl;
-} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
-
 #define SYSTEM_PAGE_PRIORITY_BITS       3
 #define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
 
+/******************************************************************************
+ *                              Kernel Types                                  *
+ ******************************************************************************/
 typedef struct _KAPC_STATE {
   LIST_ENTRY ApcListHead[MaximumMode];
   PKPROCESS Process;
@@ -4768,6 +4772,7 @@ typedef struct _KQUEUE {
   ULONG MaximumCount;
   LIST_ENTRY ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
 
 /******************************************************************************
  *                              Kernel Functions                              *
@@ -4944,7 +4949,8 @@ KeQueryOwnerMutant(
 
 NTKERNELAPI
 ULONG
-KeRemoveQueueEx (
+NTAPI
+KeRemoveQueueEx(
   IN OUT PKQUEUE Queue,
   IN KPROCESSOR_MODE WaitMode,
   IN BOOLEAN Alertable,
@@ -10285,6 +10291,9 @@ typedef struct _QUERY_PATH_RESPONSE {
 #endif
 
 #include "csq.h"
+
+extern PACL                         SePublicDefaultDacl;
+extern PACL                         SeSystemDefaultDacl;
 
 #define FS_LFN_APIS                             0x00004000
 

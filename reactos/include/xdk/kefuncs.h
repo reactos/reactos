@@ -103,7 +103,7 @@ KeBugCheck(
 $endif(_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if defined(SINGLE_GROUP_LEGACY_API)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 NTKERNELAPI
@@ -145,7 +145,7 @@ KeQueryActiveProcessors(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 #if !defined(_M_AMD64)
@@ -605,7 +605,7 @@ KIRQL
 KeAcquireSpinLockRaiseToSynch(
   IN OUT PKSPIN_LOCK SpinLock);
 #endif
-$endif
+$endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -735,7 +735,7 @@ KeFlushQueuedDpcs(VOID);
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 NTKERNELAPI
@@ -794,10 +794,10 @@ KeInvalidateAllCaches(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 NTKERNELAPI
@@ -878,7 +878,7 @@ KeLeaveGuardedRegion(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)
@@ -903,7 +903,7 @@ KeQueryDpcWatchdogInformation(
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if defined(SINGLE_GROUP_LEGACY_API)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 NTKERNELAPI
@@ -943,7 +943,7 @@ KeQueryMaximumProcessorCount(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* SINGLE_GROUP_LEGACY_API */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTIFS_)
 NTKERNELAPI
 VOID
@@ -953,7 +953,8 @@ KeQueryOwnerMutant(
 
 NTKERNELAPI
 ULONG
-KeRemoveQueueEx (
+NTAPI
+KeRemoveQueueEx(
   IN OUT PKQUEUE Queue,
   IN KPROCESSOR_MODE WaitMode,
   IN BOOLEAN Alertable,
@@ -968,12 +969,14 @@ $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS08)
 
 PVOID
+NTAPI
 KeRegisterProcessorChangeCallback(
   IN PPROCESSOR_CALLBACK_FUNCTION CallbackFunction,
   IN PVOID CallbackContext OPTIONAL,
   IN ULONG Flags);
 
 VOID
+NTAPI
 KeDeregisterProcessorChangeCallback(
   IN PVOID CallbackHandle);
 
@@ -981,7 +984,7 @@ KeDeregisterProcessorChangeCallback(
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 ULONG64
@@ -1207,7 +1210,7 @@ KeQueryHardwareCounterConfiguration(
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #if !defined(_IA64_)
 NTHALAPI

@@ -642,7 +642,7 @@ $endif (_WDMDDK_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 
 NTSYSAPI
@@ -1025,7 +1025,7 @@ ZwFlushBuffersFile(
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 $if (_WDMDDK_)
 
