@@ -312,9 +312,9 @@ BEGIN
 	CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 135, 100, 30
 
 	LTEXT "Napęd %c", 14009, 100, 170, 40, 10
-	PUSHBUTTON "Czyszczenie dysku", 14010, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Kompresja danych na dysku", 14011, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Zezwól Usłudze Indeksowania na zaindeksowanie tego dysku (szybkie przeszukiwanie plików)", 14012, 15, 220, 200, 10, WS_DISABLED
+	PUSHBUTTON "Oczyszczanie dysku", 14010, 170, 175, 60, 15, WS_TABSTOP
+	CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyśpieszyć wyszukiwanie plików", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -324,13 +324,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Sprawdzanie błędów", -1, 5, 5, 230, 60
 	LTEXT "Ta opcja sprawdzi wolumin w poszukiwaniu błędów.", -1, 40, 25, 160, 20
-	PUSHBUTTON "Sprawdź", 14000, 130, 45, 90, 15, WS_TABSTOP
+	PUSHBUTTON "Sprawdź...", 14000, 130, 45, 90, 15, WS_TABSTOP
 	GROUPBOX "Defragmentacja", -1, 5, 65, 230, 60
-	LTEXT "Ta opcja zdefragmentuje pliki na woluminie", -1, 40, 85, 160, 20
-	PUSHBUTTON "Defragmentuj", 14001, 130, 105, 90, 15, WS_TABSTOP
+	LTEXT "Ta opcja dokona defragmentacji plików woluminu.", -1, 40, 85, 160, 20
+	PUSHBUTTON "Defragmentuj...", 14001, 130, 105, 90, 15, WS_TABSTOP
 	GROUPBOX "Kopia zapasowa", -1, 5, 130, 230, 60
-	LTEXT "Ta opcja wykona kopię zapasową plików na woluminie.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Stwórz kopię", 14002, 130, 170, 90, 15, WS_TABSTOP
+	LTEXT "Ta opcja wykona kopię zapasową plików tego woluminu.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230

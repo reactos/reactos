@@ -30,13 +30,14 @@ class CDrvDefExt :
 	public IObjectWithSite
 {
 private:
-    static VOID PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem);
+    VOID PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem);
     VOID InitGeneralPage(HWND hwndDlg);
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static INT_PTR CALLBACK ExtraPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static INT_PTR CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     WCHAR m_wszDrive[MAX_PATH];
+    UINT m_FreeSpacePerc;
 
 public:
 	CDrvDefExt();

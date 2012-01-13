@@ -39,6 +39,7 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
                            LPGUID lpGuids,
                            UINT uNumberOfGuids,
                            HWPAGE_DISPLAYMODE DisplayMode);
+UINT SH_FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax);
 
 static VOID
 GetDriveNameWithLetter(LPWSTR pwszText, UINT cchTextMax, LPCWSTR pwszDrive)
@@ -211,19 +212,15 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
         HPEN hDarkBluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 128));
         HPEN hDarkMagPen = CreatePen(PS_SOLID, 1, RGB(128, 0, 128));
 
-        WCHAR wszBuf[20];
-        GetDlgItemTextW(hwndDlg, 14006, wszBuf, _countof(wszBuf));
-        UINT cFreeSpace = _wtoi(wszBuf);
-
         INT xCenter = (pDrawItem->rcItem.left + pDrawItem->rcItem.right)/2;
         INT yCenter = (pDrawItem->rcItem.top + pDrawItem->rcItem.bottom - 10)/2;
         INT cx = pDrawItem->rcItem.right - pDrawItem->rcItem.left;
         INT cy = pDrawItem->rcItem.bottom - pDrawItem->rcItem.top - 10;
-        TRACE("FreeSpace %u a %f cx %d\n", cFreeSpace, M_PI+cFreeSpace/100.0f*M_PI*2.0f, cx);
+        TRACE("FreeSpace %u a %f cx %d\n", m_FreeSpacePerc, M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f, cx);
 
         HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
-        INT xRadial = xCenter + (INT)(cosf(M_PI+cFreeSpace/100.0f*M_PI*2.0f)*cx/2);
-        INT yRadial = yCenter - (INT)(sinf(M_PI+cFreeSpace/100.0f*M_PI*2.0f)*cy/2);
+        INT xRadial = xCenter + (INT)(cosf(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cx/2);
+        INT yRadial = yCenter - (INT)(sinf(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cy/2);
         Pie(pDrawItem->hDC,
             pDrawItem->rcItem.left, pDrawItem->rcItem.top,
             pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
@@ -241,7 +238,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
         HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkBluePen);
         for (INT x = pDrawItem->rcItem.left; x < pDrawItem->rcItem.right; ++x)
         {
-            if (cFreeSpace < 50 && x == xRadial)
+            if (m_FreeSpacePerc < 50 && x == xRadial)
                 SelectObject(pDrawItem->hDC, hDarkMagPen);
 
             float cos_val = (x - xCenter)*2.0f/cx;
@@ -269,61 +266,53 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     bRet = GetVolumeInformationW(m_wszDrive, wszVolumeName, _countof(wszVolumeName), NULL, NULL, NULL, wszFileSystem, _countof(wszFileSystem));
     if (bRet)
     {
-        /* set volume label */
+        /* Set volume label and filesystem */
         SetDlgItemTextW(hwndDlg, 14000, wszVolumeName);
-
-        /* set filesystem type */
         SetDlgItemTextW(hwndDlg, 14002, wszFileSystem);
     }
 
+    /* Set drive type and icon */
     UINT DriveType = GetDriveTypeW(m_wszDrive);
-    if (DriveType == DRIVE_FIXED || DriveType == DRIVE_CDROM)
+    UINT IconId, TypeStrId = 0;
+    switch (DriveType)
     {
-        ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes, TotalNumberOfFreeBytes;
-        if(GetDiskFreeSpaceExW(m_wszDrive, &FreeBytesAvailable, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
-        {
-            ULONG SpacePercent;
-            HANDLE hVolume;
-            DWORD BytesReturned = 0;
+        case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; TypeStrId = IDS_DRIVE_CDROM; break;
+        case DRIVE_REMOVABLE: IconId = IDI_SHELL_FLOPPY; break;
+        case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
+        default: IconId = IDI_SHELL_DRIVE; TypeStrId = IDS_DRIVE_FIXED;
+    }
+    HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
+    if (hIcon)
+        SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
+    if (TypeStrId && LoadStringW(shell32_hInstance, TypeStrId, wszBuf, _countof(wszBuf)))
+        SetDlgItemTextW(hwndDlg, 14001, wszBuf);
 
-            swprintf(wszBuf, L"\\\\.\\%c:", towupper(m_wszDrive[0]));
-            hVolume = CreateFileW(wszBuf, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
-            if (hVolume != INVALID_HANDLE_VALUE)
-            {
-                bRet = DeviceIoControl(hVolume, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, (LPVOID)&TotalNumberOfBytes, sizeof(ULARGE_INTEGER), &BytesReturned, NULL);
-                if (bRet && StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
-                    SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+    ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes;
+    if(GetDiskFreeSpaceExW(m_wszDrive, &FreeBytesAvailable, &TotalNumberOfBytes, NULL))
+    {
+        /* Init free space percentage used for drawing piechart */
+        m_FreeSpacePerc = (UINT)(FreeBytesAvailable.QuadPart * 100ull / TotalNumberOfBytes.QuadPart);
 
-                CloseHandle(hVolume);
-            }
+        /* Used space */
+        if (SH_FormatByteSize(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14003, wszBuf);
 
-            TRACE("wszBuf %s hVolume %p bRet %d LengthInformation %ul BytesReturned %d\n", debugstr_w(wszBuf), hVolume, bRet, TotalNumberOfBytes.QuadPart, BytesReturned);
-
-            if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
-                SetDlgItemTextW(hwndDlg, 14003, wszBuf);
-
-            if (StrFormatByteSizeW(FreeBytesAvailable.QuadPart, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
-                SetDlgItemTextW(hwndDlg, 14005, wszBuf);
-
-            SpacePercent = (ULONG)(TotalNumberOfFreeBytes.QuadPart*100ull/TotalNumberOfBytes.QuadPart);
-            /* set free bytes percentage */
-            swprintf(wszBuf, L"%u%%", SpacePercent);
-            SetDlgItemTextW(hwndDlg, 14006, wszBuf);
-            /* store used share amount */
-            SpacePercent = 100 - SpacePercent;
-            swprintf(wszBuf, L"%u%%", SpacePercent);
+        if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14004, wszBuf);
-            if (DriveType == DRIVE_FIXED)
-            {
-                if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
-                    SetDlgItemTextW(hwndDlg, 14001, wszBuf);
-            }
-            else /* DriveType == DRIVE_CDROM) */
-            {
-                if (LoadStringW(shell32_hInstance, IDS_DRIVE_CDROM, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
-                    SetDlgItemTextW(hwndDlg, 14001, wszBuf);
-            }
-        }
+
+        /* Free space */
+        if (SH_FormatByteSize(FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14005, wszBuf);
+
+        if (StrFormatByteSizeW(FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14006, wszBuf);
+
+        /* Total space */
+        if (SH_FormatByteSize(FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+
+        if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14008, wszBuf);
     }
 
     /* Set drive description */
@@ -331,18 +320,6 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
     swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
-
-    /* Set drive icon */
-    UINT IconId;
-    switch (DriveType)
-    {
-        case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; break;
-        case DRIVE_REMOVABLE: IconId = IDI_SHELL_FLOPPY; break;
-        case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
-        default: IconId = IDI_SHELL_DRIVE;
-    }
-    HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
-    SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
 }
 
 INT_PTR CALLBACK
@@ -371,7 +348,8 @@ CDrvDefExt::GeneralPageProc(
 
             if (pDrawItem->CtlID >= 14013 && pDrawItem->CtlID <= 14015)
             {
-                CDrvDefExt::PaintStaticControls(hwndDlg, pDrawItem);
+                CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                pDrvDefExt->PaintStaticControls(hwndDlg, pDrawItem);
                 return TRUE;
             }
             break;

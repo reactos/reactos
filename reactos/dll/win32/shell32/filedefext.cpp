@@ -122,6 +122,80 @@ LPCWSTR CFileVersionInfo::GetLangName()
     return m_wszLang;
 }
 
+UINT
+SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
+{
+    // Print the number in uniform mode
+    WCHAR wszNumber[24];
+    swprintf(wszNumber, L"%I64u", Num);
+
+    // Get system strings for decimal and thousand separators.
+    WCHAR wszDecimalSep[8], wszThousandSep[8];
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, wszDecimalSep, _countof(wszDecimalSep));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, wszThousandSep, _countof(wszThousandSep));
+
+    // Initialize format for printing the number in bytes
+    NUMBERFMTW nf;
+    ZeroMemory(&nf, sizeof(nf));
+    nf.lpDecimalSep = wszDecimalSep;
+    nf.lpThousandSep = wszThousandSep;
+
+    // Get system string for groups separator
+    WCHAR wszGrouping[12];
+    INT cchGrouping = GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                                     LOCALE_SGROUPING,
+                                     wszGrouping,
+                                     _countof(wszGrouping));
+
+    // Convert grouping specs from string to integer
+    for (INT i = 0; i < cchGrouping; i++)
+    {
+        WCHAR wch = wszGrouping[i];
+
+        if (wch >= L'0' && wch <= L'9')
+            nf.Grouping = nf.Grouping * 10 + (wch - L'0');
+        else if (wch != L';')
+            break;
+    }
+
+    if ((nf.Grouping % 10) == 0)
+        nf.Grouping /= 10;
+    else
+        nf.Grouping *= 10;
+
+    // Format the number
+    INT cchResult = GetNumberFormatW(LOCALE_USER_DEFAULT,
+                                    0,
+                                    wszNumber,
+                                    &nf,
+                                    pwszResult,
+                                    cchResultMax);
+
+    if (!cchResult)
+        return 0;
+
+    // GetNumberFormatW returns number of characters including UNICODE_NULL
+    return cchResult - 1;
+}
+
+UINT
+SH_FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax)
+{
+    /* Write formated bytes count */
+    INT cchWritten = SH_FormatInteger(cbSize, pwszResult, cchResultMax);
+    if (!cchWritten)
+        return 0;
+
+    /* Copy " bytes" to buffer */
+    LPWSTR pwszEnd = pwszResult + cchWritten;
+    size_t cchRemaining = cchResultMax - cchWritten;
+    StringCchCopyExW(pwszEnd, cchRemaining, L" ", &pwszEnd, &cchRemaining, NULL);
+    cchWritten = LoadStringW(shell32_hInstance, IDS_BYTES_FORMAT, pwszEnd, cchRemaining);
+    cchRemaining -= cchWritten;
+
+    return cchResultMax - cchRemaining;
+}
+
 /*************************************************************************
  *
  * SH_FormatFileSizeWithBytes
@@ -135,95 +209,31 @@ LPCWSTR CFileVersionInfo::GetLangName()
  */
 
 LPWSTR
-SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf)
+SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UINT cchResultMax)
 {
-    NUMBERFMTW nf;
-    WCHAR      szNumber[24];
-    WCHAR      szDecimalSep[8];
-    WCHAR      szThousandSep[8];
-    WCHAR      szGrouping[12];
-    int        Len, cchFormatted, i;
-    size_t     cchRemaining;
-    LPWSTR     Ptr;
-
-    // Try to build first Format byte string
-    if (StrFormatByteSizeW(lpQwSize->QuadPart, pszBuf, cchBuf) == NULL)
+    /* Format bytes in KBs, MBs etc */
+    if (StrFormatByteSizeW(lpQwSize->QuadPart, pwszResult, cchResultMax) == NULL)
         return NULL;
 
-    // If there is less bytes than 1KB, we have nothing to do
+    /* If there is less bytes than 1KB, we have nothing to do */
     if (lpQwSize->QuadPart < 1024)
-        return pszBuf;
+        return pwszResult;
 
-    // Print the number in uniform mode
-    swprintf(szNumber, L"%I64u", lpQwSize->QuadPart);
+    /* Concate " (" */
+    UINT cchWritten = wcslen(pwszResult);
+    LPWSTR pwszEnd = pwszResult + cchWritten;
+    size_t cchRemaining = cchResultMax - cchWritten;
+    StringCchCopyExW(pwszEnd, cchRemaining, L" (", &pwszEnd, &cchRemaining, 0);
 
-    // Get system strings for decimal and thousand separators.
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSep, sizeof(szDecimalSep) / sizeof(*szDecimalSep));
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szThousandSep, sizeof(szThousandSep) / sizeof(*szThousandSep));
+    /* Write formated bytes count */
+    cchWritten = SH_FormatByteSize(lpQwSize->QuadPart, pwszEnd, cchRemaining);
+    pwszEnd += cchWritten;
+    cchRemaining -= cchWritten;
 
-    // Initialize format for printing the number in bytes
-    ZeroMemory(&nf, sizeof(nf));
-    nf.NumDigits     = 0;
-    nf.LeadingZero   = 0;
-    nf.Grouping      = 0;
-    nf.lpDecimalSep  = szDecimalSep;
-    nf.lpThousandSep = szThousandSep;
-    nf.NegativeOrder = 0;
+    /* Copy ")" to the buffer */
+    StringCchCopyW(pwszEnd, cchRemaining, L")");
 
-    // Get system string for groups separator
-    Len = GetLocaleInfoW(LOCALE_USER_DEFAULT,
-                         LOCALE_SGROUPING,
-                         szGrouping,
-                         sizeof(szGrouping) / sizeof(*szGrouping));
-
-    // Convert grouping specs from string to integer
-    for (i = 0; i < Len; i++)
-    {
-        WCHAR wch = szGrouping[i];
-
-        if (wch >= L'0' && wch <= L'9')
-            nf.Grouping = nf.Grouping * 10 + (wch - L'0');
-        else if (wch != L';')
-            break;
-    }
-
-    if ((nf.Grouping % 10) == 0)
-        nf.Grouping /= 10;
-    else
-        nf.Grouping *= 10;
-
-    // Concate " (" at the end of buffer
-    Len = wcslen(pszBuf);
-    Ptr = pszBuf + Len;
-    cchRemaining = cchBuf - Len;
-    StringCchCopyExW(Ptr, cchRemaining, L" (", &Ptr, &cchRemaining, 0);
-
-    // Save formatted number of bytes in buffer
-    cchFormatted = GetNumberFormatW(LOCALE_USER_DEFAULT,
-                                    0,
-                                    szNumber,
-                                    &nf,
-                                    Ptr,
-                                    cchRemaining);
-
-    if (cchFormatted == 0)
-        return NULL;
-
-    // cchFormatted is number of characters including NULL - make it a real length
-    --cchFormatted;
-
-    // Copy ' ' to buffer
-    Ptr += cchFormatted;
-    cchRemaining -= cchFormatted;
-    StringCchCopyExW(Ptr, cchRemaining, L" ", &Ptr, &cchRemaining, 0);
-
-    // Copy 'bytes' string and remaining ')'
-    Len = LoadStringW(shell32_hInstance, IDS_BYTES_FORMAT, Ptr, cchRemaining);
-    Ptr += Len;
-    cchRemaining -= Len;
-    StringCchCopy(Ptr, cchRemaining, L")");
-
-    return pszBuf;
+    return pwszResult;
 }
 
 /*************************************************************************
@@ -412,23 +422,32 @@ CFileDefExt::InitFileType(HWND hwndDlg)
  */
 
 BOOL
-CFileDefExt::GetFileTimeString(LPFILETIME lpFileTime, WCHAR *lpResult)
+CFileDefExt::GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
 {
     FILETIME ft;
     SYSTEMTIME st;
 
-    if (lpFileTime == NULL || lpResult == NULL)
+    if (!FileTimeToLocalFileTime(lpFileTime, &ft) || !FileTimeToSystemTime(&ft, &st))
         return FALSE;
 
-    if (!FileTimeToLocalFileTime(lpFileTime, &ft))
-        return FALSE;
+    size_t cchRemaining = cchResult;
+    LPWSTR pwszEnd = pwszResult;
+    int cchWritten = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, pwszEnd, cchRemaining);
+    if (cchWritten)
+        --cchWritten; // GetDateFormatW returns count with terminating zero
+    else
+        ERR("GetDateFormatW failed\n");
+    cchRemaining -= cchWritten;
+    pwszEnd += cchWritten;
 
-    FileTimeToSystemTime(&ft, &st);
+    StringCchCopyExW(pwszEnd, cchRemaining, L", ", &pwszEnd, &cchRemaining, 0);
 
-    /* ddmmyy */
-    swprintf(lpResult, L"%02hu/%02hu/%04hu  %02hu:%02hu", st.wDay, st.wMonth, st.wYear, st.wHour, st.wMinute);
-
-    TRACE("result %s\n", debugstr_w(lpResult));
+    cchWritten = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, pwszEnd, cchRemaining);
+    if (cchWritten)
+        --cchWritten; // GetTimeFormatW returns count with terminating zero
+    else
+        ERR("GetTimeFormatW failed\n");
+    TRACE("result %s\n", debugstr_w(pwszResult));
     return TRUE;
 }
 
@@ -509,13 +528,13 @@ CFileDefExt::InitFileSizeTime(HWND hwndDlg)
 
     CloseHandle(hFile);
 
-    if (GetFileTimeString(&CreateTime, wszBuf))
+    if (GetFileTimeString(&CreateTime, wszBuf, _countof(wszBuf)))
         SetDlgItemTextW(hwndDlg, 14015, wszBuf);
 
-    if (GetFileTimeString(&AccessedTime, wszBuf))
+    if (GetFileTimeString(&AccessedTime, wszBuf, _countof(wszBuf)))
         SetDlgItemTextW(hwndDlg, 14019, wszBuf);
 
-    if (GetFileTimeString(&WriteTime, wszBuf))
+    if (GetFileTimeString(&WriteTime, wszBuf, _countof(wszBuf)))
         SetDlgItemTextW(hwndDlg, 14017, wszBuf);
 
     if (SH_FormatFileSizeWithBytes((PULARGE_INTEGER)&FileSize,
@@ -566,6 +585,14 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
 
     /* Set file created/modfied/accessed time */
     InitFileSizeTime(hwndDlg);
+
+    DWORD dwAttr = GetFileAttributesW(m_wszPath);
+    if (dwAttr & FILE_ATTRIBUTE_READONLY)
+        SendDlgItemMessage(hwndDlg, 14021, BM_SETCHECK, BST_CHECKED, 0);
+    if (dwAttr & FILE_ATTRIBUTE_HIDDEN)
+        SendDlgItemMessage(hwndDlg, 14022, BM_SETCHECK, BST_CHECKED, 0);
+    if (dwAttr & FILE_ATTRIBUTE_ARCHIVE)
+        SendDlgItemMessage(hwndDlg, 14023, BM_SETCHECK, BST_CHECKED, 0);
 
     return TRUE;
 }

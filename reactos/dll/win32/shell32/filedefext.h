@@ -64,7 +64,7 @@ class CFileDefExt :
 private:
     VOID InitOpensWithField(HWND hwndDlg);
     BOOL InitFileType(HWND hwndDlg);
-    static BOOL GetFileTimeString(LPFILETIME lpFileTime, WCHAR *lpResult);
+    static BOOL GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult);
     BOOL InitFilePath(HWND hwndDlg);
     BOOL InitFileSizeTime(HWND hwndDlg);
     BOOL InitGeneralPage(HWND hwndDlg);
