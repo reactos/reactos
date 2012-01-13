@@ -105,4 +105,6 @@ ULONG NBCopyNeighbors(
 VOID NBResetNeighborTimeout(
     PIP_ADDRESS Address);
 
+VOID NBDestroyNeighborsForInterface(PIP_INTERFACE Interface);
+
 /* EOF */

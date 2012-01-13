@@ -127,7 +127,6 @@ typedef struct _LLIP_BIND_INFO {
     PVOID Context;                /* Pointer to link layer context information */
     UINT  HeaderSize;             /* Size of link level header */
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
-    UINT  MTU;                    /* Maximum transmission unit */
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
     LL_TRANSMIT_ROUTINE Transmit; /* Transmit function for this interface */

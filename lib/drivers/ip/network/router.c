@@ -339,6 +339,29 @@ PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
     return NCE;
 }
 
+VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+    
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
+    
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+        Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+
+        if (Interface == Current->Router->Interface)
+            DestroyFIBE(Current);
+
+        CurrentEntry = NextEntry;
+    }
+    
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
+}
+
 NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 /*
  * FUNCTION: Removes a route from the Forward Information Base (FIB)

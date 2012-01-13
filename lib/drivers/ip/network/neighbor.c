@@ -223,6 +223,42 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
                 NCE->Interface);
 }
 
+VOID NBDestroyNeighborsForInterface(PIP_INTERFACE Interface)
+{
+    KIRQL OldIrql;
+    PNEIGHBOR_CACHE_ENTRY *PrevNCE;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    ULONG i;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    for (i = 0; i <= NB_HASHMASK; i++)
+    {
+        TcpipAcquireSpinLockAtDpcLevel(&NeighborCache[i].Lock);
+        
+        for (PrevNCE = &NeighborCache[i].Cache;
+             (NCE = *PrevNCE) != NULL;)
+        {
+            if (NCE->Interface == Interface)
+            {
+                /* Unlink and destroy the NCE */
+                *PrevNCE = NCE->Next;
+
+                NBFlushPacketQueue(NCE, NDIS_STATUS_REQUEST_ABORTED);
+                ExFreePoolWithTag(NCE, NCE_TAG);
+
+                continue;
+            }
+            else
+            {
+                PrevNCE = &NCE->Next;
+            }
+        }
+        
+        TcpipReleaseSpinLockFromDpcLevel(&NeighborCache[i].Lock);
+    }
+    KeLowerIrql(OldIrql);
+}
+
 PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   PIP_INTERFACE Interface,
   PIP_ADDRESS Address,
