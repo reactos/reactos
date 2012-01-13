@@ -40,6 +40,7 @@ typedef struct LAN_ADAPTER {
     LIST_ENTRY ListEntry;                   /* Entry on list */
     KSPIN_LOCK Lock;                        /* Lock for this structure */
     UCHAR State, OldState;                  /* State of the adapter */
+    BOOLEAN CompletingReset;                /* Reset is finishing */
     KEVENT Event;                           /* Opening event */
     PVOID Context;                          /* Upper layer context information */
     NDIS_HANDLE NdisHandle;                 /* NDIS binding handle */

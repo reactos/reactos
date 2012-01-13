@@ -156,12 +156,10 @@ typedef struct _IP_INTERFACE {
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
     UINT  MTU;                    /* Maximum transmission unit */
     UINT  Speed;                  /* Link speed */
-    IP_ADDRESS Unicast, StaticUnicast;/* Unicast address */
-    IP_ADDRESS PointToPoint, StaticPointToPoint;/* Point to point address */
-    IP_ADDRESS Netmask, StaticNetmask;/* Netmask */
+    IP_ADDRESS Unicast;           /* Unicast address */
+    IP_ADDRESS PointToPoint;      /* Point to point address */
+    IP_ADDRESS Netmask;           /* Netmask */
     IP_ADDRESS Broadcast;         /* Broadcast */
-    IP_ADDRESS StaticRouter;      /* Static default route */
-    BOOLEAN DhcpEnabled;          /* DHCP enabled */
     UNICODE_STRING Name;          /* Adapter name (GUID) */
     UNICODE_STRING Description;   /* Adapter description (Human readable) */
     PUCHAR Address;               /* Pointer to interface address */

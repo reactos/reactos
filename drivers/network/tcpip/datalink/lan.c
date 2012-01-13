@@ -24,6 +24,11 @@ typedef struct _LAN_WQ_ITEM {
     BOOLEAN LegacyReceive;
 } LAN_WQ_ITEM, *PLAN_WQ_ITEM;
 
+typedef struct _RECONFIGURE_CONTEXT {
+    ULONG State;
+    PLAN_ADAPTER Adapter;
+} RECONFIGURE_CONTEXT, *PRECONFIGURE_CONTEXT;
+
 NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
 BOOLEAN ProtocolRegistered     = FALSE;
 LIST_ENTRY AdapterListHead;
@@ -571,6 +576,9 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     ANSI_STRING RegistryDataA;
     ULONG Unused;
     NTSTATUS Status;
+    IP_ADDRESS DefaultMask, Router;
+    
+    AddrInitIPv4(&DefaultMask, 0);
 
     TcpipRegistryPath.MaximumLength = sizeof(WCHAR) * 150;
     TcpipRegistryPath.Length = 0;
@@ -591,8 +599,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     
     if (!NT_SUCCESS(Status))
     {
-        Interface->DhcpEnabled = TRUE;
-        return TRUE;
+        return FALSE;
     }
     else
     {
@@ -630,10 +637,12 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                              &RegistryDataU,
                                              TRUE);
                 
-                AddrInitIPv4(&Interface->StaticUnicast, inet_addr(RegistryDataA.Buffer));
+                AddrInitIPv4(&Interface->Unicast, inet_addr(RegistryDataA.Buffer));
+
+                if (!AddrIsUnspecified(&Interface->Unicast))
+                    IPAddInterfaceRoute(Interface);
                 
                 RtlFreeAnsiString(&RegistryDataA);
-                
             }
 
             Status = ZwQueryValueKey(ParameterHandle,
@@ -650,7 +659,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                              &RegistryDataU,
                                              TRUE);
                 
-                AddrInitIPv4(&Interface->StaticNetmask, inet_addr(RegistryDataA.Buffer));
+                AddrInitIPv4(&Interface->Netmask, inet_addr(RegistryDataA.Buffer));
                 
                 RtlFreeAnsiString(&RegistryDataA);
             }
@@ -670,16 +679,13 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                              &RegistryDataU,
                                              TRUE);
                 
-                AddrInitIPv4(&Interface->StaticRouter, inet_addr(RegistryDataA.Buffer));
+                AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
+                
+                if (!AddrIsUnspecified(&Router))
+                    RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface, 1);
                 
                 RtlFreeAnsiString(&RegistryDataA);
             }
-            
-            Interface->DhcpEnabled = FALSE;
-        }
-        else
-        {
-            Interface->DhcpEnabled = TRUE;
         }
         
         ZwClose(ParameterHandle);
@@ -688,38 +694,27 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     return TRUE;
 }
 
-BOOLEAN ReconfigureAdapter(PLAN_ADAPTER Adapter, BOOLEAN FinishedReset)
+BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
 {
+    PLAN_ADAPTER Adapter = Context->Adapter;
     PIP_INTERFACE Interface = Adapter->Context;
     //NDIS_STATUS NdisStatus;
     IP_ADDRESS DefaultMask;
 
     /* Initalize the default unspecified address (0.0.0.0) */
     AddrInitIPv4(&DefaultMask, 0);
-    if (Adapter->State == LAN_STATE_STARTED && !FinishedReset)
+    if (Context->State == LAN_STATE_STARTED &&
+        !Context->Adapter->CompletingReset)
     {
-        /* Set the static IP configuration */
-        if (!Interface->DhcpEnabled)
-        {
-            /* Reset the IP information */
-            Interface->Unicast = Interface->StaticUnicast;
-            Interface->Netmask = Interface->StaticNetmask;
+        /* Read the IP configuration */
+        ReadIpConfiguration(Interface);
 
-            /* Compute the broadcast address */
-            Interface->Broadcast.Type = IP_ADDRESS_V4;
-            Interface->Broadcast.Address.IPv4Address = Interface->Unicast.Address.IPv4Address |
-                                                      ~Interface->Netmask.Address.IPv4Address;
-            
-            /* Add the interface route for a static IP */
-            if (!AddrIsUnspecified(&Interface->Unicast))
-                IPAddInterfaceRoute(Interface);
-
-            /* Add the default route */
-            if (!AddrIsUnspecified(&Interface->StaticRouter))
-                RouterCreateRoute(&DefaultMask, &DefaultMask, &Interface->StaticRouter, Interface, 1);
-        }
+        /* Compute the broadcast address */
+        Interface->Broadcast.Type = IP_ADDRESS_V4;
+        Interface->Broadcast.Address.IPv4Address = Interface->Unicast.Address.IPv4Address |
+                                                  ~Interface->Netmask.Address.IPv4Address;
     }
-    else if (!FinishedReset)
+    else if (!Context->Adapter->CompletingReset)
     {
         /* Clear IP configuration */
         Interface->Unicast = DefaultMask;
@@ -732,9 +727,15 @@ BOOLEAN ReconfigureAdapter(PLAN_ADAPTER Adapter, BOOLEAN FinishedReset)
         /* Destroy all cached neighbors */
         NBDestroyNeighborsForInterface(Interface);
     }
+    
+    Context->Adapter->CompletingReset = FALSE;
 
     /* We're done here if the adapter isn't connected */
-    if (Adapter->State != LAN_STATE_STARTED) return TRUE;
+    if (Context->State != LAN_STATE_STARTED)
+    {
+        Adapter->State = Context->State;
+        return TRUE;
+    }
     
     /* NDIS Bug! */
 #if 0
@@ -770,8 +771,21 @@ BOOLEAN ReconfigureAdapter(PLAN_ADAPTER Adapter, BOOLEAN FinishedReset)
     if (NdisStatus != NDIS_STATUS_SUCCESS)
         return FALSE;
 #endif
+
+    Adapter->State = Context->State;
     
     return TRUE;
+}
+
+VOID ReconfigureAdapterWorker(PVOID Context)
+{
+    PRECONFIGURE_CONTEXT ReconfigureContext = Context;
+    
+    /* Complete the reconfiguration asynchronously */
+    ReconfigureAdapter(ReconfigureContext);
+    
+    /* Free the context */
+    ExFreePool(ReconfigureContext);
 }
 
 VOID NTAPI ProtocolStatus(
@@ -789,8 +803,15 @@ VOID NTAPI ProtocolStatus(
  */
 {
     PLAN_ADAPTER Adapter = BindingContext;
+    PRECONFIGURE_CONTEXT Context;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+    
+    Context = ExAllocatePool(NonPagedPool, sizeof(RECONFIGURE_CONTEXT));
+    if (!Context)
+        return;
+    
+    Context->Adapter = Adapter;
 
     switch(GeneralStatus)
     {
@@ -798,36 +819,47 @@ VOID NTAPI ProtocolStatus(
             DbgPrint("NDIS_STATUS_MEDIA_CONNECT\n");
 
             if (Adapter->State == LAN_STATE_STARTED)
-                break;
+            {
+                ExFreePool(Context);
+                return;
+            }
 
-            Adapter->OldState = Adapter->State;
-            Adapter->State = LAN_STATE_STARTED;
+            Context->State = LAN_STATE_STARTED;
             break;
             
         case NDIS_STATUS_MEDIA_DISCONNECT:
             DbgPrint("NDIS_STATUS_MEDIA_DISCONNECT\n");
             
             if (Adapter->State == LAN_STATE_STOPPED)
-                break;
+            {
+                ExFreePool(Context);
+                return;
+            }
             
-            Adapter->OldState = Adapter->State;
-            Adapter->State = LAN_STATE_STOPPED;
+            Context->State = LAN_STATE_STOPPED;
             break;
 
         case NDIS_STATUS_RESET_START:
             Adapter->OldState = Adapter->State;
             Adapter->State = LAN_STATE_RESETTING;
             /* Nothing else to do here */
-            break;
+            ExFreePool(Context);
+            return;
 
         case NDIS_STATUS_RESET_END:
-            Adapter->State = Adapter->OldState;
+            Adapter->CompletingReset = TRUE;
+            Context->State = Adapter->OldState;
             break;
 
         default:
             DbgPrint("Unhandled status: %x", GeneralStatus);
-            break;
+            ExFreePool(Context);
+            return;
     }
+
+    /* Queue the work item */
+    if (!ChewCreate(ReconfigureAdapterWorker, Context))
+        ExFreePool(Context);
 }
 
 VOID NTAPI ProtocolStatusComplete(NDIS_HANDLE NdisBindingContext)
@@ -837,15 +869,7 @@ VOID NTAPI ProtocolStatusComplete(NDIS_HANDLE NdisBindingContext)
  *     BindingContext = Pointer to a device context (LAN_ADAPTER)
  */
 {
-    PLAN_ADAPTER Adapter = NdisBindingContext;
-
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-    
-    if (Adapter->State != LAN_STATE_RESETTING)
-    {
-        ReconfigureAdapter(Adapter,
-                           (Adapter->State == Adapter->OldState));
-    }
 }
 
 NDIS_STATUS NTAPI
@@ -1361,14 +1385,7 @@ BOOLEAN BindAdapter(
     IPRegisterInterface(IF);
 
     /* Set adapter state */
-    Adapter->State = LAN_STATE_STARTED;
     Adapter->Context = IF;
-    
-    /* Read adapter IP configuration */
-    ReadIpConfiguration(IF);
-    
-    /* Configure the adapter */
-    ReconfigureAdapter(Adapter, FALSE);
 
     /* Set packet filter so we can send and receive packets */
     NdisStatus = NDISCall(Adapter,
@@ -1383,6 +1400,9 @@ BOOLEAN BindAdapter(
         IPDestroyInterface(IF);
         return FALSE;
     }
+    
+    /* Indicate media connect (our drivers are broken and don't do this) */
+    ProtocolStatus(Adapter, NDIS_STATUS_MEDIA_CONNECT, NULL, 0);
 
     return TRUE;
 }
