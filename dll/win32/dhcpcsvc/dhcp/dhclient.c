@@ -548,7 +548,10 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
 
     if( Adapter->NteContext )
+    {
         DeleteIPAddress( Adapter->NteContext );
+        Adapter->NteContext = 0;
+    }
 
     /* Set up our default router if we got one from the DHCP server */
     if( new_lease->options[DHO_SUBNET_MASK].len ) {
@@ -1007,7 +1010,7 @@ send_discover(void *ipp)
 	   we haven't found anything for this interface yet. */
 	if (interval > ip->client->config->timeout) {
 		state_panic(ip);
-		return;
+        ip->client->first_sending = cur_time;
 	}
 
 	/* If we're selecting media, try the whole list before doing
@@ -1100,16 +1103,8 @@ state_panic(void *ipp)
 {
 	struct interface_info *ip = ipp;
         PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
-	time_t cur_time;
-
-	time(&cur_time);
 
 	note("No DHCPOFFERS received.");
-
-	note("No working leases in persistent database - sleeping.\n");
-	ip->client->state = S_INIT;
-	add_timeout(cur_time + ip->client->config->retry_interval, state_init,
-	    ip);
 
         if (!Adapter->NteContext)
         {
@@ -1181,7 +1176,10 @@ send_request(void *ipp)
                discover a new address. */
 
             if( Adapter )
+            {
                 DeleteIPAddress( Adapter->NteContext );
+                Adapter->NteContext = 0;
+            }
 
             ip->client->state = S_INIT;
             state_init(ip);

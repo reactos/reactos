@@ -200,6 +200,84 @@ InterfaceConnected(const MIB_IFROW* IfEntry)
     return 0;
 }
 
+BOOL
+IsReconnectHackNeeded(PDHCP_ADAPTER Adapter, const MIB_IFROW* IfEntry)
+{
+    struct protocol *proto;
+    PIP_ADAPTER_INFO AdapterInfo, Orig;
+    DWORD Size, Ret;
+    char *ZeroAddress = "0.0.0.0";
+
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+
+    if (!proto)
+        return FALSE;
+
+    if (Adapter->DhclientInfo.client->state != S_BOUND)
+        return FALSE;
+    
+    ApiUnlock();
+
+    Orig = AdapterInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(IP_ADAPTER_INFO));
+    Size = sizeof(IP_ADAPTER_INFO);
+    if (!AdapterInfo)
+    {
+        ApiLock();
+        return FALSE;
+    }
+
+    Ret = GetAdaptersInfo(AdapterInfo, &Size);
+    if (Ret == ERROR_BUFFER_OVERFLOW)
+    {
+        HeapFree(GetProcessHeap(), 0, AdapterInfo);
+        AdapterInfo = HeapAlloc(GetProcessHeap(), 0, Size);
+        if (!AdapterInfo)
+        {
+            ApiLock();
+            return FALSE;
+        }
+
+        if (GetAdaptersInfo(AdapterInfo, &Size) != NO_ERROR)
+        {
+            ApiLock();
+            return FALSE;
+        }
+
+        Orig = AdapterInfo;
+        for (; AdapterInfo != NULL; AdapterInfo = AdapterInfo->Next)
+        {
+            if (AdapterInfo->Index == IfEntry->dwIndex)
+                break;
+        }
+
+        if (AdapterInfo == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, Orig);
+            ApiLock();
+            return FALSE;
+        }
+    }
+    else if (Ret != NO_ERROR)
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return FALSE;
+    }
+
+    if (!strcmp(AdapterInfo->IpAddressList.IpAddress.String, ZeroAddress))
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return TRUE;
+    }
+    else
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return FALSE;
+    }
+}
+
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
@@ -241,12 +319,34 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
             {
+                proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+
                 /* This is an existing adapter */
                 if (InterfaceConnected(&Table->table[i])) {
                     /* We're still active so we stay in the list */
                     ifi = &Adapter->DhclientInfo;
+
+                    /* This is a hack because IP helper API sucks */
+                    if (IsReconnectHackNeeded(Adapter, &Table->table[i]))
+                    {
+                        /* This handles a disconnect/reconnect */
+
+                        remove_protocol(proto);
+                        Adapter->DhclientInfo.client->state = S_INIT;
+
+                        /* These are already invalid since the media state change */
+                        Adapter->RouterMib.dwForwardNextHop = 0;
+                        Adapter->NteContext = 0;
+
+                        add_protocol(Adapter->DhclientInfo.name,
+                                     Adapter->DhclientInfo.rfdesc,
+                                     got_one, &Adapter->DhclientInfo);
+                        state_init(&Adapter->DhclientInfo);
+
+                        SetEvent(AdapterStateChangedEvent);
+                    }
+
                 } else {
-                    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
                     if (proto)
                         remove_protocol(proto);
 

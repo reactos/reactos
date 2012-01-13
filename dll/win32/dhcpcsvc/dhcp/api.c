@@ -101,9 +101,15 @@ DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         if (Adapter->NteContext)
+        {
             DeleteIPAddress( Adapter->NteContext );
+            Adapter->NteContext = 0;
+        }
         if (Adapter->RouterMib.dwForwardNextHop)
+        {
             DeleteIpForwardEntry( &Adapter->RouterMib );
+            Adapter->RouterMib.dwForwardNextHop = 0;
+        }
 
         proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
         if (proto)
@@ -171,9 +177,15 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         if (Adapter->NteContext)
+        {
             DeleteIPAddress( Adapter->NteContext );
+            Adapter->NteContext = 0;
+        }
         if (Adapter->RouterMib.dwForwardNextHop)
+        {
             DeleteIpForwardEntry( &Adapter->RouterMib );
+            Adapter->RouterMib.dwForwardNextHop = 0;
+        }
         
         Adapter->DhclientState.state = S_STATIC;
         proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
