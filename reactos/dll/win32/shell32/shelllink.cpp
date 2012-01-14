@@ -2000,22 +2000,13 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
 
 INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    LPPROPSHEETPAGEW ppsp;
-    LPPSHNOTIFY lppsn;
-    CShellLink *pThis;
-    HWND hDlgCtrl;
-    WCHAR szBuffer[MAX_PATH];
-    WCHAR * ptr;
-    int IconIndex;
-    INT_PTR result;
-
-    pThis = (CShellLink *)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    CShellLink *pThis = (CShellLink *)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
         {
-            ppsp = (LPPROPSHEETPAGEW)lParam;
+            LPPROPSHEETPAGEW ppsp = (LPPROPSHEETPAGEW)lParam;
             if (ppsp == NULL)
                 break;
 
@@ -2028,61 +2019,61 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 pThis->sIcoPath, pThis->sPath, pThis->sPathRel, pThis->sProduct, pThis->sWorkDir);
 
             /* target location */
-            wchar_t * wTrgtLocat;
-            const int ch = '\\';
-            wTrgtLocat = wcsrchr(pThis->sWorkDir, ch)+1;
-            SetDlgItemTextW(hwndDlg, 14007, wTrgtLocat);
+            if (pThis->sWorkDir)
+                SetDlgItemTextW(hwndDlg, 14007, PathFindFileName(pThis->sWorkDir));
 
             /* target path */
-            hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
-            if ( hDlgCtrl != NULL )
-                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sPath );
+            if (pThis->sPath)
+                SetDlgItemTextW(hwndDlg, 14009, pThis->sPath);
 
             /* working dir */
-            hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
-            if ( hDlgCtrl != NULL )
-                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sWorkDir );
+            if (pThis->sWorkDir)
+                SetDlgItemTextW(hwndDlg, 14011, pThis->sWorkDir);
 
             /* description */
-            hDlgCtrl = GetDlgItem( hwndDlg, 14019 );
-            if ( hDlgCtrl != NULL )
-                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sDescription );
+            if (pThis->sDescription)
+                SetDlgItemTextW(hwndDlg, 14019, pThis->sDescription);
+
             return TRUE;
         }
-
         case WM_NOTIFY:
-            lppsn = (LPPSHNOTIFY) lParam;
-            if ( lppsn->hdr.code == PSN_APPLY )
+        {
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
             {
+                WCHAR wszBuf[MAX_PATH];
+
                 /* set working directory */
-                GetDlgItemTextW(hwndDlg, 14011, szBuffer, MAX_PATH);
-                pThis->SetWorkingDirectory(szBuffer);
+                GetDlgItemTextW(hwndDlg, 14011, wszBuf, MAX_PATH);
+                pThis->SetWorkingDirectory(wszBuf);
                 /* set link destination */
-                GetDlgItemTextW(hwndDlg, 14009, szBuffer, MAX_PATH);
-                if ( !SHELL_ExistsFileW(szBuffer) )
+                GetDlgItemTextW(hwndDlg, 14009, wszBuf, MAX_PATH);
+                if (!PathFileExistsW(wszBuf))
                 {
                     //FIXME load localized error msg
-                    MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
-                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                    MessageBoxW(hwndDlg, L"file not existing", wszBuf, MB_OK);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return TRUE;
                 }
-                ptr = wcsrchr(szBuffer, L'.');
-                if (ptr && !_wcsnicmp(ptr, L".lnk", 4))
+
+                WCHAR *pwszExt = PathFindExtensionW(wszBuf);
+                if (!wcsicmp(pwszExt, L".lnk"))
                 {
                     // FIXME load localized error msg
-                    MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
-                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                    MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return TRUE;
                 }
 
-                pThis->SetPath(szBuffer);
+                pThis->SetPath(wszBuf);
 
                 TRACE("This %p sLinkPath %S\n", pThis, pThis->sLinkPath);
-                pThis->Save(pThis->sLinkPath, TRUE );
-                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                pThis->Save(pThis->sLinkPath, TRUE);
+                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;
+        }
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
@@ -2093,21 +2084,27 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     ///
                     return TRUE;
                 case 14021:
+                {
+                    WCHAR wszPath[MAX_PATH] = L"";
+
                     if (pThis->sIcoPath)
-                        wcscpy(szBuffer, pThis->sIcoPath);
-                    IconIndex = pThis->iIcoNdx;
-                    if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
+                        wcscpy(wszPath, pThis->sIcoPath);
+                    INT IconIndex = pThis->iIcoNdx;
+                    if (PickIconDlg(hwndDlg, wszPath, MAX_PATH, &IconIndex))
                     {
-                        pThis->SetIconLocation(szBuffer, IconIndex);
+                        pThis->SetIconLocation(wszPath, IconIndex);
                         ///
                         /// FIXME redraw icon
                     }
                     return TRUE;
+                }
+                    
                 case 14022:
-                    result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
+                {
+                    INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
                     if (result == 1 || result == 0)
                     {
-                        if (pThis->bRunAs != result )
+                        if (pThis->bRunAs != result)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         }
@@ -2115,6 +2112,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                         pThis->bRunAs = result;
                     }
                     return TRUE;
+                }
             }
             switch(HIWORD(wParam))
             {
