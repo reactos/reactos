@@ -565,13 +565,9 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
     }
 
     /* load create new shell extension */
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT,
-                      L"CLSID\\{D969A300-E7FF-11d0-A93B-00A0C90F2719}",
-                      0,
-                      KEY_READ,
-                      &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory\\Background", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        LoadDynamicContextMenuHandler(hKey, &CLSID_NewMenu, TRUE);
+        EnumerateDynamicContextHandlerForKey(hKey);
         RegCloseKey(hKey);
     }
 
