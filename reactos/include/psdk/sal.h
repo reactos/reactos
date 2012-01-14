@@ -268,6 +268,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define __null_impl_notref          _Notref_ _Null_
 #define __notnull_impl              _Notnull_
 #define __notnull_impl_notref       _Notref_ _Notnull_
+#define __maybenull_impl            __inner_exceptthat _Maybenull_
 #define __maybenull_impl_notref     _Notref_ __inner_exceptthat _Maybenull_
 #define __valid_impl                __declspec("SAL_valid") // __declspec("SAL_valid(__yes)")
 #define __maybevalid_impl           __declspec("SAL_maybevalid") // __declspec("SAL_valid(__maybe)")
@@ -1557,6 +1558,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Prepost_z_
 #define _Printf_format_string_
 #define _Raises_SEH_exception_
+#define _Maybe_raises_SEH_exception_
 #define _Readable_bytes_(size)
 #define _Readable_elements_(size)
 #define _Reserved_

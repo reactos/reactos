@@ -138,4 +138,5 @@
 #define _Kernel_releases_resource_(kind)
 #define _Kernel_requires_resource_held_(kind)
 #define _Kernel_requires_resource_not_held_(kind)
+#define _Kernel_acquires_resource_(kind)
 
