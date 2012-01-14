@@ -54,7 +54,7 @@ ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
     PLOGFILE currentLogFile = NULL;
     INT i, LogsActive;
     PEVENTSOURCE pEventSource;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("ElfCreateEventLogHandle(Name: %S)\n", Name);
 
