@@ -639,6 +639,7 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
                ptr->IpAddressList.IpAddress.String);
               toIPAddressString(getInterfaceMaskByIndex(table->indexes[ndx]),
                ptr->IpAddressList.IpMask.String);
+              ptr->IpAddressList.Context = ptr->Index;
               toIPAddressString(getInterfaceGatewayByIndex(table->indexes[ndx]),
                ptr->GatewayList.IpAddress.String);
               getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
@@ -1189,7 +1190,7 @@ DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSi
           pIpForwardTable->dwNumEntries = table->numRoutes;
           for (ndx = 0; ndx < numRoutes; ndx++) {
             pIpForwardTable->table[ndx].dwForwardIfIndex =
-             table->routes[ndx].ifIndex + 1;
+             table->routes[ndx].ifIndex;
             pIpForwardTable->table[ndx].dwForwardDest =
              table->routes[ndx].dest;
             pIpForwardTable->table[ndx].dwForwardMask =

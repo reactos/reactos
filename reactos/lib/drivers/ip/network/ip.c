@@ -206,7 +206,6 @@ PIP_INTERFACE IPCreateInterface(
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
     IF->MinFrameSize = BindInfo->MinFrameSize;
-    IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
     IF->Transmit      = BindInfo->Transmit;
@@ -313,11 +312,6 @@ BOOLEAN IPRegisterInterface(
     } while( !IndexHasBeenChosen );
 
     IF->Index = ChosenIndex;
-
-    if (!AddrIsUnspecified(&IF->Unicast))
-    {
-        IPAddInterfaceRoute(IF);
-    }
 
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
