@@ -434,7 +434,7 @@ NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
                     OUT PANSI_STRING OutputString OPTIONAL)
 {
-    ULONG i;
+    ULONG i, j;
     ULONG IdOffset;
     ULONG_PTR MessageEntry;
     PCHAR BugCode;
@@ -457,7 +457,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             IdOffset = BugCheckCode - KiBugCodeMessages->Blocks[i].LowId;
 
             /* Get offset to ID */
-            for (i = 0; i < IdOffset; i++)
+            for (j = 0; j < IdOffset; j++)
             {
                 /* Advance in the Entries */
                 MessageEntry += ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->
