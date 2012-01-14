@@ -31,6 +31,9 @@
 #ifdef _PREFAST_
 
 #pragma warning(disable:6320) /* disable warning about SEH filter */
+#pragma warning(disable:28247) /* duplicated model file annotations */
+#pragma warning(disable:28251) /* Inconsistent annotation */
+
 
 #ifndef _USE_DECLSPECS_FOR_SAL
 #define _USE_DECLSPECS_FOR_SAL 1
