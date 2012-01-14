@@ -1160,44 +1160,47 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    MENUITEMINFOW mii;
-    WCHAR wszBuf[100];
-    INT DefaultPos;
-
     TRACE("hMenu %p indexMenu %u idFirst %u idLast %u uFlags %u\n", hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszBuf, _countof(wszBuf)))
+    INT DefaultPos = GetMenuDefaultItem(hMenu, TRUE, 0);
+
+    WCHAR wszName[100];
+    UINT NameId = (DefaultPos == -1 ? IDS_OPEN : IDS_OPEN_WITH);
+    if (!LoadStringW(shell32_hInstance, NameId, wszName, _countof(wszName)))
     {
         ERR("Failed to load string\n");
         return E_FAIL;
     }
 
-    /* Init cmd id */
+    /* Init first cmd id and submenu */
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
+    m_hSubMenu = NULL;
 
-    /* Load applications list */
-    m_pAppList->Load();
-    m_pAppList->LoadRecommended(m_wszPath);
-
-    /* Create submenu only if the is some choice */
-    if (m_pAppList->GetRecommendedCount() > 1)
+    /* If we are going to be default item, we shouldn't be submenu */
+    if (DefaultPos != -1)
     {
-        m_hSubMenu = CreatePopupMenu();
-
-        for(unsigned i = 0; i < m_pAppList->GetCount(); ++i)
+        /* Load applications list */
+        m_pAppList->Load();
+        m_pAppList->LoadRecommended(m_wszPath);
+        
+        /* Create submenu only if there is more than one application and menu has a default item */
+        if (m_pAppList->GetRecommendedCount() > 1)
         {
-            COpenWithList::SApp *pApp = m_pAppList->GetList() + i;
-            if (pApp->bRecommended)
-                AddApp(pApp);
+            m_hSubMenu = CreatePopupMenu();
+
+            for(UINT i = 0; i < m_pAppList->GetCount(); ++i)
+            {
+                COpenWithList::SApp *pApp = m_pAppList->GetList() + i;
+                if (pApp->bRecommended)
+                    AddApp(pApp);
+            }
+
+            AddChooseProgramItem();
         }
-
-        AddChooseProgramItem();
     }
-    else
-        m_hSubMenu = NULL;
 
-    DefaultPos = GetMenuDefaultItem(hMenu, TRUE, 0);
-
+    /* Insert menu item */
+    MENUITEMINFOW mii;
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
@@ -1211,14 +1214,15 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
         mii.wID = m_idCmdLast;
 
     mii.fType = MFT_STRING;
-    mii.dwTypeData = (LPWSTR)wszBuf;
-    mii.cch = wcslen(wszBuf);
+    mii.dwTypeData = (LPWSTR)wszName;
+    mii.cch = wcslen(wszName);
 
     mii.fState = MFS_ENABLED;
     if (DefaultPos == -1)
         mii.fState |= MFS_DEFAULT;
 
-    InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii);
+    if (!InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii))
+        return E_FAIL;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst + 1);
 }
