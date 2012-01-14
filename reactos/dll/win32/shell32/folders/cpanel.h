@@ -37,6 +37,9 @@ class CControlPanelFolder :
         int dwAttributes;       /* attributes returned by GetAttributesOf FIXME: use it */
         LPCITEMIDLIST *apidl;
         UINT cidl;
+
+        HRESULT WINAPI ExecuteFromIdList(LPCITEMIDLIST pidl);
+
     public:
         CControlPanelFolder();
         ~CControlPanelFolder();

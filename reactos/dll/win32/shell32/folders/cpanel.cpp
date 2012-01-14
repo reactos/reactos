@@ -799,29 +799,25 @@ HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST pidl, LPWSTR szIconFile, UINT cchM
 static HRESULT
 ExecuteAppletFromCLSID(LPOLESTR pOleStr)
 {
-    WCHAR szCmd[MAX_PATH];
-    WCHAR szExpCmd[MAX_PATH];
-    PROCESS_INFORMATION pi;
-    STARTUPINFOW si;
-    WCHAR szBuffer[90] = { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
-    DWORD dwType, dwSize;
+    WCHAR wszBuf[128], wszCmd[MAX_PATH];
+    DWORD cbCmd = sizeof(wszCmd);
 
-    wcscpy(&szBuffer[6], pOleStr);
-    wcscat(szBuffer, L"\\shell\\open\\command");
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"CLSID\\%s\\shell\\open\\command", pOleStr);
 
-    dwSize = sizeof(szCmd);
-    if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
+    if (RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, NULL, RRF_RT_REG_SZ, NULL, (PVOID)wszCmd, &cbCmd) != ERROR_SUCCESS)
     {
-        ERR("RegGetValueW(%ls) failed with %u\n", szBuffer, GetLastError());
+        ERR("RegGetValueW(%ls) failed with %u\n", wszBuf, GetLastError());
         return E_FAIL;
     }
 
-    if (!ExpandEnvironmentStringsW(szCmd, szExpCmd, sizeof(szExpCmd) / sizeof(WCHAR)))
+    if (!ExpandEnvironmentStringsW(wszCmd, wszBuf, _countof(wszBuf)))
         return E_FAIL;
 
+    PROCESS_INFORMATION pi;
+    STARTUPINFOW si;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
-    if (!CreateProcessW(NULL, szExpCmd, NULL, NULL, FALSE, 0, NULL,    NULL, &si, &pi))
+    if (!CreateProcessW(NULL, wszBuf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return E_FAIL;
 
     CloseHandle(pi.hProcess);
@@ -829,63 +825,65 @@ ExecuteAppletFromCLSID(LPOLESTR pOleStr)
     return S_OK;
 }
 
+EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
+
+HRESULT WINAPI CControlPanelFolder::ExecuteFromIdList(LPCITEMIDLIST pidl)
+{
+    PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(ILFindLastID(pidl));
+
+    if (!pCPanel)
+    {
+        /* Is it GUID to control panel applet? */
+        IID *piid = _ILGetGUIDPointer(ILFindLastID(pidl));
+        if (!piid)
+            return E_INVALIDARG;
+
+        /* Start it */
+        LPOLESTR pOleStr;
+        if (StringFromCLSID(*piid, &pOleStr) == S_OK)
+        {
+            HRESULT hr = ExecuteAppletFromCLSID(pOleStr);
+            CoTaskMemFree(pOleStr);
+            return hr;
+        }
+
+        ERR("Cannot open cpanel applet\n");
+        return E_INVALIDARG;
+    }
+
+    /* Build control panel applet cmd
+       Note: we passes applet name to Control_RunDLL to distinguish between applets in one .cpl file */
+    WCHAR wszCmd[2*MAX_PATH];
+    StringCbPrintfW(wszCmd, sizeof(wszCmd), L"rundll32 shell32.dll,Control_RunDLL \"%hs\",\"%hs\"", pCPanel->szName, pCPanel->szName + pCPanel->offsDispName);
+
+    /* Start the applet */
+    TRACE("Run cpl %ls\n", wszCmd);
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    if (!CreateProcessW(NULL, wszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        return E_FAIL;
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return S_OK;
+}
 
 HRESULT WINAPI CControlPanelFolder::Execute(LPSHELLEXECUTEINFOW psei)
 {
-    static const WCHAR wCplopen[] = {'c', 'p', 'l', 'o', 'p', 'e', 'n', '\0'};
-    SHELLEXECUTEINFOW sei_tmp;
-    PIDLCPanelStruct* pcpanel;
-    WCHAR path[MAX_PATH];
-    WCHAR params[MAX_PATH];
-    BOOL ret;
-    HRESULT hr;
-    int l;
-
     TRACE("(%p)->execute(%p)\n", this, psei);
 
     if (!psei)
         return E_INVALIDARG;
 
-    pcpanel = _ILGetCPanelPointer(ILFindLastID((LPCITEMIDLIST)psei->lpIDList));
-
-    if (!pcpanel)
+    if (!(psei->fMask & SEE_MASK_IDLIST))
     {
-        LPOLESTR pOleStr;
-
-        IID * iid = _ILGetGUIDPointer(ILFindLastID((LPCITEMIDLIST)psei->lpIDList));
-        if (!iid)
-            return E_INVALIDARG;
-        if (StringFromCLSID(*iid, &pOleStr) == S_OK)
-        {
-            hr = ExecuteAppletFromCLSID(pOleStr);
-            CoTaskMemFree(pOleStr);
-            return hr;
-        }
-
-        return E_INVALIDARG;
+        FIXME("no idlist given!\n");
+        return E_FAIL;
     }
-    path[0] = '\"';
-    /* Return value from MultiByteToWideChar includes terminating NUL, which
-     * compensates for the starting double quote we just put in */
-    l = MultiByteToWideChar(CP_ACP, 0, pcpanel->szName, -1, path + 1, MAX_PATH);
 
-    /* pass applet name to Control_RunDLL to distinguish between applets in one .cpl file */
-    path[l++] = '"';
-    path[l] = '\0';
-
-    MultiByteToWideChar(CP_ACP, 0, pcpanel->szName + pcpanel->offsDispName, -1, params, MAX_PATH);
-
-    memcpy(&sei_tmp, psei, sizeof(sei_tmp));
-    sei_tmp.lpFile = path;
-    sei_tmp.lpParameters = params;
-    sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
-    sei_tmp.lpVerb = wCplopen;
-
-    ret = ShellExecuteExW(&sei_tmp);
-    if (ret)
-        return S_OK;
-    else
-        return S_FALSE;
+    return ExecuteFromIdList((LPCITEMIDLIST)psei->lpIDList);
 }
 
 /**************************************************************************
@@ -894,37 +892,18 @@ HRESULT WINAPI CControlPanelFolder::Execute(LPSHELLEXECUTEINFOW psei)
 
 HRESULT WINAPI CControlPanelFolder::Execute(LPSHELLEXECUTEINFOA psei)
 {
-    SHELLEXECUTEINFOA sei_tmp;
-    PIDLCPanelStruct* pcpanel;
-    char path[MAX_PATH];
-    BOOL ret;
-
     TRACE("(%p)->execute(%p)\n", this, psei);
 
     if (!psei)
         return E_INVALIDARG;
 
-    pcpanel = _ILGetCPanelPointer(ILFindLastID((LPCITEMIDLIST)psei->lpIDList));
+    if (!(psei->fMask & SEE_MASK_IDLIST))
+    {
+        FIXME("no idlist given!\n");
+        return E_FAIL;
+    }
 
-    if (!pcpanel)
-        return E_INVALIDARG;
-
-    path[0] = '\"';
-    lstrcpyA(path + 1, pcpanel->szName);
-
-    /* pass applet name to Control_RunDLL to distinguish between applets in one .cpl file */
-    lstrcatA(path, "\" ");
-    lstrcatA(path, pcpanel->szName + pcpanel->offsDispName);
-
-    memcpy(&sei_tmp, psei, sizeof(sei_tmp));
-    sei_tmp.lpFile = path;
-    sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
-
-    ret = ShellExecuteExA(&sei_tmp);
-    if (ret)
-        return S_OK;
-    else
-        return S_FALSE;
+    return ExecuteFromIdList((LPCITEMIDLIST)psei->lpIDList);
 }
 
 /**************************************************************************
@@ -995,9 +974,8 @@ HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         sei.hwnd = lpcmi->hwnd;
         sei.nShow = SW_SHOWNORMAL;
         sei.lpVerb = L"open";
-
-        if (ShellExecuteExW(&sei) == FALSE)
-            return E_FAIL;
+ERR("here\n");
+        return Execute(&sei);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
     {
