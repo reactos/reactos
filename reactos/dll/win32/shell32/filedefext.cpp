@@ -633,13 +633,20 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             else if (LOWORD(wParam) == 14021 || LOWORD(wParam) == 14022 || LOWORD(wParam) == 14023) /* checkboxes */
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+           else if (LOWORD(wParam) == 14001) /* Name */
+            {
+                if (HIWORD(wParam) == EN_CHANGE)
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
             break;
         case WM_NOTIFY:
         {
-            CFileDefExt *pFileDefExt = (CFileDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
             LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
+                CFileDefExt *pFileDefExt = (CFileDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+                /* Update attributes first */
                 DWORD dwAttr = GetFileAttributesW(pFileDefExt->m_wszPath);
                 if (dwAttr)
                 {
@@ -652,8 +659,22 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (BST_CHECKED == SendDlgItemMessageW(hwndDlg, 14023, BM_GETCHECK, 0, 0))
                         dwAttr |= FILE_ATTRIBUTE_ARCHIVE;
 
-                    SetFileAttributesW(pFileDefExt->m_wszPath, dwAttr);
+                    if (!SetFileAttributesW(pFileDefExt->m_wszPath, dwAttr))
+                        ERR("SetFileAttributesW failed\n");
                 }
+
+                /* Update filename now */
+                WCHAR wszBuf[MAX_PATH];
+                StringCchCopyW(wszBuf, _countof(wszBuf), pFileDefExt->m_wszPath);
+                LPWSTR pwszFilename = PathFindFileNameW(wszBuf);
+                UINT cchFilenameMax = _countof(wszBuf) - (pwszFilename - wszBuf);
+                if (GetDlgItemTextW(hwndDlg, 14001, pwszFilename, cchFilenameMax))
+                {
+                    if (!MoveFileW(pFileDefExt->m_wszPath, wszBuf))
+                        ERR("MoveFileW failed\n");
+                }
+                    
+                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;

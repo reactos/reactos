@@ -379,17 +379,14 @@ CDrvDefExt::GeneralPageProc(
                         ERR("Failed to create cleanup process %ls\n", wszCmd);
                 }
             }
-            break;
-        case WM_NOTIFY:
-            if (LOWORD(wParam) == 14000) // Label
+            else if (LOWORD(wParam) == 14000) /* Label */
             {
                 if (HIWORD(wParam) == EN_CHANGE)
-                {
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                }
-                break;
             }
-            else if (((LPNMHDR)lParam)->hwndFrom == GetParent(hwndDlg))
+            break;
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->hwndFrom == GetParent(hwndDlg))
             {
                 /* Property Sheet */
                 LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
@@ -399,7 +396,7 @@ CDrvDefExt::GeneralPageProc(
                     CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                     WCHAR wszBuf[256];
 
-                    if (GetDlgItemTextW(hwndDlg, 14000, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+                    if (GetDlgItemTextW(hwndDlg, 14000, wszBuf, _countof(wszBuf)))
                         SetVolumeLabelW(pDrvDefExt->m_wszDrive, wszBuf);
                     SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                     return TRUE;
