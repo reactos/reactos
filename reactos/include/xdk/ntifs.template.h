@@ -1232,9 +1232,6 @@ typedef struct _QUERY_PATH_RESPONSE {
 
 #include "csq.h"
 
-extern PACL                         SePublicDefaultDacl;
-extern PACL                         SeSystemDefaultDacl;
-
 #define FS_LFN_APIS                             0x00004000
 
 #define FILE_STORAGE_TYPE_SPECIFIED             0x00000041  /* FILE_DIRECTORY_FILE | FILE_NON_DIRECTORY_FILE */
