@@ -97,8 +97,6 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
 BOOL
 SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
 {
-    HRESULT hr;
-    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     HPSXA hpsxa[3] = {NULL, NULL, NULL};
     CComObject<CFileDefExt> *pFileDefExt = NULL;
 
@@ -107,6 +105,7 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     if (pwszPath == NULL || !wcslen(pwszPath))
         return FALSE;
 
+    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
 
     /* Make a copy of path */
@@ -129,13 +128,14 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIS
     Header.pszCaption = PathFindFileNameW(wszPath);
 
     CComPtr<IDataObject> pDataObj;
-    hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (LPVOID *)&pDataObj);
+    HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (LPVOID *)&pDataObj);
 
     if (SUCCEEDED(hr))
     {
-        ATLTRY(pFileDefExt = new CComObject<CFileDefExt>);
-        if (pFileDefExt)
+        hr = CComObject<CFileDefExt>::CreateInstance(&pFileDefExt);
+        if (SUCCEEDED(hr))
         {
+            pFileDefExt->AddRef(); // CreateInstance returns object with 0 ref count
             hr = pFileDefExt->Initialize(pidlFolder, pDataObj, NULL);
             if (SUCCEEDED(hr))
             {

@@ -123,11 +123,9 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
 {
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
-    WCHAR wszName[256];
     PROPSHEETHEADERW psh;
-    HRESULT hr;
     CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-
+    
     ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
     psh.dwSize = sizeof(PROPSHEETHEADERW);
     psh.dwFlags = 0; // FIXME: make it modeless
@@ -135,6 +133,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     psh.nStartPage = 0;
     psh.phpage = hpsp;
 
+    WCHAR wszName[256];
     if (GetVolumeInformationW(pwszDrive, wszName, sizeof(wszName) / sizeof(WCHAR), NULL, NULL, NULL, NULL, 0))
     {
         psh.pszCaption = wszName;
@@ -148,13 +147,14 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     }
 
     CComPtr<IDataObject> pDataObj;
-    hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (LPVOID *)&pDataObj);
+    HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (LPVOID *)&pDataObj);
 
     if (SUCCEEDED(hr))
     {
-        ATLTRY(pDrvDefExt = new CComObject<CDrvDefExt>);
-        if (pDrvDefExt)
+        hr = CComObject<CDrvDefExt>::CreateInstance(&pDrvDefExt);
+        if (SUCCEEDED(hr))
         {
+            pDrvDefExt->AddRef(); // CreateInstance returns object with 0 ref count
             hr = pDrvDefExt->Initialize(pidlFolder, pDataObj, NULL);
             if (SUCCEEDED(hr))
             {
