@@ -144,14 +144,6 @@ extern "C" {
 #include <ksmedia.h>
 #include <drmk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#include <wdm.h>
-}
-#else
-#include <wdm.h>
-#endif
-
 #ifndef PC_NO_IMPORTS
 #define PORTCLASSAPI EXTERN_C __declspec(dllimport)
 #else
