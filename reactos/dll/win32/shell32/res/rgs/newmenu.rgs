@@ -11,4 +11,19 @@ HKCR
 			}
 		}
 	}
+	NoRemove Directory
+	{
+		NoRemove Background
+		{
+			NoRemove shellex
+			{
+				NoRemove ContextMenuHandlers
+				{
+					ForceRemove New = s '{D969A300-E7FF-11d0-A93B-00A0C90F2719}'
+					{
+					}
+				}
+			}
+		}
+	}
 }
