@@ -31,20 +31,24 @@ public:
     }
 
     IMP_IRegistryKey;
-    CRegistryKey(IUnknown * OuterUnknown, HANDLE hKey) : m_hKey(hKey){}
+    CRegistryKey(IUnknown * OuterUnknown, HANDLE hKey, BOOL CanDelete) : m_hKey(hKey), m_Deleted(FALSE), m_CanDelete(CanDelete), m_Ref(0){}
     virtual ~CRegistryKey();
 
 protected:
 
     HANDLE m_hKey;
     BOOL m_Deleted;
+    BOOL m_CanDelete;
     LONG m_Ref;
 };
 
 CRegistryKey::~CRegistryKey()
 {
-    if (m_hKey)
+    if (!m_Deleted)
+    {
+         // close key only when has not been deleted yet
          ZwClose(m_hKey);
+    }
 }
 
 
@@ -83,13 +87,22 @@ CRegistryKey::DeleteKey()
 
     if (m_Deleted)
     {
+        // key already deleted
         return STATUS_INVALID_HANDLE;
     }
 
+    if (!m_CanDelete)
+    {
+        // only general keys can be deleted
+        return STATUS_ACCESS_DENIED;
+    }
+
+    // delete key
     Status = ZwDeleteKey(m_hKey);
     if (NT_SUCCESS(Status))
     {
         m_Deleted = TRUE;
+        m_hKey = NULL;
     }
     return Status;
 }
@@ -164,7 +177,7 @@ CRegistryKey::NewSubKey(
         return Status;
     }
 
-    RegistryKey = new(NonPagedPool, TAG_PORTCLASS)CRegistryKey(OuterUnknown, hKey);
+    RegistryKey = new(NonPagedPool, TAG_PORTCLASS)CRegistryKey(OuterUnknown, hKey, TRUE);
     if (!RegistryKey)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -172,7 +185,6 @@ CRegistryKey::NewSubKey(
 
     if (!NT_SUCCESS(Status))
     {
-        ZwClose(hKey);
         delete RegistryKey;
         return Status;
     }
@@ -278,6 +290,7 @@ PcNewRegistryKey(
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
     ISubdevice * Device;
     PSYMBOLICLINK_ENTRY SymEntry;
+    BOOL CanDelete = FALSE;
 
     DPRINT("PcNewRegistryKey entered\n");
 
@@ -304,6 +317,9 @@ PcNewRegistryKey(
         }
         // try to create the key
         Status = ZwCreateKey(&hHandle, DesiredAccess, ObjectAttributes, 0, NULL, CreateOptions, Disposition);
+
+        // key can be deleted
+        CanDelete = TRUE;
     }
     else if (RegistryKeyType == DeviceRegistryKey ||
              RegistryKeyType == DriverRegistryKey ||
@@ -374,7 +390,7 @@ PcNewRegistryKey(
     }
 
     // allocate new registry key object
-    RegistryKey = new(NonPagedPool, TAG_PORTCLASS)CRegistryKey(OuterUnknown, hHandle);
+    RegistryKey = new(NonPagedPool, TAG_PORTCLASS)CRegistryKey(OuterUnknown, hHandle, CanDelete);
     if (!RegistryKey)
     {
         // not enough memory
@@ -394,4 +410,3 @@ PcNewRegistryKey(
     DPRINT("PcNewRegistryKey result %p\n", *OutRegistryKey);
     return STATUS_SUCCESS;
 }
-
