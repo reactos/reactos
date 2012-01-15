@@ -7,6 +7,7 @@
 #include <tchar.h>
 #include <prsht.h>
 #include <malloc.h>
+#include <debug.h>
 
 #include "resource.h"
 

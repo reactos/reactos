@@ -331,7 +331,8 @@ GeneralPageProc(HWND hwndDlg,
                 {
                     SetNewLocale(UnattendLCID);
                     PostQuitMessage(0);
-                }
+                } else
+                    DPRINT1("VerifyUnattendLCID failed\n");
                 return TRUE;
             }
             break;
