@@ -303,6 +303,10 @@ DllMain(HANDLE hDll,
             return FALSE;
         }
 
+        /* Initialize application certification globals */
+        InitializeListHead(&BasepAppCertDllsList);
+        RtlInitializeCriticalSection(&gcsAppCert);
+
         /* Insert more dll attach stuff here! */
         DllInitialized = TRUE;
         DPRINT("Initialization complete\n");

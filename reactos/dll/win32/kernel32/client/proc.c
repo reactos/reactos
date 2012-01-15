@@ -42,7 +42,406 @@ VOID
 CALLBACK
 ConsoleControlDispatcher(DWORD CodeAndFlag);
 
+BOOLEAN g_AppCertInitialized;
+BOOLEAN g_HaveAppCerts;
+LIST_ENTRY BasepAppCertDllsList;
+RTL_CRITICAL_SECTION gcsAppCert;
+PBASEP_APPCERT_EMBEDDED_FUNC fEmbeddedCertFunc;
+NTSTATUS g_AppCertStatus;
+
+RTL_QUERY_REGISTRY_TABLE BasepAppCertTable[2] =
+{
+    {
+        BasepConfigureAppCertDlls,
+        1,
+        L"AppCertDlls",
+        &BasepAppCertDllsList,
+        0,
+        NULL,
+        0
+    },
+    {}
+};
+
+PSAFER_REPLACE_PROCESS_THREAD_TOKENS g_SaferReplaceProcessThreadTokens;
+HMODULE gSaferHandle = (HMODULE)-1;
+
 /* FUNCTIONS ****************************************************************/
+
+VOID
+WINAPI
+StuffStdHandle(IN HANDLE ProcessHandle,
+               IN HANDLE StandardHandle,
+               IN PHANDLE Address)
+{
+    NTSTATUS Status;
+    HANDLE DuplicatedHandle;
+    SIZE_T Dummy;
+
+    /* Duplicate the handle */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               StandardHandle,
+                               ProcessHandle,
+                               &DuplicatedHandle,
+                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
+                               0,
+                               0);
+    if (NT_SUCCESS(Status))
+    {
+        /* Write it */
+        NtWriteVirtualMemory(ProcessHandle,
+                             Address,
+                             &DuplicatedHandle,
+                             sizeof(HANDLE),
+                             &Dummy);
+    }
+}
+
+BOOLEAN
+WINAPI
+BuildSubSysCommandLine(IN LPWSTR SubsystemName,
+                       IN LPWSTR ApplicationName,
+                       IN LPWSTR CommandLine,
+                       OUT PUNICODE_STRING SubsysCommandLine)
+{
+    UNICODE_STRING CommandLineString, ApplicationNameString;
+    PWCHAR Buffer;
+    ULONG Length;
+
+    /* Convert to unicode strings */
+    RtlInitUnicodeString(&CommandLineString, ApplicationName);
+    RtlInitUnicodeString(&ApplicationNameString, CommandLine);
+
+    /* Allocate buffer for the output string */
+    Length = CommandLineString.MaximumLength + ApplicationNameString.MaximumLength + 32;
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, Length);
+    if (!Buffer)
+    {
+        /* Fail, no memory */
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return FALSE;
+    }
+
+    /* Build the final subsystem command line */
+    RtlAppendUnicodeToString(SubsysCommandLine, SubsystemName);
+    RtlAppendUnicodeStringToString(SubsysCommandLine, &CommandLineString);
+    RtlAppendUnicodeToString(SubsysCommandLine, L" /C ");
+    RtlAppendUnicodeStringToString(SubsysCommandLine, &ApplicationNameString);
+    return TRUE;
+}
+
+BOOLEAN
+WINAPI
+BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
+                      IN ULONG ImageMinorVersion)
+{
+    /* Accept images for NT 3.1 or higher, as long as they're not newer than us */
+    return ((ImageMajorVersion >= 3) &&
+            ((ImageMajorVersion != 3) ||
+             (ImageMinorVersion >= 10)) &&
+            (ImageMajorVersion <= SharedUserData->NtMajorVersion) &&
+            ((ImageMajorVersion != SharedUserData->NtMajorVersion) ||
+             (ImageMinorVersion <= SharedUserData->NtMinorVersion)));
+}
+
+NTSTATUS
+WINAPI
+BasepCheckWebBladeHashes(IN HANDLE FileHandle)
+{
+    NTSTATUS Status;
+    CHAR Hash[16];
+
+    /* Get all the MD5 hashes */
+    Status = RtlComputeImportTableHash(FileHandle, Hash, 1);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Depending on which suite this is, run a bsearch and block the appropriate ones */
+    if (SharedUserData->SuiteMask & VER_SUITE_COMPUTE_SERVER)
+    {
+        DPRINT1("Egad! This is a ReactOS Compute Server and we should prevent you from using certain APIs...but we won't.");
+    }
+    else if (SharedUserData->SuiteMask & VER_SUITE_STORAGE_SERVER)
+    {
+        DPRINT1("Gasp! This is a ReactOS Storage Server and we should prevent you from using certain APIs...but we won't.");
+    }
+    else if (SharedUserData->SuiteMask & VER_SUITE_BLADE)
+    {
+        DPRINT1("Golly! This is a ReactOS Web Blade Server and we should prevent you from using certain APIs...but we won't.");
+    }
+
+    /* Actually, fuck it, don't block anything, we're open source */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+BasepSaveAppCertRegistryValue(IN PLIST_ENTRY List,
+                              IN PWCHAR ComponentName,
+                              IN PWCHAR DllName)
+{
+    /* Pretty much the only thing this key is used for, is malware */
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+BasepConfigureAppCertDlls(IN PWSTR ValueName,
+                          IN ULONG ValueType,
+                          IN PVOID ValueData,
+                          IN ULONG ValueLength,
+                          IN PVOID Context,
+                          IN PVOID EntryContext)
+{
+    /* Add this to the certification list */
+    return BasepSaveAppCertRegistryValue(Context, ValueName, ValueData);
+}
+
+NTSTATUS
+WINAPI
+BasepIsProcessAllowed(IN PCHAR ApplicationName)
+{
+    NTSTATUS Status;
+    PWCHAR Buffer;
+    UINT Length;
+    HMODULE TrustLibrary;
+    PBASEP_APPCERT_ENTRY Entry;
+    ULONG CertFlag;
+    PLIST_ENTRY NextEntry;
+    HANDLE KeyHandle;
+    UNICODE_STRING CertKey = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls");
+    OBJECT_ATTRIBUTES KeyAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&CertKey, OBJ_CASE_INSENSITIVE);
+
+    /* Try to initialize the certification subsystem */
+    while (!g_AppCertInitialized)
+    {
+        /* Defaults */
+        Status = STATUS_SUCCESS;
+        Buffer = NULL;
+
+        /* Acquire the lock while initializing and see if we lost a race */
+        RtlEnterCriticalSection(&gcsAppCert);
+        if (g_AppCertInitialized) break;
+
+        /* On embedded, there is a special DLL */
+        if (SharedUserData->SuiteMask & VER_SUITE_EMBEDDEDNT)
+        {
+            /* Allocate a buffer for the name */
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                     0,
+                                     MAX_PATH * sizeof(WCHAR) +
+                                     sizeof(UNICODE_NULL));
+            if (!Buffer)
+            {
+                /* Fail if no memory */
+                Status = STATUS_NO_MEMORY;
+            }
+            else
+            {
+                /* Now get the system32 directory in our buffer, make sure it fits */
+                Length = GetSystemDirectoryW(Buffer, MAX_PATH - sizeof("EmbdTrst.DLL"));
+                if ((Length) && (Length <= MAX_PATH - sizeof("EmbdTrst.DLL")))
+                {
+                    /* Add a slash if needed, and add the embedded cert DLL name */
+                    if (Buffer[Length - 1] != '\\') Buffer[Length++] = '\\';
+                    RtlCopyMemory(&Buffer[Length],
+                                  L"EmbdTrst.DLL",
+                                  sizeof(L"EmbdTrst.DLL"));
+
+                    /* Try to load it */
+                    TrustLibrary = LoadLibraryW(Buffer);
+                    if (TrustLibrary)
+                    {
+                        /* And extract the special function out of it */
+                        fEmbeddedCertFunc = (PVOID)GetProcAddress(TrustLibrary,
+                                                                  "ImageOkToRunOnEmbeddedNT");
+                    }
+                }
+
+                /* If we didn't get this far, set a failure code */
+                if (!fEmbeddedCertFunc) Status = STATUS_UNSUCCESSFUL;
+            }
+        }
+        else
+        {
+            /* Other systems have a registry entry for this */
+            Status = NtOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+            if (NT_SUCCESS(Status))
+            {
+                /* Close it, we'll query it through Rtl */
+                NtClose(KeyHandle);
+
+                /* Do the query, which will call a special callback */
+                Status = RtlQueryRegistryValues(2,
+                                                L"Session Manager",
+                                                BasepAppCertTable,
+                                                0,
+                                                0);
+                if (Status == 0xC0000034) Status = STATUS_SUCCESS;
+            }
+        }
+
+        /* Free any buffer if we had one */
+        if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+        /* Check for errors, or a missing embedded/custom certification DLL */
+        if (!NT_SUCCESS(Status) ||
+            (!(fEmbeddedCertFunc) && (IsListEmpty(&BasepAppCertDllsList))))
+        {
+            /* The subsystem is not active on this machine, so give up */
+            g_HaveAppCerts = FALSE;
+            g_AppCertStatus = Status;
+        }
+        else
+        {
+            /* We have certification DLLs active, remember this */
+            g_HaveAppCerts = TRUE;
+        }
+
+        /* We are done the initialization phase, release the lock */
+        g_AppCertInitialized = TRUE;
+        RtlLeaveCriticalSection(&gcsAppCert);
+    }
+
+    /* If there's no certification DLLs present, return the failure code */
+    if (!g_HaveAppCerts) return g_AppCertStatus;
+
+    /* Otherwise, assume success and make sure we have *something* */
+    ASSERT(fEmbeddedCertFunc || !IsListEmpty(&BasepAppCertDllsList));
+    Status = STATUS_SUCCESS;
+
+    /* If the something is an embedded certification DLL, call it and return */
+    if (fEmbeddedCertFunc) return fEmbeddedCertFunc(ApplicationName);
+
+    /* Otherwise we have custom certification DLLs, parse them */
+    NextEntry = BasepAppCertDllsList.Flink;
+    CertFlag = 2;
+    while (NextEntry != &BasepAppCertDllsList)
+    {
+        /* Make sure the entry has a callback */
+        Entry = CONTAINING_RECORD(NextEntry, BASEP_APPCERT_ENTRY, Entry);
+        ASSERT(Entry->fPluginCertFunc != NULL);
+
+        /* Call it and check if it failed */
+        Status = Entry->fPluginCertFunc(ApplicationName, 1);
+        if (!NT_SUCCESS(Status)) CertFlag = 3;
+
+        /* Move on */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Now loop them again */
+    NextEntry = BasepAppCertDllsList.Flink;
+    while (NextEntry != &BasepAppCertDllsList)
+    {
+        /* Make sure the entry has a callback */
+        Entry = CONTAINING_RECORD(NextEntry, BASEP_APPCERT_ENTRY, Entry);
+        ASSERT(Entry->fPluginCertFunc != NULL);
+
+        /* Call it, this time with the flag from the loop above */
+        Status = Entry->fPluginCertFunc(ApplicationName, CertFlag);
+    }
+
+    /* All done, return the status */
+    return Status;
+}
+
+NTSTATUS
+WINAPI
+BasepReplaceProcessThreadTokens(IN HANDLE TokenHandle,
+                                IN HANDLE ProcessHandle,
+                                IN HANDLE ThreadHandle)
+{
+    NTSTATUS Status;
+    ANSI_STRING SaferiReplaceProcessThreadTokens = RTL_CONSTANT_STRING("SaferiReplaceProcessThreadTokens");
+
+    /* Enter the application certification lock */
+    RtlEnterCriticalSection(&gcsAppCert);
+
+    /* Check if we already know the function */
+    if (g_SaferReplaceProcessThreadTokens)
+    {
+        /* Call it */
+        Status = g_SaferReplaceProcessThreadTokens(TokenHandle,
+                                                   ProcessHandle,
+                                                   ThreadHandle) ?
+                                                   STATUS_SUCCESS :
+                                                   STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Check if the app certification DLL isn't loaded */
+        if (!(gSaferHandle) ||
+            (gSaferHandle == (HMODULE)-1) ||
+            (gSaferHandle == (HMODULE)-2))
+        {
+            /* Then we can't call the function */
+            Status = STATUS_ENTRYPOINT_NOT_FOUND;
+        }
+        else
+        {
+            /* We have the DLL, find the address of the Safer function */
+            Status = LdrGetProcedureAddress(gSaferHandle,
+                                            &SaferiReplaceProcessThreadTokens,
+                                            0,
+                                            (PVOID*)&g_SaferReplaceProcessThreadTokens);
+            if (NT_SUCCESS(Status))
+            {
+                /* Found it, now call it */
+                Status = g_SaferReplaceProcessThreadTokens(TokenHandle,
+                                                           ProcessHandle,
+                                                           ThreadHandle) ?
+                                                           STATUS_SUCCESS :
+                                                           STATUS_UNSUCCESSFUL;
+            }
+            else
+            {
+                /* We couldn't find it, so this must be an unsupported DLL */
+                LdrUnloadDll(gSaferHandle);
+                gSaferHandle = NULL;
+                Status = STATUS_ENTRYPOINT_NOT_FOUND;
+            }
+        }
+    }
+
+    /* Release the lock and return the result */
+    RtlLeaveCriticalSection(&gcsAppCert);
+    return Status;
+}
+
+VOID
+WINAPI
+BasepSxsCloseHandles(IN PBASE_MSG_SXS_HANDLES Handles)
+{
+    NTSTATUS Status;
+
+    /* Sanity checks */
+    ASSERT(Handles != NULL);
+    ASSERT(Handles->Process == NULL || Handles->Process == NtCurrentProcess());
+
+    /* Close the file handle */
+    if (Handles->File)
+    {
+        Status = NtClose(Handles->File);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Close the section handle */
+    if (Handles->Section)
+    {
+        Status = NtClose(Handles->Section);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Unmap the section view */
+    if (Handles->ViewBase.QuadPart)
+    {
+        Status = NtUnmapViewOfSection(NtCurrentProcess(),
+                                      (PVOID)Handles->ViewBase.LowPart);
+        ASSERT(NT_SUCCESS(Status));
+    }
+}
 
 static
 LONG BaseExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
@@ -608,7 +1007,7 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     {
         ProcessParameters->ConsoleFlags = 1;
     }
-    
+
     /* See if the first 1MB should be reserved */
     if ((ULONG_PTR)ApplicationPathName & 1)
     {

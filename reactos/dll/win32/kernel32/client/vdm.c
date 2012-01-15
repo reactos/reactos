@@ -65,22 +65,122 @@ BaseIsDosApplication(IN PUNICODE_STRING PathName,
 
 BOOL
 WINAPI
-BaseCheckForVDM(IN HANDLE hProcess,
-                OUT LPDWORD lpExitCode)
+BaseCheckVDM(IN ULONG BinaryType,
+             IN PCWCH ApplicationName,
+             IN PCWCH CommandLine,
+             IN PCWCH CurrentDirectory,
+             IN PANSI_STRING AnsiEnvironment,
+             IN PCSR_API_MESSAGE Msg,
+             IN OUT PULONG iTask,
+             IN DWORD CreationFlags,
+             IN LPSTARTUPINFOW StartupInfo)
+{
+    /* This is not supported */
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+BaseUpdateVDMEntry(IN ULONG UpdateIndex,
+                   IN OUT PHANDLE WaitHandle,
+                   IN ULONG IndexInfo,
+                   IN ULONG BinaryType)
+{
+    NTSTATUS Status;
+    CSR_API_MESSAGE Msg;
+    ULONG CsrRequest = MAKE_CSR_API(UPDATE_VDM_ENTRY, CSR_CONSOLE);
+
+    /* Check what update is being sent */
+    switch (UpdateIndex)
+    {
+        /* VDM is being undone */
+        case VdmEntryUndo:
+
+            /* Tell the server how far we had gotten along */
+            Msg.Data.UpdateVdmEntry.iTask = (ULONG)*WaitHandle;
+            Msg.Data.UpdateVdmEntry.VDMCreationState = IndexInfo;
+            break;
+
+        /* VDM is ready with a new process handle */
+        case VdmEntryUpdateProcess:
+
+            /* Send it the process handle */
+            Msg.Data.UpdateVdmEntry.VDMProcessHandle = *WaitHandle;
+            Msg.Data.UpdateVdmEntry.iTask = IndexInfo;
+            break;
+    }
+
+    /* Also check what kind of binary this is for the console handle */
+    if (BinaryType == BINARY_TYPE_WOW)
+    {
+        /* Magic value for 16-bit apps */
+        Msg.Data.UpdateVdmEntry.ConsoleHandle = (HANDLE)-1;
+    }
+    else if (Msg.Data.UpdateVdmEntry.iTask)
+    {
+        /* No handle for true VDM */
+        Msg.Data.UpdateVdmEntry.ConsoleHandle = 0;
+    }
+    else
+    {
+        /* Otherwise, send the regular consoel handle */
+        Msg.Data.UpdateVdmEntry.ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    }
+
+    /* Finally write the index and binary type */
+    Msg.Data.UpdateVdmEntry.EntryIndex = UpdateIndex;
+    Msg.Data.UpdateVdmEntry.BinaryType = BinaryType;
+
+    /* Send the message to CSRSS */
+    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
+    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(Msg.Status)))
+    {
+        /* Handle failure */
+        BaseSetLastNTError(Msg.Status);
+        return FALSE;
+    }
+
+    /* If this was an update, CSRSS returns a new wait handle */
+    if (UpdateIndex == VdmEntryUpdateProcess)
+    {
+        /* Return it to the caller */
+        *WaitHandle = Msg.Data.UpdateVdmEntry.WaitObjectForParent;
+    }
+
+    /* We made it */
+    return TRUE;
+}
+
+BOOL
+WINAPI
+BaseCheckForVDM(IN HANDLE ProcessHandle,
+                OUT LPDWORD ExitCode)
 {
     NTSTATUS Status;
     EVENT_BASIC_INFORMATION EventBasicInfo;
+    CSR_API_MESSAGE Msg;
+    ULONG CsrRequest = MAKE_CSR_API(GET_VDM_EXIT_CODE, CSR_CONSOLE);
 
     /* It's VDM if the process is actually a wait handle (an event) */
-    Status = NtQueryEvent(hProcess,
+    Status = NtQueryEvent(ProcessHandle,
                           EventBasicInformation,
                           &EventBasicInfo,
                           sizeof(EventBasicInfo),
                           NULL);
     if (!NT_SUCCESS(Status)) return FALSE;
 
-    /* FIXME: Send a message to csrss */
-    return FALSE;
+    /* Setup the input parameters */
+    Msg.Data.GetVdmExitCode.ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    Msg.Data.GetVdmExitCode.hParent = ProcessHandle;
+
+    /* Call CSRSS */
+    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Get the exit code from the reply */
+    *ExitCode = Msg.Data.GetVdmExitCode.ExitCode;
+    return TRUE;
 }
 
 BOOL
@@ -97,7 +197,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
 
     /* Clear the buffer in case we fail */
     CmdLineString->Buffer = 0;
-    
+
     /* Always return the same size */
     *VdmSize = 0x1000000;
 
@@ -109,7 +209,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
         SetLastError(ERROR_INVALID_NAME);
         return FALSE;
     }
-    
+
     /* Check if this is VDM with a DOS Sequence ID */
     if (DosSeqId)
     {
@@ -132,7 +232,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
                    (BinaryType == 0x10) ? L" " : L"-w",
                    (BinaryType == 0x40) ? 's' : ' ');
     }
-    
+
     /* Create the actual string */
     return RtlCreateUnicodeString(CmdLineString, CommandLine);
 }
@@ -147,13 +247,13 @@ BaseGetEnvNameType_U(IN PWCHAR Name,
 
     /* Start by assuming unknown type */
     NameType = 1;
-    
+
     /* Loop all the environment names */
     for (i = 0; i < (sizeof(BasepEnvNameType) / sizeof(ENV_INFO)); i++)
     {
         /* Get this entry */
         EnvInfo = &BasepEnvNameType[i];
-        
+
         /* Check if it matches the name */
         if ((EnvInfo->NameLength == NameLength) &&
             !(_wcsnicmp(EnvInfo->Name, Name, NameLength)))
@@ -163,7 +263,7 @@ BaseGetEnvNameType_U(IN PWCHAR Name,
             break;
         }
     }
-    
+
     /* Return what we found, or unknown if nothing */
     return NameType;
 }
@@ -174,10 +274,10 @@ BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
                           IN PUNICODE_STRING UnicodeEnv)
 {
     ULONG Dummy = 0;
-    
+
     /* Clear the ASCII buffer since Rtl creates this for us */
     if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);
-    
+
     /* The Unicode buffer is build by hand, though */
     if (UnicodeEnv->Buffer)
     {
@@ -231,7 +331,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
         SetLastError(ERROR_BAD_ENVIRONMENT);
         goto Quickie;
     }
-    
+
     /* Count how much space the whole environment takes */
     p = Environment;
     while ((*p++ != UNICODE_NULL) && (*p != UNICODE_NULL)) EnvironmentSize++;
@@ -251,7 +351,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
         NewEnvironment = NULL;
         goto Quickie;
     }
-    
+
     /* Begin parsing the new environment */
     p = NewEnvironment;
 
@@ -259,12 +359,12 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
     /* Terminate it */
     *p++ = UNICODE_NULL;
-    
+
     /* Initialize the unicode string to hold it */
     EnvironmentSize = (p - NewEnvironment) * sizeof(WCHAR);
     RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, EnvironmentSize);
     UnicodeEnv->Length = EnvironmentSize;
- 
+
     /* Create the ASCII version of it */
     Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
     if (!NT_SUCCESS(Status))
@@ -282,14 +382,14 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 Quickie:
     /* Cleanup path starts here, start by destroying the envrionment copy */
     if (!(lpEnvironment) && (Environment)) RtlDestroyEnvironment(Environment);
-    
+
     /* See if we are here due to failure */
     if (NewEnvironment)
     {
         /* Initialize the paths to be empty */
         RtlInitEmptyUnicodeString(UnicodeEnv, NULL, 0);
         RtlInitEmptyAnsiString(AnsiEnv, NULL, 0);
-        
+
         /* Free the environment copy */
         RegionSize = 0;
         Status = NtFreeVirtualMemory(NtCurrentProcess(),
@@ -298,7 +398,7 @@ Quickie:
                                      MEM_RELEASE);
         ASSERT(NT_SUCCESS(Status));
     }
-    
+
     /* Return the result */
     return Result;
 }

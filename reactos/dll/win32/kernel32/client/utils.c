@@ -131,7 +131,7 @@ BaseGetNamedObjectDirectory(VOID)
 
         }
     }
-    
+
     if (NT_SUCCESS(Status)) BaseNamedObjectDirectory = BnoHandle;
 
 Quickie:
@@ -812,7 +812,7 @@ SetFileApisToANSI(VOID)
     BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
     BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
     Basep8BitStringToUnicodeSize = BasepAnsiStringToUnicodeSize;
-    
+
     /* FIXME: Old, deprecated way */
     bIsFileApiAnsi = TRUE;
 }
@@ -895,15 +895,39 @@ BaseCheckRunApp(IN DWORD Unknown1,
 /*
  * @unimplemented
  */
-BOOL
+NTSTATUS
 WINAPI
-BasepCheckWinSaferRestrictions(IN DWORD Unknown1,
-                               IN DWORD Unknown2,
-                               IN DWORD Unknown3,
-                               IN DWORD Unknown4,
-                               IN DWORD Unknown5,
-                               IN DWORD Unknown6)
+BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
+                               IN LPWSTR ApplicationName,
+                               IN HANDLE FileHandle,
+                               OUT PBOOLEAN InJob,
+                               OUT PHANDLE NewToken,
+                               OUT PHANDLE JobHandle)
 {
-    STUB;
-    return FALSE;
+    NTSTATUS Status;
+    
+    /* Validate that there's a name */
+    if ((ApplicationName) && *(ApplicationName))
+    {
+        /* Validate that the required output parameters are there */
+        if ((InJob) && (NewToken) && (JobHandle))
+        {
+            /* Do the work (one day...) */
+            UNIMPLEMENTED;
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Act as if SEH hit this */
+            Status = STATUS_ACCESS_VIOLATION;
+        }
+    }
+    else
+    {
+        /* Input is invalid */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return the status */
+    return Status;
 }

@@ -68,6 +68,42 @@
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
 #define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
 
+//
+// This stuff maybe should go in a vdm.h?
+//
+typedef enum _VDM_ENTRY_CODE
+{
+    VdmEntryUndo,
+    VdmEntryUpdateProcess,
+    VdmEntryUpdateControlCHandler
+} VDM_ENTRY_CODE;
+
+//
+// Undo States
+//
+#define VDM_UNDO_PARTIAL    0x01
+#define VDM_UNDO_FULL       0x02
+#define VDM_UNDO_REUSE      0x04
+#define VDM_UNDO_COMPLETED  0x08
+
+//
+// Binary Types to share with VDM
+//
+#define BINARY_TYPE_EXE     0x01
+#define BINARY_TYPE_COM     0x02
+#define BINARY_TYPE_PIF     0x03
+#define BINARY_TYPE_DOS     0x10
+#define BINARY_TYPE_SEPARATE_WOW 0x20
+#define BINARY_TYPE_WOW     0x40
+#define BINARY_TYPE_WOW_EX  0x80
+
+//
+// VDM States
+//
+#define VDM_NOT_LOADED      0x01
+#define VDM_NOT_READY       0x02
+#define VDM_READY           0x04
+
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
 
@@ -299,6 +335,64 @@ BaseComputeProcessDllPath(
     IN PVOID Environment
 );
 
+LPWSTR
+WINAPI
+BaseComputeProcessExePath(
+    IN LPWSTR FullPath
+);
+
+ULONG
+WINAPI
+BaseIsDosApplication(
+    IN PUNICODE_STRING PathName,
+    IN NTSTATUS Status
+);
+
+NTSTATUS
+WINAPI
+BasepCheckBadapp(
+    IN HANDLE FileHandle,
+    IN PWCHAR ApplicationName,
+    IN PWCHAR Environment,
+    IN USHORT ExeType,
+    IN PVOID* SdbQueryAppCompatData,
+    IN PULONG SdbQueryAppCompatDataSize,
+    IN PVOID* SxsData,
+    IN PULONG SxsDataSize,
+    OUT PULONG FusionFlags
+);
+
+BOOLEAN
+WINAPI
+IsShimInfrastructureDisabled(
+    VOID
+);
+
+BOOL
+NTAPI
+BaseDestroyVDMEnvironment(
+    IN PANSI_STRING AnsiEnv,
+    IN PUNICODE_STRING UnicodeEnv
+);
+
+BOOL
+WINAPI
+BaseGetVdmConfigInfo(
+    IN LPCWSTR Reserved,
+    IN ULONG DosSeqId,
+    IN ULONG BinaryType,
+    IN PUNICODE_STRING CmdLineString,
+    OUT PULONG VdmSize
+);
+
+BOOL
+NTAPI
+BaseCreateVDMEnvironment(
+    IN PWCHAR lpEnvironment,
+    IN PANSI_STRING AnsiEnv,
+    IN PUNICODE_STRING UnicodeEnv
+);
+
 VOID
 WINAPI
 InitCommandLines(VOID);
@@ -323,7 +417,57 @@ BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
                        IN PVOID Context,
                        OUT BOOLEAN *StopEnumeration);
 
+typedef NTSTATUS
+(NTAPI *PBASEP_APPCERT_PLUGIN_FUNC)(
+    IN PCHAR ApplicationName,
+    IN ULONG CertFlag
+);
+
+typedef NTSTATUS
+(NTAPI *PBASEP_APPCERT_EMBEDDED_FUNC)(
+    IN PCHAR ApplicationName
+);
+
+typedef NTSTATUS
+(NTAPI *PSAFER_REPLACE_PROCESS_THREAD_TOKENS)(
+    IN HANDLE Token,
+    IN HANDLE Process,
+    IN HANDLE Thread
+);
+
+typedef struct _BASEP_APPCERT_ENTRY
+{
+    LIST_ENTRY Entry;
+    UNICODE_STRING Name;
+    PBASEP_APPCERT_PLUGIN_FUNC fPluginCertFunc;
+} BASEP_APPCERT_ENTRY, *PBASEP_APPCERT_ENTRY;
+
+typedef struct _BASE_MSG_SXS_HANDLES
+{
+    HANDLE File;
+    HANDLE Process;
+    HANDLE Section;
+    LARGE_INTEGER ViewBase;
+} BASE_MSG_SXS_HANDLES, *PBASE_MSG_SXS_HANDLES;
+
+NTSTATUS
+NTAPI
+BasepConfigureAppCertDlls(
+    IN PWSTR ValueName,
+    IN ULONG ValueType,
+    IN PVOID ValueData,
+    IN ULONG ValueLength,
+    IN PVOID Context,
+    IN PVOID EntryContext
+);
+
+extern LIST_ENTRY BasepAppCertDllsList;
+extern RTL_CRITICAL_SECTION gcsAppCert;
+
 VOID
 WINAPI
-BaseMarkFileForDelete(IN HANDLE FileHandle,
-                      IN ULONG FileAttributes);
+BaseMarkFileForDelete(
+    IN HANDLE FileHandle,
+    IN ULONG FileAttributes
+);
+
