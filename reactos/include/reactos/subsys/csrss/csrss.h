@@ -530,6 +530,24 @@ typedef struct
     ULONG VideoMode;
 } CSRSS_SOUND_SENTRY, *PCSRSS_SOUND_SENTRY;
 
+typedef struct
+{
+    ULONG iTask;
+    ULONG BinaryType;
+    HANDLE ConsoleHandle;
+    HANDLE VDMProcessHandle;
+    HANDLE WaitObjectForParent;
+    USHORT EntryIndex;
+    USHORT VDMCreationState;
+} CSRSS_UPDATE_VDM_ENTRY, *PCSRSS_UPDATE_VDM_ENTRY;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE hParent;
+    ULONG ExitCode;
+} CSRSS_GET_VDM_EXIT_CODE, *PCSRSS_GET_VDM_EXIT_CODE;
+
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
@@ -612,6 +630,8 @@ typedef struct
 #define GET_TEMP_FILE                 (0x48)
 #define DEFINE_DOS_DEVICE			  (0X49)
 #define SOUND_SENTRY                  (0x50)
+#define UPDATE_VDM_ENTRY              (0x51)
+#define GET_VDM_EXIT_CODE             (0x52)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -696,6 +716,8 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_TEMP_FILE GetTempFile;
         CSRSS_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
         CSRSS_SOUND_SENTRY SoundSentryRequest;
+        CSRSS_UPDATE_VDM_ENTRY UpdateVdmEntry;
+        CSRSS_GET_VDM_EXIT_CODE GetVdmExitCode;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

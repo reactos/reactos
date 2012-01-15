@@ -18,8 +18,8 @@
 
 /* GLOBALS *******************************************************************/
 
-HKEY ImageExecOptionsKey;
-HKEY Wow64ExecOptionsKey;
+HANDLE ImageExecOptionsKey;
+HANDLE Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
@@ -104,9 +104,9 @@ NTSTATUS
 NTAPI
 LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
                            IN BOOLEAN Wow64,
-                           OUT PHKEY NewKeyHandle)
+                           OUT PHANDLE NewKeyHandle)
 {
-    PHKEY RootKeyLocation;
+    PHANDLE RootKeyLocation;
     HANDLE RootKey;
     UNICODE_STRING SubKeyString;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -174,7 +174,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
+LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
                            IN PCWSTR ValueName,
                            IN ULONG Type,
                            OUT PVOID Buffer,
@@ -345,7 +345,7 @@ LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
                                     IN BOOLEAN Wow64)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
 
     /* Open a handle to the key */
     Status = LdrOpenImageFileOptionsKey(SubKey, Wow64, &KeyHandle);
@@ -1326,10 +1326,10 @@ LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb
 
 NTSTATUS
 NTAPI
-LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
+LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE OptionsKey)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
     ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
@@ -1467,12 +1467,12 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PPEB Peb = NtCurrentPeb();
     BOOLEAN IsDotNetImage = FALSE;
     BOOLEAN FreeCurDir = FALSE;
-    //HKEY CompatKey;
+    //HANDLE CompatKey;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
     //LPWSTR ImagePathBuffer;
     ULONG ConfigSize;
     UNICODE_STRING CurrentDirectory;
-    HKEY OptionsKey;
+    HANDLE OptionsKey;
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;

@@ -483,7 +483,7 @@
 @ stdcall RtlCompareUnicodeString (ptr ptr long)
 @ stdcall RtlCompressBuffer(long ptr long ptr long long ptr ptr)
 @ stdcall RtlComputeCrc32(long ptr long)
-;@ stdcall RtlComputeImportTableHash
+@ stdcall RtlComputeImportTableHash(ptr ptr long)
 ;@ stdcall RtlComputePrivatizedDllName_U
 ;@ stdcall RtlConsoleMultiByteToUnicodeN
 @ stdcall RtlConvertExclusiveToShared(ptr)

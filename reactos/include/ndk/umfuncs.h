@@ -314,4 +314,23 @@ LdrVerifyImageMatchesChecksum(
     OUT PUSHORT ImageCharacterstics
 );
 
+NTSTATUS
+NTAPI
+LdrOpenImageFileOptionsKey(
+    IN PUNICODE_STRING SubKey,
+    IN BOOLEAN Wow64,
+    OUT PHANDLE NewKeyHandle
+);
+
+NTSTATUS
+NTAPI
+LdrQueryImageFileKeyOption(
+    IN HANDLE KeyHandle,
+    IN PCWSTR ValueName,
+    IN ULONG Type,
+    OUT PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnedLength OPTIONAL
+);
+
 #endif

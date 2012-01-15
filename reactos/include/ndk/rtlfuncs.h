@@ -2513,7 +2513,7 @@ NTAPI
 RtlDosPathNameToRelativeNtPathName_U(
     IN PCWSTR DosName,
     OUT PUNICODE_STRING NtName,
-    OUT PCWSTR * PartName,
+    OUT PCWSTR *PartName,
     OUT PRTL_RELATIVE_NAME_U RelativeName
 );
 
@@ -2543,6 +2543,19 @@ RtlGetFullPathName_U(
     IN ULONG Size,
     IN PWSTR Buffer,
     OUT PWSTR *ShortName
+);
+
+ULONG
+NTAPI
+RtlGetFullPathName_UstrEx(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING StaticString,
+    IN PUNICODE_STRING DynamicString,
+    IN PUNICODE_STRING *StringUsed,
+    IN PSIZE_T FilePartSize,
+    OUT PBOOLEAN NameInvalid,
+    OUT RTL_PATH_TYPE* PathType,
+    OUT PULONG LengthNeeded
 );
 
 NTSYSAPI
@@ -3824,6 +3837,15 @@ NTAPI
 RtlGUIDFromString(
   IN PUNICODE_STRING GuidString,
   OUT GUID *Guid);
+  
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlComputeImportTableHash(
+    IN HANDLE hFile,
+    OUT PCHAR Hash,
+    IN ULONG ImportTableHashRevision
+);
 #endif
 
 #ifdef __cplusplus
