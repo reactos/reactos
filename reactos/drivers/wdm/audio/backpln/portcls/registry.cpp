@@ -156,8 +156,8 @@ CRegistryKey::NewSubKey(
         return STATUS_INVALID_HANDLE;
     }
 
-    InitializeObjectAttributes(&Attributes, SubKeyName, 0, m_hKey, NULL);
-    Status = ZwCreateKey(&hKey, KEY_READ | KEY_WRITE, &Attributes, 0, NULL, 0, Disposition);
+    InitializeObjectAttributes(&Attributes, SubKeyName, OBJ_INHERIT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE, m_hKey, NULL);
+    Status = ZwCreateKey(&hKey, DesiredAccess, &Attributes, 0, NULL, CreateOptions, Disposition);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("CRegistryKey::NewSubKey failed with %x\n", Status);
@@ -176,8 +176,6 @@ CRegistryKey::NewSubKey(
         delete RegistryKey;
         return Status;
     }
-
-    *RegistrySubKey = (PREGISTRYKEY)RegistryKey;
 
     DPRINT("CRegistryKey::NewSubKey RESULT %p\n", *RegistrySubKey);
     return STATUS_SUCCESS;
