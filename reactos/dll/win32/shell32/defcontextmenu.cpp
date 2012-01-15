@@ -42,6 +42,7 @@ class CDefaultContextMenu :
     private:
         DEFCONTEXTMENU m_Dcm;
         IDataObject *m_pDataObj;
+        LPCITEMIDLIST m_pidlFolder;
         DWORD m_bGroupPolicyActive;
         PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
         UINT m_iIdSHEFirst; /* first used id */
@@ -92,8 +93,9 @@ class CDefaultContextMenu :
 
 CDefaultContextMenu::CDefaultContextMenu()
 {
-    memset (&m_Dcm, 0, sizeof(m_Dcm));
+    memset(&m_Dcm, 0, sizeof(m_Dcm));
     m_pDataObj = NULL;
+    m_pidlFolder = NULL;
     m_bGroupPolicyActive = 0;
     m_pDynamicEntries = NULL;
     m_iIdSHEFirst = 0;
@@ -108,7 +110,7 @@ CDefaultContextMenu::~CDefaultContextMenu()
     PDynamicShellEntry dEntry, dNext;
     PStaticShellEntry sEntry, sNext;
 
-    /* free dynamic shell extension entries */
+    /* Free dynamic shell extension entries */
     dEntry = m_pDynamicEntries;
     while (dEntry)
     {
@@ -117,7 +119,8 @@ CDefaultContextMenu::~CDefaultContextMenu()
         HeapFree(GetProcessHeap(), 0, dEntry);
         dEntry = dNext;
     }
-    /* free static shell extension entries */
+
+    /* Free static shell extension entries */
     sEntry = m_pStaticEntries;
     while (sEntry)
     {
@@ -127,6 +130,11 @@ CDefaultContextMenu::~CDefaultContextMenu()
         HeapFree(GetProcessHeap(), 0, sEntry);
         sEntry = sNext;
     }
+
+    if (m_pidlFolder)
+        ILFree((_ITEMIDLIST*)m_pidlFolder);
+    if (m_pDataObj)
+        m_pDataObj->Release();
 }
 
 HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
@@ -136,6 +144,25 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     TRACE("cidl %u\n", pdcm->cidl);
     if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
         m_pDataObj = pDataObj;
+
+    if (!pdcm->cidl)
+    {
+        /* Init pidlFolder only if is background context menu. See IShellExtInit::Initialize */
+        if (pdcm->pidlFolder)
+            m_pidlFolder = ILClone(pdcm->pidlFolder);
+        else
+        {
+            IPersistFolder2 *pf = NULL;
+            if (SUCCEEDED(pdcm->psf->QueryInterface(IID_IPersistFolder2, (PVOID*)&pf)))
+            {
+                if (FAILED(pf->GetCurFolder((_ITEMIDLIST**)&m_pidlFolder)))
+                    ERR("GetCurFolder failed\n");
+                pf->Release();
+            }
+        }
+        TRACE("pidlFolder %p\n", m_pidlFolder);
+    }
+
     CopyMemory(&m_Dcm, pdcm, sizeof(DEFCONTEXTMENU));
     return S_OK;
 }
@@ -362,7 +389,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pClas
             return hr;
         }
 
-        hr = shext->Initialize(NULL, m_pDataObj, hKey);
+        hr = shext->Initialize(m_pidlFolder, m_pDataObj, hKey);
         shext->Release();
         if (hr != S_OK)
         {
@@ -553,18 +580,8 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
         TRACE("disabling paste options\n");
         DisablePasteOptions(hMenu);
     }
-    /* load extensions from HKCR\* key */
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT,
-                      L"*",
-                      0,
-                      KEY_READ,
-                      &hKey) == ERROR_SUCCESS)
-    {
-        EnumerateDynamicContextHandlerForKey(hKey);
-        RegCloseKey(hKey);
-    }
 
-    /* load create new shell extension */
+    /* Load context menu handlers */
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory\\Background", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         EnumerateDynamicContextHandlerForKey(hKey);
