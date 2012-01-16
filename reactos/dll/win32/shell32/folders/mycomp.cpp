@@ -365,39 +365,48 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 */
 HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
-    HRESULT hr = S_OK;
     static const DWORD dwComputerAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_CANCOPY |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
+        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
+    static const DWORD dwControlPanelAttributes =
+        SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
+    static const DWORD dwDriveAttributes =
+        SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
+        SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
-    if (!rgfInOut)
-        return E_INVALIDARG;
     if (cidl && !apidl)
         return E_INVALIDARG;
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
+    /* FIXME: always add SFGAO_CANLINK */
     if(cidl == 0)
         *rgfInOut &= dwComputerAttributes;
     else
     {
-        while (cidl > 0 && *apidl)
+        for (UINT i = 0; i < cidl; ++i)
         {
-            pdump (*apidl);
-            SHELL32_GetItemAttributes (this, *apidl, rgfInOut);
-            apidl++;
-            cidl--;
+            if (_ILIsDrive(apidl[i]))
+                *rgfInOut &= dwDriveAttributes;
+            else if (_ILIsControlPanel(apidl[i]))
+                *rgfInOut &= dwControlPanelAttributes;
+            else
+            {
+                pdump(apidl[i]);
+                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
+            }
         }
     }
+
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
 
     TRACE ("-- result=0x%08x\n", *rgfInOut);
-    return hr;
+    return S_OK;
 }
 
 /**************************************************************************

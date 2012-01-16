@@ -643,6 +643,7 @@ HRESULT WINAPI
 CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
+    /* Load folder and shortcut icons */
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 0, 0, LR_SHARED);
     m_hbmFolder = hIcon ? IconToBitmap(hIcon) : NULL;
     hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 0, 0, LR_SHARED);

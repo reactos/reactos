@@ -144,7 +144,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 
     if (!pdcm->cidl)
     {
-        /* Init pidlFolder only if is background context menu. See IShellExtInit::Initialize */
+        /* Init pidlFolder only if it is background context menu. See IShellExtInit::Initialize */
         if (pdcm->pidlFolder)
             m_pidlFolder = ILClone(pdcm->pidlFolder);
         else
@@ -513,7 +513,7 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
 
     TRACE("BuildBackgroundContextMenu entered\n");
 
-    if (!_ILIsDesktop(m_Dcm.pidlFolder))
+    if (!_ILIsDesktop(m_pidlFolder))
     {
         WCHAR wszBuf[MAX_PATH];
 
@@ -552,18 +552,24 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
         DisablePasteOptions(hMenu);
     }
 
-    /* Load context menu handlers */
-    HKEY hKey;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory\\Background", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    /* Directory is progid of filesystem folders only */
+    LPITEMIDLIST pidlFolderLast = ILFindLastID(m_pidlFolder);
+    if (_ILIsDesktop(pidlFolderLast) || _ILIsDrive(pidlFolderLast) || _ILIsFolder(pidlFolderLast))
     {
-        EnumerateDynamicContextHandlerForKey(hKey);
-        RegCloseKey(hKey);
-    }
+        /* Load context menu handlers */
+        TRACE("Add background handlers: %p\n", m_pidlFolder);
+        HKEY hKey;
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory\\Background", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            EnumerateDynamicContextHandlerForKey(hKey);
+            RegCloseKey(hKey);
+        }
 
-    if (InsertMenuItemsOfDynamicContextMenuExtension(hMenu, GetMenuItemCount(hMenu) - 1, iIdCmdFirst, iIdCmdLast))
-    {
-        /* seperate dynamic context menu items */
-        _InsertMenuItemW(hMenu, GetMenuItemCount(hMenu) - 1, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        if (InsertMenuItemsOfDynamicContextMenuExtension(hMenu, GetMenuItemCount(hMenu) - 1, iIdCmdFirst, iIdCmdLast))
+        {
+            /* seperate dynamic context menu items */
+            _InsertMenuItemW(hMenu, GetMenuItemCount(hMenu) - 1, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        }
     }
 
     return iIdCmdLast;
@@ -795,24 +801,30 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         rfg = 0;
     }
 
-    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(m_Dcm.apidl[0]))
+    if (rfg & SFGAO_FOLDER)
     {
         /* add the default verbs open / explore */
         AddStaticEntryForFileClass(L"Folder");
-        AddStaticEntryForFileClass(L"Directory");
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Folder", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             EnumerateDynamicContextHandlerForKey(hKey);
             RegCloseKey(hKey);
         }
-        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+
+        /* Directory is only loaded for real filesystem directories */
+        if (_ILIsFolder(m_Dcm.apidl[0]))
         {
-            EnumerateDynamicContextHandlerForKey(hKey);
-            RegCloseKey(hKey);
+            AddStaticEntryForFileClass(L"Directory");
+            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                EnumerateDynamicContextHandlerForKey(hKey);
+                RegCloseKey(hKey);
+            }
         }
     }
 
-    if (rfg & SFGAO_FILESYSTEM)
+    /* AllFilesystemObjects class is loaded only for files and directories */
+    if (_ILIsFolder(m_Dcm.apidl[0]) || _ILIsValue(m_Dcm.apidl[0]))
     {
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {

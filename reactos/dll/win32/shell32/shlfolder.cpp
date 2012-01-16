@@ -397,17 +397,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 
     dwAttributes = *pdwAttributes;
 
-    /* Attributes of some special folders are hardcoded */
-    if (_ILIsDrive(pidl))
-        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
-                          SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME;
-    else if (_ILIsMyComputer(pidl) || _ILIsNetHood(pidl))
-        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
-                          SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANDELETE|
-                          SFGAO_CANRENAME|SFGAO_CANLINK;
-    else if (_ILIsControlPanel(pidl))
-        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_CANLINK;
-    else if (has_guid && HCR_GetFolderAttributes(pidl, &dwAttributes))
+    if (has_guid && HCR_GetFolderAttributes(pidl, &dwAttributes))
         *pdwAttributes = dwAttributes;
     else if (_ILGetDataPointer(pidl))
     {
