@@ -102,12 +102,17 @@ typedef struct _EVENTSOURCE
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
+
+/* Log Handle Flags */
+#define LOG_HANDLE_BACKUP_FILE 1
+
 typedef struct _LOGHANDLE
 {
     LIST_ENTRY LogHandleListEntry;
     PEVENTSOURCE EventSource;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
+    ULONG Flags;
     WCHAR szName[1];
 } LOGHANDLE, *PLOGHANDLE;
 
@@ -149,8 +154,10 @@ NTSTATUS
 LogfBackupFile(PLOGFILE LogFile,
                PUNICODE_STRING BackupFileName);
 
-PLOGFILE LogfCreate(WCHAR * LogName,
-                    WCHAR * FileName);
+NTSTATUS
+LogfCreate(PLOGFILE *Logfile,
+           WCHAR * LogName,
+           PUNICODE_STRING FileName);
 
 VOID LogfClose(PLOGFILE LogFile);
 

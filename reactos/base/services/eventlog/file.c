@@ -288,104 +288,127 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
     return TRUE;
 }
 
-PLOGFILE LogfCreate(WCHAR * LogName, WCHAR * FileName)
-{
-    PLOGFILE LogFile;
-    BOOL bResult, bCreateNew = FALSE;
 
-    LogFile = (LOGFILE *) HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, sizeof(LOGFILE));
-    if (!LogFile)
+NTSTATUS
+LogfCreate(PLOGFILE *LogFile,
+           WCHAR * LogName,
+           PUNICODE_STRING FileName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PLOGFILE pLogFile;
+    BOOL bResult, bCreateNew = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    pLogFile = (LOGFILE *) HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, sizeof(LOGFILE));
+    if (!pLogFile)
     {
         DPRINT1("Can't allocate heap!\n");
-        return NULL;
+        return STATUS_NO_MEMORY;
     }
 
-    LogFile->hFile = CreateFile(FileName,
-                                GENERIC_READ | GENERIC_WRITE,
-                                FILE_SHARE_READ,
-                                NULL,
-                                OPEN_ALWAYS,
-                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,
-                                NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-    if (LogFile->hFile == INVALID_HANDLE_VALUE)
+    Status = NtCreateFile(&pLogFile->hFile,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ,
+                          FILE_OPEN_IF,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't create file %S.\n", FileName);
-        HeapFree(MyHeap, 0, LogFile);
-        return NULL;
+        DPRINT1("Can't create file %wZ (Status: 0x%08lx)\n", FileName, Status);
+        goto fail;
     }
 
-    bCreateNew = (GetLastError() == ERROR_ALREADY_EXISTS) ? FALSE : TRUE;
+    bCreateNew = (IoStatusBlock.Information == FILE_CREATED) ? TRUE: FALSE;
 
-    LogFile->LogName =
+    pLogFile->LogName =
         (WCHAR *) HeapAlloc(MyHeap,
                             HEAP_ZERO_MEMORY,
                             (lstrlenW(LogName) + 1) * sizeof(WCHAR));
-
-    if (LogFile->LogName)
-        lstrcpyW(LogFile->LogName, LogName);
-    else
+    if (pLogFile->LogName == NULL)
     {
         DPRINT1("Can't allocate heap\n");
-        HeapFree(MyHeap, 0, LogFile);
-        return NULL;
-    }
-
-    LogFile->FileName =
-        (WCHAR *) HeapAlloc(MyHeap,
-                            HEAP_ZERO_MEMORY,
-                            (lstrlenW(FileName) + 1) * sizeof(WCHAR));
-
-    if (LogFile->FileName)
-        lstrcpyW(LogFile->FileName, FileName);
-    else
-    {
-        DPRINT1("Can't allocate heap\n");
+        Status = STATUS_NO_MEMORY;
         goto fail;
     }
 
-    LogFile->OffsetInfo =
+    lstrcpyW(pLogFile->LogName, LogName);
+
+    pLogFile->FileName =
+        (WCHAR *) HeapAlloc(MyHeap,
+                            HEAP_ZERO_MEMORY,
+                            (lstrlenW(FileName->Buffer) + 1) * sizeof(WCHAR));
+    if (pLogFile->FileName == NULL)
+    {
+        DPRINT1("Can't allocate heap\n");
+        Status = STATUS_NO_MEMORY;
+        goto fail;
+    }
+
+    lstrcpyW(pLogFile->FileName, FileName->Buffer);
+
+    pLogFile->OffsetInfo =
         (PEVENT_OFFSET_INFO) HeapAlloc(MyHeap,
                                        HEAP_ZERO_MEMORY,
                                        sizeof(EVENT_OFFSET_INFO) * 64);
-
-    if (!LogFile->OffsetInfo)
+    if (pLogFile->OffsetInfo == NULL)
     {
         DPRINT1("Can't allocate heap\n");
+        Status = STATUS_NO_MEMORY;
         goto fail;
     }
 
-    LogFile->OffsetInfoSize = 64;
+    pLogFile->OffsetInfoSize = 64;
 
     if (bCreateNew)
-        bResult = LogfInitializeNew(LogFile);
+        bResult = LogfInitializeNew(pLogFile);
     else
-        bResult = LogfInitializeExisting(LogFile);
+        bResult = LogfInitializeExisting(pLogFile);
 
     if (!bResult)
-        goto fail;
-
-    RtlInitializeResource(&LogFile->Lock);
-
-    LogfListAddItem(LogFile);
-    return LogFile;
-
-  fail:
-    if (LogFile)
     {
-        if (LogFile->OffsetInfo)
-            HeapFree(MyHeap, 0, LogFile->OffsetInfo);
-
-        if (LogFile->FileName)
-            HeapFree(MyHeap, 0, LogFile->FileName);
-
-        if (LogFile->LogName)
-            HeapFree(MyHeap, 0, LogFile->LogName);
-
-        HeapFree(MyHeap, 0, LogFile);
+        Status = STATUS_UNSUCCESSFUL;
+        goto fail;
     }
 
-    return NULL;
+    RtlInitializeResource(&pLogFile->Lock);
+
+    LogfListAddItem(pLogFile);
+
+  fail:
+    if (!NT_SUCCESS(Status))
+    {
+        if ((pLogFile->hFile != NULL) && (pLogFile->hFile != INVALID_HANDLE_VALUE))
+            CloseHandle(pLogFile->hFile);
+
+        if (pLogFile->OffsetInfo)
+            HeapFree(MyHeap, 0, pLogFile->OffsetInfo);
+
+        if (pLogFile->FileName)
+            HeapFree(MyHeap, 0, pLogFile->FileName);
+
+        if (pLogFile->LogName)
+            HeapFree(MyHeap, 0, pLogFile->LogName);
+
+        HeapFree(MyHeap, 0, pLogFile);
+    }
+    else
+    {
+        *LogFile = pLogFile;
+    }
+
+    return Status;
 }
 
 VOID LogfClose(PLOGFILE LogFile)

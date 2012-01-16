@@ -142,8 +142,48 @@ static NTSTATUS
 ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
                          PUNICODE_STRING FileName)
 {
+    PLOGHANDLE lpLogHandle;
+
+    NTSTATUS Status = STATUS_SUCCESS;
+
     DPRINT("ElfCreateBackupLogHandle(FileName: %wZ)\n", FileName);
-    return STATUS_NOT_IMPLEMENTED;
+
+    lpLogHandle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LOGHANDLE));
+    if (lpLogHandle == NULL)
+    {
+        DPRINT1("Failed to allocate Heap!\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Create the log file */
+    Status = LogfCreate(&lpLogHandle->LogFile,
+                        NULL,
+                        FileName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the log file! (Status 0x%08lx)\n", Status);
+        goto Done;
+    }
+
+    /* Set the backup flag */
+    lpLogHandle->Flags |= LOG_HANDLE_BACKUP_FILE;
+
+    /* Get the current record */
+    lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
+
+Done:
+    if (NT_SUCCESS(Status))
+    {
+        /* Append log handle */
+        InsertTailList(&LogHandleListHead, &lpLogHandle->LogHandleListEntry);
+        *LogHandle = lpLogHandle;
+    }
+    else
+    {
+        HeapFree(GetProcessHeap(), 0, lpLogHandle);
+    }
+
+    return Status;
 }
 
 
@@ -169,6 +209,10 @@ ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
 
     if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
         return STATUS_INVALID_HANDLE;
+
+    /* Close the log file if it is a backup file */
+    if (lpLogHandle->Flags & LOG_HANDLE_BACKUP_FILE)
+        LogfClose(lpLogHandle->LogFile);
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     HeapFree(GetProcessHeap(),0,lpLogHandle);
