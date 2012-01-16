@@ -1380,6 +1380,26 @@ typedef struct _RTL_TRACE_BLOCK
     PVOID *Trace;
 } RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
 
+//
+// Auto-Managed Rtl* String Buffer
+//
+typedef struct _RTL_BUFFER
+{
+    PUCHAR Buffer;
+    PUCHAR StaticBuffer;
+    SIZE_T Size;
+    SIZE_T StaticSize;
+    SIZE_T ReservedForAllocatedSize;
+    PVOID ReservedForIMalloc;
+} RTL_BUFFER, *PRTL_BUFFER;
+
+typedef struct _RTL_UNICODE_STRING_BUFFER
+{
+    UNICODE_STRING String;
+    RTL_BUFFER ByteBuffer;
+    WCHAR MinimumStaticBufferForTerminalNul;
+} RTL_UNICODE_STRING_BUFFER, *PRTL_UNICODE_STRING_BUFFER;
+
 #ifndef NTOS_MODE_USER
 
 //

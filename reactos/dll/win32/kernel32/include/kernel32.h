@@ -450,6 +450,19 @@ typedef struct _BASE_MSG_SXS_HANDLES
     LARGE_INTEGER ViewBase;
 } BASE_MSG_SXS_HANDLES, *PBASE_MSG_SXS_HANDLES;
 
+typedef struct _SXS_WIN32_NT_PATH_PAIR
+{
+    PUNICODE_STRING Win32;
+    PUNICODE_STRING Nt;
+} SXS_WIN32_NT_PATH_PAIR, *PSXS_WIN32_NT_PATH_PAIR;
+
+typedef struct _SXS_OVERRIDE_MANIFEST
+{
+    PCWCH Name;
+    PVOID Address;
+    ULONG Size;
+} SXS_OVERRIDE_MANIFEST, *PSXS_OVERRIDE_MANIFEST;
+
 NTSTATUS
 NTAPI
 BasepConfigureAppCertDlls(
@@ -464,6 +477,15 @@ BasepConfigureAppCertDlls(
 extern LIST_ENTRY BasepAppCertDllsList;
 extern RTL_CRITICAL_SECTION gcsAppCert;
 
+BOOL
+WINAPI
+BaseUpdateVDMEntry(
+    IN ULONG UpdateIndex,
+    IN OUT PHANDLE WaitHandle,
+    IN ULONG IndexInfo,
+    IN ULONG BinaryType
+);
+
 VOID
 WINAPI
 BaseMarkFileForDelete(
@@ -471,3 +493,10 @@ BaseMarkFileForDelete(
     IN ULONG FileAttributes
 );
 
+/* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
+VOID
+WINAPI
+BasepFreeAppCompatData(
+    IN PVOID AppCompatData,
+    IN PVOID AppCompatSxsData
+);
