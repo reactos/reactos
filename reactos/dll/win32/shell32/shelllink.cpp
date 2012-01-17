@@ -201,42 +201,6 @@ HRESULT WINAPI CShellLink::Load(LPCOLESTR pszFileName, DWORD dwMode)
     return r;
 }
 
-static BOOL StartLinkProcessor( LPCOLESTR szLink )
-{
-    static const WCHAR szFormat[] = {
-        'w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',
-        ' ','-','w',' ','"','%','s','"',0 };
-    LONG len;
-    LPWSTR buffer;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    BOOL ret;
-
-    len = sizeof(szFormat) + wcslen( szLink ) * sizeof(WCHAR);
-    buffer = (LPWSTR)HeapAlloc( GetProcessHeap(), 0, len );
-    if( !buffer )
-        return FALSE;
-
-    swprintf( buffer, szFormat, szLink );
-
-    TRACE("starting %s\n",debugstr_w(buffer));
-
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-
-    ret = CreateProcessW( NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
-
-    HeapFree( GetProcessHeap(), 0, buffer );
-
-    if (ret)
-    {
-        CloseHandle( pi.hProcess );
-        CloseHandle( pi.hThread );
-    }
-
-    return ret;
-}
-
 HRESULT WINAPI CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
     HRESULT r;
@@ -263,8 +227,6 @@ HRESULT WINAPI CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
             {
                 wcscpy(sLinkPath, pszFileName);
             }
-
-            StartLinkProcessor( pszFileName );
 
             bDirty = FALSE;
         }
