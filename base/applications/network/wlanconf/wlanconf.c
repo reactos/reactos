@@ -796,13 +796,13 @@ WlanScan(HANDLE hAdapter)
             _tprintf(_T("SSID: %s\n"), SsidBuffer);
 
             _tprintf(_T("BSSID: "));
-            for (i = 0; i < sizeof(NDIS_802_11_MAC_ADDRESS); i++)
+            for (j = 0; j < sizeof(NDIS_802_11_MAC_ADDRESS); j++)
             {
-                UINT BssidData = BssidInfo->MacAddress[i];
-                
+                UINT BssidData = BssidInfo->MacAddress[j];
+
                 _tprintf(_T("%.2x"), BssidData);
-                
-                if (i != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
+
+                if (j != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
                     _tprintf(_T(":"));
             }
             _tprintf(_T("\n"));
