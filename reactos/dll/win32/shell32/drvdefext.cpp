@@ -435,7 +435,7 @@ CDrvDefExt::ExtraPageProc(
             switch(LOWORD(wParam))
             {
                 case 14000:
-                    DialogBoxParamW(shell32_hInstance, L"CHKDSK_DLG", hwndDlg, ChkDskDlg, (LPARAM)pDrvDefExt->m_wszDrive);
+                    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_CHECK_DISK), hwndDlg, ChkDskDlg, (LPARAM)pDrvDefExt->m_wszDrive);
                     break;
                 case 14001:
                     if (RegGetValueW(HKEY_LOCAL_MACHINE,
@@ -569,7 +569,7 @@ CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
 
-    hPage = SH_CreatePropertySheetPage("DRIVE_GENERAL_DLG",
+    hPage = SH_CreatePropertySheetPage(IDD_DRIVE_PROPERTIES,
                                        GeneralPageProc,
                                        (LPARAM)this,
                                        NULL);
@@ -578,7 +578,7 @@ CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 
     if (GetDriveTypeW(m_wszDrive) == DRIVE_FIXED)
     {
-        hPage = SH_CreatePropertySheetPage("DRIVE_EXTRA_DLG",
+        hPage = SH_CreatePropertySheetPage(IDD_DRIVE_TOOLS,
                                            ExtraPageProc,
                                            (LPARAM)this,
                                            NULL);
@@ -586,7 +586,7 @@ CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
             pfnAddPage(hPage, lParam);
     }
 
-    hPage = SH_CreatePropertySheetPage("DRIVE_HARDWARE_DLG",
+    hPage = SH_CreatePropertySheetPage(IDD_DRIVE_HARDWARE,
                                        HardwarePageProc,
                                        (LPARAM)this,
                                        NULL);

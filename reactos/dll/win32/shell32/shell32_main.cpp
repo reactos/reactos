@@ -975,7 +975,7 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             const char* const *pstr = SHELL_Authors;
 
             // Add the authors to the list
-            SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, FALSE, 0 );
+            SendDlgItemMessageW( hWnd, IDC_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, FALSE, 0 );
 
             while (*pstr)
             {
@@ -983,11 +983,11 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
                 /* authors list is in utf-8 format */
                 MultiByteToWideChar( CP_UTF8, 0, *pstr, -1, name, sizeof(name)/sizeof(WCHAR) );
-                SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, LB_ADDSTRING, (WPARAM)-1, (LPARAM)name );
+                SendDlgItemMessageW( hWnd, IDC_ABOUT_AUTHORS_LISTBOX, LB_ADDSTRING, (WPARAM)-1, (LPARAM)name );
                 pstr++;
             }
 
-            SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, TRUE, 0 );
+            SendDlgItemMessageW( hWnd, IDC_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, TRUE, 0 );
 
             return TRUE;
         }
@@ -1034,20 +1034,20 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                 }
 
                 // Set App-specific stuff (icon, app name, szOtherStuff string)
-                SendDlgItemMessageW(hWnd, IDC_SHELL_ABOUT_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
+                SendDlgItemMessageW(hWnd, IDC_ABOUT_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
                 GetWindowTextW( hWnd, szAppTitleTemplate, sizeof(szAppTitleTemplate) / sizeof(WCHAR) );
                 swprintf( szAppTitle, szAppTitleTemplate, info->szApp );
                 SetWindowTextW( hWnd, szAppTitle );
 
-                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_APPNAME, info->szApp );
-                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_OTHERSTUFF, info->szOtherStuff );
+                SetDlgItemTextW( hWnd, IDC_ABOUT_APPNAME, info->szApp );
+                SetDlgItemTextW( hWnd, IDC_ABOUT_OTHERSTUFF, info->szOtherStuff );
 
                 // Set the registered user and organization name
                 if(RegOpenKeyExW( HKEY_LOCAL_MACHINE, szRegKey, 0, KEY_QUERY_VALUE, &hRegKey ) == ERROR_SUCCESS)
                 {
-                    SetRegTextData( hWnd, hRegKey, L"RegisteredOwner", IDC_SHELL_ABOUT_REG_USERNAME );
-                    SetRegTextData( hWnd, hRegKey, L"RegisteredOrganization", IDC_SHELL_ABOUT_REG_ORGNAME );
+                    SetRegTextData( hWnd, hRegKey, L"RegisteredOwner", IDC_ABOUT_REG_USERNAME );
+                    SetRegTextData( hWnd, hRegKey, L"RegisteredOrganization", IDC_ABOUT_REG_ORGNAME );
 
                     RegCloseKey( hRegKey );
                 }
@@ -1113,13 +1113,13 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                         swprintf( szBuf, L"%u MB", (UINT)MemStat.ullTotalPhys / 1024 / 1024 );
                     }
 
-                    SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_PHYSMEM, szBuf);
+                    SetDlgItemTextW( hWnd, IDC_ABOUT_PHYSMEM, szBuf);
                 }
 
                 // Add the Authors dialog
-                hWndAuthors = CreateDialogW( shell32_hInstance, MAKEINTRESOURCEW(IDD_SHELL_ABOUT_AUTHORS), hWnd, AboutAuthorsDlgProc );
+                hWndAuthors = CreateDialogW( shell32_hInstance, MAKEINTRESOURCEW(IDD_ABOUT_AUTHORS), hWnd, AboutAuthorsDlgProc );
                 LoadStringW( shell32_hInstance, IDS_SHELL_ABOUT_AUTHORS, szAuthorsText, sizeof(szAuthorsText) / sizeof(WCHAR) );
-                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_AUTHORS, szAuthorsText );
+                SetDlgItemTextW( hWnd, IDC_ABOUT_AUTHORS, szAuthorsText );
             }
 
             return TRUE;
@@ -1157,7 +1157,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                     EndDialog(hWnd, TRUE);
                     return TRUE;
 
-                case IDC_SHELL_ABOUT_AUTHORS:
+                case IDC_ABOUT_AUTHORS:
                 {
                     static BOOL bShowingAuthors = FALSE;
                     WCHAR szAuthorsText[20];
@@ -1173,7 +1173,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                         ShowWindow( hWndAuthors, SW_SHOW );
                     }
 
-                    SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_AUTHORS, szAuthorsText );
+                    SetDlgItemTextW( hWnd, IDC_ABOUT_AUTHORS, szAuthorsText );
                     bShowingAuthors = !bShowingAuthors;
                     return TRUE;
                 }
@@ -1233,9 +1233,12 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
     TRACE("\n");
 
     // DialogBoxIndirectParamW will be called with the hInstance of the calling application, so we have to preload the dialog template
-    if(!(hRes = FindResourceW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHELL_ABOUT), (LPWSTR)RT_DIALOG)))
+    hRes = FindResourceW(shell32_hInstance, MAKEINTRESOURCEW(IDD_ABOUT), (LPWSTR)RT_DIALOG);
+    if(!hRes)
         return FALSE;
-    if(!(DlgTemplate = (DLGTEMPLATE *)LoadResource(shell32_hInstance, hRes)))
+
+    DlgTemplate = (DLGTEMPLATE *)LoadResource(shell32_hInstance, hRes);
+    if(!DlgTemplate)
         return FALSE;
 
     info.szApp        = szApp;

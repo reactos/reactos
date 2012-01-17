@@ -1144,7 +1144,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
         wszCaption[(sizeof(wszCaption)/sizeof(WCHAR))-1] = 0;
 
         res = SHELL_ConfirmMsgBox(GetActiveWindow(), wszPath, wszCaption, NULL, cidl > 1);
-        if (res == IDD_YESTOALL || res == IDYES)
+        if (res == IDC_YESTOALL || res == IDYES)
         {
             for(i = 0; i < cidl; i++)
             {

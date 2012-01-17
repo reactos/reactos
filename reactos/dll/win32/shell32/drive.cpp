@@ -554,7 +554,7 @@ SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
     Context.Drive = drive;
     Context.Options = options;
 
-    result = DialogBoxParamW(shell32_hInstance, L"FORMAT_DLG", hwnd, FormatDriveDlg, (LPARAM)&Context);
+    result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_FORMAT_DRIVE), hwnd, FormatDriveDlg, (LPARAM)&Context);
 
     return result;
 }

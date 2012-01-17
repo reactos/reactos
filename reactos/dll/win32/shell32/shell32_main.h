@@ -212,7 +212,7 @@ BOOL SHELL_IsShortcut(LPCITEMIDLIST);
 
 INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-HPROPSHEETPAGE SH_CreatePropertySheetPage(LPCSTR pszResName, DLGPROC pfnDlgProc, LPARAM lParam, LPWSTR pwszTitle);
+HPROPSHEETPAGE SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle);
 BOOL SH_ShowDriveProperties(WCHAR *drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
 BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);

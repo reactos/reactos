@@ -245,15 +245,12 @@ SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UI
  */
 
 HPROPSHEETPAGE
-SH_CreatePropertySheetPage(LPCSTR pszResName, DLGPROC pfnDlgProc, LPARAM lParam, LPWSTR pwszTitle)
+SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
 {
-    if (pszResName == NULL)
-        return NULL;
-
-    HRSRC hRes = FindResourceA(shell32_hInstance, pszResName, (LPSTR)RT_DIALOG);
+    HRSRC hRes = FindResourceW(shell32_hInstance, MAKEINTRESOURCEW(wDialogId), (LPWSTR)RT_DIALOG);
     if (hRes == NULL)
     {
-        ERR("failed to find resource name\n");
+        ERR("failed to find resource id\n");
         return NULL;
     }
 
@@ -923,9 +920,9 @@ HRESULT WINAPI
 CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
-    LPCSTR pszRes = m_bDir ? "SHELL_FOLDER_GENERAL_DLG" : "SHELL_FILE_GENERAL_DLG";
+    WORD wResId = m_bDir ? IDD_FOLDER_PROPERTIES : IDD_FILE_PROPERTIES;
 
-    hPage = SH_CreatePropertySheetPage(pszRes,
+    hPage = SH_CreatePropertySheetPage(wResId,
                                        GeneralPageProc,
                                        (LPARAM)this,
                                        NULL);
@@ -934,7 +931,7 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 
     if (!m_bDir && GetFileVersionInfoSizeW(m_wszPath, NULL))
     {
-        hPage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",
+        hPage = SH_CreatePropertySheetPage(IDD_FILE_VERSION,
                                             VersionPageProc,
                                             (LPARAM)this,
                                             NULL);

@@ -1466,7 +1466,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     ret = SHCreateDirectoryExW(hwndOwner, szBuildPath, NULL);
     if (ret && ret != ERROR_ALREADY_EXISTS)
     {
-        ERR("Failed to create directory %s.\n", debugstr_w(szBuildPath));
+        WARN("Failed to create directory %s.\n", debugstr_w(szBuildPath));
         hr = E_FAIL;
         goto end;
     }

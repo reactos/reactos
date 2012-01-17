@@ -1383,7 +1383,7 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
     if (!pDialog)
         return E_OUTOFMEMORY;
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(OPEN_WITH_PROGRAMM_DLG), hwndParent, COpenWithDialog::DialogProc, (LPARAM)pDialog);
+    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)pDialog);
     if (hwnd == NULL)
     {
         ERR("Failed to create dialog\n");

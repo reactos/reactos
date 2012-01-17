@@ -476,15 +476,15 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     UINT num_pages = 0;
     WCHAR szOptions[100];
 
-    hpage = SH_CreatePropertySheetPage("FOLDER_OPTIONS_GENERAL_DLG", FolderOptionsGeneralDlg, 0, NULL);
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
 
-    hpage = SH_CreatePropertySheetPage("FOLDER_OPTIONS_VIEW_DLG", FolderOptionsViewDlg, 0, NULL);
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
 
-    hpage = SH_CreatePropertySheetPage("FOLDER_OPTIONS_FILETYPES_DLG", FolderOptionsFileTypesDlg, 0, NULL);
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
 

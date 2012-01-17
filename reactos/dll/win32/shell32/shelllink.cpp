@@ -2043,7 +2043,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
                 case 14022:
                 {
-                    INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
+                    INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHORTCUT_EXTENDED_PROPERTIES), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
                     if (result == 1 || result == 0)
                     {
                         if (pThis->bRunAs != result)
@@ -2071,7 +2071,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
 HRESULT WINAPI CShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)this, NULL);
+    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_SHORTCUT_PROPERTIES, SH_ShellLinkDlgProc, (LPARAM)this, NULL);
     if (hPage == NULL)
     {
         ERR("failed to create property sheet page\n");
