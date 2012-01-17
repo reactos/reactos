@@ -539,7 +539,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
      */
     if (WasDirty != NULL)
     {
-        *WasDirty = Pte & PA_DIRTY ? TRUE : FALSE;
+        *WasDirty = ((Pte & PA_DIRTY) && (Pte & PA_PRESENT)) ? TRUE : FALSE;
     }
     if (Page != NULL)
     {
@@ -687,12 +687,10 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    else if (!(Pte & PA_DIRTY))
-    {
-        MiFlushTlb(Pt, Address);
-    }
     else
     {
+        /* The processor will never clear this bit itself, therefore
+         * we do not need to flush the TLB here when setting it */
         MmUnmapPageTable(Pt);
     }
 }
