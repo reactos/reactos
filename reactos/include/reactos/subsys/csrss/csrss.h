@@ -51,6 +51,7 @@ typedef struct _BASE_SXS_CREATEPROCESS_MSG
 
 typedef struct
 {
+#if 0
     //
     // NT-type structure (BASE_CREATEPROCESS_MSG)
     //
@@ -65,6 +66,7 @@ typedef struct
     PVOID PebAddressNative;
     ULONG PebAddressWow64;
     USHORT ProcessorArchitecture;
+#endif
     //
     // ReactOS Data
     //

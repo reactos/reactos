@@ -801,7 +801,6 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
     SIZE_T Size;
     BOOLEAN HavePebLock = FALSE, Result;
     PPEB Peb = NtCurrentPeb();
-    DPRINT("BasePushProcessParameters\n");
 
     /* Get the full path name */
     Size = GetFullPathNameW(ApplicationPathName,
@@ -1050,7 +1049,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
                                  RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL : 0;
     ProcessParameters->Flags |= (CreationFlags & PROFILE_SERVER) ?
                                  RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER : 0;
-    ProcessParameters->Flags |= (NtCurrentPeb()->ProcessParameters->Flags &
+    ProcessParameters->Flags |= (Peb->ProcessParameters->Flags &
                                  RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS);
 
     /* Write the Parameter Block */
@@ -1068,7 +1067,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
                                   sizeof(PVOID),
                                   NULL);
     if (!NT_SUCCESS(Status)) goto FailPath;
-    
+
     /* Check if there's any app compat data to write */
     RemoteAppCompatData = NULL;
     if (AppCompatData)
@@ -1082,7 +1081,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
                                          MEM_COMMIT,
                                          PAGE_READWRITE);
         if (!NT_SUCCESS(Status)) goto FailPath;
-        
+
         /* Write the application compatibility data */
         Status = NtWriteVirtualMemory(ProcessHandle,
                                       RemoteAppCompatData,
@@ -1091,7 +1090,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
                                       NULL);
         if (!NT_SUCCESS(Status)) goto FailPath;
     }
-        
+
     /* Write the PEB Pointer to the app compat data (might be NULL) */
     Status = NtWriteVirtualMemory(ProcessHandle,
                                   &RemotePeb->pShimData,
@@ -1109,7 +1108,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
                              sizeof(ImageSubsystem),
                              NULL);
     }
-    
+
     /* Success path */
     Result = TRUE;
 
