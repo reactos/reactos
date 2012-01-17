@@ -84,7 +84,6 @@ static __inline LPIContextMenuImpl impl_from_IExtractIcon(IExtractIconW *iface)
     return (LPIContextMenuImpl)((char *)iface - FIELD_OFFSET(IContextMenuImpl, lpVtblExtractIconW));
 }
 
-
 static __inline LPIContextMenuImpl impl_from_IObjectWithSite(IObjectWithSite *iface)
 {
     return (LPIContextMenuImpl)((char *)iface - FIELD_OFFSET(IContextMenuImpl, lpVtblObjectWithSite));
@@ -1176,19 +1175,28 @@ static HRESULT WINAPI ISF_NetConnect_IExtractIconW_GetIconLocation(
 
     *pwFlags = 0;
     if (!GetModuleFileNameW(netshell_hInstance, szIconFile, cchMax))
+    {
+        ERR("GetModuleFileNameW failed\n");
         return E_FAIL;
+    }
 
     val = _ILGetValueStruct(This->apidl);
     if (!val)
+    {
+        ERR("_ILGetValueStruct failed\n");
         return E_FAIL;
+    }
 
     if (INetConnection_GetProperties(val->pItem, &pProperties) != NOERROR)
+    {
+        ERR("INetConnection_GetProperties failed\n");
         return E_FAIL;
+    }
 
     if (pProperties->Status == NCS_CONNECTED || pProperties->Status == NCS_CONNECTING)
-        *piIndex = IDI_NET_IDLE;
+        *piIndex = -IDI_NET_IDLE;
     else
-        *piIndex = IDI_NET_OFF;
+        *piIndex = -IDI_NET_OFF;
 
     NcFreeNetconProperties(pProperties);
 
