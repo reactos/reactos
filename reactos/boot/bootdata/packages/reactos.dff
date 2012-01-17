@@ -76,6 +76,7 @@ base\applications\network\route\route.exe               1
 base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
+base\applications\network\wlanconf\wlanconf.exe         1
 base\applications\notepad\notepad.exe                   1
 base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
@@ -532,6 +533,7 @@ drivers\network\tcpip\tcpip.sys                     2
 drivers\network\tdi\tdi.sys                         2
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
+drivers\network\ndisuio\ndisuio.sys                 2
 
 drivers\serial\serenum\serenum.sys                  2
 drivers\serial\serial\serial.sys                    2

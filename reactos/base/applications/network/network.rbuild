@@ -40,4 +40,7 @@
 	<directory name="whois">
 		<xi:include href="whois/whois.rbuild" />
 	</directory>
+	<directory name="wlanconf">
+		<xi:include href="wlanconf/wlanconf.rbuild" />
+	</directory>
 </group>
