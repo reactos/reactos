@@ -1503,9 +1503,9 @@ NTSTATUS
 NTAPI
 MmReleaseMmInfo(struct _EPROCESS *Process);
 
-NTSTATUS
+VOID
 NTAPI
-Mmi386ReleaseMmInfo(struct _EPROCESS *Process);
+MmDeleteProcessPageDirectory(struct _EPROCESS *Process);
 
 VOID
 NTAPI

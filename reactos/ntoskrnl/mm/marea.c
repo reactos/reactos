@@ -1057,6 +1057,8 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
       }
    }
 
+   MmDeleteProcessPageDirectory(Process);
+
    MmUnlockAddressSpace(&Process->Vm);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
