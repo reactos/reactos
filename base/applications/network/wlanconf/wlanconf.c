@@ -337,23 +337,10 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
         HeapFree(GetProcessHeap(), 0, QueryOid);
         return FALSE;
     }
-
-    if (SsidInfo->SsidLength == 0)
-    {
-        _tprintf(_T("\nWLAN disconnected\n"));
-        HeapFree(GetProcessHeap(), 0, QueryOid);
-        return TRUE;
-    }
-    else
-    {
-        _tprintf(_T("\nCurrent wireless association information:\n\n"));
-    }
     
     /* Copy the SSID to our internal buffer and terminate it */
     RtlCopyMemory(SsidBuffer, SsidInfo->Ssid, SsidInfo->SsidLength);
     SsidBuffer[SsidInfo->SsidLength] = 0;
-    
-    _tprintf(_T("SSID: %s\n"), SsidBuffer);
 
     HeapFree(GetProcessHeap(), 0, QueryOid);
     QueryOidSize = FIELD_OFFSET(NDISUIO_QUERY_OID, Data) + sizeof(NDIS_802_11_MAC_ADDRESS);
@@ -371,11 +358,18 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
                                QueryOidSize,
                                &dwBytesReturned,
                                NULL);
-    if (!bSuccess)
+    if (SsidInfo->SsidLength == 0 || !bSuccess)
     {
+        _tprintf(_T("\nWLAN disconnected\n"));
         HeapFree(GetProcessHeap(), 0, QueryOid);
-        return FALSE;
+        return TRUE;
     }
+    else
+    {
+        _tprintf(_T("\nCurrent wireless configuration information:\n\n"));
+    }
+
+    _tprintf(_T("SSID: %s\n"), SsidBuffer);
 
     _tprintf(_T("BSSID: "));
     for (i = 0; i < sizeof(NDIS_802_11_MAC_ADDRESS); i++)
@@ -796,13 +790,27 @@ WlanScan(HANDLE hAdapter)
             /* SSID member is a non-null terminated ASCII string */
             RtlCopyMemory(SsidBuffer, Ssid->Ssid, Ssid->SsidLength);
             SsidBuffer[Ssid->SsidLength] = 0;
-            
-            _tprintf(_T("\nSSID: %s\n"
-                        "Encrypted: %s\n"
+
+            _tprintf(_T("\n"));
+
+            _tprintf(_T("SSID: %s\n"), SsidBuffer);
+
+            _tprintf(_T("BSSID: "));
+            for (i = 0; i < sizeof(NDIS_802_11_MAC_ADDRESS); i++)
+            {
+                UINT BssidData = BssidInfo->MacAddress[i];
+                
+                _tprintf(_T("%.2x"), BssidData);
+                
+                if (i != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
+                    _tprintf(_T(":"));
+            }
+            _tprintf(_T("\n"));
+
+            _tprintf(_T("Encrypted: %s\n"
                         "Network Type: %s\n"
                         "RSSI: %i dBm\n"
                         "Supported Rates (Mbps): "),
-                        SsidBuffer,
                         BssidInfo->Privacy == 0 ? "No" : "Yes",
                         NetworkType == Ndis802_11IBSS ? "Adhoc" : "Infrastructure",
                         (int)Rssi);
@@ -915,7 +923,7 @@ int main(int argc, char* argv[])
     
     if (!OpenWlanAdapter(&hAdapter, &IpInfo))
     {
-        DoFormatMessage(GetLastError());
+        _tprintf(_T("Unable to find a WLAN adapter on the system\n"));
         return -1;
     }
     
