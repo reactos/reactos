@@ -818,18 +818,13 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
                                      (PVOID)&pbb);
     if (SUCCEEDED(hRet))
     {
-       // hRet = IBanneredBar_SetBitmap(pbb,
-       //                               hbmBanner);
         hRet = IBanneredBar_SetBitmap(pbb, hbmBanner);
 
 
         /* Update the icon size */
-        //hRet = IBanneredBar_SetIconSize(pbb,
-        //                                bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
         hRet = IBanneredBar_SetIconSize(pbb,
                                         bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
 
-        //IBanneredBar_Release(pbb);
         IBanneredBar_Release(pbb);
     }
 
@@ -888,10 +883,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     hr = IMenuPopup_QueryInterface(pMp, &IID_IInitializeObject, (PVOID*)&pIo);
     if (SUCCEEDED(hr))
     {
-        //hr = IInitializeObject_Initialize(pIo);
         hr = IInitializeObject_Initialize(pIo);
-
-        //IInitializeObject_Release(pIo);
         IInitializeObject_Release(pIo);
     }
     else

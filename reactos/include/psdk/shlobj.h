@@ -744,6 +744,21 @@ DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
 };
 #undef INTERFACE
 
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDeskBarClient_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDeskBarClient_AddRef(p)                   (p)->lpVtbl->AddRef(p)
+#define IDeskBarClient_Release(p)                  (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IDeskBarClient_GetWindow(p,a)              (p)->lpVtbl->GetWindow(p,a)
+#define IDeskBarClient_ContextSensitiveHelp(p,a)   (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleWindow IDeskBarClient ***/
+#define IDeskBarClient_SetDeskBarSite(p,a)         (p)->lpVtbl->SetDeskBarSite(p,a)
+#define IDeskBarClient_SetModeDBC(p,a)             (p)->lpVtbl->SetModeDBC(p,a)
+#define IDeskBarClient_UIActivateDBC(p,a)          (p)->lpVtbl->UIActivateDBC(p,a)
+#define IDeskBarClient_GetSize(p,a,b)              (p)->lpVtbl->GetSize(p,a,b)
+#endif
+
 #define DBC_GS_IDEAL    0
 #define DBC_GS_SIZEDOWN 1
 
