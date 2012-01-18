@@ -820,18 +820,17 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     {
        // hRet = IBanneredBar_SetBitmap(pbb,
        //                               hbmBanner);
-        hRet = pbb->lpVtbl->SetBitmap(pbb,
-                                      hbmBanner);
+        hRet = IBanneredBar_SetBitmap(pbb, hbmBanner);
 
 
         /* Update the icon size */
         //hRet = IBanneredBar_SetIconSize(pbb,
         //                                bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
-        hRet = pbb->lpVtbl->SetIconSize(pbb,
+        hRet = IBanneredBar_SetIconSize(pbb,
                                         bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
 
         //IBanneredBar_Release(pbb);
-        pbb->lpVtbl->Release(pbb);
+        IBanneredBar_Release(pbb);
     }
 
     return hRet;
@@ -890,10 +889,10 @@ CreateStartMenu(IN ITrayWindow *Tray,
     if (SUCCEEDED(hr))
     {
         //hr = IInitializeObject_Initialize(pIo);
-        hr = pIo->lpVtbl->Initialize(pIo);
+        hr = IInitializeObject_Initialize(pIo);
 
         //IInitializeObject_Release(pIo);
-        pIo->lpVtbl->Release(pIo);
+        IInitializeObject_Release(pIo);
     }
     else
         hr = S_OK;
