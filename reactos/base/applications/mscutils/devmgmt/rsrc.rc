@@ -15,6 +15,7 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 // UTF-8
 #pragma code_page(65001)
 #include "lang/bg-BG.rc"
+#include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
