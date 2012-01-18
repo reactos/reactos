@@ -427,7 +427,7 @@ PcNewResourceSublist(
 #endif
 
     /* Allocate resource list */
-    NewList->m_TranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
+    NewList->m_TranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
     if (!NewList->m_TranslatedResourceList)
     {
         /* No memory */
@@ -436,7 +436,7 @@ PcNewResourceSublist(
     }
 
     /* Allocate resource list */
-    NewList->m_UntranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
+    NewList->m_UntranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
     if (!NewList->m_UntranslatedResourceList)
     {
         /* No memory */
