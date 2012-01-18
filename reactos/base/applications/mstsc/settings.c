@@ -230,6 +230,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 {
     LPWSTR lpStr = lpBuffer;
     WCHAR szSeps[] = L":\r\n";
+    WCHAR szNewline[] = L"\r\n";
     LPWSTR lpToken;
     BOOL bFound;
     INT i;
@@ -258,7 +259,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
                 else if (lpToken[0] == L's')
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
-                    lpToken = wcstok(NULL, szSeps);
+                    lpToken = wcstok(NULL, szNewline);
                     if (lpToken != NULL)
                         wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
                 }
@@ -268,10 +269,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 
         /* move past the type and value */
         if (!bFound)
-        {
-            lpToken = wcstok(NULL, szSeps);
-            lpToken = wcstok(NULL, szSeps);
-        }
+            lpToken = wcstok(NULL, szNewline);
 
         /* move to next key */
         lpToken = wcstok(NULL, szSeps);

@@ -958,6 +958,29 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
 
 }
 
+static INT
+GetPortNumber(PCHAR szAddress)
+{
+    PCHAR szPort;
+    INT iPort = TCP_PORT_RDP;
+
+    szPort = strtok(szAddress, ":");
+
+    if (szPort != NULL)
+    {
+        szPort = strtok(NULL, ":");
+
+        if (szPort != NULL)
+        {
+            iPort = atoi(szPort);
+
+            if (iPort <= 0 || iPort > 0xFFFF)
+                iPort = TCP_PORT_RDP;
+        }
+    }
+
+    return iPort;
+}
 
 static BOOL
 ParseCommandLine(LPWSTR lpCmdLine,
@@ -1051,8 +1074,9 @@ wWinMain(HINSTANCE hInstance,
 
                     uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
 
+                    /* GetPortNumber also removes possible trailing port number from address */
+                    g_tcp_port_rdp = GetPortNumber(szValue);
                     strcpy(g_servername, szValue);
-                    //g_port = 3389;
                     strcpy(g_username, "");
                     strcpy(g_password, "");
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
