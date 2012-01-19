@@ -27,6 +27,9 @@ HINSTANCE hInst;
 static VOID ReLoadGeneralPage(PINFO pInfo);
 static VOID ReLoadDisplayPage(PINFO pInfo);
 
+#ifndef IDC_NAMEEDIT
+    #define IDC_NAMEEDIT 1015
+#endif
 
 static VOID
 DoOpenFile(PINFO pInfo)
