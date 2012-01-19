@@ -8,6 +8,7 @@ LPWSTR lpSettings[NUM_SETTINGS] =
     L"desktopheight",
     L"session bpp",
     L"full address",
+    L"username",
 };
 
 VOID
@@ -62,6 +63,17 @@ SaveAllSettings(PINFO pInfo)
                                  L"session bpp",
                                  ret);
         }
+    }
+
+    /* user name */
+    if (GetDlgItemText(pInfo->hGeneralPage,
+                       IDC_NAMEEDIT,
+                       szValue,
+                       MAXVALUE))
+    {
+        SetStringToSettings(pInfo->pRdpSettings,
+                            L"username",
+                            szValue);
     }
 }
 

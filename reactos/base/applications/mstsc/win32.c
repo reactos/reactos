@@ -982,6 +982,33 @@ GetPortNumber(PCHAR szAddress)
     return iPort;
 }
 
+static VOID
+SetDomainAndUsername(PCHAR pName)
+{
+    PCHAR pDomain;
+    PCHAR pUsername;
+
+    strcpy(g_domain, "");
+    strcpy(g_username, "");
+
+    pDomain = strtok(pName, "\\");
+
+    if(pDomain == NULL)
+        return;
+
+    pUsername = strtok(NULL, "\\");
+
+    if(pUsername == NULL)
+    {
+        strcpy(g_username, pDomain);
+        return;
+    }
+
+    strcpy(g_username, pUsername);
+    strcpy(g_domain, pDomain);
+    return;
+}
+
 static BOOL
 ParseCommandLine(LPWSTR lpCmdLine,
                  PRDPSETTINGS pRdpSettings,
@@ -1077,7 +1104,8 @@ wWinMain(HINSTANCE hInstance,
                     /* GetPortNumber also removes possible trailing port number from address */
                     g_tcp_port_rdp = GetPortNumber(szValue);
                     strcpy(g_servername, szValue);
-                    strcpy(g_username, "");
+                    uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"username"));
+                    SetDomainAndUsername(szValue);
                     strcpy(g_password, "");
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
                     if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
