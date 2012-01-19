@@ -1027,8 +1027,10 @@ ParseCommandLine(LPWSTR lpCmdLine,
     }
     else
     {
-        /* default to 16bpp */
+        /* default to screen size, 16bpp */
         SetIntegerToSettings(pRdpSettings, L"session bpp", 16);
+        SetIntegerToSettings(pRdpSettings, L"desktopwidth", GetSystemMetrics(SM_CXSCREEN));
+        SetIntegerToSettings(pRdpSettings, L"desktopheight", GetSystemMetrics(SM_CYSCREEN));
 
         lpToken = wcstok(lpStr, szSeps);
         while (lpToken)
@@ -1055,6 +1057,10 @@ ParseCommandLine(LPWSTR lpCmdLine,
             {
                 lpToken += 2;
                 SetIntegerToSettings(pRdpSettings, L"desktopheight", _wtoi(lpToken));
+            }
+            else if (*lpToken == L'f')
+            {
+                SetIntegerToSettings(pRdpSettings, L"screen mode id", 2);
             }
 
             lpToken = wcstok(NULL, szSeps);
@@ -1109,12 +1115,21 @@ wWinMain(HINSTANCE hInstance,
                     strcpy(g_password, "");
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
                     if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
-                    g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
-                    g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
                     g_screen_width = GetSystemMetrics(SM_CXSCREEN);
                     g_screen_height = GetSystemMetrics(SM_CYSCREEN);
-                    g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
-                    g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+                    g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
+                    g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
+                    if (GetIntegerFromSettings(pRdpSettings, L"screen mode id") == 2)
+                    {
+                        g_fullscreen = 1;
+                        g_xoff = 0;
+                        g_yoff = 0;
+                    }
+                    else
+                    {
+                        g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
+                        g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+                    }
 
                     ui_main();
                     ret = 0;

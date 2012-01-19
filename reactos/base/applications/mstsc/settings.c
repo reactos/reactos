@@ -9,6 +9,7 @@ LPWSTR lpSettings[NUM_SETTINGS] =
     L"session bpp",
     L"full address",
     L"username",
+    L"screen mode id",
 };
 
 VOID
@@ -28,7 +29,7 @@ SaveAllSettings(PINFO pInfo)
                             szValue);
     }
 
-    /* resolution */
+    /* resolution and fullscreen*/
     ret = SendDlgItemMessage(pInfo->hDisplayPage,
                              IDC_GEOSLIDER,
                              TBM_GETPOS,
@@ -36,6 +37,9 @@ SaveAllSettings(PINFO pInfo)
                              0);
     if (ret != -1)
     {
+        SetIntegerToSettings(pInfo->pRdpSettings,
+                             L"screen mode id",
+                             (ret == SendDlgItemMessageW(pInfo->hDisplayPage, IDC_GEOSLIDER, TBM_GETRANGEMAX, 0, 0)) ? 2 : 1);
         SetIntegerToSettings(pInfo->pRdpSettings,
                              L"desktopwidth",
                              pInfo->DisplayDeviceList->Resolutions[ret].dmPelsWidth);

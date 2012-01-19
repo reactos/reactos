@@ -27,10 +27,6 @@ HINSTANCE hInst;
 static VOID ReLoadGeneralPage(PINFO pInfo);
 static VOID ReLoadDisplayPage(PINFO pInfo);
 
-#ifndef IDC_NAMEEDIT
-    #define IDC_NAMEEDIT 1015
-#endif
-
 static VOID
 DoOpenFile(PINFO pInfo)
 {
@@ -539,7 +535,7 @@ AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICEW DisplayDevice)
 
     newEntry->Resolutions = HeapAlloc(GetProcessHeap(),
                                       0,
-                                      ResolutionsCount * sizeof(RESOLUTION_INFO));
+                                      ResolutionsCount * (sizeof(RESOLUTION_INFO) + 1));
     if (!newEntry->Resolutions) goto ByeBye;
 
     newEntry->ResolutionsCount = ResolutionsCount;
@@ -557,6 +553,11 @@ AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICEW DisplayDevice)
             i++;
         }
     }
+
+    /* fullscreen */
+    newEntry->Resolutions[i].dmPelsWidth = GetSystemMetrics(SM_CXSCREEN);
+    newEntry->Resolutions[i].dmPelsHeight = GetSystemMetrics(SM_CYSCREEN);
+
     descriptionSize = (wcslen(DisplayDevice->DeviceString) + 1) * sizeof(WCHAR);
     description = HeapAlloc(GetProcessHeap(), 0, descriptionSize);
     if (!description) goto ByeBye;
@@ -761,8 +762,11 @@ ReLoadDisplayPage(PINFO pInfo)
 {
     DWORD index;
     INT width, height, pos = 0;
-    INT bpp, num, i;
+    INT bpp, num, i, screenmode;
     BOOL bSet = FALSE;
+
+    /* get fullscreen info */
+    screenmode = GetIntegerFromSettings(pInfo->pRdpSettings, L"screen mode id");
 
     /* set trackbar position */
     width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
@@ -770,13 +774,24 @@ ReLoadDisplayPage(PINFO pInfo)
 
     if (width != -1 && height != -1)
     {
-        for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
+        if(screenmode == 2)
         {
-            if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
-                pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
+            pos = SendDlgItemMessageW(pInfo->hDisplayPage,
+                                      IDC_GEOSLIDER,
+                                      TBM_GETRANGEMAX,
+                                      0,
+                                      0);
+        }
+        else
+        {
+            for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
             {
-                pos = index;
-                break;
+                if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
+                    pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
+                {
+                    pos = index;
+                    break;
+                }
             }
         }
     }
