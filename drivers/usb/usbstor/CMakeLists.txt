@@ -7,4 +7,3 @@ add_library(usbstor SHARED descriptor.c disk.c fdo.c misc.c pdo.c queue.c error.
 
 set_module_type(usbstor kernelmodedriver)
 add_importlibs(usbstor ntoskrnl hal usbd)
-add_cab_target(usbstor 2)

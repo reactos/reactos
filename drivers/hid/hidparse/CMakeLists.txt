@@ -11,9 +11,6 @@ add_library(hidparse SHARED hidparse.c hidparse.rc ${CMAKE_CURRENT_BINARY_DIR}/h
 
 set_module_type(hidparse kernelmodedriver)
 add_importlibs(hidparse ntoskrnl)
-add_cab_target(hidparse 2)
-
-add_cab_target(hidparse 2)
 add_importlib_target(hidparse.spec)
 
 target_link_libraries(hidparse hidparser)

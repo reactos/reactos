@@ -31,5 +31,3 @@ endif(MSVC)
 
 set_module_type(usbehci kernelmodedriver)
 add_importlibs(usbehci ntoskrnl ks drmk hal)
-
-add_cab_target(usbehci 2)

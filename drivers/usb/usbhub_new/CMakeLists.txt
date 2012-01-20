@@ -9,4 +9,3 @@ target_link_libraries(usbhub ${PSEH_LIB})
 
 set_module_type(usbhub kernelmodedriver)
 add_importlibs(usbhub ntoskrnl hal usbd)
-add_cab_target(usbhub 2)
