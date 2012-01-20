@@ -214,7 +214,9 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
     return FALSE;
   }
 
-  BaseValue = (OrigValue & 0x00000001) ? (OrigValue & ~0x3) : (OrigValue & ~0xF);
+  BaseValue = (OrigValue & PCI_ADDRESS_IO_SPACE)
+              ? (OrigValue & PCI_ADDRESS_IO_ADDRESS_MASK)
+              : (OrigValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK);
 
   *Base = BaseValue;
 
@@ -267,33 +269,35 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
      return TRUE;
   }
 
-  XLength = ~((NewValue & 0x00000001) ? (NewValue & ~0x3) : (NewValue & ~0xF)) + 1;
+  XLength = ~((NewValue & PCI_ADDRESS_IO_SPACE)
+              ? (NewValue & PCI_ADDRESS_IO_ADDRESS_MASK)
+              : (NewValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK)) + 1;
 
 #if 0
   DbgPrint("BaseAddress 0x%08lx  Length 0x%08lx",
            BaseValue, XLength);
 
-  if (NewValue & 0x00000001)
+  if (NewValue & PCI_ADDRESS_IO_SPACE)
   {
     DbgPrint("  IO range");
   }
   else
   {
     DbgPrint("  Memory range");
-    if ((NewValue & 0x00000006) == 0)
+    if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 0)
     {
       DbgPrint(" in 32-Bit address space");
     }
-    else if ((NewValue & 0x00000006) == 2)
+    else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 2)
     {
       DbgPrint(" below 1BM ");
     }
-    else if ((NewValue & 0x00000006) == 4)
+    else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 4)
     {
       DbgPrint(" in 64-Bit address space");
     }
 
-    if (NewValue & 0x00000008)
+    if (NewValue & PCI_ADDRESS_MEMORY_PREFETCHABLE)
     {
       DbgPrint(" prefetchable");
     }
@@ -303,7 +307,9 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
 #endif
 
   *Length = XLength;
-  *Flags = (NewValue & 0x00000001) ? (NewValue & 0x3) : (NewValue & 0xF);
+  *Flags = (NewValue & PCI_ADDRESS_IO_SPACE)
+           ? (NewValue & ~PCI_ADDRESS_IO_ADDRESS_MASK)
+           : (NewValue & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK);
 
   return TRUE;
 }
