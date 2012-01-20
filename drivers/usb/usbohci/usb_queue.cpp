@@ -169,7 +169,6 @@ CUSBQueue::AddUSBRequest(
 {
     NTSTATUS Status;
     ULONG Type;
-    KIRQL OldLevel;
     POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
     POHCI_ENDPOINT_DESCRIPTOR Descriptor;
     POHCI_ISO_TD CurrentDescriptor;
@@ -289,6 +288,14 @@ CUSBQueue::AddUSBRequest(
 
         PrintEndpointList(m_IsoHeadEndpointDescriptor);
     }
+    else
+    {
+        //
+        // bad request type
+        //
+        Request->Release();
+        return STATUS_INVALID_PARAMETER;
+    }
 
     //
     // set descriptor active
@@ -307,7 +314,6 @@ CUSBQueue::AddUSBRequest(
         //
         m_Hardware->HeadEndpointDescriptorModified(Type);
     }
-
 
     return STATUS_SUCCESS;
 }

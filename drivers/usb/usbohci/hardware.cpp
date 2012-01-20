@@ -997,7 +997,7 @@ CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
 {
-    ULONG Value, Index = 0;
+    ULONG Value;
 
     DPRINT("CUSBHardwareDevice::ClearPortStatus PortId %x Feature %x\n", PortId, Status);
 
@@ -1383,7 +1383,6 @@ OhciDefferedRoutine(
 {
     CUSBHardwareDevice *This;
     ULONG CStatus, Index, PortStatus;
-    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
     ULONG DoneHead;
 
     //

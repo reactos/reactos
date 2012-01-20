@@ -1028,7 +1028,6 @@ CUSBDevice::SelectInterface(
     IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     IN OUT PUSBD_INTERFACE_INFORMATION InterfaceInfo)
 {
-    ULONG ConfigurationIndex = 0;
     PUSB_CONFIGURATION_DESCRIPTOR Configuration;
     ULONG PipeIndex;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;

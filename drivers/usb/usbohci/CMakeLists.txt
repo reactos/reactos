@@ -19,7 +19,6 @@ add_library(usbohci SHARED
 
 target_link_libraries(usbohci
     libcntpr
-    stlport
     ${PSEH_LIB})
 
 if(MSVC)
