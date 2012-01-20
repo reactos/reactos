@@ -42,7 +42,7 @@ KbdHid_InsertScanCodes(
     IN PCHAR  NewScanCodes,
     IN ULONG  Length)
 {
-    KEYBOARD_INPUT_DATA InputData;
+    //KEYBOARD_INPUT_DATA InputData;
     ULONG Index;
 
     for(Index = 0; Index < Length; Index++)
@@ -563,7 +563,7 @@ KbdHid_StartDevice(
     /* init input report*/
     DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
     ASSERT(DeviceExtension->ReportLength);
-    DeviceExtension->Report = (PUCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
+    DeviceExtension->Report = (PCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
     ASSERT(DeviceExtension->Report);
     RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
 

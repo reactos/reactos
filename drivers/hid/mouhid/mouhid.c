@@ -648,7 +648,7 @@ MouHid_StartDevice(
     DPRINT1("[MOUHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
 
     /* verify capabilities */
-    if (Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)
+    if ((Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE) || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)
     {
         /* not supported */
         ExFreePool(PreparsedData);
@@ -658,7 +658,7 @@ MouHid_StartDevice(
     /* init input report*/
     DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
     ASSERT(DeviceExtension->ReportLength);
-    DeviceExtension->Report = (PUCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
+    DeviceExtension->Report = (PCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
     ASSERT(DeviceExtension->Report);
     RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
 

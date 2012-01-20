@@ -86,7 +86,7 @@ typedef struct
     //
     // input report buffer
     //
-    PUCHAR Report;
+    PCHAR Report;
 
     //
     // input report length
