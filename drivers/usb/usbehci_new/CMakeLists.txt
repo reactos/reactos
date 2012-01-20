@@ -31,3 +31,5 @@ endif(MSVC)
 
 set_module_type(usbehci kernelmodedriver)
 add_importlibs(usbehci ntoskrnl ks drmk hal)
+
+add_cd_file(TARGET usbehci DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -14,3 +14,5 @@ add_importlibs(hidparse ntoskrnl)
 add_importlib_target(hidparse.spec)
 
 target_link_libraries(hidparse hidparser)
+
+add_cd_file(TARGET hidparse DESTINATION reactos/system32/drivers NO_CAB FOR all)
