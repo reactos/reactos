@@ -284,8 +284,8 @@ USBHUB_PdoHandleInternalDeviceControl(
                         DPRINT1("Connect %x\n", ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2));
                         DPRINT1("Enable %x\n", ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
                         *PortStatusBits +=
-                            ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2) +
-                            ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2);
+                            (((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2)) +
+                            (((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
                         
                     }
                 }

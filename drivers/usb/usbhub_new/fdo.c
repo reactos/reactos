@@ -800,7 +800,7 @@ NTSTATUS
 CreateDeviceIds(
     PDEVICE_OBJECT UsbChildDeviceObject)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG Index;
     PWCHAR BufferPtr;
     WCHAR Buffer[100];
@@ -965,6 +965,7 @@ CreateDeviceIds(
        if (UsbChildExtension->usInstanceId.Buffer == NULL)
        {
            DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+           Status = STATUS_INSUFFICIENT_RESOURCES;
            goto Cleanup;
        }
 

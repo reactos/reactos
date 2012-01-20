@@ -153,7 +153,7 @@ USBSTOR_GetGenericType(
 ULONG
 CopyField(
     IN PUCHAR Name,
-    IN PUCHAR Buffer,
+    IN PCHAR Buffer,
     IN ULONG MaxLength)
 {
     ULONG Index;
@@ -261,7 +261,7 @@ USBSTOR_PdoHandleQueryDeviceId(
 {
     PPDO_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
-    UCHAR Buffer[100];
+    CHAR Buffer[100];
     LPCSTR DeviceType;
     ULONG Offset = 0;
     PUFI_INQUIRY_RESPONSE InquiryData;
