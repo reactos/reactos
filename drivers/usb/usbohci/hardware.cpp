@@ -1364,7 +1364,7 @@ InterruptServiceRoutine(
     //
     // defer processing
     //
-    DPRINT1("Status %x Acknowledge %x FrameNumber %x\n", Status, Acknowledge, This->m_HCCA->CurrentFrameNumber);
+    DPRINT("Status %x Acknowledge %x FrameNumber %x\n", Status, Acknowledge, This->m_HCCA->CurrentFrameNumber);
     KeInsertQueueDpc(&This->m_IntDpcObject, (PVOID)Status, (PVOID)(DoneHead & ~1));
 
     //

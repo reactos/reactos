@@ -50,8 +50,8 @@ typedef struct _HID_DESCRIPTOR
 
 typedef 
 VOID
-(*HID_SEND_IDLE_CALLBACK)(
-    __in PVOID Context
+(NTAPI *HID_SEND_IDLE_CALLBACK)(
+    IN PVOID Context
 );
 
 typedef struct _HID_SUBMIT_IDLE_NOTIFICATION_CALLBACK_INFO

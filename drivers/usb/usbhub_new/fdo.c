@@ -803,6 +803,7 @@ CreateDeviceIds(
     NTSTATUS Status;
     ULONG Index;
     PWCHAR BufferPtr;
+    WCHAR Buffer[100];
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)UsbChildDeviceObject->DeviceExtension;
@@ -954,6 +955,28 @@ CreateDeviceIds(
         UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
         DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
+    else
+    {
+       //
+       // the device did not provide a serial number, lets create a pseudo instance id
+       //
+       Index = swprintf(Buffer, L"0&%04d", UsbChildExtension->PortNumber) + 1;
+       UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+       if (UsbChildExtension->usInstanceId.Buffer == NULL)
+       {
+           DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+           goto Cleanup;
+       }
+
+       //
+       // copy instance id
+       //
+       RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
+       UsbChildExtension->usInstanceId.Length = UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
+
+       DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
+    }
+
 
     return Status;
 

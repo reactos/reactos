@@ -941,7 +941,7 @@ CUSBRequest::AllocateEndpointDescriptor(
     Descriptor->Flags |= OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(GetEndpointAddress());
     Descriptor->Flags |= OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(GetMaxPacketSize());
 
-    DPRINT1("Flags %x DeviceAddress %x EndpointAddress %x PacketSize %x\n", Descriptor->Flags, GetDeviceAddress(), GetEndpointAddress(), GetMaxPacketSize());
+    DPRINT("Flags %x DeviceAddress %x EndpointAddress %x PacketSize %x\n", Descriptor->Flags, GetDeviceAddress(), GetEndpointAddress(), GetMaxPacketSize());
 
     //
     // is there an endpoint descriptor

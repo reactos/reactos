@@ -43,6 +43,7 @@ typedef struct _HIDP_DEVICE_DESC
 }HIDP_DEVICE_DESC, *PHIDP_DEVICE_DESC;
 
 NTSTATUS
+NTAPI
 HidP_GetCollectionDescription(
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
     IN ULONG DescLength,
@@ -51,11 +52,13 @@ HidP_GetCollectionDescription(
 );
 
 VOID
+NTAPI
 HidP_FreeCollectionDescription (
     IN PHIDP_DEVICE_DESC DeviceDescription
 );
 
 NTSTATUS
+NTAPI
 HidP_SysPowerEvent (
     IN PCHAR HidPacket,
     IN USHORT HidPacketLength,
@@ -64,6 +67,7 @@ HidP_SysPowerEvent (
 );
 
 NTSTATUS
+NTAPI
 HidP_SysPowerCaps (
     IN PHIDP_PREPARSED_DATA Ppd,
     OUT PULONG OutputBuffer
