@@ -622,7 +622,7 @@ HidUsb_GetReportDescriptor(
 {
     PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
-    PUCHAR Report = NULL;
+    PVOID Report = NULL;
     ULONG BufferLength, Length;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
