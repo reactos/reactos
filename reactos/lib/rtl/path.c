@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Wine team
  *                  Thomas Weidenmueller
  *                  Gunnar Dalsnes
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,6 +22,11 @@
 #define MAX_PFX_SIZE       16
 
 #define IS_PATH_SEPARATOR(x) (((x)==L'\\')||((x)==L'/'))
+
+#define RTL_CURDIR_IS_REMOVABLE 0x1
+#define RTL_CURDIR_DROP_OLD_HANDLE 0x2
+#define RTL_CURDIR_ALL_FLAGS (RTL_CURDIR_DROP_OLD_HANDLE | RTL_CURDIR_IS_REMOVABLE) // 0x3
+C_ASSERT(RTL_CURDIR_ALL_FLAGS == OBJ_HANDLE_TAGBITS);
 
 
 /* GLOBALS ********************************************************************/
@@ -617,7 +624,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         if (InputPathType == RtlPathTypeRelative)
         {
             /* Get current directory */
-            CurrentDirectory = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
+            CurrentDirectory = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
             if (CurrentDirectory->Handle)
             {
                 Status = RtlInitUnicodeStringEx(&FullPath, Buffer);
@@ -660,7 +667,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
                     RelativeName->CurDirRef = RtlpCurDirRef;
                     if (RelativeName->CurDirRef)
                     {
-                        /* FIXME: Increment reference count */
+                        InterlockedIncrement(&RtlpCurDirRef->RefCount);
                     }
 
                     RelativeName->ContainingDirectory = CurrentDirectory->Handle;
@@ -831,8 +838,13 @@ RtlReleaseRelativeName(IN PRTL_RELATIVE_NAME_U RelativeName)
     /* Check if a directory reference was grabbed */
     if (RelativeName->CurDirRef)
     {
-        /* FIXME: Not yet supported */
-        UNIMPLEMENTED;
+        /* Decrease reference count */
+        if (!InterlockedDecrement(&RelativeName->CurDirRef->RefCount))
+        {
+            /* If no one uses it any longer, close handle & free */
+            NtClose(RelativeName->CurDirRef->Handle);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeName->CurDirRef);
+        }
         RelativeName->CurDirRef = NULL;
     }
 }
@@ -984,89 +996,201 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
+NTSTATUS
+NTAPI
+RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
 {
-   UNICODE_STRING full;
-   FILE_FS_DEVICE_INFORMATION device_info;
-   OBJECT_ATTRIBUTES Attr;
-   IO_STATUS_BLOCK iosb;
-   PCURDIR cd;
-   NTSTATUS Status;
-   USHORT size;
-   HANDLE handle = NULL;
-   PWSTR ptr;
+    PCURDIR CurDir;
+    NTSTATUS Status;
+    RTL_PATH_TYPE PathType;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING FullPath, NtName;
+    PRTLP_CURDIR_REF OldCurDir = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_FS_DEVICE_INFORMATION FileFsDeviceInfo;
+    ULONG SavedLength, CharLength, FullPathLength;
+    HANDLE OldHandle = 0, CurDirHandle, OldCurDirHandle = 0;
 
-   DPRINT("RtlSetCurrentDirectory %wZ\n", dir);
+    DPRINT("RtlSetCurrentDirectory_U %wZ\n", Path);
 
-   full.Buffer = NULL;
+    /* Can't set current directory on DOS device */
+    if (RtlIsDosDeviceName_Ustr(Path))
+    {
+        return STATUS_NOT_A_DIRECTORY;
+    }
 
-   RtlAcquirePebLock ();
+    /* Get current directory */
+    RtlAcquirePebLock();
+    CurDir = &NtCurrentPeb()->ProcessParameters->CurrentDirectory;
 
-   cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath;
+    /* Check if we have to drop current handle */
+    if (((ULONG_PTR)(CurDir->Handle) & RTL_CURDIR_ALL_FLAGS) == RTL_CURDIR_DROP_OLD_HANDLE)
+    {
+        OldHandle = CurDir->Handle;
+        CurDir->Handle = NULL;
+    }
 
-   if (!RtlDosPathNameToNtPathName_U (dir->Buffer, &full, 0, 0))
-   {
-      RtlReleasePebLock ();
-      return STATUS_OBJECT_NAME_INVALID;
-   }
+    /* Allocate a buffer for full path (using max possible length */
+    FullPath.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, CurDir->DosPath.MaximumLength);
+    if (!FullPath.Buffer)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Leave;
+    }
 
-   DPRINT("RtlSetCurrentDirectory: full %wZ\n",&full);
+    /* Init string */
+    FullPath.Length = 0;
+    FullPath.MaximumLength = CurDir->DosPath.MaximumLength;
 
-   InitializeObjectAttributes (&Attr,
-			       &full,
-			       OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
-			       NULL,
-			       NULL);
+    /* Get new directory full path */
+    FullPathLength = RtlGetFullPathName_Ustr(Path, FullPath.MaximumLength, FullPath.Buffer, NULL, NULL, &PathType);
+    if (!FullPathLength)
+    {
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Leave;
+    }
 
-   Status = ZwOpenFile (&handle,
-			SYNCHRONIZE | FILE_TRAVERSE,
-			&Attr,
-			&iosb,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+    SavedLength = FullPath.MaximumLength;
+    CharLength = FullPathLength / sizeof(WCHAR);
 
-   if (!NT_SUCCESS(Status))
-   {
-      RtlFreeUnicodeString( &full);
-      RtlReleasePebLock ();
-      return Status;
-   }
+    if (FullPathLength > FullPath.MaximumLength)
+    {
+        Status = STATUS_NAME_TOO_LONG;
+        goto Leave;
+    }
 
-   /* don't keep the directory handle open on removable media */
-   if (NT_SUCCESS(ZwQueryVolumeInformationFile( handle, &iosb, &device_info,
-                                                sizeof(device_info), FileFsDeviceInformation )) &&
-     (device_info.Characteristics & FILE_REMOVABLE_MEDIA))
-   {
-      DPRINT1("don't keep the directory handle open on removable media\n");
-      ZwClose( handle );
-      handle = 0;
-   }
+    /* Translate it to NT name */
+    if (!RtlDosPathNameToNtPathName_U(FullPath.Buffer, &NtName, NULL, NULL))
+    {
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Leave;
+    }
 
-   if (cd->Handle)
-      ZwClose(cd->Handle);
-   cd->Handle = handle;
+   InitializeObjectAttributes(&ObjectAttributes, &NtName,
+                              OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                              NULL, NULL);
 
-   /* append trailing \ if missing */
-   size = full.Length / sizeof(WCHAR);
-   ptr = full.Buffer;
-   ptr += 4;  /* skip \??\ prefix */
-   size -= 4;
+    /* If previous current directory was removable, then check it for dropping */
+    if (((ULONG_PTR)(CurDir->Handle) & RTL_CURDIR_ALL_FLAGS) == RTL_CURDIR_ALL_FLAGS)
+    {
+        /* Get back normal handle */
+        CurDirHandle = (HANDLE)((ULONG_PTR)(CurDir->Handle) & ~RTL_CURDIR_ALL_FLAGS);
+        CurDir->Handle = 0;
 
-   /* This is ok because RtlDosPathNameToNtPathName_U returns a nullterminated string.
-    * So the nullterm is replaced with \
-    * -Gunnar
-    */
-   if (size && ptr[size - 1] != '\\') ptr[size++] = '\\';
+        /* Get device information */
+        Status = NtQueryVolumeInformationFile(CurDirHandle,
+                                              &IoStatusBlock,
+                                              &FileFsDeviceInfo,
+                                              sizeof(FileFsDeviceInfo),
+                                              FileFsDeviceInformation);
+        /* Retry without taking care of removable device */
+        if (!NT_SUCCESS(Status))
+        {
+            Status = RtlSetCurrentDirectory_U(Path);
+            goto Leave;
+        }
+    }
+    else
+    {
+        /* Open directory */
+        Status = NtOpenFile(&CurDirHandle,
+                            SYNCHRONIZE | FILE_TRAVERSE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status)) goto Leave;
 
-   memcpy( cd->DosPath.Buffer, ptr, size * sizeof(WCHAR));
-   cd->DosPath.Buffer[size] = 0;
-   cd->DosPath.Length = size * sizeof(WCHAR);
+        /* Get device information */
+        Status = NtQueryVolumeInformationFile(CurDirHandle,
+                                              &IoStatusBlock,
+                                              &FileFsDeviceInfo,
+                                              sizeof(FileFsDeviceInfo),
+                                              FileFsDeviceInformation);
+        if (!NT_SUCCESS(Status)) goto Leave;
+    }
 
-   RtlFreeUnicodeString( &full);
-   RtlReleasePebLock();
+    /* If device is removable, mark handle */
+    if (FileFsDeviceInfo.Characteristics & FILE_REMOVABLE_MEDIA)
+    {
+        CurDirHandle = (HANDLE)((ULONG_PTR)CurDirHandle | RTL_CURDIR_IS_REMOVABLE);
+    }
 
-   return STATUS_SUCCESS;
+    FullPath.Length = FullPathLength;
+
+    /* If full path isn't \ terminated, do it */
+    if (FullPath.Buffer[CharLength - 1] != L'\\')
+    {
+        if ((CharLength + 1) * sizeof(WCHAR) > SavedLength)
+        {
+            Status = STATUS_NAME_TOO_LONG;
+            goto Leave;
+        }
+
+        FullPath.Buffer[CharLength] = L'\\';
+        FullPath.Buffer[CharLength + 1] = UNICODE_NULL;
+        FullPath.Length += sizeof(WCHAR);
+    }
+
+    /* If we have previous current directory with only us as reference, save it */
+    if (RtlpCurDirRef != NULL && RtlpCurDirRef->RefCount == 1)
+    {
+        OldCurDirHandle = RtlpCurDirRef->Handle;
+    }
+    else
+    {
+        /* Allocate new current directory struct saving previous one */
+        OldCurDir = RtlpCurDirRef;
+        RtlpCurDirRef = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(RTLP_CURDIR_REF));
+        if (!RtlpCurDirRef)
+        {
+            RtlpCurDirRef = OldCurDir;
+            OldCurDir = NULL;
+            Status = STATUS_NO_MEMORY;
+            goto Leave;
+        }
+
+        /* Set reference to 1 (us) */
+        RtlpCurDirRef->RefCount = 1;
+    }
+
+    /* Save new data */
+    CurDir->Handle = CurDirHandle;
+    RtlpCurDirRef->Handle = CurDirHandle;
+    CurDirHandle = 0;
+
+    /* Copy full path */
+    RtlCopyMemory(CurDir->DosPath.Buffer, FullPath.Buffer, FullPath.Length + sizeof(WCHAR));
+    CurDir->DosPath.Length = FullPath.Length;
+
+    Status = STATUS_SUCCESS;
+
+Leave:
+    RtlReleasePebLock();
+
+    if (FullPath.Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FullPath.Buffer);
+    }
+
+    if (NtName.Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtName.Buffer);
+    }
+
+    if (CurDirHandle) NtClose(CurDirHandle);
+
+    if (OldHandle) NtClose(OldHandle);
+
+    if (OldCurDirHandle) NtClose(OldCurDirHandle);
+
+    if (OldCurDir && InterlockedDecrement(&OldCurDir->RefCount) == 0)
+    {
+        NtClose(OldCurDir->Handle);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, OldCurDir);
+    }
+
+    return Status;
 }
 
 
