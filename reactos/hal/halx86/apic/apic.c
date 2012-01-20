@@ -186,7 +186,7 @@ ApicGetCurrentIrql(VOID)
 
 VOID
 FORCEINLINE
-ApicRaiseIrql(KIRQL Irql)
+ApicSetIrql(KIRQL Irql)
 {
 #ifdef _M_AMD64
     __writecr8(Irql);
@@ -197,14 +197,13 @@ ApicRaiseIrql(KIRQL Irql)
     ApicWrite(APIC_TPR, IrqlToTpr(Irql));
 #endif
 }
+#define ApicRaiseIrql ApicSetIrql
 
+#ifdef APIC_LAZY_IRQL
 VOID
 FORCEINLINE
 ApicLowerIrql(KIRQL Irql)
 {
-#ifdef _M_AMD64
-    __writecr8(Irql);
-#elif defined(APIC_LAZY_IRQL)
     __writefsbyte(FIELD_OFFSET(KPCR, Irql), Irql);
 
     /* Is the new Irql lower than set in the TPR? */
@@ -216,11 +215,10 @@ ApicLowerIrql(KIRQL Irql)
         /* Need to lower it back */
         ApicWrite(APIC_TPR, IrqlToTpr(Irql));
     }
-#else
-    /* Convert IRQL and write the TPR */
-    ApicWrite(APIC_TPR, IrqlToTpr(Irql));
-#endif
 }
+#else
+#define ApicLowerIrql ApicSetIrql
+#endif
 
 UCHAR
 FASTCALL
@@ -394,7 +392,7 @@ ApicInitializeLocalApic(ULONG Cpu)
     ApicWrite(APIC_ERRLVTR, LvtEntry.Long);
 
     /* Set the IRQL from the PCR */
-    ApicWrite(APIC_TPR, IrqlToTpr(KeGetPcr()->Irql));
+    ApicSetIrql(KeGetPcr()->Irql);
 #ifdef APIC_LAZY_IRQL
     /* Save the new hard IRQL in the IRR field */
     KeGetPcr()->IRR = KeGetPcr()->Irql;
@@ -410,8 +408,8 @@ HalpAllocateSystemInterrupt(
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
     IN UCHAR Vector;
 
-    /* Start with low vector */
-    Vector = IrqlToTpr(Irql);
+    /* Start with lowest vector */
+    Vector = IrqlToTpr(Irql) & 0xF0;
 
     /* Find an empty vector */
     while (HalpVectorToIndex[Vector] != 0xFF)
@@ -653,7 +651,7 @@ FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
 {
     /* Convert irql to vector and request an interrupt */
-    ApicRequestInterrupt(IrqlToTpr(Irql), APIC_TGM_Edge);
+    ApicRequestInterrupt(IrqlToSoftVector(Irql), APIC_TGM_Edge);
 }
 
 VOID
