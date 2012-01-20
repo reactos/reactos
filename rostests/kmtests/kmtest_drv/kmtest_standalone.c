@@ -320,7 +320,7 @@ DriverDispatch(
                 IrpHandlers[i].IrpHandler != NULL)
             return IrpHandlers[i].IrpHandler(DeviceObject, Irp, IoStackLocation);
     }
-    
+
     /* default handler for DeviceControl */
     if (IoStackLocation->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
             IoStackLocation->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL)
@@ -462,7 +462,7 @@ DeviceControlHandler(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG ControlCode = (IoStackLocation->Parameters.DeviceIoControl.IoControlCode & 0x00000FFC) >> 2;
-    ULONG OutLength = IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength;
+    SIZE_T OutLength = IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength;
     int i;
 
     for (i = 0; i < sizeof MessageHandlers / sizeof MessageHandlers[0]; ++i)

@@ -22,8 +22,13 @@
 /* Prototypes */
 DRIVER_INITIALIZE DriverEntry;
 static DRIVER_UNLOAD DriverUnload;
+__drv_dispatchType(IRP_MJ_CREATE)
 static DRIVER_DISPATCH DriverCreate;
+__drv_dispatchType(IRP_MJ_CLEANUP)
+static DRIVER_DISPATCH DriverCleanup;
+__drv_dispatchType(IRP_MJ_CLOSE)
 static DRIVER_DISPATCH DriverClose;
+__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
 static DRIVER_DISPATCH DriverIoControl;
 
 /* Globals */
@@ -83,6 +88,7 @@ DriverEntry(
 
     DriverObject->DriverUnload = DriverUnload;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = DriverCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DriverCleanup;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = DriverClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DriverIoControl;
 
@@ -130,7 +136,7 @@ DriverUnload(
 /**
  * @name DriverCreate
  *
- * Driver Dispatch function for CreateFile
+ * Driver Dispatch function for IRP_MJ_CREATE
  *
  * @param DeviceObject
  *        Device Object
@@ -166,9 +172,9 @@ DriverCreate(
 }
 
 /**
- * @name DriverClose
+ * @name DriverCleanup
  *
- * Driver Dispatch function for CloseHandle.
+ * Driver Dispatch function for IRP_MJ_CLEANUP
  *
  * @param DeviceObject
  *        Device Object
@@ -180,7 +186,7 @@ DriverCreate(
 static
 NTSTATUS
 NTAPI
-DriverClose(
+DriverCleanup(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -192,7 +198,7 @@ DriverClose(
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("DriverClose. DeviceObject=%p, RequestorMode=%d, FileObject=%p, FsContext=%p, FsContext2=%p\n",
+    DPRINT("DriverCleanup. DeviceObject=%p, RequestorMode=%d, FileObject=%p, FsContext=%p, FsContext2=%p\n",
              DeviceObject, Irp->RequestorMode, IoStackLocation->FileObject,
              IoStackLocation->FileObject->FsContext, IoStackLocation->FileObject->FsContext2);
 
@@ -219,9 +225,43 @@ DriverClose(
 }
 
 /**
+ * @name DriverClose
+ *
+ * Driver Dispatch function for IRP_MJ_CLOSE
+ *
+ * @param DeviceObject
+ *        Device Object
+ * @param Irp
+ *        I/O request packet
+ *
+ * @return Status
+ */
+static
+NTSTATUS
+NTAPI
+DriverClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    DPRINT("DriverClose. DeviceObject=%p, RequestorMode=%d\n",
+             DeviceObject, Irp->RequestorMode);
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+/**
  * @name DriverIoControl
  *
- * Driver Dispatch function for DeviceIoControl.
+ * Driver Dispatch function for IRP_MJ_DEVICE_CONTROL
  *
  * @param DeviceObject
  *        Device Object
