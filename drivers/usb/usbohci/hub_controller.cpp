@@ -3287,7 +3287,7 @@ CHubController::SetDeviceInterface(
     //
     // done
     //
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

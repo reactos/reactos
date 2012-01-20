@@ -35,6 +35,7 @@ i8042prt.sys=,,,,,,x,,,,,,4
 hidclass.sys=,,,,,,,,,,,,4
 hidparse.sys=,,,,,,,,,,,,4
 hidusb.sys=,,,,,,,,,,,,4
+usbd.sys=,,,,,,,,,,,,4
 usbhub.sys=,,,,,,,,,,,,4
 ;usbuhci.sys=,,,,,,,,,,,,4
 usbohci.sys=,,,,,,,,,,,,4
