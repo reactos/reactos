@@ -1,5 +1,7 @@
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL (shell);
+
 HINSTANCE netshell_hInstance;
 const GUID CLSID_LANConnectUI            = {0x7007ACC5, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 const GUID CLSID_NetworkConnections      = {0x7007ACC7, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
@@ -10,30 +12,8 @@ static const WCHAR szLanConnectUI[]       = L"CLSID\\{7007ACC5-3202-11D1-AAD2-00
 static const WCHAR szLanConnectStatusUI[] = L"CLSID\\{7007ACCF-3202-11D1-AAD2-00805FC1270E}";
 static const WCHAR szNamespaceKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
 
-static INTERFACE_TABLE InterfaceTable[] =
+extern "C"
 {
-    {
-        &CLSID_NetworkConnections,
-        ISF_NetConnect_Constructor
-    },
-    {
-        &CLSID_ConnectionManager,
-        INetConnectionManager_Constructor
-    },
-    {
-        &CLSID_LANConnectUI,
-        LanConnectUI_Constructor
-    },
-    {
-        &CLSID_LanConnectStatusUI,
-        LanConnectStatusUI_Constructor
-    },
-    {
-        NULL,
-        NULL
-    }
-};
-
 
 BOOL
 WINAPI
@@ -156,43 +136,23 @@ STDAPI
 DllGetClassObject(
   REFCLSID rclsid,
   REFIID riid,
-  LPVOID* ppv 
-)
+  LPVOID *ppv)
 {
-    UINT i;
-    HRESULT	hres = E_OUTOFMEMORY;
-    IClassFactory * pcf = NULL;	
-
     if (!ppv)
         return E_INVALIDARG;
 
     *ppv = NULL;
 
-    for (i = 0; InterfaceTable[i].riid; i++) 
-    {
-        if (IsEqualIID(InterfaceTable[i].riid, rclsid)) 
-        {
-            pcf = IClassFactory_fnConstructor(InterfaceTable[i].lpfnCI, NULL, NULL);
-            break;
-        }
-    }
-
-    if (!pcf) 
-    {
-        return CLASS_E_CLASSNOTAVAILABLE;
-    }
-
-    hres = IClassFactory_QueryInterface(pcf, riid, ppv);
-    IClassFactory_Release(pcf);
-
-    return hres;
+    return IClassFactory_fnConstructor(rclsid, riid, ppv);
 }
 
 VOID
 WINAPI
-NcFreeNetconProperties (NETCON_PROPERTIES* pProps)
+NcFreeNetconProperties(NETCON_PROPERTIES *pProps)
 {
     CoTaskMemFree(pProps->pszwName);
     CoTaskMemFree(pProps->pszwDeviceName);
     CoTaskMemFree(pProps);
 }
+
+} // extern "C"

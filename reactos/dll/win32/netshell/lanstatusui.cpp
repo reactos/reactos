@@ -1,5 +1,7 @@
 #include <precomp.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL (shell);
+
 /// CLSID
 /// HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{7007ACCF-3202-11D1-AAD2-00805FC1270E}
 // IID B722BCCB-4E68-101B-A2BC-00AA00404770
@@ -13,15 +15,7 @@ typedef struct tagNotificationItem
     UINT uID;
     HWND hwndDlg;
     INetConnection *pNet;
-}NOTIFICATION_ITEM;
-
-typedef struct
-{
-    IOleCommandTarget * lpVtbl;
-    INetConnectionManager * lpNetMan;
-    LONG ref;
-    NOTIFICATION_ITEM * pHead;
-}ILanStatusImpl, *LPILanStatusImpl;
+} NOTIFICATION_ITEM;
 
 typedef struct
 {
@@ -38,13 +32,44 @@ typedef struct
     DWORD Gateway;
     UINT uID;
     UINT Status;
-}LANSTATUSUI_CONTEXT;
+} LANSTATUSUI_CONTEXT;
+
+class CLanStatus:
+    public IOleCommandTarget
+{
+    public:
+        CLanStatus();
+
+        // IUnknown
+        virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
+        virtual ULONG WINAPI AddRef();
+        virtual ULONG WINAPI Release();
+        
+        // IOleCommandTarget
+        virtual HRESULT WINAPI QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
+        virtual HRESULT WINAPI Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    
+    private:
+        HRESULT InitializeNetTaskbarNotifications();
+        HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
+        
+        INetConnectionManager *lpNetMan;
+        LONG ref;
+        NOTIFICATION_ITEM *pHead;
+};
+
+CLanStatus::CLanStatus()
+{
+    ref = 0;
+    lpNetMan = NULL;
+    pHead = NULL;
+}
 
 VOID
 UpdateLanStatusUiDlg(
     HWND hwndDlg,
-    MIB_IFROW * IfEntry,
-    LANSTATUSUI_CONTEXT * pContext)
+    MIB_IFROW *IfEntry,
+    LANSTATUSUI_CONTEXT *pContext)
 {
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szBuffer[MAX_PATH] = {0};
@@ -160,22 +185,22 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 0;
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 1;
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 2; 
         }
         else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 3;
         }
     }
@@ -183,7 +208,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->Status != 4)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 4;
         }
     }
@@ -191,7 +216,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->Status != 5)
         {
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 5;
         }
     }
@@ -209,12 +234,12 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     nid.hWnd = pContext->hwndStatusDlg;
     nid.u.uVersion = 3;
 
-    if (INetConnection_GetProperties(pContext->pNet, &pProperties) == NOERROR)
+    if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
         if (pProperties->dwCharacter & NCCF_SHOW_ICON)
         {
             if (hwndDlg)
-                nid.hIcon = CopyImage(hIcon, IMAGE_ICON, 16, 16, 0);
+                nid.hIcon = (HICON)CopyImage(hIcon, IMAGE_ICON, 16, 16, 0);
             else
                 nid.hIcon = hIcon;
 
@@ -269,7 +294,7 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     WCHAR szBuffer[MAX_PATH] = {0};
     NETCON_PROPERTIES * pProperties;
 
-    if (INetConnection_GetProperties(pContext->pNet, &pProperties) != NOERROR)
+    if (pContext->pNet->GetProperties(&pProperties) != S_OK)
         return;
 
     if (pProperties->Status == NCS_DISCONNECTED)
@@ -292,6 +317,7 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     NcFreeNetconProperties(pProperties);
 }
 
+static
 VOID
 InsertColumnToListView(
     HWND hDlgCtrl,
@@ -316,6 +342,7 @@ InsertColumnToListView(
     (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, SubItem, (LPARAM)&lc);
 }
 
+static
 VOID
 AddIPAddressToListView(
     HWND hDlgCtrl, 
@@ -341,7 +368,7 @@ AddIPAddressToListView(
             li.mask = LVIF_TEXT;
             li.iItem = Index;
             li.iSubItem = 0;
-            li.pszText = L"";
+            li.pszText = (LPWSTR)L"";
             li.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
         }
 
@@ -357,6 +384,7 @@ AddIPAddressToListView(
     }while(pCur && pCur->IpAddress.String[0]);
 }
 
+static
 INT
 InsertItemToListView(
     HWND hDlgCtrl,
@@ -604,8 +632,6 @@ FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
     return FALSE;
 }
 
-
-
 VOID
 DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWND hwndDlg)
 {
@@ -621,7 +647,7 @@ DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWN
     BOOL bClose = FALSE;
     NOTIFYICONDATAW nid;
 
-    if (FAILED(INetConnection_GetProperties(pNet, &pProperties)))
+    if (FAILED(pNet->GetProperties(&pProperties)))
         return;
 
 
@@ -632,7 +658,7 @@ DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWN
         return;
     }
 
-    if (FAILED(StringFromCLSID(&pProperties->guidId, &pDisplayName)))
+    if (FAILED(StringFromCLSID((CLSID)pProperties->guidId, &pDisplayName)))
     {
         NcFreeNetconProperties(pProperties);
         SetupDiDestroyDeviceInfoList(hInfo);
@@ -716,8 +742,7 @@ LANStatusUiDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     PROPSHEETPAGE *page;
     LANSTATUSUI_CONTEXT * pContext;
@@ -769,9 +794,9 @@ InitializePropertyDialog(
 {
     DWORD dwSize, dwAdapterIndex, dwResult;
     LPOLESTR pStr;
-    IP_ADAPTER_INFO * pAdapterInfo, *pCurAdapter;
+    IP_ADAPTER_INFO *pAdapterInfo, *pCurAdapter;
 
-    if (FAILED(StringFromCLSID(&pProperties->guidId, &pStr)))
+    if (FAILED(StringFromCLSID((CLSID)pProperties->guidId, &pStr)))
     {
         return;
     }
@@ -823,7 +848,7 @@ InitializePropertyDialog(
 
 VOID
 ShowStatusPropertyDialog(
-    LANSTATUSUI_CONTEXT * pContext,
+    LANSTATUSUI_CONTEXT *pContext,
     HWND hwndDlg)
 {
     HPROPSHEETPAGE hppages[2];
@@ -837,7 +862,7 @@ ShowStatusPropertyDialog(
     pinfo.u3.phpage = hppages;
     pinfo.hwndParent = hwndDlg;
 
-    if (INetConnection_GetProperties(pContext->pNet, &pProperties) == NOERROR)
+    if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
         if (pProperties->pszwName)
         {
@@ -876,8 +901,7 @@ LANStatusDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LANSTATUSUI_CONTEXT * pContext;
 
@@ -917,16 +941,15 @@ LANStatusDlg(
     }
     return FALSE;
 }
-static 
+ 
 HRESULT
-InitializeNetTaskbarNotifications(
-    ILanStatusImpl * This)
+CLanStatus::InitializeNetTaskbarNotifications()
 {
     NOTIFYICONDATAW nid;
     HWND hwndDlg;
-    INetConnectionManager * INetConMan;
-    IEnumNetConnection * IEnumCon;
-    INetConnection * INetCon;
+    INetConnectionManager *pNetConMan;
+    IEnumNetConnection *pEnumCon;
+    INetConnection *pNetCon;
     NETCON_PROPERTIES* pProps;
     HRESULT hr;
     ULONG Count;
@@ -934,12 +957,14 @@ InitializeNetTaskbarNotifications(
     NOTIFICATION_ITEM * pItem, *pLast = NULL;
     LANSTATUSUI_CONTEXT * pContext;
 
-    if (This->pHead)
+    TRACE("InitializeNetTaskbarNotifications\n");
+
+    if (pHead)
     {
-       pItem = This->pHead;
+       pItem = pHead;
        while(pItem)
        {
-           hr = INetConnection_GetProperties(pItem->pNet, &pProps);
+           hr = pItem->pNet->GetProperties(&pProps);
            if (SUCCEEDED(hr))
            {
                 ZeroMemory(&nid, sizeof(nid));
@@ -962,25 +987,30 @@ InitializeNetTaskbarNotifications(
     }
     /* get an instance to of IConnectionManager */
 
-    //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
+    //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&pNetConMan);
 
-    hr = INetConnectionManager_Constructor(NULL, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
-    if (FAILED(hr))
-        return hr;
-
-    hr = INetConnectionManager_EnumConnections(INetConMan, NCME_DEFAULT, &IEnumCon);
+    hr = INetConnectionManager_Constructor(NULL, IID_INetConnectionManager, (LPVOID*)&pNetConMan);
     if (FAILED(hr))
     {
-        INetConnectionManager_Release(INetConMan);
+        ERR("INetConnectionManager_Constructor failed\n");
+        return hr;
+    }
+
+    hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
+    if (FAILED(hr))
+    {
+        ERR("EnumConnections failed\n");
+        pNetConMan->Release();
         return hr;
     }
 
     Index = 1;
     do
     {
-        hr = IEnumNetConnection_Next(IEnumCon, 1, &INetCon, &Count);
+        hr = pEnumCon->Next(1, &pNetCon, &Count);
         if (hr == S_OK)
         {
+            TRACE("new connection\n");
             pItem = (NOTIFICATION_ITEM*)CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM));
             if (!pItem)
                 break;
@@ -992,13 +1022,12 @@ InitializeNetTaskbarNotifications(
                 break;
             }
 
-
             ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
             pContext->uID = Index;
-            pContext->pNet = INetCon;
+            pContext->pNet = pNetCon;
             pItem->uID = Index;
             pItem->pNext = NULL;
-            pItem->pNet = INetCon;
+            pItem->pNet = pNetCon;
             hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
             if (hwndDlg)
             {
@@ -1010,7 +1039,7 @@ InitializeNetTaskbarNotifications(
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
 
-                hr = INetConnection_GetProperties(INetCon, &pProps);
+                hr = pNetCon->GetProperties(&pProps);
                 if (SUCCEEDED(hr))
                 {
                     CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
@@ -1039,105 +1068,96 @@ InitializeNetTaskbarNotifications(
                     if (pLast)
                         pLast->pNext = pItem;
                     else
-                        This->pHead = pItem;
+                        pHead = pItem;
 
                     pLast = pItem;
                     Index++;
                 }
                 else
                 {
+                    ERR("Shell_NotifyIconW failed\n");
                     CoTaskMemFree(pItem);
                 }
 
                 if (nid.uFlags & NIF_ICON)
                     DestroyIcon(nid.hIcon);
-            }
+            } else
+                ERR("CreateDialogParamW failed\n");
         }
-    }while(hr == S_OK);
+    } while(hr == S_OK);
 
-    This->lpNetMan = INetConMan;
-    IEnumNetConnection_Release(IEnumCon);
+    lpNetMan = pNetConMan;
+    pEnumCon->Release();
     return S_OK;
 }
 
 HRESULT
-ShowStatusDialogByCLSID(
-    ILanStatusImpl * This,
-    const GUID *pguidCmdGroup)
+CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
 {
-    NOTIFICATION_ITEM * pItem;
+    NOTIFICATION_ITEM *pItem;
 
-    pItem = This->pHead;
+    pItem = pHead;
     while(pItem)
     {
-        if (IsEqualGUID(&pItem->guidItem, pguidCmdGroup))
+        if (IsEqualGUID(pItem->guidItem, *pguidCmdGroup))
         {
             SendMessageW(pItem->hwndDlg, WM_SHOWSTATUSDLG, 0, WM_LBUTTONDOWN);
             return S_OK;
         }
         pItem = pItem->pNext;
     }
+
+    ERR("not found\n");
     return E_FAIL;
 }
-static
+
 HRESULT
 WINAPI
-IOleCommandTarget_fnQueryInterface(
-    IOleCommandTarget * iface,
+CLanStatus::QueryInterface(
     REFIID iid,
-    LPVOID * ppvObj)
+    LPVOID *ppvObj)
 {
-    ILanStatusImpl * This =  (ILanStatusImpl*)iface;
     *ppvObj = NULL;
 
-    if (IsEqualIID (iid, &IID_IUnknown) ||
-        IsEqualIID (iid, &IID_IOleCommandTarget))
+    if (IsEqualIID(iid, IID_IUnknown) ||
+        IsEqualIID(iid, IID_IOleCommandTarget))
     {
-        *ppvObj = This;
-        IUnknown_AddRef(iface);
+        *ppvObj = this;
+        AddRef();
         return S_OK;
     }
     MessageBoxW(NULL, L"IOleCommandTarget_fnQueryInterface", NULL, MB_OK);
     return E_NOINTERFACE;
 }
 
-static
 ULONG
 WINAPI
-IOleCommandTarget_fnAddRef(
-    IOleCommandTarget * iface)
+CLanStatus::AddRef()
 {
-    ILanStatusImpl * This =  (ILanStatusImpl*)iface;
-    ULONG refCount = InterlockedIncrement(&This->ref);
+    ULONG refCount = InterlockedIncrement(&ref);
 
     return refCount;
 }
 
-static
 ULONG
 WINAPI
-IOleCommandTarget_fnRelease(
-    IOleCommandTarget * iface)
+CLanStatus::Release()
 {
-#if 0
-    ILanStatusImpl * This =  (ILanStatusImpl*)iface;
-    ULONG refCount = InterlockedDecrement(&This->ref);
+#if 0 // WTF?!
+    ULONG refCount = InterlockedDecrement(&ref);
 
     if (!refCount) 
-    {
-        CoTaskMemFree (This);
-    }
+        delete this;
+
     return refCount;
 #else
     return 1;
 #endif
 }
 
-static
 HRESULT
 WINAPI
-IOleCommandTarget_fnQueryStatus(
-    IOleCommandTarget * iface,
+CLanStatus::QueryStatus(
     const GUID *pguidCmdGroup,
     ULONG cCmds,
     OLECMD *prgCmds,
@@ -1147,49 +1167,33 @@ IOleCommandTarget_fnQueryStatus(
     return E_NOTIMPL;
 }
 
-static
 HRESULT
 WINAPI
-IOleCommandTarget_fnExec(
-    IOleCommandTarget * iface,
+CLanStatus::Exec(
     const GUID *pguidCmdGroup,
     DWORD nCmdID,
     DWORD nCmdexecopt,
     VARIANT *pvaIn,
     VARIANT *pvaOut)
 {
-    ILanStatusImpl * This =  (ILanStatusImpl*)iface;
-
     if (pguidCmdGroup)
     {
-        if (IsEqualIID(pguidCmdGroup, &CGID_ShellServiceObject))
+        if (IsEqualGUID(*pguidCmdGroup, CGID_ShellServiceObject))
         {
-            return InitializeNetTaskbarNotifications(This);
+            return InitializeNetTaskbarNotifications();
         }
         else
         {
             /* invoke status dialog */
-            return ShowStatusDialogByCLSID(This, pguidCmdGroup);
+            return ShowStatusDialogByCLSID(pguidCmdGroup);
         }
     }
     return S_OK;
 }
 
-
-static const IOleCommandTargetVtbl vt_OleCommandTarget =
+HRESULT WINAPI LanConnectStatusUI_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv)
 {
-    IOleCommandTarget_fnQueryInterface,
-    IOleCommandTarget_fnAddRef,
-    IOleCommandTarget_fnRelease,
-    IOleCommandTarget_fnQueryStatus,
-    IOleCommandTarget_fnExec,
-};
-
-
-HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
-{
-    ILanStatusImpl * This;
-    static volatile ILanStatusImpl *cached_This = NULL;
+    TRACE("LanConnectStatusUI_Constructor\n");
 
     if (!ppv)
         return E_POINTER;
@@ -1197,20 +1201,15 @@ HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    This = (ILanStatusImpl *) CoTaskMemAlloc(sizeof (ILanStatusImpl));
-    if (!This)
+    CLanStatus *pLanStatus = new CLanStatus;
+    if (!pLanStatus)
         return E_OUTOFMEMORY;
 
-    This->ref = 1;
-    This->lpVtbl = (IOleCommandTarget*)&vt_OleCommandTarget;
-    This->lpNetMan = NULL;
-    This->pHead = NULL;
+    pLanStatus->AddRef();
+    static volatile CLanStatus *pCachedLanStatus = NULL;
+    if (InterlockedCompareExchangePointer((void **)&pCachedLanStatus, pLanStatus, NULL) != NULL)
+        pLanStatus->Release();
 
-    if (InterlockedCompareExchangePointer((void **)&cached_This, This, NULL) != NULL)
-    {
-        CoTaskMemFree(This);
-    }
-
-    return IOleCommandTarget_fnQueryInterface ((IOleCommandTarget*)cached_This, riid, ppv);
+    return ((CLanStatus*)pCachedLanStatus)->QueryInterface(riid, ppv);
 }
 
