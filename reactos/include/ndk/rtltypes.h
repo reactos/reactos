@@ -1080,7 +1080,12 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
-typedef struct _RTLP_CURDIR_REF *PRTLP_CURDIR_REF;
+typedef struct _RTLP_CURDIR_REF
+{
+    LONG RefCount;
+    HANDLE Handle;
+} RTLP_CURDIR_REF, *PRTLP_CURDIR_REF;
+
 typedef struct _RTL_RELATIVE_NAME_U
 {
     UNICODE_STRING RelativeName;
