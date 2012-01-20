@@ -1,7 +1,0 @@
-/* $Id$ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"Tool to dump a PE image file.\0"
-#define REACTOS_STR_INTERNAL_NAME	"pedump\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"pedump.exe\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"1993 Randy Kath; 1997 Sang Cho\0"
-#include <reactos/version.rc>
