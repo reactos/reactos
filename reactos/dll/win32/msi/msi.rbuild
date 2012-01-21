@@ -27,7 +27,6 @@
 	<file>font.c</file>
 	<file>format.c</file>
 	<file>handle.c</file>
-	<file>helpers.c</file>
 	<file>insert.c</file>
 	<file>install.c</file>
 	<file>join.c</file>
@@ -36,10 +35,9 @@
 	<file>msi_main.c</file>
 	<file>msiquery.c</file>
 	<file>package.c</file>
-	<file>preview.c</file>
+	<file>patch.c</file>
 	<file>record.c</file>
 	<file>registry.c</file>
-	<file>regsvr.c</file>
 	<file>script.c</file>
 	<file>select.c</file>
 	<file>source.c</file>
@@ -74,6 +72,9 @@
 	<library>ntdll</library>
 	<library>pseh</library>
 	<library>msiserver_interface</library>
+	<library>wintrust</library>
+	<library>crypt32</library>
+	<library>imagehlp</library>
 	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>
 </module>
