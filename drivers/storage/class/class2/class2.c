@@ -130,6 +130,164 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+ScsiClassPlugPlay(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IrpSp->MinorFunction == IRP_MN_START_DEVICE)
+    {
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_SUPPORTED;
+    }
+}
+
+/* This is a hack to assign drive letters with a non-PnP storage stack */
+NTSTATUS
+NTAPI
+ScsiClassAssignDriveLetter(VOID)
+{
+    WCHAR Buffer1[100];
+    WCHAR Buffer2[100];
+    UNICODE_STRING DriveLetterU, PartitionU;
+    NTSTATUS Status;
+    ULONG Index, PartitionNumber, DeviceNumber;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE PartitionHandle;
+
+    /* We assume this device does not current have a drive letter */
+
+    Index = 0;
+    DeviceNumber = 0;
+    PartitionNumber = 1;
+    DriveLetterU.Buffer = Buffer1;
+    DriveLetterU.MaximumLength = sizeof(Buffer1);
+    PartitionU.Buffer = Buffer2;
+    PartitionU.MaximumLength = sizeof(Buffer2);
+
+    /* Determine the correct disk number */
+    do
+    {
+        /* Check that the disk exists */
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\HardDisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &PartitionU,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+        Status = ZwOpenFile(&PartitionHandle,
+                            FILE_READ_ATTRIBUTES,
+                            &ObjectAttributes,
+                            &Iosb,
+                            0,
+                            0);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Return the last one that worked */
+            DeviceNumber--;
+        }
+        else
+        {
+            ZwClose(PartitionHandle);
+            DeviceNumber++;
+        }
+    } while (Status == STATUS_SUCCESS);
+
+    /* Create the symbolic link to PhysicalDriveX */
+    PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+    DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\PhysicalDrive%d", DeviceNumber) * sizeof(WCHAR);
+
+    Status = IoCreateSymbolicLink(&DriveLetterU, &PartitionU);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to create symbolic link */
+        return Status;
+    }
+
+    DbgPrint("HACK: Created symbolic link %wZ -> %wZ\n", &PartitionU, &DriveLetterU);
+
+    while (TRUE)
+    {
+        /* Check that the disk exists */
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition%d", DeviceNumber, PartitionNumber) * sizeof(WCHAR);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &PartitionU,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+        Status = ZwOpenFile(&PartitionHandle,
+                            FILE_READ_ATTRIBUTES,
+                            &ObjectAttributes,
+                            &Iosb,
+                            0,
+                            0);
+        if (!NT_SUCCESS(Status))
+            break;
+        else
+        {
+            ZwClose(PartitionHandle);
+
+            /* Assign it a drive letter */
+            do
+            {
+                DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\%C:", ('C' + Index)) * sizeof(WCHAR);
+
+                Status = IoCreateSymbolicLink(&DriveLetterU, &PartitionU);
+
+                Index++;
+            } while (Status != STATUS_SUCCESS);
+
+            DbgPrint("HACK: Created symbolic link %wZ -> %wZ\n", &PartitionU, &DriveLetterU);
+            PartitionNumber++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+typedef struct _CLASS_DRIVER_EXTENSION {
+  ULONG PortNumber;
+  CLASS_INIT_DATA InitializationData;
+} CLASS_DRIVER_EXTENSION, *PCLASS_DRIVER_EXTENSION;
+
+NTSTATUS
+NTAPI
+ScsiClassAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    PCLASS_DRIVER_EXTENSION DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
+
+    if (DriverExtension->InitializationData.ClassFindDevices(DriverObject, NULL, &DriverExtension->InitializationData,
+                                                             PhysicalDeviceObject, DriverExtension->PortNumber))
+    {
+        /* Assign a drive letter */
+        ScsiClassAssignDriveLetter();
+
+        /* Increment the port number */
+        DriverExtension->PortNumber++;
+    }
+    else
+    {
+        /* Failed to find device */
+        DbgPrint("FAILED TO FIND DEVICE!\n");
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 
 ULONG
 NTAPI
@@ -162,7 +320,6 @@ Return Value:
 
 
     PDRIVER_OBJECT  DriverObject = Argument1;
-    ULONG           portNumber = 0;
     PDEVICE_OBJECT  portDeviceObject;
     NTSTATUS        status;
     STRING          deviceNameString;
@@ -170,6 +327,7 @@ Return Value:
     PFILE_OBJECT    fileObject;
     CCHAR           deviceNameBuffer[256];
     BOOLEAN         deviceFound = FALSE;
+    PCLASS_DRIVER_EXTENSION DriverExtension;
 
     DebugPrint((3,"\n\nSCSI Class Driver\n"));
 
@@ -200,6 +358,16 @@ Return Value:
         return (ULONG) STATUS_REVISION_MISMATCH;
     }
 
+    status = IoAllocateDriverObjectExtension(DriverObject,
+                                             DriverObject,
+                                             sizeof(CLASS_DRIVER_EXTENSION),
+                                             (PVOID *)&DriverExtension);
+    if (!NT_SUCCESS(status))
+        return status;
+
+    RtlCopyMemory(&DriverExtension->InitializationData, InitializationData, sizeof(CLASS_INIT_DATA));
+    DriverExtension->PortNumber = 0;
+
     //
     // Update driver object with entry points.
     //
@@ -208,10 +376,12 @@ Return Value:
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiClassCreateClose;
     DriverObject->MajorFunction[IRP_MJ_READ] = ScsiClassReadWrite;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = ScsiClassReadWrite;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = ScsiClassPlugPlay;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiClassInternalIoControl;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiClassDeviceControlDispatch;
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = ScsiClassShutdownFlush;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = ScsiClassShutdownFlush;
+    DriverObject->DriverExtension->AddDevice = ScsiClassAddDevice;
 
     if (InitializationData->ClassStartIo) {
         DriverObject->DriverStartIo = InitializationData->ClassStartIo;
@@ -223,7 +393,7 @@ Return Value:
 
     do {
 
-        sprintf(deviceNameBuffer, "\\Device\\ScsiPort%lu", portNumber);
+        sprintf(deviceNameBuffer, "\\Device\\ScsiPort%lu", DriverExtension->PortNumber);
 
         DebugPrint((2, "ScsiClassInitialize: Open Port %s\n", deviceNameBuffer));
 
@@ -249,7 +419,7 @@ Return Value:
             //
 
             if (InitializationData->ClassFindDevices(DriverObject, Argument2, InitializationData,
-                                                     portDeviceObject, portNumber)) {
+                                                     portDeviceObject, DriverExtension->PortNumber)) {
 
                 deviceFound = TRUE;
             }
@@ -259,7 +429,7 @@ Return Value:
         // Check next SCSI adapter.
         //
 
-        portNumber++;
+        DriverExtension->PortNumber++;
 
     } while(NT_SUCCESS(status));
 
