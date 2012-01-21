@@ -35,6 +35,8 @@ static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCON
                                            LPCSTR, LPSTR, DWORD * );
 static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
                                           LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
+static BOOL (WINAPI *pGetTokenInformation)( HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD );
+static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
@@ -55,7 +57,8 @@ static const char property_dat[] =
     "ProductLanguage\t1033\n"
     "ProductName\tmsitest\n"
     "ProductVersion\t1.1.1\n"
-    "PATCHNEWSUMMARYSUBJECT\tInstaller Database\n";
+    "PATCHNEWSUMMARYSUBJECT\tInstaller Database\n"
+    "MSIFASTINSTALL\t1\n";
 
 static const char media_dat[] =
     "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
@@ -138,6 +141,7 @@ static const struct msi_table tables[] =
 static void init_function_pointers( void )
 {
     HMODULE hmsi = GetModuleHandleA( "msi.dll" );
+    HMODULE hadvapi32 = GetModuleHandleA( "advapi32.dll" );
 
 #define GET_PROC( mod, func ) \
     p ## func = (void *)GetProcAddress( mod, #func ); \
@@ -147,7 +151,29 @@ static void init_function_pointers( void )
     GET_PROC( hmsi, MsiApplyPatchA );
     GET_PROC( hmsi, MsiGetPatchInfoExA );
     GET_PROC( hmsi, MsiEnumPatchesExA );
+
+    GET_PROC( hadvapi32, GetTokenInformation );
+    GET_PROC( hadvapi32, OpenProcessToken );
 #undef GET_PROC
+}
+
+static BOOL is_process_limited(void)
+{
+    HANDLE token;
+
+    if (!pOpenProcessToken || !pGetTokenInformation) return FALSE;
+
+    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    {
+        BOOL ret;
+        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
+        DWORD size;
+
+        ret = pGetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+        CloseHandle(token);
+        return (ret && type == TokenElevationTypeLimited);
+    }
+    return FALSE;
 }
 
 static BOOL get_program_files_dir( char *buf, char *buf2 )
@@ -260,7 +286,7 @@ static void set_suminfo( const char *filename )
     r = MsiSummaryInfoSetProperty( hsi, 7, VT_LPSTR, 0, NULL, ";1033" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 9, VT_LPSTR, 0, NULL, "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}" );
+    r = MsiSummaryInfoSetProperty( hsi, 9, VT_LPSTR, 0, NULL, "{E528DDD6-4801-4BEC-BBB6-C5EE0FD097E9}" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
     r = MsiSummaryInfoSetProperty( hsi, 14, VT_I4, 100, NULL, NULL );
@@ -681,13 +707,18 @@ static void test_simple_patch( void )
 {
     UINT r;
     DWORD size;
-    char path[MAX_PATH], install_source[MAX_PATH];
+    char path[MAX_PATH], install_source[MAX_PATH], buffer[32];
     const char *query;
     MSIHANDLE hpackage, hdb, hview, hrec;
 
     if (!pMsiApplyPatchA)
     {
         win_skip("MsiApplyPatchA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -700,7 +731,11 @@ static void test_simple_patch( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %u\n", r);
+        goto cleanup;
+    }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
     ok( size == 1000, "expected 1000, got %u\n", size );
@@ -749,6 +784,12 @@ static void test_simple_patch( void )
     MsiViewClose( hview );
     MsiCloseHandle( hview );
 
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    r = MsiGetProperty( hpackage, "PATCHNEWSUMMARYSUBJECT", buffer, &size );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    ok( !strcmp( buffer, "Installer Database" ), "expected \'Installer Database\', got \'%s\'\n", buffer );
+
     MsiCloseHandle( hdb );
     MsiCloseHandle( hpackage );
 
@@ -759,7 +800,7 @@ static void test_simple_patch( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
@@ -801,6 +842,12 @@ static void test_simple_patch( void )
     MsiViewClose( hview );
     MsiCloseHandle( hview );
 
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    r = MsiGetProperty( hpackage, "PATCHNEWSUMMARYSUBJECT", buffer, &size );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    ok( !strcmp( buffer, "Installation Database" ), "expected \'Installation Database\', got \'%s\'\n", buffer );
+
     MsiCloseHandle( hdb );
     MsiCloseHandle( hpackage );
 
@@ -827,6 +874,7 @@ static void test_simple_patch( void )
     MsiCloseHandle( hview );
     MsiCloseHandle( hdb );
 
+uninstall:
     size = sizeof(path);
     r = MsiGetProductInfoA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                             "InstallSource", path, &size );
@@ -839,8 +887,10 @@ static void test_simple_patch( void )
     ok( !delete_pf( "msitest\\patch.txt", TRUE ), "file not removed\n" );
     ok( !delete_pf( "msitest", FALSE ), "directory not removed\n" );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 
@@ -907,15 +957,83 @@ static UINT find_entry( MSIHANDLE hdb, const char *table, const char *entry )
     return r;
 }
 
+static INT get_integer( MSIHANDLE hdb, UINT field, const char *query)
+{
+    UINT r;
+    INT ret = -1;
+    MSIHANDLE hview, hrec;
+
+    r = MsiDatabaseOpenView( hdb, query, &hview );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewExecute( hview, 0 );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewFetch( hview, &hrec );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r == ERROR_SUCCESS)
+    {
+        UINT r_tmp;
+        ret = MsiRecordGetInteger( hrec, field );
+        MsiCloseHandle( hrec );
+
+        r_tmp = MsiViewFetch( hview, &hrec );
+        ok( r_tmp == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r);
+    }
+
+    MsiViewClose( hview );
+    MsiCloseHandle( hview );
+    return ret;
+}
+
+static char *get_string( MSIHANDLE hdb, UINT field, const char *query)
+{
+    UINT r;
+    static char ret[MAX_PATH];
+    MSIHANDLE hview, hrec;
+
+    ret[0] = '\0';
+
+    r = MsiDatabaseOpenView( hdb, query, &hview );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewExecute( hview, 0 );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewFetch( hview, &hrec );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r == ERROR_SUCCESS)
+    {
+        UINT size = MAX_PATH;
+        r = MsiRecordGetStringA( hrec, field, ret, &size );
+        ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+        MsiCloseHandle( hrec );
+
+        r = MsiViewFetch( hview, &hrec );
+        ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r);
+    }
+
+    MsiViewClose( hview );
+    MsiCloseHandle( hview );
+    return ret;
+}
+
 static void test_system_tables( void )
 {
     UINT r;
+    char *cr;
     const char *query;
     MSIHANDLE hproduct, hdb, hview, hrec;
+    static const char patchsource[] = "MSPSRC0F96CDC04CDF4304B2837B9264889EF7";
 
     if (!pMsiApplyPatchA)
     {
         win_skip("MsiApplyPatchA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -928,7 +1046,11 @@ static void test_system_tables( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %d\n", r);
+        goto cleanup;
+    }
 
     r = MsiOpenProductA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}", &hproduct );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
@@ -973,6 +1095,9 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Tables", "Media" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `VolumeLabel`=\'DISK1\'");
+    ok( r == 1, "Got %u\n", r );
+
     r = find_entry( hdb, "_Tables", "_Property" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
@@ -989,7 +1114,7 @@ static void test_system_tables( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     r = MsiOpenProductA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}", &hproduct );
@@ -1047,17 +1172,38 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Tables", "PatchPackage" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
+    cr = get_string( hdb, 6, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( !strcmp(cr, patchsource), "Expected \"%s\", got \"%s\"\n", patchsource, cr );
+
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( r == 100, "Got %u\n", r );
+
+    r = get_integer( hdb, 2, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( r == 10000, "Got %u\n", r );
+
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `VolumeLabel`=\'DISK1\'");
+    ok( r == 1, "Got %u\n", r );
+
+    cr = get_string( hdb, 4, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    ok( !strcmp(cr, "#CAB_msitest"), "Expected \"#CAB_msitest\", got \"%s\"\n", cr );
+
+    r = get_integer( hdb, 8, "SELECT * FROM `File` WHERE `File` = 'patch.txt'");
+    ok( r == 10000, "Got %u\n", r );
+
     MsiCloseHandle( hrec );
     MsiViewClose( hview );
     MsiCloseHandle( hview );
     MsiCloseHandle( hdb );
     MsiCloseHandle( hproduct );
 
+uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 
@@ -1071,6 +1217,11 @@ static void test_patch_registration( void )
         win_skip("required functions not available\n");
         return;
     }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
 
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
@@ -1081,7 +1232,11 @@ static void test_patch_registration( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %d\n", r);
+        goto cleanup;
+    }
 
     r = MsiApplyPatchA( mspfile, NULL, INSTALLTYPE_DEFAULT, NULL );
     ok( r == ERROR_SUCCESS || broken( r == ERROR_PATCH_PACKAGE_INVALID ), /* version 2.0 */
@@ -1090,7 +1245,7 @@ static void test_patch_registration( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     buffer[0] = 0;
@@ -1135,6 +1290,7 @@ static void test_patch_registration( void )
                            0, patch_code, NULL, NULL, NULL, NULL );
     ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r );
 
+uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
@@ -1146,8 +1302,10 @@ static void test_patch_registration( void )
                               INSTALLPROPERTY_LOCALPACKAGE, buffer, &size );
     ok( r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 

@@ -31,8 +31,13 @@
 
 #include "wine/test.h"
 
+static BOOL is_wow64;
+
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
+static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
+static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
+
 static UINT (WINAPI *pMsiSourceListAddMediaDiskA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPCSTR, LPCSTR);
 static UINT (WINAPI *pMsiSourceListAddSourceExA)
@@ -53,6 +58,7 @@ static void init_functionpointers(void)
 {
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
+    HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
     HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
 #define GET_PROC(dll, func) \
@@ -69,7 +75,8 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA)
-
+    GET_PROC(hadvapi32, RegDeleteKeyExA)
+    GET_PROC(hkernel32, IsWow64Process)
     GET_PROC(hsecur32, GetUserNameExA)
 
 #undef GET_PROC
@@ -127,25 +134,28 @@ static void create_test_guid(LPSTR prodcode, LPSTR squashed)
     WideCharToMultiByte(CP_ACP, 0, squashedW, -1, squashed, MAX_PATH, NULL, NULL);
 }
 
-static int get_user_sid(LPSTR *usersid)
+static char *get_user_sid(void)
 {
     HANDLE token;
-    BYTE buf[1024];
-    DWORD size;
-    PTOKEN_USER user;
-    BOOL rc;
+    DWORD size = 0;
+    TOKEN_USER *user;
+    char *usersid = NULL;
 
     if (!pConvertSidToStringSidA)
-        return 0;
-    rc=OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
-    if (!rc && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        return 0;
-    size = sizeof(buf);
-    GetTokenInformation(token, TokenUser, buf, size, &size);
-    user = (PTOKEN_USER)buf;
-    pConvertSidToStringSidA(user->User.Sid, usersid);
+    {
+        win_skip("ConvertSidToStringSidA is not available\n");
+        return NULL;
+    }
+    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
+    GetTokenInformation(token, TokenUser, NULL, size, &size);
+
+    user = HeapAlloc(GetProcessHeap(), 0, size);
+    GetTokenInformation(token, TokenUser, user, size, &size);
+    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    HeapFree(GetProcessHeap(), 0, user);
+
     CloseHandle(token);
-    return 1;
+    return usersid;
 }
 
 static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase, DWORD line)
@@ -198,7 +208,7 @@ static void test_MsiSourceListGetInfo(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListGetInfoA tests\n");
         return;
@@ -215,11 +225,6 @@ static void test_MsiSourceListGetInfo(void)
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* garbage szProductCodeOrPatchCode */
-    r = pMsiSourceListGetInfoA("garbage", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
-                              MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAME, NULL, NULL);
-    ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-
-    /*  szProductCodeOrPatchCode */
     r = pMsiSourceListGetInfoA("garbage", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAME, NULL, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
@@ -631,6 +636,13 @@ static void test_MsiSourceListGetInfo(void)
     LocalFree(usersid);
 }
 
+static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
+{
+    if (pRegDeleteKeyExA)
+        return pRegDeleteKeyExA( key, subkey, access, 0 );
+    return RegDeleteKeyA( key, subkey );
+}
+
 static void test_MsiSourceListAddSourceEx(void)
 {
     CHAR prodcode[MAX_PATH];
@@ -640,9 +652,9 @@ static void test_MsiSourceListAddSourceEx(void)
     LPSTR usersid;
     LONG res;
     UINT r;
-    HKEY prodkey, userkey, hkey;
-    HKEY url, net;
+    HKEY prodkey, userkey, hkey, url, net;
     DWORD size;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListAddSourceExA)
     {
@@ -651,11 +663,14 @@ static void test_MsiSourceListAddSourceEx(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListAddSourceExA tests\n");
         return;
     }
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -900,8 +915,12 @@ static void test_MsiSourceListAddSourceEx(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* product key exists */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
@@ -909,7 +928,7 @@ static void test_MsiSourceListAddSourceEx(void)
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "C:\\source", 0);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &hkey);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &hkey, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegCloseKey(hkey);
 
@@ -919,7 +938,7 @@ static void test_MsiSourceListAddSourceEx(void)
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "C:\\source", 0);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    res = RegOpenKeyA(prodkey, "SourceList\\URL", &url);
+    res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     size = MAX_PATH;
@@ -937,7 +956,7 @@ static void test_MsiSourceListAddSourceEx(void)
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "another", 0);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    res = RegOpenKeyA(prodkey, "SourceList\\URL", &url);
+    res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     size = MAX_PATH;
@@ -957,6 +976,7 @@ static void test_MsiSourceListAddSourceEx(void)
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     /* szUserSid must be NULL for MSIINSTALLCONTEXT_MACHINE */
     r = pMsiSourceListAddSourceExA(prodcode, usersid,
                                   MSIINSTALLCONTEXT_MACHINE,
@@ -971,8 +991,13 @@ static void test_MsiSourceListAddSourceEx(void)
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* product key exists */
     r = pMsiSourceListAddSourceExA(prodcode, NULL,
@@ -980,7 +1005,7 @@ static void test_MsiSourceListAddSourceEx(void)
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "C:\\source", 0);
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &hkey);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &hkey, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegCloseKey(hkey);
 
@@ -990,7 +1015,7 @@ static void test_MsiSourceListAddSourceEx(void)
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "C:\\source", 0);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    res = RegOpenKeyA(prodkey, "SourceList\\URL", &url);
+    res = RegOpenKeyExA(prodkey, "SourceList\\URL", 0, access, &url);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     size = MAX_PATH;
@@ -1001,7 +1026,7 @@ static void test_MsiSourceListAddSourceEx(void)
 
     RegCloseKey(url);
     RegCloseKey(prodkey);
-    HeapFree(GetProcessHeap(), 0, usersid);
+    LocalFree(usersid);
 }
 
 static void test_MsiSourceListEnumSources(void)
@@ -1016,6 +1041,7 @@ static void test_MsiSourceListEnumSources(void)
     HKEY prodkey, userkey;
     HKEY url, net, source;
     DWORD size;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListEnumSourcesA)
     {
@@ -1024,11 +1050,14 @@ static void test_MsiSourceListEnumSources(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListEnumSourcesA tests\n");
         return;
     }
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -1362,8 +1391,12 @@ static void test_MsiSourceListEnumSources(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* user product key exists */
     size = MAX_PATH;
@@ -1375,7 +1408,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(userkey, "SourceList", &source);
+    res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -1388,7 +1421,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(source, "URL", &url);
+    res = RegCreateKeyExA(source, "URL", 0, NULL, 0, access, NULL, &url, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* URL key exists */
@@ -1425,7 +1458,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(size == 5, "Expected 5, got %d\n", size);
 
     RegDeleteValueA(url, "1");
-    RegDeleteKeyA(url, "");
+    delete_key(url, "", access);
     RegCloseKey(url);
 
     /* SourceList key exists */
@@ -1438,7 +1471,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(source, "Net", &net);
+    res = RegCreateKeyExA(source, "Net", 0, NULL, 0, access, NULL, &net, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* Net key exists */
@@ -1465,15 +1498,16 @@ static void test_MsiSourceListEnumSources(void)
     ok(size == 5, "Expected 5, got %d\n", size);
 
     RegDeleteValueA(net, "1");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(userkey, "");
+    delete_key(userkey, "", access);
     RegCloseKey(userkey);
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     /* szUserSid is non-NULL */
     size = MAX_PATH;
     lstrcpyA(value, "aaa");
@@ -1484,7 +1518,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    /* szUserSid is non-NULL */
+    /* szUserSid is NULL */
     size = MAX_PATH;
     lstrcpyA(value, "aaa");
     r = pMsiSourceListEnumSourcesA(prodcode, NULL,
@@ -1497,8 +1531,13 @@ static void test_MsiSourceListEnumSources(void)
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* user product key exists */
     size = MAX_PATH;
@@ -1510,7 +1549,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &source);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -1523,7 +1562,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(source, "URL", &url);
+    res = RegCreateKeyExA(source, "URL", 0, NULL, 0, access, NULL, &url, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* URL key exists */
@@ -1560,7 +1599,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(size == 5, "Expected 5, got %d\n", size);
 
     RegDeleteValueA(url, "1");
-    RegDeleteKeyA(url, "");
+    delete_key(url, "", access);
     RegCloseKey(url);
 
     /* SourceList key exists */
@@ -1573,7 +1612,7 @@ static void test_MsiSourceListEnumSources(void)
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
-    res = RegCreateKeyA(source, "Net", &net);
+    res = RegCreateKeyExA(source, "Net", 0, NULL, 0, access, NULL, &net, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* Net key exists */
@@ -1600,11 +1639,11 @@ static void test_MsiSourceListEnumSources(void)
     ok(size == 5, "Expected 5, got %d\n", size);
 
     RegDeleteValueA(net, "1");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(prodkey, "");
+    delete_key(prodkey, "", access);
     RegCloseKey(prodkey);
     LocalFree(usersid);
 }
@@ -1619,6 +1658,7 @@ static void test_MsiSourceListSetInfo(void)
     LPSTR usersid;
     LONG res;
     UINT r;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListSetInfoA)
     {
@@ -1627,11 +1667,14 @@ static void test_MsiSourceListSetInfo(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListSetInfoA tests\n");
         return;
     }
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -1942,8 +1985,12 @@ static void test_MsiSourceListSetInfo(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* user product key exists */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -1952,7 +1999,7 @@ static void test_MsiSourceListSetInfo(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(userkey, "SourceList", &source);
+    res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists, no source type */
@@ -1962,25 +2009,31 @@ static void test_MsiSourceListSetInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Media key is created by MsiSourceListSetInfo */
-    res = RegOpenKeyA(source, "Media", &media);
+    res = RegOpenKeyExA(source, "Media", 0, access, &media);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     CHECK_REG_STR(media, "MediaPackage", "path");
 
     RegDeleteValueA(media, "MediaPackage");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(userkey, "");
+    delete_key(userkey, "", access);
     RegCloseKey(userkey);
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* user product key exists */
     r = pMsiSourceListSetInfoA(prodcode, NULL,
@@ -1989,7 +2042,7 @@ static void test_MsiSourceListSetInfo(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &source);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists, no source type */
@@ -1999,7 +2052,7 @@ static void test_MsiSourceListSetInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Media key is created by MsiSourceListSetInfo */
-    res = RegOpenKeyA(source, "Media", &media);
+    res = RegOpenKeyExA(source, "Media", 0, access, &media);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     CHECK_REG_STR(media, "MediaPackage", "path");
 
@@ -2011,11 +2064,11 @@ static void test_MsiSourceListSetInfo(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     RegDeleteValueA(media, "MediaPackage");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(prodkey, "");
+    delete_key(prodkey, "", access);
     RegCloseKey(prodkey);
     LocalFree(usersid);
 }
@@ -2030,6 +2083,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     LPSTR usersid;
     LONG res;
     UINT r;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListAddMediaDiskA)
     {
@@ -2038,11 +2092,14 @@ static void test_MsiSourceListAddMediaDisk(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListAddMediaDiskA tests\n");
         return;
     }
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -2238,8 +2295,12 @@ static void test_MsiSourceListAddMediaDisk(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* user product key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, usersid,
@@ -2248,7 +2309,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(userkey, "SourceList", &source);
+    res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -2258,26 +2319,32 @@ static void test_MsiSourceListAddMediaDisk(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Media subkey is created by MsiSourceListAddMediaDisk */
-    res = RegOpenKeyA(source, "Media", &media);
+    res = RegOpenKeyExA(source, "Media", 0, access, &media);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_REG_STR(media, "1", "label;prompt");
 
     RegDeleteValueA(media, "1");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(userkey, "");
+    delete_key(userkey, "", access);
     RegCloseKey(userkey);
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* machine product key exists */
     r = pMsiSourceListAddMediaDiskA(prodcode, NULL,
@@ -2286,7 +2353,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &source);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -2296,7 +2363,7 @@ static void test_MsiSourceListAddMediaDisk(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Media subkey is created by MsiSourceListAddMediaDisk */
-    res = RegOpenKeyA(source, "Media", &media);
+    res = RegOpenKeyExA(source, "Media", 0, access, &media);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_REG_STR(media, "1", "label;prompt");
@@ -2309,11 +2376,11 @@ static void test_MsiSourceListAddMediaDisk(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     RegDeleteValueA(media, "1");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(prodkey, "");
+    delete_key(prodkey, "", access);
     RegCloseKey(prodkey);
     LocalFree(usersid);
 }
@@ -2325,14 +2392,12 @@ static void test_MsiSourceListEnumMediaDisks(void)
     CHAR keypath[MAX_PATH*2];
     CHAR label[MAX_PATH];
     CHAR prompt[MAX_PATH];
-    HKEY prodkey, userkey;
-    HKEY media, source;
-    DWORD labelsz, promptsz;
+    HKEY prodkey, userkey, media, source;
+    DWORD labelsz, promptsz, val, id;
     LPSTR usersid;
-    DWORD val;
-    DWORD id;
     LONG res;
     UINT r;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListEnumMediaDisksA)
     {
@@ -2341,11 +2406,14 @@ static void test_MsiSourceListEnumMediaDisks(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListEnumMediaDisksA tests\n");
         return;
     }
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -2943,8 +3011,12 @@ static void test_MsiSourceListEnumMediaDisks(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* user product key exists */
     r = pMsiSourceListEnumMediaDisksA(prodcode, usersid, MSIINSTALLCONTEXT_USERMANAGED,
@@ -2953,7 +3025,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(userkey, "SourceList", &source);
+    res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -2973,7 +3045,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
     ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
 
-    res = RegCreateKeyA(source, "Media", &media);
+    res = RegCreateKeyExA(source, "Media", 0, NULL, 0, access, NULL, &media, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* Media key exists */
@@ -3013,20 +3085,26 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(promptsz == 6, "Expected 6, got %d\n", promptsz);
 
     RegDeleteValueA(media, "2");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(userkey, "");
+    delete_key(userkey, "", access);
     RegCloseKey(userkey);
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* machine product key exists */
     r = pMsiSourceListEnumMediaDisksA(prodcode, NULL, MSIINSTALLCONTEXT_MACHINE,
@@ -3035,7 +3113,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(r == ERROR_BAD_CONFIGURATION,
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &source);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -3055,7 +3133,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(!lstrcmpA(prompt, "bbb"), "Expected \"bbb\", got \"%s\"\n", prompt);
     ok(promptsz == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", promptsz);
 
-    res = RegCreateKeyA(source, "Media", &media);
+    res = RegCreateKeyExA(source, "Media", 0, NULL, 0, access, NULL, &media, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* Media key exists */
@@ -3112,11 +3190,11 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(promptsz == MAX_PATH, "Expected MAX_PATH, got %d\n", promptsz);
 
     RegDeleteValueA(media, "2");
-    RegDeleteKeyA(media, "");
+    delete_key(media, "", access);
     RegCloseKey(media);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(prodkey, "");
+    delete_key(prodkey, "", access);
     RegCloseKey(prodkey);
     LocalFree(usersid);
 }
@@ -3130,9 +3208,9 @@ static void test_MsiSourceListAddSource(void)
     LPSTR usersid, ptr;
     LONG res;
     UINT r;
-    HKEY prodkey, userkey;
-    HKEY net, source;
+    HKEY prodkey, userkey, net, source;
     DWORD size;
+    REGSAM access = KEY_ALL_ACCESS;
 
     if (!pMsiSourceListAddSourceA)
     {
@@ -3141,7 +3219,7 @@ static void test_MsiSourceListAddSource(void)
     }
 
     create_test_guid(prodcode, prod_squashed);
-    if (!get_user_sid(&usersid))
+    if (!(usersid = get_user_sid()))
     {
         skip("User SID not available -> skipping MsiSourceListAddSourceA tests\n");
         return;
@@ -3160,6 +3238,9 @@ static void test_MsiSourceListAddSource(void)
         GetUserNameA(ptr, &size);
     }
     trace("username: %s\n", username);
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
 
     /* GetLastError is not set by the function */
 
@@ -3205,14 +3286,18 @@ static void test_MsiSourceListAddSource(void)
     lstrcatA(keypath, "\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto userunmanaged_tests;
+    }
 
     /* user product key exists */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(userkey, "SourceList", &source);
+    res = RegCreateKeyExA(userkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -3220,7 +3305,7 @@ static void test_MsiSourceListAddSource(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Net key is created */
-    res = RegOpenKeyA(source, "Net", &net);
+    res = RegOpenKeyExA(source, "Net", 0, access, &net);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* LastUsedSource does not exist and it is not created */
@@ -3230,7 +3315,7 @@ static void test_MsiSourceListAddSource(void)
     CHECK_REG_STR(net, "1", "source\\");
 
     RegDeleteValueA(net, "1");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
 
     res = RegSetValueExA(source, "LastUsedSource", 0, REG_SZ, (LPBYTE)"blah", 5);
@@ -3241,14 +3326,14 @@ static void test_MsiSourceListAddSource(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Net key is created */
-    res = RegOpenKeyA(source, "Net", &net);
+    res = RegOpenKeyExA(source, "Net", 0, access, &net);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_REG_STR(source, "LastUsedSource", "blah");
     CHECK_REG_STR(net, "1", "source\\");
 
     RegDeleteValueA(net, "1");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
 
     res = RegSetValueExA(source, "LastUsedSource", 0, REG_SZ, (LPBYTE)"5", 2);
@@ -3259,7 +3344,7 @@ static void test_MsiSourceListAddSource(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Net key is created */
-    res = RegOpenKeyA(source, "Net", &net);
+    res = RegOpenKeyExA(source, "Net", 0, access, &net);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_REG_STR(source, "LastUsedSource", "5");
@@ -3288,15 +3373,16 @@ static void test_MsiSourceListAddSource(void)
     RegDeleteValueA(net, "1");
     RegDeleteValueA(net, "2");
     RegDeleteValueA(net, "3");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(userkey, "");
+    delete_key(userkey, "", access);
     RegCloseKey(userkey);
 
     /* MSIINSTALLCONTEXT_USERUNMANAGED */
 
+userunmanaged_tests:
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
 
@@ -3304,7 +3390,11 @@ static void test_MsiSourceListAddSource(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &userkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        goto machine_tests;
+    }
 
     /* user product key exists */
     r = pMsiSourceListAddSourceA(prodcode, username, 0, "source");
@@ -3333,20 +3423,26 @@ static void test_MsiSourceListAddSource(void)
 
     /* MSIINSTALLCONTEXT_MACHINE */
 
+machine_tests:
     r = pMsiSourceListAddSourceA(prodcode, NULL, 0, "source");
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
 
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
 
-    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        skip("Product key creation failed with error code %u\n", res);
+        LocalFree(usersid);
+        return;
+    }
 
     /* machine product key exists */
     r = pMsiSourceListAddSourceA(prodcode, NULL, 0, "source");
     ok(r == ERROR_BAD_CONFIGURATION, "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
 
-    res = RegCreateKeyA(prodkey, "SourceList", &source);
+    res = RegCreateKeyExA(prodkey, "SourceList", 0, NULL, 0, access, NULL, &source, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* SourceList key exists */
@@ -3354,7 +3450,7 @@ static void test_MsiSourceListAddSource(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* Net key is created */
-    res = RegOpenKeyA(source, "Net", &net);
+    res = RegOpenKeyExA(source, "Net", 0, access, &net);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_REG_STR(net, "1", "source\\");
@@ -3368,11 +3464,11 @@ static void test_MsiSourceListAddSource(void)
 
     RegDeleteValueA(net, "2");
     RegDeleteValueA(net, "1");
-    RegDeleteKeyA(net, "");
+    delete_key(net, "", access);
     RegCloseKey(net);
-    RegDeleteKeyA(source, "");
+    delete_key(source, "", access);
     RegCloseKey(source);
-    RegDeleteKeyA(prodkey, "");
+    delete_key(prodkey, "", access);
     RegCloseKey(prodkey);
     LocalFree(usersid);
 }
@@ -3380,6 +3476,9 @@ static void test_MsiSourceListAddSource(void)
 START_TEST(source)
 {
     init_functionpointers();
+
+    if (pIsWow64Process)
+        pIsWow64Process(GetCurrentProcess(), &is_wow64);
 
     test_MsiSourceListGetInfo();
     test_MsiSourceListAddSourceEx();

@@ -4,6 +4,7 @@ add_definitions(
     -D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    action.c
     automation.c
     db.c
     format.c

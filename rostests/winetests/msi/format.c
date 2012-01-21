@@ -201,15 +201,20 @@ static MSIHANDLE create_package_db(void)
     DeleteFile(msifile);
 
     /* create an empty database */
-    res = MsiOpenDatabase(msifile, MSIDBOPEN_CREATE, &hdb );
-    ok( res == ERROR_SUCCESS , "Failed to create database\n" );
+    res = MsiOpenDatabase(msifile, MSIDBOPEN_CREATEDIRECT, &hdb );
+    ok( res == ERROR_SUCCESS , "Failed to create database %u\n", res );
     if( res != ERROR_SUCCESS )
-        return hdb;
+        return 0;
 
     res = MsiDatabaseCommit( hdb );
     ok( res == ERROR_SUCCESS , "Failed to commit database\n" );
+    if( res != ERROR_SUCCESS )
+        return 0;
 
     res = set_summary_info(hdb);
+    ok( res == ERROR_SUCCESS , "Failed to set summary info %u\n", res );
+    if( res != ERROR_SUCCESS )
+        return 0;
 
     res = run_query( hdb,
             "CREATE TABLE `Directory` ( "
@@ -217,25 +222,31 @@ static MSIHANDLE create_package_db(void)
             "`Directory_Parent` CHAR(255), "
             "`DefaultDir` CHAR(255) NOT NULL "
             "PRIMARY KEY `Directory`)" );
-    ok( res == ERROR_SUCCESS , "Failed to create directory table\n" );
+    ok( res == ERROR_SUCCESS , "Failed to create directory table %u\n", res );
 
     return hdb;
 }
 
-static MSIHANDLE package_from_db(MSIHANDLE hdb)
+static UINT package_from_db(MSIHANDLE hdb, MSIHANDLE *handle)
 {
     UINT res;
-    CHAR szPackage[10];
+    CHAR szPackage[12];
     MSIHANDLE hPackage;
 
-    sprintf(szPackage,"#%i",hdb);
-    res = MsiOpenPackage(szPackage,&hPackage);
-    ok( res == ERROR_SUCCESS , "Failed to open package\n" );
+    sprintf(szPackage, "#%u", hdb);
+    res = MsiOpenPackage(szPackage, &hPackage);
+    if (res != ERROR_SUCCESS)
+        return res;
 
     res = MsiCloseHandle(hdb);
-    ok( res == ERROR_SUCCESS , "Failed to close db handle\n" );
+    if (res != ERROR_SUCCESS)
+    {
+        MsiCloseHandle(hPackage);
+        return res;
+    }
 
-    return hPackage;
+    *handle = hPackage;
+    return ERROR_SUCCESS;
 }
 
 static void create_test_file(const CHAR *name)
@@ -250,22 +261,21 @@ static void create_test_file(const CHAR *name)
     CloseHandle(file);
 }
 
-static MSIHANDLE helper_createpackage( const char *szName )
+static UINT helper_createpackage( const char *szName, MSIHANDLE *handle )
 {
-    MSIHANDLE hdb = 0;
+    MSIHANDLE hPackage, suminfo, hdb = 0;
     UINT res;
-    CHAR szPackage[10];
-    MSIHANDLE hPackage;
-    MSIHANDLE suminfo;
 
     DeleteFile(szName);
 
     /* create an empty database */
-    res = MsiOpenDatabase(szName, MSIDBOPEN_CREATE, &hdb );
-    ok( res == ERROR_SUCCESS , "Failed to create database\n" );
+    res = MsiOpenDatabase(szName, MSIDBOPEN_CREATEDIRECT, &hdb );
+    ok( res == ERROR_SUCCESS , "Failed to create database %u\n", res );
+    if (res != ERROR_SUCCESS)
+        return res;
 
     res = MsiDatabaseCommit( hdb );
-    ok( res == ERROR_SUCCESS , "Failed to commit database\n" );
+    ok( res == ERROR_SUCCESS , "Failed to commit database %u\n", res );
 
     /* build summary info */
     res = MsiGetSummaryInformation(hdb, NULL, 7, &suminfo);
@@ -303,14 +313,15 @@ static MSIHANDLE helper_createpackage( const char *szName )
     res = MsiCloseHandle( suminfo);
     ok( res == ERROR_SUCCESS , "Failed to close suminfo\n" );
 
-    sprintf(szPackage,"#%i",hdb);
-    res = MsiOpenPackage(szPackage,&hPackage);
-    ok( res == ERROR_SUCCESS , "Failed to open package\n" );
+    res = package_from_db( hdb, &hPackage );
+    MsiCloseHandle(hdb);
 
-    res = MsiCloseHandle( hdb );
-    ok( res == ERROR_SUCCESS , "Failed to close database\n" );
+    if (res != ERROR_SUCCESS)
+        DeleteFileA( szName );
+    else
+        *handle = hPackage;
 
-    return hPackage;
+    return res;
 }
 
 static void test_createpackage(void)
@@ -318,11 +329,16 @@ static void test_createpackage(void)
     MSIHANDLE hPackage = 0;
     UINT res;
 
-    hPackage = helper_createpackage( msifile );
-    ok ( hPackage != 0, " Failed to create package\n");
+    res = helper_createpackage( msifile, &hPackage );
+    if (res == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        return;
+    }
+    ok( res == ERROR_SUCCESS, "Failed to create package %u\n", res );
 
-    res = MsiCloseHandle( hPackage);
-    ok( res == ERROR_SUCCESS , "Failed to close package\n" );
+    res = MsiCloseHandle( hPackage );
+    ok( res == ERROR_SUCCESS , "Failed to close package %u\n", res );
 
     DeleteFile( msifile );
 }
@@ -457,7 +473,9 @@ static void test_formatrecord(void)
 
     /* now put something in the first field */
     r = MsiRecordSetString(hrec, 0, "[1] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -468,6 +486,7 @@ static void test_formatrecord(void)
 
     /* empty string */
     r = MsiRecordSetString(hrec, 0, "");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
@@ -477,7 +496,9 @@ static void test_formatrecord(void)
 
     /* play games with recursive lookups */
     r = MsiRecordSetString(hrec, 0, "[[1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -487,7 +508,9 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"hey hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[[1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "[2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -497,8 +520,11 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"[[2]] hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[[[3]]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -513,9 +539,13 @@ static void test_formatrecord(void)
     ok( hrec, "failed to create record\n");
 
     r = MsiRecordSetString(hrec, 0, "[[3][1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -525,10 +555,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"big hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[[3][4][1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -538,10 +573,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"big hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[[3][[4]][1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -552,10 +592,15 @@ static void test_formatrecord(void)
 
     /* incorrect  formats */
     r = MsiRecordSetString(hrec, 0, "[[[3][[4]][1]] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -565,10 +610,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"[[[3][[4]][1]] [2]"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[[3][[4]][1]] [2]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -581,10 +631,15 @@ static void test_formatrecord(void)
     /* play games with {} */
 
     r = MsiRecordSetString(hrec, 0, "{[3][1]} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -594,10 +649,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"12 hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[{[3][1]}] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -608,10 +668,15 @@ static void test_formatrecord(void)
 
 
     r = MsiRecordSetString(hrec, 0, "{test} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -621,10 +686,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{test} hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[test]} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -634,10 +704,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{[test]} hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[1][2][3][4]} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -647,10 +722,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer," hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[1][2][3][dummy]} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -660,10 +740,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{2hey1[dummy]} hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[1][2][3][4][dummy]} [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -673,10 +758,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{2hey1[dummy]} hey"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{[1][2]}[3][4][dummy]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -686,10 +776,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{{2hey}1[dummy]}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{[1][2]}[3]{[4][dummy]}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hey");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -699,10 +794,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,""), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{[1][2]}[3]} {[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -712,10 +812,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{{12}3} {12}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[1][2]} {{[1][2]}[3]} {[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -725,10 +830,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"12 {{12}3} {12}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{[4]}{[1][2]} {{[1][2]}[3]} {[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -738,10 +848,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"12 {{12}3} {12}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{blah} {[4]}{[1][2]} {{[1][2]}[3]} {[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -751,10 +866,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{blah} 12 {{12}3} {12}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{[1]}[2]} {[4]}{[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -764,10 +884,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"{{1}2} {}{12}"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{[1]}} {[4]}{[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -777,10 +902,15 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer," 12"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "{{{[1]}} {[4]}{[1][2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "1");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "3");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 12, "big");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -793,7 +923,9 @@ static void test_formatrecord(void)
     
     /* now put play games with escaping */
     r = MsiRecordSetString(hrec, 0, "[1] [2] [\\3asdf]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -804,7 +936,9 @@ static void test_formatrecord(void)
 
     /* now put play games with escaping */
     r = MsiRecordSetString(hrec, 0, "[1] [2] [\\x]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -813,28 +947,32 @@ static void test_formatrecord(void)
     ok( sz == 12, "size wrong\n");
     ok( 0 == strcmp(buffer,"boo hoo [\\x]"), "wrong output\n");
 
-    MsiRecordSetString(hrec, 0, "[\\x]");
+    r = MsiRecordSetString(hrec, 0, "[\\x]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 4, "size wrong: %d\n", sz);
     ok( 0 == strcmp(buffer,"[\\x]"), "wrong output: %s\n", buffer);
 
-    MsiRecordSetString(hrec, 0, "{\\x}");
+    r = MsiRecordSetString(hrec, 0, "{\\x}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 4, "size wrong: %d\n", sz);
     ok( 0 == strcmp(buffer,"{\\x}"), "wrong output: %s\n", buffer);
 
-    MsiRecordSetString(hrec, 0, "[abc\\x]");
+    r = MsiRecordSetString(hrec, 0, "[abc\\x]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 7, "size wrong: %d\n", sz);
     ok( 0 == strcmp(buffer,"[abc\\x]"), "wrong output: %s\n", buffer);
 
-    MsiRecordSetString(hrec, 0, "[\\[]Bracket Text[\\]]");
+    r = MsiRecordSetString(hrec, 0, "[\\[]Bracket Text[\\]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
@@ -843,7 +981,9 @@ static void test_formatrecord(void)
 
     /* now try other formats without a package */
     r = MsiRecordSetString(hrec, 0, "[1] [2] [property]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -853,7 +993,9 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"boo hoo [property]"), "wrong output\n");
 
     r = MsiRecordSetString(hrec, 0, "[1] [~] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -863,6 +1005,7 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"boo [~] hoo"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetInteger(hrec, 1, 123456);
     ok( r == ERROR_SUCCESS, "set integer failed\n");
     sz = sizeof buffer;
@@ -872,6 +1015,7 @@ static void test_formatrecord(void)
     ok( 0 == strcmp(buffer,"123456"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[~]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
@@ -879,6 +1023,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 2, "size wrong\n");
@@ -887,6 +1032,7 @@ static void test_formatrecord(void)
 
     /* MsiFormatRecord doesn't seem to handle a negative too well */
     r = MsiRecordSetString(hrec, 0, "[-1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -894,6 +1040,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -901,6 +1048,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[0]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
@@ -908,6 +1056,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[100]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -915,8 +1064,11 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1] [2]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 7, "size wrong\n");
@@ -924,6 +1076,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -931,6 +1084,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{foo}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 5, "size wrong\n");
@@ -938,7 +1092,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{boo [1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 7, "size wrong\n");
@@ -946,7 +1102,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{[1]}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -954,7 +1112,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{ {[1]}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -965,7 +1125,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{[1]} }");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 8, "size wrong\n");
@@ -973,7 +1135,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ [1]}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -981,7 +1145,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{[1] }}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -989,6 +1155,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{a}{b}{c }{ d}{any text}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -996,6 +1163,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{a} }");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 6, "size wrong\n");
@@ -1003,22 +1171,23 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{a} {b}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
     ok( 0 == strcmp(buffer,""), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
-    todo_wine {
     r = MsiRecordSetString(hrec, 0, "{{a} b}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
-    ok( sz == 0, "size wrong\n");
-    ok( 0 == strcmp(buffer,""), "wrong output\n");
-    }
+    todo_wine ok( sz == 0, "size wrong\n");
+    todo_wine ok( 0 == strcmp(buffer,""), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{a b}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 0, "size wrong\n");
@@ -1026,6 +1195,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{ }");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
@@ -1033,32 +1203,33 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, " {{a}}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 2, "size wrong\n");
     ok( 0 == strcmp(buffer," }"), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
-    todo_wine {
     r = MsiRecordSetString(hrec, 0, "{{ almost {{ any }} text }}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
-    ok( sz == 8, "size wrong\n");
-    ok( 0 == strcmp(buffer," text }}"), "wrong output\n");
-    }
+    todo_wine ok( sz == 8, "size wrong\n");
+    todo_wine ok( 0 == strcmp(buffer," text }}"), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
-    todo_wine {
     r = MsiRecordSetString(hrec, 0, "{{ } { hidden ][ [ }}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
-    ok( sz == 0, "size wrong\n");
-    ok( 0 == strcmp(buffer,""), "wrong output\n");
-    }
+    todo_wine ok( sz == 0, "size wrong\n");
+    todo_wine ok( 0 == strcmp(buffer,""), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[ 1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -1066,33 +1237,39 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[01]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
     ok( 0 == strcmp(buffer,"hoo"), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
-    todo_wine {
     r = MsiRecordSetString(hrec, 0, "{{test}} [01");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
-    ok( sz == 4, "size wrong\n");
-    ok( 0 == strcmp(buffer," [01"), "wrong output\n");
-    }
+    todo_wine ok( sz == 4, "size wrong\n");
+    todo_wine ok( 0 == strcmp(buffer," [01"), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[\\[]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
     ok( 0 == strcmp(buffer,"[\\[]"), "wrong output\n");
     ok( r == ERROR_SUCCESS, "format failed\n");
 
-    MsiRecordSetString(hrec, 0, "[\\[]");
-    MsiRecordSetString(hrec, 1, "hoo");
+    r = MsiRecordSetString(hrec, 0, "[\\[]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof(buffer);
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
@@ -1100,7 +1277,9 @@ static void test_formatrecord(void)
     ok(!lstrcmpA(buffer, "[\\[]"), "Expected \"[\\[]\", got \"%s\"\n", buffer);
 
     r = MsiRecordSetString(hrec, 0, "[foo]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 5, "size wrong\n");
@@ -1108,7 +1287,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[01.]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 5, "size wrong\n");
@@ -1117,6 +1298,7 @@ static void test_formatrecord(void)
 
     SetEnvironmentVariable("FOO", "BAR");
     r = MsiRecordSetString(hrec, 0, "[%FOO]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 6, "size wrong\n");
@@ -1124,7 +1306,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 6, "size wrong\n");
@@ -1132,7 +1316,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ {[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 8, "size wrong\n");
@@ -1140,7 +1326,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ {[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 8, "size wrong\n");
@@ -1148,7 +1336,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ {{[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 9, "size wrong\n");
@@ -1156,7 +1346,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -1164,6 +1356,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ {{a}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 7, "size wrong\n");
@@ -1171,6 +1364,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{ {{a}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 7, "size wrong\n");
@@ -1178,7 +1372,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "0{1{2{3{4[1]5}6}7}8}9");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1189,7 +1385,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "0{1{2[1]3}4");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1200,7 +1398,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "0{1{2[1]3}4");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1211,7 +1411,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1.} [1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 9, "size wrong\n");
@@ -1222,8 +1424,11 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[{[1]}]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1234,8 +1439,11 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1][}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1246,8 +1454,11 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "[2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
@@ -1255,7 +1466,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[{{boo}}1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
@@ -1266,8 +1479,11 @@ static void test_formatrecord(void)
     }
 
     r = MsiRecordSetString(hrec, 0, "[{{boo}}1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 0, "[1{{boo}}]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 3, "size wrong\n");
@@ -1275,7 +1491,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1]{{boo} }}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1286,7 +1504,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1{{boo}}]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1297,7 +1517,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{{[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 6, "size wrong: got %u, expected 3\n", sz);
@@ -1305,7 +1527,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1{{bo}o}}]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 13, "size wrong\n");
@@ -1313,6 +1537,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1{{b{o}o}}]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1323,7 +1548,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{ {[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1335,7 +1562,9 @@ static void test_formatrecord(void)
 
     /* {} inside a substitution does strange things... */
     r = MsiRecordSetString(hrec, 0, "[[1]{}]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1346,7 +1575,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[[1]{}[1]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1357,7 +1588,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[a[1]b[1]c{}d[1]e]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1368,7 +1601,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[a[1]b");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 6, "size wrong\n");
@@ -1376,7 +1611,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "a[1]b]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -1384,7 +1621,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "]a[1]b");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -1392,7 +1631,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "]a[1]b");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 4, "size wrong\n");
@@ -1400,7 +1641,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "\\[1]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 2, "size wrong\n");
@@ -1408,7 +1651,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "\\{[1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "2");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 2, "size wrong\n");
@@ -1416,7 +1661,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "a{b[1]c}d");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 2, "size wrong\n");
@@ -1424,7 +1671,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{a[0]b}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 9, "size wrong\n");
@@ -1432,6 +1681,7 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "[foo]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( sz == 5, "size wrong\n");
@@ -1439,7 +1689,9 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec, 0, "{[1][-1][1]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     todo_wine
@@ -1451,70 +1703,80 @@ static void test_formatrecord(void)
 
     /* nested braces */
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{abcd}");
+    r = MsiRecordSetString(hrec, 0, "{abcd}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 6, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{abcd}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{a[one]bc[two]de[one]f}");
+    r = MsiRecordSetString(hrec, 0, "{a[one]bc[two]de[one]f}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 23, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{a[one]bc[two]de[one]f}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{a[one]bc[bad]de[two]f}");
+    r = MsiRecordSetString(hrec, 0, "{a[one]bc[bad]de[two]f}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 23, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{a[one]bc[bad]de[two]f}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{[bad]}");
+    r = MsiRecordSetString(hrec, 0, "{[bad]}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 7, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{[bad]}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{abc{d[one]ef}"); /* missing final brace */
+    r = MsiRecordSetString(hrec, 0, "{abc{d[one]ef}"); /* missing final brace */
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 14, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{abc{d[one]ef}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{abc{d[one]ef}}");
+    r = MsiRecordSetString(hrec, 0, "{abc{d[one]ef}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 15, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{abc{d[one]ef}}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{abc}{{def}hi{j[one]k}}");
+    r = MsiRecordSetString(hrec, 0, "{abc}{{def}hi{j[one]k}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 5, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{abc}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{def}hi{j[one]k}}");
+    r = MsiRecordSetString(hrec, 0, "{{def}hi{j[one]k}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 0, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,""), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{def}hi{jk}}");
+    r = MsiRecordSetString(hrec, 0, "{{def}hi{jk}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 0, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,""), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{{def}}hi{jk}}");
+    r = MsiRecordSetString(hrec, 0, "{{{def}}hi{jk}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     todo_wine
@@ -1524,7 +1786,8 @@ static void test_formatrecord(void)
     }
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{def}hi{{jk}}}");
+    r = MsiRecordSetString(hrec, 0, "{{def}hi{{jk}}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     todo_wine
@@ -1534,42 +1797,48 @@ static void test_formatrecord(void)
     }
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{def}{jk}}");
+    r = MsiRecordSetString(hrec, 0, "{{def}{jk}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 0, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,""), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{def}}");
+    r = MsiRecordSetString(hrec, 0, "{{def}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 0, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,""), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{a{b}c}");
+    r = MsiRecordSetString(hrec, 0, "{a{b}c}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 7, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{a{b}c}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{a{b}}");
+    r = MsiRecordSetString(hrec, 0, "{a{b}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 6, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{a{b}}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{b}c}");
+    r = MsiRecordSetString(hrec, 0, "{{b}c}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 6, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"{{b}c}"), "wrong output (%s)\n",buffer);
 
     sz = sizeof buffer;
-    MsiRecordSetString(hrec, 0, "{{{{}}}}");
+    r = MsiRecordSetString(hrec, 0, "{{{{}}}}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     todo_wine
@@ -1581,15 +1850,18 @@ static void test_formatrecord(void)
     sz = sizeof buffer;
     MsiRecordSetInteger(hrec, 1, 100);
     MsiRecordSetInteger(hrec, 2, -100);
-    MsiRecordSetString(hrec, 0, "[1] [2]");
+    r = MsiRecordSetString(hrec, 0, "[1] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 8, "size wrong(%i)\n",sz);
     ok( 0 == strcmp(buffer,"100 -100"), "wrong output (%s)\n",buffer);
 
     sz = sizeof(buffer);
-    MsiRecordSetString(hrec, 0, "[1] {[noprop] [twoprop]} {abcdef}");
-    MsiRecordSetString(hrec, 1, "one");
+    r = MsiRecordSetString(hrec, 0, "[1] {[noprop] [twoprop]} {abcdef}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 1, "one");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(sz == 33, "Expected 33, got %d\n",sz);
@@ -1597,8 +1869,10 @@ static void test_formatrecord(void)
        "Expected \"one {[noprop] [twoprop]} {abcdef}\", got \"%s\"\n", buffer);
 
     sz = sizeof(buffer);
-    MsiRecordSetString(hrec, 0, "[1] {[noprop] [one]} {abcdef}");
-    MsiRecordSetString(hrec, 1, "one");
+    r = MsiRecordSetString(hrec, 0, "[1] {[noprop] [one]} {abcdef}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 1, "one");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(sz == 29, "Expected 29, got %d\n",sz);
@@ -1606,8 +1880,10 @@ static void test_formatrecord(void)
        "Expected \"one {[noprop] [one]} {abcdef}\", got \"%s\"\n", buffer);
 
     sz = sizeof(buffer);
-    MsiRecordSetString(hrec, 0, "[1] {[one]} {abcdef}");
-    MsiRecordSetString(hrec, 1, "one");
+    r = MsiRecordSetString(hrec, 0, "[1] {[one]} {abcdef}");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 1, "one");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(sz == 20, "Expected 20, got %d\n",sz);
@@ -1625,8 +1901,13 @@ static void test_formatrecord_package(void)
     UINT r;
     DWORD sz=100;
 
-    package = helper_createpackage( msifile );
-    ok(package!=0, "Unable to create package\n");
+    r = helper_createpackage( msifile, &package );
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        return;
+    }
+    ok( r == ERROR_SUCCESS, "Unable to create package %u\n", r );
 
     hrec = MsiCreateRecord(12);
     ok( hrec, "failed to create record\n");
@@ -1638,17 +1919,29 @@ static void test_formatrecord_package(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
 
     r = MsiRecordSetString(hrec,0,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,1,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,2,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,3,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,4,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,5,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,6,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,7,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,8,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,9,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,10,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,11,NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec,12,NULL);
     ok( r == ERROR_SUCCESS, "set string failed\n");
 
@@ -1662,11 +1955,17 @@ static void test_formatrecord_package(void)
     ok( r == ERROR_SUCCESS, "failed to set propertY: %d\n", r);
 
     r = MsiRecordSetString(hrec, 0, NULL);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "[2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "stuff");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "prop");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 4, "[prop]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 5, "[noprop]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
     r = MsiFormatRecord(package, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed with empty buffer (%i)\n",r);
@@ -1680,7 +1979,9 @@ static void test_formatrecord_package(void)
 
     /* now put play games with escaping */
     r = MsiRecordSetString(hrec, 0, "[1] [2] [\\3asdf]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1690,7 +1991,9 @@ static void test_formatrecord_package(void)
     ok( 0 == strcmp(buffer,"boo hoo 3"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[1] [2] [\\x]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1831,7 +2134,9 @@ static void test_formatrecord_package(void)
 
     /* null characters */
     r = MsiRecordSetString(hrec, 0, "[1] [~] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1842,9 +2147,12 @@ static void test_formatrecord_package(void)
     ok(!lstrcmpA(&buffer[5], " hoo"),
        "Expected \" hoo\", got \"%s\"\n", &buffer[5]);
 
-    MsiRecordSetString(hrec, 0, "[1] [~abc] [2]");
-    MsiRecordSetString(hrec, 1, "boo");
-    MsiRecordSetString(hrec, 2, "hoo");
+    r = MsiRecordSetString(hrec, 0, "[1] [~abc] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetString(hrec, 2, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof(buffer);
     r = MsiFormatRecord(package, hrec, buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
@@ -1855,7 +2163,9 @@ static void test_formatrecord_package(void)
     r = MsiSetProperty(package,"dummy","Bork");
     ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiRecordSetString(hrec, 0, "[1] [dummy] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1865,7 +2175,9 @@ static void test_formatrecord_package(void)
     ok( 0 == strcmp(buffer,"boo Bork hoo"), "wrong output\n");
 
     r = MsiRecordSetString(hrec, 0, "[1] [invalid] [2]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1876,12 +2188,17 @@ static void test_formatrecord_package(void)
 
     /* nesting tests */
     r = MsiSetProperty(package,"dummya","foo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiSetProperty(package,"dummyb","baa");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiSetProperty(package,"adummyc","whoa");
     ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiRecordSetString(hrec, 0, "[dummy[1]] [dummy[2]] [[1]dummy[3]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "a");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "b");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "c");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1891,11 +2208,15 @@ static void test_formatrecord_package(void)
     ok( 0 == strcmp(buffer,"foo baa whoa"), "wrong output (%s)\n",buffer);
 
     r = MsiSetProperty(package,"dummya","1");
+    ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiSetProperty(package,"dummyb","[2]");
     ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiRecordSetString(hrec, 0, "[dummya] [[dummya]] [dummyb]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "aaa");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "bbb");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "ccc");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1908,13 +2229,19 @@ static void test_formatrecord_package(void)
     }
 
     r = MsiSetProperty(package,"dummya","1");
+    ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiSetProperty(package,"dummyb","a");
+    ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiSetProperty(package,"dummyc","\\blath");
+    ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiSetProperty(package,"dummyd","[\\blath]");
     ok( r == ERROR_SUCCESS, "set property failed\n");
     r = MsiRecordSetString(hrec, 0, "[dummyc] [[dummyc]] [dummy[dummyb]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "aaa");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "bbb");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "ccc");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1924,8 +2251,11 @@ static void test_formatrecord_package(void)
     ok( 0 == strcmp(buffer,"\\blath b 1"), "wrong output (%s)\n",buffer);
 
     r = MsiRecordSetString(hrec, 0, "[1] [2] [[\\3asdf]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "yeah");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -1938,8 +2268,11 @@ static void test_formatrecord_package(void)
     }
 
     r = MsiRecordSetString(hrec, 0, "[1] [2] [[3]]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 1, "boo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 2, "hoo");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
     r = MsiRecordSetString(hrec, 3, "\\help");
     ok( r == ERROR_SUCCESS, "set string failed\n");
     sz = sizeof buffer;
@@ -2120,7 +2453,7 @@ static void test_formatrecord_package(void)
 
 static void test_formatrecord_tables(void)
 {
-    MSIHANDLE hdb, hpkg, hrec;
+    MSIHANDLE hdb, hrec, hpkg = 0;
     CHAR buf[MAX_PATH];
     CHAR curr_dir[MAX_PATH];
     CHAR expected[MAX_PATH];
@@ -2186,19 +2519,26 @@ static void test_formatrecord_tables(void)
     ok( r == ERROR_SUCCESS, "cannot create CustomAction table: %d\n", r);
 
     r = add_custom_action_entry( hdb, "'MyCustom', 51, 'prop', '[!temporal_file]'" );
-    ok( r == ERROR_SUCCESS, "cannt add custom action: %d\n", r);
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
 
     r = add_custom_action_entry( hdb, "'EscapeIt1', 51, 'prop', '[\\[]Bracket Text[\\]]'" );
-    ok( r == ERROR_SUCCESS, "cannt add custom action: %d\n", r);
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
 
     r = add_custom_action_entry( hdb, "'EscapeIt2', 51, 'prop', '[\\xabcd]'" );
-    ok( r == ERROR_SUCCESS, "cannt add custom action: %d\n", r);
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
 
     r = add_custom_action_entry( hdb, "'EscapeIt3', 51, 'prop', '[abcd\\xefgh]'" );
-    ok( r == ERROR_SUCCESS, "cannt add custom action: %d\n", r);
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
 
-    hpkg = package_from_db( hdb );
-    ok( hpkg, "failed to create package\n");
+    r = package_from_db( hdb, &hpkg );
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        MsiCloseHandle( hdb );
+        DeleteFile( msifile );
+        return;
+    }
+    ok( r == ERROR_SUCCESS, "failed to create package %u\n", r );
 
     MsiCloseHandle( hdb );
 
@@ -2243,6 +2583,8 @@ static void test_formatrecord_tables(void)
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
     ok( !lstrcmp( buf, "1:  " ), "Expected '1:  ', got %s\n", buf );
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
     r = MsiDoAction(hpkg, "CostInitialize");
     ok( r == ERROR_SUCCESS, "CostInitialize failed: %d\n", r);
@@ -2381,12 +2723,18 @@ static void test_formatrecord_tables(void)
 
 static void test_processmessage(void)
 {
-    MSIHANDLE hrec;
-    MSIHANDLE package;
-    int r;
+    MSIHANDLE hrec, package;
+    UINT r;
 
-    package = helper_createpackage( msifile );
-    ok(package!=0, "Unable to create package\n");
+    MsiSetInternalUI(INSTALLUILEVEL_BASIC, NULL);
+
+    r = helper_createpackage( msifile, &package );
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        return;
+    }
+    ok( r == ERROR_SUCCESS, "Unable to create package %u\n", r );
 
     hrec = MsiCreateRecord(3);
     ok( hrec, "failed to create record\n");

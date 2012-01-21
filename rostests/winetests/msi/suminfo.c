@@ -63,7 +63,7 @@
 #define PID_MSISOURCE PID_WORDCOUNT
 #define PID_MSIRESTRICT PID_CHARCOUNT
 
-const char *msifile = "winetest-suminfo.msi";
+static const char *msifile = "winetest-suminfo.msi";
 static const WCHAR msifileW[] = {
     'w','i','n','e','t','e','s','t','-','s','u','m','i','n','f','o','.','m','s','i',0 };
 
@@ -86,7 +86,18 @@ static void test_suminfo(void)
     ok(r == ERROR_INVALID_PARAMETER, "MsiGetSummaryInformation wrong error\n");
 
     r = MsiGetSummaryInformation(hdb, NULL, 0, &hsuminfo);
-    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiGetSummaryInformation(0, "", 0, &hsuminfo);
+    todo_wine
+    ok(r == ERROR_INSTALL_PACKAGE_INVALID || r == ERROR_INSTALL_PACKAGE_OPEN_FAILED,
+       "MsiGetSummaryInformation failed %u\n", r);
+
+    r = MsiGetSummaryInformation(hdb, "", 0, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
 
     r = MsiSummaryInfoGetPropertyCount(0, NULL);
     ok(r == ERROR_INVALID_HANDLE, "getpropcount failed\n");

@@ -589,6 +589,9 @@ static void test_fieldzero(void)
 
     MsiCloseHandle(rec);
 
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "nosuchtable", &rec);
+    ok(r == ERROR_INVALID_TABLE, "Expected ERROR_INVALID_TABLE, got %d\n", r);
+
     query = "SELECT * FROM `drone` WHERE `id` = 1";
     r = MsiDatabaseOpenView(hdb, query, &hview);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
