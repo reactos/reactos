@@ -2,43 +2,41 @@
 Signature="$WINDOWS NT$"
 Class=HIDClass
 ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
-Provider=%MSFT%
+Provider=%ReactOS%
 LayoutFile=layout.inf
-DriverVer=07/01/2001,5.1.2600.5512
+DriverVer=01/20/2012,1.00
 
 [DestinationDirs]
 DefaultDestDir = 12
 HID_Inst.CopyFilesDLL.NT = 11
-SPI_Files_DLL = 11
-
-[ClassInstall]
-Addreg=HIDClassReg
 
 [HIDClassReg]
 HKR,,,,%HID.ClassName%
 HKR,,Icon,,-24
 HKR,,NoInstallClass,,1
 
-[ClassInstall32]
+[ClassInstall32.NT]
 Addreg=HIDClassReg
 
+[Manufacturer]
+%StdMfg% = StdMfg
+%MSMice% = MSMice
+
 [MSMice]
-%USB\VID_045E&PID_0009.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0009
-%USB\VID_045E&PID_001E.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_001E
-%USB\VID_045E&PID_0023.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0023
-%USB\VID_045E&PID_0024.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0024
-%USB\VID_045E&PID_0025.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0025
-%USB\VID_045E&PID_0029.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0029
-%USB\VID_045E&PID_0039.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0039
-%USB\VID_045E&PID_0040.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0040
-%USB\VID_045E&PID_0047.DeviceDesc%=HID_Inst,, USB\VID_045E&PID_0047
+%USB\VID_045E&PID_0009.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0009
+%USB\VID_045E&PID_001E.DeviceDesc%=HID_Inst,USB\VID_045E&PID_001E
+%USB\VID_045E&PID_0023.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0023
+%USB\VID_045E&PID_0024.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0024
+%USB\VID_045E&PID_0025.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0025
+%USB\VID_045E&PID_0029.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0029
+%USB\VID_045E&PID_0039.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0039
+%USB\VID_045E&PID_0040.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0040
+%USB\VID_045E&PID_0047.DeviceDesc%=HID_Inst,USB\VID_045E&PID_0047
 
-
-[Standard]
-%HID_DEVICE_SYSTEM_GAME%=HID_Raw_Inst,, HID_DEVICE_SYSTEM_GAME
-%HID_DEVICE%=HID_Raw_Inst,, HID_DEVICE
-%HID.DeviceDesc% = HID_Inst,,GENERIC_HID_DEVICE,USB\Class_03&SubClass_01,USB\Class_03
-
+[StdMfg]
+%HID.DeviceDesc% = HID_Inst,GENERIC_HID_DEVICE
+%HID.DeviceDesc% = HID_Inst,USB\Class_03&SubClass_01
+%HID.DeviceDesc% = HID_Inst,USB\Class_03
 
 [HID_Inst.NT]
 Copyfiles = HID_Inst.CopyFiles.NT, HID_Inst.CopyFilesDLL.NT
@@ -59,15 +57,13 @@ ServiceType   = 1
 StartType     = 3
 ErrorControl  = 1
 ServiceBinary = %12%\hidusb.sys
-LoadOrderGroup = extended base
+LoadOrderGroup = Extended Base
 
-[strings]
-MSFT                  = "ReactOS"
-HID.DeviceDesc        = "USB-HID (Human Interface Device)"
-HID.DefaultDevice     = "HID-Standardgerät"
-HID.ClassName         = "Eingabegeräte (Human Interface Devices)"
-HID.SvcDesc           = "ReactOS HID Class-Treiber"
+[Strings]
+ReactOS               = "ReactOS Team"
+HID.ClassName         = "Human Interface Devices"
+HID.DeviceDesc        = "USB Human Interface Device"
 
-
-
+StdMfg                = "(Standard Human Interface Devices)"
+MSMice                = "Microsoft"
 

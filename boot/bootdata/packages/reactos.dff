@@ -666,6 +666,7 @@ media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
 media\inf\hal.inf                                   6
 media\inf\hdc.inf                                   6
+media\inf\input.inf                                 6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
 media\inf\machine.inf                               6
