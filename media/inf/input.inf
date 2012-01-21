@@ -10,13 +10,13 @@ DriverVer=01/20/2012,1.00
 DefaultDestDir = 12
 HID_Inst.CopyFilesDLL.NT = 11
 
-[HIDClassReg]
-HKR,,,,%HID.ClassName%
-HKR,,Icon,,-24
-HKR,,NoInstallClass,,1
+[HIDClass.NT.AddReg]
+HKR,,,0,%HID.ClassName%
+HKR,,Icon,0,"-24"
+HKR,,NoInstallClass,0,1
 
 [ClassInstall32.NT]
-Addreg=HIDClassReg
+AddReg=HIDClass.NT.AddReg
 
 [Manufacturer]
 %StdMfg% = StdMfg
