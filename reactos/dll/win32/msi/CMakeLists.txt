@@ -97,6 +97,8 @@ add_importlibs(msi
 add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
+allow_warnings(msi)
+
 endif(NOT MSVC)
 
 add_importlib_target(msi.spec)
