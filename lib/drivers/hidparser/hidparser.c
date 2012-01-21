@@ -49,7 +49,7 @@ HidParser_GetCollectionDescription(
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
     HIDPARSER_STATUS ParserStatus;
-    ULONG CollectionCount;
+    ULONG CollectionCount, ReportCount;
     ULONG Index;
 
     //
@@ -678,9 +678,7 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
             //
             // process usage
             //
-            //Status = HidParser_TranslateUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
-			UNIMPLEMENTED
-			Status = HIDPARSER_STATUS_NOT_IMPLEMENTED;
+            Status = HidParser_TranslateUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
         }
         else if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_CONSUMER)
         {

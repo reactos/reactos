@@ -13,7 +13,6 @@
 #define _HIDPI_
 #define _HIDPI_NO_FUNCTION_MACROS_
 #include <ntddk.h>
-#include <ntddkbd.h>
 #include <hidpddi.h>
 #include <hidpi.h>
 #include <debug.h>
@@ -331,7 +330,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_TranslateUsageAndPagesToI8042ScanCodes(
-   IN PHID_PARSER Parser,
    IN PUSAGE_AND_PAGE  ChangedUsageList,
    IN ULONG  UsageListLength,
    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
