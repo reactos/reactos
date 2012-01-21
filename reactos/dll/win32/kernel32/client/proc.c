@@ -59,8 +59,7 @@ RTL_QUERY_REGISTRY_TABLE BasepAppCertTable[2] =
         0,
         NULL,
         0
-    },
-    {}
+    }
 };
 
 PSAFER_REPLACE_PROCESS_THREAD_TOKENS g_SaferReplaceProcessThreadTokens;
