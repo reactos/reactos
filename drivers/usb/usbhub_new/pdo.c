@@ -191,7 +191,7 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             // Set the real device handle
             //
-            DPRINT("UsbdDeviceHandle %x, ChildDeviceHandle %x\n", Urb->UrbHeader.UsbdDeviceHandle, ChildDeviceExtension->UsbDeviceHandle);
+            //DPRINT("UsbdDeviceHandle %x, ChildDeviceHandle %x\n", Urb->UrbHeader.UsbdDeviceHandle, ChildDeviceExtension->UsbDeviceHandle);
 
             Urb->UrbHeader.UsbdDeviceHandle = ChildDeviceExtension->UsbDeviceHandle;
 

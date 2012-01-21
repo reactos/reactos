@@ -155,7 +155,7 @@ USBHUB_DispatchInternalDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Usbhub: DispatchInternalDeviceControl\n");
+    //DPRINT1("Usbhub: DispatchInternalDeviceControl\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_IrpStub(DeviceObject, Irp);
     else
