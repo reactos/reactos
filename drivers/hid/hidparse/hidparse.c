@@ -333,11 +333,6 @@ HidP_TranslateUsageAndPagesToI8042ScanCodes(
     HID_PARSER Parser;
 
     //
-    // sanity check
-    //
-    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
-
-    //
     // init parser
     //
     HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, NULL, &Parser);
@@ -345,7 +340,7 @@ HidP_TranslateUsageAndPagesToI8042ScanCodes(
     //
     // translate usage pages
     //
-    return HidParser_TranslateUsageAndPagesToI8042ScanCodes(Parser, UsageListLength, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+    return HidParser_TranslateUsageAndPagesToI8042ScanCodes(&Parser, ChangedUsageList, UsageListLength, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
 }
 
 

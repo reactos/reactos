@@ -101,7 +101,6 @@ HidParser_GetReportByType(
 {
     PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
-    ULONG ReportCount = 0;
 
     //
     // get parser context
@@ -863,7 +862,6 @@ HidParser_GetScaledUsageValueWithReport(
     PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
-    ULONG ItemCount = 0;
     USHORT CurrentUsagePage;
     PHID_REPORT_ITEM ReportItem;
     ULONG Data;
@@ -1017,7 +1015,7 @@ HidParser_DispatchKey(
         //
         // is this a key break
         //
-        if (KeyAction == HidP_KeyboardBreak)
+        if (KeyAction == HidP_Keyboard_Break)
         {
             //
             // add break

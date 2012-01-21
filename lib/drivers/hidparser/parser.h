@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <pshpack1.h>
 #include "hidparser.h"
+#include <ntddkbd.h>
 
  /*
   * Copyright 2007, Haiku, Inc. All Rights Reserved.

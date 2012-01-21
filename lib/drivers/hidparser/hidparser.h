@@ -330,6 +330,7 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_TranslateUsageAndPagesToI8042ScanCodes(
+   IN PHID_PARSER Parser,
    IN PUSAGE_AND_PAGE  ChangedUsageList,
    IN ULONG  UsageListLength,
    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
@@ -417,6 +418,16 @@ HidParser_InitializeReportForID(
   IN PHIDP_PREPARSED_DATA  PreparsedData,
   IN OUT PCHAR  Report,
   IN ULONG  ReportLength);
+
+
+HIDPARSER_STATUS
+HidParser_TranslateUsage(
+    IN PHID_PARSER Parser,
+    IN USAGE Usage,
+    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+    IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+    IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+    IN PVOID  InsertCodesContext);
 
 HIDAPI
 NTSTATUS

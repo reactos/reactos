@@ -49,7 +49,7 @@ HidParser_GetCollectionDescription(
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
     HIDPARSER_STATUS ParserStatus;
-    ULONG CollectionCount, ReportCount;
+    ULONG CollectionCount;
     ULONG Index;
 
     //
