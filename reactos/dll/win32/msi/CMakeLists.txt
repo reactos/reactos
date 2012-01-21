@@ -75,7 +75,7 @@ set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BIN
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader)
-add_delay_importlibs(msi odbccp32 crypt32 imagehlp)
+add_delay_importlibs(msi odbccp32 crypt32 imagehlp wintrust)
 
 add_importlibs(msi
     advapi32
