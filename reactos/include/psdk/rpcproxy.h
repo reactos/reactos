@@ -203,6 +203,9 @@ RPCRTAPI HRESULT RPC_ENTRY
 RPCRTAPI HRESULT RPC_ENTRY
   NdrDllUnregisterProxy( HMODULE hDll, const ProxyFileInfo **pProxyFileList, const CLSID *pclsid );
 
+HRESULT __wine_register_resources( HMODULE module ) DECLSPEC_HIDDEN;
+HRESULT __wine_unregister_resources( HMODULE module ) DECLSPEC_HIDDEN;
+
 #define CSTDSTUBBUFFERRELEASE(pFactory) \
 ULONG WINAPI CStdStubBuffer_Release(IRpcStubBuffer *This) \
   { return NdrCStdStubBuffer_Release(This, (IPSFactoryBuffer *)pFactory); }
@@ -285,6 +288,15 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 # define DLLCANUNLOADNOW_ENTRY DllCanUnloadNow
 #endif
 
+#ifdef WINE_REGISTER_DLL
+# define WINE_DO_REGISTER_DLL(pfl, clsid) return __wine_register_resources( hProxyDll )
+# define WINE_DO_UNREGISTER_DLL(pfl, clsid) return __wine_unregister_resources( hProxyDll )
+#else
+# define WINE_DO_REGISTER_DLL(pfl, clsid)   return NdrDllRegisterProxy( hProxyDll, (pfl), (clsid) )
+# define WINE_DO_UNREGISTER_DLL(pfl, clsid) return NdrDllUnregisterProxy( hProxyDll, (pfl), (clsid) )
+#endif
+
+
 #define DLLDATA_GETPROXYDLLINFO(pfl, rclsid) \
     void RPC_ENTRY GetProxyDllInfo(const ProxyFileInfo ***ppProxyFileInfo, \
                                    const CLSID **ppClsid) DECLSPEC_HIDDEN; \
@@ -329,16 +341,16 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
     HRESULT WINAPI DLLREGISTERSERVER_ENTRY(void) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLREGISTERSERVER_ENTRY(void) \
     { \
-        return NdrDllRegisterProxy(hProxyDll, (pfl), (factory_clsid)); \
+        WINE_DO_REGISTER_DLL( (pfl), (factory_clsid) ); \
     } \
     \
     HRESULT WINAPI DLLUNREGISTERSERVER_ENTRY(void) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLUNREGISTERSERVER_ENTRY(void) \
     { \
-        return NdrDllUnregisterProxy(hProxyDll, (pfl), (factory_clsid)); \
+        WINE_DO_UNREGISTER_DLL( (pfl), (factory_clsid) ); \
     }
 
-#ifdef REGISTER_PROXY_DLL
+#if defined(REGISTER_PROXY_DLL) || defined(WINE_REGISTER_DLL)
 # define DLLREGISTRY_ROUTINES(pfl, factory_clsid) \
     REGISTER_PROXY_DLL_ROUTINES(pfl, factory_clsid)
 #else
