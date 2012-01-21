@@ -76,7 +76,7 @@ USB\ROOT_HUB20 = usbhub
 ;PCI\CC_0C0300 = usbuhci
 PCI\CC_0C0310 = usbohci
 PCI\CC_0C0320 = usbehci
-;USB\Class_08&SubClass_06&Prot_50 = usbstor
+USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid
 
 [BootBusExtenders.Load]
