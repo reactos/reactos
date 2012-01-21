@@ -132,7 +132,6 @@ HidClassPDO_HandleQueryDeviceId(
     // store result
     //
     DPRINT1("NewBuffer %S\n", NewBuffer);
-    ASSERT(FALSE);
     Irp->IoStatus.Information = (ULONG_PTR)NewBuffer;
     return STATUS_SUCCESS;
 }
@@ -272,7 +271,6 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // store result
     //
-    ASSERT(FALSE);
     Irp->IoStatus.Information = (ULONG_PTR)Ptr;
     return STATUS_SUCCESS;
 }
