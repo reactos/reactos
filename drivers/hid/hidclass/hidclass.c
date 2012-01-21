@@ -117,7 +117,6 @@ HidClassDriverUnload(
     IN PDRIVER_OBJECT DriverObject)
 {
     UNIMPLEMENTED
-    ASSERT(FALSE);
 }
 
 NTSTATUS
@@ -848,7 +847,6 @@ HidClass_Power(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
-    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
