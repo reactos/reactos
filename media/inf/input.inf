@@ -67,3 +67,13 @@ HID.DeviceDesc        = "USB Human Interface Device"
 StdMfg                = "(Standard Human Interface Devices)"
 MSMice                = "Microsoft"
 
+
+USB\VID_045E&PID_0009.DeviceDesc="Microsoft IntelliMouse (USB)"
+USB\VID_045E&PID_001E.DeviceDesc="Microsoft IntelliMouse Explorer (USB)"
+USB\VID_045E&PID_0023.DeviceDesc="Microsoft Trackball Optical (USB)"
+USB\VID_045E&PID_0024.DeviceDesc="Microsoft Trackball Explorer (USB)"
+USB\VID_045E&PID_0025.DeviceDesc="Microsoft IntelliMouse mit IntelliEye (USB)"
+USB\VID_045E&PID_0029.DeviceDesc="Microsoft IntelliMouse Web (USB)"
+USB\VID_045E&PID_0039.DeviceDesc="Microsoft IntelliMouse Optical (USB)"
+USB\VID_045E&PID_0040.DeviceDesc="Microsoft Wheel Mouse Optical (USB)"
+USB\VID_045E&PID_0047.DeviceDesc="Microsoft IntelliMouse Explorer 3.0 (USB)"
