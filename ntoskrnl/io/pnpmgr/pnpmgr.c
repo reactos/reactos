@@ -102,16 +102,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       return Status;
    }
 
-   /* Check if driver added a FDO above the PDO */
    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-   if (Fdo == DeviceNode->PhysicalDeviceObject)
-   {
-      /* FIXME: What do we do? Unload the driver or just disable the device? */
-      DPRINT1("An FDO was not attached\n");
-      ObDereferenceObject(Fdo);
-      IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-      return STATUS_UNSUCCESSFUL;
-   }
 
    /* Check if we have a ACPI device (needed for power management) */
    if (Fdo->DeviceType == FILE_DEVICE_ACPI)
