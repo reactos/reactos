@@ -9,9 +9,6 @@
 #include <ctype.h>
 #include <malloc.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #include <winsock2.h>
 #include <windows.h>
 

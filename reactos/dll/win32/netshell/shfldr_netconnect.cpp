@@ -498,7 +498,7 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
     if (SUCCEEDED(hr))
     {
         strRet->uType = STRRET_WSTR;
-        strRet->u.pOleStr = pszName;
+        strRet->pOleStr = pszName;
     }
     else
     {
@@ -578,7 +578,7 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
     {
         psd->str.uType = STRRET_WSTR;
         if (LoadStringW(netshell_hInstance, NetConnectSFHeader[iColumn].colnameid, buffer, MAX_PATH))
-            hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+            hr = SHStrDupW(buffer, &psd->str.pOleStr);
 
         return hr;
     }
@@ -608,7 +608,7 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
                 if (LoadStringW(netshell_hInstance, IDS_TYPE_ETHERNET, buffer, MAX_PATH))
                 {
                     psd->str.uType = STRRET_WSTR;
-                    hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+                    hr = SHStrDupW(buffer, &psd->str.pOleStr);
                 }
             }
             break;
@@ -629,7 +629,7 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
             {
                 buffer[MAX_PATH-1] = L'\0';
                 psd->str.uType = STRRET_WSTR;
-                hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+                hr = SHStrDupW(buffer, &psd->str.pOleStr);
             }
             break;
         case COLUMN_DEVNAME:
@@ -638,17 +638,17 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
                 wcscpy(buffer, pProperties->pszwDeviceName);
                 buffer[MAX_PATH-1] = L'\0';
                 psd->str.uType = STRRET_WSTR;
-                hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+                hr = SHStrDupW(buffer, &psd->str.pOleStr);
             }
             else
             {
-                psd->str.u.cStr[0] = '\0';
+                psd->str.cStr[0] = '\0';
                 psd->str.uType = STRRET_CSTR;
             }
             break;
         case COLUMN_PHONE:
         case COLUMN_OWNER:
-            psd->str.u.cStr[0] = '\0';
+            psd->str.cStr[0] = '\0';
             psd->str.uType = STRRET_CSTR;
             break;
     }
@@ -840,7 +840,7 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 
     if (pinfo->nPages < MAX_PROPERTY_SHEET_PAGE)
     {
-        pinfo->u3.phpage[pinfo->nPages++] = hPage;
+        pinfo->phpage[pinfo->nPages++] = hPage;
         return TRUE;
     }
     return FALSE;
@@ -903,7 +903,7 @@ ShowNetConnectionProperties(
         ZeroMemory(hppages, sizeof(hppages));
         pinfo.dwSize = sizeof(PROPSHEETHEADERW);
         pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
-        pinfo.u3.phpage = hppages;
+        pinfo.phpage = hppages;
         pinfo.hwndParent = hwnd;
 
         pinfo.pszCaption = pProperties->pszwName;

@@ -232,7 +232,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     nid.cbSize = sizeof(nid);
     nid.uID = pContext->uID;
     nid.hWnd = pContext->hwndStatusDlg;
-    nid.u.uVersion = 3;
+    nid.uVersion = 3;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
@@ -859,7 +859,7 @@ ShowStatusPropertyDialog(
     ZeroMemory(hppages, sizeof(hppages));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
-    pinfo.u3.phpage = hppages;
+    pinfo.phpage = hppages;
     pinfo.hwndParent = hwndDlg;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
@@ -1035,7 +1035,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
                 nid.uFlags = NIF_MESSAGE;
-                nid.u.uVersion = 3;
+                nid.uVersion = 3;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
 

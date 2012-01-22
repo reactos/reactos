@@ -78,7 +78,7 @@ InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWS
     memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
     ppage.dwSize = sizeof(PROPSHEETPAGEW);
     ppage.dwFlags = PSP_DEFAULT;
-    ppage.u.pszTemplate = resname;
+    ppage.pszTemplate = resname;
     ppage.pfnDlgProc = dlgproc;
     ppage.lParam = lParam;
     ppage.hInstance = netshell_hInstance;
