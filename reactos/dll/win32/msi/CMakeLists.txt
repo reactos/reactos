@@ -34,7 +34,6 @@ list(APPEND SOURCE
     handle.c
     insert.c
     install.c
-    join.c
     media.c
     msi.c
     msi_main.c

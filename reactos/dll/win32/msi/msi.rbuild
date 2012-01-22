@@ -29,7 +29,6 @@
 	<file>handle.c</file>
 	<file>insert.c</file>
 	<file>install.c</file>
-	<file>join.c</file>
 	<file>media.c</file>
 	<file>msi.c</file>
 	<file>msi_main.c</file>
