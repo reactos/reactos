@@ -14,6 +14,7 @@
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 NTSTATUS
+NTAPI
 UrbCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -108,7 +109,7 @@ FowardUrbToRootHub(
     // Now set the completion routine for the new Irp.
     //
     IoSetCompletionRoutine(ForwardIrp,
-                           (PIO_COMPLETION_ROUTINE)UrbCompletion,
+                           UrbCompletion,
                            Irp,
                            TRUE,
                            TRUE,

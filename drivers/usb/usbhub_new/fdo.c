@@ -558,7 +558,7 @@ QueryStatusChangeEndpoint(
     // Set the completion routine for when device is connected to root hub
     //
     IoSetCompletionRoutine(HubDeviceExtension->PendingSCEIrp,
-                           (PIO_COMPLETION_ROUTINE) StatusChangeEndpointCompletion,
+                           StatusChangeEndpointCompletion,
                            DeviceObject,
                            TRUE,
                            TRUE,
