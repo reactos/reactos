@@ -78,6 +78,7 @@ PCI\CC_0C0310 = usbohci
 PCI\CC_0C0320 = usbehci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid
+GenDisk = disk
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
@@ -100,6 +101,7 @@ pciide = pciide.sys
 [SCSI.Load]
 uniata = uniata.sys
 buslogic = buslogic.sys
+disk = disk.sys
 
 [Cabinets]
 Cabinet=reactos.cab
