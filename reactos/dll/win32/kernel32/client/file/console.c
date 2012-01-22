@@ -2634,18 +2634,17 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
     PCSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
-    ULONG nChars, SizeBytes, CharSize;
+    ULONG SizeBytes, CharSize;
     DWORD CharsRead = 0;
 
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    nChars = min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR) / CharSize;
-    SizeBytes = nChars * CharSize;
+    nLength = min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize);
+    SizeBytes = nLength * CharSize;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                               max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR)
-                                  + min (nChars, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize) * CharSize));
+                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR) + SizeBytes));
     if (Request == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2661,7 +2660,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
 
         Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
         Request->Data.ReadConsoleOutputCharRequest.Unicode = bUnicode;
-        Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead = min(nLength, nChars);
+        Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead = nLength;
         SizeBytes = Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead * CharSize;
 
         Status = CsrClientCallServer(Request,
