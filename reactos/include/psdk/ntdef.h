@@ -353,7 +353,7 @@ typedef ULONG *PLOGICAL;
 /* Signed Types */
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
-typedef LONG NTSTATUS;
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS *PNTSTATUS;
 typedef signed char SCHAR;
 typedef SCHAR *PSCHAR;
@@ -381,8 +381,8 @@ typedef _Null_terminated_ CONST CHAR *LPCSTR, *PCSTR;
 typedef _Null_terminated_ PCSTR *PZPCSTR;
 
 /* Pointer to an Asciiz string */
-typedef CHAR *PSZ;
-typedef CONST char *PCSZ;
+typedef _Null_terminated_ CHAR *PSZ;
+typedef _Null_terminated_ CONST char *PCSZ;
 
 /* UNICODE (Wide Character) types */
 typedef wchar_t WCHAR;
@@ -395,6 +395,7 @@ typedef _Null_terminated_ WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
 typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
 typedef _Null_terminated_ PCWSTR *PZPCWSTR;
 typedef _Null_terminated_ CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
+typedef _NullNull_terminated_ WCHAR *PZZWSTR;
 
 /* Cardinal Data Types */
 typedef char CCHAR, *PCCHAR;
@@ -489,7 +490,10 @@ typedef struct _CSTRING {
 typedef struct _STRING {
   USHORT Length;
   USHORT MaximumLength;
-  PCHAR  Buffer;
+#ifdef MIDL_PASS
+  [size_is(MaximumLength), length_is(Length) ]
+#endif
+  _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
 } STRING, *PSTRING;
 
 typedef STRING ANSI_STRING;
@@ -617,12 +621,14 @@ typedef struct _PROCESSOR_NUMBER {
 struct _CONTEXT;
 struct _EXCEPTION_RECORD;
 
+_IRQL_requires_same_
+_Function_class_(EXCEPTION_ROUTINE)
 typedef EXCEPTION_DISPOSITION
 (NTAPI *PEXCEPTION_ROUTINE)(
-  struct _EXCEPTION_RECORD *ExceptionRecord,
-  PVOID EstablisherFrame,
-  struct _CONTEXT *ContextRecord,
-  PVOID DispatcherContext);
+    _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _In_ PVOID DispatcherContext);
 
 typedef struct _GROUP_AFFINITY {
   KAFFINITY Mask;
