@@ -429,7 +429,17 @@ USBHUB_PdoQueryDeviceText(
         case DeviceTextLocationInformation:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
-            SourceString = &ChildDeviceExtension->usTextDescription;
+
+            //
+            // does the device provide a text description
+            //
+            if (ChildDeviceExtension->usTextDescription->Buffer && ChildDeviceExtension->usTextDescription->Length)
+            {
+                //
+                // use device text
+                //
+                SourceString = &ChildDeviceExtension->usTextDescription;
+            }
             break;
         }
         default:
