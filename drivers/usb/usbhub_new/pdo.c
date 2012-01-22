@@ -433,7 +433,7 @@ USBHUB_PdoQueryDeviceText(
             //
             // does the device provide a text description
             //
-            if (ChildDeviceExtension->usTextDescription->Buffer && ChildDeviceExtension->usTextDescription->Length)
+            if (ChildDeviceExtension->usTextDescription.Buffer && ChildDeviceExtension->usTextDescription.Length)
             {
                 //
                 // use device text
