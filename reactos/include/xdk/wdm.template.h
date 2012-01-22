@@ -6,7 +6,7 @@
  * This file is part of the ReactOS DDK package.
  *
  * Contributors:
- *   Amine Khaldi
+ *   Amine Khaldi (amine.khaldi@reactos.org)
  *   Timo Kreuzer (timo.kreuzer@reactos.org)
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
@@ -66,6 +66,9 @@ typedef GUID *PGUID;
 #endif
 
 #include "intrin.h"
+
+__internal_kernel_driver
+__drv_Mode_impl(WDM_INCLUDED)
 
 #ifdef __cplusplus
 extern "C" {
@@ -206,15 +209,6 @@ $define (_WDMDDK_)
 $include (interlocked.h)
 $include (rtltypes.h)
 $include (ketypes.h)
-$include (mmtypes.h)
-$include (extypes.h)
-$include (setypes.h)
-$include (potypes.h)
-$include (cmtypes.h)
-$include (iotypes.h)
-$include (obtypes.h)
-$include (pstypes.h)
-$include (wmitypes.h)
 
 #if defined(_M_IX86)
 $include(x86/ke.h)
@@ -231,6 +225,16 @@ $include(arm/ke.h)
 #else
 #error Unknown Architecture
 #endif
+
+$include (mmtypes.h)
+$include (extypes.h)
+$include (setypes.h)
+$include (potypes.h)
+$include (cmtypes.h)
+$include (iotypes.h)
+$include (obtypes.h)
+$include (pstypes.h)
+$include (wmitypes.h)
 
 $include (rtlfuncs.h)
 $include (kefuncs.h)

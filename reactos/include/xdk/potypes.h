@@ -392,22 +392,25 @@ DEFINE_GUID(GUID_ENABLE_SWITCH_FORCED_SHUTDOWN, 0x833a6b62, 0xdfa4, 0x46d1, 0x82
 #define POWER_DEVICE_IDLE_POLICY_PERFORMANCE     0
 #define POWER_DEVICE_IDLE_POLICY_CONSERVATIVE    1
 
+_Function_class_(REQUEST_POWER_COMPLETE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI REQUEST_POWER_COMPLETE)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN UCHAR MinorFunction,
-  IN POWER_STATE PowerState,
-  IN PVOID Context,
-  IN struct _IO_STATUS_BLOCK *IoStatus);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _In_ UCHAR MinorFunction,
+  _In_ POWER_STATE PowerState,
+  _In_opt_ PVOID Context,
+  _In_ struct _IO_STATUS_BLOCK *IoStatus);
 typedef REQUEST_POWER_COMPLETE *PREQUEST_POWER_COMPLETE;
 
-typedef
-NTSTATUS
+_Function_class_(POWER_SETTING_CALLBACK)
+_IRQL_requires_same_
+typedef NTSTATUS
 (NTAPI POWER_SETTING_CALLBACK)(
-  IN LPCGUID SettingGuid,
-  IN PVOID Value,
-  IN ULONG ValueLength,
-  IN OUT PVOID Context OPTIONAL);
+  _In_ LPCGUID SettingGuid,
+  _In_reads_bytes_(ValueLength) PVOID Value,
+  _In_ ULONG ValueLength,
+  _Inout_opt_ PVOID Context);
 typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
 $endif (_WDMDDK_)
 $if (_NTIFS_)
