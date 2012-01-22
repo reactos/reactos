@@ -435,6 +435,7 @@ DeviceStatusChangeThread(
 }
 
 NTSTATUS
+NTAPI
 StatusChangeEndpointCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
