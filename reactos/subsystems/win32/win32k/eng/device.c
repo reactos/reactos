@@ -331,12 +331,12 @@ IntPrepareDriver()
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
                                        sizeof(PrimarySurface.gdiinfo),
-                                       &PrimarySurface.gdiinfo,
+                                       (PULONG)&PrimarySurface.gdiinfo,
                                        sizeof(PrimarySurface.devinfo),
                                        &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
-                                       (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
+                                       PrimarySurface.VideoFileObject->DeviceObject);
 
             /* If no handle, then fallback to default */
             if (!PrimarySurface.hPDev)
@@ -361,12 +361,12 @@ IntPrepareDriver()
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
                                        sizeof(PrimarySurface.gdiinfo),
-                                       &PrimarySurface.gdiinfo,
+                                       (PULONG)&PrimarySurface.gdiinfo,
                                        sizeof(PrimarySurface.devinfo),
                                        &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
-                                       (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
+                                       PrimarySurface.VideoFileObject->DeviceObject);
 
             if (!PrimarySurface.hPDev)
             {
