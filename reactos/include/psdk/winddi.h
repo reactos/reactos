@@ -846,6 +846,8 @@ typedef struct _PATHOBJ {
   ULONG  cCurves;
 } PATHOBJ;
 
+typedef BYTE GAMMA_TABLES[2][256];
+
 typedef struct _GLYPHBITS {
   POINTL  ptlOrigin;
   SIZEL  sizlBitmap;
