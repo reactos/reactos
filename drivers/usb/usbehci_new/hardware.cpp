@@ -1131,21 +1131,28 @@ EhciDefferedRoutine(
                     This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED;
                     This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_CONNECT;
                     This->m_PortStatus[i].PortChange |= USB_PORT_STATUS_CONNECT;
-
-                    //
-                    // is there a status change callback
-                    //
-                    if (This->m_SCECallBack != NULL)
-                    {
-                        //
-                        // queue work item for processing
-                        //
-                        ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
-                    }
                 }
                 else
                 {
                     DPRINT1("Device disconnected on port %d\n", i);
+
+                    //
+                    // update port status flags
+                    //
+                    This->m_PortStatus[i].PortStatus &= ~USB_PORT_STATUS_HIGH_SPEED;
+                    This->m_PortStatus[i].PortStatus &= ~USB_PORT_STATUS_CONNECT;
+                    This->m_PortStatus[i].PortChange |= USB_PORT_STATUS_CONNECT;
+                }
+                
+                //
+                // is there a status change callback
+                //
+                if (This->m_SCECallBack != NULL)
+                {
+                    //
+                    // queue work item for processing
+                    //
+                    ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
                 }
 
                 //

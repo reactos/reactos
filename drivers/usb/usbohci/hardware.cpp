@@ -1447,17 +1447,6 @@ OhciDefferedRoutine(
                         //
                         This->m_PortStatus[Index].PortStatus |= USB_PORT_STATUS_LOW_SPEED;
                     }
-
-                    //
-                    // is there a status change callback
-                    //
-                    if (This->m_SCECallBack != NULL)
-                    {
-                        //
-                        // queue work item for processing
-                        //
-                        ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
-                    }
                 }
                 else
                 {
@@ -1465,6 +1454,24 @@ OhciDefferedRoutine(
                     // device disconnected
                     //
                     DPRINT1("Device disconnected at Port %x\n", Index);
+
+                    //
+                    // update port status flags
+                    //
+                    This->m_PortStatus[Index].PortStatus &= ~USB_PORT_STATUS_LOW_SPEED;
+                    This->m_PortStatus[Index].PortStatus &= ~USB_PORT_STATUS_CONNECT;
+                    This->m_PortStatus[Index].PortChange |= USB_PORT_STATUS_CONNECT;
+                }
+
+                //
+                // is there a status change callback
+                //
+                if (This->m_SCECallBack != NULL)
+                {
+                    //
+                    // queue work item for processing
+                    //
+                    ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
                 }
             }
         }

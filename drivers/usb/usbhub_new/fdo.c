@@ -22,6 +22,11 @@ CreateUsbChildDeviceObject(
     OUT PDEVICE_OBJECT *UsbChildDeviceObject);
 
 NTSTATUS
+DestroyUsbChildDeviceObject(
+    IN PDEVICE_OBJECT UsbHubDeviceObject,
+    IN LONG PortId);
+
+NTSTATUS
 SubmitRequestToRootHub(
     IN PDEVICE_OBJECT RootHubDeviceObject,
     IN ULONG IoControlCode,
@@ -304,9 +309,11 @@ DeviceStatusChangeThread(
             {
                 DPRINT1("Device disconnected from port %d\n", PortId);
 
-                //
-                // FIXME: Remove the device, and deallocate memory
-                //
+                Status = DestroyUsbChildDeviceObject(DeviceObject, PortId);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Failed to delete child device object after disconnect\n");
+                }
             }
             else
             {
@@ -997,6 +1004,51 @@ Cleanup:
         ExFreePool(UsbChildExtension->usInstanceId.Buffer);
 
     return Status;
+}
+
+NTSTATUS
+DestroyUsbChildDeviceObject(
+    IN PDEVICE_OBJECT UsbHubDeviceObject,
+    IN LONG PortId)
+{
+    PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbHubDeviceObject->DeviceExtension;
+    PHUB_CHILDDEVICE_EXTENSION UsbChildExtension = NULL;
+    PDEVICE_OBJECT ChildDeviceObject = NULL;
+    ULONG Index = 0;
+
+    DPRINT1("Removing device on port %d (Child index: %d)\n", PortId, Index);
+
+    for (Index = 0; Index < USB_MAXCHILDREN; Index++)
+    {
+        if (HubDeviceExtension->ChildDeviceObject[Index])
+        {
+            UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)HubDeviceExtension->ChildDeviceObject[Index]->DeviceExtension;
+
+            /* Check if it matches the port ID */
+            if (UsbChildExtension->PortNumber == PortId)
+            {
+                /* We found it */
+                ChildDeviceObject = HubDeviceExtension->ChildDeviceObject[Index];
+                break;
+            }
+        }
+    }
+
+    /* Fail the request if the device doesn't exist */
+    if (!ChildDeviceObject)
+    {
+        DPRINT1("Removal request for non-existant device!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Remove the device from the table */
+    HubDeviceExtension->ChildDeviceObject[Index] = NULL;
+
+    /* Invalidate device relations for the root hub */
+    IoInvalidateDeviceRelations(HubDeviceExtension->RootHubPhysicalDeviceObject, BusRelations);
+
+    /* The rest of the removal process takes place in IRP_MN_REMOVE_DEVICE handling for the PDO */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

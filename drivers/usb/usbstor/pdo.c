@@ -842,9 +842,18 @@ USBSTOR_PdoHandlePnp(
            break;
        }
        case IRP_MN_REMOVE_DEVICE:
-           DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_REMOVE_DEVICE unimplemented\n");
-           Status = STATUS_SUCCESS;
-           break;
+       {
+           DPRINT1("IRP_MN_REMOVE_DEVICE\n");
+
+           /* Complete the IRP */
+           Irp->IoStatus.Status = STATUS_SUCCESS;
+           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+           /* Delete the device object */
+           IoDeleteDevice(DeviceObject);
+
+           return STATUS_SUCCESS;
+       }
        case IRP_MN_QUERY_CAPABILITIES:
        {
            //

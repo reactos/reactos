@@ -119,6 +119,31 @@ USBSTOR_FdoHandleDeviceRelations(
 }
 
 NTSTATUS
+USBSTOR_FdoHandleRemoveDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PFDO_DEVICE_EXTENSION DeviceExtension,
+    IN OUT PIRP Irp)
+{
+    NTSTATUS Status;
+
+    DPRINT1("Handling FDO removal\n");
+
+    /* We don't need to request removal of our children here */
+
+    /* Send the IRP down the stack */
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+
+    /* Detach from the device stack */
+    /* IoDetachDevice(DeviceExtension->LowerDeviceObject); */ //This crashes for some reason during unload
+
+    /* Delete the device object */
+    IoDeleteDevice(DeviceObject);
+
+    return Status;
+}
+
+NTSTATUS
 USBSTOR_FdoHandleStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension,
@@ -302,9 +327,11 @@ USBSTOR_FdoHandlePnp(
            Status = STATUS_NOT_SUPPORTED;
            break;
        case IRP_MN_REMOVE_DEVICE:
-           DPRINT1("USBSTOR_FdoHandlePnp: IRP_MN_REMOVE_DEVICE unimplemented\n");
-           Status = STATUS_NOT_SUPPORTED;
-           break;
+       {
+           DPRINT1("IRP_MN_REMOVE_DEVICE\n");
+
+           return USBSTOR_FdoHandleRemoveDevice(DeviceObject, DeviceExtension, Irp);
+       }
        case IRP_MN_QUERY_CAPABILITIES:
        {
            //

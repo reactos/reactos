@@ -582,11 +582,21 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            //
-            // FIXME
-            //
-            Status = STATUS_SUCCESS;
-            break;
+            PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbChildExtension->ParentDeviceObject->DeviceExtension;
+            PUSB_BUS_INTERFACE_HUB_V5 HubInterface = &HubDeviceExtension->HubInterface;
+
+            DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+
+            /* Remove the device */
+            HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+
+            /* Complete the IRP */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+            /* Delete the device object */
+            IoDeleteDevice(DeviceObject);
+            return STATUS_SUCCESS;
         }
         default:
         {
