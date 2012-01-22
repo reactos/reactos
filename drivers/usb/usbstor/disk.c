@@ -526,6 +526,11 @@ USBSTOR_HandleDeviceControl(
 {
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PSCSI_ADAPTER_BUS_INFO BusInfo;
+    PSCSI_INQUIRY_DATA InquiryData;
+    PINQUIRYDATA ScsiInquiryData;
+    PUFI_INQUIRY_RESPONSE UFIInquiryResponse;
 
     //
     // get current stack location
@@ -538,14 +543,6 @@ USBSTOR_HandleDeviceControl(
         // query property
         //
         Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_ADDRESS)
-    {
-        //
-        // query get scsi address
-        //
-        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_GET_ADDRESS NOT implemented\n");
-        Status = STATUS_NOT_SUPPORTED;
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_PASS_THROUGH)
     {
@@ -570,6 +567,105 @@ USBSTOR_HandleDeviceControl(
         //
         DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
         Status = STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_CAPABILITIES)
+    {
+        PIO_SCSI_CAPABILITIES Capabilities;
+
+        /* Legacy port capability query */
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
+        {
+            Capabilities = *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = ExAllocatePool(NonPagedPool, sizeof(IO_SCSI_CAPABILITIES));
+            Irp->IoStatus.Information = sizeof(PVOID);
+        }
+        else
+        {
+            Capabilities = Irp->AssociatedIrp.SystemBuffer;
+            Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
+        }
+
+        if (Capabilities)
+        {
+            Capabilities->MaximumTransferLength = MAXULONG;
+            Capabilities->MaximumPhysicalPages = 25;
+            Capabilities->SupportedAsynchronousEvents = 0;
+            Capabilities->AlignmentMask = 0;
+            Capabilities->TaggedQueuing = FALSE;
+            Capabilities->AdapterScansDown = FALSE;
+            Capabilities->AdapterUsesPio = FALSE;
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    } 
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_INQUIRY_DATA)
+    {
+        //
+        // get device extension
+        //
+        PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+        ASSERT(PDODeviceExtension);
+        ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+        //
+        // get parameters
+        //
+        BusInfo = Irp->AssociatedIrp.SystemBuffer;
+        InquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
+        ScsiInquiryData = (PINQUIRYDATA)InquiryData->InquiryData;
+        
+
+        //
+        // get inquiry data
+        //
+        UFIInquiryResponse = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        ASSERT(UFIInquiryResponse);
+
+
+        BusInfo->NumberOfBuses = 1;
+        BusInfo->BusData[0].NumberOfLogicalUnits = 1; //FIXME
+        BusInfo->BusData[0].InitiatorBusId = 0;
+        BusInfo->BusData[0].InquiryDataOffset = sizeof(SCSI_ADAPTER_BUS_INFO);
+
+        InquiryData->PathId = 0;
+        InquiryData->TargetId = 0;
+        InquiryData->Lun = PDODeviceExtension->LUN & MAX_LUN;
+        InquiryData->DeviceClaimed = PDODeviceExtension->Claimed;
+        InquiryData->InquiryDataLength = sizeof(INQUIRYDATA);
+        InquiryData->NextInquiryDataOffset = 0;
+
+        RtlZeroMemory(ScsiInquiryData, sizeof(INQUIRYDATA));
+        ScsiInquiryData->DeviceType = UFIInquiryResponse->DeviceType;
+        ScsiInquiryData->DeviceTypeQualifier = (UFIInquiryResponse->RMB & 0x7F);
+        ScsiInquiryData->RemovableMedia = FALSE; //HACK for IoReadPartitionTable
+        ScsiInquiryData->Versions = 0x04;
+        ScsiInquiryData->ResponseDataFormat = 0x02;
+        ScsiInquiryData->AdditionalLength = 31;
+        ScsiInquiryData->SoftReset = 0;
+        ScsiInquiryData->CommandQueue = 0;
+        ScsiInquiryData->LinkedCommands = 0;
+        ScsiInquiryData->RelativeAddressing = 0;
+
+        RtlCopyMemory(&ScsiInquiryData->VendorId, UFIInquiryResponse->Vendor, USBSTOR_GetFieldLength(UFIInquiryResponse->Vendor, 8));
+        RtlCopyMemory(&ScsiInquiryData->ProductId, UFIInquiryResponse->Product, USBSTOR_GetFieldLength(UFIInquiryResponse->Product, 16));
+
+        Irp->IoStatus.Information = sizeof(SCSI_ADAPTER_BUS_INFO) + sizeof(SCSI_INQUIRY_DATA) + sizeof(INQUIRYDATA) - 1;
+        Status = STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_ADDRESS)
+    {
+        PSCSI_ADDRESS Address = Irp->AssociatedIrp.SystemBuffer;
+
+        Address->Length = sizeof(SCSI_ADDRESS);
+        Address->PortNumber = 0;
+        Address->PathId = 0;
+        Address->TargetId = 0;
+        Address->Lun = (((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LUN & MAX_LUN);
+        Irp->IoStatus.Information = sizeof(SCSI_ADDRESS);
+
+        Status = STATUS_SUCCESS;
     }
     else
     {
