@@ -127,9 +127,10 @@ extern ULONG NTSYSAPI NtBuildNumber;
 #define PROFILE_ALL_ACCESS                  (STANDARD_RIGHTS_REQUIRED | PROFILE_CONTROL)
 
 //
-// Maximum Parameters for NtRaiseHardError
+// NtRaiseHardError-related parameters
 //
 #define MAXIMUM_HARDERROR_PARAMETERS        4
+#define HARDERROR_OVERRIDE_ERRORMODE        0x10000000
 
 //
 // Pushlock bits
