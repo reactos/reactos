@@ -135,7 +135,7 @@ USBSTOR_FdoHandleRemoveDevice(
     Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 
     /* Detach from the device stack */
-    /* IoDetachDevice(DeviceExtension->LowerDeviceObject); */ //This crashes for some reason during unload
+    IoDetachDevice(DeviceExtension->LowerDeviceObject);
 
     /* Delete the device object */
     IoDeleteDevice(DeviceObject);
