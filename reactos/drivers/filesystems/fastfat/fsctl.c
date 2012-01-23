@@ -85,8 +85,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       }
       PartitionInfoIsValid = TRUE;
       DPRINT("Partition Information:\n");
-      DPRINT("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
-      DPRINT("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
+      DPRINT("StartingOffset      %I64u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
+      DPRINT("PartitionLength     %I64u\n", PartitionInfo.PartitionLength.QuadPart / 512);
       DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
       DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
       DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
