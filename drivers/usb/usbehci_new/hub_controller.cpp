@@ -1861,9 +1861,7 @@ CHubController::AcquireDeviceAddress()
     //
     // acquire device lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // find address
@@ -1885,7 +1883,6 @@ CHubController::AcquireDeviceAddress()
     //
     // release spin lock
     //
-    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 
     //
@@ -1903,9 +1900,7 @@ CHubController::ReleaseDeviceAddress(
     //
     // acquire device lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // sanity check
@@ -1925,7 +1920,6 @@ CHubController::ReleaseDeviceAddress(
     //
     // release lock
     //
-    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 //-----------------------------------------------------------------------------------------
@@ -1941,9 +1935,7 @@ CHubController::RemoveUsbDevice(
     //
     // acquire lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // point to first entry
@@ -1991,7 +1983,6 @@ CHubController::RemoveUsbDevice(
     //
     // release lock
     //
-    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 
     //
@@ -2011,9 +2002,7 @@ CHubController::ValidateUsbDevice(PUSBDEVICE UsbDevice)
     //
     // acquire lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // point to first entry
@@ -2051,7 +2040,6 @@ CHubController::ValidateUsbDevice(PUSBDEVICE UsbDevice)
     //
     // release lock
     //
-    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 
     //
@@ -2089,9 +2077,7 @@ CHubController::AddUsbDevice(
     //
     // acquire lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // insert entry
@@ -2101,7 +2087,6 @@ CHubController::AddUsbDevice(
     //
     // release spin lock
     //
-    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 
     //
@@ -2121,9 +2106,7 @@ CHubController::SetNotification(
     //
     // acquire hub controller lock
     //
-    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
-    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // now set the callback routine and context of the hub
@@ -2131,11 +2114,10 @@ CHubController::SetNotification(
     m_HubCallbackContext = CallbackContext;
     m_HubCallbackRoutine = CallbackRoutine;
 
-    //
-    // release hub controller lock
-    //
-    DPRINT(__FUNCTION__ "release\n");
-    KeReleaseSpinLock(&m_Lock, OldLevel);
+   //
+   // release hub controller lock
+   //
+   KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 
 //=================================================================================================
