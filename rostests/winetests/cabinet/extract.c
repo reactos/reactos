@@ -55,10 +55,10 @@ typedef struct {
 } SESSION;
 
 /* function pointers */
-HMODULE hCabinet;
+static HMODULE hCabinet;
 static HRESULT (WINAPI *pExtract)(SESSION*, LPCSTR);
 
-CHAR CURR_DIR[MAX_PATH];
+static CHAR CURR_DIR[MAX_PATH];
 
 static void init_function_pointers(void)
 {

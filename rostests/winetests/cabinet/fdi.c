@@ -28,7 +28,7 @@
 #define MEDIA_SIZE          999999999
 #define FOLDER_THRESHOLD    900000
 
-CHAR CURR_DIR[MAX_PATH];
+static CHAR CURR_DIR[MAX_PATH];
 
 /* FDI callbacks */
 
@@ -100,106 +100,106 @@ static void test_FDICreate(void)
     if (0)
     {
         SetLastError(0xdeadbeef);
-        erf.erfOper = 0xcafefeed;
-        erf.erfType = 0xdeadbabe;
-        erf.fError = 0xdecaface;
+        erf.erfOper = 0x1abe11ed;
+        erf.erfType = 0x5eed1e55;
+        erf.fError = 0x1ead1e55;
         hfdi = FDICreate(fdi_alloc, NULL, fdi_open, fdi_read,
                          fdi_write, fdi_close, fdi_seek,
                          cpuUNKNOWN, &erf);
         ok(hfdi != NULL, "Expected non-NULL context\n");
         ok(GetLastError() == 0xdeadbeef,
            "Expected 0xdeadbeef, got %d\n", GetLastError());
-        ok(erf.erfOper == 0xcafefeed, "Expected 0xcafefeed, got %d\n", erf.erfOper);
-        ok(erf.erfType == 0xdeadbabe, "Expected 0xdeadbabe, got %d\n", erf.erfType);
-        ok(erf.fError == 0xdecaface, "Expected 0xdecaface, got %d\n", erf.fError);
+        ok(erf.erfOper == 0x1abe11ed, "Expected 0x1abe11ed, got %d\n", erf.erfOper);
+        ok(erf.erfType == 0x5eed1e55, "Expected 0x5eed1e55, got %d\n", erf.erfType);
+        ok(erf.fError == 0x1ead1e55, "Expected 0x1ead1e55, got %d\n", erf.fError);
 
         FDIDestroy(hfdi);
     }
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, NULL, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, NULL,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      NULL, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, NULL, fdi_seek,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, NULL,
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, NULL);
@@ -212,26 +212,26 @@ static void test_FDICreate(void)
 
     /* bad cpu type */
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      0xcafebabe, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
        "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok((erf.erfOper == 0xcafefeed || erf.erfOper == 0 /* Vista */), "Expected 0xcafefeed or 0, got %d\n", erf.erfOper);
-    ok((erf.erfType == 0xdeadbabe || erf.erfType == 0 /* Vista */), "Expected 0xdeadbabe or 0, got %d\n", erf.erfType);
-    ok((erf.fError == 0xdecaface || erf.fError == 0 /* Vista */), "Expected 0xdecaface or 0, got %d\n", erf.fError);
+    ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
+    ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
+    ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
 
     FDIDestroy(hfdi);
 
     /* pfnalloc fails */
     SetLastError(0xdeadbeef);
-    erf.erfOper = 0xcafefeed;
-    erf.erfType = 0xdeadbabe;
-    erf.fError = 0xdecaface;
+    erf.erfOper = 0x1abe11ed;
+    erf.erfType = 0x5eed1e55;
+    erf.fError = 0x1ead1e55;
     hfdi = FDICreate(fdi_alloc_bad, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
@@ -239,12 +239,9 @@ static void test_FDICreate(void)
     ok(erf.erfOper == FDIERROR_ALLOC_FAIL,
        "Expected FDIERROR_ALLOC_FAIL, got %d\n", erf.erfOper);
     ok(erf.fError == TRUE, "Expected TRUE, got %d\n", erf.fError);
-    todo_wine
-    {
-        ok(GetLastError() == 0xdeadbeef,
-           "Expected 0xdeadbeef, got %d\n", GetLastError());
-        ok(erf.erfType == 0, "Expected 0, got %d\n", erf.erfType);
-    }
+    ok(GetLastError() == 0xdeadbeef,
+       "Expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(erf.erfType == 0, "Expected 0, got %d\n", erf.erfType);
 }
 
 static void test_FDIDestroy(void)
@@ -581,11 +578,8 @@ static void test_FDIIsCabinet(void)
     ok(cabinfo.cFiles == 4, "Expected 4, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 1, "Expected 1, got %d\n", cabinfo.cFolders);
     ok(cabinfo.setID == 0xbeef, "Expected 0xbeef, got %d\n", cabinfo.setID);
-    todo_wine
-    {
-        ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
-        ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
-    }
+    ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
+    ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
 
     fdi_close(fd);
     FDIDestroy(hfdi);
@@ -631,11 +625,8 @@ static void test_FDICopy(void)
         SetLastError(0xdeadbeef);
         ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
         ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
-        todo_wine
-        {
-            ok(GetLastError() == ERROR_INVALID_HANDLE,
-               "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
-        }
+        ok(GetLastError() == ERROR_INVALID_HANDLE,
+           "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
 
         FDIDestroy(hfdi);
     }
@@ -651,7 +642,6 @@ static void test_FDICopy(void)
     /* cabinet with no files or folders */
     SetLastError(0xdeadbeef);
     ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
-    todo_wine
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
     ok(GetLastError() == 0, "Expected 0f, got %d\n", GetLastError());
 
