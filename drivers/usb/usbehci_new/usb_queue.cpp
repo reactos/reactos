@@ -580,16 +580,18 @@ CUSBQueue::QueueHeadCompletion(
     //
     // now unlink the queue head
     // FIXME: implement chained queue heads
+    // no need to acquire locks, as it is called with locks held
     //
 
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
-
+    //
+    // unlink queue head
+    //
     UnlinkQueueHead(CurrentQH);
 
+    //
+    // insert into completed list
+    //
     InsertTailList(&m_CompletedRequestAsyncList, &CurrentQH->LinkedQueueHeads);
-
-    KeReleaseSpinLock(&m_Lock, OldLevel);
-
 }
 
 VOID
