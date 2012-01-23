@@ -244,7 +244,6 @@ static void test_simpleroundtrip(const char *plaintext)
 START_TEST(protectdata)
 {
     HMODULE hCrypt32 = GetModuleHandleA("crypt32.dll");
-    hCrypt32 = GetModuleHandleA("crypt32.dll");
     pCryptProtectData = (void*)GetProcAddress(hCrypt32, "CryptProtectData");
     pCryptUnprotectData = (void*)GetProcAddress(hCrypt32, "CryptUnprotectData");
     if (!pCryptProtectData || !pCryptUnprotectData)

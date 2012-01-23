@@ -451,6 +451,7 @@ static void test_registerDefaultOIDFunction(void)
     /* Repeat a few tests on the normal encoding type */
     ret = CryptRegisterDefaultOIDFunction(X509_ASN_ENCODING,
      "CertDllOpenStoreProv", 0, bogusDll);
+    ok(ret, "CryptRegisterDefaultOIDFunction failed\n");
     ret = CryptUnregisterDefaultOIDFunction(X509_ASN_ENCODING,
      "CertDllOpenStoreProv", bogusDll);
     ok(ret, "CryptUnregisterDefaultOIDFunction failed\n");

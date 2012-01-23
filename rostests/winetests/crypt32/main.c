@@ -28,7 +28,7 @@
 
 #include "wine/test.h"
 
-HMODULE hCrypt;
+static HMODULE hCrypt;
 
 static void test_findAttribute(void)
 {
@@ -47,8 +47,7 @@ static void test_findAttribute(void)
     if (0)
     {
         /* crashes */
-        SetLastError(0xdeadbeef);
-        ret = CertFindAttribute(NULL, 1, NULL);
+        CertFindAttribute(NULL, 1, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -93,7 +92,7 @@ static void test_findExtension(void)
     {
         /* crashes */
         SetLastError(0xdeadbeef);
-        ret = CertFindExtension(NULL, 1, NULL);
+        CertFindExtension(NULL, 1, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -138,7 +137,7 @@ static void test_findRDNAttr(void)
     {
         /* crashes */
         SetLastError(0xdeadbeef);
-        ret = CertFindRDNAttr(NULL, NULL);
+        CertFindRDNAttr(NULL, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -395,7 +394,7 @@ static void test_format_object(void)
     /* Crash */
     if (0)
     {
-        ret = pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
+        pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
     }
     /* When called with any but the default encoding, it fails to find a
      * formatting function.

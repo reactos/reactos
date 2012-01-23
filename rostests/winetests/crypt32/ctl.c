@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winerror.h>
@@ -213,6 +213,7 @@ static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,
     memset(hashProperty, 0, sizeof(hashProperty));
     size = sizeof(hash);
     ret = CryptHashCertificate(0, algID, 0, data, dataLen, hash, &size);
+    ok(ret, "CryptHashCertificate failed: %08x\n", GetLastError());
     ret = CertGetCTLContextProperty(context, propID, hashProperty, &size);
     ok(ret, "CertGetCTLContextProperty failed: %08x\n", GetLastError());
     if (ret)
