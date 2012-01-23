@@ -130,7 +130,7 @@ static void delnode_test(void)
     HRESULT hr;
     HANDLE hn;
     CHAR currDir[MAX_PATH];
-    int currDirLen;
+    UINT currDirLen;
 
     /* Native DelNode apparently does not support relative paths, so we use
        absolute paths for testing */
@@ -446,7 +446,7 @@ static void translateinfstringex_test(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     memset(buffer, 'a', APP_PATH_LEN);
@@ -457,7 +457,7 @@ static void translateinfstringex_test(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     {
@@ -473,7 +473,7 @@ static void translateinfstringex_test(void)
         ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
         ok(!lstrcmpi(buffer, drive),
                "Expected %s, got %s\n", drive, buffer);
-        ok(size == lstrlenA(drive)+1, "Expected size %d, got %d\n",
+        ok(size == strlen(drive)+1, "Expected size %d, got %d\n",
                lstrlenA(drive)+1, size);
     }
 
@@ -531,7 +531,7 @@ static void translateinfstringex_test(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     /* close the INF again */

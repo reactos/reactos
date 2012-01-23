@@ -29,12 +29,12 @@
 #define FOLDER_THRESHOLD    900000
 
 /* function pointers */
-HMODULE hAdvPack;
+static HMODULE hAdvPack;
 static HRESULT (WINAPI *pAddDelBackupEntry)(LPCSTR, LPCSTR, LPCSTR, DWORD);
 static HRESULT (WINAPI *pExtractFiles)(LPCSTR, LPCSTR, DWORD, LPCSTR, LPVOID, DWORD);
 static HRESULT (WINAPI *pAdvInstallFile)(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,DWORD,DWORD);
 
-CHAR CURR_DIR[MAX_PATH];
+static CHAR CURR_DIR[MAX_PATH];
 
 static void init_function_pointers(void)
 {
