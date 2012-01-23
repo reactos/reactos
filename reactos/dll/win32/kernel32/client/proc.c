@@ -1558,7 +1558,7 @@ GetStartupInfoW(IN LPSTARTUPINFOW lpStartupInfo)
 
     /* Copy the data out of there */
     lpStartupInfo->cb = sizeof(STARTUPINFOW);
-    lpStartupInfo->lpReserved  = Params->ShellInfo.Buffer;
+    lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
     lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
     lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
     lpStartupInfo->dwX = Params->StartingX;
@@ -1659,7 +1659,7 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                     if (NT_SUCCESS(Status))
                     {
                         /* Save it */
-                        StartupInfo->lpReserved = TitleString.Buffer;
+                        StartupInfo->lpTitle = TitleString.Buffer;
 
                         /* We finished with the ANSI version, try to cache it */
                         if (!InterlockedCompareExchangePointer(&BaseAnsiStartupInfo,
