@@ -506,7 +506,7 @@ USBHUB_PdoHandlePnp(
             DeviceCapabilities->Address = UsbChildExtension->PortNumber;
             DeviceCapabilities->UINumber = 0;
             DeviceCapabilities->DeviceState[0] = PowerDeviceD0;
-            for (i = 0; i < PowerSystemMaximum; i++)
+            for (i = 1; i < PowerSystemMaximum; i++)
                 DeviceCapabilities->DeviceState[i] = PowerDeviceD3;
             //DeviceCapabilities->DeviceWake = PowerDeviceUndefined;
             DeviceCapabilities->D1Latency = 0;

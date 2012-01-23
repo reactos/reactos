@@ -593,7 +593,7 @@ CHubController::HandlePnp(
             DeviceCapabilities->HardwareDisabled = FALSE;
             DeviceCapabilities->NoDisplayInUI = FALSE;
             DeviceCapabilities->DeviceState[0] = PowerDeviceD0;
-            for (Index = 0; Index < PowerSystemMaximum; Index++)
+            for (Index = 1; Index < PowerSystemMaximum; Index++)
                 DeviceCapabilities->DeviceState[Index] = PowerDeviceD3;
             DeviceCapabilities->DeviceWake = PowerDeviceUnspecified;
             DeviceCapabilities->D1Latency = 0;
