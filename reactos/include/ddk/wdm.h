@@ -13763,9 +13763,16 @@ IoInitializeDpcRequest(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PIO_DPC_ROUTINE DpcRoutine)
 {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28024)
+#endif
   KeInitializeDpc(&DeviceObject->Dpc,
                   (PKDEFERRED_ROUTINE) DpcRoutine,
                   DeviceObject);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 }
 
 #define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
@@ -13821,6 +13828,7 @@ IoInitializeThreadedDpcRequest(
 {
 #ifdef _MSC_VER
 #pragma warning(push)
+#pragma warning(disable:28024)
 #pragma warning(disable:28128)
 #endif
     KeInitializeThreadedDpc(&DeviceObject->Dpc,
