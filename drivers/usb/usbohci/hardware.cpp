@@ -997,6 +997,11 @@ CUSBHardwareDevice::StopController(void)
         if ((Reset & OHCI_HOST_CONTROLLER_RESET) == 0)
         {
             //
+            // restore the frame interval register
+            //
+            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
+
+            //
             // controller completed reset
             //
             return STATUS_SUCCESS;
