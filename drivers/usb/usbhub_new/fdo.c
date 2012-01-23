@@ -804,6 +804,34 @@ GetUsbStringDescriptor(
     return STATUS_SUCCESS;
 }
 
+ULONG
+IsCompositeDevice(
+    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
+{
+    if (DeviceDescriptor->bDeviceClass == 0)
+    {
+        //
+        // composite device
+        //
+        return TRUE;
+    }
+
+    if (DeviceDescriptor->bDeviceClass == 0xEF && 
+        DeviceDescriptor->bDeviceSubClass == 0x02 &&
+        DeviceDescriptor->bDeviceProtocol == 0x01)
+    {
+        //
+        // USB-IF association descriptor
+        //
+        return TRUE;
+    }
+
+    //
+    // not a composite device
+    //
+    return FALSE;
+}
+
 NTSTATUS
 CreateDeviceIds(
     PDEVICE_OBJECT UsbChildDeviceObject)
@@ -813,15 +841,22 @@ CreateDeviceIds(
     PWCHAR BufferPtr;
     WCHAR Buffer[100];
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
+    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
 
+    //
+    // get child device extension
+    //
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)UsbChildDeviceObject->DeviceExtension;
 
     //
     // Initialize the CompatibleIds String
     //
-    UsbChildExtension->usCompatibleIds.Length = 144;
+    UsbChildExtension->usCompatibleIds.Length = 144; //FIXME
     UsbChildExtension->usCompatibleIds.MaximumLength = UsbChildExtension->usCompatibleIds.Length;
 
+    //
+    // allocate mem for compatible id string
+    //
     BufferPtr = ExAllocatePoolWithTag(NonPagedPool,
                                       UsbChildExtension->usCompatibleIds.Length,
                                       USB_HUB_TAG);
@@ -832,39 +867,43 @@ CreateDeviceIds(
     }
 
     RtlZeroMemory(BufferPtr, UsbChildExtension->usCompatibleIds.Length);
-
     Index = 0;
+
+    //
+    // get device descriptor
+    //
+    DeviceDescriptor = &UsbChildExtension->DeviceDesc;
+
     //
     // Construct the CompatibleIds
     //
-    if (UsbChildExtension->DeviceDesc.bDeviceClass == 0)
+    if (IsCompositeDevice(DeviceDescriptor))
     {
-        PUSB_INTERFACE_DESCRIPTOR InterDesc = (PUSB_INTERFACE_DESCRIPTOR)
-            ((ULONG_PTR)UsbChildExtension->FullConfigDesc + sizeof(USB_CONFIGURATION_DESCRIPTOR));
-
         Index += swprintf(&BufferPtr[Index], 
-                          L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
-                          InterDesc->bInterfaceClass,InterDesc->bInterfaceSubClass,InterDesc->bInterfaceProtocol) + 1;
+                          L"USB\\DevClass_%02x&SubClass_%02x&Prot_%02x",
+                          DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
         Index += swprintf(&BufferPtr[Index],
-                          L"USB\\Class_%02x&SubClass_%02x",
-                          InterDesc->bInterfaceClass,InterDesc->bInterfaceSubClass) + 1;
+                          L"USB\\DevClass_%02x&SubClass_%02x",
+                          DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass) + 1;
         Index += swprintf(&BufferPtr[Index],
-                          L"USB\\Class_%02x",
-                          InterDesc->bInterfaceClass) + 1;
+                          L"USB\\DevClass_%02x",
+                          DeviceDescriptor->bDeviceClass) + 1;
+        Index += swprintf(&BufferPtr[Index],
+                          L"USB\\COMPOSITE") + 1;
     }
     else
     {
-        PUSB_DEVICE_DESCRIPTOR DevDesc = &UsbChildExtension->DeviceDesc;
         Index += swprintf(&BufferPtr[Index], 
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
-                          DevDesc->bDeviceClass,DevDesc->bDeviceSubClass,DevDesc->bDeviceProtocol) + 1;
+                          DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
         Index += swprintf(&BufferPtr[Index],
                           L"USB\\Class_%02x&SubClass_%02x",
-                          DevDesc->bDeviceClass,DevDesc->bDeviceSubClass) + 1;
+                          DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass) + 1;
         Index += swprintf(&BufferPtr[Index],
                           L"USB\\Class_%02x",
-                          DevDesc->bDeviceClass) + 1;
+                          DeviceDescriptor->bDeviceClass) + 1;
     }
+
     BufferPtr[Index] = UNICODE_NULL;
     UsbChildExtension->usCompatibleIds.Buffer = BufferPtr;
     DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
