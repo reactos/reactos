@@ -104,6 +104,7 @@ static void do_enum(void)
 	ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
 	hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
+	ok (hr == S_FALSE,"Expected S_FALSE, got 0x%08x\n", hr);
 	ok (fetched == 0,"Fetched wrong number of guids %u\n",fetched);
 	IEnumGUID_Release(pIEnum);
 
@@ -113,6 +114,7 @@ static void do_enum(void)
             ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
             hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
+            ok (hr == S_OK,"Expected S_OK, got 0x%08x\n", hr);
             ok (fetched == 1,"Fetched wrong number of guids %u\n",fetched);
             ok (IsEqualGUID(the_guid,&wanted_guid),"Guids do not match\n");
 
