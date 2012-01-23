@@ -575,8 +575,6 @@ CUSBQueue::QueueHeadCompletion(
     PQUEUE_HEAD CurrentQH,
     NTSTATUS Status)
 {
-    KIRQL OldLevel;
-
     //
     // now unlink the queue head
     // FIXME: implement chained queue heads
