@@ -5,7 +5,9 @@
 	<importlibrary definition="cabinet.spec" />
 	<include base="cabinet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="ReactOS">include/reactos/libs/zlib</include>
 	<define name="__WINESRC__" />
+	<define name="HAVE_ZLIB" />
 	<file>cabinet_main.c</file>
 	<file>fci.c</file>
 	<file>fdi.c</file>
@@ -13,6 +15,7 @@
 	<file>cabinet.rc</file>
 	<pch>cabinet.h</pch>
 	<library>wine</library>
+	<library>zlib</library>
 	<library>ntdll</library>
 </module>
 </group>
