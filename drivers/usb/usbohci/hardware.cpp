@@ -879,7 +879,7 @@ CUSBHardwareDevice::InitializeController()
 NTSTATUS
 CUSBHardwareDevice::StopController(void)
 {
-    ULONG Control, Reset;
+    ULONG Control, Reset, Status;
     ULONG Index, FrameInterval;
 
     //
@@ -892,10 +892,56 @@ CUSBHardwareDevice::StopController(void)
     //
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
 
-    //
-    // FIXME: support routing
-    //
-    ASSERT((Control & OHCI_INTERRUPT_ROUTING) == 0);
+
+    if ((Control & OHCI_INTERRUPT_ROUTING))
+    {
+        //
+        // read command status
+        //
+        Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
+
+        //
+        // change ownership
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Status | OHCI_OWNERSHIP_CHANGE_REQUEST);
+        for(Index = 0; Index < 100; Index++)
+        {
+            //
+            // wait a bit
+            //
+            KeStallExecutionProcessor(100);
+
+            //
+            // check control
+            //
+            Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+            if (!(Control & OHCI_INTERRUPT_ROUTING))
+            {
+                //
+                // acquired ownership
+                //
+                break;
+            }
+        }    
+
+        //
+        // if the ownership is still not changed, perform reset
+        //
+        if (Control & OHCI_INTERRUPT_ROUTING)
+        {
+            DPRINT1("SMM not responding\n");
+            //
+            // some controllers also depend on this
+            //
+            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
+
+            //
+            // wait a bit
+            //
+            KeStallExecutionProcessor(100);
+        }
+    }
+
 
     //
     // have a break
