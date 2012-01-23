@@ -157,7 +157,7 @@ IopCheckDeviceAndDriver(IN POPEN_PACKET OpenPacket,
     else
     {
         /* Increase reference count */
-        DeviceObject->ReferenceCount++;
+        InterlockedIncrement(&DeviceObject->ReferenceCount);
         return STATUS_SUCCESS;
     }
 }
