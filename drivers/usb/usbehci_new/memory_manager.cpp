@@ -157,7 +157,9 @@ CDMAMemoryManager::Allocate(
     //
     // acquire lock
     //
+    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // helper variable
@@ -235,6 +237,7 @@ CDMAMemoryManager::Allocate(
     //
     // release lock
     //
+    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(m_Lock, OldLevel);
 
     //
@@ -304,7 +307,9 @@ CDMAMemoryManager::Release(
     //
     // acquire lock
     //
+    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // release buffer
@@ -314,6 +319,7 @@ CDMAMemoryManager::Release(
     //
     // release lock
     //
+    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(m_Lock, OldLevel);
 
     //

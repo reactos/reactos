@@ -519,7 +519,9 @@ CUSBDevice::SubmitIrp(
     //
     // acquire device lock
     //
+    DPRINT(__FUNCTION__ " acquire\n");
     KeAcquireSpinLock(&m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // commit urb
@@ -529,6 +531,7 @@ CUSBDevice::SubmitIrp(
     //
     // release lock
     //
+    DPRINT(__FUNCTION__ "release\n");
     KeReleaseSpinLock(&m_Lock, OldLevel);
 
     return Status;

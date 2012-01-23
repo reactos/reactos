@@ -33,7 +33,7 @@ public:
         return m_Ref;
     }
 
-    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
+    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN PKSPIN_LOCK Lock);
     virtual ULONG GetPendingRequestCount();
     virtual NTSTATUS AddUSBRequest(PURB Urb);
     virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
@@ -48,7 +48,7 @@ public:
 
 protected:
     LONG m_Ref;                                                                         // reference count
-    KSPIN_LOCK m_Lock;                                                                  // list lock
+    PKSPIN_LOCK m_Lock;                                                                  // list lock
     PDMA_ADAPTER m_Adapter;                                                             // dma adapter
     PUSBHARDWAREDEVICE m_Hardware;                                                      // stores hardware object
     PQUEUE_HEAD AsyncListQueueHead;                                                     // async queue head
@@ -114,7 +114,7 @@ CUSBQueue::Initialize(
     //
     // initialize device lock
     //
-    KeInitializeSpinLock(&m_Lock);
+    m_Lock = Lock;
 
     //
     // Get the AsyncQueueHead
@@ -355,9 +355,13 @@ CUSBQueue::AddUSBRequest(
         //
         // Add it to the pending list
         //
-        KeAcquireSpinLock(&m_Lock, &OldLevel);
+        DPRINT(__FUNCTION__ " acquire\n");
+        KeAcquireSpinLock(m_Lock, &OldLevel);
+        DPRINT(__FUNCTION__ " acquired\n");
+
         LinkQueueHead(AsyncListQueueHead, QueueHead);
-        KeReleaseSpinLock(&m_Lock, OldLevel);
+        DPRINT(__FUNCTION__ "release\n");
+        KeReleaseSpinLock(m_Lock, OldLevel);
     }
 
 
@@ -575,8 +579,6 @@ CUSBQueue::QueueHeadCompletion(
     PQUEUE_HEAD CurrentQH,
     NTSTATUS Status)
 {
-    KIRQL OldLevel;
-
     //
     // now unlink the queue head
     // FIXME: implement chained queue heads
@@ -608,7 +610,9 @@ CUSBQueue::ProcessAsyncList(
     //
     // lock completed async list
     //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquire\n");
+    KeAcquireSpinLock(m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // walk async list 
@@ -664,7 +668,8 @@ CUSBQueue::ProcessAsyncList(
     //
     // release lock
     //
-    KeReleaseSpinLock(&m_Lock, OldLevel);
+    DPRINT(__FUNCTION__ "release\n");
+    KeReleaseSpinLock(m_Lock, OldLevel);
 }
 
 
@@ -767,7 +772,9 @@ CUSBQueue::QueueHeadCleanup(
             //
             // first acquire request lock
             //
-            KeAcquireSpinLock(&m_Lock, &OldLevel);
+            DPRINT(__FUNCTION__ " acquire\n");
+            KeAcquireSpinLock(m_Lock, &OldLevel);
+            DPRINT(__FUNCTION__ " acquired\n");
 
             //
             // add to pending list
@@ -777,7 +784,8 @@ CUSBQueue::QueueHeadCleanup(
             //
             // release queue head
             //
-            KeReleaseSpinLock(&m_Lock, OldLevel);
+            DPRINT(__FUNCTION__ "release\n");
+            KeReleaseSpinLock(m_Lock, OldLevel);
 
             //
             // Done for now
@@ -846,7 +854,9 @@ CUSBQueue::CompleteAsyncRequests()
     //
     // first acquire request lock
     //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquire\n");
+    KeAcquireSpinLock(m_Lock, &OldLevel);
+    DPRINT(__FUNCTION__ " acquired\n");
 
     //
     // the list should not be empty
@@ -873,7 +883,8 @@ CUSBQueue::CompleteAsyncRequests()
         //
         // release lock
         //
-        KeReleaseSpinLock(&m_Lock, OldLevel);
+        DPRINT(__FUNCTION__ "release\n");
+        KeReleaseSpinLock(m_Lock, OldLevel);
 
         //
         // complete request now
@@ -883,7 +894,10 @@ CUSBQueue::CompleteAsyncRequests()
         //
         // first acquire request lock
         //
-        KeAcquireSpinLock(&m_Lock, &OldLevel);
+        DPRINT(__FUNCTION__ " acquire\n");
+        KeAcquireSpinLock(m_Lock, &OldLevel);
+        DPRINT(__FUNCTION__ " acquired\n");
+
     }
 
     //
@@ -910,7 +924,8 @@ CUSBQueue::CompleteAsyncRequests()
     //
     // release lock
     //
-    KeReleaseSpinLock(&m_Lock, OldLevel);
+    DPRINT(__FUNCTION__ "release\n");
+    KeReleaseSpinLock(m_Lock, OldLevel);
 }
 
 NTSTATUS
