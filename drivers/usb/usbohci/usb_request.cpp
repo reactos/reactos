@@ -654,7 +654,7 @@ NTSTATUS
 CUSBRequest::BuildIsochronousEndpoint(
     POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
 {
-    POHCI_ISO_TD FirstDescriptor, PreviousDescriptor = NULL, CurrentDescriptor;
+    POHCI_ISO_TD FirstDescriptor = NULL, PreviousDescriptor = NULL, CurrentDescriptor = NULL;
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
     ULONG Index = 0, SubIndex, NumberOfPackets, PageOffset, Page;
     NTSTATUS Status;

@@ -502,7 +502,6 @@ CHCDController::HandlePnp(
                 //
                 // not supported
                 //
-                PC_ASSERT(0);
                 Status = STATUS_NOT_SUPPORTED;
             }
             break;
