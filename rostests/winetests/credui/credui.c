@@ -83,7 +83,10 @@ static void test_CredUIPromptForCredentials(void)
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
 
         credui_info.pszCaptionText = wszCaption1;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL,
@@ -93,7 +96,10 @@ static void test_CredUIPromptForCredentials(void)
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
 
         credui_info.pszCaptionText = wszCaption2;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, 0,
@@ -102,7 +108,11 @@ static void test_CredUIPromptForCredentials(void)
                                           NULL, CREDUI_FLAGS_INCORRECT_PASSWORD|CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
+
 
         save = TRUE;
         credui_info.pszCaptionText = wszCaption3;
@@ -122,7 +132,11 @@ static void test_CredUIPromptForCredentials(void)
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         ok(!save, "save flag should have been untouched\n");
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
+
     }
 }
 
