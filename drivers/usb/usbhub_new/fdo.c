@@ -806,8 +806,25 @@ GetUsbStringDescriptor(
 
 ULONG
 IsCompositeDevice(
-    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
+    IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor,
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
+    if (DeviceDescriptor->bNumConfigurations != 1)
+    {
+         //
+         // composite device must have only one configuration
+         //
+         return FALSE;
+    }
+
+    if (ConfigurationDescriptor->bNumInterfaces < 2)
+    {
+        //
+        // composite device must have multiple interfaces
+        //
+        return FALSE;
+    }
+
     if (DeviceDescriptor->bDeviceClass == 0)
     {
         //
@@ -877,7 +894,7 @@ CreateDeviceIds(
     //
     // Construct the CompatibleIds
     //
-    if (IsCompositeDevice(DeviceDescriptor))
+    if (IsCompositeDevice(DeviceDescriptor, UsbChildExtension->FullConfigDesc))
     {
         Index += swprintf(&BufferPtr[Index], 
                           L"USB\\DevClass_%02x&SubClass_%02x&Prot_%02x",
