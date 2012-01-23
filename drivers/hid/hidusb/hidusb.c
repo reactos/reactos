@@ -1504,6 +1504,11 @@ HidPnp(
                 //
                 IoStack->Parameters.DeviceCapabilities.Capabilities->DeviceD1 = TRUE;
                 IoStack->Parameters.DeviceCapabilities.Capabilities->DeviceD2 = TRUE;
+
+                //
+                // don't need to safely remove
+                //
+                IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
             }
 
             //

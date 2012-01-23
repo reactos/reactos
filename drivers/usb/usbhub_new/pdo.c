@@ -517,44 +517,18 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_QUERY_RESOURCES:
         {
-            PCM_RESOURCE_LIST ResourceList;
-
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
-            ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
-            if (!ResourceList)
-            {
-                DPRINT1("ExAllocatePool() failed\n");
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-            }
-            else
-            {
-                ResourceList->Count = 0;
-                Information = (ULONG_PTR)ResourceList;
-                Status = STATUS_SUCCESS;
-            }
+
+            Information = Irp->IoStatus.Information;
+            Status = Irp->IoStatus.Status;
             break;
         }
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
         {
-            PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
-            ResourceList = ExAllocatePool(PagedPool, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
-            if (!ResourceList)
-            {
-                DPRINT1("ExAllocatePool() failed\n");
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-            }
-            else
-            {
-                RtlZeroMemory(ResourceList, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
-                ResourceList->ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
-                ResourceList->AlternativeLists = 1;
-                ResourceList->List->Version = 1;
-                ResourceList->List->Revision = 1;
-                ResourceList->List->Count = 0;
-                Information = (ULONG_PTR)ResourceList;
-                Status = STATUS_SUCCESS;
-            }
+            
+            Information = Irp->IoStatus.Information;
+            Status = Irp->IoStatus.Status;
             break;
         }
         case IRP_MN_QUERY_DEVICE_TEXT:
