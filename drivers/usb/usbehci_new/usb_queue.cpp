@@ -695,6 +695,7 @@ CUSBQueue::QueueHeadCleanup(
     IUSBRequest * Request;
     BOOLEAN ShouldReleaseWhenDone;
     USBD_STATUS UrbStatus;
+    KIRQL OldLevel;
 
     //
     // sanity checks
@@ -764,9 +765,19 @@ CUSBQueue::QueueHeadCleanup(
         if (Request->GetQueueHead(&NewQueueHead) == STATUS_SUCCESS)
         {
             //
+            // first acquire request lock
+            //
+            KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+            //
             // add to pending list
             //
             InsertTailList(&m_PendingRequestAsyncList, &NewQueueHead->LinkedQueueHeads);
+
+            //
+            // release queue head
+            //
+            KeReleaseSpinLock(&m_Lock, OldLevel);
 
             //
             // Done for now
@@ -860,9 +871,19 @@ CUSBQueue::CompleteAsyncRequests()
         Request = (IUSBRequest*) CurrentQH->Request;
 
         //
+        // release lock
+        //
+        KeReleaseSpinLock(&m_Lock, OldLevel);
+
+        //
         // complete request now
         //
         QueueHeadCleanup(CurrentQH);
+
+        //
+        // first acquire request lock
+        //
+        KeAcquireSpinLock(&m_Lock, &OldLevel);
     }
 
     //
