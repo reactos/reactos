@@ -1824,13 +1824,10 @@ IopHandleDeviceRemoval(
             }
         }
 
-        if (!Found)
+        if (!Found && !(Child->Flags & DNF_WILL_BE_REMOVED))
         {
             /* Send removal IRPs to all of its children */
             IopPrepareDeviceForRemoval(Child->PhysicalDeviceObject, TRUE);
-
-            /* Set the flag */
-            Child->Flags |= DNF_WILL_BE_REMOVED;
 
             /* Send the surprise removal IRP */
             IopSendSurpriseRemoval(Child->PhysicalDeviceObject);
@@ -4166,6 +4163,7 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
         return Status;
     }
 
+    DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
     if (DeviceRelations)
         IopSendRemoveDeviceRelations(DeviceRelations);
     IopSendRemoveChildDevices(DeviceNode);
@@ -4186,7 +4184,6 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
         IopSendRemoveDevice(DeviceNode->PhysicalDeviceObject);
         IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
                                   &DeviceNode->InstancePath);
-        DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
         return STATUS_SUCCESS;
     }
 
