@@ -14,7 +14,7 @@
 @ stub BCryptDuplicateHash
 @ stub BCryptDuplicateKey
 @ stub BCryptEncrypt
-@ stub BCryptEnumAlgorithms
+@ stdcall BCryptEnumAlgorithms(long ptr ptr long)
 @ stub BCryptEnumContextFunctionProviders
 @ stub BCryptEnumContextFunctions
 @ stub BCryptEnumContexts
