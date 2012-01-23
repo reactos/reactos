@@ -589,12 +589,16 @@ USBSTOR_SendRequest(
                 if (CommandLength == UFI_READ_WRITE_CMD_LEN)
                 {
                     MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
+
+                    //
+                    // is there an offset
+                    //
                     if (MdlVirtualAddress != Context->TransferData)
-					{
+                    {
                         //
                         // lets build an mdl
                         //
-						Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
+                        Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
                         if (!Context->TransferBufferMDL)
                         {
                             //
@@ -603,17 +607,20 @@ USBSTOR_SendRequest(
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
 
-						//
-						// now build the partial mdl
-						//
-						IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
-					}
+                        //
+                        // now build the partial mdl
+                        //
+                        IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
+                    }
                 }
 
-                //
-                // I/O paging request
-                //
-                Context->TransferBufferMDL = OriginalRequest->MdlAddress;
+                if (!Context->TransferBufferMDL)
+                {
+                    //
+                    // I/O paging request
+                    //
+                    Context->TransferBufferMDL = OriginalRequest->MdlAddress;
+                }
             }
             else
             {
