@@ -576,7 +576,7 @@ USBSTOR_SendRequest(
     if (Context->TransferDataLength)
     {
         //
-        // check if the original request already does not have an mdl associated
+        // check if the original request already does have an mdl associated
         //
         if (OriginalRequest)
         {
@@ -589,7 +589,25 @@ USBSTOR_SendRequest(
                 if (CommandLength == UFI_READ_WRITE_CMD_LEN)
                 {
                     MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
-                    ASSERT(MdlVirtualAddress == Context->TransferData);
+                    if (MdlVirtualAddress != Context->TransferData)
+					{
+                        //
+                        // lets build an mdl
+                        //
+						Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
+                        if (!Context->TransferBufferMDL)
+                        {
+                            //
+                            // failed to allocate MDL
+                            //
+                            return STATUS_INSUFFICIENT_RESOURCES;
+                        }
+
+						//
+						// now build the partial mdl
+						//
+						IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
+					}
                 }
 
                 //
