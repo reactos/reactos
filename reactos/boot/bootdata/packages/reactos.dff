@@ -128,6 +128,7 @@ base\system\rundll32\rundll32.exe                   1
 base\system\runonce\runonce.exe                     1
 base\system\services\services.exe                   1
 base\system\smss\smss.exe                           1
+base\system\smss2\smss2.exe                         1
 base\system\userinit\userinit.exe                   1
 base\system\winlogon\winlogon.exe                   1
 

@@ -40,6 +40,9 @@
 	<directory name="smss">
 		<xi:include href="smss/smss.rbuild" />
 	</directory>
+	<directory name="smss2">
+		<xi:include href="smss2/smss2.rbuild" />
+	</directory>
 	<directory name="userinit">
 		<xi:include href="userinit/userinit.rbuild" />
 	</directory>

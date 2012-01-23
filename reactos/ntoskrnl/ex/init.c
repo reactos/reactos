@@ -66,7 +66,7 @@ BOOLEAN InitIsWinPEMode, InitWinPEModeType;
 UNICODE_STRING NtSystemRoot;
 
 /* NT Initial User Application */
-WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss.exe";
+WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss2.exe";
 ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
                                          sizeof(WCHAR);
 ULONG NtInitialUserProcessBufferType = REG_SZ;

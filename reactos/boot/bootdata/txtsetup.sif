@@ -48,6 +48,7 @@ pcix.sys=,,,,,,,,,,,,4
 pcmcia.sys=,,,,,,,,,,,,4
 swenum.sys=,,,,,,,,,,,,4
 ntdll.dll=,,,,,,,,,,,,2
+smss2.exe=,,,,,,,,,,,,2
 
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp
