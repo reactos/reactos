@@ -551,6 +551,7 @@ CUSBHardwareDevice::StartController(void)
     // get frame interval
     //
     FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
     DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
     FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
     DPRINT1("FrameInterval %x\n", FrameInterval);
