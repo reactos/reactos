@@ -465,7 +465,7 @@ StatusChangeEndpointCompletion(
     }
     WorkItemData->Context = RealDeviceObject;
     DPRINT1("Initialize work item\n");
-    ExInitializeWorkItem(&WorkItemData->WorkItem, (PWORKER_THREAD_ROUTINE)DeviceStatusChangeThread, (PVOID)WorkItemData);
+    ExInitializeWorkItem(&WorkItemData->WorkItem, DeviceStatusChangeThread, (PVOID)WorkItemData);
 
     //
     // Queue the work item to handle initializing the device
@@ -1335,6 +1335,7 @@ USBHUB_FdoQueryBusRelations(
 }
 
 VOID
+NTAPI
 RootHubInitCallbackFunction(
     PVOID Context)
 {
@@ -1687,7 +1688,7 @@ USBHUB_FdoHandlePnp(
             {
                 Status = HubDeviceExtension->HubInterface.RootHubInitNotification(HubInterfaceBusContext,
                                                                                   DeviceObject,
-                                                                                  (PRH_INIT_CALLBACK)RootHubInitCallbackFunction);
+                                                                                  RootHubInitCallbackFunction);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Failed to set callback\n");
