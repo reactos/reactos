@@ -23,6 +23,7 @@
 #define CERT_CHAIN_PARA_HAS_EXTRA_FIELDS
 #define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
 #include "wincrypt.h"
+#include "wininet.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "crypt32_private.h"
@@ -1343,7 +1344,7 @@ static CERT_POLICIES_INFO *CRYPT_GetPolicies(PCCERT_CONTEXT cert)
     return policies;
 }
 
-static void CRYPT_CheckPolicies(CERT_POLICIES_INFO *policies, CERT_INFO *cert,
+static void CRYPT_CheckPolicies(const CERT_POLICIES_INFO *policies, CERT_INFO *cert,
  DWORD *errorStatus)
 {
     DWORD i;
@@ -1661,20 +1662,20 @@ static void dump_extension(const CERT_EXTENSION *ext)
         dump_netscape_cert_type(ext);
 }
 
-static LPCWSTR filetime_to_str(const FILETIME *time)
+static LPCSTR filetime_to_str(const FILETIME *time)
 {
-    static WCHAR date[80];
-    WCHAR dateFmt[80]; /* sufficient for all versions of LOCALE_SSHORTDATE */
+    char date[80];
+    char dateFmt[80]; /* sufficient for all versions of LOCALE_SSHORTDATE */
     SYSTEMTIME sysTime;
 
-    if (!time) return NULL;
+    if (!time) return "(null)";
 
-    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt,
+    GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt,
      sizeof(dateFmt) / sizeof(dateFmt[0]));
     FileTimeToSystemTime(time, &sysTime);
-    GetDateFormatW(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date,
+    GetDateFormatA(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date,
      sizeof(date) / sizeof(date[0]));
-    return date;
+    return wine_dbg_sprintf("%s", date);
 }
 
 static void dump_element(PCCERT_CONTEXT cert)
@@ -1704,8 +1705,8 @@ static void dump_element(PCCERT_CONTEXT cert)
         CryptMemFree(name);
     }
     TRACE_(chain)("valid from %s to %s\n",
-     debugstr_w(filetime_to_str(&cert->pCertInfo->NotBefore)),
-     debugstr_w(filetime_to_str(&cert->pCertInfo->NotAfter)));
+     filetime_to_str(&cert->pCertInfo->NotBefore),
+     filetime_to_str(&cert->pCertInfo->NotAfter));
     TRACE_(chain)("%d extensions\n", cert->pCertInfo->cExtension);
     for (i = 0; i < cert->pCertInfo->cExtension; i++)
         dump_extension(&cert->pCertInfo->rgExtension[i]);
@@ -1759,28 +1760,12 @@ static BOOL CRYPT_KeyUsageValid(PCertificateChainEngine engine,
              * extensions as CA certs.  V1 and V2 certificates did not have
              * extensions, and many root certificates are V1 certificates, so
              * perhaps this is prudent.  On the other hand, MS also accepts V3
-             * certs without key usage extensions.  We are more restrictive:
-             * we accept locally installed V1 or V2 certs as CA certs.
-             * We also accept a lack of key usage extension on root certs,
-             * which is implied in RFC 5280, section 6.1:  the trust anchor's
-             * only requirement is that it was used to issue the next
-             * certificate in the chain.
+             * certs without key usage extensions.  Because some CAs, e.g.
+             * Certum, also do not include key usage extensions in their
+             * intermediate certificates, we are forced to accept V3
+             * certificates without key usage extensions as well.
              */
-            if (isRoot)
-                ret = TRUE;
-            else if (cert->pCertInfo->dwVersion == CERT_V1 ||
-             cert->pCertInfo->dwVersion == CERT_V2)
-            {
-                PCCERT_CONTEXT localCert = CRYPT_FindCertInStore(
-                 engine->hWorld, cert);
-
-                ret = localCert != NULL;
-                CertFreeCertificateContext(localCert);
-            }
-            else
-                ret = FALSE;
-            if (!ret)
-                WARN_(chain)("no key usage extension on a CA cert\n");
+            ret = TRUE;
         }
         else
         {
@@ -1892,7 +1877,7 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
     CERT_BASIC_CONSTRAINTS2_INFO constraints = { FALSE, FALSE, 0 };
 
     TRACE_(chain)("checking chain with %d elements for time %s\n",
-     chain->cElement, debugstr_w(filetime_to_str(time)));
+     chain->cElement, filetime_to_str(time));
     for (i = chain->cElement - 1; i >= 0; i--)
     {
         BOOL isRoot;
@@ -1970,7 +1955,8 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
         if (!CRYPT_CriticalExtensionsSupported(
          chain->rgpElement[i]->pCertContext))
             chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
-             CERT_TRUST_INVALID_EXTENSION;
+             CERT_TRUST_INVALID_EXTENSION |
+             CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT;
         CRYPT_CombineTrustStatus(&chain->TrustStatus,
          &chain->rgpElement[i]->TrustStatus);
     }
@@ -2147,6 +2133,13 @@ static BOOL CRYPT_BuildSimpleChain(const CertificateChainEngine *engine,
     return ret;
 }
 
+static LPCSTR debugstr_filetime(LPFILETIME pTime)
+{
+    if (!pTime)
+        return "(nil)";
+    return wine_dbg_sprintf("%p (%s)", pTime, filetime_to_str(pTime));
+}
+
 static BOOL CRYPT_GetSimpleChainForCert(PCertificateChainEngine engine,
  HCERTSTORE world, PCCERT_CONTEXT cert, LPFILETIME pTime,
  PCERT_SIMPLE_CHAIN *ppChain)
@@ -2154,7 +2147,7 @@ static BOOL CRYPT_GetSimpleChainForCert(PCertificateChainEngine engine,
     BOOL ret = FALSE;
     PCERT_SIMPLE_CHAIN chain;
 
-    TRACE("(%p, %p, %p, %p)\n", engine, world, cert, pTime);
+    TRACE("(%p, %p, %p, %s)\n", engine, world, cert, debugstr_filetime(pTime));
 
     chain = CryptMemAlloc(sizeof(CERT_SIMPLE_CHAIN));
     if (chain)
@@ -2375,7 +2368,8 @@ static PCertificateChain CRYPT_BuildAlternateContextFromChain(
     PCertificateChainEngine engine = (PCertificateChainEngine)hChainEngine;
     PCertificateChain alternate;
 
-    TRACE("(%p, %p, %p, %p)\n", hChainEngine, pTime, hAdditionalStore, chain);
+    TRACE("(%p, %s, %p, %p)\n", hChainEngine, debugstr_filetime(pTime),
+     hAdditionalStore, chain);
 
     /* Always start with the last "lower quality" chain to ensure a consistent
      * order of alternate creation:
@@ -2559,7 +2553,8 @@ typedef struct _CERT_CHAIN_PARA_NO_EXTRA_FIELDS {
 } CERT_CHAIN_PARA_NO_EXTRA_FIELDS, *PCERT_CHAIN_PARA_NO_EXTRA_FIELDS;
 
 static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
- LPFILETIME pTime, const CERT_CHAIN_PARA *pChainPara, DWORD chainFlags)
+ LPFILETIME pTime, HCERTSTORE hAdditionalStore,
+ const CERT_CHAIN_PARA *pChainPara, DWORD chainFlags)
 {
     DWORD cContext;
 
@@ -2583,78 +2578,84 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
         cContext = 0;
     if (cContext)
     {
-        PCCERT_CONTEXT *contexts =
-         CryptMemAlloc(cContext * sizeof(PCCERT_CONTEXT));
+        DWORD i, j, iContext, revocationFlags;
+        CERT_REVOCATION_PARA revocationPara = { sizeof(revocationPara), 0 };
+        CERT_REVOCATION_STATUS revocationStatus =
+         { sizeof(revocationStatus), 0 };
+        BOOL ret;
 
-        if (contexts)
+        revocationFlags = CERT_VERIFY_REV_CHAIN_FLAG;
+        if (chainFlags & CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY)
+            revocationFlags |= CERT_VERIFY_CACHE_ONLY_BASED_REVOCATION;
+        if (chainFlags & CERT_CHAIN_REVOCATION_ACCUMULATIVE_TIMEOUT)
+            revocationFlags |= CERT_VERIFY_REV_ACCUMULATIVE_TIMEOUT_FLAG;
+        revocationPara.pftTimeToUse = pTime;
+        if (hAdditionalStore)
         {
-            DWORD i, j, iContext, revocationFlags;
-            CERT_REVOCATION_PARA revocationPara = { sizeof(revocationPara), 0 };
-            CERT_REVOCATION_STATUS revocationStatus =
-             { sizeof(revocationStatus), 0 };
-            BOOL ret;
+            revocationPara.cCertStore = 1;
+            revocationPara.rgCertStore = &hAdditionalStore;
+            revocationPara.hCrlStore = hAdditionalStore;
+        }
+        if (pChainPara->cbSize == sizeof(CERT_CHAIN_PARA))
+        {
+            revocationPara.dwUrlRetrievalTimeout =
+             pChainPara->dwUrlRetrievalTimeout;
+            revocationPara.fCheckFreshnessTime =
+             pChainPara->fCheckRevocationFreshnessTime;
+            revocationPara.dwFreshnessTime =
+             pChainPara->dwRevocationFreshnessTime;
+        }
+        for (i = 0, iContext = 0; iContext < cContext && i < chain->cChain; i++)
+        {
+            for (j = 0; iContext < cContext &&
+             j < chain->rgpChain[i]->cElement; j++, iContext++)
+            {
+                PCCERT_CONTEXT certToCheck =
+                 chain->rgpChain[i]->rgpElement[j]->pCertContext;
 
-            for (i = 0, iContext = 0; iContext < cContext && i < chain->cChain;
-             i++)
-            {
-                for (j = 0; iContext < cContext &&
-                 j < chain->rgpChain[i]->cElement; j++)
-                    contexts[iContext++] =
-                     chain->rgpChain[i]->rgpElement[j]->pCertContext;
-            }
-            revocationFlags = CERT_VERIFY_REV_CHAIN_FLAG;
-            if (chainFlags & CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY)
-                revocationFlags |= CERT_VERIFY_CACHE_ONLY_BASED_REVOCATION;
-            if (chainFlags & CERT_CHAIN_REVOCATION_ACCUMULATIVE_TIMEOUT)
-                revocationFlags |= CERT_VERIFY_REV_ACCUMULATIVE_TIMEOUT_FLAG;
-            revocationPara.pftTimeToUse = pTime;
-            if (pChainPara->cbSize == sizeof(CERT_CHAIN_PARA))
-            {
-                revocationPara.dwUrlRetrievalTimeout =
-                 pChainPara->dwUrlRetrievalTimeout;
-                revocationPara.fCheckFreshnessTime =
-                 pChainPara->fCheckRevocationFreshnessTime;
-                revocationPara.dwFreshnessTime =
-                 pChainPara->dwRevocationFreshnessTime;
-            }
-            ret = CertVerifyRevocation(X509_ASN_ENCODING,
-             CERT_CONTEXT_REVOCATION_TYPE, cContext, (void **)contexts,
-             revocationFlags, &revocationPara, &revocationStatus);
-            if (!ret)
-            {
-                PCERT_CHAIN_ELEMENT element =
-                 CRYPT_FindIthElementInChain(chain, revocationStatus.dwIndex);
-                DWORD error;
+                if (j < chain->rgpChain[i]->cElement - 1)
+                    revocationPara.pIssuerCert =
+                     chain->rgpChain[i]->rgpElement[j + 1]->pCertContext;
+                else
+                    revocationPara.pIssuerCert = NULL;
+                ret = CertVerifyRevocation(X509_ASN_ENCODING,
+                 CERT_CONTEXT_REVOCATION_TYPE, 1, (void **)&certToCheck,
+                 revocationFlags, &revocationPara, &revocationStatus);
+                if (!ret)
+                {
+                    PCERT_CHAIN_ELEMENT element = CRYPT_FindIthElementInChain(
+                     chain, iContext);
+                    DWORD error;
 
-                switch (revocationStatus.dwError)
-                {
-                case CRYPT_E_NO_REVOCATION_CHECK:
-                case CRYPT_E_NO_REVOCATION_DLL:
-                case CRYPT_E_NOT_IN_REVOCATION_DATABASE:
-                    /* If the revocation status is unknown, it's assumed to be
-                     * offline too.
-                     */
-                    error = CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
-                     CERT_TRUST_IS_OFFLINE_REVOCATION;
-                    break;
-                case CRYPT_E_REVOCATION_OFFLINE:
-                    error = CERT_TRUST_IS_OFFLINE_REVOCATION;
-                    break;
-                case CRYPT_E_REVOKED:
-                    error = CERT_TRUST_IS_REVOKED;
-                    break;
-                default:
-                    WARN("unmapped error %08x\n", revocationStatus.dwError);
-                    error = 0;
+                    switch (revocationStatus.dwError)
+                    {
+                    case CRYPT_E_NO_REVOCATION_CHECK:
+                    case CRYPT_E_NO_REVOCATION_DLL:
+                    case CRYPT_E_NOT_IN_REVOCATION_DATABASE:
+                        /* If the revocation status is unknown, it's assumed
+                         * to be offline too.
+                         */
+                        error = CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
+                         CERT_TRUST_IS_OFFLINE_REVOCATION;
+                        break;
+                    case CRYPT_E_REVOCATION_OFFLINE:
+                        error = CERT_TRUST_IS_OFFLINE_REVOCATION;
+                        break;
+                    case CRYPT_E_REVOKED:
+                        error = CERT_TRUST_IS_REVOKED;
+                        break;
+                    default:
+                        WARN("unmapped error %08x\n", revocationStatus.dwError);
+                        error = 0;
+                    }
+                    if (element)
+                    {
+                        /* FIXME: set element's pRevocationInfo member */
+                        element->TrustStatus.dwErrorStatus |= error;
+                    }
+                    chain->TrustStatus.dwErrorStatus |= error;
                 }
-                if (element)
-                {
-                    /* FIXME: set element's pRevocationInfo member */
-                    element->TrustStatus.dwErrorStatus |= error;
-                }
-                chain->TrustStatus.dwErrorStatus |= error;
             }
-            CryptMemFree(contexts);
         }
     }
 }
@@ -2801,8 +2802,9 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
     BOOL ret;
     PCertificateChain chain = NULL;
 
-    TRACE("(%p, %p, %p, %p, %p, %08x, %p, %p)\n", hChainEngine, pCertContext,
-     pTime, hAdditionalStore, pChainPara, dwFlags, pvReserved, ppChainContext);
+    TRACE("(%p, %p, %s, %p, %p, %08x, %p, %p)\n", hChainEngine, pCertContext,
+     debugstr_filetime(pTime), hAdditionalStore, pChainPara, dwFlags,
+     pvReserved, ppChainContext);
 
     if (ppChainContext)
         *ppChainContext = NULL;
@@ -2844,8 +2846,8 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
         if (!(dwFlags & CERT_CHAIN_RETURN_LOWER_QUALITY_CONTEXTS))
             CRYPT_FreeLowerQualityChains(chain);
         pChain = (PCERT_CHAIN_CONTEXT)chain;
-        if (!pChain->TrustStatus.dwErrorStatus)
-            CRYPT_VerifyChainRevocation(pChain, pTime, pChainPara, dwFlags);
+        CRYPT_VerifyChainRevocation(pChain, pTime, hAdditionalStore,
+         pChainPara, dwFlags);
         CRYPT_CheckUsages(pChain, pChainPara);
         TRACE_(chain)("error status: %08x\n",
          pChain->TrustStatus.dwErrorStatus);
@@ -2883,6 +2885,15 @@ VOID WINAPI CertFreeCertificateChain(PCCERT_CHAIN_CONTEXT pChainContext)
     }
 }
 
+PCCERT_CHAIN_CONTEXT WINAPI CertFindChainInStore(HCERTSTORE store,
+ DWORD certEncodingType, DWORD findFlags, DWORD findType,
+ const void *findPara, PCCERT_CHAIN_CONTEXT prevChainContext)
+{
+    FIXME("(%p, %08x, %08x, %d, %p, %p): stub\n", store, certEncodingType,
+     findFlags, findType, findPara, prevChainContext);
+    return NULL;
+}
+
 static void find_element_with_error(PCCERT_CHAIN_CONTEXT chain, DWORD error,
  LONG *iChain, LONG *iElement)
 {
@@ -2903,21 +2914,18 @@ static BOOL WINAPI verify_base_policy(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
 {
+    DWORD checks = 0;
+
+    if (pPolicyPara)
+        checks = pPolicyPara->dwFlags;
     pPolicyStatus->lChainIndex = pPolicyStatus->lElementIndex = -1;
+    pPolicyStatus->dwError = NO_ERROR;
     if (pChainContext->TrustStatus.dwErrorStatus &
      CERT_TRUST_IS_NOT_SIGNATURE_VALID)
     {
         pPolicyStatus->dwError = TRUST_E_CERT_SIGNATURE;
         find_element_with_error(pChainContext,
          CERT_TRUST_IS_NOT_SIGNATURE_VALID, &pPolicyStatus->lChainIndex,
-         &pPolicyStatus->lElementIndex);
-    }
-    else if (pChainContext->TrustStatus.dwErrorStatus &
-     CERT_TRUST_IS_UNTRUSTED_ROOT)
-    {
-        pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
-        find_element_with_error(pChainContext,
-         CERT_TRUST_IS_UNTRUSTED_ROOT, &pPolicyStatus->lChainIndex,
          &pPolicyStatus->lElementIndex);
     }
     else if (pChainContext->TrustStatus.dwErrorStatus & CERT_TRUST_IS_CYCLIC)
@@ -2928,8 +2936,43 @@ static BOOL WINAPI verify_base_policy(LPCSTR szPolicyOID,
         /* For a cyclic chain, which element is a cycle isn't meaningful */
         pPolicyStatus->lElementIndex = -1;
     }
-    else
-        pPolicyStatus->dwError = NO_ERROR;
+    if (!pPolicyStatus->dwError &&
+     pChainContext->TrustStatus.dwErrorStatus & CERT_TRUST_IS_UNTRUSTED_ROOT &&
+     !(checks & CERT_CHAIN_POLICY_ALLOW_UNKNOWN_CA_FLAG))
+    {
+        pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_UNTRUSTED_ROOT, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    if (!pPolicyStatus->dwError &&
+     pChainContext->TrustStatus.dwErrorStatus & CERT_TRUST_IS_NOT_TIME_VALID)
+    {
+        pPolicyStatus->dwError = CERT_E_EXPIRED;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_NOT_TIME_VALID, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    if (!pPolicyStatus->dwError &&
+     pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_NOT_VALID_FOR_USAGE &&
+     !(checks & CERT_CHAIN_POLICY_IGNORE_WRONG_USAGE_FLAG))
+    {
+        pPolicyStatus->dwError = CERT_E_WRONG_USAGE;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_NOT_VALID_FOR_USAGE, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    if (!pPolicyStatus->dwError &&
+     pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT &&
+     !(checks & CERT_CHAIN_POLICY_IGNORE_NOT_SUPPORTED_CRITICAL_EXT_FLAG))
+    {
+        pPolicyStatus->dwError = CERT_E_CRITICAL;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
     return TRUE;
 }
 
@@ -2946,13 +2989,30 @@ static BYTE msTestPubKey2[] = {
 0x71,0x9e,0x06,0xd9,0xbf,0xbb,0x31,0x69,0xa3,0xf6,0x30,0xa0,0x78,0x7b,0x18,
 0xdd,0x50,0x4d,0x79,0x1e,0xeb,0x61,0xc1,0x02,0x03,0x01,0x00,0x01 };
 
+static void dump_authenticode_extra_chain_policy_para(
+ AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_PARA *extraPara)
+{
+    if (extraPara)
+    {
+        TRACE_(chain)("cbSize = %d\n", extraPara->cbSize);
+        TRACE_(chain)("dwRegPolicySettings = %08x\n",
+         extraPara->dwRegPolicySettings);
+        TRACE_(chain)("pSignerInfo = %p\n", extraPara->pSignerInfo);
+    }
+}
+
 static BOOL WINAPI verify_authenticode_policy(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
 {
     BOOL ret = verify_base_policy(szPolicyOID, pChainContext, pPolicyPara,
      pPolicyStatus);
+    AUTHENTICODE_EXTRA_CERT_CHAIN_POLICY_PARA *extraPara = NULL;
 
+    if (pPolicyPara)
+        extraPara = pPolicyPara->pvExtraPolicyPara;
+    if (TRACE_ON(chain))
+        dump_authenticode_extra_chain_policy_para(extraPara);
     if (ret && pPolicyStatus->dwError == CERT_E_UNTRUSTEDROOT)
     {
         CERT_PUBLIC_KEY_INFO msPubKey = { { 0 } };
@@ -3001,7 +3061,7 @@ static BOOL WINAPI verify_basic_constraints_policy(LPCSTR szPolicyOID,
     return TRUE;
 }
 
-static BOOL match_dns_to_subject_alt_name(PCERT_EXTENSION ext,
+static BOOL match_dns_to_subject_alt_name(const CERT_EXTENSION *ext,
  LPCWSTR server_name)
 {
     BOOL matches = FALSE;
@@ -3069,7 +3129,7 @@ static BOOL match_dns_to_subject_alt_name(PCERT_EXTENSION ext,
     return matches;
 }
 
-static BOOL find_matching_domain_component(CERT_NAME_INFO *name,
+static BOOL find_matching_domain_component(const CERT_NAME_INFO *name,
  LPCWSTR component)
 {
     BOOL matches = FALSE;
@@ -3080,7 +3140,7 @@ static BOOL find_matching_domain_component(CERT_NAME_INFO *name,
             if (!strcmp(szOID_DOMAIN_COMPONENT,
              name->rgRDN[i].rgRDNAttr[j].pszObjId))
             {
-                PCERT_RDN_ATTR attr;
+                const CERT_RDN_ATTR *attr;
 
                 attr = &name->rgRDN[i].rgRDNAttr[j];
                 /* Compare with memicmpW rather than strcmpiW in order to avoid
@@ -3088,7 +3148,7 @@ static BOOL find_matching_domain_component(CERT_NAME_INFO *name,
                  * must match one domain component attribute's entire string
                  * value with a case-insensitive match.
                  */
-                matches = !memicmpW(component, (LPWSTR)attr->Value.pbData,
+                matches = !memicmpW(component, (LPCWSTR)attr->Value.pbData,
                  attr->Value.cbData / sizeof(WCHAR));
             }
     return matches;
@@ -3137,7 +3197,8 @@ static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
                 break;
             }
         }
-        matches = tolowerW(*allowed_ptr) == tolowerW(*server_ptr);
+        if (matches)
+            matches = tolowerW(*allowed_ptr) == tolowerW(*server_ptr);
     }
     if (matches && server_ptr - server_component < server_len)
     {
@@ -3149,7 +3210,7 @@ static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
     return matches;
 }
 
-static BOOL match_common_name(LPCWSTR server_name, PCERT_RDN_ATTR nameAttr)
+static BOOL match_common_name(LPCWSTR server_name, const CERT_RDN_ATTR *nameAttr)
 {
     LPCWSTR allowed = (LPCWSTR)nameAttr->Value.pbData;
     LPCWSTR allowed_component = allowed;
@@ -3241,7 +3302,6 @@ static BOOL match_dns_to_subject_dn(PCCERT_CONTEXT cert, LPCWSTR server_name)
         {
             LPCWSTR ptr = server_name;
 
-            matches = TRUE;
             do {
                 LPCWSTR dot = strchrW(ptr, '.'), end;
                 /* 254 is the maximum DNS label length, see RFC 1035 */
@@ -3267,23 +3327,55 @@ static BOOL match_dns_to_subject_dn(PCCERT_CONTEXT cert, LPCWSTR server_name)
         }
         else
         {
-            PCERT_RDN_ATTR attr;
+            DWORD i, j;
 
             /* If the certificate isn't using a DN attribute in the name, make
-             * make sure the common name matches.
+             * make sure at least one common name matches.  From RFC 2818,
+             * section 3.1:
+             * "If more than one identity of a given type is present in the
+             * certificate (e.g., more than one dNSName name, a match in any
+             * one of the set is considered acceptable.)"
              */
-            if ((attr = CertFindRDNAttr(szOID_COMMON_NAME, name)))
-                matches = match_common_name(server_name, attr);
+            for (i = 0; !matches && i < name->cRDN; i++)
+                for (j = 0; !matches && j < name->rgRDN[i].cRDNAttr; j++)
+                {
+                    PCERT_RDN_ATTR attr = &name->rgRDN[i].rgRDNAttr[j];
+
+                    if (attr->pszObjId && !strcmp(szOID_COMMON_NAME,
+                     attr->pszObjId))
+                        matches = match_common_name(server_name, attr);
+                }
         }
         LocalFree(name);
     }
     return matches;
 }
 
+static void dump_ssl_extra_chain_policy_para(HTTPSPolicyCallbackData *sslPara)
+{
+    if (sslPara)
+    {
+        TRACE_(chain)("cbSize = %d\n", sslPara->u.cbSize);
+        TRACE_(chain)("dwAuthType = %d\n", sslPara->dwAuthType);
+        TRACE_(chain)("fdwChecks = %08x\n", sslPara->fdwChecks);
+        TRACE_(chain)("pwszServerName = %s\n",
+         debugstr_w(sslPara->pwszServerName));
+    }
+}
+
 static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
 {
+    HTTPSPolicyCallbackData *sslPara = NULL;
+    DWORD checks = 0;
+
+    if (pPolicyPara)
+        sslPara = pPolicyPara->pvExtraPolicyPara;
+    if (TRACE_ON(chain))
+        dump_ssl_extra_chain_policy_para(sslPara);
+    if (sslPara && sslPara->u.cbSize >= sizeof(HTTPSPolicyCallbackData))
+        checks = sslPara->fdwChecks;
     pPolicyStatus->lChainIndex = pPolicyStatus->lElementIndex = -1;
     if (pChainContext->TrustStatus.dwErrorStatus &
      CERT_TRUST_IS_NOT_SIGNATURE_VALID)
@@ -3294,7 +3386,8 @@ static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
          &pPolicyStatus->lElementIndex);
     }
     else if (pChainContext->TrustStatus.dwErrorStatus &
-     CERT_TRUST_IS_UNTRUSTED_ROOT)
+     CERT_TRUST_IS_UNTRUSTED_ROOT &&
+     !(checks & SECURITY_FLAG_IGNORE_UNKNOWN_CA))
     {
         pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
         find_element_with_error(pChainContext,
@@ -3311,11 +3404,46 @@ static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
         pPolicyStatus->lElementIndex = -1;
     }
     else if (pChainContext->TrustStatus.dwErrorStatus &
-     CERT_TRUST_IS_NOT_TIME_VALID)
+     CERT_TRUST_IS_NOT_TIME_VALID &&
+     !(checks & SECURITY_FLAG_IGNORE_CERT_DATE_INVALID))
     {
         pPolicyStatus->dwError = CERT_E_EXPIRED;
         find_element_with_error(pChainContext,
          CERT_TRUST_IS_NOT_TIME_VALID, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_NOT_VALID_FOR_USAGE &&
+     !(checks & SECURITY_FLAG_IGNORE_WRONG_USAGE))
+    {
+        pPolicyStatus->dwError = CERT_E_WRONG_USAGE;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_NOT_VALID_FOR_USAGE, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_REVOKED && !(checks & SECURITY_FLAG_IGNORE_REVOCATION))
+    {
+        pPolicyStatus->dwError = CERT_E_REVOKED;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_REVOKED, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_OFFLINE_REVOCATION &&
+     !(checks & SECURITY_FLAG_IGNORE_REVOCATION))
+    {
+        pPolicyStatus->dwError = CERT_E_REVOCATION_FAILURE;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_OFFLINE_REVOCATION, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT)
+    {
+        pPolicyStatus->dwError = CERT_E_CRITICAL;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT, &pPolicyStatus->lChainIndex,
          &pPolicyStatus->lElementIndex);
     }
     else
@@ -3326,12 +3454,11 @@ static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
     if (!pPolicyStatus->dwError && pPolicyPara &&
      pPolicyPara->cbSize >= sizeof(CERT_CHAIN_POLICY_PARA))
     {
-        HTTPSPolicyCallbackData *sslPara = pPolicyPara->pvExtraPolicyPara;
-
         if (sslPara && sslPara->u.cbSize >= sizeof(HTTPSPolicyCallbackData))
         {
             if (sslPara->dwAuthType == AUTHTYPE_SERVER &&
-             sslPara->pwszServerName)
+             sslPara->pwszServerName &&
+             !(checks & SECURITY_FLAG_IGNORE_CERT_CN_INVALID))
             {
                 PCCERT_CONTEXT cert;
                 PCERT_EXTENSION altNameExt;
@@ -3485,6 +3612,16 @@ typedef BOOL (WINAPI *CertVerifyCertificateChainPolicyFunc)(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus);
 
+static void dump_policy_para(PCERT_CHAIN_POLICY_PARA para)
+{
+    if (para)
+    {
+        TRACE_(chain)("cbSize = %d\n", para->cbSize);
+        TRACE_(chain)("dwFlags = %08x\n", para->dwFlags);
+        TRACE_(chain)("pvExtraPolicyPara = %p\n", para->pvExtraPolicyPara);
+    }
+}
+
 BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
@@ -3496,6 +3633,8 @@ BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
 
     TRACE("(%s, %p, %p, %p)\n", debugstr_a(szPolicyOID), pChainContext,
      pPolicyPara, pPolicyStatus);
+    if (TRACE_ON(chain))
+        dump_policy_para(pPolicyPara);
 
     if (IS_INTOID(szPolicyOID))
     {
