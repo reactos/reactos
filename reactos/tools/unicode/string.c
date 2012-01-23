@@ -351,7 +351,7 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
 {
     unsigned int written = 0;
     const WCHAR *iter = format;
-    char bufa[256], fmtbufa[64], *fmta;
+    char bufa[512], fmtbufa[64], *fmta;
 
     while (*iter)
     {
