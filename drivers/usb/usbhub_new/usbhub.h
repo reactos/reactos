@@ -1,5 +1,6 @@
 #pragma once
 
+#define NDEBUG
 #include <ntifs.h>
 #include <ntddk.h>
 #include <wdmguid.h>
