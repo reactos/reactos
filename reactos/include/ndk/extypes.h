@@ -772,7 +772,7 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION
     ULONG TotalSystemCodePages;
     ULONG NonPagedPoolLookasideHits;
     ULONG PagedPoolLookasideHits;
-    ULONG AvailablePagedPoolPages;
+    ULONG Spare3Count;
     ULONG ResidentSystemCachePage;
     ULONG ResidentPagedPoolPage;
     ULONG ResidentSystemDriverPage;

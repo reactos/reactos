@@ -46,7 +46,7 @@ Author:
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1            0x200
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2            0x400
 #define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH        0x1000
-#define RTL_USER_PROCESS_PARAMETERS_APP_MANIFEST_PRESENT    0x2000
+#define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH          0x2000
 #define RTL_USER_PROCESS_PARAMETERS_IMAGE_KEY_MISSING       0x4000
 #define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
 
@@ -979,6 +979,16 @@ typedef struct _RTL_HEAP_ENTRY
     } u;
 } RTL_HEAP_ENTRY, *PRTL_HEAP_ENTRY;
 
+typedef struct _RTL_HEAP_TAG
+{
+    ULONG NumberOfAllocations;
+    ULONG NumberOfFrees;
+    SIZE_T BytesAllocated;
+    USHORT TagIndex;
+    USHORT CreatorBackTraceIndex;
+    WCHAR TagName[24];
+} RTL_HEAP_TAG, *PRTL_HEAP_TAG;
+
 typedef struct _RTL_HEAP_INFORMATION
 {
     PVOID BaseAddress;
@@ -1262,8 +1272,8 @@ typedef struct _RTL_RESOURCE
     ULONG ExclusiveWaiters;
     LONG NumberActive;
     HANDLE OwningThread;
-    ULONG Flags;
-    PRTL_RESOURCE_DEBUG DebugInfo;
+    ULONG TimeoutBoost;
+    PVOID DebugInfo;
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
 //

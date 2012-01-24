@@ -964,7 +964,7 @@ NTSTATUS
 NTAPI
 RtlWalkHeap(
     IN HANDLE HeapHandle,
-    IN OUT PRTL_HEAP_WALK_ENTRY HeapEntry
+    IN PVOID HeapEntry
 );
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
@@ -2663,14 +2663,6 @@ NTSTATUS
 NTAPI
 RtlSetCurrentDirectory_U(
     IN PUNICODE_STRING name
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSetCurrentEnvironment(
-    IN PVOID Environment,
-    OUT OPTIONAL PVOID *PreviousEnvironment
 );
 
 NTSYSAPI

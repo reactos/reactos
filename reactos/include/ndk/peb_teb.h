@@ -146,7 +146,7 @@ typedef struct STRUCT(_PEB)
     PTR(PVOID*) FlsCallback;
     STRUCT(LIST_ENTRY) FlsListHead;
     PTR(PVOID) FlsBitmap;
-    ULONG FlsBitmapBits[FLS_MAXIMUM_AVAILABLE/(sizeof(ULONG)*8)];
+    ULONG FlsBitmapBits[4]; // [FLS_MAXIMUM_AVAILABLE/(sizeof(ULONG)*8)];
     ULONG FlsHighIndex;
 #endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
