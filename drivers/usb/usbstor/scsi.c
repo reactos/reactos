@@ -282,14 +282,14 @@ USBSTOR_CSWCompletionRoutine(
         Context->Irp->IoStatus.Information = Context->TransferDataLength;
 
         //
+        // terminate current request
+        //
+        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
+
+        //
         // complete request
         //
         IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
-
-        //
-        // terminate current request
-        //
-        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, TRUE);
 
         //
         // start next request
@@ -840,6 +840,16 @@ USBSTOR_SendModeSenseCmd(
     PSCSI_REQUEST_BLOCK Request;
 
     //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+    //
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -853,22 +863,8 @@ USBSTOR_SendModeSenseCmd(
     Request->SrbStatus = SRB_STATUS_SUCCESS;
     Irp->IoStatus.Information = Request->DataTransferLength;
     Irp->IoStatus.Status = STATUS_SUCCESS;
+    USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, Irp);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    //
-    // get PDO device extension
-    //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    //
-    // sanity check
-    //
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-    //
-    // terminate current request
-    //
-    USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, TRUE);
 
     //
     // start next request
@@ -1204,12 +1200,8 @@ USBSTOR_HandleExecuteSCSI(
         Request->SrbStatus = SRB_STATUS_SUCCESS;
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = Request->DataTransferLength;
+        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-        //
-        // terminate current request
-        //
-        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, TRUE);
 
         //
         // start next request

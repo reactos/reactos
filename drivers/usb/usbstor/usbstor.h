@@ -66,7 +66,7 @@ typedef struct
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
     BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
-    BOOLEAN SrbActive;                                                                   // debug field if srb is pending
+    PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -439,4 +439,4 @@ USBSTOR_QueueNextRequest(
 VOID
 USBSTOR_QueueTerminateRequest(
     IN PDEVICE_OBJECT DeviceObject,
-    IN BOOLEAN ModifySrbState);
+    IN PIRP Irp);

@@ -129,10 +129,10 @@ USBSTOR_HandleTransferError(
         /* Complete the master IRP */
         Context->Irp->IoStatus.Status = Status;
         Context->Irp->IoStatus.Information = 0;
+        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
         IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
 
         /* Start the next request */
-        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, TRUE);
         USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
 
         /* Signal the context event */

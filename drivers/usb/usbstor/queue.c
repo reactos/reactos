@@ -67,7 +67,13 @@ USBSTOR_CancelIo(
     //
     // now cancel the irp
     //
+    USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    //
+    // start the next one
+    //
+    USBSTOR_QueueNextRequest(DeviceObject);
 }
 
 VOID
@@ -117,7 +123,13 @@ USBSTOR_Cancel(
     //
     // now cancel the irp
     //
+    USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    //
+    // start the next one
+    //
+    USBSTOR_QueueNextRequest(DeviceObject);
 }
 
 BOOLEAN
@@ -358,8 +370,14 @@ USBSTOR_QueueFlushIrps(
         //
         // complete request
         //
+        USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         
+        //
+        // start next one
+        //
+        USBSTOR_QueueNextRequest(DeviceObject);
+
         //
         // acquire lock
         //
@@ -375,10 +393,12 @@ USBSTOR_QueueFlushIrps(
 VOID
 USBSTOR_QueueTerminateRequest(
     IN PDEVICE_OBJECT FDODeviceObject,
-    IN BOOLEAN ModifySrbState)
+    IN PIRP Irp)
 {
     KIRQL OldLevel;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    PSCSI_REQUEST_BLOCK Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
 
     //
     // get FDO device extension
@@ -400,17 +420,15 @@ USBSTOR_QueueTerminateRequest(
     //
     FDODeviceExtension->IrpPendingCount--;
 
-    if (ModifySrbState)
+    //
+    // check if this was our current active SRB
+    //
+    if (FDODeviceExtension->ActiveSrb == Request)
     {
-        //
-        // sanity check
-        //
-        ASSERT(FDODeviceExtension->SrbActive == TRUE);
-
         //
         // indicate processing is completed
         //
-        FDODeviceExtension->SrbActive = FALSE;
+        FDODeviceExtension->ActiveSrb = NULL;
     }
 
     //
@@ -438,6 +456,18 @@ USBSTOR_QueueNextRequest(
     // sanity check
     //
     ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // check first if there's already a request pending or the queue is frozen
+    //
+    if (FDODeviceExtension->ActiveSrb != NULL ||
+        FDODeviceExtension->IrpListFreeze)
+    {
+        //
+        // no work to do yet
+        //
+        return;
+    }
 
     //
     // remove first irp from list
@@ -470,6 +500,11 @@ USBSTOR_QueueNextRequest(
     // sanity check
     //
     ASSERT(Request);
+
+    //
+    // set the active SRB
+    //
+    FDODeviceExtension->ActiveSrb = Request;
 
     //
     // start next packet
@@ -605,21 +640,19 @@ USBSTOR_StartIo(
         Irp->IoStatus.Information = 0;
 
         //
+        // terminate request
+        //
+        USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
+
+        //
         // complete request
         //
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
         //
-        // check if the queue has been frozen
+        // queue next request
         //
-        if (FDODeviceExtension->IrpListFreeze == FALSE)
-        {
-            //
-            // queue next request
-            //
-            USBSTOR_QueueTerminateRequest(DeviceObject, FALSE);
-            USBSTOR_QueueNextRequest(DeviceObject);
-        }
+        USBSTOR_QueueNextRequest(DeviceObject);
 
         //
         // done
@@ -642,12 +675,6 @@ USBSTOR_StartIo(
     //
     ResetInProgress = FDODeviceExtension->ResetInProgress;
     ASSERT(ResetInProgress == FALSE);
-
-    //
-    // sanity check
-    //
-    ASSERT(FDODeviceExtension->SrbActive == FALSE);
-    FDODeviceExtension->SrbActive = TRUE;
 
     //
     // release lock
@@ -679,8 +706,8 @@ USBSTOR_StartIo(
         //
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
+        USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        USBSTOR_QueueTerminateRequest(DeviceObject, TRUE);
         return;
     }
 
