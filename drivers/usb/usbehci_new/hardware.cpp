@@ -1028,8 +1028,10 @@ EhciDefferedRoutine(
                 //
                 // controller reported error
                 //
+                DPRINT1("CStatus %x\n", CStatus);
                 Status = STATUS_UNSUCCESSFUL;
                 PC_ASSERT(FALSE);
+                return;
             }
 
             //
