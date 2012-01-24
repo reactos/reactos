@@ -60,8 +60,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 static const WCHAR cryptNet[] = { 'c','r','y','p','t','n','e','t','.',
    'd','l','l',0 };
-static const WCHAR ldapProvOpenStore[] = { 'L','d','a','p','P','r','o','v',
-   'O','p','e','S','t','o','r','e',0 };
 
 /***********************************************************************
  *    DllRegisterServer (CRYPTNET.@)
@@ -571,7 +569,7 @@ static BOOL CRYPT_GetObjectFromCache(LPCWSTR pszURL, PCRYPT_BLOB_ARRAY pObject,
     return ret;
 }
 
-/* Parses the URL, and sets components's lpszHostName and lpszUrlPath members
+/* Parses the URL, and sets components' lpszHostName and lpszUrlPath members
  * to NULL-terminated copies of those portions of the URL (to be freed with
  * CryptMemFree.)
  */
@@ -583,16 +581,25 @@ static BOOL CRYPT_CrackUrl(LPCWSTR pszURL, URL_COMPONENTSW *components)
 
     memset(components, 0, sizeof(*components));
     components->dwStructSize = sizeof(*components);
-    components->lpszHostName = CryptMemAlloc(MAX_PATH * sizeof(WCHAR));
-    components->dwHostNameLength = MAX_PATH;
-    components->lpszUrlPath = CryptMemAlloc(MAX_PATH * 2 * sizeof(WCHAR));
-    components->dwUrlPathLength = 2 * MAX_PATH;
+    components->lpszHostName = CryptMemAlloc(INTERNET_MAX_HOST_NAME_LENGTH * sizeof(WCHAR));
+    components->dwHostNameLength = INTERNET_MAX_HOST_NAME_LENGTH;
+    if (!components->lpszHostName)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    components->lpszUrlPath = CryptMemAlloc(INTERNET_MAX_PATH_LENGTH * sizeof(WCHAR));
+    components->dwUrlPathLength = INTERNET_MAX_PATH_LENGTH;
+    if (!components->lpszUrlPath)
+    {
+        CryptMemFree(components->lpszHostName);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
     ret = InternetCrackUrlW(pszURL, 0, ICU_DECODE, components);
     if (ret)
     {
-        if ((components->dwUrlPathLength == 2 * MAX_PATH - 1) ||
-            (components->dwHostNameLength == MAX_PATH - 1))
-            FIXME("Buffers are too small\n");
         switch (components->nScheme)
         {
         case INTERNET_SCHEME_FTP:
@@ -740,11 +747,15 @@ static void CRYPT_CacheURL(LPCWSTR pszURL, const CRYPT_BLOB_ARRAY *pObject,
             if (ret)
                 lstrcpyW(cacheFileName, info->lpszLocalFileName);
             /* Check if the existing cache entry is up to date.  If it isn't,
-             * overwite it with the new value.
+             * remove the existing cache entry, and create a new one with the
+             * new value.
              */
             GetSystemTimeAsFileTime(&ft);
             if (CompareFileTime(&info->ExpireTime, &ft) < 0)
+            {
                 create = TRUE;
+                DeleteUrlCacheEntryW(pszURL);
+            }
             CryptMemFree(info);
         }
         else
@@ -814,7 +825,7 @@ static BOOL CRYPT_Connect(const URL_COMPONENTSW *components,
      components->nPort, context, pCredentials, phInt, phInt);
 
     *phHost = NULL;
-    *phInt = InternetOpenW(NULL, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL,
+    *phInt = InternetOpenW(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL,
      context ? INTERNET_FLAG_ASYNC : 0);
     if (*phInt)
     {
@@ -1021,15 +1032,18 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
     *ppfnFreeObject = CRYPT_FreeBlob;
     *ppvFreeContext = NULL;
 
-    components.lpszUrlPath = CryptMemAlloc(MAX_PATH * 2 * sizeof(WCHAR));
-    components.dwUrlPathLength = 2 * MAX_PATH;
+    components.lpszUrlPath = CryptMemAlloc(INTERNET_MAX_PATH_LENGTH * sizeof(WCHAR));
+    components.dwUrlPathLength = INTERNET_MAX_PATH_LENGTH;
+    if (!components.lpszUrlPath)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
     ret = InternetCrackUrlW(pszURL, 0, ICU_DECODE, &components);
     if (ret)
     {
         LPWSTR path;
-
-        if (components.dwUrlPathLength == 2 * MAX_PATH - 1)
-            FIXME("Buffers are too small\n");
 
         /* 3 == lstrlenW(L"c:") + 1 */
         path = CryptMemAlloc((components.dwUrlPathLength + 3) * sizeof(WCHAR));
@@ -1082,6 +1096,11 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
             else
                 ret = FALSE;
             CryptMemFree(path);
+        }
+        else
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            ret = FALSE;
         }
     }
     CryptMemFree(components.lpszUrlPath);
@@ -1553,36 +1572,32 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
     return ret;
 }
 
-static DWORD verify_cert_revocation_with_crl(PCCERT_CONTEXT cert,
+static DWORD verify_cert_revocation_with_crl_online(PCCERT_CONTEXT cert,
  PCCRL_CONTEXT crl, DWORD index, FILETIME *pTime,
  PCERT_REVOCATION_STATUS pRevStatus)
 {
     DWORD error;
+    PCRL_ENTRY entry = NULL;
 
-    if (CertVerifyCRLTimeValidity(pTime, crl->pCrlInfo))
+    CertFindCertificateInCRL(cert, crl, 0, NULL, &entry);
+    if (entry)
     {
-        /* The CRL isn't time valid */
-        error = CRYPT_E_NO_REVOCATION_CHECK;
+        error = CRYPT_E_REVOKED;
+        pRevStatus->dwIndex = index;
     }
     else
     {
-        PCRL_ENTRY entry = NULL;
-
-        CertFindCertificateInCRL(cert, crl, 0, NULL, &entry);
-        if (entry)
-        {
-            error = CRYPT_E_REVOKED;
-            pRevStatus->dwIndex = index;
-        }
-        else
-            error = ERROR_SUCCESS;
+        /* Since the CRL was retrieved for the cert being checked, then it's
+         * guaranteed to be fresh, and the cert is not revoked.
+         */
+        error = ERROR_SUCCESS;
     }
     return error;
 }
 
 static DWORD verify_cert_revocation_from_dist_points_ext(
  const CRYPT_DATA_BLOB *value, PCCERT_CONTEXT cert, DWORD index,
- FILETIME *pTime, DWORD dwFlags, PCERT_REVOCATION_PARA pRevPara,
+ FILETIME *pTime, DWORD dwFlags, const CERT_REVOCATION_PARA *pRevPara,
  PCERT_REVOCATION_STATUS pRevStatus)
 {
     DWORD error = ERROR_SUCCESS, cbUrlArray;
@@ -1621,8 +1636,8 @@ static DWORD verify_cert_revocation_from_dist_points_ext(
                  NULL, NULL, NULL, NULL);
                 if (ret)
                 {
-                    error = verify_cert_revocation_with_crl(cert, crl, index,
-                     pTime, pRevStatus);
+                    error = verify_cert_revocation_with_crl_online(cert, crl,
+                     index, pTime, pRevStatus);
                     if (!error && timeout)
                     {
                         DWORD time = GetTickCount();
@@ -1692,6 +1707,45 @@ static DWORD verify_cert_revocation_from_aia_ext(
     return error;
 }
 
+static DWORD verify_cert_revocation_with_crl_offline(PCCERT_CONTEXT cert,
+ PCCRL_CONTEXT crl, DWORD index, FILETIME *pTime,
+ PCERT_REVOCATION_STATUS pRevStatus)
+{
+    DWORD error;
+    LONG valid;
+
+    valid = CompareFileTime(pTime, &crl->pCrlInfo->ThisUpdate);
+    if (valid <= 0)
+    {
+        /* If this CRL is not older than the time being verified, there's no
+         * way to know whether the certificate was revoked.
+         */
+        TRACE("CRL not old enough\n");
+        error = CRYPT_E_REVOCATION_OFFLINE;
+    }
+    else
+    {
+        PCRL_ENTRY entry = NULL;
+
+        CertFindCertificateInCRL(cert, crl, 0, NULL, &entry);
+        if (entry)
+        {
+            error = CRYPT_E_REVOKED;
+            pRevStatus->dwIndex = index;
+        }
+        else
+        {
+            /* Since the CRL was not retrieved for the cert being checked,
+             * there's no guarantee it's fresh, so the cert *might* be okay,
+             * but it's safer not to guess.
+             */
+            TRACE("certificate not found\n");
+            error = CRYPT_E_REVOCATION_OFFLINE;
+        }
+    }
+    return error;
+}
+
 static DWORD verify_cert_revocation(PCCERT_CONTEXT cert, DWORD index,
  FILETIME *pTime, DWORD dwFlags, PCERT_REVOCATION_PARA pRevPara,
  PCERT_REVOCATION_STATUS pRevStatus)
@@ -1757,18 +1811,25 @@ static DWORD verify_cert_revocation(PCCERT_CONTEXT cert, DWORD index,
             }
             if (crl)
             {
-                error = verify_cert_revocation_with_crl(cert, crl, index,
-                 pTime, pRevStatus);
+                error = verify_cert_revocation_with_crl_offline(cert, crl,
+                 index, pTime, pRevStatus);
                 CertFreeCRLContext(crl);
             }
             else
             {
+                TRACE("no CRL found\n");
                 error = CRYPT_E_NO_REVOCATION_CHECK;
                 pRevStatus->dwIndex = index;
             }
         }
         else
         {
+            if (!pRevPara)
+                WARN("no CERT_REVOCATION_PARA\n");
+            else if (!pRevPara->hCrlStore)
+                WARN("no dist points/aia extension and no CRL store\n");
+            else if (!pRevPara->pIssuerCert)
+                WARN("no dist points/aia extension and no issuer\n");
             error = CRYPT_E_NO_REVOCATION_CHECK;
             pRevStatus->dwIndex = index;
         }
