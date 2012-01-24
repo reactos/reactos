@@ -181,18 +181,9 @@ USBSTOR_CSWCompletionRoutine(
             {
                 DPRINT1("Attempting Error Recovery\n");
                 //
-                // If a Read Capacity Request free TransferBuffer
+                // free the allocated irp
                 //
-                if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
-                {
-                    FreeItem(Context->TransferData);
-                }
-
-                //
-                // Clean up the rest
-                //
-                FreeItem(Context->cbw);
-                FreeItem(Context);
+                IoFreeIrp(Irp);
 
                 //
                 // Allocate Work Item Data
@@ -213,7 +204,6 @@ USBSTOR_CSWCompletionRoutine(
                                         ErrorHandlerWorkItemData);
     
                     ErrorHandlerWorkItemData->DeviceObject = Context->FDODeviceExtension->FunctionalDeviceObject;
-                    ErrorHandlerWorkItemData->Irp = Irp;
                     ErrorHandlerWorkItemData->Context = Context;
                     DPRINT1("Queuing WorkItemROutine\n");
                     ExQueueWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem, DelayedWorkQueue);
@@ -315,6 +305,10 @@ USBSTOR_CSWCompletionRoutine(
         KeSetEvent(Context->Event, 0, FALSE);
     }
 
+    //
+    // free our allocated irp
+    //
+    IoFreeIrp(Irp);
 
     //
     // free context
