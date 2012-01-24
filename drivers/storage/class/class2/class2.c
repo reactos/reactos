@@ -373,6 +373,9 @@ ScsiClassAddDevice(
 
         /* Assign a drive letter */
         ScsiClassAssignDriveLetter(DeviceInfo);
+
+        /* Move to the next port number */
+        DriverExtension->PortNumber++;
     }
     else
     {
