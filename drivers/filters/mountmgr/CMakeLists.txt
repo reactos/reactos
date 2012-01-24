@@ -1,0 +1,21 @@
+
+list(APPEND SOURCE
+    database.c
+    device.c
+    mountmgr.c
+    notify.c
+    point.c
+    symlink.c
+    uniqueid.c
+    mountmgr.rc)
+
+allow_warnings(mountmgr)
+
+add_library(mountmgr SHARED ${SOURCE})
+
+set_module_type(mountmgr kernelmodedriver)
+add_importlibs(mountmgr ntoskrnl hal)
+
+add_pch(mountmgr mntmgr.h)
+
+#add_cd_file(TARGET mountmgr DESTINATION reactos/system32/drivers NO_CAB FOR all)
