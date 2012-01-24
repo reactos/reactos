@@ -1369,7 +1369,7 @@ RtlUnicodeToMultiByteN(
   _Out_writes_bytes_to_(MaxBytesInMultiByteString, *BytesInMultiByteString) PCHAR MultiByteString,
   _In_ ULONG MaxBytesInMultiByteString,
   _Out_opt_ PULONG BytesInMultiByteString,
-  _In_reads_bytes_(BytesInUnicodeString) PWCH UnicodeString,
+  _In_reads_bytes_(BytesInUnicodeString) PCWCH UnicodeString,
   _In_ ULONG BytesInUnicodeString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

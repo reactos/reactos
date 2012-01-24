@@ -764,6 +764,19 @@ typedef struct _KERNEL_USER_TIMES
     LARGE_INTEGER UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
+typedef struct _POOLED_USAGE_AND_LIMITS
+{
+    SIZE_T PeakPagedPoolUsage;
+    SIZE_T PagedPoolUsage;
+    SIZE_T PagedPoolLimit;
+    SIZE_T PeakNonPagedPoolUsage;
+    SIZE_T NonPagedPoolUsage;
+    SIZE_T NonPagedPoolLimit;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PagefileLimit;
+} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
+
 typedef struct _PROCESS_SESSION_INFORMATION
 {
     ULONG SessionId;

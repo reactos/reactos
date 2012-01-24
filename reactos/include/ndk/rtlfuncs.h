@@ -964,7 +964,7 @@ NTSTATUS
 NTAPI
 RtlWalkHeap(
     IN HANDLE HeapHandle,
-    IN PVOID HeapEntry
+    IN OUT PRTL_HEAP_WALK_ENTRY HeapEntry
 );
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
@@ -1818,7 +1818,7 @@ RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1998,6 +1998,16 @@ RtlFillMemoryUlong(
 );
 
 NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    OUT PVOID Destination,
+    IN SIZE_T Length,
+    IN ULONGLONG Pattern
+);
+
+
+NTSYSAPI
 SIZE_T
 NTAPI
 RtlCompareMemoryUlong(
@@ -2079,6 +2089,25 @@ RtlPrefixString(
     PCANSI_STRING String2,
     BOOLEAN CaseInsensitive
 );
+
+#ifdef _M_X64
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64GetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN OUT PWOW64_CONTEXT ThreadContext
+);
+
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64SetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN PWOW64_CONTEXT ThreadContext
+);
+#endif
 
 NTSYSAPI
 BOOLEAN
@@ -2321,6 +2350,25 @@ RtlInitializeContext(
     IN PINITIAL_TEB InitialTeb
 );
 
+#ifdef _M_AMD64
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64GetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN OUT PWOW64_CONTEXT ThreadContext
+);
+
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64SetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN PWOW64_CONTEXT ThreadContext
+);
+#endif
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2545,6 +2593,19 @@ RtlGetFullPathName_U(
     OUT PWSTR *ShortName
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetFullPathName_UEx(
+    IN PWSTR FileName,
+    IN ULONG BufferLength,
+    OUT PWSTR Buffer,
+    OUT OPTIONAL PWSTR *FilePart,
+    OUT OPTIONAL RTL_PATH_TYPE *InputPathType
+    );
+#endif
+
 ULONG
 NTAPI
 RtlGetFullPathName_UstrEx(
@@ -2586,9 +2647,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
-    PWSTR Environment,
-    PUNICODE_STRING Name,
-    PUNICODE_STRING Value
+    IN OPTIONAL PWSTR Environment,
+    IN PUNICODE_STRING Name,
+    OUT PUNICODE_STRING Value
 );
 
 VOID
@@ -2602,6 +2663,14 @@ NTSTATUS
 NTAPI
 RtlSetCurrentDirectory_U(
     IN PUNICODE_STRING name
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetCurrentEnvironment(
+    IN PVOID Environment,
+    OUT OPTIONAL PVOID *PreviousEnvironment
 );
 
 NTSYSAPI
