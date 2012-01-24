@@ -830,6 +830,8 @@ IsCompositeDevice(
         //
         // composite device
         //
+        ASSERT(DeviceDescriptor->bDeviceSubClass == 0);
+        ASSERT(DeviceDescriptor->bDeviceProtocol == 0);
         return TRUE;
     }
 
@@ -859,6 +861,8 @@ CreateDeviceIds(
     WCHAR Buffer[100];
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
 
     //
     // get child device extension
@@ -892,10 +896,26 @@ CreateDeviceIds(
     DeviceDescriptor = &UsbChildExtension->DeviceDesc;
 
     //
+    // get configuration descriptor
+    //
+    ConfigurationDescriptor = UsbChildExtension->FullConfigDesc;
+
+    //
+    // get interface descriptor
+    //
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)(ConfigurationDescriptor + 1);
+
+    //
     // Construct the CompatibleIds
     //
-    if (IsCompositeDevice(DeviceDescriptor, UsbChildExtension->FullConfigDesc))
+    if (IsCompositeDevice(DeviceDescriptor, ConfigurationDescriptor))
     {
+        //
+        // sanity checks
+        //
+        ASSERT(DeviceDescriptor->bNumConfigurations == 1);
+        ASSERT(ConfigurationDescriptor->bNumInterfaces > 1);
+
         Index += swprintf(&BufferPtr[Index], 
                           L"USB\\DevClass_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
@@ -910,15 +930,42 @@ CreateDeviceIds(
     }
     else
     {
-        Index += swprintf(&BufferPtr[Index], 
+        //
+        // sanity checks for simple usb device
+        //
+        ASSERT(ConfigurationDescriptor->bNumInterfaces == 1);
+
+        //
+        // FIXME: support multiple configurations
+        //
+        ASSERT(DeviceDescriptor->bNumConfigurations == 1);
+
+        if (DeviceDescriptor->bDeviceClass == 0)
+        {
+            Index += swprintf(&BufferPtr[Index], 
+                          L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+                          InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass, InterfaceDescriptor->bInterfaceProtocol) + 1;
+            Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x&SubClass_%02x",
+                          InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass) + 1;
+            Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x",
+                          InterfaceDescriptor->bInterfaceClass) + 1;
+        }
+        else
+        {
+            Index += swprintf(&BufferPtr[Index], 
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
-        Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&BufferPtr[Index],
                           L"USB\\Class_%02x&SubClass_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass) + 1;
-        Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&BufferPtr[Index],
                           L"USB\\Class_%02x",
                           DeviceDescriptor->bDeviceClass) + 1;
+
+
+        }
     }
 
     BufferPtr[Index] = UNICODE_NULL;
