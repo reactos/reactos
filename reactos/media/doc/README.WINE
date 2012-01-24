@@ -59,7 +59,7 @@ reactos/dll/win32/cryptnet        # Synced to Wine-1.3.37
 reactos/dll/win32/cryptui         # Autosync
 reactos/dll/win32/dbghelp         # Autosync
 reactos/dll/win32/dciman32        # Autosync
-reactos/dll/win32/dwmapi          # Autosync
+reactos/dll/win32/dwmapi          # Synced to Wine-1.3.37
 reactos/dll/win32/fusion          # Autosync
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
