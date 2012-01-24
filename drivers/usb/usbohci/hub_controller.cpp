@@ -790,7 +790,15 @@ CHubController::HandleIsochronousTransfer(
     //
     // check if this is a valid usb device handle
     //
-    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleIsochronousTransfer invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
@@ -847,7 +855,15 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     // check if this is a valid usb device handle
     //
-    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleBuldOrInterruptTransfer invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
@@ -1057,7 +1073,15 @@ CHubController::HandleSelectConfiguration(
         //
         // check if this is a valid usb device handle
         //
-        PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+        if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+        {
+            DPRINT1("HandleSelectConfiguration invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+            //
+            // invalid device handle
+            //
+            return STATUS_DEVICE_NOT_CONNECTED;
+        }
 
         //
         // get device
@@ -1099,7 +1123,15 @@ CHubController::HandleSelectInterface(
         //
         // check if this is a valid usb device handle
         //
-        PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+        if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+        {
+            DPRINT1("HandleSelectInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+            //
+            // invalid device handle
+            //
+            return STATUS_DEVICE_NOT_CONNECTED;
+        }
 
         //
         // get device
@@ -1149,7 +1181,15 @@ CHubController::HandleGetStatusFromDevice(
     //
     // check if this is a valid usb device handle
     //
-    ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleGetStatusFromDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
@@ -1205,7 +1245,15 @@ CHubController::HandleClassDevice(
             //
             // check if this is a valid usb device handle
             //
-            ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+            if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+            {
+                DPRINT1("USB_REQUEST_GET_STATUS invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+                //
+                // invalid device handle
+                //
+                return STATUS_DEVICE_NOT_CONNECTED;
+            }
 
             //
             // get device
@@ -1311,7 +1359,15 @@ CHubController::HandleGetDescriptorFromInterface(
     //
     // check if this is a valid usb device handle
     //
-    ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleGetDescriptorFromInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
@@ -1381,7 +1437,15 @@ CHubController::HandleGetDescriptor(
                 //
                 // check if this is a valid usb device handle
                 //
-                PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+                if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+                {
+                    DPRINT1("HandleGetDescriptor invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+                    //
+                    // invalid device handle
+                    //
+                    return STATUS_DEVICE_NOT_CONNECTED;
+                }
 
                 //
                 // get device
@@ -1452,7 +1516,15 @@ CHubController::HandleGetDescriptor(
                 //
                 // check if this is a valid usb device handle
                 //
-                PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+                if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+                {
+                    DPRINT1("USB_CONFIGURATION_DESCRIPTOR_TYPE invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+                    //
+                    // invalid device handle
+                    //
+                    return STATUS_DEVICE_NOT_CONNECTED;
+                }
 
                 //
                 // get device
@@ -1494,11 +1566,18 @@ CHubController::HandleGetDescriptor(
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength);
 
-
             //
             // check if this is a valid usb device handle
             //
-            PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+            if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+            {
+                DPRINT1("USB_STRING_DESCRIPTOR_TYPE invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+                //
+                // invalid device handle
+                //
+                return STATUS_DEVICE_NOT_CONNECTED;
+            }
 
             //
             // get device
@@ -1552,7 +1631,15 @@ CHubController::HandleClassEndpoint(
     //
     // check if this is a valid usb device handle
     //
-    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleClassEndpoint invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
@@ -1616,7 +1703,15 @@ CHubController::HandleClassInterface(
     //
     // check if this is a valid usb device handle
     //
-    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+    {
+        DPRINT1("HandleClassInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     //
     // get device
