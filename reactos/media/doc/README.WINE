@@ -68,7 +68,7 @@ reactos/dll/win32/hnetcfg         # Autosync
 reactos/dll/win32/httpapi         # Synced to Wine-1.3.37
 reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
-reactos/dll/win32/imaadp32.acm    # Autosync
+reactos/dll/win32/imaadp32.acm    # Synced to Wine-1.3.37
 reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/imagehlp        # Autosync
 reactos/dll/win32/inetcomm        # Autosync
