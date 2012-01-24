@@ -188,7 +188,7 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 
 	DebugStartOfLine = FALSE; // We don't want line headers
-	DbgPrint("Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
+	DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
 
 	for (Idx=0; Idx<Length; )
 	{

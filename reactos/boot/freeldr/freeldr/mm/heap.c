@@ -42,7 +42,7 @@ VOID MmInitializeHeap(PVOID PageLookupTable)
 	}
 
 	// Initialize BGET
-	bpool(HeapStart << MM_PAGE_SHIFT, PagesNeeded << MM_PAGE_SHIFT);
+	bpool((PVOID)(HeapStart << MM_PAGE_SHIFT), PagesNeeded << MM_PAGE_SHIFT);
 
 	// Mark those pages as used
 	MmMarkPagesInLookupTable(PageLookupTableAddress, HeapStart, PagesNeeded, LoaderOsloaderHeap);
