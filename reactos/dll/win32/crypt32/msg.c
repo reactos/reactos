@@ -1809,7 +1809,12 @@ static BOOL CEnvelopedEncodeMsg_GetParam(HCRYPTMSG hCryptMsg, DWORD dwParamType,
             char oid_rsa_data[] = szOID_RSA_data;
             CRYPT_ENVELOPED_DATA envelopedData = {
              CMSG_ENVELOPED_DATA_PKCS_1_5_VERSION, msg->cRecipientInfo,
-             msg->recipientInfo, { oid_rsa_data, msg->algo, msg->data }
+             msg->recipientInfo, { oid_rsa_data, {
+               msg->algo.pszObjId,
+               { msg->algo.Parameters.cbData, msg->algo.Parameters.pbData }
+              },
+              { msg->data.cbData, msg->data.pbData }
+             }
             };
 
             ret = CRYPT_AsnEncodePKCSEnvelopedData(&envelopedData, pvData,
