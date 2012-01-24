@@ -365,6 +365,11 @@ USBSTOR_QueueFlushIrps(
         //
         KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
     }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
 }
 
 VOID
