@@ -51,6 +51,45 @@ USBSTOR_CancelIo(
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
+    // this IRP isn't in our list here
+    //  
+
+    //
+    // now release the cancel lock
+    //
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    //
+    // set cancel status
+    //
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+
+    //
+    // now cancel the irp
+    //
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+
+VOID
+NTAPI
+USBSTOR_Cancel(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    //
+    // get FDO device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
     // acquire irp list lock
     //
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
@@ -80,7 +119,6 @@ USBSTOR_CancelIo(
     //
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
-
 
 BOOLEAN
 USBSTOR_QueueAddIrp(
@@ -149,7 +187,14 @@ USBSTOR_QueueAddIrp(
     //
     // now set the driver cancel routine
     //
-    OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_CancelIo);
+    if (SrbProcessing)
+    {
+        OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_Cancel);
+    }
+    else
+    {
+        OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_CancelIo);
+    }
 
     //
     // check if the irp has already been cancelled
@@ -159,7 +204,7 @@ USBSTOR_QueueAddIrp(
         //
         // cancel irp
         //
-        USBSTOR_CancelIo(DeviceObject, Irp);
+        Irp->CancelRoutine(DeviceObject, Irp);
 
         //
         // irp was cancelled
@@ -241,6 +286,7 @@ USBSTOR_QueueFlushIrps(
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
+    KIRQL OldIrql;
 
     //
     // get FDO device extension
@@ -273,6 +319,13 @@ USBSTOR_QueueFlushIrps(
         Irp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
         //
+        // remove the cancellation routine
+        //
+        IoAcquireCancelSpinLock(&OldIrql);
+        (void)IoSetCancelRoutine(Irp, NULL);
+        IoReleaseCancelSpinLock(OldIrql);
+
+        //
         // get current stack location
         //
         IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -298,15 +351,20 @@ USBSTOR_QueueFlushIrps(
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
 
         //
+        // release lock
+        //
+        KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+
+        //
         // complete request
         //
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        
+        //
+        // acquire lock
+        //
+        KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
     }
-
-    //
-    // release lock
-    //
-    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
 }
 
 VOID
