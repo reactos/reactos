@@ -390,7 +390,7 @@ USBSTOR_HandleQueryProperty(
         DeviceDescriptor->Size = TotalLength;
         DeviceDescriptor->DeviceType = InquiryData->DeviceType;
         DeviceDescriptor->DeviceTypeModifier = (InquiryData->RMB & 0x7F);
-        DeviceDescriptor->RemovableMedia = TRUE;
+        DeviceDescriptor->RemovableMedia = (InquiryData->RMB & 0x80) ? TRUE : FALSE;
         DeviceDescriptor->CommandQueueing = FALSE;
         DeviceDescriptor->BusType = BusTypeUsb;
         DeviceDescriptor->VendorIdOffset = sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR);
@@ -641,7 +641,7 @@ USBSTOR_HandleDeviceControl(
         ScsiInquiryData->DeviceTypeQualifier = (UFIInquiryResponse->RMB & 0x7F);
 
         /* Hack for IoReadPartitionTable call in disk.sys */
-        ScsiInquiryData->RemovableMedia = (ScsiInquiryData->DeviceType != DIRECT_ACCESS_DEVICE) ? 1 : 0;
+        ScsiInquiryData->RemovableMedia = ((ScsiInquiryData->DeviceType != DIRECT_ACCESS_DEVICE) ? ((UFIInquiryResponse->RMB & 0x80) ? 1 : 0) : 0);
 
         ScsiInquiryData->Versions = 0x04;
         ScsiInquiryData->ResponseDataFormat = 0x02;
