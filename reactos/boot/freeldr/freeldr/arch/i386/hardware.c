@@ -250,7 +250,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   TRACE("Estimated buffer size %u\n", NodeSize * NodeCount);
 
     /* Set 'Configuration Data' value */
-  Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + (NodeSize * NodeCount);
+  Size = sizeof(CM_PARTIAL_RESOURCE_LIST)
+        + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK) + (NodeSize * NodeCount);
   PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
@@ -268,8 +269,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PartialResourceList->PartialDescriptors[0].ShareDisposition =
     CmResourceShareUndetermined;
 
-  Ptr = (char *)(((ULONG_PTR)&PartialResourceList->PartialDescriptors[0]) +
-		 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+  /* The buffer starts after PartialResourceList->PartialDescriptors[0] */
+  Ptr = (char *)(PartialResourceList + 1);
 
   /* Set instalation check data */
   memcpy (Ptr, InstData, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
@@ -291,6 +292,12 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 		    DeviceNode->Node,
 		    DeviceNode->Size,
 		    DeviceNode->Size);
+
+      if (PnpBufferSize + DeviceNode->Size > Size)
+      {
+          ERR("Buffer too small!\n");
+          break;
+      }
 
 	  memcpy (Ptr,
 		  DeviceNode,
