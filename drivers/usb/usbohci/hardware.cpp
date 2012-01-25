@@ -874,10 +874,10 @@ CUSBHardwareDevice::StopController(void)
     //
     // alignment check
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET, 0xFFFFFFFF);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), 0xFFFFFFFF);
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
-    DPRINT1("HcHCCA Alignment %x\n", Control);
-    ASSERT((Control & 0xFFFFFFF0) == 0xFFFFFFF0);
+    //ASSERT((m_HCCAPhysicalAddress.QuadPart & Control) == Control);
+
 
     //
     // check context
@@ -1099,6 +1099,7 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
+#if 0
     ULONG Value;
 
     if (PortId > m_NumberOfPorts)
@@ -1146,6 +1147,11 @@ CUSBHardwareDevice::GetPortStatus(
     // port reset
     if (Value & OHCI_RH_PORTSTATUS_PRSC)
         *PortChange |= USB_PORT_STATUS_RESET;
+
+#else
+    *PortStatus = m_PortStatus[PortId].PortStatus;
+    *PortChange = m_PortStatus[PortId].PortChange;
+#endif
 
     return STATUS_SUCCESS;
 }
