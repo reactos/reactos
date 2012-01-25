@@ -142,6 +142,8 @@ USBSTOR_QueueAddIrp(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     BOOLEAN IrpListFreeze;
     BOOLEAN SrbProcessing;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    PSCSI_REQUEST_BLOCK Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
 
     //
     // get FDO device extension
@@ -201,10 +203,15 @@ USBSTOR_QueueAddIrp(
     //
     if (SrbProcessing)
     {
+        ASSERT(FDODeviceExtension->ActiveSrb != NULL);
+
         OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_Cancel);
     }
     else
     {
+        ASSERT(FDODeviceExtension->ActiveSrb == NULL);
+
+        FDODeviceExtension->ActiveSrb = Request;
         OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_CancelIo);
     }
 
