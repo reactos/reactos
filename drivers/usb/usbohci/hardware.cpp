@@ -888,7 +888,6 @@ CUSBHardwareDevice::StopController(void)
     //
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
 
-
     if ((Control & OHCI_INTERRUPT_ROUTING))
     {
         //
@@ -932,26 +931,100 @@ CUSBHardwareDevice::StopController(void)
             DPRINT1("SMM has given up ownership\n");
         }
     }
+    else
+    {
+        //
+        // read contents of control register
+        //
+        Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
+        DPRINT1("Controller State %x\n", Control);
 
-    //
-    // turn off interrupts
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_DISABLE_OFFSET), OHCI_ALL_INTERRUPTS);
+        if (Control != OHCI_HC_FUNCTIONAL_STATE_RESET)
+        {
+            //
+            // OHCI 5.1.1.3.4, no SMM, BIOS active
+            //
+            if (Control != OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL)
+            {
+                //
+                // lets resume
+                //
+                WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESUME);
+                Index = 0;
+                do
+                {
+                    //
+                    // wait untill its resumed
+                    //
+                    KeStallExecutionProcessor(10);
 
-    //
-    // have a break
-    //
-    KeStallExecutionProcessor(100);
+                    //
+                    // check control register
+                    //
+                    Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
+                    if (Control & OHCI_HC_FUNCTIONAL_STATE_RESUME)
+                    {
+                        //
+                        // it has resumed
+                        //
+                        break;
+                    }
 
-    //
-    // some controllers also depend on this
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
+                    //
+                    // check for time outs
+                    //
+                    Index++;
+                    if(Index > 100)
+                    {
+                        DPRINT1("Failed to resume controller\n");
+                        break;
+                    }
+                }while(TRUE);
+            }
+        }
+        else
+        {
+            //
+            // 5.1.1.3.5 OHCI, no SMM, no BIOS
+            //
+            Index = 0;
 
-    //
-    // wait a bit
-    //
-    KeStallExecutionProcessor(100);
+            //
+            // some controllers also depend on this
+            //
+            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
+            do
+            {
+                 //
+                 // wait untill its reset
+                 //
+                 KeStallExecutionProcessor(10);
+
+                 //
+                 // check control register
+                 //
+                 Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
+                 if (Control == OHCI_HC_FUNCTIONAL_STATE_RESET)
+                 {
+                     //
+                     // it has reset
+                     //
+                     break;
+                 }
+
+                 //
+                 // check for time outs
+                 //
+                 Index++;
+                 if(Index > 100)
+                 {
+                    DPRINT1("Failed to reset controller\n");
+                    break;
+                 }
+
+            }while(TRUE);
+        }
+    }
 
     //
     // read from interval
