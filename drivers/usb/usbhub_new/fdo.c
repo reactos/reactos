@@ -1443,10 +1443,11 @@ RootHubInitCallbackFunction(
     PVOID Context)
 {
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
+/*
     NTSTATUS Status;
-    ULONG PortId;
-    PHUB_DEVICE_EXTENSION HubDeviceExtension;
-    PORT_STATUS_CHANGE StatusChange;
+    //ULONG PortId;
+    //PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    //PORT_STATUS_CHANGE StatusChange;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -1474,7 +1475,7 @@ RootHubInitCallbackFunction(
             }
         }
     }
-
+*/
     //
     // Send the first SCE Request
     //
@@ -1492,7 +1493,7 @@ USBHUB_FdoHandlePnp(
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_OBJECT RootHubDeviceObject;
     PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
-    PORT_STATUS_CHANGE StatusChange;
+    //PORT_STATUS_CHANGE StatusChange;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -1829,6 +1830,7 @@ USBHUB_FdoHandlePnp(
             }
             else
             {
+/*
                 //
                 // reset ports
                 //
@@ -1854,7 +1856,7 @@ USBHUB_FdoHandlePnp(
                         }
                     }
                 }
-
+*/
                 //
                 // Send the first SCE Request
                 //
