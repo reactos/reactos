@@ -884,6 +884,14 @@ CUSBHardwareDevice::StopController(void)
     ULONG Index, FrameInterval;
 
     //
+    // alignment check
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET, 0xFFFFFFFF);
+    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
+    DPRINT1("HcHCCA Alignment %x\n", Control);
+    ASSERT((Control & 0xFFFFFFF0) == 0xFFFFFFF0);
+
+    //
     // check context
     //
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
