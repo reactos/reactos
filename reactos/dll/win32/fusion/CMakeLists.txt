@@ -14,6 +14,7 @@ list(APPEND SOURCE
     assembly.c
     fusion.c
     fusion_main.c
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 
