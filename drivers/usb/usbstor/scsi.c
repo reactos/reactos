@@ -1221,7 +1221,7 @@ USBSTOR_HandleExecuteSCSI(
     }
     else
     {
-        UNIMPLEMENTED;
+        DPRINT1("UNIMPLEMENTED Operation Code %x\n", pCDB->AsByte[0]);
         Request->SrbStatus = SRB_STATUS_ERROR;
         Status = STATUS_NOT_SUPPORTED;
         DbgBreakPoint();

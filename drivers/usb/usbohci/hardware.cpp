@@ -1036,11 +1036,54 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
+    ULONG Value;
+
+    if (PortId > m_NumberOfPorts)
+        return STATUS_UNSUCCESSFUL;
+
+    // init result variables
+    *PortStatus = 0;
+    *PortChange = 0;
+
     //
-    // FIXME: should read status from hardware
+    // read port status
     //
-    *PortStatus = m_PortStatus[PortId].PortStatus;
-    *PortChange = m_PortStatus[PortId].PortChange;
+    Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+    DPRINT("GetPortStatus PortId %x Value %x\n", PortId, Value);
+
+
+    // connected
+    if (Value & OHCI_RH_PORTSTATUS_CCS)
+        *PortStatus |= USB_PORT_STATUS_CONNECT;
+
+    // did a device connect?
+    if (Value & OHCI_RH_PORTSTATUS_CSC)
+        *PortChange |= USB_PORT_STATUS_CONNECT;
+
+    // port enabled
+    if (Value & OHCI_RH_PORTSTATUS_PES)
+        *PortStatus |= USB_PORT_STATUS_ENABLE;
+
+    // port enabled
+    if (Value & OHCI_RH_PORTSTATUS_PESC)
+        *PortChange |= USB_PORT_STATUS_ENABLE;
+
+    // port suspend
+    if (Value & OHCI_RH_PORTSTATUS_PSS)
+        *PortStatus |= USB_PORT_STATUS_SUSPEND;
+
+    // port suspend
+    if (Value & OHCI_RH_PORTSTATUS_PSSC)
+        *PortChange |= USB_PORT_STATUS_ENABLE;
+
+    // port reset
+    if (Value & OHCI_RH_PORTSTATUS_PSS)
+        *PortStatus |= USB_PORT_STATUS_RESET;
+
+    // port reset
+    if (Value & OHCI_RH_PORTSTATUS_PRSC)
+        *PortChange |= USB_PORT_STATUS_RESET;
+
     return STATUS_SUCCESS;
 }
 

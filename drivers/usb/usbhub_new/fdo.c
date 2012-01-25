@@ -1443,8 +1443,37 @@ RootHubInitCallbackFunction(
     PVOID Context)
 {
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
+    NTSTATUS Status;
+    ULONG PortId;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PORT_STATUS_CHANGE StatusChange;
 
-    DPRINT1("Sending the initial SCE Request %x\n", DeviceObject);
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    DPRINT1("RootHubInitCallbackFunction Sending the initial SCE Request %x\n", DeviceObject);
+
+    for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
+    {
+        //
+        // get port status
+        //
+        Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &StatusChange);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // is there a device connected
+            //
+            if (StatusChange.Status & USB_PORT_STATUS_CONNECT)
+            {
+                //
+                // reset port
+                //
+                Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
+                if (!NT_SUCCESS(Status))
+                    DPRINT1("Failed to reset on port %d\n", PortId);
+            }
+        }
+    }
 
     //
     // Send the first SCE Request
@@ -1463,6 +1492,7 @@ USBHUB_FdoHandlePnp(
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_OBJECT RootHubDeviceObject;
     PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
+    PORT_STATUS_CHANGE StatusChange;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -1799,6 +1829,32 @@ USBHUB_FdoHandlePnp(
             }
             else
             {
+                //
+                // reset ports
+                //
+                for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
+                {
+                    //
+                    // get port status
+                    //
+                    Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &StatusChange);
+                    if (NT_SUCCESS(Status))
+                    {
+                        //
+                        // is there a device connected
+                        //
+                        if (StatusChange.Status & USB_PORT_STATUS_CONNECT)
+                        {
+                            //
+                            // reset port
+                            //
+                            Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
+                            if (!NT_SUCCESS(Status))
+                                DPRINT1("Failed to reset on port %d\n", PortId);
+                        }
+                    }
+                }
+
                 //
                 // Send the first SCE Request
                 //
