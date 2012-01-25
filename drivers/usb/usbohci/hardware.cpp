@@ -884,11 +884,6 @@ CUSBHardwareDevice::StopController(void)
     ULONG Index, FrameInterval;
 
     //
-    // first turn off all interrupts
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_DISABLE_OFFSET), OHCI_ALL_INTERRUPTS);
-
-    //
     // check context
     //
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
@@ -931,18 +926,17 @@ CUSBHardwareDevice::StopController(void)
         if (Control & OHCI_INTERRUPT_ROUTING)
         {
             DPRINT1("SMM not responding\n");
-            //
-            // some controllers also depend on this
-            //
-            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
-
-            //
-            // wait a bit
-            //
-            KeStallExecutionProcessor(100);
+        }
+        else
+        {
+            DPRINT1("SMM has given up ownership\n");
         }
     }
 
+    //
+    // turn off interrupts
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_DISABLE_OFFSET), OHCI_ALL_INTERRUPTS);
 
     //
     // have a break
