@@ -120,7 +120,6 @@ protected:
     POHCI_ENDPOINT_DESCRIPTOR m_IsoEndpointDescriptor;                                 // iso endpoint descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_InterruptEndpoints[OHCI_STATIC_ENDPOINT_COUNT];        // endpoints for interrupt / iso transfers
     ULONG m_NumberOfPorts;                                                             // number of ports
-    OHCI_PORT_STATUS m_PortStatus[OHCI_MAX_PORT_COUNT];                                // port change status
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
@@ -1099,7 +1098,6 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
-#if 0
     ULONG Value;
 
     if (PortId > m_NumberOfPorts)
@@ -1114,7 +1112,6 @@ CUSBHardwareDevice::GetPortStatus(
     //
     Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
     DPRINT("GetPortStatus PortId %x Value %x\n", PortId, Value);
-
 
     // connected
     if (Value & OHCI_RH_PORTSTATUS_CCS)
@@ -1140,18 +1137,20 @@ CUSBHardwareDevice::GetPortStatus(
     if (Value & OHCI_RH_PORTSTATUS_PSSC)
         *PortChange |= USB_PORT_STATUS_ENABLE;
 
-    // port reset
-    if (Value & OHCI_RH_PORTSTATUS_PSS)
+    // port reset started (change bit only set at completion)
+    if (Value & OHCI_RH_PORTSTATUS_PRS)
+    {
         *PortStatus |= USB_PORT_STATUS_RESET;
+        *PortChange |= USB_PORT_STATUS_RESET;
+    }
 
-    // port reset
+    // port reset ended (change bit only set at completion)
     if (Value & OHCI_RH_PORTSTATUS_PRSC)
         *PortChange |= USB_PORT_STATUS_RESET;
 
-#else
-    *PortStatus = m_PortStatus[PortId].PortStatus;
-    *PortChange = m_PortStatus[PortId].PortChange;
-#endif
+    // low speed device
+    if (Value & OHCI_RH_PORTSTATUS_LSDA)
+        *PortStatus |= USB_PORT_STATUS_LOW_SPEED;
 
     return STATUS_SUCCESS;
 }
@@ -1220,30 +1219,11 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRSC);
 
-        //
-        // read status register
-        //
-        Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
-
-        //
-        // reset complete bit should be cleared
-        //
-        ASSERT((Value & OHCI_RH_PORTSTATUS_PRSC) == 0);
-
-        //
-        // update port status
-        //
-        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
 
         //
         // sanity check
         //
         ASSERT((Value & OHCI_RH_PORTSTATUS_PES));
-
-        //
-        // port is enabled
-        //
-        m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
 
         //
         // re-enable root hub change
@@ -1259,10 +1239,7 @@ CUSBHardwareDevice::ClearPortStatus(
         // clear bit
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC);
-        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_CONNECT;
     }
-
-
 
     return STATUS_SUCCESS;
 }
@@ -1323,12 +1300,6 @@ CUSBHardwareDevice::SetPortFeature(
         // wait 
         //
         KeStallExecutionProcessor(100);
-
-        //
-        // update cached settings
-        //
-        m_PortStatus[PortId].PortChange |= USB_PORT_STATUS_RESET;
-        m_PortStatus[PortId].PortStatus &= ~USB_PORT_STATUS_ENABLE;
 
         //
         // is there a status change callback
@@ -1596,21 +1567,6 @@ OhciDefferedRoutine(
                     // enable port
                     //
                     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_RH_PORT_STATUS(Index)), OHCI_RH_PORTSTATUS_PES);
-
-
-                    //
-                    // store change
-                    //
-                    This->m_PortStatus[Index].PortStatus |= USB_PORT_STATUS_CONNECT;
-                    This->m_PortStatus[Index].PortChange |= USB_PORT_STATUS_CONNECT;
-
-                    if ((PortStatus & OHCI_RH_PORTSTATUS_LSDA))
-                    {
-                        //
-                        // low speed device connected
-                        //
-                        This->m_PortStatus[Index].PortStatus |= USB_PORT_STATUS_LOW_SPEED;
-                    }
                 }
                 else
                 {
@@ -1618,13 +1574,6 @@ OhciDefferedRoutine(
                     // device disconnected
                     //
                     DPRINT1("Device disconnected at Port %x\n", Index);
-
-                    //
-                    // update port status flags
-                    //
-                    This->m_PortStatus[Index].PortStatus &= ~USB_PORT_STATUS_LOW_SPEED;
-                    This->m_PortStatus[Index].PortStatus &= ~USB_PORT_STATUS_CONNECT;
-                    This->m_PortStatus[Index].PortChange |= USB_PORT_STATUS_CONNECT;
                 }
 
                 //
