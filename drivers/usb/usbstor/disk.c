@@ -639,7 +639,10 @@ USBSTOR_HandleDeviceControl(
         RtlZeroMemory(ScsiInquiryData, sizeof(INQUIRYDATA));
         ScsiInquiryData->DeviceType = UFIInquiryResponse->DeviceType;
         ScsiInquiryData->DeviceTypeQualifier = (UFIInquiryResponse->RMB & 0x7F);
-        ScsiInquiryData->RemovableMedia = FALSE; //HACK for IoReadPartitionTable
+
+        /* Hack for IoReadPartitionTable call in disk.sys */
+        ScsiInquiryData->RemovableMedia = (ScsiInquiryData->DeviceType != DIRECT_ACCESS_DEVICE) ? 1 : 0;
+
         ScsiInquiryData->Versions = 0x04;
         ScsiInquiryData->ResponseDataFormat = 0x02;
         ScsiInquiryData->AdditionalLength = 31;
