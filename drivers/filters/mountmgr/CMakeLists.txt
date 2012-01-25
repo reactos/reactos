@@ -9,10 +9,8 @@ list(APPEND SOURCE
     uniqueid.c
     mountmgr.rc)
 
-allow_warnings(mountmgr)
-
 add_library(mountmgr SHARED ${SOURCE})
-
+allow_warnings(mountmgr)
 set_module_type(mountmgr kernelmodedriver)
 add_importlibs(mountmgr ntoskrnl hal)
 
