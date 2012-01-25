@@ -171,7 +171,8 @@
                                     | OHCI_WRITEBACK_DONE_HEAD \
                                     | OHCI_RESUME_DETECTED \
                                     | OHCI_UNRECOVERABLE_ERROR \
-                                    | OHCI_ROOT_HUB_STATUS_CHANGE)
+                                    | OHCI_ROOT_HUB_STATUS_CHANGE \
+									| OHCI_OWNERSHIP_CHANGE)
 
 //
 // FSMPS

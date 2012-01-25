@@ -496,11 +496,6 @@ CUSBHardwareDevice::StartController(void)
     ULONG Control, NumberOfPorts, Index, Descriptor, FrameInterval, Periodic;
 
     //
-    // first write address of HCCA
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), m_HCCAPhysicalAddress.LowPart);
-
-    //
     // lets write physical address of dummy control endpoint descriptor
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_HEAD_ED_OFFSET), m_ControlEndpointDescriptor->PhysicalAddress.LowPart);
@@ -511,24 +506,45 @@ CUSBHardwareDevice::StartController(void)
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_BULK_HEAD_ED_OFFSET), m_BulkEndpointDescriptor->PhysicalAddress.LowPart);
 
     //
-    // read control register
+    // get frame interval
     //
-    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
+    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
+    FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
+    DPRINT1("FrameInterval %x\n", FrameInterval);
 
     //
-    // remove flags
-    // 
-    Control &= ~(OHCI_CONTROL_BULK_SERVICE_RATIO_MASK | OHCI_ENABLE_LIST | OHCI_HC_FUNCTIONAL_STATE_MASK | OHCI_INTERRUPT_ROUTING);
+    // write frame interval
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
 
     //
-    // set command status flags
+    // write address of HCCA
     //
-    Control |= OHCI_ENABLE_LIST | OHCI_CONTROL_BULK_RATIO_1_4 | OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL;
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), m_HCCAPhysicalAddress.LowPart);
 
     //
-    // now start the controller
+    // now enable the interrupts
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), Control);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_NORMAL_INTERRUPTS | OHCI_MASTER_INTERRUPT_ENABLE);
+
+    //
+    // enable all queues
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_ENABLE_LIST);
+
+    //
+    // 90 % periodic
+    //
+    Periodic = OHCI_PERIODIC(m_IntervalValue);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
+    DPRINT1("Periodic Start %x\n", Periodic);
+
+    //
+    // start the controller
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_ENABLE_LIST | OHCI_CONTROL_BULK_RATIO_1_4 | OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
 
     //
     // wait a bit
@@ -546,27 +562,6 @@ CUSBHardwareDevice::StartController(void)
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
     ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
     DPRINT1("Control %x\n", Control);
-
-    //
-    // get frame interval
-    //
-    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
-    FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
-    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
-    FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
-    DPRINT1("FrameInterval %x\n", FrameInterval);
-
-    //
-    // write frame interval
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
-
-    //
-    // 90 % periodic
-    //
-    Periodic = OHCI_PERIODIC(m_IntervalValue);
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
-    DPRINT1("Periodic Start %x\n", Periodic);
 
     //
     // read descriptor
@@ -592,8 +587,6 @@ CUSBHardwareDevice::StartController(void)
     // write descriptor
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
-
-
 
     //
     // retrieve number of ports
@@ -637,11 +630,6 @@ CUSBHardwareDevice::StartController(void)
     //
     DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
 
-
-    //
-    // now enable the interrupts
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_NORMAL_INTERRUPTS | OHCI_MASTER_INTERRUPT_ENABLE);
 
     //
     // done
