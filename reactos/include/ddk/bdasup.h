@@ -51,143 +51,193 @@ typedef struct _KSM_PIN {
 
 /* Functions */
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCheckChanges(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCommitChanges(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCreateFilterFactory(
-  IN PKSDEVICE pKSDevice,
-  IN const KSFILTER_DESCRIPTOR *pFilterDescriptor,
-  IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate);
+  _In_ PKSDEVICE pKSDevice,
+  _In_ const KSFILTER_DESCRIPTOR *pFilterDescriptor,
+  _In_ const BDA_FILTER_TEMPLATE *pBdaFilterTemplate);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCreateFilterFactoryEx(
-  IN PKSDEVICE pKSDevice,
-  IN const KSFILTER_DESCRIPTOR *pFilterDescriptor,
-  IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate,
-  OUT PKSFILTERFACTORY  *ppKSFilterFactory);
+  _In_ PKSDEVICE pKSDevice,
+  _In_ const KSFILTER_DESCRIPTOR *pFilterDescriptor,
+  _In_ const BDA_FILTER_TEMPLATE *pBdaFilterTemplate,
+  _Out_opt_ PKSFILTERFACTORY *ppKSFilterFactory);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCreatePin(
-  IN PKSFILTER pKSFilter,
-  IN ULONG ulPinType,
-  OUT ULONG *pulPinId);
+  _In_ PKSFILTER pKSFilter,
+  _In_ ULONG ulPinType,
+  _Out_opt_ ULONG *pulPinId);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaCreateTopology(
-  IN PKSFILTER pKSFilter,
-  IN ULONG InputPinId,
-  IN ULONG OutputPinId);
+  _In_ PKSFILTER pKSFilter,
+  _In_ ULONG InputPinId,
+  _In_ ULONG OutputPinId);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaDeletePin(
-  IN PKSFILTER pKSFilter,
-  IN ULONG *pulPinId);
+  _In_ PKSFILTER pKSFilter,
+  _Out_opt_ ULONG *pulPinId);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaFilterFactoryUpdateCacheData(
-  IN PKSFILTERFACTORY pFilterFactory,
-  IN const KSFILTER_DESCRIPTOR *pFilterDescriptor OPTIONAL);
+  _In_ PKSFILTERFACTORY pFilterFactory,
+  _In_opt_ const KSFILTER_DESCRIPTOR *pFilterDescriptor);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaGetChangeState(
-  IN PIRP Irp,
-  OUT BDA_CHANGE_STATE *pChangeState);
+  _In_ PIRP Irp,
+  _Out_opt_ BDA_CHANGE_STATE *pChangeState);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaInitFilter(
-  IN PKSFILTER pKSFilter,
-  IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate);
+  _In_ PKSFILTER pKSFilter,
+  _In_ const BDA_FILTER_TEMPLATE *pBdaFilterTemplate);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaMethodCreatePin(
-  IN PIRP Irp,
-  IN KSMETHOD *pKSMethod,
-  OUT ULONG *pulPinFactoryID);
+  _In_ PIRP Irp,
+  _In_ KSMETHOD *pKSMethod,
+  _Out_opt_ ULONG *pulPinFactoryID);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaMethodCreateTopology(
-  IN PIRP Irp,
-  IN KSMETHOD *pKSMethod,
-  OPTIONAL PVOID pvIgnored);
+  _In_ PIRP Irp,
+  _In_ KSMETHOD *pKSMethod,
+  PVOID pvIgnored);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaMethodDeletePin(
-  IN PIRP Irp,
-  IN KSMETHOD *pKSMethod,
-  OPTIONAL PVOID pvIgnored);
+  _In_ PIRP Irp,
+  _In_ KSMETHOD *pKSMethod,
+  PVOID pvIgnored);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyGetControllingPinId(
-  IN PIRP Irp,
-  IN KSP_BDA_NODE_PIN *pProperty,
-  OUT ULONG *pulControllingPinId);
+  _In_ PIRP Irp,
+  _In_ KSP_BDA_NODE_PIN *pProperty,
+  _Out_opt_ ULONG *pulControllingPinId);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyGetPinControl(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty,
-  OUT ULONG *pulProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty,
+  _Out_opt_ ULONG *pulProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyNodeDescriptors(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty,
-  OUT BDANODE_DESCRIPTOR *pNodeDescriptorProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty,
+  _Out_opt_ BDANODE_DESCRIPTOR *pNodeDescriptorProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyNodeEvents(
-  IN PIRP Irp,
-  IN KSP_NODE *pKSProperty,
-  OUT GUID *pguidProperty);
+  _In_ PIRP Irp,
+  _In_ KSP_NODE *pKSProperty,
+  _Out_opt_ GUID *pguidProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyNodeMethods(
-  IN PIRP Irp,
-  IN KSP_NODE *pKSProperty,
-  OUT GUID *pguidProperty);
+  _In_ PIRP Irp,
+  _In_ KSP_NODE *pKSProperty,
+  _Out_opt_ GUID *pguidProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyNodeProperties(
-  IN PIRP Irp,
-  IN KSP_NODE *pKSProperty,
-  OUT GUID *pguidProperty);
+  _In_ PIRP Irp,
+  _In_ KSP_NODE *pKSProperty,
+  _Out_opt_ GUID *pguidProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyNodeTypes(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty,
-  OUT ULONG *pulProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty,
+  _Out_writes_bytes_(OutputBufferLenFromIrp(Irp)) ULONG *pulProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyPinTypes(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty,
-  OUT ULONG *pulProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty,
+  _Out_writes_bytes_(OutputBufferLenFromIrp(Irp)) ULONG *pulProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaPropertyTemplateConnections(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty,
-  OUT KSTOPOLOGY_CONNECTION *pConnectionProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty,
+  _Out_opt_ KSTOPOLOGY_CONNECTION *pConnectionProperty);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaStartChanges(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaUninitFilter(
-  IN PKSFILTER pKSFilter);
+  _In_ PKSFILTER pKSFilter);
 
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 STDMETHODIMP_(NTSTATUS)
 BdaValidateNodeProperty(
-  IN PIRP Irp,
-  IN KSPROPERTY *pKSProperty);
+  _In_ PIRP Irp,
+  _In_ KSPROPERTY *pKSProperty);
 
 #if defined(__cplusplus)
 }
