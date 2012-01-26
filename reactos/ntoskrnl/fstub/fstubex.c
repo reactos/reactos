@@ -53,27 +53,6 @@ typedef struct _EFI_PARTITION_ENTRY
     WCHAR Name[0x24];      // 56
 } EFI_PARTITION_ENTRY, *PEFI_PARTITION_ENTRY;
 
-typedef struct _CREATE_DISK_MBR
-{
-    ULONG Signature;
-} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
-
-typedef struct _CREATE_DISK_GPT
-{
-    GUID DiskId;
-    ULONG MaxPartitionCount;
-} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
-
-typedef struct _CREATE_DISK
-{
-    PARTITION_STYLE PartitionStyle;
-    union
-    {
-        CREATE_DISK_MBR Mbr;
-        CREATE_DISK_GPT Gpt;
-    };
-} CREATE_DISK, *PCREATE_DISK;
-
 typedef struct _PARTITION_TABLE_ENTRY
 {
     UCHAR BootIndicator;
