@@ -1,7 +1,7 @@
 /*
- *      MultiMedia Streams private interfaces (AMSTREAM.DLL)
+ * COM Classes for amstream
  *
- * Copyright 2004 Christian Costa
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,22 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __AMSTREAM_PRIVATE_INCLUDED__
-#define __AMSTREAM_PRIVATE_INCLUDED__
+[
+    helpstring("SFilter Class"),
+    threading(both),
+    uuid(49c47ce0-9ba4-11d0-8212-00c04fc32c45)
+]
+coclass MediaStreamFilter { interface IMediaStreamFilter; }
 
-#include <stdarg.h>
+[
+    helpstring("Stream Class"),
+    threading(both),
+    uuid(49c47ce4-9ba4-11d0-8212-00c04fc32c45)
+]
+coclass AMDirectDrawStream { interface IAMMultiMediaStream; }
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "dshow.h"
-#include "mmstream.h"
-
-HRESULT AM_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT mediastream_create(IMultiMediaStream *Parent, const MSPID *pPurposeId,
-        STREAM_TYPE StreamType, IMediaStream **ppMediaStream) DECLSPEC_HIDDEN;
-
-#endif /* __AMSTREAM_PRIVATE_INCLUDED__ */
+[
+    helpstring("MMStream Class"),
+    threading(both),
+    uuid(49c47ce5-9ba4-11d0-8212-00c04fc32c45)
+]
+coclass AMMultiMediaStream { interface IAMMultiMediaStream; }
