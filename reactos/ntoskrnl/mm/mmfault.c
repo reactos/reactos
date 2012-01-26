@@ -20,6 +20,41 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID
+FASTCALL
+MiSyncForProcessAttach(IN PKTHREAD Thread,
+                       IN PEPROCESS Process)
+{
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+    //DPRINT1("Hack sync for process: %p and thread: %p\n", Process, Thread);
+    //DPRINT1("Thread stack hack: %p %d\n", Thread->StackLimit, Thread->LargeStack);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread, sizeof(ETHREAD));
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(IN PKTHREAD Thread)
+{
+    PVOID Process = PsGetCurrentProcess();
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+    //DPRINT1("Hack sync for thread: %p and process: %p\n", Thread, Process);
+    //DPRINT1("Thread stack hack: %p %d\n", Thread->StackLimit, Thread->LargeStack);
+    
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
 NTSTATUS
 NTAPI
 MmpAccessFault(KPROCESSOR_MODE Mode,

@@ -6,6 +6,20 @@
 
 struct _EPROCESS;
 
+/* ReactOS Mm Hacks */
+VOID
+FASTCALL
+MiSyncForProcessAttach(
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
+);
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(
+    IN PKTHREAD Thread
+);
+
 extern PMMSUPPORT MmKernelAddressSpace;
 extern PFN_COUNT MiFreeSwapPages;
 extern PFN_COUNT MiUsedSwapPages;
