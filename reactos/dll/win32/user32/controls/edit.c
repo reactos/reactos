@@ -1058,13 +1058,15 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 		while (line_def->index != li)
 			line_def = line_def->next;
 
-                if (!line_def->ssa)
-                    return 0;
-
 		lw = line_def->width;
 		w = es->format_rect.right - es->format_rect.left;
-		ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
-		x -= es->x_offset;
+		if (line_def->ssa)
+		{
+			ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
+			x -= es->x_offset;
+		}
+		else
+			x = es->x_offset;
 
 		if (es->style & ES_RIGHT)
 			x = w - (lw - x);
@@ -1080,6 +1082,7 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 			{
 				if (es->x_offset >= get_text_length(es))
 				{
+					int leftover = es->x_offset - get_text_length(es);
 					if (es->ssa)
 					{
 						const SIZE *size;
@@ -1088,8 +1091,10 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 					}
 					else
 						xoff = 0;
+					xoff += es->char_width * leftover;
 				}
-				ScriptStringCPtoX(es->ssa, es->x_offset, FALSE, &xoff);
+				else
+					ScriptStringCPtoX(es->ssa, es->x_offset, FALSE, &xoff);
 			}
 			else
 				xoff = 0;
@@ -1109,8 +1114,8 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 			}
 			else if (es->ssa)
 				ScriptStringCPtoX(es->ssa, index, FALSE, &xi);
-                        else
-                                xi = 0;
+			else
+				xi = 0;
 		}
 		x = xi - xoff;
 
@@ -1145,18 +1150,52 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
  */
 static void EDIT_GetLineRect(EDITSTATE *es, INT line, INT scol, INT ecol, LPRECT rc)
 {
-	INT line_index =  EDIT_EM_LineIndex(es, line);
-        INT pt1, pt2;
+	SCRIPT_STRING_ANALYSIS ssa;
+	INT line_index = 0;
+	INT pt1, pt2, pt3;
 
 	if (es->style & ES_MULTILINE)
+	{
+		const LINEDEF *line_def = NULL;
 		rc->top = es->format_rect.top + (line - es->y_offset) * es->line_height;
+		if (line >= es->line_count)
+			return;
+
+		line_def = es->first_line_def;
+		if (line == -1) {
+			INT index = es->selection_end - line_def->length;
+			while ((index >= 0) && line_def->next) {
+				line_index += line_def->length;
+				line_def = line_def->next;
+				index -= line_def->length;
+			}
+		} else {
+			while (line > 0) {
+				line_index += line_def->length;
+				line_def = line_def->next;
+				line--;
+			}
+		}
+		ssa = line_def->ssa;
+	}
 	else
+	{
+		line_index = 0;
 		rc->top = es->format_rect.top;
+		ssa = es->ssa;
+	}
+
 	rc->bottom = rc->top + es->line_height;
-        pt1 = (scol == 0) ? es->format_rect.left : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + scol, TRUE));
-        pt2 = (ecol == -1) ? es->format_rect.right : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + ecol, TRUE));
-        rc->right = max(pt1 , pt2);
-        rc->left = min(pt1, pt2);
+	pt1 = (scol == 0) ? es->format_rect.left : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + scol, TRUE));
+	pt2 = (ecol == -1) ? es->format_rect.right : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + ecol, TRUE));
+	if (ssa)
+	{
+		ScriptStringCPtoX(ssa, scol, FALSE, &pt3);
+		pt3+=es->format_rect.left;
+	}
+	else pt3 = pt1;
+	rc->right = max(max(pt1 , pt2),pt3);
+	rc->left = min(min(pt1, pt2),pt3);
 }
 
 
@@ -3666,7 +3705,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 					(es->style & ES_NOHIDESEL));
         dc = hdc ? hdc : BeginPaint(es->hwndSelf, &ps);
 
-       /* The dc we use for calcualting may not be the one we paint into.
+       /* The dc we use for calculating may not be the one we paint into.
           This is the safest action. */
         EDIT_InvalidateUniscribeData(es);
 	GetClientRect(es->hwndSelf, &rcClient);
@@ -3719,11 +3758,13 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 	if (es->style & ES_MULTILINE) {
 		INT vlc = get_vertical_line_count(es);
 		for (i = es->y_offset ; i <= min(es->y_offset + vlc, es->y_offset + es->line_count - 1) ; i++) {
+			EDIT_UpdateUniscribeData(es, dc, i);
 			EDIT_GetLineRect(es, i, 0, -1, &rcLine);
 			if (IntersectRect(&rc, &rcRgn, &rcLine))
 				EDIT_PaintLine(es, dc, i, rev);
 		}
 	} else {
+		EDIT_UpdateUniscribeData(es, dc, 0);
 		EDIT_GetLineRect(es, 0, 0, -1, &rcLine);
 		if (IntersectRect(&rc, &rcRgn, &rcLine))
 			EDIT_PaintLine(es, dc, 0, rev);
