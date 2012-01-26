@@ -114,9 +114,9 @@ protected:
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
-    EHCI_PORT_STATUS m_PortStatus[16];                                                 // port status
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
+    BOOLEAN m_ResetInProgress[16];                                                     // set when a reset is in progress
 
     // set command
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -713,7 +713,6 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
-#if 0
     ULONG Value;
     USHORT Status = 0, Change = 0;
 
@@ -763,8 +762,11 @@ CUSBHardwareDevice::GetPortStatus(
         Status |= USB_PORT_STATUS_OVER_CURRENT;
 
     // In a reset state?
-    if (Value & EHCI_PRT_RESET)
+    if ((Value & EHCI_PRT_RESET) || m_ResetInProgress[PortId])
+    {
         Status |= USB_PORT_STATUS_RESET;
+        Change |= USB_PORT_STATUS_RESET;
+    }
 
     //
     // FIXME: Is the Change here correct?
@@ -777,10 +779,7 @@ CUSBHardwareDevice::GetPortStatus(
 
     *PortStatus = Status;
     *PortChange = Change;
-#else
-    *PortStatus = m_PortStatus[PortId].PortStatus;
-    *PortChange = m_PortStatus[PortId].PortChange;
-#endif
+
     return STATUS_SUCCESS;
 }
 
@@ -811,10 +810,8 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // update port status
         //
-        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
-        if (Value & EHCI_PRT_ENABLED) 
-            m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
-        else
+        m_ResetInProgress[PortId] = FALSE;
+        if (!(Value & EHCI_PRT_ENABLED))
         {
             DPRINT1("Port is not enabled.\n");
         }
@@ -822,12 +819,8 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_CONNECTION)
     {
-        // FIXME: Make sure its the Connection and Enable Change status.
-        Value |= EHCI_PRT_CONNECTSTATUSCHANGE;
-        Value |= EHCI_PRT_ENABLEDSTATUSCHANGE;
+        Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
         EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
-
-        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_CONNECT;
     }
 
     return STATUS_SUCCESS;
@@ -868,8 +861,7 @@ CUSBHardwareDevice::SetPortFeature(
         //
         // update cached settings
         //
-        m_PortStatus[PortId].PortChange |= USB_PORT_STATUS_RESET;
-        m_PortStatus[PortId].PortStatus &= ~USB_PORT_STATUS_ENABLE;
+        m_ResetInProgress[PortId] = TRUE;
 
         //
         // is there a status change callback
@@ -1100,11 +1092,6 @@ EhciDefferedRoutine(
             //
             if (PortStatus & EHCI_PRT_CONNECTSTATUSCHANGE)
             {
-                //
-                // Clear the port change status
-                //
-                //This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_CONNECTSTATUSCHANGE);
-
                 if (PortStatus & EHCI_PRT_CONNECTED)
                 {
                     DPRINT1("Device connected on port %d\n", i);
@@ -1126,26 +1113,12 @@ EhciDefferedRoutine(
                             continue;
                         }
                     }
-
-                    //
-                    // update port status flags
-                    //
-                    This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED;
-                    This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_CONNECT;
-                    This->m_PortStatus[i].PortChange |= USB_PORT_STATUS_CONNECT;
                 }
                 else
                 {
                     DPRINT1("Device disconnected on port %d\n", i);
-
-                    //
-                    // update port status flags
-                    //
-                    This->m_PortStatus[i].PortStatus &= ~USB_PORT_STATUS_HIGH_SPEED;
-                    This->m_PortStatus[i].PortStatus &= ~USB_PORT_STATUS_CONNECT;
-                    This->m_PortStatus[i].PortChange |= USB_PORT_STATUS_CONNECT;
                 }
-                
+
                 //
                 // is there a status change callback
                 //
