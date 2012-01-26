@@ -1145,7 +1145,12 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
 
     /* If the symbolic link already exists, return an informational success status */
     if (SymLinkStatus == STATUS_OBJECT_NAME_COLLISION)
+    {
+        /* HACK: Delete the existing symbolic link and update it to the new PDO name */
+        IoDeleteSymbolicLink(SymbolicLinkName);
+        IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
         SymLinkStatus = STATUS_OBJECT_NAME_EXISTS;
+    }
 
     if (!NT_SUCCESS(SymLinkStatus))
     {
