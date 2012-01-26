@@ -38,6 +38,7 @@ typedef struct
     USBC_DEVICE_CONFIGURATION_INTERFACE_V1 BusInterface;     // bus custom enumeration interface
     PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor;            // usb function descriptor
     ULONG FunctionDescriptorCount;                           // number of function descriptor
+    PDEVICE_OBJECT * ChildPDO;                               // child pdos
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 #define USBCCPG_TAG 'cbsu'
@@ -45,7 +46,10 @@ typedef struct
 typedef struct
 {
     COMMON_DEVICE_EXTENSION Common;                          // shared with FDO
-
+    PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor;            // function descriptor
+    PDEVICE_OBJECT NextDeviceObject;                         // next device object
+    DEVICE_CAPABILITIES Capabilities;                        // device capabilities
+    ULONG FunctionIndex;                                     // function index
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* descriptor.c */
