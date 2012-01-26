@@ -4,6 +4,7 @@
 #include <ntddk.h>
 #define YDEBUG
 #include <debug.h>
+#include <initguid.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
@@ -34,6 +35,9 @@ typedef struct
     PUSBD_INTERFACE_LIST_ENTRY InterfaceList;                // interface list
     ULONG InterfaceListCount;                                // interface list count
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;           // configuration handle
+    USBC_DEVICE_CONFIGURATION_INTERFACE_V1 BusInterface;     // bus custom enumeration interface
+    PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor;            // usb function descriptor
+    ULONG FunctionDescriptorCount;                           // number of function descriptor
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 #define USBCCPG_TAG 'cbsu'
@@ -54,6 +58,16 @@ NTSTATUS
 USBCCGP_SelectConfiguration(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+NTAPI
+USBCCGP_GetDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR DescriptorType,
+    IN ULONG DescriptorLength,
+    IN UCHAR DescriptorIndex,
+    IN LANGID LanguageId,
+    OUT PVOID *OutDescriptor);
 
 /* misc.c */
 
@@ -91,6 +105,15 @@ PDO_Dispatch(
     PDEVICE_OBJECT DeviceObject, 
     PIRP Irp);
 
+/* function.c */
 
+NTSTATUS
+USBCCGP_QueryInterface(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PUSBC_DEVICE_CONFIGURATION_INTERFACE_V1 BusInterface);
+
+NTSTATUS
+USBCCGP_EnumerateFunctions(
+    IN PDEVICE_OBJECT DeviceObject);
 
 #endif

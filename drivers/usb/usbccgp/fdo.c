@@ -187,9 +187,26 @@ FDO_StartDevice(
         return Status;
     }
 
+    // query bus interface
+    USBCCGP_QueryInterface(FDODeviceExtension->NextDeviceObject, &FDODeviceExtension->BusInterface);
+
+    // now enumerate the functions
+    Status = USBCCGP_EnumerateFunctions(DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to enumerate functions
+        DPRINT1("Failed to enumerate functions with %x\n", Status);
+        return Status;
+    }
+
     //
-    // FIXME: parse usb interface association descriptor
-    // and create PDO for each function
+    // sanity checks
+    //
+    ASSERT(FDODeviceExtension->FunctionDescriptorCount);
+    ASSERT(FDODeviceExtension->FunctionDescriptor);
+
+    //
+    // FIXME:create PDO for each function
     //
     ASSERT(FALSE);
     return Status;
