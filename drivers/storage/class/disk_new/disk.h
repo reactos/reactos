@@ -393,79 +393,67 @@ extern const DISK_MEDIA_TYPES_LIST DiskMediaTypes[];
 
 
 NTSTATUS
-NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
     );
 
 VOID
-NTAPI
 DiskUnload(
     IN PDRIVER_OBJECT DriverObject
     );
 
 NTSTATUS
-NTAPI
 DiskAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT Pdo
     );
 
 NTSTATUS
-NTAPI
 DiskInitFdo(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
-NTAPI
 DiskInitPdo(
     IN PDEVICE_OBJECT Pdo
     );
 
 NTSTATUS
-NTAPI
 DiskStartFdo(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
-NTAPI
 DiskStartPdo(
     IN PDEVICE_OBJECT Pdo
     );
 
 NTSTATUS
-NTAPI
 DiskStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
     );
 
 NTSTATUS
-NTAPI
 DiskRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
     );
 
 NTSTATUS
-NTAPI
 DiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-NTAPI
 DiskDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
-NTAPI
 DiskFdoProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -474,42 +462,36 @@ DiskFdoProcessError(
     );
 
 NTSTATUS
-NTAPI
 DiskShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-NTAPI
 DiskGetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo
     );
 
 NTSTATUS
-NTAPI
 DiskSetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo
     );
 
 VOID
-NTAPI
 DisableWriteCache(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_WORKITEM WorkItem
     );
 
 VOID
-NTAPI
 DiskIoctlVerify(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDISK_VERIFY_WORKITEM_CONTEXT Context
     );
 
 NTSTATUS
-NTAPI
 DiskModeSelect(
     IN PDEVICE_OBJECT DeviceObject,
     IN PCHAR ModeSelectBuffer,
@@ -533,7 +515,6 @@ DiskModeSelect(
 
 
 NTSTATUS
-NTAPI
 DiskPerformSmartCommand(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG SrbControlCode,
@@ -546,28 +527,24 @@ DiskPerformSmartCommand(
     );
 
 NTSTATUS
-NTAPI
 DiskGetInfoExceptionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PMODE_INFO_EXCEPTIONS ReturnPageData
     );
 
 NTSTATUS
-NTAPI
 DiskSetInfoExceptionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PMODE_INFO_EXCEPTIONS PageData
     );
 
 NTSTATUS
-NTAPI
 DiskDetectFailurePrediction(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PFAILURE_PREDICTION_METHOD FailurePredictCapability
     );
 
 BOOLEAN
-NTAPI
 EnumerateBusKey(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension,
     HANDLE BusKey,
@@ -575,7 +552,6 @@ EnumerateBusKey(
     );
 
 NTSTATUS
-NTAPI
 DiskCreateFdo(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT LowerDeviceObject,
@@ -584,39 +560,33 @@ DiskCreateFdo(
     );
 
 VOID
-NTAPI
 UpdateDeviceObjects(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
-NTAPI
 DiskSetSpecialHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
     );
 
 VOID
-NTAPI
 DiskScanRegistryForSpecial(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
-NTAPI
 ResetBus(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
-NTAPI
 DiskEnumerateDevice(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
-NTAPI
 DiskQueryId(
     IN PDEVICE_OBJECT Pdo,
     IN BUS_QUERY_ID_TYPE IdType,
@@ -624,14 +594,12 @@ DiskQueryId(
     );
 
 NTSTATUS
-NTAPI
 DiskQueryPnpCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_CAPABILITIES Capabilities
     );
 
 NTSTATUS
-NTAPI
 DiskGenerateDeviceName(
     IN BOOLEAN IsFdo,
     IN ULONG DeviceNumber,
@@ -642,27 +610,23 @@ DiskGenerateDeviceName(
     );
 
 VOID
-NTAPI
 DiskCreateSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 VOID
-NTAPI
 DiskUpdatePartitions(
     IN PDEVICE_OBJECT Fdo,
     IN OUT PDRIVE_LAYOUT_INFORMATION_EX PartitionList
     );
 
 VOID
-NTAPI
 DiskUpdateRemovablePartitions(
     IN PDEVICE_OBJECT Fdo,
     IN OUT PDRIVE_LAYOUT_INFORMATION_EX PartitionList
     );
 
 NTSTATUS
-NTAPI
 DiskCreatePdo(
     IN PDEVICE_OBJECT Fdo,
     IN ULONG PartitionOrdinal,
@@ -672,13 +636,11 @@ DiskCreatePdo(
     );
 
 VOID
-NTAPI
 DiskDeleteSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
-NTAPI
 DiskPdoQueryWmiRegInfo(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -686,7 +648,6 @@ DiskPdoQueryWmiRegInfo(
     );
 
 NTSTATUS
-NTAPI
 DiskPdoQueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -696,7 +657,6 @@ DiskPdoQueryWmiDataBlock(
     );
 
 NTSTATUS
-NTAPI
 DiskPdoSetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -706,7 +666,6 @@ DiskPdoSetWmiDataBlock(
     );
 
 NTSTATUS
-NTAPI
 DiskPdoSetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -717,7 +676,6 @@ DiskPdoSetWmiDataItem(
     );
 
 NTSTATUS
-NTAPI
 DiskPdoExecuteWmiMethod(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -729,7 +687,6 @@ DiskPdoExecuteWmiMethod(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoQueryWmiRegInfo(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -737,7 +694,6 @@ DiskFdoQueryWmiRegInfo(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoQueryWmiRegInfoEx(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -746,7 +702,6 @@ DiskFdoQueryWmiRegInfoEx(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoQueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -756,7 +711,6 @@ DiskFdoQueryWmiDataBlock(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoSetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -766,7 +720,6 @@ DiskFdoSetWmiDataBlock(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoSetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -777,7 +730,6 @@ DiskFdoSetWmiDataItem(
     );
 
 NTSTATUS
-NTAPI
 DiskFdoExecuteWmiMethod(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -789,7 +741,6 @@ DiskFdoExecuteWmiMethod(
     );
 
 NTSTATUS
-NTAPI
 DiskWmiFunctionControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -799,28 +750,24 @@ DiskWmiFunctionControl(
     );
 
 NTSTATUS
-NTAPI
 DiskReadFailurePredictStatus(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_STATUS DiskSmartStatus
     );
 
 NTSTATUS
-NTAPI
 DiskReadFailurePredictData(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_DATA DiskSmartData
     );
 
 NTSTATUS
-NTAPI
 DiskEnableDisableFailurePrediction(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     BOOLEAN Enable
     );
 
 NTSTATUS
-NTAPI
 DiskEnableDisableFailurePredictPolling(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     BOOLEAN Enable,
@@ -828,18 +775,16 @@ DiskEnableDisableFailurePredictPolling(
     );
 
 VOID
-NTAPI
 DiskAcquirePartitioningLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
-NTAPI
 DiskReleasePartitioningLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
-NTSTATUS NTAPI DiskInitializeReregistration(
+NTSTATUS DiskInitializeReregistration(
     void
     );
 
@@ -848,7 +793,6 @@ extern GUIDREGINFO DiskWmiPdoGuidList[];
 
 #if defined(_X86_)
 NTSTATUS
-NTAPI
 DiskReadDriveCapacity(
     IN PDEVICE_OBJECT Fdo
     );
@@ -868,19 +812,16 @@ DiskQuerySuggestedLinkName(
 #endif
 
 NTSTATUS
-NTAPI
 DiskSaveDetectInfo(
     PDRIVER_OBJECT DriverObject
     );
 
 VOID
-NTAPI
 DiskCleanupDetectInfo(
     IN PDRIVER_OBJECT DriverObject
     );
 
 VOID
-NTAPI
 DiskDriverReinitialization (
     IN PDRIVER_OBJECT DriverObject,
     IN PVOID Nothing,
@@ -890,26 +831,22 @@ DiskDriverReinitialization (
 #endif
 
 VOID
-NTAPI
 DiskConvertPartitionToExtended(
     IN PPARTITION_INFORMATION Partition,
     OUT PPARTITION_INFORMATION_EX PartitionEx
     );
 
 PDRIVE_LAYOUT_INFORMATION_EX
-NTAPI
 DiskConvertLayoutToExtended(
     IN CONST PDRIVE_LAYOUT_INFORMATION Layout
     );
 
 PDRIVE_LAYOUT_INFORMATION
-NTAPI
 DiskConvertExtendedToLayout(
     IN CONST PDRIVE_LAYOUT_INFORMATION_EX LayoutEx
     );
 
 NTSTATUS
-NTAPI
 DiskReadPartitionTableEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN BypassCache,
@@ -917,14 +854,12 @@ DiskReadPartitionTableEx(
     );
 
 NTSTATUS
-NTAPI
 DiskWritePartitionTableEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout
     );
 
 NTSTATUS
-NTAPI
 DiskSetPartitionInformationEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN ULONG PartitionNumber,
@@ -932,7 +867,6 @@ DiskSetPartitionInformationEx(
     );
 
 NTSTATUS
-NTAPI
 DiskSetPartitionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN ULONG SectorSize,
@@ -941,14 +875,12 @@ DiskSetPartitionInformation(
     );
 
 NTSTATUS
-NTAPI
 DiskVerifyPartitionTable(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN FixErrors
     );
 
 BOOLEAN
-NTAPI
 DiskInvalidatePartitionTable(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN PartitionLockHeld
@@ -956,14 +888,12 @@ DiskInvalidatePartitionTable(
 
 #if defined (_X86_)
 NTSTATUS
-NTAPI
 DiskGetDetectInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_DETECTION_INFO DetectInfo
     );
 
 NTSTATUS
-NTAPI
 DiskReadSignature(
     IN PDEVICE_OBJECT Fdo
     );

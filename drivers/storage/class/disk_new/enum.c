@@ -219,7 +219,6 @@ Return Values:
 
 
 NTSTATUS
-NTAPI
 DiskEnumerateDevice(
     IN PDEVICE_OBJECT Fdo
     )

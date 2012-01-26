@@ -188,7 +188,6 @@ Return Value:
 
 
 NTSTATUS
-NTAPI
 DiskInitFdo(
     IN PDEVICE_OBJECT Fdo
     )
@@ -657,7 +656,6 @@ DiskStopDevice(
 
 
 NTSTATUS
-NTAPI
 DiskQueryId(
     IN PDEVICE_OBJECT Pdo,
     IN BUS_QUERY_ID_TYPE IdType,
@@ -1161,7 +1159,6 @@ Return Value:
 
 
 NTSTATUS
-NTAPI
 DiskStartFdo(
     IN PDEVICE_OBJECT Fdo
     )

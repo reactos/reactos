@@ -173,7 +173,6 @@ const GUID GUID_NULL = { 0 };
 
 
 NTSTATUS
-NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -344,7 +343,6 @@ Return Value:
 
 
 VOID
-NTAPI
 DiskUnload(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -359,7 +357,6 @@ DiskUnload(
 
 
 NTSTATUS
-NTAPI
 DiskCreateFdo(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -632,7 +629,6 @@ DiskCreateFdoExit:
 
 
 NTSTATUS
-NTAPI
 DiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1013,7 +1009,6 @@ Return Value:
 
 
 NTSTATUS
-NTAPI
 DiskDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -3271,7 +3266,6 @@ defaultHandler:
 
 
 NTSTATUS
-NTAPI
 DiskShutdownFlush (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -3791,7 +3785,6 @@ DiskIoctlVerify(
 
 
 VOID
-NTAPI
 DiskFdoProcessError(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4261,7 +4254,6 @@ Return Value:
 
 
 NTSTATUS
-NTAPI
 DiskQueryPnpCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_CAPABILITIES Capabilities
