@@ -1542,7 +1542,7 @@ CUSBRequest::FreeQueueHead(
 
                 if (USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress))
                 {
-                    DPRINT1("m_TotalBytesTransferred %x, %x - %x\n",
+                    DPRINT("m_TotalBytesTransferred %x, %x - %x\n",
                         m_TotalBytesTransferred,
                         m_TransferDescriptors[DescriptorCount]->TotalBytesToTransfer,
                         m_TransferDescriptors[DescriptorCount]->Token.Bits.TotalBytesToTransfer);
