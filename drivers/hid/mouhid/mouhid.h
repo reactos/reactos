@@ -110,6 +110,7 @@ typedef struct
 
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
+#define WHEEL_DELTA 120
 
 NTSTATUS
 MouHid_InitiateRead(

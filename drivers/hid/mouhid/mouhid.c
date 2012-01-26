@@ -219,15 +219,15 @@ MouHid_ReadCompletion(
         {
             /* store wheel status */
             MouseInputData.ButtonFlags |= MOUSE_WHEEL;
-            MouseInputData.ButtonData = (USHORT)UsageValue; /* FIXME */
+            MouseInputData.ButtonData = (USHORT)(UsageValue * WHEEL_DELTA);
         }
         else
         {
-            DPRINT1("[MOUHID] failed to get wheel status with %x\n", Status);
+            DPRINT("[MOUHID] failed to get wheel status with %x\n", Status);
         }
     }
 
-    DPRINT1("[MOUHID] LastX %ld LastY %ld Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
+    DPRINT("[MOUHID] LastX %ld LastY %ld Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
 
     /* dispatch mouse action */
     MouHid_DispatchInputData(DeviceExtension, &MouseInputData);
