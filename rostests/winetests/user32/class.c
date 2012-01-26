@@ -21,7 +21,6 @@
 /* To get CS_DROPSHADOW with the MSVC headers */
 //#define _WIN32_WINNT 0x0501
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>

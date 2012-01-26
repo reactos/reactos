@@ -302,13 +302,10 @@ todo_wine
         if (bThemeActive || style != WS_HSCROLL)
 todo_wine
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == ( style | WS_VSCROLL),
-                    "unexpected style change %8lx expected %8lx\n",
-                    (winstyle & (WS_HSCROLL|WS_VSCROLL)), style | WS_VSCROLL);
+                "unexpected style change %08x/%08x\n", winstyle, style);
         else
-            ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style ||
-                    broken((winstyle & (WS_HSCROLL|WS_VSCROLL)) == (WS_HSCROLL|WS_VSCROLL)), /* Win 9x/ME */
-                    "unexpected style change %8lx expected %8x\n",
-                    (winstyle & (WS_HSCROLL|WS_VSCROLL)), style);
+            ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style,
+                "unexpected style change %08x/%08x\n", winstyle, style);
     }
     /* do the test again with H and V reversed.
      * Start with a clean window */
@@ -341,13 +338,10 @@ todo_wine
         if (bThemeActive || style != WS_VSCROLL)
 todo_wine
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == ( style | WS_HSCROLL),
-                    "unexpected style change %8lx expected %8lx\n",
-                    (winstyle & (WS_HSCROLL|WS_VSCROLL)), style | WS_HSCROLL);
+                "unexpected style change %08x/%08x\n", winstyle, style);
         else
-            ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style ||
-                    broken((winstyle & (WS_HSCROLL|WS_VSCROLL)) == (WS_HSCROLL|WS_VSCROLL)), /* Win 9x/ME */
-                    "unexpected style change %8lx expected %8x\n",
-                    (winstyle & (WS_HSCROLL|WS_VSCROLL)), style);
+            ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style,
+                "unexpected style change %08x/%08x\n", winstyle, style);
     }
     /* Slightly change the test to use SetScrollInfo
      * Start with a clean window */

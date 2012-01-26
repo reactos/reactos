@@ -25,6 +25,8 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600 /* For SPI_GETMOUSEHOVERWIDTH and more */
 //#define _WIN32_IE 0x0700
+#undef WINVER
+#define WINVER 0x0600 /* For COLOR_MENUBAR, NONCLIENTMETRICS with padding */
 
 #include "wine/test.h"
 #include "windef.h"
@@ -682,7 +684,7 @@ static BOOL test_setborder(UINT curr_val, int usesetborder, int dpi)
     INT frame;
     NONCLIENTMETRICSA ncm;
 
-    ncm.cbSize = sizeof( ncm);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
     rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     if( usesetborder) {
@@ -727,11 +729,11 @@ static void test_SPI_SETBORDER( void )                 /*      6 */
 {
     BOOL rc;
     UINT old_border;
-    NONCLIENTMETRICSA ncmsave;
+    NONCLIENTMETRICS ncmsave;
     INT CaptionWidth,
         PaddedBorderWidth;
 
-    ncmsave.cbSize = sizeof( ncmsave);
+    ncmsave.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
     rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncmsave, 0);
     if( !rc) {
         win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
@@ -1415,10 +1417,10 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     NONCLIENTMETRICSA Ncmcur;
     NONCLIENTMETRICSA Ncmstart;
 
-    Ncmorig.cbSize = sizeof(NONCLIENTMETRICSA);
-    Ncmnew.cbSize = sizeof(NONCLIENTMETRICSA);
-    Ncmcur.cbSize = sizeof(NONCLIENTMETRICSA);
-    Ncmstart.cbSize = sizeof(NONCLIENTMETRICSA);
+    Ncmorig.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    Ncmnew.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    Ncmcur.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    Ncmstart.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
 
     trace("testing SPI_{GET,SET}NONCLIENTMETRICS\n");
     change_counter = 0;
@@ -2574,8 +2576,28 @@ static void test_GetSystemMetrics( void)
     NONCLIENTMETRICS ncm;
     SIZE screen;
 
+    assert(sizeof(ncm) == 344);
+
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
+    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ok(rc, "SystemParametersInfoA failed\n");
+
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth) - 1;
+    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ok(!rc, "SystemParametersInfoA should fail\n");
+
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth) + 1;
+    SetLastError(0xdeadbeef);
+    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ok(!rc, "SystemParametersInfoA should fail\n");
+
+    ncm.cbSize = sizeof(ncm); /* Vista added padding */
+    SetLastError(0xdeadbeef);
+    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ok(rc || broken(!rc) /* before Vista */, "SystemParametersInfoA failed\n");
+
     minim.cbSize = sizeof( minim);
-    ncm.cbSize = sizeof( ncm);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
     SystemParametersInfo( SPI_GETMINIMIZEDMETRICS, 0, &minim, 0);
     rc = SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     if( !rc) {

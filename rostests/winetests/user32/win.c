@@ -2513,7 +2513,7 @@ static LRESULT WINAPI set_focus_on_activate_proc(HWND hwnd, UINT msg, WPARAM wp,
 
 static void test_SetFocus(HWND hwnd)
 {
-    HWND child, child2;
+    HWND child, child2, ret;
     WNDPROC old_wnd_proc;
 
     /* check if we can set focus to non-visible windows */
@@ -2588,8 +2588,31 @@ todo_wine
     ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
 todo_wine
     ok( GetFocus() == child, "Focus should be on child %p, not %p\n", child, GetFocus() );
-
     SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)old_wnd_proc);
+
+    SetFocus( hwnd );
+    SetParent( child, GetDesktopWindow());
+    SetParent( child2, child );
+    ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
+    ok( GetFocus() == hwnd, "Focus should be on parent %p\n", hwnd );
+    ret = SetFocus( child2 );
+    ok( ret == 0, "SetFocus %p should fail\n", child2);
+    ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
+    ok( GetFocus() == hwnd, "Focus should be on parent %p\n", hwnd );
+    ret = SetFocus( child );
+    ok( ret == 0, "SetFocus %p should fail\n", child);
+    ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
+    ok( GetFocus() == hwnd, "Focus should be on parent %p\n", hwnd );
+    SetWindowLongW( child, GWL_STYLE, WS_POPUP|WS_CHILD );
+    SetFocus( child2 );
+    ok( GetActiveWindow() == child, "child window %p should be active\n", child);
+    ok( GetFocus() == child2, "Focus should be on child2 %p\n", child2 );
+    SetFocus( hwnd );
+    ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
+    ok( GetFocus() == hwnd, "Focus should be on parent %p\n", hwnd );
+    SetFocus( child );
+    ok( GetActiveWindow() == child, "child window %p should be active\n", child);
+    ok( GetFocus() == child, "Focus should be on child %p\n", child );
 
     DestroyWindow( child2 );
     DestroyWindow( child );
@@ -3642,7 +3665,7 @@ static LRESULT WINAPI StyleCheckProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
                 ok(!(lpcs->dwExStyle & WS_EX_WINDOWEDGE), "Window shouldn't have WS_EX_WINDOWEDGE style\n");
 
             ok((lpss->styleOld & ~WS_EX_WINDOWEDGE) == (lpcs->dwExStyle & ~WS_EX_WINDOWEDGE),
-                "Ex style (0x%08lx) should match what the caller passed to CreateWindowEx (0x%08lx)\n",
+                "Ex style (0x%08x) should match what the caller passed to CreateWindowEx (0x%08x)\n",
                 (lpss->styleOld & ~WS_EX_WINDOWEDGE), (lpcs->dwExStyle & ~WS_EX_WINDOWEDGE));
 
             ok(lpss->styleNew == lpcs->style,
@@ -3673,6 +3696,7 @@ static void register_style_check_class(void)
     };
     
     atomStyleCheckClass = RegisterClass(&wc);
+    assert(atomStyleCheckClass);
 }
 
 static void check_window_style(DWORD dwStyleIn, DWORD dwExStyleIn, DWORD dwStyleOut, DWORD dwExStyleOut)
@@ -3700,28 +3724,42 @@ static void check_window_style(DWORD dwStyleIn, DWORD dwExStyleIn, DWORD dwStyle
 
     dwActualStyle = GetWindowLong(hwnd, GWL_STYLE);
     dwActualExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    ok((dwActualStyle == dwStyleOut) && (dwActualExStyle == dwExStyleOut),
-        "Style (0x%08x) should really be 0x%08x and/or Ex style (0x%08x) should really be 0x%08x\n",
-        dwActualStyle, dwStyleOut, dwActualExStyle, dwExStyleOut);
+    ok(dwActualStyle == dwStyleOut, "expected style %#x, got %#x\n", dwStyleOut, dwActualStyle);
+    ok(dwActualExStyle == dwExStyleOut, "expected ex_style %#x, got %#x\n", dwExStyleOut, dwActualExStyle);
 
     /* try setting the styles explicitly */
     SetWindowLong( hwnd, GWL_EXSTYLE, dwExStyleIn );
+    dwActualStyle = GetWindowLong(hwnd, GWL_STYLE);
+    dwActualExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    /* WS_EX_WINDOWEDGE can't always be changed */
+    if (dwExStyleIn & WS_EX_DLGMODALFRAME)
+        dwExStyleOut = dwExStyleIn | WS_EX_WINDOWEDGE;
+    else if ((dwActualStyle & (WS_DLGFRAME | WS_THICKFRAME)) && !(dwExStyleIn & WS_EX_STATICEDGE))
+        dwExStyleOut = dwExStyleIn | WS_EX_WINDOWEDGE;
+    else
+        dwExStyleOut = dwExStyleIn & ~WS_EX_WINDOWEDGE;
+    ok(dwActualStyle == dwStyleOut, "expected style %#x, got %#x\n", dwStyleOut, dwActualStyle);
+    ok(dwActualExStyle == dwExStyleOut, "expected ex_style %#x, got %#x\n", dwExStyleOut, dwActualExStyle);
+
     SetWindowLong( hwnd, GWL_STYLE, dwStyleIn );
     dwActualStyle = GetWindowLong(hwnd, GWL_STYLE);
     dwActualExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
     /* WS_CLIPSIBLINGS can't be reset on top-level windows */
-    if (dwStyleIn & WS_CHILD) dwStyleOut = dwStyleIn;
+    if ((dwStyleIn & (WS_CHILD|WS_POPUP)) == WS_CHILD) dwStyleOut = dwStyleIn;
     else dwStyleOut = dwStyleIn | WS_CLIPSIBLINGS;
     /* WS_EX_WINDOWEDGE can't always be changed */
-    if ((dwExStyleIn & WS_EX_DLGMODALFRAME) || (dwStyleIn & WS_THICKFRAME))
+    if (dwExStyleIn & WS_EX_DLGMODALFRAME)
         dwExStyleOut = dwExStyleIn | WS_EX_WINDOWEDGE;
-    else if (dwStyleIn & (WS_CHILD | WS_POPUP))
-        dwExStyleOut = dwExStyleIn & ~WS_EX_WINDOWEDGE;
+    else if ((dwActualStyle & (WS_DLGFRAME | WS_THICKFRAME)) && !(dwExStyleIn & WS_EX_STATICEDGE))
+        dwExStyleOut = dwExStyleIn | WS_EX_WINDOWEDGE;
     else
-        dwExStyleOut = dwExStyleIn;
-    ok((dwActualStyle == dwStyleOut) && (dwActualExStyle == dwExStyleOut),
-        "%08x/%08x: Style (0x%08x) should really be 0x%08x and/or Ex style (0x%08x) should really be 0x%08x\n",
-       dwStyleIn, dwExStyleIn, dwActualStyle, dwStyleOut, dwActualExStyle, dwExStyleOut);
+        dwExStyleOut = dwExStyleIn & ~WS_EX_WINDOWEDGE;
+    ok(dwActualStyle == dwStyleOut, "expected style %#x, got %#x\n", dwStyleOut, dwActualStyle);
+    /* FIXME: Remove the condition below once Wine is fixed */
+    if (dwActualExStyle != dwExStyleOut)
+    todo_wine ok(dwActualExStyle == dwExStyleOut, "expected ex_style %#x, got %#x\n", dwExStyleOut, dwActualExStyle);
+    else
+    ok(dwActualExStyle == dwExStyleOut, "expected ex_style %#x, got %#x\n", dwExStyleOut, dwActualExStyle);
 
     DestroyWindow(hwnd);
     if (hwndParent) DestroyWindow(hwndParent);
@@ -3733,14 +3771,36 @@ static void test_window_styles(void)
     register_style_check_class();
 
     check_window_style(0, 0, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE);
+    check_window_style(WS_DLGFRAME, 0, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE);
+    check_window_style(WS_THICKFRAME, 0, WS_THICKFRAME|WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE);
+    check_window_style(WS_DLGFRAME, WS_EX_STATICEDGE, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_STATICEDGE);
+    check_window_style(WS_THICKFRAME, WS_EX_STATICEDGE, WS_THICKFRAME|WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_STATICEDGE);
     check_window_style(WS_OVERLAPPEDWINDOW, 0, WS_CLIPSIBLINGS|WS_OVERLAPPEDWINDOW, WS_EX_WINDOWEDGE);
     check_window_style(WS_CHILD, 0, WS_CHILD, 0);
+    check_window_style(WS_CHILD|WS_DLGFRAME, 0, WS_CHILD|WS_DLGFRAME, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD|WS_THICKFRAME, 0, WS_CHILD|WS_THICKFRAME, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD|WS_DLGFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_DLGFRAME, WS_EX_STATICEDGE);
+    check_window_style(WS_CHILD|WS_THICKFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_THICKFRAME, WS_EX_STATICEDGE);
+    check_window_style(WS_CHILD|WS_CAPTION, 0, WS_CHILD|WS_CAPTION, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD|WS_CAPTION|WS_SYSMENU, 0, WS_CHILD|WS_CAPTION|WS_SYSMENU, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD, WS_EX_WINDOWEDGE, WS_CHILD, 0);
+    check_window_style(WS_CHILD, WS_EX_DLGMODALFRAME, WS_CHILD, WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
+    check_window_style(WS_CHILD, WS_EX_DLGMODALFRAME|WS_EX_STATICEDGE, WS_CHILD, WS_EX_STATICEDGE|WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
+    check_window_style(WS_CHILD|WS_POPUP, 0, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, 0);
+    check_window_style(WS_CHILD|WS_POPUP|WS_DLGFRAME, 0, WS_CHILD|WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD|WS_POPUP|WS_THICKFRAME, 0, WS_CHILD|WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_window_style(WS_CHILD|WS_POPUP|WS_DLGFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
+    check_window_style(WS_CHILD|WS_POPUP|WS_THICKFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
+    check_window_style(WS_CHILD|WS_POPUP, WS_EX_APPWINDOW, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, WS_EX_APPWINDOW);
+    check_window_style(WS_CHILD|WS_POPUP, WS_EX_WINDOWEDGE, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, 0);
     check_window_style(WS_CHILD, WS_EX_WINDOWEDGE, WS_CHILD, 0);
     check_window_style(0, WS_EX_TOOLWINDOW, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_TOOLWINDOW);
     check_window_style(WS_POPUP, 0, WS_POPUP|WS_CLIPSIBLINGS, 0);
     check_window_style(WS_POPUP, WS_EX_WINDOWEDGE, WS_POPUP|WS_CLIPSIBLINGS, 0);
-    check_window_style(WS_CHILD, WS_EX_DLGMODALFRAME, WS_CHILD, WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
-    check_window_style(WS_CHILD, WS_EX_DLGMODALFRAME|WS_EX_STATICEDGE, WS_CHILD, WS_EX_STATICEDGE|WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
+    check_window_style(WS_POPUP|WS_DLGFRAME, 0, WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_window_style(WS_POPUP|WS_THICKFRAME, 0, WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_window_style(WS_POPUP|WS_DLGFRAME, WS_EX_STATICEDGE, WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
+    check_window_style(WS_POPUP|WS_THICKFRAME, WS_EX_STATICEDGE, WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
     check_window_style(WS_CAPTION, WS_EX_STATICEDGE, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_STATICEDGE|WS_EX_WINDOWEDGE);
     check_window_style(0, WS_EX_APPWINDOW, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_APPWINDOW|WS_EX_WINDOWEDGE);
 
@@ -3750,6 +3810,175 @@ static void test_window_styles(void)
         check_window_style(0, WS_EX_LAYERED|WS_EX_TRANSPARENT, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_WINDOWEDGE);
         check_window_style(0, WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW, WS_CLIPSIBLINGS|WS_CAPTION,
                                                       WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_WINDOWEDGE);
+    }
+}
+
+static INT_PTR WINAPI empty_dlg_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    return 0;
+}
+
+static void check_dialog_style(DWORD style_in, DWORD ex_style_in, DWORD style_out, DWORD ex_style_out)
+{
+    struct
+    {
+        DLGTEMPLATE dt;
+        WORD menu_name;
+        WORD class_id;
+        WORD class_atom;
+        WCHAR caption[1];
+    } dlg_data;
+    DWORD style, ex_style;
+    HWND hwnd, parent = 0;
+
+    if (style_in & WS_CHILD)
+        parent = CreateWindowEx(0, "static", NULL, WS_OVERLAPPEDWINDOW,
+                                0, 0, 0, 0, NULL, NULL, NULL, NULL);
+
+    dlg_data.dt.style = style_in;
+    dlg_data.dt.dwExtendedStyle = ex_style_in;
+    dlg_data.dt.cdit = 0;
+    dlg_data.dt.x = 0;
+    dlg_data.dt.y = 0;
+    dlg_data.dt.cx = 100;
+    dlg_data.dt.cy = 100;
+    dlg_data.menu_name = 0;
+    dlg_data.class_id = 0;
+    dlg_data.class_atom = 0;
+    dlg_data.caption[0] = 0;
+
+    hwnd = CreateDialogIndirectParam(GetModuleHandle(0), &dlg_data.dt, parent, empty_dlg_proc, 0);
+    ok(hwnd != 0, "dialog creation failed, style %#x, exstyle %#x\n", style_in, ex_style_in);
+
+    flush_events( TRUE );
+
+    style = GetWindowLong(hwnd, GWL_STYLE);
+    ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    ok(style == (style_out | DS_3DLOOK), "expected style %#x, got %#x\n", style_out | DS_3DLOOK, style);
+    ok(ex_style == ex_style_out, "expected ex_style %#x, got %#x\n", ex_style_out, ex_style);
+
+    /* try setting the styles explicitly */
+    SetWindowLong(hwnd, GWL_EXSTYLE, ex_style_in);
+    style = GetWindowLong(hwnd, GWL_STYLE);
+    ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    ok(style == (style_out | DS_3DLOOK), "expected style %#x, got %#x\n", style_out|DS_3DLOOK, style);
+    /* WS_EX_WINDOWEDGE can't always be changed */
+    if (ex_style_in & WS_EX_DLGMODALFRAME)
+        ex_style_out = ex_style_in | WS_EX_WINDOWEDGE;
+    else if ((style & (WS_DLGFRAME | WS_THICKFRAME)) && !(ex_style_in & WS_EX_STATICEDGE))
+        ex_style_out = ex_style_in | WS_EX_WINDOWEDGE;
+    else
+        ex_style_out = ex_style_in & ~WS_EX_WINDOWEDGE;
+    ok(ex_style == ex_style_out, "expected ex_style %#x, got %#x\n", ex_style_out, ex_style);
+
+    SetWindowLong(hwnd, GWL_STYLE, style_in);
+    style = GetWindowLong(hwnd, GWL_STYLE);
+    ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+    if ((style_in & (WS_CHILD | WS_POPUP)) == WS_CHILD) style_out = style_in;
+    else style_out = style_in | WS_CLIPSIBLINGS;
+    ok(style == style_out, "expected style %#x, got %#x\n", style_out, style);
+    /* WS_EX_WINDOWEDGE can't always be changed */
+    if (ex_style_in & WS_EX_DLGMODALFRAME)
+        ex_style_out = ex_style_in | WS_EX_WINDOWEDGE;
+    else if ((style & (WS_DLGFRAME | WS_THICKFRAME)) && !(ex_style_in & WS_EX_STATICEDGE))
+        ex_style_out = ex_style_in | WS_EX_WINDOWEDGE;
+    else
+        ex_style_out = ex_style_in & ~WS_EX_WINDOWEDGE;
+    /* FIXME: Remove the condition below once Wine is fixed */
+    if (ex_style != ex_style_out)
+    todo_wine ok(ex_style == ex_style_out, "expected ex_style %#x, got %#x\n", ex_style_out, ex_style);
+    else
+    ok(ex_style == ex_style_out, "expected ex_style %#x, got %#x\n", ex_style_out, ex_style);
+
+    DestroyWindow(hwnd);
+    DestroyWindow(parent);
+}
+
+static void test_dialog_styles(void)
+{
+    check_dialog_style(0, 0, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_DLGFRAME, 0, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_THICKFRAME, 0, WS_THICKFRAME|WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_DLGFRAME, WS_EX_STATICEDGE, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_STATICEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_THICKFRAME, WS_EX_STATICEDGE, WS_THICKFRAME|WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_STATICEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(DS_CONTROL, 0, WS_CLIPSIBLINGS|WS_CAPTION|DS_CONTROL, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CAPTION, 0, WS_CAPTION|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_BORDER, 0, WS_CAPTION|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_DLGFRAME, 0, WS_CAPTION|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_BORDER|DS_CONTROL, 0, WS_CAPTION|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_DLGFRAME|DS_CONTROL, 0, WS_CAPTION|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CAPTION|WS_SYSMENU, 0, WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_SYSMENU, 0, WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CAPTION|DS_CONTROL, 0, WS_CAPTION|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_SYSMENU|DS_CONTROL, 0, WS_CAPTION|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CAPTION|WS_SYSMENU|DS_CONTROL, 0, WS_CAPTION|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_OVERLAPPEDWINDOW, 0, WS_CLIPSIBLINGS|WS_OVERLAPPEDWINDOW, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD, 0, WS_CHILD, 0);
+    check_dialog_style(WS_CHILD|WS_DLGFRAME, 0, WS_CHILD|WS_DLGFRAME, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_THICKFRAME, 0, WS_CHILD|WS_THICKFRAME, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_DLGFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_DLGFRAME, WS_EX_STATICEDGE);
+    check_dialog_style(WS_CHILD|WS_THICKFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_THICKFRAME, WS_EX_STATICEDGE);
+    check_dialog_style(WS_CHILD|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_CAPTION, 0, WS_CHILD|WS_CAPTION, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_BORDER, 0, WS_CHILD|WS_BORDER, 0);
+    check_dialog_style(WS_CHILD|WS_DLGFRAME, 0, WS_CHILD|WS_DLGFRAME, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_BORDER|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_DLGFRAME|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_CAPTION|WS_SYSMENU, 0, WS_CHILD|WS_CAPTION|WS_SYSMENU, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_SYSMENU, 0, WS_CHILD|WS_SYSMENU, 0);
+    check_dialog_style(WS_CHILD|WS_CAPTION|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_SYSMENU|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_CAPTION|WS_SYSMENU|DS_CONTROL, 0, WS_CHILD|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD, WS_EX_WINDOWEDGE, WS_CHILD, 0);
+    check_dialog_style(WS_CHILD, WS_EX_DLGMODALFRAME, WS_CHILD, WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
+    check_dialog_style(WS_CHILD, WS_EX_DLGMODALFRAME|WS_EX_STATICEDGE, WS_CHILD, WS_EX_STATICEDGE|WS_EX_WINDOWEDGE|WS_EX_DLGMODALFRAME);
+    check_dialog_style(WS_CHILD|WS_POPUP, 0, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, 0);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_DLGFRAME, 0, WS_CHILD|WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_THICKFRAME, 0, WS_CHILD|WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_DLGFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_THICKFRAME, WS_EX_STATICEDGE, WS_CHILD|WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|DS_CONTROL, 0, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_CAPTION, 0, WS_CHILD|WS_POPUP|WS_CAPTION|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_BORDER, 0, WS_CHILD|WS_POPUP|WS_BORDER|WS_CLIPSIBLINGS, 0);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_DLGFRAME, 0, WS_CHILD|WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_BORDER|DS_CONTROL, 0, WS_CHILD|WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_DLGFRAME|DS_CONTROL, 0, WS_CHILD|WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_CAPTION|WS_SYSMENU, 0, WS_CHILD|WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_SYSMENU, 0, WS_CHILD|WS_POPUP|WS_SYSMENU|WS_CLIPSIBLINGS, 0);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_CAPTION|DS_CONTROL, 0, WS_CHILD|WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_SYSMENU|DS_CONTROL, 0, WS_CHILD|WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP|WS_CAPTION|WS_SYSMENU|DS_CONTROL, 0, WS_CHILD|WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CHILD|WS_POPUP, WS_EX_APPWINDOW, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, WS_EX_APPWINDOW);
+    check_dialog_style(WS_CHILD|WS_POPUP, WS_EX_WINDOWEDGE, WS_CHILD|WS_POPUP|WS_CLIPSIBLINGS, 0);
+    check_dialog_style(WS_CHILD, WS_EX_WINDOWEDGE, WS_CHILD, 0);
+    check_dialog_style(0, WS_EX_TOOLWINDOW, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_WINDOWEDGE|WS_EX_TOOLWINDOW|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP, 0, WS_POPUP|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP, WS_EX_WINDOWEDGE, WS_POPUP|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_DLGFRAME, 0, WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_THICKFRAME, 0, WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_DLGFRAME, WS_EX_STATICEDGE, WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_THICKFRAME, WS_EX_STATICEDGE, WS_POPUP|WS_THICKFRAME|WS_CLIPSIBLINGS, WS_EX_STATICEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|DS_CONTROL, 0, WS_POPUP|WS_CLIPSIBLINGS|DS_CONTROL, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_CAPTION, 0, WS_POPUP|WS_CAPTION|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_BORDER, 0, WS_POPUP|WS_BORDER|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_DLGFRAME, 0, WS_POPUP|WS_DLGFRAME|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_BORDER|DS_CONTROL, 0, WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_DLGFRAME|DS_CONTROL, 0, WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_CAPTION|WS_SYSMENU, 0, WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_SYSMENU, 0, WS_POPUP|WS_SYSMENU|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_CAPTION|DS_CONTROL, 0, WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_SYSMENU|DS_CONTROL, 0, WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_POPUP|WS_CAPTION|WS_SYSMENU|DS_CONTROL, 0, WS_POPUP|DS_CONTROL|WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT);
+    check_dialog_style(WS_CAPTION, WS_EX_STATICEDGE, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_STATICEDGE|WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+    check_dialog_style(0, WS_EX_APPWINDOW, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_APPWINDOW|WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+
+    if (pGetLayeredWindowAttributes)
+    {
+        check_dialog_style(0, WS_EX_LAYERED, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_LAYERED|WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+        check_dialog_style(0, WS_EX_LAYERED|WS_EX_TRANSPARENT, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
+        check_dialog_style(0, WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW, WS_CLIPSIBLINGS|WS_CAPTION,
+                              WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_WINDOWEDGE|WS_EX_CONTROLPARENT);
     }
 }
 
@@ -5094,20 +5323,20 @@ static void test_CreateWindow(void)
                 ok( !pGetProcessDefaultLayout( NULL ), "GetProcessDefaultLayout succeeded\n" );
                 ok( GetLastError() == ERROR_NOACCESS, "wrong error %u\n", GetLastError() );
                 SetLastError( 0xdeadbeef );
-                ok( pGetProcessDefaultLayout( &layout ),
-                    "GetProcessDefaultLayout failed err %u\n", GetLastError ());
+                res = pGetProcessDefaultLayout( &layout );
+                ok( res, "GetProcessDefaultLayout failed err %u\n", GetLastError ());
                 ok( layout == 0, "GetProcessDefaultLayout wrong layout %x\n", layout );
                 SetLastError( 0xdeadbeef );
-                ok( pSetProcessDefaultLayout( 7 ),
-                    "SetProcessDefaultLayout failed err %u\n", GetLastError ());
-                ok( pGetProcessDefaultLayout( &layout ),
-                    "GetProcessDefaultLayout failed err %u\n", GetLastError ());
+                res = pSetProcessDefaultLayout( 7 );
+                ok( res, "SetProcessDefaultLayout failed err %u\n", GetLastError ());
+                res = pGetProcessDefaultLayout( &layout );
+                ok( res, "GetProcessDefaultLayout failed err %u\n", GetLastError ());
                 ok( layout == 7, "GetProcessDefaultLayout wrong layout %x\n", layout );
                 SetLastError( 0xdeadbeef );
-                ok( pSetProcessDefaultLayout( LAYOUT_RTL ),
-                    "SetProcessDefaultLayout failed err %u\n", GetLastError ());
-                ok( pGetProcessDefaultLayout( &layout ),
-                    "GetProcessDefaultLayout failed err %u\n", GetLastError ());
+                res = pSetProcessDefaultLayout( LAYOUT_RTL );
+                ok( res, "SetProcessDefaultLayout failed err %u\n", GetLastError ());
+                res = pGetProcessDefaultLayout( &layout );
+                ok( res, "GetProcessDefaultLayout failed err %u\n", GetLastError ());
                 ok( layout == LAYOUT_RTL, "GetProcessDefaultLayout wrong layout %x\n", layout );
                 hwnd = CreateWindowEx(WS_EX_APPWINDOW, "static", NULL, WS_POPUP,
                                       0, 0, 100, 100, 0, 0, 0, NULL);
@@ -6685,6 +6914,7 @@ START_TEST(win)
 
     test_AdjustWindowRect();
     test_window_styles();
+    test_dialog_styles();
     test_redrawnow();
     test_csparentdc();
     test_SetWindowLong();

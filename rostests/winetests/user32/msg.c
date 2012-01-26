@@ -8134,12 +8134,6 @@ static VOID CALLBACK tfunc(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
 {
 }
 
-static VOID CALLBACK tfunc_crash(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
-{
-    /* Crash on purpose */
-    *(volatile int *)0 = 2;
-}
-
 #define TIMER_ID  0x19
 
 static DWORD WINAPI timer_thread_proc(LPVOID x)
@@ -8161,7 +8155,6 @@ static void test_timers(void)
 {
     struct timer_info info;
     DWORD id;
-    MSG msg;
 
     info.hWnd = CreateWindow ("TestWindowClass", NULL,
        WS_OVERLAPPEDWINDOW ,
@@ -8182,26 +8175,6 @@ static void test_timers(void)
     CloseHandle(info.handles[1]);
 
     ok( KillTimer(info.hWnd, TIMER_ID), "KillTimer failed\n");
-
-    ok(DestroyWindow(info.hWnd), "failed to destroy window\n");
-
-    /* Test timer callback with crash */
-    SetLastError(0xdeadbeef);
-    info.hWnd = CreateWindowW(testWindowClassW, NULL,
-                              WS_OVERLAPPEDWINDOW ,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, 0,
-                              NULL, NULL, 0);
-    if ((!info.hWnd && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) || /* Win9x/Me */
-        (!pGetMenuInfo)) /* Win95/NT4 */
-    {
-        win_skip("Test would crash on Win9x/WinMe/NT4\n");
-        DestroyWindow(info.hWnd);
-        return;
-    }
-    info.id = SetTimer(info.hWnd, TIMER_ID, 0, tfunc_crash);
-    ok(info.id, "SetTimer failed\n");
-    Sleep(150);
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
 
     ok(DestroyWindow(info.hWnd), "failed to destroy window\n");
 }
@@ -9516,8 +9489,8 @@ static DWORD CALLBACK send_msg_thread_2(void *param)
 
         case WAIT_OBJECT_0 + EV_SENDMSG:
             trace("thread: sending message\n");
-            ok( SendNotifyMessageA(info->hwnd, WM_USER, 0, 0),
-                "SendNotifyMessageA failed error %u\n", GetLastError());
+            ret = SendNotifyMessageA(info->hwnd, WM_USER, 0, 0);
+            ok(ret, "SendNotifyMessageA failed error %u\n", GetLastError());
             SetEvent(info->hevent[EV_ACK]);
             break;
 
@@ -11236,7 +11209,7 @@ static void test_dialog_messages(void)
     cls.lpszClassName = "MyDialogClass";
     cls.hInstance = GetModuleHandle(0);
     /* need a cast since a dlgproc is used as a wndproc */
-    cls.lpfnWndProc = (WNDPROC)test_dlg_proc;
+    cls.lpfnWndProc = test_dlg_proc;
     if (!RegisterClass(&cls)) assert(0);
 
     hdlg = CreateDialogParam(0, "CLASS_TEST_DIALOG_2", 0, test_dlg_proc, 0);
@@ -11253,6 +11226,52 @@ static void test_dialog_messages(void)
     DestroyWindow(hdlg);
     flush_sequence();
 
+    UnregisterClass(cls.lpszClassName, cls.hInstance);
+}
+
+static void test_EndDialog(void)
+{
+    HWND hparent, hother, hactive, hdlg;
+    WNDCLASS cls;
+
+    hparent = CreateWindowExA(0, "TestParentClass", "Test parent",
+                              WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_DISABLED,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hparent != 0, "Failed to create parent window\n");
+
+    hother = CreateWindowExA(0, "TestParentClass", "Test parent 2",
+                              WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hother != 0, "Failed to create parent window\n");
+
+    ok(GetClassInfo(0, "#32770", &cls), "GetClassInfo failed\n");
+    cls.lpszClassName = "MyDialogClass";
+    cls.hInstance = GetModuleHandle(0);
+    /* need a cast since a dlgproc is used as a wndproc */
+    cls.lpfnWndProc = (WNDPROC)test_dlg_proc;
+    if (!RegisterClass(&cls)) assert(0);
+
+    flush_sequence();
+    SetForegroundWindow(hother);
+    hactive = GetForegroundWindow();
+    ok(hother == hactive, "Wrong window has focus (%p != %p)\n", hother, hactive);
+
+    /* create a dialog where the parent is disabled, this parent should still
+       receive the focus when the dialog exits (even though "normally" a
+       disabled window should not receive the focus) */
+    hdlg = CreateDialogParam(0, "CLASS_TEST_DIALOG_2", hparent, test_dlg_proc, 0);
+    ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+    SetForegroundWindow(hdlg);
+    hactive = GetForegroundWindow();
+    ok(hdlg == hactive, "Wrong window has focus (%p != %p)\n", hdlg, hactive);
+    EndDialog(hdlg, 0);
+    hactive = GetForegroundWindow();
+    ok(hparent == hactive, "Wrong window has focus (parent != active) (active: %p, parent: %p, dlg: %p, other: %p)\n", hactive, hparent, hdlg, hother);
+    DestroyWindow(hdlg);
+    flush_sequence();
+
+    DestroyWindow( hother );
+    DestroyWindow( hparent );
     UnregisterClass(cls.lpszClassName, cls.hInstance);
 }
 
@@ -13024,6 +13043,7 @@ static void test_keyflags(void)
     test_window = CreateWindowEx(0, "TestWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                            100, 100, 200, 200, 0, 0, 0, NULL);
 
+    flush_events();
     flush_sequence();
 
     /* keyup without a keydown */
@@ -13470,6 +13490,234 @@ end:
     flush_sequence();
 }
 
+
+static const struct message WmSetFocus_1[] = {
+    { HCBT_SETFOCUS, hook }, /* child */
+    { HCBT_ACTIVATE, hook }, /* parent */
+    { WM_QUERYNEWPALETTE, sent|wparam|lparam|parent|optional, 0, 0 },
+    { WM_WINDOWPOSCHANGING, sent|parent, 0, SWP_NOSIZE|SWP_NOMOVE },
+    { WM_ACTIVATEAPP, sent|wparam|parent, 1 },
+    { WM_NCACTIVATE, sent|parent },
+    { WM_GETTEXT, sent|defwinproc|parent|optional },
+    { WM_GETTEXT, sent|defwinproc|parent|optional },
+    { WM_ACTIVATE, sent|wparam|parent, 1 },
+    { HCBT_SETFOCUS, hook }, /* parent */
+    { WM_SETFOCUS, sent|defwinproc|parent },
+    { WM_KILLFOCUS, sent|parent },
+    { WM_SETFOCUS, sent },
+    { 0 }
+};
+static const struct message WmSetFocus_2[] = {
+    { HCBT_SETFOCUS, hook }, /* parent */
+    { WM_KILLFOCUS, sent },
+    { WM_SETFOCUS, sent|parent },
+    { 0 }
+};
+static const struct message WmSetFocus_3[] = {
+    { HCBT_SETFOCUS, hook }, /* child */
+    { 0 }
+};
+static const struct message WmSetFocus_4[] = {
+    { 0 }
+};
+
+static void test_SetFocus(void)
+{
+    HWND parent, old_parent, child, old_focus, old_active;
+    MSG msg;
+    struct wnd_event wnd_event;
+    HANDLE hthread;
+    DWORD ret, tid;
+
+    wnd_event.start_event = CreateEvent(NULL, 0, 0, NULL);
+    ok(wnd_event.start_event != 0, "CreateEvent error %d\n", GetLastError());
+    hthread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
+    ok(hthread != 0, "CreateThread error %d\n", GetLastError());
+    ret = WaitForSingleObject(wnd_event.start_event, INFINITE);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(wnd_event.start_event);
+
+    parent = CreateWindowEx(0, "TestParentClass", NULL, WS_OVERLAPPEDWINDOW,
+                            0, 0, 0, 0, 0, 0, 0, NULL);
+    ok(parent != 0, "failed to create parent window\n");
+    child = CreateWindowEx(0, "TestWindowClass", NULL, WS_CHILD,
+                           0, 0, 0, 0, parent, 0, 0, NULL);
+    ok(child != 0, "failed to create child window\n");
+
+    trace("parent %p, child %p, thread window %p\n", parent, child, wnd_event.hwnd);
+
+    SetFocus(0);
+    SetActiveWindow(0);
+
+    flush_events();
+    flush_sequence();
+
+    ok(GetActiveWindow() == 0, "expected active 0, got %p\n", GetActiveWindow());
+    ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+    log_all_parent_messages++;
+
+    old_focus = SetFocus(child);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmSetFocus_1, "SetFocus on a child window", TRUE);
+    ok(old_focus == parent, "expected old focus %p, got %p\n", parent, old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == child, "expected focus %p, got %p\n", child, GetFocus());
+
+    old_focus = SetFocus(parent);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmSetFocus_2, "SetFocus on a parent window", FALSE);
+    ok(old_focus == child, "expected old focus %p, got %p\n", child, old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_focus = SetFocus((HWND)0xdeadbeef);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE || broken(GetLastError() == 0xdeadbeef),
+       "expected ERROR_INVALID_WINDOW_HANDLE, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetFocus on an invalid window", FALSE);
+    ok(old_focus == 0, "expected old focus 0, got %p\n", old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_focus = SetFocus(GetDesktopWindow());
+    ok(GetLastError() == ERROR_ACCESS_DENIED /* Vista+ */ ||
+       broken(GetLastError() == 0xdeadbeef), "expected ERROR_ACCESS_DENIED, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetFocus on a desktop window", TRUE);
+    ok(old_focus == 0, "expected old focus 0, got %p\n", old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_focus = SetFocus(wnd_event.hwnd);
+    ok(GetLastError() == ERROR_ACCESS_DENIED /* Vista+ */ ||
+       broken(GetLastError() == 0xdeadbeef), "expected ERROR_ACCESS_DENIED, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetFocus on another thread window", TRUE);
+    ok(old_focus == 0, "expected old focus 0, got %p\n", old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_active = SetActiveWindow((HWND)0xdeadbeef);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE || broken(GetLastError() == 0xdeadbeef),
+       "expected ERROR_INVALID_WINDOW_HANDLE, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetActiveWindow on an invalid window", FALSE);
+    ok(old_active == 0, "expected old focus 0, got %p\n", old_active);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_active = SetActiveWindow(GetDesktopWindow());
+todo_wine
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetActiveWindow on a desktop window", TRUE);
+    ok(old_active == 0, "expected old focus 0, got %p\n", old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_active = SetActiveWindow(wnd_event.hwnd);
+todo_wine
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetActiveWindow on another thread window", TRUE);
+    ok(old_active == 0, "expected old focus 0, got %p\n", old_active);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, TRUE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+todo_wine {
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+}
+    flush_events();
+    flush_sequence();
+
+    old_focus = SetFocus(wnd_event.hwnd);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok(old_focus == wnd_event.hwnd, "expected old focus %p, got %p\n", wnd_event.hwnd, old_focus);
+    ok(GetActiveWindow() == wnd_event.hwnd, "expected active %p, got %p\n", wnd_event.hwnd, GetActiveWindow());
+    ok(GetFocus() == wnd_event.hwnd, "expected focus %p, got %p\n", wnd_event.hwnd, GetFocus());
+
+    old_focus = SetFocus(parent);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok(old_focus == parent, "expected old focus %p, got %p\n", parent, old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    flush_events();
+    flush_sequence();
+
+    old_active = SetActiveWindow(wnd_event.hwnd);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok(old_active == parent, "expected old focus %p, got %p\n", parent, old_active);
+    ok(GetActiveWindow() == wnd_event.hwnd, "expected active %p, got %p\n", wnd_event.hwnd, GetActiveWindow());
+    ok(GetFocus() == wnd_event.hwnd, "expected focus %p, got %p\n", wnd_event.hwnd, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    ret = AttachThreadInput(GetCurrentThreadId(), tid, FALSE);
+    ok(ret, "AttachThreadInput error %d\n", GetLastError());
+
+    ok(GetActiveWindow() == 0, "expected active 0, got %p\n", GetActiveWindow());
+    ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+    old_parent = SetParent(child, GetDesktopWindow());
+    ok(old_parent == parent, "expected old parent %p, got %p\n", parent, old_parent);
+
+    ok(GetActiveWindow() == 0, "expected active 0, got %p\n", GetActiveWindow());
+    ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+    old_focus = SetFocus(parent);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok(old_focus == parent, "expected old focus %p, got %p\n", parent, old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    flush_events();
+    flush_sequence();
+
+    SetLastError(0xdeadbeef);
+    old_focus = SetFocus(child);
+todo_wine
+    ok(GetLastError() == ERROR_INVALID_PARAMETER /* Vista+ */ ||
+       broken(GetLastError() == 0) /* XP */ ||
+       broken(GetLastError() == 0xdeadbeef), "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmSetFocus_3, "SetFocus on a child window", TRUE);
+    ok(old_focus == 0, "expected old focus 0, got %p\n", old_focus);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    SetLastError(0xdeadbeef);
+    old_active = SetActiveWindow(child);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    ok_sequence(WmEmptySeq, "SetActiveWindow on a child window", FALSE);
+    ok(old_active == parent, "expected old active %p, got %p\n", parent, old_active);
+    ok(GetActiveWindow() == parent, "expected active %p, got %p\n", parent, GetActiveWindow());
+    ok(GetFocus() == parent, "expected focus %p, got %p\n", parent, GetFocus());
+
+    log_all_parent_messages--;
+
+    DestroyWindow(child);
+    DestroyWindow(parent);
+
+    ret = PostMessage(wnd_event.hwnd, WM_QUIT, 0, 0);
+    ok(ret, "PostMessage(WM_QUIT) error %d\n", GetLastError());
+    ret = WaitForSingleObject(hthread, INFINITE);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(hthread);
+}
+
 START_TEST(msg)
 {
     char **test_argv;
@@ -13533,6 +13781,7 @@ START_TEST(msg)
     hEvent_hook = 0;
 #endif
 
+    test_SetFocus();
     test_SetParent();
     test_PostMessage();
     test_ShowWindow();
@@ -13572,6 +13821,7 @@ START_TEST(msg)
     test_SetWindowRgn();
     test_sys_menu();
     test_dialog_messages();
+    test_EndDialog();
     test_nullCallback();
     test_dbcs_wm_char();
     test_menu_messages();

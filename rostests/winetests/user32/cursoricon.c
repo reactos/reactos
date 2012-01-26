@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -185,7 +184,7 @@ typedef struct {
               0,                         /* biYPelsPerMeter */ \
               0,                         /* biClrUsed */ \
               0                          /* biClrImportant */ \
-        }, \
+        } \
         /* DIB data: left uninitialized */ \
     } \
 }
@@ -697,7 +696,7 @@ static void test_initial_cursor(void)
     ok(error == 0xdeadbeef, "Last error: 0x%08x\n", error);
 }
 
-static void test_icon_info_dbg(HICON hIcon, UINT exp_cx, UINT exp_cy, UINT exp_bpp, int line)
+static void test_icon_info_dbg(HICON hIcon, UINT exp_cx, UINT exp_cy, UINT exp_mask_cy, UINT exp_bpp, int line)
 {
     ICONINFO info;
     DWORD ret;
@@ -737,13 +736,13 @@ static void test_icon_info_dbg(HICON hIcon, UINT exp_cx, UINT exp_cy, UINT exp_b
 
         ok_(__FILE__, line)(bmMask.bmBitsPixel == 1, "bmMask.bmBitsPixel = %d\n", bmMask.bmBitsPixel);
         ok_(__FILE__, line)(bmMask.bmWidth == exp_cx, "bmMask.bmWidth = %d\n", bmMask.bmWidth);
-        ok_(__FILE__, line)(bmMask.bmHeight == exp_cy, "bmMask.bmHeight = %d\n", bmMask.bmHeight);
+        ok_(__FILE__, line)(bmMask.bmHeight == exp_mask_cy, "bmMask.bmHeight = %d\n", bmMask.bmHeight);
     }
     else
     {
         ok_(__FILE__, line)(bmMask.bmBitsPixel == 1, "bmMask.bmBitsPixel = %d\n", bmMask.bmBitsPixel);
         ok_(__FILE__, line)(bmMask.bmWidth == exp_cx, "bmMask.bmWidth = %d\n", bmMask.bmWidth);
-        ok_(__FILE__, line)(bmMask.bmHeight == exp_cy * 2, "bmMask.bmHeight = %d\n", bmMask.bmHeight);
+        ok_(__FILE__, line)(bmMask.bmHeight == exp_mask_cy, "bmMask.bmHeight = %d\n", bmMask.bmHeight);
     }
     if (pGetIconInfoExA)
     {
@@ -778,7 +777,7 @@ static void test_icon_info_dbg(HICON hIcon, UINT exp_cx, UINT exp_cy, UINT exp_b
     }
 }
 
-#define test_icon_info(a,b,c,d) test_icon_info_dbg((a),(b),(c),(d),__LINE__)
+#define test_icon_info(a,b,c,d,e) test_icon_info_dbg((a),(b),(c),(d),(e),__LINE__)
 
 static void test_CreateIcon(void)
 {
@@ -790,6 +789,7 @@ static void test_CreateIcon(void)
     HDC hdc;
     void *bits;
     UINT display_bpp;
+    int i;
 
     hdc = GetDC(0);
     display_bpp = GetDeviceCaps(hdc, BITSPIXEL);
@@ -801,12 +801,12 @@ static void test_CreateIcon(void)
 
     hIcon = CreateIcon(0, 16, 16, 1, 1, bmp_bits, bmp_bits);
     ok(hIcon != 0, "CreateIcon failed\n");
-    test_icon_info(hIcon, 16, 16, 1);
+    test_icon_info(hIcon, 16, 16, 32, 1);
     DestroyIcon(hIcon);
 
     hIcon = CreateIcon(0, 16, 16, 1, display_bpp, bmp_bits, bmp_bits);
     ok(hIcon != 0, "CreateIcon failed\n");
-    test_icon_info(hIcon, 16, 16, display_bpp);
+    test_icon_info(hIcon, 16, 16, 16, display_bpp);
     DestroyIcon(hIcon);
 
     hbmMask = CreateBitmap(16, 16, 1, 1, bmp_bits);
@@ -841,7 +841,7 @@ static void test_CreateIcon(void)
     info.hbmColor = hbmColor;
     hIcon = CreateIconIndirect(&info);
     ok(hIcon != 0, "CreateIconIndirect failed\n");
-    test_icon_info(hIcon, 16, 16, display_bpp);
+    test_icon_info(hIcon, 16, 16, 16, display_bpp);
     DestroyIcon(hIcon);
 
     DeleteObject(hbmMask);
@@ -858,11 +858,27 @@ static void test_CreateIcon(void)
     SetLastError(0xdeadbeaf);
     hIcon = CreateIconIndirect(&info);
     ok(hIcon != 0, "CreateIconIndirect failed\n");
-    test_icon_info(hIcon, 16, 16, 1);
+    test_icon_info(hIcon, 16, 16, 32, 1);
     DestroyIcon(hIcon);
-
     DeleteObject(hbmMask);
-    DeleteObject(hbmColor);
+
+    for (i = 0; i <= 4; i++)
+    {
+        hbmMask = CreateBitmap(1, i, 1, 1, bmp_bits);
+        ok(hbmMask != 0, "CreateBitmap failed\n");
+
+        info.fIcon = TRUE;
+        info.xHotspot = 0;
+        info.yHotspot = 0;
+        info.hbmMask = hbmMask;
+        info.hbmColor = 0;
+        SetLastError(0xdeadbeaf);
+        hIcon = CreateIconIndirect(&info);
+        ok(hIcon != 0, "CreateIconIndirect failed\n");
+        test_icon_info(hIcon, 1, i / 2, max(i,1), 1);
+        DestroyIcon(hIcon);
+        DeleteObject(hbmMask);
+    }
 
     /* test creating an icon from a DIB section */
 
@@ -891,7 +907,7 @@ static void test_CreateIcon(void)
     SetLastError(0xdeadbeaf);
     hIcon = CreateIconIndirect(&info);
     ok(hIcon != 0, "CreateIconIndirect failed\n");
-    test_icon_info(hIcon, 32, 32, 8);
+    test_icon_info(hIcon, 32, 32, 32, 8);
     DestroyIcon(hIcon);
     DeleteObject(hbmColor);
 
@@ -909,7 +925,7 @@ static void test_CreateIcon(void)
     SetLastError(0xdeadbeaf);
     hIcon = CreateIconIndirect(&info);
     ok(hIcon != 0, "CreateIconIndirect failed\n");
-    test_icon_info(hIcon, 32, 32, 8);
+    test_icon_info(hIcon, 32, 32, 32, 8);
     DestroyIcon(hIcon);
     DeleteObject(hbmColor);
 
@@ -927,7 +943,7 @@ static void test_CreateIcon(void)
     SetLastError(0xdeadbeaf);
     hIcon = CreateIconIndirect(&info);
     ok(hIcon != 0, "CreateIconIndirect failed\n");
-    test_icon_info(hIcon, 32, 32, 8);
+    test_icon_info(hIcon, 32, 32, 32, 8);
     DestroyIcon(hIcon);
 
     DeleteObject(hbmMask);

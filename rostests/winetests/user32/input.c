@@ -1540,7 +1540,7 @@ static void test_key_map(void)
 
 static void test_ToUnicode(void)
 {
-    WCHAR wStr[2];
+    WCHAR wStr[4];
     BYTE state[256];
     const BYTE SC_RETURN = 0x1c, SC_TAB = 0x0f;
     const BYTE HIGHEST_BIT = 0x80;
@@ -1548,8 +1548,9 @@ static void test_ToUnicode(void)
     for(i=0; i<256; i++)
         state[i]=0;
 
+    wStr[1] = 0xAA;
     SetLastError(0xdeadbeef);
-    ret = ToUnicode(VK_RETURN, SC_RETURN, state, wStr, 2, 0);
+    ret = ToUnicode(VK_RETURN, SC_RETURN, state, wStr, 4, 0);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("ToUnicode is not implemented\n");
@@ -1558,7 +1559,11 @@ static void test_ToUnicode(void)
 
     ok(ret == 1, "ToUnicode for Return key didn't return 1 (was %i)\n", ret);
     if(ret == 1)
+    {
         ok(wStr[0]=='\r', "ToUnicode for CTRL + Return was %i (expected 13)\n", wStr[0]);
+        ok(wStr[1]==0 || broken(wStr[1]!=0) /* nt4 */,
+           "ToUnicode didn't null-terminate the buffer when there was room.\n");
+    }
     state[VK_CONTROL] |= HIGHEST_BIT;
     state[VK_LCONTROL] |= HIGHEST_BIT;
 

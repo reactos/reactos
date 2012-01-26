@@ -45,6 +45,16 @@ STRINGTABLE
   65534 "Test high id"
 }
 
+/* Test dialog with a mixed style WS_CHILD | WS_POPUP control */
+TEST_DLG_CHILD_POPUP DIALOG 0, 0, 60, 30
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Test dialog with mixed style controls"
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "bump7",7,"static",WS_CHILD|WS_POPUP|WS_BORDER,0,0,40,10,WS_EX_TRANSPARENT
+  CONTROL "bump8",8,"static",WS_POPUP,0,10,40,10,WS_EX_TRANSPARENT
+}
+
 TEST_DIALOG DIALOG 0, 0, 60, 30
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 CAPTION "Test dialog"
@@ -87,6 +97,14 @@ CAPTION "Test dialog"
 FONT 8, "MS Shell Dlg"
 {
   EDITTEXT                200,4,4,50,14
+}
+
+FOCUS_TEST_DIALOG_2 DIALOG 0, 0, 60, 30
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Test dialog"
+FONT 8, "MS Shell Dlg"
+{
+  LTEXT "Hello world",    200,4,4,50,14
 }
 
 IDD_DIALOG DIALOG  0, 0, 186, 95

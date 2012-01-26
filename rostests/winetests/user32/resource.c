@@ -90,7 +90,7 @@ static void test_LoadStringA (void)
                                   {sizeof str, sizeof str - 1},
                                   {sizeof str - 1, sizeof str - 2}};
     unsigned int i;
-    int ret;
+    int ret, ret2;
 
     assert (sizeof str < sizeof buf);
     for (i = 0; i < sizeof tests / sizeof tests[0]; i++) {
@@ -110,17 +110,17 @@ static void test_LoadStringA (void)
 
     ret = LoadStringA(hInst, 1, buf, sizeof(buf) );
     ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 65534, buf, sizeof(buf) );
     ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 0, buf, 0);
     ok( ret == -1 || broken(ret == 0),
