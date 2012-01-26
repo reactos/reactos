@@ -204,22 +204,21 @@ static void test_dtm_set_format(void)
 
 static void test_mccolor_types(HWND hWndDateTime, int mccolor_type, const char* mccolor_name)
 {
-    LRESULT r;
-    COLORREF theColor, prevColor;
+    COLORREF theColor, prevColor, crColor;
 
     theColor=RGB(0,0,0);
-    r = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
-    ok(r != -1, "%s: Set RGB(0,0,0): Expected COLORREF of previous value, got %ld\n", mccolor_name, r);
+    crColor = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
+    ok(crColor != ~0u, "%s: Set RGB(0,0,0): Expected COLORREF of previous value, got %d\n", mccolor_name, crColor);
     prevColor=theColor;
     theColor=RGB(255,255,255);
-    r = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
-    ok(r==prevColor, "%s: Set RGB(255,255,255): Expected COLORREF of previous value, got %ld\n", mccolor_name, r);
+    crColor = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
+    ok(crColor==prevColor, "%s: Set RGB(255,255,255): Expected COLORREF of previous value, got %d\n", mccolor_name, crColor);
     prevColor=theColor;
     theColor=RGB(100,180,220);
-    r = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
-    ok(r==prevColor, "%s: Set RGB(100,180,220): Expected COLORREF of previous value, got %ld\n", mccolor_name, r);
-    r = SendMessage(hWndDateTime, DTM_GETMCCOLOR, mccolor_type, 0);
-    ok(r==theColor, "%s: GETMCCOLOR: Expected %d, got %ld\n", mccolor_name, theColor, r);
+    crColor = SendMessage(hWndDateTime, DTM_SETMCCOLOR, mccolor_type, theColor);
+    ok(crColor==prevColor, "%s: Set RGB(100,180,220): Expected COLORREF of previous value, got %d\n", mccolor_name, crColor);
+    crColor = SendMessage(hWndDateTime, DTM_GETMCCOLOR, mccolor_type, 0);
+    ok(crColor==theColor, "%s: GETMCCOLOR: Expected %d, got %d\n", mccolor_name, theColor, crColor);
 }
 
 static void test_dtm_set_and_get_mccolor(void)
@@ -600,6 +599,15 @@ static void test_dtm_set_and_get_system_time(void)
     r = SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, (LPARAM)&getSt);
     expect(GDT_VALID, r);
     expect_systime(&ref, &getSt);
+    /* day invalid for current month */
+    st = ref;
+    st.wDay = 30;
+    st.wMonth = 2;
+    r = SendMessage(hWnd, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
+    expect(0, r);
+    r = SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, (LPARAM)&getSt);
+    expect(GDT_VALID, r);
+    expect_systime(&ref, &getSt);
     /* day of week isn't validated */
     st = ref;
     st.wDayOfWeek = 10;
@@ -659,7 +667,7 @@ static void test_dtm_set_and_get_system_time(void)
 static void test_wm_set_get_text(void)
 {
     static const CHAR a_str[] = "a";
-    char buff[16], time[16];
+    CHAR buff[16], time[16], caltype[3];
     HWND hWnd;
     LRESULT ret;
 
@@ -673,10 +681,23 @@ static void test_wm_set_get_text(void)
 
     buff[0] = 0;
     ret = SendMessage(hWnd, WM_GETTEXT, sizeof(buff), (LPARAM)buff);
-    ok(strcmp(buff, a_str) != 0, "Expected text not to change, got %s\n", buff);
+    ok(strcmp(buff, a_str) != 0, "Expected text to change, got %s\n", buff);
+    ok(ret != 0, "Expected non-zero return value\n");
 
-    GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, time, sizeof(time));
-    ok(!strcmp(buff, time), "Expected %s, got %s\n", time, buff);
+    SetLastError(0xdeadbeef);
+    ret = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ICALENDARTYPE, caltype, 3);
+    if (ret == 0)
+        skip("Must know local calendar type (%x)\n", GetLastError());
+    else if (atoi(caltype) != CAL_GREGORIAN)
+        skip("DateTimePicker Control only supports Gregorian calendar (type: %s)\n", caltype);
+    else {
+        SetLastError(0xdeadbeef);
+        ret = GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, time, sizeof(time));
+        if (ret == 0)
+            skip("GetDateFormat failed, returned %ld, error %d\n", ret, GetLastError());
+        else
+            ok(!strcmp(buff, time), "Expected %s, got %s\n", time, buff);
+    }
 
     DestroyWindow(hWnd);
 }

@@ -40,8 +40,8 @@ static WNDPROC g_status_wndproc;
 static RECT g_rcCreated;
 static HWND g_hMainWnd;
 static int g_wmsize_count = 0;
-static DWORD g_ysize;
-static DWORD g_dpisize;
+static INT g_ysize;
+static INT g_dpisize;
 static int g_wmdrawitm_ctr;
 static WNDPROC g_wndproc_saved;
 
@@ -120,7 +120,7 @@ static int CALLBACK check_height_font_enumproc(ENUMLOGFONTEX *enumlf, NEWTEXTMET
     static const int sizes[] = { 6,  7,  8,  9, 10, 11, 12, 13, 15, 16,
                                 20, 22, 28, 36, 48, 72};
     DWORD i;
-    DWORD y;
+    INT y;
     LPSTR facename = (CHAR *)enumlf->elfFullName;
 
     /* on win9x, enumlf->elfFullName is only valid for truetype fonts */
@@ -260,8 +260,9 @@ static void test_status_control(void)
     HICON hIcon;
     char ch;
     char chstr[10] = "Inval id";
+    COLORREF crColor = RGB(0,0,0);
 
-    hWndStatus = create_status_control(WS_VISIBLE, 0);
+    hWndStatus = create_status_control(WS_VISIBLE | SBT_TOOLTIPS, 0);
 
     /* Divide into parts and set text */
     r = SendMessage(hWndStatus, SB_SETPARTS, 3, (LPARAM)nParts);
@@ -343,14 +344,14 @@ static void test_status_control(void)
     }
 
     /* Set background color */
-    r = SendMessage(hWndStatus, SB_SETBKCOLOR , 0, RGB(255,0,0));
-    ok(r == CLR_DEFAULT ||
-       broken(r == 0), /* win95 */
-       "Expected %d, got %d\n", CLR_DEFAULT, r);
-    r = SendMessage(hWndStatus, SB_SETBKCOLOR , 0, CLR_DEFAULT);
-    ok(r == RGB(255,0,0) ||
-       broken(r == 0), /* win95 */
-       "Expected %d, got %d\n", RGB(255,0,0), r);
+    crColor = SendMessage(hWndStatus, SB_SETBKCOLOR , 0, RGB(255,0,0));
+    ok(crColor == CLR_DEFAULT ||
+       broken(crColor == RGB(0,0,0)), /* win95 */
+       "Expected 0x%.8x, got 0x%.8x\n", CLR_DEFAULT, crColor);
+    crColor = SendMessage(hWndStatus, SB_SETBKCOLOR , 0, CLR_DEFAULT);
+    ok(crColor == RGB(255,0,0) ||
+       broken(crColor == RGB(0,0,0)), /* win95 */
+       "Expected 0x%.8x, got 0x%.8x\n", RGB(255,0,0), crColor);
 
     /* Add an icon to the status bar */
     hIcon = LoadIcon(NULL, IDI_QUESTION);
@@ -369,6 +370,7 @@ static void test_status_control(void)
 
     /* Set the Unicode format */
     r = SendMessage(hWndStatus, SB_SETUNICODEFORMAT, FALSE, 0);
+    expect(FALSE,r);
     r = SendMessage(hWndStatus, SB_GETUNICODEFORMAT, 0, 0);
     expect(FALSE,r);
     r = SendMessage(hWndStatus, SB_SETUNICODEFORMAT, TRUE, 0);
@@ -381,6 +383,12 @@ static void test_status_control(void)
     /* Reset number of parts */
     r = SendMessage(hWndStatus, SB_SETPARTS, 2, (LPARAM)nParts);
     expect(TRUE,r);
+    r = SendMessage(hWndStatus, SB_GETPARTS, 0, 0);
+    ok(r == 2, "Expected 2, got %d\n", r);
+    r = SendMessage(hWndStatus, SB_SETPARTS, 0, 0);
+    expect(FALSE,r);
+    r = SendMessage(hWndStatus, SB_GETPARTS, 0, 0);
+    ok(r == 2, "Expected 2, got %d\n", r);
 
     /* Set the minimum height and get rectangle information again */
     SendMessage(hWndStatus, SB_SETMINHEIGHT, 50, 0);
@@ -399,15 +407,12 @@ static void test_status_control(void)
     expect(FALSE,r);
 
     /* Set the ToolTip text */
-    todo_wine
-    {
-        SendMessage(hWndStatus, SB_SETTIPTEXT, 0,(LPARAM) "Tooltip Text");
-        lstrcpyA(charArray, "apple");
-        SendMessage(hWndStatus, SB_GETTIPTEXT, MAKEWPARAM (0, 20),(LPARAM) charArray);
-        ok(strcmp(charArray,"Tooltip Text") == 0 ||
-           broken(!strcmp(charArray, "apple")), /* win95 */
-           "Expected Tooltip Text, got %s\n", charArray);
-    }
+    SendMessage(hWndStatus, SB_SETTIPTEXT, 0,(LPARAM) "Tooltip Text");
+    lstrcpyA(charArray, "apple");
+    SendMessage(hWndStatus, SB_GETTIPTEXT, MAKEWPARAM (0, 20),(LPARAM) charArray);
+    ok(strcmp(charArray,"Tooltip Text") == 0 ||
+        broken(!strcmp(charArray, "apple")), /* win95 */
+        "Expected Tooltip Text, got %s\n", charArray);
 
     /* Make simple */
     SendMessage(hWndStatus, SB_SIMPLE, TRUE, 0);
@@ -455,7 +460,7 @@ static void test_status_ownerdraw(void)
     r = SendMessage(hWndStatus, SB_SETTEXT, SBT_OWNERDRAW, (LPARAM)statustext);
     ok( r == TRUE, "Sendmessage returned %d, expected 1\n", r);
     ok( 1 == g_wmdrawitm_ctr, "got %d drawitem messages expected 1\n", g_wmdrawitm_ctr);
-    /* ;and again */
+    /* and again */
     g_wmdrawitm_ctr = 0;
     r = SendMessage(hWndStatus, SB_SETTEXT, SBT_OWNERDRAW, (LPARAM)statustext);
     ok( r == TRUE, "Sendmessage returned %d, expected 1\n", r);

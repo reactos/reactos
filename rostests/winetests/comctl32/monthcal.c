@@ -28,12 +28,14 @@
 #include "commctrl.h"
 
 #include "wine/test.h"
+#include "v6util.h"
 #include <assert.h>
 #include <windows.h>
 #include "msg.h"
 
 #define expect(expected, got) ok(expected == got, "Expected %d, got %d\n", expected, got);
 #define expect_hex(expected, got) ok(expected == got, "Expected %x, got %x\n", expected, got);
+#define expect_d(expected, got) ok(abs((expected) - (got)) <= 2, "Expected %d, got %d\n", expected, got);
 
 #define NUM_MSG_SEQUENCES   2
 #define PARENT_SEQ_INDEX    0
@@ -80,45 +82,6 @@ static const struct message create_monthcal_multi_sel_style_seq[] = {
     { WM_QUERYUISTATE, sent|optional },
     { WM_GETFONT, sent },
     { WM_PARENTNOTIFY, sent },
-    { 0 }
-};
-
-static const struct message monthcal_color_seq[] = {
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_BACKGROUND, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_BACKGROUND, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_BACKGROUND, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_BACKGROUND, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_BACKGROUND, 0},
-
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_MONTHBK, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_MONTHBK, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_MONTHBK, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_MONTHBK, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_MONTHBK, 0},
-
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TEXT, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TEXT, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TEXT, 0},
-
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLEBK, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TITLEBK, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLEBK, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TITLEBK, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLEBK, 0},
-
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLETEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TITLETEXT, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLETEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TITLETEXT, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TITLETEXT, 0},
-
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TRAILINGTEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TRAILINGTEXT, RGB(0,0,0)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TRAILINGTEXT, 0},
-    { MCM_SETCOLOR, sent|wparam|lparam, MCSC_TRAILINGTEXT, RGB(255,255,255)},
-    { MCM_GETCOLOR, sent|wparam|lparam, MCSC_TRAILINGTEXT, 0},
     { 0 }
 };
 
@@ -287,26 +250,6 @@ static const struct message destroy_monthcal_multi_sel_style_seq[] = {
     { WM_SHOWWINDOW, sent|wparam|lparam, 0, 0},
     { WM_WINDOWPOSCHANGING, sent|wparam, 0},
     { WM_WINDOWPOSCHANGED, sent|wparam, 0},
-    { WM_DESTROY, sent|wparam|lparam, 0, 0},
-    { WM_NCDESTROY, sent|wparam|lparam, 0, 0},
-    { 0 }
-};
-
-/* expected message sequence for parent window*/
-static const struct message destroy_parent_seq[] = {
-    { 0x0090, sent|optional }, /* Vista */
-    { WM_WINDOWPOSCHANGING, sent|wparam, 0},
-    { WM_WINDOWPOSCHANGED, sent|wparam, 0},
-    { WM_IME_SETCONTEXT, sent|wparam|optional, 0},
-    { WM_IME_NOTIFY, sent|wparam|lparam|defwinproc|optional, 1, 0},
-    { WM_NCACTIVATE, sent|wparam|optional, 0},
-    { WM_ACTIVATE, sent|wparam|optional, 0},
-    { WM_NCACTIVATE, sent|wparam|lparam|optional, 0, 0},
-    { WM_ACTIVATE, sent|wparam|lparam|optional, 0, 0},
-    { WM_ACTIVATEAPP, sent|wparam|optional, 0},
-    { WM_KILLFOCUS, sent|wparam|lparam|optional, 0, 0},
-    { WM_IME_SETCONTEXT, sent|wparam|optional, 0},
-    { WM_IME_NOTIFY, sent|wparam|lparam|defwinproc|optional, 1, 0},
     { WM_DESTROY, sent|wparam|lparam, 0, 0},
     { WM_NCDESTROY, sent|wparam|lparam, 0, 0},
     { 0 }
@@ -523,6 +466,29 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
+    if (message == WM_NOTIFY)
+    {
+        NMHDR *hdr = (NMHDR*)lParam;
+        switch (hdr->code)
+        {
+          case MCN_GETDAYSTATE:
+          {
+            NMDAYSTATE *nmstate = (NMDAYSTATE*)lParam;
+            static MONTHDAYSTATE months[14] = { 0 };
+
+            ok(nmstate->cDayState > 0, "got %d\n", nmstate->cDayState);
+            ok(nmstate->cDayState <= 14, "got %d\n", nmstate->cDayState);
+            ok(nmstate->prgDayState != NULL, "got %p\n", nmstate->prgDayState);
+
+            nmstate->prgDayState = months;
+
+            return TRUE;
+          }
+          default:
+            break;
+        }
+    }
+
     defwndproc_counter++;
     ret = DefWindowProcA(hwnd, message, wParam, lParam);
     defwndproc_counter--;
@@ -629,82 +595,83 @@ static HWND create_monthcal_control(DWORD style)
 
 /* Setter and Getters Tests */
 
-static void test_monthcal_color(void)
+static void test_color(void)
 {
-    int res, temp;
+    COLORREF color, prev;
     HWND hwnd;
 
     hwnd = create_monthcal_control(0);
 
-    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    /* invalid color index */
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT + 1, 0);
+    expect(~0u, color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TRAILINGTEXT + 1, RGB(255,255,255));
+    expect(~0u, prev);
 
-    /* Setter and Getters for color*/
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
-    expect(RGB(255,255,255), temp);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_BACKGROUND, 0);
+    expect(RGB(255,255,255), color);
 
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_MONTHBK, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_MONTHBK, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
-    expect(RGB(255,255,255), temp);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_MONTHBK, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_MONTHBK, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_MONTHBK, 0);
+    expect(RGB(255,255,255), color);
 
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TEXT, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TEXT, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
-    expect(RGB(255,255,255), temp);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TEXT, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TEXT, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TEXT, 0);
+    expect(RGB(255,255,255), color);
 
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLEBK, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLEBK, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
-    expect(RGB(255,255,255), temp);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLEBK, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLEBK, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLEBK, 0);
+    expect(RGB(255,255,255), color);
 
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLETEXT, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLETEXT, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
-    expect(RGB(255,255,255), temp);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLETEXT, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TITLETEXT, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TITLETEXT, 0);
+    expect(RGB(255,255,255), color);
 
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TRAILINGTEXT, RGB(0,0,0));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
-    expect(RGB(0,0,0), temp);
-    res = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TRAILINGTEXT, RGB(255,255,255));
-    expect(temp, res);
-    temp = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
-    expect(RGB(255,255,255), temp);
-
-    ok_sequence(sequences, MONTHCAL_SEQ_INDEX, monthcal_color_seq, "monthcal color", FALSE);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TRAILINGTEXT, RGB(0,0,0));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
+    expect(RGB(0,0,0), color);
+    prev = SendMessage(hwnd, MCM_SETCOLOR, MCSC_TRAILINGTEXT, RGB(255,255,255));
+    expect(color, prev);
+    color = SendMessage(hwnd, MCM_GETCOLOR, MCSC_TRAILINGTEXT, 0);
+    expect(RGB(255,255,255), color);
 
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_currdate(void)
+static void test_currdate(void)
 {
     SYSTEMTIME st_original, st_new, st_test;
     int res;
@@ -831,15 +798,43 @@ static void test_monthcal_currdate(void)
     res = SendMessage(hwnd, MCM_SETCURSEL, 0, (LPARAM)&st_new);
     expect(1, res);
 
+    /* set with invalid day of week */
+    memset(&st_test, 0, sizeof(st_test));
+    st_test.wYear = 2009;
+    st_test.wDay  = 7;
+    st_test.wMonth = 10;
+    st_test.wDayOfWeek = 100;
+    res = SendMessage(hwnd, MCM_SETCURSEL, 0, (LPARAM)&st_test);
+    expect(1, res);
+
+    memset(&st_test, 0, sizeof(st_test));
+    res = SendMessage(hwnd, MCM_GETCURSEL, 0, (LPARAM)&st_test);
+    expect(1, res);
+    expect(2009, st_test.wYear);
+    expect(7, st_test.wDay);
+    expect(10, st_test.wMonth);
+    expect(3, st_test.wDayOfWeek);
+
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_firstDay(void)
+static void test_firstDay(void)
 {
     int res, fday, i, prev;
-    CHAR b[128];
+    CHAR b[128], caltype[3];
     LCID lcid = LOCALE_USER_DEFAULT;
     HWND hwnd;
+    LRESULT ret;
+
+    SetLastError(0xdeadbeef);
+    ret = GetLocaleInfoA(lcid, LOCALE_ICALENDARTYPE, caltype, 3);
+    if (ret == 0) {
+        skip("Must know local calendar type (%x)\n", GetLastError());
+        return;
+    } else if (atoi(caltype) != CAL_GREGORIAN) {
+        skip("MonthCalendar Control only supports Gregorian calendar (type: %s)\n", caltype);
+        return;
+    }
 
     hwnd = create_monthcal_control(0);
 
@@ -881,7 +876,7 @@ static void test_monthcal_firstDay(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_unicode(void)
+static void test_unicode(void)
 {
     int res, temp;
     HWND hwnd;
@@ -924,7 +919,7 @@ static void test_monthcal_unicode(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_hittest(void)
+static void test_hittest(void)
 {
     typedef struct hittest_test
     {
@@ -965,11 +960,11 @@ static void test_monthcal_hittest(void)
     res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
     expect(0, mchit.pt.x);
     expect(0, mchit.pt.y);
-    expect(-1, res);
+    expect(~0u, res);
     expect(0, mchit.uHit);
     /* test with invalid pointer */
     res = SendMessage(hwnd, MCM_HITTEST, 0, 0);
-    expect(-1, res);
+    expect(~0u, res);
 
     /* resize control to display single Calendar */
     res = SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r);
@@ -1175,7 +1170,7 @@ static void test_monthcal_hittest(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_todaylink(void)
+static void test_todaylink(void)
 {
     MCHITTESTINFO mchit;
     SYSTEMTIME st_test, st_new;
@@ -1188,6 +1183,7 @@ static void test_monthcal_todaylink(void)
     hwnd = create_monthcal_control(0);
 
     res = SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r);
+    expect(1, res);
     MoveWindow(hwnd, 0, 0, r.right, r.bottom, FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -1206,7 +1202,8 @@ static void test_monthcal_todaylink(void)
     st_test.wMonth = 1;
     st_test.wYear = 2005;
 
-    SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    res = SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    expect(0, res);
 
     memset(&st_new, 0, sizeof(st_new));
     res = SendMessage(hwnd, MCM_GETTODAY, 0, (LPARAM)&st_new);
@@ -1230,7 +1227,7 @@ static void test_monthcal_todaylink(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_today(void)
+static void test_today(void)
 {
     SYSTEMTIME st_test, st_new;
     int res;
@@ -1250,7 +1247,8 @@ static void test_monthcal_today(void)
     st_new.wDay = 27;
     st_new.wMonth = 27;
 
-    SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    res = SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    expect(0, res);
 
     res = SendMessage(hwnd, MCM_GETTODAY, 0, (LPARAM)&st_new);
     expect(1, res);
@@ -1267,7 +1265,8 @@ static void test_monthcal_today(void)
     st_test.wDay = 0;
     st_test.wMonth = 0;
 
-    SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    res = SendMessage(hwnd, MCM_SETTODAY, 0, (LPARAM)&st_test);
+    expect(0, res);
 
     res = SendMessage(hwnd, MCM_GETTODAY, 0, (LPARAM)&st_new);
     expect(1, res);
@@ -1285,7 +1284,7 @@ static void test_monthcal_today(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_scroll(void)
+static void test_scroll(void)
 {
     int res;
     HWND hwnd;
@@ -1323,7 +1322,7 @@ static void test_monthcal_scroll(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_monthrange(void)
+static void test_monthrange(void)
 {
     int res;
     SYSTEMTIME st_visible[2], st_daystate[2], st;
@@ -1360,33 +1359,31 @@ static void test_monthcal_monthrange(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     res = SendMessage(hwnd, MCM_GETMONTHRANGE, GMR_VISIBLE, (LPARAM)st_visible);
-    todo_wine {
-        expect(2, res);
-    }
+    expect(2, res);
     expect(2000, st_visible[0].wYear);
     expect(11, st_visible[0].wMonth);
     expect(1, st_visible[0].wDay);
     expect(2000, st_visible[1].wYear);
+    expect(12, st_visible[1].wMonth);
+    expect(31, st_visible[1].wDay);
 
-    todo_wine {
-        expect(12, st_visible[1].wMonth);
-        expect(31, st_visible[1].wDay);
-    }
     res = SendMessage(hwnd, MCM_GETMONTHRANGE, GMR_DAYSTATE, (LPARAM)st_daystate);
-    todo_wine {
-        expect(4, res);
-    }
+    expect(4, res);
     expect(2000, st_daystate[0].wYear);
     expect(10, st_daystate[0].wMonth);
     expect(29, st_daystate[0].wDay);
-
-    todo_wine {
-        expect(2001, st_daystate[1].wYear);
-        expect(1, st_daystate[1].wMonth);
-        expect(6, st_daystate[1].wDay);
-    }
+    expect(2001, st_daystate[1].wYear);
+    expect(1, st_daystate[1].wMonth);
+    expect(6, st_daystate[1].wDay);
 
     ok_sequence(sequences, MONTHCAL_SEQ_INDEX, monthcal_monthrange_seq, "monthcal monthrange", FALSE);
+
+    /* with null date array parameter */
+    res = SendMessage(hwnd, MCM_GETMONTHRANGE, GMR_VISIBLE, 0);
+    expect(2, res);
+
+    res = SendMessage(hwnd, MCM_GETMONTHRANGE, GMR_DAYSTATE, 0);
+    expect(4, res);
 
     /* resize control to display single Calendar */
     MoveWindow(hwnd, 0, 0, r.right, r.bottom, FALSE);
@@ -1416,7 +1413,7 @@ static void test_monthcal_monthrange(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_maxselday(void)
+static void test_maxselday(void)
 {
     int res;
     HWND hwnd;
@@ -1482,7 +1479,7 @@ static void test_monthcal_maxselday(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_size(void)
+static void test_size(void)
 {
     int res;
     RECT r1, r2;
@@ -1518,7 +1515,7 @@ static void test_monthcal_size(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_create(void)
+static void test_create(void)
 {
     HWND hwnd;
 
@@ -1535,7 +1532,7 @@ static void test_monthcal_create(void)
     DestroyWindow(hwnd);
 }
 
-static void test_monthcal_destroy(void)
+static void test_destroy(void)
 {
     HWND hwnd;
 
@@ -1552,7 +1549,7 @@ static void test_monthcal_destroy(void)
     ok_sequence(sequences, MONTHCAL_SEQ_INDEX, destroy_monthcal_multi_sel_style_seq, "Destroy monthcal (multi sel style)", FALSE);
 }
 
-static void test_monthcal_selrange(void)
+static void test_selrange(void)
 {
     HWND hwnd;
     SYSTEMTIME st, range[2], range2[2];
@@ -1680,11 +1677,256 @@ static void test_killfocus(void)
     DestroyWindow(hwnd);
 }
 
+static void test_hittest_v6(void)
+{
+    MCHITTESTINFO mchit;
+    DWORD ret;
+    HWND hwnd;
+    RECT r;
+
+    hwnd = create_monthcal_control(0);
+    SendMessage(hwnd, MCM_SETCALENDARBORDER, TRUE, 0);
+
+    SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r);
+    /* reserving some area around calendar */
+    MoveWindow(hwnd, 0, 0, r.right * 3 / 2, r.bottom * 3 / 2, FALSE);
+    mchit.cbSize = sizeof(MCHITTESTINFO);
+    mchit.pt.x = mchit.pt.y = 0;
+    mchit.iOffset = -1;
+    mchit.iRow = -1;
+    mchit.iCol = -1;
+    ret = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+    if (ret == ~0u)
+    {
+        win_skip("Only MCHITTESTINFO_V1 supported\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+    todo_wine expect_hex(MCHT_NOWHERE, ret);
+    expect(-1, mchit.iOffset);
+    expect(-1, mchit.iRow);
+    expect(-1, mchit.iCol);
+
+    MoveWindow(hwnd, 0, 0, r.right, r.bottom, FALSE);
+    mchit.pt.x = r.right / 2;
+    mchit.pt.y = r.bottom / 2;
+    mchit.iOffset = -1;
+    ret = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+    expect_hex(MCHT_CALENDARDATE, ret);
+    expect(0, mchit.iOffset);
+
+    /* over day area */
+    mchit.pt.x = r.right / (7*2);
+    mchit.pt.y = r.bottom / 2;
+    mchit.iOffset = -1;
+    mchit.iCol = mchit.iRow = -1;
+    mchit.uHit = 0;
+    mchit.rc.left = mchit.rc.right = mchit.rc.top = mchit.rc.bottom = -1;
+    ret = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+    expect_hex(MCHT_CALENDARDATE, ret);
+    expect_hex(MCHT_CALENDARDATE, mchit.uHit);
+    expect(0, mchit.iOffset);
+    expect(2, mchit.iRow);
+    expect(0, mchit.iCol);
+    /* returned a one day rectangle */
+    expect_d(r.right / 7, mchit.rc.right - mchit.rc.left);
+    expect_d(r.bottom / 10, mchit.rc.bottom - mchit.rc.top);
+
+    /* title */
+    mchit.pt.x = 1;
+    mchit.pt.y = 1;
+    mchit.iOffset = -1;
+    mchit.iCol = mchit.iRow = -1;
+    mchit.uHit = 0;
+    mchit.rc.left = mchit.rc.right = mchit.rc.top = mchit.rc.bottom = -1;
+    ret = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+    expect_hex(MCHT_TITLE, ret);
+    expect_hex(MCHT_TITLE, mchit.uHit);
+    expect(0, mchit.iOffset);
+    expect(-1, mchit.iRow);
+    expect(-1, mchit.iCol);
+    expect(0, mchit.rc.left);
+    expect(0, mchit.rc.top);
+    expect_d(r.right, mchit.rc.right);
+    ok(mchit.rc.bottom > 0, "got %d\n", mchit.rc.bottom);
+
+    /* between two calendars */
+    MoveWindow(hwnd, 0, 0, r.right * 5/2, r.bottom, FALSE);
+    mchit.pt.x = r.right / (5*4);
+    mchit.pt.y = r.bottom / 2;
+    mchit.iOffset = -2;
+    mchit.iCol = mchit.iRow = -2;
+    mchit.uHit = ~0;
+    mchit.rc.left = mchit.rc.right = mchit.rc.top = mchit.rc.bottom = -1;
+    ret = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+    todo_wine expect_hex(MCHT_NOWHERE, ret);
+    todo_wine expect_hex(MCHT_NOWHERE, mchit.uHit);
+    expect(-2, mchit.iOffset);
+    expect(-2, mchit.iRow);
+    expect(-2, mchit.iCol);
+    todo_wine expect(0, mchit.rc.left);
+    todo_wine expect(0, mchit.rc.top);
+    todo_wine expect_d(r.right * 5/2, mchit.rc.right);
+    todo_wine expect_d(r.bottom, mchit.rc.bottom);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_get_set_border(void)
+{
+    HWND hwnd;
+    DWORD ret;
+
+    hwnd = create_monthcal_control(0);
+
+    /* a non-default value */
+    ret = SendMessage(hwnd, MCM_SETCALENDARBORDER, TRUE, 10);
+    expect(0, ret);
+
+    ret = SendMessage(hwnd, MCM_GETCALENDARBORDER, 0, 0);
+
+    if (ret != 10)
+    {
+        skip("MCM_GET/SETCALENDARBORDER not supported\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    expect(10, ret);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_MCM_SIZERECTTOMIN(void)
+{
+    HWND hwnd;
+    DWORD ret;
+    RECT r, r2;
+
+    hwnd = create_monthcal_control(0);
+
+    ret = SendMessageA(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r2);
+    if (ret == 0)
+    {
+        win_skip("Message MCM_GETMINREQRECT unsupported. Skipping.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, 0);
+    ok(ret == 0, "got %d\n", ret);
+
+    r.left = r.right = r.top = r.bottom = 0;
+    ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r);
+    if (ret == 0)
+    {
+        skip("Message MCM_SIZERECTTOMIN unsupported. Skipping.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+    ok(ret == 1, "got %d\n", ret);
+    ok(r.left == 0 && r.right > 0, "got %d, %d\n", r.left, r.right);
+
+    r = r2;
+    ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r);
+    ok(ret == 1, "got %d\n", ret);
+
+    r2.right = (r2.right - r2.left) * 3;
+    r2.bottom = (r2.bottom - r2.top) * 3;
+    r2.left = r2.top = 0;
+    ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r2);
+    ok(ret == 1, "got %d\n", ret);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_MCM_GETCALENDARCOUNT(void)
+{
+    HWND hwnd;
+    DWORD ret;
+
+    hwnd = create_monthcal_control(0);
+
+    ret = SendMessageA(hwnd, MCM_GETCALENDARCOUNT, 0, 0);
+    if (ret == 0)
+    {
+        win_skip("Message MCM_GETCALENDARCOUNT unsupported. Skipping.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    expect(2, ret);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_daystate(void)
+{
+    MONTHDAYSTATE state[4];
+    DWORD ret, style;
+    HWND hwnd;
+    RECT r;
+
+    /* without MCS_DAYSTATE */
+    hwnd = create_monthcal_control(0);
+
+    ret = SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r);
+    expect(TRUE, ret);
+
+    /* resize control to display two Calendars */
+    MoveWindow(hwnd, 0, 0, r.right, (5/2)*r.bottom, FALSE);
+
+    ret = SendMessageA(hwnd, MCM_GETMONTHRANGE, GMR_DAYSTATE, 0);
+    expect(4, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 4, (LPARAM)&state);
+    expect(0, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 2, (LPARAM)&state);
+    expect(0, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 0, 0);
+    expect(0, ret);
+
+    /* try to switch on */
+    SetWindowLongA(hwnd, GWL_STYLE, GetWindowLongA(hwnd, GWL_STYLE) | MCS_DAYSTATE);
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok((style & MCS_DAYSTATE) == 0, "got 0x%08x\n", style);
+
+    DestroyWindow(hwnd);
+
+    /* with MCS_DAYSTATE */
+    hwnd = create_monthcal_control(MCS_DAYSTATE);
+
+    ret = SendMessageA(hwnd, MCM_GETMONTHRANGE, GMR_DAYSTATE, 0);
+    expect(4, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 4, (LPARAM)&state);
+    expect(1, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 2, (LPARAM)&state);
+    expect(0, ret);
+
+    ret = SendMessageA(hwnd, MCM_SETDAYSTATE, 0, 0);
+    expect(0, ret);
+
+    /* try to switch off */
+    SetWindowLongA(hwnd, GWL_STYLE, GetWindowLongA(hwnd, GWL_STYLE) & ~MCS_DAYSTATE);
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok((style & MCS_DAYSTATE) == MCS_DAYSTATE, "got 0x%08x\n", style);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(monthcal)
 {
-    HMODULE hComctl32;
     BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     INITCOMMONCONTROLSEX iccex;
+    HMODULE hComctl32;
+    HWND hwnd;
+
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
 
     hComctl32 = GetModuleHandleA("comctl32.dll");
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
@@ -1703,23 +1945,50 @@ START_TEST(monthcal)
 
     parent_wnd = create_parent_window();
 
-    test_monthcal_create();
-    test_monthcal_destroy();
-    test_monthcal_color();
-    test_monthcal_currdate();
-    test_monthcal_firstDay();
-    test_monthcal_unicode();
-    test_monthcal_today();
-    test_monthcal_scroll();
-    test_monthcal_monthrange();
-    test_monthcal_hittest();
-    test_monthcal_todaylink();
-    test_monthcal_size();
-    test_monthcal_maxselday();
-    test_monthcal_selrange();
+    test_create();
+    test_destroy();
+    test_color();
+    test_currdate();
+    test_firstDay();
+    test_unicode();
+    test_today();
+    test_scroll();
+    test_monthrange();
+    test_hittest();
+    test_todaylink();
+    test_size();
+    test_maxselday();
+    test_selrange();
     test_killfocus();
+    test_daystate();
 
-    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+    {
+        DestroyWindow(parent_wnd);
+        return;
+    }
+
+    /* this is a XP SP3 failure workaround */
+    hwnd = CreateWindowExA(0, MONTHCAL_CLASSA, "foo",
+                           WS_CHILD | WS_BORDER | WS_VISIBLE,
+                           0, 0, 100, 100,
+                           parent_wnd, NULL, GetModuleHandleA(NULL), NULL);
+    if (!IsWindow(hwnd))
+    {
+        win_skip("FIXME: failed to create Monthcal window.\n");
+        unload_v6_module(ctx_cookie, hCtx);
+        DestroyWindow(parent_wnd);
+        return;
+    }
+    else
+        DestroyWindow(hwnd);
+
+    test_hittest_v6();
+    test_get_set_border();
+    test_MCM_SIZERECTTOMIN();
+    test_MCM_GETCALENDARCOUNT();
+
+    unload_v6_module(ctx_cookie, hCtx);
+
     DestroyWindow(parent_wnd);
-    ok_sequence(sequences, PARENT_SEQ_INDEX, destroy_parent_seq, "Destroy parent window", FALSE);
 }

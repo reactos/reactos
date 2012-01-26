@@ -44,7 +44,6 @@
  *   - more stuff to test
  */
 
-#include <assert.h>
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
@@ -406,6 +405,7 @@ static void test_updown_pos32(void)
 
     low = high = -1;
     r = SendMessage(updown, UDM_GETRANGE32, (WPARAM) &low , (LPARAM) &high );
+    expect(0,r);
     if (low == -1)
     {
         win_skip("UDM_SETRANGE32/UDM_GETRANGE32 not available\n");

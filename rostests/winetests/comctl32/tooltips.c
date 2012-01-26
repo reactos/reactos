@@ -148,7 +148,7 @@ static void test_customdraw(void) {
         {CDRF_NEWFONT, TEST_CDDS_PREPAINT}
     };
 
-   int       iterationNumber;
+   DWORD       iterationNumber;
    WNDCLASSA wc;
    LRESULT   lResult;
 
@@ -435,7 +435,7 @@ static void test_ttm_gettoolinfo(void)
     ti.uFlags = 0;
     ti.uId = 0x1234ABCD;
     ti.lpszText = NULL;
-    ti.lParam = 0xdeadbeef;
+    ti.lParam = 0x1abe11ed;
     GetClientRect(hwnd, &ti.rect);
     r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti);
     ok(r, "Adding the tool to the tooltip failed\n");
@@ -444,9 +444,9 @@ static void test_ttm_gettoolinfo(void)
     ti.lParam = 0xaaaaaaaa;
     r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&ti);
     ok(r, "Getting tooltip info failed\n");
-    ok(0xdeadbeef == ti.lParam ||
-       broken(0xdeadbeef != ti.lParam), /* comctl32 < 5.81 */
-       "Expected 0xdeadbeef, got %lx\n", ti.lParam);
+    ok(0x1abe11ed == ti.lParam ||
+       broken(0x1abe11ed != ti.lParam), /* comctl32 < 5.81 */
+       "Expected 0x1abe11ed, got %lx\n", ti.lParam);
 
     tiW.cbSize = TTTOOLINFOW_V2_SIZE;
     tiW.hwnd = NULL;
@@ -454,22 +454,22 @@ static void test_ttm_gettoolinfo(void)
     tiW.lParam = 0xaaaaaaaa;
     r = SendMessageA(hwnd, TTM_GETTOOLINFOW, 0, (LPARAM)&tiW);
     ok(r, "Getting tooltip info failed\n");
-    ok(0xdeadbeef == tiW.lParam ||
-       broken(0xdeadbeef != tiW.lParam), /* comctl32 < 5.81 */
-       "Expected 0xdeadbeef, got %lx\n", tiW.lParam);
+    ok(0x1abe11ed == tiW.lParam ||
+       broken(0x1abe11ed != tiW.lParam), /* comctl32 < 5.81 */
+       "Expected 0x1abe11ed, got %lx\n", tiW.lParam);
 
     ti.cbSize = TTTOOLINFOA_V2_SIZE;
     ti.uId = 0x1234ABCD;
-    ti.lParam = 0xaaaaaaaa;
+    ti.lParam = 0x55555555;
     SendMessageA(hwnd, TTM_SETTOOLINFOA, 0, (LPARAM)&ti);
 
     ti.cbSize = TTTOOLINFOA_V2_SIZE;
     ti.lParam = 0xdeadbeef;
     r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&ti);
     ok(r, "Getting tooltip info failed\n");
-    ok(0xaaaaaaaa == ti.lParam ||
-       broken(0xaaaaaaaa != ti.lParam), /* comctl32 < 5.81 */
-       "Expected 0xaaaaaaaa, got %lx\n", ti.lParam);
+    ok(0x55555555 == ti.lParam ||
+       broken(0x55555555 != ti.lParam), /* comctl32 < 5.81 */
+       "Expected 0x55555555, got %lx\n", ti.lParam);
 
     DestroyWindow(hwnd);
 

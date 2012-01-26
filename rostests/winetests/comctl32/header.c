@@ -955,6 +955,7 @@ static void test_hdm_imageMessages(HWND hParent)
 {
     HIMAGELIST hImageList = ImageList_Create (4, 4, 0, 1, 0);
     HIMAGELIST hIml;
+    BOOL wasValid;
     HWND hChild;
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -977,6 +978,9 @@ static void test_hdm_imageMessages(HWND hParent)
     ok_sequence(sequences, HEADER_SEQ_INDEX, imageMessages_seq, "imageMessages sequence testing", FALSE);
 
     DestroyWindow(hChild);
+
+    wasValid = ImageList_Destroy(hImageList);
+    ok(wasValid, "Header must not free image list at destruction!\n");
 }
 
 static void test_hdm_filterMessages(HWND hParent)
@@ -1024,10 +1028,6 @@ static void test_hdm_filterMessages(HWND hParent)
     else
          ok_sequence(sequences, HEADER_SEQ_INDEX, filterMessages_seq_noninteractive,
                      "filterMessages sequence testing", FALSE);
-    /* Some Win9x versions don't send a WM_KILLFOCUS.
-     * Set the focus explicitly to the parent to avoid a crash.
-     */
-    SetFocus(hParent);
     DestroyWindow(hChild);
 
 }

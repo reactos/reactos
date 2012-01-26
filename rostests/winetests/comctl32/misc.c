@@ -87,18 +87,15 @@ static void test_GetPtrAW(void)
              * Our implementation also crashes and we should probably leave
              * it like that.
              */
-            count = -1;
             count = pStr_GetPtrA(NULL, NULL, destsize);
             trace("count : %d\n", count);
         }
 
-        count = 0;
         count = pStr_GetPtrA(source, NULL, 0);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
 
-        count = 0;
         strcpy(dest, desttest);
         count = pStr_GetPtrA(source, dest, 0);
         ok (count == sourcelen ||
@@ -108,26 +105,22 @@ static void test_GetPtrAW(void)
             broken(!lstrcmp(dest, "")), /* Win7 */
             "Expected destination to not have changed\n");
 
-        count = 0;
         count = pStr_GetPtrA(source, NULL, destsize);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
 
-        count = 0;
         count = pStr_GetPtrA(source, dest, destsize);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
         ok (!lstrcmp(source, dest), "Expected source and destination to be the same\n");
 
-        count = -1;
         strcpy(dest, desttest);
         count = pStr_GetPtrA(NULL, dest, destsize);
         ok (count == 0, "Expected count to be 0, it was %d\n", count);
         ok (dest[0] == '\0', "Expected destination to be cut-off and 0 terminated\n");
 
-        count = 0;
         destsize = 15;
         count = pStr_GetPtrA(source, dest, destsize);
         ok (count == 15 ||

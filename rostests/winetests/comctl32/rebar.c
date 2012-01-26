@@ -30,8 +30,9 @@
 
 #include "wine/test.h"
 
-RECT height_change_notify_rect;
+static RECT height_change_notify_rect;
 static HWND hMainWnd;
+static int system_font_height;
 
 
 #define check_rect(name, val, exp) ok(val.top == exp.top && val.bottom == exp.bottom && \
@@ -46,7 +47,8 @@ static HWND hMainWnd;
 
 #define compare(val, exp, format) ok((val) == (exp), #val " value " format " expected " format "\n", (val), (exp));
 
-#define expect_eq(expr, value, type, format) { type ret = expr; ok((value) == ret, #expr " expected " format "  got " format "\n", (value), (ret)); }
+#define expect_eq(line, expr, value, type, format) { type ret = expr;\
+        ok((value) == ret, #expr " expected " format "  got " format " from line %d\n", (value), (ret), line); }
 
 static INT CALLBACK is_font_installed_proc(const LOGFONT *elf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
 {
@@ -63,6 +65,17 @@ static BOOL is_font_installed(const char *name)
 
     ReleaseDC(0, hdc);
     return ret;
+}
+
+static void init_system_font_height(void) {
+    HDC hDC;
+    TEXTMETRIC tm;
+
+    hDC = CreateCompatibleDC(NULL);
+    GetTextMetrics(hDC, &tm);
+    DeleteDC(NULL);
+
+    system_font_height = tm.tmHeight;
 }
 
 static HWND create_rebar_control(void)
@@ -167,131 +180,258 @@ static void dump_sizes(HWND hRebar)
 
 #else
 
+static int string_width(const CHAR *s) {
+    SIZE sz;
+    HDC hdc;
+
+    hdc = CreateCompatibleDC(NULL);
+    GetTextExtentPoint32A(hdc, s, strlen(s), &sz);
+    DeleteDC(hdc);
+
+    return sz.cx;
+}
+
 typedef struct {
     RECT rc;
     DWORD fStyle;
-    INT cx;
+    UINT cx;
 } rbband_result_t;
 
 typedef struct {
     RECT rcClient;
     int cyBarHeight;
     int nRows;
-    int cyRowHeights[50];
+    int *cyRowHeights;
     int nBands;
-    rbband_result_t bands[50];
+    rbband_result_t *bands;
 } rbsize_result_t;
 
-rbsize_result_t rbsize_results[] = {
-  { {0, 0, 672, 0}, 0, 0, {0, }, 0, {{{0, 0, 0, 0}, 0, 0},
-  }, },
-  { {0, 0, 672, 4}, 4, 1, {4, }, 1, {
-    { {  0,   0, 672,   4}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 4}, 4, 1, {4, }, 2, {
-    { {  0,   0, 200,   4}, 0x00, 200}, { {200,   0, 672,   4}, 0x04, 200},
-  }, },
-  { {0, 0, 672, 30}, 30, 1, {30, }, 3, {
-    { {  0,   0, 200,  30}, 0x00, 200}, { {200,   0, 400,  30}, 0x04, 200},
-    { {400,   0, 672,  30}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 4, {
-    { {  0,   0, 200,  34}, 0x00, 200}, { {200,   0, 400,  34}, 0x04, 200},
-    { {400,   0, 604,  34}, 0x00, 200}, { {604,   0, 672,  34}, 0x04, 68},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 4, {
-    { {  0,   0, 200,  34}, 0x00, 200}, { {200,   0, 400,  34}, 0x04, 200},
-    { {400,   0, 604,  34}, 0x00, 200}, { {604,   0, 672,  34}, 0x04, 68},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 4, {
-    { {  0,   0, 200,  34}, 0x00, 200}, { {202,   0, 402,  34}, 0x04, 200},
-    { {404,   0, 604,  34}, 0x00, 200}, { {606,   0, 672,  34}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 70}, 70, 2, {34, 34, }, 5, {
-    { {  0,   0, 142,  34}, 0x00, 200}, { {144,   0, 557,  34}, 0x00, 200},
-    { {559,   0, 672,  34}, 0x04, 200}, { {  0,  36, 200,  70}, 0x00, 200},
-    { {202,  36, 672,  70}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 5, {
-    { {  0,   0, 167,  34}, 0x00, 200}, { {169,   0, 582,  34}, 0x00, 200},
-    { {559,   0, 759,  34}, 0x08, 200}, { {584,   0, 627,  34}, 0x00, 200},
-    { {629,   0, 672,  34}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 4, {
-    { {  0,   0, 167,  34}, 0x00, 200}, { {169,   0, 582,  34}, 0x00, 200},
-    { {584,   0, 627,  34}, 0x00, 200}, { {629,   0, 672,  34}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 3, {
-    { {  0,   0, 413,  34}, 0x00, 200}, { {415,   0, 615,  34}, 0x00, 200},
-    { {617,   0, 672,  34}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 34}, 34, 1, {34, }, 2, {
-    { {  0,   0, 604,  34}, 0x00, 200}, { {606,   0, 672,  34}, 0x04, 66},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 184,  20}, 0x00, 70},
-    { {184,   0, 424,  20}, 0x00, 240}, { {424,   0, 672,  20}, 0x00, 60},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 227,  20}, 0x00, 113},
-    { {227,   0, 424,  20}, 0x00, 197}, { {424,   0, 672,  20}, 0x00, 60},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 328,  20}, 0x00, 214},
-    { {328,   0, 511,  20}, 0x00, 183}, { {511,   0, 672,  20}, 0x00, 161},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 167,  20}, 0x00, 53},
-    { {167,   0, 511,  20}, 0x00, 344}, { {511,   0, 672,  20}, 0x00, 161},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 328,  20}, 0x00, 214},
-    { {328,   0, 511,  20}, 0x00, 183}, { {511,   0, 672,  20}, 0x00, 161},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 328,  20}, 0x00, 214},
-    { {328,   0, 511,  20}, 0x00, 183}, { {511,   0, 672,  20}, 0x00, 161},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 56}, 56, 2, {28, 28, }, 5, {
-    { {  0,   0, 114,  28}, 0x00, 40}, { {114,   0, 328,  28}, 0x00, 214},
-    { {328,   0, 511,  28}, 0x00, 183}, { {511,   0, 672,  28}, 0x00, 161},
-    { {  0,  28, 672,  56}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 40}, 40, 2, {20, 20, }, 5, {
-    { {  0,   0, 114,  20}, 0x00, 40}, { {114,   0, 328,  20}, 0x00, 214},
-    { {328,   0, 511,  20}, 0x00, 183}, { {511,   0, 672,  20}, 0x00, 161},
-    { {  0,  20, 672,  40}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 56}, 56, 2, {28, 28, }, 5, {
-    { {  0,   0, 114,  28}, 0x00, 40}, { {114,   0, 328,  28}, 0x00, 214},
-    { {328,   0, 511,  28}, 0x00, 183}, { {511,   0, 672,  28}, 0x00, 161},
-    { {  0,  28, 672,  56}, 0x00, 200},
-  }, },
-  { {0, 0, 672, 0}, 0, 0, {0, }, 0, {{{0, 0, 0, 0}, 0, 0},
-  }, },
-  { {0, 0, 672, 65}, 65, 1, {65, }, 3, {
-    { {  0,   0,  90,  65}, 0x40, 90}, { { 90,   0, 180,  65}, 0x40, 90},
-    { {180,   0, 672,  65}, 0x40, 90},
-  }, },
-  { {0, 0, 0, 226}, 0, 0, {0, }, 0, {{{0, 0, 0, 0}, 0, 0},
-  }, },
-  { {0, 0, 65, 226}, 65, 1, {65, }, 1, {
-    { {  0,   0, 226,  65}, 0x40, 90},
-  }, },
-  { {0, 0, 65, 226}, 65, 1, {65, }, 2, {
-    { {  0,   0,  90,  65}, 0x40, 90}, { { 90,   0, 226,  65}, 0x40, 90},
-  }, },
-  { {0, 0, 65, 226}, 65, 1, {65, }, 3, {
-    { {  0,   0,  90,  65}, 0x40, 90}, { { 90,   0, 163,  65}, 0x40, 90},
-    { {163,   0, 226,  65}, 0x40, 90},
-  }, },
-};
+static rbsize_result_t rbsize_init(int cleft, int ctop, int cright, int cbottom, int cyBarHeight, int nRows, int nBands)
+{
+    rbsize_result_t ret;
+
+    SetRect(&ret.rcClient, cleft, ctop, cright, cbottom);
+    ret.cyBarHeight = cyBarHeight;
+    ret.nRows = 0;
+    ret.cyRowHeights = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nRows*sizeof(int));
+    ret.nBands = 0;
+    ret.bands = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nBands*sizeof(rbband_result_t));
+
+    return ret;
+}
+
+static void rbsize_add_row(rbsize_result_t *rbsr, int rowHeight) {
+    rbsr->cyRowHeights[rbsr->nRows] = rowHeight;
+    rbsr->nRows++;
+}
+
+static void rbsize_add_band(rbsize_result_t *rbsr, int left, int top, int right, int bottom, DWORD fStyle, UINT cx)
+{
+    SetRect(&(rbsr->bands[rbsr->nBands].rc), left, top, right, bottom);
+    rbsr->bands[rbsr->nBands].fStyle = fStyle;
+    rbsr->bands[rbsr->nBands].cx = cx;
+    rbsr->nBands++;
+}
+
+static rbsize_result_t *rbsize_results;
+
+#define rbsize_results_num 27
+
+static void rbsize_results_init(void)
+{
+    rbsize_results = HeapAlloc(GetProcessHeap(), 0, rbsize_results_num*sizeof(rbsize_result_t));
+
+    rbsize_results[0] = rbsize_init(0, 0, 672, 0, 0, 0, 0);
+
+    rbsize_results[1] = rbsize_init(0, 0, 672, 4, 4, 1, 1);
+    rbsize_add_row(&rbsize_results[1], 4);
+    rbsize_add_band(&rbsize_results[1], 0, 0, 672, 4, 0x00, 200);
+
+    rbsize_results[2] = rbsize_init(0, 0, 672, 4, 4, 1, 2);
+    rbsize_add_row(&rbsize_results[2], 4);
+    rbsize_add_band(&rbsize_results[2], 0, 0, 200, 4, 0x00, 200);
+    rbsize_add_band(&rbsize_results[2], 200, 0, 672, 4, 0x04, 200);
+
+    rbsize_results[3] = rbsize_init(0, 0, 672, 30, 30, 1, 3);
+    rbsize_add_row(&rbsize_results[3], 30);
+    rbsize_add_band(&rbsize_results[3], 0, 0, 200, 30, 0x00, 200);
+    rbsize_add_band(&rbsize_results[3], 200, 0, 400, 30, 0x04, 200);
+    rbsize_add_band(&rbsize_results[3], 400, 0, 672, 30, 0x00, 200);
+
+    rbsize_results[4] = rbsize_init(0, 0, 672, 34, 34, 1, 4);
+    rbsize_add_row(&rbsize_results[4], 34);
+    rbsize_add_band(&rbsize_results[4], 0, 0, 200, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[4], 200, 0, 400, 34, 0x04, 200);
+    rbsize_add_band(&rbsize_results[4], 400, 0, 604, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[4], 604, 0, 672, 34, 0x04, 68);
+
+    rbsize_results[5] = rbsize_init(0, 0, 672, 34, 34, 1, 4);
+    rbsize_add_row(&rbsize_results[5], 34);
+    rbsize_add_band(&rbsize_results[5], 0, 0, 200, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[5], 200, 0, 400, 34, 0x04, 200);
+    rbsize_add_band(&rbsize_results[5], 400, 0, 604, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[5], 604, 0, 672, 34, 0x04, 68);
+
+    rbsize_results[6] = rbsize_init(0, 0, 672, 34, 34, 1, 4);
+    rbsize_add_row(&rbsize_results[6], 34);
+    rbsize_add_band(&rbsize_results[6], 0, 0, 200, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[6], 202, 0, 402, 34, 0x04, 200);
+    rbsize_add_band(&rbsize_results[6], 404, 0, 604, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[6], 606, 0, 672, 34, 0x04, 66);
+
+    rbsize_results[7] = rbsize_init(0, 0, 672, 70, 70, 2, 5);
+    rbsize_add_row(&rbsize_results[7], 34);
+    rbsize_add_row(&rbsize_results[7], 34);
+    rbsize_add_band(&rbsize_results[7], 0, 0, 142, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[7], 144, 0, 557, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[7], 559, 0, 672, 34, 0x04, 200);
+    rbsize_add_band(&rbsize_results[7], 0, 36, 200, 70, 0x00, 200);
+    rbsize_add_band(&rbsize_results[7], 202, 36, 672, 70, 0x04, 66);
+
+    rbsize_results[8] = rbsize_init(0, 0, 672, 34, 34, 1, 5);
+    rbsize_add_row(&rbsize_results[8], 34);
+    rbsize_add_band(&rbsize_results[8], 0, 0, 167, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[8], 169, 0, 582, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[8], 559, 0, 759, 34, 0x08, 200);
+    rbsize_add_band(&rbsize_results[8], 584, 0, 627, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[8], 629, 0, 672, 34, 0x04, 66);
+
+    rbsize_results[9] = rbsize_init(0, 0, 672, 34, 34, 1, 4);
+    rbsize_add_row(&rbsize_results[9], 34);
+    rbsize_add_band(&rbsize_results[9], 0, 0, 167, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[9], 169, 0, 582, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[9], 584, 0, 627, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[9], 629, 0, 672, 34, 0x04, 66);
+
+    rbsize_results[10] = rbsize_init(0, 0, 672, 34, 34, 1, 3);
+    rbsize_add_row(&rbsize_results[10], 34);
+    rbsize_add_band(&rbsize_results[10], 0, 0, 413, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[10], 415, 0, 615, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[10], 617, 0, 672, 34, 0x04, 66);
+
+    rbsize_results[11] = rbsize_init(0, 0, 672, 34, 34, 1, 2);
+    rbsize_add_row(&rbsize_results[11], 34);
+    rbsize_add_band(&rbsize_results[11], 0, 0, 604, 34, 0x00, 200);
+    rbsize_add_band(&rbsize_results[11], 606, 0, 672, 34, 0x04, 66);
+
+    rbsize_results[12] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[12], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[12], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[12], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[12], 87 + string_width("ABC"), 0, 157 + string_width("ABC"), 4 + system_font_height, 0x00, 70);
+    rbsize_add_band(&rbsize_results[12], 157 + string_width("ABC"), 0, 397 + string_width("ABC"), 4 + system_font_height, 0x00, 240);
+    rbsize_add_band(&rbsize_results[12], 397 + string_width("ABC"), 0, 672, 4 + system_font_height, 0x00, 60);
+    rbsize_add_band(&rbsize_results[12], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[13] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[13], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[13], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[13], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[13], 87 + string_width("ABC"), 0, 200 + string_width("ABC"), 4 + system_font_height, 0x00, 113);
+    rbsize_add_band(&rbsize_results[13], 200 + string_width("ABC"), 0, 397 + string_width("ABC"), 4 + system_font_height, 0x00, 197);
+    rbsize_add_band(&rbsize_results[13], 397 + string_width("ABC"), 0, 672, 4 + system_font_height, 0x00, 60);
+    rbsize_add_band(&rbsize_results[13], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[14] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[14], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[14], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[14], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[14], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[14], 412 - string_width("MMMMMMM"), 0, 595 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 183);
+    rbsize_add_band(&rbsize_results[14], 595 - string_width("MMMMMMM"), 0, 672, 4 + system_font_height, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[14], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[15] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[15], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[15], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[15], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[15], 87 + string_width("ABC"), 0, 140 + string_width("ABC"), 4 + system_font_height, 0x00, 53);
+    rbsize_add_band(&rbsize_results[15], 140 + string_width("ABC"), 0, 595 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 455 - string_width("MMMMMMM") - string_width("ABC"));
+    rbsize_add_band(&rbsize_results[15], 595 - string_width("MMMMMMM"), 0, 672, 4 + system_font_height, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[15], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[16] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[16], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[16], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[16], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[16], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[16], 412 - string_width("MMMMMMM"), 0, 595 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 183);
+    rbsize_add_band(&rbsize_results[16], 595 - string_width("MMMMMMM"), 0, 672, 4 + system_font_height, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[16], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[17] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[17], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[17], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[17], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[17], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[17], 412 - string_width("MMMMMMM"), 0, 595 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 183);
+    rbsize_add_band(&rbsize_results[17], 595 - string_width("MMMMMMM"), 0, 672, 4 + system_font_height, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[17], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[18] = rbsize_init(0, 0, 672, 56, 56, 2, 5);
+    rbsize_add_row(&rbsize_results[18], 28);
+    rbsize_add_row(&rbsize_results[18], 28);
+    rbsize_add_band(&rbsize_results[18], 0, 0, 87 + string_width("ABC"), 28, 0x00, 40);
+    rbsize_add_band(&rbsize_results[18], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 28, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[18], 412 - string_width("MMMMMMM"), 0, 595 - string_width("MMMMMMM"), 28, 0x00, 183);
+    rbsize_add_band(&rbsize_results[18], 595 - string_width("MMMMMMM"), 0, 672, 28, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[18], 0, 28, 672, 56, 0x00, 200);
+
+    rbsize_results[19] = rbsize_init(0, 0, 672, 8 + 2*system_font_height, 40, 2, 5);
+    rbsize_add_row(&rbsize_results[19], 4 + system_font_height);
+    rbsize_add_row(&rbsize_results[19], 4 + system_font_height);
+    rbsize_add_band(&rbsize_results[19], 0, 0, 87 + string_width("ABC"), 4 + system_font_height, 0x00, 40);
+    rbsize_add_band(&rbsize_results[19], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[19], 412 - string_width("MMMMMMM"), 0, 595 - string_width("MMMMMMM"), 4 + system_font_height, 0x00, 183);
+    rbsize_add_band(&rbsize_results[19], 595 - string_width("MMMMMMM"), 0, 672, 4 + system_font_height, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[19], 0, 4 + system_font_height, 672, 8 + 2*system_font_height, 0x00, 200);
+
+    rbsize_results[20] = rbsize_init(0, 0, 672, 56, 56, 2, 5);
+    rbsize_add_row(&rbsize_results[20], 28);
+    rbsize_add_row(&rbsize_results[20], 28);
+    rbsize_add_band(&rbsize_results[20], 0, 0, 87 + string_width("ABC"), 28, 0x00, 40);
+    rbsize_add_band(&rbsize_results[20], 87 + string_width("ABC"), 0, 412 - string_width("MMMMMMM"), 28, 0x00, 325 - string_width("ABC") - string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[20], 412 - string_width("MMMMMMM"), 0,  595 - string_width("MMMMMMM"), 28, 0x00, 183);
+    rbsize_add_band(&rbsize_results[20],  595 - string_width("MMMMMMM"), 0, 672, 28, 0x00, 77 + string_width("MMMMMMM"));
+    rbsize_add_band(&rbsize_results[20], 0, 28, 672, 56, 0x00, 200);
+
+    rbsize_results[21] = rbsize_init(0, 0, 672, 0, 0, 0, 0);
+
+    rbsize_results[22] = rbsize_init(0, 0, 672, 65, 56, 1, 3);
+    rbsize_add_row(&rbsize_results[22], 65);
+    rbsize_add_band(&rbsize_results[22], 0, 0, 90, 65, 0x40, 90);
+    rbsize_add_band(&rbsize_results[22], 90, 0, 180, 65, 0x40, 90);
+    rbsize_add_band(&rbsize_results[22], 180, 0, 672, 65, 0x40, 90);
+
+    rbsize_results[23] = rbsize_init(0, 0, 0, 226, 0, 0, 0);
+
+    rbsize_results[24] = rbsize_init(0, 0, 65, 226, 65, 1, 1);
+    rbsize_add_row(&rbsize_results[24], 65);
+    rbsize_add_band(&rbsize_results[24], 0, 0, 226, 65, 0x40, 90);
+
+    rbsize_results[25] = rbsize_init(0, 0, 65, 226, 65, 1, 2);
+    rbsize_add_row(&rbsize_results[25], 65);
+    rbsize_add_band(&rbsize_results[25], 0, 0, 90, 65, 0x40, 90);
+    rbsize_add_band(&rbsize_results[25], 90, 0, 226, 65, 0x40, 90);
+
+    rbsize_results[26] = rbsize_init(0, 0, 65, 226, 65, 1, 3);
+    rbsize_add_row(&rbsize_results[26], 65);
+    rbsize_add_band(&rbsize_results[26], 0, 0, 90, 65, 0x40, 90);
+    rbsize_add_band(&rbsize_results[26], 90, 0, 163, 65, 0x40, 90);
+    rbsize_add_band(&rbsize_results[26], 163, 0, 226, 65, 0x40, 90);
+}
+
+static void rbsize_results_free(void)
+{
+    int i;
+
+    for (i = 0; i < rbsize_results_num; i++) {
+        HeapFree(GetProcessHeap(), 0, rbsize_results[i].cyRowHeights);
+        HeapFree(GetProcessHeap(), 0, rbsize_results[i].bands);
+    }
+    HeapFree(GetProcessHeap(), 0, rbsize_results);
+    rbsize_results = NULL;
+}
 
 static int rbsize_numtests = 0;
 
@@ -299,8 +439,7 @@ static int rbsize_numtests = 0;
         RECT rc; \
         REBARBANDINFO rbi; \
         int count, i/*, mask=(todomask)*/; \
-        rbsize_result_t *res = &rbsize_results[rbsize_numtests]; \
-        assert(rbsize_numtests < sizeof(rbsize_results)/sizeof(rbsize_results[0])); \
+        const rbsize_result_t *res = &rbsize_results[rbsize_numtests]; \
         GetClientRect(hRebar, &rc); \
         check_rect("client", rc, res->rcClient); \
         count = SendMessage(hRebar, RB_GETROWCOUNT, 0, 0); \
@@ -352,6 +491,8 @@ static void test_layout(void)
     REBARBANDINFO rbi;
     HIMAGELIST himl;
     REBARINFO ri;
+
+    rbsize_results_init();
 
     hRebar = create_rebar_control();
     check_sizes();
@@ -510,6 +651,7 @@ static void test_layout(void)
     SendMessageA(hRebar, RB_INSERTBAND, -1, (LPARAM)&rbi);
     check_sizes();
 
+    rbsize_results_free();
     DestroyWindow(hRebar);
     ImageList_Destroy(himl);
 }
@@ -547,7 +689,7 @@ typedef struct {
     BOOL heightNotify;
 } rbresize_test_result_t;
 
-rbresize_test_result_t resize_results[] = {
+static const rbresize_test_result_t resize_results[] = {
 /* style 00000001 */
     {{0, 2, 672, 2}, 0, FALSE},
     {{0, 2, 672, 22}, 1, TRUE},
@@ -668,12 +810,13 @@ rbresize_test_result_t resize_results[] = {
     {{-2, 0, 674, 24}, 0, FALSE},
 };
 
-static int resize_numtests = 0;
+static DWORD resize_numtests = 0;
 
 #define comment(fmt, arg1)
 #define check_client() { \
         RECT r; \
-        rbresize_test_result_t *res = &resize_results[resize_numtests++]; \
+        int value; \
+        const rbresize_test_result_t *res = &resize_results[resize_numtests++]; \
         assert(resize_numtests <= sizeof(resize_results)/sizeof(resize_results[0])); \
         GetWindowRect(hRebar, &r); \
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2); \
@@ -682,7 +825,8 @@ static int resize_numtests = 0;
         } else { \
             check_rect("client", r, res->rc); \
         } \
-        expect_eq((int)SendMessage(hRebar, RB_GETROWCOUNT, 0, 0), res->iNumRows, int, "%d"); \
+        value = (int)SendMessage(hRebar, RB_GETROWCOUNT, 0, 0); \
+        ok(res->iNumRows == value, "RB_GETROWCOUNT expected %d got %d\n", res->iNumRows, value); \
         if (res->heightNotify) { \
             RECT rcClient; \
             GetClientRect(hRebar, &rcClient); \
@@ -746,11 +890,11 @@ static void test_resize(void)
     }
 }
 
-static void expect_band_content(HWND hRebar, UINT uBand, INT fStyle, COLORREF clrFore,
+static void expect_band_content_(int line, HWND hRebar, UINT uBand, INT fStyle, COLORREF clrFore,
     COLORREF clrBack, LPCSTR lpText, int iImage, HWND hwndChild,
     INT cxMinChild, INT cyMinChild, INT cx, HBITMAP hbmBack, INT wID,
     INT cyChild, INT cyMaxChild, INT cyIntegral, INT cxIdeal, LPARAM lParam,
-    INT cxHeader, INT cxHeader_broken)
+    UINT cxHeader, UINT cxHeader_broken)
 {
     CHAR buf[MAX_PATH] = "abc";
     REBARBANDINFOA rb;
@@ -762,27 +906,34 @@ static void expect_band_content(HWND hRebar, UINT uBand, INT fStyle, COLORREF cl
         | RBBIM_SIZE | RBBIM_STYLE | RBBIM_TEXT;
     rb.lpText = buf;
     rb.cch = MAX_PATH;
-    ok(SendMessageA(hRebar, RB_GETBANDINFOA, uBand, (LPARAM)&rb), "RB_GETBANDINFO failed\n");
-    expect_eq(rb.fStyle, fStyle, int, "%x");
-    expect_eq(rb.clrFore, clrFore, COLORREF, "%x");
-    expect_eq(rb.clrBack, clrBack, COLORREF, "%x");
-    expect_eq(strcmp(rb.lpText, lpText), 0, int, "%d");
-    expect_eq(rb.iImage, iImage, int, "%x");
-    expect_eq(rb.hwndChild, hwndChild, HWND, "%p");
-    expect_eq(rb.cxMinChild, cxMinChild, int, "%d");
-    expect_eq(rb.cyMinChild, cyMinChild, int, "%d");
-    expect_eq(rb.cx, cx, int, "%d");
-    expect_eq(rb.hbmBack, hbmBack, HBITMAP, "%p");
-    expect_eq(rb.wID, wID, int, "%d");
+    ok(SendMessageA(hRebar, RB_GETBANDINFOA, uBand, (LPARAM)&rb), "RB_GETBANDINFO failed from line %d\n", line);
+    expect_eq(line, rb.fStyle, fStyle, int, "%x");
+    expect_eq(line, rb.clrFore, clrFore, COLORREF, "%x");
+    expect_eq(line, rb.clrBack, clrBack, COLORREF, "%x");
+    expect_eq(line, strcmp(rb.lpText, lpText), 0, int, "%d");
+    expect_eq(line, rb.iImage, iImage, int, "%x");
+    expect_eq(line, rb.hwndChild, hwndChild, HWND, "%p");
+    expect_eq(line, rb.cxMinChild, cxMinChild, int, "%d");
+    expect_eq(line, rb.cyMinChild, cyMinChild, int, "%d");
+    expect_eq(line, rb.cx, cx, int, "%d");
+    expect_eq(line, rb.hbmBack, hbmBack, HBITMAP, "%p");
+    expect_eq(line, rb.wID, wID, int, "%d");
     /* the values of cyChild, cyMaxChild and cyIntegral can't be read unless the band is RBBS_VARIABLEHEIGHT */
-    expect_eq(rb.cyChild, cyChild, int, "%x");
-    expect_eq(rb.cyMaxChild, cyMaxChild, int, "%x");
-    expect_eq(rb.cyIntegral, cyIntegral, int, "%x");
-    expect_eq(rb.cxIdeal, cxIdeal, int, "%d");
-    expect_eq(rb.lParam, lParam, LPARAM, "%ld");
-    ok( rb.cxHeader == cxHeader || broken(rb.cxHeader == cxHeader_broken),
-        "expected %d for %d\n", cxHeader, rb.cxHeader );
+    expect_eq(line, rb.cyChild, cyChild, int, "%x");
+    expect_eq(line, rb.cyMaxChild, cyMaxChild, int, "%x");
+    expect_eq(line, rb.cyIntegral, cyIntegral, int, "%x");
+    expect_eq(line, rb.cxIdeal, cxIdeal, int, "%d");
+    expect_eq(line, rb.lParam, lParam, LPARAM, "%ld");
+    ok(rb.cxHeader == cxHeader || rb.cxHeader == cxHeader + 1 || broken(rb.cxHeader == cxHeader_broken),
+        "expected %d for %d from line %d\n", cxHeader, rb.cxHeader, line);
 }
+
+#define expect_band_content(hRebar, uBand, fStyle, clrFore, clrBack,\
+ lpText, iImage, hwndChild, cxMinChild, cyMinChild, cx, hbmBack, wID,\
+ cyChild, cyMaxChild, cyIntegral, cxIdeal, lParam, cxHeader, cxHeader_broken) \
+ expect_band_content_(__LINE__, hRebar, uBand, fStyle, clrFore, clrBack,\
+ lpText, iImage, hwndChild, cxMinChild, cyMinChild, cx, hbmBack, wID,\
+ cyChild, cyMaxChild, cyIntegral, cxIdeal, lParam, cxHeader, cxHeader_broken)
 
 static void test_bandinfo(void)
 {
@@ -814,13 +965,13 @@ static void test_bandinfo(void)
     rb.fMask = RBBIM_TEXT;
     rb.lpText = szABC;
     ok(SendMessageA(hRebar, RB_SETBANDINFOA, 0, (LPARAM)&rb), "RB_SETBANDINFO failed\n");
-    expect_band_content(hRebar, 0, 0, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 0xdddddddd, 0xdddddddd, 0xdddddddd, 0, 0, 35, -1);
+    expect_band_content(hRebar, 0, 0, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 0xdddddddd, 0xdddddddd, 0xdddddddd, 0, 0, 3 + 2*system_font_height, -1);
 
     rb.cbSize = REBARBANDINFOA_V6_SIZE;
     rb.fMask = 0;
     ok(SendMessageA(hRebar, RB_INSERTBANDA, 1, (LPARAM)&rb), "RB_INSERTBAND failed\n");
     expect_band_content(hRebar, 1, 0, 0, GetSysColor(COLOR_3DFACE), "", -1, NULL, 0, 0, 0, NULL, 0, 0xdddddddd, 0xdddddddd, 0xdddddddd, 0, 0, 9, -1);
-    expect_band_content(hRebar, 0, 0, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 0xdddddddd, 0xdddddddd, 0xdddddddd, 0, 0, 40, -1);
+    expect_band_content(hRebar, 0, 0, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 0xdddddddd, 0xdddddddd, 0xdddddddd, 0, 0, 8 + 2*system_font_height, -1);
 
     rb.fMask = RBBIM_HEADERSIZE;
     rb.cxHeader = 50;
@@ -839,7 +990,7 @@ static void test_bandinfo(void)
     rb.fStyle = RBBS_VARIABLEHEIGHT;
     rb.lpText = szABC;
     ok(SendMessageA(hRebar, RB_SETBANDINFOA, 0, (LPARAM)&rb), "RB_SETBANDINFO failed\n");
-    expect_band_content(hRebar, 0, RBBS_VARIABLEHEIGHT, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 20, 0x7fffffff, 0, 0, 0, 40, 5);
+    expect_band_content(hRebar, 0, RBBS_VARIABLEHEIGHT, 0, GetSysColor(COLOR_3DFACE), "ABC", -1, NULL, 15, 20, 0, NULL, 0, 20, 0x7fffffff, 0, 0, 0, 8 + 2*system_font_height, 5);
 
     DestroyWindow(hRebar);
 }
@@ -962,7 +1113,9 @@ START_TEST(rebar)
     INITCOMMONCONTROLSEX iccex;
     MSG msg;
 
-    /* LoadLibrary is needed. This file has no references to functions in comctl32 */
+    init_system_font_height();
+
+    /* LoadLibrary is needed. This file has no reference to functions in comctl32 */
     hComctl32 = LoadLibraryA("comctl32.dll");
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
     if (!pInitCommonControlsEx)

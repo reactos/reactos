@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 
 #include "windef.h"
@@ -57,11 +56,16 @@ static const struct message ttgetdispinfo_parent_seq[] = {
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 
-#define check_rect(name, val, exp) ok(val.top == exp.top && val.bottom == exp.bottom && \
-    val.left == exp.left && val.right == exp.right, "invalid rect (" name ") (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d)\n", \
-    val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom);
+#define check_rect(name, val, exp, ...) ok(val.top == exp.top && val.bottom == exp.bottom && \
+    val.left == exp.left && val.right == exp.right, "invalid rect (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d) - (" name ")\n", \
+    val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom, __VA_ARGS__);
  
 #define compare(val, exp, format) ok((val) == (exp), #val " value " format " expected " format "\n", (val), (exp));
+
+#define check_button_size(handle, width, height, ...) {\
+    LRESULT bsize = SendMessageA(handle, TB_GETBUTTONSIZE, 0, 0);\
+    ok(bsize == MAKELONG(width, height), "Unexpected button size - got size (%d, %d), expected (%d, %d)\n", LOWORD(bsize), HIWORD(bsize), width, height);\
+    }
 
 static void MakeButton(TBBUTTON *p, int idCommand, int fsStyle, int nString) {
   p->iBitmap = -2;
@@ -160,6 +164,7 @@ static void basic_test(void)
     TBBUTTON buttons[9];
     HWND hToolbar;
     int i;
+
     for (i=0; i<9; i++)
         MakeButton(buttons+i, 1000+i, TBSTYLE_CHECKGROUP, 0);
     MakeButton(buttons+3, 1003, TBSTYLE_SEP|TBSTYLE_GROUP, 0);
@@ -505,6 +510,14 @@ static void test_add_string(void)
     ok(ret == 2, "TB_ADDSTRINGA - unexpected return %d\n", ret);
     CHECK_STRING_TABLE(3, ret2);
 
+    /* null instance handle */
+    ret = SendMessageA(hToolbar, TB_ADDSTRINGA, 0, IDS_TBADD1);
+    ok(ret == -1, "TB_ADDSTRINGA - unexpected return %d\n", ret);
+
+    /* invalid instance handle */
+    ret = SendMessageA(hToolbar, TB_ADDSTRINGA, 0xdeadbeef, IDS_TBADD1);
+    ok(ret == -1, "TB_ADDSTRINGA - unexpected return %d\n", ret);
+
     ret = SendMessageA(hToolbar, TB_ADDSTRINGA, (WPARAM)GetModuleHandle(NULL), IDS_TBADD1);
     ok(ret == 3, "TB_ADDSTRINGA - unexpected return %d\n", ret);
     CHECK_STRING_TABLE(3, ret2);
@@ -664,137 +677,312 @@ static void dump_sizes(HWND hToolbar)
 
 #else
 
+static int system_font_height(void) {
+    HDC hDC;
+    TEXTMETRIC tm;
+
+    hDC = CreateCompatibleDC(NULL);
+    GetTextMetrics(hDC, &tm);
+    DeleteDC(NULL);
+
+    return tm.tmHeight;
+}
+
+static int string_width(const CHAR *s) {
+    SIZE sz;
+    HDC hdc;
+
+    hdc = CreateCompatibleDC(NULL);
+    GetTextExtentPoint32A(hdc, s, strlen(s), &sz);
+    DeleteDC(hdc);
+
+    return sz.cx;
+}
+
 typedef struct
 {
     RECT rcClient;
     SIZE szMin;
     INT nButtons;
-    RECT rcButtons[100];
+    RECT *prcButtons;
 } tbsize_result_t;
 
-static tbsize_result_t tbsize_results[] =
-{
-  { {0, 0, 672, 26}, {100, 22}, 5, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24},
-  }, },
-  { {0, 0, 672, 26}, {146, 22}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24}, {100,   2, 123,  24},
-    {  0,  24,  23,  46},
-  }, },
-  { {0, 0, 672, 48}, {146, 22}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24}, {100,   2, 123,  24},
-    {  0,  24,  23,  46},
-  }, },
-  { {0, 0, 672, 26}, {146, 22}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24}, {100,   2, 123,  24},
-    {123,   2, 146,  24},
-  }, },
-  { {0, 0, 672, 26}, {192, 22}, 9, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24}, {100,   2, 123,  24},
-    {123,   2, 146,  24}, {146,   2, 169,  24}, {169,   2, 192,  24},
-  }, },
-  { {0, 0, 672, 92}, {882, 22}, 39, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, {  0,   2,   8,  29},
-    {  0,  29,  23,  51}, { 23,  29,  46,  51}, { 46,  29,  69,  51},
-    { 69,  29,  92,  51}, { 92,  29, 115,  51}, {115,  29, 138,  51},
-    {138,  29, 161,  51}, {161,  29, 184,  51}, {184,  29, 207,  51},
-    {207,  29, 230,  51}, {230,  29, 253,  51}, {253,  29, 276,  51},
-    {276,  29, 299,  51}, {299,  29, 322,  51}, {322,  29, 345,  51},
-    {345,  29, 368,  51}, {368,  29, 391,  51}, {391,  29, 414,  51},
-    {414,  29, 437,  51}, {437,  29, 460,  51}, {460,  29, 483,  51},
-    {483,  29, 506,  51}, {506,  29, 529,  51}, {529,  29, 552,  51},
-    {552,  29, 575,  51}, {575,  29, 598,  51}, {598,  29, 621,  51},
-    {621,  29, 644,  51}, {644,  29, 667,  51}, {  0,  51,  23,  73},
-    { 23,  51,  46,  73}, { 46,  51,  69,  73}, { 69,  51,  92,  73},
-    { 92,  51, 115,  73}, {115,  51, 138,  73}, {138,  51, 161,  73},
-  }, },
-  { {0, 0, 48, 226}, {23, 140}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  94,  24},
-    { 94,   2, 117,  24}, {117,   2, 140,  24}, {140,   2, 163,  24},
-    {  0,  24,  23,  46},
-  }, },
-  { {0, 0, 92, 226}, {23, 140}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, {  0,  24,  92,  32},
-    {  0,  32,  23,  54}, { 23,  32,  46,  54}, { 46,  32,  69,  54},
-    { 69,  32,  92,  54},
-  }, },
-  { {0, 0, 672, 26}, {194, 30}, 7, {
-    {  0,   2,  31,  32}, { 31,   2,  62,  32}, { 62,   2,  70,  32},
-    { 70,   2, 101,  32}, {101,   2, 132,  32}, {132,   2, 163,  32},
-    {  0,  32,  31,  62},
-  }, },
-  { {0, 0, 672, 64}, {194, 30}, 7, {
-    {  0,   2,  31,  32}, { 31,   2,  62,  32}, { 62,   2,  70,  32},
-    { 70,   2, 101,  32}, {101,   2, 132,  32}, {132,   2, 163,  32},
-    {  0,  32,  31,  62},
-  }, },
-  { {0, 0, 672, 64}, {194, 30}, 7, {
-    {  0,   0,  31,  30}, { 31,   0,  62,  30}, { 62,   0,  70,  30},
-    { 70,   0, 101,  30}, {101,   0, 132,  30}, {132,   0, 163,  30},
-    {  0,  30,  31,  60},
-  }, },
-  { {0, 0, 124, 226}, {31, 188}, 7, {
-    {  0,   0,  31,  30}, { 31,   0,  62,  30}, {  0,  30, 124,  38},
-    {  0,  38,  31,  68}, { 31,  38,  62,  68}, { 62,  38,  93,  68},
-    { 93,  38, 124,  68},
-  }, },
-  { {0, 0, 672, 26}, {146, 22}, 7, {
-    {  0,   2,  23,  24}, { 23,   2,  46,  24}, { 46,   2,  54,  24},
-    { 54,   2,  77,  24}, { 77,   2, 100,  24}, {100,   2, 123,  24},
-    {123,   2, 146,  24},
-  }, },
-  { {0, 0, 672, 26}, {146, 100}, 7, {
-    {  0,   0,  23, 100}, { 23,   0,  46, 100}, { 46,   0,  54, 100},
-    { 54,   0,  77, 100}, { 77,   0, 100, 100}, {100,   0, 123, 100},
-    {123,   0, 146, 100},
-  }, },
-  { {0, 0, 672, 26}, {215, 100}, 10, {
-    {  0,   0,  23, 100}, { 23,   0,  46, 100}, { 46,   0,  54, 100},
-    { 54,   0,  77, 100}, { 77,   0, 100, 100}, {100,   0, 123, 100},
-    {123,   0, 146, 100}, {146,   0, 169, 100}, {169,   0, 192, 100},
-    {192,   0, 215, 100},
-  }, },
-  { {0, 0, 672, 26}, {238, 39}, 11, {
-    {  0,   0,  23,  39}, { 23,   0,  46,  39}, { 46,   0,  54,  39},
-    { 54,   0,  77,  39}, { 77,   0, 100,  39}, {100,   0, 123,  39},
-    {123,   0, 146,  39}, {146,   0, 169,  39}, {169,   0, 192,  39},
-    {192,   0, 215,  39}, {215,   0, 238,  39},
-  }, },
-  { {0, 0, 672, 26}, {238, 22}, 11, {
-    {  0,   0,  23,  22}, { 23,   0,  46,  22}, { 46,   0,  54,  22},
-    { 54,   0,  77,  22}, { 77,   0, 100,  22}, {100,   0, 123,  22},
-    {123,   0, 146,  22}, {146,   0, 169,  22}, {169,   0, 192,  22},
-    {192,   0, 215,  22}, {215,   0, 238,  22},
-  }, },
-  { {0, 0, 672, 26}, {489, 39}, 3, {
-    {  0,   2, 163,  41}, {163,   2, 330,  41}, {330,   2, 493,  41},
-  }, },
-  { {0, 0, 672, 104}, {978, 24}, 6, {
-    {  0,   2, 163,  26}, {163,   2, 326,  26}, {326,   2, 489,  26},
-    {489,   2, 652,  26}, {652,   2, 819,  26}, {819,   2, 850,  26},
-  }, },
-  { {0, 0, 672, 28}, {978, 38}, 6, {
-    {  0,   0, 163,  38}, {163,   0, 326,  38}, {326,   0, 489,  38},
-    {489,   0, 652,  38}, {652,   0, 819,  38}, {819,   0, 850,  38},
-  }, },
-  { {0, 0, 672, 100}, {239, 102}, 3, {
-    {  0,   2, 100,  102}, {100,   2, 139,  102}, {139, 2, 239,  102},
-  }, },
-  { {0, 0, 672, 42}, {185, 40}, 3, {
-      {  0,   2,  75,  40}, {75,   2, 118, 40}, {118, 2, 185, 40},
-  }, },
-  { {0, 0, 672, 42}, {67, 40}, 1, {
-      {  0,   2,  67,  40},
-  }, },
-  { {0, 0, 672, 42}, {67, 41}, 2, {
-      {  0,   2,  672,  41}, {  0,   41,  672,  80},
-  }, },
-};
+static tbsize_result_t init_tbsize_result(int nButtonsAlloc, int cleft, int ctop, int cright, int cbottom, int minx, int miny) {
+    tbsize_result_t ret;
+
+    SetRect(&ret.rcClient, cleft, ctop, cright, cbottom);
+    ret.szMin.cx = minx;
+    ret.szMin.cy = miny;
+    ret.nButtons = 0;
+    ret.prcButtons = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nButtonsAlloc*sizeof(RECT));
+
+    return ret;
+}
+
+static void tbsize_addbutton(tbsize_result_t *tbsr, int left, int top, int right, int bottom) {
+    SetRect(&tbsr->prcButtons[tbsr->nButtons], left, top, right, bottom);
+    tbsr->nButtons++;
+}
+
+#define STRING0 "A"
+#define STRING1 "MMMMMMMMMMMMM"
+#define STRING2 "Tst"
+
+static tbsize_result_t *tbsize_results;
+
+#define tbsize_results_num 24
+
+static void init_tbsize_results(void) {
+    int fontheight = system_font_height();
+    int buttonwidth;
+
+    tbsize_results = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, tbsize_results_num*sizeof(tbsize_result_t));
+
+    tbsize_results[0] = init_tbsize_result(5, 0, 0 ,672 ,26, 100 ,22);
+    tbsize_addbutton(&tbsize_results[0],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[0],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[0],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[0],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[0],  77,   2, 100,  24);
+
+    tbsize_results[1] = init_tbsize_result(7, 0, 0, 672, 26, 146, 22);
+    tbsize_addbutton(&tbsize_results[1],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[1],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[1],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[1],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[1],  77,   2, 100,  24);
+    tbsize_addbutton(&tbsize_results[1], 100,   2, 123,  24);
+    tbsize_addbutton(&tbsize_results[1],   0,   24, 23,  46);
+
+    tbsize_results[2] = init_tbsize_result(7, 0, 0, 672, 26, 146, 22);
+    tbsize_addbutton(&tbsize_results[2],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[2],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[2],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[2],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[2],  77,   2, 100,  24);
+    tbsize_addbutton(&tbsize_results[2], 100,   2, 123,  24);
+    tbsize_addbutton(&tbsize_results[2],   0,   24, 23,  46);
+
+    tbsize_results[3] = init_tbsize_result(7, 0, 0, 672, 26, 146, 22);
+    tbsize_addbutton(&tbsize_results[3],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[3],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[3],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[3],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[3],  77,   2, 100,  24);
+    tbsize_addbutton(&tbsize_results[3], 100,   2, 123,  24);
+    tbsize_addbutton(&tbsize_results[3], 123,   2, 146,  24);
+
+    tbsize_results[4] = init_tbsize_result(9, 0, 0, 672, 26, 192, 22);
+    tbsize_addbutton(&tbsize_results[4],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[4],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[4],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[4],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[4],  77,   2, 100,  24);
+    tbsize_addbutton(&tbsize_results[4], 100,   2, 123,  24);
+    tbsize_addbutton(&tbsize_results[4], 123,   2, 146,  24);
+    tbsize_addbutton(&tbsize_results[4], 146,   2, 169,  24);
+    tbsize_addbutton(&tbsize_results[4], 169,   2, 192,  24);
+
+    tbsize_results[5] = init_tbsize_result(39, 0, 0, 672, 92, 882, 22);
+    tbsize_addbutton(&tbsize_results[5],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[5],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[5],   0,   2,   8,  29);
+    tbsize_addbutton(&tbsize_results[5],   0,  29,  23,  51);
+    tbsize_addbutton(&tbsize_results[5],  23,  29,  46,  51);
+    tbsize_addbutton(&tbsize_results[5],  46,  29,  69,  51);
+    tbsize_addbutton(&tbsize_results[5],  69,  29,  92,  51);
+    tbsize_addbutton(&tbsize_results[5],  92,  29, 115,  51);
+    tbsize_addbutton(&tbsize_results[5], 115,  29, 138,  51);
+    tbsize_addbutton(&tbsize_results[5], 138,  29, 161,  51);
+    tbsize_addbutton(&tbsize_results[5], 161,  29, 184,  51);
+    tbsize_addbutton(&tbsize_results[5], 184,  29, 207,  51);
+    tbsize_addbutton(&tbsize_results[5], 207,  29, 230,  51);
+    tbsize_addbutton(&tbsize_results[5], 230,  29, 253,  51);
+    tbsize_addbutton(&tbsize_results[5], 253,  29, 276,  51);
+    tbsize_addbutton(&tbsize_results[5], 276,  29, 299,  51);
+    tbsize_addbutton(&tbsize_results[5], 299,  29, 322,  51);
+    tbsize_addbutton(&tbsize_results[5], 322,  29, 345,  51);
+    tbsize_addbutton(&tbsize_results[5], 345,  29, 368,  51);
+    tbsize_addbutton(&tbsize_results[5], 368,  29, 391,  51);
+    tbsize_addbutton(&tbsize_results[5], 391,  29, 414,  51);
+    tbsize_addbutton(&tbsize_results[5], 414,  29, 437,  51);
+    tbsize_addbutton(&tbsize_results[5], 437,  29, 460,  51);
+    tbsize_addbutton(&tbsize_results[5], 460,  29, 483,  51);
+    tbsize_addbutton(&tbsize_results[5], 483,  29, 506,  51);
+    tbsize_addbutton(&tbsize_results[5], 506,  29, 529,  51);
+    tbsize_addbutton(&tbsize_results[5], 529,  29, 552,  51);
+    tbsize_addbutton(&tbsize_results[5], 552,  29, 575,  51);
+    tbsize_addbutton(&tbsize_results[5], 575,  29, 598,  51);
+    tbsize_addbutton(&tbsize_results[5], 598,  29, 621,  51);
+    tbsize_addbutton(&tbsize_results[5], 621,  29, 644,  51);
+    tbsize_addbutton(&tbsize_results[5], 644,  29, 667,  51);
+    tbsize_addbutton(&tbsize_results[5],   0,  51,  23,  73);
+    tbsize_addbutton(&tbsize_results[5],  23,  51,  46,  73);
+    tbsize_addbutton(&tbsize_results[5],  46,  51,  69,  73);
+    tbsize_addbutton(&tbsize_results[5],  69,  51,  92,  73);
+    tbsize_addbutton(&tbsize_results[5],  92,  51, 115,  73);
+    tbsize_addbutton(&tbsize_results[5], 115,  51, 138,  73);
+    tbsize_addbutton(&tbsize_results[5], 138,  51, 161,  73);
+
+    tbsize_results[6] = init_tbsize_result(7, 0, 0, 48, 226, 23, 140);
+    tbsize_addbutton(&tbsize_results[6],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[6],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[6],  46,   2,  94,  24);
+    tbsize_addbutton(&tbsize_results[6],  94,   2, 117,  24);
+    tbsize_addbutton(&tbsize_results[6], 117,   2, 140,  24);
+    tbsize_addbutton(&tbsize_results[6], 140,   2, 163,  24);
+    tbsize_addbutton(&tbsize_results[6],   0,  24,  23,  46);
+
+    tbsize_results[7] = init_tbsize_result(7, 0, 0, 92, 226, 23, 140);
+    tbsize_addbutton(&tbsize_results[7],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[7],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[7],   0,  24,  92,  32);
+    tbsize_addbutton(&tbsize_results[7],   0,  32,  23,  54);
+    tbsize_addbutton(&tbsize_results[7],  23,  32,  46,  54);
+    tbsize_addbutton(&tbsize_results[7],  46,  32,  69,  54);
+    tbsize_addbutton(&tbsize_results[7],  69,  32,  92,  54);
+
+    tbsize_results[8] = init_tbsize_result(7, 0, 0, 672, 26, 194, 30);
+    tbsize_addbutton(&tbsize_results[8],   0,   2,  31,  32);
+    tbsize_addbutton(&tbsize_results[8],  31,   2,  62,  32);
+    tbsize_addbutton(&tbsize_results[8],  62,   2,  70,  32);
+    tbsize_addbutton(&tbsize_results[8],  70,   2, 101,  32);
+    tbsize_addbutton(&tbsize_results[8], 101,   2, 132,  32);
+    tbsize_addbutton(&tbsize_results[8], 132,   2, 163,  32);
+    tbsize_addbutton(&tbsize_results[8],   0,  32,  31,  62);
+
+    tbsize_results[9] = init_tbsize_result(7, 0, 0, 672, 64, 194, 30);
+    tbsize_addbutton(&tbsize_results[9],   0,   2,  31,  32);
+    tbsize_addbutton(&tbsize_results[9],  31,   2,  62,  32);
+    tbsize_addbutton(&tbsize_results[9],  62,   2,  70,  32);
+    tbsize_addbutton(&tbsize_results[9],  70,   2, 101,  32);
+    tbsize_addbutton(&tbsize_results[9], 101,   2, 132,  32);
+    tbsize_addbutton(&tbsize_results[9], 132,   2, 163,  32);
+    tbsize_addbutton(&tbsize_results[9],   0,  32,  31,  62);
+
+    tbsize_results[10] = init_tbsize_result(7, 0, 0, 672, 64, 194, 30);
+    tbsize_addbutton(&tbsize_results[10],   0,   0,  31,  30);
+    tbsize_addbutton(&tbsize_results[10],  31,   0,  62,  30);
+    tbsize_addbutton(&tbsize_results[10],  62,   0,  70,  30);
+    tbsize_addbutton(&tbsize_results[10],  70,   0, 101,  30);
+    tbsize_addbutton(&tbsize_results[10], 101,   0, 132,  30);
+    tbsize_addbutton(&tbsize_results[10], 132,   0, 163,  30);
+    tbsize_addbutton(&tbsize_results[10],   0,  30,  31,  60);
+
+    tbsize_results[11] = init_tbsize_result(7, 0, 0, 124, 226, 31, 188);
+    tbsize_addbutton(&tbsize_results[11],   0,    0,  31,  30);
+    tbsize_addbutton(&tbsize_results[11],  31,    0,  62,  30);
+    tbsize_addbutton(&tbsize_results[11],   0,   30, 124,  38);
+    tbsize_addbutton(&tbsize_results[11],   0,   38,  31,  68);
+    tbsize_addbutton(&tbsize_results[11],  31,   38,  62,  68);
+    tbsize_addbutton(&tbsize_results[11],  62,   38,  93,  68);
+    tbsize_addbutton(&tbsize_results[11],  93,   38, 124,  68);
+
+    tbsize_results[12] = init_tbsize_result(7, 0, 0, 672, 26, 146, 22);
+    tbsize_addbutton(&tbsize_results[12],   0,   2,  23,  24);
+    tbsize_addbutton(&tbsize_results[12],  23,   2,  46,  24);
+    tbsize_addbutton(&tbsize_results[12],  46,   2,  54,  24);
+    tbsize_addbutton(&tbsize_results[12],  54,   2,  77,  24);
+    tbsize_addbutton(&tbsize_results[12],  77,   2, 100,  24);
+    tbsize_addbutton(&tbsize_results[12], 100,   2, 123,  24);
+    tbsize_addbutton(&tbsize_results[12], 123,   2, 146,  24);
+
+    tbsize_results[13] = init_tbsize_result(7, 0, 0, 672, 26, 146, 100);
+    tbsize_addbutton(&tbsize_results[13],   0,   0,  23, 100);
+    tbsize_addbutton(&tbsize_results[13],  23,   0,  46, 100);
+    tbsize_addbutton(&tbsize_results[13],  46,   0,  54, 100);
+    tbsize_addbutton(&tbsize_results[13],  54,   0,  77, 100);
+    tbsize_addbutton(&tbsize_results[13],  77,   0, 100, 100);
+    tbsize_addbutton(&tbsize_results[13], 100,   0, 123, 100);
+    tbsize_addbutton(&tbsize_results[13], 123,   0, 146, 100);
+
+    tbsize_results[14] = init_tbsize_result(10, 0, 0, 672, 26, 146, 100);
+    tbsize_addbutton(&tbsize_results[14],   0,   0,  23, 100);
+    tbsize_addbutton(&tbsize_results[14],  23,   0,  46, 100);
+    tbsize_addbutton(&tbsize_results[14],  46,   0,  54, 100);
+    tbsize_addbutton(&tbsize_results[14],  54,   0,  77, 100);
+    tbsize_addbutton(&tbsize_results[14],  77,   0, 100, 100);
+    tbsize_addbutton(&tbsize_results[14], 100,   0, 123, 100);
+    tbsize_addbutton(&tbsize_results[14], 123,   0, 146, 100);
+    tbsize_addbutton(&tbsize_results[14], 146,   0, 169, 100);
+    tbsize_addbutton(&tbsize_results[14], 169,   0, 192, 100);
+    tbsize_addbutton(&tbsize_results[14], 192,   0, 215, 100);
+
+    tbsize_results[15] = init_tbsize_result(11, 0, 0, 672, 26, 238, 39);
+    tbsize_addbutton(&tbsize_results[15],   0,   0,  23,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15],  23,   0,  46,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15],  46,   0,  54,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15],  54,   0,  77,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15],  77,   0, 100,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 100,   0, 123,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 123,   0, 146,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 146,   0, 169,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 169,   0, 192,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 192,   0, 215,  23 + fontheight);
+    tbsize_addbutton(&tbsize_results[15], 215,   0, 238,  23 + fontheight);
+
+    tbsize_results[16] = init_tbsize_result(11, 0, 0, 672, 26, 239, 22);
+    tbsize_addbutton(&tbsize_results[16],   0,   0,  23,  22);
+    tbsize_addbutton(&tbsize_results[16],  23,   0,  46,  22);
+    tbsize_addbutton(&tbsize_results[16],  46,   0,  54,  22);
+    tbsize_addbutton(&tbsize_results[16],  54,   0,  77,  22);
+    tbsize_addbutton(&tbsize_results[16],  77,   0, 100,  22);
+    tbsize_addbutton(&tbsize_results[16], 100,   0, 123,  22);
+    tbsize_addbutton(&tbsize_results[16], 123,   0, 146,  22);
+    tbsize_addbutton(&tbsize_results[16], 146,   0, 169,  22);
+    tbsize_addbutton(&tbsize_results[16], 169,   0, 192,  22);
+    tbsize_addbutton(&tbsize_results[16], 192,   0, 215,  22);
+    tbsize_addbutton(&tbsize_results[16], 215,   0, 238,  22);
+
+    buttonwidth = 7 + string_width(STRING1);
+
+    tbsize_results[17] = init_tbsize_result(3, 0, 0, 672, 26, 489, 39);
+    tbsize_addbutton(&tbsize_results[17],   0,   2, buttonwidth,  25 + fontheight);
+    tbsize_addbutton(&tbsize_results[17], buttonwidth,   2, 2*buttonwidth + 4,  25 + fontheight);
+    tbsize_addbutton(&tbsize_results[17], 2*buttonwidth + 4,   2, 3*buttonwidth + 4,  25 + fontheight);
+
+    tbsize_results[18] = init_tbsize_result(6, 0, 0, 672, 104, 978, 24);
+    tbsize_addbutton(&tbsize_results[18],   0,   2, buttonwidth,  10 + fontheight);
+    tbsize_addbutton(&tbsize_results[18], buttonwidth,   2, 2*buttonwidth,  10 + fontheight);
+    tbsize_addbutton(&tbsize_results[18], 2*buttonwidth,   2, 3*buttonwidth,  10 + fontheight);
+    tbsize_addbutton(&tbsize_results[18], 3*buttonwidth,   2, 4*buttonwidth,  10 + fontheight);
+    tbsize_addbutton(&tbsize_results[18], 4*buttonwidth,   2, 5*buttonwidth + 4,  10 + fontheight);
+    tbsize_addbutton(&tbsize_results[18], 5*buttonwidth + 4,   2, 5*buttonwidth + 4 + string_width(STRING2) + 11,  10 + fontheight);
+
+    tbsize_results[19] = init_tbsize_result(6, 0, 0, 672, 28, 978, 38);
+    tbsize_addbutton(&tbsize_results[19],   0,   0, buttonwidth,  22 + fontheight);
+    tbsize_addbutton(&tbsize_results[19], buttonwidth,   0, 2*buttonwidth,  22 + fontheight);
+    tbsize_addbutton(&tbsize_results[19], 2*buttonwidth,   0, 3*buttonwidth,  22 + fontheight);
+    tbsize_addbutton(&tbsize_results[19], 3*buttonwidth,   0, 4*buttonwidth,  22 + fontheight);
+    tbsize_addbutton(&tbsize_results[19], 4*buttonwidth,   0, 5*buttonwidth + 4,  22 + fontheight);
+    tbsize_addbutton(&tbsize_results[19], 5*buttonwidth + 4,   0, 5*buttonwidth + 4 + string_width(STRING2) + 11,  22 + fontheight);
+
+    tbsize_results[20] = init_tbsize_result(3, 0, 0, 672, 100, 239, 102);
+    tbsize_addbutton(&tbsize_results[20],   0,   2, 100, 102);
+    tbsize_addbutton(&tbsize_results[20], 100,   2, 139, 102);
+    tbsize_addbutton(&tbsize_results[20], 139,   2, 239, 102);
+
+    tbsize_results[21] = init_tbsize_result(3, 0, 0, 672, 42, 185, 40);
+    tbsize_addbutton(&tbsize_results[21],   0,   2,  75,  40);
+    tbsize_addbutton(&tbsize_results[21],  75,   2, 118,  40);
+    tbsize_addbutton(&tbsize_results[21], 118,   2, 165 + string_width(STRING2),  40);
+
+    tbsize_results[22] = init_tbsize_result(1, 0, 0, 672, 42, 67, 40);
+    tbsize_addbutton(&tbsize_results[22],   0,   2,  47 + string_width(STRING2),  40);
+
+    tbsize_results[23] = init_tbsize_result(2, 0, 0, 672, 42, 67, 41);
+    tbsize_addbutton(&tbsize_results[23],   0,   2, 672,  25 + fontheight);
+    tbsize_addbutton(&tbsize_results[23],   0,  25 + fontheight, 672,  48 + 2*fontheight);
+}
+
+static void free_tbsize_results(void) {
+    int i;
+
+    for (i = 0; i < tbsize_results_num; i++)
+        HeapFree(GetProcessHeap(), 0, tbsize_results[i].prcButtons);
+    HeapFree(GetProcessHeap(), 0, tbsize_results);
+    tbsize_results = NULL;
+}
 
 static int tbsize_numtests = 0;
 
@@ -812,13 +1000,12 @@ static tbsize_alt_result_t tbsize_alt_results[] =
   { 20, 2, { 107, 2, 207, 102 } }
 };
 
-static int tbsize_alt_numtests = 0;
+static DWORD tbsize_alt_numtests = 0;
 
 #define check_sizes_todo(todomask) { \
         RECT rc; \
         int buttonCount, i, mask=(todomask); \
         tbsize_result_t *res = &tbsize_results[tbsize_numtests]; \
-        assert(tbsize_numtests < sizeof(tbsize_results)/sizeof(tbsize_results[0])); \
         GetClientRect(hToolbar, &rc); \
         /*check_rect("client", rc, res->rcClient);*/ \
         buttonCount = SendMessage(hToolbar, TB_BUTTONCOUNT, 0, 0); \
@@ -830,9 +1017,9 @@ static int tbsize_alt_numtests = 0;
                 win_skip("Alternate rect found\n"); \
                 tbsize_alt_numtests++; \
             } else if (!(mask&1)) { \
-                check_rect("button", rc, res->rcButtons[i]); \
+                check_rect("button = %d, tbsize_numtests = %d", rc, res->prcButtons[i], i, tbsize_numtests); \
             } else {\
-                todo_wine { check_rect("button", rc, res->rcButtons[i]); } \
+                todo_wine { check_rect("button = %d, tbsize_numtests = %d", rc, res->prcButtons[i], i, tbsize_numtests); } \
             } \
             mask >>= 1; \
         } \
@@ -855,7 +1042,7 @@ static TBBUTTON buttons3[] = {
     {0, 30, TBSTATE_ENABLED, 0, {0, }, 0, 0},
     {0, 31, TBSTATE_ENABLED, 0, {0, }, 0, 1},
     {0, 32, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, 1},
-    {0, 33, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, (UINT_PTR)"Tst"}
+    {0, 33, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0, }, 0, (UINT_PTR)STRING2}
 };
 
 static void test_sizes(void)
@@ -865,6 +1052,9 @@ static void test_sizes(void)
     TBBUTTONINFO tbinfo;
     int style;
     int i;
+    int fontheight = system_font_height();
+
+    init_tbsize_results();
 
     rebuild_toolbar_with_buttons(&hToolbar);
     style = GetWindowLong(hToolbar, GWL_STYLE);
@@ -922,15 +1112,15 @@ static void test_sizes(void)
     SendMessageA(hToolbar, TB_ADDBUTTONS, 2, (LPARAM)buttons2);
     check_sizes();
     /* TB_SETBUTTONSIZE can't be used to reduce the size of a button below the default */
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(22, 21))==1, "TB_SETBUTTONSIZE\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(5, 100))==1, "TB_SETBUTTONSIZE\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 100);
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(3, 3))==1, "TB_SETBUTTONSIZE\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(5, 100))==1, "TB_SETBUTTONSIZE\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 100);
     check_sizes();
     /* add some buttons with non-default sizes */
     SendMessageA(hToolbar, TB_ADDBUTTONS, 2, (LPARAM)buttons2);
@@ -938,26 +1128,26 @@ static void test_sizes(void)
     check_sizes();
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[0]);
     /* TB_ADDSTRING resets the size */
-    SendMessageA(hToolbar, TB_ADDSTRING, 0, (LPARAM)"A\0MMMMMMMMMMMMM\0");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 39), "Unexpected button size\n");
+    SendMessageA(hToolbar, TB_ADDSTRING, 0, (LPARAM) STRING0 "\0" STRING1 "\0");
+    check_button_size(hToolbar, 23, 23 + fontheight);
     check_sizes();
     /* TB_SETBUTTONSIZE can be used to crop the text */
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(3, 3));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     check_sizes();
     /* the default size is bitmap size + padding */
     SendMessageA(hToolbar, TB_SETPADDING, 0, MAKELONG(1, 1));
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(3, 3));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(17, 17), "Unexpected button size\n");
+    check_button_size(hToolbar, 17, 17);
     SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(3, 3));
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(3, 3));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(4, 4), "Unexpected button size\n");
+    check_button_size(hToolbar, 4, 4);
 
     rebuild_toolbar(&hToolbar);
     /* sending a TB_SETBITMAPSIZE with the same sizes is enough to make the button smaller */
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(16, 15));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 21), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 21);
     /* -1 in TB_SETBITMAPSIZE is a special code meaning that the coordinate shouldn't be changed */
     add_128x15_bitmap(hToolbar, 16);
     ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(14, -1)), "TB_SETBITMAPSIZE failed\n");
@@ -972,64 +1162,64 @@ static void test_sizes(void)
     CHECK_IMAGELIST(16, 14, 12);
 
     rebuild_toolbar(&hToolbar);
-    SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"A\0MMMMMMMMMMMMM\0");
+    SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)STRING0 "\0" STRING1 "\0");
     /* the height is increased after a TB_ADDSTRING */
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 39), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 23 + fontheight);
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
     /* if a string is in the pool, even adding a button without a string resets the size */
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons2[0]);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
     /* an BTNS_AUTOSIZE button is also considered when computing the new size */
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[2]);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(163, 39), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING1), 23 + fontheight);
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[0]);
     check_sizes();
     /* delete button doesn't change the buttons size */
     SendMessageA(hToolbar, TB_DELETEBUTTON, 2, 0);
     SendMessageA(hToolbar, TB_DELETEBUTTON, 1, 0);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(163, 39), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING1), 23 + fontheight);
     /* TB_INSERTBUTTONS will */
     SendMessageA(hToolbar, TB_INSERTBUTTON, 1, (LPARAM)&buttons2[0]);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
 
     /* TB_HIDEBUTTON and TB_MOVEBUTTON doesn't force a recalc */
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
     ok(SendMessageA(hToolbar, TB_MOVEBUTTON, 0, 1), "TB_MOVEBUTTON failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 100);
     ok(SendMessageA(hToolbar, TB_HIDEBUTTON, 20, TRUE), "TB_HIDEBUTTON failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 100);
     /* however changing the hidden flag with TB_SETSTATE does */
     ok(SendMessageA(hToolbar, TB_SETSTATE, 20, TBSTATE_ENABLED|TBSTATE_HIDDEN), "TB_SETSTATE failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 100);
     ok(SendMessageA(hToolbar, TB_SETSTATE, 20, TBSTATE_ENABLED), "TB_SETSTATE failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
+    check_button_size(hToolbar, 23, 22);
 
     /* TB_SETIMAGELIST always changes the height but the width only if necessary */
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
     himl = ImageList_LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP_80x15), 20, 2, CLR_NONE, IMAGE_BITMAP, LR_DEFAULTCOLOR);
     ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl) == 0, "TB_SETIMAGELIST failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 21), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 21);
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(100, 100));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 100);
     /* But there are no update when we change imagelist, and image sizes are the same */
     himl2 = ImageList_LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP_128x15), 20, 2, CLR_NONE, IMAGE_BITMAP, LR_DEFAULTCOLOR);
     ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, (LRESULT)himl2) == (LRESULT)himl, "TB_SETIMAGELIST failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(100, 100), "Unexpected button size\n");
+    check_button_size(hToolbar, 100, 100);
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(1, 1));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 21), "Unexpected button size\n");
+    check_button_size(hToolbar, 27, 21);
     ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, 0) == (LRESULT)himl2, "TB_SETIMAGELIST failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 7), "Unexpected button size\n");
+    check_button_size(hToolbar, 27, 7);
     SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(1, 1));
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(8, 7), "Unexpected button size\n");
+    check_button_size(hToolbar, 8, 7)
     ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl) == 0, "TB_SETIMAGELIST failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 21), "Unexpected button size\n");
+    check_button_size(hToolbar, 27, 21)
     /* the text is taken into account */
-    SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"A\0MMMMMMMMMMMMM\0");
+    SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)STRING0 "\0" STRING1 "\0");
     SendMessageA(hToolbar, TB_ADDBUTTONS, 4, (LPARAM)buttons3);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(163, 38), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING1), 22 + fontheight);
     ok(SendMessageA(hToolbar, TB_SETIMAGELIST, 0, 0) == (LRESULT)himl, "TB_SETIMAGELIST failed\n");
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(163, 24), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING1), 8 + fontheight);
     /* the style change also comes into effect */
     check_sizes();
     SetWindowLong(hToolbar, GWL_STYLE, GetWindowLong(hToolbar, GWL_STYLE) | TBSTYLE_FLAT);
@@ -1041,9 +1231,9 @@ static void test_sizes(void)
     ImageList_Destroy(himl2);
 
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 39), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING2), 23 + fontheight);
     SendMessageA(hToolbar, TB_DELETEBUTTON, 0, 0);
-    ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 39), "Unexpected button size\n");
+    check_button_size(hToolbar, 7 + string_width(STRING2), 23 + fontheight);
 
     rebuild_toolbar(&hToolbar);
 
@@ -1092,6 +1282,7 @@ static void test_sizes(void)
         ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 33, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
     }
 
+    free_tbsize_results();
     DestroyWindow(hToolbar);
 }
 
@@ -1338,7 +1529,7 @@ static void test_setrows(void)
 {
     TBBUTTON buttons[9];
     HWND hToolbar;
-    int i;
+    DWORD i;
 
     for (i=0; i<9; i++)
         MakeButton(buttons+i, 1000+i, TBSTYLE_FLAT | TBSTYLE_CHECKGROUP, 0);
@@ -1443,6 +1634,53 @@ static void test_tooltip(void)
     DestroyWindow(hToolbar);
 }
 
+static void test_get_set_style(void)
+{
+    TBBUTTON buttons[9];
+    DWORD style, style2, ret;
+    HWND hToolbar;
+    int i;
+
+    for (i=0; i<9; i++)
+        MakeButton(buttons+i, 1000+i, TBSTYLE_CHECKGROUP, 0);
+    MakeButton(buttons+3, 1003, TBSTYLE_SEP|TBSTYLE_GROUP, 0);
+    MakeButton(buttons+6, 1006, TBSTYLE_SEP, 0);
+
+    hToolbar = CreateToolbarEx(hMainWnd,
+        WS_VISIBLE | WS_CLIPCHILDREN | CCS_TOP |
+        WS_CHILD | TBSTYLE_LIST,
+        100,
+        0, NULL, 0,
+        buttons, sizeof(buttons)/sizeof(buttons[0]),
+        0, 0, 20, 16, sizeof(TBBUTTON));
+    ok(hToolbar != NULL, "Toolbar creation\n");
+    SendMessage(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"test\000");
+
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    style2 = GetWindowLongA(hToolbar, GWL_STYLE);
+    ok(style == style2, "got 0x%08x, expected 0x%08x\n", style, style2);
+
+    /* try to alter common window bits */
+    style2 |= WS_BORDER;
+    ret = SendMessageA(hToolbar, TB_SETSTYLE, 0, style2);
+    ok(ret == 0, "got %d\n", ret);
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    style2 = GetWindowLongA(hToolbar, GWL_STYLE);
+    ok((style != style2) && (style == (style2 | WS_BORDER)),
+        "got 0x%08x, expected 0x%08x\n", style, style2);
+    ok(style & WS_BORDER, "got 0x%08x\n", style);
+
+    /* now styles are the same, alter window style */
+    ret = SendMessageA(hToolbar, TB_SETSTYLE, 0, style2);
+    ok(ret == 0, "got %d\n", ret);
+    style2 |= WS_BORDER;
+    SetWindowLongA(hToolbar, GWL_STYLE, style2);
+    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
+    ok(style == style2, "got 0x%08x, expected 0x%08x\n", style, style2);
+
+    DestroyWindow(hToolbar);
+}
+
 START_TEST(toolbar)
 {
     WNDCLASSA wc;
@@ -1482,6 +1720,7 @@ START_TEST(toolbar)
     test_setrows();
     test_getstring();
     test_tooltip();
+    test_get_set_style();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {
