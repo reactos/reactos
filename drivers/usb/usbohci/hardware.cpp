@@ -1125,9 +1125,9 @@ CUSBHardwareDevice::GetPortStatus(
     if (Value & OHCI_RH_PORTSTATUS_PES)
         *PortStatus |= USB_PORT_STATUS_ENABLE;
 
-    // port enabled
+    // port disconnect or hardware error
     if (Value & OHCI_RH_PORTSTATUS_PESC)
-        *PortChange |= USB_PORT_STATUS_ENABLE;
+        *PortChange |= USB_PORT_STATUS_CONNECT;
 
     // port suspend
     if (Value & OHCI_RH_PORTSTATUS_PSS)
@@ -1211,7 +1211,6 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // sanity checks
         //
-        ASSERT((Value & OHCI_RH_PORTSTATUS_PRS) == 0);
         ASSERT((Value & OHCI_RH_PORTSTATUS_PRSC));
 
         //
@@ -1219,27 +1218,24 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRSC);
 
-
         //
         // sanity check
         //
         ASSERT((Value & OHCI_RH_PORTSTATUS_PES));
-
-        //
-        // re-enable root hub change
-        //
-        Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET));
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), Value | OHCI_ROOT_HUB_STATUS_CHANGE);
-
     }
 
-    if (Status == C_PORT_CONNECTION)
+    if (Status == C_PORT_CONNECTION || Status == C_PORT_ENABLE)
     {
         //
-        // clear bit
+        // clear bits
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC);
     }
+
+    //
+    // re-enable root hub change
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
 
     return STATUS_SUCCESS;
 }
@@ -1474,10 +1470,6 @@ InterruptServiceRoutine(
 
     if (Status & OHCI_ROOT_HUB_STATUS_CHANGE) 
     {
-        //
-        // new device has arrived
-        //
-
         //
         // disable interrupt as it will fire untill the port has been reset
         //
