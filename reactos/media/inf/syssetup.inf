@@ -26,9 +26,9 @@ ks.inf
 RegisterDlls = OleControlDlls
 
 [OleControlDlls]
+11,,atl.dll,1
 11,,actxprxy.dll,1
 11,,amstream.dll,1
-11,,atl.dll,1
 11,,avifil32.dll,1
 11,,browseui.dll,1
 11,,comcat.dll,1
