@@ -151,6 +151,19 @@ extern "C" {
 #define IOCTL_DISK_SET_CACHE_INFORMATION \
   CTL_CODE(IOCTL_DISK_BASE, 0x0036, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
+//
+// NTDDI_WIN2003 was an older define used in the early beta builds, which
+// Microsoft forgot to fix in a few headers.
+// NTDDI_WS03 is the correct term.
+//
+#if (NTDDI_VERSION < NTDDI_WS03)
+#define IOCTL_DISK_GET_WRITE_CACHE_STATE \
+  CTL_CODE(IOCTL_DISK_BASE, 0x0037, METHOD_BUFFERED, FILE_READ_ACCESS)
+#else
+#define OBSOLETE_DISK_GET_WRITE_CACHE_STATE \
+  CTL_CODE(IOCTL_DISK_BASE, 0x0037, METHOD_BUFFERED, FILE_READ_ACCESS)
+#endif
+
 #define IOCTL_DISK_SET_DRIVE_LAYOUT \
   CTL_CODE(IOCTL_DISK_BASE, 0x0004, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
@@ -460,10 +473,35 @@ typedef struct _SET_PARTITION_INFORMATION_EX {
   } DUMMYUNIONNAME;
 } SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
 
+typedef struct _CREATE_DISK_GPT {
+    GUID DiskId;
+    ULONG MaxPartitionCount;
+} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
+
+typedef struct _CREATE_DISK_MBR {
+    ULONG Signature;
+} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
+
+typedef struct _CREATE_DISK {
+    PARTITION_STYLE PartitionStyle;
+    _ANONYMOUS_UNION union {
+        CREATE_DISK_MBR Mbr;
+        CREATE_DISK_GPT Gpt;
+    } DUMMYUNIONNAME;
+} CREATE_DISK, *PCREATE_DISK;
+
 typedef struct _VERIFY_INFORMATION {
   LARGE_INTEGER  StartingOffset;
   ULONG  Length;
 } VERIFY_INFORMATION, *PVERIFY_INFORMATION;
+
+#if (OSVER(NTDDI_VERSION) == NTDDI_WINXP)
+typedef enum _DISK_WRITE_CACHE_STATE {
+    DiskWriteCacheNormal,
+    DiskWriteCacheForceDisable,
+    DiskWriteCacheDisableNotSupported
+} DISK_WRITE_CACHE_STATE, *PDISK_WRITE_CACHE_STATE;
+#endif
 
 typedef enum {
 	EqualPriority,
