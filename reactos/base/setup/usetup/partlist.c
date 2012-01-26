@@ -88,12 +88,12 @@ AssignDriverLetters (PPARTLIST List)
                                      PARTENTRY,
                                      ListEntry);
 
-      for (i=0; i<3; i++)
+      for (i=0; i<4; i++)
         PartEntry->DriveLetter[i] = 0;
 
       if (PartEntry->Unpartitioned == FALSE)
       {
-        for (i=0; i<3; i++)
+        for (i=0; i<4; i++)
         {
           if (IsContainerPartition (PartEntry->PartInfo[i].PartitionType))
             continue;
