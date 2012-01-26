@@ -402,13 +402,9 @@ DeviceStatusChangeThread(
             }
 
             //
-            // Create the device object only if the port manipulation was started by a device connect
+            // This is a new device
             //
-            if (HubDeviceExtension->PortStatusChange[PortId-1].Status)
-            {
-                HubDeviceExtension->PortStatusChange[PortId-1].Status = 0;
-                Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL);
-            }
+            Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL);
         }
     }
 
