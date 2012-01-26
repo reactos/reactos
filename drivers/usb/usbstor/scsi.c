@@ -31,7 +31,7 @@ USBSTOR_BuildCBW(
     Control->Signature = CBW_SIGNATURE;
     Control->Tag = Tag;
     Control->DataTransferLength = DataTransferLength;
-    Control->Flags = 0x80;
+    Control->Flags = (CommandBlock[0] != SCSIOP_WRITE) ? 0x80 : 0x00;
     Control->LUN = (LUN & MAX_LUN);
     Control->CommandBlockLength = CommandBlockLength;
 
