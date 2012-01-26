@@ -374,7 +374,8 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
           PartEntry->PartInfo[j].StartingOffset.QuadPart -
           (LastStartingOffset + LastPartitionLength);
 
-          if (LastUnusedPartitionLength >= DiskEntry->CylinderSize)
+          if (PartEntry->PartInfo[j].StartingOffset.QuadPart > (LastStartingOffset + LastPartitionLength) &&
+              LastUnusedPartitionLength >= DiskEntry->CylinderSize)
           {
             DPRINT ("Unpartitioned disk space %I64u\n", LastUnusedPartitionLength);
 
@@ -718,7 +719,8 @@ AddDiskToList (HANDLE FileHandle,
     return;
   }
 
-  if (DiskGeometry.MediaType != FixedMedia)
+  if (DiskGeometry.MediaType != FixedMedia &&
+      DiskGeometry.MediaType != RemovableMedia)
   {
     return;
   }
