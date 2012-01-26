@@ -12,6 +12,7 @@ list(APPEND SOURCE
     linebreak.c
     usp10.c
     mirror.c
+    opentype.c
     shape.c
     shaping.c
     ${CMAKE_CURRENT_BINARY_DIR}/usp10_stubs.c
