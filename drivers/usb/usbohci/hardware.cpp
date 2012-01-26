@@ -1266,10 +1266,39 @@ CUSBHardwareDevice::SetPortFeature(
     }
     else if (Feature == PORT_POWER)
     {
+        LARGE_INTEGER Timeout;
+
         //
         // enable power
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PPS);
+
+        //
+        // read descriptor A for the delay data
+        //
+        Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
+
+        //
+        // compute the delay
+        //
+        Timeout.QuadPart = OHCI_RH_GET_POWER_ON_TO_POWER_GOOD_TIME(Value);
+
+        //
+        // delay is multiplied by 2 ms
+        //
+        Timeout.QuadPart *= 2;
+        DPRINT1("Waiting %d milliseconds for port power up\n", Timeout.LowPart);
+
+        //
+        // convert to 100 ns units (absolute)
+        //
+        Timeout.QuadPart *= -10000;
+
+        //
+        // perform the wait
+        //
+        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+
         return STATUS_SUCCESS;
     }
     else if (Feature == PORT_SUSPEND)
