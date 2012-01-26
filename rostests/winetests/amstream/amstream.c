@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #define COBJMACROS
 
 #include "wine/test.h"
@@ -29,9 +27,9 @@
 #define FILE_LEN 9
 static const char fileA[FILE_LEN] = "test.avi";
 
-IAMMultiMediaStream* pams;
-IDirectDraw7* pdd7 = NULL;
-IDirectDrawSurface7* pdds7 = NULL;
+static IAMMultiMediaStream* pams;
+static IDirectDraw7* pdd7;
+static IDirectDrawSurface7* pdds7;
 
 static int create_ammultimediastream(void)
 {
