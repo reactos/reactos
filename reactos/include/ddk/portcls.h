@@ -614,7 +614,7 @@ DECLARE_INTERFACE_(IServiceGroup, IServiceSink) {
 typedef IServiceGroup *PSERVICEGROUP;
 
 
-#if (NTDDI_VERSION >= NTDDI_WIN2003)
+#if (NTDDI_VERSION >= NTDDI_WS03)
 /* ===============================================================
     IUnregisterSubdevice Interface
 */
