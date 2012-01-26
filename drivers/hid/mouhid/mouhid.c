@@ -215,7 +215,7 @@ MouHid_ReadCompletion(
         /* get usage */
         UsageValue = 0;
         Status = HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_WHEEL, &UsageValue, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
-        if (Status == HIDP_STATUS_SUCCESS)
+        if (Status == HIDP_STATUS_SUCCESS && UsageValue != 0)
         {
             /* store wheel status */
             MouseInputData.ButtonFlags |= MOUSE_WHEEL;
