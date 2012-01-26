@@ -74,6 +74,8 @@ elseif(ARCH MATCHES arm)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
 
+add_definitions(-D_inline=__inline)
+
 # alternative arch name
 if(ARCH MATCHES amd64)
     set(ARCH2 x86_64)
