@@ -514,14 +514,18 @@ HidClassPDO_PnP(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT1("[HIDCLASS] PDO IRP_MN_REMOVE_DEVICE not implemented\n");
-            ASSERT(FALSE);
+            /* Disable the device interface */
+            if (PDODeviceExtension->DeviceInterface.Length != 0)
+                IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, FALSE);
 
-            //
-            // do nothing
-            //
-            Status = STATUS_SUCCESS; //Irp->IoStatus.Status;
-            break;
+            /* Complete the IRP */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+            /* Delete our device object*/
+            IoDeleteDevice(DeviceObject);
+
+            return STATUS_SUCCESS;
         }
         case IRP_MN_QUERY_INTERFACE:
         {

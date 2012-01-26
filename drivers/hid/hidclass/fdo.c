@@ -384,9 +384,18 @@ HidClassFDO_RemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+
+    /* Pass the IRP down */
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+
+    /* Now teardown our portion of the device stack */
+    IoDetachDevice(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject);
+    IoDeleteDevice(DeviceObject);
+
+    return Status;
 }
 
 NTSTATUS
