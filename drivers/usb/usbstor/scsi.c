@@ -447,7 +447,7 @@ USBSTOR_CBWCompletionRoutine(
                                                NULL,
                                                Context->TransferBufferMDL,
                                                Context->TransferDataLength,
-                                               ((Code == SCSIOP_WRITE) ? USBD_TRANSFER_DIRECTION_OUT : USBD_TRANSFER_DIRECTION_IN) | USBD_SHORT_TRANSFER_OK,
+                                               ((Code == SCSIOP_WRITE) ? USBD_TRANSFER_DIRECTION_OUT : (USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK)),
                                                NULL);
 
         //
@@ -551,7 +551,7 @@ USBSTOR_SendRequest(
                                            Context->cbw,
                                            NULL,
                                            sizeof(CBW),
-                                           USBD_TRANSFER_DIRECTION_OUT | USBD_SHORT_TRANSFER_OK,
+                                           USBD_TRANSFER_DIRECTION_OUT,
                                            NULL);
 
     //
