@@ -868,7 +868,7 @@ CreateDeviceIds(
     //
     // Initialize the CompatibleIds String
     //
-    UsbChildExtension->usCompatibleIds.Length = 144; //FIXME
+    UsbChildExtension->usCompatibleIds.Length = 188; //FIXME
     UsbChildExtension->usCompatibleIds.MaximumLength = UsbChildExtension->usCompatibleIds.Length;
 
     //
