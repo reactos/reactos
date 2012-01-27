@@ -77,7 +77,7 @@ reactos/dll/win32/initpki         # Autosync
 reactos/dll/win32/inseng          # Synced to Wine-1.3.37
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/itircl          # Autosync
-reactos/dll/win32/itss            # Autosync
+reactos/dll/win32/itss            # Synced to Wine-1.3.37
 reactos/dll/win32/jscript         # Autosync
 reactos/dll/win32/localspl        # Autosync
 reactos/dll/win32/localui         # Autosync
