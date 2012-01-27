@@ -62,7 +62,7 @@ DEFINE_EXPECT(GetBindInfo);
 DEFINE_EXPECT(ReportProgress_BEGINDOWNLOADDATA);
 DEFINE_EXPECT(ReportProgress_SENDINGREQUEST);
 DEFINE_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
-DEFINE_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+DEFINE_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
 DEFINE_EXPECT(ReportProgress_DIRECTBIND);
 DEFINE_EXPECT(ReportData);
 DEFINE_EXPECT(ReportResult);
@@ -149,7 +149,7 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         ok(!lstrcmpW(szStatusText, text_html), "unexpected szStatusText\n");
         break;
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
-        CHECK_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+        CHECK_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         ok(!lstrcmpW(szStatusText, cache_file), "unexpected szStatusText\n");
         break;
     case BINDSTATUS_DIRECTBIND:
@@ -294,7 +294,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
     if(expect_mime)
         SET_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
     if(test_protocol == MK_PROTOCOL)
-        SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+        SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
     SET_EXPECT(ReportData);
     if(test_protocol == ITS_PROTOCOL)
         SET_EXPECT(ReportProgress_BEGINDOWNLOADDATA);
@@ -311,7 +311,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
         if(expect_mime)
             SET_CALLED(ReportProgress_MIMETYPEAVAILABLE);
         if(test_protocol == MK_PROTOCOL)
-            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         SET_CALLED(ReportData);
         if(test_protocol == ITS_PROTOCOL)
             SET_CALLED(ReportProgress_BEGINDOWNLOADDATA);
@@ -324,7 +324,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
         if(expect_mime)
             CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
         if(test_protocol == MK_PROTOCOL)
-            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         CHECK_CALLED(ReportData);
         if(test_protocol == ITS_PROTOCOL)
             CHECK_CALLED(ReportProgress_BEGINDOWNLOADDATA);
