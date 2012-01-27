@@ -393,9 +393,22 @@ USBHUB_PdoQueryId(
 
     if (SourceString)
     {
-        ReturnString = ExAllocatePool(PagedPool, SourceString->Length);
-        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->Length);
-        DPRINT1("%S\n", ReturnString);
+        //
+        // allocate buffer
+        //
+        ReturnString = ExAllocatePool(PagedPool, SourceString->MaximumLength);
+        if (!ReturnString)
+        {
+            //
+            // no memory
+            //
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        //
+        // copy buffer
+        //
+        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->MaximumLength);
     }
 
     *Information = (ULONG_PTR)ReturnString;

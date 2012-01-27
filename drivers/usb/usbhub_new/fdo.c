@@ -700,6 +700,7 @@ GetUsbStringDescriptor(
     NTSTATUS Status;
     PUSB_STRING_DESCRIPTOR StringDesc = NULL;
     ULONG SizeNeeded;
+    LPWSTR Buffer;
 
     StringDesc = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(USB_STRING_DESCRIPTOR),
@@ -777,23 +778,29 @@ GetUsbStringDescriptor(
     //
     // Allocate Buffer to return
     //
-    *TransferBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                            SizeNeeded,
-                                            USB_HUB_TAG);
-    if (!*TransferBuffer)
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   SizeNeeded,
+                                   USB_HUB_TAG);
+    if (!Buffer)
     {
         DPRINT1("Failed to allocate buffer for string!\n");
         ExFreePool(StringDesc);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+	DPRINT1("Buffer %p\n", Buffer);
+    RtlZeroMemory(Buffer, SizeNeeded);
 
-    RtlZeroMemory(*TransferBuffer, SizeNeeded);
+	DPRINT1("Buffer %p\n", Buffer);
+	DPRINT1("SizeNeeded %lu\n", SizeNeeded);
+	DPRINT1("Offset %lu\n", FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+    DPRINT1("Length %lu\n", SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
 
     //
     // Copy the string to destination
     //
-    RtlCopyMemory(*TransferBuffer, StringDesc->bString, SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+    RtlCopyMemory(Buffer, StringDesc->bString, SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bString));
     *Size = SizeNeeded;
+    *TransferBuffer = Buffer;
 
     ExFreePool(StringDesc);
 
@@ -852,9 +859,9 @@ CreateDeviceIds(
     PDEVICE_OBJECT UsbChildDeviceObject)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG Index;
-    PWCHAR BufferPtr;
-    WCHAR Buffer[100];
+    ULONG Index = 0;
+    LPWSTR DeviceString;
+    WCHAR Buffer[200];
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
@@ -864,27 +871,6 @@ CreateDeviceIds(
     // get child device extension
     //
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)UsbChildDeviceObject->DeviceExtension;
-
-    //
-    // Initialize the CompatibleIds String
-    //
-    UsbChildExtension->usCompatibleIds.Length = 188; //FIXME
-    UsbChildExtension->usCompatibleIds.MaximumLength = UsbChildExtension->usCompatibleIds.Length;
-
-    //
-    // allocate mem for compatible id string
-    //
-    BufferPtr = ExAllocatePoolWithTag(NonPagedPool,
-                                      UsbChildExtension->usCompatibleIds.Length,
-                                      USB_HUB_TAG);
-    if (!BufferPtr)
-    {
-        DPRINT1("Failed to allocate memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory(BufferPtr, UsbChildExtension->usCompatibleIds.Length);
-    Index = 0;
 
     //
     // get device descriptor
@@ -897,9 +883,10 @@ CreateDeviceIds(
     ConfigurationDescriptor = UsbChildExtension->FullConfigDesc;
 
     //
-    // get interface descriptor
+    // use first interface descriptor available
     //
-    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)(ConfigurationDescriptor + 1);
+    InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, 0, -1, -1, -1, -1);
+    ASSERT(InterfaceDescriptor);
 
     //
     // Construct the CompatibleIds
@@ -911,17 +898,16 @@ CreateDeviceIds(
         //
         ASSERT(DeviceDescriptor->bNumConfigurations == 1);
         ASSERT(ConfigurationDescriptor->bNumInterfaces > 1);
-
-        Index += swprintf(&BufferPtr[Index], 
+        Index += swprintf(&Buffer[Index],
                           L"USB\\DevClass_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
-        Index += swprintf(&BufferPtr[Index],
+        Index += swprintf(&Buffer[Index],
                           L"USB\\DevClass_%02x&SubClass_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass) + 1;
-        Index += swprintf(&BufferPtr[Index],
+        Index += swprintf(&Buffer[Index],
                           L"USB\\DevClass_%02x",
                           DeviceDescriptor->bDeviceClass) + 1;
-        Index += swprintf(&BufferPtr[Index],
+        Index += swprintf(&Buffer[Index],
                           L"USB\\COMPOSITE") + 1;
     }
     else
@@ -938,85 +924,109 @@ CreateDeviceIds(
 
         if (DeviceDescriptor->bDeviceClass == 0)
         {
-            Index += swprintf(&BufferPtr[Index], 
+            Index += swprintf(&Buffer[Index], 
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass, InterfaceDescriptor->bInterfaceProtocol) + 1;
-            Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x",
                           InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass) + 1;
-            Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x",
                           InterfaceDescriptor->bInterfaceClass) + 1;
         }
         else
         {
-            Index += swprintf(&BufferPtr[Index], 
+            Index += swprintf(&Buffer[Index], 
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
-            Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass) + 1;
-            Index += swprintf(&BufferPtr[Index],
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x",
                           DeviceDescriptor->bDeviceClass) + 1;
-
-
         }
     }
 
-    BufferPtr[Index] = UNICODE_NULL;
-    UsbChildExtension->usCompatibleIds.Buffer = BufferPtr;
+    //
+    // now allocate the buffer
+    //
+    DeviceString = ExAllocatePool(NonPagedPool, (Index + 1) * sizeof(WCHAR));
+    if (!DeviceString)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // copy buffer
+    //
+    RtlCopyMemory(DeviceString, Buffer, Index * sizeof(WCHAR));
+    DeviceString[Index] = UNICODE_NULL;
+    UsbChildExtension->usCompatibleIds.Buffer = DeviceString;
+    UsbChildExtension->usCompatibleIds.Length = Index * sizeof(WCHAR);
+    UsbChildExtension->usCompatibleIds.MaximumLength = (Index + 1) * sizeof(WCHAR);
     DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
 
     //
-    // Initialize the DeviceId String
+    // Construct DeviceId string
     //
-    UsbChildExtension->usDeviceId.Length = 44;
-    UsbChildExtension->usDeviceId.MaximumLength  = UsbChildExtension->usDeviceId.Length;
-    BufferPtr = ExAllocatePoolWithTag(NonPagedPool,
-                                      UsbChildExtension->usDeviceId.Length,
-                                      USB_HUB_TAG);
-    if (!BufferPtr)
+    Index = swprintf(Buffer, L"USB\\Vid_%04x&Pid_%04x", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct) + 1;
+
+    //
+    // now allocate the buffer
+    //
+    DeviceString = ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+    if (!DeviceString)
     {
-        DPRINT1("Failed to allocate memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Cleanup;
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     //
-    // Construct DeviceId
+    // copy buffer
     //
-    swprintf(BufferPtr, L"USB\\Vid_%04x&Pid_%04x\0", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct);
-    UsbChildExtension->usDeviceId.Buffer = BufferPtr;
+    RtlCopyMemory(DeviceString, Buffer, Index * sizeof(WCHAR));
+    UsbChildExtension->usDeviceId.Buffer = DeviceString;
+    UsbChildExtension->usDeviceId.Length = (Index-1) * sizeof(WCHAR);
+    UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
     DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usDeviceId);
 
     //
-    // Initialize the HardwareId String
-    //
-    UsbChildExtension->usHardwareIds.Length = 110;
-    UsbChildExtension->usHardwareIds.MaximumLength = UsbChildExtension->usHardwareIds.Length;
-    BufferPtr = ExAllocatePoolWithTag(NonPagedPool, UsbChildExtension->usHardwareIds.Length, USB_HUB_TAG);
-    if (!BufferPtr)
-    {
-        DPRINT1("Failed to allocate memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Cleanup;
-    }
-
-    RtlZeroMemory(BufferPtr, UsbChildExtension->usHardwareIds.Length);
-
-    //
-    // Consturct HardwareIds
+    // Construct HardwareIds
     //
     Index = 0;
-    Index += swprintf(&BufferPtr[Index], 
+    Index += swprintf(&Buffer[Index], 
                       L"USB\\Vid_%04x&Pid_%04x&Rev_%04x",
                       UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct, UsbChildExtension->DeviceDesc.bcdDevice) + 1;
-    Index += swprintf(&BufferPtr[Index],
+    Index += swprintf(&Buffer[Index],
                       L"USB\\Vid_%04x&Pid_%04x",
                       UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct) + 1;
-    BufferPtr[Index] = UNICODE_NULL;
-    UsbChildExtension->usHardwareIds.Buffer = BufferPtr;
+
+    //
+    // now allocate the buffer
+    //
+    DeviceString = ExAllocatePool(NonPagedPool, (Index + 1) * sizeof(WCHAR));
+    if (!DeviceString)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // copy buffer
+    //
+    RtlCopyMemory(DeviceString, Buffer, Index * sizeof(WCHAR));
+    DeviceString[Index] = UNICODE_NULL;
+    UsbChildExtension->usHardwareIds.Buffer = DeviceString;
+    UsbChildExtension->usHardwareIds.Length = (Index + 1) * sizeof(WCHAR);
+    UsbChildExtension->usHardwareIds.MaximumLength = (Index + 1) * sizeof(WCHAR);
     DPRINT1("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
 
     //
@@ -1036,7 +1046,7 @@ CreateDeviceIds(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-            goto Cleanup;
+            return Status;
         }
 
         UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
@@ -1056,7 +1066,7 @@ CreateDeviceIds(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-            goto Cleanup;
+            return Status;
         }
 
         UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
@@ -1073,35 +1083,17 @@ CreateDeviceIds(
        {
            DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
            Status = STATUS_INSUFFICIENT_RESOURCES;
-           goto Cleanup;
+           return Status;
        }
 
        //
        // copy instance id
        //
        RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
-       UsbChildExtension->usInstanceId.Length = UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
+       UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
 
        DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
-
-
-    return Status;
-
-Cleanup:
-    //
-    // Free Memory
-    //
-    if (UsbChildExtension->usCompatibleIds.Buffer)
-        ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
-    if (UsbChildExtension->usDeviceId.Buffer)
-        ExFreePool(UsbChildExtension->usDeviceId.Buffer);
-    if (UsbChildExtension->usHardwareIds.Buffer)
-        ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
-    if (UsbChildExtension->usTextDescription.Buffer)
-        ExFreePool(UsbChildExtension->usTextDescription.Buffer);
-    if (UsbChildExtension->usInstanceId.Buffer)
-        ExFreePool(UsbChildExtension->usInstanceId.Buffer);
 
     return Status;
 }
