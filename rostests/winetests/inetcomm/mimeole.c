@@ -29,7 +29,6 @@
 #include "mimeole.h"
 
 #include <stdio.h>
-#include <assert.h>
 
 #include "wine/test.h"
 
@@ -257,6 +256,7 @@ static void test_CreateMessage(void)
     IMimeBody_Release(body);
 
     hr = IMimeMessage_GetBody(msg, IBL_ROOT, NULL, &hbody);
+    ok(hr == S_OK, "ret %08x\n", hr);
 
     PropVariantInit(&prop);
     hr = IMimeMessage_GetBodyProp(msg, hbody, att_pritype, 0, &prop);
