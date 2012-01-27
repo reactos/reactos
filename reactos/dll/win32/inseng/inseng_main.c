@@ -28,11 +28,14 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "rpcproxy.h"
 #include "initguid.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inseng);
+
+static HINSTANCE instance;
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
@@ -41,6 +44,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     case DLL_WINE_PREATTACH:
         return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
+        instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
@@ -59,9 +63,28 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
+/***********************************************************************
+ *              DllCanUnloadNow (INSENG.@)
+ */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (INSENG.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (INSENG.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }
 
 BOOL WINAPI CheckTrustEx( LPVOID a, LPVOID b, LPVOID c, LPVOID d, LPVOID e )
