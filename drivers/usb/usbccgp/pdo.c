@@ -323,6 +323,280 @@ PDO_HandlePnp(
 
 }
 
+NTSTATUS
+USBCCGP_BuildConfigurationDescriptor(
+    PDEVICE_OBJECT DeviceObject, 
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    ULONG TotalSize, Index;
+    PURB Urb;
+    PVOID Buffer;
+    PUCHAR BufferPtr;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("USBCCGP_BuildConfigurationDescriptor\n");
+
+    //
+    // get device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // get configuration descriptor
+    //
+    ConfigurationDescriptor = PDODeviceExtension->ConfigurationDescriptor;
+
+    //
+    // calculate size of configuration descriptor
+    //
+    TotalSize = sizeof(USB_CONFIGURATION_DESCRIPTOR);
+
+    for(Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
+    {
+        //
+        // get current interface descriptor
+        //
+        InterfaceDescriptor = PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[Index];
+
+        //
+        // add to size and move to next descriptor
+        //
+        TotalSize += InterfaceDescriptor->bLength;
+        InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+
+        do
+        {
+            if ((ULONG_PTR)InterfaceDescriptor >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+            {
+                //
+                // reached end of configuration descriptor
+                //
+                break;
+            }
+
+            //
+            // association descriptors are removed
+            //
+            if (InterfaceDescriptor->bDescriptorType != USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE)
+            {
+                if (InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
+                {
+                    //
+                    // reached next descriptor
+                    //
+                    break;
+                }
+
+                //
+                // append size
+                //
+                TotalSize += InterfaceDescriptor->bLength;
+            }
+
+            //
+            // move to next descriptor
+            //
+            InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+        }while(TRUE);
+    }
+
+    //
+    // now allocate temporary buffer for the configuration descriptor
+    //
+    Buffer = AllocateItem(NonPagedPool, TotalSize);
+    if (!Buffer)
+    {
+        //
+        // failed to allocate buffer
+        //
+        DPRINT1("[USBCCGP] Failed to allocate %lu Bytes\n", TotalSize);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // first copy the configuration descriptor
+    //
+    RtlCopyMemory(Buffer, ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    BufferPtr = (PUCHAR)((ULONG_PTR)Buffer + ConfigurationDescriptor->bLength);
+
+    for(Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
+    {
+        //
+        // get current interface descriptor
+        //
+        InterfaceDescriptor = PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[Index];
+
+        //
+        // copy descriptor and move to next descriptor
+        //
+        RtlCopyMemory(BufferPtr, InterfaceDescriptor, InterfaceDescriptor->bLength);
+        BufferPtr += InterfaceDescriptor->bLength;
+        InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+
+        do
+        {
+            if ((ULONG_PTR)InterfaceDescriptor >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+            {
+                //
+                // reached end of configuration descriptor
+                //
+                break;
+            }
+
+            //
+            // association descriptors are removed
+            //
+            if (InterfaceDescriptor->bDescriptorType != USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE)
+            {
+                if (InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
+                {
+                    //
+                    // reached next descriptor
+                    //
+                    break;
+                }
+
+                //
+                // copy descriptor
+                //
+                RtlCopyMemory(BufferPtr, InterfaceDescriptor, InterfaceDescriptor->bLength);
+                BufferPtr += InterfaceDescriptor->bLength;
+            }
+
+            //
+            // move to next descriptor
+            //
+            InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+        }while(TRUE);
+    }
+
+    //
+    // modify configuration descriptor
+    //
+    ConfigurationDescriptor = Buffer;
+    ConfigurationDescriptor->wTotalLength = TotalSize;
+    ConfigurationDescriptor->bNumInterfaces = PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces;
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+    ASSERT(Urb);
+
+    //
+    // copy descriptor
+    //
+    RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Buffer, min(TotalSize, Urb->UrbControlDescriptorRequest.TransferBufferLength));
+
+    //
+    // store final size
+    //
+    Urb->UrbControlDescriptorRequest.TransferBufferLength = TotalSize;
+
+    //
+    // free buffer
+    //
+    FreeItem(Buffer);
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+PDO_HandleInternalDeviceControl(
+    PDEVICE_OBJECT DeviceObject, 
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_SUBMIT_URB)
+    {
+        //
+        // get urb
+        //
+        Urb = (PURB)IoStack->Parameters.Others.Argument1;
+        ASSERT(Urb);
+
+        if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE)
+        {
+            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x\n", Urb->UrbHeader.Function);
+
+            if(Urb->UrbControlDescriptorRequest.DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE)
+            {
+                //
+                // is the buffer big enough
+                //
+                if (Urb->UrbControlDescriptorRequest.TransferBufferLength < sizeof(USB_DEVICE_DESCRIPTOR))
+                {
+                    //
+                    // invalid buffer size
+                    //
+                    DPRINT1("[USBCCGP] invalid device descriptor size %lu\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
+                    Urb->UrbControlDescriptorRequest.TransferBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
+                    Irp->IoStatus.Status = STATUS_INVALID_BUFFER_SIZE;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    return STATUS_INVALID_BUFFER_SIZE;
+                }
+
+                //
+                // copy device descriptor
+                //
+                ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
+                RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, &PDODeviceExtension->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_SUCCESS;
+            }
+            else if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE)
+            {
+                //
+                // build configuration descriptor
+                //
+                Status = USBCCGP_BuildConfigurationDescriptor(DeviceObject, Irp);
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
+        }
+    }
+
+
+
+    DPRINT1("IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DPRINT1("InputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.InputBufferLength);
+    DPRINT1("OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+    DPRINT1("Type3InputBuffer %p\n", IoStack->Parameters.DeviceIoControl.Type3InputBuffer);
+
+    ASSERT(FALSE);
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 NTSTATUS
 PDO_Dispatch(
@@ -339,6 +613,8 @@ PDO_Dispatch(
     {
         case IRP_MJ_PNP:
             return PDO_HandlePnp(DeviceObject, Irp);
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+            return PDO_HandleInternalDeviceControl(DeviceObject, Irp);
         default:
             DPRINT1("PDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             ASSERT(FALSE);

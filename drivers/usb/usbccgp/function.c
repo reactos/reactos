@@ -787,22 +787,17 @@ USBCCGP_EnumWithAudioLegacy(
     FDODeviceExtension->FunctionDescriptor[0].FunctionNumber = 0;
 
     //
-    // FIXME: how many interfaces should be stored?
+    // store interfaces
     //
-
-    FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * 1);
-    if (!FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList)
+    Status = AllocateInterfaceDescriptorsArray(FDODeviceExtension->ConfigurationDescriptor, &FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList);
+    if (!NT_SUCCESS(Status))
     {
         //
-        // no memory
+        // failed to allocate descriptor array
         //
-        return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT1("[USBCCGP] Failed to allocate descriptor array %x\n", Status);
+        return Status;
     }
-
-    //
-    // store interface descriptor
-    //
-    FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList[0] = InterfaceDescriptor;
 
     //
     // now init the device ids
@@ -816,6 +811,11 @@ USBCCGP_EnumWithAudioLegacy(
         DPRINT1("[USBCCGP] Failed to init ids with %x\n", Status);
         return Status;
     }
+
+    //
+    // number of interfaces
+    //
+    FDODeviceExtension->FunctionDescriptor[0].NumberOfInterfaces = CountInterfaceDescriptors(FDODeviceExtension->ConfigurationDescriptor);
 
     //
     // store function count

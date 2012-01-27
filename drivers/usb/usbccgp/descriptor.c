@@ -202,6 +202,66 @@ CountInterfaceDescriptors(
 }
 
 NTSTATUS
+AllocateInterfaceDescriptorsArray(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    OUT PUSB_INTERFACE_DESCRIPTOR **OutArray)
+{
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PVOID CurrentPosition;
+    ULONG Count = 0;
+    PUSB_INTERFACE_DESCRIPTOR *Array;
+
+    Count = CountInterfaceDescriptors(ConfigurationDescriptor);
+    ASSERT(Count);
+
+    //
+    // allocate array
+    //
+    Array = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * Count);
+    if (!Array)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    //
+    // enumerate all interfaces
+    //
+    CurrentPosition = ConfigurationDescriptor;
+    Count = 0;
+    do
+    {
+        //
+        // find next descriptor
+        //
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
+        if (!InterfaceDescriptor)
+            break;
+
+        //
+        // store descriptor
+        //
+        Array[Count] = InterfaceDescriptor;
+        Count++;
+
+        //
+        // advance to next descriptor
+        //
+        CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+
+    }while(TRUE);
+
+    //
+    // store result
+    //
+    *OutArray = Array;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+
+
+NTSTATUS
 NTAPI
 USBCCGP_ScanConfigurationDescriptor(
     IN OUT PFDO_DEVICE_EXTENSION FDODeviceExtension,

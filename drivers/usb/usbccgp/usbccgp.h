@@ -50,6 +50,8 @@ typedef struct
     PDEVICE_OBJECT NextDeviceObject;                         // next device object
     DEVICE_CAPABILITIES Capabilities;                        // device capabilities
     ULONG FunctionIndex;                                     // function index
+    USB_DEVICE_DESCRIPTOR DeviceDescriptor;                  // usb device descriptor
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;   // usb configuration descriptor
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* descriptor.c */
@@ -72,6 +74,15 @@ USBCCGP_GetDescriptor(
     IN UCHAR DescriptorIndex,
     IN LANGID LanguageId,
     OUT PVOID *OutDescriptor);
+
+ULONG
+CountInterfaceDescriptors(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+
+NTSTATUS
+AllocateInterfaceDescriptorsArray(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    OUT PUSB_INTERFACE_DESCRIPTOR **OutArray);
 
 /* misc.c */
 
