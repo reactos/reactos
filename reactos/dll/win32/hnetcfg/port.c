@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_port
 {
-    const INetFwOpenPortVtbl *vtbl;
+    INetFwOpenPort INetFwOpenPort_iface;
     LONG refs;
 } fw_port;
 
 static inline fw_port *impl_from_INetFwOpenPort( INetFwOpenPort *iface )
 {
-    return (fw_port *)((char *)iface - FIELD_OFFSET( fw_port, vtbl ));
+    return CONTAINING_RECORD(iface, fw_port, INetFwOpenPort_iface);
 }
 
 static ULONG WINAPI fw_port_AddRef(
@@ -330,10 +330,10 @@ static HRESULT NetFwOpenPort_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_port_vtbl;
+    fp->INetFwOpenPort_iface.lpVtbl = &fw_port_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwOpenPort_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;
@@ -341,13 +341,13 @@ static HRESULT NetFwOpenPort_create( IUnknown *pUnkOuter, LPVOID *ppObj )
 
 typedef struct fw_ports
 {
-    const INetFwOpenPortsVtbl *vtbl;
+    INetFwOpenPorts INetFwOpenPorts_iface;
     LONG refs;
 } fw_ports;
 
 static inline fw_ports *impl_from_INetFwOpenPorts( INetFwOpenPorts *iface )
 {
-    return (fw_ports *)((char *)iface - FIELD_OFFSET( fw_ports, vtbl ));
+    return CONTAINING_RECORD(iface, fw_ports, INetFwOpenPorts_iface);
 }
 
 static ULONG WINAPI fw_ports_AddRef(
@@ -536,10 +536,10 @@ HRESULT NetFwOpenPorts_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_ports_vtbl;
+    fp->INetFwOpenPorts_iface.lpVtbl = &fw_ports_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwOpenPorts_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

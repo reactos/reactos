@@ -1,5 +1,7 @@
 /*
- * Copyright 2009 Hans Leidekker for CodeWeavers
+ * COM Classes for hnetcfg
+ *
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-HRESULT NetFwMgr_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwPolicy_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwProfile_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwAuthorizedApplication_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwAuthorizedApplications_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwOpenPorts_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT NetFwServices_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+[
+    helpstring("HNetCfg.FwMgr"),
+    progid("HNetCfg.FwMgr"),
+    threading(both),
+    uuid(304ce942-6e39-40d8-943a-b913c40c9cd4)
+]
+coclass NetFwMgr { interface INetFwMgr; }
+
+[
+    helpstring("HNetCfg.FwAuthorizedApplication"),
+    progid("HNetCfg.FwAuthorizedApplication"),
+    threading(both),
+    uuid(ec9846b3-2762-4a6b-a214-6acb603462d2)
+]
+coclass NetFwAuthorizedApplication { interface INetFwAuthorizedApplications; }
