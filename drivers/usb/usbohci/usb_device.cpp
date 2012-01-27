@@ -315,7 +315,6 @@ CUSBDevice::SetDeviceAddress(
     //
     // initialize request
     //
-    CtrlSetup->bmRequestType.B = 0xB;
     CtrlSetup->bRequest = USB_REQUEST_SET_ADDRESS;
     CtrlSetup->wValue.W = (USHORT)DeviceAddress;
 
