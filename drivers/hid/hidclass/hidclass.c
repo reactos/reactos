@@ -723,6 +723,21 @@ HidClass_DeviceControl(
     // get device extension
     //
     CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // only PDO are supported
+    //
+    if (CommonDeviceExtension->IsFDO)
+    {
+        //
+        // invalid request
+        //
+        DPRINT1("[HIDCLASS] DeviceControl Irp for FDO arrived\n");
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
     ASSERT(CommonDeviceExtension->IsFDO == FALSE);
 
     //
