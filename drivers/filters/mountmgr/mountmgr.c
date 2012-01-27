@@ -658,7 +658,7 @@ FindDeviceInfo(IN PDEVICE_EXTENSION DeviceExtension,
     NTSTATUS Status;
     PLIST_ENTRY NextEntry;
     UNICODE_STRING DeviceName;
-    PDEVICE_INFORMATION DeviceInfo;
+    PDEVICE_INFORMATION DeviceInfo = NULL;
 
     /* If a device name was given, use it */
     if (DeviceNameGiven)
@@ -1464,7 +1464,7 @@ MountMgrMountedDeviceRemoval(IN PDEVICE_EXTENSION DeviceExtension,
     PUNIQUE_ID_REPLICATE UniqueIdReplicate;
     PSYMLINK_INFORMATION SymlinkInformation;
     PASSOCIATED_DEVICE_ENTRY AssociatedDevice;
-    PSAVED_LINK_INFORMATION SavedLinkInformation;
+    PSAVED_LINK_INFORMATION SavedLinkInformation = NULL;
     PDEVICE_INFORMATION DeviceInformation, CurrentDevice;
 
     /* Acquire device exclusively */
