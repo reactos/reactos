@@ -23,12 +23,24 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
+typedef struct
+{
+    ITaskTrigger ITaskTrigger_iface;
+    LONG ref;
+    TASK_TRIGGER triggerCond;
+} TaskTriggerImpl;
+
+static inline TaskTriggerImpl *impl_from_ITaskTrigger(ITaskTrigger *iface)
+{
+    return CONTAINING_RECORD(iface, TaskTriggerImpl, ITaskTrigger_iface);
+}
+
 static HRESULT WINAPI MSTASK_ITaskTrigger_QueryInterface(
         ITaskTrigger* iface,
         REFIID riid,
         void **ppvObject)
 {
-    TaskTriggerImpl *This = (TaskTriggerImpl *)iface;
+    TaskTriggerImpl *This = impl_from_ITaskTrigger(iface);
 
     TRACE("IID: %s\n", debugstr_guid(riid));
     if (ppvObject == NULL)
@@ -37,7 +49,7 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
             IsEqualGUID(riid, &IID_ITaskTrigger))
     {
-        *ppvObject = &This->lpVtbl;
+        *ppvObject = &This->ITaskTrigger_iface;
         ITaskTrigger_AddRef(iface);
         return S_OK;
     }
@@ -50,7 +62,7 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_QueryInterface(
 static ULONG WINAPI MSTASK_ITaskTrigger_AddRef(
         ITaskTrigger* iface)
 {
-    TaskTriggerImpl *This = (TaskTriggerImpl *)iface;
+    TaskTriggerImpl *This = impl_from_ITaskTrigger(iface);
     ULONG ref;
     TRACE("\n");
     ref = InterlockedIncrement(&This->ref);
@@ -60,7 +72,7 @@ static ULONG WINAPI MSTASK_ITaskTrigger_AddRef(
 static ULONG WINAPI MSTASK_ITaskTrigger_Release(
         ITaskTrigger* iface)
 {
-    TaskTriggerImpl *This = (TaskTriggerImpl *)iface;
+    TaskTriggerImpl *This = impl_from_ITaskTrigger(iface);
     ULONG ref;
     TRACE("\n");
     ref = InterlockedDecrement(&This->ref);
@@ -76,7 +88,7 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_SetTrigger(
         ITaskTrigger* iface,
         const PTASK_TRIGGER pTrigger)
 {
-    TaskTriggerImpl * This = (TaskTriggerImpl *)iface;
+    TaskTriggerImpl * This = impl_from_ITaskTrigger(iface);
     TIME_FIELDS field_time;
     LARGE_INTEGER sys_time;
     TASK_TRIGGER tmp_trigger_cond;
@@ -187,7 +199,7 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_GetTrigger(
         ITaskTrigger* iface,
         PTASK_TRIGGER pTrigger)
 {
-    TaskTriggerImpl * This = (TaskTriggerImpl *)iface;
+    TaskTriggerImpl * This = impl_from_ITaskTrigger(iface);
 
     TRACE("(%p, %p)\n", iface, pTrigger);
 
@@ -274,7 +286,7 @@ HRESULT TaskTriggerConstructor(LPVOID *ppObj)
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &MSTASK_ITaskTriggerVtbl;
+    This->ITaskTrigger_iface.lpVtbl = &MSTASK_ITaskTriggerVtbl;
     This->ref = 1;
 
     /* Most fields of triggerCond default to zero.  Initialize other
@@ -291,7 +303,7 @@ HRESULT TaskTriggerConstructor(LPVOID *ppObj)
     This->triggerCond.TriggerType = TASK_TIME_TRIGGER_DAILY,
     This->triggerCond.Type.Daily.DaysInterval = 1;
 
-    *ppObj = &This->lpVtbl;
+    *ppObj = &This->ITaskTrigger_iface;
     InterlockedIncrement(&dll_ref);
     return S_OK;
 }
