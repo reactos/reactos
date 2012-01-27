@@ -35,6 +35,7 @@ i8042prt.sys=,,,,,,x,,,,,,4
 hidclass.sys=,,,,,,,,,,,,4
 hidparse.sys=,,,,,,,,,,,,4
 hidusb.sys=,,,,,,,,,,,,4
+usbccgp.sys=,,,,,,,,,,,,4
 usbd.sys=,,,,,,,,,,,,4
 usbhub.sys=,,,,,,,,,,,,4
 ;usbuhci.sys=,,,,,,,,,,,,4
@@ -78,6 +79,7 @@ PCI\CC_0C0310 = usbohci
 PCI\CC_0C0320 = usbehci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid
+USB\COMPOSITE = usbccgp
 GenDisk = disk
 
 [BootBusExtenders.Load]
@@ -90,7 +92,7 @@ usbehci = usbehci.sys
 usbohci = usbohci.sys
 ;usbuhci = usbuhci.sys
 usbhub = usbhub.sys
-;usbccgp = usbccgp.sys
+usbccgp = usbccgp.sys
 hidusb = hidusb.sys
 usbstor = usbstor.sys
 kbdhid = kbdhid.sys
