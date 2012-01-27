@@ -1,5 +1,7 @@
 /*
- * Copyright 2009 CodeWeavers, Aric Stewart
+ * COM Classes for msctf
+ *
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,13 +18,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-1 WINE_REGISTRY msctf.rgs
+[
+    threading(apartment),
+    uuid(529a9e6b-6587-4f23-ab9e-9c7d683e3c50)
+]
+coclass TF_ThreadMgr { interface ITfThreadMgr; }
 
-#define WINE_FILEDESCRIPTION_STR "Wine Msctf"
-#define WINE_FILENAME_STR "msctf.dll"
-#define WINE_FILEVERSION 5,1,2600,3319
-#define WINE_FILEVERSION_STR " 5.1.2600.3319"
-#define WINE_PRODUCTVERSION 5,1,2600,3319
-#define WINE_PRODUCTVERSION_STR "5.1.2600.3319"
+[
+    threading(apartment),
+    uuid(33c53a50-f456-4884-b049-85fd643ecfed)
+]
+coclass TF_InputProcessorProfiles { interface ITfInputProcessorProfiles; }
 
-#include "wine/wine_common_ver.rc"
+[
+    threading(apartment),
+    uuid(a4b544a1-438d-4b41-9325-869523e2d6c7)
+]
+coclass TF_CategoryMgr { interface ITfCategoryMgr; }
+
+[
+    threading(apartment),
+    uuid(ebb08c45-6c4a-4fdc-ae53-4eb8c4c7db8e)
+]
+coclass TF_LangBarMgr { interface ITfLangBarMgr; }
+
+[
+    threading(apartment),
+    uuid(3ce74de4-53d3-4d74-8b83-431b3828ba53)
+]
+coclass TF_DisplayAttributeMgr { interface ITfDisplayAttributeMgr; }

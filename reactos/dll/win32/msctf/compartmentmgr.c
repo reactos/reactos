@@ -284,7 +284,7 @@ HRESULT CompartmentMgr_Constructor(IUnknown *pUnkOuter, REFIID riid, IUnknown **
 }
 
 /**************************************************
- * IEnumGUID implementaion for ITfCompartmentMgr::EnumCompartments
+ * IEnumGUID implementation for ITfCompartmentMgr::EnumCompartments
  **************************************************/
 static void CompartmentEnumGuid_Destructor(CompartmentEnumGuid *This)
 {
