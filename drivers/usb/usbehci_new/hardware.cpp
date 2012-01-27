@@ -525,39 +525,10 @@ CUSBHardwareDevice::StartController(void)
         StopController();
 
     //
-    // Reset the device. Bit is set to 0 on completion.
+    // Enable Interrupts and start execution
     //
-    GetCommandRegister(&UsbCmd);
-    UsbCmd.HCReset = TRUE;
-    SetCommandRegister(&UsbCmd);
-
-    //
-    // Check that the controller reset
-    //
-    for (FailSafe = 100; FailSafe > 1; FailSafe--)
-    {
-        KeStallExecutionProcessor(10);
-        GetCommandRegister(&UsbCmd);
-        if (!UsbCmd.HCReset)
-        {
-            break;
-        }
-    }
-
-    //
-    // If the controller did not reset then fail
-    //
-    if (UsbCmd.HCReset)
-    {
-        DPRINT1("EHCI ERROR: Controller failed to reset. Hardware problem!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    //
-    // Disable Interrupts and clear status
-    //
-    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, 0);
-    EHCI_WRITE_REGISTER_ULONG(EHCI_USBSTS, 0x0000001f);
+    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
+        /*| EHCI_USBINTR_FLROVR*/  | EHCI_USBINTR_PC);
 
     //
     // Assign the AsyncList Register
@@ -574,18 +545,10 @@ CUSBHardwareDevice::StartController(void)
     //
     GetCommandRegister(&UsbCmd);
     UsbCmd.PeriodicEnable = TRUE;
-    UsbCmd.AsyncEnable = TRUE;  //FIXME: Need USB Memory Manager
-
     UsbCmd.IntThreshold = 1;
-    // FIXME: Set framelistsize when periodic is implemented.
     SetCommandRegister(&UsbCmd);
 
-    //
-    // Enable Interrupts and start execution
-    //
-    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
-        /*| EHCI_USBINTR_FLROVR*/  | EHCI_USBINTR_PC);
-
+    GetCommandRegister(&UsbCmd);
     UsbCmd.Run = TRUE;
     SetCommandRegister(&UsbCmd);
 
@@ -613,6 +576,14 @@ CUSBHardwareDevice::StartController(void)
     // Set port routing to EHCI controller
     //
     EHCI_WRITE_REGISTER_ULONG(EHCI_CONFIGFLAG, 1);
+
+    //
+    // Enable async
+    //
+    GetCommandRegister(&UsbCmd);
+    UsbCmd.AsyncEnable = TRUE;  //FIXME: Need USB Memory Manager
+    // FIXME: Set framelistsize when periodic is implemented.
+    SetCommandRegister(&UsbCmd);
 
     DPRINT1("EHCI Started!\n");
     return STATUS_SUCCESS;
@@ -669,12 +640,17 @@ CUSBHardwareDevice::ResetPort(
         return STATUS_UNSUCCESSFUL;
 
     PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+    //
+    // check slow speed line before reset
+    //
     if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
         DPRINT1("Non HighSpeed device. Releasing Ownership\n");
         EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
+
+    ASSERT(PortStatus & EHCI_PRT_CONNECTED);
 
     //
     // Reset and clean enable
@@ -692,17 +668,35 @@ CUSBHardwareDevice::ResetPort(
     PortStatus &= ~EHCI_PRT_RESET;
     EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
 
-    KeStallExecutionProcessor(100);
+    do
+    {
+        //
+        // wait
+        //
+        KeStallExecutionProcessor(100);
+
+        //
+        // Check that the port reset
+        //
+        PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+        if (!(PortStatus & EHCI_PRT_RESET))
+            break;
+    } while (TRUE);
 
     //
-    // Check that the port reset
+    // check slow speed line after reset
     //
-    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
-    if (PortStatus & EHCI_PRT_RESET)
+    if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
-        DPRINT1("Port did not reset\n");
-        return STATUS_RETRY;
+        DPRINT1("Non HighSpeed device. Releasing Ownership\n");
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
+        return STATUS_DEVICE_NOT_CONNECTED;
     }
+
+    //
+    // this must be enabled now
+    //
+    ASSERT(PortStatus & EHCI_PRT_ENABLED);
 
     return STATUS_SUCCESS;
 }
@@ -739,15 +733,17 @@ CUSBHardwareDevice::GetPortStatus(
         }
     }
 
-    // Get Speed. If SlowSpeedLine flag is there then its a slow speed device
-    if (Value & EHCI_PRT_SLOWSPEEDLINE)
-        Status |= USB_PORT_STATUS_LOW_SPEED;
-    else
-        Status |= USB_PORT_STATUS_HIGH_SPEED;
-
     // Get Connected Status
     if (Value & EHCI_PRT_CONNECTED)
+    {
         Status |= USB_PORT_STATUS_CONNECT;
+
+        // Get Speed. If SlowSpeedLine flag is there then its a slow speed device
+        if (Value & EHCI_PRT_SLOWSPEEDLINE)
+            Status |= USB_PORT_STATUS_LOW_SPEED;
+        else
+            Status |= USB_PORT_STATUS_HIGH_SPEED;
+    }
 
     // Get Enabled Status
     if (Value & EHCI_PRT_ENABLED)
@@ -795,30 +791,17 @@ CUSBHardwareDevice::ClearPortStatus(
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
 
-    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-
     if (Status == C_PORT_RESET)
     {
-        if (Value & EHCI_PRT_RESET)
-        {
-            Value &= ~EHCI_PRT_RESET;
-            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
-            KeStallExecutionProcessor(100);
-        }
-
-        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         //
         // update port status
         //
         m_ResetInProgress[PortId] = FALSE;
-        if (!(Value & EHCI_PRT_ENABLED))
-        {
-            DPRINT1("Port is not enabled.\n");
-        }
     }
 
     if (Status == C_PORT_CONNECTION)
     {
+        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
         EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
     }
@@ -851,11 +834,6 @@ CUSBHardwareDevice::SetPortFeature(
 
     if (Feature == PORT_RESET)
     {
-        if (Value & EHCI_PRT_SLOWSPEEDLINE)
-        {
-            DPRINT1("Non HighSpeed device. Releasing Ownership\n");
-        }
-
         ResetPort(PortId);
 
         //
