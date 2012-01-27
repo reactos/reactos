@@ -1,7 +1,7 @@
 /*
- * Object Picker Dialog
+ * COM Classes for objsel
  *
- * Copyright 2005 Thomas Weidenmueller <w3seek@reactos.com>
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,13 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-1 WINE_REGISTRY objsel.rgs
-
-#define WINE_FILENAME_STR "objsel.dll"
-
-#include "wine/wine_common_ver.rc"
+[
+    threading(both),
+    uuid(17d6ccd8-3b7b-11d2-b9e0-00c04fd8dbf7)
+]
+coclass DsObjectPicker { interface IDsObjectPicker; }
