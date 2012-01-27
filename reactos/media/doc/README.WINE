@@ -115,7 +115,7 @@ reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msvidc32        # Autosync
 reactos/dll/win32/msxml3          # Autosync
-reactos/dll/win32/nddeapi         # Autosync
+reactos/dll/win32/nddeapi         # Synced to Wine-1.3.37
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
 reactos/dll/win32/ntprint         # Autosync
