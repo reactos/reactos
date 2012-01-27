@@ -6,6 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(inetcomm.dll inetcomm.spec)
 
 list(APPEND SOURCE
@@ -15,8 +16,8 @@ list(APPEND SOURCE
     mimeintl.c
     mimeole.c
     pop3transport.c
-    regsvr.c
     smtptransport.c
+    inetcomm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
 

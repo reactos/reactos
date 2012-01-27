@@ -63,7 +63,6 @@ static HRESULT parse_response(POP3Transport *This)
     switch (This->state)
     {
     case STATE_NONE:
-    {
         if (strlen(This->response) < 3)
         {
             WARN("parse error\n");
@@ -78,7 +77,7 @@ static HRESULT parse_response(POP3Transport *This)
         }
         This->state = STATE_DONE;
         return S_FALSE;
-    }
+
     default: return S_OK;
     }
 }
@@ -92,7 +91,6 @@ static HRESULT parse_uidl_response(POP3Transport *This, POP3UIDL *uidl)
     switch (This->state)
     {
     case STATE_OK:
-    {
         if (This->type == POP3CMD_GET_POPID)
         {
             if ((p = strchr(This->ptr, ' ')))
@@ -111,9 +109,8 @@ static HRESULT parse_uidl_response(POP3Transport *This, POP3UIDL *uidl)
         }
         This->state = STATE_MULTILINE;
         return S_OK;
-    }
+
     case STATE_MULTILINE:
-    {
         if (This->response[0] == '.' && !This->response[1])
         {
             This->valid_info = FALSE;
@@ -128,13 +125,11 @@ static HRESULT parse_uidl_response(POP3Transport *This, POP3UIDL *uidl)
             This->valid_info = TRUE;
             return S_OK;
         }
-    }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
@@ -147,7 +142,6 @@ static HRESULT parse_stat_response(POP3Transport *This, POP3STAT *stat)
     switch (This->state)
     {
     case STATE_OK:
-    {
         if ((p = strchr(This->ptr, ' ')))
         {
             while (*p == ' ') p++;
@@ -156,13 +150,11 @@ static HRESULT parse_stat_response(POP3Transport *This, POP3STAT *stat)
             This->state = STATE_DONE;
             return S_OK;
         }
-    }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
@@ -175,7 +167,6 @@ static HRESULT parse_list_response(POP3Transport *This, POP3LIST *list)
     switch (This->state)
     {
     case STATE_OK:
-    {
         if (This->type == POP3CMD_GET_POPID)
         {
             if ((p = strchr(This->ptr, ' ')))
@@ -189,9 +180,8 @@ static HRESULT parse_list_response(POP3Transport *This, POP3LIST *list)
         }
         This->state = STATE_MULTILINE;
         return S_OK;
-    }
+
     case STATE_MULTILINE:
-    {
         if (This->response[0] == '.' && !This->response[1])
         {
             This->valid_info = FALSE;
@@ -206,13 +196,11 @@ static HRESULT parse_list_response(POP3Transport *This, POP3LIST *list)
             This->valid_info = TRUE;
             return S_OK;
         }
-    }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
@@ -221,17 +209,14 @@ static HRESULT parse_dele_response(POP3Transport *This, DWORD *dwPopId)
     switch (This->state)
     {
     case STATE_OK:
-    {
         *dwPopId = 0; /* FIXME */
         This->state = STATE_DONE;
         return S_OK;
-    }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
@@ -240,7 +225,6 @@ static HRESULT parse_retr_response(POP3Transport *This, POP3RETR *retr)
     switch (This->state)
     {
     case STATE_OK:
-    {
         retr->fHeader = FALSE;
         retr->fBody = FALSE;
         retr->dwPopId = This->msgid;
@@ -251,7 +235,7 @@ static HRESULT parse_retr_response(POP3Transport *This, POP3RETR *retr)
         This->state = STATE_MULTILINE;
         This->valid_info = FALSE;
         return S_OK;
-    }
+
     case STATE_MULTILINE:
     {
         int len;
@@ -273,12 +257,11 @@ static HRESULT parse_retr_response(POP3Transport *This, POP3RETR *retr)
         This->valid_info = TRUE;
         return S_OK;
     }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
@@ -287,7 +270,6 @@ static HRESULT parse_top_response(POP3Transport *This, POP3TOP *top)
     switch (This->state)
     {
     case STATE_OK:
-    {
         top->fHeader = FALSE;
         top->fBody = FALSE;
         top->dwPopId = This->msgid;
@@ -299,7 +281,7 @@ static HRESULT parse_top_response(POP3Transport *This, POP3TOP *top)
         This->state = STATE_MULTILINE;
         This->valid_info = FALSE;
         return S_OK;
-    }
+
     case STATE_MULTILINE:
     {
         int len;
@@ -321,12 +303,11 @@ static HRESULT parse_top_response(POP3Transport *This, POP3TOP *top)
         This->valid_info = TRUE;
         return S_OK;
     }
+
     default:
-    {
         WARN("parse error\n");
         This->state = STATE_DONE;
         return S_FALSE;
-    }
     }
 }
 
