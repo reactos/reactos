@@ -1029,54 +1029,6 @@ MmGetPhysicalAddress(PVOID vaddr)
 }
 
 VOID
-NTAPI
-MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
-{
-    ULONG StartOffset, EndOffset, Offset;
-    PULONG Pde;
-    
-    //
-    // Check if the process isn't there anymore
-    // This is probably a bad sign, since it means the caller is setting cr3 to
-    // 0 or something...
-    //
-    if ((PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]) == 0) && (Process != PsGetCurrentProcess()))
-    {
-        DPRINT1("Process: %16s is dead: %p\n", Process->ImageFileName, Process->Pcb.DirectoryTableBase[0]);
-        ASSERT(FALSE);
-        return;
-    }
-
-    if (Address < MmSystemRangeStart)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-
-    StartOffset = ADDR_TO_PDE_OFFSET(Address);
-    EndOffset = ADDR_TO_PDE_OFFSET((PVOID)((ULONG_PTR)Address + Size));
-
-    if (Process != NULL && Process != PsGetCurrentProcess())
-    {
-        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-    }
-    else
-    {
-        Pde = (PULONG)PAGEDIRECTORY_MAP;
-    }
-    for (Offset = StartOffset; Offset <= EndOffset; Offset++)
-    {
-        if (Offset != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP))
-        {
-            InterlockedCompareExchangePte(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
-        }
-    }
-    if (Pde != (PULONG)PAGEDIRECTORY_MAP)
-    {
-        MmDeleteHyperspaceMapping(Pde);
-    }
-}
-
-VOID
 INIT_FUNCTION
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)

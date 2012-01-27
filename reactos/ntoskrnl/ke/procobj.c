@@ -97,9 +97,6 @@ KiAttachProcess(IN PKTHREAD Thread,
         /* Release lock */
         KiReleaseApcLockFromDpcLevel(ApcLock);
 
-        /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-        MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
-        
         /* Swap Processes */
         KiSwapProcess(Process, SavedApcState->Process);
 
@@ -618,9 +615,6 @@ KeDetachProcess(VOID)
     /* Release lock */
     KiReleaseApcLockFromDpcLevel(&ApcLock);
 
-    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
-
     /* Swap Processes */
     KiSwapProcess(Thread->ApcState.Process, Process);
 
@@ -787,9 +781,6 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
 
     /* Release lock */
     KiReleaseApcLockFromDpcLevel(&ApcLock);
-
-    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Swap Processes */
     KiSwapProcess(Thread->ApcState.Process, Process);

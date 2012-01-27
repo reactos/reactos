@@ -856,9 +856,6 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->StackBase = KernelStack;
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
-    
-    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;

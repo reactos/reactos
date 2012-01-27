@@ -433,9 +433,6 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* Get thread pointers */
     OldThread = (PKTHREAD)(OldThreadAndApcFlag & ~3);
     NewThread = Pcr->PrcbData.CurrentThread;
-    
-    /* ReactOS Mm Hack */
-    MiSyncForContextSwitch(NewThread);
 
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
