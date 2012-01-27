@@ -411,7 +411,10 @@ USBCCGP_InitFunctionDescriptor(
 
     // copy description
     RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
-    RtlInitUnicodeString(&FunctionDescriptor->HardwareId, DescriptionBuffer);
+    FunctionDescriptor->HardwareId.Buffer = DescriptionBuffer;
+    FunctionDescriptor->HardwareId.Length = Index * sizeof(WCHAR);
+    FunctionDescriptor->HardwareId.MaximumLength = (Index + 1) * sizeof(WCHAR);
+
 
     //
     // now init the compatible id
@@ -431,9 +434,10 @@ USBCCGP_InitFunctionDescriptor(
     }
 
     // copy description
-    // copy description
     RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
-    RtlInitUnicodeString(&FunctionDescriptor->CompatibleId, DescriptionBuffer);
+    FunctionDescriptor->CompatibleId.Buffer = DescriptionBuffer;
+    FunctionDescriptor->CompatibleId.Length = Index * sizeof(WCHAR);
+    FunctionDescriptor->CompatibleId.MaximumLength = (Index + 1) * sizeof(WCHAR);
 
     //
     // done
@@ -506,13 +510,194 @@ USBCCGP_EnumWithAssociationDescriptor(
     return Status;
 }
 
+NTSTATUS
+USBCCG_InitIdsWithInterfaceDescriptor(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PUSB_INTERFACE_DESCRIPTOR Descriptor,
+    OUT PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor)
+{
+    ULONG Index;
+    WCHAR Buffer[200];
+    LPWSTR DescriptionBuffer;
+    NTSTATUS Status;
+
+    //
+    // now init interface description
+    //
+    if (Descriptor->iInterface)
+    {
+        //
+        // get interface description
+        //
+         Status = USBCCGP_GetDescriptor(FDODeviceExtension->NextDeviceObject, 
+                                        USB_STRING_DESCRIPTOR_TYPE, 
+                                        100 * sizeof(WCHAR), 
+                                        Descriptor->iInterface, 
+                                        0x0409, //FIXME
+                                        (PVOID*)&DescriptionBuffer);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // no description
+            //
+            RtlInitUnicodeString(&FunctionDescriptor->FunctionDescription, L"");
+        }
+        else
+        {
+            //
+            // init description
+            //
+            RtlInitUnicodeString(&FunctionDescriptor->FunctionDescription, DescriptionBuffer);
+        }
+        DPRINT1("FunctionDescription %wZ\n", &FunctionDescriptor->FunctionDescription);
+    }
+
+
+
+    //
+    // now init hardware id
+    //
+    Index = swprintf(Buffer, L"USB\\VID_%04x&PID_%04x&Rev_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
+                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
+                                                                         FDODeviceExtension->DeviceDescriptor->bcdDevice,
+                                                                         Descriptor->bInterfaceNumber) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
+                                                                        FDODeviceExtension->DeviceDescriptor->idProduct,
+                                                                        Descriptor->bInterfaceNumber) + 1;
+
+    // allocate result buffer
+    DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
+    if (!DescriptionBuffer)
+    {
+        //
+        // failed to allocate memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // copy description
+    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    FunctionDescriptor->HardwareId.Buffer = DescriptionBuffer;
+    FunctionDescriptor->HardwareId.Length = Index * sizeof(WCHAR);
+    FunctionDescriptor->HardwareId.MaximumLength = (Index + 1) * sizeof(WCHAR);
+
+
+    //
+    // now init the compatible id
+    //
+    Index = swprintf(Buffer, L"USB\\Class_%02x&SubClass_%02x&Prot_%02x", Descriptor->bInterfaceClass, Descriptor->bInterfaceSubClass, Descriptor->bInterfaceProtocol) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\Class_%04x&SubClass_%04x",  Descriptor->bInterfaceClass, Descriptor->bInterfaceSubClass) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\Class_%04x", Descriptor->bInterfaceClass) + 1;
+
+    // allocate result buffer
+    DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
+    if (!DescriptionBuffer)
+    {
+        //
+        // failed to allocate memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // copy description
+    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    FunctionDescriptor->CompatibleId.Buffer = DescriptionBuffer;
+    FunctionDescriptor->CompatibleId.Length = Index * sizeof(WCHAR);
+    FunctionDescriptor->CompatibleId.MaximumLength = (Index + 1) * sizeof(WCHAR);
+}
+
 
 NTSTATUS
-USBCCGP_EnumWithAudioLegacy(
+USBCCGP_LegacyEnum(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Index;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+
+    //
+    // allocate function array
+    //
+    FDODeviceExtension->FunctionDescriptor = AllocateItem(NonPagedPool, sizeof(USBC_FUNCTION_DESCRIPTOR) * FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+    if (!FDODeviceExtension->FunctionDescriptor)
+    {
+        //
+        // no memory
+        //
+        DPRINT1("USBCCGP_EnumWithAssociationDescriptor failed to allocate function descriptor %lu\n", FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // init function descriptors
+    //
+    for(Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
+    {
+        // get interface descriptor
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptor(FDODeviceExtension->ConfigurationDescriptor, Index, 0);
+        if (InterfaceDescriptor == NULL)
+        {
+            //
+            // failed to find interface descriptor
+            //
+            DPRINT1("[USBCCGP] Failed to find interface descriptor index %lu\n", Index);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        //
+        // init function descriptor
+        //
+        FDODeviceExtension->FunctionDescriptor[Index].FunctionNumber = Index;
+        FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces = 1;
+        FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * 1);
+        if (!FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList)
+        {
+            //
+            // no memory
+            //
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        //
+        // store interface descriptor
+        //
+        FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[0] = InterfaceDescriptor;
+
+        //
+        // now init the device ids
+        //
+        Status = USBCCG_InitIdsWithInterfaceDescriptor(FDODeviceExtension, InterfaceDescriptor, &FDODeviceExtension->FunctionDescriptor[Index]);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to init ids
+            //
+            DPRINT1("[USBCCGP] Failed to init ids with %x\n", Status);
+            return Status;
+        }
+
+        //
+        // store function count
+        //
+        FDODeviceExtension->FunctionDescriptorCount++;
+    }
+
+    //
+    // done
+    //
+    return Status;
 }
 
 NTSTATUS
@@ -523,6 +708,121 @@ USBCCGP_EnumWithUnionFunctionDescriptors(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+USBCCGP_EnumWithAudioLegacy(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    ULONG Index;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor, FirstDescriptor = NULL;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+
+    //
+    // first check if all interfaces belong to the same audio class
+    //
+    for(Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
+    {
+        //
+        // get interface descriptor
+        //
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index, -1, -1, -1, -1);
+        if (InterfaceDescriptor->bInterfaceClass != 0x1)
+        {
+            //
+            // collection contains non audio class
+            //
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        if (FirstDescriptor == NULL)
+        {
+            //
+            // store interface descriptor
+            //
+            FirstDescriptor = InterfaceDescriptor;
+            continue;
+        }
+
+        if (FirstDescriptor->bInterfaceSubClass == InterfaceDescriptor->bInterfaceSubClass)
+        {
+            //
+            // interface subclass must be different from the first interface
+            //
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    //
+    // this is an composite audio device
+    //
+    DPRINT1("[USBCCGP] Audio Composite Device detected\n");
+
+    //
+    // audio interfaces are all grouped into one single function
+    //
+    FDODeviceExtension->FunctionDescriptor = AllocateItem(NonPagedPool, sizeof(USBC_FUNCTION_DESCRIPTOR));
+    if (!FDODeviceExtension->FunctionDescriptor)
+    {
+        //
+        // no memory
+        //
+        DPRINT1("USBCCGP_EnumWithAssociationDescriptor failed to allocate function descriptor count\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // init function number
+    //
+    FDODeviceExtension->FunctionDescriptor[0].FunctionNumber = 0;
+
+    //
+    // FIXME: how many interfaces should be stored?
+    //
+
+    FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * 1);
+    if (!FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // store interface descriptor
+    //
+    FDODeviceExtension->FunctionDescriptor[0].InterfaceDescriptorList[0] = InterfaceDescriptor;
+
+    //
+    // now init the device ids
+    //
+    Status = USBCCG_InitIdsWithInterfaceDescriptor(FDODeviceExtension, InterfaceDescriptor, &FDODeviceExtension->FunctionDescriptor[0]);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to init ids
+        //
+        DPRINT1("[USBCCGP] Failed to init ids with %x\n", Status);
+        return Status;
+    }
+
+    //
+    // store function count
+    //
+    FDODeviceExtension->FunctionDescriptorCount = 1;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 USBCCGP_EnumerateFunctions(
@@ -561,6 +861,7 @@ USBCCGP_EnumerateFunctions(
         return Status;
     }
 
+#if 0
     //
     // try with union function descriptors
     //
@@ -572,9 +873,22 @@ USBCCGP_EnumerateFunctions(
         //
         return Status;
     }
+#endif
 
     //
     // try with legacy audio methods
     //
-    return USBCCGP_EnumWithAudioLegacy(DeviceObject);
+    Status = USBCCGP_EnumWithAudioLegacy(DeviceObject);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // succeeded
+        //
+        return Status;
+    }
+
+    //
+    // try with legacy enumeration
+    //
+    return USBCCGP_LegacyEnum(DeviceObject);
 }

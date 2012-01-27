@@ -195,3 +195,23 @@ FreeItem(
     ExFreePoolWithTag(Item, USBCCPG_TAG);
 }
 
+VOID
+DumpFunctionDescriptor(
+    IN PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor,
+    IN ULONG FunctionDescriptorCount)
+{
+    ULONG Index;
+
+
+    DPRINT1("FunctionCount %lu\n", FunctionDescriptorCount);
+    for(Index = 0; Index < FunctionDescriptorCount; Index++)
+    {
+        DPRINT1("Function %lu\n", Index);
+        DPRINT1("FunctionNumber %lu\n", FunctionDescriptor[Index].FunctionNumber);
+        DPRINT1("HardwareId %wZ\n", &FunctionDescriptor[Index].HardwareId);
+        DPRINT1("CompatibleId %wZ\n", &FunctionDescriptor[Index].CompatibleId);
+        DPRINT1("FunctionDescription %wZ\n", &FunctionDescriptor[Index].FunctionDescription);
+        DPRINT1("NumInterfaces %lu\n", FunctionDescriptor[Index].NumberOfInterfaces);
+    }
+
+}

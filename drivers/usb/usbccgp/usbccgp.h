@@ -95,6 +95,11 @@ VOID
 FreeItem(
     IN PVOID Item);
 
+VOID
+DumpFunctionDescriptor(
+    IN PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor,
+    IN ULONG FunctionDescriptorCount);
+
 /* fdo.c */
 
 NTSTATUS

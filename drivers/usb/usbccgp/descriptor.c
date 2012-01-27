@@ -162,6 +162,45 @@ USBCCGP_GetDescriptors(
      return Status;
 }
 
+ULONG
+CountInterfaceDescriptors(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PVOID CurrentPosition;
+    ULONG Count = 0;
+
+    //
+    // enumerate all interfaces
+    //
+    CurrentPosition = ConfigurationDescriptor;
+    do
+    {
+        //
+        // find next descriptor
+        //
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
+        if (!InterfaceDescriptor)
+            break;
+
+        //
+        // advance to next descriptor
+        //
+        CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+
+        //
+        // increment descriptor count
+        //
+        Count++;
+
+    }while(TRUE);
+
+    //
+    // done
+    //
+    return Count;
+}
+
 NTSTATUS
 NTAPI
 USBCCGP_ScanConfigurationDescriptor(
@@ -170,6 +209,8 @@ USBCCGP_ScanConfigurationDescriptor(
 {
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     ULONG InterfaceIndex = 0;
+    PVOID CurrentPosition;
+    ULONG DescriptorCount;
 
     //
     // sanity checks
@@ -178,9 +219,14 @@ USBCCGP_ScanConfigurationDescriptor(
     ASSERT(ConfigurationDescriptor->bNumInterfaces);
 
     //
+    // count all interface descriptors
+    //
+    DescriptorCount = CountInterfaceDescriptors(ConfigurationDescriptor);
+
+    //
     // allocate array holding the interface descriptors
     //
-    FDODeviceExtension->InterfaceList = AllocateItem(NonPagedPool, sizeof(USB_CONFIGURATION_DESCRIPTOR) * (ConfigurationDescriptor->bNumInterfaces + 1));
+    FDODeviceExtension->InterfaceList = AllocateItem(NonPagedPool, sizeof(USBD_INTERFACE_LIST_ENTRY) * (DescriptorCount + 1));
     if (!FDODeviceExtension->InterfaceList)
     {
         //
@@ -189,12 +235,13 @@ USBCCGP_ScanConfigurationDescriptor(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    CurrentPosition = ConfigurationDescriptor;
     do
     {
         //
         // parse configuration descriptor
         //
-        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, InterfaceIndex, 0, -1, -1, -1);
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
         if (InterfaceDescriptor)
         {
             //
@@ -202,6 +249,7 @@ USBCCGP_ScanConfigurationDescriptor(
             //
             FDODeviceExtension->InterfaceList[FDODeviceExtension->InterfaceListCount].InterfaceDescriptor = InterfaceDescriptor;
             FDODeviceExtension->InterfaceListCount++;
+            CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
         }
 
         //
@@ -209,7 +257,7 @@ USBCCGP_ScanConfigurationDescriptor(
         //
         InterfaceIndex++;
 
-    }while(InterfaceIndex < ConfigurationDescriptor->bNumInterfaces);
+    }while(InterfaceIndex < DescriptorCount);
 
     //
     // sanity check
@@ -347,13 +395,12 @@ USBCCGP_SelectConfiguration(
     // get interface information
     //
     InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
-
     for(Index = 0; Index < DeviceExtension->InterfaceListCount; Index++)
     {
         //
         // allocate buffer to store interface information
         //
-        DeviceExtension->InterfaceList[Index].Interface = AllocateItem(NonPagedPool, InterfaceInformation[Index].Length);
+        DeviceExtension->InterfaceList[Index].Interface = AllocateItem(NonPagedPool, InterfaceInformation->Length);
         if (!DeviceExtension->InterfaceList[Index].Interface)
         {
             //
@@ -366,7 +413,13 @@ USBCCGP_SelectConfiguration(
         // copy interface information
         //
         RtlCopyMemory(DeviceExtension->InterfaceList[Index].Interface, InterfaceInformation, InterfaceInformation->Length);
+
+        //
+        // move to next interface
+        //
+        InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + InterfaceInformation->Length);
     }
+
 
     //
     // store pipe handle

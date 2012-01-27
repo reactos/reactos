@@ -18,7 +18,7 @@ USBCCGP_PdoHandleQueryDeviceText(
 {
     LPWSTR Buffer;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-
+    LPWSTR GenericString = L"Composite USB Device";
     //
     // get device extension
     //
@@ -53,7 +53,18 @@ USBCCGP_PdoHandleQueryDeviceText(
     // FIXME use GenericCompositeUSBDeviceString
     //
     UNIMPLEMENTED
-    return Irp->IoStatus.Status;
+    Buffer = AllocateItem(PagedPool, (wcslen(GenericString) + 1) * sizeof(WCHAR));
+    if (!Buffer)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlCopyMemory(Buffer, GenericString, (wcslen(GenericString) + 1) * sizeof(WCHAR));
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -145,7 +156,7 @@ USBCCGP_PdoHandleQueryId(
         //
         // FIXME append interface id
         //
-        ASSERT(FALSE);
+        UNIMPLEMENTED
         return Status;
     }
     else if (IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)

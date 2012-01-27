@@ -138,7 +138,6 @@ FDO_DeviceRelations(
     //
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-
     //
     // get current irp stack location
     //
@@ -376,6 +375,7 @@ FDO_StartDevice(
     //
     ASSERT(FDODeviceExtension->FunctionDescriptorCount);
     ASSERT(FDODeviceExtension->FunctionDescriptor);
+    DumpFunctionDescriptor(FDODeviceExtension->FunctionDescriptor, FDODeviceExtension->FunctionDescriptorCount);
 
     //
     // now create the pdo
