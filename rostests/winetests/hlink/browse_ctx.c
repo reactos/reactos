@@ -24,16 +24,6 @@
 
 #include "wine/test.h"
 
-/* Win9x and WinMe don't have lstrcmpW */
-static int strcmp_ww(const WCHAR *str1, const WCHAR *str2)
-{
-    DWORD len1 = lstrlenW(str1);
-    DWORD len2 = lstrlenW(str2);
-
-    if (len1 != len2) return 1;
-    return memcmp(str1, str2, len1 * sizeof(WCHAR));
-}
-
 static void test_SetInitialHlink(void)
 {
     IHlinkBrowseContext *bc;
@@ -68,7 +58,7 @@ static void test_SetInitialHlink(void)
 
     hres = IMoniker_GetDisplayName(found_moniker, bindctx, NULL, &found_name);
     ok(hres == S_OK, "GetDisplayName failed: 0x%08x\n", hres);
-    ok(!strcmp_ww(found_name, exp_name), "Found display name should have been %s, was: %s\n", wine_dbgstr_w(exp_name), wine_dbgstr_w(found_name));
+    ok(!lstrcmpW(found_name, exp_name), "Found display name should have been %s, was: %s\n", wine_dbgstr_w(exp_name), wine_dbgstr_w(found_name));
 
     CoTaskMemFree(exp_name);
     CoTaskMemFree(found_name);
@@ -124,6 +114,8 @@ static void test_BrowseWindowInfo(void)
     hres = IHlinkBrowseContext_GetBrowseWindowInfo(bc, &bwinfo_get);
     ok(hres == S_OK, "GetBrowseWindowInfo failed: 0x%08x\n", hres);
     ok(!memcmp(&bwinfo_set, &bwinfo_get, sizeof(HLBWINFO)), "Set and Get differ\n");
+
+    IHlinkBrowseContext_Release(bc);
 }
 
 START_TEST(browse_ctx)
