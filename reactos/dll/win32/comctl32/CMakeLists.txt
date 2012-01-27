@@ -56,7 +56,7 @@ list(APPEND SOURCE
 
 add_library(comctl32 SHARED ${SOURCE})
 set_module_type(comctl32 win32dll UNICODE)
-target_link_libraries(comctl32 uuid wine)
+target_link_libraries(comctl32 uuid wine ${PSEH_LIB})
 add_delay_importlibs(comctl32 winmm uxtheme)
 
 add_importlibs(comctl32
