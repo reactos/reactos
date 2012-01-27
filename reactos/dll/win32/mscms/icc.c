@@ -33,7 +33,7 @@
 
 #ifdef HAVE_LCMS
 
-static inline void MSCMS_adjust_endianess32( ULONG *ptr )
+static inline void MSCMS_adjust_endianness32( ULONG *ptr )
 {
 #ifndef WORDS_BIGENDIAN
     *ptr = RtlUlongByteSwap(*ptr);
@@ -48,7 +48,7 @@ void MSCMS_get_profile_header( const icProfile *iccprofile, PROFILEHEADER *heade
 
     /* ICC format is big-endian, swap bytes if necessary */
     for (i = 0; i < sizeof(PROFILEHEADER) / sizeof(ULONG); i++)
-        MSCMS_adjust_endianess32( (ULONG *)header + i );
+        MSCMS_adjust_endianness32( (ULONG *)header + i );
 }
 
 void MSCMS_set_profile_header( icProfile *iccprofile, const PROFILEHEADER *header )
@@ -60,14 +60,14 @@ void MSCMS_set_profile_header( icProfile *iccprofile, const PROFILEHEADER *heade
 
     /* ICC format is big-endian, swap bytes if necessary */
     for (i = 0; i < sizeof(icHeader) / sizeof(ULONG); i++)
-        MSCMS_adjust_endianess32( (ULONG *)iccheader + i );
+        MSCMS_adjust_endianness32( (ULONG *)iccheader + i );
 }
 
 DWORD MSCMS_get_tag_count( const icProfile *iccprofile )
 {
     ULONG count = iccprofile->count;
 
-    MSCMS_adjust_endianess32( &count );
+    MSCMS_adjust_endianness32( &count );
     return count;
 }
 
@@ -79,9 +79,9 @@ void MSCMS_get_tag_by_index( icProfile *iccprofile, DWORD index, icTag *tag )
     tag->offset = tmp->offset;
     tag->size = tmp->size;
 
-    MSCMS_adjust_endianess32( &tag->sig );
-    MSCMS_adjust_endianess32( &tag->offset );
-    MSCMS_adjust_endianess32( &tag->size );
+    MSCMS_adjust_endianness32( &tag->sig );
+    MSCMS_adjust_endianness32( &tag->offset );
+    MSCMS_adjust_endianness32( &tag->size );
 }
 
 void MSCMS_get_tag_data( const icProfile *iccprofile, const icTag *tag, DWORD offset, void *buffer )
@@ -98,7 +98,7 @@ DWORD MSCMS_get_profile_size( const icProfile *iccprofile )
 {
     DWORD size = ((const icHeader *)iccprofile)->size;
 
-    MSCMS_adjust_endianess32( &size );
+    MSCMS_adjust_endianness32( &size );
     return size;
 }
 
