@@ -1172,42 +1172,6 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_RESET)
     {
-        do
-        {
-           //
-           // read port status
-           //
-           Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
-
-           if ((Value & OHCI_RH_PORTSTATUS_PRS)  == 0)
-           {
-               //
-               // reset is complete
-               //
-               break;
-           }
-
-           //
-           // wait a bit
-           //
-           KeStallExecutionProcessor(100);
-
-           //DPRINT1("Value %x Index %lu\n", Value, Index);
-
-        }while(TRUE);
-
-        //
-        // check if reset bit is still set
-        //
-        if (Value & OHCI_RH_PORTSTATUS_PRS)
-        {
-            //
-            // reset failed
-            //
-            DPRINT1("PortId %lu Reset failed\n", PortId);
-            return STATUS_UNSUCCESSFUL;
-        }
-
         //
         // sanity checks
         //
@@ -1321,21 +1285,33 @@ CUSBHardwareDevice::SetPortFeature(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRS);
 
-        //
-        // wait 
-        //
-        KeStallExecutionProcessor(100);
+        do
+        {
+           //
+           // read port status
+           //
+           Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+
+           if ((Value & OHCI_RH_PORTSTATUS_PRS)  == 0)
+           {
+               //
+               // reset is complete
+               //
+               break;
+           }
+
+           //
+           // wait a bit
+           //
+           KeStallExecutionProcessor(100);
+        }while(TRUE);
 
         //
-        // is there a status change callback
+        // trigger the status change interrupt
         //
-        if (m_SCECallBack != NULL)
-        {
-            //
-            // issue callback
-            //
-            m_SCECallBack(m_SCEContext);
-        }
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
+
+        return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
 }
