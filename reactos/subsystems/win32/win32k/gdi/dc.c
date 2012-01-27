@@ -99,6 +99,33 @@ DC_AllocateDcAttr(HDC hDC)
   DC_UnlockDc(pDC);
 }
 
+VOID
+FASTCALL
+DC_FreeDcAttr(HDC DCToFree)
+{
+    NTSTATUS Status;
+    SIZE_T Size = 0;
+
+    PDC pDC = DC_LockDc(DCToFree);
+    if (pDC->pdcattr == NULL) return; // Internal DC object!
+    pDC->pdcattr = NULL;
+    DC_UnlockDc(pDC);
+
+    {
+        INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
+        PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData)
+        {
+            Status = ZwFreeVirtualMemory(NtCurrentProcess(), &Entry->UserData, &Size, MEM_RELEASE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed freeing dcattr memory with Status 0x%08X\n", Status);
+            }
+            Entry->UserData = NULL;
+        }
+    }
+}
+
 BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
                             LPCWSTR output, const DEVMODEW* initData, ULONG dcType )
 {
@@ -120,7 +147,7 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     pNewDC->ppdev = (PVOID)&PrimarySurface;
 
     /* Allocate dc shared memory */
-    DC_AllocateDcAttr(hNewDC);    
+    DC_AllocateDcAttr(hNewDC);
 
     /* Set default fg/bg colors */
     pNewDC->crBackgroundClr = RGB(255, 255, 255);
@@ -191,6 +218,9 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev )
 {
     DPRINT("RosGdiDeleteDC(%x)\n", physDev);
+
+    /* Free DC attr */
+    DC_FreeDcAttr(physDev);
 
     /* Free DC */
     GDIOBJ_FreeObjByHandle(physDev, GDI_OBJECT_TYPE_DC);
