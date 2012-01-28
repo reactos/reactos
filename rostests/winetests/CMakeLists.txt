@@ -43,6 +43,7 @@ add_subdirectory(mapi32)
 add_subdirectory(mlang)
 add_subdirectory(msacm32)
 add_subdirectory(mscms)
+add_subdirectory(mscoree)
 add_subdirectory(msctf)
 if(NOT MSVC)
     # FIXME: msvc build.

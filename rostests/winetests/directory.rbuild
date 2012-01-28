@@ -112,6 +112,9 @@
 	<directory name="mscms">
 		<xi:include href="mscms/mscms.rbuild" />
 	</directory>
+	<directory name="mscoree">
+		<xi:include href="mscoree/mscoree.rbuild" />
+	</directory>
 	<directory name="msctf">
 		<xi:include href="msctf/msctf.rbuild" />
 	</directory>
