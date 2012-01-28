@@ -513,6 +513,137 @@ USBCCGP_BuildConfigurationDescriptor(
 }
 
 NTSTATUS
+USBCCGP_PDOSelectConfiguration(
+    PDEVICE_OBJECT DeviceObject, 
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PURB Urb;
+    PUSBD_INTERFACE_INFORMATION InterfaceInformation;
+    ULONG InterfaceInformationCount, Index, InterfaceIndex;
+    PUSBD_INTERFACE_LIST_ENTRY Entry;
+    ULONG NeedSelect;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+    ASSERT(Urb);
+
+    //
+    // is there already an configuration handle
+    //
+    if (Urb->UrbSelectConfiguration.ConfigurationHandle)
+    {
+        //
+        // nothing to do
+        //
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // count interface information
+    //
+    InterfaceInformationCount = 0;
+    InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
+    do
+    {
+        InterfaceInformationCount++;
+        InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + InterfaceInformation->Length);
+    }while((ULONG_PTR)InterfaceInformation < (ULONG_PTR)Urb + Urb->UrbSelectConfiguration.Hdr.Length);
+
+    //
+    // check all interfaces
+    //
+    InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
+    Index = 0;
+    Entry = NULL;
+
+    do
+    {
+        //
+        // search for the interface
+        //
+        for(InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; InterfaceIndex++)
+        {
+            if (PDODeviceExtension->InterfaceList[InterfaceIndex].Interface->InterfaceNumber == InterfaceInformation->InterfaceNumber)
+            {
+                // found interface entry
+                Entry = &PDODeviceExtension->InterfaceList[InterfaceIndex];
+                break;
+            }
+        }
+
+        if (!Entry || Entry->InterfaceDescriptor)
+        {
+            //
+            // invalid parameter
+            //
+            ASSERT(FALSE);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        NeedSelect = FALSE;
+        if (Entry->InterfaceDescriptor->bAlternateSetting == InterfaceInformation->AlternateSetting)
+        {
+            for(InterfaceIndex = 0; Entry->InterfaceDescriptor->bNumEndpoints; InterfaceIndex++)
+            {
+                if (InterfaceInformation->Pipes[InterfaceIndex].MaximumTransferSize != Entry->Interface->Pipes[InterfaceIndex].MaximumTransferSize)
+                {
+                    //
+                    // changed interface
+                    //
+                    NeedSelect = TRUE;
+                }
+            }
+        }
+        else
+        {
+            //
+            // need select
+            //
+            NeedSelect = TRUE;
+        }
+
+        if (!NeedSelect)
+        {
+            //
+            // interface is already selected
+            //
+            ASSERT(InterfaceInformation->Length == Entry->Interface->Length);
+            RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+        }
+        else
+        {
+            //
+            // FIXME select interface
+            //
+            UNIMPLEMENTED
+            ASSERT(FALSE);
+        }
+
+        //
+        // move to next information
+        //
+        InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + InterfaceInformation->Length);
+        Index++;
+    }while(Index < InterfaceInformationCount);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 PDO_HandleInternalDeviceControl(
     PDEVICE_OBJECT DeviceObject, 
     PIRP Irp)
@@ -539,11 +670,20 @@ PDO_HandleInternalDeviceControl(
         //
         Urb = (PURB)IoStack->Parameters.Others.Argument1;
         ASSERT(Urb);
+        DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x\n", Urb->UrbHeader.Function);
 
-        if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE)
+        if (Urb->UrbHeader.Function == URB_FUNCTION_SELECT_CONFIGURATION)
         {
-            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x\n", Urb->UrbHeader.Function);
-
+            //
+            // select configuration
+            //
+            Status = USBCCGP_PDOSelectConfiguration(DeviceObject, Irp);
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+        else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE)
+        {
             if(Urb->UrbControlDescriptorRequest.DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE)
             {
                 //
@@ -581,6 +721,9 @@ PDO_HandleInternalDeviceControl(
                 return Status;
             }
         }
+
+
+
     }
 
 

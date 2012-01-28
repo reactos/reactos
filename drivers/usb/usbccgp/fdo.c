@@ -279,6 +279,7 @@ FDO_CreateChildPdo(
         PDODeviceExtension->FunctionDescriptor = &FDODeviceExtension->FunctionDescriptor[Index];
         PDODeviceExtension->NextDeviceObject = DeviceObject;
         PDODeviceExtension->FunctionIndex = Index;
+        PDODeviceExtension->ConfigurationHandle = FDODeviceExtension->ConfigurationHandle;
         PDODeviceExtension->ConfigurationDescriptor = FDODeviceExtension->ConfigurationDescriptor;
         RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
         RtlCopyMemory(&PDODeviceExtension->DeviceDescriptor, &FDODeviceExtension->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));

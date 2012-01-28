@@ -52,6 +52,9 @@ typedef struct
     ULONG FunctionIndex;                                     // function index
     USB_DEVICE_DESCRIPTOR DeviceDescriptor;                  // usb device descriptor
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;   // usb configuration descriptor
+    USBD_CONFIGURATION_HANDLE ConfigurationHandle;           // configuration handle
+    PUSBD_INTERFACE_LIST_ENTRY InterfaceList;                // interface list
+    ULONG InterfaceListCount;                                // interface list count
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* descriptor.c */
