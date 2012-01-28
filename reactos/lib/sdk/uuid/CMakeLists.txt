@@ -176,7 +176,10 @@ list(APPEND IDL_SOURCES
 
 if(MSVC)
     list(APPEND IDL_SOURCES
-        atliface.idl)
+        atliface.idl
+        cor.idl
+        cordebug.idl
+        metahost.idl)
 else()
     list(APPEND IDL_SOURCES
         wbemcli.idl
