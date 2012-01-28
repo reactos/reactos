@@ -214,14 +214,7 @@ static void test_PSetupEnumMonitor(VOID)
 
 START_TEST(ntprint)
 {
-    LPCSTR ptr;
-
-    /* ntprint.dll does not exist on win9x */
-    ptr = load_functions();
-    if (ptr) {
-        skip("%s not found\n", ptr);
-        return;
-    }
+    load_functions();
 
     test_PSetupCreateMonitorInfo();
     test_PSetupDestroyMonitorInfo();
