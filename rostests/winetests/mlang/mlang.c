@@ -254,28 +254,6 @@ static BOOL init_function_ptrs(void)
         ok(0, (format), string1, string2); \
     }
 
-/* lstrcmpW is not supported on Win9x! */
-static int mylstrcmpW(const WCHAR* str1, const WCHAR* str2)
-{
-    if (!str2) return 1;
-    while (*str1 && *str1==*str2) {
-        str1++;
-        str2++;
-    }
-    return *str1-*str2;
-}
-
-/* lstrcpyW is not supported on Win95 */
-static void mylstrcpyW(WCHAR* str1, const WCHAR* str2)
-{
-    while (str2 && *str2) {
-        *str1 = *str2;
-        str1++;
-        str2++;
-    }
-    *str1 = '\0';
-}
-
 static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 {
     /* these APIs are broken regarding constness of the input buffer */
@@ -586,8 +564,6 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 #ifdef DUMP_CP_INFO
         trace("%u: codepage %u family %u\n", i, cpinfo[i].uiCodePage, cpinfo[i].uiFamilyCodePage);
 #endif
-        /* Win95 does not support UTF-7 */
-        if (cpinfo[i].uiCodePage == CP_UTF7) continue;
 
 	/* support files for some codepages might be not installed, or
 	 * the codepage is just an alias.
@@ -773,7 +749,6 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
     if (!flags)
     {
 	ok(n == total, "IEnumScript_Next: expected %u, got %u\n", total, n);
-	flags = SCRIPTCONTF_SCRIPT_USER | SCRIPTCONTF_SCRIPT_HIDE | SCRIPTCONTF_SCRIPT_SYSTEM;
     }
 
     total = n;
@@ -834,7 +809,7 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
     DWORD dwCodePages, dwManyCodePages;
     DWORD dwCmpCodePages;
     UINT CodePage;
-    static const WCHAR str[3] = { 'd', 0x0436, 0xff90 };
+    static const WCHAR str[] = { 'd', 0x0436, 0xff90 };
     LONG processed;
     HRESULT ret;
 
@@ -1227,28 +1202,32 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
         ok(!lstrcmpA(rfc1766A, info_table[i].rfc1766),
             "#%02d: got '%s' (expected '%s')\n", i, rfc1766A, info_table[i].rfc1766);
 
-        /* Some IE versions truncate an oversized name one character to short */
-        mylstrcpyW(short_broken_name, info_table[i].broken_name);
-        short_broken_name[MAX_LOCALE_NAME - 2] = '\0';
+        /* Some IE versions truncate an oversized name one character too short */
+        if (info_table[i].broken_name) {
+            lstrcpyW(short_broken_name, info_table[i].broken_name);
+            short_broken_name[MAX_LOCALE_NAME - 2] = 0;
+        }
 
         if (info_table[i].todo & TODO_NAME) {
             todo_wine
-            ok( (!mylstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
-                broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
-                broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
+            ok( (!lstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
+               (info_table[i].broken_name && (
+                broken(!lstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
+                broken(!lstrcmpW(prfc->wszLocaleName, short_broken_name)))),
                 "#%02d: got %s (expected %s)\n", i,
                 wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
         }
         else
-            ok( (!mylstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
-                broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
-                broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
+            ok( (!lstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
+               (info_table[i].broken_name && (
+                broken(!lstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
+                broken(!lstrcmpW(prfc->wszLocaleName, short_broken_name)))),
                 "#%02d: got %s (expected %s)\n", i,
                 wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
 
     }
 
-    /* SUBLANG_NEUTRAL only allowed for english, arabic, chinese */
+    /* SUBLANG_NEUTRAL only allowed for English, Arabic, Chinese */
     ret = IMultiLanguage2_GetRfc1766Info(iML2, MAKELANGID(LANG_GERMAN, SUBLANG_NEUTRAL), LANG_ENGLISH, prfc);
     ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
 
@@ -1903,20 +1882,6 @@ static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
     UINT i;
     HRESULT hr;
 
-    SetLastError(0xdeadbeef);
-    lstrcmpW(NULL, NULL);
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        /* This corruption leads (sometimes) to test failures in oleaut32 but also
-         * to the inability to use the Regional Settings.
-         * This only seems to be an issue with Win98 and IE6 (mlang version 6.0.2800.1106).
-         *
-         * A reboot restores the codepages again.
-         */
-        win_skip("IsCodePageInstallable could mess up the codepages on Win98\n");
-        return;
-    }
-
     for (i = 0; i < 0xffff; i++)
     {
         hr = IMultiLanguage2_IsCodePageInstallable(ml2, i);
@@ -1929,6 +1894,23 @@ static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
                broken(hr == S_FALSE) ||  /* win2k */
                broken(hr == E_INVALIDARG),  /* win2k */
                "code page %u is valid but not installable 0x%08x\n", i, hr);
+    }
+}
+
+static void test_GetGlobalFontLinkObject(void)
+{
+    HRESULT ret;
+    void *unknown;
+
+    ret = GetGlobalFontLinkObject(NULL);
+    ok(ret == E_INVALIDARG, "expected E_INVALIDARG got %#x\n", ret);
+
+    unknown = (void *)0xdeadbeef;
+    ret = GetGlobalFontLinkObject(&unknown);
+todo_wine {
+    ok(ret == S_OK, "expected S_OK got %#x\n", ret);
+    ok(unknown != NULL && unknown != (void *)0xdeadbeef,
+       "GetGlobalFontLinkObject() returned %p\n", unknown);
     }
 }
 
@@ -1950,6 +1932,7 @@ START_TEST(mlang)
     test_ConvertINetUnicodeToMultiByte();
     test_JapaneseConversion();
 
+    test_GetGlobalFontLinkObject();
 
     trace("IMultiLanguage\n");
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
