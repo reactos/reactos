@@ -86,28 +86,23 @@ static void test_SQLInstallDriverManager(void)
     bool_ret = SQLInstallDriverManager(NULL, 0, NULL);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
     ok(!bool_ret, "SQLInstallDriverManager unexpectedly succeeded\n");
-    todo_wine
     ok(sql_ret == SQL_SUCCESS_WITH_INFO && error_code == ODBC_ERROR_INVALID_BUFF_LEN,
         "Expected SQLInstallDriverManager to fail with ODBC_ERROR_INVALID_BUFF_LEN\n");
 
     /* Length smaller than MAX_PATH */
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH / 2, NULL);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
-    todo_wine {
     ok(!bool_ret, "SQLInstallDriverManager unexpectedly succeeded\n");
     ok(sql_ret == SQL_SUCCESS_WITH_INFO && error_code == ODBC_ERROR_INVALID_BUFF_LEN,
         "Expected SQLInstallDriverManager to fail with ODBC_ERROR_INVALID_BUFF_LEN\n");
-    }
 
     path_out = 0xcafe;
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH / 2, &path_out);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
-    todo_wine {
     ok(!bool_ret, "SQLInstallDriverManager unexpectedly succeeded\n");
     ok(sql_ret == SQL_SUCCESS_WITH_INFO && error_code == ODBC_ERROR_INVALID_BUFF_LEN,
         "Expected SQLInstallDriverManager to fail with ODBC_ERROR_INVALID_BUFF_LEN\n");
     ok(path_out == 0xcafe, "Expected path_out to not have changed\n");
-    }
 
     /* Length OK */
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH, NULL);
