@@ -821,6 +821,7 @@ modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   o
 modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
 modules\rostests\winetests\msacm32\msacm32_winetest.exe                    7   optional
 modules\rostests\winetests\mscms\mscms_winetest.exe                        7   optional
+modules\rostests\winetests\mscoree\mscoree_winetest.exe                    7   optional
 modules\rostests\winetests\msctf\msctf_winetest.exe                        7   optional
 modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
 modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
