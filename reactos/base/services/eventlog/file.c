@@ -292,7 +292,9 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
 NTSTATUS
 LogfCreate(PLOGFILE *LogFile,
            WCHAR * LogName,
-           PUNICODE_STRING FileName)
+           PUNICODE_STRING FileName,
+           BOOL Permanent,
+           BOOL Backup)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -314,13 +316,13 @@ LogfCreate(PLOGFILE *LogFile,
                                NULL);
 
     Status = NtCreateFile(&pLogFile->hFile,
-                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                          Backup ? (GENERIC_READ | SYNCHRONIZE) : (GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE),
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
                           FILE_ATTRIBUTE_NORMAL,
                           FILE_SHARE_READ,
-                          FILE_OPEN_IF,
+                          Backup ? FILE_OPEN : FILE_OPEN_IF,
                           FILE_SYNCHRONOUS_IO_NONALERT,
                           NULL,
                           0);
@@ -371,6 +373,8 @@ LogfCreate(PLOGFILE *LogFile,
 
     pLogFile->OffsetInfoSize = 64;
 
+    pLogFile->Permanent = Permanent;
+
     if (bCreateNew)
         bResult = LogfInitializeNew(pLogFile);
     else
@@ -411,9 +415,15 @@ LogfCreate(PLOGFILE *LogFile,
     return Status;
 }
 
-VOID LogfClose(PLOGFILE LogFile)
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOL ForceClose)
 {
     if (LogFile == NULL)
+        return;
+
+    if ((ForceClose == FALSE) &&
+        (LogFile->Permanent == TRUE))
         return;
 
     RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
@@ -436,7 +446,7 @@ VOID LogfCloseAll(VOID)
 {
     while (!IsListEmpty(&LogFileListHead))
     {
-        LogfClose(LogfListHead());
+        LogfClose(LogfListHead(), TRUE);
     }
 
     DeleteCriticalSection(&LogFileListCs);

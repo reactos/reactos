@@ -327,7 +327,7 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
     DPRINT("%S -> %S\n", Buf, Expanded);
 
-    Status = LogfCreate(&pLogf, LogName, &FileName);
+    Status = LogfCreate(&pLogf, LogName, &FileName, TRUE, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);

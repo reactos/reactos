@@ -92,6 +92,7 @@ typedef struct _LOGFILE
     PEVENT_OFFSET_INFO OffsetInfo;
     ULONG OffsetInfoSize;
     ULONG OffsetInfoNext;
+    BOOL Permanent;
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
@@ -157,9 +158,13 @@ LogfBackupFile(PLOGFILE LogFile,
 NTSTATUS
 LogfCreate(PLOGFILE *Logfile,
            WCHAR * LogName,
-           PUNICODE_STRING FileName);
+           PUNICODE_STRING FileName,
+           BOOL Permanent,
+           BOOL Backup);
 
-VOID LogfClose(PLOGFILE LogFile);
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOL ForceClose);
 
 VOID LogfCloseAll(VOID);
 
