@@ -80,6 +80,13 @@ public:
 
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
+    // set command
+    VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+
+    // get command
+    VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+
+
     // local
     BOOLEAN InterruptService();
 
@@ -118,11 +125,6 @@ protected:
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BOOLEAN m_ResetInProgress[16];                                                     // set when a reset is in progress
 
-    // set command
-    VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
-
-    // get command
-    VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
 
     // read register
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -336,8 +338,13 @@ CUSBHardwareDevice::PnpStart(
                 m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 4));
                 m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 8));
 
+                DPRINT1("Controller has %d Length\n", m_Capabilities.Length);
                 DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
                 DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
+				DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
+				DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+
+				DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
                     for (Count = 0; Count < m_Capabilities.HCSParams.PortCount; Count++)
@@ -518,22 +525,42 @@ CUSBHardwareDevice::StartController(void)
     ULONG UsbSts, FailSafe;
 
     //
+    // check caps
+    //
+    if (m_Capabilities.HCCParams.CurAddrBits)
+    {
+        //
+        // disable 64-bit addressing
+        //
+        EHCI_WRITE_REGISTER_ULONG(EHCI_CTRLDSSEGMENT, 0x0);
+    }
+
+
+#if 1
+    //
     // Stop the controller if its running
     //
     UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
     if (!(UsbSts & EHCI_STS_HALT))
+    {
+        DPRINT1("Stopping Controller %x\n", UsbSts);
         StopController();
+    }
+#endif
 
     //
     // Enable Interrupts and start execution
     //
-    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
-        /*| EHCI_USBINTR_FLROVR*/  | EHCI_USBINTR_PC);
+    ULONG Mask = EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR | EHCI_USBINTR_PC;
+    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, Mask);
 
-    //
-    // Assign the AsyncList Register
-    //
-    EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, AsyncQueueHead->PhysicalAddr);
+    KeStallExecutionProcessor(10);
+
+    ULONG Status = EHCI_READ_REGISTER_ULONG(EHCI_USBINTR);
+
+    DPRINT1("Interrupt Mask %x\n", Status);
+    ASSERT((Status & Mask) == Mask);
+
 
     //
     // Assign the SyncList Register
@@ -543,13 +570,12 @@ CUSBHardwareDevice::StartController(void)
     //
     // Set Schedules to Enable and Interrupt Threshold to 1ms.
     //
-    GetCommandRegister(&UsbCmd);
-    UsbCmd.PeriodicEnable = TRUE;
-    UsbCmd.IntThreshold = 1;
-    SetCommandRegister(&UsbCmd);
+    RtlZeroMemory(&UsbCmd, sizeof(EHCI_USBCMD_CONTENT));
 
-    GetCommandRegister(&UsbCmd);
+    UsbCmd.PeriodicEnable = TRUE;
+    UsbCmd.IntThreshold = 0x8; //1ms
     UsbCmd.Run = TRUE;
+    UsbCmd.FrameListSize = 0x0; //1024
     SetCommandRegister(&UsbCmd);
 
     //
@@ -566,6 +592,7 @@ CUSBHardwareDevice::StartController(void)
         }
     }
 
+
     if (UsbSts & EHCI_STS_HALT)
     {
         DPRINT1("Could not start execution on the controller\n");
@@ -573,17 +600,62 @@ CUSBHardwareDevice::StartController(void)
     }
 
     //
+    // Assign the AsyncList Register
+    //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, AsyncQueueHead->PhysicalAddr);
+
+    //
+    // get command register
+    //
+    GetCommandRegister(&UsbCmd);
+
+    //
+    // preserve bits
+    //
+    UsbCmd.AsyncEnable = TRUE;
+
+    //
+    // enable async
+    //
+    SetCommandRegister(&UsbCmd);
+
+    //
+    // Wait for execution to start
+    //
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(10);
+        UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
+
+        if ((UsbSts & EHCI_STS_ASS))
+        {
+            break;
+        }
+    }
+
+    if (!(UsbSts & EHCI_STS_ASS))
+    {
+        DPRINT1("Failed to enable async schedule UsbSts %x\n", UsbSts);
+        ASSERT(FALSE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    DPRINT1("UsbSts %x\n", UsbSts);
+    GetCommandRegister(&UsbCmd);
+
+    DPRINT1("UsbCmd.PeriodicEnable %x\n", UsbCmd.PeriodicEnable);
+    DPRINT1("UsbCmd.AsyncEnable %x\n", UsbCmd.AsyncEnable);
+    DPRINT1("UsbCmd.IntThreshold %x\n", UsbCmd.IntThreshold);
+    DPRINT1("UsbCmd.Run %x\n", UsbCmd.Run);
+    DPRINT1("UsbCmd.FrameListSize %x\n", UsbCmd.FrameListSize);
+
+    //
     // Set port routing to EHCI controller
     //
     EHCI_WRITE_REGISTER_ULONG(EHCI_CONFIGFLAG, 1);
 
-    //
-    // Enable async
-    //
-    GetCommandRegister(&UsbCmd);
-    UsbCmd.AsyncEnable = TRUE;  //FIXME: Need USB Memory Manager
-    // FIXME: Set framelistsize when periodic is implemented.
-    SetCommandRegister(&UsbCmd);
+
+
 
     DPRINT1("EHCI Started!\n");
     return STATUS_SUCCESS;
@@ -854,8 +926,16 @@ CUSBHardwareDevice::SetPortFeature(
     }
 
     if (Feature == PORT_POWER)
-        DPRINT1("PORT_POWER Not implemented\n");
-
+    {
+        if (m_Capabilities.HCSParams.PortPowerControl)
+        {
+            //
+            // enable port power
+            //
+            ULONG Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId)) | EHCI_PRT_POWER;
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC, Value);
+        }
+    }
     return STATUS_SUCCESS;
 }
 
@@ -982,6 +1062,7 @@ EhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
+	DPRINT1("CStatus %x\n", CStatus);
 
     //
     // check for completion of async schedule
