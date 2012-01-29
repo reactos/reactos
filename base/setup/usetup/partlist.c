@@ -875,7 +875,7 @@ AddDiskToList (HANDLE FileHandle,
 
   GetDriverName (DiskEntry);
 
-  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, BiosDiskNumber);
+  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
   /*
    * Allocate a buffer for 26 logical drives (2 entries each == 52) 
@@ -2377,9 +2377,8 @@ CheckActiveBootPartition (PPARTLIST List)
   }
 #endif
 
-  DiskEntry = CONTAINING_RECORD (List->DiskListHead.Flink,
-                                 DISKENTRY,
-                                 ListEntry);
+  /* Choose the currently selected disk */
+  DiskEntry = List->CurrentDisk;
 
   /* Check for empty partition list */
   if (IsListEmpty (&DiskEntry->PartListHead))
@@ -2440,7 +2439,7 @@ CheckActiveBootPartition (PPARTLIST List)
           List->ActiveBootPartitionNumber = i;
 
           DPRINT("Found bootable partition disk %d, drive letter %c\n",
-              DiskEntry->BiosDiskNumber, PartEntry->DriveLetter[i]);
+              DiskEntry->DiskNumber, PartEntry->DriveLetter[i]);
 
           break;
         }
