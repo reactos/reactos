@@ -134,7 +134,7 @@ reactos/dll/win32/pdh             # Autosync
 reactos/dll/win32/pidgen          # Autosync
 reactos/dll/win32/powrprof        # Forked at Wine-1.0rc5
 reactos/dll/win32/printui         # Synced to Wine-1.3.37
-reactos/dll/win32/pstorec         # Autosync
+reactos/dll/win32/pstorec         # Synced to Wine-1.3.37
 reactos/dll/win32/query           # Autosync
 reactos/dll/win32/rasapi32        # Autosync
 reactos/dll/win32/resutils        # Autosync
