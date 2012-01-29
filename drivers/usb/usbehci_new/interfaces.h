@@ -301,6 +301,15 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 // Description: releases the device lock
 
     virtual void ReleaseDeviceLock(KIRQL OldLevel) = 0;
+
+	    // set command
+    virtual void SetCommandRegister(struct _EHCI_USBCMD_CONTENT *UsbCmd) = 0;
+
+    // get command
+    virtual void GetCommandRegister(struct _EHCI_USBCMD_CONTENT *UsbCmd) = 0;
+
+
+
 };
 
 typedef IUSBHardwareDevice *PUSBHARDWAREDEVICE;

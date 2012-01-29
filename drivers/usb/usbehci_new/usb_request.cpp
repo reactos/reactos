@@ -767,7 +767,14 @@ CUSBRequest::BuildControlTransferQueueHead(
     // link transfer descriptors to queue head
     //
     QueueHead->NextPointer = m_TransferDescriptors[0]->PhysicalAddr;
+/*
+	if (m_TransferBufferMDL)
+	    QueueHead->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
+	else
+	    QueueHead->AlternateNextPointer = m_TransferDescriptors[1]->PhysicalAddr;
 
+	QueueHead->EndPointCapabilities.InterruptScheduleMask = 0x0;
+*/
     //
     // store result
     //

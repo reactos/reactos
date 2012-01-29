@@ -141,6 +141,11 @@ CUSBQueue::Initialize(
     //
     Status = InitializeSyncSchedule(Hardware, MemManager);
 
+    //
+    // store hardware object
+    //
+    m_Hardware = Hardware;
+
     return Status;
 }
 
@@ -358,6 +363,13 @@ CUSBQueue::AddUSBRequest(
         KeAcquireSpinLock(m_Lock, &OldLevel);
         LinkQueueHead(AsyncListQueueHead, QueueHead);
         KeReleaseSpinLock(m_Lock, OldLevel);
+
+        EHCI_USBCMD_CONTENT UsbCmd;
+        m_Hardware->GetCommandRegister(&UsbCmd);
+        ASSERT(UsbCmd.AsyncEnable == TRUE);
+
+        m_Hardware->SetAsyncListRegister(QueueHead->PhysicalAddr);
+
     }
 
 
@@ -419,6 +431,7 @@ CUSBQueue::LinkQueueHead(
     //
     // Link the LIST_ENTRYs
     //
+    ASSERT(IsListEmpty(&HeadQueueHead->LinkedQueueHeads));
     InsertTailList(&HeadQueueHead->LinkedQueueHeads, &NewQueueHead->LinkedQueueHeads);
 
     //
@@ -426,6 +439,7 @@ CUSBQueue::LinkQueueHead(
     //
     Entry = NewQueueHead->LinkedQueueHeads.Blink;
     LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    ASSERT(LastQueueHead == HeadQueueHead);
     LastQueueHead->HorizontalLinkPointer = (NewQueueHead->PhysicalAddr | QH_TYPE_QH);
 
     //
@@ -435,6 +449,11 @@ CUSBQueue::LinkQueueHead(
     NextQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
     ASSERT(NextQueueHead == HeadQueueHead);
     NewQueueHead->HorizontalLinkPointer = (NextQueueHead->PhysicalAddr | QH_TYPE_QH);
+
+    //
+    // head queue head must be halted
+    //
+    PC_ASSERT(HeadQueueHead->Token.Bits.Halted == TRUE);
 }
 
 //
