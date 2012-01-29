@@ -27,6 +27,7 @@ PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 #define REQ_INTERACTIVE_WINSTA(err) \
     if (gpwinstaCurrent != InputWindowStation) \
     { \
+        ERR("NtUserSystemParametersInfo requires interactive window station\n"); \
         EngSetLastError(err); \
         return 0; \
     }
@@ -422,7 +423,7 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        TRACE("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
+        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
     }
     return NT_SUCCESS(Status);
 }
@@ -1536,6 +1537,7 @@ UserSystemParametersInfo(
     if (!gbSpiInitialized)
     {
         KeRosDumpStackFrames(NULL, 20);
+        //ASSERT(FALSE);
         return FALSE;
     }
 
@@ -1545,7 +1547,8 @@ UserSystemParametersInfo(
     if (!gpwinstaCurrent)
     {
         ERR("UserSystemParametersInfo called without active windowstation.\n");
-        //KeRosDumpStackFrames(NULL, 0);
+        //ASSERT(FALSE);
+        //return FALSE;
     }
 
     /* Do the actual operation */
