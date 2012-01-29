@@ -256,7 +256,7 @@ typedef struct _EHCI_CAPS {
         EHCI_HCC_CONTENT HCCParams;
         ULONG HCCParamsLong;
     };
-    UCHAR PortRoute [8];
+    UCHAR PortRoute [15];
 } EHCI_CAPS, *PEHCI_CAPS;
 
 
