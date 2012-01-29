@@ -85,7 +85,6 @@ static void test_rasenum(void)
     rasDevInfo[0].dwSize = 0;
     cb = bufsize;
     result = pRasEnumDevicesA(rasDevInfo, &cb, &cDevices);
-    todo_wine
     ok(result == ERROR_INVALID_SIZE ||
     result == ERROR_INVALID_USER_BUFFER, /* win98 */
     "Expected ERROR_INVALID_SIZE, got %08d\n", result);
@@ -93,7 +92,6 @@ static void test_rasenum(void)
     rasDevInfo[0].dwSize = sizeof(RASDEVINFOA) -1;
     cb = bufsize;
     result = pRasEnumDevicesA(rasDevInfo, &cb, &cDevices);
-    todo_wine
     ok(result == ERROR_INVALID_SIZE ||
     result == ERROR_INVALID_USER_BUFFER, /* win98 */
     "Expected ERROR_INVALID_SIZE, got %08d\n", result);
@@ -101,7 +99,6 @@ static void test_rasenum(void)
     rasDevInfo[0].dwSize = sizeof(RASDEVINFOA) +1;
     cb = bufsize;
     result = pRasEnumDevicesA(rasDevInfo, &cb, &cDevices);
-    todo_wine
     ok(result == ERROR_INVALID_SIZE ||
     result == ERROR_INVALID_USER_BUFFER, /* win98 */
     "Expected ERROR_INVALID_SIZE, got %08d\n", result);
@@ -151,7 +148,6 @@ static void test_rasenum(void)
     cb = 0;
     rasDevInfo[0].dwSize = 0;
     result = pRasEnumDevicesA(rasDevInfo, &cb, &cDevices);
-    todo_wine
     ok(result == ERROR_INVALID_SIZE ||
     broken(result == ERROR_BUFFER_TOO_SMALL), /* win98 */
     "Expected ERROR_INVALID_SIZE, got %08d\n", result);
