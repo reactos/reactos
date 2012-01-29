@@ -180,7 +180,7 @@ reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628
 reactos/dll/win32/wintrust        # Autosync
 reactos/dll/win32/wldap32         # Autosync
 reactos/dll/win32/wmi             # Autosync
-reactos/dll/win32/wtsapi32        # Forked
+reactos/dll/win32/wtsapi32        # Synced to Wine-1.3.37
 reactos/dll/win32/wuapi           # Autosync
 reactos/dll/win32/xinput1_1       # Autosync
 reactos/dll/win32/xinput1_2       # Autosync
