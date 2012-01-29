@@ -368,8 +368,6 @@ CUSBQueue::AddUSBRequest(
         m_Hardware->GetCommandRegister(&UsbCmd);
         ASSERT(UsbCmd.AsyncEnable == TRUE);
 
-        m_Hardware->SetAsyncListRegister(QueueHead->PhysicalAddr);
-
     }
 
 
