@@ -3094,13 +3094,13 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 
     if ((ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32) || ilc == ILC_COLOR)
     {
-        char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-        BITMAPINFO *bmi = (BITMAPINFO *)buffer;
+        BITMAPINFO *bmi = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ));
+        if (bmi == NULL)
+            return NULL;
 
         TRACE("Creating DIBSection %d x %d, %d Bits per Pixel\n",
               sz.cx, sz.cy, himl->uBitsPixel);
 
-        memset( buffer, 0, sizeof(buffer) );
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi->bmiHeader.biWidth = sz.cx;
 	bmi->bmiHeader.biHeight = sz.cy;
@@ -3116,6 +3116,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
             DeleteObject( tmp );
 	}
 	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, NULL, 0, 0);
+        HeapFree( GetProcessHeap(), 0, bmi );
     }
     else /*if (ilc == ILC_COLORDDB)*/
     {
