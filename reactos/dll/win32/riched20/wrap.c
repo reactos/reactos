@@ -271,7 +271,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
   {
     if (wc->pLastSplittableRun->member.run.nFlags & (MERF_GRAPHICS|MERF_TAB))
     {
-      wc->pt = wc->ptLastSplittableRun;
+      wc->pt = wc->pLastSplittableRun->member.run.pt;
       return wc->pLastSplittableRun;
     }
     else if (wc->pLastSplittableRun->member.run.nFlags & MERF_SPLITTABLE)
@@ -299,7 +299,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
     else
     {
       /* restart from the first run beginning with spaces */
-      wc->pt = wc->ptLastSplittableRun;
+      wc->pt = wc->pLastSplittableRun->member.run.pt;
       return wc->pLastSplittableRun;
     }
   }
@@ -349,7 +349,6 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
       return p->next;
 
     if (run->nFlags & MERF_WHITESPACE) {
-      p->member.run.nFlags |= MERF_SKIPPED;
       wc->pt.x += run->nWidth;
       /* skip runs consisting of only whitespaces */
       return p->next;
@@ -362,7 +361,9 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
       if (black) {
         wc->bOverflown = FALSE;
         pp = ME_SplitRun(wc, p, black);
-        p->member.run.nFlags |= MERF_SKIPPED;
+        ME_CalcRunExtent(wc->context, &wc->pPara->member.para,
+                         wc->nRow ? wc->nLeftMargin : wc->nFirstMargin,
+                         &pp->member.run);
         ME_InsertRowStart(wc, pp);
         return pp;
       }
@@ -451,7 +452,6 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     || ((run->nFlags & (MERF_GRAPHICS|MERF_TAB)) && (p != wc->pRowStart)))
   {
     wc->pLastSplittableRun = p;
-    wc->ptLastSplittableRun = wc->pt;
   }
   wc->pt.x += run->nWidth;
   return p->next;
@@ -480,7 +480,32 @@ static int ME_GetParaLineSpace(ME_Context* c, ME_Paragraph* para)
     return sp * c->editor->nZoomNumerator / c->editor->nZoomDenominator;
 }
 
-static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
+static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
+  ME_DisplayItem *p;
+
+  tp->member.para.nWidth = 0;
+  /* remove row start items as they will be reinserted by the
+   * paragraph wrapper anyway */
+  tp->member.para.nRows = 0;
+  for (p = tp->next; p != tp->member.para.next_para; p = p->next) {
+    if (p->type == diStartRow) {
+      ME_DisplayItem *pRow = p;
+      p = p->prev;
+      ME_Remove(pRow);
+      ME_DestroyDisplayItem(pRow);
+    }
+  }
+  /* join runs that can be joined */
+  for (p = tp->next; p != tp->member.para.next_para; p = p->next) {
+    assert(p->type != diStartRow); /* should have been deleted above */
+    if (p->type == diRun) {
+      while (p->next->type == diRun && /* FIXME */
+             ME_CanJoinRuns(&p->member.run, &p->next->member.run)) {
+        ME_JoinRuns(c->editor, p);
+      }
+    }
+  }
+}
 
 static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
@@ -556,45 +581,6 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   tp->member.para.nFlags &= ~MEPF_REWRAP;
   tp->member.para.nHeight = wc.pt.y;
   tp->member.para.nRows = wc.nRow;
-}
-
-
-static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
-  ME_DisplayItem *p, *pRow;
-
-  tp->member.para.nWidth = 0;
-  /* remove all items that will be reinserted by paragraph wrapper anyway */
-  tp->member.para.nRows = 0;
-  for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
-    switch(p->type) {
-      case diStartRow:
-        pRow = p;
-        p = p->prev;
-        ME_Remove(pRow);
-        ME_DestroyDisplayItem(pRow);
-        break;
-      default:
-        break;
-    }
-  }
-  /* join runs that can be joined, set up flags */
-  for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
-    switch(p->type) {
-      case diStartRow: assert(0); break; /* should have deleted it */
-      case diRun:
-        while (p->next->type == diRun) { /* FIXME */
-          if (ME_CanJoinRuns(&p->member.run, &p->next->member.run)) {
-            ME_JoinRuns(c->editor, p);
-          }
-          else
-            break;
-        }
-        p->member.run.nFlags &= ~MERF_CALCBYWRAP;
-        break;
-      default:
-        break;
-    }
-  }
 }
 
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)

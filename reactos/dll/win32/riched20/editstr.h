@@ -118,10 +118,6 @@ typedef enum {
 #define MERF_ENDWHITE   0x004000
 /* run is completely made of whitespaces */
 #define MERF_WHITESPACE 0x008000
-/* run is a last (dummy) run in the paragraph */
-#define MERF_SKIPPED    0x010000
-/* flags that are calculated during text wrapping */
-#define MERF_CALCBYWRAP 0x0F0000
 /* the "end of paragraph" run, contains 1 character */
 #define MERF_ENDPARA    0x100000
 /* forcing the "end of row" run, contains 1 character */
@@ -414,7 +410,6 @@ typedef struct tagME_WrapContext
   ME_DisplayItem *pRowStart;
 
   ME_DisplayItem *pLastSplittableRun;
-  POINT ptLastSplittableRun;
 } ME_WrapContext;
 
 #endif

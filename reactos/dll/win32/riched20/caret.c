@@ -579,10 +579,8 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
         }
 
         p = &editor->pCursors[nCursor];
-        if (p->nOffset) {
-          ME_SplitRunSimple(editor, p->pRun, p->nOffset);
-          p = &editor->pCursors[nCursor];
-        }
+        if (p->nOffset)
+          ME_SplitRunSimple(editor, p);
         tmp_style = ME_GetInsertStyle(editor, nCursor);
         /* ME_SplitParagraph increases style refcount */
         tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, eol_str, 0);
@@ -1201,7 +1199,6 @@ static ME_DisplayItem *ME_FindRunInRow(ME_TextEditor *editor, ME_DisplayItem *pR
   ME_DisplayItem *pNext, *pLastRun;
   pNext = ME_FindItemFwd(pRow, diRunOrStartRow);
   assert(pNext->type == diRun);
-  pLastRun = pNext;
   if (pbCaretAtEnd) *pbCaretAtEnd = FALSE;
   if (pOffset) *pOffset = 0;
   do {

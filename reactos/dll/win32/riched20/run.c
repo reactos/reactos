@@ -251,9 +251,9 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
 ME_DisplayItem *ME_SplitRun(ME_WrapContext *wc, ME_DisplayItem *item, int nVChar)
 {
   ME_TextEditor *editor = wc->context->editor;
-  ME_DisplayItem *item2 = NULL;
   ME_Run *run, *run2;
-  ME_Paragraph *para = &ME_GetParagraph(item)->member.para;
+  ME_Paragraph *para = &wc->pPara->member.para;
+  ME_Cursor cursor = {wc->pPara, item, nVChar};
 
   assert(item->member.run.nCharOfs != -1);
   if(TRACE_ON(richedit))
@@ -268,12 +268,11 @@ ME_DisplayItem *ME_SplitRun(ME_WrapContext *wc, ME_DisplayItem *item, int nVChar
   TRACE("Before split: %s(%d, %d)\n", debugstr_w(run->strText->szData),
         run->pt.x, run->pt.y);
 
-  item2 = ME_SplitRunSimple(editor, item, nVChar);
+  ME_SplitRunSimple(editor, &cursor);
 
-  run2 = &item2->member.run;
+  run2 = &cursor.pRun->member.run;
 
   ME_CalcRunExtent(wc->context, para, wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, run);
-  ME_CalcRunExtent(wc->context, para, wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, run2);
 
   run2->pt.x = run->pt.x+run->nWidth;
   run2->pt.y = run->pt.y;
@@ -288,46 +287,45 @@ ME_DisplayItem *ME_SplitRun(ME_WrapContext *wc, ME_DisplayItem *item, int nVChar
       debugstr_w(run2->strText->szData), run2->pt.x, run2->pt.y);
   }
 
-  return item2;
+  return cursor.pRun;
 }
 
 /******************************************************************************
  * ME_SplitRunSimple
- * 
+ *
  * Does the most basic job of splitting a run into two - it does not
- * update the positions and extents.    
- */    
-ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nVChar)
+ * update the positions and extents.
+ */
+ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_Cursor *cursor)
 {
-  ME_Run *run = &item->member.run;
-  ME_DisplayItem *item2;
-  ME_Run *run2;
+  ME_DisplayItem *run = cursor->pRun;
+  ME_DisplayItem *new_run;
   int i;
-  assert(nVChar > 0 && nVChar < run->strText->nLen);
-  assert(item->type == diRun);
-  assert(!(item->member.run.nFlags & MERF_NONTEXT));
-  assert(item->member.run.nCharOfs != -1);
+  int nOffset = cursor->nOffset;
 
-  item2 = ME_MakeRun(run->style,
-      ME_VSplitString(run->strText, nVChar), run->nFlags&MERF_SPLITMASK);
+  assert(!(run->member.run.nFlags & MERF_NONTEXT));
 
-  item2->member.run.nCharOfs = item->member.run.nCharOfs + nVChar;
+  new_run = ME_MakeRun(run->member.run.style,
+                       ME_VSplitString(run->member.run.strText, nOffset),
+                       run->member.run.nFlags & MERF_SPLITMASK);
 
-  run2 = &item2->member.run;
-  ME_InsertBefore(item->next, item2);
+  new_run->member.run.nCharOfs = run->member.run.nCharOfs + nOffset;
+  cursor->pRun = new_run;
+  cursor->nOffset = 0;
 
-  ME_UpdateRunFlags(editor, run);
-  ME_UpdateRunFlags(editor, run2);
-  for (i=0; i<editor->nCursors; i++) {
-    if (editor->pCursors[i].pRun == item &&
-        editor->pCursors[i].nOffset >= nVChar) {
-      assert(item2->type == diRun);
-      editor->pCursors[i].pRun = item2;
-      editor->pCursors[i].nOffset -= nVChar;
+  ME_InsertBefore(run->next, new_run);
+
+  ME_UpdateRunFlags(editor, &run->member.run);
+  ME_UpdateRunFlags(editor, &new_run->member.run);
+  for (i = 0; i < editor->nCursors; i++) {
+    if (editor->pCursors[i].pRun == run &&
+        editor->pCursors[i].nOffset >= nOffset) {
+      editor->pCursors[i].pRun = new_run;
+      editor->pCursors[i].nOffset -= nOffset;
     }
   }
-  ME_GetParagraph(item)->member.para.nFlags |= MEPF_REWRAP;
-  return item2;
+  cursor->pPara->member.para.nFlags |= MEPF_REWRAP;
+  return run;
 }
 
 /******************************************************************************
@@ -361,12 +359,8 @@ ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor, ME_Style *style,
   ME_DisplayItem *pDI;
   ME_UndoItem *pUI;
 
-  if (cursor->nOffset) {
-  	/* We're inserting at the middle of the existing run, which means that
-		 * that run must be split. It isn't always necessary, but */
-    cursor->pRun = ME_SplitRunSimple(editor, cursor->pRun, cursor->nOffset);
-    cursor->nOffset = 0;
-  }
+  if (cursor->nOffset)
+    ME_SplitRunSimple(editor, cursor);
 
   pUI = ME_AddUndoItem(editor, diUndoDeleteRun, NULL);
   if (pUI) {
@@ -756,10 +750,8 @@ void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, C
   {
     /* SplitRunSimple may or may not update the cursors, depending on whether they
      * are selection cursors, but we need to make sure they are valid. */
-    ME_DisplayItem *split_run = start->pRun;
     int split_offset = start->nOffset;
-    start->pRun = ME_SplitRunSimple(editor, split_run, split_offset);
-    start->nOffset = 0;
+    ME_DisplayItem *split_run = ME_SplitRunSimple(editor, start);
     if (end && end->pRun == split_run)
     {
       end->pRun = start->pRun;
@@ -768,12 +760,8 @@ void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, C
   }
 
   if (end && end->nOffset)
-  {
-    end_run = end->pRun = ME_SplitRunSimple(editor, end->pRun, end->nOffset);
-    end->nOffset = 0;
-  } else if (end) {
-    end_run = end->pRun;
-  }
+    ME_SplitRunSimple(editor, end);
+  end_run = end ? end->pRun : NULL;
 
   run = start->pRun;
   para = start->pPara;
@@ -906,8 +894,8 @@ void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
 
   do {
     /* FIXME add more style feature comparisons */
-    int nAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR | CFM_UNDERLINETYPE;
-    int nEffects = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_PROTECTED | CFM_LINK | CFM_SUPERSCRIPT;
+    DWORD dwAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR | CFM_UNDERLINETYPE;
+    DWORD dwEffects = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_PROTECTED | CFM_LINK | CFM_SUPERSCRIPT;
 
     run = ME_FindItemFwd(run, diRun);
 
@@ -915,7 +903,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
     tmp.cbSize = sizeof(tmp);
     ME_GetRunCharFormat(editor, run, &tmp);
 
-    assert((tmp.dwMask & nAttribs) == nAttribs);
+    assert((tmp.dwMask & dwAttribs) == dwAttribs);
     /* reset flags that differ */
 
     if (pFmt->yHeight != tmp.yHeight)
@@ -941,7 +929,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
       }
     }
 
-    pFmt->dwMask &= ~((pFmt->dwEffects ^ tmp.dwEffects) & nEffects);
+    pFmt->dwMask &= ~((pFmt->dwEffects ^ tmp.dwEffects) & dwEffects);
     pFmt->dwEffects = tmp.dwEffects;
 
   } while(run != run_end);
