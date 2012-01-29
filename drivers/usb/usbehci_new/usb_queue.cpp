@@ -364,10 +364,6 @@ CUSBQueue::AddUSBRequest(
         LinkQueueHead(AsyncListQueueHead, QueueHead);
         KeReleaseSpinLock(m_Lock, OldLevel);
 
-        EHCI_USBCMD_CONTENT UsbCmd;
-        m_Hardware->GetCommandRegister(&UsbCmd);
-        ASSERT(UsbCmd.AsyncEnable == TRUE);
-
     }
 
 

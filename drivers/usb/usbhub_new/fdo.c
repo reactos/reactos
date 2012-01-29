@@ -817,6 +817,7 @@ IsCompositeDevice(
          //
          // composite device must have only one configuration
          //
+         DPRINT1("IsCompositeDevice bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
          return FALSE;
     }
 
@@ -825,6 +826,7 @@ IsCompositeDevice(
         //
         // composite device must have multiple interfaces
         //
+        DPRINT1("IsCompositeDevice bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
         return FALSE;
     }
 
@@ -835,6 +837,7 @@ IsCompositeDevice(
         //
         ASSERT(DeviceDescriptor->bDeviceSubClass == 0);
         ASSERT(DeviceDescriptor->bDeviceProtocol == 0);
+        DPRINT1("IsCompositeDevice: TRUE\n");
         return TRUE;
     }
 
@@ -845,8 +848,11 @@ IsCompositeDevice(
         //
         // USB-IF association descriptor
         //
+        DPRINT1("IsCompositeDevice: TRUE\n");
         return TRUE;
     }
+
+    DPRINT1("DeviceDescriptor bDeviceClass %x bDeviceSubClass %x bDeviceProtocol %x\n", DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol);
 
     //
     // not a composite device
@@ -1327,7 +1333,7 @@ CreateUsbChildDeviceObject(
         goto Cleanup;
     }
 
-    DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
+    //DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
 
     //
     // Construct all the strings that will described the device to PNP
