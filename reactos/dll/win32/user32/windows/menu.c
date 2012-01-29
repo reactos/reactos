@@ -2168,14 +2168,14 @@ MenuInit(VOID)
     ncm.cbSize = sizeof(ncm);
     if(!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
     {
-      DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
+      ERR("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
       return FALSE;
     }
 
     hMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFont == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
 
@@ -2183,7 +2183,7 @@ MenuInit(VOID)
     hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFontBold == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
       DeleteObject(hMenuFont);
       hMenuFont = NULL;
       return FALSE;
