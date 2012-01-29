@@ -1,6 +1,8 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D__WINESRC__
+    -DCOM_NO_WINDOWS_H)
 
 spec2def(query.dll query.spec)
 
