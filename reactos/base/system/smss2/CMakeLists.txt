@@ -2,12 +2,20 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 list(APPEND SOURCE
-    smss.c
-    smss.rc)
+     crashdmp.c
+     pagefile.c
+     sminit.c
+     smloop.c
+     smsbapi.c
+     smsessn.c
+     smsubsys.c
+     smutil.c
+     smss.c
+     smss.rc)
 
 add_executable(smss2 WIN32 ${SOURCE})
 
-target_link_libraries(smss2 nt)
+target_link_libraries(smss2 nt pseh)
 
 add_pch(smss2 smss.h)
 

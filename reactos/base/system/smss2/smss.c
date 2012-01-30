@@ -28,6 +28,9 @@ ULONG NtInitialUserProcessBufferType = REG_SZ;
 
 UNICODE_STRING NtSystemRoot;
 
+ULONG AttachedSessionId = -1;
+BOOLEAN SmpDebug;
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -176,7 +179,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                               (USHORT)Size);
 
     /* Append the DLL path to it */
-    RtlAppendUnicodeToString(&Environment, L"Path=" );
+    RtlAppendUnicodeToString(&Environment, L"Path=");
     RtlAppendUnicodeStringToString(&Environment, &ProcessParams->DllPath);
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
@@ -246,19 +249,20 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
 NTSTATUS
 NTAPI
-LaunchOldSmss(VOID)
+LaunchOldSmss(OUT PHANDLE Handles)
 {
     PINIT_BUFFER InitBuffer;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
-    LARGE_INTEGER Timeout;
     NTSTATUS Status;
     PCHAR Environment;
-    SIZE_T Size;
-  
+
+    /* No handles at first */
+    Handles[0] = Handles[1] = NULL;
+
     /* Setup system root */
     RtlInitUnicodeString(&NtSystemRoot, SharedUserData->NtSystemRoot);
-   
+
     /* Allocate the initialization buffer */
     InitBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(INIT_BUFFER));
     if (!InitBuffer)
@@ -266,7 +270,7 @@ LaunchOldSmss(VOID)
         /* Bugcheck */
         return STATUS_NO_MEMORY;
     }
-   
+
     /* Launch initial process */
     ProcessInfo = &InitBuffer->ProcessInfo;
     Status = ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
@@ -277,51 +281,223 @@ LaunchOldSmss(VOID)
         return Status;
     }
 
-    /* Wait 5 seconds for initial process to initialize */
-    Timeout.QuadPart = Int32x32To64(5, -10000000);
-    Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
-    if (Status == STATUS_SUCCESS)
-    {
-        /* Failed, display error */
-        DPRINT1("INIT: Session Manager terminated.\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Close process handles */
-    ZwClose(ProcessInfo->ThreadHandle);
-    ZwClose(ProcessInfo->ProcessHandle);
-
-    /* Free the initial process environment */
-    Size = 0;
-    ZwFreeVirtualMemory(NtCurrentProcess(),
-                        (PVOID*)&Environment,
-                        &Size,
-                        MEM_RELEASE);
-
-    /* Free the initial process parameters */
-    Size = 0;
-    ZwFreeVirtualMemory(NtCurrentProcess(),
-                        (PVOID*)&ProcessParameters,
-                        &Size,
-                        MEM_RELEASE);
-    return STATUS_SUCCESS;
+    /* Return the handle and status */
+    Handles[0] = ProcessInfo->ProcessHandle;
+    Handles[1] = ProcessInfo->ProcessHandle;
+    return Status;
 }
 
 NTSTATUS
-__cdecl
+NTAPI
+SmpTerminate(IN PULONG_PTR Parameters,
+             IN ULONG ParameterMask,
+             IN ULONG ParameterCount)
+{
+    NTSTATUS Status;
+    BOOLEAN Old;
+    ULONG Response;
+
+    /* Give the shutdown privilege to the thread */
+    if (RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, TRUE, &Old) ==
+        STATUS_NO_TOKEN)
+    {
+        /* Thread doesn't have a token, give it to the entire process */
+        RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
+    }
+
+    /* Take down the process/machine with a hard error */
+    Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+                              ParameterCount,
+                              ParameterMask,
+                              Parameters,
+                              OptionShutdownSystem,
+                              &Response);
+
+    /* Terminate the process if the hard error didn't already */
+    return NtTerminateProcess(NtCurrentProcess(), Status);
+}
+
+LONG
+SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
+{
+    ULONG_PTR Parameters[4];
+    UNICODE_STRING DestinationString;
+
+    /* Print and breakpoint into the debugger */
+    DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %x\n",
+             ExceptionInfo->ExceptionRecord->ExceptionCode,
+             ExceptionInfo->ExceptionRecord->ExceptionAddress);
+    DbgPrint("      Memory Address: %x  Read/Write: %x\n",
+             ExceptionInfo->ExceptionRecord->ExceptionInformation[0],
+             ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+    DbgBreakPoint();
+
+    /* Build the hard error and terminate */
+    RtlInitUnicodeString(&DestinationString, L"Unhandled Exception in Session Manager");
+    Parameters[0] = (ULONG_PTR)&DestinationString;
+    Parameters[1] = ExceptionInfo->ExceptionRecord->ExceptionCode;
+    Parameters[2] = (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+    Parameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
+    SmpTerminate(Parameters, 1, RTL_NUMBER_OF(Parameters));
+
+    /* We hould never get here */
+    ASSERT(FALSE);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+NTSTATUS
 _main(IN INT argc,
       IN PCHAR argv[],
       IN PCHAR envp[],
       IN ULONG DebugFlag)
 {
     NTSTATUS Status;
-    
-    /* Launch the original SMSS */
-    DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
-    Status = LaunchOldSmss();
+    KPRIORITY SetBasePriority;
+    ULONG_PTR Parameters[4];
+    HANDLE Handles[2];
+    PVOID State;
+    ULONG Flags;
+    PROCESS_BASIC_INFORMATION ProcessInfo;
+    UNICODE_STRING DbgString, InitialCommand;
 
-    /* Terminate this SMSS for now, later we'll have an LPC thread running */
-    return NtTerminateThread(NtCurrentThread(), Status);
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
+    /* Raise our priority */
+    SetBasePriority = 11;
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessBasePriority,
+                                     (PVOID)&SetBasePriority,
+                                     sizeof(SetBasePriority));
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Save the debug flag if it was passed */
+    if (DebugFlag) SmpDebug = DebugFlag;
+
+    /* Build the hard error parameters */
+    Parameters[0] = (ULONG_PTR)&DbgString;
+    Parameters[1] = Parameters[2] = Parameters[3] = 0;
+
+    /* Enter SEH so we can terminate correctly if anything goes wrong */
+    _SEH2_TRY
+    {
+        /* Initialize SMSS */
+        Status = SmpInit(&InitialCommand, Handles);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SMSS: SmpInit return failure - Status == %x\n");
+            RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
+            Parameters[1] = Status;
+            _SEH2_LEAVE;
+        }
+
+        /* Get the global flags */
+        Status = NtQuerySystemInformation(SystemFlagsInformation,
+                                          &Flags,
+                                          sizeof(Flags),
+                                          NULL);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Before executing the initial command check if the debug flag is on */
+        if (Flags & (FLG_DEBUG_INITIAL_COMMAND | FLG_DEBUG_INITIAL_COMMAND_EX))
+        {
+            /* SMSS should launch ntsd with a few parameters at this point */
+            DPRINT1("Global Flags Set to SMSS Debugging: Not yet supported\n");
+        }
+
+#if 0
+        /* Execute the initial command (Winlogon.exe) */
+        Status = SmpExecuteInitialCommand(0, &InitialCommand, &Handles[1], NULL);
+#else
+        /* Launch the original SMSS */
+        DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
+        Status = LaunchOldSmss(Handles);
+#endif
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail and raise a hard error */
+            DPRINT1("SMSS: Execute Initial Command failed\n");
+            RtlInitUnicodeString(&DbgString,
+                                 L"Session Manager ExecuteInitialCommand");
+            Parameters[1] = Status;
+            _SEH2_LEAVE;
+        }
+
+        /*  Check if we're already attached to a session */
+        Status = SmpAcquirePrivilege(SE_LOAD_DRIVER_PRIVILEGE, &State);
+        if (AttachedSessionId != -1)
+        {
+            /* Detach from it, we should be in no session right now */
+            Status = NtSetSystemInformation(SystemSessionDetach,
+                                            &AttachedSessionId,
+                                            sizeof(AttachedSessionId));
+            ASSERT(NT_SUCCESS(Status));
+            AttachedSessionId = -1;
+        }
+        SmpReleasePrivilege(State);
+
+        /* Wait on either CSRSS or Winlogon to die */
+        Status = NtWaitForMultipleObjects(RTL_NUMBER_OF(Handles),
+                                          Handles,
+                                          WaitAny,
+                                          FALSE,
+                                          NULL);
+        if (Status == STATUS_WAIT_0)
+        {
+            /* CSRSS is dead, get exit code and prepare for the hard error */
+            RtlInitUnicodeString(&DbgString, L"Windows SubSystem");
+            Status = NtQueryInformationProcess(Handles[0],
+                                               ProcessBasicInformation,
+                                               &ProcessInfo,
+                                               sizeof(ProcessInfo),
+                                               NULL);
+            DPRINT1("SMSS: Windows subsystem terminated when it wasn't supposed to.\n");
+        }
+        else
+        {
+            /* The initial command is dead or we have another failure */
+            RtlInitUnicodeString(&DbgString, L"Windows Logon Process");
+            if (Status == STATUS_WAIT_1)
+            {
+                /* Winlogon.exe got terminated, get its exit code */
+                Status = NtQueryInformationProcess(Handles[1],
+                                                   ProcessBasicInformation,
+                                                   &ProcessInfo,
+                                                   sizeof(ProcessInfo),
+                                                   NULL);
+            }
+            else
+            {
+                /* Something else satisfied our wait, so set the wait status */
+                ProcessInfo.ExitStatus = Status;
+                Status = STATUS_SUCCESS;
+            }
+            DPRINT1("SMSS: Initial command '%wZ' terminated when it wasn't supposed to.\n",
+                    &InitialCommand);
+        }
+
+        /* Check if NtQueryInformationProcess was successful */
+        if (NT_SUCCESS(Status))
+        {
+            /* Then we must have a valid exit status in the structure, use it */
+            Parameters[1] = ProcessInfo.ExitStatus;
+        }
+        else
+        {
+            /* We really don't know what happened, so set a generic error */
+            Parameters[1] = STATUS_UNSUCCESSFUL;
+        }
+    }
+    _SEH2_EXCEPT(SmpUnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
+    {
+        /* The filter should never return here */
+        ASSERT(FALSE);
+    }
+    _SEH2_END;
+
+    /* Something in the init loop failed, terminate SMSS */
+    return SmpTerminate(Parameters, 1, RTL_NUMBER_OF(Parameters));
 }
 
 /* EOF */
