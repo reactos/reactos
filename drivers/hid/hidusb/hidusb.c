@@ -646,7 +646,7 @@ HidUsb_GetReportDescriptor(
     // FIXME: support old hid version
     //
     BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, HidDeviceExtension->InterfaceInfo->InterfaceNumber);
     if (!NT_SUCCESS(Status))
     {
         //
