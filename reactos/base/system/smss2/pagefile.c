@@ -20,6 +20,9 @@
 #define STANDARD_PAGING_FILE_NAME       L"\\??\\?:\\pagefile.sys"
 #define STANDARD_DRIVE_LETTER_OFFSET    4
 
+//
+// Structure and flags describing each pagefile
+//
 #define SMP_PAGEFILE_CREATED            0x01
 #define SMP_PAGEFILE_DEFAULT            0x02
 #define SMP_PAGEFILE_SYSTEM_MANAGED     0x04
@@ -38,6 +41,20 @@ typedef struct _SMP_PAGEFILE_DESCRIPTOR
     LARGE_INTEGER ActualMaxSize;
     ULONG Flags;
 } SMP_PAGEFILE_DESCRIPTOR, *PSMP_PAGEFILE_DESCRIPTOR;
+
+//
+// Structure and flags describing each volume
+//
+#define SMP_VOLUME_INSERTED             0x01
+#define SMP_VOLUME_IS_BOOT              0x08
+typedef struct _SMP_VOLUME_DESCRIPTOR
+{
+    LIST_ENTRY Entry;
+    ULONG Flags;
+    WCHAR DriveLetter;
+    LARGE_INTEGER FreeSpace;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+} SMP_VOLUME_DESCRIPTOR, *PSMP_VOLUME_DESCRIPTOR;
 
 LIST_ENTRY SmpPagingFileDescriptorList, SmpVolumeDescriptorList;
 BOOLEAN SmpRegistrySpecifierPresent;
@@ -411,7 +428,184 @@ NTSTATUS
 NTAPI
 SmpCreateVolumeDescriptors(VOID)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    UNICODE_STRING VolumePath;
+    ULONG Length;
+    BOOLEAN BootVolumeFound = FALSE;
+    WCHAR StartChar, Drive, DriveDiff;
+    HANDLE VolumeHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PROCESS_DEVICEMAP_INFORMATION ProcessInformation;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+    FILE_FS_SIZE_INFORMATION SizeInfo;
+    PSMP_VOLUME_DESCRIPTOR Volume;
+    LARGE_INTEGER FreeSpace, FinalFreeSpace;
+    WCHAR Buffer[32];
+
+    /* We should be starting with an empty list */
+    ASSERT(IsListEmpty(&SmpVolumeDescriptorList));
+
+    /* Query the device map so we can get the drive letters */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       &ProcessInformation,
+                                       sizeof(ProcessInformation),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS:PFILE: Query(ProcessDeviceMap) failed with status %X \n",
+                Status);
+        return Status;
+    }
+
+    /* Build the volume string, starting with A: (we'll edit this in place) */
+    wcscpy(Buffer, L"\\??\\A:\\");
+    Length = wcslen(Buffer);
+    VolumePath.Buffer = Buffer;
+    VolumePath.Length = Length * sizeof(WCHAR);
+    VolumePath.MaximumLength = Length * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+
+    /* Start with the C drive except on weird Japanese NECs... */
+    StartChar = SharedUserData->AlternativeArchitecture ? L'A' : L'C';
+    for (Drive = StartChar, DriveDiff = StartChar - 'A'; Drive <= L'Z'; Drive++, DriveDiff++)
+    {
+        /* Skip the disk if it's not in the drive map */
+        if (!((1 << DriveDiff) & ProcessInformation.Query.DriveMap)) continue;
+
+        /* Write the drive letter and try to open the volume */
+        VolumePath.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = Drive;
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &VolumePath,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenFile(&VolumeHandle,
+                            FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Skip the volume if we failed */
+            DPRINT1("SMSS:PFILE: Open volume `%wZ' failed with status %X \n",
+                    &VolumePath, Status);
+            continue;
+        }
+
+        /* Now query device information on the volume */
+        Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                              &IoStatusBlock,
+                                              &DeviceInfo,
+                                              sizeof(DeviceInfo),
+                                              FileFsDeviceInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Move to the next volume if we failed */
+            DPRINT1("SMSS:PFILE: Query volume `%wZ' (handle %p) for device info"
+                    " failed with status %X \n",
+                    &VolumePath,
+                    VolumeHandle,
+                    Status);
+            NtClose(VolumeHandle);
+            continue;
+        }
+
+        /* Check if this is a fixed disk */
+        if (DeviceInfo.Characteristics & (FILE_FLOPPY_DISKETTE |
+                                          FILE_READ_ONLY_DEVICE |
+                                          FILE_REMOTE_DEVICE |
+                                          FILE_REMOVABLE_MEDIA))
+        {
+            /* It isn't, so skip it */
+            DPRINT1("SMSS:PFILE: Volume `%wZ' (%X) cannot store a paging file \n",
+                    &VolumePath,
+                    DeviceInfo.Characteristics);
+            NtClose(VolumeHandle);
+            continue;
+        }
+
+        /* We found a fixed volume, allocate a descriptor for it */
+        Volume = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 sizeof(SMP_VOLUME_DESCRIPTOR));
+        if (!Volume)
+        {
+            /* Failed to allocate memory, try the next disk */
+            DPRINT1("SMSS:PFILE: Failed to allocate a volume descriptor (%u bytes) \n",
+                    sizeof(SMP_VOLUME_DESCRIPTOR));
+            NtClose(VolumeHandle);
+            continue;
+        }
+
+        /* Save the drive letter and device information */
+        Volume->DriveLetter = Drive;
+        Volume->DeviceInfo = DeviceInfo;
+
+        /* Check if this is the boot volume */
+        if (RtlUpcaseUnicodeChar(Drive) ==
+            RtlUpcaseUnicodeChar(SharedUserData->NtSystemRoot[0]))
+        {
+            /* Save it */
+            ASSERT(BootVolumeFound == FALSE);
+            Volume->Flags |= SMP_VOLUME_IS_BOOT;
+            BootVolumeFound = TRUE;
+        }
+
+        /* Now get size information on the volume */
+        Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                              &IoStatusBlock,
+                                              &SizeInfo,
+                                              sizeof(SizeInfo),
+                                              FileFsSizeInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed -- keep going */
+            DPRINT1("SMSS:PFILE: Query volume `%wZ' (handle %p) for size failed"
+                    " with status %X \n",
+                    &VolumePath,
+                    VolumeHandle,
+                    Status);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Volume);
+            NtClose(VolumeHandle);
+            continue;
+        }
+
+        /* Done querying volume information, close the handle */
+        NtClose(VolumeHandle);
+
+        /* Compute how much free space we have */
+        FreeSpace.QuadPart = SizeInfo.AvailableAllocationUnits.QuadPart *
+                             SizeInfo.SectorsPerAllocationUnit;
+        FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
+        Volume->FreeSpace = FinalFreeSpace;
+
+        /* Check if there's less than 32MB free so we don't starve the disk */
+        if (FinalFreeSpace.QuadPart <= 0x2000000)
+        {
+            /* In this case, act as if there's no free space  */
+            Volume->FreeSpace.QuadPart = 0;
+        }
+        else
+        {
+            /* Trim off 32MB to give the disk a bit of breathing room */
+            Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart - 0x2000000;
+        }
+
+        /* All done, add this volume to our descriptor list */
+        InsertTailList(&SmpVolumeDescriptorList, &Volume->Entry);
+        Volume->Flags |= SMP_VOLUME_INSERTED;
+        DPRINT1("SMSS:PFILE: Created volume descriptor for`%wZ' \n", &VolumePath);
+    }
+
+    /* We must've found at least the boot volume */
+    ASSERT(BootVolumeFound == TRUE);
+    ASSERT(!IsListEmpty(&SmpVolumeDescriptorList));
+    if (!IsListEmpty(&SmpVolumeDescriptorList)) return STATUS_SUCCESS;
+
+    /* Something is really messed up if we found no disks at all */
+    return STATUS_UNEXPECTED_IO_ERROR;
 }
 
 NTSTATUS
