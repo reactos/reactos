@@ -44,6 +44,7 @@ typedef struct _PORT_STATUS_CHANGE
 typedef struct _WORK_ITEM_DATA
 {
     WORK_QUEUE_ITEM WorkItem;
+    KEVENT Event;
     PVOID Context;
 } WORK_ITEM_DATA, *PWORK_ITEM_DATA;
 

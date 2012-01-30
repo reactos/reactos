@@ -260,8 +260,6 @@ DeviceStatusChangeThread(
     PORT_STATUS_CHANGE PortStatus;
     LONG PortId;
 
-    static LONG failsafe = 0;
-
     DPRINT1("Entered DeviceStatusChangeThread, Context %x\n", Context);
 
     WorkItemData = (PWORK_ITEM_DATA)Context;
@@ -408,20 +406,7 @@ DeviceStatusChangeThread(
         }
     }
 
-    //
-    // FIXME: Still in testing
-    //
-    failsafe++;
-    if (failsafe > 100)
-    {
-        DPRINT1("SCE completed over 100 times but no action has been taken to clear the Change of any ports.\n");
-        //
-        // Return and dont send any more SCE Requests
-        //
-        return;
-    }
-
-    ExFreePool(WorkItemData);
+    KeSetEvent(&WorkItemData->Event, IO_NO_INCREMENT, FALSE);
 
     //
     // Send another SCE Request
@@ -460,6 +445,7 @@ StatusChangeEndpointCompletion(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     WorkItemData->Context = RealDeviceObject;
+    KeInitializeEvent(&WorkItemData->Event, NotificationEvent, FALSE);
     DPRINT1("Initialize work item\n");
     ExInitializeWorkItem(&WorkItemData->WorkItem, DeviceStatusChangeThread, (PVOID)WorkItemData);
 
@@ -467,6 +453,16 @@ StatusChangeEndpointCompletion(
     // Queue the work item to handle initializing the device
     //
     ExQueueWorkItem(&WorkItemData->WorkItem, DelayedWorkQueue);
+
+    //
+    // Wait for the work item
+    //
+    KeWaitForSingleObject(&WorkItemData->Event,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+    ExFreePool(WorkItemData);
 
     //
     // Return more processing required so the IO Manger doesn’t try to mess with IRP just freed
@@ -1824,6 +1820,11 @@ USBHUB_FdoHandlePnp(
             else
             {
                 //
+                // Send the first SCE Request
+                //
+                QueryStatusChangeEndpoint(DeviceObject);
+
+                //
                 // reset ports
                 //
                 for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
@@ -1848,11 +1849,6 @@ USBHUB_FdoHandlePnp(
                         }
                     }
                 }
-
-                //
-                // Send the first SCE Request
-                //
-                QueryStatusChangeEndpoint(DeviceObject);
             }
 
             ExFreePool(Urb);
