@@ -5,6 +5,9 @@
  * PURPOSE:         SMSS (SB and SM) Message Format
  * PROGRAMMERS:     Alex Ionescu
  */
+#pragma once
+#ifndef _SM_MSG_
+#define _SM_MSG_
 
 //
 // There are the APIs that a Client (such as CSRSS) can send to the SMSS Server.
@@ -205,4 +208,4 @@ typedef struct _SB_API_MSG
 //
 C_ASSERT(sizeof(SB_CONNECTION_INFO) == 0xF4);
 C_ASSERT(sizeof(SB_API_MSG) == 0x110);
-
+#endif
