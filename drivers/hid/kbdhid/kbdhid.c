@@ -384,7 +384,6 @@ KbdHid_InternalDeviceControl(
     {
         /* not implemented */
         DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATORS not implemented\n");
-        ASSERT(FALSE);
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;
@@ -393,7 +392,6 @@ KbdHid_InternalDeviceControl(
     {
         /* not implemented */
         DPRINT1("IOCTL_KEYBOARD_QUERY_TYPEMATIC not implemented\n");
-        ASSERT(FALSE);
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;
@@ -402,7 +400,6 @@ KbdHid_InternalDeviceControl(
     {
         /* not implemented */
         DPRINT1("IOCTL_KEYBOARD_SET_INDICATORS not implemented\n");
-        ASSERT(FALSE);
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;
@@ -411,7 +408,6 @@ KbdHid_InternalDeviceControl(
     {
         /* not implemented */
         DPRINT1("IOCTL_KEYBOARD_SET_TYPEMATIC not implemented\n");
-        ASSERT(FALSE);
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;
@@ -420,7 +416,6 @@ KbdHid_InternalDeviceControl(
     {
         /* not implemented */
         DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION not implemented\n");
-        ASSERT(FALSE);
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;

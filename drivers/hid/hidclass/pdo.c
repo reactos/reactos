@@ -143,7 +143,7 @@ HidClassPDO_HandleQueryHardwareId(
 {
     NTSTATUS Status;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
-    WCHAR Buffer[100];
+    WCHAR Buffer[200];
     ULONG Offset = 0;
     LPWSTR Ptr;
     PHIDP_COLLECTION_DESC CollectionDescription;
@@ -280,26 +280,38 @@ HidClassPDO_HandleQueryInstanceId(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    NTSTATUS Status;
+    LPWSTR Buffer;
+    PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
 
     //
-    // copy current stack location
+    // get device extension
     //
-    IoCopyCurrentIrpStackLocationToNext(Irp);
+   PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
 
     //
-    // call mini-driver
+    // allocate buffer
     //
-    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
-    if (!NT_SUCCESS(Status))
+    Buffer = ExAllocatePool(NonPagedPool, 5 * sizeof(WCHAR));
+    if (!Buffer)
     {
         //
         // failed
         //
-        return Status;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    DPRINT1("HidClassPDO_HandleQueryInstanceId Buffer %S\n", Irp->IoStatus.Information);
-    return Status;
+
+    //
+    // write device id
+    //
+    swprintf(Buffer, L"%04x", PDODeviceExtension->CollectionNumber);
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
