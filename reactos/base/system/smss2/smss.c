@@ -35,6 +35,17 @@ BOOLEAN SmpDebug;
 
 NTSTATUS
 NTAPI
+SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
+                  IN ULONG MuSessionId,
+                  OUT PULONG ProcessId,
+                  IN ULONG Flags)
+{
+    DPRINT1("Should run: %wZ for session %d\n", CommandLine, MuSessionId);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
                       OUT PCHAR *ProcessEnvironment)
@@ -389,7 +400,7 @@ _main(IN INT argc,
             DPRINT1("SMSS: SmpInit return failure - Status == %x\n");
             RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
             Parameters[1] = Status;
-            _SEH2_LEAVE;
+            //_SEH2_LEAVE; Hack so that setup can work. will go away later
         }
 
         /* Get the global flags */

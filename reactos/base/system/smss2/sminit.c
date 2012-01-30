@@ -14,19 +14,37 @@
 
 /* GLOBALS ********************************************************************/
 
+typedef struct _SMP_REGISTRY_VALUE
+{
+    LIST_ENTRY Entry;
+    UNICODE_STRING Name;
+    UNICODE_STRING Value;
+    PCHAR AnsiValue;
+} SMP_REGISTRY_VALUE, *PSMP_REGISTRY_VALUE;
+
 UNICODE_STRING SmpSubsystemName, PosixName, Os2Name;
-LIST_ENTRY NativeProcessList;
+UNICODE_STRING SmpDebugKeyword, SmpASyncKeyword, SmpAutoChkKeyword;
+LIST_ENTRY SmpBootExecuteList, SmpSetupExecuteList, SmpPagingFileList;
+LIST_ENTRY SmpDosDevicesList, SmpFileRenameList, SmpKnownDllsList;
+LIST_ENTRY SmpExcludeKnownDllsList, SmpSubSystemList, SmpSubSystemsToLoad;
+LIST_ENTRY SmpSubSystemsToDefer, SmpExecuteList, NativeProcessList;
+
 ULONG SmBaseTag;
-PVOID SmpHeap;
 HANDLE SmpDebugPort;
+PVOID SmpHeap;
+PWCHAR SmpDefaultEnvironment;
+
 ULONG SmpInitProgressByLine;
 NTSTATUS SmpInitReturnStatus;
 PVOID SmpInitLastCall;
+
 SECURITY_DESCRIPTOR SmpPrimarySDBody, SmpLiberalSDBody, SmpKnownDllsSDBody;
 SECURITY_DESCRIPTOR SmpApiPortSDBody;
 PSECURITY_DESCRIPTOR SmpPrimarySecurityDescriptor, SmpLiberalSecurityDescriptor;
 PSECURITY_DESCRIPTOR SmpKnownDllsSecurityDescriptor, SmpApiPortSecurityDescriptor;
-ULONG SmpProtectionMode = 1;
+
+ULONG SmpAllowProtectedRenames, SmpProtectionMode = 1;
+BOOLEAN MiniNTBoot;
 
 #define SMSS_CHECKPOINT(x, y)           \
 {                                       \
@@ -34,6 +52,84 @@ ULONG SmpProtectionMode = 1;
     SmpInitReturnStatus = (y);          \
     SmpInitLastCall = (x);              \
 }
+
+/* REGISTRY CONFIGURATION *****************************************************/
+
+NTSTATUS
+NTAPI
+SmpConfigureProtectionMode(IN PWSTR ValueName,
+                           IN ULONG ValueType,
+                           IN PVOID ValueData,
+                           IN ULONG ValueLength,
+                           IN PVOID Context,
+                           IN PVOID EntryContext)
+{
+    /* Make sure the value is valid */
+    if (ValueLength == sizeof(ULONG))
+    {
+        /* Read it */
+        SmpProtectionMode = *(PULONG)ValueData;
+    }
+    else
+    {
+        /* Default is to protect stuff */
+        SmpProtectionMode = 1;
+    }
+
+    /* Recreate the security descriptors to take into account security mode */
+    SmpCreateSecurityDescriptors(FALSE);
+    DPRINT1("SmpProtectionMode: %d\n", SmpProtectionMode);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureAllowProtectedRenames(IN PWSTR ValueName,
+                                  IN ULONG ValueType,
+                                  IN PVOID ValueData,
+                                  IN ULONG ValueLength,
+                                  IN PVOID Context,
+                                  IN PVOID EntryContext)
+{
+    /* Make sure the value is valid */
+    if (ValueLength == sizeof(ULONG))
+    {
+        /* Read it */
+        SmpAllowProtectedRenames = *(PULONG)ValueData;
+    }
+    else
+    {
+        /* Default is to not allow protected renames */
+        SmpAllowProtectedRenames = 0;
+    }
+
+    DPRINT1("SmpAllowProtectedRenames: %d\n", SmpAllowProtectedRenames);
+    return STATUS_SUCCESS;
+}
+
+RTL_QUERY_REGISTRY_TABLE
+SmpRegistryConfigurationTable[] =
+{
+    {
+        SmpConfigureProtectionMode,
+        0,
+        L"ProtectionMode",
+        NULL,
+        REG_DWORD,
+        NULL,
+        0
+    },
+    {
+        SmpConfigureAllowProtectedRenames,
+        RTL_QUERY_REGISTRY_DELETE,
+        L"AllowProtectedRenames",
+        NULL,
+        REG_DWORD,
+        NULL,
+        0
+    },
+    {0},
+};
 
 /* FUNCTIONS ******************************************************************/
 
@@ -343,9 +439,231 @@ Quickie:
 
 NTSTATUS
 NTAPI
-SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
+SmpInitializeDosDevices(VOID)
 {
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpInitializeKnownDlls(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpCreateDynamicEnvironmentVariables(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpProcessFileRenames(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
+{
+    NTSTATUS Status;
+    PLIST_ENTRY Head, NextEntry;
+    PSMP_REGISTRY_VALUE RegEntry;
+    PVOID OriginalEnvironment;
+    ULONG MuSessionId = 0;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle;
+    UNICODE_STRING DestinationString;
+    
+    /* Initialize the keywords we'll be looking for */
+    RtlInitUnicodeString(&SmpDebugKeyword, L"debug");
+    RtlInitUnicodeString(&SmpASyncKeyword, L"async");
+    RtlInitUnicodeString(&SmpAutoChkKeyword, L"autocheck");
+
+    /* Initialize all the registry-associated list heads */
+    InitializeListHead(&SmpBootExecuteList);
+    InitializeListHead(&SmpSetupExecuteList);
+    InitializeListHead(&SmpPagingFileList);
+    InitializeListHead(&SmpDosDevicesList);
+    InitializeListHead(&SmpFileRenameList);
+    InitializeListHead(&SmpKnownDllsList);
+    InitializeListHead(&SmpExcludeKnownDllsList);
+    InitializeListHead(&SmpSubSystemList);
+    InitializeListHead(&SmpSubSystemsToLoad);
+    InitializeListHead(&SmpSubSystemsToDefer);
+    InitializeListHead(&SmpExecuteList);
+    SmpPagingFileInitialize();
+
+    /* Initialize the SMSS environment */
+    Status = RtlCreateEnvironment(TRUE, &SmpDefaultEnvironment);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if there was a problem */
+        DPRINT1("SMSS: Unable to allocate default environment - Status == %X\n",
+                Status);
+        SMSS_CHECKPOINT(RtlCreateEnvironment, Status);
+        return Status;
+    }
+
+    /* Check if we were booted in PE mode (LiveCD should have this) */
+    RtlInitUnicodeString(&DestinationString,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                         "Control\\MiniNT");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* If the key exists, we were */
+        NtClose(KeyHandle);
+        MiniNTBoot = TRUE;
+    }
+
+    /* Print out if this is the case */
+    if (MiniNTBoot) DPRINT1("SMSS: !!! MiniNT Boot !!!\n");
+
+    /* Open the environment key to see if we are booted in safe mode */
+    RtlInitUnicodeString(&DestinationString,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                         "Control\\Session Manager\\Environment");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* Delete the value if we found it */
+        RtlInitUnicodeString(&DestinationString, L"SAFEBOOT_OPTION");
+        NtDeleteValueKey(KeyHandle, &DestinationString);
+        NtClose(KeyHandle);
+    }
+
+    /* Switch environments, then query the registry for all needed settings */
+    OriginalEnvironment = NtCurrentPeb()->ProcessParameters->Environment;
+    NtCurrentPeb()->ProcessParameters->Environment = SmpDefaultEnvironment;
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"Session Manager",
+                                    SmpRegistryConfigurationTable,
+                                    NULL,
+                                    NULL);
+    SmpDefaultEnvironment = NtCurrentPeb()->ProcessParameters->Environment;
+    NtCurrentPeb()->ProcessParameters->Environment = OriginalEnvironment;
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed somewhere in registry initialization, which is bad... */
+        DPRINT1("SMSS: RtlQueryRegistryValues failed - Status == %lx\n", Status);
+        SMSS_CHECKPOINT(RtlQueryRegistryValues, Status);
+        return Status;
+    }
+
+    /* Now we can start acting on the registry settings. First to DOS devices */
+    Status = SmpInitializeDosDevices();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        DPRINT1("SMSS: Unable to initialize DosDevices configuration - Status == %lx\n",
+                Status);
+        SMSS_CHECKPOINT(SmpInitializeDosDevices, Status);
+        return Status;
+    }
+
+    /* Next create the session directory... */
+    RtlInitUnicodeString(&DestinationString, L"\\Sessions");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
+                               NULL,
+                               SmpPrimarySecurityDescriptor);
+    Status = NtCreateDirectoryObject(&SmpSessionsObjectDirectory,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DPRINT1("SMSS: Unable to create %wZ object directory - Status == %lx\n",
+                &DestinationString, Status);
+        SMSS_CHECKPOINT(NtCreateDirectoryObject, Status);
+        return Status;
+    }
+
+    /* Next loop all the boot execute binaries */
+    Head = &SmpBootExecuteList;
+    while (!IsListEmpty(Head))
+    {
+        /* Remove each one from the list */
+        NextEntry = RemoveHeadList(Head);
+
+        /* Execute it */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        SmpExecuteCommand(&RegEntry->Name, 0, NULL, 0);
+
+        /* And free it */
+        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+    }
+
+    /* Now do any pending file rename operations... */
+    if (!MiniNTBoot) SmpProcessFileRenames();
+
+    /* And initialize known DLLs... */
+    Status = SmpInitializeKnownDlls();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if that didn't work */
+        DPRINT1("SMSS: Unable to initialize KnownDll configuration - Status == %lx\n",
+                Status);
+        SMSS_CHECKPOINT(SmpInitializeKnownDlls, Status);
+        return Status;
+    }
+
+    /* Loop every page file */
+    Head = &SmpPagingFileList;
+    while (!IsListEmpty(Head))
+    {
+        /* Remove each one from the list */
+        NextEntry = RemoveHeadList(Head);
+
+        /* Create the descriptor for it */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        SmpCreatePagingFileDescriptor(&RegEntry->Name);
+
+        /* And free it */
+        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+    }
+
+    /* Now create all the paging files for the descriptors that we have */
+    SmpCreatePagingFiles();
+
+    /* Tell Cm it's now safe to fully enable write access to the registry */
+    // NtInitializeRegistry(FALSE); Later...
+
+    /* Create all the system-based environment variables for later inheriting */
+    Status = SmpCreateDynamicEnvironmentVariables();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Handle failure */
+        SMSS_CHECKPOINT(SmpCreateDynamicEnvironmentVariables, Status);
+        return Status;
+    }
+
+    /* And finally load all the subsytems for our first session! */
+    Status = SmpLoadSubSystemsForMuSession(&MuSessionId,
+                                           &SmpWindowsSubSysProcessId,
+                                           InitialCommand);
+    ASSERT(MuSessionId == 0);
+    if (!NT_SUCCESS(Status)) SMSS_CHECKPOINT(SmpLoadSubSystemsForMuSession, Status);
+    return Status;
 }
 
 NTSTATUS
@@ -386,7 +704,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
     SmpNextSessionId = 1;
     SmpNextSessionIdScanMode = 0;
     SmpDbgSsLoaded = FALSE;
-    
+
     /* Create the initial security descriptors */
     Status = SmpCreateSecurityDescriptors(TRUE);
     if (!NT_SUCCESS(Status))

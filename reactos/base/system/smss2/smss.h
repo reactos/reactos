@@ -40,8 +40,16 @@ extern ULONG SmpNextSessionId;
 extern ULONG SmpNextSessionIdScanMode;
 extern BOOLEAN SmpDbgSsLoaded;
 extern HANDLE SmpWindowsSubSysProcess;
- 
+extern HANDLE SmpSessionsObjectDirectory;
+extern HANDLE SmpWindowsSubSysProcessId;
+
 /* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+SmpCreateSecurityDescriptors(
+    IN BOOLEAN InitialCall
+);
 
 NTSTATUS
 NTAPI
@@ -68,3 +76,39 @@ NTAPI
 SmpApiLoop(
     IN PVOID Parameter
 );
+
+NTSTATUS
+NTAPI
+SmpExecuteCommand(
+    IN PUNICODE_STRING CommandLine,
+    IN ULONG MuSessionId,
+    OUT PULONG ProcessId,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+SmpLoadSubSystemsForMuSession(
+    IN PULONG MuSessionId,
+    OUT PHANDLE ProcessId,
+    IN PUNICODE_STRING InitialCommand
+);
+
+VOID
+NTAPI
+SmpPagingFileInitialize(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+SmpCreatePagingFileDescriptor(
+    IN PUNICODE_STRING PageFileToken
+);
+
+NTSTATUS
+NTAPI
+SmpCreatePagingFiles(
+    VOID
+);
+

@@ -17,7 +17,17 @@
 RTL_CRITICAL_SECTION SmpKnownSubSysLock;
 LIST_ENTRY SmpKnownSubSysHead;
 HANDLE SmpWindowsSubSysProcess;
+HANDLE SmpWindowsSubSysProcessId;
 
 /* FUNCTIONS ******************************************************************/
 
-/* EOF */
+NTSTATUS
+NTAPI
+SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
+                              OUT PHANDLE ProcessId,
+                              IN PUNICODE_STRING InitialCommand)
+{
+    DPRINT1("Should start subsystems for Session: %lx\n", *MuSessionId);
+    return STATUS_SUCCESS;
+}
+

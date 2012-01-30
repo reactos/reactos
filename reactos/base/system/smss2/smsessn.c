@@ -19,5 +19,6 @@ LIST_ENTRY SmpSessionListHead;
 ULONG SmpNextSessionId;
 ULONG SmpNextSessionIdScanMode;
 BOOLEAN SmpDbgSsLoaded;
+HANDLE SmpSessionsObjectDirectory;
 
 /* FUNCTIONS ******************************************************************/
