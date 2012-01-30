@@ -523,7 +523,7 @@ USBCCGP_PDOSelectConfiguration(
     PUSBD_INTERFACE_INFORMATION InterfaceInformation;
     ULONG InterfaceInformationCount, Index, InterfaceIndex;
     PUSBD_INTERFACE_LIST_ENTRY Entry;
-    ULONG NeedSelect;
+    ULONG NeedSelect, FoundInterface;
 
     //
     // get current stack location
@@ -569,35 +569,66 @@ USBCCGP_PDOSelectConfiguration(
     InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
     Index = 0;
     Entry = NULL;
-
+    DPRINT1("Count %x\n", InterfaceInformationCount);
     do
     {
+        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);
+
         //
-        // search for the interface
+        // search for the interface in the local interface list
         //
+        FoundInterface = FALSE;
         for(InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; InterfaceIndex++)
         {
-            if (PDODeviceExtension->InterfaceList[InterfaceIndex].Interface->InterfaceNumber == InterfaceInformation->InterfaceNumber)
+            if (PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[InterfaceIndex]->bInterfaceNumber == InterfaceInformation->InterfaceNumber)
             {
                 // found interface entry
-                Entry = &PDODeviceExtension->InterfaceList[InterfaceIndex];
+                FoundInterface = TRUE;
                 break;
             }
         }
 
-        if (!Entry || Entry->InterfaceDescriptor)
+        if (!FoundInterface)
         {
             //
             // invalid parameter
             //
+            DPRINT1("InterfaceInformation InterfaceNumber %x Alternative %x NumberOfPipes %x not found\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
             ASSERT(FALSE);
             return STATUS_INVALID_PARAMETER;
+        }
+
+        //
+        // now query the total interface list
+        //
+        Entry = NULL;
+        for(InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->InterfaceListCount; InterfaceIndex++)
+        {
+            if (PDODeviceExtension->InterfaceList[InterfaceIndex].Interface->InterfaceNumber == InterfaceInformation->InterfaceNumber)
+            {
+                //
+                // found entry
+                //
+                Entry = &PDODeviceExtension->InterfaceList[InterfaceIndex];
+            }
+        }
+
+        //
+        // sanity check
+        //
+        ASSERT(Entry);
+        if (!Entry)
+        {
+            //
+            // corruption detected
+            //
+            KeBugCheck(0);
         }
 
         NeedSelect = FALSE;
         if (Entry->InterfaceDescriptor->bAlternateSetting == InterfaceInformation->AlternateSetting)
         {
-            for(InterfaceIndex = 0; Entry->InterfaceDescriptor->bNumEndpoints; InterfaceIndex++)
+            for(InterfaceIndex = 0; InterfaceIndex < Entry->InterfaceDescriptor->bNumEndpoints; InterfaceIndex++)
             {
                 if (InterfaceInformation->Pipes[InterfaceIndex].MaximumTransferSize != Entry->Interface->Pipes[InterfaceIndex].MaximumTransferSize)
                 {
@@ -611,7 +642,7 @@ USBCCGP_PDOSelectConfiguration(
         else
         {
             //
-            // need select
+            // need select as the interface number differ
             //
             NeedSelect = TRUE;
         }
@@ -640,6 +671,16 @@ USBCCGP_PDOSelectConfiguration(
         Index++;
     }while(Index < InterfaceInformationCount);
 
+    //
+    // store configuration handle
+    //
+    Urb->UrbSelectConfiguration.ConfigurationHandle = PDODeviceExtension->ConfigurationHandle;
+
+    DPRINT1("[USBCCGP] SelectConfiguration Function %x Completed\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber);
+
+    //
+    // done
+    //
     return STATUS_SUCCESS;
 }
 
@@ -721,9 +762,14 @@ PDO_HandleInternalDeviceControl(
                 return Status;
             }
         }
-
-
-
+        else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE)
+        {
+            DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE\n");
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+            DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE Status %x\n", Status);
+            return Status;
+        }
     }
 
 

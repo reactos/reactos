@@ -136,6 +136,7 @@ DriverEntry(
 {
 
     // initialize driver object
+    DPRINT1("[USBCCGP] DriverEntry\n");
     DriverObject->DriverExtension->AddDevice = USBCCGP_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = USBCCGP_Dispatch;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBCCGP_Dispatch;

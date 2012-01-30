@@ -301,7 +301,7 @@ USBCCGP_ScanConfigurationDescriptor(
         //
         // parse configuration descriptor
         //
-        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, InterfaceIndex, -1, -1, -1, -1);
         if (InterfaceDescriptor)
         {
             //

@@ -277,8 +277,10 @@ FDO_CreateChildPdo(
         //
         PDODeviceExtension->Common.IsFDO = FALSE;
         PDODeviceExtension->FunctionDescriptor = &FDODeviceExtension->FunctionDescriptor[Index];
-        PDODeviceExtension->NextDeviceObject = DeviceObject;
+        PDODeviceExtension->NextDeviceObject = FDODeviceExtension->NextDeviceObject; //DeviceObject; HACK
         PDODeviceExtension->FunctionIndex = Index;
+        PDODeviceExtension->InterfaceList = FDODeviceExtension->InterfaceList;
+        PDODeviceExtension->InterfaceListCount = FDODeviceExtension->InterfaceListCount;
         PDODeviceExtension->ConfigurationHandle = FDODeviceExtension->ConfigurationHandle;
         PDODeviceExtension->ConfigurationDescriptor = FDODeviceExtension->ConfigurationDescriptor;
         RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
@@ -421,7 +423,7 @@ FDO_HandlePnp(
 
     // get stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
+	DPRINT1("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
     switch(IoStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:

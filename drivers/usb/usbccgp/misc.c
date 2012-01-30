@@ -200,7 +200,7 @@ DumpFunctionDescriptor(
     IN PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor,
     IN ULONG FunctionDescriptorCount)
 {
-    ULONG Index;
+    ULONG Index, SubIndex;
 
 
     DPRINT1("FunctionCount %lu\n", FunctionDescriptorCount);
@@ -212,6 +212,13 @@ DumpFunctionDescriptor(
         DPRINT1("CompatibleId %wZ\n", &FunctionDescriptor[Index].CompatibleId);
         DPRINT1("FunctionDescription %wZ\n", &FunctionDescriptor[Index].FunctionDescription);
         DPRINT1("NumInterfaces %lu\n", FunctionDescriptor[Index].NumberOfInterfaces);
+
+        for(SubIndex = 0; SubIndex < FunctionDescriptor[Index].NumberOfInterfaces; SubIndex++)
+        {
+            DPRINT1(" Interface %p\n", FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex]);
+            DPRINT1(" Interface InterfaceNumber %x\n", FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex]->bInterfaceNumber);
+            DPRINT1(" Interface Alternate %x\n", FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex]->bAlternateSetting );
+        }
     }
 
 }
