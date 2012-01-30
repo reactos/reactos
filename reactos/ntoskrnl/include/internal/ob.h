@@ -559,6 +559,7 @@ NTAPI
 ObpCaptureObjectCreateInformation(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
+    IN KPROCESSOR_MODE CreatorMode,
     IN BOOLEAN AllocateFromLookaside,
     IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     OUT PUNICODE_STRING ObjectName
