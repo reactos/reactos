@@ -57,6 +57,370 @@ IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
    return ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
 }
 
+VOID
+IopFixupDeviceId(PWCHAR String)
+{
+    ULONG Length = wcslen(String), i;
+
+    for (i = 0; i < Length; i++)
+    {
+        if (String[i] == L'\\')
+            String[i] = L'#';
+    }
+}
+
+VOID
+NTAPI
+IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
+{
+    NTSTATUS Status;
+    HANDLE CriticalDeviceKey, InstanceKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING CriticalDeviceKeyU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\CriticalDeviceDatabase");
+    UNICODE_STRING CompatibleIdU = RTL_CONSTANT_STRING(L"CompatibleIDs");
+    UNICODE_STRING HardwareIdU = RTL_CONSTANT_STRING(L"HardwareID");
+    UNICODE_STRING ServiceU = RTL_CONSTANT_STRING(L"Service");
+    UNICODE_STRING ClassGuidU = RTL_CONSTANT_STRING(L"ClassGUID");
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    ULONG HidLength = 0, CidLength = 0, BufferLength;
+    PWCHAR IdBuffer, OriginalIdBuffer;
+    
+    /* Open the device instance key */
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    if (Status != STATUS_SUCCESS)
+        return;
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &HardwareIdU,
+                             KeyValuePartialInformation,
+                             NULL,
+                             0,
+                             &HidLength);
+    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &CompatibleIdU,
+                             KeyValuePartialInformation,
+                             NULL,
+                             0,
+                             &CidLength);
+    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        CidLength = 0;
+    }
+
+    BufferLength = HidLength + CidLength;
+    BufferLength -= (((CidLength != 0) ? 2 : 1) * FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data));
+
+    /* Allocate a buffer to hold data from both */
+    OriginalIdBuffer = IdBuffer = ExAllocatePool(PagedPool, BufferLength);
+    if (!IdBuffer)
+    {
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    /* Compute the buffer size */
+    if (HidLength > CidLength)
+        BufferLength = HidLength;
+    else
+        BufferLength = CidLength;
+
+    PartialInfo = ExAllocatePool(PagedPool, BufferLength);
+    if (!PartialInfo)
+    {
+        ZwClose(InstanceKey);
+        ExFreePool(OriginalIdBuffer);
+        return;
+    }
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &HardwareIdU,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             HidLength,
+                             &HidLength);
+    if (Status != STATUS_SUCCESS)
+    {
+        ExFreePool(PartialInfo);
+        ExFreePool(OriginalIdBuffer);
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    /* Copy in HID info first (without 2nd terminating NULL if CID is present) */
+    HidLength = PartialInfo->DataLength - ((CidLength != 0) ? sizeof(WCHAR) : 0);
+    RtlCopyMemory(IdBuffer, PartialInfo->Data, HidLength);
+
+    if (CidLength != 0)
+    {
+        Status = ZwQueryValueKey(InstanceKey,
+                                 &CompatibleIdU,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 CidLength,
+                                 &CidLength);
+        if (Status != STATUS_SUCCESS)
+        {
+            ExFreePool(PartialInfo);
+            ExFreePool(OriginalIdBuffer);
+            ZwClose(InstanceKey);
+            return;
+        }
+        
+        /* Copy CID next */
+        CidLength = PartialInfo->DataLength;
+        RtlCopyMemory(((PUCHAR)IdBuffer) + HidLength, PartialInfo->Data, CidLength);
+    }
+
+    /* Free our temp buffer */
+    ExFreePool(PartialInfo);
+    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &CriticalDeviceKeyU,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&CriticalDeviceKey,
+                       KEY_ENUMERATE_SUB_KEYS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* The critical device database doesn't exist because
+         * we're probably in 1st stage setup, but it's ok */
+        ExFreePool(OriginalIdBuffer);
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    while (*IdBuffer)
+    {
+        ULONG StringLength = (ULONG)wcslen(IdBuffer) + 1, Index;
+        
+        IopFixupDeviceId(IdBuffer);
+        
+        /* Look through all subkeys for a match */
+        for (Index = 0; TRUE; Index++)
+        {
+            ULONG NeededLength;
+            PKEY_BASIC_INFORMATION BasicInfo;
+            
+            Status = ZwEnumerateKey(CriticalDeviceKey,
+                                    Index,
+                                    KeyBasicInformation,
+                                    NULL,
+                                    0,
+                                    &NeededLength);
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                break;
+            else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                UNICODE_STRING ChildIdNameU, RegKeyNameU;
+
+                BasicInfo = ExAllocatePool(PagedPool, NeededLength);
+                if (!BasicInfo)
+                {
+                    /* No memory */
+                    ExFreePool(OriginalIdBuffer);
+                    ZwClose(CriticalDeviceKey);
+                    ZwClose(InstanceKey);
+                    return;
+                }
+
+                Status = ZwEnumerateKey(CriticalDeviceKey,
+                                        Index,
+                                        KeyBasicInformation,
+                                        BasicInfo,
+                                        NeededLength,
+                                        &NeededLength);
+                if (Status != STATUS_SUCCESS)
+                {
+                    /* This shouldn't happen */
+                    ExFreePool(BasicInfo);
+                    continue;
+                }
+
+                ChildIdNameU.Buffer = IdBuffer;
+                ChildIdNameU.MaximumLength = ChildIdNameU.Length = (StringLength - 1) * sizeof(WCHAR);
+                RegKeyNameU.Buffer = BasicInfo->Name;
+                RegKeyNameU.MaximumLength = RegKeyNameU.Length = BasicInfo->NameLength;
+
+                if (RtlEqualUnicodeString(&ChildIdNameU, &RegKeyNameU, TRUE))
+                {
+                    HANDLE ChildKeyHandle;
+
+                    InitializeObjectAttributes(&ObjectAttributes,
+                                               &ChildIdNameU,
+                                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                               CriticalDeviceKey,
+                                               NULL);
+
+                    Status = ZwOpenKey(&ChildKeyHandle,
+                                       KEY_QUERY_VALUE,
+                                       &ObjectAttributes);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    /* Check if there's already a driver installed */
+                    Status = ZwQueryValueKey(InstanceKey,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    PartialInfo = ExAllocatePool(PagedPool, NeededLength);
+                    if (!PartialInfo)
+                    {
+                        ExFreePool(OriginalIdBuffer);
+                        ExFreePool(BasicInfo);
+                        ZwClose(InstanceKey);
+                        ZwClose(ChildKeyHandle);
+                        ZwClose(CriticalDeviceKey);
+                        return;
+                    }
+
+                    /* Read ClassGUID entry in the CDDB */
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             PartialInfo,
+                                             NeededLength,
+                                             &NeededLength);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    /* Write it to the ENUM key */
+                    Status = ZwSetValueKey(InstanceKey,
+                                           &ClassGuidU,
+                                           0,
+                                           REG_SZ,
+                                           PartialInfo->Data,
+                                           PartialInfo->DataLength);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        ExFreePool(PartialInfo);
+                        ZwClose(ChildKeyHandle);
+                        continue;
+                    }
+
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ServiceU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(PartialInfo);
+                        PartialInfo = ExAllocatePool(PagedPool, NeededLength);
+                        if (!PartialInfo)
+                        {
+                            ExFreePool(OriginalIdBuffer);
+                            ExFreePool(BasicInfo);
+                            ZwClose(InstanceKey);
+                            ZwClose(ChildKeyHandle);
+                            ZwClose(CriticalDeviceKey);
+                            return;
+                        }
+
+                        /* Read the service entry from the CDDB */
+                        Status = ZwQueryValueKey(ChildKeyHandle,
+                                                 &ServiceU,
+                                                 KeyValuePartialInformation,
+                                                 PartialInfo,
+                                                 NeededLength,
+                                                 &NeededLength);
+                        if (Status != STATUS_SUCCESS)
+                        {
+                            ExFreePool(BasicInfo);
+                            ExFreePool(PartialInfo);
+                            ZwClose(ChildKeyHandle);
+                            continue;
+                        }
+
+                        /* Write it to the ENUM key */
+                        Status = ZwSetValueKey(InstanceKey,
+                                               &ServiceU,
+                                               0,
+                                               REG_SZ,
+                                               PartialInfo->Data,
+                                               PartialInfo->DataLength);
+                        if (Status != STATUS_SUCCESS)
+                        {
+                            ExFreePool(BasicInfo);
+                            ExFreePool(PartialInfo);
+                            ZwClose(ChildKeyHandle);
+                            continue;
+                        }
+
+                        DPRINT1("Installed service '%S' for critical device '%wZ'\n", PartialInfo->Data, &ChildIdNameU);
+                    }
+                    else
+                    {
+                        DPRINT1("Installed NULL service for critical device '%wZ'\n", &ChildIdNameU);
+                    }
+
+                    /* We need to enumerate children */
+                    DeviceNode->Flags |= DNF_NEED_TO_ENUM;
+
+                    ExFreePool(OriginalIdBuffer);
+                    ExFreePool(PartialInfo);
+                    ExFreePool(BasicInfo);
+                    ZwClose(InstanceKey);
+                    ZwClose(ChildKeyHandle);
+                    ZwClose(CriticalDeviceKey);
+
+                    /* That's it */
+                    return;
+                }
+
+                ExFreePool(BasicInfo);
+            }
+            else
+            {
+                /* Umm, not sure what happened here */
+                continue;
+            }
+        }
+
+        /* Advance to the next ID */
+        IdBuffer += StringLength;
+    }
+    
+    ExFreePool(OriginalIdBuffer);
+    ZwClose(InstanceKey);
+    ZwClose(CriticalDeviceKey);
+}
+
 NTSTATUS
 FASTCALL
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
@@ -1869,6 +2233,8 @@ IopEnumerateDevice(
                                   &DeviceNode->InstancePath);
     }
 
+    DeviceNode->Flags &= ~DNF_NEED_TO_ENUM;
+
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
     Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
@@ -2053,6 +2419,9 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
 
+      /* Install the service for this if it's in the CDDB */
+      //IopInstallCriticalDevice(DeviceNode);
+
       RegKey.Length = 0;
       RegKey.MaximumLength = sizeof(RegKeyBuffer);
       RegKey.Buffer = RegKeyBuffer;
@@ -2184,7 +2553,25 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
+   {
+       if (DeviceNode->Flags & DNF_NEED_TO_ENUM)
+       {
+           Status = IopInitializeDevice(DeviceNode, NULL);
+           if (NT_SUCCESS(Status))
+           {
+               /* HACK */
+               DeviceNode->Flags &= ~DNF_STARTED;
+               Status = IopStartDevice(DeviceNode);
+               if (!NT_SUCCESS(Status))
+               {
+                   DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
+                           &DeviceNode->InstancePath, Status);
+               }
+           }
+           DeviceNode->Flags &= ~DNF_NEED_TO_ENUM;
+       }
        return STATUS_SUCCESS;
+   }
 
    if (DeviceNode->ServiceName.Buffer == NULL)
    {
