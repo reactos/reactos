@@ -50,7 +50,7 @@ SmpDosDevicesQueryRoutine(PWSTR ValueName,
   /* create symbolic link */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
-			     OBJ_PERMANENT|OBJ_CASE_INSENSITIVE,
+			     OBJ_PERMANENT|OBJ_CASE_INSENSITIVE|OBJ_OPENIF,
 			     NULL,
 			     NULL);
   Status = NtCreateSymbolicLinkObject(&LinkHandle,

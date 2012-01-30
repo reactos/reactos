@@ -42,6 +42,7 @@ extern BOOLEAN SmpDbgSsLoaded;
 extern HANDLE SmpWindowsSubSysProcess;
 extern HANDLE SmpSessionsObjectDirectory;
 extern HANDLE SmpWindowsSubSysProcessId;
+extern BOOLEAN RegPosixSingleInstance;
 
 /* FUNCTIONS ******************************************************************/
 

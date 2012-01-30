@@ -82,7 +82,7 @@ SmpKnownDllsQueryRoutine(PWSTR ValueName,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ImageName,
-			     OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+			     OBJ_CASE_INSENSITIVE | OBJ_PERMANENT | OBJ_OPENIF,
 			     (HANDLE)EntryContext,
 			     NULL);
   Status = NtCreateSection(&SectionHandle,

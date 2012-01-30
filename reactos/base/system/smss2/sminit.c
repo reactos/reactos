@@ -32,7 +32,9 @@ LIST_ENTRY SmpSubSystemsToDefer, SmpExecuteList, NativeProcessList;
 ULONG SmBaseTag;
 HANDLE SmpDebugPort;
 PVOID SmpHeap;
-PWCHAR SmpDefaultEnvironment;
+PWCHAR SmpDefaultEnvironment, SmpDefaultLibPathBuffer;
+UNICODE_STRING SmpKnownDllPath, SmpDefaultLibPath;
+ULONG SmpCalledConfigEnv;
 
 ULONG SmpInitProgressByLine;
 NTSTATUS SmpInitReturnStatus;
@@ -54,6 +56,174 @@ BOOLEAN MiniNTBoot;
 }
 
 /* REGISTRY CONFIGURATION *****************************************************/
+
+NTSTATUS
+NTAPI
+SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
+                     IN PWSTR Name,
+                     IN PWCHAR Value,
+                     IN BOOLEAN Flags)
+{
+    PSMP_REGISTRY_VALUE RegEntry;
+    UNICODE_STRING NameString, ValueString;
+    ANSI_STRING AnsiValueString;
+    PLIST_ENTRY NextEntry;
+
+    /* Convert to unicode strings */
+    RtlInitUnicodeString(&NameString, Name);
+    RtlInitUnicodeString(&ValueString, Value);
+
+    /* Check if we should do a duplicat echeck */
+    if (Flags)
+    {
+        /* Loop the current list */
+        NextEntry = ListAddress->Flink;
+        while (NextEntry != ListAddress)
+        {
+            /* Get each entry */
+            RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+
+            /* Check if the value name matches */
+            if (!RtlCompareUnicodeString(&RegEntry->Name, &NameString, TRUE))
+            {
+                /* Check if the value is the exact same thing */
+                if (((Value) &&
+                     (RtlCompareUnicodeString(&RegEntry->Value, &ValueString, TRUE))) ||
+                    (!(Value) && !(RegEntry->Value.Buffer)))
+                {
+                    /* Fail -- the same setting is being set twice */
+                    return STATUS_OBJECT_NAME_EXISTS;
+                }
+
+                /* We found the list, and this isn't a duplicate value */
+                break;
+            }
+
+            /* This wasn't a match, keep going */
+            NextEntry = NextEntry->Flink;
+            RegEntry = NULL;
+        }
+    }
+    else
+    {
+        /* This should be the first value, so initialize a new list/structure */
+        RegEntry = NULL;
+    }
+
+    /* Are we adding on, or creating a new entry */
+    if (!RegEntry)
+    {
+        /* A new entry -- allocate it */
+        RegEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   SmBaseTag,
+                                   NameString.MaximumLength +
+                                   sizeof(SMP_REGISTRY_VALUE));
+        if (!RegEntry) return STATUS_NO_MEMORY;
+
+        /* Initialize the list and set all values to NULL */
+        InitializeListHead(&RegEntry->Entry);
+        RegEntry->AnsiValue = NULL;
+        RegEntry->Value.Buffer = NULL;
+
+        /* Copy and initialize the value name */
+        RegEntry->Name.Buffer = (PWCHAR)(RegEntry + 1);
+        RegEntry->Name.Length = NameString.Length;
+        RegEntry->Name.MaximumLength = NameString.MaximumLength;
+        RtlCopyMemory(RegEntry->Name.Buffer,
+                      NameString.Buffer,
+                      NameString.MaximumLength);
+
+        /* Add this entry into the list */
+        InsertTailList(ListAddress, &RegEntry->Entry);
+    }
+
+    /* Did we have an old value buffer? */
+    if (RegEntry->Value.Buffer)
+    {
+        /* Free it */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+    }
+
+    /* Is there no value associated? */
+    if (!Value)
+    {
+        /* We're done here */
+        RtlInitUnicodeString(&RegEntry->Value, NULL);
+        return STATUS_SUCCESS;
+    }
+
+    /* There is a value, so allocate a buffer for it */
+    RegEntry->Value.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                             SmBaseTag,
+                                             ValueString.MaximumLength);
+    if (!RegEntry->Value.Buffer)
+    {
+        /* Out of memory, undo */
+        RemoveEntryList(&RegEntry->Entry);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Copy the value into the entry */
+    RegEntry->Value.Length = ValueString.Length;
+    RegEntry->Value.MaximumLength = ValueString.MaximumLength;
+    RtlCopyMemory(RegEntry->Value.Buffer,
+                  ValueString.Buffer,
+                  ValueString.MaximumLength);
+
+    /* Now allocate memory for an ANSI copy of it */
+    RegEntry->AnsiValue = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          SmBaseTag,
+                                          (ValueString.Length / sizeof(WCHAR)) +
+                                          sizeof(ANSI_NULL));
+    if (!RegEntry->AnsiValue)
+    {
+        /* Out of memory, undo */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RemoveEntryList(&RegEntry->Entry);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Convert the Unicode value string and return success */
+    RtlInitEmptyAnsiString(&AnsiValueString,
+                           RegEntry->AnsiValue,
+                           (ValueString.Length / sizeof(WCHAR)) +
+                           sizeof(ANSI_NULL));
+    RtlUnicodeStringToAnsiString(&AnsiValueString, &ValueString, FALSE);
+    return STATUS_SUCCESS;
+}
+
+PSMP_REGISTRY_VALUE
+NTAPI
+SmpFindRegistryValue(IN PLIST_ENTRY List,
+                     IN PWSTR ValueName)
+{
+    PSMP_REGISTRY_VALUE RegEntry;
+    UNICODE_STRING ValueString;
+    PLIST_ENTRY NextEntry;
+
+    /* Initialize the value name sting */
+    RtlInitUnicodeString(&ValueString, ValueName);
+
+    /* Loop the list */
+    NextEntry = List->Flink;
+    while (NextEntry != List)
+    {
+        /* Get each entry */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+
+        /* Check if the value name matches */
+        if (!RtlCompareUnicodeString(&RegEntry->Name, &ValueString, TRUE)) break;
+
+        /* It doesn't, move on */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* If we looped back, return NULL, otherwise return the entry we found */
+    if (NextEntry == List) RegEntry = NULL;
+    return RegEntry;
+}
 
 NTSTATUS
 NTAPI
@@ -107,6 +277,334 @@ SmpConfigureAllowProtectedRenames(IN PWSTR ValueName,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+SmpConfigureObjectDirectories(IN PWSTR ValueName,
+                              IN ULONG ValueType,
+                              IN PVOID ValueData,
+                              IN ULONG ValueLength,
+                              IN PVOID Context,
+                              IN PVOID EntryContext)
+{
+    PISECURITY_DESCRIPTOR SecDescriptor;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE DirHandle;
+    UNICODE_STRING RpcString, WindowsString, SearchString;
+    PWCHAR SourceString = ValueData;
+
+    /* Initialize the two strings we will be looking for */
+    RtlInitUnicodeString(&RpcString, L"\\RPC Control");
+    RtlInitUnicodeString(&WindowsString, L"\\Windows");
+
+    /* Loop the registry data we received */
+    while (*SourceString)
+    {
+        /* Assume primary SD for most objects */
+        RtlInitUnicodeString(&SearchString, SourceString);
+        SecDescriptor = SmpPrimarySecurityDescriptor;
+
+        /* But for these two always set the liberal descriptor */
+        if ((RtlEqualUnicodeString(&SearchString, &RpcString, TRUE)) ||
+            (RtlEqualUnicodeString(&SearchString, &WindowsString, TRUE)))
+        {
+            SecDescriptor = SmpLiberalSecurityDescriptor;
+        }
+
+        /* Create the requested directory with the requested descriptor */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SearchString,
+                                   OBJ_CASE_INSENSITIVE |
+                                   OBJ_OPENIF |
+                                   OBJ_PERMANENT,
+                                   NULL,
+                                   SecDescriptor);
+        DPRINT1("Creating: %wZ directory\n", &SearchString);
+        Status = NtCreateDirectoryObject(&DirHandle,
+                                         DIRECTORY_ALL_ACCESS,
+                                         &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Failure case */
+            DPRINT1("SMSS: Unable to create %wZ object directory - Status == %lx\n",
+                    &SearchString, Status);
+        }
+        else
+        {
+            /* It worked, now close the handle */
+            NtClose(DirHandle);
+        }
+
+        /* Move to the next requested object */
+        while (*SourceString++);
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureMemoryMgmt(IN PWSTR ValueName,
+                       IN ULONG ValueType,
+                       IN PVOID ValueData,
+                       IN ULONG ValueLength,
+                       IN PVOID Context,
+                       IN PVOID EntryContext)
+{
+    /* Save this is into a list */
+    DPRINT1("PageFile or Execute Entry: %S-%S\n", ValueName, ValueData);
+    return SmpSaveRegistryValue(EntryContext, ValueData, NULL, TRUE);
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureFileRenames(IN PWSTR ValueName,
+                        IN ULONG ValueType,
+                        IN PVOID ValueData,
+                        IN ULONG ValueLength,
+                        IN PVOID Context,
+                        IN PVOID EntryContext)
+{
+    NTSTATUS Status;
+    static PWCHAR Canary;
+
+    /* Check if this is the second call */
+    if (Canary)
+    {
+        /* Save the data into the list */
+        DPRINT1("Renamed file: %S-%S\n", Canary, ValueData);
+        Status = SmpSaveRegistryValue(EntryContext, Canary, ValueData, FALSE);
+        Canary = 0;
+    }
+    else
+    {
+        /* This it the first call, do nothing until we get the second call */
+        Canary = ValueData;
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return the status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureExcludeKnownDlls(IN PWSTR ValueName,
+                             IN ULONG ValueType,
+                             IN PVOID ValueData,
+                             IN ULONG ValueLength,
+                             IN PVOID Context,
+                             IN PVOID EntryContext)
+{
+    PWCHAR DllName;
+    NTSTATUS Status;
+
+    /* Make sure the value type is valid */
+    if ((ValueType == REG_MULTI_SZ) || (ValueType == REG_SZ))
+    {
+        /* Keep going for each DLL in the list */
+        DllName = ValueData;
+        while (*DllName)
+        {
+            /* Add this to the linked list */
+            DPRINT1("Excluded DLL: %S\n", DllName);
+            Status = SmpSaveRegistryValue(EntryContext, DllName, NULL, TRUE);
+
+            /* Bail out on failure or if only one DLL name was present */
+            if (!(NT_SUCCESS(Status)) || (ValueType == REG_SZ)) return Status;
+
+            /* Otherwise, move to the next DLL name */
+            while (*DllName++);
+        }
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureDosDevices(IN PWSTR ValueName,
+                       IN ULONG ValueType,
+                       IN PVOID ValueData,
+                       IN ULONG ValueLength,
+                       IN PVOID Context,
+                       IN PVOID EntryContext)
+{
+    /* Save into linked list */
+    DPRINT1("DOS Device: %S-%S\n", ValueName, ValueData);
+    return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
+}
+
+NTSTATUS
+NTAPI
+SmpInitializeKnownDllPath(IN PUNICODE_STRING DllPath,
+                          IN PWCHAR Buffer,
+                          IN ULONG Length)
+{
+    NTSTATUS Status;
+
+    /* Allocate the buffer */
+    DllPath->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), SmBaseTag, Length);
+    if (DllPath->Buffer)
+    {
+        /* Fill out the rest of the string */
+        DllPath->MaximumLength = Length;
+        DllPath->Length = Length - sizeof(UNICODE_NULL);
+
+        /* Copy the actual path and return success */
+        RtlCopyMemory(DllPath->Buffer, Buffer, Length);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Fail with out of memory code */
+        Status = STATUS_NO_MEMORY;
+    }
+
+    /* Return result */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureKnownDlls(IN PWSTR ValueName,
+                      IN ULONG ValueType,
+                      IN PVOID ValueData,
+                      IN ULONG ValueLength,
+                      IN PVOID Context,
+                      IN PVOID EntryContext)
+{
+    /* Check which value is being set */
+    if (_wcsicmp(ValueName, L"DllDirectory"))
+    {
+        /* Add to the linked list -- this is a file */
+        DPRINT1("KnownDll: %S-%S\n", ValueName, ValueData);
+        return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
+    }
+
+    /* This is the directory, initialize it */
+    DPRINT1("KnownDll Path: %S\n", ValueData);
+    return SmpInitializeKnownDllPath(&SmpKnownDllPath, ValueData, ValueLength);
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureEnvironment(IN PWSTR ValueName,
+                        IN ULONG ValueType,
+                        IN PVOID ValueData,
+                        IN ULONG ValueLength,
+                        IN PVOID Context,
+                        IN PVOID EntryContext)
+{
+    NTSTATUS Status;
+    UNICODE_STRING ValueString, DataString;
+
+    /* Convert the strings into UNICODE_STRING and set the variable defined */
+    RtlInitUnicodeString(&ValueString, ValueName);
+    RtlInitUnicodeString(&DataString, ValueData);
+    DPRINT1("Setting %wZ = %wZ\n", &ValueString, &DataString);
+    Status = RtlSetEnvironmentVariable(0, &ValueString, &DataString);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: 'SET %wZ = %wZ' failed - Status == %lx\n",
+                &ValueString, &DataString, Status);
+        return Status;
+    }
+
+    /* Check if the path is being set, and wait for the second instantiation */
+    if (!(_wcsicmp(ValueName, L"Path")) && (++SmpCalledConfigEnv == 2))
+    {
+        /* Allocate the path buffer */
+        SmpDefaultLibPathBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                  SmBaseTag,
+                                                  ValueLength);
+        if (!SmpDefaultLibPathBuffer) return STATUS_NO_MEMORY;
+
+        /* Copy the data into it and create the UNICODE_STRING to hold it */
+        RtlCopyMemory(SmpDefaultLibPathBuffer, ValueData, ValueLength);
+        RtlInitUnicodeString(&SmpDefaultLibPath, SmpDefaultLibPathBuffer);
+    }
+
+    /* All good */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpConfigureSubSystems(IN PWSTR ValueName,
+                       IN ULONG ValueType,
+                       IN PVOID ValueData,
+                       IN ULONG ValueLength,
+                       IN PVOID Context,
+                       IN PVOID EntryContext)
+{
+    PSMP_REGISTRY_VALUE RegEntry;
+    PWCHAR SubsystemName;
+
+    /* Is this a required or optional subsystem */
+    if ((_wcsicmp(ValueName, L"Required")) &&
+        (_wcsicmp(ValueName, L"Optional")))
+    {
+        /* It isn't, is this the PSI flag? */
+        if ((_wcsicmp(ValueName, L"PosixSingleInstance")) ||
+            (ValueType != REG_DWORD))
+        {
+            /* It isn't, must be a subsystem entry, add it to the list */
+            DPRINT1("Subsystem entry: %S-%S\n", ValueName, ValueData);
+            return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
+        }
+
+        /* This was the PSI flag, save it and exit */
+        RegPosixSingleInstance = TRUE;
+        return STATUS_SUCCESS;
+    }
+
+    /* This should be one of the required/optional lists. Is the type valid? */
+    if (ValueType == REG_MULTI_SZ)
+    {
+        /* It is, get the first subsystem */
+        SubsystemName = ValueData;
+        while (*SubsystemName)
+        {
+            /* We should have already put it into the list when we found it */
+            DPRINT1("Found subsystem: %S\n", SubsystemName);
+            RegEntry = SmpFindRegistryValue(EntryContext, SubsystemName);
+            if (!RegEntry)
+            {
+                /* This subsystem doesn't exist, so skip it */
+                DPRINT1("SMSS: Invalid subsystem name - %ws\n", SubsystemName);
+            }
+            else
+            {
+                /* Found it -- remove it from the main list */
+                RemoveEntryList(&RegEntry->Entry);
+
+                /* Figure out which list to put it in */
+                if (_wcsicmp(ValueName, L"Required"))
+                {
+                    /* Put it into the optional list */
+                    DPRINT1("Optional\n");
+                    InsertTailList(&SmpSubSystemsToDefer, &RegEntry->Entry);
+                }
+                else
+                {
+                    /* Put it into the required list */
+                    DPRINT1("Required\n");
+                    InsertTailList(&SmpSubSystemsToLoad, &RegEntry->Entry);
+                }
+            }
+
+            /* Move to the next name */
+            while (*SubsystemName++);
+        }
+    }
+
+    /* All done! */
+    return STATUS_SUCCESS;
+}
+
 RTL_QUERY_REGISTRY_TABLE
 SmpRegistryConfigurationTable[] =
 {
@@ -119,15 +617,177 @@ SmpRegistryConfigurationTable[] =
         NULL,
         0
     },
+
     {
         SmpConfigureAllowProtectedRenames,
-        RTL_QUERY_REGISTRY_DELETE,
+        0, //RTL_QUERY_REGISTRY_DELETE,
         L"AllowProtectedRenames",
         NULL,
         REG_DWORD,
         NULL,
         0
     },
+
+    {
+        SmpConfigureObjectDirectories,
+        0,
+        L"ObjectDirectories",
+        NULL,
+        REG_MULTI_SZ,
+        L"\\Windows\0\\RPC Control\0",
+        0
+    },
+
+    {
+        SmpConfigureMemoryMgmt,
+        0,
+        L"BootExecute",
+        &SmpBootExecuteList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureMemoryMgmt,
+        RTL_QUERY_REGISTRY_TOPKEY,
+        L"SetupExecute",
+        &SmpSetupExecuteList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureFileRenames,
+        0, //RTL_QUERY_REGISTRY_DELETE,
+        L"PendingFileRenameOperations",
+        &SmpFileRenameList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureFileRenames,
+        0, //RTL_QUERY_REGISTRY_DELETE,
+        L"PendingFileRenameOperations2",
+        &SmpFileRenameList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureExcludeKnownDlls,
+        0,
+        L"ExcludeFromKnownDlls",
+        &SmpExcludeKnownDllsList,
+        REG_MULTI_SZ,
+        L"\0",
+        0
+    },
+
+    {
+        NULL,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"Memory Management",
+        NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureMemoryMgmt,
+        0,
+        L"PagingFiles",
+        &SmpPagingFileList,
+        REG_MULTI_SZ,
+        L"?:\\pagefile.sys\0",
+        0
+    },
+
+    {
+        SmpConfigureDosDevices,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"DOS Devices",
+        &SmpDosDevicesList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureKnownDlls,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"KnownDlls",
+        &SmpKnownDllsList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureEnvironment,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"Environment",
+        NULL,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureSubSystems,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"SubSystems",
+        &SmpSubSystemList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureSubSystems,
+        RTL_QUERY_REGISTRY_NOEXPAND,
+        L"Required",
+        &SmpSubSystemList,
+        REG_MULTI_SZ,
+        L"Debug\0Windows\0",
+        0
+    },
+
+    {
+        SmpConfigureSubSystems,
+        RTL_QUERY_REGISTRY_NOEXPAND,
+        L"Optional",
+        &SmpSubSystemList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureSubSystems,
+        0,
+        L"Kmode",
+        &SmpSubSystemList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureMemoryMgmt,
+        RTL_QUERY_REGISTRY_TOPKEY,
+        L"Execute",
+        &SmpExecuteList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
     {0},
 };
 
@@ -477,7 +1137,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle;
     UNICODE_STRING DestinationString;
-    
+
     /* Initialize the keywords we'll be looking for */
     RtlInitUnicodeString(&SmpDebugKeyword, L"debug");
     RtlInitUnicodeString(&SmpASyncKeyword, L"async");

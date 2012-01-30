@@ -18,6 +18,7 @@ RTL_CRITICAL_SECTION SmpKnownSubSysLock;
 LIST_ENTRY SmpKnownSubSysHead;
 HANDLE SmpWindowsSubSysProcess;
 HANDLE SmpWindowsSubSysProcessId;
+BOOLEAN RegPosixSingleInstance;
 
 /* FUNCTIONS ******************************************************************/
 

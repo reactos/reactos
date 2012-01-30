@@ -37,7 +37,7 @@ SmpObjectDirectoryQueryRoutine(PWSTR ValueName,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
-			     0,
+			     OBJ_OPENIF,
 			     NULL,
 			     NULL);
 
