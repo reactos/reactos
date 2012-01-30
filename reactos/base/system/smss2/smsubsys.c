@@ -14,6 +14,10 @@
 
 /* GLOBALS ********************************************************************/
 
+RTL_CRITICAL_SECTION SmpKnownSubSysLock;
+LIST_ENTRY SmpKnownSubSysHead;
+HANDLE SmpWindowsSubSysProcess;
+
 /* FUNCTIONS ******************************************************************/
 
 /* EOF */

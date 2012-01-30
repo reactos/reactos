@@ -14,4 +14,10 @@
 
 /* GLOBALS ********************************************************************/
 
+RTL_CRITICAL_SECTION SmpSessionListLock;
+LIST_ENTRY SmpSessionListHead;
+ULONG SmpNextSessionId;
+ULONG SmpNextSessionIdScanMode;
+BOOLEAN SmpDbgSsLoaded;
+
 /* FUNCTIONS ******************************************************************/

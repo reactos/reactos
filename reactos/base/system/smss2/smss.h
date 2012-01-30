@@ -30,6 +30,17 @@
 
 /* DEFINES ********************************************************************/
 
+/* EXTERNALS ******************************************************************/
+
+extern RTL_CRITICAL_SECTION SmpKnownSubSysLock;
+extern LIST_ENTRY SmpKnownSubSysHead;
+extern RTL_CRITICAL_SECTION SmpSessionListLock;
+extern LIST_ENTRY SmpSessionListHead;
+extern ULONG SmpNextSessionId;
+extern ULONG SmpNextSessionIdScanMode;
+extern BOOLEAN SmpDbgSsLoaded;
+extern HANDLE SmpWindowsSubSysProcess;
+ 
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -50,4 +61,10 @@ VOID
 NTAPI
 SmpReleasePrivilege(
     IN PVOID State
+);
+
+ULONG
+NTAPI
+SmpApiLoop(
+    IN PVOID Parameter
 );
