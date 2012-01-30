@@ -874,14 +874,11 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         return(Status);
     }
 
-#if 0
     MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
         (ULONG_PTR)MemoryArea->StartingAddress;
-#else
     ULONG_PTR EndingAddress;
     EndingAddress = ((ULONG_PTR)MemoryArea->StartingAddress + RegionSize - 1) | (PAGE_SIZE - 1);
-    MemoryAreaLength = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1; 
-#endif
+    RegionSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1; 
     
     MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
         MemoryAreaLength, Type, Protect);
@@ -898,7 +895,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
     *UBaseAddress = BaseAddress;
-    *URegionSize = MemoryAreaLength;
+    *URegionSize = RegionSize;
     DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
 
     return(STATUS_SUCCESS);
