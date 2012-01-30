@@ -29,6 +29,18 @@ ACCESS_MASK MmMakeSectionAccess[8] =
     SECTION_MAP_EXECUTE | SECTION_MAP_READ
 };
 
+ACCESS_MASK MmMakeFileAccess[8] =
+{
+    FILE_READ_DATA,
+    FILE_READ_DATA,
+    FILE_EXECUTE,
+    FILE_EXECUTE | FILE_READ_DATA,
+    FILE_WRITE_DATA | FILE_READ_DATA,
+    FILE_READ_DATA,
+    FILE_EXECUTE | FILE_WRITE_DATA | FILE_READ_DATA,
+    FILE_EXECUTE | FILE_READ_DATA
+};
+
 CHAR MmUserProtectionToMask1[16] =
 {
     0,
@@ -72,6 +84,24 @@ CHAR MmUserProtectionToMask2[16] =
 MMSESSION MmSession;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+ACCESS_MASK
+NTAPI
+MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection)
+{
+    ULONG ProtectionMask;
+
+    /* Calculate the protection mask and make sure it's valid */
+    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
+
+    /* Now convert it to the required file access */
+    return MmMakeFileAccess[ProtectionMask & 0x7];
+}
 
 ULONG
 NTAPI
