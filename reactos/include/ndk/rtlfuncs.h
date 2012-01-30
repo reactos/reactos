@@ -2407,6 +2407,15 @@ RtlSetProcessIsCritical(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetThreadIsCritical(
+    IN BOOLEAN NewValue,
+    OUT PBOOLEAN OldValue OPTIONAL,
+    IN BOOLEAN NeedBreaks
+);
+
+NTSYSAPI
 ULONG
 NTAPI
 RtlGetCurrentProcessorNumber(

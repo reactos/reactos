@@ -53,6 +53,7 @@ typedef struct _SM_EXEC_PGM_MSG
     RTL_USER_PROCESS_INFORMATION ProcessInformation;
     BOOLEAN DebugFlag;
 } SM_EXEC_PGM_MSG, *PM_EXEC_PGM_MSG;
+C_ASSERT(sizeof(SM_EXEC_PGM_MSG) == 0x48);
 
 typedef struct _SM_LOAD_DEFERED_SUBSYSTEM_MSG
 {
