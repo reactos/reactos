@@ -124,6 +124,64 @@ USBCCGP_PdoHandleDeviceRelations(
 }
 
 NTSTATUS
+USBCCGP_PdoAppendInterfaceNumber(
+    IN LPWSTR DeviceId,
+    IN ULONG InterfaceNumber,
+    OUT LPWSTR *OutString)
+{
+    ULONG Length = 0, StringLength;
+    LPWSTR String;
+
+    //
+    // count length of string
+    //
+    String = DeviceId;
+    while(*String)
+    {
+        StringLength = wcslen(String) + 1;
+        Length += StringLength;
+        Length += 6; //&MI_XX
+        String += StringLength;
+    }
+
+    //
+    // now allocate the buffer
+    //
+    String = AllocateItem(NonPagedPool, (Length + 2) * sizeof(WCHAR));
+    if (!String)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // store result
+    //
+    *OutString = String;
+
+    while(*DeviceId)
+    {
+        StringLength = swprintf(String, L"%s&MI_%02x", DeviceId) + 1;
+        Length = wcslen(DeviceId) + 1;
+        DPRINT1("String %p\n", String);
+
+        //
+        // next string
+        //
+        String += StringLength;
+        DeviceId += Length;
+    }
+
+    //
+    // success
+    //
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 USBCCGP_PdoHandleQueryId(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -152,11 +210,32 @@ USBCCGP_PdoHandleQueryId(
         // handle query device id
         //
         Status = USBCCGP_SyncForwardIrp(PDODeviceExtension->NextDeviceObject, Irp);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // allocate buffer
+            //
+            Buffer = AllocateItem(NonPagedPool, (wcslen((LPWSTR)Irp->IoStatus.Information) + 7) * sizeof(WCHAR));
+            if (Buffer)
+            {
+                //
+                // append interface number
+                //
+                ASSERT(Irp->IoStatus.Information);
+                swprintf(Buffer, L"%s&MI_%02x", (LPWSTR)Irp->IoStatus.Information, PDODeviceExtension->FunctionDescriptor->FunctionNumber);
+                DPRINT1("BusQueryDeviceID %S\n", Buffer);
 
-        //
-        // FIXME append interface id
-        //
-        UNIMPLEMENTED
+                ExFreePool((PVOID)Irp->IoStatus.Information);
+                Irp->IoStatus .Information = (ULONG_PTR)Buffer;
+            }
+            else
+            {
+                //
+                // no memory
+                //
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
         return Status;
     }
     else if (IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
@@ -171,8 +250,21 @@ USBCCGP_PdoHandleQueryId(
         //
         // handle instance id
         //
-        RtlInitUnicodeString(&TempString, L"0000");
-        DeviceString = &TempString;
+        Buffer = AllocateItem(NonPagedPool, 5 * sizeof(WCHAR));
+        if (!Buffer)
+        {
+            //
+            // no memory
+            //
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        //
+        // use function number
+        //
+        swprintf(Buffer, L"%04x", PDODeviceExtension->FunctionDescriptor->FunctionNumber);
+        Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+        return STATUS_SUCCESS;
     }
     else if (IoStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
     {
@@ -202,8 +294,9 @@ USBCCGP_PdoHandleQueryId(
     //
     // copy buffer
     //
-    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
     RtlCopyMemory(Buffer, DeviceString->Buffer, DeviceString->Length);
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+
     return STATUS_SUCCESS;
 }
 
