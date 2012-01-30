@@ -119,7 +119,7 @@ VOID
 NTAPI
 HidParser_FreeCollectionDescription(
     IN PHID_PARSER Parser,
-    IN PHIDP_DEVICE_DESC   DeviceDescription);
+    IN PHIDP_DEVICE_DESC DeviceDescription);
 
 HIDAPI
 NTSTATUS
@@ -180,53 +180,53 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetData(
-  IN HIDP_REPORT_TYPE  ReportType,
-  OUT PHIDP_DATA  DataList,
-  IN OUT PULONG  DataLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    OUT PHIDP_DATA  DataList,
+    IN OUT PULONG  DataLength,
+    IN PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetExtendedAttributes(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USHORT  DataIndex,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
-  IN OUT PULONG  LengthAttributes);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USHORT  DataIndex,
+    OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
+    IN OUT PULONG  LengthAttributes);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetLinkCollectionNodes(
+    IN PHID_PARSER Parser,
     OUT PHIDP_LINK_COLLECTION_NODE  LinkCollectionNodes,
-    IN OUT PULONG  LinkCollectionNodesLength,
-    IN PHIDP_PREPARSED_DATA  PreparsedData);
+    IN OUT PULONG  LinkCollectionNodesLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValue(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN USAGE  Usage,
-  OUT PULONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection,
+    IN USAGE  Usage,
+    OUT PULONG  UsageValue,
+    IN PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_UsageListDifference(
-  IN PUSAGE  PreviousUsageList,
-  IN PUSAGE  CurrentUsageList,
-  OUT PUSAGE  BreakUsageList,
-  OUT PUSAGE  MakeUsageList,
-  IN ULONG  UsageListLength);
+    IN PUSAGE  PreviousUsageList,
+    IN PUSAGE  CurrentUsageList,
+    OUT PUSAGE  BreakUsageList,
+    OUT PUSAGE  MakeUsageList,
+    IN ULONG  UsageListLength);
 
 
 HIDAPI
@@ -266,30 +266,30 @@ HidParser_GetUsagesEx(
 NTSTATUS
 NTAPI
 HidParser_SysPowerEvent (
+    IN PHID_PARSER Parser,
     IN PCHAR HidPacket,
     IN USHORT HidPacketLength,
-    IN PHIDP_PREPARSED_DATA Ppd,
     OUT PULONG OutputBuffer);
 
 NTSTATUS
 NTAPI
 HidParser_SysPowerCaps (
-    IN PHIDP_PREPARSED_DATA Ppd,
+    IN PHID_PARSER Parser,
     OUT PULONG OutputBuffer);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValueArray(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection  OPTIONAL,
-  IN USAGE  Usage,
-  OUT PCHAR  UsageValue,
-  IN USHORT  UsageValueByteLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection  OPTIONAL,
+    IN USAGE  Usage,
+    OUT PCHAR  UsageValue,
+    IN USHORT  UsageValueByteLength,
+    IN PCHAR  Report,
+    IN ULONG  ReportLength);
 
 
 HIDAPI
@@ -306,14 +306,14 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_UnsetUsages(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN PUSAGE  UsageList,
-  IN OUT PULONG  UsageLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection,
+    IN PUSAGE  UsageList,
+    IN OUT PULONG  UsageLength,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
@@ -342,87 +342,87 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsages(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN PUSAGE  UsageList,
-  IN OUT PULONG  UsageLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection,
+    IN PUSAGE  UsageList,
+    IN OUT PULONG  UsageLength,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValueArray(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection  OPTIONAL,
-  IN USAGE  Usage,
-  IN PCHAR  UsageValue,
-  IN USHORT  UsageValueByteLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection  OPTIONAL,
+    IN USAGE  Usage,
+    IN PCHAR  UsageValue,
+    IN USHORT  UsageValueByteLength,
+    OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValue(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN USAGE  Usage,
-  IN ULONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection,
+    IN USAGE  Usage,
+    IN ULONG  UsageValue,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetScaledUsageValue(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection  OPTIONAL,
-  IN USAGE  Usage,
-  IN LONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN USAGE  UsagePage,
+    IN USHORT  LinkCollection  OPTIONAL,
+    IN USAGE  Usage,
+    IN LONG  UsageValue,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetData(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN PHIDP_DATA  DataList,
-  IN OUT PULONG  DataLength,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN PHIDP_DATA  DataList,
+    IN OUT PULONG  DataLength,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDAPI
 ULONG
 NTAPI
 HidParser_MaxDataListLength(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN PHIDP_PREPARSED_DATA  PreparsedData);
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType);
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_InitializeReportForID(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN UCHAR  ReportID,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN OUT PCHAR  Report,
-  IN ULONG  ReportLength);
-
+    IN PHID_PARSER Parser,
+    IN HIDP_REPORT_TYPE  ReportType,
+    IN UCHAR  ReportID,
+    IN OUT PCHAR  Report,
+    IN ULONG  ReportLength);
 
 HIDPARSER_STATUS
 HidParser_TranslateUsage(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionNumber,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
@@ -433,7 +433,7 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetValueCaps(
-  HIDP_REPORT_TYPE ReportType,
-  PHIDP_VALUE_CAPS ValueCaps,
-  PULONG ValueCapsLength,
-  PHIDP_PREPARSED_DATA PreparsedData);
+    PHID_PARSER Parser,
+    HIDP_REPORT_TYPE ReportType,
+    PHIDP_VALUE_CAPS ValueCaps,
+    PULONG ValueCapsLength);

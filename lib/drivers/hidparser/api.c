@@ -95,89 +95,73 @@ HidParser_GetCollection(
 }
 
 PHID_REPORT
-HidParser_GetReportByType(
-    IN PHID_PARSER Parser,
-    IN ULONG ReportType)
+HidParser_GetReportInCollection(
+    PHID_COLLECTION Collection,
+    IN UCHAR ReportType)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
+    PHID_REPORT Report;
 
     //
-    // get parser context
+    // search in local array
     //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-    for(Index = 0; Index < ParserContext->ReportCount; Index++)
+    for(Index = 0; Index < Collection->ReportCount; Index++)
     {
-        //
-        // check if the report type match
-        //
-        if (ParserContext->Reports[Index]->Type == ReportType)
+        if (Collection->Reports[Index]->Type == ReportType)
         {
             //
             // found report
             //
-            return ParserContext->Reports[Index];
+            return Collection->Reports[Index];
         }
     }
 
     //
-    // report not found
+    // search in local array
+    //
+    for(Index = 0; Index < Collection->NodeCount; Index++)
+    {
+        Report = HidParser_GetReportInCollection(Collection->Nodes[Index], ReportType);
+        if (Report)
+        {
+            //
+            // found report
+            //
+            return Report;
+        }
+    }
+
+    //
+    // not found
     //
     return NULL;
 }
 
-
-ULONG
-HidParser_NumberOfReports(
+PHID_REPORT
+HidParser_GetReportByType(
     IN PHID_PARSER Parser,
-    IN ULONG ReportType)
+    IN ULONG CollectionIndex,
+    IN UCHAR ReportType)
 {
-    PHID_PARSER_CONTEXT ParserContext;
-    ULONG Index;
-    ULONG ReportCount = 0;
+    PHID_COLLECTION Collection;
 
     //
-    // get parser context
+    // find collection
     //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-    for(Index = 0; Index < ParserContext->ReportCount; Index++)
+    Collection = HidParser_GetCollection(Parser, CollectionIndex);
+    if (!Collection)
     {
         //
-        // check if the report type match
+        // no such collection
         //
-        if (ParserContext->Reports[Index]->Type == ReportType)
-        {
-            //
-            // found report
-            //
-            ReportCount++;
-        }
+        ASSERT(FALSE);
+        return NULL;
     }
 
     //
-    // done
+    // search report
     //
-    return ReportCount;
+    return HidParser_GetReportInCollection(Collection, ReportType);
 }
 
 HIDPARSER_STATUS
@@ -212,6 +196,7 @@ HidParser_GetCollectionUsagePage(
 ULONG
 HidParser_GetReportLength(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType)
 {
     PHID_PARSER_CONTEXT ParserContext;
@@ -236,7 +221,7 @@ HidParser_GetReportLength(
     //
     // get first report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -289,6 +274,7 @@ HidParser_IsReportIDUsed(
 ULONG
 HidParser_GetReportItemCountFromReportType(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType)
 {
     PHID_PARSER_CONTEXT ParserContext;
@@ -312,7 +298,7 @@ HidParser_GetReportItemCountFromReportType(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -331,6 +317,7 @@ HidParser_GetReportItemCountFromReportType(
 ULONG
 HidParser_GetReportItemTypeCountFromReportType(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType,
     IN ULONG bData)
 {
@@ -357,7 +344,7 @@ HidParser_GetReportItemTypeCountFromReportType(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -398,7 +385,8 @@ HidParser_GetReportItemTypeCountFromReportType(
 
 ULONG
 HidParser_GetContextSize(
-    IN PHID_PARSER Parser)
+    IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex)
 {
     //
     // FIXME the context must contain all parsed info
@@ -540,6 +528,7 @@ HidParser_GetTotalCollectionCount(
 ULONG
 HidParser_GetMaxUsageListLengthWithReportAndPage(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType,
     IN USAGE  UsagePage  OPTIONAL)
 {
@@ -567,7 +556,7 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -600,6 +589,7 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
 HIDPARSER_STATUS
 HidParser_GetSpecificValueCapsWithReport(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType,
     IN USHORT UsagePage,
     IN USHORT Usage,
@@ -631,7 +621,7 @@ HidParser_GetSpecificValueCapsWithReport(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -705,6 +695,7 @@ HidParser_GetSpecificValueCapsWithReport(
 HIDPARSER_STATUS
 HidParser_GetUsagesWithReport(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG  ReportType,
     IN USAGE  UsagePage,
     OUT USAGE  *UsageList,
@@ -739,7 +730,7 @@ HidParser_GetUsagesWithReport(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -852,6 +843,7 @@ HidParser_GetUsagesWithReport(
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN ULONG ReportType,
     IN USAGE UsagePage,
     IN USAGE  Usage,
@@ -884,7 +876,7 @@ HidParser_GetScaledUsageValueWithReport(
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, ReportType);
+    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
     if (!Report)
     {
         //
@@ -1042,6 +1034,7 @@ HidParser_DispatchKey(
 HIDPARSER_STATUS
 HidParser_TranslateUsage(
     IN PHID_PARSER Parser,
+    IN ULONG CollectionIndex,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
@@ -1072,4 +1065,16 @@ HidParser_TranslateUsage(
     // done
     //
     return HIDPARSER_STATUS_SUCCESS;
+}
+
+ULONG
+HidParser_GetCollectionNumberFromParserContext(
+    IN PHID_PARSER Parser)
+{
+    PHID_PARSER_CONTEXT Context = (PHID_PARSER_CONTEXT)Parser->ParserContext;
+
+    //
+    // get parser context
+    //
+    return Context->CollectionIndex;
 }

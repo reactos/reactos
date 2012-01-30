@@ -136,26 +136,6 @@ HidParser_ResetParser(
     //
     ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
 
-
-    //
-    // delete all reports
-    //
-    for(Index = 0; Index < ParserContext->ReportCount; Index++)
-    {
-        //
-        // delete report
-        //
-        HidParser_DeleteReport(Parser, ParserContext->Reports[Index]);
-    }
-
-    if (ParserContext->ReportCount && ParserContext->Reports)
-    {
-        //
-        // free report array
-        //
-       Parser->Free(ParserContext->Reports);
-    }
-
     if (ParserContext->RootCollection)
     {
         //
@@ -167,8 +147,6 @@ HidParser_ResetParser(
     //
     // reinit parser
     //
-    ParserContext->ReportCount = 0;
-    ParserContext->Reports = NULL;
     ParserContext->RootCollection = NULL;
     ParserContext->UseReportIDs = FALSE;
 
@@ -237,31 +215,38 @@ HidParser_AddCollection(
 }
 
 HIDPARSER_STATUS
-HidParser_FindReport(
-    IN PHID_PARSER Parser,
+HidParser_FindReportInCollection(
+    IN PHID_COLLECTION Collection,
     IN UCHAR ReportType,
     IN UCHAR ReportID,
     OUT PHID_REPORT *OutReport)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
+    HIDPARSER_STATUS Status;
 
     //
-    // get parser context
+    // search in local list
     //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-    ASSERT(ParserContext);
-
-    for(Index = 0; Index < ParserContext->ReportCount; Index++)
+    for(Index = 0; Index < Collection->ReportCount; Index++)
     {
-        if (ParserContext->Reports[Index]->Type == ReportType && ParserContext->Reports[Index]->ReportID == ReportID)
+        if (Collection->Reports[Index]->Type == ReportType && Collection->Reports[Index]->ReportID == ReportID)
         {
             //
             // found report
             //
-            *OutReport = ParserContext->Reports[Index];
+            *OutReport = Collection->Reports[Index];
             return HIDPARSER_STATUS_SUCCESS;
         }
+    }
+
+    //
+    // search in sub collections
+    //
+    for(Index = 0; Index < Collection->NodeCount; Index++)
+    {
+        Status = HidParser_FindReportInCollection(Collection->Nodes[Index], ReportType, ReportID, OutReport);
+        if (Status == HIDPARSER_STATUS_SUCCESS)
+            return Status;
     }
 
     //
@@ -269,6 +254,28 @@ HidParser_FindReport(
     //
     *OutReport = NULL;
     return HIDPARSER_STATUS_REPORT_NOT_FOUND;
+}
+
+
+HIDPARSER_STATUS
+HidParser_FindReport(
+    IN PHID_PARSER Parser,
+    IN UCHAR ReportType,
+    IN UCHAR ReportID,
+    OUT PHID_REPORT *OutReport)
+{
+    PHID_PARSER_CONTEXT ParserContext;
+
+    //
+    // get parser context
+    //
+    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
+    ASSERT(ParserContext);
+
+    //
+    // search in current top level collection
+    //
+    return HidParser_FindReportInCollection(ParserContext->RootCollection->Nodes[ParserContext->RootCollection->NodeCount-1], ReportType, ReportID, OutReport);
 }
 
 HIDPARSER_STATUS
@@ -306,8 +313,9 @@ HidParser_AllocateReport(
 }
 
 HIDPARSER_STATUS
-HidParser_AddReport(
+HidParser_AddReportToCollection(
     IN PHID_PARSER Parser,
+    IN PHID_COLLECTION CurrentCollection,
     IN PHID_REPORT NewReport)
 {
     PHID_REPORT * NewReportArray;
@@ -322,7 +330,7 @@ HidParser_AddReport(
     //
     // allocate new report array
     //
-    NewReportArray = (PHID_REPORT*)Parser->Alloc(sizeof(PHID_REPORT) * (ParserContext->ReportCount + 1));
+    NewReportArray = (PHID_REPORT*)Parser->Alloc(sizeof(PHID_REPORT) * (CurrentCollection->ReportCount + 1));
     if (!NewReportArray)
     {
         //
@@ -331,25 +339,25 @@ HidParser_AddReport(
         return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (ParserContext->ReportCount)
+    if (CurrentCollection->ReportCount)
     {
         //
         // copy old array contents
         //
-        Parser->Copy(NewReportArray, ParserContext->Reports, sizeof(PHID_REPORT) * ParserContext->ReportCount);
+        Parser->Copy(NewReportArray, CurrentCollection->Reports, sizeof(PHID_REPORT) * CurrentCollection->ReportCount);
 
         //
         // free old array
         //
-        Parser->Free(ParserContext->Reports);
+        Parser->Free(CurrentCollection->Reports);
     }
 
     //
     // store result
     //
-    NewReportArray[ParserContext->ReportCount] = NewReport;
-    ParserContext->Reports = NewReportArray;
-    ParserContext->ReportCount++;
+    NewReportArray[CurrentCollection->ReportCount] = NewReport;
+    CurrentCollection->Reports = NewReportArray;
+    CurrentCollection->ReportCount++;
 
     //
     // completed successfully
@@ -360,6 +368,7 @@ HidParser_AddReport(
 HIDPARSER_STATUS
 HidParser_GetReport(
     IN PHID_PARSER Parser,
+    IN PHID_COLLECTION Collection,
     IN UCHAR ReportType,
     IN UCHAR ReportID,
     IN UCHAR CreateIfNotExists,
@@ -394,7 +403,7 @@ HidParser_GetReport(
     //
     // add report
     //
-    Status = HidParser_AddReport(Parser, *OutReport);
+    Status = HidParser_AddReportToCollection(Parser, Collection, *OutReport);
     if (Status != HIDPARSER_STATUS_SUCCESS)
     {
         //
@@ -925,7 +934,7 @@ HidParser_ParseReportDescriptor(
             }
 
         }
-
+        Parser->Debug("Tag %x Type %x Size %x Offset %lu Length %lu\n", CurrentItem->Tag, CurrentItem->Type, CurrentItem->Size,  ((ULONG_PTR)CurrentItem - (ULONG_PTR)ReportDescriptor), ReportLength);
         //
         // handle items
         //
@@ -1019,7 +1028,7 @@ HidParser_ParseReportDescriptor(
                             break;
 
                         default:
-                            Parser->Debug("[HIDPARSE] Unknown ReportType %x\n", CurrentItem->Tag);
+                            Parser->Debug("[HIDPARSE] Unknown ReportType Tag %x Type %x Size %x CurrentItemSize %x\n", CurrentItem->Tag, CurrentItem->Type, CurrentItem->Size, CurrentItemSize);
                             ASSERT(FALSE);
                             break;
                     }
@@ -1030,7 +1039,7 @@ HidParser_ParseReportDescriptor(
                     //
                     // get report
                     //
-                    Status = HidParser_GetReport(Parser, ReportType, ParserContext->GlobalItemState.ReportId, TRUE, &Report);
+                    Status = HidParser_GetReport(Parser, CurrentCollection, ReportType, ParserContext->GlobalItemState.ReportId, TRUE, &Report);
                     ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
 
                     // fill in a sensible default if the index isn't set
@@ -1246,7 +1255,7 @@ HidParser_ParseReportDescriptor(
                         break;
 
                     case ITEM_TAG_LOCAL_USAGE_MAXIMUM:
-                        Parser->Debug("[HIDPARSE] ITEM_TAG_LOCAL_USAGE_MAXIMUM Data %x\n", Data);
+                        Parser->Debug("[HIDPARSE] ITEM_TAG_LOCAL_USAGE_MAXIMUM Data %x ItemSize %x %x\n", Data, CurrentItemSize, CurrentItem->Size);
                         ParserContext->LocalItemState.UsageMaximum.u.Extended = Data;
                         ParserContext->LocalItemState.UsageMaximum.IsExtended
                             = CurrentItemSize == sizeof(ULONG);
@@ -1344,4 +1353,3 @@ HidParser_ParseReportDescriptor(
     //
     return HIDPARSER_STATUS_SUCCESS;
 }
-
