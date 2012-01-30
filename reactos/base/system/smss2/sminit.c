@@ -30,7 +30,7 @@ LIST_ENTRY SmpExcludeKnownDllsList, SmpSubSystemList, SmpSubSystemsToLoad;
 LIST_ENTRY SmpSubSystemsToDefer, SmpExecuteList, NativeProcessList;
 
 ULONG SmBaseTag;
-HANDLE SmpDebugPort;
+HANDLE SmpDebugPort, SmpDosDevicesObjectDirectory;
 PVOID SmpHeap;
 PWCHAR SmpDefaultEnvironment, SmpDefaultLibPathBuffer;
 UNICODE_STRING SmpKnownDllPath, SmpDefaultLibPath;
@@ -42,8 +42,8 @@ PVOID SmpInitLastCall;
 
 SECURITY_DESCRIPTOR SmpPrimarySDBody, SmpLiberalSDBody, SmpKnownDllsSDBody;
 SECURITY_DESCRIPTOR SmpApiPortSDBody;
-PSECURITY_DESCRIPTOR SmpPrimarySecurityDescriptor, SmpLiberalSecurityDescriptor;
-PSECURITY_DESCRIPTOR SmpKnownDllsSecurityDescriptor, SmpApiPortSecurityDescriptor;
+PISECURITY_DESCRIPTOR SmpPrimarySecurityDescriptor, SmpLiberalSecurityDescriptor;
+PISECURITY_DESCRIPTOR SmpKnownDllsSecurityDescriptor, SmpApiPortSecurityDescriptor;
 
 ULONG SmpAllowProtectedRenames, SmpProtectionMode = 1;
 BOOLEAN MiniNTBoot;
@@ -353,7 +353,6 @@ SmpConfigureMemoryMgmt(IN PWSTR ValueName,
                        IN PVOID EntryContext)
 {
     /* Save this is into a list */
-    DPRINT1("PageFile or Execute Entry: %S-%S\n", ValueName, ValueData);
     return SmpSaveRegistryValue(EntryContext, ValueData, NULL, TRUE);
 }
 
@@ -433,7 +432,6 @@ SmpConfigureDosDevices(IN PWSTR ValueName,
                        IN PVOID EntryContext)
 {
     /* Save into linked list */
-    DPRINT1("DOS Device: %S-%S\n", ValueName, ValueData);
     return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
 }
 
@@ -480,7 +478,6 @@ SmpConfigureKnownDlls(IN PWSTR ValueName,
     if (_wcsicmp(ValueName, L"DllDirectory"))
     {
         /* Add to the linked list -- this is a file */
-        DPRINT1("KnownDll: %S-%S\n", ValueName, ValueData);
         return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
     }
 
@@ -1101,14 +1098,400 @@ NTSTATUS
 NTAPI
 SmpInitializeDosDevices(VOID)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PSMP_REGISTRY_VALUE RegEntry;
+    SECURITY_DESCRIPTOR_CONTROL OldFlag = 0;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DestinationString;
+    HANDLE DirHandle;
+    PLIST_ENTRY NextEntry, Head;
+
+    /* Open the GLOBAL?? directory */
+    RtlInitUnicodeString(&DestinationString, L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtOpenDirectoryObject(&SmpDosDevicesObjectDirectory,
+                                   DIRECTORY_ALL_ACCESS,
+                                   &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Unable to open %wZ directory - Status == %lx\n",
+                &DestinationString, Status);
+        return Status;
+    }
+
+    /* Loop the DOS devices */
+    Head = &SmpDosDevicesList;
+    while (!IsListEmpty(Head))
+    {
+        /* Get the entry and remove it */
+        NextEntry = RemoveHeadList(Head);
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+
+        /* Initialize the attributes, and see which descriptor is being used */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &RegEntry->Name,
+                                   OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
+                                   SmpDosDevicesObjectDirectory,
+                                   SmpPrimarySecurityDescriptor);
+        if (SmpPrimarySecurityDescriptor)
+        {
+            /* Save the old flag and set it while we create this link */
+            OldFlag = SmpPrimarySecurityDescriptor->Control;
+            SmpPrimarySecurityDescriptor->Control |= SE_DACL_DEFAULTED;
+        }
+
+        /* Create the symbolic link */
+        DPRINT1("Creating symlink for %wZ to %wZ\n", &RegEntry->Name, &RegEntry->Value);
+        Status = NtCreateSymbolicLinkObject(&DirHandle,
+                                            SYMBOLIC_LINK_ALL_ACCESS,
+                                            &ObjectAttributes,
+                                            &RegEntry->Value);
+        if (Status == STATUS_OBJECT_NAME_EXISTS)
+        {
+            /* Make it temporary and get rid of the handle */
+            NtMakeTemporaryObject(DirHandle);
+            NtClose(DirHandle);
+
+            /* Treat this as success, and see if we got a name back */
+            Status = STATUS_SUCCESS;
+            if (RegEntry->Value.Length)
+            {
+                /* Create it now with this name */
+                ObjectAttributes.Attributes &= ~OBJ_OPENIF;
+                Status = NtCreateSymbolicLinkObject(&DirHandle,
+                                                    SYMBOLIC_LINK_ALL_ACCESS,
+                                                    &ObjectAttributes,
+                                                    &RegEntry->Value);
+            }
+        }
+
+        /* If we were using a security descriptor, restore the non-defaulted flag */
+        if (ObjectAttributes.SecurityDescriptor)
+        {
+            SmpPrimarySecurityDescriptor->Control = OldFlag;
+        }
+
+        /* Print a failure if we failed to create the symbolic link */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SMSS: Unable to create %wZ => %wZ symbolic link object - Status == 0x%lx\n",
+                    &RegEntry->Name,
+                    &RegEntry->Value,
+                    Status);
+            break;
+        }
+
+        /* Close the handle */
+        NtClose(DirHandle);
+
+        /* Free this entry */
+        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+    }
+
+    /* Return the status */
+    return Status;
+}
+
+VOID
+NTAPI
+SmpProcessModuleImports(IN PVOID Unused,
+                        IN PCHAR ImportName)
+{
+    ULONG Length = 0, Chars;
+    WCHAR Buffer[MAX_PATH];
+    PWCHAR DllName, DllValue;
+    ANSI_STRING ImportString;
+    UNICODE_STRING ImportUnicodeString;
+    NTSTATUS Status;
+
+    /* Skip NTDLL since it's already always mapped */
+    if (!_stricmp(ImportName, "ntdll.dll")) return;
+
+    /* Initialize our strings */
+    RtlInitAnsiString(&ImportString, ImportName);
+    RtlInitEmptyUnicodeString(&ImportUnicodeString, Buffer, sizeof(Buffer));
+    Status = RtlAnsiStringToUnicodeString(&ImportUnicodeString, &ImportString, FALSE);
+    if (!NT_SUCCESS(Status)) return;
+
+    /* Loop in case we find a forwarder */
+    ImportUnicodeString.MaximumLength = ImportUnicodeString.Length + sizeof(UNICODE_NULL);
+    while (Length < ImportUnicodeString.Length)
+    {
+        if (ImportUnicodeString.Buffer[Length / sizeof(WCHAR)] == L'.') break;
+        Length += sizeof(WCHAR);
+    }
+
+    /* Break up the values as needed */
+    DllValue = ImportUnicodeString.Buffer;
+    DllName = &ImportUnicodeString.Buffer[ImportUnicodeString.MaximumLength / sizeof(WCHAR)];
+    Chars = Length >> 1;
+    wcsncpy(DllName, ImportUnicodeString.Buffer, Chars);
+    DllName[Chars] = 0;
+
+    /* Add the DLL to the list */
+    SmpSaveRegistryValue(&SmpKnownDllsList, DllName, DllValue, TRUE);
+}
+
+NTSTATUS
+NTAPI
+SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
+                               IN PUNICODE_STRING Path)
+{
+    HANDLE DirFileHandle, DirHandle, SectionHandle, FileHandle, LinkHandle;
+    UNICODE_STRING NtPath, DestinationString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status, Status1;
+    PLIST_ENTRY NextEntry;
+    PSMP_REGISTRY_VALUE RegEntry;
+    ULONG_PTR ErrorParameters[3];
+    UNICODE_STRING ErrorResponse;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ULONG OldFlag = 0;
+    USHORT ImageCharacteristics;
+
+    /* Initialize to NULL */
+    DirFileHandle = NULL;
+    DirHandle = NULL;
+    NtPath.Buffer = NULL;
+
+    /* Create the \KnownDLLs directory */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               Directory,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
+                               NULL,
+                               SmpKnownDllsSecurityDescriptor);
+    Status = NtCreateDirectoryObject(&DirHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Handle failure */
+        DPRINT1("SMSS: Unable to create %wZ directory - Status == %lx\n",
+                Directory, Status);
+        return Status;
+    }
+
+    /* Convert the path to native format */
+    if (!RtlDosPathNameToNtPathName_U(Path->Buffer, &NtPath, NULL, NULL))
+    {
+        /* Fail if this didn't work */
+        DPRINT1("SMSS: Unable to to convert %wZ to an Nt path\n", Path);
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Quickie;
+    }
+
+    /* Open the path that was specified, which should be a directory */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&DirFileHandle,
+                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if we couldn't open it */
+        DPRINT1("SMSS: Unable to open a handle to the KnownDll directory (%wZ)"
+                "- Status == %lx\n",
+                Path,
+                Status);
+        FileHandle = NULL;
+        goto Quickie;
+    }
+
+    /* Temporarily hack the SD to use a default DACL for this symbolic link */
+    if (SmpPrimarySecurityDescriptor)
+    {
+        OldFlag = SmpPrimarySecurityDescriptor->Control;
+        SmpPrimarySecurityDescriptor->Control |= SE_DACL_DEFAULTED;
+    }
+
+    /* Create a symbolic link to the directory in the object manager */
+    RtlInitUnicodeString(&DestinationString, L"KnownDllPath");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_PERMANENT,
+                               DirHandle,
+                               SmpPrimarySecurityDescriptor);
+    Status = NtCreateSymbolicLinkObject(&LinkHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        Path);
+
+    /* Undo the hack */
+    if (SmpPrimarySecurityDescriptor) SmpPrimarySecurityDescriptor->Control = OldFlag;
+
+    /* Check if the symlink was created */
+    if (!NT_SUCCESS(Status))
+    {
+        /* It wasn't, so bail out since the OS needs it to exist */
+        DPRINT1("SMSS: Unable to create %wZ symbolic link - Status == %lx\n",
+                &DestinationString, Status);
+        LinkHandle = NULL;
+        goto Quickie;
+    }
+
+    /* We created it permanent, we can go ahead and close the handle now */
+    Status1 = NtClose(LinkHandle);
+    ASSERT(NT_SUCCESS(Status1));
+
+    /* Now loop the known DLLs */
+    NextEntry = SmpKnownDllsList.Flink;
+    while (NextEntry != &SmpKnownDllsList)
+    {
+        /* Get the entry and skip it if it's in the exluded list */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        DPRINT1("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
+        if ((SmpFindRegistryValue(&SmpExcludeKnownDllsList,
+                                  RegEntry->Name.Buffer)) ||
+            (SmpFindRegistryValue(&SmpExcludeKnownDllsList,
+                                  RegEntry->Value.Buffer)))
+        {
+            continue;
+        }
+
+        /* Open the actual file */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &RegEntry->Value,
+                                   OBJ_CASE_INSENSITIVE,
+                                   DirFileHandle,
+                                   NULL);
+        Status = NtOpenFile(&FileHandle,
+                            SYNCHRONIZE | FILE_EXECUTE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_DELETE,
+                            FILE_NON_DIRECTORY_FILE |
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status)) break;
+
+        /* Checksum it */
+        Status = LdrVerifyImageMatchesChecksum((HANDLE)((ULONG_PTR)FileHandle | 1),
+                                               SmpProcessModuleImports,
+                                               RegEntry,
+                                               &ImageCharacteristics);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Checksum failed, so don't even try going further -- kill SMSS */
+            RtlInitUnicodeString(&ErrorResponse,
+                                 L"Verification of a KnownDLL failed.");
+            ErrorParameters[0] = (ULONG)&ErrorResponse;
+            ErrorParameters[1] = Status;
+            ErrorParameters[2] = (ULONG)&RegEntry->Value;
+            SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
+        }
+        else if (!(ImageCharacteristics & IMAGE_FILE_DLL))
+        {
+            /* An invalid known DLL entry will also kill SMSS */
+            RtlInitUnicodeString(&ErrorResponse,
+                                 L"Non-DLL file included in KnownDLL list.");
+            ErrorParameters[0] = (ULONG)&ErrorResponse;
+            ErrorParameters[1] = STATUS_INVALID_IMPORT_OF_NON_DLL;
+            ErrorParameters[2] = (ULONG)&RegEntry->Value;
+            SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
+        }
+
+        /* Temporarily hack the SD to use a default DACL for this section */
+        if (SmpLiberalSecurityDescriptor)
+        {
+            OldFlag = SmpLiberalSecurityDescriptor->Control;
+            SmpLiberalSecurityDescriptor->Control |= SE_DACL_DEFAULTED;
+        }
+
+        /* Create the section for this known DLL */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &RegEntry->Value,
+                                   OBJ_PERMANENT,
+                                   DirHandle,
+                                   SmpLiberalSecurityDescriptor)
+        Status = NtCreateSection(&SectionHandle,
+                                 SECTION_ALL_ACCESS,
+                                 &ObjectAttributes,
+                                 0,
+                                 PAGE_EXECUTE,
+                                 SEC_IMAGE,
+                                 FileHandle);
+
+        /* Undo the hack */
+        if (SmpLiberalSecurityDescriptor) SmpLiberalSecurityDescriptor->Control = OldFlag;
+
+        /* Check if we created the section okay */
+        if (NT_SUCCESS(Status))
+        {
+            /* We can close it now, since it's marked permanent */
+            Status1 = NtClose(SectionHandle);
+            ASSERT(NT_SUCCESS(Status1));
+        }
+        else
+        {
+            /* If we couldn't make it "known", that's fine and keep going */
+            DPRINT1("SMSS: CreateSection for KnownDll %wZ failed - Status == %lx\n",
+                    &RegEntry->Value, Status);
+        }
+
+        /* Close the file since we can move on to the next one */
+        Status1 = NtClose(FileHandle);
+        ASSERT(NT_SUCCESS(Status1));
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+Quickie:
+    /* Close both handles and free the NT path buffer */
+    if (DirHandle)
+    {
+        Status1 = NtClose(DirHandle);
+        ASSERT(NT_SUCCESS(Status1));
+    }
+    if (DirFileHandle)
+    {
+        Status1 = NtClose(DirFileHandle);
+        ASSERT(NT_SUCCESS(Status1));
+    }
+    if (NtPath.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, NtPath.Buffer);
+    return Status;
 }
 
 NTSTATUS
 NTAPI
 SmpInitializeKnownDlls(VOID)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PSMP_REGISTRY_VALUE RegEntry;
+    UNICODE_STRING DestinationString;
+    PLIST_ENTRY Head, NextEntry;
+
+    /* Call the internal function */
+    RtlInitUnicodeString(&DestinationString, L"\\KnownDlls");
+    Status = SmpInitializeKnownDllsInternal(&DestinationString, &SmpKnownDllPath);
+
+    /* Wipe out the list regardless of success */
+    Head = &SmpKnownDllsList;
+    while (!IsListEmpty(Head))
+    {
+        /* Remove this entry */
+        NextEntry = RemoveHeadList(Head);
+
+        /* Free it */
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+    }
+
+    /* All done */
+    return Status;
 }
 
 NTSTATUS

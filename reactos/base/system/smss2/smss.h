@@ -48,6 +48,14 @@ extern BOOLEAN RegPosixSingleInstance;
 
 NTSTATUS
 NTAPI
+SmpTerminate(
+    IN PULONG_PTR Parameters,
+    IN ULONG ParameterMask,
+    IN ULONG ParameterCount
+);
+
+NTSTATUS
+NTAPI
 SmpCreateSecurityDescriptors(
     IN BOOLEAN InitialCall
 );
