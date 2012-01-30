@@ -26,8 +26,7 @@ ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
                                          sizeof(WCHAR);
 ULONG NtInitialUserProcessBufferType = REG_SZ;
 
-UNICODE_STRING NtSystemRoot;
-
+UNICODE_STRING SmpSystemRoot;
 ULONG AttachedSessionId = -1;
 BOOLEAN SmpDebug;
 
@@ -127,7 +126,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Copy the DOS path */
     RtlCopyUnicodeString(&ProcessParams->CurrentDirectory.DosPath,
-                         &NtSystemRoot);
+                         &SmpSystemRoot);
 
     /* Make a buffer for the DLL Path */
     p = (PWSTR)((PCHAR)ProcessParams->CurrentDirectory.DosPath.Buffer +
@@ -195,7 +194,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
     /* Create the system drive string */
-    SystemDriveString = NtSystemRoot;
+    SystemDriveString = SmpSystemRoot;
     SystemDriveString.Length = 2 * sizeof(WCHAR);
 
     /* Append it to the environment */
@@ -205,7 +204,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Append the system root to the environment */
     RtlAppendUnicodeToString(&Environment, L"SystemRoot=");
-    RtlAppendUnicodeStringToString(&Environment, &NtSystemRoot);
+    RtlAppendUnicodeStringToString(&Environment, &SmpSystemRoot);
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
     /* Create SMSS process */
@@ -271,8 +270,8 @@ LaunchOldSmss(OUT PHANDLE Handles)
     /* No handles at first */
     Handles[0] = Handles[1] = NULL;
 
-    /* Setup system root */
-    RtlInitUnicodeString(&NtSystemRoot, SharedUserData->NtSystemRoot);
+    /* Initialize the system root */
+    RtlInitUnicodeString(&SmpSystemRoot, SharedUserData->NtSystemRoot);
 
     /* Allocate the initialization buffer */
     InitBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(INIT_BUFFER));

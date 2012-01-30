@@ -30,6 +30,11 @@
 
 /* DEFINES ********************************************************************/
 
+#define SMP_DEBUG_FLAG      0x01
+#define SMP_ASYNC_FLAG      0x02
+#define SMP_AUTOCHK_FLAG    0x04
+#define SMP_INVALID_PATH    0x10
+
 /* EXTERNALS ******************************************************************/
 
 extern RTL_CRITICAL_SECTION SmpKnownSubSysLock;
@@ -43,6 +48,12 @@ extern HANDLE SmpWindowsSubSysProcess;
 extern HANDLE SmpSessionsObjectDirectory;
 extern HANDLE SmpWindowsSubSysProcessId;
 extern BOOLEAN RegPosixSingleInstance;
+extern UNICODE_STRING SmpDebugKeyword, SmpASyncKeyword, SmpAutoChkKeyword;
+extern PVOID SmpHeap;
+extern ULONG SmBaseTag;
+extern UNICODE_STRING SmpSystemRoot;
+extern PWCHAR SmpDefaultEnvironment;
+extern UNICODE_STRING SmpDefaultLibPath;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -121,3 +132,12 @@ SmpCreatePagingFiles(
     VOID
 );
 
+NTSTATUS
+NTAPI
+SmpParseCommandLine(
+    IN PUNICODE_STRING CommandLine,
+    OUT PULONG Flags,
+    OUT PUNICODE_STRING FileName,
+    OUT PUNICODE_STRING Directory,
+    OUT PUNICODE_STRING Arguments
+);

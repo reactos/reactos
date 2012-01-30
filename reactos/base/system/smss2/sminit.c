@@ -23,15 +23,14 @@ typedef struct _SMP_REGISTRY_VALUE
 } SMP_REGISTRY_VALUE, *PSMP_REGISTRY_VALUE;
 
 UNICODE_STRING SmpSubsystemName, PosixName, Os2Name;
-UNICODE_STRING SmpDebugKeyword, SmpASyncKeyword, SmpAutoChkKeyword;
 LIST_ENTRY SmpBootExecuteList, SmpSetupExecuteList, SmpPagingFileList;
 LIST_ENTRY SmpDosDevicesList, SmpFileRenameList, SmpKnownDllsList;
 LIST_ENTRY SmpExcludeKnownDllsList, SmpSubSystemList, SmpSubSystemsToLoad;
 LIST_ENTRY SmpSubSystemsToDefer, SmpExecuteList, NativeProcessList;
 
+PVOID SmpHeap;
 ULONG SmBaseTag;
 HANDLE SmpDebugPort, SmpDosDevicesObjectDirectory;
-PVOID SmpHeap;
 PWCHAR SmpDefaultEnvironment, SmpDefaultLibPathBuffer;
 UNICODE_STRING SmpKnownDllPath, SmpDefaultLibPath;
 ULONG SmpCalledConfigEnv;
@@ -720,6 +719,16 @@ SmpRegistryConfigurationTable[] =
         RTL_QUERY_REGISTRY_SUBKEY,
         L"KnownDlls",
         &SmpKnownDllsList,
+        REG_NONE,
+        NULL,
+        0
+    },
+
+    {
+        SmpConfigureEnvironment,
+        RTL_QUERY_REGISTRY_SUBKEY,
+        L"Environment",
+        NULL,
         REG_NONE,
         NULL,
         0
