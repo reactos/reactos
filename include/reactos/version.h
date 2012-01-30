@@ -24,7 +24,7 @@
 #define COPYRIGHT_YEAR              "2012"
 
 /* KERNEL_VERSION_BUILD_TYPE is L"SVN", L"RC1", L"RC2" or L"" (for the release) */
-#define KERNEL_VERSION_BUILD_TYPE   L"SVN"
+#define KERNEL_VERSION_BUILD_TYPE   L""
 
 
 #endif
