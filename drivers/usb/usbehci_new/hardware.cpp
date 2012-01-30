@@ -1090,7 +1090,7 @@ EhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
-	DPRINT1("CStatus %x\n", CStatus);
+	DPRINT("CStatus %x\n", CStatus);
 
     //
     // check for completion of async schedule
