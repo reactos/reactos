@@ -5,7 +5,8 @@ list(APPEND SOURCE
     compses.c
     connect.c
     execpgm.c
-    lookupss.c)
+    lookupss.c
+    smclient.c)
     
 add_library(smlib ${SOURCE})
 add_pch(smlib precomp.h)
