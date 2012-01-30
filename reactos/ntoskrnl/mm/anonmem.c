@@ -874,9 +874,15 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         return(Status);
     }
 
+#if 0
     MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
         (ULONG_PTR)MemoryArea->StartingAddress;
-
+#else
+    ULONG_PTR EndingAddress;
+    EndingAddress = ((ULONG_PTR)MemoryArea->StartingAddress + RegionSize - 1) | (PAGE_SIZE - 1);
+    MemoryAreaLength = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1; 
+#endif
+    
     MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
         MemoryAreaLength, Type, Protect);
 
