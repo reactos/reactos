@@ -168,10 +168,11 @@ USBSTOR_HandleInternalDeviceControl(
             break;
         }
 
+        case SRB_FUNCTION_SHUTDOWN:
         case SRB_FUNCTION_FLUSH:
         case SRB_FUNCTION_FLUSH_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE\n");
+            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
 
             //
             // flush all requests
