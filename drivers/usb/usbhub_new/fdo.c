@@ -1446,6 +1446,11 @@ RootHubInitCallbackFunction(
 
     DPRINT1("RootHubInitCallbackFunction Sending the initial SCE Request %x\n", DeviceObject);
 
+    //
+    // Send the first SCE Request
+    //
+    QueryStatusChangeEndpoint(DeviceObject);
+
     for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
     {
         //
@@ -1468,11 +1473,6 @@ RootHubInitCallbackFunction(
             }
         }
     }
-
-    //
-    // Send the first SCE Request
-    //
-    QueryStatusChangeEndpoint(DeviceObject);
 }
 
 NTSTATUS
