@@ -389,9 +389,6 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
                         DPRINT1("Installed NULL service for critical device '%wZ'\n", &ChildIdNameU);
                     }
 
-                    /* We need to enumerate children */
-                    DeviceNode->Flags |= DNF_NEED_TO_ENUM;
-
                     ExFreePool(OriginalIdBuffer);
                     ExFreePool(PartialInfo);
                     ExFreePool(BasicInfo);
@@ -2174,6 +2171,9 @@ IopHandleDeviceRemoval(
     ULONG i;
     BOOLEAN Found;
 
+    if (DeviceNode == IopRootDeviceNode)
+        return;
+
     while (Child != NULL)
     {
         NextChild = Child->Sibling;
@@ -2420,7 +2420,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       UNICODE_STRING RegKey;
 
       /* Install the service for this if it's in the CDDB */
-      //IopInstallCriticalDevice(DeviceNode);
+      IopInstallCriticalDevice(DeviceNode);
 
       RegKey.Length = 0;
       RegKey.MaximumLength = sizeof(RegKeyBuffer);
@@ -2553,25 +2553,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
-   {
-       if (DeviceNode->Flags & DNF_NEED_TO_ENUM)
-       {
-           Status = IopInitializeDevice(DeviceNode, NULL);
-           if (NT_SUCCESS(Status))
-           {
-               /* HACK */
-               DeviceNode->Flags &= ~DNF_STARTED;
-               Status = IopStartDevice(DeviceNode);
-               if (!NT_SUCCESS(Status))
-               {
-                   DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
-                           &DeviceNode->InstancePath, Status);
-               }
-           }
-           DeviceNode->Flags &= ~DNF_NEED_TO_ENUM;
-       }
        return STATUS_SUCCESS;
-   }
 
    if (DeviceNode->ServiceName.Buffer == NULL)
    {

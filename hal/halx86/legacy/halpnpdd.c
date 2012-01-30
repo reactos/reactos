@@ -139,7 +139,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
 #endif
 
     /* Invalidate device relations since we added a new device */
-    IoInvalidateDeviceRelations(TargetDevice, BusRelations);
+    IoSynchronousInvalidateDeviceRelations(TargetDevice, BusRelations);
 
     /* Return status */
     DPRINT("Device added %lx\n", Status);
