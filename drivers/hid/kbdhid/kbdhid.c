@@ -575,7 +575,7 @@ KbdHid_StartDevice(
     MmBuildMdlForNonPagedPool(DeviceExtension->ReportMDL);
 
     /* get max number of buttons */
-    Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_BUTTON, PreparsedData);
+    Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_KEYBOARD, PreparsedData);
     DPRINT1("[KBDHID] Buttons %lu\n", Buttons);
     ASSERT(Buttons > 0);
 

@@ -188,7 +188,6 @@ USBCCGP_PdoHandleQueryId(
 {
     PIO_STACK_LOCATION IoStack;
     PUNICODE_STRING DeviceString = NULL;
-    UNICODE_STRING TempString;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     NTSTATUS Status;
     LPWSTR Buffer;
@@ -855,12 +854,10 @@ PDO_HandleInternalDeviceControl(
                 return Status;
             }
         }
-        else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE)
+        else
         {
-            DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE\n");
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
-            DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE Status %x\n", Status);
             return Status;
         }
     }
