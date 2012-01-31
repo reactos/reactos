@@ -24,6 +24,18 @@ BOOLEAN RegPosixSingleInstance;
 
 NTSTATUS
 NTAPI
+SmpLoadSubSystem(IN PUNICODE_STRING FileName,
+                 IN PUNICODE_STRING Directory,
+                 IN PUNICODE_STRING CommandLine,
+                 IN ULONG MuSessionId,
+                 OUT PHANDLE ProcessId)
+{
+    DPRINT1("Should start subsystem %wZ for Session: %lx\n", FileName, MuSessionId);
+    return STATUS_SUCCESS; 
+}
+
+NTSTATUS
+NTAPI
 SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                               OUT PHANDLE ProcessId,
                               IN PUNICODE_STRING InitialCommand)

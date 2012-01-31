@@ -14,6 +14,11 @@
 
 /* GLOBALS ********************************************************************/
 
+//
+// Taken from an ASSERT
+//
+#define VALUE_BUFFER_SIZE (sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 512)
+
 typedef struct _SMP_PRIVILEGE_STATE
 {
     HANDLE TokenHandle;
@@ -399,12 +404,147 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
         else
         {
             /* There is a directory, and a filename -- separate those two */
-            FilePart -= sizeof(UNICODE_NULL);
-            *FilePart = UNICODE_NULL;
+            *--FilePart = UNICODE_NULL;
             RtlCreateUnicodeString(Directory, PathBuffer);
         }
     }
 
     /* We are done -- move on to the second pass to get the arguments */
     return SmpParseToken(&CmdLineCopy, TRUE, Arguments);
+}
+
+BOOLEAN
+NTAPI
+SmpQueryRegistrySosOption(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyName, ValueName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle;
+    WCHAR ValueBuffer[VALUE_BUFFER_SIZE];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
+    ULONG Length;
+
+    /* Open the key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't open control key: 0x%x\n", Status);
+        return FALSE;
+    }
+
+    /* Query the value */
+    RtlInitUnicodeString(&ValueName, L"SystemStartOptions");
+    Status = NtQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             sizeof(ValueBuffer),
+                             &Length);
+    ASSERT(Length < VALUE_BUFFER_SIZE);
+    NtClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't query value key: 0x%x\n", Status);
+        return FALSE;
+    }
+
+    /* Check if it's set to SOS or sos */
+    if (!(wcsstr((PWCHAR)PartialInfo->Data, L"SOS")) ||
+         (wcsstr((PWCHAR)PartialInfo->Data, L"sos")))
+    {
+        /* It's not set, return FALSE */
+        return FALSE;
+    }
+
+    /* It's set, return TRUE */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+SmpSaveAndClearBootStatusData(OUT PBOOLEAN BootOkay,
+                              OUT PBOOLEAN ShutdownOkay)
+{
+    NTSTATUS Status;
+    BOOLEAN Value = TRUE;
+    PVOID BootStatusDataHandle;
+
+    /* Assume failure */
+    *BootOkay = FALSE;
+    *ShutdownOkay = FALSE;
+
+    /* Lock the BSD and fail if we couldn't */
+    Status = RtlLockBootStatusData(&BootStatusDataHandle);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Read the old settings */
+    RtlGetSetBootStatusData(BootStatusDataHandle,
+                            TRUE,
+                            RtlBsdItemBootGood,
+                            BootOkay,
+                            sizeof(BOOLEAN),
+                            NULL);
+    RtlGetSetBootStatusData(BootStatusDataHandle,
+                            TRUE,
+                            RtlBsdItemBootShutdown,
+                            ShutdownOkay,
+                            sizeof(BOOLEAN),
+                            NULL);
+
+    /* Set new ones indicating we got at least this far */
+    RtlGetSetBootStatusData(BootStatusDataHandle,
+                            FALSE,
+                            RtlBsdItemBootGood,
+                            &Value,
+                            sizeof(Value),
+                            NULL);
+    RtlGetSetBootStatusData(BootStatusDataHandle,
+                            FALSE,
+                            RtlBsdItemBootShutdown,
+                            &Value,
+                            sizeof(Value),
+                            NULL);
+
+    /* Unlock the BSD and return */
+    RtlUnlockBootStatusData(BootStatusDataHandle);
+    return TRUE;
+}
+
+VOID
+NTAPI
+SmpRestoreBootStatusData(IN BOOLEAN BootOkay,
+                         IN BOOLEAN ShutdownOkay)
+{
+    NTSTATUS Status;
+    PVOID BootState;
+
+    /* Lock the BSD */
+    Status = RtlLockBootStatusData(&BootState);
+    if (NT_SUCCESS(Status))
+    {
+        /* Write the bootokay and bootshudown values */
+        RtlGetSetBootStatusData(BootState,
+                                FALSE,
+                                RtlBsdItemBootGood,
+                                &BootOkay,
+                                sizeof(BootOkay),
+                                NULL);
+        RtlGetSetBootStatusData(BootState,
+                                FALSE,
+                                RtlBsdItemBootShutdown,
+                                &ShutdownOkay,
+                                sizeof(ShutdownOkay),
+                                NULL);
+
+        /* Unlock the BSD and return */
+        RtlUnlockBootStatusData(BootState);
+    }
 }

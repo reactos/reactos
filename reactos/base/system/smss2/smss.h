@@ -33,7 +33,9 @@
 #define SMP_DEBUG_FLAG      0x01
 #define SMP_ASYNC_FLAG      0x02
 #define SMP_AUTOCHK_FLAG    0x04
+#define SMP_SUBSYSTEM_FLAG  0x08
 #define SMP_INVALID_PATH    0x10
+#define SMP_DEFERRED_FLAG   0x20
 
 /* EXTERNALS ******************************************************************/
 
@@ -102,7 +104,7 @@ NTAPI
 SmpExecuteCommand(
     IN PUNICODE_STRING CommandLine,
     IN ULONG MuSessionId,
-    OUT PULONG ProcessId,
+    OUT PHANDLE ProcessId,
     IN ULONG Flags
 );
 
@@ -141,3 +143,42 @@ SmpParseCommandLine(
     OUT PUNICODE_STRING Directory,
     OUT PUNICODE_STRING Arguments
 );
+
+NTSTATUS
+NTAPI
+SmpLoadSubSystem(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING Directory,
+    IN PUNICODE_STRING CommandLine,
+    IN ULONG MuSessionId,
+    OUT PHANDLE ProcessId
+);
+
+NTSTATUS
+NTAPI
+SmpSetProcessMuSessionId(
+    IN HANDLE ProcessHandle,
+    IN ULONG SessionId
+);
+
+BOOLEAN
+NTAPI
+SmpQueryRegistrySosOption(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+SmpSaveAndClearBootStatusData(
+    OUT PBOOLEAN BootOkay,
+    OUT PBOOLEAN ShutdownOkay
+);
+
+VOID
+NTAPI
+SmpRestoreBootStatusData(
+    IN BOOLEAN BootOkay,
+    IN BOOLEAN ShutdownOkay
+);
+
+

@@ -22,3 +22,25 @@ BOOLEAN SmpDbgSsLoaded;
 HANDLE SmpSessionsObjectDirectory;
 
 /* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+SmpSetProcessMuSessionId(IN HANDLE ProcessHandle,
+                         IN ULONG SessionId)
+{
+    NTSTATUS Status;
+
+    /* Tell the kernel about our session ID */
+    Status = NtSetInformationProcess(ProcessHandle,
+                                     ProcessSessionInformation,
+                                     &SessionId,
+                                     sizeof(SessionId));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: SetProcessMuSessionId, Process=%x, Status=%x\n",
+                ProcessHandle, Status);
+    }
+
+    /* Return */
+    return Status;
+}

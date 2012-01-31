@@ -28,19 +28,271 @@ ULONG NtInitialUserProcessBufferType = REG_SZ;
 
 UNICODE_STRING SmpSystemRoot;
 ULONG AttachedSessionId = -1;
-BOOLEAN SmpDebug;
+BOOLEAN SmpDebug, SmpEnableDots;
 
 /* FUNCTIONS ******************************************************************/
+
+/* GCC's incompetence strikes again */
+VOID
+sprintf_nt(IN PCHAR Buffer,
+           IN PCHAR Format,
+           IN ...)
+{
+    va_list ap;
+    va_start(ap, Format);
+    sprintf(Buffer, Format, ap);
+    va_end(ap);
+}
+
+NTSTATUS
+NTAPI
+SmpExecuteImage(IN PUNICODE_STRING FileName,
+                IN PUNICODE_STRING Directory,
+                IN PUNICODE_STRING CommandLine,
+                IN ULONG MuSessionId,
+                IN ULONG Flags,
+                IN PRTL_USER_PROCESS_INFORMATION ProcessInformation)
+{
+    PRTL_USER_PROCESS_INFORMATION ProcessInfo;
+    NTSTATUS Status;
+    RTL_USER_PROCESS_INFORMATION LocalProcessInfo;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+
+    /* Use the input process information if we have it, otherwise use local */
+    ProcessInfo = ProcessInformation;
+    if (!ProcessInfo) ProcessInfo = &LocalProcessInfo;
+
+    /* Create parameters for the target process */
+    Status = RtlCreateProcessParameters(&ProcessParameters,
+                                        FileName,
+                                        SmpDefaultLibPath.Length ?
+                                        &SmpDefaultLibPath : NULL,
+                                        Directory,
+                                        CommandLine,
+                                        SmpDefaultEnvironment,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* This is a pretty bad failure. ASSERT on checked builds and exit */
+        ASSERTMSG(NT_SUCCESS(Status), "RtlCreateProcessParameters");
+        DPRINT1("SMSS: RtlCreateProcessParameters failed for %wZ - Status == %lx\n",
+                FileName, Status);
+        return Status;
+    }
+
+    /* Set the size field as required */
+    ProcessInfo->Size = sizeof(RTL_USER_PROCESS_INFORMATION);
+
+    /* Check if the debug flag was requested */
+    if (Flags & SMP_DEBUG_FLAG)
+    {
+        /* Write it in the process parameters */
+        ProcessParameters->DebugFlags = 1;
+    }
+    else
+    {
+        /* Otherwise inherit the flag that was passed to SMSS itself */
+        ProcessParameters->DebugFlags = SmpDebug;
+    }
+
+    /* Subsystems get the first 1MB of memory reserved for DOS/IVT purposes */
+    if (Flags & SMP_SUBSYSTEM_FLAG)
+    {
+        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+    }
+
+    /* And always force NX for anything that SMSS launches */
+    ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_NX;
+
+    /* Now create the process */
+    Status = RtlCreateUserProcess(FileName,
+                                  OBJ_CASE_INSENSITIVE,
+                                  ProcessParameters,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  FALSE,
+                                  NULL,
+                                  NULL,
+                                  ProcessInfo);
+    RtlDestroyProcessParameters(ProcessParameters);
+    if (!NT_SUCCESS(Status))
+    {
+        /* If we couldn't create it, fail back to the caller */
+        DPRINT1("SMSS: Failed load of %wZ - Status  == %lx\n",
+                FileName, Status);
+        return Status;
+    }
+
+    /* Associate a session with this process */
+    Status = SmpSetProcessMuSessionId(ProcessInfo->ProcessHandle, MuSessionId);
+
+    /* If the application is deferred (suspended), there's nothing to do */
+    if (Flags & SMP_DEFERRED_FLAG) return Status;
+
+    /* Otherwise, get ready to start it, but make sure it's a native app */
+    if (ProcessInfo->ImageInformation.SubSystemType == IMAGE_SUBSYSTEM_NATIVE)
+    {
+        /* Resume it */
+        NtResumeThread(ProcessInfo->ThreadHandle, NULL);
+        if (!(Flags & SMP_ASYNC_FLAG))
+        {
+            /* Block on it unless Async was requested */
+            NtWaitForSingleObject(ProcessInfo->ThreadHandle, FALSE, NULL);
+        }
+
+        /* It's up and running now, close our handles */
+        NtClose(ProcessInfo->ThreadHandle);
+        NtClose(ProcessInfo->ProcessHandle);
+    }
+    else
+    {
+        /* This image is invalid, so kill it, close our handles, and fail */
+        Status = STATUS_INVALID_IMAGE_FORMAT;
+        NtTerminateProcess(ProcessInfo->ProcessHandle, Status);
+        NtWaitForSingleObject(ProcessInfo->ThreadHandle, 0, 0);
+        NtClose(ProcessInfo->ThreadHandle);
+        NtClose(ProcessInfo->ProcessHandle);
+        DPRINT1("SMSS: Not an NT image - %wZ\n", FileName);
+    }
+
+    /* Return the outcome of the process create */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
+                 IN PUNICODE_STRING Directory,
+                 IN PUNICODE_STRING Arguments,
+                 IN ULONG Flags)
+{
+    ANSI_STRING DestinationString;
+    CHAR SourceString[256];
+    UNICODE_STRING Destination;
+    WCHAR Buffer[1024];
+    BOOLEAN BootState, BootOkay, ShutdownOkay;
+
+    /* Check if autochk should show dots (if the user booted with /SOS) */
+    if (SmpQueryRegistrySosOption()) SmpEnableDots = FALSE;
+
+    /* Make sure autochk was actually found */
+    if (Flags & SMP_INVALID_PATH)
+    {
+        /* It wasn't, so create an error message to print on the screen */
+        sprintf_nt(SourceString,
+                   "%wZ program not found - skipping AUTOCHECK\n",
+                   FileName);
+        RtlInitAnsiString(&DestinationString, SourceString);
+        if (RtlAnsiStringToUnicodeString(&Destination,
+                                         &DestinationString,
+                                         TRUE))
+        {
+            /* And show it */
+            NtDisplayString(&Destination);
+            RtlFreeUnicodeString(&Destination);
+        }
+    }
+    else
+    {
+        /* Autochk is there, so record the BSD state */
+        BootState = SmpSaveAndClearBootStatusData(&BootOkay, &ShutdownOkay);
+
+        /* Build the path to autochk and place its arguments */
+        RtlInitEmptyUnicodeString(&Destination, Buffer, sizeof(Buffer));
+        RtlAppendUnicodeStringToString(&Destination, FileName);
+        RtlAppendUnicodeToString(&Destination, L" ");
+        RtlAppendUnicodeStringToString(&Destination, Arguments);
+
+        /* Execute it */
+        SmpExecuteImage(FileName,
+                        Directory,
+                        &Destination,
+                        0,
+                        Flags & ~SMP_AUTOCHK_FLAG,
+                        NULL);
+
+        /* Restore the BSD state */
+        if (BootState) SmpRestoreBootStatusData(BootOkay, ShutdownOkay);
+    }
+
+    /* We're all done! */
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI
 SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
                   IN ULONG MuSessionId,
-                  OUT PULONG ProcessId,
+                  OUT PHANDLE ProcessId,
                   IN ULONG Flags)
 {
-    DPRINT1("Should run: %wZ for session %d\n", CommandLine, MuSessionId);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    UNICODE_STRING Arguments, Directory, FileName;
+
+    /* There's no longer a debugging subsystem */
+    if (Flags & SMP_DEBUG_FLAG) return STATUS_SUCCESS;
+
+    /* Parse the command line to see what execution flags are requested */
+    Status = SmpParseCommandLine(CommandLine,
+                                 &Flags,
+                                 &FileName,
+                                 &Directory,
+                                 &Arguments);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if we couldn't do that */
+        DPRINT1("SMSS: SmpParseCommand( %wZ ) failed - Status == %lx\n",
+                CommandLine, Status);
+        return Status;
+    }
+
+    /* Check if autochk is requested */
+    if (Flags & SMP_AUTOCHK_FLAG)
+    {
+        /* Run it */
+        Status = SmpInvokeAutoChk(&FileName, &Directory, &Arguments, Flags);
+    }
+    else if (Flags & SMP_SUBSYSTEM_FLAG)
+    {
+        Status = SmpLoadSubSystem(&FileName,
+                                  &Directory,
+                                  CommandLine,
+                                  MuSessionId,
+                                  ProcessId);
+    }
+    else if (Flags & SMP_INVALID_PATH)
+    {
+        /* An invalid image was specified, fail */
+        DPRINT1("SMSS: Image file (%wZ) not found\n", &FileName);
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+    else
+    {
+        /* An actual image name was present -- execute it */
+        Status = SmpExecuteImage(&FileName,
+                                 &Directory,
+                                 CommandLine,
+                                 MuSessionId,
+                                 Flags,
+                                 NULL);
+    }
+
+    /* Free all the token parameters */
+    if (FileName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+    if (Directory.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Directory.Buffer);
+    if (Arguments.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Arguments.Buffer);
+
+    /* Return to the caller */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Command '%wZ' failed - Status == %x\n",
+                CommandLine, Status);
+    }
+    return Status;
 }
 
 NTSTATUS
