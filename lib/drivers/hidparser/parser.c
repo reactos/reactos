@@ -535,20 +535,21 @@ HidParser_InitReportItem(
             // get usage minimum from local state
             //
             UsageValue = LocalItemState->UsageMinimum;
-            ASSERT(LocalItemState->UsageMinimumSet);
-            ASSERT(LocalItemState->UsageMaximumSet);
 
             //
             // append item index
             //
             UsageValue.u.Extended += ReportItemIndex;
 
-            if (UsageValue.u.Extended > LocalItemState->UsageMaximum.u.Extended)
+            if (LocalItemState->UsageMaximumSet)
             {
-                //
-                // maximum reached
-                //
-                UsageValue.u.Extended = LocalItemState->UsageMaximum.u.Extended;
+                if (UsageValue.u.Extended > LocalItemState->UsageMaximum.u.Extended)
+                {
+                    //
+                    // maximum reached
+                    //
+                    UsageValue.u.Extended = LocalItemState->UsageMaximum.u.Extended;
+                }
             }
         }
 

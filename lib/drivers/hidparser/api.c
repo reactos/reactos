@@ -345,6 +345,7 @@ HidParser_GetUsagesWithReport(
     PHID_REPORT_ITEM ReportItem;
     UCHAR Activated;
     ULONG Data;
+    PUSAGE_AND_PAGE UsageAndPage = NULL;
 
     //
     // get report
@@ -366,6 +367,17 @@ HidParser_GetUsagesWithReport(
         return HIDPARSER_STATUS_INVALID_REPORT_LENGTH;
     }
 
+    //
+    // cast to usage and page
+    //
+    if (UsagePage == HID_USAGE_PAGE_UNDEFINED)
+    {
+        //
+        // the caller requested any set usages
+        //
+        UsageAndPage = (PUSAGE_AND_PAGE)UsageList;
+    }
+
     for(Index = 0; Index < Report->ItemCount; Index++)
     {
         //
@@ -384,17 +396,20 @@ HidParser_GetUsagesWithReport(
         //
         CurrentUsagePage = (ReportItem->UsageMinimum >> 16);
 
-        //
-        // does usage match
-        //
-        if (UsagePage != CurrentUsagePage)
-            continue;
+        if (UsagePage != HID_USAGE_PAGE_UNDEFINED)
+        {
+            //
+            // does usage match
+            //
+            if (UsagePage != CurrentUsagePage)
+                continue;
+        }
 
         //
         // check if the specified usage is activated
         //
         ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
-        ASSERT(ReportItem->BitCount < 8);
+        ASSERT(ReportItem->BitCount <= 8);
 
         //
         // one extra shift for skipping the prepended report id
@@ -428,10 +443,21 @@ HidParser_GetUsagesWithReport(
             continue;
         }
 
-        //
-        // store item
-        //
-        UsageList[ItemCount] = (ReportItem->UsageMinimum & 0xFFFF);
+        if (UsagePage != HID_USAGE_PAGE_UNDEFINED)
+        {
+            //
+            // store item
+            //
+            UsageList[ItemCount] = (ReportItem->UsageMinimum & 0xFFFF);
+        }
+        else
+        {
+            //
+            // store usage and page
+            //
+            UsageAndPage[ItemCount].Usage = (ReportItem->UsageMinimum & 0xFFFF);
+            UsageAndPage[ItemCount].UsagePage = CurrentUsagePage;
+        }
         ItemCount++;
     }
 
@@ -443,10 +469,21 @@ HidParser_GetUsagesWithReport(
         return HIDPARSER_STATUS_BUFFER_TOO_SMALL;
     }
 
-    //
-    // success, clear rest of array
-    //
-    Parser->Zero(&UsageList[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE));
+    if (UsagePage == HID_USAGE_PAGE_UNDEFINED)
+    {
+        //
+        // success, clear rest of array
+        //
+        Parser->Zero(&UsageAndPage[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE_AND_PAGE));
+    }
+    else
+    {
+        //
+        // success, clear rest of array
+        //
+        Parser->Zero(&UsageList[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE));
+    }
+
 
     //
     // store result size
