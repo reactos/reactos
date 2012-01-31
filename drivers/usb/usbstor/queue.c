@@ -176,12 +176,18 @@ USBSTOR_QueueAddIrp(
         // add irp to queue
         //
         InsertTailList(&FDODeviceExtension->IrpListHead, &Irp->Tail.Overlay.ListEntry);
-   }
+    }
 
-   //
-   // increment pending count
-   //
-   FDODeviceExtension->IrpPendingCount++;
+    //
+    // increment pending count
+    //
+    FDODeviceExtension->IrpPendingCount++;
+
+
+    //
+    // clear the no requests pending event
+    //
+    KeClearEvent(&FDODeviceExtension->NoPendingRequests);
 
     //
     // check if queue is freezed
@@ -296,16 +302,10 @@ USBSTOR_RemoveIrp(
 }
 
 VOID
-USBSTOR_QueueFlushIrps(
+USBSTOR_QueueWaitForPendingRequests(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    KIRQL OldLevel;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    PLIST_ENTRY Entry;
-    PIRP Irp;
-    PIO_STACK_LOCATION IoStack;
-    PSCSI_REQUEST_BLOCK Request;
-    KIRQL OldIrql;
 
     //
     // get FDO device extension
@@ -313,88 +313,13 @@ USBSTOR_QueueFlushIrps(
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
-    // sanity check
+    // perform the wait
     //
-    ASSERT(FDODeviceExtension->Common.IsFDO);
-
-    //
-    // acquire lock
-    //
-    KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
-
-    //
-    // complete all irps with status cancelled
-    // 
-    while(!IsListEmpty(&FDODeviceExtension->IrpListHead))
-    {
-        //
-        // remove irp
-        //
-        Entry = RemoveHeadList(&FDODeviceExtension->IrpListHead);
-
-        //
-        // get start of irp structure
-        //
-        Irp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
-
-        //
-        // remove the cancellation routine
-        //
-        IoAcquireCancelSpinLock(&OldIrql);
-        (void)IoSetCancelRoutine(Irp, NULL);
-        IoReleaseCancelSpinLock(OldIrql);
-
-        //
-        // get current stack location
-        //
-        IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-        //
-        // get request block
-        //
-        Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
-
-        //
-        // sanity check
-        //
-        ASSERT(Request);
-
-        //
-        // set srb status to flushed
-        //
-        Request->SrbStatus = SRB_STATUS_REQUEST_FLUSHED;
-
-        //
-        // set unsuccessful status
-        //
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-
-        //
-        // release lock
-        //
-        KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
-
-        //
-        // complete request
-        //
-        USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        
-        //
-        // start next one
-        //
-        USBSTOR_QueueNextRequest(DeviceObject);
-
-        //
-        // acquire lock
-        //
-        KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
-    }
-
-    //
-    // release lock
-    //
-    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+    KeWaitForSingleObject(&FDODeviceExtension->NoPendingRequests,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
 }
 
 VOID
@@ -436,6 +361,15 @@ USBSTOR_QueueTerminateRequest(
         // indicate processing is completed
         //
         FDODeviceExtension->ActiveSrb = NULL;
+    }
+
+    //
+    // Set the event if nothing else is pending
+    //
+    if (FDODeviceExtension->IrpPendingCount == 0 &&
+        FDODeviceExtension->ActiveSrb == NULL)
+    {
+        KeSetEvent(&FDODeviceExtension->NoPendingRequests, IO_NO_INCREMENT, FALSE);
     }
 
     //

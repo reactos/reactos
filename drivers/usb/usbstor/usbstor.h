@@ -67,6 +67,7 @@ typedef struct
     BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
     PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
+    KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -405,7 +406,7 @@ USBSTOR_StartIo(
     PIRP Irp);
 
 VOID
-USBSTOR_QueueFlushIrps(
+USBSTOR_QueueWaitForPendingRequests(
     IN PDEVICE_OBJECT DeviceObject);
 
 VOID
