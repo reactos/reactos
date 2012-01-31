@@ -2534,15 +2534,11 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    }
 
    /*
-    * Make sure this device node is a direct child of the parent device node
-    * that is given as an argument
+    * We don't want to check for a direct child because
+    * this function is called during boot to reinitialize
+    * devices with drivers that couldn't load yet due to
+    * stage 0 limitations (ie can't load from disk yet).
     */
-
-   if (DeviceNode->Parent != ParentDeviceNode)
-   {
-      DPRINT("Skipping 2+ level child\n");
-      return STATUS_SUCCESS;
-   }
 
    if (!(DeviceNode->Flags & DNF_PROCESSED))
    {
