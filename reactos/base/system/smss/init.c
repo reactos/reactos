@@ -33,7 +33,7 @@ struct {
 	{FALSE, SmUpdateEnvironment,          "update environment variables"},
 	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
 	{TRUE,  SmCreatePagingFiles,          "create paging files"},
-	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
+//	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
 	{TRUE,  SmInitializeClientManagement, "initialize client management"},
 	{TRUE,  SmLoadSubsystems,             "load subsystems"}
 };

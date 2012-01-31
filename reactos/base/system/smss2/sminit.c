@@ -1507,6 +1507,322 @@ NTSTATUS
 NTAPI
 SmpCreateDynamicEnvironmentVariables(VOID)
 {
+    NTSTATUS Status;
+    SYSTEM_BASIC_INFORMATION BasicInfo;
+    SYSTEM_PROCESSOR_INFORMATION ProcessorInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ValueName, DestinationString;
+    HANDLE KeyHandle, KeyHandle2;
+    ULONG ResultLength;
+    PWCHAR ArchName;
+    WCHAR ValueBuffer[512], ValueBuffer2[512];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo2 = (PVOID)ValueBuffer2;
+
+    /* Get system basic information -- we'll need the CPU count */
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &BasicInfo,
+                                      sizeof(BasicInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out on failure */
+        DPRINT1("SMSS: Unable to query system basic information - %x\n", Status);
+        return Status;
+    }
+
+    /* Get the processor information, we'll query a bunch of revision info */
+    Status = NtQuerySystemInformation(SystemProcessorInformation,
+                                      &ProcessorInfo,
+                                      sizeof(ProcessorInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out on failure */
+        DPRINT1("SMSS: Unable to query system processor information - %x\n", Status);
+        return Status;
+    }
+
+    /* We'll be writing all these environment variables over here */
+    RtlInitUnicodeString(&DestinationString,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                         "Control\\Session Manager\\Environment");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, GENERIC_WRITE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out on failure */
+        DPRINT1("SMSS: Unable to open %wZ - %x\n", &DestinationString, Status);
+        return Status;
+    }
+
+    /* First let's write the OS variable */
+    RtlInitUnicodeString(&ValueName, L"OS");
+    DPRINT1("Setting %wZ to %S\n", &ValueName, L"Windows_NT");
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           L"Windows_NT",
+                           wcslen(L"Windows_NT") * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* Next, let's write the CPU architecture variable */
+    RtlInitUnicodeString(&ValueName, L"PROCESSOR_ARCHITECTURE");
+    switch (ProcessorInfo.ProcessorArchitecture)
+    {
+        /* Pick the correct string that matches the architecture */
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            ArchName = L"x86";
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            ArchName = L"AMD64";
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            ArchName = L"IA64";
+            break;
+
+        default:
+            ArchName = L"Unknown";
+            break;
+    }
+
+    /* Set it */
+    DPRINT1("Setting %wZ to %S\n", &ValueName, ArchName);
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           ArchName,
+                           wcslen(ArchName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* And now let's write the processor level */
+    RtlInitUnicodeString(&ValueName, L"PROCESSOR_LEVEL");
+    swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorLevel);
+    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           ValueBuffer,
+                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* Now open the hardware CPU key */
+    RtlInitUnicodeString(&DestinationString,
+                         L"\\Registry\\Machine\\Hardware\\Description\\System\\"
+                         "CentralProcessor\\0");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle2, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Unable to open %wZ - %x\n", &DestinationString, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* So that we can read the identifier out of it... */
+    RtlInitUnicodeString(&ValueName, L"Identifier");
+    Status = NtQueryValueKey(KeyHandle2,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             sizeof(ValueBuffer),
+                             &ResultLength);
+    if (!NT_SUCCESS(Status))
+    {
+        NtClose(KeyHandle2);
+        NtClose(KeyHandle);
+        DPRINT1("SMSS: Unable to read %wZ\\%wZ - %x\n",
+                &DestinationString, &ValueName, Status);
+        return Status;
+    }
+
+    /* As well as the vendor... */
+    RtlInitUnicodeString(&ValueName, L"VendorIdentifier");
+    Status = NtQueryValueKey(KeyHandle2,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             PartialInfo2,
+                             sizeof(ValueBuffer2),
+                             &ResultLength);
+    NtClose(KeyHandle2);
+    if (NT_SUCCESS(Status))
+    {
+        /* To combine it into a single string */
+        swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
+                 L", %ws",
+                 PartialInfo2->Data);
+    }
+
+    /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
+    RtlInitUnicodeString(&ValueName, L"PROCESSOR_IDENTIFIER");
+    DPRINT1("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           PartialInfo->Data,
+                           wcslen((PWCHAR)PartialInfo->Data) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* Now let's get the processor architecture */
+    RtlInitUnicodeString(&ValueName, L"PROCESSOR_REVISION");
+    switch (ProcessorInfo.ProcessorArchitecture)
+    {
+        /* Check if this is an older Intel CPU */
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            if ((ProcessorInfo.ProcessorRevision >> 8) == 0xFF)
+            {
+                /* These guys used a revision + stepping, so get the rev only */
+                swprintf(ValueBuffer, L"%02x", ProcessorInfo.ProcessorRevision & 0xFF);
+                _wcsupr(ValueBuffer);
+                break;
+            }
+
+        /* Modern Intel, as well as 64-bit CPUs use a revision without stepping */
+        case PROCESSOR_ARCHITECTURE_IA64:
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            swprintf(ValueBuffer, L"%04x", ProcessorInfo.ProcessorRevision);
+            break;
+
+        /* And anything else we'll just read the whole revision identifier */
+        default:
+            swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorRevision);
+            break;
+    }
+
+    /* Write the revision to the registry */
+    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           ValueBuffer,
+                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* And finally, write the number of CPUs */
+    RtlInitUnicodeString(&ValueName, L"NUMBER_OF_PROCESSORS");
+    swprintf(ValueBuffer, L"%u", BasicInfo.NumberOfProcessors);
+    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           ValueBuffer,
+                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                &ValueName, Status);
+        NtClose(KeyHandle);
+        return Status;
+    }
+
+    /* Now we need to write the safeboot option key in a different format */
+    RtlInitUnicodeString(&DestinationString,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                         "Control\\Safeboot\\Option");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DestinationString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle2, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* This was indeed a safeboot, so check what kind of safeboot it was */
+        RtlInitUnicodeString(&ValueName, L"OptionValue");
+        Status = NtQueryValueKey(KeyHandle2,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 sizeof(ValueBuffer),
+                                 &ResultLength);
+        NtClose(KeyHandle2);
+        if (NT_SUCCESS(Status))
+        {
+            /* Convert from the integer value to the correct specifier */
+            RtlInitUnicodeString(&ValueName, L"SAFEBOOT_OPTION");
+            switch (*(PULONG)PartialInfo->Data)
+            {
+                case 1:
+                    wcscpy(ValueBuffer, L"MINIMAL");
+                    break;
+                case 2:
+                    wcscpy(ValueBuffer, L"NETWORK");
+                    break;
+                case 3:
+                    wcscpy(ValueBuffer, L"DSREPAIR");
+                    break;
+            }
+
+            /* And write it in the environment! */
+            DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+            Status = NtSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   ValueBuffer,
+                                   wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
+                        &ValueName, Status);
+                NtClose(KeyHandle);
+                return Status;
+            }
+        }
+        else
+        {
+            DPRINT1("SMSS: Failed querying safeboot option = %x\n", Status);
+        }
+    }
+
+    /* We are all done now */
+    NtClose(KeyHandle);
     return STATUS_SUCCESS;
 }
 
@@ -1698,7 +2014,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     SmpCreatePagingFiles();
 
     /* Tell Cm it's now safe to fully enable write access to the registry */
-    // NtInitializeRegistry(FALSE); Later...
+    NtInitializeRegistry(CM_BOOT_FLAG_SMSS);
 
     /* Create all the system-based environment variables for later inheriting */
     Status = SmpCreateDynamicEnvironmentVariables();
