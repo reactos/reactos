@@ -134,6 +134,26 @@ static void Test_NonClientMetrics()
     COMPARE_CACHE(CaptionHeight_chain);
 }
 
+static void Test_MouseSpeed()
+{
+    ULONG ulMouseSpeed, temp;
+    BOOL ret;
+
+    ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &ulMouseSpeed, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    ok(ulMouseSpeed >= 1 && ulMouseSpeed <=20, "Wrong mouse speed (%d)\n", (int)ulMouseSpeed);
+
+    temp = 1;
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)temp, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ok(ret, "SystemParametersInfo failed\n");
+    ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &temp, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    ok(temp == 1, "SPI_GETMOUSESPEED did not get value set by SPI_SETMOUSESPEED (%d instead of 1)\n", (int)temp);
+
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)ulMouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ok(ret, "SystemParametersInfo failed\n");
+}
+
 START_TEST(SystemParametersInfo)
 {
     RegisterSimpleClass(SysParamsTestProc, L"sysparamstest"); 
@@ -144,6 +164,7 @@ START_TEST(SystemParametersInfo)
                          200, 200, 300, 300, NULL, NULL, 0, NULL);
 
     Test_NonClientMetrics();
+    Test_MouseSpeed();
 
     DestroyWindow(hWnd1);
     DestroyWindow(hWnd2);
