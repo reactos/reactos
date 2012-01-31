@@ -31,143 +31,9 @@ static ULONG KeyboardScanCodes[256] =
     150,158,159,128,136,177,178,176,142,152,173,140
 };
 
-
-
-ULONG
-HidParser_NumberOfTopCollections(
-    IN PHID_PARSER Parser)
-{
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-    ASSERT(ParserContext->RootCollection);
-    ASSERT(ParserContext->RootCollection->NodeCount);
-
-    //
-    // number of top collections
-    //
-    return ParserContext->RootCollection->NodeCount;
-}
-
-PHID_COLLECTION
-HidParser_GetCollection(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionNumber)
-{
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-    ASSERT(ParserContext->RootCollection);
-    ASSERT(ParserContext->RootCollection->NodeCount);
-
-    //
-    // is collection index out of bounds
-    //
-    if (CollectionNumber < ParserContext->RootCollection->NodeCount)
-    {
-        //
-        // valid collection
-        //
-        return ParserContext->RootCollection->Nodes[CollectionNumber];
-    }
-
-    //
-    // no such collection
-    //
-    Parser->Debug("HIDPARSE] No such collection %lu\n", CollectionNumber);
-    return NULL;
-}
-
-PHID_REPORT
-HidParser_GetReportInCollection(
-    PHID_COLLECTION Collection,
-    IN UCHAR ReportType)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-
-    //
-    // search in local array
-    //
-    for(Index = 0; Index < Collection->ReportCount; Index++)
-    {
-        if (Collection->Reports[Index]->Type == ReportType)
-        {
-            //
-            // found report
-            //
-            return Collection->Reports[Index];
-        }
-    }
-
-    //
-    // search in local array
-    //
-    for(Index = 0; Index < Collection->NodeCount; Index++)
-    {
-        Report = HidParser_GetReportInCollection(Collection->Nodes[Index], ReportType);
-        if (Report)
-        {
-            //
-            // found report
-            //
-            return Report;
-        }
-    }
-
-    //
-    // not found
-    //
-    return NULL;
-}
-
-PHID_REPORT
-HidParser_GetReportByType(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN UCHAR ReportType)
-{
-    PHID_COLLECTION Collection;
-
-    //
-    // find collection
-    //
-    Collection = HidParser_GetCollection(Parser, CollectionIndex);
-    if (!Collection)
-    {
-        //
-        // no such collection
-        //
-        ASSERT(FALSE);
-        return NULL;
-    }
-
-    //
-    // search report
-    //
-    return HidParser_GetReportInCollection(Collection, ReportType);
-}
-
 HIDPARSER_STATUS
 HidParser_GetCollectionUsagePage(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
+    IN PVOID CollectionContext,
     OUT PUSHORT Usage,
     OUT PUSHORT UsagePage)
 {
@@ -176,7 +42,7 @@ HidParser_GetCollectionUsagePage(
     //
     // find collection
     //
-    Collection = HidParser_GetCollection(Parser, CollectionIndex);
+    Collection = HidParser_GetCollectionFromContext(CollectionContext);
     if (!Collection)
     {
         //
@@ -195,33 +61,16 @@ HidParser_GetCollectionUsagePage(
 
 ULONG
 HidParser_GetReportLength(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType)
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     PHID_REPORT Report;
     ULONG ReportLength;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get first report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -249,56 +98,17 @@ HidParser_GetReportLength(
     return ReportLength;
 }
 
-UCHAR
-HidParser_IsReportIDUsed(
-    IN PHID_PARSER Parser)
-{
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // return flag
-    //
-    return ParserContext->UseReportIDs;
-}
-
 ULONG
 HidParser_GetReportItemCountFromReportType(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType)
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     PHID_REPORT Report;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
 
     //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -316,35 +126,18 @@ HidParser_GetReportItemCountFromReportType(
 
 ULONG
 HidParser_GetReportItemTypeCountFromReportType(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
     IN ULONG bData)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
     ULONG ItemCount = 0;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -361,14 +154,14 @@ HidParser_GetReportItemTypeCountFromReportType(
         //
         // check item type
         //
-        if (Report->Items[Index]->HasData && bData == TRUE)
+        if (Report->Items[Index].HasData && bData == TRUE)
         {
             //
             // found data item
             //
             ItemCount++;
         }
-        else if (Report->Items[Index]->HasData == FALSE && bData == FALSE)
+        else if (Report->Items[Index].HasData == FALSE && bData == FALSE)
         {
             //
             // found value item
@@ -383,85 +176,6 @@ HidParser_GetReportItemTypeCountFromReportType(
     return ItemCount;
 }
 
-ULONG
-HidParser_GetContextSize(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex)
-{
-    //
-    // FIXME the context must contain all parsed info
-    //
-    return sizeof(HID_PARSER_CONTEXT);
-}
-
-VOID
-HidParser_FreeContext(
-    IN PHID_PARSER Parser,
-    IN PUCHAR Context,
-    IN ULONG ContextLength)
-{
-    //
-    // FIXME implement freeing of parsed info
-    //
-}
-
-HIDPARSER_STATUS
-HidParser_AllocateParser(
-    IN PHIDPARSER_ALLOC_FUNCTION AllocFunction,
-    IN PHIDPARSER_FREE_FUNCTION FreeFunction,
-    IN PHIDPARSER_ZERO_FUNCTION ZeroFunction,
-    IN PHIDPARSER_COPY_FUNCTION CopyFunction,
-    IN PHIDPARSER_DEBUG_FUNCTION DebugFunction,
-    OUT PHID_PARSER *OutParser)
-{
-    PHID_PARSER Parser;
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // allocate 
-    //
-    Parser = (PHID_PARSER)AllocFunction(sizeof(HID_PARSER));
-    if (!Parser)
-    {
-        //
-        // no memory
-        //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // allocate parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)AllocFunction(sizeof(HID_PARSER_CONTEXT));
-    if (!ParserContext)
-    {
-        //
-        // no memory
-        //
-        FreeFunction(Parser);
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-
-    //
-    // init parser
-    //
-    Parser->Alloc = AllocFunction;
-    Parser->Free = FreeFunction;
-    Parser->Zero = ZeroFunction;
-    Parser->Copy = CopyFunction;
-    Parser->Debug = DebugFunction;
-    Parser->ParserContext = ParserContext;
-
-    //
-    // store result
-    //
-    *OutParser = Parser;
-    //
-    // success
-    //
-    return HIDPARSER_STATUS_SUCCESS;
-}
 
 VOID
 HidParser_InitParser(
@@ -470,7 +184,6 @@ HidParser_InitParser(
     IN PHIDPARSER_ZERO_FUNCTION ZeroFunction,
     IN PHIDPARSER_COPY_FUNCTION CopyFunction,
     IN PHIDPARSER_DEBUG_FUNCTION DebugFunction,
-    IN PVOID ParserContext,
     OUT PHID_PARSER Parser)
 {
     Parser->Alloc = AllocFunction;
@@ -478,85 +191,23 @@ HidParser_InitParser(
     Parser->Zero = ZeroFunction;
     Parser->Copy = CopyFunction;
     Parser->Debug = DebugFunction;
-    Parser->ParserContext = ParserContext;
-}
-
-ULONG
-HidParser_GetCollectionCount(
-    IN PHID_COLLECTION Collection)
-{
-    ULONG Index;
-    ULONG Count = Collection->NodeCount;
-
-    for(Index = 0; Index < Collection->NodeCount; Index++)
-    {
-        //
-        // count collection for sub nodes
-        //
-        Count += HidParser_GetCollectionCount(Collection->Nodes[Index]);
-    }
-
-    //
-    // done
-    //
-    return Count;
-}
-
-ULONG
-HidParser_GetTotalCollectionCount(
-    IN PHID_PARSER Parser)
-{
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity check
-    //
-    ASSERT(ParserContext);
-    ASSERT(ParserContext->RootCollection);
-
-    //
-    // count collections
-    //
-    return HidParser_GetCollectionCount(ParserContext->RootCollection);
 }
 
 ULONG
 HidParser_GetMaxUsageListLengthWithReportAndPage(
-    IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
     IN USAGE  UsagePage  OPTIONAL)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
     ULONG ItemCount = 0;
     USHORT CurrentUsagePage;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -570,8 +221,8 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
         //
         // check usage page
         //
-        CurrentUsagePage = (Report->Items[Index]->UsageMinimum >> 16);
-        if (CurrentUsagePage == UsagePage && Report->Items[Index]->HasData)
+        CurrentUsagePage = (Report->Items[Index].UsageMinimum >> 16);
+        if (CurrentUsagePage == UsagePage && Report->Items[Index].HasData)
         {
             //
             // found item
@@ -589,14 +240,13 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
 HIDPARSER_STATUS
 HidParser_GetSpecificValueCapsWithReport(
     IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
     IN USHORT UsagePage,
     IN USHORT Usage,
     OUT PHIDP_VALUE_CAPS  ValueCaps,
     IN OUT PULONG  ValueCapsLength)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
     ULONG ItemCount = 0;
@@ -604,24 +254,9 @@ HidParser_GetSpecificValueCapsWithReport(
     USHORT CurrentUsage;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -635,8 +270,8 @@ HidParser_GetSpecificValueCapsWithReport(
         //
         // check usage page
         //
-        CurrentUsagePage = (Report->Items[Index]->UsageMinimum >> 16);
-        CurrentUsage = (Report->Items[Index]->UsageMinimum & 0xFFFF);
+        CurrentUsagePage = (Report->Items[Index].UsageMinimum >> 16);
+        CurrentUsage = (Report->Items[Index].UsageMinimum & 0xFFFF);
 
         if ((Usage == CurrentUsage && UsagePage == CurrentUsagePage) || (Usage == 0 && UsagePage == CurrentUsagePage) || (Usage == CurrentUsage && UsagePage == 0) || (Usage == 0 && UsagePage == 0))
         {
@@ -655,10 +290,10 @@ HidParser_GetSpecificValueCapsWithReport(
                 //
                 ValueCaps[ItemCount].UsagePage = CurrentUsagePage;
                 ValueCaps[ItemCount].ReportID = Report->ReportID;
-                ValueCaps[ItemCount].LogicalMin = Report->Items[Index]->Minimum;
-                ValueCaps[ItemCount].LogicalMax = Report->Items[Index]->Maximum;
-                ValueCaps[ItemCount].IsAbsolute = !Report->Items[Index]->Relative;
-                ValueCaps[ItemCount].BitSize = Report->Items[Index]->BitCount;
+                ValueCaps[ItemCount].LogicalMin = Report->Items[Index].Minimum;
+                ValueCaps[ItemCount].LogicalMax = Report->Items[Index].Maximum;
+                ValueCaps[ItemCount].IsAbsolute = !Report->Items[Index].Relative;
+                ValueCaps[ItemCount].BitSize = Report->Items[Index].BitCount;
 
                 //
                 // FIXME: FILLMEIN
@@ -695,15 +330,14 @@ HidParser_GetSpecificValueCapsWithReport(
 HIDPARSER_STATUS
 HidParser_GetUsagesWithReport(
     IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG  ReportType,
+    IN PVOID CollectionContext,
+    IN UCHAR  ReportType,
     IN USAGE  UsagePage,
     OUT USAGE  *UsageList,
     IN OUT PULONG UsageLength,
     IN PCHAR  ReportDescriptor,
     IN ULONG  ReportDescriptorLength)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
     ULONG ItemCount = 0;
@@ -713,24 +347,9 @@ HidParser_GetUsagesWithReport(
     ULONG Data;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -752,7 +371,7 @@ HidParser_GetUsagesWithReport(
         //
         // get report item
         //
-        ReportItem = Report->Items[Index];
+        ReportItem = &Report->Items[Index];
 
         //
         // does it have data
@@ -843,15 +462,14 @@ HidParser_GetUsagesWithReport(
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
     IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
-    IN ULONG ReportType,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
     IN USAGE UsagePage,
     IN USAGE  Usage,
     OUT PLONG UsageValue,
     IN PCHAR ReportDescriptor,
     IN ULONG ReportDescriptorLength)
 {
-    PHID_PARSER_CONTEXT ParserContext;
     ULONG Index;
     PHID_REPORT Report;
     USHORT CurrentUsagePage;
@@ -859,24 +477,9 @@ HidParser_GetScaledUsageValueWithReport(
     ULONG Data;
 
     //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // sanity checks
-    //
-    ASSERT(ParserContext);
-
-    //
-    // FIXME support multiple top collecions
-    //
-    ASSERT(ParserContext->RootCollection->NodeCount == 1);
-
-    //
     // get report
     //
-    Report = HidParser_GetReportByType(Parser, CollectionIndex, ReportType);
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
     if (!Report)
     {
         //
@@ -898,7 +501,7 @@ HidParser_GetScaledUsageValueWithReport(
         //
         // get report item
         //
-        ReportItem = Report->Items[Index];
+        ReportItem = &Report->Items[Index];
 
         //
         // check usage page
@@ -1034,7 +637,6 @@ HidParser_DispatchKey(
 HIDPARSER_STATUS
 HidParser_TranslateUsage(
     IN PHID_PARSER Parser,
-    IN ULONG CollectionIndex,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
@@ -1065,16 +667,4 @@ HidParser_TranslateUsage(
     // done
     //
     return HIDPARSER_STATUS_SUCCESS;
-}
-
-ULONG
-HidParser_GetCollectionNumberFromParserContext(
-    IN PHID_PARSER Parser)
-{
-    PHID_PARSER_CONTEXT Context = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    //
-    // get parser context
-    //
-    return Context->CollectionIndex;
 }

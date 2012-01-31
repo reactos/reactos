@@ -123,40 +123,6 @@ HidParser_AllocateCollection(
     return HIDPARSER_STATUS_SUCCESS;
 }
 
-
-VOID
-HidParser_ResetParser(
-    OUT PHID_PARSER Parser)
-{
-    ULONG Index;
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-
-    if (ParserContext->RootCollection)
-    {
-        //
-        // delete root collection
-        //
-        HidParser_FreeCollection(Parser, ParserContext->RootCollection);
-    }
-
-    //
-    // reinit parser
-    //
-    ParserContext->RootCollection = NULL;
-    ParserContext->UseReportIDs = FALSE;
-
-    //
-    // zero item states
-    //
-    Parser->Zero(&ParserContext->GlobalItemState, sizeof(GLOBAL_ITEM_STATE));
-    Parser->Zero(&ParserContext->LocalItemState, sizeof(LOCAL_ITEM_STATE));
-}
-
 HIDPARSER_STATUS
 HidParser_AddCollection(
     IN PHID_PARSER Parser,
@@ -260,18 +226,11 @@ HidParser_FindReportInCollection(
 HIDPARSER_STATUS
 HidParser_FindReport(
     IN PHID_PARSER Parser,
+    IN PHID_PARSER_CONTEXT ParserContext,
     IN UCHAR ReportType,
     IN UCHAR ReportID,
     OUT PHID_REPORT *OutReport)
 {
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-    ASSERT(ParserContext);
-
     //
     // search in current top level collection
     //
@@ -315,17 +274,11 @@ HidParser_AllocateReport(
 HIDPARSER_STATUS
 HidParser_AddReportToCollection(
     IN PHID_PARSER Parser,
+    IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_COLLECTION CurrentCollection,
     IN PHID_REPORT NewReport)
 {
     PHID_REPORT * NewReportArray;
-    PHID_PARSER_CONTEXT ParserContext;
-
-    //
-    // get parser context
-    //
-    ParserContext = (PHID_PARSER_CONTEXT)Parser->ParserContext;
-    ASSERT(ParserContext);
 
     //
     // allocate new report array
@@ -368,6 +321,7 @@ HidParser_AddReportToCollection(
 HIDPARSER_STATUS
 HidParser_GetReport(
     IN PHID_PARSER Parser,
+    IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_COLLECTION Collection,
     IN UCHAR ReportType,
     IN UCHAR ReportID,
@@ -379,7 +333,7 @@ HidParser_GetReport(
     //
     // try finding existing report
     //
-    Status = HidParser_FindReport(Parser, ReportType, ReportID, OutReport);
+    Status = HidParser_FindReport(Parser, ParserContext, ReportType, ReportID, OutReport);
     if (Status == HIDPARSER_STATUS_SUCCESS || CreateIfNotExists == FALSE)
     {
         //
@@ -403,7 +357,7 @@ HidParser_GetReport(
     //
     // add report
     //
-    Status = HidParser_AddReportToCollection(Parser, Collection, *OutReport);
+    Status = HidParser_AddReportToCollection(Parser, ParserContext, Collection, *OutReport);
     if (Status != HIDPARSER_STATUS_SUCCESS)
     {
         //
@@ -418,85 +372,36 @@ HidParser_GetReport(
     return Status;
 }
 
-
-HIDPARSER_STATUS
-HidParser_ReserveCollectionItems(
-    IN PHID_PARSER Parser,
-    IN PHID_COLLECTION Collection,
-    IN ULONG ReportCount)
-{
-    PHID_REPORT_ITEM * NewReportArray;
-
-    if (Collection->ItemCount + ReportCount <= Collection->ItemCountAllocated)
-    {
-        //
-        // enough space for the next items
-        //
-        return HIDPARSER_STATUS_SUCCESS;
-    }
-
-    //
-    // allocate report array
-    //
-    NewReportArray = (PHID_REPORT_ITEM*)Parser->Alloc(sizeof(PHID_REPORT) * (Collection->ItemCountAllocated + ReportCount));
-    if (!NewReportArray)
-    {
-        //
-        // no memory
-        //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // are there any items
-    //
-    if (Collection->ItemCount)
-    {
-        //
-        // copy old items
-        //
-        Parser->Copy(NewReportArray, Collection->Items, sizeof(PHID_REPORT_ITEM) * Collection->ItemCount);
-
-        //
-        // free old item
-        //
-        Parser->Free(Collection->Items);
-    }
-
-    //
-    // replace array
-    //
-    Collection->Items = NewReportArray;
-    Collection->ItemCountAllocated += ReportCount;
-
-    //
-    // completed sucessfully
-    //
-    return HIDPARSER_STATUS_SUCCESS;
-}
-
-
 HIDPARSER_STATUS
 HidParser_ReserveReportItems(
     IN PHID_PARSER Parser,
     IN PHID_REPORT Report,
-    IN ULONG ReportCount)
+    IN ULONG ReportCount,
+    OUT PHID_REPORT *OutReport)
 {
-    PHID_REPORT_ITEM * NewReportArray;
+    PHID_REPORT NewReport;
+    ULONG OldSize, Size;
 
     if (Report->ItemCount + ReportCount <= Report->ItemAllocated)
     {
         //
-        // enough space for the next items
+        // space is already allocated
         //
+        *OutReport = Report;
         return HIDPARSER_STATUS_SUCCESS;
     }
 
     //
-    // allocate report array
+    //calculate new size
     //
-    NewReportArray = (PHID_REPORT_ITEM*)Parser->Alloc(sizeof(PHID_REPORT_ITEM) * (Report->ItemAllocated + ReportCount));
-    if (!NewReportArray)
+    OldSize = sizeof(HID_REPORT) + (Report->ItemCount) * sizeof(HID_REPORT_ITEM);
+    Size =  ReportCount * sizeof(HID_REPORT_ITEM);
+
+    //
+    // allocate memory
+    //
+    NewReport = (PHID_REPORT)Parser->Alloc(Size + OldSize);
+    if (!NewReport)
     {
         //
         // no memory
@@ -504,92 +409,26 @@ HidParser_ReserveReportItems(
         return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // are there any items
-    //
-    if (Report->ItemCount)
-    {
-        //
-        // copy old items
-        //
-        Parser->Copy(NewReportArray, Report->Items, sizeof(PHID_REPORT_ITEM) * Report->ItemCount);
-
-        //
-        // free old item
-        //
-        Parser->Free(Report->Items);
-    }
 
     //
-    // replace array
+    // copy old report
     //
-    Report->Items = NewReportArray;
-    Report->ItemAllocated += ReportCount;
+    Parser->Copy(NewReport, Report, OldSize);
+
+    //
+    // increase array size
+    //
+    NewReport->ItemAllocated += ReportCount;
+
+    //
+    // store result
+    //
+    *OutReport = NewReport;
 
     //
     // completed sucessfully
     //
     return HIDPARSER_STATUS_SUCCESS;
-}
-
-HIDPARSER_STATUS
-HidParser_AllocateReportItem(
-    IN PHID_PARSER Parser,
-    OUT PHID_REPORT_ITEM * OutReportItem)
-{
-    PHID_REPORT_ITEM ReportItem;
-
-    //
-    // allocate report item
-    //
-    ReportItem = (PHID_REPORT_ITEM)Parser->Alloc(sizeof(HID_REPORT_ITEM));
-    if (!ReportItem)
-    {
-        //
-        // no memory
-        //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // store result
-    //
-    *OutReportItem = ReportItem;
-    return HIDPARSER_STATUS_SUCCESS;
-}
-
-VOID
-HidParser_AddReportItemToReport(
-    IN OUT PHID_REPORT Report,
-    IN PHID_REPORT_ITEM ReportItem)
-{
-    //
-    // there should be space in item array
-    //
-    ASSERT(Report->ItemCount + 1 <= Report->ItemAllocated);
-
-    //
-    // store item
-    //
-    Report->Items[Report->ItemCount] = ReportItem;
-    Report->ItemCount++;
-}
-
-VOID
-HidParser_AddReportItemToCollection(
-    IN OUT PHID_COLLECTION Collection,
-    IN PHID_REPORT_ITEM ReportItem)
-{
-    //
-    // there should be space in item array
-    //
-    ASSERT(Collection->ItemCount + 1 <= Collection->ItemCountAllocated);
-
-    //
-    // store item
-    //
-    Collection->Items[Collection->ItemCount] = ReportItem;
-    Collection->ItemCount++;
 }
 
 VOID
@@ -745,23 +584,87 @@ HidParser_InitReportItem(
     return HIDPARSER_STATUS_SUCCESS;
 }
 
+BOOLEAN
+HidParser_UpdateCurrentCollectionReport(
+    IN PHID_COLLECTION Collection,
+    IN PHID_REPORT Report,
+    IN PHID_REPORT NewReport)
+{
+    ULONG Index;
+    BOOLEAN Found = FALSE, TempFound;
+
+    //
+    // search in local list
+    //
+    for(Index = 0; Index < Collection->ReportCount; Index++)
+    {
+        if (Collection->Reports[Index] == Report)
+        {
+            //
+            // update report
+            //
+            Collection->Reports[Index] = NewReport;
+            Found = TRUE;
+        }
+    }
+
+    //
+    // search in sub collections
+    //
+    for(Index = 0; Index < Collection->NodeCount; Index++)
+    {
+        //
+        // was it found
+        //
+        TempFound = HidParser_UpdateCurrentCollectionReport(Collection->Nodes[Index], Report, NewReport);
+        if (TempFound)
+        {
+            //
+            // the same report should not be found in different collections
+            //
+            ASSERT(Found == FALSE);
+            Found = TRUE;
+        }
+    }
+
+    //
+    // done
+    //
+    return Found;
+}
+
+BOOLEAN
+HidParser_UpdateCollectionReport(
+    IN PHID_PARSER_CONTEXT ParserContext,
+    IN PHID_REPORT Report,
+    IN PHID_REPORT NewReport)
+{
+    //
+    // update in current collection
+    //
+    return HidParser_UpdateCurrentCollectionReport(ParserContext->RootCollection->Nodes[ParserContext->RootCollection->NodeCount-1], Report, NewReport);
+}
+
+
 HIDPARSER_STATUS
 HidParser_AddMainItem(
     IN PHID_PARSER Parser,
+    IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_REPORT Report,
     IN PGLOBAL_ITEM_STATE GlobalItemState,
     IN PLOCAL_ITEM_STATE LocalItemState,
     IN PMAIN_ITEM_DATA ItemData,
     IN PHID_COLLECTION Collection)
 {
-    PHID_REPORT_ITEM ReportItem;
     HIDPARSER_STATUS Status;
     ULONG Index;
+    PHID_REPORT NewReport;
+    BOOLEAN Found;
 
     //
     // first grow report item array
     //
-    Status = HidParser_ReserveReportItems(Parser, Report, GlobalItemState->ReportCount);
+    Status = HidParser_ReserveReportItems(Parser, Report, GlobalItemState->ReportCount, &NewReport);
     if (Status != HIDPARSER_STATUS_SUCCESS)
     {
         //
@@ -770,35 +673,23 @@ HidParser_AddMainItem(
         return Status;
     }
 
-    //
-    // grow collection item array
-    //
-    Status = HidParser_ReserveCollectionItems(Parser, Collection, GlobalItemState->ReportCount);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
+    if (NewReport != Report)
     {
         //
-        // failed to allocate memory
+        // update current top level collection
         //
-        return Status;
+        Found = HidParser_UpdateCollectionReport(ParserContext, Report, NewReport);
+        ASSERT(Found);
     }
 
-
+    //
+    // sanity check
+    //
+    ASSERT(NewReport->ItemCount + GlobalItemState->ReportCount <= NewReport->ItemAllocated);
 
     for(Index = 0; Index < GlobalItemState->ReportCount; Index++)
     {
-        //
-        // create report item
-        //
-        Status = HidParser_AllocateReportItem(Parser, &ReportItem);
-        if (Status != HIDPARSER_STATUS_SUCCESS)
-        {
-            //
-            // failed to allocate memory
-            //
-            return Status;
-        }
-
-        Status = HidParser_InitReportItem(Report, ReportItem, GlobalItemState, LocalItemState, ItemData, Index);
+        Status = HidParser_InitReportItem(NewReport, &NewReport->Items[NewReport->ItemCount], GlobalItemState, LocalItemState, ItemData, Index);
         if (Status != HIDPARSER_STATUS_SUCCESS)
         {
             //
@@ -808,10 +699,9 @@ HidParser_AddMainItem(
         }
 
         //
-        // add report item
+        // increment report item count
         //
-        HidParser_AddReportItemToReport(Report, ReportItem);
-        HidParser_AddReportItemToCollection(Collection, ReportItem);
+        NewReport->ItemCount++;
     }
 
     //
@@ -821,10 +711,35 @@ HidParser_AddMainItem(
 }
 
 HIDPARSER_STATUS
+AllocateParserContext(
+    IN PHID_PARSER Parser,
+    OUT PHID_PARSER_CONTEXT *OutParserContext)
+{
+    PHID_PARSER_CONTEXT ParserContext;
+
+    ParserContext = Parser->Alloc(sizeof(HID_PARSER_CONTEXT));
+    if (!ParserContext)
+    {
+        //
+        // failed
+        //
+        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // store result
+    //
+    *OutParserContext = ParserContext;
+    return HIDPARSER_STATUS_SUCCESS;
+}
+
+
+HIDPARSER_STATUS
 HidParser_ParseReportDescriptor(
     IN PHID_PARSER Parser,
     IN PUCHAR ReportDescriptor,
-    IN ULONG ReportLength)
+    IN ULONG ReportLength,
+    OUT PVOID *OutParser)
 {
     PGLOBAL_ITEM_STATE LinkedGlobalItemState, NextLinkedGlobalItemState;
     ULONG Index;
@@ -843,15 +758,12 @@ HidParser_ParseReportDescriptor(
     PHID_PARSER_CONTEXT ParserContext;
 
     //
-    // reset parser
+    // allocate parser
     //
-    HidParser_ResetParser(Parser);
+    Status = AllocateParserContext(Parser, &ParserContext);
+    if (Status != HIDPARSER_STATUS_SUCCESS)
+        return Status;
 
-    //
-    // get parser context
-    //
-    ParserContext =(PHID_PARSER_CONTEXT)Parser->ParserContext;
-    ASSERT(ParserContext);
 
     //
     // allocate usage stack
@@ -1039,7 +951,7 @@ HidParser_ParseReportDescriptor(
                     //
                     // get report
                     //
-                    Status = HidParser_GetReport(Parser, CurrentCollection, ReportType, ParserContext->GlobalItemState.ReportId, TRUE, &Report);
+                    Status = HidParser_GetReport(Parser, ParserContext, CurrentCollection, ReportType, ParserContext->GlobalItemState.ReportId, TRUE, &Report);
                     ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
 
                     // fill in a sensible default if the index isn't set
@@ -1059,7 +971,7 @@ HidParser_ParseReportDescriptor(
                     //
                     // add states & data to the report
                     //
-                    Status = HidParser_AddMainItem(Parser, Report, &ParserContext->GlobalItemState, &ParserContext->LocalItemState, MainItemData, CurrentCollection);
+                    Status = HidParser_AddMainItem(Parser, ParserContext, Report, &ParserContext->GlobalItemState, &ParserContext->LocalItemState, MainItemData, CurrentCollection);
                     ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
                 }
 
@@ -1349,7 +1261,139 @@ HidParser_ParseReportDescriptor(
     ParserContext->LocalItemState.UsageStack = NULL;
 
     //
+    // store result
+    //
+    *OutParser = ParserContext;
+
+    //
     // done
     //
     return HIDPARSER_STATUS_SUCCESS;
 }
+
+PHID_COLLECTION
+HidParser_GetCollection(
+    IN PHID_PARSER Parser,
+    PHID_PARSER_CONTEXT ParserContext,
+    IN ULONG CollectionNumber)
+{
+    //
+    // sanity checks
+    //
+    ASSERT(ParserContext);
+    ASSERT(ParserContext->RootCollection);
+    ASSERT(ParserContext->RootCollection->NodeCount);
+
+    //
+    // is collection index out of bounds
+    //
+    if (CollectionNumber < ParserContext->RootCollection->NodeCount)
+    {
+        //
+        // valid collection
+        //
+        return ParserContext->RootCollection->Nodes[CollectionNumber];
+    }
+
+    //
+    // no such collection
+    //
+    Parser->Debug("HIDPARSE] No such collection %lu\n", CollectionNumber);
+    return NULL;
+}
+
+
+ULONG
+HidParser_NumberOfTopCollections(
+    IN PVOID ParserCtx)
+{
+    PHID_PARSER_CONTEXT ParserContext;
+
+    //
+    // get parser context
+    //
+    ParserContext = (PHID_PARSER_CONTEXT)ParserCtx;
+
+    //
+    // sanity checks
+    //
+    ASSERT(ParserContext);
+    ASSERT(ParserContext->RootCollection);
+    ASSERT(ParserContext->RootCollection->NodeCount);
+
+    //
+    // number of top collections
+    //
+    return ParserContext->RootCollection->NodeCount;
+}
+
+HIDPARSER_STATUS
+HidParser_BuildContext(
+    IN PHID_PARSER Parser,
+    IN PVOID ParserContext,
+    IN ULONG CollectionIndex,
+    IN ULONG ContextSize,
+    OUT PVOID *CollectionContext)
+{
+    PHID_COLLECTION Collection;
+    PVOID Context;
+    HIDPARSER_STATUS Status;
+
+    //
+    // lets get the collection
+    //
+    Collection = HidParser_GetCollection(Parser, (PHID_PARSER_CONTEXT)ParserContext, CollectionIndex);
+    ASSERT(Collection);
+
+    //
+    // lets allocate the context
+    //
+    Context = Parser->Alloc(ContextSize);
+    if (Context == NULL)
+    {
+        //
+        // no memory
+        //
+        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // lets build the context
+    //
+    Status = HidParser_BuildCollectionContext(Parser, Collection, Context, ContextSize);
+    if (Status == HIDPARSER_STATUS_SUCCESS)
+    {
+        //
+        // store context
+        //
+        *CollectionContext = Context;
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
+
+
+ULONG
+HidParser_GetContextSize(
+    IN PHID_PARSER Parser,
+    IN PVOID ParserContext,
+    IN ULONG CollectionIndex)
+{
+    PHID_COLLECTION Collection;
+    ULONG Size;
+
+    //
+    // lets get the collection
+    //
+    Collection = HidParser_GetCollection(Parser, (PHID_PARSER_CONTEXT)ParserContext, CollectionIndex);
+
+    //
+    // calculate size
+    //
+    Size = HidParser_CalculateContextSize(Collection);
+    return Size;
+}
+

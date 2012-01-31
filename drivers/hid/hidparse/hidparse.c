@@ -93,7 +93,7 @@ HidP_FreeCollectionDescription (
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, NULL, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // free collection
@@ -114,12 +114,12 @@ HidP_GetCaps(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get caps
     //
-    return HidParser_GetCaps(&Parser, Capabilities);
+    return HidParser_GetCaps(&Parser, PreparsedData, Capabilities);
 }
 
 NTSTATUS
@@ -130,30 +130,17 @@ HidP_GetCollectionDescription(
     IN POOL_TYPE PoolType,
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
-    PHID_PARSER Parser;
-    HIDPARSER_STATUS Status;
+    HID_PARSER Parser;
 
     //
-    // first allocate the parser
+    // init parser
     //
-    Status = HidParser_AllocateParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // not enough memory
-        //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get description;
     //
-    Status = HidParser_GetCollectionDescription(Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
-
-    //
-    // FIXME parser memory leak
-    //
-    return Status;
+    return HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
 }
 
 HIDAPI
@@ -174,13 +161,13 @@ HidP_MaxUsageListLength(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
 
     //
     // get usage length
     //
-    return HidParser_MaxUsageListLength(&Parser, ReportType, UsagePage);
+    return HidParser_MaxUsageListLength(&Parser, PreparsedData, ReportType, UsagePage);
 }
 
 HIDAPI
@@ -205,12 +192,12 @@ HidP_GetSpecificValueCaps(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get value caps
     //
-    return HidParser_GetSpecificValueCaps(&Parser, ReportType, UsagePage, LinkCollection, Usage, ValueCaps, ValueCapsLength);
+    return HidParser_GetSpecificValueCaps(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, ValueCaps, ValueCapsLength);
 }
 
 HIDAPI
@@ -236,12 +223,12 @@ HidP_GetUsages(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get usages
     //
-    return HidParser_GetUsages(&Parser, ReportType, UsagePage, LinkCollection, UsageList, UsageLength, Report, ReportLength);
+    return HidParser_GetUsages(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, UsageList, UsageLength, Report, ReportLength);
 }
 
 
@@ -311,12 +298,12 @@ HidP_GetScaledUsageValue(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, PreparsedData, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get scaled usage value
     //
-    return HidParser_GetScaledUsageValue(&Parser, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
+    return HidParser_GetScaledUsageValue(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
 }
 
 HIDAPI
@@ -335,7 +322,7 @@ HidP_TranslateUsageAndPagesToI8042ScanCodes(
     //
     // init parser
     //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, NULL, &Parser);
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // translate usage pages

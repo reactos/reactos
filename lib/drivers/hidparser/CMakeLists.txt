@@ -4,6 +4,7 @@ add_definitions(
     -DNDEBUG=1)
 
 list(APPEND SOURCE
+    context.c
     hidparser.c
     parser.c
     api.c)

@@ -324,8 +324,8 @@ USBD_CreateConfigurationRequestEx(
          InterfaceList[InterfaceCount].InterfaceDescriptor != NULL;
          InterfaceCount++)
     {
-        UrbSize += sizeof(USBD_INTERFACE_INFORMATION);
-        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
+        UrbSize += FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes);
+        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints) * sizeof(USBD_PIPE_INFORMATION);
     }
 
     UrbSize += sizeof(URB) + sizeof(USBD_INTERFACE_INFORMATION);
