@@ -29,6 +29,11 @@ USBSTOR_QueueInitialize(
     // initialize irp list head
     //
     InitializeListHead(&FDODeviceExtension->IrpListHead);
+
+    //
+    // initialize event
+    //
+    KeInitializeEvent(&FDODeviceExtension->NoPendingRequests, NotificationEvent, TRUE);
 }
 
 VOID
