@@ -12,6 +12,8 @@
 #include <usb.h>
 #include <usbdlib.h>
 
+#include <hidport.h>
+
 typedef struct
 {
     //
@@ -80,3 +82,5 @@ NTSTATUS
 Hid_DispatchUrb(
     IN PDEVICE_OBJECT DeviceObject,
     IN PURB Urb);
+
+#define USB_SET_IDLE_REQUEST 0xA

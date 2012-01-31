@@ -47,6 +47,11 @@ typedef struct _HID_DESCRIPTOR
 
 #include <poppack.h>
 
+#define HID_HID_DESCRIPTOR_TYPE             0x21
+#define HID_REPORT_DESCRIPTOR_TYPE          0x22
+#define HID_PHYSICAL_DESCRIPTOR_TYPE        0x23
+
+
 
 typedef 
 VOID

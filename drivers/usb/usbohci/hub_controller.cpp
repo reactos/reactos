@@ -1731,7 +1731,10 @@ CHubController::HandleClassInterface(
 
     if (Urb->UrbControlVendorClassRequest.TransferBufferLength == 0)
     {
-        DPRINT1("Invalid request length\n");
+        //
+        // FIXME: support requests w/o data stage
+        //;
+        ASSERT(FALSE);
         return STATUS_SUCCESS;
     }
 
