@@ -3877,12 +3877,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSetBootStatusData(
-    HANDLE FileHandle,
-    BOOLEAN WriteMode,
-    DWORD DataClass,
-    PVOID Buffer,
-    ULONG BufferSize,
-    DWORD DataClass2
+    IN HANDLE FileHandle,
+    IN BOOLEAN WriteMode,
+    IN RTL_BSD_ITEM_TYPE DataClass,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
