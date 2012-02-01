@@ -1191,9 +1191,33 @@ CUSBHardwareDevice::ClearPortStatus(
     if (Status == C_PORT_CONNECTION || Status == C_PORT_ENABLE)
     {
         //
-        // clear bits
+        // clear change bits
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC);
+
+        //
+        // wait for port to stabilize
+        //
+        if (Status == C_PORT_CONNECTION)
+        {
+            LARGE_INTEGER Timeout;
+
+            //
+            // delay is 100 ms
+            //
+            Timeout.QuadPart = 100;
+            DPRINT1("Waiting %d milliseconds for port to stabilize after connection\n", Timeout.LowPart);
+
+            //
+            // convert to 100 ns units (absolute)
+            //
+            Timeout.QuadPart *= -10000;
+
+            //
+            // perform the wait
+            //
+            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+        }
     }
 
     //
@@ -1275,6 +1299,8 @@ CUSBHardwareDevice::SetPortFeature(
     }
     else if (Feature == PORT_RESET)
     {
+        LARGE_INTEGER Timeout;
+
         //
         // assert
         //
@@ -1305,6 +1331,22 @@ CUSBHardwareDevice::SetPortFeature(
            //
            KeStallExecutionProcessor(100);
         }while(TRUE);
+
+        //
+        // delay is 10 ms
+        //
+        Timeout.QuadPart = 10;
+        DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
+        
+        //
+        // convert to 100 ns units (absolute)
+        //
+        Timeout.QuadPart *= -10000;
+        
+        //
+        // perform the wait
+        //
+        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
 
         //
         // trigger the status change interrupt

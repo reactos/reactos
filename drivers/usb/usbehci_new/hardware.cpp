@@ -799,8 +799,25 @@ CUSBHardwareDevice::ResetPort(
     } while (TRUE);
 
     //
+    // delay is 10 ms
+    //
+    Timeout.QuadPart = 10;
+    DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
+
+    //
+    // convert to 100 ns units (absolute)
+    //
+    Timeout.QuadPart *= -10000;
+
+    //
+    // perform the wait
+    //
+    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+
+    //
     // check slow speed line after reset
     //
+    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
     if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
         DPRINT1("Non HighSpeed device. Releasing Ownership\n");
@@ -916,9 +933,30 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_CONNECTION)
     {
+        LARGE_INTEGER Timeout;
+
+        //
+        // reset status change bits
+        //
         Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
         EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
+        //
+        // delay is 100 ms
+        //
+        Timeout.QuadPart = 100;
+        DPRINT1("Waiting %d milliseconds for port to stabilize after connection\n", Timeout.LowPart);
+
+        //
+        // convert to 100 ns units (absolute)
+        //
+        Timeout.QuadPart *= -10000;
+
+        //
+        // perform the wait
+        //
+        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
     }
 
     return STATUS_SUCCESS;
