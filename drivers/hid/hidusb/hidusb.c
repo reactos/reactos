@@ -1269,7 +1269,7 @@ Hid_SetIdle(
                           URB_FUNCTION_CLASS_INTERFACE, 
                           sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
                           0,
-                          HID_REPORT_DESCRIPTOR_TYPE,
+                          0,
                           USB_SET_IDLE_REQUEST, // HID_SET_IDLE
                           0,
                           0,
@@ -1296,6 +1296,76 @@ Hid_SetIdle(
 }
 
 
+NTSTATUS
+Hid_GetProtocol(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
+    PHID_DEVICE_EXTENSION DeviceExtension;
+    PURB Urb;
+    NTSTATUS Status;
+    UCHAR Protocol[1];
+
+    //
+    // get device extension
+    //
+    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+
+    //
+    // allocate urb
+    //
+    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    if (!Urb)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // zero urb
+    //
+    RtlZeroMemory(Urb, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+
+    //
+    // format urb
+    //
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_INTERFACE, 
+                          sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                          USBD_TRANSFER_DIRECTION_IN,
+                          0,
+                          USB_GET_PROTOCOL_REQUEST,
+                          0,
+                          0,
+                          Protocol,
+                          NULL,
+                          1,
+                          NULL);
+    Protocol[0] = 0xFF;
+    //
+    // dispatch urb
+    //
+    Status = Hid_DispatchUrb(DeviceObject, Urb);
+
+    //
+    // free urb
+    //
+    ExFreePool(Urb);
+
+    //
+    // print status
+    //
+    DPRINT1("Status %x Protocol %x\n", Status, Protocol[0] & 0xFF);
+
+    //
+    // assert when boot protocol is still active
+    //
+    ASSERT(Protocol[0] == 0x1); 
+    return Status;
+}
 
 NTSTATUS
 Hid_PnpStart(
@@ -1404,6 +1474,7 @@ Hid_PnpStart(
     //
     Hid_SetIdle(DeviceObject);
 
+   Hid_GetProtocol(DeviceObject);
 
     //
     // move to next descriptor
