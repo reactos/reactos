@@ -735,6 +735,7 @@ CUSBHardwareDevice::ResetPort(
     IN ULONG PortIndex)
 {
     ULONG PortStatus;
+    LARGE_INTEGER Timeout;
 
     if (PortIndex > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
@@ -759,7 +760,21 @@ CUSBHardwareDevice::ResetPort(
     PortStatus &= ~EHCI_PRT_ENABLED;
     EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
 
-    KeStallExecutionProcessor(100);
+    //
+    // delay is 20 ms for port reset as per USB 2.0 spec
+    //
+    Timeout.QuadPart = 20;
+    DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
+
+    //
+    // convert to 100 ns units (absolute)
+    //
+    Timeout.QuadPart *= -10000;
+
+    //
+    // perform the wait
+    //
+    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
 
     //
     // Clear reset
