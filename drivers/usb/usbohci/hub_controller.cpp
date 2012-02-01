@@ -1660,11 +1660,20 @@ CHubController::HandleClassEndpoint(
     //
     // initialize setup packet
     //
-    CtrlSetup.bmRequestType.B = 0xa2; //FIXME: Const.
+    CtrlSetup.bmRequestType.B = 0x22; //FIXME: Const.
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
     CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+
+    if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
+    {
+        //
+        // data direction is device to host
+        //
+        CtrlSetup.bmRequestType.B |= 0x80;
+    }
+
 
     //
     // issue request
@@ -1729,23 +1738,22 @@ CHubController::HandleClassInterface(
     DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
     DPRINT1("Index %x\n", Urb->UrbControlVendorClassRequest.Index);
 
-    if (Urb->UrbControlVendorClassRequest.TransferBufferLength == 0)
-    {
-        //
-        // FIXME: support requests w/o data stage
-        //;
-        ASSERT(FALSE);
-        return STATUS_SUCCESS;
-    }
-
     //
     // initialize setup packet
     //
-    CtrlSetup.bmRequestType.B = 0xa1;
+    CtrlSetup.bmRequestType.B = 0x21;
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
     CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+
+    if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
+    {
+        //
+        // data direction is device to host
+        //
+        CtrlSetup.bmRequestType.B |= 0x80;
+    }
 
     //
     // issue request

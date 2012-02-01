@@ -858,27 +858,35 @@ CUSBDevice::SubmitSetupPacket(
     OUT PVOID Buffer)
 {
     NTSTATUS Status;
-    PMDL Mdl;
+    PMDL Mdl = NULL;
 
-    //
-    // allocate mdl
-    //
-    Mdl = IoAllocateMdl(Buffer, BufferLength, FALSE, FALSE, 0);
+    if (BufferLength)
+    {
+        //
+        // allocate mdl
+        //
+        Mdl = IoAllocateMdl(Buffer, BufferLength, FALSE, FALSE, 0);
+        if (!Mdl)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-    //
-    // HACK HACK HACK: assume the buffer is build from non paged pool
-    //
-    MmBuildMdlForNonPagedPool(Mdl);
+        //
+        // HACK HACK HACK: assume the buffer is build from non paged pool
+        //
+        MmBuildMdlForNonPagedPool(Mdl);
+    }
 
     //
     // commit setup packet
     //
     Status = CommitSetupPacket(SetupPacket, 0, BufferLength, Mdl);
 
-    //
-    // free mdl
-    //
-    IoFreeMdl(Mdl);
+    if (Mdl != NULL)
+    {
+        //
+        // free mdl
+        //
+        IoFreeMdl(Mdl);
+    }
 
     //
     // done
