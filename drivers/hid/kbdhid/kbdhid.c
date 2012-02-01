@@ -42,16 +42,36 @@ KbdHid_InsertScanCodes(
     IN PCHAR  NewScanCodes,
     IN ULONG  Length)
 {
-    //KEYBOARD_INPUT_DATA InputData;
+    KEYBOARD_INPUT_DATA InputData;
     ULONG Index;
+    PKBDHID_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)Context;
 
     for(Index = 0; Index < Length; Index++)
     {
         DPRINT1("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
+
         //
-        // TODO: set up input data
+        // set up input data
         //
-        //KbdHid_DispatchInputData((PKBDHID_DEVICE_EXTENSION)Context, &InputData);
+        RtlZeroMemory(&InputData, sizeof(KEYBOARD_INPUT_DATA));
+
+        /* use keyboard unit id */
+        InputData.UnitId = DeviceExtension->KeyboardIndicator.UnitId;
+
+        if (NewScanCodes[Index] > 0x7F)
+        {
+            /* scan codes greater than 0x7F are a key break */
+            InputData.Flags |= KEY_BREAK;
+        }
+
+        /* store key code */
+        InputData.MakeCode = NewScanCodes[Index];
+
+        /* dispatch scan codes */
+        KbdHid_DispatchInputData((PKBDHID_DEVICE_EXTENSION)Context, &InputData);
     }
 
     //
@@ -391,9 +411,20 @@ KbdHid_InternalDeviceControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_INDICATORS)
     {
-        /* not implemented */
-        DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATORS not implemented\n");
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
+        {
+             /* invalid parameter */
+             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy indicators */
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &DeviceExtension->KeyboardIndicator, sizeof(KEYBOARD_INDICATOR_PARAMETERS));
+
+        /* complete request */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(KEYBOARD_INDICATOR_PARAMETERS);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_IMPLEMENTED;
     }
@@ -407,11 +438,22 @@ KbdHid_InternalDeviceControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_INDICATORS)
     {
-        /* not implemented */
-        DPRINT1("IOCTL_KEYBOARD_SET_INDICATORS not implemented\n");
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
+        {
+             /* invalid parameter */
+             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy indicators */
+        RtlCopyMemory(&DeviceExtension->KeyboardIndicator, Irp->AssociatedIrp.SystemBuffer, sizeof(KEYBOARD_INDICATOR_PARAMETERS));
+
+        /* done */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_NOT_IMPLEMENTED;
+        return STATUS_SUCCESS;
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_TYPEMATIC)
     {

@@ -109,6 +109,12 @@ typedef struct
     //
     HIDP_KEYBOARD_MODIFIER_STATE ModifierState;
 
+    //
+    // keyboard indicator state
+    //
+    KEYBOARD_INDICATOR_PARAMETERS KeyboardIndicator;
+
+
 }KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
 
 /* defaults from kbfiltr.h */

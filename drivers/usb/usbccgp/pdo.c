@@ -850,7 +850,7 @@ PDO_HandleInternalDeviceControl(
         //
         Urb = (PURB)IoStack->Parameters.Others.Argument1;
         ASSERT(Urb);
-        DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x\n", Urb->UrbHeader.Function);
+        DPRINT("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x\n", Urb->UrbHeader.Function);
 
         if (Urb->UrbHeader.Function == URB_FUNCTION_SELECT_CONFIGURATION)
         {

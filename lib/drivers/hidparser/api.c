@@ -663,9 +663,9 @@ HidParser_DispatchKey(
         if (KeyAction == HidP_Keyboard_Break)
         {
             //
-            // add break
+            // add break - see USB HID to PS/2 Scan Code Translation Table
             //
-            ScanCodes[Index] |= KEY_BREAK;
+            ScanCodes[Index] |= 0x80;
         }
 
         //
@@ -711,7 +711,6 @@ HidParser_TranslateUsage(
     //
     // FIXME: translate modifier states
     //
-	DPRINT1("Usage %x ScanCode %x\n", Usage, ScanCode);
     HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
     //
