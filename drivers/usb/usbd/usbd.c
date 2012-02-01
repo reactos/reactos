@@ -32,9 +32,9 @@
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
-#include <wdm.h>
+#include <ntddk.h>
 #include <usbdi.h>
-
+#include <debug.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
 #endif
@@ -324,8 +324,8 @@ USBD_CreateConfigurationRequestEx(
          InterfaceList[InterfaceCount].InterfaceDescriptor != NULL;
          InterfaceCount++)
     {
-        UrbSize += FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes);
-        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints) * sizeof(USBD_PIPE_INFORMATION);
+        UrbSize += sizeof(USBD_INTERFACE_INFORMATION);
+        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
     }
 
     UrbSize += sizeof(URB) + sizeof(USBD_INTERFACE_INFORMATION);
@@ -410,16 +410,39 @@ USBD_ParseDescriptors(
     LONG  DescriptorType
     )
 {
-    PUSB_COMMON_DESCRIPTOR PComDes = StartPosition;
+    PUSB_COMMON_DESCRIPTOR CommonDescriptor;
 
-    while(PComDes)
+    /* use start position */
+    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)StartPosition;
+
+
+    /* find next available descriptor */
+    while(CommonDescriptor)
     {
-       if (PComDes >= (PUSB_COMMON_DESCRIPTOR)
-                            ((PLONG)DescriptorBuffer + TotalLength) ) break;
-       if (PComDes->bDescriptorType == DescriptorType) return PComDes;
-       if (PComDes->bLength == 0) break;
-       PComDes = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)PComDes + PComDes->bLength);
+       if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)DescriptorBuffer + TotalLength))
+       {
+           /* end reached */
+           DPRINT1("End reached %p\n", CommonDescriptor);
+           return NULL;
+       }
+
+       DPRINT("CommonDescriptor Type %x Length %x\n", CommonDescriptor->bDescriptorType, CommonDescriptor->bLength);
+
+       /* is the requested one */
+       if (CommonDescriptor->bDescriptorType == DescriptorType)
+       {
+           /* it is */
+           return CommonDescriptor;
+       }
+
+       /* sanity check */
+       ASSERT(CommonDescriptor->bLength);
+
+       /* move to next descriptor */
+       CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
     }
+
+    /* no descriptor found */
     return NULL;
 }
 
@@ -438,45 +461,97 @@ USBD_ParseConfigurationDescriptorEx(
     LONG InterfaceProtocol
     )
 {
-    int x = 0;
-    PUSB_INTERFACE_DESCRIPTOR UsbInterfaceDesc = StartPosition;
+    BOOLEAN Found;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
 
-    while(UsbInterfaceDesc)
+    /* set to start position */
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)StartPosition;
+
+    DPRINT("USBD_ParseConfigurationDescriptorEx\n");
+    DPRINT("ConfigurationDescriptor %p Length %lu\n", ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength);
+    DPRINT("CurrentOffset %p Offset %lu\n", StartPosition, ((ULONG_PTR)StartPosition - (ULONG_PTR)ConfigurationDescriptor));
+
+    while(InterfaceDescriptor)
     {
-       UsbInterfaceDesc = (PUSB_INTERFACE_DESCRIPTOR)
-                           USBD_ParseDescriptors(ConfigurationDescriptor,
-                                        ConfigurationDescriptor->wTotalLength,
-                                        UsbInterfaceDesc,
-                                        USB_INTERFACE_DESCRIPTOR_TYPE);
+       /* get interface descriptor */
+       InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR) USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, InterfaceDescriptor, USB_INTERFACE_DESCRIPTOR_TYPE);
+       if (!InterfaceDescriptor)
+       {
+           /* no more descriptors available */
+           break;
+       }
 
-       if (!UsbInterfaceDesc) break;
+       DPRINT("InterfaceDescriptor %p InterfaceNumber %x AlternateSetting %x Length %lu\n", InterfaceDescriptor, InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting, InterfaceDescriptor->bLength);
 
+       /* set found */
+       Found = TRUE;
+
+       /* is there an interface number provided */
        if(InterfaceNumber != -1)
        {
-          if(InterfaceNumber != UsbInterfaceDesc->bInterfaceNumber) x = 1;
+          if(InterfaceNumber != InterfaceDescriptor->bInterfaceNumber)
+          {
+              /* interface number does not match */
+              Found = FALSE;
+          }
        }
+
+       /* is there an alternate setting provided */
        if(AlternateSetting != -1)
        {
-          if(AlternateSetting != UsbInterfaceDesc->bAlternateSetting) x = 1;
+          if(AlternateSetting != InterfaceDescriptor->bAlternateSetting)
+          {
+              /* alternate setting does not match */
+              Found = FALSE;
+          }
        }
+
+       /* match on interface class */
        if(InterfaceClass != -1)
        {
-          if(InterfaceClass != UsbInterfaceDesc->bInterfaceClass) x = 1;
+          if(InterfaceClass != InterfaceDescriptor->bInterfaceClass)
+          {
+              /* no match with interface class criteria */
+              Found = FALSE;
+          }
        }
+
+       /* match on interface sub class */
        if(InterfaceSubClass != -1)
        {
-          if(InterfaceSubClass != UsbInterfaceDesc->bInterfaceSubClass) x = 1;
+          if(InterfaceSubClass != InterfaceDescriptor->bInterfaceSubClass)
+          {
+              /* no interface sub class match */
+              Found = FALSE;
+          }
        }
+
+       /* interface protocol criteria */
        if(InterfaceProtocol != -1)
        {
-          if(InterfaceProtocol != UsbInterfaceDesc->bInterfaceProtocol) x = 1;
+          if(InterfaceProtocol != InterfaceDescriptor->bInterfaceProtocol)
+          {
+              /* no interface protocol match */
+              Found = FALSE;
+          }
        }
 
-       if (!x) return UsbInterfaceDesc;
+       if (Found)
+       {
+           /* the choosen one */
+           return InterfaceDescriptor;
+       }
 
-       if (UsbInterfaceDesc->bLength == 0) break;
-       UsbInterfaceDesc = UsbInterfaceDesc + UsbInterfaceDesc->bLength;
+       /* sanity check */
+       ASSERT(InterfaceDescriptor->bLength);
+
+       /* move to next descriptor */
+       InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
     }
+
+    DPRINT("No Descriptor With InterfaceNumber %ld AlternateSetting %ld InterfaceClass %ld InterfaceSubClass %ld InterfaceProtocol %ld found\n", InterfaceNumber,
+            AlternateSetting, InterfaceClass, InterfaceSubClass, InterfaceProtocol);
+
     return NULL;
 }
 
