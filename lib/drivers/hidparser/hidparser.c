@@ -683,9 +683,8 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
         else
         {
             //
-            // invalid page
+            // invalid page / end of usage list page
             //
-            DPRINT1("[HIDPARSE] Error unexpected usage page %x\n", ChangedUsageList[Index].UsagePage);
             return HIDP_STATUS_I8042_TRANS_UNKNOWN;
         }
 

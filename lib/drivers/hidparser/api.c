@@ -455,7 +455,20 @@ HidParser_GetUsagesWithReport(
             //
             // store usage and page
             //
-            UsageAndPage[ItemCount].Usage = (ReportItem->UsageMinimum & 0xFFFF);
+            if (ReportItem->BitCount == 1)
+            {
+                //
+                // use usage minimum
+                //
+                UsageAndPage[ItemCount].Usage =(ReportItem->UsageMinimum & 0xFFFF);
+            }
+            else
+            {
+                //
+                // use value from control
+                //
+                UsageAndPage[ItemCount].Usage = (USHORT)Data;
+            }
             UsageAndPage[ItemCount].UsagePage = CurrentUsagePage;
         }
         ItemCount++;
@@ -691,13 +704,14 @@ HidParser_TranslateUsage(
         //
         // invalid lookup or no scan code available
         //
+        DPRINT1("No Scan code for Usage %x\n", Usage);
         return HIDPARSER_STATUS_I8042_TRANS_UNKNOWN;
     }
 
     //
     // FIXME: translate modifier states
     //
-
+	DPRINT1("Usage %x ScanCode %x\n", Usage, ScanCode);
     HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
     //

@@ -94,6 +94,15 @@ KbdHid_ReadCompletion(
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
+    //
+    // print out raw report
+    //
+    ASSERT(DeviceExtension->ReportLength >= 9);
+    DPRINT1("[KBDHID] ReadCompletion %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", DeviceExtension->Report[0], DeviceExtension->Report[1], DeviceExtension->Report[2],
+        DeviceExtension->Report[3], DeviceExtension->Report[4], DeviceExtension->Report[5],
+        DeviceExtension->Report[6], DeviceExtension->Report[7], DeviceExtension->Report[8]);
+
+
     /* get current usages */
     ButtonLength = DeviceExtension->UsageListLength;
     Status = HidP_GetUsagesEx(HidP_Input, HIDP_LINK_COLLECTION_UNSPECIFIED, DeviceExtension->CurrentUsageList, &ButtonLength, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
