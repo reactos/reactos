@@ -356,7 +356,7 @@ USBCCGP_SelectInterface(
     //
     // allocate urb
     //
-    Urb = AllocateItem(NonPagedPool, sizeof(struct _URB_SELECT_INTERFACE));
+    Urb = AllocateItem(NonPagedPool, GET_SELECT_INTERFACE_REQUEST_SIZE(DeviceExtension->InterfaceList[InterfaceIndex].InterfaceDescriptor->bNumEndpoints));
     if (!Urb)
     {
         //
@@ -369,11 +369,6 @@ USBCCGP_SelectInterface(
     // now prepare interface urb
     //
     UsbBuildSelectInterfaceRequest(Urb, GET_SELECT_INTERFACE_REQUEST_SIZE(DeviceExtension->InterfaceList[InterfaceIndex].InterfaceDescriptor->bNumEndpoints), DeviceExtension->ConfigurationHandle, DeviceExtension->InterfaceList[InterfaceIndex].InterfaceDescriptor->bInterfaceNumber, DeviceExtension->InterfaceList[InterfaceIndex].InterfaceDescriptor->bAlternateSetting);
-
-    //
-    // copy interface information structure back - as offset for SelectConfiguration / SelectInterface request do differ
-    //
-    RtlCopyMemory(&Urb->UrbSelectInterface.Interface, DeviceExtension->InterfaceList[InterfaceIndex].Interface, DeviceExtension->InterfaceList[InterfaceIndex].Interface->Length);
 
     //
     // now select the interface

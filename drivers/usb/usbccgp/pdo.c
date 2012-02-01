@@ -611,11 +611,12 @@ USBCCGP_PDOSelectConfiguration(
 {
     PIO_STACK_LOCATION IoStack;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PURB Urb;
+    PURB Urb, NewUrb;
     PUSBD_INTERFACE_INFORMATION InterfaceInformation;
     ULONG InterfaceInformationCount, Index, InterfaceIndex;
     PUSBD_INTERFACE_LIST_ENTRY Entry;
     ULONG NeedSelect, FoundInterface;
+    NTSTATUS Status;
 
     //
     // get current stack location
@@ -720,7 +721,8 @@ USBCCGP_PDOSelectConfiguration(
         NeedSelect = FALSE;
         if (Entry->InterfaceDescriptor->bAlternateSetting == InterfaceInformation->AlternateSetting)
         {
-            for(InterfaceIndex = 0; InterfaceIndex < Entry->InterfaceDescriptor->bNumEndpoints; InterfaceIndex++)
+            
+            for(InterfaceIndex = 0; InterfaceIndex < InterfaceInformation->NumberOfPipes; InterfaceIndex++)
             {
                 if (InterfaceInformation->Pipes[InterfaceIndex].MaximumTransferSize != Entry->Interface->Pipes[InterfaceIndex].MaximumTransferSize)
                 {
@@ -744,16 +746,61 @@ USBCCGP_PDOSelectConfiguration(
             //
             // interface is already selected
             //
-            ASSERT(InterfaceInformation->Length == Entry->Interface->Length);
-            RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+            RtlCopyMemory(InterfaceInformation, Entry->Interface, min(InterfaceInformation->Length, Entry->Interface->Length));
         }
         else
         {
             //
-            // FIXME select interface
+            // select interface
             //
-            UNIMPLEMENTED
-            ASSERT(FALSE);
+            DPRINT1("Selecting InterfaceIndex %lu AlternateSetting %lu NumberOfPipes %lu\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
+            ASSERT(InterfaceInformation->Length == Entry->Interface->Length);
+
+            //
+            // build urb
+            //
+            NewUrb = AllocateItem(NonPagedPool, GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceInformation->NumberOfPipes));
+            if (!NewUrb)
+            {
+                //
+                // no memory
+                //
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            //
+            // now prepare interface urb
+            //
+            UsbBuildSelectInterfaceRequest(NewUrb, GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceInformation->NumberOfPipes), PDODeviceExtension->ConfigurationHandle, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);
+
+            //
+            // now select the interface
+            //
+            Status = USBCCGP_SyncUrbRequest(PDODeviceExtension->NextDeviceObject, NewUrb);
+            DPRINT1("SelectInterface Status %x\n", Status);
+
+            //
+            // did it succeeed
+            //
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // update configuration info
+                //
+                ASSERT(Entry->Interface->Length == NewUrb->UrbSelectInterface.Interface.Length);
+                ASSERT(InterfaceInformation->Length == NewUrb->UrbSelectInterface.Interface.Length);
+                RtlCopyMemory(Entry->Interface, &NewUrb->UrbSelectInterface.Interface, NewUrb->UrbSelectInterface.Interface.Length);
+
+                //
+                // update provided interface information
+                //
+                RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+            }
+
+            //
+            // free urb
+            //
+            FreeItem(NewUrb);
         }
 
         //
