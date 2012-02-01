@@ -114,6 +114,12 @@ typedef struct
     //
     KEYBOARD_INDICATOR_PARAMETERS KeyboardIndicator;
 
+    //
+    // keyboard type matic
+    //
+    KEYBOARD_TYPEMATIC_PARAMETERS KeyboardTypematic;
+
+
 
 }KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
 

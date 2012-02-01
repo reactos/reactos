@@ -53,15 +53,13 @@ KbdHid_InsertScanCodes(
     {
         DPRINT1("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
 
-        //
-        // set up input data
-        //
+        /* init input data */
         RtlZeroMemory(&InputData, sizeof(KEYBOARD_INPUT_DATA));
 
         /* use keyboard unit id */
-        InputData.UnitId = DeviceExtension->KeyboardIndicator.UnitId;
+        InputData.UnitId = DeviceExtension->KeyboardTypematic.UnitId;
 
-        if (NewScanCodes[Index] > 0x7F)
+        if (((UCHAR)(NewScanCodes[Index] & 0xFF))> 0x7F)
         {
             /* scan codes greater than 0x7F are a key break */
             InputData.Flags |= KEY_BREAK;
@@ -74,9 +72,7 @@ KbdHid_InsertScanCodes(
         KbdHid_DispatchInputData((PKBDHID_DEVICE_EXTENSION)Context, &InputData);
     }
 
-    //
-    // done
-    //
+    /* done */
     return TRUE;
 }
 
@@ -430,11 +426,22 @@ KbdHid_InternalDeviceControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_TYPEMATIC)
     {
-        /* not implemented */
-        DPRINT1("IOCTL_KEYBOARD_QUERY_TYPEMATIC not implemented\n");
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
+        {
+             /* invalid parameter */
+             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy indicators */
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &DeviceExtension->KeyboardTypematic, sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));
+
+        /* done */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(KEYBOARD_TYPEMATIC_PARAMETERS);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_NOT_IMPLEMENTED;
+        return STATUS_SUCCESS;
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_INDICATORS)
     {
@@ -457,11 +464,22 @@ KbdHid_InternalDeviceControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_SET_TYPEMATIC)
     {
-        /* not implemented */
-        DPRINT1("IOCTL_KEYBOARD_SET_TYPEMATIC not implemented\n");
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
+        {
+             /* invalid parameter */
+             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy indicators */
+        RtlCopyMemory(&DeviceExtension->KeyboardTypematic, Irp->AssociatedIrp.SystemBuffer, sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));
+
+        /* done */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_NOT_IMPLEMENTED;
+        return STATUS_SUCCESS;
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION)
     {
