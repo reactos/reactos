@@ -55,4 +55,7 @@
 <directory name="usrmgr">
 	<xi:include href="usrmgr/usrmgr.rbuild" />
 </directory>
+<directory name="wined3dcfg">
+	<xi:include href="wined3dcfg/wined3dcfg.rbuild" />
+</directory>
 </group>
