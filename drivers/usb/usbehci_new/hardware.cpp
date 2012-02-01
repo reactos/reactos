@@ -957,11 +957,30 @@ CUSBHardwareDevice::SetPortFeature(
     {
         if (m_Capabilities.HCSParams.PortPowerControl)
         {
+            ULONG Value;
+            LARGE_INTEGER Timeout;
+
             //
             // enable port power
             //
-            ULONG Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId)) | EHCI_PRT_POWER;
+            Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId)) | EHCI_PRT_POWER;
             EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC, Value);
+
+            //
+            // delay is 20 ms
+            //
+            Timeout.QuadPart = 20;
+            DPRINT1("Waiting %d milliseconds for port power up\n", Timeout.LowPart);
+
+            //
+            // convert to 100 ns units (absolute)
+            //
+            Timeout.QuadPart *= -10000;
+
+            //
+            // perform the wait
+            //
+            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
         }
     }
     return STATUS_SUCCESS;
