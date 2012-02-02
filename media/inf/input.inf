@@ -37,6 +37,20 @@ AddReg=HIDClass.NT.AddReg
 %HID.DeviceDesc% = HID_Inst,GENERIC_HID_DEVICE
 %HID.DeviceDesc% = HID_Inst,USB\Class_03&SubClass_01
 %HID.DeviceDesc% = HID_Inst,USB\Class_03
+%HID_DEVICE%=HID_Raw_Inst,, HID_DEVICE
+
+;=========================== HID Raw Device ====================
+
+[HID_Raw_Inst.NT]
+
+[HID_Raw_Inst.Services]
+AddService = , 0x00000002
+
+[HID_Raw_Inst.HW]
+
+
+;=========================== HID Device ====================
+
 
 [HID_Inst.NT]
 Copyfiles = HID_Inst.CopyFiles.NT, HID_Inst.CopyFilesDLL.NT
@@ -64,6 +78,7 @@ ReactOS               = "ReactOS Team"
 HID.ClassName         = "Human Interface Devices"
 HID.DeviceDesc        = "USB Human Interface Device"
 
+HID_DEVICE            =  "HID-compatible Device"
 StdMfg                = "(Standard Human Interface Devices)"
 MSMice                = "Microsoft"
 
