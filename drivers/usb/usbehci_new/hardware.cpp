@@ -304,6 +304,8 @@ CUSBHardwareDevice::PnpStart(
     PHYSICAL_ADDRESS AsyncPhysicalAddress;
     PVOID ResourceBase;
     NTSTATUS Status;
+    UCHAR Value;
+    UCHAR PortCount;
 
     DPRINT1("CUSBHardwareDevice::PnpStart\n");
     for(Index = 0; Index < TranslatedResources->List[0].PartialResourceList.Count; Index++)
@@ -361,24 +363,38 @@ CUSBHardwareDevice::PnpStart(
                 //
                 // Get controllers capabilities 
                 //
-                m_Capabilities.Length = READ_REGISTER_UCHAR((PUCHAR)ResourceBase);
-                m_Capabilities.HCIVersion = READ_REGISTER_USHORT((PUSHORT)((ULONG)ResourceBase + 2));
-                m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 4));
-                m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 8));
+                m_Capabilities.Length = READ_REGISTER_UCHAR((PUCHAR)ResourceBase + EHCI_CAPLENGTH);
+                m_Capabilities.HCIVersion = READ_REGISTER_USHORT((PUSHORT)((ULONG)ResourceBase + EHCI_HCIVERSION));
+                m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + EHCI_HCSPARAMS));
+                m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + EHCI_HCCPARAMS));
 
                 DPRINT1("Controller has %d Length\n", m_Capabilities.Length);
                 DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
                 DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
-				DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
-				DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+                DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
+                DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+                DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
 
-				DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
+                
+
+
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
-                    for (Count = 0; Count < m_Capabilities.HCSParams.PortCount; Count++)
+                    Count = 0;
+                    PortCount = max(m_Capabilities.HCSParams.PortCount/2, (m_Capabilities.HCSParams.PortCount+1)/2);
+                    do
                     {
-                        m_Capabilities.PortRoute[Count] = READ_REGISTER_UCHAR((PUCHAR)(ULONG)ResourceBase + 12 + Count);
-                    }
+                        //
+                        // each entry is a 4 bit field EHCI 2.2.5
+                        //
+                        Value = READ_REGISTER_UCHAR((PUCHAR)(ULONG)ResourceBase + EHCI_HCSP_PORTROUTE + Count);
+                        m_Capabilities.PortRoute[Count*2] = (Value & 0xF0);
+
+                        if ((Count*2) + 1 < m_Capabilities.HCSParams.PortCount)
+                            m_Capabilities.PortRoute[(Count*2)+1] = (Value & 0x0F);
+
+                        Count++;
+                    }while(Count < PortCount);
                 }
 
                 //

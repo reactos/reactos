@@ -2,6 +2,16 @@
 
 #include <ntddk.h>
 
+
+//
+// Host Controller Capability Registers
+//
+#define EHCI_CAPLENGTH                  0x00
+#define EHCI_HCIVERSION                 0x02
+#define EHCI_HCSPARAMS                  0x04
+#define EHCI_HCCPARAMS                  0x08
+#define EHCI_HCSP_PORTROUTE             0x0c
+
 //
 // EHCI Operational Registers
 //
