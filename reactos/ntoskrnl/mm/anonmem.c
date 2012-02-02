@@ -556,6 +556,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     KAPC_STATE ApcState;
     ULONG ProtectionMask;
     BOOLEAN Attached = FALSE;
+    ULONG_PTR EndingAddress;
     BoundaryAddressMultiple.QuadPart = 0;
     PAGED_CODE();
 
@@ -876,7 +877,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
     MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
         (ULONG_PTR)MemoryArea->StartingAddress;
-    ULONG_PTR EndingAddress;
     EndingAddress = ((ULONG_PTR)MemoryArea->StartingAddress + RegionSize - 1) | (PAGE_SIZE - 1);
     RegionSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1; 
     
