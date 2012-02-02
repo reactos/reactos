@@ -3350,7 +3350,16 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
+    /* Find or set the active partition */
     CheckActiveBootPartition(PartitionList);
+
+    /* Update the partition table because we may have changed the active partition */
+    if (WritePartitionsToDisk(PartitionList) == FALSE)
+    {
+        DPRINT("WritePartitionsToDisk() failed\n");
+        MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
 
     RtlFreeUnicodeString(&SystemRootPath);
     swprintf(PathBuffer,
