@@ -518,10 +518,11 @@ HidClassPDO_PnP(
                 Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
                 DPRINT1("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
             }
-            ASSERT(Status == STATUS_SUCCESS);
+
             //
-            // break
+            // done
             //
+            Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_REMOVE_DEVICE:
