@@ -236,8 +236,9 @@ HidClassPDO_HandleQueryHardwareId(
     }
 
     //
-    // FIXME: add 'HID_DEVICE_UP:0001_U:0002'
+    // add HID_DEVICE_UP:0001_U:0002'
     //
+    Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_UP:%04x_U:%04x", CollectionDescription->UsagePage, CollectionDescription->Usage) + 1;
 
     //
     // add HID
