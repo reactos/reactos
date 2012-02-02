@@ -81,6 +81,8 @@ USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid
 USB\COMPOSITE = usbccgp
 GenDisk = disk
+USB\Class_03 = hidusb
+GENERIC_HID_DEVICE = hidusb
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
