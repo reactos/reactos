@@ -193,13 +193,29 @@ USBSTOR_FdoHandleStartDevice(
     // Check that this device uses bulk transfers and is SCSI
     //
     InterfaceDesc = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)DeviceExtension->ConfigurationDescriptor + sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    //
+    // sanity check
+    //
+    ASSERT(InterfaceDesc->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
+    ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
+
     DPRINT1("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
     if (InterfaceDesc->bInterfaceProtocol != 0x50)
     {
         DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
         return STATUS_NOT_SUPPORTED;
     }
-    
+
+    if (InterfaceDesc->bInterfaceSubClass != 0x06)
+    {
+        //
+        // FIXME: need to pad CDBs to 12 byte
+        // mode select commands must be translated from 1AH / 15h to 5AH / 55h
+        //
+        DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     //
     // now select an interface
