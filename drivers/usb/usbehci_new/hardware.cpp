@@ -644,10 +644,24 @@ CUSBHardwareDevice::StartController(void)
                 else if ((Caps & EHCI_LEGSUP_OSOWNED))
                 {
                     //
-                    // HC OS Owned Semaphore EHCI 2.1.8
+                    // HC OS Owned Semaphore EHCI 2.1.7
                     //
                     DPRINT1("[EHCI] acquired ownership\n");
                 }
+
+                //
+                // explictly clear the bios owned flag 2.1.7
+                //
+                Value = 0;
+                m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, ExtendedCapsSupport+2, sizeof(UCHAR));
+
+                //
+                // clear SMI interrupt EHCI 2.1.8
+                //
+                Caps = 4;
+                m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Caps, ExtendedCapsSupport+4, sizeof(ULONG));
+
+
             }
         }
     }
