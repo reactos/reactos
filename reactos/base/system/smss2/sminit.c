@@ -447,8 +447,8 @@ SmpInitializeKnownDllPath(IN PUNICODE_STRING DllPath,
     if (DllPath->Buffer)
     {
         /* Fill out the rest of the string */
-        DllPath->MaximumLength = Length;
-        DllPath->Length = Length - sizeof(UNICODE_NULL);
+        DllPath->MaximumLength = (USHORT)Length;
+        DllPath->Length = (USHORT)Length - sizeof(UNICODE_NULL);
 
         /* Copy the actual path and return success */
         RtlCopyMemory(DllPath->Buffer, Buffer, Length);
@@ -1261,7 +1261,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     ULONG_PTR ErrorParameters[3];
     UNICODE_STRING ErrorResponse;
     IO_STATUS_BLOCK IoStatusBlock;
-    ULONG OldFlag = 0;
+    SECURITY_DESCRIPTOR_CONTROL OldFlag = 0;
     USHORT ImageCharacteristics;
 
     /* Initialize to NULL */
@@ -1546,7 +1546,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     /* We'll be writing all these environment variables over here */
     RtlInitUnicodeString(&DestinationString,
                          L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                         "Control\\Session Manager\\Environment");
+                         L"Control\\Session Manager\\Environment");
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -1636,7 +1636,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     /* Now open the hardware CPU key */
     RtlInitUnicodeString(&DestinationString,
                          L"\\Registry\\Machine\\Hardware\\Description\\System\\"
-                         "CentralProcessor\\0");
+                         L"CentralProcessor\\0");
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -1764,7 +1764,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     /* Now we need to write the safeboot option key in a different format */
     RtlInitUnicodeString(&DestinationString,
                          L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                         "Control\\Safeboot\\Option");
+                         L"Control\\Safeboot\\Option");
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -1879,7 +1879,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     /* Check if we were booted in PE mode (LiveCD should have this) */
     RtlInitUnicodeString(&DestinationString,
                          L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                         "Control\\MiniNT");
+                         L"Control\\MiniNT");
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -1899,7 +1899,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     /* Open the environment key to see if we are booted in safe mode */
     RtlInitUnicodeString(&DestinationString,
                          L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                         "Control\\Session Manager\\Environment");
+                         L"Control\\Session Manager\\Environment");
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
