@@ -1349,10 +1349,15 @@ CUSBHardwareDevice::SetPortFeature(
         KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
 
         //
-        // trigger the status change interrupt
+        // is there a status change callback
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
-
+        if (m_SCECallBack != NULL)
+        {
+            //
+            // issue callback
+            //
+            m_SCECallBack(m_SCEContext);
+        }
         return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
