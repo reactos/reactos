@@ -124,7 +124,7 @@ protected:
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BOOLEAN m_ResetInProgress[16];                                                     // set when a reset is in progress
-
+    BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
 
     // read register
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -159,7 +159,6 @@ CUSBHardwareDevice::Initialize(
     PDEVICE_OBJECT PhysicalDeviceObject,
     PDEVICE_OBJECT LowerDeviceObject)
 {
-    BUS_INTERFACE_STANDARD BusInterface;
     PCI_COMMON_CONFIG PciConfig;
     NTSTATUS Status;
     ULONG BytesRead;
@@ -207,14 +206,14 @@ CUSBHardwareDevice::Initialize(
     m_VendorID = 0;
     m_DeviceID = 0;
 
-    Status = GetBusInterface(PhysicalDeviceObject, &BusInterface);
+    Status = GetBusInterface(PhysicalDeviceObject, &m_BusInterface);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get BusInteface!\n");
         return Status;
     }
 
-    BytesRead = (*BusInterface.GetBusData)(BusInterface.Context,
+    BytesRead = (*m_BusInterface.GetBusData)(m_BusInterface.Context,
                                            PCI_WHICHSPACE_CONFIG,
                                            &PciConfig,
                                            0,
@@ -241,9 +240,9 @@ CUSBHardwareDevice::Initialize(
      DPRINT1("PCI Configuration shows this as a non Bus Mastering device! Enabling...\n");
 
      PciConfig.Command |= PCI_ENABLE_BUS_MASTER;
-     BusInterface.SetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &PciConfig, 0, PCI_COMMON_HDR_LENGTH);
+     m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &PciConfig, 0, PCI_COMMON_HDR_LENGTH);
 
-     BytesRead = (*BusInterface.GetBusData)(BusInterface.Context,
+     BytesRead = (*m_BusInterface.GetBusData)(m_BusInterface.Context,
                                             PCI_WHICHSPACE_CONFIG,
                                             &PciConfig,
                                             0,
@@ -374,9 +373,6 @@ CUSBHardwareDevice::PnpStart(
                 DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
                 DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
                 DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
-
-                
-
 
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
@@ -566,7 +562,9 @@ NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
     EHCI_USBCMD_CONTENT UsbCmd;
-    ULONG UsbSts, FailSafe;
+    ULONG UsbSts, FailSafe, ExtendedCapsSupport, Caps, Index;
+    UCHAR Value;
+    LARGE_INTEGER Timeout;
 
     //
     // check caps
@@ -578,6 +576,82 @@ CUSBHardwareDevice::StartController(void)
         //
         EHCI_WRITE_REGISTER_ULONG(EHCI_CTRLDSSEGMENT, 0x0);
     }
+
+    //
+    // are extended caps supported
+    //
+    ExtendedCapsSupport = (m_Capabilities.HCCParamsLong >> EHCI_ECP_SHIFT) & EHCI_ECP_MASK;
+    if (ExtendedCapsSupport)
+    {
+        DPRINT1("[EHCI] Extended Caps Support detected!\n");
+
+        //
+        // sanity check
+        //
+        ASSERT(ExtendedCapsSupport >= PCI_COMMON_HDR_LENGTH);
+        m_BusInterface.GetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Caps, ExtendedCapsSupport, sizeof(ULONG));
+
+        //
+        // OS Handoff Synchronization support capability. EHCI 5.1
+        //
+        if ((Caps & EHCI_LEGSUP_CAPID_MASK) == EHCI_LEGSUP_CAPID)
+        {
+            //
+            // is it bios owned
+            //
+            if ((Caps & EHCI_LEGSUP_BIOSOWNED))
+            {
+                DPRINT1("[EHCI] Controller is BIOS owned, acquring control\n");
+
+                //
+                // acquire ownership
+                //
+                Value = 1;
+                m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, ExtendedCapsSupport+3, sizeof(UCHAR));
+
+                for(Index = 0; Index < 20; Index++)
+                {
+                    //
+                    // get status
+                    //
+                    m_BusInterface.GetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Caps, ExtendedCapsSupport, sizeof(ULONG));
+                    if ((Caps & EHCI_LEGSUP_BIOSOWNED))
+                    {
+                        //
+                        // lets wait a bit
+                        //
+                        Timeout.QuadPart = 50;
+                        DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
+
+                        //
+                        // convert to 100 ns units (absolute)
+                        //
+                        Timeout.QuadPart *= -10000;
+
+                        //
+                        // perform the wait
+                        //
+                        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+                    }
+                }
+                if ((Caps & EHCI_LEGSUP_BIOSOWNED))
+                {
+                    //
+                    // failed to aquire ownership
+                    //
+                    DPRINT1("[EHCI] failed to acquire ownership\n");
+                }
+                else if ((Caps & EHCI_LEGSUP_OSOWNED))
+                {
+                    //
+                    // HC OS Owned Semaphore EHCI 2.1.8
+                    //
+                    DPRINT1("[EHCI] acquired ownership\n");
+                }
+            }
+        }
+    }
+
 
 
 #if 1
@@ -697,9 +771,6 @@ CUSBHardwareDevice::StartController(void)
     // Set port routing to EHCI controller
     //
     EHCI_WRITE_REGISTER_ULONG(EHCI_CONFIGFLAG, 1);
-
-
-
 
     DPRINT1("EHCI Started!\n");
     return STATUS_SUCCESS;

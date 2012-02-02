@@ -12,6 +12,18 @@
 #define EHCI_HCCPARAMS                  0x08
 #define EHCI_HCSP_PORTROUTE             0x0c
 
+
+//
+// Extended Capabilities
+//
+#define EHCI_ECP_SHIFT                  8
+#define EHCI_ECP_MASK                   0xff
+#define EHCI_LEGSUP_CAPID_MASK          0xff
+#define EHCI_LEGSUP_CAPID               0x01
+#define EHCI_LEGSUP_OSOWNED             (1 << 24)
+#define EHCI_LEGSUP_BIOSOWNED           (1 << 16)
+
+
 //
 // EHCI Operational Registers
 //
