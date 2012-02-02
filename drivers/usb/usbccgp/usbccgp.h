@@ -55,6 +55,7 @@ typedef struct
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;           // configuration handle
     PUSBD_INTERFACE_LIST_ENTRY InterfaceList;                // interface list
     ULONG InterfaceListCount;                                // interface list count
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;                        // pointer to fdo's pdo list
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* descriptor.c */

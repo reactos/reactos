@@ -279,6 +279,7 @@ FDO_CreateChildPdo(
         PDODeviceExtension->FunctionDescriptor = &FDODeviceExtension->FunctionDescriptor[Index];
         PDODeviceExtension->NextDeviceObject = FDODeviceExtension->NextDeviceObject; //DeviceObject; HACK
         PDODeviceExtension->FunctionIndex = Index;
+        PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->InterfaceList = FDODeviceExtension->InterfaceList;
         PDODeviceExtension->InterfaceListCount = FDODeviceExtension->InterfaceListCount;
         PDODeviceExtension->ConfigurationHandle = FDODeviceExtension->ConfigurationHandle;
@@ -423,9 +424,31 @@ FDO_HandlePnp(
 
     // get stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-	DPRINT1("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
+    DPRINT1("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
     switch(IoStack->MinorFunction)
     {
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            /* Send the IRP down the stack */
+            Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // Detach from the device stack
+                //
+                IoDetachDevice(FDODeviceExtension->NextDeviceObject);
+
+                //
+                // Delete the device object
+                //
+                IoDeleteDevice(DeviceObject);
+            }
+
+            //
+            // request completed
+            //
+            break;
+        }
         case IRP_MN_START_DEVICE:
         {
             //

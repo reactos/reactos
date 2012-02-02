@@ -307,6 +307,7 @@ PDO_HandlePnp(
     PIO_STACK_LOCATION IoStack;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     NTSTATUS Status;
+    ULONG Index;
 
     //
     // get current stack location
@@ -351,15 +352,31 @@ PDO_HandlePnp(
        }
        case IRP_MN_REMOVE_DEVICE:
        {
-           DPRINT1("IRP_MN_REMOVE_DEVICE\n");
+           //
+           // remove us from the fdo's pdo list
+           //
+           for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->FunctionDescriptorCount; Index++)
+           {
+               if (PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] == DeviceObject)
+               {
+                   //
+                   // remove us
+                   //
+                   PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] = NULL;
+                   break;
+               }
+           }
 
-           /* Complete the IRP */
+           //
+           // Complete the IRP
+           //
            Irp->IoStatus.Status = STATUS_SUCCESS;
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-           /* Delete the device object */
+           //
+           // Delete the device object
+           //
            IoDeleteDevice(DeviceObject);
-
            return STATUS_SUCCESS;
        }
        case IRP_MN_QUERY_CAPABILITIES:

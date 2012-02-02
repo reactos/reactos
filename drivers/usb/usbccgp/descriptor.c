@@ -259,8 +259,6 @@ AllocateInterfaceDescriptorsArray(
     return STATUS_SUCCESS;
 }
 
-
-
 NTSTATUS
 NTAPI
 USBCCGP_ScanConfigurationDescriptor(
@@ -281,7 +279,7 @@ USBCCGP_ScanConfigurationDescriptor(
     //
     // count all interface descriptors
     //
-    DescriptorCount = CountInterfaceDescriptors(ConfigurationDescriptor);
+    DescriptorCount = ConfigurationDescriptor->bNumInterfaces;
 
     //
     // allocate array holding the interface descriptors
@@ -302,6 +300,7 @@ USBCCGP_ScanConfigurationDescriptor(
         // parse configuration descriptor
         //
         InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, InterfaceIndex, -1, -1, -1, -1);
+        ASSERT(InterfaceDescriptor);
         if (InterfaceDescriptor)
         {
             //
