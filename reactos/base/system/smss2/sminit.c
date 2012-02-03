@@ -72,7 +72,10 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
     RtlInitUnicodeString(&NameString, Name);
     RtlInitUnicodeString(&ValueString, Value);
 
-    /* Check if we should do a duplicat echeck */
+    /* In case this is the first value, initialize a new list/structure */
+    RegEntry = NULL;
+
+    /* Check if we should do a duplicate check */
     if (Flags)
     {
         /* Loop the current list */
@@ -86,9 +89,7 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
             if (!RtlCompareUnicodeString(&RegEntry->Name, &NameString, TRUE))
             {
                 /* Check if the value is the exact same thing */
-                if (((Value) &&
-                     (RtlCompareUnicodeString(&RegEntry->Value, &ValueString, TRUE))) ||
-                    (!(Value) && !(RegEntry->Value.Buffer)))
+                if (!RtlCompareUnicodeString(&RegEntry->Value, &ValueString, TRUE))
                 {
                     /* Fail -- the same setting is being set twice */
                     return STATUS_OBJECT_NAME_EXISTS;
@@ -102,11 +103,6 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
             NextEntry = NextEntry->Flink;
             RegEntry = NULL;
         }
-    }
-    else
-    {
-        /* This should be the first value, so initialize a new list/structure */
-        RegEntry = NULL;
     }
 
     /* Are we adding on, or creating a new entry */
@@ -140,6 +136,7 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
     if (RegEntry->Value.Buffer)
     {
         /* Free it */
+        ASSERT(RegEntry->Value.Length != 0);
         RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
     }
 
