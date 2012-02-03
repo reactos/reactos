@@ -534,9 +534,34 @@ CHCDController::HandlePnp(
             }
             break;
         }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // sure
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(m_NextDeviceObject, Irp);
+        }
         case IRP_MN_REMOVE_DEVICE:
         {
             DPRINT1("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
+
+            //
+            // delete the symbolic link
+            //
+            SetSymbolicLink(FALSE);
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            IoCallDriver(m_NextDeviceObject, Irp);
 
             //
             // detach device from device stack
@@ -548,8 +573,7 @@ CHCDController::HandlePnp(
             //
             IoDeleteDevice(m_FunctionalDeviceObject);
 
-            Status = STATUS_SUCCESS;
-            break;
+            return STATUS_SUCCESS;
         }
         default:
         {
