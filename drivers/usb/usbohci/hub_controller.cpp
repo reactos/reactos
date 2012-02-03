@@ -1763,8 +1763,13 @@ CHubController::HandleClassInterface(
     //
     // assert on failure
     //
-    PC_ASSERT(NT_SUCCESS(Status));
-
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // display error
+        //
+        DPRINT1("URB_FUNCTION_CLASS_INTERFACE failed with Urb Status %x\n", Urb->UrbHeader.Status);
+    }
 
     //
     // done

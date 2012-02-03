@@ -363,7 +363,7 @@ CUSBQueue::FindTransferDescriptorInEndpoint(
         //
         // check if the transfer descriptor is inside the list
         //
-        if (IsTransferDescriptorInEndpoint(EndpointDescriptor, TransferDescriptorLogicalAddress))
+        if ((EndpointDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_HEAD_MASK) == EndpointDescriptor->TailPhysicalDescriptor || (EndpointDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_HALTED))
         {
             //
             // found endpoint
@@ -582,13 +582,6 @@ CUSBQueue::CleanupEndpointDescriptor(
     //
     // free endpoint descriptor
     //
-    Request->FreeEndpointDescriptor(EndpointDescriptor);
-
-    //
-    // FIXME: check if complete
-    //
-    //ASSERT(Request->IsRequestComplete());
-
     Request->FreeEndpointDescriptor(EndpointDescriptor);
 
     //

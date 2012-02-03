@@ -598,11 +598,24 @@ CUSBDevice::CreateDeviceDescriptor()
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     PMDL Mdl;
     NTSTATUS Status;
+    PVOID DeviceDescriptor;
+
+    //
+    // allocate descriptor page aligned
+    //
+    DeviceDescriptor = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+    if (!DeviceDescriptor)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     //
     // zero descriptor
     //
-    RtlZeroMemory(&m_DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+    RtlZeroMemory(DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
     RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
     //
@@ -616,7 +629,7 @@ CUSBDevice::CreateDeviceDescriptor()
     //
     // allocate mdl describing the device descriptor
     //
-    Mdl = IoAllocateMdl(&m_DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR), FALSE, FALSE, 0);
+    Mdl = IoAllocateMdl(DeviceDescriptor, PAGE_SIZE, FALSE, FALSE, 0);
     if (!Mdl)
     {
         //
@@ -643,10 +656,20 @@ CUSBDevice::CreateDeviceDescriptor()
     if (NT_SUCCESS(Status))
     {
         //
+        // copy back device descriptor
+        //
+        RtlCopyMemory(&m_DeviceDescriptor, DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+
+        //
         // informal dbg print
         //
         DumpDeviceDescriptor(&m_DeviceDescriptor);
     }
+
+    //
+    // free item
+    //
+    ExFreePool(DeviceDescriptor);
 
     //
     // done

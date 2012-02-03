@@ -239,7 +239,8 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 #define OHCI_ENDPOINT_DIRECTION_IN              0x00001000
 #define OHCI_ENDPOINT_GENERAL_FORMAT            0x00000000
 #define OHCI_ENDPOINT_ISOCHRONOUS_FORMAT        0x00008000
-
+#define	OHCI_ENDPOINT_HEAD_MASK                 0xfffffffc
+#define	OHCI_ENDPOINT_HALTED					0x00000001
 //
 // Maximum port count set by OHCI
 //

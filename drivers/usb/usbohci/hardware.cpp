@@ -1457,6 +1457,8 @@ InterruptServiceRoutine(
         // the interrupt was not caused by DoneHead update
         // check if something important happened
         //
+        DPRINT1("InterruptStatus %x  InterruptEnable %x\n", READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), 
+                                                            READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)));
         Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)) & (~OHCI_WRITEBACK_DONE_HEAD); 
         if (Status == 0)
         {

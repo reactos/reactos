@@ -64,6 +64,8 @@ public:
     NTSTATUS CreateIsochronousTransferDescriptor(OUT POHCI_ISO_TD *OutDescriptor, ULONG FrameCount);
     UCHAR GetEndpointAddress();
     USHORT GetMaxPacketSize();
+    VOID CheckError(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
+
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -968,7 +970,6 @@ CUSBRequest::AllocateEndpointDescriptor(
 
     }
 
-
     //
     // FIXME: detect type
     //
@@ -1269,7 +1270,37 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // initialize data descriptor
         //
-        DataDescriptor->Flags = OHCI_TD_BUFFER_ROUNDING| OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY | OHCI_TD_DIRECTION_PID_IN;
+        DataDescriptor->Flags = OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY | OHCI_TD_TOGGLE_1;
+
+        if (m_EndpointDescriptor)
+        {
+            if (USB_ENDPOINT_DIRECTION_OUT(m_EndpointDescriptor->bEndpointAddress))
+            {
+                //
+                // direction out
+                //
+                DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_OUT;
+            }
+            else
+            {
+                //
+                // direction in
+                //
+                DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
+            }
+        }
+        else
+        {
+            //
+            // no end point address provided - assume its an in direction
+            //
+            DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
+        }
+
+        //
+        // FIXME verify short packets are ok
+        //
+        //DataDescriptor->Flags |= OHCI_TD_BUFFER_ROUNDING;
 
         //
         // store physical address of buffer
@@ -1282,7 +1313,7 @@ CUSBRequest::BuildControlTransferDescriptor(
     //
     // initialize setup descriptor
     //
-    SetupDescriptor->Flags = OHCI_TD_DIRECTION_PID_SETUP | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_0 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);
+    SetupDescriptor->Flags = OHCI_TD_BUFFER_ROUNDING | OHCI_TD_DIRECTION_PID_SETUP | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_0 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);
 
     if (m_SetupPacket)
     {
@@ -1561,6 +1592,134 @@ CUSBRequest::FreeEndpointDescriptor(
 }
 
 VOID
+CUSBRequest::CheckError(
+    struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
+{
+    POHCI_GENERAL_TD TransferDescriptor;
+    ULONG ConditionCode;
+    PURB Urb;
+    PIO_STACK_LOCATION IoStack;
+
+
+    //
+    // set status code
+    //
+    m_NtStatusCode = STATUS_SUCCESS;
+    m_UrbStatusCode = USBD_STATUS_SUCCESS;
+
+
+    if (OutDescriptor->Flags & OHCI_ENDPOINT_ISOCHRONOUS_FORMAT)
+    {
+        //
+        // FIXME: handle isochronous support
+        //
+        ASSERT(FALSE);
+    }
+    else
+    {
+        //
+        // get first general transfer descriptor
+        //
+        TransferDescriptor = (POHCI_GENERAL_TD)OutDescriptor->HeadLogicalDescriptor;
+
+        while(TransferDescriptor)
+        {
+             //
+             // the descriptor must have been processed
+             //
+            ASSERT(OHCI_TD_GET_CONDITION_CODE(TransferDescriptor->Flags) != OHCI_TD_CONDITION_NOT_ACCESSED);
+
+            //
+            // get condition code
+            //
+            ConditionCode = OHCI_TD_GET_CONDITION_CODE(TransferDescriptor->Flags);
+            if (ConditionCode != OHCI_TD_CONDITION_NO_ERROR)
+            {
+                //
+                // FIXME status code
+                //
+                m_NtStatusCode = STATUS_UNSUCCESSFUL;
+
+                switch(ConditionCode)
+                {
+                    case OHCI_TD_CONDITION_CRC_ERROR:
+                        DPRINT1("OHCI_TD_CONDITION_CRC_ERROR detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_CRC;
+                        break;
+                    case OHCI_TD_CONDITION_BIT_STUFFING:
+                        DPRINT1("OHCI_TD_CONDITION_BIT_STUFFING detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_BTSTUFF;
+                        break;
+                    case OHCI_TD_CONDITION_TOGGLE_MISMATCH:
+                        DPRINT1("OHCI_TD_CONDITION_TOGGLE_MISMATCH detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_DATA_TOGGLE_MISMATCH;
+                        break;
+                    case OHCI_TD_CONDITION_STALL:
+                        DPRINT1("OHCI_TD_CONDITION_STALL detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_STALL_PID;
+                        break;
+                    case OHCI_TD_CONDITION_NO_RESPONSE:
+                        DPRINT1("OHCI_TD_CONDITION_NO_RESPONSE detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_DEV_NOT_RESPONDING;
+                        break;
+                    case OHCI_TD_CONDITION_PID_CHECK_FAILURE:
+                        DPRINT1("OHCI_TD_CONDITION_PID_CHECK_FAILURE detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_PID_CHECK_FAILURE;
+                        break;
+                    case OHCI_TD_CONDITION_UNEXPECTED_PID:
+                        DPRINT1("OHCI_TD_CONDITION_UNEXPECTED_PID detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_UNEXPECTED_PID;
+                        break;
+                    case OHCI_TD_CONDITION_DATA_OVERRUN:
+                        DPRINT1("OHCI_TD_CONDITION_DATA_OVERRUN detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_DATA_OVERRUN;
+                        break;
+                    case OHCI_TD_CONDITION_DATA_UNDERRUN:
+                        if (m_Irp)
+                        {
+                            //
+                            // get current irp stack location
+                            //
+                            IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+                            //
+                            // get urb
+                            //
+                            Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+                            if(Urb->UrbBulkOrInterruptTransfer.TransferFlags & USBD_SHORT_TRANSFER_OK)
+                            {
+                                //
+                                // short packets are ok
+                                //
+                                ASSERT(Urb->UrbHeader.Function == URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER);
+                                m_NtStatusCode = STATUS_SUCCESS;
+                                break;
+                            }
+                        }
+                        DPRINT1("OHCI_TD_CONDITION_DATA_UNDERRUN detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_DATA_UNDERRUN;
+                        break;
+                    case OHCI_TD_CONDITION_BUFFER_OVERRUN:
+                        DPRINT1("OHCI_TD_CONDITION_BUFFER_OVERRUN detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_BUFFER_OVERRUN;
+                        break;
+                    case OHCI_TD_CONDITION_BUFFER_UNDERRUN:
+                        DPRINT1("OHCI_TD_CONDITION_BUFFER_UNDERRUN detected in TransferDescriptor TransferDescriptor %p\n", TransferDescriptor);
+                        m_UrbStatusCode = USBD_STATUS_BUFFER_UNDERRUN;
+                        break;
+                }
+            }
+
+            //
+            // get next
+            //
+            TransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
+        }
+    }
+}
+
+VOID
 CUSBRequest::CompletionCallback(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
@@ -1570,17 +1729,16 @@ CUSBRequest::CompletionCallback(
     DPRINT("CUSBRequest::CompletionCallback Descriptor %p PhysicalAddress %x\n", OutDescriptor, OutDescriptor->PhysicalAddress.LowPart);
 
     //
-    // set status code
+    // check for errors
     //
-    m_NtStatusCode = STATUS_SUCCESS;
-    m_UrbStatusCode = USBD_STATUS_SUCCESS;
+    CheckError(OutDescriptor);
 
     if (m_Irp)
     {
         //
         // set irp completion status
         //
-        m_Irp->IoStatus.Status = STATUS_SUCCESS; //FIXME
+        m_Irp->IoStatus.Status = m_NtStatusCode;
 
         //
         // get current irp stack location
@@ -1595,7 +1753,7 @@ CUSBRequest::CompletionCallback(
         //
         // store urb status
         //
-        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS; //FIXME
+        Urb->UrbHeader.Status = m_UrbStatusCode;
 
         //
         // Check if the MDL was created
