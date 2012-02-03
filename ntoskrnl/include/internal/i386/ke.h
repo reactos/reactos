@@ -243,8 +243,8 @@ FORCEINLINE
 VOID
 KeInvalidateTlbEntry(IN PVOID Address)
 {
-    /* Invalidate the TLB entry for this address */
-    __invlpg(Address);
+    /* HACK: Flush the entire TLB */
+    __writecr3(__readcr3());
 }
 
 FORCEINLINE
