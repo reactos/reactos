@@ -15,3 +15,12 @@
 /* GLOBALS ********************************************************************/
 
 /* FUNCTIONS ******************************************************************/
+
+BOOLEAN
+NTAPI
+SmpCheckForCrashDump(IN PUNICODE_STRING FileName)
+{
+    return FALSE;
+}
+
+     

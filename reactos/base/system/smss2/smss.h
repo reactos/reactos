@@ -181,4 +181,10 @@ SmpRestoreBootStatusData(
     IN BOOLEAN ShutdownOkay
 );
 
+BOOLEAN
+NTAPI
+SmpCheckForCrashDump(
+    IN PUNICODE_STRING FileName
+);
+
 

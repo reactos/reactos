@@ -46,11 +46,13 @@ typedef struct _SMP_PAGEFILE_DESCRIPTOR
 // Structure and flags describing each volume
 //
 #define SMP_VOLUME_INSERTED             0x01
+#define SMP_VOLUME_PAGEFILE_CREATED     0x04
 #define SMP_VOLUME_IS_BOOT              0x08
 typedef struct _SMP_VOLUME_DESCRIPTOR
 {
     LIST_ENTRY Entry;
-    ULONG Flags;
+    USHORT Flags;
+    USHORT PageFileCount;
     WCHAR DriveLetter;
     LARGE_INTEGER FreeSpace;
     FILE_FS_DEVICE_INFORMATION DeviceInfo;
@@ -230,13 +232,369 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
 
 NTSTATUS
 NTAPI
+SmpGetPagingFileSize(IN PUNICODE_STRING FileName,
+                     OUT PLARGE_INTEGER Size)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    FILE_STANDARD_INFORMATION StandardInfo;
+
+    DPRINT1("SMSS:PFILE: Trying to get size for `%wZ'\n", FileName);
+    Size->QuadPart = 0;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    &StandardInfo,
+                                    sizeof(StandardInfo),
+                                    FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS:PFILE: Failed query for size potential pagefile `%wZ' with status %X \n",
+                FileName, Status);
+        NtClose(FileHandle);
+        return Status;
+    }
+
+    NtClose(FileHandle);
+    Size->LowPart = StandardInfo.AllocationSize.LowPart;
+    Size->HighPart = StandardInfo.AllocationSize.HighPart;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SmpDeletePagingFile(IN PUNICODE_STRING FileName)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    FILE_DISPOSITION_INFORMATION Disposition;
+
+    /* Open the page file */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&FileHandle,
+                        DELETE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_NON_DIRECTORY_FILE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Delete it */
+        Disposition.DeleteFile = TRUE;
+        Status = NtSetInformationFile(FileHandle,
+                                      &IoStatusBlock,
+                                      &Disposition,
+                                      sizeof(Disposition),
+                                      FileDispositionInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SMSS:PFILE: Failed to delete page file `%wZ' (status %X)\n",
+                    FileName, Status);
+        }
+        else
+        {
+            DPRINT1("SMSS:PFILE: Deleted stale paging file - %wZ\n", FileName);
+        }
+
+        /* Close the handle */
+        NtClose(FileHandle);
+    }
+    else
+    {
+        DPRINT1("SMSS:PFILE: Failed to open for deletion page file `%wZ' (status %X)\n",
+                FileName, Status);
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER FreeSpace, FinalFreeSpace;
+    FILE_FS_SIZE_INFORMATION SizeInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING VolumeName;
+    HANDLE VolumeHandle;
+    WCHAR PathString[32];
+    ASSERT(Volume->Flags & SMP_VOLUME_IS_BOOT); // ASSERT says "BootVolume == 1"
+
+    /* Build the standard path */
+    wcscpy(PathString, L"\\??\\A:\\");
+    VolumeName.Buffer = PathString;
+    VolumeName.Length = wcslen(PathString) * sizeof(WCHAR);
+    VolumeName.MaximumLength = VolumeName.Length + sizeof(UNICODE_NULL);
+    VolumeName.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = Volume->DriveLetter;
+    DPRINT1("SMSS:PFILE: Querying volume `%wZ' for free space \n", &VolumeName);
+
+    /* Open the volume */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &VolumeName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&VolumeHandle,
+                        FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS:PFILE: Open volume `%wZ' failed with status %X \n", &VolumeName, Status);
+        return Status;
+    }
+
+    /* Now get size information on the volume */
+    Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                          &IoStatusBlock,
+                                          &SizeInfo,
+                                          sizeof(SizeInfo),
+                                          FileFsSizeInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed -- keep going */
+        DPRINT1("SMSS:PFILE: Query volume `%wZ' (handle %p) for size failed"
+                " with status %X \n",
+                &VolumeName,
+                VolumeHandle,
+                Status);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Volume);
+        NtClose(VolumeHandle);
+        return Status;
+    }
+    NtClose(VolumeHandle);
+
+    /* Compute how much free space we have */
+    FreeSpace.QuadPart = SizeInfo.AvailableAllocationUnits.QuadPart *
+                         SizeInfo.SectorsPerAllocationUnit;
+    FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
+    Volume->FreeSpace = FinalFreeSpace;
+
+    /* Check if there's less than 32MB free so we don't starve the disk */
+    if (FinalFreeSpace.QuadPart <= 0x2000000)
+    {
+        /* In this case, act as if there's no free space  */
+        Volume->FreeSpace.QuadPart = 0;
+    }
+    else
+    {
+        /* Trim off 32MB to give the disk a bit of breathing room */
+        Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart - 0x2000000;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+PSMP_VOLUME_DESCRIPTOR
+NTAPI
+SmpSearchVolumeDescriptor(IN WCHAR DriveLetter)
+{
+    WCHAR UpLetter;
+    PSMP_VOLUME_DESCRIPTOR Volume = NULL;
+    PLIST_ENTRY NextEntry;
+
+    /* Use upper case to reduce differences */
+    UpLetter = RtlUpcaseUnicodeChar(DriveLetter);
+
+    /* Loop each volume */
+    NextEntry = SmpVolumeDescriptorList.Flink;
+    while (NextEntry != &SmpVolumeDescriptorList)
+    {
+        /* Grab the entry */
+        Volume = CONTAINING_RECORD(NextEntry, SMP_VOLUME_DESCRIPTOR, Entry);
+
+        /* Make sure it's a valid entry with an uppcase drive letter */
+        ASSERT(Volume->Flags & SMP_VOLUME_INSERTED); // Volume->Initialized in ASSERT
+        ASSERT(Volume->DriveLetter >= L'A' && Volume->DriveLetter <= L'Z');
+
+        /* Break if it matches, if not, keep going */
+        if (Volume->DriveLetter == UpLetter) break;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Return the volume if one was found */
+    if (NextEntry == &SmpVolumeDescriptorList) Volume = NULL;
+    return Volume;
+}
+
+NTSTATUS
+NTAPI
+SmpCreatePagingFile(IN PUNICODE_STRING Name,
+                    IN PLARGE_INTEGER MinSize,
+                    IN PLARGE_INTEGER MaxSize,
+                    IN ULONG Priority)
+{
+    NTSTATUS Status;
+    DPRINT1("Should request pagefile: %wZ with size %I64x and %I64x\n", Name, MinSize->QuadPart, MaxSize->QuadPart);
+
+    /* Tell the kernel to create the pagefile */
+    Status = STATUS_SUCCESS;
+    //Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",
+                Name,
+                MinSize->QuadPart,
+                MaxSize->QuadPart);
+    }
+    else
+    {
+        DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) failed with %X \n",
+                Name,
+                MinSize->QuadPart,
+                MaxSize->QuadPart,
+                Status);
+    }
+
+    /* Return the status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
                                 IN PLARGE_INTEGER FuzzFactor,
                                 IN PLARGE_INTEGER MinimumSize)
 {
-    DPRINT1("Should create fixed pagefile of sizes: %I64d %I64d\n",
-            FuzzFactor->QuadPart, MinimumSize->QuadPart);
-    return STATUS_SUCCESS;
+    PSMP_VOLUME_DESCRIPTOR Volume;
+    BOOLEAN ShouldDelete;
+    NTSTATUS Status;
+    LARGE_INTEGER PageFileSize;
+    ASSERT(Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] != L'?');
+
+    /* Try to find the volume descriptor for this drive letter */
+    ShouldDelete = FALSE;
+    Volume = SmpSearchVolumeDescriptor(Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET]);
+    if (!Volume)
+    {
+        /* Couldn't find it, fail */
+        DPRINT1("SMSS:PFILE: No volume descriptor for `%wZ' \n",
+                &Descriptor->Name);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if this is the boot volume */
+    if (Volume->Flags & SMP_VOLUME_IS_BOOT)
+    {
+        /* Check if we haven't yet processed a crash dump on this volume */
+        if (!(Descriptor->Flags & SMP_PAGEFILE_DUMP_PROCESSED))
+        {
+            /* Try to find a crash dump and extract it */
+            DPRINT1("SMSS:PFILE: Checking for crash dump in `%wZ' on boot volume \n",
+                    &Descriptor->Name);
+            SmpCheckForCrashDump(&Descriptor->Name);
+
+            /* Update how much free space we have now that we extracted a dump */
+            Status = SmpGetVolumeFreeSpace(Volume);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SMSS:PFILE: Failed to query free space for boot volume `%wC'\n",
+                        Volume->DriveLetter);
+            }
+
+            /* Don't process crashdump on this volume anymore */
+            Descriptor->Flags |= SMP_PAGEFILE_DUMP_PROCESSED;
+        }
+    }
+    else
+    {
+        /* Crashdumps can only be on the boot volume */
+        DPRINT1("SMSS:PFILE: Skipping crash dump checking for `%wZ' on non boot"
+                "volume `%wC' \n",
+                &Descriptor->Name,
+                Volume->DriveLetter);
+    }
+
+    /* Update the size after dump extraction */
+    Descriptor->ActualMinSize = Descriptor->MinSize;
+    Descriptor->ActualMaxSize = Descriptor->MaxSize;
+
+    /* Check how big we can make the pagefile */
+    Status = SmpGetPagingFileSize(&Descriptor->Name, &PageFileSize);
+    if (PageFileSize.QuadPart > 0) ShouldDelete = TRUE;
+    DPRINT1("SMSS:PFILE: Detected size %I64X for future paging file `%wZ'\n",
+            PageFileSize,
+            &Descriptor->Name);
+    DPRINT1("SMSS:PFILE: Free space on volume `%wC' is %I64X \n",
+            Volume->DriveLetter,
+            Volume->FreeSpace.QuadPart);
+
+    /* Now update our size and make sure none of these are too big */
+    PageFileSize.QuadPart += Volume->FreeSpace.QuadPart;
+    if (Descriptor->ActualMinSize.QuadPart > PageFileSize.QuadPart)
+    {
+        Descriptor->ActualMinSize = PageFileSize;
+    }
+    if (Descriptor->ActualMaxSize.QuadPart > PageFileSize.QuadPart)
+    {
+        Descriptor->ActualMaxSize = PageFileSize;
+    }
+    DPRINT1("SMSS:PFILE: min %I64X, max %I64X, real min %I64X \n",
+            Descriptor->ActualMinSize.QuadPart,
+            Descriptor->ActualMaxSize.QuadPart,
+            MinimumSize->QuadPart);
+
+    /* Keep going until we've created a pagefile of the right size */
+    while (Descriptor->ActualMinSize.QuadPart >= MinimumSize->QuadPart)
+    {
+        /* Call NT to do it */
+        Status = SmpCreatePagingFile(&Descriptor->Name,
+                                     &Descriptor->ActualMinSize,
+                                     &Descriptor->ActualMaxSize,
+                                     0);
+        if (NT_SUCCESS(Status))
+        {
+            /* We're done, update flags and increase the count */
+            Descriptor->Flags |= SMP_PAGEFILE_CREATED;
+            Volume->Flags |= SMP_VOLUME_PAGEFILE_CREATED;
+            Volume->PageFileCount++;
+            break;
+        }
+
+        /* We failed, try a slighly smaller pagefile */
+        Descriptor->ActualMinSize.QuadPart -= FuzzFactor->QuadPart;
+    }
+
+    /* Check if we weren't able to create it */
+    if (Descriptor->ActualMinSize.QuadPart < MinimumSize->QuadPart)
+    {
+        /* Delete the current page file and fail */
+        if (ShouldDelete) SmpDeletePagingFile(&Descriptor->Name);
+        DPRINT1("SMSS:PFILE: Failing for min %I64X, max %I64X, real min %I64X \n",
+                Descriptor->ActualMinSize.QuadPart,
+                Descriptor->ActualMaxSize.QuadPart,
+                MinimumSize->QuadPart);
+        Status = STATUS_DISK_FULL;
+    }
+
+    /* Return the status */
+    return Status;
 }
 
 NTSTATUS
@@ -245,9 +603,36 @@ SmpCreatePagingFileOnAnyDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
                               IN PLARGE_INTEGER FuzzFactor,
                               IN PLARGE_INTEGER MinimumSize)
 {
-    DPRINT1("Should create 'any' pagefile of sizes: %I64d %I64d\n",
-            FuzzFactor->QuadPart, MinimumSize->QuadPart);
-    return STATUS_SUCCESS;
+    PSMP_VOLUME_DESCRIPTOR Volume;
+    NTSTATUS Status = STATUS_DISK_FULL;
+    PLIST_ENTRY NextEntry;
+    ASSERT(Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] == L'?');
+
+    /* Loop the volume list */
+    NextEntry = SmpVolumeDescriptorList.Flink;
+    while (NextEntry != &SmpVolumeDescriptorList)
+    {
+        /* Get the volume */
+        Volume = CONTAINING_RECORD(NextEntry, SMP_VOLUME_DESCRIPTOR, Entry);
+
+        /* Make sure it's inserted and on a valid drive letter */
+        ASSERT(Volume->Flags & SMP_VOLUME_INSERTED); // Volume->Initialized in ASSERT
+        ASSERT(Volume->DriveLetter >= L'A' && Volume->DriveLetter <= L'Z');
+
+        /* Write the drive letter to try creating it on this volume */
+        Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = Volume->DriveLetter;
+        Status = SmpCreatePagingFileOnFixedDrive(Descriptor,
+                                                 FuzzFactor,
+                                                 MinimumSize);
+        if (NT_SUCCESS(Status)) break;
+
+        /* It didn't work, make it an any pagefile again and keep going */
+        Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = L'?';
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Return disk full or success */
+    return Status;
 }
 
 VOID
