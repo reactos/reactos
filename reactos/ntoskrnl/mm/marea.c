@@ -462,7 +462,7 @@ MmFindGapBottomUp(
     /* Get the margins of the address space */
     if (MmGetAddressSpaceOwner(AddressSpace) != NULL)
     {
-        LowestAddress = MM_LOWEST_USER_ADDRESS;
+        LowestAddress = (ULONG_PTR)MM_LOWEST_USER_ADDRESS;
         HighestAddress = (ULONG_PTR)MmHighestUserAddress;
     }
     else
