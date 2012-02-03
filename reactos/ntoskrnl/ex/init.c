@@ -331,7 +331,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the codepage data in its new location. */
-    ASSERT(SectionBase > MmSystemRangeStart);
+    ASSERT(SectionBase >= MmSystemRangeStart);
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
