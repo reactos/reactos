@@ -80,6 +80,8 @@ protected:
     PUSBQUEUE m_Queue;
     PDMAMEMORYMANAGER m_DmaManager;
     PUSB_CONFIGURATION_DESCRIPTOR *m_ConfigurationDescriptors;
+    LIST_ENTRY m_IrpListHead;
+
 };
 
 //----------------------------------------------------------------------------------------
@@ -116,6 +118,11 @@ CUSBDevice::Initialize(
     // initialize device lock
     //
     KeInitializeSpinLock(&m_Lock);
+
+    //
+    // initialize irp list
+    //
+    InitializeListHead(&m_IrpListHead);
 
     //
     // no device address has been set yet
@@ -268,7 +275,6 @@ CUSBDevice::GetType()
 
     DPRINT1("CUSBDevice::GetType Unknown bcdUSB Type %x\n", m_DeviceDescriptor.bcdUSB);
     PC_ASSERT(FALSE);
-
     return Usb11Device;
 }
 
@@ -462,7 +468,7 @@ CUSBDevice::CommitIrp(
     //
     // initialize request
     //
-    Status = Request->InitializeWithIrp(m_DmaManager, Irp);
+    Status = Request->InitializeWithIrp(m_DmaManager, Irp, GetSpeed());
 
     //
     // mark irp as pending
@@ -550,7 +556,7 @@ CUSBDevice::CommitSetupPacket(
     //
     // initialize request
     //
-    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, m_DeviceAddress, EndpointDescriptor, BufferLength, Mdl);
+    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, m_DeviceAddress, EndpointDescriptor, GetSpeed(), BufferLength, Mdl);
     if (!NT_SUCCESS(Status))
     {
         //

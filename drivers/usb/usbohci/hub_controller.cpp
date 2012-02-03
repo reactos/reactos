@@ -2282,7 +2282,7 @@ USBHI_CreateUsbDevice(
     CHubController * Controller;
     NTSTATUS Status;
 
-    DPRINT1("USBHI_CreateUsbDevice\n");
+    DPRINT1("USBHI_CreateUsbDevice PortStatus %x\n", PortStatus);
 
     //
     // first get hub controller
