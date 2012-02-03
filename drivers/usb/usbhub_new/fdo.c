@@ -19,7 +19,8 @@ NTSTATUS
 CreateUsbChildDeviceObject(
     IN PDEVICE_OBJECT UsbHubDeviceObject,
     IN LONG PortId,
-    OUT PDEVICE_OBJECT *UsbChildDeviceObject);
+    OUT PDEVICE_OBJECT *UsbChildDeviceObject,
+    IN ULONG PortStatus);
 
 NTSTATUS
 DestroyUsbChildDeviceObject(
@@ -402,7 +403,7 @@ DeviceStatusChangeThread(
             //
             // This is a new device
             //
-            Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL);
+            Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL, PortStatus.Status);
         }
     }
 
@@ -1149,7 +1150,8 @@ NTSTATUS
 CreateUsbChildDeviceObject(
     IN PDEVICE_OBJECT UsbHubDeviceObject,
     IN LONG PortId,
-    OUT PDEVICE_OBJECT *UsbChildDeviceObject)
+    OUT PDEVICE_OBJECT *UsbChildDeviceObject,
+    IN ULONG PortStatus)
 {
     NTSTATUS Status;
     PDEVICE_OBJECT RootHubDeviceObject, NewChildDeviceObject;
@@ -1252,7 +1254,7 @@ CreateUsbChildDeviceObject(
     Status = HubInterface->CreateUsbDevice(HubInterfaceBusContext,
                                            (PVOID)&UsbChildExtension->UsbDeviceHandle,
                                            HubDeviceExtension->RootHubHandle,
-                                           0x501, //hack
+                                           PortStatus,
                                            PortId);
     if (!NT_SUCCESS(Status))
     {
