@@ -556,6 +556,14 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 
     virtual VOID TransferDescriptorCompletionCallback(ULONG TransferDescriptorLogicalAddress) = 0;
 
+
+//-----------------------------------------------------------------------------------------
+//
+// AbortDevicePipe
+//
+// Description: aborts all pending requsts of an device
+
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
 };
 
 typedef IUSBQueue *PUSBQUEUE;
@@ -809,6 +817,16 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
                                      IN OUT PUSBD_INTERFACE_INFORMATION Interface) = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
+// AbortPipe
+//
+// Description: aborts all pending requsts
+
+    virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
+
 };
 
 typedef IUSBDevice *PUSBDEVICE;

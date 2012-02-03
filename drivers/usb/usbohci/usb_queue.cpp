@@ -40,6 +40,7 @@ public:
     virtual NTSTATUS CancelRequests();
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
     virtual VOID TransferDescriptorCompletionCallback(ULONG TransferDescriptorLogicalAddress);
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
 
     // local functions
     BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
@@ -739,6 +740,115 @@ CUSBQueue::FindInterruptEndpointDescriptor(
     //
     return m_InterruptEndpoints[Index];
 }
+
+NTSTATUS
+CUSBQueue::AbortDevicePipe(
+    IN UCHAR DeviceAddress,
+    IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor, CurrentDescriptor, PreviousDescriptor, TempDescriptor;
+    ULONG Type;
+    POHCI_GENERAL_TD TransferDescriptor;
+
+    //
+    // get type
+    //
+    Type = (EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
+
+    //
+    // check type
+    //
+    if (Type == USB_ENDPOINT_TYPE_BULK)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = m_BulkHeadEndpointDescriptor;
+    }
+    else if (Type == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = m_ControlHeadEndpointDescriptor;
+    }
+    else if (Type == USB_ENDPOINT_TYPE_INTERRUPT)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = FindInterruptEndpointDescriptor(EndpointDescriptor->bInterval);
+        ASSERT(HeadDescriptor);
+    }
+    else if (Type == USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    {
+        UNIMPLEMENTED
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    //
+    // FIXME should disable list processing
+    //
+
+    //
+    // now remove all endpoints
+    //
+    ASSERT(HeadDescriptor);
+    CurrentDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)HeadDescriptor->NextDescriptor;
+    PreviousDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)HeadDescriptor;
+
+    while(CurrentDescriptor)
+    {
+        if ((CurrentDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_HEAD_MASK) == CurrentDescriptor->TailPhysicalDescriptor || (CurrentDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_HALTED))
+        {
+            //
+            // cleanup endpoint
+            //
+            TempDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)CurrentDescriptor->NextDescriptor;
+            CleanupEndpointDescriptor(CurrentDescriptor, PreviousDescriptor);
+
+            //
+            // use next descriptor
+            //
+            CurrentDescriptor = TempDescriptor;
+        }
+
+        if (!CurrentDescriptor)
+            break;
+
+        if (CurrentDescriptor->HeadPhysicalDescriptor)
+        {
+            TransferDescriptor = (POHCI_GENERAL_TD)CurrentDescriptor->HeadLogicalDescriptor;
+            ASSERT(TransferDescriptor);
+
+            if ((OHCI_ENDPOINT_GET_ENDPOINT_NUMBER(TransferDescriptor->Flags) == (EndpointDescriptor->bEndpointAddress & 0xF)) &&
+                (OHCI_ENDPOINT_GET_DEVICE_ADDRESS(TransferDescriptor->Flags) == DeviceAddress))
+            {
+                //
+                // cleanup endpoint
+                //
+                TempDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)CurrentDescriptor->NextDescriptor;
+                CleanupEndpointDescriptor(CurrentDescriptor, PreviousDescriptor);
+                //
+                // use next descriptor
+                //
+                CurrentDescriptor = TempDescriptor;
+            }
+       }
+
+       if (!CurrentDescriptor)
+           break;
+
+       PreviousDescriptor = CurrentDescriptor;
+       CurrentDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)CurrentDescriptor->NextDescriptor;
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 CreateUSBQueue(

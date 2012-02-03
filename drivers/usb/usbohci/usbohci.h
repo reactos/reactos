@@ -7,6 +7,7 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
+#include <usb100.h>
 
 extern
 "C"

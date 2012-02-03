@@ -229,6 +229,7 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 
 #define OHCI_ENDPOINT_SKIP                      0x00004000
 #define OHCI_ENDPOINT_SET_DEVICE_ADDRESS(s)     (s)
+#define OHCI_ENDPOINT_GET_DEVICE_ADDRESS(s)     ((s) & 0xFF)
 #define OHCI_ENDPOINT_GET_ENDPOINT_NUMBER(s)    (((s) >> 7) & 0xf)
 #define OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(s)    ((s) << 7)
 #define OHCI_ENDPOINT_GET_MAX_PACKET_SIZE(s)    (((s) >> 16) & 0x07ff)
