@@ -1700,9 +1700,7 @@ CHubController::HandleSyncResetAndClearStall(
     IN OUT PIRP Irp,
     IN OUT PURB Urb)
 {
-    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status = STATUS_SUCCESS;
-    PUSBDEVICE UsbDevice;
     PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
     ULONG Type;
 
@@ -1759,11 +1757,9 @@ CHubController::HandleAbortPipe(
     IN OUT PIRP Irp,
     IN OUT PURB Urb)
 {
-    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
     PUSBDEVICE UsbDevice;
     PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-
 
     //
     // sanity check
