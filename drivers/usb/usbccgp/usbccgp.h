@@ -39,6 +39,11 @@ typedef struct
     PUSBC_FUNCTION_DESCRIPTOR FunctionDescriptor;            // usb function descriptor
     ULONG FunctionDescriptorCount;                           // number of function descriptor
     PDEVICE_OBJECT * ChildPDO;                               // child pdos
+    LIST_ENTRY ResetPortListHead;                            // reset port list head
+    LIST_ENTRY CyclePortListHead;                            // cycle port list head
+    UCHAR ResetPortActive;                                   // reset port active
+    UCHAR CyclePortActive;                                   // cycle port active
+    KSPIN_LOCK Lock;                                         // reset / cycle port list lock
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 #define USBCCPG_TAG 'cbsu'

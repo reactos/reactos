@@ -277,7 +277,7 @@ FDO_CreateChildPdo(
         //
         PDODeviceExtension->Common.IsFDO = FALSE;
         PDODeviceExtension->FunctionDescriptor = &FDODeviceExtension->FunctionDescriptor[Index];
-        PDODeviceExtension->NextDeviceObject = FDODeviceExtension->NextDeviceObject; //DeviceObject; HACK
+        PDODeviceExtension->NextDeviceObject = DeviceObject;
         PDODeviceExtension->FunctionIndex = Index;
         PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->InterfaceList = FDODeviceExtension->InterfaceList;
@@ -498,8 +498,182 @@ FDO_HandlePnp(
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
+}
+
+NTSTATUS
+FDO_HandleResetCyclePort(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    PLIST_ENTRY ListHead, Entry;
+    LIST_ENTRY TempList;
+    PUCHAR ResetActive;
+    PIRP ListIrp;
+    KIRQL OldLevel;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    // get stack location 
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DPRINT1("FDO_HandleResetCyclePort IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT)
+    {
+        //
+        // use reset port list
+        //
+        ListHead = &FDODeviceExtension->ResetPortListHead;
+        ResetActive = &FDODeviceExtension->ResetPortActive;
+    }
+    else
+    {
+        //
+        // use cycle port list
+        //
+        ListHead = &FDODeviceExtension->CyclePortListHead;
+        ResetActive = &FDODeviceExtension->CyclePortActive;
+    }
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&FDODeviceExtension->Lock, &OldLevel);
+
+    if (*ResetActive)
+    {
+        //
+        // insert into pending list
+        //
+        InsertTailList(ListHead, &Irp->Tail.Overlay.ListEntry);
+
+        //
+        // mark irp pending
+        //
+        IoMarkIrpPending(Irp);
+        Status = STATUS_PENDING;
+
+        //
+        // release lock
+        //
+        KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
+    }
+    else
+    {
+        //
+        // mark reset active
+        //
+        *ResetActive = TRUE;
+
+        //
+        // release lock
+        //
+        KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
+
+        //
+        // forward request synchronized
+        //
+        USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+
+        //
+        // reacquire lock
+        //
+        KeAcquireSpinLock(&FDODeviceExtension->Lock, &OldLevel);
+
+        //
+        // mark reset as completed
+        //
+        *ResetActive = FALSE;
+
+        //
+        // move all requests into temporary list
+        //
+        InitializeListHead(&TempList);
+        while(!IsListEmpty(ListHead))
+        {
+            Entry = RemoveHeadList(ListHead);
+            InsertTailList(&TempList, Entry);
+        }
+
+        //
+        // release lock
+        //
+        KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
+
+        //
+        // complete pending irps
+        //
+        while(!IsListEmpty(&TempList))
+        {
+            Entry = RemoveHeadList(&TempList);
+            ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+            //
+            // complete request with status success
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        }
+
+        //
+        // status success
+        //
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
+}
 
 
+
+NTSTATUS
+FDO_HandleInternalDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    // get stack location 
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT || 
+        IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_CYCLE_PORT)
+    {
+        //
+        // handle reset / cycle ports
+        //
+        Status = FDO_HandleResetCyclePort(DeviceObject, Irp);
+        DPRINT1("FDO_HandleResetCyclePort Status %x\n", Status);
+        if (Status != STATUS_PENDING)
+        {
+            //
+            // complete request
+            //
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        }
+        return Status;
+    }
+
+    //
+    // forward and forget request
+    //
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -517,6 +691,8 @@ FDO_Dispatch(
     {
         case IRP_MJ_PNP:
             return FDO_HandlePnp(DeviceObject, Irp);
+         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+            return FDO_HandleInternalDeviceControl(DeviceObject, Irp);
         default:
             DPRINT1("FDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             ASSERT(FALSE);

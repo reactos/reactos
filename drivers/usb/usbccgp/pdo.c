@@ -925,6 +925,24 @@ PDO_HandleInternalDeviceControl(
             return Status;
         }
     }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_GET_PORT_STATUS)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+        return Status;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+        return Status;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_CYCLE_PORT)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+        return Status;
+    }
 
 
 

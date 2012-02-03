@@ -43,6 +43,10 @@ USBCCGP_AddDevice(
     FDODeviceExtension->Common.IsFDO = TRUE;
     FDODeviceExtension->DriverObject = DriverObject;
     FDODeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+    InitializeListHead(&FDODeviceExtension->ResetPortListHead);
+    InitializeListHead(&FDODeviceExtension->CyclePortListHead);
+    KeInitializeSpinLock(&FDODeviceExtension->Lock);
+
     FDODeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
     if (!FDODeviceExtension->NextDeviceObject)
     {
