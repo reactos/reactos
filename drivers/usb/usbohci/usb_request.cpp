@@ -36,8 +36,8 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
     virtual NTSTATUS GetEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutEndpointDescriptor);
@@ -136,6 +136,15 @@ protected:
     NTSTATUS m_NtStatusCode;
     ULONG m_UrbStatusCode;
 
+    //
+    // device speed
+    //
+    USB_DEVICE_SPEED m_DeviceSpeed;
+
+    //
+    // store urb
+    //
+    PURB m_Urb;
 };
 
 //----------------------------------------------------------------------------------------
@@ -155,6 +164,7 @@ CUSBRequest::InitializeWithSetupPacket(
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
     IN UCHAR DeviceAddress,
     IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN USB_DEVICE_SPEED DeviceSpeed,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -174,6 +184,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_DeviceAddress = DeviceAddress;
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
+    m_DeviceSpeed = DeviceSpeed;
 
     //
     // Set Length Completed to 0
@@ -206,10 +217,10 @@ CUSBRequest::InitializeWithSetupPacket(
 NTSTATUS
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
-    IN OUT PIRP Irp)
+    IN OUT PIRP Irp,
+    IN USB_DEVICE_SPEED DeviceSpeed)
 {
     PIO_STACK_LOCATION IoStack;
-    PURB Urb;
 
     //
     // sanity checks
@@ -235,7 +246,7 @@ CUSBRequest::InitializeWithIrp(
     //
     // get urb
     //
-    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+    m_Urb = (PURB)IoStack->Parameters.Others.Argument1;
 
     //
     // store irp
@@ -243,38 +254,43 @@ CUSBRequest::InitializeWithIrp(
     m_Irp = Irp;
 
     //
+    // store speed
+    //
+    m_DeviceSpeed = DeviceSpeed;
+
+    //
     // check function type
     //
-    switch (Urb->UrbHeader.Function)
+    switch (m_Urb->UrbHeader.Function)
     {
         case URB_FUNCTION_ISOCH_TRANSFER:
         {
             //
             // there must be at least one packet
             //
-            ASSERT(Urb->UrbIsochronousTransfer.NumberOfPackets);
+            ASSERT(m_Urb->UrbIsochronousTransfer.NumberOfPackets);
 
             //
             // is there data to be transferred
             //
-            if (Urb->UrbIsochronousTransfer.TransferBufferLength)
+            if (m_Urb->UrbIsochronousTransfer.TransferBufferLength)
             {
                 //
                 // Check if there is a MDL
                 //
-                if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+                if (!m_Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
                 {
                     //
                     // sanity check
                     //
-                    PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+                    PC_ASSERT(m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
 
                     //
                     // Create one using TransferBuffer
                     //
-                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
-                    m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
-                                                        Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
+                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer, m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                    m_TransferBufferMDL = IoAllocateMdl(m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
+                                                        m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
                                                         FALSE,
                                                         FALSE,
                                                         NULL);
@@ -298,14 +314,14 @@ CUSBRequest::InitializeWithIrp(
                     //
                     // use provided mdl
                     //
-                    m_TransferBufferMDL = Urb->UrbIsochronousTransfer.TransferBufferMDL;
+                    m_TransferBufferMDL = m_Urb->UrbIsochronousTransfer.TransferBufferMDL;
                 }
             }
  
             //
             // save buffer length
             //
-            m_TransferBufferLength = Urb->UrbIsochronousTransfer.TransferBufferLength;
+            m_TransferBufferLength = m_Urb->UrbIsochronousTransfer.TransferBufferLength;
 
             //
             // Set Length Completed to 0
@@ -315,7 +331,7 @@ CUSBRequest::InitializeWithIrp(
             //
             // get endpoint descriptor
             //
-            m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbIsochronousTransfer.PipeHandle;
+            m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)m_Urb->UrbIsochronousTransfer.PipeHandle;
 
             //
             // completed initialization
@@ -332,24 +348,24 @@ CUSBRequest::InitializeWithIrp(
             //
             // bulk interrupt transfer
             //
-            if (Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
+            if (m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
             {
                 //
                 // Check if there is a MDL
                 //
-                if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+                if (!m_Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
                 {
                     //
                     // sanity check
                     //
-                    PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+                    PC_ASSERT(m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
 
                     //
                     // Create one using TransferBuffer
                     //
-                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
-                    m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
-                                                        Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
+                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer, m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                    m_TransferBufferMDL = IoAllocateMdl(m_Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
+                                                        m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
                                                         FALSE,
                                                         FALSE,
                                                         NULL);
@@ -374,13 +390,13 @@ CUSBRequest::InitializeWithIrp(
                 }
                 else
                 {
-                    m_TransferBufferMDL = Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL;
+                    m_TransferBufferMDL = m_Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL;
                 }
 
                 //
                 // save buffer length
                 //
-                m_TransferBufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+                m_TransferBufferLength = m_Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
 
                 //
                 // Set Length Completed to 0
@@ -390,13 +406,13 @@ CUSBRequest::InitializeWithIrp(
                 //
                 // get endpoint descriptor
                 //
-                m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+                m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)m_Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
             }
             break;
         }
         default:
-            DPRINT1("URB Function: not supported %x\n", Urb->UrbHeader.Function);
+            DPRINT1("URB Function: not supported %x\n", m_Urb->UrbHeader.Function);
             PC_ASSERT(FALSE);
     }
 
@@ -971,9 +987,29 @@ CUSBRequest::AllocateEndpointDescriptor(
     }
 
     //
-    // FIXME: detect type
+    // set type
     //
-    Descriptor->Flags |= OHCI_ENDPOINT_FULL_SPEED;
+    if (m_DeviceSpeed == UsbFullSpeed)
+    {
+        //
+        // device is full speed
+        //
+        Descriptor->Flags |= OHCI_ENDPOINT_FULL_SPEED;
+    }
+    else if (m_DeviceSpeed == UsbLowSpeed)
+    {
+        //
+        // device is full speed
+        //
+        Descriptor->Flags |= OHCI_ENDPOINT_LOW_SPEED;
+    }
+    else
+    {
+        //
+        // error
+        //
+        ASSERT(FALSE);
+    }
 
     Descriptor->HeadPhysicalDescriptor = 0;
     Descriptor->NextPhysicalEndpoint = 0;
@@ -1098,6 +1134,19 @@ CUSBRequest::BuildBulkInterruptEndpoint(
         //
         CurrentDescriptor->BufferPhysical = MmGetPhysicalAddress(Buffer).LowPart;
         CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + CurrentSize - 1; 
+
+#if 0
+        if (m_Urb != NULL)
+        {
+            if (m_Urb->UrbBulkOrInterruptTransfer.TransferFlags & USBD_SHORT_TRANSFER_OK)
+            {
+                //
+                // indicate short packet support
+                //
+                CurrentDescriptor->Flags |= OHCI_TD_BUFFER_ROUNDING;
+            }
+        }
+#endif
 
         //
         // is there a previous descriptor
@@ -1298,16 +1347,15 @@ CUSBRequest::BuildControlTransferDescriptor(
         }
 
         //
-        // FIXME verify short packets are ok
+        // use short packets
         //
-        //DataDescriptor->Flags |= OHCI_TD_BUFFER_ROUNDING;
+        DataDescriptor->Flags |= OHCI_TD_BUFFER_ROUNDING;
 
         //
         // store physical address of buffer
         //
         DataDescriptor->BufferPhysical = MmGetPhysicalAddress(MmGetMdlVirtualAddress(m_TransferBufferMDL)).LowPart;
         DataDescriptor->LastPhysicalByteAddress = DataDescriptor->BufferPhysical + m_TransferBufferLength - 1; 
-
     }
 
     //

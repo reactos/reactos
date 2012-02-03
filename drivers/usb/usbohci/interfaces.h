@@ -402,6 +402,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
                                                IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+                                               IN USB_DEVICE_SPEED DeviceSpeed,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 
@@ -411,9 +412,11 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 //
 // Description: initializes the request with an IRP
 // The irp contains an URB block which contains all necessary information
+// contains the device speed (FullSpeed / LowSpeed)
 
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, 
-                                       IN OUT PIRP Irp) = 0;
+                                       IN OUT PIRP Irp,
+                                       IN USB_DEVICE_SPEED DeviceSpeed) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
