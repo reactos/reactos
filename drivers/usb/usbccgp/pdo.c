@@ -391,6 +391,15 @@ PDO_HandlePnp(
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
            return STATUS_SUCCESS;
        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // sure
+            //
+            Status = STATUS_SUCCESS;
+            break;
+        }
        case IRP_MN_START_DEVICE:
        {
            //
@@ -406,6 +415,7 @@ PDO_HandlePnp(
             // do nothing
             //
             Status = Irp->IoStatus.Status;
+            break;
         }
     }
 

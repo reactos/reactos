@@ -1561,8 +1561,11 @@ HidPnp(
             }
 
             //
-            // done
+            // delete and detach device
             //
+            IoDetachDevice(DeviceExtension->NextDeviceObject);
+            IoDeleteDevice(DeviceObject);
+
             return Status;
         }
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
@@ -1574,6 +1577,25 @@ HidPnp(
 
             //
             // pass request to next request
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+
+            //
+            // done
+            //
+            return Status;
+        }
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            //
+            // we're fine with it
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // pass request to next driver
             //
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);

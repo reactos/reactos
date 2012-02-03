@@ -554,6 +554,7 @@ HidClassFDO_PnP(
         {
              return HidClassFDO_RemoveDevice(DeviceObject, Irp);
         }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
             //
@@ -567,6 +568,7 @@ HidClassFDO_PnP(
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
         }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
         case IRP_MN_CANCEL_STOP_DEVICE:
         {
             //

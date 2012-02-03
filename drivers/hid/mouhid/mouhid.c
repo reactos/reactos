@@ -788,7 +788,11 @@ MouHid_Pnp(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT1("[MOUHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
 
-    if (IoStack->MinorFunction == IRP_MN_STOP_DEVICE || IoStack->MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE || IoStack->MinorFunction == IRP_MN_QUERY_STOP_DEVICE || IoStack->MinorFunction == IRP_MN_CANCEL_STOP_DEVICE)
+    if (IoStack->MinorFunction == IRP_MN_STOP_DEVICE ||
+        IoStack->MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE ||
+        IoStack->MinorFunction == IRP_MN_QUERY_STOP_DEVICE ||
+        IoStack->MinorFunction == IRP_MN_CANCEL_STOP_DEVICE ||
+        IoStack->MinorFunction == IRP_MN_QUERY_REMOVE_DEVICE)
     {
         /* indicate success */
         Irp->IoStatus.Status = STATUS_SUCCESS;

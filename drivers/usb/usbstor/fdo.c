@@ -339,9 +339,11 @@ USBSTOR_FdoHandlePnp(
            break;
        }
        case IRP_MN_STOP_DEVICE:
+       {
            DPRINT1("USBSTOR_FdoHandlePnp: IRP_MN_STOP_DEVICE unimplemented\n");
            Status = STATUS_NOT_SUPPORTED;
            break;
+       }
        case IRP_MN_REMOVE_DEVICE:
        {
            DPRINT1("IRP_MN_REMOVE_DEVICE\n");
@@ -355,6 +357,29 @@ USBSTOR_FdoHandlePnp(
            //
            IoSkipCurrentIrpStackLocation(Irp);
            return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+       }
+       case IRP_MN_QUERY_STOP_DEVICE:
+       case IRP_MN_QUERY_REMOVE_DEVICE:
+       {
+           //
+           // we can if nothing is pending
+           //
+           if (DeviceExtension->IrpPendingCount != 0 ||
+               DeviceExtension->ActiveSrb != NULL)
+           {
+               /* We have pending requests */
+               DPRINT1("Failing removal/stop request due to pending requests present\n");
+               Status = STATUS_UNSUCCESSFUL;
+           }
+           else
+           {
+               /* We're all clear */
+               Irp->IoStatus.Status = STATUS_SUCCESS;
+
+               IoSkipCurrentIrpStackLocation(Irp);
+               return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+           }
+           break;
        }
        case IRP_MN_START_DEVICE:
        {

@@ -437,6 +437,15 @@ CHubController::HandlePnp(
             Status = SetDeviceInterface(TRUE);
             break;
         }
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            //
+            // sure
+            //
+            Status = STATUS_SUCCESS;
+            break;
+        }
         case IRP_MN_QUERY_ID:
         {
             DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_ID Type %x\n", IoStack->Parameters.QueryId.IdType);

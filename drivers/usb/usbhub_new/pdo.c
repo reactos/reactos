@@ -586,6 +586,14 @@ USBHUB_PdoHandlePnp(
             IoDeleteDevice(DeviceObject);
             return STATUS_SUCCESS;
         }
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            /* Sure, no problem */
+            Status = STATUS_SUCCESS;
+            Information = 0;
+            break;
+        }
         default:
         {
             DPRINT1("PDO IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);

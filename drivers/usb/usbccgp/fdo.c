@@ -481,6 +481,20 @@ FDO_HandlePnp(
             }
             break;
        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // sure
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
+        }
        default:
        {
             //

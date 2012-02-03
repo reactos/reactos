@@ -1883,6 +1883,22 @@ USBHUB_FdoHandlePnp(
             }
             break;
         }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+            IoDetachDevice(HubDeviceExtension->LowerDeviceObject);
+            IoDeleteDevice(DeviceObject);
+
+            return STATUS_SUCCESS;
+        }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
             DPRINT1("IRP_MN_QUERY_BUS_INFORMATION\n");
