@@ -452,7 +452,7 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
-    if(!NumberOfRecords)
+    if (NumberOfRecords == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -497,7 +497,7 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
-    if(!OldestRecord)
+    if (OldestRecord == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -630,16 +630,15 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
 
     if (lpFileName == NULL)
     {
-        RtlInitUnicodeString(&FileNameW, NULL);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
     }
-    else
+
+    if (!RtlDosPathNameToNtPathName_U(lpFileName, &FileNameW,
+                                      NULL, NULL))
     {
-        if (!RtlDosPathNameToNtPathName_U(lpFileName, &FileNameW,
-                                          NULL, NULL))
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return NULL;
-        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
     }
 
     RpcTryExcept
@@ -802,22 +801,32 @@ ReadEventLogA(IN HANDLE hEventLog,
 {
     NTSTATUS Status;
     DWORD bytesRead, minNumberOfBytesNeeded;
+    DWORD dwFlags;
 
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
+    if (lpBuffer == NULL ||
+        pnBytesRead == NULL ||
+        pnMinNumberOfBytesNeeded == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
-       trying to access a null pointer */
-    if (!lpBuffer)
+    dwFlags = dwReadFlags & (EVENTLOG_SEQUENTIAL_READ | EVENTLOG_SEEK_READ);
+    if (dwFlags == (EVENTLOG_SEQUENTIAL_READ | EVENTLOG_SEEK_READ))
     {
-        nNumberOfBytesToRead = 0;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    dwFlags = dwReadFlags & (EVENTLOG_FORWARDS_READ | EVENTLOG_BACKWARDS_READ);
+    if (dwFlags == (EVENTLOG_FORWARDS_READ | EVENTLOG_BACKWARDS_READ))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
     RpcTryExcept
@@ -872,22 +881,32 @@ ReadEventLogW(IN HANDLE hEventLog,
 {
     NTSTATUS Status;
     DWORD bytesRead, minNumberOfBytesNeeded;
+    DWORD dwFlags;
 
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
+    if (lpBuffer == NULL ||
+        pnBytesRead == NULL ||
+        pnMinNumberOfBytesNeeded == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
-       trying to access a null pointer */
-    if (!lpBuffer)
+    dwFlags = dwReadFlags & (EVENTLOG_SEQUENTIAL_READ | EVENTLOG_SEEK_READ);
+    if (dwFlags == (EVENTLOG_SEQUENTIAL_READ | EVENTLOG_SEEK_READ))
     {
-        nNumberOfBytesToRead = 0;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    dwFlags = dwReadFlags & (EVENTLOG_FORWARDS_READ | EVENTLOG_BACKWARDS_READ);
+    if (dwFlags == (EVENTLOG_FORWARDS_READ | EVENTLOG_BACKWARDS_READ))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
     RpcTryExcept
