@@ -102,6 +102,7 @@ USBD_Debug_LogEntry(PCHAR Name, ULONG_PTR Info1, ULONG_PTR Info2,
 PVOID NTAPI
 USBD_AllocateDeviceName(ULONG Unknown)
 {
+    UNIMPLEMENTED
     return NULL;
 }
 
@@ -139,6 +140,7 @@ USBD_CalculateUsbBandwidth(
 ULONG NTAPI
 USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 {
+    UNIMPLEMENTED
     return 1;
 }
 
@@ -148,6 +150,7 @@ USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 VOID NTAPI
 USBD_FreeDeviceMutex(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -156,6 +159,7 @@ USBD_FreeDeviceMutex(PVOID Unknown)
 VOID NTAPI
 USBD_FreeDeviceName(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -164,6 +168,7 @@ USBD_FreeDeviceName(PVOID Unknown)
 VOID NTAPI
 USBD_WaitDeviceMutex(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -172,6 +177,7 @@ USBD_WaitDeviceMutex(PVOID Unknown)
 ULONG NTAPI
 USBD_GetSuspendPowerState(ULONG Unknown1)
 {
+    UNIMPLEMENTED
     return 0;
 }
 
@@ -182,6 +188,7 @@ NTSTATUS NTAPI
 USBD_InitializeDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -193,6 +200,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6, ULONG Unknown7,
     ULONG Unknown8, ULONG Unknown9, ULONG Unknown10)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -202,6 +210,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_GetDeviceInformation(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -212,6 +221,7 @@ NTSTATUS NTAPI
 USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -221,6 +231,7 @@ USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -230,6 +241,7 @@ USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 VOID NTAPI
 USBD_CompleteRequest(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -241,6 +253,7 @@ USBD_RegisterHcFilter(
     PDEVICE_OBJECT FilterDeviceObject
     )
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -249,6 +262,7 @@ USBD_RegisterHcFilter(
 VOID NTAPI
 USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -257,6 +271,7 @@ USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 NTSTATUS NTAPI
 USBD_MakePdoName(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -269,6 +284,7 @@ USBD_QueryBusTime(
     PULONG CurrentFrame
     )
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -283,7 +299,7 @@ USBD_GetUSBDIVersion(
     if (Version != NULL)
     {
         Version->USBDI_Version = USBDI_VERSION;
-        Version->Supported_USB_Version = 0x100;
+        Version->Supported_USB_Version = 0x200;
     }
 }
 
@@ -293,6 +309,7 @@ USBD_GetUSBDIVersion(
 NTSTATUS NTAPI
 USBD_RestoreDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -303,6 +320,7 @@ VOID NTAPI
 USBD_RegisterHcDeviceCapabilities(ULONG Unknown1, ULONG Unknown2,
     ULONG Unknown3)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -586,28 +604,58 @@ USBD_GetPdoRegistryParameter(
     NTSTATUS Status;
     HANDLE DevInstRegKey;
 
+    /* Open the device key */
     Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject,
-        PLUGPLAY_REGKEY_DRIVER, STANDARD_RIGHTS_ALL, &DevInstRegKey);
+        PLUGPLAY_REGKEY_DEVICE, STANDARD_RIGHTS_ALL, &DevInstRegKey);
     if (NT_SUCCESS(Status))
     {
-        PKEY_VALUE_FULL_INFORMATION FullInfo;
+        PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
         UNICODE_STRING ValueName;
         ULONG Length;
 
-        RtlInitUnicodeString(&ValueName, KeyName);
-        Length = ParameterLength + KeyNameLength + sizeof(KEY_VALUE_FULL_INFORMATION);
-        FullInfo = ExAllocatePool(PagedPool, Length);
-        if (FullInfo)
+        /* Initialize the unicode string based on caller data */
+        ValueName.Buffer = KeyName;
+        ValueName.Length = ValueName.MaximumLength = KeyNameLength;
+
+        Length = ParameterLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+        PartialInfo = ExAllocatePool(PagedPool, Length);
+        if (PartialInfo)
         {
             Status = ZwQueryValueKey(DevInstRegKey, &ValueName,
-                KeyValueFullInformation, FullInfo, Length, &Length);
+                KeyValuePartialInformation, PartialInfo, Length, &Length);
+            if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                /* The caller doesn't want all the data */
+                ExFreePool(PartialInfo);
+                PartialInfo = ExAllocatePool(PagedPool, Length);
+                if (PartialInfo)
+                {
+                    Status = ZwQueryValueKey(DevInstRegKey, &ValueName,
+                       KeyValuePartialInformation, PartialInfo, Length, &Length);
+                }
+                else
+                {
+                    Status = STATUS_NO_MEMORY;
+                }
+            }
+
             if (NT_SUCCESS(Status))
             {
+                /* Compute the length to copy back */
+                if (ParameterLength < PartialInfo->DataLength)
+                    Length = ParameterLength;
+                else
+                    Length = PartialInfo->DataLength;
+
                 RtlCopyMemory(Parameter,
-                    ((PUCHAR)FullInfo) + FullInfo->DataOffset,
-                    ParameterLength /*FullInfo->DataLength*/);
+                              PartialInfo->Data,
+                              Length);
             }
-            ExFreePool(FullInfo);
+
+            if (PartialInfo)
+            {
+                ExFreePool(PartialInfo);
+            }
         } else
             Status = STATUS_NO_MEMORY;
         ZwClose(DevInstRegKey);
