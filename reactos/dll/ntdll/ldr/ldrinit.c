@@ -124,7 +124,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
 
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                               Wow64 ? 
+                               Wow64 ?
                                &Wow64OptionsString : &ImageExecOptionsString,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
@@ -441,7 +441,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PULONG_PTR Cookie;
     LARGE_INTEGER Counter;
-    ULONG NewCookie;
+    ULONG_PTR NewCookie;
 
     /* Fetch address of the cookie */
     Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
@@ -536,7 +536,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                 EntryPoint = LdrEntry->EntryPoint;
 
                 /* Check if we are ready to call it */
-                if ((EntryPoint) && 
+                if ((EntryPoint) &&
                     (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                     (LdrEntry->Flags & LDRP_IMAGE_DLL))
                 {
@@ -939,7 +939,7 @@ LdrShutdownProcess(VOID)
             EntryPoint = LdrEntry->EntryPoint;
 
             /* Check if we are ready to call it */
-            if (EntryPoint && 
+            if (EntryPoint &&
                 (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                 LdrEntry->Flags)
             {
@@ -1212,7 +1212,7 @@ LdrpAllocateTls(VOID)
     PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
-    ULONG TlsDataSize;
+    SIZE_T TlsDataSize;
     PVOID *TlsVector;
 
     /* Check if we have any entries */
@@ -1236,7 +1236,7 @@ LdrpAllocateTls(VOID)
         NextEntry = NextEntry->Flink;
 
         /* Allocate this vector */
-        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData - 
+        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
         TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
                                                                            0,
