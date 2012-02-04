@@ -192,9 +192,15 @@ PsGetProcessExitStatus(
     PEPROCESS Process
 );
 
+HANDLE
+NTAPI
+PsGetProcessSessionId(
+    IN PEPROCESS Process
+);
+
 NTKERNELAPI
-BOOLEAN 
-NTAPI 
+BOOLEAN
+NTAPI
 PsGetProcessExitProcessCalled(
     PEPROCESS Process
 );

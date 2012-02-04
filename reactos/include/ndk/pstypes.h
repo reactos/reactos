@@ -1056,11 +1056,11 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    ULONG QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
-    ULONG QuotaPeak[3];  /* ditto */
-    ULONG CommitCharge;
-    ULONG PeakVirtualSize;
-    ULONG VirtualSize;
+    SIZE_T QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
+    SIZE_T QuotaPeak[3];  /* ditto */
+    SIZE_T CommitCharge;
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
     LIST_ENTRY SessionProcessLinks;
     PVOID DebugPort;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -1075,7 +1075,7 @@ typedef struct _EPROCESS
 #endif
     PHANDLE_TABLE ObjectTable;
     EX_FAST_REF Token;
-    ULONG WorkingSetPage;
+    PFN_NUMBER WorkingSetPage;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     EX_PUSH_LOCK AddressCreationLock;
     PETHREAD RotateInProgress;
@@ -1084,11 +1084,11 @@ typedef struct _EPROCESS
     KSPIN_LOCK HyperSpaceLock;
 #endif
     PETHREAD ForkInProgress;
-    ULONG HardwareTrigger;
+    ULONG_PTR HardwareTrigger;
     PMM_AVL_TABLE PhysicalVadRoot;
     PVOID CloneRoot;
-    ULONG NumberOfPrivatePages;
-    ULONG NumberOfLockedPages;
+    PFN_NUMBER NumberOfPrivatePages;
+    PFN_NUMBER NumberOfLockedPages;
     PVOID *Win32Process;
     struct _EJOB *Job;
     PVOID SectionObject;
@@ -1112,7 +1112,7 @@ typedef struct _EPROCESS
         HARDWARE_PTE PageDirectoryPte;
         ULONGLONG Filler;
     };
-    ULONG Session;
+    ULONG Session; // FIXME: PVOID
     CHAR ImageFileName[16];
     LIST_ENTRY JobLinks;
     PVOID LockedPagesList;
@@ -1135,12 +1135,16 @@ typedef struct _EPROCESS
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-    ULONG CommitChargeLimit;
-    ULONG CommitChargePeak;
+    SIZE_T CommitChargeLimit;
+    SIZE_T CommitChargePeak;
     PVOID AweInfo;
     SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo;
     MMSUPPORT Vm;
+#ifdef _M_AMD64
+    ULONG Spares[2];
+#else
     LIST_ENTRY MmProcessLinks;
+#endif
     ULONG ModifiedPageCount;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     union

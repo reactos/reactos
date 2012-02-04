@@ -2090,25 +2090,6 @@ RtlPrefixString(
     BOOLEAN CaseInsensitive
 );
 
-#ifdef _M_X64
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlWow64GetThreadContext(
-    IN HANDLE ThreadHandle,
-    IN OUT PWOW64_CONTEXT ThreadContext
-);
-
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlWow64SetThreadContext(
-    IN HANDLE ThreadHandle,
-    IN PWOW64_CONTEXT ThreadContext
-);
-#endif
-
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -3907,7 +3888,7 @@ NTAPI
 RtlGUIDFromString(
   IN PUNICODE_STRING GuidString,
   OUT GUID *Guid);
-  
+
 NTSYSAPI
 NTSTATUS
 NTAPI
