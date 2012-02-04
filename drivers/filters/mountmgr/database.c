@@ -194,11 +194,92 @@ GetRemoteDatabaseEntry(IN HANDLE Database,
     return Entry;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 DeleteRemoteDatabaseEntry(IN HANDLE Database,
                           IN LONG StartingOffset)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    LONG EndSize;
+    PVOID TmpBuffer;
+    NTSTATUS Status;
+    LONG DatabaseSize;
+    PDATABASE_ENTRY Entry;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER EndEntriesOffset;
+
+    /* First, get database size */
+    DatabaseSize = GetRemoteDatabaseSize(Database);
+    if (!DatabaseSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Then, get the entry to remove */
+    Entry = GetRemoteDatabaseEntry(Database, StartingOffset);
+    if (!Entry)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validate parameters: ensure we won't get negative size */
+    if (Entry->EntrySize + StartingOffset > DatabaseSize)
+    {
+        /* If we get invalid parameters, truncate the whole database
+         * starting the wrong entry. We can't rely on the rest
+         */
+        FreePool(Entry);
+        return TruncateRemoteDatabase(Database, StartingOffset);
+    }
+
+    /* Now, get the size of the remaining entries (those after the one to remove) */
+    EndSize = DatabaseSize - Entry->EntrySize - StartingOffset;
+    /* Allocate a buffer big enough to hold them */
+    TmpBuffer = AllocatePool(EndSize);
+    if (!TmpBuffer)
+    {
+        FreePool(Entry);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Get the offset of the entry right after the one to delete */
+    EndEntriesOffset.QuadPart = Entry->EntrySize + StartingOffset;
+    /* We don't need the entry any more */
+    FreePool(Entry);
+
+    /* Read the ending entries */
+    Status = ZwReadFile(Database, NULL, NULL, NULL, &IoStatusBlock,
+                        TmpBuffer, EndSize, &EndEntriesOffset, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(TmpBuffer);
+        return Status;
+    }
+
+    /* Ensure nothing went wrong - we don't want to corrupt the DB */
+    if (IoStatusBlock.Information != EndSize)
+    {
+        FreePool(TmpBuffer);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Remove the entry */
+    Status = TruncateRemoteDatabase(Database, StartingOffset + EndSize);
+    if (!NT_SUCCESS(Status))
+    {
+        FreePool(TmpBuffer);
+        return Status;
+    }
+
+    /* Now, shift the ending entries to erase the entry */
+    EndEntriesOffset.QuadPart = StartingOffset;
+    Status = ZwWriteFile(Database, NULL, NULL, NULL, &IoStatusBlock,
+                         TmpBuffer, EndSize, &EndEntriesOffset, NULL);
+
+    FreePool(TmpBuffer);
+
+    return Status;
 }
 
 /*

@@ -41,7 +41,6 @@ PWSTR Cunc = L"\\??\\C:";
 
 /*
  * TODO:
- * - DeleteRemoteDatabaseEntry
  * - MountMgrQueryDosVolumePath
  * - MountMgrQueryDosVolumePaths
  * - MountMgrQueryVolumePaths
