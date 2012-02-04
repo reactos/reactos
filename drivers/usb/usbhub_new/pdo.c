@@ -485,6 +485,8 @@ USBHUB_PdoHandlePnp(
     PIO_STACK_LOCATION Stack;
     ULONG_PTR Information = 0;
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
+    ULONG Index;
+    PDEVICE_RELATIONS DeviceRelation;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -576,7 +578,21 @@ USBHUB_PdoHandlePnp(
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
             /* Remove the device */
-            HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+            Status = HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+
+            /* FIXME handle error */
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* remove us from pdo list */
+            for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+            {
+                if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
+                {
+                    /* remove us */
+                    HubDeviceExtension->ChildDeviceObject[Index] = NULL;
+                    break;
+                }
+            }
 
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -585,6 +601,35 @@ USBHUB_PdoHandlePnp(
             /* Delete the device object */
             IoDeleteDevice(DeviceObject);
             return STATUS_SUCCESS;
+        }
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+        {
+            /* only target relations are supported */
+            if (Stack->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
+            {
+                /* not supported */
+                Status = Irp->IoStatus.Status;
+                break;
+            }
+
+            /* allocate device relations */
+            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS));
+            if (!DeviceRelation)
+            {
+                /* no memory */
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            /* init device relation */
+            DeviceRelation->Count = 1;
+            DeviceRelation->Objects[0] = DeviceObject;
+            ObReferenceObject(DeviceRelation->Objects[0]);
+
+            /* store result */
+            Irp->IoStatus.Information = (ULONG_PTR)DeviceRelation;
+            Status = STATUS_SUCCESS;
+            break;
         }
         case IRP_MN_QUERY_STOP_DEVICE:
         case IRP_MN_QUERY_REMOVE_DEVICE:

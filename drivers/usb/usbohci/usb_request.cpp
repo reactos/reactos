@@ -1672,11 +1672,6 @@ CUSBRequest::CheckError(
 
         while(TransferDescriptor)
         {
-             //
-             // the descriptor must have been processed
-             //
-            ASSERT(OHCI_TD_GET_CONDITION_CODE(TransferDescriptor->Flags) != OHCI_TD_CONDITION_NOT_ACCESSED);
-
             //
             // get condition code
             //

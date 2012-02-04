@@ -107,6 +107,11 @@ typedef struct
     //
     PDEVICE_OBJECT FDODeviceObject;
 
+    //
+    // fdo device extension
+    //
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+
 }HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
 typedef struct __HIDCLASS_FILEOP_CONTEXT__

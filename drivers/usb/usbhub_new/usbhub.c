@@ -183,12 +183,23 @@ USBHUB_DispatchPower(
     return STATUS_NOT_SUPPORTED;
 }
 
+VOID
+NTAPI
+USBHUB_Unload(
+    IN PDRIVER_OBJECT DriverObject)
+{
+    UNIMPLEMENTED
+}
+
+
 NTSTATUS NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath)
 {
     DriverObject->DriverExtension->AddDevice = USBHUB_AddDevice;
+    DriverObject->DriverUnload = USBHUB_Unload;
+
     DPRINT1("USBHUB: DriverEntry\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = USBHUB_Create;

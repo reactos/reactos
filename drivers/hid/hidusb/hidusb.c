@@ -1764,6 +1764,15 @@ HidAddDevice(
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+Hid_Unload(
+    IN PDRIVER_OBJECT DriverObject)
+{
+    UNIMPLEMENTED
+}
+
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -1783,6 +1792,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HidSystemControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = HidPnp;
     DriverObject->DriverExtension->AddDevice = HidAddDevice;
+    DriverObject->DriverUnload = Hid_Unload;
 
     //
     // prepare registration info

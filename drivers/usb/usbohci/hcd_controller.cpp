@@ -531,7 +531,19 @@ CHCDController::HandlePnp(
                 // stop lower device
                 //
                 Status = SyncForwardIrp(m_NextDeviceObject, Irp);
+                if (NT_SUCCESS(Status))
+                {
+                    //
+                    // detach device
+                    //
+                    IoDetachDevice(m_NextDeviceObject);
+                    IoDeleteDevice(DeviceObject);
+                }
+
             }
+
+
+
             break;
         }
         case IRP_MN_QUERY_REMOVE_DEVICE:

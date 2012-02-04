@@ -344,7 +344,6 @@ HidClassPDO_HandleQueryCompatibleId(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 HidClassPDO_PnP(
     IN PDEVICE_OBJECT DeviceObject,
@@ -355,6 +354,7 @@ HidClassPDO_PnP(
     NTSTATUS Status;
     PPNP_BUS_INFORMATION BusInformation;
     PDEVICE_RELATIONS DeviceRelation;
+    ULONG Index;
 
     //
     // get device extension
@@ -532,6 +532,21 @@ HidClassPDO_PnP(
             if (PDODeviceExtension->DeviceInterface.Length != 0)
                 IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, FALSE);
 
+           //
+           // remove us from the fdo's pdo list
+           //
+           for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->DeviceRelations->Count; Index++)
+           {
+               if (PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] == DeviceObject)
+               {
+                   //
+                   // remove us
+                   //
+                   PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] = NULL;
+                   break;
+               }
+           }
+
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -550,6 +565,17 @@ HidClassPDO_PnP(
             // do nothing
             //
             Status = Irp->IoStatus.Status;
+            break;
+        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            //
+            // no/op
+            //
+            Status = STATUS_SUCCESS;
             break;
         }
         default:
@@ -657,6 +683,7 @@ HidClassPDO_CreatePDO(
         PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
         PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
         PDODeviceExtension->Common.IsFDO = FALSE;
+        PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->FDODeviceObject = DeviceObject;
         PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
         PDODeviceExtension->CollectionNumber = FDODeviceExtension->Common.DeviceDescription.CollectionDesc[Index].CollectionNumber;

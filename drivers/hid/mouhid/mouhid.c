@@ -807,6 +807,9 @@ MouHid_Pnp(
     {
         /* FIXME synchronization */
 
+        /* request stop */
+        DeviceExtension->StopReadReport = TRUE;
+
         /* cancel irp */
         IoCancelIrp(DeviceExtension->Irp);
 
@@ -819,9 +822,19 @@ MouHid_Pnp(
         /* dispatch to lower device */
         Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 
+        /* wait for completion of stop event */
+        KeWaitForSingleObject(&DeviceExtension->ReadCompletionEvent, Executive, KernelMode, FALSE, NULL);
+
+        /* free irp */
         IoFreeIrp(DeviceExtension->Irp);
+
+        /* detach device */
         IoDetachDevice(DeviceExtension->NextDeviceObject);
+
+        /* delete device */
         IoDeleteDevice(DeviceObject);
+
+        /* done */
         return Status;
     }
     else if (IoStack->MinorFunction == IRP_MN_START_DEVICE)
