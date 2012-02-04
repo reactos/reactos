@@ -91,7 +91,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	CHAR	HalPath[] = "\\";
 	CHAR	ArcBoot[256];
 	CHAR	MiscFiles[256];
-	ULONG i, PathSeparator;
+	ULONG i;
+	ULONG_PTR PathSeparator;
 	PLOADER_PARAMETER_EXTENSION Extension;
 
 	/* Construct SystemRoot and ArcBoot from SystemPath */

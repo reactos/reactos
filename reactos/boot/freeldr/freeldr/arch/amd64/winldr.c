@@ -236,7 +236,7 @@ WinLdrpMapApic()
 BOOLEAN
 WinLdrMapSpecialPages()
 {
-	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
+	PHARDWARE_PTE PpeBase, PdeBase;
 
 	/* Map the PCR page */
 	if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
@@ -308,7 +308,7 @@ Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 
 	/* Set the new Gdt */
 	__lgdt(&GdtDesc.Limit);
-	DbgPrint("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
+	TRACE("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
 
 }
 
@@ -329,7 +329,7 @@ Amd64SetupIdt(PVOID IdtBase)
 
 	/* Set the new IDT */
 	__lidt(&IdtDesc.Limit);
-	DbgPrint("Idtr.Base = %p\n", IdtDesc.Base);
+	TRACE("Idtr.Base = %p\n", IdtDesc.Base);
 
 }
 
