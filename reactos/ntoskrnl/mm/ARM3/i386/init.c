@@ -281,8 +281,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // nonpaged pool expansion (above) and the system PTEs. Note that it is
     // then aligned to a PDE boundary (4MB).
     //
+    MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
-                                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
+                                    MiNonPagedSystemSize);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 

@@ -78,6 +78,8 @@
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
+#define MiIsPteOnPdeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
@@ -164,7 +166,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #error Define these please!
 #endif
 
-extern const ULONG MmProtectToPteMask[32];
+extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
@@ -262,7 +264,11 @@ extern const ULONG MmProtectToValue[32];
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
+#ifdef _M_AMD64
+#define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
+#else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+#endif
 
 //
 // System views are binned into 64K chunks
@@ -444,6 +450,7 @@ extern SIZE_T MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
 extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
+extern SIZE_T MiNonPagedSystemSize;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
@@ -1379,7 +1386,14 @@ MiRemoveZeroPageSafe(IN ULONG Color)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
 #define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
 #define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
 #define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
 typedef struct _MMROSPFN

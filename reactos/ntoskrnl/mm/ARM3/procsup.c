@@ -913,7 +913,7 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     MmWorkingSetList->LastInitializedWsle = 4;
 
     /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
-    Pfn1 = MiGetPfnEntry(MiAddressToPte(PDE_BASE)->u.Hard.PageFrameNumber);
+    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
     Pfn1->u1.Event = (PKEVENT)CurrentProcess;
 }
@@ -963,13 +963,23 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Setup the PFN for the PDE base of this process */
+#ifdef _M_AMD64
+    PointerPte = MiAddressToPte(PXE_BASE);
+#else
     PointerPte = MiAddressToPte(PDE_BASE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE);
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
+#ifdef _M_AMD64
+    PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
+#else
     PointerPde = MiAddressToPde(HYPER_SPACE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
+    //ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE); // we're not lucky
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
 
     /* Setup the PFN for the PTE for the working set */

@@ -419,7 +419,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Write back the Session ID */
-                SessionInfo->SessionId = Process->Session; //MmGetSessionId(Process);
+                SessionInfo->SessionId = PtrToUlong(PsGetProcessSessionId(Process));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -818,32 +818,32 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             }
             _SEH2_END;
             break;
-            
+
         case ProcessImageInformation:
             DPRINT1("Image Information Query Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessDebugObjectHandle:
             DPRINT1("Debug Object Query Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessHandleTracing:
             DPRINT1("Handle tracing Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-          
+
         case ProcessLUIDDeviceMapsEnabled:
             DPRINT1("LUID Device Maps Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-        
+
         case ProcessExecuteFlags:
             DPRINT1("No execute Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-        
+
         case ProcessWow64Information:
         case ProcessLdtInformation:
         case ProcessWx86Information:
@@ -855,12 +855,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             DPRINT1("WS Watch Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessPooledUsageAndLimits:
             DPRINT1("Pool limits Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-        
+
         /* Not supported by Server 2003 */
         default:
             DPRINT1("Unsupported info class: %lx\n", ProcessInformationClass);
@@ -978,7 +978,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
-            
+
             /* Get the LPC Port */
             Status = ObReferenceObjectByHandle(PortHandle,
                                                0,
@@ -1050,10 +1050,10 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Set the mode */
             Process->DefaultHardErrorProcessing = DefaultHardErrorMode;
-            
+
             /* Call Ke for the update */
             if (DefaultHardErrorMode & SEM_NOALIGNMENTFAULTEXCEPT)
             {
@@ -1219,7 +1219,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                                         PsProcessPriorityBackground);
             Status = STATUS_SUCCESS;
             break;
-                
+
         case ProcessBasePriority:
 
             /* Validate input length */
@@ -1242,7 +1242,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Extract the memory priority out of there */
             if (BasePriority & 0x80000000)
             {
@@ -1253,22 +1253,22 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             {
                 MemoryPriority = MEMORY_PRIORITY_BACKGROUND;
             }
-            
+
             /* Validate the number */
             if ((BasePriority > HIGH_PRIORITY) || (BasePriority <= LOW_PRIORITY))
             {
                 return STATUS_INVALID_PARAMETER;
             }
-            
+
             /* Check if the new base is higher */
             if (BasePriority > Process->Pcb.BasePriority)
             {
                 DPRINT1("Should check privilege\n");
             }
-            
+
             /* Call Ke */
             KeSetPriorityAndQuantumProcess(&Process->Pcb, BasePriority, 0);
-            
+
             /* Now set the memory priority */
             MmSetMemoryPriorityProcess(Process, MemoryPriority);
             Status = STATUS_SUCCESS;
@@ -1351,14 +1351,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
-            
+
             /* Set or clear the flag */
             if (Break)
             {
@@ -1370,9 +1370,9 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
 
             break;
-            
+
         case ProcessAffinityMask:
-        
+
             /* Check buffer length */
             if (ProcessInformationLength != sizeof(KAFFINITY))
             {
@@ -1393,7 +1393,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-        
+
             /* Make sure it's valid for the CPUs present */
             ValidAffinity = Affinity & KeActiveProcessors;
             if (!Affinity || (ValidAffinity != Affinity))
@@ -1435,7 +1435,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_PROCESS_IS_TERMINATING;
             }
             break;
-            
+
         /* Priority Boosting status */
         case ProcessPriorityBoost:
 
@@ -1469,7 +1469,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
                 /* Call Ke to do the work */
                 KeSetDisableBoostProcess(&Process->Pcb, DisableBoost);
-                
+
                 /* Loop the threads too */
                 for (Next = Process->ThreadListHead.Flink;
                      Next != &Process->ThreadListHead;
@@ -1494,7 +1494,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_PROCESS_IS_TERMINATING;
             }
             break;
-            
+
         case ProcessDebugFlags:
 
             /* Check buffer length */
@@ -1516,7 +1516,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Set the mode */
             if (DebugFlags & ~1)
             {
@@ -1537,7 +1537,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Done */
             Status = STATUS_SUCCESS;
             break;
-            
+
         case ProcessEnableAlignmentFaultFixup:
 
             /* Check buffer length */
@@ -1559,7 +1559,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Set the mode */
             if (EnableFixup)
             {
@@ -1569,12 +1569,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             {
                 Process->DefaultHardErrorProcessing &= ~SEM_NOALIGNMENTFAULTEXCEPT;
             }
-            
+
             /* Call Ke for the update */
             KeSetAutoAlignmentProcess(&Process->Pcb, FALSE);
             Status = STATUS_SUCCESS;
             break;
-            
+
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
@@ -1584,32 +1584,32 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
              DPRINT1("VDM/16-bit Request not implemented: %lx\n", ProcessInformationClass);
              Status = STATUS_NOT_IMPLEMENTED;
              break;
-                
+
         case ProcessQuotaLimits:
             DPRINT1("Quota Limits not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-                
+
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessDeviceMap:
             DPRINT1("Device map not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessHandleTracing:
             DPRINT1("Handle tracing not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         case ProcessExecuteFlags:
             DPRINT1("No execute support not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-            
+
         /* Anything else is invalid */
         default:
             DPRINT1("Invalid Server 2003 Info Class: %lx\n", ProcessInformationClass);
