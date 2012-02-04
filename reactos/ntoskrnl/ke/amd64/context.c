@@ -24,12 +24,16 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 {
     KIRQL OldIrql;
 
+    /* Make sure we have an amd64 context, then remove the flag */
+    ASSERT(ContextFlags & CONTEXT_AMD64);
+    ContextFlags &= ~CONTEXT_AMD64;
+
     /* Do this at APC_LEVEL */
     OldIrql = KeGetCurrentIrql();
     if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Handle integer registers */
-    if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    if (ContextFlags & CONTEXT_INTEGER)
     {
         TrapFrame->Rax = Context->Rax;
         TrapFrame->Rbx = Context->Rbx;
@@ -42,15 +46,18 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->R9 = Context->R9;
         TrapFrame->R10 = Context->R10;
         TrapFrame->R11 = Context->R11;
-        ExceptionFrame->R12 = Context->R12;
-        ExceptionFrame->R13 = Context->R13;
-        ExceptionFrame->R14 = Context->R14;
-        ExceptionFrame->R15 = Context->R15;
+        if (ExceptionFrame)
+        {
+            ExceptionFrame->R12 = Context->R12;
+            ExceptionFrame->R13 = Context->R13;
+            ExceptionFrame->R14 = Context->R14;
+            ExceptionFrame->R15 = Context->R15;
+        }
     }
 
     /* Handle floating point registers */
-    if (((Context->ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) && (Context->SegCs & MODE_MASK))
+    if ((ContextFlags & CONTEXT_FLOATING_POINT) &&
+        (Context->SegCs & MODE_MASK))
     {
         TrapFrame->Xmm0 = Context->Xmm0;
         TrapFrame->Xmm1 = Context->Xmm1;
@@ -58,20 +65,23 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->Xmm3 = Context->Xmm3;
         TrapFrame->Xmm4 = Context->Xmm4;
         TrapFrame->Xmm5 = Context->Xmm5;
-        ExceptionFrame->Xmm6 = Context->Xmm6;
-        ExceptionFrame->Xmm7 = Context->Xmm7;
-        ExceptionFrame->Xmm8 = Context->Xmm8;
-        ExceptionFrame->Xmm9 = Context->Xmm9;
-        ExceptionFrame->Xmm10 = Context->Xmm10;
-        ExceptionFrame->Xmm11 = Context->Xmm11;
-        ExceptionFrame->Xmm12 = Context->Xmm12;
-        ExceptionFrame->Xmm13 = Context->Xmm13;
-        ExceptionFrame->Xmm14 = Context->Xmm14;
-        ExceptionFrame->Xmm15 = Context->Xmm15;
+        if (ExceptionFrame)
+        {
+            ExceptionFrame->Xmm6 = Context->Xmm6;
+            ExceptionFrame->Xmm7 = Context->Xmm7;
+            ExceptionFrame->Xmm8 = Context->Xmm8;
+            ExceptionFrame->Xmm9 = Context->Xmm9;
+            ExceptionFrame->Xmm10 = Context->Xmm10;
+            ExceptionFrame->Xmm11 = Context->Xmm11;
+            ExceptionFrame->Xmm12 = Context->Xmm12;
+            ExceptionFrame->Xmm13 = Context->Xmm13;
+            ExceptionFrame->Xmm14 = Context->Xmm14;
+            ExceptionFrame->Xmm15 = Context->Xmm15;
+        }
     }
 
     /* Handle control registers */
-    if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    if (ContextFlags & CONTEXT_CONTROL)
     {
         /* Check if this was a Kernel Trap */
         if (Context->SegCs == KGDT64_R0_CODE)
@@ -94,7 +104,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle segment selectors */
-    if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+    if (ContextFlags & CONTEXT_SEGMENTS)
     {
         /* Check if this was a Kernel Trap */
         if (Context->SegCs == KGDT64_R0_CODE)
@@ -116,8 +126,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle debug registers */
-    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) ==
-        CONTEXT_DEBUG_REGISTERS)
+    if (ContextFlags & CONTEXT_DEBUG_REGISTERS)
     {
         /* Copy the debug registers */
         TrapFrame->Dr0 = Context->Dr0;
@@ -158,10 +167,14 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->R9 = TrapFrame->R9;
         Context->R10 = TrapFrame->R10;
         Context->R11 = TrapFrame->R11;
-        Context->R12 = ExceptionFrame->R12;
-        Context->R13 = ExceptionFrame->R13;
-        Context->R14 = ExceptionFrame->R14;
-        Context->R15 = ExceptionFrame->R15;
+
+        if (ExceptionFrame)
+        {
+            Context->R12 = ExceptionFrame->R12;
+            Context->R13 = ExceptionFrame->R13;
+            Context->R14 = ExceptionFrame->R14;
+            Context->R15 = ExceptionFrame->R15;
+        }
     }
 
     /* Handle floating point registers */
@@ -174,16 +187,19 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->Xmm3 = TrapFrame->Xmm3;
         Context->Xmm4 = TrapFrame->Xmm4;
         Context->Xmm5 = TrapFrame->Xmm5;
-        Context->Xmm6 = ExceptionFrame->Xmm6;
-        Context->Xmm7 = ExceptionFrame->Xmm7;
-        Context->Xmm8 = ExceptionFrame->Xmm8;
-        Context->Xmm9 = ExceptionFrame->Xmm9;
-        Context->Xmm10 = ExceptionFrame->Xmm10;
-        Context->Xmm11 = ExceptionFrame->Xmm11;
-        Context->Xmm12 = ExceptionFrame->Xmm12;
-        Context->Xmm13 = ExceptionFrame->Xmm13;
-        Context->Xmm14 = ExceptionFrame->Xmm14;
-        Context->Xmm15 = ExceptionFrame->Xmm15;
+        if (ExceptionFrame)
+        {
+            Context->Xmm6 = ExceptionFrame->Xmm6;
+            Context->Xmm7 = ExceptionFrame->Xmm7;
+            Context->Xmm8 = ExceptionFrame->Xmm8;
+            Context->Xmm9 = ExceptionFrame->Xmm9;
+            Context->Xmm10 = ExceptionFrame->Xmm10;
+            Context->Xmm11 = ExceptionFrame->Xmm11;
+            Context->Xmm12 = ExceptionFrame->Xmm12;
+            Context->Xmm13 = ExceptionFrame->Xmm13;
+            Context->Xmm14 = ExceptionFrame->Xmm14;
+            Context->Xmm15 = ExceptionFrame->Xmm15;
+        }
     }
 
     /* Handle control registers */
