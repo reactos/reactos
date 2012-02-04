@@ -168,10 +168,6 @@ LogfClose(PLOGFILE LogFile,
 
 VOID LogfCloseAll(VOID);
 
-BOOL LogfInitializeNew(PLOGFILE LogFile);
-
-BOOL LogfInitializeExisting(PLOGFILE LogFile);
-
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 
 DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
