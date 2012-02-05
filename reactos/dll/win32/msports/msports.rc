@@ -8,10 +8,11 @@
 #include <reactos/version.rc>
 
 #include "lang/de-DE.rc"
-#include "lang/en-US.rc"
 
 // UTF-8
 #pragma code_page(65001)
+#include "lang/bg-BG.rc"
+#include "lang/en-US.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
 #include "lang/uk-UA.rc"

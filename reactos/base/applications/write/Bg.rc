@@ -1,5 +1,7 @@
-/*
- * Copyright 2007 Mikolaj Zalewski
+ /*
+ * Bulgarian language support
+ *
+ * Copyright (C) 2007 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,30 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Превод на Български/ Bulgarian translation */
+/* http://www.reactos.org/wiki/Bulgarian_translation */
+/* LOCATION: \base\applications\write\lang */
+
+/* WARNING */
+/* Do NOT save this file with BOM */
+
 #include "resources.h"
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include "Da.rc"
-#include "En.rc"
-#include "Ko.rc"
-#include "Nl.rc"
-#include "No.rc"
-#include "Pl.rc"
-#include "Pt.rc"
-#include "Sv.rc"
-
 /* UTF-8 */
-#include "Bg.rc"
-#include "De.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "It.rc"
-#include "Ja.rc"
-#include "Lt.rc"
-#include "Ro.rc"
-#include "Ru.rc"
-#include "Si.rc"
-#include "Sr.rc"
-#include "Uk.rc"
-#include "Zh.rc"
+#pragma code_page(65001)
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_FAILED, "Неуспешно пускане на Тетрадката."
+}

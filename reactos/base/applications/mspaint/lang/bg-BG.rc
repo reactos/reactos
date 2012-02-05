@@ -1,9 +1,9 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/bg-BG.rc
- * PURPOSE:     Bulgarian Language resource file
- * TRANSLATORS: unknown
+ * Превод на Български/ Bulgarian translation
+ * http://www.reactos.org/wiki/Bulgarian_translation
+ * LOCATION: \base\applications\mspaint\lang
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
@@ -178,8 +178,8 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME, "Рисуване"
     IDS_WINDOWTITLE, "%s - рисуване"
-    IDS_INFOTITLE, "Рисунък (Paint) за РеактОС"
-    IDS_INFOTEXT, "Рисунък (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL) версия 3 (see www.gnu.org)"
+    IDS_INFOTITLE, "Рисувач (Paint) за РеактОС"
+    IDS_INFOTEXT, "Рисувач (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL) версия 3 (see www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Искате ли да запишете промените в %s?"
     IDS_DEFAULTFILENAME, "Без име.bmp"
     IDS_MINIATURETITLE, "Изображенийце"
@@ -201,6 +201,6 @@ BEGIN
     IDS_TOOLTIP16, "Заоблен правоъгълник"
     IDS_OPENFILTER, "Файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Всички файлове (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 разрядни файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_FILESIZE, "%d разряда"
+    IDS_PRINTRES, "%d x %d точки на метър"
 END
