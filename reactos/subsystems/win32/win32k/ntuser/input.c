@@ -10,9 +10,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
-extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
-extern PPROCESSINFO ppiScrnSaver;
-
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;

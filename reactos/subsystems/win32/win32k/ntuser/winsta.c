@@ -66,12 +66,6 @@ InitWindowStationImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
-CleanupWindowStationImpl(VOID)
-{
-   return STATUS_SUCCESS;
-}
-
 /* OBJECT CALLBACKS  **********************************************************/
 
 VOID APIENTRY

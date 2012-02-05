@@ -11,6 +11,7 @@
 
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
+extern PPROCESSINFO ppiScrnSaver;
 
 INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

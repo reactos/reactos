@@ -23,7 +23,6 @@ IntFreeDesktopHeap(
 PDESKTOP InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
-BOOL g_PaintDesktopVersion = FALSE;
 
 GENERIC_MAPPING IntDesktopMapping =
 {
@@ -194,13 +193,6 @@ InitDesktopImpl(VOID)
     /* Set Desktop Object Attributes */
     ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP);
     ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-FASTCALL
-CleanupDesktopImpl(VOID)
-{
     return STATUS_SUCCESS;
 }
 
@@ -567,42 +559,6 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
       return NULL;
    }
    return pdo->DesktopWindow;
-}
-
-BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
-{
-   if (bEnable)
-   {
-      RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-      NTSTATUS Status;
-
-      RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-      QueryTable[0].Name = L"PaintDesktopVersion";
-      QueryTable[0].EntryContext = &g_PaintDesktopVersion;
-
-      /* Query the "PaintDesktopVersion" flag in the "Control Panel\Desktop" key */
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_USER,
-                                      L"Control Panel\\Desktop",
-                                      QueryTable, NULL, NULL);
-      if (!NT_SUCCESS(Status))
-      {
-         TRACE("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
-                 Status);
-         g_PaintDesktopVersion = FALSE;
-         return FALSE;
-      }
-
-      TRACE("PaintDesktopVersion = %d\n", g_PaintDesktopVersion);
-
-      return TRUE;
-   }
-   else
-   {
-      g_PaintDesktopVersion = FALSE;
-      return TRUE;
-   }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

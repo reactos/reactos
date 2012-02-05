@@ -11,7 +11,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 
 SHORT
 FASTCALL
-IntGdiGetLanguageID(VOID)
+UserGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
   OBJECT_ATTRIBUTES ObAttr;

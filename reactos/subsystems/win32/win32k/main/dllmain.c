@@ -454,41 +454,6 @@ leave:
     return Status;
 }
 
-NTSTATUS
-Win32kInitWin32Thread(PETHREAD Thread)
-{
-    PEPROCESS Process;
-
-    Process = Thread->ThreadsProcess;
-
-    if (Process->Win32Process == NULL)
-    {
-        /* FIXME: Lock the process */
-        Process->Win32Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(PROCESSINFO), USERTAG_PROCESSINFO);
-
-        if (Process->Win32Process == NULL)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
-        /* FIXME: Unlock the process */
-
-        Win32kProcessCallback(Process, TRUE);
-    }
-
-    if (Thread->Tcb.Win32Thread == NULL)
-    {
-        Thread->Tcb.Win32Thread = ExAllocatePoolWithTag(NonPagedPool, sizeof(THREADINFO), USERTAG_THREADINFO);
-        if (Thread->Tcb.Win32Thread == NULL)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(THREADINFO));
-
-        Win32kThreadCallback(Thread, PsW32ThreadCalloutInitialize);
-    }
-
-    return(STATUS_SUCCESS);
-}
-
 #ifdef _M_IX86
 C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
 #endif
@@ -588,7 +553,6 @@ DriverEntry(
     NT_ROF(InitDeviceImpl());
     NT_ROF(InitDcImpl());
     NT_ROF(InitUserImpl());
-    NT_ROF(InitHotkeyImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());
@@ -603,7 +567,7 @@ DriverEntry(
         return Status;
     }
 
-    gusLanguageID = IntGdiGetLanguageID();
+    gusLanguageID = UserGetLanguageID();
 
     return STATUS_SUCCESS;
 }

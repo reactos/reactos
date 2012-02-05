@@ -17,6 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 PWINSTATION_OBJECT gpwinstaCurrent = NULL;
+BOOL g_PaintDesktopVersion = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -58,6 +59,8 @@ static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
 static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
+static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
+static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -267,6 +270,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
+    gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
@@ -320,7 +324,10 @@ NtUserUpdatePerUserSystemParameters(
     UserEnterExclusive();
 
     SpiUpdatePerUserSystemParameters();
-    bResult = IntDesktopUpdatePerUserSettings(bEnable);
+    if(bEnable)
+        g_PaintDesktopVersion = SpiLoadDWord(KEY_DESKTOP, VAL_PAINTDESKVER, 0);
+    else
+        g_PaintDesktopVersion = FALSE;
 
     TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
     UserLeave();
