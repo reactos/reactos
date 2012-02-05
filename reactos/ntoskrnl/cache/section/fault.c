@@ -266,12 +266,13 @@ MiCowCacheSectionPage
            Region->Protect == PAGE_EXECUTE_READWRITE)
 #endif
        {
+           ULONG Entry;
            DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n", Segment, Process, PAddress, Offset.u.LowPart, MmGetPfnForProcess(Process, Address));
            if (Segment->FileObject)
            {
                DPRINTC("file %wZ\n", &Segment->FileObject->FileName);
            }
-           ULONG Entry = MiGetPageEntryCacheSectionSegment(Segment, &Offset);
+           Entry = MiGetPageEntryCacheSectionSegment(Segment, &Offset);
            DPRINT("Entry %x\n", Entry);
            if (Entry &&
                !IS_SWAP_FROM_SSE(Entry) &&
@@ -478,7 +479,7 @@ MmpSectionAccessFaultInner
 	  {
 		  if (Thread->ActiveFaultCount > 0)
 		  {
-			  WORK_QUEUE_WITH_CONTEXT Context = { };
+			  WORK_QUEUE_WITH_CONTEXT Context = {0};
 			  DPRINT("Already fault handling ... going to work item (%x)\n", Address);
 			  Context.AddressSpace = AddressSpace;
 			  Context.MemoryArea = MemoryArea;
@@ -659,7 +660,7 @@ MmNotPresentFaultCacheSectionInner
 		{
 			if (Thread->ActiveFaultCount > 1)
 			{
-				WORK_QUEUE_WITH_CONTEXT Context = { };
+				WORK_QUEUE_WITH_CONTEXT Context = {0};
 				DPRINTC("Already fault handling ... going to work item (%x)\n", Address);
 				Context.AddressSpace = AddressSpace;
 				Context.MemoryArea = MemoryArea;

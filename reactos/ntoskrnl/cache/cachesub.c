@@ -143,7 +143,7 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
     PNOCC_BCB Bcb = NULL;
 	LARGE_INTEGER LowerBound, UpperBound;
 	PLIST_ENTRY ListEntry;
-    IO_STATUS_BLOCK IOSB = { };
+    IO_STATUS_BLOCK IOSB = {0};
 
 	DPRINT1("CcFlushCache (while file) (%s:%d)\n", File, Line);
 
@@ -164,7 +164,7 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
 	while (ListEntry != &Map->AssociatedBcb)
 	{
 		Bcb = CONTAINING_RECORD(ListEntry, NOCC_BCB, ThisFileList);
-		CcpReferenceCache(Bcb - CcCacheSections);
+		CcpReferenceCache((ULONG)(Bcb - CcCacheSections));
 
 		if (Bcb->FileOffset.QuadPart + Bcb->Length >= LowerBound.QuadPart &&
 			Bcb->FileOffset.QuadPart < UpperBound.QuadPart)
@@ -186,7 +186,7 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
 			if (Delete && Bcb->RefCount < 2)
 			{
 				Bcb->RefCount = 1;
-				CcpDereferenceCache(Bcb - CcCacheSections, FALSE);
+				CcpDereferenceCache((ULONG)(Bcb - CcCacheSections), FALSE);
 			}
 			else
 				CcpUnpinData(Bcb, TRUE);
@@ -276,9 +276,10 @@ PVOID
 NTAPI
 CcRemapBcb(IN PVOID Bcb)
 {
+	ULONG Number = (ULONG)(((PNOCC_BCB)Bcb) - CcCacheSections);
 	CcpLock();
-	ASSERT(RtlTestBit(CcCacheBitmap, ((PNOCC_BCB)Bcb) - CcCacheSections));
-	CcpReferenceCache(((PNOCC_BCB)Bcb) - CcCacheSections);
+	ASSERT(RtlTestBit(CcCacheBitmap, Number));
+	CcpReferenceCache(Number);
 	CcpUnlock();
     return Bcb;
 }
@@ -315,10 +316,11 @@ VOID
 NTAPI
 CcRepinBcb(IN PVOID Bcb)
 {
+	ULONG Number = (ULONG)(((PNOCC_BCB)Bcb) - CcCacheSections);
 	CcpLock();
-	ASSERT(RtlTestBit(CcCacheBitmap, ((PNOCC_BCB)Bcb) - CcCacheSections));
-	DPRINT("CcRepinBcb(#%x)\n", ((PNOCC_BCB)Bcb) - CcCacheSections);
-	CcpReferenceCache(((PNOCC_BCB)Bcb) - CcCacheSections);
+	ASSERT(RtlTestBit(CcCacheBitmap, Number));
+	DPRINT("CcRepinBcb(#%x)\n", Number);
+	CcpReferenceCache(Number);
 	CcpUnlock();
 }
 

@@ -422,6 +422,8 @@ bail:
 
    if (Segment)
    {
+	   ULONG RefCount;
+
 	   DPRINTC("About to finalize section page %x (%x:%x) Status %x %s\n", Page, Segment, FileOffset.LowPart, Status, Dirty ? "dirty" : "clean");
 
 	   if (!NT_SUCCESS(Status) ||
@@ -438,7 +440,6 @@ bail:
 	   }
 
 	   // Alas, we had the last reference
-	   ULONG RefCount;
 	   if ((RefCount = InterlockedDecrementUL(&Segment->ReferenceCount)) == 0)
 		   MmFinalizeSegment(Segment);
    }

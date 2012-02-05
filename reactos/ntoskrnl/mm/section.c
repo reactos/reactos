@@ -1290,7 +1290,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   MM_REQUIRED_RESOURCES Resources = { };
+   MM_REQUIRED_RESOURCES Resources = {0};
+   NTSTATUS Status;
 
    Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
    Resources.FileOffset.QuadPart = SegOffset +
@@ -1300,7 +1301,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
    DPRINT1("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
 
-   NTSTATUS Status = MiReadFilePage(NULL, NULL, &Resources);
+   Status = MiReadFilePage(NULL, NULL, &Resources);
    *Page = Resources.Page[0];
    return Status;
 }

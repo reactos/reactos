@@ -318,6 +318,8 @@ CcpMapData
     PMM_CACHE_SECTION_SEGMENT SectionObject = NULL;
     NTSTATUS Status;
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	ULONG SectionSize;
+	ULONG ViewSize = CACHE_STRIPE;
 
 	if (!Map)
 	{
@@ -358,8 +360,6 @@ CcpMapData
 		goto cleanup;
 	}
 
-	ULONG SectionSize;
-	
 	DPRINT("File size %08x%08x\n", Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
 	
 	if (Map->FileSizes.ValidDataLength.QuadPart)
@@ -424,7 +424,6 @@ retry:
     }
 	
     DPRINT("Selected BCB #%x\n", BcbHead);
-	ULONG ViewSize = CACHE_STRIPE;
 
     Bcb = &CcCacheSections[BcbHead];
 	Status = MmMapCacheViewInSystemSpaceAtOffset
