@@ -263,10 +263,14 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     bool BreakLoop = false;
     DWORD BytesAvailable;
     DWORD Temp;
-    stringstream ss;
+    stringstream ss, ssFinish;
+    DWORD StartTime = GetTickCount();
+    float TotalTime;
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
+
+    StartTime = GetTickCount();
 
     {
         /* Execute the test */
@@ -305,6 +309,11 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         }
         while(!BreakLoop);
     }
+
+    TotalTime = ((float)GetTickCount() - StartTime)/1000;
+    ssFinish << "Test " << TestInfo->Test << " completed in ";
+    ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
+    StringOut(ssFinish.str());
 }
 
 /**

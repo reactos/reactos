@@ -51,10 +51,16 @@ wmain(int argc, wchar_t* argv[])
 
     try
     {
+        stringstream ss;
+
         /* Set up the configuration */
         Configuration.ParseParameters(argc, argv);
         Configuration.GetSystemInformation();
         Configuration.GetConfigurationFromFile();
+
+        ss << "\n\nSystem uptime " << setprecision(2) << fixed ;
+        ss << ((float)GetTickCount()/1000) << " seconds\n";
+        StringOut(ss.str());
 
         /* Run the tests */
         WineTest.Run();
