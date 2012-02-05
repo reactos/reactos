@@ -773,6 +773,7 @@ USBSTOR_PdoHandlePnp(
     PPDO_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     PDEVICE_CAPABILITIES Caps;
+    ULONG bDelete;
 
     //
     // get current stack location
@@ -845,13 +846,31 @@ USBSTOR_PdoHandlePnp(
        {
            DPRINT1("IRP_MN_REMOVE_DEVICE\n");
 
+           if(*DeviceExtension->PDODeviceObject != NULL)
+           {
+               //
+               // clear entry in FDO pdo list
+               //
+               *DeviceExtension->PDODeviceObject = NULL;
+               bDelete = TRUE;
+           }
+           else
+           {
+               //
+               // device object already marked for deletion
+               //
+               bDelete = FALSE;
+           }
+
            /* Complete the IRP */
            Irp->IoStatus.Status = STATUS_SUCCESS;
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-           /* Delete the device object */
-           IoDeleteDevice(DeviceObject);
-
+           if (bDelete)
+           {
+               /* Delete the device object */
+               IoDeleteDevice(DeviceObject);
+           }
            return STATUS_SUCCESS;
        }
        case IRP_MN_QUERY_CAPABILITIES:
@@ -880,7 +899,10 @@ USBSTOR_PdoHandlePnp(
            // if we're not claimed it's ok
            //
            if (DeviceExtension->Claimed)
+           {
                Status = STATUS_UNSUCCESSFUL;
+               DPRINT1("[USBSTOR] Request %x fails because device is still claimed\n", IoStack->MinorFunction);
+           }
            else
                Status = STATUS_SUCCESS;
            break;
@@ -961,6 +983,7 @@ USBSTOR_CreatePDO(
     RtlZeroMemory(PDODeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->LowerDeviceObject = DeviceObject;
+    PDODeviceExtension->PDODeviceObject = ChildDeviceObject;
 
     //
     // set device flags

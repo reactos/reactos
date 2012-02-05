@@ -743,7 +743,7 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         // no buffer, setup in descriptor
         //
-        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
+        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
         m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = 0;
 
         //

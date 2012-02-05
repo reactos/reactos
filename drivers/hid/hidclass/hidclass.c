@@ -79,11 +79,18 @@ HidClassAddDevice(
     RtlZeroMemory(FDODeviceExtension, sizeof(HIDCLASS_FDO_EXTENSION));
 
     /* initialize device extension */
+    FDODeviceExtension->Common.IsFDO = TRUE;
+    FDODeviceExtension->Common.DriverExtension = DriverExtension;
     FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = PhysicalDeviceObject;
     FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = (PVOID)((ULONG_PTR)FDODeviceExtension + sizeof(HIDCLASS_FDO_EXTENSION));
     FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = IoAttachDeviceToDeviceStack(NewDeviceObject, PhysicalDeviceObject);
-    FDODeviceExtension->Common.IsFDO = TRUE;
-    FDODeviceExtension->Common.DriverExtension = DriverExtension;
+    if (FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject == NULL)
+    {
+        /* no PDO */
+        IoDeleteDevice(NewDeviceObject);
+        DPRINT1("[HIDCLASS] failed to attach to device stack\n");
+        return STATUS_DEVICE_REMOVED;
+    }
 
     /* sanity check */
     ASSERT(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject);

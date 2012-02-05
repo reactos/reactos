@@ -79,6 +79,7 @@ typedef struct
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
     ULONG LastLogicBlockAddress;                                                         // last block address
+    PDEVICE_OBJECT *PDODeviceObject;                                                     // entry in pdo list
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 //

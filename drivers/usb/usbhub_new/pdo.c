@@ -486,6 +486,7 @@ USBHUB_PdoHandlePnp(
     ULONG_PTR Information = 0;
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
     ULONG Index;
+    ULONG bFound;
     PDEVICE_RELATIONS DeviceRelation;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -577,19 +578,21 @@ USBHUB_PdoHandlePnp(
 
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
-            /* Remove the device */
-            Status = HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
-
-            /* FIXME handle error */
-            ASSERT(Status == STATUS_SUCCESS);
-
             /* remove us from pdo list */
+            bFound = FALSE;
             for(Index = 0; Index < USB_MAXCHILDREN; Index++)
             {
                 if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
                 {
+                     /* Remove the device */
+                     Status = HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+
+                     /* FIXME handle error */
+                     ASSERT(Status == STATUS_SUCCESS);
+
                     /* remove us */
                     HubDeviceExtension->ChildDeviceObject[Index] = NULL;
+                    bFound = TRUE;
                     break;
                 }
             }
@@ -598,8 +601,12 @@ USBHUB_PdoHandlePnp(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-            /* Delete the device object */
-            IoDeleteDevice(DeviceObject);
+            if (bFound)
+            {
+                /* Delete the device object */
+                IoDeleteDevice(DeviceObject);
+            }
+
             return STATUS_SUCCESS;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:

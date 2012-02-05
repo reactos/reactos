@@ -354,7 +354,7 @@ HidClassPDO_PnP(
     NTSTATUS Status;
     PPNP_BUS_INFORMATION BusInformation;
     PDEVICE_RELATIONS DeviceRelation;
-    ULONG Index;
+    ULONG Index, bFound;
 
     //
     // get device extension
@@ -535,6 +535,7 @@ HidClassPDO_PnP(
            //
            // remove us from the fdo's pdo list
            //
+           bFound = FALSE;
            for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->DeviceRelations->Count; Index++)
            {
                if (PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] == DeviceObject)
@@ -542,6 +543,7 @@ HidClassPDO_PnP(
                    //
                    // remove us
                    //
+                   bFound = TRUE;
                    PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] = NULL;
                    break;
                }
@@ -551,8 +553,11 @@ HidClassPDO_PnP(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-            /* Delete our device object*/
-            IoDeleteDevice(DeviceObject);
+            if (bFound)
+            {
+                /* Delete our device object*/
+                IoDeleteDevice(DeviceObject);
+            }
 
             return STATUS_SUCCESS;
         }

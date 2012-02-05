@@ -1662,19 +1662,10 @@ HidPnp(
                 Status = Irp->IoStatus.Status;
             }
 
-            if (NT_SUCCESS(Status))
-            {
-                //
-                // driver supports D1 & D2
-                //
-                IoStack->Parameters.DeviceCapabilities.Capabilities->DeviceD1 = TRUE;
-                IoStack->Parameters.DeviceCapabilities.Capabilities->DeviceD2 = TRUE;
-
-                //
-                // don't need to safely remove
-                //
-                IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
-            }
+            //
+            // don't need to safely remove
+            //
+            IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
 
             //
             // done

@@ -622,75 +622,84 @@ CUSBQueue::TransferDescriptorCompletionCallback(
 
     DPRINT("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
 
-    //
-    // find transfer descriptor in control list
-    //
-    Status = FindTransferDescriptorInEndpoint(m_ControlHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
-    if (NT_SUCCESS(Status))
+    do
     {
         //
-        // cleanup endpoint
+        // find transfer descriptor in control list
         //
-        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+        Status = FindTransferDescriptorInEndpoint(m_ControlHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // cleanup endpoint
+            //
+            CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+            //
+            // done
+            //
+            continue;
+        }
 
         //
-        // done
+        // find transfer descriptor in bulk list
+        //
+        Status = FindTransferDescriptorInEndpoint(m_BulkHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // cleanup endpoint
+            //
+            CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+            //
+            // done
+            //
+            continue;
+        }
+
+        //
+        // find transfer descriptor in interrupt list
+        //
+        Status = FindTransferDescriptorInInterruptHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // cleanup endpoint
+            //
+            CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+            //
+            // done
+            //
+            continue;
+        }
+
+        //
+        // last try: find the descriptor in isochronous list
+        //
+        Status = FindTransferDescriptorInIsochronousHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // cleanup endpoint
+            //
+            DPRINT1("ISO endpoint complete\n");
+            ASSERT(FALSE);
+            CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+            //
+            // done
+            //
+            continue;
+        }
+
+        //
+        // no more completed descriptors found
         //
         return;
-    }
 
-    //
-    // find transfer descriptor in bulk list
-    //
-    Status = FindTransferDescriptorInEndpoint(m_BulkHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // cleanup endpoint
-        //
-        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
-
-        //
-        // done
-        //
-        return;
-    }
-
-    //
-    // find transfer descriptor in interrupt list
-    //
-    Status = FindTransferDescriptorInInterruptHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // cleanup endpoint
-        //
-        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
-
-        //
-        // done
-        //
-        return;
-    }
-
-    //
-    // last try: find the descriptor in isochronous list
-    //
-    Status = FindTransferDescriptorInIsochronousHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // cleanup endpoint
-        //
-        DPRINT1("ISO endpoint complete\n");
-ASSERT(FALSE);
-        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
-
-        //
-        // done
-        //
-        return;
-    }
+    }while(TRUE);
 
     //
     // hardware reported dead endpoint completed
