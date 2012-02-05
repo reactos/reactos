@@ -24,7 +24,7 @@ PMMWSL MmWorkingSetList;
 
 VOID
 NTAPI
-MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
+MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
@@ -35,8 +35,7 @@ MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
                                 &AllocatedBase,
-                                ((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - 1) -
-                                (ULONG_PTR)USER_SHARED_DATA,
+                                PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MemoryArea,
                                 TRUE,
@@ -1002,7 +1001,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
 
     /* Check if there's a Section Object */
     if (SectionObject)
@@ -1102,7 +1101,7 @@ INIT_FUNCTION
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
     return STATUS_SUCCESS;
 }
 

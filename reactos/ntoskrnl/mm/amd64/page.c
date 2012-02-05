@@ -336,6 +336,44 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
     return Pte.u.Hard.Valid && Pte.u.Soft.Transition;
 }
 
+static PMMPTE
+MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
+{
+    __debugbreak();
+    return 0;
+}
+
+BOOLEAN MmUnmapPageTable(PMMPTE Pt)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+
+static ULONG64 MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
+{
+    MMPTE Pte, *PointerPte;
+
+    PointerPte = MmGetPageTableForProcess(Process, Address, FALSE);
+    if (PointerPte)
+    {
+        Pte = *PointerPte;
+        MmUnmapPageTable(PointerPte);
+        return Pte.u.Long;
+    }
+    return 0;
+}
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+    PEPROCESS Process,
+    PVOID Address,
+    SWAPENTRY* SwapEntry)
+{
+	ULONG64 Entry = MmGetPageEntryForProcess(Process, Address);
+	*SwapEntry = Entry >> 1;
+}
+
 BOOLEAN
 NTAPI
 MmIsDirtyPage(PEPROCESS Process, PVOID Address)
