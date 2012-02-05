@@ -5,7 +5,7 @@ Name = LGeneral
 Version = 1.1
 Licence = GPL
 Description = Panzer General Clone using SDL libs.
-Size = 2.0MB
+Size = 1.92MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LGeneral
 URLDownload = http://ovh.dl.sourceforge.net/project/lgames/binaries/lgeneral-1.1-win32.exe

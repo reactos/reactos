@@ -2,13 +2,13 @@
 
 [Section]
 Name = BitTorrent
-Version = 7.5
+Version = 7.6
 Licence = Freeware for non-commercial uses
 Description = The Original BitTorrent Client.
-Size = 539K
+Size = 5.78M
 Category = 5
 URLSite = http://www.bittorrent.com/
-URLDownload = http://download.bittorrent.com/dl/BitTorrent-7.5.exe
+URLDownload = http://download.bittorrent.com/dl/BitTorrent-7.6.exe
 CDPath = none
 
 [Section.0407]

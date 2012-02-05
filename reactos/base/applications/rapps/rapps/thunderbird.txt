@@ -2,47 +2,47 @@
 
 [Section]
 Name = Mozilla Thunderbird
-Version = 3.1.16
+Version = 3.1.18
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Mail Clients out there.
-Size = 9.1M
+Size = 9.06MB
 Category = 5
 URLSite = http://www.mozilla-europe.org/en/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/en-US/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/en-US/Thunderbird%20Setup%203.1.18.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Mail-Clients.
-Size = 8.9M
+Size = 8.91MB
 URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/de/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/de/Thunderbird%20Setup%203.1.18.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores clientes mail que hay.
-Size = 8.9M
+Size = 8.88MB
 URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/es-ES/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/es-ES/Thunderbird%20Setup%203.1.18.exe
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
-Size = 9.1M
+Size = 9.13MB
 URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/fr/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/fr/Thunderbird%20Setup%203.1.18.exe
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
-Size = 9.7M
+Size = 9.73MB
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/pl/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/pl/Thunderbird%20Setup%203.1.18.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
-Size = 9.3M
+Size = 9.29MB
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/ru/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/ru/Thunderbird%20Setup%203.1.18.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
-Size = 9.3M
+Size = 9.29MB
 URLSite = http://www.mozillamessaging.com/uk/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.16/win32/uk/Thunderbird%20Setup%203.1.16.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.18/win32/uk/Thunderbird%20Setup%203.1.18.exe
