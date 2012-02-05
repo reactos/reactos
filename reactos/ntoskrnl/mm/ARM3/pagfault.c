@@ -637,8 +637,15 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                  IN PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
-    PMMPTE PointerPte, ProtoPte = NULL;
-    PMMPDE PointerPde;
+    PMMPTE ProtoPte = NULL;
+    PMMPTE PointerPte = MiAddressToPte(Address);
+    PMMPDE PointerPde = MiAddressToPde(Address);
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPDE PointerPpe = MiAddressToPpe(Address);
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPDE PointerPxe = MiAddressToPxe(Address);
+#endif
+#endif
     MMPTE TempPte;
     PETHREAD CurrentThread;
     PEPROCESS CurrentProcess;
@@ -648,17 +655,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     PMMVAD Vad;
     PFN_NUMBER PageFrameIndex;
     ULONG Color;
-    DPRINT("ARM3 FAULT AT: %p\n", Address);
 
-    //
-    // Get the PTE and PDE
-    //
-    PointerPte = MiAddressToPte(Address);
-    PointerPde = MiAddressToPde(Address);
-#if (_MI_PAGING_LEVELS >= 3)
-    /* We need the PPE and PXE addresses */
-    ASSERT(FALSE);
-#endif
+    DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     //
     // Check for dispatch-level snafu
@@ -675,7 +673,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     }
 
     //
-    // Check for kernel fault
+    // Check for kernel fault address
     //
     while (Address >= MmSystemRangeStart)
     {
@@ -685,8 +683,18 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
 
 #if (_MI_PAGING_LEVELS >= 3)
-        /* Need to check PXE and PDE validity */
-        ASSERT(FALSE);
+        if (
+#if (_MI_PAGING_LEVELS == 4)
+            (PointerPxe->u.Hard.Valid == 0) ||
+#endif
+            (PointerPpe->u.Hard.Valid == 0))
+        {
+            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                         (ULONG_PTR)Address,
+                         StoreInstruction,
+                         (ULONG_PTR)TrapInformation,
+                         2);
+        }
 #endif
 
         //
@@ -871,17 +879,20 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
 
-    /* This is a user fault */
+#if (_MI_PAGING_LEVELS == 4)
+    /* On these systems we have PXEs and PPEs ready for everything we need */
+    if (PointerPxe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+    if (PointerPpe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+#endif
+
+    /* This is a user fault (<- And this is a lie!) */
     CurrentThread = PsGetCurrentThread();
     CurrentProcess = PsGetCurrentProcess();
 
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
-
-#if (_MI_PAGING_LEVELS >= 3)
-    /* Need to check/handle PPE and PXE validity too */
-    ASSERT(FALSE);
-#endif
 
     /* First things first, is the PDE valid? */
     ASSERT(PointerPde->u.Hard.LargePage == 0);
@@ -916,10 +927,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
-#if (_MI_PAGING_LEVELS >= 3)
-        /* Need to check/handle PPE and PXE validity too */
-        ASSERT(FALSE);
-#endif
         ASSERT(PointerPde->u.Hard.Valid == 1);
     }
 

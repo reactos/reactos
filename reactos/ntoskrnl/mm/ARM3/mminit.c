@@ -1605,7 +1605,10 @@ MiBuildPagedPool(VOID)
     KIRQL OldIrql;
     SIZE_T Size;
     ULONG BitMapSize;
-#if (_MI_PAGING_LEVELS == 2)
+#if (_MI_PAGING_LEVELS >= 3)
+    MMPPE TempPpe = ValidKernelPpe;
+    PMMPPE PointerPpe;
+#elif (_MI_PAGING_LEVELS == 2)
     MMPTE TempPte = ValidKernelPte;
 
     //
@@ -1682,17 +1685,32 @@ MiBuildPagedPool(VOID)
                               MmSizeOfPagedPoolInBytes) - 1);
 
     //
+    // Lock the PFN database
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+#if (_MI_PAGING_LEVELS >= 3)
+    /* On these systems, there's no double-mapping, so instead, the PPEs
+     * are setup to span the entire paged pool area, so there's no need for the
+     * system PD */
+    for (PointerPpe = MiAddressToPpe(MmPagedPoolStart);
+         PointerPpe <= MiAddressToPpe(MmPagedPoolEnd);
+         PointerPpe++)
+    {
+        /* Check if the PPE is already valid */
+        if (!PointerPpe->u.Hard.Valid)
+        {
+            /* It is not, so map a fresh zeroed page */
+            TempPpe.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
+            MI_WRITE_VALID_PPE(PointerPpe, TempPpe);
+        }
+    }
+#endif
+
+    //
     // So now get the PDE for paged pool and zero it out
     //
     PointerPde = MiAddressToPde(MmPagedPoolStart);
-
-#if (_MI_PAGING_LEVELS >= 3)
-    /* On these systems, there's no double-mapping, so instead, the PPE and PXEs
-     * are setup to span the entire paged pool area, so there's no need for the
-     * system PD */
-     ASSERT(FALSE);
-#endif
-
     RtlZeroMemory(PointerPde,
                   (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPDE));
 
@@ -1703,11 +1721,6 @@ MiBuildPagedPool(VOID)
     MmPagedPoolInfo.FirstPteForPagedPool = PointerPte;
     MmPagedPoolInfo.LastPteForPagedPool = MiAddressToPte(MmPagedPoolEnd);
 
-    //
-    // Lock the PFN database
-    //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
     /* Allocate a page and map the first paged pool PDE */
     MI_SET_USAGE(MI_USAGE_PAGED_POOL);
     MI_SET_PROCESS2("Kernel");
@@ -1717,7 +1730,11 @@ MiBuildPagedPool(VOID)
 #if (_MI_PAGING_LEVELS >= 3)
     /* Use the PPE of MmPagedPoolStart that was setup above */
 //    Bla = PFN_FROM_PTE(PpeAddress(MmPagedPool...));
-    ASSERT(FALSE);
+
+    /* Initialize the PFN entry for it */
+    MiInitializePfnForOtherProcess(PageFrameIndex,
+                                   (PMMPTE)PointerPde,
+                                   PFN_FROM_PTE(MiAddressToPpe(MmPagedPoolStart)));
 #else
     /* Do it this way */
 //    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]
