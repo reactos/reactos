@@ -646,7 +646,7 @@ Return Value:
     ULONG partitionOrdinal;
     ULONG newPartitionNumber;
 
-    PPARTITION_INFORMATION_EX partitionEntry;
+    PPARTITION_INFORMATION_EX partitionEntry = NULL;
     PDISK_DATA pdoData;
     PARTITION_STYLE partitionStyle;
 

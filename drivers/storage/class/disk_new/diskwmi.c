@@ -281,7 +281,7 @@ ULONG DiskDummyData[4] = { 1, 2, 3, 4};
 //
 // Enable SMART
 //
-_inline NTSTATUS
+__inline NTSTATUS
 DiskEnableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -302,7 +302,7 @@ DiskEnableSmart(
 //
 // Disable SMART
 //
-_inline NTSTATUS
+__inline NTSTATUS
 DiskDisableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -322,7 +322,7 @@ DiskDisableSmart(
 //
 // Enable Attribute Autosave
 //
-_inline NTSTATUS
+__inline NTSTATUS
 DiskEnableSmartAttributeAutosave(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -342,7 +342,7 @@ DiskEnableSmartAttributeAutosave(
 //
 // Disable Attribute Autosave
 //
-_inline NTSTATUS
+__inline NTSTATUS
 DiskDisableSmartAttributeAutosave(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -362,7 +362,7 @@ DiskDisableSmartAttributeAutosave(
 //
 // Initialize execution of SMART online diagnostics
 //
-_inline NTSTATUS
+__inline NTSTATUS
 DiskExecuteSmartDiagnostics(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     UCHAR Subcommand

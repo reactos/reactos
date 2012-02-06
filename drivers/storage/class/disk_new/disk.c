@@ -1201,6 +1201,7 @@ Return Value:
         break;
     }
 
+#if(_WIN32_WINNT >= 0x0500)
     case IOCTL_DISK_GET_WRITE_CACHE_STATE: {
 
         PDISK_WRITE_CACHE_STATE writeCacheState = (PDISK_WRITE_CACHE_STATE)Irp->AssociatedIrp.SystemBuffer;
@@ -1248,6 +1249,7 @@ Return Value:
         status = STATUS_SUCCESS;
         break;
     }
+#endif
 
     case SMART_GET_VERSION: {
 
