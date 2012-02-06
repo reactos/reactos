@@ -100,6 +100,28 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     }
 }
 
+#if (_MI_PAGING_LEVELS == 2)
+BOOLEAN
+FORCEINLINE
+MiSynchronizeSystemPde(PMMPDE PointerPde)
+{
+    MMPDE SystemPde;
+    ULONG Index;
+
+    /* Get the Index from the PDE */
+    Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
+
+    /* Copy the PDE from the double-mapped system page directory */
+    SystemPde = MmSystemPagePtes[Index];
+    *PointerPde = SystemPde;
+
+    /* Make sure we re-read the PDE and PTE */
+    KeMemoryBarrierWithoutFence();
+
+    /* Return, if we had success */
+    return (BOOLEAN)SystemPde.u.Hard.Valid;
+}
+
 NTSTATUS
 FASTCALL
 MiCheckPdeForPagedPool(IN PVOID Address)
@@ -159,6 +181,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     return Status;
 }
+#endif
 
 VOID
 NTAPI
@@ -699,28 +722,12 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Check if the PDE is invalid */
         if (PointerPde->u.Hard.Valid == 0)
         {
-            //
-            // Debug spew (eww!)
-            //
-            DPRINT("Invalid PDE\n");
 #if (_MI_PAGING_LEVELS == 2)
-            //
-            // Handle mapping in "Special" PDE directoreis
-            //
-            MiCheckPdeForPagedPool(Address);
+            /* Sync this PDE and check, if that made it valid */
+            if (!MiSynchronizeSystemPde(PointerPde))
 #endif
-            //
-            // Now we SHOULD be good
-            //
-            if (PointerPde->u.Hard.Valid == 0)
             {
-                //
-                // FIXFIX: Do the S-LIST hack
-                //
-
-                //
-                // Kill the system
-                //
+                /* PDE (still) not valid, kill the system */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
                              StoreInstruction,
@@ -824,20 +831,20 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                              (ULONG_PTR)TrapInformation,
                              1);
             }
-        }
 
-        /* Check for demand page */
-        if ((StoreInstruction) && !(ProtoPte) && !(TempPte.u.Hard.Valid))
-        {
-            /* Get the protection code */
-            if (!(TempPte.u.Soft.Protection & MM_READWRITE))
+            /* Check for demand page */
+            if ((StoreInstruction) && !(TempPte.u.Hard.Valid))
             {
-                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
-                KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
-                             (ULONG_PTR)Address,
-                             TempPte.u.Long,
-                             (ULONG_PTR)TrapInformation,
-                             14);
+                /* Get the protection code */
+                if (!(TempPte.u.Soft.Protection & MM_READWRITE))
+                {
+                    /* Bugcheck the system! */
+                    KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
+                                 (ULONG_PTR)Address,
+                                 TempPte.u.Long,
+                                 (ULONG_PTR)TrapInformation,
+                                 14);
+                }
             }
         }
 
@@ -889,21 +896,15 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Right now, we expect a valid protection mask on the VAD */
         ASSERT(ProtectionCode != MM_NOACCESS);
 
-        /* Make the PDE demand-zero */
-        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
-
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;
 #endif
-        Status = MiDispatchFault(TRUE,
-                                 PointerPte,
-                                 (PMMPTE)PointerPde,
-                                 NULL,
-                                 FALSE,
-                                 PsGetCurrentProcess(),
-                                 TrapInformation,
-                                 NULL);
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPte,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
@@ -930,15 +931,14 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return STATUS_PAGE_FAULT_DEMAND_ZERO;
     }
 
-    /* Get protection and check if it's a prototype PTE */
-    ProtectionCode = (ULONG)TempPte.u.Soft.Protection;
+    /* Make sure it's not a prototype PTE */
     ASSERT(TempPte.u.Soft.Prototype == 0);
 
     /* Check for non-demand zero PTE */
     if (TempPte.u.Long != 0)
     {
         /* This is a page fault, check for valid protection */
-        ASSERT(ProtectionCode != 0x100);
+        ASSERT(TempPte.u.Soft.Protection != 0x100);
 
         /* FIXME: Run MiAccessCheck */
 
