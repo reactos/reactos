@@ -567,17 +567,6 @@ CUSBHardwareDevice::StartController(void)
     LARGE_INTEGER Timeout;
 
     //
-    // check caps
-    //
-    if (m_Capabilities.HCCParams.CurAddrBits)
-    {
-        //
-        // disable 64-bit addressing
-        //
-        EHCI_WRITE_REGISTER_ULONG(EHCI_CTRLDSSEGMENT, 0x0);
-    }
-
-    //
     // are extended caps supported
     //
     ExtendedCapsSupport = (m_Capabilities.HCCParamsLong >> EHCI_ECP_SHIFT) & EHCI_ECP_MASK;
@@ -648,7 +637,7 @@ CUSBHardwareDevice::StartController(void)
                     //
                     DPRINT1("[EHCI] acquired ownership\n");
                 }
-
+#if 0
                 //
                 // explictly clear the bios owned flag 2.1.7
                 //
@@ -660,15 +649,11 @@ CUSBHardwareDevice::StartController(void)
                 //
                 Caps = 4;
                 m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Caps, ExtendedCapsSupport+4, sizeof(ULONG));
-
-
+#endif
             }
         }
     }
 
-
-
-#if 1
     //
     // Stop the controller if its running
     //
@@ -678,7 +663,22 @@ CUSBHardwareDevice::StartController(void)
         DPRINT1("Stopping Controller %x\n", UsbSts);
         StopController();
     }
-#endif
+
+    //
+    // Reset the controller
+    //
+    ResetController();
+
+    //
+    // check caps
+    //
+    if (m_Capabilities.HCCParams.CurAddrBits)
+    {
+        //
+        // disable 64-bit addressing
+        //
+        EHCI_WRITE_REGISTER_ULONG(EHCI_CTRLDSSEGMENT, 0x0);
+    }
 
     //
     // Enable Interrupts and start execution
@@ -692,7 +692,6 @@ CUSBHardwareDevice::StartController(void)
 
     DPRINT1("Interrupt Mask %x\n", Status);
     ASSERT((Status & Mask) == Mask);
-
 
     //
     // Assign the SyncList Register
@@ -827,8 +826,28 @@ CUSBHardwareDevice::StopController(void)
 NTSTATUS
 CUSBHardwareDevice::ResetController(void)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    EHCI_USBCMD_CONTENT UsbCmd;
+    ULONG FailSafe;
+
+    GetCommandRegister(&UsbCmd);
+    UsbCmd.HCReset = TRUE;
+    SetCommandRegister(&UsbCmd);
+
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(100);
+        GetCommandRegister(&UsbCmd);
+        if (!UsbCmd.HCReset)
+            break;
+    }
+
+    if (UsbCmd.HCReset)
+    {
+        DPRINT1("EHCI ERROR: Controller is not responding to reset request!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
