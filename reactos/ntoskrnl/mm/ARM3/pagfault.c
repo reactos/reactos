@@ -181,6 +181,13 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     return Status;
 }
+#else
+NTSTATUS
+FASTCALL
+MiCheckPdeForPagedPool(IN PVOID Address)
+{
+    return STATUS_ACCESS_VIOLATION;
+}
 #endif
 
 VOID
@@ -784,7 +791,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             CurrentProcess = NULL;
         }
 
-
         /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
@@ -902,16 +908,42 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     }
 
 #if (_MI_PAGING_LEVELS == 4)
-    /* On these systems we have PXEs and PPEs ready for everything we need */
-    if (PointerPxe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+    /* Check if the PXE is valid */
+    if (PointerPxe->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PXE is totally empty */
+        ASSERT(PointerPxe->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPpe,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
+
+        /* We should come back with a valid PXE */
+        ASSERT(PointerPxe->u.Hard.Valid == 1);
+    }
 #endif
 
 #if (_MI_PAGING_LEVELS >= 3)
-    if (PointerPpe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+    /* Check if the PPE is valid */
+    if (PointerPpe->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PPE is totally empty */
+        ASSERT(PointerPpe->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPde,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
+
+        /* We should come back with a valid PPE */
+        ASSERT(PointerPpe->u.Hard.Valid == 1);
+    }
 #endif
 
-
-    /* First things first, is the PDE valid? */
+    /* Check if the PDE is valid */
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PDE is totally empty */
@@ -983,12 +1015,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
 
-
-    {
-        /* Add an additional page table reference */
-        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
-    }
+#if (_MI_PAGING_LEVELS == 2)
+    /* Add an additional page table reference */
+    MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+    ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+#endif
 
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
