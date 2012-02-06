@@ -489,79 +489,113 @@ static DISPID get_dispid( IDispatch *disp, const char *name )
     return id;
 }
 
-typedef struct {
-    DISPID did;
-    const char *name;
-    BOOL todo;
-} get_did_t;
-
-static const get_did_t get_did_data[] = {
-    { 1,  "CreateRecord" },
-    { 2,  "OpenPackage" },
-    { 3,  "OpenProduct" },
-    { 4,  "OpenDatabase" },
-    { 5,  "SummaryInformation" },
-    { 6,  "UILevel" },
-    { 7,  "EnableLog" },
-    { 8,  "InstallProduct" },
-    { 9,  "Version" },
-    { 10, "LastErrorRecord" },
-    { 11, "RegistryValue" },
-    { 12, "Environment" },
-    { 13, "FileAttributes" },
-    { 15, "FileSize" },
-    { 16, "FileVersion" },
-    { 17, "ProductState" },
-    { 18, "ProductInfo" },
-    { 19, "ConfigureProduct", TRUE },
-    { 20, "ReinstallProduct", TRUE },
-    { 21, "CollectUserInfo", TRUE },
-    { 22, "ApplyPatch", TRUE },
-    { 23, "FeatureParent", TRUE },
-    { 24, "FeatureState", TRUE },
-    { 25, "UseFeature", TRUE },
-    { 26, "FeatureUsageCount", TRUE },
-    { 27, "FeatureUsageDate", TRUE },
-    { 28, "ConfigureFeature", TRUE },
-    { 29, "ReinstallFeature", TRUE },
-    { 30, "ProvideComponent", TRUE },
-    { 31, "ComponentPath", TRUE },
-    { 32, "ProvideQualifiedComponent", TRUE },
-    { 33, "QualifierDescription", TRUE },
-    { 34, "ComponentQualifiers", TRUE },
-    { 35, "Products" },
-    { 36, "Features", TRUE },
-    { 37, "Components", TRUE },
-    { 38, "ComponentClients", TRUE },
-    { 39, "Patches", TRUE },
-    { 40, "RelatedProducts" },
-    { 41, "PatchInfo", TRUE },
-    { 42, "PatchTransforms", TRUE },
-    { 43, "AddSource", TRUE },
-    { 44, "ClearSourceList", TRUE },
-    { 45, "ForceSourceListResolution", TRUE },
-    { 46, "ShortcutTarget", TRUE },
-    { 47, "FileHash", TRUE },
-    { 48, "FileSignatureInfo", TRUE },
-    { 0 }
-};
-
 static void test_dispid(void)
 {
-    const get_did_t *ptr = get_did_data;
     DISPID dispid;
 
-    while (ptr->name)
+    dispid = get_dispid(pInstaller, "CreateRecord");
+    ok(dispid  == 1, "Expected 1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenPackage");
+    ok(dispid  == 2, "Expected 2, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenProduct");
+    ok(dispid  == 3, "Expected 3, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenDatabase");
+    ok(dispid == 4, "Expected 4, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "SummaryInformation");
+    ok(dispid == 5, "Expected 5, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "UILevel" );
+    ok(dispid == 6, "Expected 6, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "EnableLog");
+    ok(dispid == 7, "Expected 7, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "InstallProduct");
+    ok(dispid == 8, "Expected 8, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "Version");
+    ok(dispid == 9, "Expected 9, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "LastErrorRecord");
+    ok(dispid == 10, "Expected 10, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "RegistryValue");
+    ok(dispid == 11, "Expected 11, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "Environment");
+    ok(dispid == 12, "Expected 12, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileAttributes");
+    ok(dispid == 13, "Expected 13, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileSize");
+    ok(dispid == 15, "Expected 15, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileVersion");
+    ok(dispid == 16, "Expected 16, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ProductState");
+    ok(dispid == 17, "Expected 17, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ProductInfo");
+    ok(dispid == 18, "Expected 18, got %d\n", dispid);
+    todo_wine
     {
-        dispid = get_dispid(pInstaller, ptr->name);
-        if (ptr->todo)
-        todo_wine
-            ok(dispid == ptr->did, "%s: expected %d, got %d\n", ptr->name, ptr->did, dispid);
-        else
-            ok(dispid == ptr->did, "%s: expected %d, got %d\n", ptr->name, ptr->did, dispid);
-        ptr++;
+        dispid = get_dispid(pInstaller, "ConfigureProduct");
+        ok(dispid == 19, "Expected 19, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ReinstallProduct");
+        ok(dispid == 20 , "Expected 20, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "CollectUserInfo");
+        ok(dispid == 21, "Expected 21, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ApplyPatch");
+        ok(dispid == 22, "Expected 22, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureParent");
+        ok(dispid == 23, "Expected 23, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureState");
+        ok(dispid == 24, "Expected 24, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "UseFeature");
+        ok(dispid == 25, "Expected 25, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureUsageCount");
+        ok(dispid == 26, "Expected 26, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FeatureUsageDate");
+        ok(dispid == 27, "Expected 27, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ConfigureFeature");
+        ok(dispid == 28, "Expected 28, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ReinstallFeature");
+        ok(dispid == 29, "Expected 29, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ProvideComponent");
+        ok(dispid == 30, "Expected 30, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentPath");
+        ok(dispid == 31, "Expected 31, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ProvideQualifiedComponent");
+        ok(dispid == 32, "Expected 32, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "QualifierDescription");
+        ok(dispid == 33, "Expected 33, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentQualifiers");
+        ok(dispid == 34, "Expected 34, got %d\n", dispid);
     }
-
+    dispid = get_dispid(pInstaller, "Products");
+    ok(dispid == 35, "Expected 35, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "Features");
+        ok(dispid == 36, "Expected 36, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "Components");
+        ok(dispid == 37, "Expected 37, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ComponentClients");
+        ok(dispid == 38, "Expected 38, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "Patches");
+        ok(dispid == 39, "Expected 39, got %d\n", dispid);
+    }
+    dispid = get_dispid(pInstaller, "RelatedProducts");
+    ok(dispid == 40, "Expected 40, got %d\n", dispid);
+    todo_wine
+    {
+        dispid = get_dispid(pInstaller, "PatchInfo");
+        ok(dispid == 41, "Expected 41, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "PatchTransforms");
+        ok(dispid == 42, "Expected 42, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "AddSource");
+        ok(dispid == 43, "Expected 43, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ClearSourceList");
+        ok(dispid == 44, "Expected 44, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ForceSourceListResolution");
+        ok(dispid == 45, "Expected 45, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "ShortcutTarget");
+        ok(dispid == 46, "Expected 46, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileHash");
+        ok(dispid == 47, "Expected 47, got %d\n", dispid);
+        dispid = get_dispid(pInstaller, "FileSignatureInfo");
+        ok(dispid == 48, "Expected 48, got %d\n", dispid);
+    }
     dispid = get_dispid(pInstaller, "RemovePatches");
     ok(dispid == 49 || dispid == -1, "Expected 49 or -1, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "ApplyMultiplePatches");
