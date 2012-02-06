@@ -30,7 +30,7 @@ struct {
 //	{TRUE,  SmInitDosDevices,             "create dos device links"},
 //	{TRUE,  SmRunBootApplications,        "run boot applications"},
 //	{TRUE,  SmProcessFileRenameList,      "process the file rename list"},
-	{FALSE, SmUpdateEnvironment,          "update environment variables"},
+//	{FALSE, SmUpdateEnvironment,          "update environment variables"},
 //	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
 //	{TRUE,  SmCreatePagingFiles,          "create paging files"},
 //	{TRUE,  SmInitializeRegistry,         "initialize the registry"},

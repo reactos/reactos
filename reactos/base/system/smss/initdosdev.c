@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
+
 static NTSTATUS NTAPI
 SmpDosDevicesQueryRoutine(PWSTR ValueName,
 			 ULONG ValueType,
@@ -88,5 +90,7 @@ SmInitDosDevices(VOID)
 				  NULL);
   return(Status);
 }
+
+#endif
 
 /* EOF */

@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 //HANDLE Children[2] = {0, 0}; /* csrss, winlogon */
 
 
@@ -223,6 +224,6 @@ SmRunBootApplications(VOID)
 
   return(Status);
 }
-
+#endif
 
 /* EOF */

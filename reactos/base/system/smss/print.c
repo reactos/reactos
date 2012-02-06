@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 VOID NTAPI DisplayString(LPCWSTR lpwString)
 {
    UNICODE_STRING us;
@@ -39,5 +40,6 @@ VOID NTAPI PrintString (char* fmt, ...)
    NtDisplayString(&UnicodeString);
    RtlFreeUnicodeString (&UnicodeString);
 }
+#endif
 
 /* EOF */

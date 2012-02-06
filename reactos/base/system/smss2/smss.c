@@ -305,7 +305,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     SIZE_T Size;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
-    UNICODE_STRING SmssName, Environment, SystemDriveString, DebugString;
+    UNICODE_STRING SmssName, DebugString;
     PVOID EnvironmentPtr = NULL;
     PRTL_USER_PROCESS_INFORMATION ProcessInformation;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams = NULL;
@@ -436,28 +436,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                              NtInitialUserProcessBuffer);
 
     /* Create the environment string */
-    RtlInitEmptyUnicodeString(&Environment,
-                              ProcessParams->Environment,
-                              (USHORT)Size);
-
-    /* Append the DLL path to it */
-    RtlAppendUnicodeToString(&Environment, L"Path=");
-    RtlAppendUnicodeStringToString(&Environment, &ProcessParams->DllPath);
-    RtlAppendUnicodeStringToString(&Environment, &NullString);
-
-    /* Create the system drive string */
-    SystemDriveString = SmpSystemRoot;
-    SystemDriveString.Length = 2 * sizeof(WCHAR);
-
-    /* Append it to the environment */
-    RtlAppendUnicodeToString(&Environment, L"SystemDrive=");
-    RtlAppendUnicodeStringToString(&Environment, &SystemDriveString);
-    RtlAppendUnicodeStringToString(&Environment, &NullString);
-
-    /* Append the system root to the environment */
-    RtlAppendUnicodeToString(&Environment, L"SystemRoot=");
-    RtlAppendUnicodeStringToString(&Environment, &SmpSystemRoot);
-    RtlAppendUnicodeStringToString(&Environment, &NullString);
+    ProcessParams->Environment = SmpDefaultEnvironment;
 
     /* Create SMSS process */
     SmssName = ProcessParams->ImagePathName;

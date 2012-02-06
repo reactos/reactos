@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 static NTSTATUS NTAPI
 SmpKnownDllsQueryRoutine(PWSTR ValueName,
 			ULONG ValueType,
@@ -236,6 +237,6 @@ SmLoadKnownDlls(VOID)
 
   return Status;
 }
-
+#endif
 
 /* EOF */

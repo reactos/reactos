@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
+
 #define GIGABYTE (1024 * 1024 * 1024) /* One Gigabyte */
 
 static NTSTATUS NTAPI
@@ -520,6 +522,6 @@ SmCreatePagingFiles(VOID)
 
     return Status;
 }
-
+#endif
 
 /* EOF */

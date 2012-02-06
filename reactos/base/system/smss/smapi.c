@@ -35,7 +35,7 @@ SM_PORT_API SmApi [] =
     SmInvalid,	/* obsolete */
     SmInvalid,	/* unknown */
     SmExecPgm,	/* smapiexec.c */
-    SmQryInfo	/* smapyqry.c */
+    SmInvalid	/* smapyqry.c */
 };
 
 /* TODO: optimize this address computation (it should be done

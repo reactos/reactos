@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 static NTSTATUS NTAPI
 SmpObjectDirectoryQueryRoutine(PWSTR ValueName,
 			      ULONG ValueType,
@@ -69,5 +70,6 @@ SmCreateObjectDirectories(VOID)
 
   return(Status);
 }
+#endif
 
 /* EOF */
