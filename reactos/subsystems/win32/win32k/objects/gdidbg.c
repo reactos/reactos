@@ -483,7 +483,7 @@ DbgCleanupEventList(PSLIST_HEADER pslh)
 
 void
 NTAPI
-DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
+GdiDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 {
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
@@ -498,7 +498,7 @@ DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 
 ULONG_PTR
 NTAPI
-DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 {
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)

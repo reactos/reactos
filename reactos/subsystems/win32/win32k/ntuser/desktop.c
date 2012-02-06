@@ -864,6 +864,7 @@ NtUserCreateDesktop(
    /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
       NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
       ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
+      ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
    }
    DesktopName.Buffer = NULL;
 
@@ -1069,7 +1070,11 @@ CLEANUP:
    {
        ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
    }
-   if (!NoHooks && ptiCurrent) ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
+   if (!NoHooks && ptiCurrent) 
+   {
+       ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
+       ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
+   }
    TRACE("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1676,15 +1681,14 @@ CLEANUP:
 static NTSTATUS
 IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 {
-    PTHREADINFO ti;
-    PPROCESSINFO CurrentWin32Process;
+    PPROCESSINFO ppi;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("DO %p\n");
 
-    CurrentWin32Process = PsGetCurrentProcessWin32Process();
-    PrevLink = &CurrentWin32Process->HeapMappings.Next;
+    ppi = PsGetCurrentProcessWin32Process();
+    PrevLink = &ppi->HeapMappings.Next;
 
     /* Unmap if we're the last thread using the desktop */
     HeapMapping = *PrevLink;
@@ -1709,13 +1713,6 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
         PrevLink = &HeapMapping->Next;
         HeapMapping = HeapMapping->Next;
     }
-
-    ti = GetW32ThreadInfo();
-    if (ti != NULL)
-    {
-        GetWin32ClientInfo()->pDeskInfo = NULL;
-    }
-    GetWin32ClientInfo()->ulClientDelta = 0;
 
     return Status;
 }
@@ -1792,17 +1789,21 @@ BOOL
 IntSetThreadDesktop(IN HDESK hDesktop,
                     IN BOOL FreeOnFailure)
 {
-    PDESKTOP DesktopObject = NULL, OldDesktop;
-    HDESK hOldDesktop;
-    PTHREADINFO W32Thread;
+    PDESKTOP pdesk = NULL, pdeskOld;
+    HDESK hdeskOld;
+    PTHREADINFO pti;
     NTSTATUS Status;
-    BOOL MapHeap;
-    CLIENTTHREADINFO ctiSave;
+    PCLIENTTHREADINFO pctiOld, pctiNew;
+    PCLIENTINFO pci;
+
+    ASSERT(NtCurrentTeb());
 
     TRACE("IntSetThreadDesktop() , FOF=%d\n", FreeOnFailure);
-    MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
-    W32Thread = PsGetCurrentThreadWin32Thread();
 
+    pti = PsGetCurrentThreadWin32Thread();
+    pci = pti->pClientInfo;
+
+    /* If the caller gave us a desktop, ensure it is valid */
     if(hDesktop != NULL)
     {
         /* Validate the new desktop. */
@@ -1810,7 +1811,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
                     hDesktop,
                     UserMode,
                     0,
-                    &DesktopObject);
+                    &pdesk);
 
         if (!NT_SUCCESS(Status))
         {
@@ -1818,106 +1819,113 @@ IntSetThreadDesktop(IN HDESK hDesktop,
             return FALSE;
         }
 
-        if (W32Thread->rpdesk == DesktopObject)
+        if (pti->rpdesk == pdesk)
         {
             /* Nothing to do */
-            ObDereferenceObject(DesktopObject);
+            ObDereferenceObject(pdesk);
             return TRUE;
         }
-
     }
 
-    if (!IsListEmpty(&W32Thread->WindowListHead))
+    /* Make sure that we don't own any window in the current desktop */
+    if (!IsListEmpty(&pti->WindowListHead))
     {
+        if(pdesk)
+            ObDereferenceObject(pdesk);
         ERR("Attempted to change thread desktop although the thread has windows!\n");
         EngSetLastError(ERROR_BUSY);
         return FALSE;
     }
 
-    OldDesktop = W32Thread->rpdesk;
-    hOldDesktop = W32Thread->hdesk;
-
-    W32Thread->rpdesk = DesktopObject;
-    W32Thread->hdesk = hDesktop;
-
-    if (MapHeap && DesktopObject != NULL)
+    /* Before doing the switch, map the new desktop heap and allocate the new pcti */
+    if(pdesk != NULL)
     {
-        Status = IntMapDesktopView(DesktopObject);
+        Status = IntMapDesktopView(pdesk);
         if (!NT_SUCCESS(Status))
         {
+            ERR("Failed to map desktop heap!\n");
+            ObDereferenceObject(pdesk);
             SetLastNtError(Status);
             return FALSE;
         }
-        W32Thread->pDeskInfo = DesktopObject->pDeskInfo;
+
+        pctiNew = DesktopHeapAlloc( pdesk, sizeof(CLIENTTHREADINFO));
+        if(pctiNew == NULL)
+        {
+            ERR("Failed to allocate new pcti\n");
+            IntUnmapDesktopView(pdesk);
+            ObDereferenceObject(pdesk);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
     }
 
-    RtlZeroMemory(&ctiSave, sizeof(CLIENTTHREADINFO));
-
-    if (W32Thread->pcti && OldDesktop && NtCurrentTeb())
+    /* free all classes or move them to the shared heap */
+    if(pti->rpdesk != NULL)
     {
-        RtlCopyMemory(&ctiSave, W32Thread->pcti, sizeof(CLIENTTHREADINFO));
-        TRACE("Free ClientThreadInfo\n");
-        DesktopHeapFree(OldDesktop, W32Thread->pcti);
-        W32Thread->pcti = NULL;
+        if(!IntCheckProcessDesktopClasses(pti->rpdesk, FreeOnFailure))
+        {
+            ERR("Failed to move process classes to shared heap!\n");
+            if(pdesk)
+            {
+                DesktopHeapFree(pdesk, pctiNew);
+                IntUnmapDesktopView(pdesk);
+                ObDereferenceObject(pdesk);
+            }
+            return FALSE;
+        }
     }
 
-    if (!W32Thread->pcti && DesktopObject && NtCurrentTeb())
-    {
-        TRACE("Allocate ClientThreadInfo\n");
-        W32Thread->pcti = DesktopHeapAlloc( DesktopObject,
-                                            sizeof(CLIENTTHREADINFO));
-        RtlCopyMemory(W32Thread->pcti, &ctiSave, sizeof(CLIENTTHREADINFO));
-    }
+    pdeskOld = pti->rpdesk;
+    hdeskOld = pti->hdesk;
+    pctiOld = pti->pcti;
 
-    if (NtCurrentTeb())
+    /* do the switch */   
+    if(pdesk != NULL)
     {
-        PCLIENTINFO pci = GetWin32ClientInfo();
+        pti->rpdesk = pdesk;
+        pti->hdesk = hDesktop;
+        pti->pDeskInfo = pti->rpdesk->pDeskInfo;
+        pti->pcti = pctiNew;
+
         pci->ulClientDelta = DesktopHeapGetUserDelta();
-        if (DesktopObject)
+        pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
+        pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
+
+        /* initialize the new pcti */
+        if(pctiOld != NULL)
         {
-            pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - pci->ulClientDelta);
-            if (W32Thread->pcti) pci->pClientThreadInfo = (PVOID)((ULONG_PTR)W32Thread->pcti - pci->ulClientDelta);
+            RtlCopyMemory(pctiNew, pctiOld, sizeof(CLIENTTHREADINFO));
+        }
+        else
+        {
+            RtlZeroMemory(pctiNew, sizeof(CLIENTTHREADINFO));
         }
     }
-
-    if (OldDesktop != NULL &&
-        !IntCheckProcessDesktopClasses(OldDesktop,
-                                        FreeOnFailure))
+    else
     {
-        ERR("Failed to move process classes to shared heap!\n");
-
-        /* Failed to move desktop classes to the shared heap,
-            unmap the view and return the error */
-        if (MapHeap && DesktopObject != NULL)
-            IntUnmapDesktopView(DesktopObject);
-
-        return FALSE;
+        pti->rpdesk = NULL;
+        pti->hdesk = NULL;
+        pti->pDeskInfo = NULL;
+        pti->pcti = NULL;
+        pci->ulClientDelta = 0;
+        pci->pDeskInfo = NULL;
+        pci->pClientThreadInfo = NULL;
+    }
+    
+    /* clean up the old desktop */
+    if(pdeskOld != NULL)
+    {
+        RemoveEntryList(&pti->PtiLink);
+        DesktopHeapFree(pdeskOld, pctiOld);
+        IntUnmapDesktopView(pdeskOld);
+        ObDereferenceObject(pdeskOld);
+        ZwClose(hdeskOld);
     }
 
-    /* Remove the thread from the old desktop's list */
-    RemoveEntryList(&W32Thread->PtiLink);
-
-    if (DesktopObject != NULL)
+    if(pdesk)
     {
-        ObReferenceObject(DesktopObject);
-        /* Insert into new desktop's list */
-        InsertTailList(&DesktopObject->PtiList, &W32Thread->PtiLink);
-    }
-
-    /* Close the old desktop */
-    if (OldDesktop != NULL)
-    {
-        if (MapHeap)
-        {
-            IntUnmapDesktopView(OldDesktop);
-        }
-
-        ObDereferenceObject(OldDesktop);
-    }
-
-    if (hOldDesktop != NULL)
-    {
-        ZwClose(hOldDesktop);
+        InsertTailList(&pdesk->PtiList, &pti->PtiLink);
     }
 
     return TRUE;

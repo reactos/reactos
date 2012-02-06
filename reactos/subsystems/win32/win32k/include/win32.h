@@ -198,3 +198,9 @@ typedef struct _PROCESSINFO
   BYTE DbgChannelLevel[DbgChCount];
 #endif
 } PROCESSINFO;
+
+#ifdef DBG
+void NTAPI UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
+ULONG_PTR NTAPI UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
+#endif
+

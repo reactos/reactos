@@ -9,6 +9,7 @@
 #define UserEnterCo UserEnterExclusive
 #define UserLeaveCo UserLeave
 
+extern BOOL gbInitialized;
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
 extern PPROCESSINFO ppiScrnSaver;

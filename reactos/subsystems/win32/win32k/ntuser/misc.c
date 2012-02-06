@@ -542,6 +542,68 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
    return STATUS_SUCCESS;
 }
 
+void UserDbgAssertThreadInfo(BOOL showCaller)
+{
+    PTEB Teb;
+    PPROCESSINFO ppi;
+    PCLIENTINFO pci;
+    PTHREADINFO pti;
+
+    ppi = PsGetCurrentProcessWin32Process();
+    pti = PsGetCurrentThreadWin32Thread();
+    Teb = NtCurrentTeb();
+    pci = GetWin32ClientInfo();
+
+    ASSERT(Teb);
+    ASSERT(pti);
+    ASSERT(pti->ppi == ppi);
+    ASSERT(pti->pClientInfo == pci);
+    ASSERT(Teb->Win32ThreadInfo == pti);
+    ASSERT(pci->ppi == ppi);
+    ASSERT(pci->fsHooks == pti->fsHooks);
+    ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
+    if (pti->pcti && pci->pDeskInfo)
+        ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
+    if (pti->KeyboardLayout) 
+        ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
+    if(pti->rpdesk != NULL)
+        ASSERT(pti->pDeskInfo == pti->rpdesk->pDeskInfo);
+
+    /*too bad we still get this assertion*/
+    /* ASSERT(pci->dwTIFlags == pti->TIF_flags); */
+    if(pci->dwTIFlags != pti->TIF_flags)
+    {
+        ERR("pci->dwTIFlags(0x%x) doesn't match pti->TIF_flags(0x%x)\n", pci->dwTIFlags, pti->TIF_flags);
+        if(showCaller)
+        {
+            DbgPrint("Caller:\n");
+            KeRosDumpStackFrames(NULL, 10);
+        }
+        pci->dwTIFlags = pti->TIF_flags;
+    }
+}
+
+void
+NTAPI
+UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
+{
+    UserDbgAssertThreadInfo(FALSE);
+}
+
+ULONG_PTR
+NTAPI
+UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+{
+    /* Make sure that the first syscall is NtUserInitialize */
+    /* too bad this fails */
+    //ASSERT(gbInitialized);
+
+    UserDbgAssertThreadInfo(TRUE);
+
+    return ulResult;
+}
+
+
 PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
@@ -551,66 +613,8 @@ GetW32ProcessInfo(VOID)
 PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
-    PTEB Teb;
-    PPROCESSINFO ppi;
-    PCLIENTINFO pci;
-    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-
-    if (pti == NULL)
-    {
-        /* FIXME: Temporary hack for system threads... */
-        return NULL;
-    }
-    /* Initialize it */
-    pti->ppi = ppi = GetW32ProcessInfo();
-
-    if (pti->rpdesk != NULL)
-    {
-       pti->pDeskInfo = pti->rpdesk->pDeskInfo;
-    }
-    else
-    {
-       pti->pDeskInfo = NULL;
-    }
-    /* Update the TEB */
-    Teb = NtCurrentTeb();
-    pci = GetWin32ClientInfo();
-    pti->pClientInfo = pci;
-    _SEH2_TRY
-    {
-        if(Teb)
-        {    
-            ProbeForWrite( Teb,
-                           sizeof(TEB),
-                           sizeof(ULONG));
-
-            Teb->Win32ThreadInfo = (PW32THREAD) pti;
-        }
-
-        pci->ppi = ppi;
-        pci->fsHooks = pti->fsHooks;
-        if (pti->KeyboardLayout) pci->hKL = pti->KeyboardLayout->hkl;
-        pci->dwTIFlags = pti->TIF_flags;
-        /* CI may not have been initialized. */
-        if (!pci->pDeskInfo && pti->pDeskInfo)
-        {
-           if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
-
-           pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
-        }
-        if (pti->pcti && pci->pDeskInfo)
-           pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
-        else
-           pci->pClientThreadInfo = NULL;
-
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    return pti;
+    UserDbgAssertThreadInfo(TRUE);
+    return (PTHREADINFO)PsGetCurrentThreadWin32Thread();
 }
 
 /* EOF */

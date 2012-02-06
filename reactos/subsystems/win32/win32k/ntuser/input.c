@@ -141,8 +141,10 @@ RawInputThreadMain()
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
-    ptiRawInput = PsGetCurrentThreadWin32Thread();
+    ptiRawInput = GetW32ThreadInfo();
     ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
+    ptiRawInput->pClientInfo->dwTIFlags = ptiRawInput->TIF_flags;
+
     TRACE("Raw Input Thread 0x%x\n", ptiRawInput);
 
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
