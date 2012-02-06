@@ -627,7 +627,7 @@ _main(IN INT argc,
         Status = SmpInit(&InitialCommand, Handles);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SMSS: SmpInit return failure - Status == %x\n");
+            DPRINT1("SMSS: SmpInit return failure - Status == %x\n", Status);
             RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
             Parameters[1] = Status;
             //_SEH2_LEAVE; Hack so that setup can work. will go away later

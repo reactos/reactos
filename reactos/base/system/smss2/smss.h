@@ -37,6 +37,16 @@
 #define SMP_INVALID_PATH    0x10
 #define SMP_DEFERRED_FLAG   0x20
 
+/* STRUCTURES *****************************************************************/
+
+typedef struct _SMP_REGISTRY_VALUE
+{
+    LIST_ENTRY Entry;
+    UNICODE_STRING Name;
+    UNICODE_STRING Value;
+    PCHAR AnsiValue;
+} SMP_REGISTRY_VALUE, *PSMP_REGISTRY_VALUE;
+
 /* EXTERNALS ******************************************************************/
 
 extern RTL_CRITICAL_SECTION SmpKnownSubSysLock;
@@ -56,6 +66,11 @@ extern ULONG SmBaseTag;
 extern UNICODE_STRING SmpSystemRoot;
 extern PWCHAR SmpDefaultEnvironment;
 extern UNICODE_STRING SmpDefaultLibPath;
+extern LIST_ENTRY SmpSetupExecuteList;
+extern LIST_ENTRY SmpSubSystemsToLoad;
+extern LIST_ENTRY SmpExecuteList;
+extern LIST_ENTRY SmpSubSystemList;
+extern ULONG AttachedSessionId;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -187,4 +202,8 @@ SmpCheckForCrashDump(
     IN PUNICODE_STRING FileName
 );
 
-
+VOID
+NTAPI
+SmpTranslateSystemPartitionInformation(
+    VOID
+    );

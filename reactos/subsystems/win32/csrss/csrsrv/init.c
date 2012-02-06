@@ -598,6 +598,7 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 	return Status;
 }
 
+#if 0
 /**********************************************************************
  * 	CsrpLoadKernelModeDriver/3
  */
@@ -641,6 +642,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 	}
 	return Status;
 }
+#endif
 
 /**********************************************************************
  * CsrpCreateApiPort/2
@@ -753,7 +755,7 @@ struct {
 	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
     {TRUE, CsrpCreateHardErrorPort,  "create the hard error port"},
 	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
-	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
+//	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
 	{TRUE, CsrpInitVideo,            "initialize video"},
 	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
 	{TRUE, CsrpCCTS,                 "connect client to server"},

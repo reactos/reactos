@@ -14,14 +14,6 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef struct _SMP_REGISTRY_VALUE
-{
-    LIST_ENTRY Entry;
-    UNICODE_STRING Name;
-    UNICODE_STRING Value;
-    PCHAR AnsiValue;
-} SMP_REGISTRY_VALUE, *PSMP_REGISTRY_VALUE;
-
 UNICODE_STRING SmpSubsystemName, PosixName, Os2Name;
 LIST_ENTRY SmpBootExecuteList, SmpSetupExecuteList, SmpPagingFileList;
 LIST_ENTRY SmpDosDevicesList, SmpFileRenameList, SmpKnownDllsList;
@@ -244,7 +236,7 @@ SmpConfigureProtectionMode(IN PWSTR ValueName,
 
     /* Recreate the security descriptors to take into account security mode */
     SmpCreateSecurityDescriptors(FALSE);
-    DPRINT1("SmpProtectionMode: %d\n", SmpProtectionMode);
+    DPRINT("SmpProtectionMode: %d\n", SmpProtectionMode);
     return STATUS_SUCCESS;
 }
 
@@ -269,7 +261,7 @@ SmpConfigureAllowProtectedRenames(IN PWSTR ValueName,
         SmpAllowProtectedRenames = 0;
     }
 
-    DPRINT1("SmpAllowProtectedRenames: %d\n", SmpAllowProtectedRenames);
+    DPRINT("SmpAllowProtectedRenames: %d\n", SmpAllowProtectedRenames);
     return STATUS_SUCCESS;
 }
 
@@ -315,7 +307,7 @@ SmpConfigureObjectDirectories(IN PWSTR ValueName,
                                    OBJ_PERMANENT,
                                    NULL,
                                    SecDescriptor);
-        DPRINT1("Creating: %wZ directory\n", &SearchString);
+        DPRINT("Creating: %wZ directory\n", &SearchString);
         Status = NtCreateDirectoryObject(&DirHandle,
                                          DIRECTORY_ALL_ACCESS,
                                          &ObjectAttributes);
@@ -403,7 +395,7 @@ SmpConfigureExcludeKnownDlls(IN PWSTR ValueName,
         while (*DllName)
         {
             /* Add this to the linked list */
-            DPRINT1("Excluded DLL: %S\n", DllName);
+            DPRINT("Excluded DLL: %S\n", DllName);
             Status = SmpSaveRegistryValue(EntryContext, DllName, NULL, TRUE);
 
             /* Bail out on failure or if only one DLL name was present */
@@ -478,7 +470,7 @@ SmpConfigureKnownDlls(IN PWSTR ValueName,
     }
 
     /* This is the directory, initialize it */
-    DPRINT1("KnownDll Path: %S\n", ValueData);
+    DPRINT("KnownDll Path: %S\n", ValueData);
     return SmpInitializeKnownDllPath(&SmpKnownDllPath, ValueData, ValueLength);
 }
 
@@ -497,7 +489,7 @@ SmpConfigureEnvironment(IN PWSTR ValueName,
     /* Convert the strings into UNICODE_STRING and set the variable defined */
     RtlInitUnicodeString(&ValueString, ValueName);
     RtlInitUnicodeString(&DataString, ValueData);
-    DPRINT1("Setting %wZ = %wZ\n", &ValueString, &DataString);
+    DPRINT("Setting %wZ = %wZ\n", &ValueString, &DataString);
     Status = RtlSetEnvironmentVariable(0, &ValueString, &DataString);
     if (!NT_SUCCESS(Status))
     {
@@ -545,7 +537,7 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
             (ValueType != REG_DWORD))
         {
             /* It isn't, must be a subsystem entry, add it to the list */
-            DPRINT1("Subsystem entry: %S-%S\n", ValueName, ValueData);
+            DPRINT("Subsystem entry: %S-%S\n", ValueName, ValueData);
             return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
         }
 
@@ -562,7 +554,7 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
         while (*SubsystemName)
         {
             /* We should have already put it into the list when we found it */
-            DPRINT1("Found subsystem: %S\n", SubsystemName);
+            DPRINT("Found subsystem: %S\n", SubsystemName);
             RegEntry = SmpFindRegistryValue(EntryContext, SubsystemName);
             if (!RegEntry)
             {
@@ -578,13 +570,13 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
                 if (_wcsicmp(ValueName, L"Required"))
                 {
                     /* Put it into the optional list */
-                    DPRINT1("Optional\n");
+                    DPRINT("Optional\n");
                     InsertTailList(&SmpSubSystemsToDefer, &RegEntry->Entry);
                 }
                 else
                 {
                     /* Put it into the required list */
-                    DPRINT1("Required\n");
+                    DPRINT("Required\n");
                     InsertTailList(&SmpSubSystemsToLoad, &RegEntry->Entry);
                 }
             }
@@ -795,6 +787,161 @@ SmpRegistryConfigurationTable[] =
 };
 
 /* FUNCTIONS ******************************************************************/
+
+VOID
+NTAPI
+SmpTranslateSystemPartitionInformation(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString, LinkTarget, SearchString, SystemPartition;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle, LinkHandle;
+    CHAR ValueBuffer[512 + sizeof(KEY_VALUE_PARTIAL_INFORMATION)];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
+    ULONG Length, Context;
+    CHAR DirInfoBuffer[512 + sizeof(OBJECT_DIRECTORY_INFORMATION)];
+    POBJECT_DIRECTORY_INFORMATION DirInfo = (PVOID)DirInfoBuffer;
+    WCHAR LinkBuffer[MAX_PATH];
+
+    /* Open the setup key */
+    RtlInitUnicodeString(&UnicodeString, L"\\Registry\\Machine\\System\\Setup");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UnicodeString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't open system setup key for reading: 0x%x\n", Status);
+        return;
+    }
+
+    /* Query the system partition */
+    RtlInitUnicodeString(&UnicodeString, L"SystemPartition");
+    Status = NtQueryValueKey(KeyHandle,
+                             &UnicodeString,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             sizeof(ValueBuffer),
+                             &Length);
+    NtClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't query SystemPartition value: 0x%x\n", Status);
+        return;
+    }
+
+    /* Initialize the system partition string string */
+    RtlInitUnicodeString(&SystemPartition, (PWCHAR)PartialInfo->Data);
+
+    /* Enumerate the directory looking for the symbolic link string */
+    RtlInitUnicodeString(&SearchString, L"SymbolicLink");
+    RtlInitEmptyUnicodeString(&LinkTarget, LinkBuffer, sizeof(LinkBuffer));
+    Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
+                                    DirInfo,
+                                    sizeof(DirInfoBuffer),
+                                    TRUE,
+                                    TRUE,
+                                    &Context,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't find drive letter for system partition\n");
+        return;
+    }
+
+    /* Keep searching until we find it */
+    do
+    {
+        /* Is this it? */
+        if ((RtlEqualUnicodeString(&DirInfo->TypeName, &SearchString, TRUE)) &&
+            (DirInfo->Name.Length == 2 * sizeof(WCHAR)) &&
+            (DirInfo->Name.Buffer[1] == L':'))
+        {
+            /* Looks like we found it, open the link to get its target */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &DirInfo->Name,
+                                       OBJ_CASE_INSENSITIVE,
+                                       SmpDosDevicesObjectDirectory,
+                                       NULL);
+            Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                              SYMBOLIC_LINK_ALL_ACCESS,
+                                              &ObjectAttributes);
+            if (NT_SUCCESS(Status))
+            {
+                /* Open worked, query the target now */
+                Status = NtQuerySymbolicLinkObject(LinkHandle,
+                                                   &LinkTarget,
+                                                   NULL);
+                NtClose(LinkHandle);
+
+                /* Check if it matches the string we had found earlier */
+                if ((NT_SUCCESS(Status)) &&
+                    ((RtlEqualUnicodeString(&SystemPartition,
+                                           &LinkTarget,
+                                           TRUE)) ||
+                    ((RtlPrefixUnicodeString(&SystemPartition,
+                                             &LinkTarget,
+                                             TRUE)) &&
+                     (LinkTarget.Buffer[SystemPartition.Length / sizeof(WCHAR)] == L'\\'))))
+                {
+                    /* All done */
+                    break;
+                }
+            }
+        }
+
+        /* Couldn't find it, try again */
+        Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
+                                        DirInfo,
+                                        sizeof(DirInfoBuffer),
+                                        TRUE,
+                                        FALSE,
+                                        &Context,
+                                        NULL);
+    } while (NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't find drive letter for system partition\n");
+        return;
+    }
+
+    /* Open the setup key again, for full access this time */
+    RtlInitUnicodeString(&UnicodeString,
+                         L"\\Registry\\Machine\\Software\\Microsoft\\Windows\\CurrentVersion\\Setup");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UnicodeString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: can't open software setup key for writing: 0x%x\n",
+                Status);
+        return;
+    }
+
+    /* Wrap up the end of the link buffer */
+    wcsncpy(LinkBuffer, DirInfo->Name.Buffer, 2);
+    LinkBuffer[2] = L'\\';
+    LinkBuffer[3] = L'\0';
+
+    /* Now set this as the "BootDir" */
+    RtlInitUnicodeString(&UnicodeString, L"BootDir");
+    Status = NtSetValueKey(KeyHandle,
+                           &UnicodeString,
+                           0,
+                           REG_SZ,
+                           LinkBuffer,
+                           4 * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: couldn't write BootDir value: 0x%x\n", Status);
+    }
+    NtClose(KeyHandle);
+}
 
 NTSTATUS
 NTAPI
@@ -1151,7 +1298,7 @@ SmpInitializeDosDevices(VOID)
         }
 
         /* Create the symbolic link */
-        DPRINT1("Creating symlink for %wZ to %wZ\n", &RegEntry->Name, &RegEntry->Value);
+        DPRINT("Creating symlink for %wZ to %wZ\n", &RegEntry->Name, &RegEntry->Value);
         Status = NtCreateSymbolicLinkObject(&DirHandle,
                                             SYMBOLIC_LINK_ALL_ACCESS,
                                             &ObjectAttributes,
@@ -1357,7 +1504,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     {
         /* Get the entry and skip it if it's in the exluded list */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
+        DPRINT("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
         if ((SmpFindRegistryValue(&SmpExcludeKnownDllsList,
                                   RegEntry->Name.Buffer)) ||
             (SmpFindRegistryValue(&SmpExcludeKnownDllsList,
@@ -1388,6 +1535,8 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
                                                &ImageCharacteristics);
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("Hey ReactOS -- you suck! Please fix the checksum (or the API) behind: %wZ\n", &RegEntry->Value);
+            #if 0
             /* Checksum failed, so don't even try going further -- kill SMSS */
             RtlInitUnicodeString(&ErrorResponse,
                                  L"Verification of a KnownDLL failed.");
@@ -1395,6 +1544,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[1] = Status;
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
+            #endif
         }
         else if (!(ImageCharacteristics & IMAGE_FILE_DLL))
         {
@@ -1559,7 +1709,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* First let's write the OS variable */
     RtlInitUnicodeString(&ValueName, L"OS");
-    DPRINT1("Setting %wZ to %S\n", &ValueName, L"Windows_NT");
+    DPRINT("Setting %wZ to %S\n", &ValueName, L"Windows_NT");
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1597,7 +1747,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     }
 
     /* Set it */
-    DPRINT1("Setting %wZ to %S\n", &ValueName, ArchName);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ArchName);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1615,7 +1765,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     /* And now let's write the processor level */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_LEVEL");
     swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorLevel);
-    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1683,7 +1833,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_IDENTIFIER");
-    DPRINT1("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
+    DPRINT("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1725,7 +1875,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     }
 
     /* Write the revision to the registry */
-    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1743,7 +1893,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     /* And finally, write the number of CPUs */
     RtlInitUnicodeString(&ValueName, L"NUMBER_OF_PROCESSORS");
     swprintf(ValueBuffer, L"%u", BasicInfo.NumberOfProcessors);
-    DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1797,7 +1947,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
             }
 
             /* And write it in the environment! */
-            DPRINT1("Setting %wZ to %S\n", &ValueName, ValueBuffer);
+            DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
