@@ -1383,8 +1383,88 @@ NTAPI
 NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
                         IN PVOID File2MappedAsFile)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PVOID AddressSpace;
+    PMEMORY_AREA MemoryArea1, MemoryArea2;
+    PROS_SECTION_OBJECT Section1, Section2;
+    
+    DPRINT1("Is image: %p the same as file: %p?\n", File1MappedAsAnImage, File2MappedAsFile);
+    
+    /* Lock address space */
+    AddressSpace = MmGetCurrentAddressSpace();
+    MmLockAddressSpace(AddressSpace);
+    
+    /* Locate the memory area for the process by address */
+    MemoryArea1 = MmLocateMemoryAreaByAddress(AddressSpace, File1MappedAsAnImage);
+    if (!MemoryArea1)
+    {
+        /* Fail, the address does not exist */
+        DPRINT1("Invalid address\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_INVALID_ADDRESS;
+    }
+    
+    /* Check if it's a section view (RosMm section) or ARM3 section */
+    if (MemoryArea1->Type != MEMORY_AREA_SECTION_VIEW)
+    {
+        /* Fail, the address is not a section */
+        DPRINT1("Invalid address (not a section)\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    
+    /* Get the section pointer to the SECTION_OBJECT */
+    Section1 = MemoryArea1->Data.SectionData.Section;
+    if (Section1->FileObject == NULL)
+    {
+        DPRINT1("No file object\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES; 
+    }
+    
+    /* Locate the memory area for the process by address */
+    MemoryArea2 = MmLocateMemoryAreaByAddress(AddressSpace, File2MappedAsFile);
+    if (!MemoryArea2)
+    {
+        /* Fail, the address does not exist */
+        DPRINT1("Invalid address\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_INVALID_ADDRESS;
+    }
+    
+    /* Check if it's a section view (RosMm section) or ARM3 section */
+    if (MemoryArea2->Type != MEMORY_AREA_SECTION_VIEW)
+    {
+        /* Fail, the address is not a section */
+        DPRINT1("Invalid address (not a section)\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    
+    /* Get the section pointer to the SECTION_OBJECT */
+    Section2 = MemoryArea2->Data.SectionData.Section;
+    if (Section2->FileObject == NULL)
+    {
+        DPRINT1("No file object\n");
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES; 
+    }
+    
+    /* These dbgprints should allow me to see what should w ecompare in ROS's section implementation once the winetests are run... for now lie and say they're not equal. */
+    DPRINT1("FO1/2: %p %p\n", Section1->FileObject, Section2->FileObject);
+    DPRINT1("SOP: %p %p\n",
+            Section1->FileObject->SectionObjectPointer,
+            Section2->FileObject->SectionObjectPointer);
+    DPRINT1("SCM: %p %p\n",
+            Section1->FileObject->SectionObjectPointer->SharedCacheMap,
+            Section2->FileObject->SectionObjectPointer->SharedCacheMap);
+    DPRINT1("ISO: %p %p\n",
+            Section1->FileObject->SectionObjectPointer->ImageSectionObject,
+            Section2->FileObject->SectionObjectPointer->ImageSectionObject);
+    DPRINT1("SISO: %p %p\n", Section1->ImageSection, Section2->ImageSection);
+    
+    /* Unlock address space */
+    MmUnlockAddressSpace(AddressSpace);
+    return STATUS_NOT_SAME_DEVICE;
 }
 
 /*

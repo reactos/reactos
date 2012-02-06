@@ -2204,12 +2204,7 @@ lookinhash:
                 {
                     /* Headers match too! Finally ask the kernel to compare mapped files */
                     Status = ZwAreMappedFilesTheSame(CurEntry->DllBase, ViewBase);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        /* Almost identical, but not quite, keep trying */
-                        _SEH2_YIELD(continue;)
-                    }
-                    else
+                    if (NT_SUCCESS(Status))
                     {
                         /* This is our entry!, unmap and return success */
                         *LdrEntry = CurEntry;
