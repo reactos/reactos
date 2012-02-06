@@ -764,6 +764,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_SUCCESS;
         }
 
+        /* Get the current thread */
+        CurrentThread = PsGetCurrentThread();
+
         // Check for a fault on the page table or hyperspace
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
@@ -781,8 +784,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             CurrentProcess = NULL;
         }
 
-        /* Get the current thread */
-        CurrentThread = PsGetCurrentThread();
 
         /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
