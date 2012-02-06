@@ -22,7 +22,7 @@ Revision History:
 
 #include "disk.h"
 
-extern PULONG InitSafeBootMode;
+extern NTSYSAPI ULONG InitSafeBootMode;
 
 #ifdef ALLOC_PRAGMA
 
@@ -500,7 +500,7 @@ Return Value:
     // and enable failure prediction polling.
     //
 
-    if (*InitSafeBootMode == 0)
+    if (InitSafeBootMode == 0)
     {
         DiskDetectFailurePrediction(fdoExtension,
                                   &diskData->FailurePredictionCapability);
