@@ -209,11 +209,12 @@ MiZeroPfn(IN PFN_NUMBER PageFrameNumber)
 NTSTATUS
 NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
-                         IN PMMPTE PointerPte,
+                         IN ULONG Protection,
                          IN PEPROCESS Process,
                          IN KIRQL OldIrql)
 {
     PFN_NUMBER PageFrameNumber = 0;
+    PMMPTE PointerPte = MiAddressToPte(Address);
     MMPTE TempPte;
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
@@ -294,13 +295,11 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
+    /* Increment demand zero faults */
+    KeGetCurrentPrcb()->MmDemandZeroCount++;
+
     /* Release PFN lock if needed */
     if (HaveLock) KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-    //
-    // Increment demand zero faults
-    //
-    InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
 
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
@@ -311,7 +310,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* For user mode */
         MI_MAKE_HARDWARE_PTE_USER(&TempPte,
                                   PointerPte,
-                                  PointerPte->u.Soft.Protection,
+                                  Protection,
                                   PageFrameNumber);
     }
     else
@@ -319,7 +318,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* For kernel mode */
         MI_MAKE_HARDWARE_PTE(&TempPte,
                              PointerPte,
-                             PointerPte->u.Soft.Protection,
+                             Protection,
                              PageFrameNumber);
     }
 
@@ -462,7 +461,10 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     ASSERT(TempPte.u.Soft.Transition == 0);
 
     /* Resolve the demand zero fault */
-    Status = MiResolveDemandZeroFault(Address, PointerProtoPte, Process, OldIrql);
+    Status = MiResolveDemandZeroFault(Address,
+                                      (ULONG)PointerProtoPte->u.Soft.Protection,
+                                      Process,
+                                      OldIrql);
     ASSERT(NT_SUCCESS(Status));
 
     /* Complete the prototype PTE fault -- this will release the PFN lock */
@@ -493,6 +495,9 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
              Address,
              Process);
+
+    /* Make sure the addresses are ok */
+    ASSERT(PointerPte == MiAddressToPte(Address));
 
     //
     // Make sure APCs are off and we're not at dispatch
@@ -609,7 +614,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     // we want. Go handle it!
     //
     Status = MiResolveDemandZeroFault(Address,
-                                      PointerPte,
+                                      (ULONG)PointerPte->u.Soft.Protection,
                                       Process,
                                       MM_NOIRQL);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -658,30 +663,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
-    //
-    // Check for dispatch-level snafu
-    //
+    /* Check for page fault on high IRQL */
     if (OldIrql > APC_LEVEL)
     {
-        //
         // There are some special cases where this is okay, but not in ARM3 yet
-        //
         DbgPrint("MM:***PAGE FAULT AT IRQL > 1  Va %p, IRQL %lx\n",
                  Address,
                  OldIrql);
         ASSERT(OldIrql <= APC_LEVEL);
     }
 
-    //
-    // Check for kernel fault address
-    //
+    /* Check for kernel fault address */
     while (Address >= MmSystemRangeStart)
     {
-        //
-        // What are you even DOING here?
-        //
+        /* Bail out, if the fault came from user mode */
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
 
+        /* PXEs and PPEs for kernel mode are mapped for everything we need */
 #if (_MI_PAGING_LEVELS >= 3)
         if (
 #if (_MI_PAGING_LEVELS == 4)
@@ -689,6 +687,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
             (PointerPpe->u.Hard.Valid == 0))
         {
+            /* The address is not from any pageable area! */
             KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                          (ULONG_PTR)Address,
                          StoreInstruction,
@@ -697,9 +696,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
 #endif
 
-        //
-        // Is the PDE valid?
-        //
+        /* Check if the PDE is invalid */
         if (PointerPde->u.Hard.Valid == 0)
         {
             //
@@ -732,9 +729,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             }
         }
 
-        //
-        // The PDE is valid, so read the PTE
-        //
+        /* The PDE is valid, so read the PTE */
         TempPte = *PointerPte;
         if (TempPte.u.Hard.Valid == 1)
         {
@@ -751,9 +746,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_SUCCESS;
         }
 
-        //
-        // Check for a fault on the page table or hyperspace itself
-        //
+        // Check for a fault on the page table or hyperspace
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
 #if (_MI_PAGING_LEVELS == 2)
@@ -776,26 +769,21 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
 
-        //
-        // Re-read PTE now that the IRQL has been raised
-        //
+        /* Re-read PTE now that we own the lock */
         TempPte = *PointerPte;
         if (TempPte.u.Hard.Valid == 1)
         {
-            //
             // Only two things can go wrong here:
             // Executing NX page (we couldn't care less)
             // Writing to a read-only page (the stuff ARM3 works with is write,
-            // so again, moot point.
-            //
+            // so again, moot point).
+            ASSERT(TempPte.u.Hard.Write == 1);
 
             /* Release the working set */
             MiUnlockWorkingSet(CurrentThread, WorkingSet);
             KeLowerIrql(LockIrql);
 
-            //
             // Otherwise, the PDE was probably invalid, and all is good now
-            //
             return STATUS_SUCCESS;
         }
 
@@ -823,15 +811,13 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
         else
         {
-            //
-            // We don't implement transition PTEs
-            //
+            /* We don't implement transition PTEs */
             ASSERT(TempPte.u.Soft.Transition == 0);
 
             /* Check for no-access PTE */
             if (TempPte.u.Soft.Protection == MM_NOACCESS)
             {
-                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                /* Bugcheck the system! */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
                              StoreInstruction,
@@ -855,9 +841,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             }
         }
 
-        //
-        // Now do the real fault handling
-        //
+        /* Now do the real fault handling */
         Status = MiDispatchFault(StoreInstruction,
                                  Address,
                                  PointerPte,
@@ -872,9 +856,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         MiUnlockWorkingSet(CurrentThread, WorkingSet);
         KeLowerIrql(LockIrql);
 
-        //
-        // We are done!
-        //
+        /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
         return Status;
     }
@@ -939,7 +921,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     {
         /* Resolve the fault */
         MiResolveDemandZeroFault(Address,
-                                 PointerPte,
+                                 (ULONG)PointerPte->u.Soft.Protection,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
@@ -1038,11 +1020,12 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Initialize the PFN entry now */
         MiInitializePfn(PageFrameIndex, PointerPte, 1);
 
+        /* One more demand-zero fault */
+        KeGetCurrentPrcb()->MmDemandZeroCount++;
+
         /* And we're done with the lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-        /* One more demand-zero fault */
-        InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
 
         /* Was the fault on an actual user page, or a kernel page for the user? */
         if (PointerPte <= MiHighestUserPte)
