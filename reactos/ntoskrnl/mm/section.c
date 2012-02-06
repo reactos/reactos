@@ -402,7 +402,7 @@ l_ReadHeaderFromFile:
             break;
         }
 
-        /* PE32+ */
+        /* PE64 */
         case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
         {
             const IMAGE_OPTIONAL_HEADER64 * pioh64OptHeader;
@@ -463,7 +463,7 @@ l_ReadHeaderFromFile:
 
     if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
     {
-        ImageSectionObject->EntryPoint = piohOptHeader->ImageBase +
+        ImageSectionObject->EntryPoint = ImageSectionObject->ImageBase +
                                          piohOptHeader->AddressOfEntryPoint;
     }
 
