@@ -1827,7 +1827,211 @@ NTSTATUS
 NTAPI
 SmpProcessFileRenames(VOID)
 {
-    return STATUS_SUCCESS;
+    BOOLEAN OldState, HavePrivilege;
+    NTSTATUS Status;
+    HANDLE FileHandle, OtherFileHandle;
+    FILE_INFORMATION_CLASS InformationClass;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING FileString;
+    FILE_BASIC_INFORMATION BasicInfo;
+    FILE_DISPOSITION_INFORMATION DeleteInformation;
+    PFILE_RENAME_INFORMATION Buffer;
+    PLIST_ENTRY Head, NextEntry;
+    PSMP_REGISTRY_VALUE RegEntry;
+    PWCHAR FileName;
+    ULONG ValueLength, Length;
+
+    /* Give us access to restore any files we want */
+    Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &OldState);
+    if (NT_SUCCESS(Status)) HavePrivilege = TRUE;
+
+    /* Process pending files to rename */
+    Head = &SmpFileRenameList;
+    while (!IsListEmpty(Head))
+    {
+        /* Get this entry */
+        NextEntry = RemoveHeadList(Head);
+        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        DPRINT1("Processing PFRO: %wZ/%wZ\n", &RegEntry->Value, &RegEntry->Name);
+
+        /* Skip past the '@' marker */
+        if (!(RegEntry->Value.Length) && (*RegEntry->Name.Buffer == L'@'))
+        {
+            RegEntry->Name.Length -= sizeof(UNICODE_NULL);
+            RegEntry->Name.Buffer++;
+        }
+
+        /* Open the file for delete access */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &RegEntry->Name,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenFile(&OtherFileHandle,
+                            DELETE | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Check if it's a rename or just a delete */
+        ValueLength = RegEntry->Value.Length;
+        if (!ValueLength)
+        {
+            /* Just a delete, set up the class, length and buffer */
+            InformationClass = FileDispositionInformation;
+            Length = sizeof(DeleteInformation);
+            Buffer = (PFILE_RENAME_INFORMATION)&DeleteInformation;
+
+            /* Set the delete disposition */
+            DeleteInformation.DeleteFile = TRUE;
+        }
+        else
+        {
+            /* This is a rename, setup the class and length */
+            InformationClass = FileRenameInformation;
+            Length = ValueLength + sizeof(FILE_RENAME_INFORMATION);
+
+            /* Skip past the special markers */
+            FileName = RegEntry->Value.Buffer;
+            if ((*FileName == L'!') || (*FileName == L'@'))
+            {
+                FileName++;
+                Length -= sizeof(UNICODE_NULL);
+            }
+
+            /* Now allocate the buffer for the rename information */
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), SmBaseTag, Length);
+            if (Buffer)
+            {
+                /* Setup the buffer to point to the filename, and copy it */
+                Buffer->RootDirectory = NULL;
+                Buffer->FileNameLength = Length - sizeof(FILE_RENAME_INFORMATION);
+                Buffer->ReplaceIfExists = FileName != RegEntry->Value.Buffer;
+                RtlCopyMemory(Buffer->FileName, FileName, Buffer->FileNameLength);
+            }
+            else
+            {
+                /* Fail */
+                Status = STATUS_NO_MEMORY;
+            }
+        }
+
+        /* Check if everything is okay till here */
+        if (NT_SUCCESS(Status))
+        {
+            /* Now either rename or delete the file as requested */
+            Status = NtSetInformationFile(OtherFileHandle,
+                                          &IoStatusBlock,
+                                          Buffer,
+                                          Length,
+                                          InformationClass);
+
+            /* Check if we seem to have failed because the file was readonly */
+            if ((NT_SUCCESS(Status) &&
+                (InformationClass == FileRenameInformation) &&
+                (Status == STATUS_OBJECT_NAME_COLLISION) &&
+                (Buffer->ReplaceIfExists)))
+            {
+                /* Open the file for write attribute access this time... */
+                DPRINT1("\nSMSS: %wZ => %wZ failed - Status == %x, Possible readonly target\n",
+                        &RegEntry->Name,
+                        &RegEntry->Value,
+                        STATUS_OBJECT_NAME_COLLISION);
+                FileString.Length = RegEntry->Value.Length - sizeof(WCHAR);
+                FileString.MaximumLength = RegEntry->Value.MaximumLength - sizeof(WCHAR);
+                FileString.Buffer = FileName;
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &FileString,
+                                           OBJ_CASE_INSENSITIVE,
+                                           NULL,
+                                           NULL);
+                Status = NtOpenFile(&FileHandle,
+                                    FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                                    &ObjectAttributes,
+                                    &IoStatusBlock,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                    FILE_SYNCHRONOUS_IO_NONALERT);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* That didn't work, so bail out */
+                    DPRINT1("     SMSS: Open Existing file Failed - Status == %x\n",
+                            Status);
+                }
+                else
+                {
+                    /* Now remove the read-only attribute from the file */
+                    DPRINT1("     SMSS: Open Existing Success\n");
+                    RtlZeroMemory(&BasicInfo, sizeof(BasicInfo));
+                    BasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+                    Status = NtSetInformationFile(FileHandle,
+                                                  &IoStatusBlock,
+                                                  &BasicInfo,
+                                                  sizeof(BasicInfo),
+                                                  FileBasicInformation);
+                    NtClose(FileHandle);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        /* That didn't work, bail out */
+                        DPRINT1("     SMSS: Set To NORMAL Failed - Status == %x\n",
+                                Status);
+                    }
+                    else
+                    {
+                        /* Now that the file is no longer read-only, delete! */
+                        DPRINT1("     SMSS: Set To NORMAL OK\n");
+                        Status = NtSetInformationFile(OtherFileHandle,
+                                                      &IoStatusBlock,
+                                                      Buffer,
+                                                      Length,
+                                                      FileRenameInformation);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            /* That failed too! */
+                            DPRINT1("     SMSS: Re-Rename Failed - Status == %x\n",
+                                    Status);
+                        }
+                        else
+                        {
+                            /* Everything ok */
+                            DPRINT1("     SMSS: Re-Rename Worked OK\n");
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Close the file handle and check the operation result */
+        NtClose(OtherFileHandle);
+Quickie:
+        if (!NT_SUCCESS(Status))
+        {
+            /* We totally failed */
+            DPRINT1("SMSS: %wZ => %wZ failed - Status == %x\n",
+                    &RegEntry->Name, &RegEntry->Value, Status);
+        }
+        else if (RegEntry->Value.Length)
+        {
+            /* We succeed with a rename */
+            DPRINT1("SMSS: %wZ (renamed to) %wZ\n", &RegEntry->Name, &RegEntry->Value);
+        }
+        else
+        {
+            /* We suceeded with a delete */
+            DPRINT1("SMSS: %wZ (deleted)\n", &RegEntry->Name);
+        }
+
+        /* Now free this entry and keep going */
+        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+    }
+
+    /* Put back the restore privilege if we had requested it, and return */
+    if (HavePrivilege) RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, FALSE, FALSE, &OldState);
+    return Status;
 }
 
 NTSTATUS

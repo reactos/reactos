@@ -23,16 +23,16 @@ struct {
 	PCHAR ErrorMessage;
 } InitRoutine [] = {
 	{TRUE,  SmCreateHeap,                 "create private heap, aborting"},
-	{TRUE,  SmCreateObjectDirectories,    "create object directories"},
+//	{TRUE,  SmCreateObjectDirectories,    "create object directories"},
 	{TRUE,  SmCreateApiPort,              "create \\SmApiPort"},
 	{TRUE,  SmCreateEnvironment,          "create the system environment"},
-	{TRUE,  SmSetEnvironmentVariables,    "set system environment variables"},
-	{TRUE,  SmInitDosDevices,             "create dos device links"},
-	{TRUE,  SmRunBootApplications,        "run boot applications"},
-	{TRUE,  SmProcessFileRenameList,      "process the file rename list"},
+//	{TRUE,  SmSetEnvironmentVariables,    "set system environment variables"},
+//	{TRUE,  SmInitDosDevices,             "create dos device links"},
+//	{TRUE,  SmRunBootApplications,        "run boot applications"},
+//	{TRUE,  SmProcessFileRenameList,      "process the file rename list"},
 	{FALSE, SmUpdateEnvironment,          "update environment variables"},
-	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
-	{TRUE,  SmCreatePagingFiles,          "create paging files"},
+//	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
+//	{TRUE,  SmCreatePagingFiles,          "create paging files"},
 //	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
 	{TRUE,  SmInitializeClientManagement, "initialize client management"},
 	{TRUE,  SmLoadSubsystems,             "load subsystems"}

@@ -451,11 +451,9 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
                     IN ULONG Priority)
 {
     NTSTATUS Status;
-    DPRINT1("Should request pagefile: %wZ with size %I64x and %I64x\n", Name, MinSize->QuadPart, MaxSize->QuadPart);
 
     /* Tell the kernel to create the pagefile */
-    Status = STATUS_SUCCESS;
-    //Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
+    Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
     if (NT_SUCCESS(Status))
     {
         DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",
