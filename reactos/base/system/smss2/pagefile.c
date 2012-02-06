@@ -395,6 +395,10 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
                          SizeInfo.SectorsPerAllocationUnit;
     FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
     Volume->FreeSpace = FinalFreeSpace;
+    DPRINT1("AUs: %I64 Sectors: %lx Bytes Per Sector: %lx\n",
+            SizeInfo.AvailableAllocationUnits.QuadPart,
+            SizeInfo.SectorsPerAllocationUnit,
+            SizeInfo.BytesPerSector);
 
     /* Check if there's less than 32MB free so we don't starve the disk */
     if (FinalFreeSpace.QuadPart <= 0x2000000)
@@ -514,6 +518,11 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
             {
                 DPRINT1("SMSS:PFILE: Failed to query free space for boot volume `%wC'\n",
                         Volume->DriveLetter);
+            }
+            else
+            {
+                DPRINT1("Queried free space for boot volume `%wC: %I64x'\n",
+                        Volume->DriveLetter, Volume->FreeSpace.QuadPart);
             }
 
             /* Don't process crashdump on this volume anymore */
