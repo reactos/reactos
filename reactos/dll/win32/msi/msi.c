@@ -42,9 +42,6 @@
 #include "wintrust.h"
 #include "softpub.h"
 
-#include "initguid.h"
-#include "msxml2.h"
-
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
@@ -306,6 +303,7 @@ done:
 
     return r;
 }
+
 
 static UINT get_patch_product_codes( LPCWSTR szPatchPackage, WCHAR ***product_codes )
 {
@@ -582,56 +580,9 @@ static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
     return r;
 }
 
-/* IXMLDOMDocument should be set to XPath mode already */
-static UINT MSI_ApplicablePatchXML( MSIPACKAGE *package, IXMLDOMDocument *desc )
-{
-    static const WCHAR queryW[] = {'M','s','i','P','a','t','c','h','/',
-                                   'T','a','r','g','e','t','P','r','o','d','u','c','t','/',
-                                   'T','a','r','g','e','t','P','r','o','d','u','c','t','C','o','d','e',0};
-    UINT r = ERROR_FUNCTION_FAILED;
-    IXMLDOMNodeList *list;
-    LPWSTR product_code;
-    IXMLDOMNode *node;
-    HRESULT hr;
-    BSTR s;
-
-    product_code = msi_dup_property( package->db, szProductCode );
-    if (!product_code)
-    {
-        /* FIXME: the property ProductCode should be written into the DB somewhere */
-        ERR("no product code to check\n");
-        return ERROR_SUCCESS;
-    }
-
-    s = SysAllocString(queryW);
-    hr = IXMLDOMDocument_selectNodes( desc, s, &list );
-    SysFreeString(s);
-    if (hr != S_OK)
-        return ERROR_INVALID_PATCH_XML;
-
-    while (IXMLDOMNodeList_nextNode( list, &node ) == S_OK && r != ERROR_SUCCESS)
-    {
-        hr = IXMLDOMNode_get_text( node, &s );
-        IXMLDOMNode_Release( node );
-        if (!strcmpW( s, product_code )) r = ERROR_SUCCESS;
-        SysFreeString(s);
-    }
-    IXMLDOMNodeList_Release( list );
-
-    if (r != ERROR_SUCCESS)
-        TRACE("patch not applicable\n");
-
-    msi_free( product_code );
-    return r;
-}
-
 static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCHSEQUENCEINFOW *info )
 {
-    IXMLDOMDocument *desc = NULL;
     DWORD i;
-
-    if (count > 1)
-        FIXME("patch ordering not supported\n");
 
     for (i = 0; i < count; i++)
     {
@@ -639,56 +590,8 @@ static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCH
         {
         case MSIPATCH_DATATYPE_PATCHFILE:
         {
+            FIXME("patch ordering not supported\n");
             if (MSI_ApplicablePatchW( package, info[i].szPatchData ) != ERROR_SUCCESS)
-            {
-                info[i].dwOrder = ~0u;
-                info[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
-            }
-            else
-            {
-                info[i].dwOrder = i;
-                info[i].uStatus = ERROR_SUCCESS;
-            }
-            break;
-        }
-        case MSIPATCH_DATATYPE_XMLPATH:
-        case MSIPATCH_DATATYPE_XMLBLOB:
-        {
-            VARIANT_BOOL b;
-            HRESULT hr;
-            BSTR s;
-
-            if (!desc)
-            {
-                hr = CoCreateInstance( &CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER,
-                    &IID_IXMLDOMDocument, (void**)&desc );
-                if (hr != S_OK)
-                {
-                    ERR("failed to create DOMDocument30 instance, 0x%08x\n", hr);
-                    return ERROR_FUNCTION_FAILED;
-                }
-            }
-
-            s = SysAllocString( info[i].szPatchData );
-            if (info[i].ePatchDataType == MSIPATCH_DATATYPE_XMLPATH)
-            {
-                VARIANT src;
-
-                V_VT(&src) = VT_BSTR;
-                V_BSTR(&src) = s;
-                hr = IXMLDOMDocument_load( desc, src, &b );
-            }
-            else
-                hr = IXMLDOMDocument_loadXML( desc, s, &b );
-            SysFreeString( s );
-            if ( hr != S_OK )
-            {
-                ERR("failed to parse patch description\n");
-                IXMLDOMDocument_Release( desc );
-                break;
-            }
-
-            if (MSI_ApplicablePatchXML( package, desc ) != ERROR_SUCCESS)
             {
                 info[i].dwOrder = ~0u;
                 info[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
@@ -702,21 +605,17 @@ static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCH
         }
         default:
         {
-            FIXME("unknown patch data type %u\n", info[i].ePatchDataType);
+            FIXME("patch data type %u not supported\n", info[i].ePatchDataType);
             info[i].dwOrder = i;
             info[i].uStatus = ERROR_SUCCESS;
             break;
         }
         }
-
         TRACE("szPatchData: %s\n", debugstr_w(info[i].szPatchData));
         TRACE("ePatchDataType: %u\n", info[i].ePatchDataType);
         TRACE("dwOrder: %u\n", info[i].dwOrder);
         TRACE("uStatus: %u\n", info[i].uStatus);
     }
-
-    if (desc) IXMLDOMDocument_Release( desc );
-
     return ERROR_SUCCESS;
 }
 

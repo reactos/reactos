@@ -102,7 +102,7 @@ reactos/dll/win32/msg711.acm      # Synced to Wine-1.3.37
 reactos/dll/win32/msgsm32.acm     # Synced to Wine-1.3.37
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/mshtml.tlb      # Autosync
-reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/msi             # Synced to Wine-1.3.37
 reactos/dll/win32/msimg32         # Synced to Wine-1.3.37
 reactos/dll/win32/msimtf          # Synced to Wine-1.3.37
 reactos/dll/win32/msisip          # Synced to Wine-1.3.37

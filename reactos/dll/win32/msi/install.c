@@ -347,10 +347,16 @@ UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder,
     return MSI_GetTargetPath( hInstall, szFolder, &path, pcchPathBuf );
 }
 
-static WCHAR *get_source_root( MSIPACKAGE *package )
+static WCHAR *get_source_root( MSIDATABASE *db )
 {
-    msi_set_sourcedir_props( package, FALSE );
-    return msi_dup_property( package->db, szSourceDir );
+    WCHAR *path, *p;
+
+    if ((path = msi_dup_property( db, szSourceDir ))) return path;
+    if ((path = msi_dup_property( db, szDatabase )))
+    {
+        if ((p = strrchrW( path, '\\' ))) p[1] = 0;
+    }
+    return path;
 }
 
 WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOLDER **folder )
@@ -366,7 +372,7 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
     /* special resolving for root dir */
     if (!strcmpW( name, szTargetDir ) && !f->ResolvedSource)
     {
-        f->ResolvedSource = get_source_root( package );
+        f->ResolvedSource = get_source_root( package->db );
     }
     if (folder) *folder = f;
     if (f->ResolvedSource)
@@ -382,7 +388,7 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
     p = msi_resolve_source_folder( package, parent, NULL );
 
     if (package->WordCount & msidbSumInfoSourceTypeCompressed)
-        path = get_source_root( package );
+        path = get_source_root( package->db );
     else if (package->WordCount & msidbSumInfoSourceTypeSFN)
         path = msi_build_directory_name( 3, p, f->SourceShortPath, NULL );
     else
@@ -553,7 +559,8 @@ static void set_target_path( MSIPACKAGE *package, MSIFOLDER *folder, const WCHAR
     MSIFOLDER *child;
     WCHAR *target_path;
 
-    if (!(target_path = msi_normalize_path( path ))) return;
+    if (!(target_path = strdupW( path ))) return;
+    msi_clean_path( target_path );
     if (strcmpW( target_path, folder->ResolvedTarget ))
     {
         msi_free( folder->ResolvedTarget );
@@ -571,7 +578,7 @@ static void set_target_path( MSIPACKAGE *package, MSIFOLDER *folder, const WCHAR
 
 UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolderPath )
 {
-    DWORD attrib;
+    DWORD attrib, len;
     MSIFOLDER *folder;
     MSIFILE *file;
 
@@ -586,7 +593,17 @@ UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolder
     }
     if (!(folder = msi_get_loaded_folder( package, szFolder ))) return ERROR_DIRECTORY;
 
-    set_target_path( package, folder, szFolderPath );
+    len = strlenW( szFolderPath );
+    if (len && szFolderPath[len - 1] != '\\')
+    {
+        WCHAR *path = msi_alloc( (len + 2) * sizeof(WCHAR) );
+        memcpy( path, szFolderPath, len * sizeof(WCHAR) );
+        path[len] = '\\';
+        path[len + 1] = 0;
+        set_target_path( package, folder, path );
+        msi_free( path );
+    }
+    else set_target_path( package, folder, szFolderPath );
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {

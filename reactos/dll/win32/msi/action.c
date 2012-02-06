@@ -2214,15 +2214,11 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
-WCHAR *msi_normalize_path( const WCHAR *in )
+void msi_clean_path( WCHAR *p )
 {
-    const WCHAR *p = in;
-    WCHAR *q, *ret;
-    int n, len = strlenW( in ) + 2;
+    WCHAR *q = p;
+    int n, len = 0;
 
-    if (!(q = ret = msi_alloc( len * sizeof(WCHAR) ))) return NULL;
-
-    len = 0;
     while (1)
     {
         /* copy until the end of the string or a space */
@@ -2249,20 +2245,32 @@ WCHAR *msi_normalize_path( const WCHAR *in )
         else  /* copy n spaces */
             while (n && (*q++ = *p++)) n--;
     }
-    while (q - ret > 0 && q[-1] == ' ') q--;
-    if (q - ret > 0 && q[-1] != '\\')
+}
+
+static WCHAR *get_target_dir_property( MSIDATABASE *db )
+{
+    int len;
+    WCHAR *path, *target_dir = msi_dup_property( db, szTargetDir );
+
+    if (!target_dir) return NULL;
+
+    len = strlenW( target_dir );
+    if (target_dir[len - 1] == '\\') return target_dir;
+    if ((path = msi_alloc( (len + 2) * sizeof(WCHAR) )))
     {
-        q[0] = '\\';
-        q[1] = 0;
+        strcpyW( path, target_dir );
+        path[len] = '\\';
+        path[len + 1] = 0;
     }
-    return ret;
+    msi_free( target_dir );
+    return path;
 }
 
 void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL load_prop )
 {
     FolderList *fl;
     MSIFOLDER *folder, *parent, *child;
-    WCHAR *path, *normalized_path;
+    WCHAR *path;
 
     TRACE("resolving %s\n", debugstr_w(name));
 
@@ -2270,7 +2278,7 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
 
     if (!strcmpW( folder->Directory, szTargetDir )) /* special resolving for target root dir */
     {
-        if (!load_prop || !(path = msi_dup_property( package->db, szTargetDir )))
+        if (!load_prop || !(path = get_target_dir_property( package->db )))
         {
             path = msi_dup_property( package->db, szRootDrive );
         }
@@ -2285,17 +2293,16 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
         else
             path = msi_build_directory_name( 2, folder->TargetDefault, NULL );
     }
-    normalized_path = msi_normalize_path( path );
-    msi_free( path );
-    if (folder->ResolvedTarget && !strcmpiW( normalized_path, folder->ResolvedTarget ))
+    msi_clean_path( path );
+    if (folder->ResolvedTarget && !strcmpiW( path, folder->ResolvedTarget ))
     {
         TRACE("%s already resolved to %s\n", debugstr_w(name), debugstr_w(folder->ResolvedTarget));
-        msi_free( normalized_path );
+        msi_free( path );
         return;
     }
-    msi_set_property( package->db, folder->Directory, normalized_path );
+    msi_set_property( package->db, folder->Directory, path );
     msi_free( folder->ResolvedTarget );
-    folder->ResolvedTarget = normalized_path;
+    folder->ResolvedTarget = path;
 
     LIST_FOR_EACH_ENTRY( fl, &folder->children, FolderList, entry )
     {
@@ -3601,9 +3608,25 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
     target = MSI_RecordGetString(row, 5);
     if (strchrW(target, '['))
     {
-        deformat_string( package, target, &path );
+        int len;
+        WCHAR *format_string, *p;
+
+        if (!(p = strchrW( target, ']' ))) goto err;
+        len = p - target + 1;
+        format_string = msi_alloc( (len + 1) * sizeof(WCHAR) );
+        memcpy( format_string, target, len * sizeof(WCHAR) );
+        format_string[len] = 0;
+        deformat_string( package, format_string, &deformated );
+        msi_free( format_string );
+
+        path = msi_alloc( (strlenW( deformated ) + strlenW( p + 1 ) + 2) * sizeof(WCHAR) );
+        strcpyW( path, deformated );
+        PathAddBackslashW( path );
+        strcatW( path, p + 1 );
         TRACE("target path is %s\n", debugstr_w(path));
+
         IShellLinkW_SetPath( sl, path );
+        msi_free( deformated );
         msi_free( path );
     }
     else
@@ -4456,7 +4479,7 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     MSIFILE *file;
     MSIRECORD *uirow;
 
-    filename = MSI_RecordGetString( row, 1 );
+    filename = MSI_RecordGetString(row,1);
     file = msi_get_loaded_file( package, filename );
     if (!file)
     {
@@ -4474,7 +4497,7 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     register_dll( file->TargetPath, FALSE );
 
     uirow = MSI_CreateRecord( 2 );
-    MSI_RecordSetStringW( uirow, 1, file->File );
+    MSI_RecordSetStringW( uirow, 1, filename );
     MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     msi_ui_actiondata( package, szSelfRegModules, uirow );
     msiobj_release( &uirow->hdr );
@@ -4524,7 +4547,7 @@ static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
     register_dll( file->TargetPath, TRUE );
 
     uirow = MSI_CreateRecord( 2 );
-    MSI_RecordSetStringW( uirow, 1, file->File );
+    MSI_RecordSetStringW( uirow, 1, filename );
     MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     msi_ui_actiondata( package, szSelfUnregModules, uirow );
     msiobj_release( &uirow->hdr );
