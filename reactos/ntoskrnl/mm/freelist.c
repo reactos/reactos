@@ -501,6 +501,7 @@ MmReferencePage(PFN_NUMBER Pfn)
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
 
+   ASSERT(Page->u3.e2.ReferenceCount != 0);
    Page->u3.e2.ReferenceCount++;
 }
 
@@ -543,6 +544,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
 
+   ASSERT(Page->u3.e2.ReferenceCount != 0);
    Page->u3.e2.ReferenceCount--;
    if (Page->u3.e2.ReferenceCount == 0)
    {
