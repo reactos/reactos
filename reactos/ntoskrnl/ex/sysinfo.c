@@ -1759,6 +1759,10 @@ NTSTATUS
 NTAPI
 MmSessionCreate(OUT PULONG SessionId);
 
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId);
+
 /* Class 47 - Create a new session (TSE) */
 SSI_DEF(SystemCreateSession)
 {
@@ -1786,9 +1790,22 @@ SSI_DEF(SystemCreateSession)
 /* Class 48 - Delete an existing session (TSE) */
 SSI_DEF(SystemDeleteSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemDeleteSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    SessionId = *(PULONG)Buffer;
+    
+    return MmSessionDelete(SessionId);
 }
 
 

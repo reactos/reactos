@@ -457,7 +457,8 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
     NTSTATUS Status;
 
     /* Tell the kernel to create the pagefile */
-    Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
+    //Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
+    Status = STATUS_SUCCESS;
     if (NT_SUCCESS(Status))
     {
         DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",
@@ -592,13 +593,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     if (Descriptor->ActualMinSize.QuadPart < MinimumSize->QuadPart)
     {
         /* Delete the current page file and fail */
-        if (ShouldDelete)
-        {
-            SmpDeletePagingFile(&Descriptor->Name);
-            
-            /* FIXFIX: Windows Vista does this, and it seems like we should too, so try to see if this fixes KVM */
-            Volume->FreeSpace.QuadPart += PageFileSize.QuadPart;
-        }
+        if (ShouldDelete) SmpDeletePagingFile(&Descriptor->Name);
         DPRINT1("SMSS:PFILE: Failing for min %I64X, max %I64X, real min %I64X \n",
                 Descriptor->ActualMinSize.QuadPart,
                 Descriptor->ActualMaxSize.QuadPart,
@@ -978,6 +973,10 @@ SmpCreateVolumeDescriptors(VOID)
                              SizeInfo.SectorsPerAllocationUnit;
         FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
         Volume->FreeSpace = FinalFreeSpace;
+        DPRINT1("AUs: %I64x Sectors: %lx Bytes Per Sector: %lx\n",
+                SizeInfo.AvailableAllocationUnits.QuadPart,
+                SizeInfo.SectorsPerAllocationUnit,
+                SizeInfo.BytesPerSector);
 
         /* Check if there's less than 32MB free so we don't starve the disk */
         if (FinalFreeSpace.QuadPart <= 0x2000000)

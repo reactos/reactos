@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#if 0
+#if 1
 
 #define GIGABYTE (1024 * 1024 * 1024) /* One Gigabyte */
 
@@ -220,7 +220,7 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
                               0);
   if (! NT_SUCCESS(Status))
     {
-      PrintString("Creation of paging file %wZ with size %I64d KB failed (status 0x%x)\n",
+      DPRINT1("Creation of paging file %wZ with size %I64d KB failed (status 0x%x)\n",
                   &FileName, InitialSize.QuadPart / 1024, Status);
     }
 

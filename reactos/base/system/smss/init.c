@@ -32,7 +32,7 @@ struct {
 //	{TRUE,  SmProcessFileRenameList,      "process the file rename list"},
 //	{FALSE, SmUpdateEnvironment,          "update environment variables"},
 //	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
-//	{TRUE,  SmCreatePagingFiles,          "create paging files"},
+	{TRUE,  SmCreatePagingFiles,          "create paging files"},
 //	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
 	{TRUE,  SmInitializeClientManagement, "initialize client management"},
 	{TRUE,  SmLoadSubsystems,             "load subsystems"}

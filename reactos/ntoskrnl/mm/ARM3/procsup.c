@@ -1478,6 +1478,35 @@ MmSessionCreate(OUT PULONG SessionId)
     return Status;
 }
 
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+
+    /* Process must be in a session */
+    if (!(Process->Flags & PSF_PROCESS_IN_SESSION_BIT))
+    {
+        DPRINT1("Not in a session!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* It must be the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        DPRINT1("Not a session leader!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* Remove one reference count */
+    KeEnterCriticalRegion();
+    /* FIXME: Do it */
+    KeLeaveCriticalRegion();
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS
