@@ -328,6 +328,7 @@ NtUserUpdatePerUserSystemParameters(
         g_PaintDesktopVersion = SpiLoadDWord(KEY_DESKTOP, VAL_PAINTDESKVER, 0);
     else
         g_PaintDesktopVersion = FALSE;
+    bResult = TRUE;
 
     TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
     UserLeave();
