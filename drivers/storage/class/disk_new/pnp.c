@@ -424,7 +424,7 @@ Return Value:
     HalExamineMBR(fdoExtension->CommonExtension.DeviceObject,
                   fdoExtension->DiskGeometry.BytesPerSector,
                   (ULONG)0x54,
-                  &dmSkew);
+                  (PVOID*)&dmSkew);
 
     if (dmSkew) {
 

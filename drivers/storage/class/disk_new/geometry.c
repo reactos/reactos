@@ -1002,7 +1002,7 @@ Return Value:
     KeInitializeEvent(&event, SynchronizationEvent, FALSE);
 
     IoSetCompletionRoutine(irp, 
-                           ClassSignalCompletion,
+                           (PIO_COMPLETION_ROUTINE)ClassSignalCompletion,
                            &event,
                            TRUE,
                            TRUE,
@@ -1348,7 +1348,7 @@ Return Value:
 {
     ULONG i;
     BOOLEAN found;
-    PDISK_DETECT_INFO diskInfo;
+    PDISK_DETECT_INFO diskInfo = NULL;
     PDISK_DATA diskData = FdoExtension->CommonExtension.DriverData;
 
     PAGED_CODE ();

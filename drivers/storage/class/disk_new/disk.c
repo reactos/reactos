@@ -173,6 +173,7 @@ const GUID GUID_NULL = { 0 };
 
 
 NTSTATUS
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -1304,7 +1305,7 @@ Return Value:
         //
 
         buffer = (PUCHAR)srbControl;
-        (ULONG_PTR)buffer += srbControl->HeaderLength;
+        buffer += srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1341,7 +1342,7 @@ Return Value:
         if (NT_SUCCESS(status)) {
 
             buffer = (PUCHAR)srbControl;
-            (ULONG_PTR)buffer += srbControl->HeaderLength;
+            buffer += srbControl->HeaderLength;
 
             RtlMoveMemory (Irp->AssociatedIrp.SystemBuffer, buffer,
                            sizeof(GETVERSIONINPARAMS));
@@ -1444,7 +1445,7 @@ Return Value:
         //
 
         buffer = (PUCHAR)srbControl;
-        (ULONG_PTR)buffer += srbControl->HeaderLength;
+        buffer += srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1494,7 +1495,7 @@ Return Value:
         //
 
         buffer = (PUCHAR)srbControl;
-        (ULONG_PTR)buffer += srbControl->HeaderLength;
+        buffer += srbControl->HeaderLength;
 
         if (NT_SUCCESS(status)) {
 
@@ -1640,7 +1641,7 @@ Return Value:
         //
 
         buffer = (PUCHAR)srbControl;
-        (ULONG_PTR)buffer += srbControl->HeaderLength;
+        buffer += srbControl->HeaderLength;
 
         //
         // Ensure correct target is set in the cmd parameters.
@@ -1690,7 +1691,7 @@ Return Value:
         //
 
         buffer = (PUCHAR)srbControl;
-        (ULONG_PTR)buffer += srbControl->HeaderLength;
+        buffer += srbControl->HeaderLength;
 
         //
         // Update the return buffer size based on the sub-command.
@@ -1828,7 +1829,7 @@ Retry:
             //
 
             blockDescriptor = (PMODE_PARAMETER_BLOCK)modeData;
-            (ULONG_PTR)blockDescriptor += sizeof(MODE_PARAMETER_HEADER);
+            blockDescriptor = (PMODE_PARAMETER_BLOCK)((ULONG_PTR)blockDescriptor + sizeof(MODE_PARAMETER_HEADER));
 
             //
             // Do some validation.
@@ -2165,7 +2166,7 @@ Retry:
                     IoMarkIrpPending(Irp);
 
                     IoQueueWorkItem(Context->WorkItem,
-                                    DiskIoctlVerify,
+                                    (PIO_WORKITEM_ROUTINE)DiskIoctlVerify,
                                     DelayedWorkQueue,
                                     Context);
 
@@ -3521,7 +3522,7 @@ Return Value:
 
     ((PMODE_PARAMETER_HEADER)buffer)->BlockDescriptorLength = sizeof(MODE_PARAMETER_BLOCK);
 
-    (PULONG)blockDescriptor = (buffer + 1);
+    blockDescriptor = (PMODE_PARAMETER_BLOCK)(buffer + 1);
 
     //
     // Set size
@@ -3888,7 +3889,7 @@ Return Value:
                             if (workItem) {
 
                                 IoQueueWorkItem(workItem,
-                                                DisableWriteCache,
+                                                (PIO_WORKITEM_ROUTINE)DisableWriteCache,
                                                 CriticalWorkQueue,
                                                 workItem);
                             }

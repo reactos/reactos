@@ -60,15 +60,20 @@ CLASSPNP_SCAN_FOR_SPECIAL_INFO DiskBadControllers[] = {
     { NULL      , NULL                             , NULL,   0x0  }
 };
 
+//
+// ======== ROS DIFF ========
+// Added MediaTypes in their own brace nesting level
+// ======== ROS DIFF ========
+//
 DISK_MEDIA_TYPES_LIST const DiskMediaTypes[] = {
-    { "COMPAQ"  , "PD-1 LF-1094" , NULL,  1, 1, PC_5_RW           , 0      , 0      , 0 },
-    { "HP"      , NULL           , NULL,  2, 2, MO_5_WO           , MO_5_RW, 0      , 0 },
-    { "iomega"  , "jaz"          , NULL,  1, 1, IOMEGA_JAZ        , 0      , 0      , 0 },
-    { "IOMEGA"  , "ZIP"          , NULL,  1, 1, IOMEGA_ZIP        , 0      , 0      , 0 },
-    { "PINNACLE", "Apex 4.6GB"   , NULL,  3, 2, PINNACLE_APEX_5_RW, MO_5_RW, MO_5_WO, 0 },
-    { "SONY"    , "SMO-F541"     , NULL,  2, 2, MO_5_WO           , MO_5_RW, 0      , 0 },
-    { "SONY"    , "SMO-F551"     , NULL,  2, 2, MO_5_WO           , MO_5_RW, 0      , 0 },
-    { NULL      , NULL           , NULL,  0, 0, 0                 , 0      , 0      , 0 }
+    { "COMPAQ"  , "PD-1 LF-1094" , NULL,  1, 1, {PC_5_RW           , 0      , 0      , 0 }},
+    { "HP"      , NULL           , NULL,  2, 2, {MO_5_WO           , MO_5_RW, 0      , 0 }},
+    { "iomega"  , "jaz"          , NULL,  1, 1, {IOMEGA_JAZ        , 0      , 0      , 0 }},
+    { "IOMEGA"  , "ZIP"          , NULL,  1, 1, {IOMEGA_ZIP        , 0      , 0      , 0 }},
+    { "PINNACLE", "Apex 4.6GB"   , NULL,  3, 2, {PINNACLE_APEX_5_RW, MO_5_RW, MO_5_WO, 0 }},
+    { "SONY"    , "SMO-F541"     , NULL,  2, 2, {MO_5_WO           , MO_5_RW, 0      , 0 }},
+    { "SONY"    , "SMO-F551"     , NULL,  2, 2, {MO_5_WO           , MO_5_RW, 0      , 0 }},
+    { NULL      , NULL           , NULL,  0, 0, {0                 , 0      , 0      , 0 }}
 };
 
 #ifdef ALLOC_DATA_PRAGMA

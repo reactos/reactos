@@ -546,7 +546,7 @@ Return Value:
     //
 
     buffer = (PUCHAR)SrbControl;
-    (ULONG_PTR)buffer +=  sizeof(SRB_IO_CONTROL);
+    buffer +=  sizeof(SRB_IO_CONTROL);
 
     cmdInParameters = (PSENDCMDINPARAMS)buffer;
     cmdOutParameters = (PSENDCMDOUTPARAMS)buffer;
@@ -641,11 +641,16 @@ Return Value:
                     break;
                 }
                 
+                default:
+                    controlCode = 0;
+                    break;
+                
             }
         } else if (Command == ID_CMD) {
             controlCode = IOCTL_SCSI_MINIPORT_IDENTIFY;
             lengthNeeded = IDENTIFY_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS) -1;
         } else {
+            controlCode = 0;
             ASSERT(FALSE);
         }
 
@@ -1393,8 +1398,10 @@ NTSTATUS DiskInfoExceptionComplete(
             retry = TRUE;
         }
 
-        if (retry && ((ULONG)(ULONG_PTR)irpStack->Parameters.Others.Argument4)--)
+        if (retry && irpStack->Parameters.Others.Argument4)
         {
+            irpStack->Parameters.Others.Argument4 =
+                (PVOID)((ULONG_PTR)irpStack->Parameters.Others.Argument4 - 1);
 
             //
             // Retry request.
@@ -2798,6 +2805,7 @@ Return Value:
                 //
                 case ReadLogSectors:
                 {
+                    sizeNeeded = 0;
                     if (diskData->FailurePredictionCapability ==
                                   FailurePredictionSmart)
                     {
@@ -2853,6 +2861,7 @@ Return Value:
                 //       );
                 case WriteLogSectors:
                 {
+                    sizeNeeded = 0;
                     if (diskData->FailurePredictionCapability ==
                                   FailurePredictionSmart)
                     {
@@ -2911,6 +2920,7 @@ Return Value:
                 //         uint32 ReturnCode);
                 case ExecuteSelfTest:
                 {
+                    sizeNeeded = 0;
                     if (diskData->FailurePredictionCapability ==
                               FailurePredictionSmart)
                     {
