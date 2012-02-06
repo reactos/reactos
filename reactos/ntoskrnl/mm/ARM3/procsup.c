@@ -29,7 +29,7 @@ MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID AllocatedBase = (PVOID)USER_SHARED_DATA;
+    PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
     BoundaryAddressMultiple.QuadPart = 0;
 
     Status = MmCreateMemoryArea(&Process->Vm,
@@ -830,7 +830,11 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
+#ifdef _M_AMD64
+        Teb->NtTib.ExceptionList = NULL;
+#else
         Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+#endif
         Teb->NtTib.Self = (PNT_TIB)Teb;
 
         //

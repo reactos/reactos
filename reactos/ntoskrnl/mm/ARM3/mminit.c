@@ -1284,9 +1284,9 @@ INIT_FUNCTION
 MiAddHalIoMappings(VOID)
 {
     PVOID BaseAddress;
-    PMMPDE PointerPde;
+    PMMPDE PointerPde, LastPde;
     PMMPTE PointerPte;
-    ULONG i, j, PdeCount;
+    ULONG j;
     PFN_NUMBER PageFrameIndex;
 
     /* HAL Heap address -- should be on a PDE boundary */
@@ -1295,8 +1295,9 @@ MiAddHalIoMappings(VOID)
 
     /* Check how many PDEs the heap has */
     PointerPde = MiAddressToPde(BaseAddress);
-    PdeCount = PDE_COUNT - MiGetPdeOffset(BaseAddress);
-    for (i = 0; i < PdeCount; i++)
+    LastPde = MiAddressToPde((PVOID)MM_HAL_VA_END);
+
+    while (PointerPde <= LastPde)
     {
         /* Does the HAL own this mapping? */
         if ((PointerPde->u.Hard.Valid == 1) &&

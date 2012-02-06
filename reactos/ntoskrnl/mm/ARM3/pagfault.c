@@ -56,7 +56,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     ASSERT(MI_IS_SESSION_ADDRESS(VirtualAddress) == FALSE);
 
     /* Special case for shared data */
-    if (PAGE_ALIGN(VirtualAddress) == (PVOID)USER_SHARED_DATA)
+    if (PAGE_ALIGN(VirtualAddress) == (PVOID)MM_SHARED_USER_DATA_VA)
     {
         /* It's a read-only page */
         *ProtectCode = MM_READONLY;
