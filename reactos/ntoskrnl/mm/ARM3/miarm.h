@@ -565,6 +565,50 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderBBTMemory));
 }
 
+#ifdef _M_AMD64
+BOOLEAN
+FORCEINLINE
+MiIsUserPxe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPpe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
+}
+#else
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
+            (Address <= (PVOID)MiHighestUserPde));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return (Address <= (PVOID)MiHighestUserPte);
+}
+#endif
 
 //
 // Figures out the hardware bits for a PTE
@@ -583,9 +627,15 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
     MI_MAKE_ACCESSED_PAGE(&TempPte);
 
     /* Is this for user-mode? */
-    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
-        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
-         (PointerPte <= (PVOID)MiHighestUserPde)))
+    if (
+#if (_MI_PAGING_LEVELS == 4)
+        MiIsUserPxe(PointerPte) ||
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        MiIsUserPpe(PointerPte) ||
+#endif
+        MiIsUserPde(PointerPte) ||
+        MiIsUserPte(PointerPte))
     {
         /* Set the owner bit */
         MI_MAKE_OWNER_PAGE(&TempPte);

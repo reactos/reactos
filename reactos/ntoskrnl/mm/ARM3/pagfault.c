@@ -335,22 +335,10 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (NeedZero) MiZeroPfn(PageFrameNumber);
 
     /* Build the PTE */
-    if (PointerPte <= MiHighestUserPte)
-    {
-        /* For user mode */
-        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
-                                  PointerPte,
-                                  Protection,
-                                  PageFrameNumber);
-    }
-    else
-    {
-        /* For kernel mode */
-        MI_MAKE_HARDWARE_PTE(&TempPte,
-                             PointerPte,
-                             Protection,
-                             PageFrameNumber);
-    }
+    MI_MAKE_HARDWARE_PTE(&TempPte,
+                         PointerPte,
+                         Protection,
+                         PageFrameNumber);
 
     /* Set it dirty if it's a writable page */
     if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
@@ -625,6 +613,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     /* Check if the PTE is completely empty */
     if (TempPte.u.Long == 0)
     {
+        /* The address is not from any pageable area! */
         KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                      (ULONG_PTR)Address,
                      StoreInstruction,
