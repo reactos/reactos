@@ -697,7 +697,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     }
 
     /* Check for kernel fault address */
-    while (Address >= MmSystemRangeStart)
+    if (Address >= MmSystemRangeStart)
     {
         /* Bail out, if the fault came from user mode */
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
@@ -716,6 +716,17 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                          StoreInstruction,
                          (ULONG_PTR)TrapInformation,
                          2);
+        }
+#endif
+
+#if (_MI_PAGING_LEVELS == 2)
+        /* Check if we have a situation that might need synchronization
+           of the PDE with the system page directory */
+        if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address))
+        {
+            /* This could be a paged pool commit with an unsychronized PDE.
+               NOTE: This way it works on x86, verify for other architectures! */
+            if (MiSynchronizeSystemPde((PMMPDE)PointerPte)) return STATUS_SUCCESS;
         }
 #endif
 
@@ -756,23 +767,24 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         // Check for a fault on the page table or hyperspace
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be paged pool access from a new process -- synchronize the page directories */
-            if (MiCheckPdeForPagedPool(Address) == STATUS_WAIT_1)
-            {
-                DPRINT1("PAGE TABLES FAULTED IN!\n");
-                return STATUS_SUCCESS;
-            }
-#endif
-            /* Otherwise this could be a commit of a virtual address */
-            break;
+            ASSERT(TempPte.u.Long != (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS));
+            ASSERT(TempPte.u.Soft.Prototype == 0);
+
+            /* Use the process working set */
+            CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
+            WorkingSet = &CurrentProcess->Vm;
+        }
+        else
+        {
+            /* Otherwise use the system working set */
+            WorkingSet = &MmSystemCacheWs;
+            CurrentProcess = NULL;
         }
 
-        /* In this path, we are using the system working set */
+        /* Get the current thread */
         CurrentThread = PsGetCurrentThread();
-        WorkingSet = &MmSystemCacheWs;
 
-        /* Acquire it */
+        /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
 
@@ -854,7 +866,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                                  PointerPte,
                                  ProtoPte,
                                  FALSE,
-                                 NULL,
+                                 CurrentProcess,
                                  TrapInformation,
                                  NULL);
 
@@ -868,30 +880,41 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
 
-#if (_MI_PAGING_LEVELS == 4)
-    /* On these systems we have PXEs and PPEs ready for everything we need */
-    if (PointerPxe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
-#endif
-#if (_MI_PAGING_LEVELS >= 3)
-    if (PointerPpe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
-#endif
-
-    /* This is a user fault (<- And this is a lie!) */
+    /* This is a user fault */
     CurrentThread = PsGetCurrentThread();
-    CurrentProcess = PsGetCurrentProcess();
+    CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
 
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
 
-    /* First things first, is the PDE valid? */
+#if (_MI_PAGING_LEVELS == 2)
     ASSERT(PointerPde->u.Hard.LargePage == 0);
+#endif
+
+    /* Check if this address range belongs to a valid allocation (VAD) */
+    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    if (ProtectionCode == MM_NOACCESS)
+    {
+        /* This is a bogus VA */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+#if (_MI_PAGING_LEVELS == 4)
+    /* On these systems we have PXEs and PPEs ready for everything we need */
+    if (PointerPxe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+#endif
+
+#if (_MI_PAGING_LEVELS >= 3)
+    if (PointerPpe->u.Hard.Valid == 0) return STATUS_ACCESS_VIOLATION;
+#endif
+
+
+    /* First things first, is the PDE valid? */
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PDE is totally empty */
         ASSERT(PointerPde->u.Long == 0);
-
-        /* Check if this address range belongs to a valid allocation (VAD) */
-        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
 
         /* Right now, we expect a valid protection mask on the VAD */
         ASSERT(ProtectionCode != MM_NOACCESS);
@@ -921,6 +944,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
     {
         /* Resolve the fault */
+        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
         MiResolveDemandZeroFault(Address,
                                  (ULONG)PointerPte->u.Soft.Protection,
                                  CurrentProcess,
@@ -937,8 +961,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     /* Check for non-demand zero PTE */
     if (TempPte.u.Long != 0)
     {
-        /* This is a page fault, check for valid protection */
-        ASSERT(TempPte.u.Soft.Protection != 0x100);
+        /* This is a page fault */
 
         /* FIXME: Run MiAccessCheck */
 
@@ -959,28 +982,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
 
-    /* Check if this address range belongs to a valid allocation (VAD) */
-    ASSERT(TempPte.u.Long == 0);
-    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-    if (ProtectionCode == MM_NOACCESS)
-    {
-        /* This is a bogus VA */
-        Status = STATUS_ACCESS_VIOLATION;
 
-        /* Could be a not-yet-mapped paged pool page table */
-#if (_MI_PAGING_LEVELS == 2)
-        MiCheckPdeForPagedPool(Address);
-#endif
-        /* See if that fixed it */
-        if (PointerPte->u.Hard.Valid == 1) Status = STATUS_SUCCESS;
-
-        /* Return the status */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-        return Status;
-    }
-
-    /* Is this a user address? */
-    if (Address <= MM_HIGHEST_USER_ADDRESS)
     {
         /* Add an additional page table reference */
         MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
@@ -1026,24 +1028,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* And we're done with the lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-
-        /* Was the fault on an actual user page, or a kernel page for the user? */
-        if (PointerPte <= MiHighestUserPte)
-        {
-            /* User fault, build a user PTE */
-            MI_MAKE_HARDWARE_PTE_USER(&TempPte,
-                                      PointerPte,
-                                      PointerPte->u.Soft.Protection,
-                                      PageFrameIndex);
-        }
-        else
-        {
-            /* Session, kernel, or user PTE, figure it out and build it */
-            MI_MAKE_HARDWARE_PTE(&TempPte,
-                                 PointerPte,
-                                 PointerPte->u.Soft.Protection,
-                                 PageFrameIndex);
-        }
+        /* User fault, build a user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  PointerPte->u.Soft.Protection,
+                                  PageFrameIndex);
 
         /* Write the dirty bit for writeable pages */
         if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
