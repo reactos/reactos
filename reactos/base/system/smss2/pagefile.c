@@ -395,7 +395,7 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
                          SizeInfo.SectorsPerAllocationUnit;
     FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
     Volume->FreeSpace = FinalFreeSpace;
-    DPRINT1("AUs: %I64 Sectors: %lx Bytes Per Sector: %lx\n",
+    DPRINT1("AUs: %I64x Sectors: %lx Bytes Per Sector: %lx\n",
             SizeInfo.AvailableAllocationUnits.QuadPart,
             SizeInfo.SectorsPerAllocationUnit,
             SizeInfo.BytesPerSector);
@@ -592,7 +592,13 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     if (Descriptor->ActualMinSize.QuadPart < MinimumSize->QuadPart)
     {
         /* Delete the current page file and fail */
-        if (ShouldDelete) SmpDeletePagingFile(&Descriptor->Name);
+        if (ShouldDelete)
+        {
+            SmpDeletePagingFile(&Descriptor->Name);
+            
+            /* FIXFIX: Windows Vista does this, and it seems like we should too, so try to see if this fixes KVM */
+            Volume->FreeSpace.QuadPart += PageFileSize.QuadPart;
+        }
         DPRINT1("SMSS:PFILE: Failing for min %I64X, max %I64X, real min %I64X \n",
                 Descriptor->ActualMinSize.QuadPart,
                 Descriptor->ActualMaxSize.QuadPart,

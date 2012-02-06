@@ -437,6 +437,9 @@ MmInitSystem(IN ULONG Phase,
                                 PageFrameNumber);
     *MmSharedUserDataPte = TempPte;
 
+    /* Setup session IDs */
+    MiInitializeSessionIds();
+
     /* Setup the memory threshold events */
     if (!MiInitializeMemoryEvents()) return FALSE;
 

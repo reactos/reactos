@@ -1755,13 +1755,31 @@ SSI_DEF(SystemSetTimeSlipEvent)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId);
 
 /* Class 47 - Create a new session (TSE) */
 SSI_DEF(SystemCreateSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemCreateSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status;
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    Status = MmSessionCreate(&SessionId);
+    if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
+
+    return Status;
 }
 
 

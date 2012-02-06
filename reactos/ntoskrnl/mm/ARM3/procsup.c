@@ -1340,6 +1340,144 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
     MmUnlockAddressSpace(&Process->Vm);
 }
 
+/* SESSION CODE TO MOVE TO SESSION.C ******************************************/
+
+KGUARDED_MUTEX MiSessionIdMutex;
+PRTL_BITMAP MiSessionIdBitmap;
+volatile LONG MiSessionLeaderExists;
+
+VOID
+NTAPI
+MiInitializeSessionIds(VOID)
+{
+    /* FIXME: Other stuff should go here */
+
+    /* Initialize the lock */
+    KeInitializeGuardedMutex(&MiSessionIdMutex);
+
+    /* Allocate the bitmap */
+    MiSessionIdBitmap = ExAllocatePoolWithTag(PagedPool,
+                                              sizeof(RTL_BITMAP) + ((64 + 31) / 32) * 4,
+                                              '  mM');
+    if (MiSessionIdBitmap)
+    {
+        /* Free all the bits */
+        RtlInitializeBitMap(MiSessionIdBitmap, (PVOID)(MiSessionIdBitmap + 1), 64);
+        RtlClearAllBits(MiSessionIdBitmap);
+    }
+    else
+    {
+        /* Die if we couldn't allocate the bitmap */
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MmLowestPhysicalPage,
+                     MmHighestPhysicalPage,
+                     0x200);
+    }
+}
+
+VOID
+NTAPI
+MiSessionLeader(IN PEPROCESS Process)
+{
+    KIRQL OldIrql;
+
+    /* Set the flag while under the expansion lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
+    Process->Vm.Flags.SessionLeader = TRUE;
+    KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+}
+
+NTSTATUS
+NTAPI
+MiSessionCreateInternal(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG NewFlags, Flags;
+
+    /* Loop so we can set the session-is-creating flag */
+    Flags = Process->Flags;
+    while (TRUE)
+    {
+        /* Check if it's already set */
+        if (Flags & PSF_SESSION_CREATION_UNDERWAY_BIT)
+        {
+            /* Bail out */
+            DPRINT1("Lost session race\n");
+            return STATUS_ALREADY_COMMITTED;
+        }
+
+        /* Now try to set it */
+        NewFlags = InterlockedCompareExchange((PLONG)&Process->Flags,
+                                              Flags | PSF_SESSION_CREATION_UNDERWAY_BIT,
+                                              Flags);
+        if (NewFlags == Flags) break;
+
+        /* It changed, try again */
+        Flags = NewFlags;
+    }
+
+    /* Now we should own the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+
+    /* Allocate a new Session ID */
+    KeAcquireGuardedMutex(&MiSessionIdMutex);
+    *SessionId = RtlFindClearBitsAndSet(MiSessionIdBitmap, 1, 0);
+    if (*SessionId == 0xFFFFFFFF)
+    {
+        DPRINT1("Too many sessions created. Expansion not yet supported\n");
+        return STATUS_NO_MEMORY;
+    }
+    KeReleaseGuardedMutex(&MiSessionIdMutex);
+
+    /* We're done, clear the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+    PspClearProcessFlag(Process, PSF_SESSION_CREATION_UNDERWAY_BIT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG SessionLeaderExists;
+    NTSTATUS Status;
+
+    /* Fail if the process is already in a session */
+    if (Process->Flags & PSF_PROCESS_IN_SESSION_BIT)
+    {
+        DPRINT1("Process already in session\n");
+        return STATUS_ALREADY_COMMITTED;
+    }
+
+    /* Check if the process is already the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        /* Atomically set it as the leader */
+        SessionLeaderExists = InterlockedCompareExchange(&MiSessionLeaderExists, 1, 0);
+        if (SessionLeaderExists)
+        {
+            DPRINT1("Session leader race\n");
+            return STATUS_INVALID_SYSTEM_SERVICE;
+        }
+
+        /* Do the work required to upgrade him */
+        MiSessionLeader(Process);
+    }
+
+    /* FIXME: Actually create a session */
+    KeEnterCriticalRegion();
+    Status = MiSessionCreateInternal(SessionId);
+    KeLeaveCriticalRegion();
+
+    /* Set and assert the flags, and return */
+    PspSetProcessFlag(Process, PSF_PROCESS_IN_SESSION_BIT);
+    ASSERT(MiSessionLeaderExists == 1);
+    if (NT_SUCCESS(Status)) DPRINT1("New session created: %lx\n", *SessionId);
+    return Status;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS

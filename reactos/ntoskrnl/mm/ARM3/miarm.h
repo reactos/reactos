@@ -983,6 +983,12 @@ MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+VOID
+NTAPI
+MiInitializeSessionIds(
+    VOID
+);
+
 BOOLEAN
 NTAPI
 MiInitializeMemoryEvents(
