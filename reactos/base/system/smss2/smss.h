@@ -7,6 +7,9 @@
  */
 
 /* DEPENDENCIES ***************************************************************/
+#pragma once
+#ifndef _SM_
+#define _SM_
 
 //
 // Native Headers
@@ -206,4 +209,5 @@ VOID
 NTAPI
 SmpTranslateSystemPartitionInformation(
     VOID
-    );
+);
+#endif
