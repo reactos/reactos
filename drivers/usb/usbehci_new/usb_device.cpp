@@ -52,6 +52,8 @@ public:
     virtual NTSTATUS SubmitSetupPacket(IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, OUT ULONG BufferLength, OUT PVOID Buffer);
     virtual NTSTATUS SelectConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor, IN PUSBD_INTERFACE_INFORMATION Interface, OUT USBD_CONFIGURATION_HANDLE *ConfigurationHandle);
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle, IN OUT PUSBD_INTERFACE_INFORMATION Interface);
+    virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
@@ -1254,6 +1256,23 @@ CUSBDevice::SelectInterface(
     //
     return Status;
 }
+
+NTSTATUS
+CUSBDevice::AbortPipe(
+    IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    //
+    // let it handle usb queue
+    //
+    ASSERT(m_Queue);
+    ASSERT(m_DeviceAddress);
+
+    //
+    // done
+    //
+    return m_Queue->AbortDevicePipe(m_DeviceAddress, EndpointDescriptor);
+}
+
 
 //----------------------------------------------------------------------------------------
 NTSTATUS

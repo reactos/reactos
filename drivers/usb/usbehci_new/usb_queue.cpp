@@ -41,6 +41,8 @@ public:
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
     virtual VOID InterruptCallback(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
     virtual VOID CompleteAsyncRequests();
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -925,6 +927,16 @@ CUSBQueue::CompleteAsyncRequests()
 }
 
 NTSTATUS
+CUSBQueue::AbortDevicePipe(
+    IN UCHAR DeviceAddress,
+    IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {
@@ -957,3 +969,4 @@ CreateUSBQueue(
     //
     return STATUS_SUCCESS;
 }
+
