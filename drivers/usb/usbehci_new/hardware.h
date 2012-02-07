@@ -152,6 +152,8 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
     ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
+C_ASSERT(FIELD_OFFSET(QUEUE_TRANSFER_DESCRIPTOR, PhysicalAddr) == 0x20);
+
 //
 // EndPointSpeeds Flags and END_POINT_CHARACTERISTICS
 //
@@ -217,6 +219,9 @@ typedef struct _QUEUE_HEAD
     PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, PhysicalAddr) == 0x30);
+
+
 //
 // Command register content
 //
@@ -280,30 +285,6 @@ typedef struct _EHCI_CAPS {
     };
     UCHAR PortRoute [15];
 } EHCI_CAPS, *PEHCI_CAPS;
-
-
-typedef struct
-{
-    PKSPIN_LOCK Lock;
-    RTL_BITMAP Bitmap;
-    PULONG BitmapBuffer;
-    ULONG BlockSize;
-    PVOID VirtualBase;
-    PHYSICAL_ADDRESS PhysicalBase;
-    ULONG Length;
-}DMA_MEMORY_ALLOCATOR, *LPDMA_MEMORY_ALLOCATOR;
-
-typedef struct _EHCI_HOST_CONTROLLER
-{
-    ULONG OpRegisters;
-    EHCI_CAPS ECHICaps;
-    PVOID CommonBufferVA;
-    PHYSICAL_ADDRESS CommonBufferPA;
-    ULONG CommonBufferSize;
-    PQUEUE_HEAD AsyncListQueue;
-    KSPIN_LOCK Lock;
-    LPDMA_MEMORY_ALLOCATOR DmaMemAllocator;
-} EHCI_HOST_CONTROLLER, *PEHCI_HOST_CONTROLLER;
 
 typedef struct
 {

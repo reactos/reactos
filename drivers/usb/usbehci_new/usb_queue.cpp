@@ -447,7 +447,7 @@ CUSBQueue::LinkQueueHead(
     //
     // head queue head must be halted
     //
-    PC_ASSERT(HeadQueueHead->Token.Bits.Halted == TRUE);
+    //PC_ASSERT(HeadQueueHead->Token.Bits.Halted == TRUE);
 }
 
 //
@@ -463,7 +463,7 @@ CUSBQueue::UnlinkQueueHead(
     //
     // sanity check: there must be at least one queue head with halted bit set
     //
-    PC_ASSERT(QueueHead->Token.Bits.Halted == 0);
+    //PC_ASSERT(QueueHead->Token.Bits.Halted == 0);
 
     //
     // get previous link
@@ -499,6 +499,11 @@ CUSBQueue::UnlinkQueueHead(
     // remove software link
     //
     RemoveEntryList(&QueueHead->LinkedQueueHeads);
+
+    //
+    // FIXME: clear failure 
+    //
+    QueueHead->Token.Bits.Halted = FALSE;
 }
 
 //
@@ -653,7 +658,7 @@ CUSBQueue::ProcessAsyncList(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT1("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete

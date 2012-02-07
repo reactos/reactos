@@ -128,7 +128,7 @@ protected:
     //
     // DMA transfer descriptors linked to the queue head
     //
-    PQUEUE_TRANSFER_DESCRIPTOR m_TransferDescriptors[3];
+    PQUEUE_TRANSFER_DESCRIPTOR m_TransferDescriptors[4];
 
     //
     // allocated setup packet from the DMA pool
@@ -690,14 +690,15 @@ CUSBRequest::BuildControlTransferQueueHead(
         QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->wMaxPacketSize;
     }
 
-    QueueHead->Token.Bits.DataToggle = TRUE;
-
     //
     // setup descriptors
     //
     m_TransferDescriptors[0]->Token.Bits.PIDCode = PID_CODE_SETUP_TOKEN;
     m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer = sizeof(USB_DEFAULT_PIPE_SETUP_PACKET);
     m_TransferDescriptors[0]->Token.Bits.DataToggle = FALSE;
+    m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorSetupPacket.LowPart);
+    m_TransferDescriptors[0]->NextPointer = m_TransferDescriptors[1]->PhysicalAddr;
+    m_TransferDescriptors[0]->AlternateNextPointer = m_TransferDescriptors[1]->PhysicalAddr;
 
     if (m_TransferBufferMDL)
     {
@@ -706,6 +707,9 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
         m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = m_TransferBufferLength;
+        m_TransferDescriptors[1]->NextPointer = m_TransferDescriptors[2]->PhysicalAddr;
+        m_TransferDescriptors[1]->Token.Bits.DataToggle = TRUE;
+        m_TransferDescriptors[1]->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
 
         //
         // FIXME: check if the request spawns over a page -> fill other members
@@ -718,24 +722,19 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         m_TransferDescriptors[2]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
         m_TransferDescriptors[2]->Token.Bits.TotalBytesToTransfer = 0;
-
-        //
-        // link descriptors
-        //
-        m_TransferDescriptors[0]->NextPointer = m_TransferDescriptors[1]->PhysicalAddr;
+        m_TransferDescriptors[2]->Token.Bits.DataToggle = FALSE;
 
         //
         // special case, setup alternative next descriptor in case of error
         // HAIKU links to dead descriptor
         //
-        m_TransferDescriptors[0]->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
-        m_TransferDescriptors[1]->NextPointer = m_TransferDescriptors[2]->PhysicalAddr;
-        m_TransferDescriptors[1]->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
 
         //
         // interrupt on completion
         //
         m_TransferDescriptors[2]->Token.Bits.InterruptOnComplete = TRUE;
+
+	_TransferDescriptors[3]->Token.Bits.Halted = TRUE;
 
     }
     else
@@ -743,14 +742,8 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         // no buffer, setup in descriptor
         //
-        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
+        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
         m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = 0;
-
-        //
-        // link descriptors
-        //
-        m_TransferDescriptors[0]->NextPointer = m_TransferDescriptors[1]->PhysicalAddr;
-        m_TransferDescriptors[0]->AlternateNextPointer = m_TransferDescriptors[1]->PhysicalAddr;
 
         //
         // interrupt on completion
@@ -759,22 +752,39 @@ CUSBRequest::BuildControlTransferQueueHead(
     }
 
     //
-    // link setup packet into buffer - Physical Address!!!
-    //
-    m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorSetupPacket.LowPart);
-
-    //
     // link transfer descriptors to queue head
     //
     QueueHead->NextPointer = m_TransferDescriptors[0]->PhysicalAddr;
-/*
-	if (m_TransferBufferMDL)
-	    QueueHead->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
-	else
-	    QueueHead->AlternateNextPointer = m_TransferDescriptors[1]->PhysicalAddr;
 
-	QueueHead->EndPointCapabilities.InterruptScheduleMask = 0x0;
-*/
+    DPRINT("QueueHead %p Addr %x\n", QueueHead, QueueHead->PhysicalAddr);
+    DPRINT("NumDescriptors %lu\n", NumTransferDescriptors);
+    DPRINT("QueueHead AlternateNextPointer %x\n", QueueHead->AlternateNextPointer);
+    DPRINT("QueueHead NextPointer %x\n", QueueHead->NextPointer);
+    DPRINT("m_DescriptorSetupPacket HiPart %x LoPart %x\n", m_DescriptorSetupPacket.HighPart, m_DescriptorSetupPacket.LowPart);
+
+
+    DPRINT("TransferDescriptor 0 Addr %x\n", m_TransferDescriptors[0]->PhysicalAddr);
+    DPRINT("TransferDescriptor 0 Next %x\n", m_TransferDescriptors[0]->NextPointer);
+    DPRINT("TransferDescriptor 0 AlternativeNext %x\n", m_TransferDescriptors[0]->AlternateNextPointer);
+    DPRINT("TransferDescriptor 0 Buffer Pointer %x\n", m_TransferDescriptors[0]->BufferPointer[0]);
+    DPRINT("TransferDescriptor 0 TotalBytesToTransfer 0x%x\n", m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer);
+
+    DPRINT("TransferDescriptor 1 Addr %x\n", m_TransferDescriptors[1]->PhysicalAddr);
+    DPRINT("TransferDescriptor 1 Next %x\n", m_TransferDescriptors[1]->NextPointer);
+    DPRINT("TransferDescriptor 1 AlternativeNext %x\n", m_TransferDescriptors[1]->AlternateNextPointer);
+    DPRINT("TransferDescriptor 1 Buffer Pointer %x\n", m_TransferDescriptors[1]->BufferPointer[0]);
+    DPRINT("TransferDescriptor 1 TotalBytesToTransfer 0x%x\n", m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer);
+
+    if (NumTransferDescriptors == 3)
+    {
+        DPRINT("TransferDescriptor 2 Addr %x\n", m_TransferDescriptors[2]->PhysicalAddr);
+        DPRINT("TransferDescriptor 2 Next %x\n", m_TransferDescriptors[2]->NextPointer);
+        DPRINT("TransferDescriptor 2 AlternativeNext %x\n", m_TransferDescriptors[2]->AlternateNextPointer);
+        DPRINT("TransferDescriptor 2 Buffer Pointer %x\n", m_TransferDescriptors[2]->BufferPointer[0]);
+        DPRINT("TransferDescriptor 2 TotalBytesToTransfer 0x%x\n", m_TransferDescriptors[2]->Token.Bits.TotalBytesToTransfer);
+    }
+
+
     //
     // store result
     //
@@ -797,6 +807,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
     ULONG BytesAvailable, BufferIndex;
     PVOID Base;
     ULONG PageOffset, CurrentTransferBufferLength;
+    UCHAR DataToggle;
 
     //
     // Allocate the queue head
@@ -867,6 +878,8 @@ CUSBRequest::BuildBulkTransferQueueHead(
     //
     m_TransferBufferLengthCompleted += CurrentTransferBufferLength;
     BytesAvailable = CurrentTransferBufferLength;
+
+    DPRINT1("BuildBulkTransferQueueHead\n");
     DPRINT("CurrentTransferBufferLength %x, m_TransferBufferLengthCompleted %x\n", CurrentTransferBufferLength, m_TransferBufferLengthCompleted);
 
     DPRINT("EndPointAddress %x\n", m_EndpointDescriptor->bEndpointAddress);
@@ -877,6 +890,11 @@ CUSBRequest::BuildBulkTransferQueueHead(
     DPRINT("Irp %p QueueHead %p\n", m_Irp, QueueHead);
 
     //PC_ASSERT(InternalGetPidDirection() == USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
+
+    //
+    // DataToggle
+    //
+    DataToggle = FALSE;
 
     //
     // Allocated transfer descriptors
@@ -940,7 +958,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                 //
                 BytesAvailable -= m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
 
-                DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                DPRINT1("TransferDescriptor %p Index %lu BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], Index, m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                     BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
             }
             else
@@ -972,32 +990,35 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     //
                     BytesAvailable -= PAGE_SIZE;
 
-                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                    DPRINT1("TransferDescriptor %p Index %lu BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], Index, m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                             BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
                 }
                 else
                 {
                     PC_ASSERT(BytesAvailable);
 
-                    //
-                    // store address
-                    //
-                    m_TransferDescriptors[Index]->BufferPointer[BufferIndex] = MmGetPhysicalAddress(Base).LowPart;
+                    if (BytesAvailable)
+                    {
+                        //
+                        // store address
+                        //
+                        m_TransferDescriptors[Index]->BufferPointer[BufferIndex] = MmGetPhysicalAddress(Base).LowPart;
 
-                    //
-                    // increment transfer descriptor bytes
-                    //
-                    m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer += BytesAvailable;
+                       //
+                       // increment transfer descriptor bytes
+                       //
+                       m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer += BytesAvailable;
 
-                    //
-                    // decrement available byte count
-                    //
-                    BytesAvailable -= BytesAvailable;
+                       //
+                       // decrement available byte count
+                       //
+                       BytesAvailable -= BytesAvailable;
 
-                    //
-                    // done as this is the last partial or full page
-                    //
-                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                       //
+                       // done as this is the last partial or full page
+                       //
+                    }
+                    DPRINT1("TransferDescriptor %p Index %lu BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], Index, m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                             BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
 
                     break;
@@ -1012,11 +1033,6 @@ CUSBRequest::BuildBulkTransferQueueHead(
         }
 
         //
-        // store transfer bytes of descriptor
-        //
-        m_TransferDescriptors[Index]->TotalBytesToTransfer = m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
-
-        //
         // Go ahead and link descriptors
         //
         if (Index > 0)
@@ -1024,19 +1040,26 @@ CUSBRequest::BuildBulkTransferQueueHead(
             m_TransferDescriptors[Index - 1]->NextPointer = m_TransferDescriptors[Index]->PhysicalAddr;
         }
 
+
+        //
+        // status descriptor
+        //
+        m_TransferDescriptors[Index]->Token.Bits.InterruptOnComplete = TRUE;
+
+        //
+        // FIXME: need status descriptor?
+        //
+
         //
         // setup direction
         //
         m_TransferDescriptors[Index]->Token.Bits.PIDCode = InternalGetPidDirection();
 
         //
-        // FIXME: performance penality?
+        // set data toggle
         //
-        m_TransferDescriptors[Index]->Token.Bits.InterruptOnComplete = TRUE;
-
-        //
-        // FIXME need dead queue transfer descriptor?
-        //
+        m_TransferDescriptors[Index]->Token.Bits.DataToggle = DataToggle;
+        DataToggle = !DataToggle;
 
         //
         // Check if all bytes have been consumed
@@ -1064,7 +1087,10 @@ CUSBRequest::BuildBulkTransferQueueHead(
         QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->wMaxPacketSize;
     }
 
-    QueueHead->Token.Bits.DataToggle = TRUE;
+    //
+    // store number of transactions
+    //
+    QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = min(Index, 1);
 
     //
     // link descriptor with queue head
@@ -1168,7 +1194,7 @@ CUSBRequest::CreateQueueHead(
     //
     // Get the Initial Data Toggle from the QEDT
     //
-    QueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+    QueueHead->EndPointCharacteristics.QEDTDataToggleControl = TRUE;
 
     //
     // FIXME: check if High Speed Device
@@ -1593,7 +1619,8 @@ CUSBRequest::IsQueueHeadComplete(
         //
         // queue head is active (currently processed)
         //
-        return FALSE;
+        ASSERT(QueueHead->Token.Bits.Halted == FALSE);
+        //return FALSE;
     }
 
     //
@@ -1609,7 +1636,13 @@ CUSBRequest::IsQueueHeadComplete(
             //
             // check for serious error
             //
-            //PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Halted == 0);
+            DPRINT("Descriptor Addr %x\n", m_TransferDescriptors[Index]->PhysicalAddr);
+            DPRINT("Descriptor BabbleDetected %x\n", m_TransferDescriptors[Index]->Token.Bits.BabbleDetected);
+            DPRINT("Descriptor DataBufferError %x\n", m_TransferDescriptors[Index]->Token.Bits.DataBufferError);
+            DPRINT("Descriptor DataToggle %x\n", m_TransferDescriptors[Index]->Token.Bits.DataToggle);
+            DPRINT("Descriptor ErrorCounter %x\n", m_TransferDescriptors[Index]->Token.Bits.ErrorCounter);
+            DPRINT("Descriptor TransactionError %x\n", m_TransferDescriptors[Index]->Token.Bits.TransactionError);
+
 
             //
             // the transfer descriptor should be in the same state as the queue head
@@ -1617,6 +1650,7 @@ CUSBRequest::IsQueueHeadComplete(
             //PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Active == 0);
         }
     }
+    //ASSERT(FALSE);
 
     return TRUE;
 }

@@ -467,18 +467,15 @@ CUSBHardwareDevice::PnpStart(
     //
     m_MemoryManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&AsyncQueueHead, &AsyncPhysicalAddress);
 
-    AsyncQueueHead->AlternateNextPointer = TERMINATE_POINTER;
-    AsyncQueueHead->NextPointer = TERMINATE_POINTER;
     AsyncQueueHead->PhysicalAddr = AsyncPhysicalAddress.LowPart;
     AsyncQueueHead->HorizontalLinkPointer = AsyncQueueHead->PhysicalAddr | QH_TYPE_QH;
-    AsyncQueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
-    AsyncQueueHead->Token.Bits.InterruptOnComplete = FALSE;
     AsyncQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
-    AsyncQueueHead->Token.Bits.Halted = TRUE;
-    AsyncQueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
-    AsyncQueueHead->EndPointCharacteristics.NakCountReload = 0;
     AsyncQueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
-    AsyncQueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
+    AsyncQueueHead->Token.Bits.Halted = TRUE;
+
+    AsyncQueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x01;
+    AsyncQueueHead->NextPointer = TERMINATE_POINTER;
+    AsyncQueueHead->CurrentLinkPointer = TERMINATE_POINTER;
 
     InitializeListHead(&AsyncQueueHead->LinkedQueueHeads);
 
@@ -653,6 +650,39 @@ CUSBHardwareDevice::StartController(void)
             }
         }
     }
+
+    //
+    // get command register
+    //
+    GetCommandRegister(&UsbCmd);
+
+    //
+    // disable running schedules
+    //
+    UsbCmd.PeriodicEnable = FALSE;
+    UsbCmd.AsyncEnable = FALSE;
+    SetCommandRegister(&UsbCmd);
+
+    //
+    // Wait for execution to start
+    //
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(100);
+        UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
+
+        if (!(UsbSts & EHCI_STS_PSS) && (UsbSts & EHCI_STS_ASS))
+        {
+            break;
+        }
+    }
+
+    if ((UsbSts & (EHCI_STS_PSS | EHCI_STS_ASS)))
+    {
+        DPRINT1("Failed to stop running schedules %x\n", UsbSts);
+        ASSERT(FALSE);
+    }
+
 
     //
     // Stop the controller if its running
@@ -1240,6 +1270,8 @@ InterruptServiceRoutine(
     CStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
 
     CStatus &= (EHCI_ERROR_INT | EHCI_STS_INT | EHCI_STS_IAA | EHCI_STS_PCD | EHCI_STS_FLR);
+    DPRINT1("CStatus %x\n", CStatus);
+
     //
     // Check that it belongs to EHCI
     //
@@ -1307,9 +1339,6 @@ EhciDefferedRoutine(
                 // controller reported error
                 //
                 DPRINT1("CStatus %x\n", CStatus);
-                Status = STATUS_UNSUCCESSFUL;
-                PC_ASSERT(FALSE);
-                return;
             }
 
             //
