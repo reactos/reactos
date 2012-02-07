@@ -11,24 +11,6 @@
 #define INITGUID
 #include "usbehci.h"
 
-typedef struct _USB_ENDPOINT
-{
-    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
-} USB_ENDPOINT, *PUSB_ENDPOINT;
-
-typedef struct _USB_INTERFACE
-{
-    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    USB_ENDPOINT *EndPoints;
-} USB_INTERFACE, *PUSB_INTERFACE;
-
-typedef struct _USB_CONFIGURATION
-{
-    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-    USB_INTERFACE *Interfaces;
-} USB_CONFIGURATION, *PUSB_CONFIGURATION;
-
-
 class CUSBDevice : public IUSBDevice
 {
 public:
@@ -73,7 +55,7 @@ public:
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
-    virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG BufferLength, IN OUT PMDL Mdl);
+    virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor, IN ULONG BufferLength, IN OUT PMDL Mdl);
     virtual NTSTATUS CreateConfigurationDescriptor(ULONG ConfigurationIndex);
     virtual NTSTATUS CreateDeviceDescriptor();
     virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
@@ -537,7 +519,7 @@ CUSBDevice::SubmitIrp(
 NTSTATUS
 CUSBDevice::CommitSetupPacket(
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET Packet,
-    IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor,
     IN ULONG BufferLength, 
     IN OUT PMDL Mdl)
 {

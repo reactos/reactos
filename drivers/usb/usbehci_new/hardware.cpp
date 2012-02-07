@@ -1339,6 +1339,7 @@ EhciDefferedRoutine(
                 // controller reported error
                 //
                 DPRINT1("CStatus %x\n", CStatus);
+                ASSERT(FALSE);
             }
 
             //

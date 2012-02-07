@@ -39,6 +39,28 @@
 #define C_PORT_OVER_CURRENT 19
 #define C_PORT_RESET        20
 
+typedef struct _USB_ENDPOINT
+{
+    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+    UCHAR HubAddress;
+    UCHAR HubPort;
+    UCHAR DataToggle;
+} USB_ENDPOINT, *PUSB_ENDPOINT;
+
+typedef struct _USB_INTERFACE
+{
+    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT *EndPoints;
+} USB_INTERFACE, *PUSB_INTERFACE;
+
+typedef struct _USB_CONFIGURATION
+{
+    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_INTERFACE *Interfaces;
+} USB_CONFIGURATION, *PUSB_CONFIGURATION;
+
+
+
 typedef struct
 {
     BOOLEAN IsFDO;                                               // is device a FDO or PDO

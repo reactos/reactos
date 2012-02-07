@@ -379,6 +379,7 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 // 
 
 struct _QUEUE_HEAD;
+struct _USB_ENDPOINT;
 
 DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 {
@@ -395,7 +396,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
-                                               IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+                                               IN OPTIONAL struct _USB_ENDPOINT *EndpointDescriptor,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 

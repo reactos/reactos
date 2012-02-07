@@ -148,7 +148,7 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
     
     //Software
     ULONG PhysicalAddr;
-    LIST_ENTRY LinkedDescriptors;
+    LIST_ENTRY DescriptorEntry;
     ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
@@ -216,6 +216,7 @@ typedef struct _QUEUE_HEAD
     //Software
     ULONG PhysicalAddr;
     LIST_ENTRY LinkedQueueHeads;
+    LIST_ENTRY TransferDescriptorListHead;
     PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
@@ -291,4 +292,5 @@ typedef struct
     ULONG PortStatus;
     ULONG PortChange;
 }EHCI_PORT_STATUS;
+
 

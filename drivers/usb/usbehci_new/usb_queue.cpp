@@ -499,11 +499,6 @@ CUSBQueue::UnlinkQueueHead(
     // remove software link
     //
     RemoveEntryList(&QueueHead->LinkedQueueHeads);
-
-    //
-    // FIXME: clear failure 
-    //
-    QueueHead->Token.Bits.Halted = FALSE;
 }
 
 //
