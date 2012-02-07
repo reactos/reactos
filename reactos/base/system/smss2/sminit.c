@@ -2439,7 +2439,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
     RtlInitUnicodeString(&Os2Name, L"OS2");
 
     /* Create the SM API Port */
-    RtlInitUnicodeString(&PortName, L"\\Sm2ApiPort");
+    RtlInitUnicodeString(&PortName, L"\\SmApiPort2");
     InitializeObjectAttributes(&ObjectAttributes, &PortName, 0, NULL, NULL);
     Status = NtCreatePort(&PortHandle,
                           &ObjectAttributes,

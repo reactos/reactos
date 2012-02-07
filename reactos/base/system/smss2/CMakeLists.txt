@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_executable(smss2 WIN32 ${SOURCE})
 
-target_link_libraries(smss2 nt pseh)
+target_link_libraries(smss2 nt pseh smlib)
 
 add_pch(smss2 smss.h)
 

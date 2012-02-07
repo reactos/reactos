@@ -29,6 +29,8 @@ ULONG NtInitialUserProcessBufferType = REG_SZ;
 UNICODE_STRING SmpSystemRoot;
 ULONG AttachedSessionId = -1;
 BOOLEAN SmpDebug, SmpEnableDots;
+HANDLE SmApiPort;
+HANDLE SmpInitialCommandProcessId;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -57,6 +59,7 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
     NTSTATUS Status;
     RTL_USER_PROCESS_INFORMATION LocalProcessInfo;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+    DPRINT1("Executing image: %wZ\n", FileName);
 
     /* Use the input process information if we have it, otherwise use local */
     ProcessInfo = ProcessInformation;
@@ -292,6 +295,103 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
         DPRINT1("SMSS: Command '%wZ' failed - Status == %x\n",
                 CommandLine, Status);
     }
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmpExecuteInitialCommand(IN ULONG MuSessionId,
+                         IN PUNICODE_STRING InitialCommand,
+                         IN HANDLE InitialCommandProcess,
+                         OUT PHANDLE ReturnPid)
+{
+    NTSTATUS Status;
+    RTL_USER_PROCESS_INFORMATION ProcessInfo;
+    UNICODE_STRING Arguments, ImageFileDirectory, ImageFileName;
+    ULONG Flags = 0;
+
+    /* Check if we haven't yet connected to ourselves */
+    if (!SmApiPort)
+    {
+        /* Connect to ourselves, as a client */
+        Status = SmConnectToSm(0, 0, 0, &SmApiPort);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SMSS: Unable to connect to SM - Status == %lx\n", Status);
+            return Status;
+        }
+    }
+
+    /* Parse the initial command line */
+    Status = SmpParseCommandLine(InitialCommand,
+                                 (PULONG)&Flags,
+                                 &ImageFileName,
+                                 &ImageFileDirectory,
+                                 &Arguments);
+    if (Flags & SMP_INVALID_PATH)
+    {
+        /* Fail if it doesn't exist */
+        DPRINT1("SMSS: Initial command image (%wZ) not found\n", &ImageFileName);
+        if (ImageFileName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileName.Buffer);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    /* And fail if any other reason is also true */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: SmpParseCommand( %wZ ) failed - Status == %lx\n",
+                InitialCommand, Status);
+        return Status;
+    }
+
+    /* Execute the initial command -- but defer its full execution */
+    Status = SmpExecuteImage(&ImageFileName,
+                             &ImageFileDirectory,
+                             InitialCommand,
+                             MuSessionId,
+                             SMP_DEFERRED_FLAG,
+                             &ProcessInfo);
+
+    /* Free any buffers we had lying around */
+    if (ImageFileName.Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileName.Buffer);
+    }
+    if (ImageFileDirectory.Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ImageFileDirectory.Buffer);
+    }
+    if (Arguments.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Arguments.Buffer);
+
+    /* Bail out if we couldn't execute the initial command */
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Now duplicate the handle to this process */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               ProcessInfo.ProcessHandle,
+                               NtCurrentProcess(),
+                               InitialCommandProcess,
+                               PROCESS_ALL_ACCESS,
+                               0,
+                               0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Kill it utterly if duplication failed */
+        DPRINT1("SMSS: DupObject Failed. Status == %lx\n", Status);
+        NtTerminateProcess(ProcessInfo.ProcessHandle, Status);
+        NtResumeThread(ProcessInfo.ThreadHandle, NULL);
+        NtClose(ProcessInfo.ThreadHandle);
+        NtClose(ProcessInfo.ProcessHandle);
+        return Status;
+    }
+
+    /* Return PID to the caller, and set this as the initial command PID */
+    if (ReturnPid) *ReturnPid = ProcessInfo.ClientId.UniqueProcess;
+    if (!MuSessionId) SmpInitialCommandProcessId = ProcessInfo.ClientId.UniqueProcess;
+
+    /* Now call our server execution function to wrap up its initialization */
+    Status = SmExecPgm(SmApiPort, &ProcessInfo, FALSE);
+    if (!NT_SUCCESS(Status)) DPRINT1("SMSS: SmExecPgm Failed. Status == %lx\n", Status);
     return Status;
 }
 
@@ -630,6 +730,9 @@ _main(IN INT argc,
             DPRINT1("SMSS: SmpInit return failure - Status == %x\n", Status);
             RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
             Parameters[1] = Status;
+            DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
+            Status = LaunchOldSmss(Handles);
+            goto SetupHack;
             //_SEH2_LEAVE; Hack so that setup can work. will go away later
         }
 
@@ -647,14 +750,21 @@ _main(IN INT argc,
             DPRINT1("Global Flags Set to SMSS Debugging: Not yet supported\n");
         }
 
-#if 0
-        /* Execute the initial command (Winlogon.exe) */
-        Status = SmpExecuteInitialCommand(0, &InitialCommand, &Handles[1], NULL);
-#else
         /* Launch the original SMSS */
         DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
         Status = LaunchOldSmss(Handles);
-#endif
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail and raise a hard error */
+            DPRINT1("SMSS: Execute Old SMSS failed\n");
+            RtlInitUnicodeString(&DbgString,
+                                 L"Session Manager LaunchOldSmss");
+            Parameters[1] = Status;
+            _SEH2_LEAVE;
+        }
+        
+        /* Execute the initial command (Winlogon.exe) */
+        Status = SmpExecuteInitialCommand(0, &InitialCommand, &Handles[1], NULL);
         if (!NT_SUCCESS(Status))
         {
             /* Fail and raise a hard error */
@@ -679,6 +789,7 @@ _main(IN INT argc,
         SmpReleasePrivilege(State);
 
         /* Wait on either CSRSS or Winlogon to die */
+SetupHack:
         Status = NtWaitForMultipleObjects(RTL_NUMBER_OF(Handles),
                                           Handles,
                                           WaitAny,

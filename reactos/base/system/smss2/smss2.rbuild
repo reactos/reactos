@@ -7,6 +7,7 @@
 	<library>nt</library>
 	<library>pseh</library>
 	<library>ntdll</library>
+	<library>smlib</library>
 	<pch>smss.h</pch>
 	<compilationunit name="unit.c">
 		<file>smss.c</file>

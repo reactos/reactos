@@ -23,6 +23,97 @@ WCHAR InitialCommandBuffer[256];
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+SmpDereferenceSubsystem(IN PSMP_SUBSYSTEM SubSystem)
+{
+    /* Acquire the database lock while we (potentially) destroy this subsystem */
+    RtlEnterCriticalSection(&SmpKnownSubSysLock);
+
+    /* Drop the reference and see if it's terminating */
+    if (!(--SubSystem->ReferenceCount) && (SubSystem->Terminating))
+    {
+        /* Close all handles and free it */
+        if (SubSystem->Event) NtClose(SubSystem->Event);
+        if (SubSystem->ProcessHandle) NtClose(SubSystem->ProcessHandle);
+        if (SubSystem->SbApiPort) NtClose(SubSystem->SbApiPort);
+        RtlFreeHeap(SmpHeap, 0, SubSystem);
+    }
+
+    /* Release the database lock */
+    RtlLeaveCriticalSection(&SmpKnownSubSysLock);
+}
+
+PSMP_SUBSYSTEM
+NTAPI
+SmpLocateKnownSubSysByCid(IN PCLIENT_ID ClientId)
+{
+    PSMP_SUBSYSTEM Subsystem = NULL;
+    PLIST_ENTRY NextEntry;
+
+    /* Lock the subsystem database */
+    RtlEnterCriticalSection(&SmpKnownSubSysLock);
+
+    /* Loop each subsystem in the database */
+    NextEntry = SmpKnownSubSysHead.Flink;
+    while (NextEntry != &SmpKnownSubSysHead)
+    {
+        /* Check if this one matches the client ID and is still valid */
+        Subsystem = CONTAINING_RECORD(NextEntry, SMP_SUBSYSTEM, Entry);
+        if ((*(PULONGLONG)&Subsystem->ClientId == *(PULONGLONG)&ClientId) &&
+            !(Subsystem->Terminating))
+        {
+            /* Add a reference and return it */
+            Subsystem->ReferenceCount++;
+            break;
+        }
+
+        /* Reset the current pointer and keep earching */
+        Subsystem = NULL;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the lock and return the subsystem we found */
+    RtlLeaveCriticalSection(&SmpKnownSubSysLock);
+    return Subsystem;
+}
+
+PSMP_SUBSYSTEM
+NTAPI
+SmpLocateKnownSubSysByType(IN ULONG MuSessionId,
+                           IN ULONG ImageType)
+{
+    PSMP_SUBSYSTEM Subsystem = NULL;
+    PLIST_ENTRY NextEntry;
+
+    /* Lock the subsystem database */
+    RtlEnterCriticalSection(&SmpKnownSubSysLock);
+
+    /* Loop each subsystem in the database */
+    NextEntry = SmpKnownSubSysHead.Flink;
+    while (NextEntry != &SmpKnownSubSysHead)
+    {
+        /* Check if this one matches the image and uID, and is still valid */
+        Subsystem = CONTAINING_RECORD(NextEntry, SMP_SUBSYSTEM, Entry);
+        if ((Subsystem->ImageType == ImageType) &&
+            !(Subsystem->Terminating) &&
+            (Subsystem->MuSessionId == MuSessionId))
+        {
+            /* Return it referenced for the caller */
+            Subsystem->ReferenceCount++;
+            break;
+        }
+
+        /* Reset the current pointer and keep earching */
+        Subsystem = NULL;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the lock and return the subsystem we found */
+    RtlLeaveCriticalSection(&SmpKnownSubSysLock);
+    return Subsystem;
+}
+
 NTSTATUS
 NTAPI
 SmpLoadSubSystem(IN PUNICODE_STRING FileName,

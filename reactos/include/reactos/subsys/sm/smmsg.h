@@ -21,14 +21,14 @@
 //
 typedef enum _SMSRV_API_NUMBER
 {
-    SmpCreateForeignSession,
-    SmpSessionComplete,
-    SmpTerminateForeignSession,
-    SmpExecPgm,
-    SmpLoadDeferedSubsystem,
-    SmpStartCsr,
-    SmpStopCsr,
-    SmpMaxApiNumber // Based on BasepMaxApiNumber, UserpMaxApiNumber...
+    SmCreateForeignSessionApi,
+    SmSessionCompleteApi,
+    SmTerminateForeignSessionApi,
+    SmExecPgmApi,
+    SmLoadDeferedSubsystemApi,
+    SmStartCsrApi,
+    SmStopCsrApi,
+    SmMaxApiNumber // Based on BasepMaxApiNumber, UserpMaxApiNumber...
 } SMSRV_API_NUMBER;
 
 //
@@ -184,7 +184,7 @@ typedef struct _SB_CONNECTION_INFO
 //
 typedef struct _SB_API_MSG
 {
-    PORT_MESSAGE Header;
+    PORT_MESSAGE h;
     union
     {
         SB_CONNECTION_INFO ConnectionInfo;
@@ -208,4 +208,25 @@ typedef struct _SB_API_MSG
 //
 C_ASSERT(sizeof(SB_CONNECTION_INFO) == 0xF4);
 C_ASSERT(sizeof(SB_API_MSG) == 0x110);
+
+//
+// The actual server functions that a client linking with smlib can call
+//
+NTSTATUS
+NTAPI
+SmConnectToSm(
+    IN PUNICODE_STRING SbApiPortName,
+    IN HANDLE SbApiPort,
+    IN ULONG ImageType,
+    IN HANDLE SmApiPort
+);
+
+NTSTATUS
+NTAPI
+SmExecPgm(
+    IN HANDLE SmApiPort,
+    IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
+    IN BOOLEAN DebugFlag
+);
+                        
 #endif

@@ -49,6 +49,20 @@ typedef struct _SMP_REGISTRY_VALUE
     PCHAR AnsiValue;
 } SMP_REGISTRY_VALUE, *PSMP_REGISTRY_VALUE;
 
+typedef struct _SMP_SUBSYSTEM
+{
+    LIST_ENTRY Entry;
+    HANDLE Event;
+    HANDLE ProcessHandle;
+    ULONG ImageType;
+    HANDLE PortHandle;
+    HANDLE SbApiPort;
+    CLIENT_ID ClientId;
+    ULONG MuSessionId;
+    BOOLEAN Terminating;
+    ULONG ReferenceCount;
+} SMP_SUBSYSTEM, *PSMP_SUBSYSTEM;
+
 /* EXTERNALS ******************************************************************/
 
 extern RTL_CRITICAL_SECTION SmpKnownSubSysLock;
@@ -209,4 +223,31 @@ NTAPI
 SmpTranslateSystemPartitionInformation(
     VOID
 );
+
+PSMP_SUBSYSTEM
+NTAPI
+SmpLocateKnownSubSysByCid(
+    IN PCLIENT_ID ClientId
+);
+
+PSMP_SUBSYSTEM
+NTAPI
+SmpLocateKnownSubSysByType(
+    IN ULONG MuSessionId,
+    IN ULONG ImageType
+);
+
+NTSTATUS
+NTAPI
+SmpGetProcessMuSessionId(
+    IN HANDLE ProcessHandle,
+    OUT PULONG SessionId
+);
+
+VOID
+NTAPI
+SmpDereferenceSubsystem(
+    IN PSMP_SUBSYSTEM SubSystem
+);
+
 #endif
