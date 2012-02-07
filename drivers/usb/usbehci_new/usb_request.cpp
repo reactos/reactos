@@ -722,7 +722,7 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         m_TransferDescriptors[2]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
         m_TransferDescriptors[2]->Token.Bits.TotalBytesToTransfer = 0;
-        m_TransferDescriptors[2]->Token.Bits.DataToggle = FALSE;
+        m_TransferDescriptors[2]->Token.Bits.DataToggle = TRUE;
 
         //
         // special case, setup alternative next descriptor in case of error
@@ -733,9 +733,6 @@ CUSBRequest::BuildControlTransferQueueHead(
         // interrupt on completion
         //
         m_TransferDescriptors[2]->Token.Bits.InterruptOnComplete = TRUE;
-
-	_TransferDescriptors[3]->Token.Bits.Halted = TRUE;
-
     }
     else
     {
@@ -744,6 +741,7 @@ CUSBRequest::BuildControlTransferQueueHead(
         //
         m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
         m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = 0;
+        m_TransferDescriptors[1]->Token.Bits.DataToggle = TRUE;
 
         //
         // interrupt on completion
