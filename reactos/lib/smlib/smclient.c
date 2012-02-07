@@ -38,7 +38,7 @@ SmExecPgm(IN HANDLE SmApiPort,
     SmApiMsg.h.u1.s1.TotalLength = sizeof(SmApiMsg);
 
     /* Initalize this specific API's parameters */
-    SmApiMsg.ApiNumber = SmpExecPgm;
+    SmApiMsg.ApiNumber = SmExecPgmApi;
     RtlCopyMemory(&SmApiMsg.u.ExecPgm.ProcessInformation,
                   ProcessInformation,
                   sizeof(SmApiMsg.u.ExecPgm.ProcessInformation));
@@ -48,7 +48,7 @@ SmExecPgm(IN HANDLE SmApiPort,
     Status = NtRequestWaitReplyPort(SmApiPort, &SmApiMsg.h, &SmApiMsg.h);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("SmExecPgm: NtRequestWaitReply Failed %lx\n", Status);
+        DPRINT1("SmExecPgm: NtRequestWaitReply Failed %lx\n", Status);
     }
     else
     {
@@ -81,7 +81,7 @@ SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Set the SM API port name */
-    RtlInitUnicodeString(&DestinationString, L"\\SmApiPort");
+    RtlInitUnicodeString(&DestinationString, L"\\SmApiPort2");
 
     /* Check if this is a client connecting to SMSS, or SMSS to itself */
     if (SbApiPortName)
