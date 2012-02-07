@@ -17,7 +17,7 @@
 // The exact names are not known, but we are basing them on the SmpApiName array
 // in the checked build of SMSS, which is probably a close approximation. We add
 // "p" to use the similar nomenclature seen/leaked out in the Base CSRSS APIs.
-// 
+//
 //
 typedef enum _SMSRV_API_NUMBER
 {
@@ -56,7 +56,9 @@ typedef struct _SM_EXEC_PGM_MSG
     RTL_USER_PROCESS_INFORMATION ProcessInformation;
     BOOLEAN DebugFlag;
 } SM_EXEC_PGM_MSG, *PM_EXEC_PGM_MSG;
+#ifndef _WIN64
 C_ASSERT(sizeof(SM_EXEC_PGM_MSG) == 0x48);
+#endif
 
 typedef struct _SM_LOAD_DEFERED_SUBSYSTEM_MSG
 {
@@ -101,7 +103,9 @@ typedef struct _SM_API_MSG
 //
 // This is the size that Server 2003 SP1 SMSS expects, so make sure we conform.
 //
+#ifndef _WIN64
 C_ASSERT(sizeof(SM_API_MSG) == 0x130);
+#endif
 
 //
 // There are the APIs that the SMSS Serve can send to a client (such as CSRSS)
@@ -112,7 +116,7 @@ C_ASSERT(sizeof(SM_API_MSG) == 0x130);
 // array in the checked build of CSRSRV which is probably a close approximation.
 // We add "p" to use the similar nomenclature seen/leaked out in the Base CSRSS
 // APIs.
-// 
+//
 //
 typedef enum _SB_API_NUMBER
 {
@@ -206,8 +210,10 @@ typedef struct _SB_API_MSG
 //
 // This is the size that Server 2003 SP1 SMSS expects, so make sure we conform.
 //
+#ifndef _WIN64
 C_ASSERT(sizeof(SB_CONNECTION_INFO) == 0xF4);
 C_ASSERT(sizeof(SB_API_MSG) == 0x110);
+#endif
 
 //
 // The actual server functions that a client linking with smlib can call
@@ -228,5 +234,5 @@ SmExecPgm(
     IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
     IN BOOLEAN DebugFlag
 );
-                        
+
 #endif
