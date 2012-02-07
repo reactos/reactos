@@ -1,11 +1,13 @@
 
-add_library(w32kdll SHARED main.c)
+spec2def(w32kdll_ros.dll w32kdll_ros.spec)
 
-set_entrypoint(w32kdll 0)
+add_library(w32kdll_ros SHARED
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/w32kdll_ros.def)
 
-target_link_libraries(w32kdll
-    ${CMAKE_CURRENT_SOURCE_DIR}/w32kdll_ros.def
-    win32ksys)
+set_entrypoint(w32kdll_ros 0)
 
-add_dependencies(w32kdll psdk )
-add_importlib_target(w32kdll_ros.def)
+target_link_libraries(w32kdll_ros win32ksys)
+
+add_dependencies(w32kdll_ros psdk)
+add_importlib_target(w32kdll_ros.spec)
