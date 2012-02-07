@@ -439,7 +439,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ANSI_STRING ArcBootString, ArcSystemString, DeviceStringA, ArcNameStringA, HalPathStringA;
 
     /* Initialise device number */
-    DeviceNumber.DeviceNumber = UINT_MAX;
+    DeviceNumber.DeviceNumber = ULONG_MAX;
     /* Get all the disks present in the system */
     DiskCount = IoGetConfigurationInformation()->DiskCount;
 
@@ -535,7 +535,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (NotEnabledPresent && *lSymbolicLinkList == UNICODE_NULL)
             {
                 /* No enabled disk worked, reset field */
-                if (DeviceNumber.DeviceNumber == UINT_MAX)
+                if (DeviceNumber.DeviceNumber == ULONG_MAX)
                 {
                     DeviceNumber.DeviceNumber = 0;
                 }
@@ -569,7 +569,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
             RtlFreeUnicodeString(&DeviceStringW);
             /* This is a security measure, to ensure DiskNumber will be used */
-            DeviceNumber.DeviceNumber = UINT_MAX;
+            DeviceNumber.DeviceNumber = ULONG_MAX;
         }
 
         /* Something failed somewhere earlier, just skip the disk */
@@ -705,7 +705,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != UINT_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
+                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
                 RtlInitAnsiString(&DeviceStringA, Buffer);
                 Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -734,7 +734,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != UINT_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
+                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
                     RtlInitAnsiString(&DeviceStringA, Buffer);
                     Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                     if (!NT_SUCCESS(Status))
