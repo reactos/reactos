@@ -714,19 +714,26 @@ CUSBHardwareDevice::StartController(void)
     //
     for (FailSafe = 100; FailSafe > 1; FailSafe--)
     {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
         UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
 
-        if (!(UsbSts & EHCI_STS_HALT))
+        if (!(UsbSts & EHCI_STS_HALT) && (UsbSts & EHCI_STS_PSS))
         {
             break;
         }
     }
 
-
     if (UsbSts & EHCI_STS_HALT)
     {
         DPRINT1("Could not start execution on the controller\n");
+        ASSERT(FALSE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (!(UsbSts & EHCI_STS_PSS))
+    {
+        DPRINT1("Could not enable periodic scheduling\n");
+        ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -755,7 +762,7 @@ CUSBHardwareDevice::StartController(void)
     //
     for (FailSafe = 100; FailSafe > 1; FailSafe--)
     {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
         UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
 
         if ((UsbSts & EHCI_STS_ASS))
@@ -1282,7 +1289,7 @@ EhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
-	DPRINT("CStatus %x\n", CStatus);
+    DPRINT("CStatus %x\n", CStatus);
 
     //
     // check for completion of async schedule
