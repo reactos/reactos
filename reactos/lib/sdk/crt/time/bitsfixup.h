@@ -10,12 +10,13 @@
 #undef _timeb
 #undef _ftime
 #undef _tctime
-#undef _ftime_s
 #undef _tctime_s
 #undef _tutime
 #else
 #define _time time
 #endif
+
+#undef _ftime_s
 
 #ifdef _USE_EXPLICIT_32BIT_TIME
 #define time_t __time32_t
