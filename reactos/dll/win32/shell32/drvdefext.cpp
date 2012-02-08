@@ -243,7 +243,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
                 SelectObject(pDrawItem->hDC, hDarkMagPen);
 
             double cos_val = (x - xCenter)*2.0f/cx;
-            INT y = yCenter+(INT)sin(acos(cos_val))*cy/2;
+            INT y = yCenter+(INT)(sin(acos(cos_val))*cy/2);
             MoveToEx(pDrawItem->hDC, x, y, NULL);
             LineTo(pDrawItem->hDC, x, y + 10);
         }
