@@ -265,7 +265,8 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
                                   &Directory,
                                   CommandLine,
                                   MuSessionId,
-                                  ProcessId);
+                                  ProcessId,
+                                  Flags);
     }
     else if (Flags & SMP_INVALID_PATH)
     {
@@ -590,16 +591,13 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
 NTSTATUS
 NTAPI
-LaunchOldSmss(OUT PHANDLE Handles)
+LaunchOldSmss(VOID)
 {
     PINIT_BUFFER InitBuffer;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     NTSTATUS Status;
     PCHAR Environment;
-
-    /* No handles at first */
-    Handles[0] = Handles[1] = NULL;
 
     /* Initialize the system root */
     RtlInitUnicodeString(&SmpSystemRoot, SharedUserData->NtSystemRoot);
@@ -623,8 +621,6 @@ LaunchOldSmss(OUT PHANDLE Handles)
     }
 
     /* Return the handle and status */
-    Handles[0] = ProcessInfo->ProcessHandle;
-    Handles[1] = ProcessInfo->ProcessHandle;
     return Status;
 }
 
@@ -723,6 +719,8 @@ _main(IN INT argc,
     /* Enter SEH so we can terminate correctly if anything goes wrong */
     _SEH2_TRY
     {
+        LARGE_INTEGER Infinite = {{0x80000000, 0x7FFFFFFF}};
+
         /* Initialize SMSS */
         Status = SmpInit(&InitialCommand, Handles);
         if (!NT_SUCCESS(Status))
@@ -731,9 +729,10 @@ _main(IN INT argc,
             RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
             Parameters[1] = Status;
             DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
-            Status = LaunchOldSmss(Handles);
-            goto SetupHack;
             //_SEH2_LEAVE; Hack so that setup can work. will go away later
+            Status = LaunchOldSmss();
+            if (!NT_SUCCESS(Status)) return Status;
+            return NtDelayExecution(FALSE, &Infinite);
         }
 
         /* Get the global flags */
@@ -750,19 +749,6 @@ _main(IN INT argc,
             DPRINT1("Global Flags Set to SMSS Debugging: Not yet supported\n");
         }
 
-        /* Launch the original SMSS */
-        DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
-        Status = LaunchOldSmss(Handles);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Fail and raise a hard error */
-            DPRINT1("SMSS: Execute Old SMSS failed\n");
-            RtlInitUnicodeString(&DbgString,
-                                 L"Session Manager LaunchOldSmss");
-            Parameters[1] = Status;
-            _SEH2_LEAVE;
-        }
-        
         /* Execute the initial command (Winlogon.exe) */
         Status = SmpExecuteInitialCommand(0, &InitialCommand, &Handles[1], NULL);
         if (!NT_SUCCESS(Status))
@@ -772,7 +758,11 @@ _main(IN INT argc,
             RtlInitUnicodeString(&DbgString,
                                  L"Session Manager ExecuteInitialCommand");
             Parameters[1] = Status;
-            _SEH2_LEAVE;
+            //_SEH2_LEAVE;
+            DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
+            Status = LaunchOldSmss();
+            if (!NT_SUCCESS(Status)) return Status;
+            return NtDelayExecution(FALSE, &Infinite);
         }
 
         /*  Check if we're already attached to a session */
@@ -789,7 +779,6 @@ _main(IN INT argc,
         SmpReleasePrivilege(State);
 
         /* Wait on either CSRSS or Winlogon to die */
-SetupHack:
         Status = NtWaitForMultipleObjects(RTL_NUMBER_OF(Handles),
                                           Handles,
                                           WaitAny,

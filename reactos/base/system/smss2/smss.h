@@ -38,6 +38,8 @@
 #define SMP_SUBSYSTEM_FLAG  0x08
 #define SMP_INVALID_PATH    0x10
 #define SMP_DEFERRED_FLAG   0x20
+#define SMP_POSIX_FLAG      0x100
+#define SMP_OS2_FLAG        0x200
 
 /* STRUCTURES *****************************************************************/
 
@@ -87,6 +89,7 @@ extern LIST_ENTRY SmpSubSystemsToLoad;
 extern LIST_ENTRY SmpExecuteList;
 extern LIST_ENTRY SmpSubSystemList;
 extern ULONG AttachedSessionId;
+extern BOOLEAN SmpDebug;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -182,7 +185,8 @@ SmpLoadSubSystem(
     IN PUNICODE_STRING Directory,
     IN PUNICODE_STRING CommandLine,
     IN ULONG MuSessionId,
-    OUT PHANDLE ProcessId
+    OUT PHANDLE ProcessId,
+    IN ULONG Flags
 );
 
 NTSTATUS
@@ -248,6 +252,46 @@ VOID
 NTAPI
 SmpDereferenceSubsystem(
     IN PSMP_SUBSYSTEM SubSystem
+);
+
+NTSTATUS
+NTAPI
+SmpSbCreateSession(
+    IN PVOID Reserved,
+    IN PSMP_SUBSYSTEM OtherSubsystem,
+    IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
+    IN ULONG MuSessionId,
+    IN PCLIENT_ID DbgClientId
+);
+
+ULONG
+NTAPI
+SmpAllocateSessionId(
+    IN PSMP_SUBSYSTEM Subsystem,
+    IN PSMP_SUBSYSTEM OtherSubsystem
+);
+
+VOID
+NTAPI
+SmpDeleteSession(
+    IN ULONG SessionId
+);
+
+BOOLEAN
+NTAPI
+SmpCheckDuplicateMuSessionId(
+    IN ULONG MuSessionId
+);
+
+NTSTATUS
+NTAPI
+SmpExecuteImage(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING Directory,
+    IN PUNICODE_STRING CommandLine,
+    IN ULONG MuSessionId,
+    IN ULONG Flags,
+    IN PRTL_USER_PROCESS_INFORMATION ProcessInformation
 );
 
 #endif

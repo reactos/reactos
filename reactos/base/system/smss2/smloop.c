@@ -42,7 +42,7 @@ SmpCreateForeignSession(IN PSM_API_MSG SmApiMsg,
                         IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -52,7 +52,7 @@ SmpSessionComplete(IN PSM_API_MSG SmApiMsg,
                    IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -62,7 +62,7 @@ SmpTerminateForeignSession(IN PSM_API_MSG SmApiMsg,
                            IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -72,7 +72,7 @@ SmpExecPgm(IN PSM_API_MSG SmApiMsg,
            IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -82,7 +82,7 @@ SmpLoadDeferedSubsystem(IN PSM_API_MSG SmApiMsg,
                         IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -92,7 +92,7 @@ SmpStartCsr(IN PSM_API_MSG SmApiMsg,
             IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -102,7 +102,7 @@ SmpStopCsr(IN PSM_API_MSG SmApiMsg,
            IN HANDLE SmApiPort)
 {
     DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 PSM_API_HANDLER SmpApiDispatch[SmMaxApiNumber] =

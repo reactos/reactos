@@ -120,7 +120,8 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
                  IN PUNICODE_STRING Directory,
                  IN PUNICODE_STRING CommandLine,
                  IN ULONG MuSessionId,
-                 OUT PHANDLE ProcessId)
+                 OUT PHANDLE ProcessId,
+                 IN ULONG Flags)
 {
     DPRINT1("Should start subsystem %wZ for Session: %lx\n", FileName, MuSessionId);
     return STATUS_SUCCESS;
