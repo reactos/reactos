@@ -23,6 +23,7 @@
 
 /* Subsystem Manager Header */
 #include <sm/helper.h>
+#include <sm/smmsg.h>
 
 /* Internal CSRSS Headers */
 #include <api.h>

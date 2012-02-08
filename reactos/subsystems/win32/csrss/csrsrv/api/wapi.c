@@ -767,7 +767,7 @@ DWORD WINAPI
 ServerSbApiPortThread (HANDLE hSbApiPortListen)
 {
     HANDLE          hConnectedPort = (HANDLE) 0;
-    PORT_MESSAGE    Request;
+    SB_API_MSG    Request;
     PVOID           Context = NULL;
     NTSTATUS        Status = STATUS_SUCCESS;
     PPORT_MESSAGE Reply = NULL;
@@ -775,7 +775,7 @@ ServerSbApiPortThread (HANDLE hSbApiPortListen)
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
-    Status = NtListenPort (hSbApiPortListen, & Request);
+    Status = NtListenPort (hSbApiPortListen, & Request.h);
 
     if (!NT_SUCCESS(Status))
     {
@@ -785,7 +785,7 @@ ServerSbApiPortThread (HANDLE hSbApiPortListen)
         DPRINT("-- 1\n");
         Status = NtAcceptConnectPort(&hConnectedPort,
                                      NULL,
-                                     &Request,
+                                     &Request.h,
                                      TRUE,
                                      NULL,
                                      NULL);
@@ -819,7 +819,7 @@ ServerSbApiPortThread (HANDLE hSbApiPortListen)
                     Status = NtReplyWaitReceivePort(hConnectedPort,
                                                     Context,
                                                     Reply,
-                                                    &Request);
+                                                    &Request.h);
                     if(!NT_SUCCESS(Status))
                     {
                         DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
@@ -827,12 +827,30 @@ ServerSbApiPortThread (HANDLE hSbApiPortListen)
                         break;
                     }
 
-                    switch (Request.u2.s2.Type) //fix .h PORT_MESSAGE_TYPE(Request))
+                    switch (Request.h.u2.s2.Type) //fix .h PORT_MESSAGE_TYPE(Request))
                     {
                         /* TODO */
+                        case LPC_PORT_CLOSED:
+                        case LPC_CLIENT_DIED:
+                            DPRINT1("CSR: SMSS died\n");
+                            Reply = NULL;
+                            break;
+                            
                         default:
                         DPRINT1("CSR: %s received message (type=%d)\n",
-                                __FUNCTION__, Request.u2.s2.Type);
+                                __FUNCTION__, Request.h.u2.s2.Type);
+
+                        if (Request.ApiNumber == SbpCreateSession)
+                        {
+                            DPRINT("Session create... legacy CSRSS resuming thread as minimum work done\n");
+                            Request.ReturnValue = NtResumeThread(Request.CreateSession.ProcessInfo.ThreadHandle, NULL);
+                        }
+                        else
+                        {
+                            DPRINT1("CSR: %d Not implemented in legacy CSRSS... faking success\n", Request.ApiNumber);
+                            Request.ReturnValue = STATUS_SUCCESS;
+                        }
+                        Reply = &Request.h;
                     }
                     DPRINT("-- 5\n");
                 }
