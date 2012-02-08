@@ -470,7 +470,7 @@ private:
 		return S_OK;
 	}
 
-	inline unsigned int HexToBin(char a)
+	inline unsigned int HexToBin(OLECHAR a)
 	{
 		if (a >= '0' && a <= '9')
 			return a - '0';
@@ -489,14 +489,14 @@ private:
 		LONG								lres;
 		HKEY								hkey;
 		strbuf								name;
-	    
+
 		enum {
 			NORMAL,
 			NO_REMOVE,
 			IS_VAL,
 			FORCE_REMOVE,
 			DO_DELETE
-		} key_type = NORMAL; 
+		} key_type = NORMAL;
 
 		static const wchar_t *wstrNoRemove = _T("NoRemove");
 		static const wchar_t *wstrForceRemove = _T("ForceRemove");
@@ -531,7 +531,7 @@ private:
 				if (FAILED(hres))
 					break;
 			}
-	    
+
 			if (do_register)
 			{
 				if (key_type == IS_VAL)
@@ -676,7 +676,7 @@ private:
 				RegCloseKey(hkey);
 			hkey = 0;
 			name.len = 0;
-	        
+
 			hres = get_word(&iter, buf);
 			if (FAILED(hres))
 				break;
