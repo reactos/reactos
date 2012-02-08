@@ -14,6 +14,7 @@
 
 #define MODULE_INVOLVED_IN_ARM3
 #include "miarm.h"
+#undef MmSystemRangeStart
 
 /* GLOBALS ********************************************************************/
 
@@ -170,7 +171,7 @@ PMMPDE MmSystemPagePtes;
 //
 // This should be 0xC0C00000 -- the cache itself starts at 0xC1000000
 //
-PMMWSL MmSystemCacheWorkingSetList = MI_SYSTEM_CACHE_WS_START;
+PMMWSL MmSystemCacheWorkingSetList = (PVOID)MI_SYSTEM_CACHE_WS_START;
 
 //
 // Windows NT seems to choose between 7000, 11000 and 50000
