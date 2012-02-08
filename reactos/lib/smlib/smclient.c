@@ -24,7 +24,7 @@ SmExecPgm(IN HANDLE SmApiPort,
     NTSTATUS Status;
     SM_API_MSG SmApiMsg;
 
-#ifdef _WIN64 // You can take care of this Timo
+#if 0 //def _WIN64 // You can take care of this Timo
     /* 64-bit SMSS needs to talk to 32-bit processes so do the LPC conversion */
     if (SmpIsWow64Process())
     {
