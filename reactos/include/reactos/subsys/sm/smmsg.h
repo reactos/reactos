@@ -55,7 +55,7 @@ typedef struct _SM_EXEC_PGM_MSG
 {
     RTL_USER_PROCESS_INFORMATION ProcessInformation;
     BOOLEAN DebugFlag;
-} SM_EXEC_PGM_MSG, *PM_EXEC_PGM_MSG;
+} SM_EXEC_PGM_MSG, *PSM_EXEC_PGM_MSG;
 #ifndef _WIN64
 C_ASSERT(sizeof(SM_EXEC_PGM_MSG) == 0x48);
 #endif
@@ -135,6 +135,9 @@ typedef struct _SB_CREATE_SESSION_MSG
 {
     ULONG SessionId;
     RTL_USER_PROCESS_INFORMATION ProcessInfo;
+    ULONG Unknown;
+    ULONG MuSessionId;
+    CLIENT_ID ClientId;
 } SB_CREATE_SESSION_MSG, *PSB_CREATE_SESSION_MSG;
 
 typedef struct _SB_TERMINATE_SESSION_MSG
