@@ -44,7 +44,6 @@ typedef struct _PORT_STATUS_CHANGE
 typedef struct _WORK_ITEM_DATA
 {
     WORK_QUEUE_ITEM WorkItem;
-    KEVENT Event;
     PVOID Context;
 } WORK_ITEM_DATA, *PWORK_ITEM_DATA;
 
@@ -80,6 +79,7 @@ typedef struct _HUB_DEVICE_EXTENSION
     PDEVICE_OBJECT RootHubFunctionalDeviceObject;
 
     ULONG NumberOfHubs;
+    KEVENT ResetComplete;
 
     PORT_STATUS_CHANGE *PortStatusChange;
     URB PendingSCEUrb;

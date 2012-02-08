@@ -90,6 +90,11 @@ USBHUB_AddDevice(
     DeviceObject->Flags |= DO_POWER_PAGABLE;
 
     //
+    // initialize reset complete event
+    //
+    KeInitializeEvent(&HubDeviceExtension->ResetComplete, NotificationEvent, FALSE);
+
+    //
     // Attached to lower device
     //
     //Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);

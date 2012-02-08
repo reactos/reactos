@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/usb/usbhub/fdo.c
@@ -260,6 +260,7 @@ DeviceStatusChangeThread(
     PWORK_ITEM_DATA WorkItemData;
     PORT_STATUS_CHANGE PortStatus;
     LONG PortId;
+    BOOLEAN SignalResetComplete = FALSE;
 
     DPRINT1("Entered DeviceStatusChangeThread, Context %x\n", Context);
 
@@ -404,16 +405,32 @@ DeviceStatusChangeThread(
             // This is a new device
             //
             Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL, PortStatus.Status);
+
+            //
+            // Request event signalling later
+            //
+            SignalResetComplete = TRUE;
         }
     }
 
-    KeSetEvent(&WorkItemData->Event, IO_NO_INCREMENT, FALSE);
+    ExFreePool(WorkItemData);
 
     //
     // Send another SCE Request
     //
     DPRINT1("Sending another SCE!\n");
     QueryStatusChangeEndpoint(DeviceObject);
+
+    //
+    // Check if a reset event was satisfied
+    //
+    if (SignalResetComplete)
+    {
+        //
+        // Signal anyone waiting on it
+        //
+        KeSetEvent(&HubDeviceExtension->ResetComplete, IO_NO_INCREMENT, FALSE);
+    }
 }
 
 NTSTATUS
@@ -446,24 +463,14 @@ StatusChangeEndpointCompletion(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     WorkItemData->Context = RealDeviceObject;
-    KeInitializeEvent(&WorkItemData->Event, NotificationEvent, FALSE);
-    DPRINT1("Initialize work item\n");
-    ExInitializeWorkItem(&WorkItemData->WorkItem, DeviceStatusChangeThread, (PVOID)WorkItemData);
+
+    DPRINT1("Queuing work item\n");
 
     //
     // Queue the work item to handle initializing the device
     //
+    ExInitializeWorkItem(&WorkItemData->WorkItem, DeviceStatusChangeThread, (PVOID)WorkItemData);
     ExQueueWorkItem(&WorkItemData->WorkItem, DelayedWorkQueue);
-
-    //
-    // Wait for the work item
-    //
-    KeWaitForSingleObject(&WorkItemData->Event,
-                          Executive,
-                          KernelMode,
-                          FALSE,
-                          NULL);
-    ExFreePool(WorkItemData);
 
     //
     // Return more processing required so the IO Manger doesn’t try to mess with IRP just freed
@@ -1467,7 +1474,21 @@ RootHubInitCallbackFunction(
                 //
                 Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
                 if (!NT_SUCCESS(Status))
+                {
                     DPRINT1("Failed to reset on port %d\n", PortId);
+                }
+                else
+                {
+                    //
+                    // wait for the reset to be handled since we want to enumerate synchronously
+                    //
+                    KeWaitForSingleObject(&HubDeviceExtension->ResetComplete,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                    KeClearEvent(&HubDeviceExtension->ResetComplete);
+                }
             }
         }
     }
@@ -1807,7 +1828,7 @@ USBHUB_FdoHandlePnp(
             DPRINT1("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
 
             //
-            // init roo hub notification
+            // init root hub notification
             //
             if (HubDeviceExtension->HubInterface.RootHubInitNotification)
             {
@@ -1847,7 +1868,21 @@ USBHUB_FdoHandlePnp(
                             //
                             Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
                             if (!NT_SUCCESS(Status))
+                            {
                                 DPRINT1("Failed to reset on port %d\n", PortId);
+                            }
+                            else
+                            {
+                                //
+                                // wait for the reset to be handled since we want to enumerate synchronously
+                                //
+                                KeWaitForSingleObject(&HubDeviceExtension->ResetComplete,
+                                                      Executive,
+                                                      KernelMode,
+                                                      FALSE,
+                                                      NULL);
+                                KeClearEvent(&HubDeviceExtension->ResetComplete);
+                            }
                         }
                     }
                 }
