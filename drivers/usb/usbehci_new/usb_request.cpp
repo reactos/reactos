@@ -594,6 +594,7 @@ CUSBRequest::InternalGetTransferType()
         // initialized with setup packet, must be a control transfer
         //
         TransferType = USB_ENDPOINT_TYPE_CONTROL;
+        ASSERT(m_EndpointDescriptor == FALSE);
     }
 
     //
@@ -1048,7 +1049,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
     PQUEUE_HEAD QueueHead;
     PVOID Base;
     ULONG ChainDescriptorLength;
-    PQUEUE_TRANSFER_DESCRIPTOR FirstDescriptor;
+    PQUEUE_TRANSFER_DESCRIPTOR FirstDescriptor, LastDescriptor;
 
     //
     // Allocate the queue head
@@ -1096,7 +1097,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                                           InternalGetPidDirection(),
                                           m_EndpointDescriptor->DataToggle,
                                           &FirstDescriptor,
-                                          NULL,
+                                          &LastDescriptor,
                                           &m_EndpointDescriptor->DataToggle,
                                           &ChainDescriptorLength);
 
@@ -1104,6 +1105,13 @@ CUSBRequest::BuildBulkTransferQueueHead(
     // FIXME: handle errors
     //
     ASSERT(ChainDescriptorLength == m_TransferBufferLength);
+
+    //
+    // move to next offset
+    //
+    m_TransferBufferLengthCompleted += ChainDescriptorLength;
+
+
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -1114,10 +1122,27 @@ CUSBRequest::BuildBulkTransferQueueHead(
     QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
     QueueHead->NextPointer = FirstDescriptor->PhysicalAddr;
 
+
+    ASSERT(QueueHead->EndPointCharacteristics.DeviceAddress);
+    ASSERT(QueueHead->EndPointCharacteristics.EndPointNumber);
+    ASSERT(QueueHead->EndPointCharacteristics.MaximumPacketLength);
+    ASSERT(QueueHead->NextPointer);
+
+    //
+    // interrupt on last descriptor
+    //
+    LastDescriptor->Token.Bits.InterruptOnComplete = TRUE;
+
     //
     // store result
     //
     *OutHead = QueueHead;
+
+    //
+    // dump status
+    //
+    //DPRINT1("bEndpoint %x\n", m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress);
+    //DumpQueueHead(QueueHead);
 
     //
     // done
