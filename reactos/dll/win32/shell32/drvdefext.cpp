@@ -44,7 +44,8 @@ UINT SH_FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax);
 static VOID
 GetDriveNameWithLetter(LPWSTR pwszText, UINT cchTextMax, LPCWSTR pwszDrive)
 {
-    DWORD dwMaxComp, dwFileSys, cchText = 0;
+    DWORD dwMaxComp, dwFileSys;
+    SIZE_T cchText = 0;
 
     if (GetVolumeInformationW(pwszDrive, pwszText, cchTextMax, NULL, &dwMaxComp, &dwFileSys, NULL, 0))
     {
@@ -219,8 +220,8 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
         TRACE("FreeSpace %u a %f cx %d\n", m_FreeSpacePerc, M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f, cx);
 
         HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
-        INT xRadial = xCenter + (INT)(cosf(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cx/2);
-        INT yRadial = yCenter - (INT)(sinf(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cy/2);
+        INT xRadial = xCenter + (INT)(cos(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cx/2);
+        INT yRadial = yCenter - (INT)(sin(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cy/2);
         Pie(pDrawItem->hDC,
             pDrawItem->rcItem.left, pDrawItem->rcItem.top,
             pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
@@ -241,8 +242,8 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
             if (m_FreeSpacePerc < 50 && x == xRadial)
                 SelectObject(pDrawItem->hDC, hDarkMagPen);
 
-            float cos_val = (x - xCenter)*2.0f/cx;
-            INT y = yCenter+sinf(acosf(cos_val))*cy/2;
+            double cos_val = (x - xCenter)*2.0f/cx;
+            INT y = yCenter+(INT)sin(acos(cos_val))*cy/2;
             MoveToEx(pDrawItem->hDC, x, y, NULL);
             LineTo(pDrawItem->hDC, x, y + 10);
         }
@@ -390,7 +391,7 @@ CDrvDefExt::GeneralPageProc(
             {
                 /* Property Sheet */
                 LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
-                
+
                 if (lppsn->hdr.code == PSN_APPLY)
                 {
                     CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
@@ -505,7 +506,7 @@ CDrvDefExt::CDrvDefExt()
 
 CDrvDefExt::~CDrvDefExt()
 {
-    
+
 }
 
 HRESULT WINAPI

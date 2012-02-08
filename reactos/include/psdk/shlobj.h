@@ -82,7 +82,7 @@ DECLARE_HANDLE(HPSXA);
 #endif
 
 UINT         WINAPI SHAddFromPropSheetExtArray(HPSXA,LPFNADDPROPSHEETPAGE,LPARAM);
-LPVOID       WINAPI SHAlloc(ULONG) __WINE_ALLOC_SIZE(1);
+LPVOID       WINAPI SHAlloc(SIZE_T) __WINE_ALLOC_SIZE(1);
 HRESULT      WINAPI SHCoCreateInstance(LPCWSTR,const CLSID*,IUnknown*,REFIID,LPVOID*);
 HPSXA        WINAPI SHCreatePropSheetExtArray(HKEY,LPCWSTR,UINT);
 HPSXA        WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
@@ -1812,7 +1812,7 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
  * SHOpenWithDialog
  */
 
-enum tagOPEN_AS_INFO_FLAGS 
+enum tagOPEN_AS_INFO_FLAGS
 {
 	OAIF_ALLOW_REGISTRATION = 1,
 	OAIF_REGISTER_EXT       = 2,
@@ -1871,14 +1871,14 @@ DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
  * Travel log
  */
 
-#define TLOG_BACK  -1 
-#define TLOG_FORE   1 
+#define TLOG_BACK  -1
+#define TLOG_FORE   1
 
-#define TLMENUF_INCLUDECURRENT      0x00000001 
-#define TLMENUF_CHECKCURRENT        (TLMENUF_INCLUDECURRENT | 0x00000002) 
-#define TLMENUF_BACK                0x00000010  // Default 
-#define TLMENUF_FORE                0x00000020 
-#define TLMENUF_BACKANDFORTH        (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT) 
+#define TLMENUF_INCLUDECURRENT      0x00000001
+#define TLMENUF_CHECKCURRENT        (TLMENUF_INCLUDECURRENT | 0x00000002)
+#define TLMENUF_BACK                0x00000010  // Default
+#define TLMENUF_FORE                0x00000020
+#define TLMENUF_BACKANDFORTH        (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT)
 
 /*****************************************************************************
  * IDockingWindowSite interface
