@@ -2,6 +2,22 @@
  *                              Kernel Functions                              *
  ******************************************************************************/
 $if (_WDMDDK_)
+#if defined(_M_IX86)
+$include(x86/ke.h)
+#elif defined(_M_AMD64)
+$include(amd64/ke.h)
+#elif defined(_M_IA64)
+$include(ia64/ke.h)
+#elif defined(_M_PPC)
+$include(ppc/ke.h)
+#elif defined(_M_MIPS)
+$include(mips/ke.h)
+#elif defined(_M_ARM)
+$include(arm/ke.h)
+#else
+#error Unknown Architecture
+#endif
+
 NTKERNELAPI
 VOID
 NTAPI
