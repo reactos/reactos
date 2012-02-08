@@ -2332,6 +2332,8 @@ RtlInitializeContext(
 );
 
 #ifdef _M_AMD64
+typedef struct _WOW64_CONTEXT *PWOW64_CONTEXT;
+
 NTSYSAPI
 NTSTATUS
 NTAPI
