@@ -626,6 +626,7 @@ CUSBQueue::ProcessAsyncList(
     //
     // walk async list 
     //
+    ASSERT(AsyncListQueueHead);
     Entry = AsyncListQueueHead->LinkedQueueHeads.Flink;
 
     while(Entry != &AsyncListQueueHead->LinkedQueueHeads)
@@ -634,6 +635,7 @@ CUSBQueue::ProcessAsyncList(
         // get queue head structure
         //
         QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+        ASSERT(QueueHead);
 
         //
         // sanity check
@@ -655,7 +657,7 @@ CUSBQueue::ProcessAsyncList(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT1("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete

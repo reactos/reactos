@@ -32,6 +32,11 @@ VOID
 NTAPI
 StatusChangeWorkItemRoutine(PVOID Context);
 
+VOID
+NTAPI
+QueueHeadCompletionRoutine(PVOID Context);
+
+
 class CUSBHardwareDevice : public IUSBHardwareDevice
 {
 public:
@@ -94,6 +99,7 @@ public:
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
     friend VOID NTAPI EhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
+    friend VOID NTAPI QueueHeadCompletionRoutine(PVOID Context);
     // constructor / destructor
     CUSBHardwareDevice(IUnknown *OuterUnknown){}
     virtual ~CUSBHardwareDevice(){}
@@ -1306,6 +1312,37 @@ InterruptServiceRoutine(
     return TRUE;
 }
 
+typedef struct
+{
+    WORK_QUEUE_ITEM QueueHeadWorkItem;
+    CUSBHardwareDevice * This;
+
+}QUEUE_HEAD_COMPLETION, *PQUEUE_HEAD_COMPLETION;
+
+
+VOID
+NTAPI
+QueueHeadCompletionRoutine(
+    IN PVOID Ctx)
+{
+    //
+    // cast to hardware object
+    //
+    PQUEUE_HEAD_COMPLETION Context = (PQUEUE_HEAD_COMPLETION)Ctx;
+
+    //
+    // now notify IUSBQueue that it can free completed requests
+    //
+    Context->This->m_UsbQueue->CompleteAsyncRequests();
+
+    //
+    // door ring bell completed
+    //
+    Context->This->m_DoorBellRingInProgress = FALSE;
+
+    ExFreePool(Context);
+}
+
 VOID NTAPI
 EhciDefferedRoutine(
     IN PKDPC Dpc,
@@ -1317,6 +1354,7 @@ EhciDefferedRoutine(
     ULONG CStatus, PortStatus, PortCount, i, ShouldRingDoorBell;
     NTSTATUS Status = STATUS_SUCCESS;
     EHCI_USBCMD_CONTENT UsbCmd;
+    PQUEUE_HEAD_COMPLETION Context;
 
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
@@ -1386,14 +1424,22 @@ EhciDefferedRoutine(
         PC_ASSERT(This->m_DoorBellRingInProgress == TRUE);
 
         //
-        // now notify IUSBQueue that it can free completed requests
+        // get command register
         //
-        This->m_UsbQueue->CompleteAsyncRequests();
+        This->GetCommandRegister(&UsbCmd);
+        ASSERT(UsbCmd.DoorBell == FALSE);
 
         //
-        // door ring bell completed
+        // allocate work item context
         //
-        This->m_DoorBellRingInProgress = FALSE;
+        Context = (PQUEUE_HEAD_COMPLETION)ExAllocatePool(NonPagedPool, sizeof(QUEUE_HEAD_COMPLETION));
+        if (Context)
+        {
+            ExInitializeWorkItem(&Context->QueueHeadWorkItem, QueueHeadCompletionRoutine, Context);
+            Context->This = This;
+            ExQueueWorkItem(&Context->QueueHeadWorkItem, DelayedWorkQueue);
+        }
+
     }
 
     This->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
