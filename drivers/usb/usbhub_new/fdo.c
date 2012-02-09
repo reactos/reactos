@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/usb/usbhub/fdo.c
@@ -1056,7 +1056,7 @@ CreateDeviceIds(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-            RtlInitUnicodeString(&UsbChildExtension->usTextDescription, "");
+            RtlInitUnicodeString(&UsbChildExtension->usTextDescription, L"");
         }
         else
         {
