@@ -202,8 +202,11 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	//PKTSS Tss;
 	//BOOLEAN Status;
 
+	/* Cleanup heap */
+	HeapCleanupAll();
+
 	//
-	// Creating a suitable memory map for the Windows can be tricky, so let's
+	// Creating a suitable memory map for Windows can be tricky, so let's
 	// give a few advices:
 	// 1) One must not map the whole available memory pages to PDE!
 	//    Map only what's needed - 16Mb, 24Mb, 32Mb max I think,
