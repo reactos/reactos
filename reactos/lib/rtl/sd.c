@@ -250,9 +250,14 @@ RtlLengthSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
    PSID Owner, Group;
    PACL Sacl, Dacl;
-   ULONG Length = sizeof(SECURITY_DESCRIPTOR);
+   ULONG Length;
 
    PAGED_CODE_RTL();
+
+   if (((PISECURITY_DESCRIPTOR)SecurityDescriptor)->Control & SE_SELF_RELATIVE)
+      Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
+   else
+      Length = sizeof(SECURITY_DESCRIPTOR);
 
    RtlpQuerySecurityDescriptorPointers((PISECURITY_DESCRIPTOR)SecurityDescriptor,
                                        &Owner,
