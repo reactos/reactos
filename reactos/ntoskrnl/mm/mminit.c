@@ -126,8 +126,7 @@ MiInitSystemMemoryAreas()
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
-                                (ULONG_PTR)MmNonPagedPoolEnd -
-                                (ULONG_PTR)MmNonPagedSystemStart,
+                                MiNonPagedSystemSize,
                                 PAGE_READWRITE,
                                 &MArea,
                                 TRUE,
