@@ -379,7 +379,6 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 // 
 
 struct _QUEUE_HEAD;
-struct _USB_ENDPOINT;
 
 DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 {
@@ -396,7 +395,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
-                                               IN OPTIONAL struct _USB_ENDPOINT *EndpointDescriptor,
+                                               IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 
@@ -589,15 +588,6 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // This function gets called by IUSBHardware after it the Interrupt on Async Advance bit has been set
 
     virtual VOID CompleteAsyncRequests() = 0;
-
-//-----------------------------------------------------------------------------------------
-//
-// AbortDevicePipe
-//
-// Description: aborts all pending requsts of an device
-
-    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
-
 };
 
 typedef IUSBQueue *PUSBQUEUE;
@@ -851,15 +841,6 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
                                      IN OUT PUSBD_INTERFACE_INFORMATION Interface) = 0;
-
-//-----------------------------------------------------------------------------------------
-//
-// AbortPipe
-//
-// Description: aborts all pending requsts
-
-    virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
-
 };
 
 typedef IUSBDevice *PUSBDEVICE;

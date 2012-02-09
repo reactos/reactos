@@ -148,7 +148,7 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
     
     //Software
     ULONG PhysicalAddr;
-    LIST_ENTRY DescriptorEntry;
+    LIST_ENTRY LinkedDescriptors;
     ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
@@ -216,21 +216,9 @@ typedef struct _QUEUE_HEAD
     //Software
     ULONG PhysicalAddr;
     LIST_ENTRY LinkedQueueHeads;
-    LIST_ENTRY TransferDescriptorListHead;
     PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
-C_ASSERT(sizeof(END_POINT_CHARACTERISTICS) == 4);
-C_ASSERT(sizeof(END_POINT_CAPABILITIES) == 4);
-
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, HorizontalLinkPointer) == 0x00);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, EndPointCharacteristics) == 0x04);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, EndPointCapabilities) == 0x08);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, CurrentLinkPointer) == 0xC);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, NextPointer) == 0x10);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, AlternateNextPointer) == 0x14);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, Token) == 0x18);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, BufferPointer) == 0x1C);
 C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, PhysicalAddr) == 0x30);
 
 
@@ -303,5 +291,4 @@ typedef struct
     ULONG PortStatus;
     ULONG PortChange;
 }EHCI_PORT_STATUS;
-
 

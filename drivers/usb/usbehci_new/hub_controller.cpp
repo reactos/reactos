@@ -70,9 +70,6 @@ public:
     NTSTATUS HandleClassEndpoint(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleIsochronousTransfer(IN OUT PIRP Irp, PURB Urb);
-    NTSTATUS HandleClearStall(IN OUT PIRP Irp, PURB Urb);
-    NTSTATUS HandleSyncResetAndClearStall(IN OUT PIRP Irp, PURB Urb);
-    NTSTATUS HandleAbortPipe(IN OUT PIRP Irp, PURB Urb);
 
     friend VOID StatusChangeEndpointCallBack(PVOID Context);
 
@@ -1678,20 +1675,11 @@ CHubController::HandleClassEndpoint(
     //
     // initialize setup packet
     //
-    CtrlSetup.bmRequestType.B = 0x22; //FIXME: Const.
+    CtrlSetup.bmRequestType.B = 0xa2; //FIXME: Const.
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
     CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
-
-    if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
-    {
-        //
-        // data direction is device to host
-        //
-        CtrlSetup.bmRequestType.B |= 0x80;
-    }
-
 
     //
     // issue request
@@ -1709,185 +1697,6 @@ CHubController::HandleClassEndpoint(
     //
     return Status;
 }
-
-NTSTATUS
-CHubController::HandleSyncResetAndClearStall(
-    IN OUT PIRP Irp,
-    IN OUT PURB Urb)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PUSB_ENDPOINT EndpointDescriptor;
-    ULONG Type;
-
-    //
-    // sanity check
-    //
-    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle);
-    PC_ASSERT(Urb->UrbHeader.Length == sizeof(struct _URB_PIPE_REQUEST));
-    PC_ASSERT(Urb->UrbPipeRequest.PipeHandle);
-
-    //
-    // check if this is a valid usb device handle
-    //
-    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
-    {
-        DPRINT1("HandleAbortPipe invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
-
-        //
-        // invalid device handle
-        //
-        return STATUS_DEVICE_NOT_CONNECTED;
-    }
-
-    //
-    // get endpoint descriptor
-    //
-    EndpointDescriptor = (PUSB_ENDPOINT)Urb->UrbPipeRequest.PipeHandle;
-
-    //
-    // get type
-    //
-    Type = (EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK);
-    if (Type != USB_ENDPOINT_TYPE_ISOCHRONOUS)
-    {
-        //
-        // clear stall
-        //
-        Status = HandleClearStall(Irp, Urb);
-    }
-    DPRINT1("URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL Status %x\n", Status);
-
-    //
-    // reset data toggle
-    //
-    ASSERT(NT_SUCCESS(Status));
-    EndpointDescriptor->DataToggle = 0x0;
-
-    //
-    // done
-    //
-    return Status;
-}
-
-NTSTATUS
-CHubController::HandleAbortPipe(
-    IN OUT PIRP Irp,
-    IN OUT PURB Urb)
-{
-    NTSTATUS Status;
-    PUSBDEVICE UsbDevice;
-    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-
-    //
-    // sanity check
-    //
-    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle);
-    PC_ASSERT(Urb->UrbHeader.Length == sizeof(struct _URB_PIPE_REQUEST));
-    PC_ASSERT(Urb->UrbPipeRequest.PipeHandle);
-
-    //
-    // check if this is a valid usb device handle
-    //
-    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
-    {
-        DPRINT1("HandleAbortPipe invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
-
-        //
-        // invalid device handle
-        //
-        return STATUS_DEVICE_NOT_CONNECTED;
-    }
-
-    //
-    // get endpoint descriptor
-    //
-    EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbPipeRequest.PipeHandle;
-
-    //
-    // get device
-    //
-    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-
-
-    //
-    // issue request
-    //
-    Status = UsbDevice->AbortPipe(EndpointDescriptor);
-    DPRINT1("URB_FUNCTION_ABORT_PIPE Status %x\n", Status);
-
-    //
-    // done
-    //
-    return Status;
-}
-
-
-//-----------------------------------------------------------------------------------------
-NTSTATUS
-CHubController::HandleClearStall(
-    IN OUT PIRP Irp,
-    IN OUT PURB Urb)
-{
-    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
-    NTSTATUS Status;
-    PUSBDEVICE UsbDevice;
-    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-
-
-    //
-    // sanity check
-    //
-    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle);
-    PC_ASSERT(Urb->UrbHeader.Length == sizeof(struct _URB_PIPE_REQUEST));
-    PC_ASSERT(Urb->UrbPipeRequest.PipeHandle);
-
-    //
-    // check if this is a valid usb device handle
-    //
-    if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
-    {
-        DPRINT1("HandleClearStall invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
-
-        //
-        // invalid device handle
-        //
-        return STATUS_DEVICE_NOT_CONNECTED;
-    }
-
-    //
-    // get endpoint descriptor
-    //
-    EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbPipeRequest.PipeHandle;
-
-    //
-    // get device
-    //
-    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-    DPRINT1("URB_FUNCTION_SYNC_CLEAR_STALL\n");
-
-    //
-    // initialize setup packet
-    //
-    CtrlSetup.bmRequestType.B = 0x02;
-    CtrlSetup.bRequest = USB_REQUEST_CLEAR_FEATURE;
-    CtrlSetup.wValue.W = USB_FEATURE_ENDPOINT_STALL;
-    CtrlSetup.wIndex.W = EndpointDescriptor->bEndpointAddress;
-    CtrlSetup.wLength = 0;
-    CtrlSetup.wValue.W = 0;
-
-    //
-    // issue request
-    //
-    Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, 0, 0);
-
-    DPRINT1("URB_FUNCTION_CLEAR_STALL Status %x\n", Status);
-
-    //
-    // done
-    //
-    return Status;
-}
-
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
@@ -1938,19 +1747,11 @@ CHubController::HandleClassInterface(
     //
     // initialize setup packet
     //
-    CtrlSetup.bmRequestType.B = 0x21;
+    CtrlSetup.bmRequestType.B = 0xa1; //FIXME: Const.
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
     CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
-
-    if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
-    {
-        //
-        // data direction is device to host
-        //
-        CtrlSetup.bmRequestType.B |= 0x80;
-    }
 
     //
     // issue request
@@ -1960,13 +1761,8 @@ CHubController::HandleClassInterface(
     //
     // assert on failure
     //
-    if (!NT_SUCCESS(Status))
-    {
-        //
-        // display error
-        //
-        DPRINT1("URB_FUNCTION_CLASS_INTERFACE failed with Urb Status %x\n", Urb->UrbHeader.Status);
-    }
+    PC_ASSERT(NT_SUCCESS(Status));
+
 
     //
     // done
@@ -2010,16 +1806,6 @@ CHubController::HandleDeviceControl(
 
             switch (Urb->UrbHeader.Function)
             {
-                case URB_FUNCTION_SYNC_RESET_PIPE:
-                case URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL:
-                    Status = HandleSyncResetAndClearStall(Irp, Urb);
-                    break;
-                case URB_FUNCTION_ABORT_PIPE:
-                    Status = HandleAbortPipe(Irp, Urb);
-                    break;
-                case URB_FUNCTION_SYNC_CLEAR_STALL:
-                    Status = HandleClearStall(Irp, Urb);
-                    break;
                 case URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE:
                     Status = HandleGetDescriptorFromInterface(Irp, Urb);
                     break;

@@ -11,6 +11,24 @@
 #define INITGUID
 #include "usbehci.h"
 
+typedef struct _USB_ENDPOINT
+{
+    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+} USB_ENDPOINT, *PUSB_ENDPOINT;
+
+typedef struct _USB_INTERFACE
+{
+    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT *EndPoints;
+} USB_INTERFACE, *PUSB_INTERFACE;
+
+typedef struct _USB_CONFIGURATION
+{
+    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_INTERFACE *Interfaces;
+} USB_CONFIGURATION, *PUSB_CONFIGURATION;
+
+
 class CUSBDevice : public IUSBDevice
 {
 public:
@@ -52,12 +70,10 @@ public:
     virtual NTSTATUS SubmitSetupPacket(IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, OUT ULONG BufferLength, OUT PVOID Buffer);
     virtual NTSTATUS SelectConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor, IN PUSBD_INTERFACE_INFORMATION Interface, OUT USBD_CONFIGURATION_HANDLE *ConfigurationHandle);
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle, IN OUT PUSBD_INTERFACE_INFORMATION Interface);
-    virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
-
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
-    virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor, IN ULONG BufferLength, IN OUT PMDL Mdl);
+    virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG BufferLength, IN OUT PMDL Mdl);
     virtual NTSTATUS CreateConfigurationDescriptor(ULONG ConfigurationIndex);
     virtual NTSTATUS CreateDeviceDescriptor();
     virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
@@ -521,7 +537,7 @@ CUSBDevice::SubmitIrp(
 NTSTATUS
 CUSBDevice::CommitSetupPacket(
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET Packet,
-    IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor,
+    IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
     IN ULONG BufferLength, 
     IN OUT PMDL Mdl)
 {
@@ -1256,23 +1272,6 @@ CUSBDevice::SelectInterface(
     //
     return Status;
 }
-
-NTSTATUS
-CUSBDevice::AbortPipe(
-    IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
-{
-    //
-    // let it handle usb queue
-    //
-    ASSERT(m_Queue);
-    ASSERT(m_DeviceAddress);
-
-    //
-    // done
-    //
-    return m_Queue->AbortDevicePipe(m_DeviceAddress, EndpointDescriptor);
-}
-
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
