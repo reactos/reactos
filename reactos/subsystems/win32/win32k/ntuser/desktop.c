@@ -1243,10 +1243,20 @@ NtUserCloseDesktop(HDESK hDesktop)
 {
    PDESKTOP Object;
    NTSTATUS Status;
+   PTHREADINFO pti;
    DECLARE_RETURN(BOOL);
+
+   pti = PsGetCurrentThreadWin32Thread();
 
    TRACE("Enter NtUserCloseDesktop\n");
    UserEnterExclusive();
+
+   if( hDesktop == pti->hdesk || hDesktop == pti->ppi->hdeskStartup)
+   {
+       ERR("Attempted to close thread desktop\n");
+       EngSetLastError(ERROR_BUSY);
+       RETURN(FALSE);
+   }
 
    TRACE("About to close desktop handle (0x%X)\n", hDesktop);
 
