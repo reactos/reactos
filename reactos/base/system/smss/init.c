@@ -24,8 +24,8 @@ struct {
 } InitRoutine [] = {
 	{TRUE,  SmCreateHeap,                 "create private heap, aborting"},
 //	{TRUE,  SmCreateObjectDirectories,    "create object directories"},
-	{TRUE,  SmCreateApiPort,              "create \\SmApiPort"},
-	{TRUE,  SmCreateEnvironment,          "create the system environment"},
+//	{TRUE,  SmCreateApiPort,              "create \\SmApiPort"},
+//	{TRUE,  SmCreateEnvironment,          "create the system environment"},
 //	{TRUE,  SmSetEnvironmentVariables,    "set system environment variables"},
 //	{TRUE,  SmInitDosDevices,             "create dos device links"},
 //	{TRUE,  SmRunBootApplications,        "run boot applications"},
@@ -34,8 +34,8 @@ struct {
 //	{FALSE, SmLoadKnownDlls,              "preload system DLLs"},
 	{TRUE,  SmCreatePagingFiles,          "create paging files"},
 //	{TRUE,  SmInitializeRegistry,         "initialize the registry"},
-	{TRUE,  SmInitializeClientManagement, "initialize client management"},
-	{TRUE,  SmLoadSubsystems,             "load subsystems"}
+//	{TRUE,  SmInitializeClientManagement, "initialize client management"},
+//	{TRUE,  SmLoadSubsystems,             "load subsystems"}
 };
 
 NTSTATUS
