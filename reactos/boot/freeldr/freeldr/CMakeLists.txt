@@ -54,7 +54,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     inifile/parse.c
     mm/meminit.c
     mm/mm.c
-    mm/heap_new.c
+    mm/heap.c
     reactos/registry.c
     reactos/arcname.c
     reactos/archwsup.c
