@@ -71,8 +71,69 @@ SmpExecPgm(IN PSM_API_MSG SmApiMsg,
            IN PSMP_CLIENT_CONTEXT ClientContext,
            IN HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    HANDLE ProcessHandle;
+    NTSTATUS Status;
+    PSM_EXEC_PGM_MSG SmExecPgm;
+    RTL_USER_PROCESS_INFORMATION ProcessInformation;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* Open the client process */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = NtOpenProcess(&ProcessHandle,
+                           PROCESS_DUP_HANDLE,
+                           &ObjectAttributes,
+                           &SmApiMsg->h.ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DPRINT1("SmExecPgm: NtOpenProcess Failed %lx\n", Status);
+        return Status;
+    }
+
+    /* Copy the process information out of the message */
+    SmExecPgm = &SmApiMsg->u.ExecPgm;
+    ProcessInformation = SmExecPgm->ProcessInformation;
+
+    /* Duplicate the process handle */
+    Status = NtDuplicateObject(ProcessHandle,
+                               SmExecPgm->ProcessInformation.ProcessHandle,
+                               NtCurrentProcess(),
+                               &ProcessInformation.ProcessHandle,
+                               PROCESS_ALL_ACCESS,
+                               0,
+                               0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Close the handle and fail */
+        NtClose(ProcessHandle);
+        DPRINT1("SmExecPgm: NtDuplicateObject (Process) Failed %lx\n", Status);
+        return Status;
+    }
+
+    /* Duplicate the thread handle */
+    Status = NtDuplicateObject(ProcessHandle,
+                               SmExecPgm->ProcessInformation.ThreadHandle,
+                               NtCurrentProcess(),
+                               &ProcessInformation.ThreadHandle,
+                               THREAD_ALL_ACCESS,
+                               0,
+                               0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Close both handles and fail */
+        NtClose(ProcessInformation.ProcessHandle);
+        NtClose(ProcessHandle);
+        DPRINT1("SmExecPgm: NtDuplicateObject (Thread) Failed %lx\n", Status);
+        return Status;
+    }
+
+    /* Close the process handle and call the internal client API */
+    NtClose(ProcessHandle);
+    return SmpSbCreateSession(NULL,
+                              NULL,
+                              &ProcessInformation,
+                              0,
+                              SmExecPgm->DebugFlag ? &SmApiMsg->h.ClientId : NULL);
 }
 
 NTSTATUS
