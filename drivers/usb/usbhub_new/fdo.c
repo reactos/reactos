@@ -1056,11 +1056,13 @@ CreateDeviceIds(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-            return Status;
+            RtlInitUnicodeString(&UsbChildExtension->usTextDescription, "");
         }
-
-        UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
-        DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
+        else
+        {
+            UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
+            DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
+        }
     }
 
     //
