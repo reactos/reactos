@@ -67,6 +67,10 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     PLIST_ENTRY NextEntry, ListHead;
     PWINSTATION_OBJECT WinStaObject = (PWINSTATION_OBJECT)ParseObject;
     PUNICODE_STRING DesktopName;
+    PBOOLEAN pContext = (PBOOLEAN) Context;
+
+    if(pContext)
+        *pContext = FALSE;
 
     /* Set the list pointers and loop the window station */
     ListHead = &WinStaObject->DesktopListHead;
@@ -144,6 +148,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 
     /* Set the desktop object and return success */
     *Object = Desktop;
+    *pContext = TRUE;
     return STATUS_SUCCESS;
 }
 
@@ -844,7 +849,7 @@ NtUserCreateDesktop(
    CSR_API_MESSAGE Request;
    PVOID DesktopHeapSystemBase = NULL;
    SIZE_T DesktopInfoSize;
-   ULONG DummyContext;
+   BOOLEAN Context;
    ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
@@ -880,10 +885,12 @@ NtUserCreateDesktop(
                UserMode,
                NULL,
                dwDesiredAccess,
-               (PVOID)&DummyContext,
+               (PVOID)&Context,
                (HANDLE*)&Desktop);
    if (!NT_SUCCESS(Status)) RETURN(NULL);
-   if (Status == STATUS_OBJECT_NAME_EXISTS)
+
+   /* In case the object was not created (eg if it existed), return now */
+   if (Context == FALSE)
    {
       RETURN( Desktop);
    }
