@@ -41,6 +41,8 @@ public:
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
     virtual VOID InterruptCallback(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
     virtual VOID CompleteAsyncRequests();
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -499,11 +501,6 @@ CUSBQueue::UnlinkQueueHead(
     // remove software link
     //
     RemoveEntryList(&QueueHead->LinkedQueueHeads);
-
-    //
-    // FIXME: clear failure 
-    //
-    QueueHead->Token.Bits.Halted = FALSE;
 }
 
 //
@@ -629,6 +626,7 @@ CUSBQueue::ProcessAsyncList(
     //
     // walk async list 
     //
+    ASSERT(AsyncListQueueHead);
     Entry = AsyncListQueueHead->LinkedQueueHeads.Flink;
 
     while(Entry != &AsyncListQueueHead->LinkedQueueHeads)
@@ -637,6 +635,7 @@ CUSBQueue::ProcessAsyncList(
         // get queue head structure
         //
         QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+        ASSERT(QueueHead);
 
         //
         // sanity check
@@ -658,7 +657,7 @@ CUSBQueue::ProcessAsyncList(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT1("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete
@@ -930,6 +929,16 @@ CUSBQueue::CompleteAsyncRequests()
 }
 
 NTSTATUS
+CUSBQueue::AbortDevicePipe(
+    IN UCHAR DeviceAddress,
+    IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {
@@ -962,3 +971,4 @@ CreateUSBQueue(
     //
     return STATUS_SUCCESS;
 }
+
