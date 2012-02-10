@@ -138,7 +138,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
                     ((c == 'l') || (c == 'c') || (c == 'p') || (c == 'a') || (c == 'n')))
                 {
                     /* Calculate the offset */
-                    ReturnOffset = (PCHAR)End - (PCHAR)PathCopy.Buffer;
+                    ReturnOffset = (USHORT)((PCHAR)End - (PCHAR)PathCopy.Buffer);
 
                     /* Build the final string */
                     PathCopy.Length = OriginalLength - ReturnOffset - (ColonCount * sizeof(WCHAR));
@@ -179,7 +179,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
     while ((Start > PathCopy.Buffer) && (Start[-1] == ' ')) --Start;
 
     /* Finally see how many characters are left, and that's our size */
-    PathChars = Start - PathCopy.Buffer;
+    PathChars = (USHORT)(Start - PathCopy.Buffer);
     PathCopy.Length = PathChars * sizeof(WCHAR);
 
     /* Check if this is a COM or LPT port, which has a digit after it */
@@ -641,13 +641,13 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
                     RtlReleasePebLock();
                     return Status;
                 }
- 
+
                 /* File is in current directory */
                 if (RtlEqualUnicodeString(&FullPath, &CurrentDirectory->DosPath, TRUE))
                 {
                     /* Make relative name string */
                     RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)NewBuffer + FullPath.Length - PrefixCut);
-                    RelativeName->RelativeName.Length = PathLength - FullPath.Length;
+                    RelativeName->RelativeName.Length = (USHORT)(PathLength - FullPath.Length);
                     /* If relative name starts with \, skip it */
                     if (RelativeName->RelativeName.Buffer[0] == L'\\')
                     {
@@ -1116,7 +1116,7 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
         CurDirHandle = (HANDLE)((ULONG_PTR)CurDirHandle | RTL_CURDIR_IS_REMOVABLE);
     }
 
-    FullPath.Length = FullPathLength;
+    FullPath.Length = (USHORT)FullPathLength;
 
     /* If full path isn't \ terminated, do it */
     if (FullPath.Buffer[CharLength - 1] != L'\\')
@@ -1784,7 +1784,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
                           IN PSIZE_T FilePartSize,
                           OUT PBOOLEAN NameInvalid,
                           OUT RTL_PATH_TYPE* PathType,
-                          OUT PULONG LengthNeeded)
+                          OUT PSIZE_T LengthNeeded)
 {
     NTSTATUS Status;
     PWCHAR StaticBuffer;
@@ -1846,7 +1846,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
     if ((StaticString) && (Length < StaticLength))
     {
         /* Set the final length */
-        StaticString->Length = Length;
+        StaticString->Length = (USHORT)Length;
 
         /* Set the file part size */
         if (FilePartSize) *FilePartSize = ShortName ? (ShortName - StaticString->Buffer) : 0;
@@ -1878,7 +1878,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
 
         /* Set the settings for the dynamic string the caller sent */
         DynamicString->MaximumLength = StaticLength;
-        DynamicString->Length = Length;
+        DynamicString->Length = (USHORT)Length;
         DynamicString->Buffer = StaticBuffer;
 
         /* Set the part size */
@@ -1914,7 +1914,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
     if ((StaticString) && (Length < StaticLength))
     {
         /* Set the final length */
-        StaticString->Length = Length;
+        StaticString->Length = (USHORT)Length;
 
         /* Set the file part size */
         if (FilePartSize) *FilePartSize = ShortName ? (ShortName - StaticString->Buffer) : 0;
@@ -1946,7 +1946,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
     }
 
     /* Add space for a NULL terminator, and now check the full path */
-    TempDynamicString.MaximumLength = Length + sizeof(UNICODE_NULL);
+    TempDynamicString.MaximumLength = (USHORT)Length + sizeof(UNICODE_NULL);
     Length = RtlGetFullPathName_Ustr(FileName,
                                      Length,
                                      TempDynamicString.Buffer,
@@ -1979,7 +1979,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
 
     /* Finalize the string and return it to the user */
     DynamicString->Buffer = TempDynamicString.Buffer;
-    DynamicString->Length = Length;
+    DynamicString->Length = (USHORT)Length;
     DynamicString->MaximumLength = TempDynamicString.MaximumLength;
     if (StringUsed) *StringUsed = DynamicString;
 
@@ -2027,16 +2027,16 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                       IN PUNICODE_STRING CallerBuffer,
                       IN OUT PUNICODE_STRING DynamicString OPTIONAL,
                       OUT PUNICODE_STRING* FullNameOut OPTIONAL,
-                      OUT PULONG FilePartSize OPTIONAL,
-                      OUT PULONG LengthNeeded OPTIONAL)
+                      OUT PSIZE_T FilePartSize OPTIONAL,
+                      OUT PSIZE_T LengthNeeded OPTIONAL)
 {
     WCHAR StaticCandidateBuffer[MAX_PATH];
     UNICODE_STRING StaticCandidateString;
     NTSTATUS Status;
     RTL_PATH_TYPE PathType;
     PWCHAR p, End, CandidateEnd, SegmentEnd;
-    ULONG SegmentSize, NamePlusExtLength, PathSize, MaxPathSize = 0, WorstCaseLength, ByteCount;
-    USHORT ExtensionLength = 0;
+    SIZE_T SegmentSize, ByteCount, PathSize, MaxPathSize = 0;
+    USHORT NamePlusExtLength, WorstCaseLength, ExtensionLength = 0;
     PUNICODE_STRING FullIsolatedPath;
     DPRINT("DOS Path Search: %lx %wZ %wZ %wZ %wZ %wZ\n",
             Flags, PathString, FileNameString, ExtensionString, CallerBuffer, DynamicString);
@@ -2177,7 +2177,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
         /* Use the extension, the file name, and the largest path as the size */
         WorstCaseLength = ExtensionLength +
                           FileNameString->Length +
-                          MaxPathSize +
+                          (USHORT)MaxPathSize +
                           sizeof(UNICODE_NULL);
         if (WorstCaseLength > UNICODE_STRING_MAX_BYTES)
         {
@@ -2292,7 +2292,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
             *CandidateEnd = UNICODE_NULL;
 
             /* Now set the final length of the string so it becomes valid */
-            StaticCandidateString.Length = (CandidateEnd -
+            StaticCandidateString.Length = (USHORT)(CandidateEnd -
                                             StaticCandidateString.Buffer) *
                                            sizeof(WCHAR);
 

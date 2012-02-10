@@ -2525,8 +2525,7 @@ RtlFindCharInUnicodeString(
     BOOLEAN Found;
     const BOOLEAN WantToFind = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_COMPLEMENT_CHAR_SET) == 0;
     const BOOLEAN CaseInSensitive = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE) != 0;
-    INT Length;
-    INT i;
+    USHORT i, Length;
 
     DPRINT("RtlFindCharInUnicodeString(%u, '%wZ', '%wZ', %p)\n",
            Flags, SearchString, MatchString, Position);

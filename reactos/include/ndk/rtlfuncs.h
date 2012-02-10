@@ -2533,8 +2533,8 @@ RtlDosSearchPath_Ustr(
     IN PUNICODE_STRING CallerBuffer,
     IN OUT PUNICODE_STRING DynamicString OPTIONAL,
     OUT PUNICODE_STRING* FullNameOut OPTIONAL,
-    OUT PULONG FilePartSize OPTIONAL,
-    OUT PULONG LengthNeeded OPTIONAL
+    OUT PSIZE_T FilePartSize OPTIONAL,
+    OUT PSIZE_T LengthNeeded OPTIONAL
 );
 
 NTSYSAPI
@@ -2608,7 +2608,7 @@ RtlGetFullPathName_UstrEx(
     IN PSIZE_T FilePartSize,
     OUT PBOOLEAN NameInvalid,
     OUT RTL_PATH_TYPE* PathType,
-    OUT PULONG LengthNeeded
+    OUT PSIZE_T LengthNeeded
 );
 
 NTSYSAPI

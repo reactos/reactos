@@ -37,7 +37,7 @@
 #endif
 
 
-static const int YearLengths[2] =
+static const unsigned int YearLengths[2] =
 {
     DAYSPERNORMALYEAR, DAYSPERLEAPYEAR
 };
