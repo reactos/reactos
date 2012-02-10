@@ -84,11 +84,11 @@
 @ stub Icmp6CreateFile
 @ stub Icmp6ParseReplies
 @ stub Icmp6SendEcho2
-@ stub IcmpCloseHandle
-@ stub IcmpCreateFile
-@ stub IcmpParseReplies
-@ stub IcmpSendEcho
-@ stub IcmpSendEcho2
+@ stdcall IcmpCloseHandle(ptr) icmp.IcmpCloseHandle
+@ stdcall IcmpCreateFile() icmp.IcmpCreateFile
+@ stdcall IcmpParseReplies(ptr long) icmp.IcmpParseReplies
+@ stdcall IcmpSendEcho(ptr long ptr long ptr ptr long long) icmp.IcmpSendEcho
+@ stdcall IcmpSendEcho2(ptr ptr ptr ptr long ptr long ptr ptr long long) icmp.IcmpSendEcho2
 @ stub InternalCreateIpForwardEntry
 @ stub InternalCreateIpNetEntry
 @ stub InternalDeleteIpForwardEntry
