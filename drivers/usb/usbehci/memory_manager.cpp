@@ -271,7 +271,7 @@ CDMAMemoryManager::Release(
     IN ULONG Size)
 {
     KIRQL OldLevel;
-    ULONG BlockOffset = 0, BlockLength;
+    ULONG BlockOffset = 0, BlockLength, BlockCount;
 
     //
     // sanity checks
@@ -302,14 +302,25 @@ CDMAMemoryManager::Release(
     Size = (Size + m_BlockSize - 1) & ~(m_BlockSize - 1);
 
     //
+    // convert to blocks
+    //
+    BlockCount = Size / m_BlockSize;
+    ASSERT(BlockCount);
+
+    //
     // acquire lock
     //
     KeAcquireSpinLock(m_Lock, &OldLevel);
 
     //
+    // sanity check
+    //
+    ASSERT(RtlAreBitsSet(&m_Bitmap, BlockOffset, BlockCount));
+
+    //
     // release buffer
     //
-    RtlClearBits(&m_Bitmap, BlockOffset, Size);
+    RtlClearBits(&m_Bitmap, BlockOffset, BlockCount);
 
     //
     // release lock
