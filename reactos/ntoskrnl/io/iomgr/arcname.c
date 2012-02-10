@@ -108,7 +108,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (NT_SUCCESS(Status))
         {
             /* Map ARC to NT name */
-            IoCreateSymbolicLink(&BootDeviceName, &SystemDevice);
+            IoAssignArcName(&BootDeviceName, &SystemDevice);
             RtlFreeUnicodeString(&BootDeviceName);
 
             /* Now, get loader path name */
@@ -381,7 +381,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (NT_SUCCESS(Status))
             {
                 /* Create symbolic link */
-                IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
                 RtlFreeUnicodeString(&ArcNameStringW);
                 DPRINT1("Boot device found\n");
             }
@@ -724,7 +724,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 }
 
                 /* Link both */
-                IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
                 /* And release resources */
                 RtlFreeUnicodeString(&ArcNameStringW);
@@ -781,7 +781,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     }
 
                     /* Link device name & ARC name */
-                    IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                    IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
                     /* Release strings */
                     RtlFreeUnicodeString(&ArcNameStringW);
