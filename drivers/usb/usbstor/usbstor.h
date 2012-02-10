@@ -198,6 +198,7 @@ typedef struct
     ULONG BlockLength;                                               // block length in bytes
 }UFI_CAPACITY_RESPONSE, *PUFI_CAPACITY_RESPONSE;
 
+#define UFI_READ_CAPACITY_CMD_LEN 0xA
 C_ASSERT(sizeof(UFI_CAPACITY_RESPONSE) == 8);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------

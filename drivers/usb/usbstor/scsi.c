@@ -819,7 +819,7 @@ USBSTOR_SendCapacityCmd(
     //
     // send request, response will be freed in completion routine
     //
-    return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_INQUIRY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_CAPACITY_RESPONSE), (PUCHAR)Response);
+    return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_CAPACITY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_CAPACITY_RESPONSE), (PUCHAR)Response);
 }
 
 NTSTATUS
@@ -1167,7 +1167,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         ASSERT(Request->DataBuffer);
 
-        DPRINT("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
+        DPRINT("SCSIOP_READ_CAPACITY Length %lu\n", Request->DataTransferLength);
         Status = USBSTOR_SendCapacityCmd(DeviceObject, Irp);
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
