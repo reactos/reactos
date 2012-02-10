@@ -30,8 +30,8 @@ PVOID FrLdrTempHeap;
 
 typedef struct _BLOCK_DATA
 {
-    ULONG Flink;
-    ULONG Blink;
+    ULONG_PTR Flink;
+    ULONG_PTR Blink;
 } BLOCK_DATA, *PBLOCK_DATA;
 
 typedef struct _HEAP_BLOCK
@@ -44,26 +44,26 @@ typedef struct _HEAP_BLOCK
 
 typedef struct _HEAP
 {
-    ULONG MaximumSize;
-    ULONG CurrentAllocBytes;
-    ULONG MaxAllocBytes;
+    SIZE_T MaximumSize;
+    SIZE_T CurrentAllocBytes;
+    SIZE_T MaxAllocBytes;
     ULONG NumAllocs;
     ULONG NumFrees;
-    ULONG LargestAllocation;
+    SIZE_T LargestAllocation;
     ULONGLONG AllocationTime;
     ULONGLONG FreeTime;
-    ULONG TerminatingBlock;
+    ULONG_PTR TerminatingBlock;
     HEAP_BLOCK Blocks;
 } HEAP, *PHEAP;
 
 PVOID
 HeapCreate(
-    ULONG MaximumSize,
+    SIZE_T MaximumSize,
     TYPE_OF_MEMORY MemoryType)
 {
     PHEAP Heap;
     PHEAP_BLOCK Block;
-    ULONG Remaining;
+    SIZE_T Remaining;
     USHORT PreviousSize;
     TRACE("HeapCreate(MemoryType=%ld)\n", MemoryType);
 
@@ -136,7 +136,7 @@ HeapDestroy(
     /* Mark all pages as firmware temporary, so they are free for the kernel */
     MmMarkPagesInLookupTable(PageLookupTableAddress,
                              (ULONG_PTR)Heap / MM_PAGE_SIZE,
-                             Heap->MaximumSize / MM_PAGE_SIZE,
+                             (PFN_COUNT)(Heap->MaximumSize / MM_PAGE_SIZE),
                              LoaderFirmwareTemporary);
 }
 
@@ -147,7 +147,7 @@ HeapRelease(
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block;
     PUCHAR StartAddress, EndAddress;
-    ULONG FreePages, AllFreePages = 0;
+    PFN_COUNT FreePages, AllFreePages = 0;
     TRACE("HeapRelease(%p)\n", HeapHandle);
 
     /* Loop all heap chunks */
@@ -176,7 +176,7 @@ HeapRelease(
             EndAddress = ALIGN_DOWN_POINTER_BY(Block->Data, PAGE_SIZE);
         }
 
-        FreePages = (EndAddress - StartAddress) / MM_PAGE_SIZE;
+        FreePages = (PFN_COUNT)((EndAddress - StartAddress) / MM_PAGE_SIZE);
         AllFreePages += FreePages;
 
         /* Now mark the pages free */
@@ -449,7 +449,7 @@ MmInitializeHeap(PVOID PageLookupTable)
 }
 
 PVOID
-MmHeapAlloc(ULONG MemorySize)
+MmHeapAlloc(SIZE_T MemorySize)
 {
     return HeapAllocate(FrLdrDefaultHeap, MemorySize, 'pHmM');
 }

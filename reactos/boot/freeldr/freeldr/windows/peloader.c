@@ -453,7 +453,7 @@ WinLdrpCompareDllName(IN PCH DllName,
 {
 	PWSTR Buffer;
 	UNICODE_STRING UnicodeNamePA;
-	ULONG i, Length;
+	SIZE_T i, Length;
 
 	/* First obvious check: for length of two names */
 	Length = strlen(DllName);

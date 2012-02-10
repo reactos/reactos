@@ -73,7 +73,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
 		// Get the line of data
 		CurrentOffset = IniGetNextLine(IniFileData, IniFileSize, IniFileLine, IniFileLineSize, CurrentOffset);
-		LineLength = strlen(IniFileLine);
+		LineLength = (ULONG)strlen(IniFileLine);
 
 		// If it is a blank line or a comment then skip it
 		if (IniIsLineEmpty(IniFileLine, LineLength) || IniIsCommentLine(IniFileLine, LineLength))

@@ -416,7 +416,7 @@ PcVideoSet480ScanLines(VOID)
   CRTC = (CRTC | 0xE2);
 
   /* (write) */
-  WRITE_PORT_UCHAR((PUCHAR)0x03C2, CRTC);
+  WRITE_PORT_UCHAR((PUCHAR)0x03C2, (UCHAR)CRTC);
 }
 
 static VOID

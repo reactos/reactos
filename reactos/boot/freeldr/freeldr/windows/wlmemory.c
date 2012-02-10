@@ -49,8 +49,8 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 extern PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 extern ULONG BiosMemoryMapEntryCount;
-extern ULONG MmLowestPhysicalPage;
-extern ULONG MmHighestPhysicalPage;
+extern PFN_NUMBER MmLowestPhysicalPage;
+extern PFN_NUMBER MmHighestPhysicalPage;
 
 /* GLOBALS ***************************************************************/
 
@@ -63,8 +63,8 @@ ULONG MadCount = 0;
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
+                   PFN_NUMBER BasePage,
+                   PFN_NUMBER PageCount,
                    ULONG Type)
 {
 	BOOLEAN Status = TRUE;
@@ -195,10 +195,10 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 BOOLEAN
 WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	ULONG i, PagesCount, MemoryMapSizeInPages;
-	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
+	PFN_NUMBER i, PagesCount, MemoryMapSizeInPages, NoEntries;
+	PFN_NUMBER LastPageIndex, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
-	ULONG NoEntries;
+	ULONG LastPageType;
 	//PKTSS Tss;
 	//BOOLEAN Status;
 
