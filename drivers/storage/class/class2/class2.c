@@ -12,6 +12,10 @@
 #include <include/class2.h>
 #include <stdio.h>
 
+/* Part of the drive letter hack */
+#include <ntifs.h>
+#include <ketypes.h>
+
 //#define NDEBUG
 #include <debug.h>
 
@@ -371,8 +375,16 @@ ScsiClassAddDevice(
         /* Attach it to the PDO */
         DeviceInfo->LowerDevice = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
 
-        /* Assign a drive letter */
-        ScsiClassAssignDriveLetter(DeviceInfo);
+        /* Check that the kernel has already assigned drive letters */
+        if (KeLoaderBlock == NULL)
+        {
+            /* Assign a drive letter */
+            ScsiClassAssignDriveLetter(DeviceInfo);
+        }
+        else
+        {
+            /* The kernel will handle it */
+        }
 
         /* Move to the next port number */
         DriverExtension->PortNumber++;
@@ -533,7 +545,8 @@ Return Value:
 
     } while(NT_SUCCESS(status));
 
-    return deviceFound ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
+    /* We don't want to fail init just because we don't have devices right now */
+    return STATUS_SUCCESS; /*deviceFound ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;*/
 }
 
 
