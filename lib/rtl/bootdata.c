@@ -686,12 +686,12 @@ RtlCreateBootStatusDataFile(VOID)
 */
 NTSTATUS
 NTAPI
-RtlGetSetBootStatusData(HANDLE Filehandle,
-                        BOOLEAN WriteMode,
-                        DWORD DataClass,
-                        PVOID Buffer,
-                        ULONG BufferSize,
-                        DWORD DataClass2)
+RtlGetSetBootStatusData(IN HANDLE Filehandle,
+                        IN BOOLEAN WriteMode,
+                        IN RTL_BSD_ITEM_TYPE DataClass,
+                        IN PVOID Buffer,
+                        IN ULONG BufferSize,
+                        OUT PULONG ReturnLength)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

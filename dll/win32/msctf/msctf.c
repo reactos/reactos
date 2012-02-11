@@ -33,6 +33,7 @@
 #include "shlwapi.h"
 #include "shlguid.h"
 #include "comcat.h"
+#include "rpcproxy.h"
 #include "msctf.h"
 
 #include "msctf_internal.h"
@@ -94,10 +95,15 @@ static const struct {
 
 typedef struct tagClassFactory
 {
-    const IClassFactoryVtbl *vtbl;
+    IClassFactory IClassFactory_iface;
     LONG   ref;
     LPFNCONSTRUCTOR ctor;
 } ClassFactory;
+
+static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
+}
 
 static void ClassFactory_Destructor(ClassFactory *This)
 {
@@ -121,13 +127,13 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
 
 static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory *)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory *)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ret = InterlockedDecrement(&This->ref);
 
     if (ret == 0)
@@ -137,7 +143,7 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 
 static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *punkOuter, REFIID iid, LPVOID *ppvOut)
 {
-    ClassFactory *This = (ClassFactory *)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     HRESULT ret;
     IUnknown *obj;
 
@@ -152,7 +158,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown
 
 static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
 {
-    ClassFactory *This = (ClassFactory *)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
 
     TRACE("(%p)->(%x)\n", This, fLock);
 
@@ -178,7 +184,7 @@ static const IClassFactoryVtbl ClassFactoryVtbl = {
 static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
 {
     ClassFactory *This = HeapAlloc(GetProcessHeap(),0,sizeof(ClassFactory));
-    This->vtbl = &ClassFactoryVtbl;
+    This->IClassFactory_iface.lpVtbl = &ClassFactoryVtbl;
     This->ref = 1;
     This->ctor = ctor;
     *ppvOut = This;
@@ -551,6 +557,22 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, LPVOID *ppvOut)
         }
     FIXME("CLSID %s not supported\n", debugstr_guid(clsid));
     return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (MSCTF.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( MSCTF_hinstance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (MSCTF.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( MSCTF_hinstance );
 }
 
 /***********************************************************************

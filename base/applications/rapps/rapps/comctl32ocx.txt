@@ -5,7 +5,7 @@ Name = Microsoft Visual Basic 6.0 Common Controls
 Version = 6.0
 Licence = Unknown
 Description = File needed by some applications. Contains: comctl32.ocx, mscomctl.ocx, advpack.dll. 
-Size = 914kB
+Size = 913.73kB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=25437D98-51D0-41C1-BB14-64662F5F62FE&displaylang=en
 URLDownload = http://download.microsoft.com/download/3/a/5/3a5925ac-e779-4b1c-bb01-af67dc2f96fc/VisualBasic6-KB896559-v1-ENU.exe

@@ -7,5 +7,6 @@
 	<file>execpgm.c</file>
 	<file>compses.c</file>
 	<file>lookupss.c</file>
+	<file>smclient.c</file>
 	<pch>precomp.h</pch>
 </module>

@@ -64,7 +64,7 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DbgPrint("Ecx: %x\n", TrapFrame->Ecx);
     DbgPrint("Eax: %x\n", TrapFrame->Eax);
     DbgPrint("PreviousPreviousMode: %x\n", TrapFrame->PreviousPreviousMode);
-    DbgPrint("ExceptionList: %x\n", TrapFrame->ExceptionList);
+    DbgPrint("ExceptionList: %p\n", TrapFrame->ExceptionList);
     DbgPrint("SegFs: %x\n", TrapFrame->SegFs);
     DbgPrint("Edi: %x\n", TrapFrame->Edi);
     DbgPrint("Esi: %x\n", TrapFrame->Esi);

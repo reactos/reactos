@@ -91,13 +91,16 @@ enum DeviceObjectState {
   DeviceObjectRemoved
 };
 
-typedef VOID (NTAPI *PHID_STATUS_CHANGE)(
-  PVOID  Context,
-  enum DeviceObjectState  State);
+typedef VOID
+(NTAPI *PHID_STATUS_CHANGE)(
+  _In_ PVOID Context,
+  _In_ enum DeviceObjectState State);
 
-typedef NTSTATUS (NTAPI *PHIDP_GETCAPS)(
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  OUT PHIDP_CAPS  Capabilities);
+_Must_inspect_result_
+typedef NTSTATUS
+(NTAPI *PHIDP_GETCAPS)(
+  _In_ PHIDP_PREPARSED_DATA PreparsedData,
+  _Out_ PHIDP_CAPS Capabilities);
 
 typedef struct _HID_COLLECTION_INFORMATION {
   ULONG  DescriptorSize;

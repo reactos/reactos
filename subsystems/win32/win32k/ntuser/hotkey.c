@@ -28,20 +28,6 @@ PHOT_KEY gphkFirst = &hkWinKey;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitHotkeyImpl(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-/*NTSTATUS FASTCALL
-CleanupHotKeys(VOID)
-{
-    return STATUS_SUCCESS;
-}*/
-
 /*
  * IntGetModifiers
  *

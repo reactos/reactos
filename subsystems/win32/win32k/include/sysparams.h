@@ -175,6 +175,7 @@ typedef union _SPIBUFFER
 } SPIBUFFER;
 
 extern SPIVALUES gspv;
+extern BOOL g_PaintDesktopVersion;
 
 BOOL InitSysParams();
 

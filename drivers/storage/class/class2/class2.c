@@ -1793,7 +1793,7 @@ Return Value:
             srb,
             irpStack->MajorFunction,
             irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
-            MAXIMUM_RETRIES - ((ULONG_PTR)irpStack->Parameters.Others.Argument4),
+            MAXIMUM_RETRIES - PtrToUlong(irpStack->Parameters.Others.Argument4),
             &status);
 
         //
@@ -1945,7 +1945,7 @@ Return Value:
             srb,
             irpStack->MajorFunction,
             irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
-            MAXIMUM_RETRIES - ((ULONG_PTR)irpStack->Parameters.Others.Argument4),
+            MAXIMUM_RETRIES - PtrToUlong(irpStack->Parameters.Others.Argument4),
             &status);
 
         //

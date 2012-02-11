@@ -37,32 +37,32 @@ extern "C" {
 #define BULKIN_FLAG                       0x80
 
 typedef struct _DRV_VERSION {
-  OUT ULONG major;
-  OUT ULONG minor;
-  OUT ULONG internal;
+  _Out_ ULONG major;
+  _Out_ ULONG minor;
+  _Out_ ULONG internal;
 } DRV_VERSION, *PDRV_VERSION;
 
 typedef struct _IO_BLOCK {
-  IN ULONG uOffset;
-  IN ULONG uLength;
-  IN OUT PUCHAR pbyData;
-  IN ULONG uIndex;
+  _In_ ULONG uOffset;
+  _In_ ULONG uLength;
+  _Inout_updates_bytes_(uLength) PUCHAR pbyData;
+  _In_ ULONG uIndex;
 } IO_BLOCK, *PIO_BLOCK;
 
 typedef struct _IO_BLOCK_EX {
-  IN ULONG uOffset;
-  IN ULONG uLength;
-  IN OUT PUCHAR pbyData;
-  IN ULONG uIndex;
-  IN UCHAR bRequest;
-  IN UCHAR bmRequestType;
-  IN UCHAR fTransferDirectionIn;
+  _In_ ULONG uOffset;
+  _In_ ULONG uLength;
+  _Inout_updates_bytes_(uLength) PUCHAR pbyData;
+  _In_ ULONG uIndex;
+  _In_ UCHAR bRequest;
+  _In_ UCHAR bmRequestType;
+  _In_ UCHAR fTransferDirectionIn;
 } IO_BLOCK_EX, *PIO_BLOCK_EX;
 
 typedef struct _CHANNEL_INFO {
-  OUT ULONG EventChannelSize;
-  OUT ULONG uReadDataAlignment;
-  OUT ULONG uWriteDataAlignment;
+  _Out_ ULONG EventChannelSize;
+  _Out_ ULONG uReadDataAlignment;
+  _Out_ ULONG uWriteDataAlignment;
 }CHANNEL_INFO, *PCHANNEL_INFO;
 
 typedef enum _PIPE_TYPE {
@@ -73,16 +73,16 @@ typedef enum _PIPE_TYPE {
 } PIPE_TYPE;
 
 typedef struct _USBSCAN_GET_DESCRIPTOR {
-  IN UCHAR DescriptorType;
-  IN UCHAR Index;
-  IN USHORT LanguageId;
+  _In_ UCHAR DescriptorType;
+  _In_ UCHAR Index;
+  _In_ USHORT LanguageId;
 } USBSCAN_GET_DESCRIPTOR, *PUSBSCAN_GET_DESCRIPTOR;
 
 typedef struct _DEVICE_DESCRIPTOR {
-  OUT USHORT usVendorId;
-  OUT USHORT usProductId;
-  OUT USHORT usBcdDevice;
-  OUT USHORT usLanguageId;
+  _Out_ USHORT usVendorId;
+  _Out_ USHORT usProductId;
+  _Out_ USHORT usBcdDevice;
+  _Out_ USHORT usLanguageId;
 } DEVICE_DESCRIPTOR, *PDEVICE_DESCRIPTOR;
 
 typedef enum _RAW_PIPE_TYPE {
@@ -100,8 +100,8 @@ typedef struct _USBSCAN_PIPE_INFORMATION {
 } USBSCAN_PIPE_INFORMATION, *PUSBSCAN_PIPE_INFORMATION;
 
 typedef struct _USBSCAN_PIPE_CONFIGURATION {
-  OUT ULONG NumberOfPipes;
-  OUT USBSCAN_PIPE_INFORMATION PipeInfo[MAX_NUM_PIPES];
+  _Out_ ULONG NumberOfPipes;
+  _Out_writes_(NumberOfPipes) USBSCAN_PIPE_INFORMATION PipeInfo[MAX_NUM_PIPES];
 } USBSCAN_PIPE_CONFIGURATION, *PUSBSCAN_PIPE_CONFIGURATION;
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)

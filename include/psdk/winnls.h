@@ -597,6 +597,15 @@ typedef struct _FILEMUIINFO {
     BYTE abBuffer[8];
 } FILEMUIINFO, *PFILEMUIINFO;
 
+#define HIGH_SURROGATE_START 0xd800
+#define HIGH_SURROGATE_END   0xdbff
+#define LOW_SURROGATE_START  0xdc00
+#define LOW_SURROGATE_END    0xdfff
+
+#define IS_HIGH_SURROGATE(ch) ((ch) >= HIGH_SURROGATE_START && (ch) <= HIGH_SURROGATE_END)
+#define IS_LOW_SURROGATE(ch) ((ch) >= LOW_SURROGATE_START  && (ch) <= LOW_SURROGATE_END)
+#define IS_SURROGATE_PAIR(high,low) (IS_HIGH_SURROGATE(high) && IS_LOW_SURROGATE(low))
+
 int WINAPI CompareStringA(LCID,DWORD,LPCSTR,int,LPCSTR,int);
 int WINAPI CompareStringW(LCID,DWORD,LPCWSTR,int,LPCWSTR,int);
 LCID WINAPI ConvertDefaultLocale(LCID);

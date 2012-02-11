@@ -21,19 +21,27 @@
 #include "hlink_private.h"
 
 #include "winreg.h"
+#include "rpcproxy.h"
 #include "hlguids.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
-typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown*, REFIID, LPVOID*);
+static HINSTANCE instance;
+
+typedef HRESULT (*LPFNCREATEINSTANCE)(IUnknown*, REFIID, LPVOID*);
 
 typedef struct
 {
-    const IClassFactoryVtbl *lpVtbl;
-    LPFNCREATEINSTANCE      lpfnCI;
+    IClassFactory      IClassFactory_iface;
+    LPFNCREATEINSTANCE lpfnCI;
 } CFImpl;
+
+static inline CFImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, CFImpl, IClassFactory_iface);
+}
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -42,6 +50,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+        instance = hinstDLL;
         DisableThreadLibraryCalls(hinstDLL);
         break;
     case DLL_PROCESS_DETACH:
@@ -252,14 +261,16 @@ HRESULT WINAPI HlinkNavigateToStringReference( LPCWSTR pwzTarget,
     HRESULT r;
     IHlink *hlink = NULL;
 
-    FIXME("%s %s %p %08x %p %08x %p %p %p\n",
+    TRACE("%s %s %p %08x %p %08x %p %p %p\n",
           debugstr_w(pwzTarget), debugstr_w(pwzLocation), pihlsite,
           dwSiteData, pihlframe, grfHLNF, pibc, pibsc, pihlbc);
 
     r = HlinkCreateFromString( pwzTarget, pwzLocation, NULL, pihlsite,
                                dwSiteData, NULL, &IID_IHlink, (LPVOID*) &hlink );
-    if (SUCCEEDED(r))
+    if (SUCCEEDED(r)) {
         r = HlinkNavigate(hlink, pihlframe, grfHLNF, pibc, pibsc, pihlbc);
+        IHlink_Release(hlink);
+    }
 
     return r;
 }
@@ -496,7 +507,7 @@ cleanup:
 static HRESULT WINAPI HLinkCF_fnQueryInterface ( LPCLASSFACTORY iface,
         REFIID riid, LPVOID *ppvObj)
 {
-    CFImpl *This = (CFImpl *)iface;
+    CFImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("(%p)->(%s)\n",This,debugstr_guid(riid));
 
@@ -526,7 +537,7 @@ static ULONG WINAPI HLinkCF_fnRelease(LPCLASSFACTORY iface)
 static HRESULT WINAPI HLinkCF_fnCreateInstance( LPCLASSFACTORY iface,
         LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject)
 {
-    CFImpl *This = (CFImpl *)iface;
+    CFImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("%p->(%p,%s,%p)\n", This, pUnkOuter, debugstr_guid(riid), ppvObject);
 
@@ -550,8 +561,8 @@ static const IClassFactoryVtbl hlcfvt =
     HLinkCF_fnLockServer
 };
 
-static CFImpl HLink_cf = { &hlcfvt, HLink_Constructor };
-static CFImpl HLinkBrowseContext_cf = { &hlcfvt, HLinkBrowseContext_Constructor };
+static CFImpl HLink_cf = { { &hlcfvt }, HLink_Constructor };
+static CFImpl HLinkBrowseContext_cf = { { &hlcfvt }, HLinkBrowseContext_Constructor };
 
 /***********************************************************************
  *             DllGetClassObject (HLINK.@)
@@ -567,55 +578,27 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     *ppv = NULL;
 
     if (IsEqualIID(rclsid, &CLSID_StdHlink))
-        pcf = (IClassFactory*) &HLink_cf;
+        pcf = &HLink_cf.IClassFactory_iface;
     else if (IsEqualIID(rclsid, &CLSID_StdHlinkBrowseContext))
-        pcf = (IClassFactory*) &HLinkBrowseContext_cf;
+        pcf = &HLinkBrowseContext_cf.IClassFactory_iface;
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 
     return IClassFactory_QueryInterface(pcf, iid, ppv);
 }
 
-static HRESULT register_clsid(LPCGUID guid)
-{
-    static const WCHAR clsid[] =
-        {'C','L','S','I','D','\\',0};
-    static const WCHAR ips[] =
-        {'\\','I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
-    static const WCHAR hlink[] =
-        {'h','l','i','n','k','.','d','l','l',0};
-    static const WCHAR threading_model[] =
-        {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
-    static const WCHAR apartment[] =
-        {'A','p','a','r','t','m','e','n','t',0};
-    WCHAR path[80];
-    HKEY key = NULL;
-    LONG r;
-
-    lstrcpyW(path, clsid);
-    StringFromGUID2(guid, &path[6], 80);
-    lstrcatW(path, ips);
-    r = RegCreateKeyW(HKEY_CLASSES_ROOT, path, &key);
-    if (r != ERROR_SUCCESS)
-        return E_FAIL;
-
-    RegSetValueExW(key, NULL, 0, REG_SZ, (const BYTE *)hlink, sizeof hlink);
-    RegSetValueExW(key, threading_model, 0, REG_SZ, (const BYTE *)apartment, sizeof apartment);
-    RegCloseKey(key);
-
-    return S_OK;
-}
-
 /***********************************************************************
- *             DllRegisterServer (HLINK.@)
+ *		DllRegisterServer (HLINK.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    HRESULT r;
+    return __wine_register_resources( instance );
+}
 
-    r = register_clsid(&CLSID_StdHlink);
-    if (SUCCEEDED(r))
-        r = register_clsid(&CLSID_StdHlinkBrowseContext);
-
-    return S_OK;
+/***********************************************************************
+ *		DllUnregisterServer (HLINK.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

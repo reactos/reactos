@@ -154,6 +154,7 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
     KEVENT Event;
     PIRP Irp;
     NTSTATUS Status;
+    BOOLEAN LastChance = FALSE;
 
     DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
         "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
@@ -208,20 +209,29 @@ again:
     {
         PDEVICE_OBJECT DeviceToVerify;
 
-        DPRINT1("STATUS_VERIFY_REQUIRED\n");
         DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
         IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
 
         if (DeviceToVerify)
         {
             Status = IoVerifyVolume(DeviceToVerify, FALSE);
-            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", Status);
+            DPRINT("IoVerifyVolume() returned (Status %lx)\n", Status);
         }
 
-        if (NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status) && !LastChance)
         {
             DPRINT1("Volume verify succeeded; trying request again\n");
+            LastChance = TRUE;
             goto again;
+        }
+        else if (NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to read after successful verify, aborting\n");
+            Status = STATUS_DEVICE_NOT_READY;
+        }
+        else
+        {
+            DPRINT1("IoVerifyVolume() failed (Status %lx)\n", Status);
         }
     }
 

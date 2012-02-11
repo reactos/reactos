@@ -36,17 +36,22 @@ Author:
 //
 #define RTL_USER_PROCESS_PARAMETERS_NORMALIZED              0x01
 #define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER            0x02
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x04
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x08
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x04
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x08
 #define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                 0x10
 #define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB             0x20
 #define RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB            0x40
+#define RTL_USER_PROCESS_PARAMETERS_CASE_SENSITIVE          0x80
 #define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS     0x100
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1            0x200
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2            0x400
 #define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH        0x1000
 #define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH          0x2000
+#define RTL_USER_PROCESS_PARAMETERS_IMAGE_KEY_MISSING       0x4000
 #define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
+
+#define RTL_MAX_DRIVE_LETTERS 32
+#define RTL_DRIVE_LETTER_VALID (USHORT)0x0001
 
 //
 // Exception Flags
@@ -361,6 +366,20 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 #endif /* NTOS_MODE_USER */
 
 #ifdef NTOS_MODE_USER
+
+//
+// Boot Status Data Field Types
+//
+typedef enum _RTL_BSD_ITEM_TYPE
+{
+    RtlBsdItemVersionNumber,
+    RtlBsdItemProductType,
+    RtlBsdItemAabEnabled,
+    RtlBsdItemAabTimeout,
+    RtlBsdItemBootGood,
+    RtlBsdItemBootShutdown,
+    RtlBsdItemMax
+} RTL_BSD_ITEM_TYPE, *PRTL_BSD_ITEM_TYPE;
 
 //
 // Table and Compare result types
@@ -901,28 +920,88 @@ typedef struct _RTL_PROCESS_MODULE_INFORMATION_EX
 
 typedef struct _RTL_HEAP_TAG_INFO
 {
-   ULONG NumberOfAllocations;
-   ULONG NumberOfFrees;
-   ULONG BytesAllocated;
+    ULONG NumberOfAllocations;
+    ULONG NumberOfFrees;
+    SIZE_T BytesAllocated;
 } RTL_HEAP_TAG_INFO, *PRTL_HEAP_TAG_INFO;
 
 typedef struct _RTL_HEAP_USAGE_ENTRY
 {
     struct _RTL_HEAP_USAGE_ENTRY *Next;
+    PVOID Address;
+    SIZE_T Size;
+    USHORT AllocatorBackTraceIndex;
+    USHORT TagIndex;
 } RTL_HEAP_USAGE_ENTRY, *PRTL_HEAP_USAGE_ENTRY;
 
 typedef struct _RTL_HEAP_USAGE
 {
     ULONG Length;
-    ULONG BytesAllocated;
-    ULONG BytesCommitted;
-    ULONG BytesReserved;
-    ULONG BytesReservedMaximum;
+    SIZE_T BytesAllocated;
+    SIZE_T BytesCommitted;
+    SIZE_T BytesReserved;
+    SIZE_T BytesReservedMaximum;
     PRTL_HEAP_USAGE_ENTRY Entries;
     PRTL_HEAP_USAGE_ENTRY AddedEntries;
     PRTL_HEAP_USAGE_ENTRY RemovedEntries;
-    UCHAR Reserved[32];
+    ULONG_PTR Reserved[8];
 } RTL_HEAP_USAGE, *PRTL_HEAP_USAGE;
+
+typedef struct _RTL_HEAP_WALK_ENTRY
+{
+    PVOID DataAddress;
+    SIZE_T DataSize;
+    UCHAR OverheadBytes;
+    UCHAR SegmentIndex;
+    USHORT Flags;
+    union
+    {
+        struct
+        {
+            SIZE_T Settable;
+            USHORT TagIndex;
+            USHORT AllocatorBackTraceIndex;
+            ULONG Reserved[2];
+        } Block;
+        struct
+        {
+            ULONG_PTR CommittedSize;
+            ULONG_PTR UnCommittedSize;
+            PVOID FirstEntry;
+            PVOID LastEntry;
+        } Segment;
+    };
+} RTL_HEAP_WALK_ENTRY, *PRTL_HEAP_WALK_ENTRY;
+
+typedef struct _RTL_HEAP_ENTRY
+{
+    SIZE_T Size;
+    USHORT Flags;
+    USHORT AllocatorBackTraceIndex;
+    union
+    {
+        struct
+        {
+            SIZE_T Settable;
+            ULONG Tag;
+        } s1;
+        struct
+        {
+            SIZE_T CommittedSize;
+            PVOID FirstBlock;
+        } s2;
+    } u;
+} RTL_HEAP_ENTRY, *PRTL_HEAP_ENTRY;
+
+typedef struct _RTL_HEAP_TAG
+{
+    ULONG NumberOfAllocations;
+    ULONG NumberOfFrees;
+    SIZE_T BytesAllocated;
+    USHORT TagIndex;
+    USHORT CreatorBackTraceIndex;
+    WCHAR TagName[24];
+} RTL_HEAP_TAG, *PRTL_HEAP_TAG;
 
 typedef struct _RTL_HEAP_INFORMATION
 {
@@ -930,15 +1009,15 @@ typedef struct _RTL_HEAP_INFORMATION
     ULONG Flags;
     USHORT EntryOverhead;
     USHORT CreatorBackTraceIndex;
-    ULONG BytesAllocated;
-    ULONG BytesCommitted;
+    SIZE_T BytesAllocated;
+    SIZE_T BytesCommitted;
     ULONG NumberOfTags;
     ULONG NumberOfEntries;
     ULONG NumberOfPseudoTags;
     ULONG PseudoTagGranularity;
     ULONG Reserved[4];
-    PVOID Tags;
-    PVOID Entries;
+    PRTL_HEAP_TAG Tags;
+    PRTL_HEAP_ENTRY Entries;
 } RTL_HEAP_INFORMATION, *PRTL_HEAP_INFORMATION;
 
 typedef struct _RTL_PROCESS_HEAPS
@@ -1196,6 +1275,8 @@ typedef struct _RANGE_LIST_ITERATOR
 //
 // RTL Resource
 //
+#define RTL_RESOURCE_FLAG_LONG_TERM ((ULONG)0x00000001)
+
 typedef struct _RTL_RESOURCE
 {
     RTL_CRITICAL_SECTION Lock;
@@ -1241,7 +1322,13 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
     UNICODE_STRING DesktopInfo;
     UNICODE_STRING ShellInfo;
     UNICODE_STRING RuntimeData;
-    RTL_DRIVE_LETTER_CURDIR CurrentDirectories[32];
+    RTL_DRIVE_LETTER_CURDIR CurrentDirectories[RTL_MAX_DRIVE_LETTERS];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    SIZE_T EnvironmentSize;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    SIZE_T EnvironmentVersion;
+#endif
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
 typedef struct _RTL_USER_PROCESS_INFORMATION

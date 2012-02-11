@@ -442,10 +442,11 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 NTSTATUS
 NTAPI
 ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN BOOLEAN AllocateFromLookaside,
-                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-                           OUT PUNICODE_STRING ObjectName)
+                                  IN KPROCESSOR_MODE AccessMode,
+                                  IN KPROCESSOR_MODE CreatorMode,
+                                  IN BOOLEAN AllocateFromLookaside,
+                                  IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                                  OUT PUNICODE_STRING ObjectName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
@@ -479,9 +480,10 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
 
-            /* Set some Create Info */
+            /* Set some Create Info and do not allow user-mode kernel handles */
             ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
-            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
+            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes & OBJ_VALID_ATTRIBUTES;
+            if (CreatorMode != KernelMode) ObjectCreateInfo->Attributes &= ~OBJ_KERNEL_HANDLE;
             LocalObjectName = ObjectAttributes->ObjectName;
             SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
             SecurityQos = ObjectAttributes->SecurityQualityOfService;
@@ -942,6 +944,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
     /* Capture all the info */
     Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
                                                ProbeMode,
+                                               AccessMode,
                                                FALSE,
                                                ObjectCreateInfo,
                                                &ObjectName);

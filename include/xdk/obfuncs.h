@@ -6,54 +6,60 @@ $endif (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG_PTR
 FASTCALL
 ObfDereferenceObject(
-  IN PVOID Object);
+  _In_ PVOID Object);
 #define ObDereferenceObject ObfDereferenceObject
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObGetObjectSecurity(
-  IN PVOID Object,
-  OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
-  OUT PBOOLEAN MemoryAllocated);
+  _In_ PVOID Object,
+  _Out_ PSECURITY_DESCRIPTOR *SecurityDescriptor,
+  _Out_ PBOOLEAN MemoryAllocated);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG_PTR
 FASTCALL
 ObfReferenceObject(
-  IN PVOID Object);
+  _In_ PVOID Object);
 #define ObReferenceObject ObfReferenceObject
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByHandle(
-  IN HANDLE Handle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PVOID *Object,
-  OUT POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL);
+  _In_ HANDLE Handle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PVOID *Object,
+  _Out_opt_ POBJECT_HANDLE_INFORMATION HandleInformation);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByPointer(
-  IN PVOID Object,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode);
+  _In_ PVOID Object,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ObReleaseObjectSecurity(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN BOOLEAN MemoryAllocated);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ BOOLEAN MemoryAllocated);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
@@ -61,46 +67,46 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ObInsertObject(
-  IN PVOID Object,
-  IN OUT PACCESS_STATE PassedAccessState OPTIONAL,
-  IN ACCESS_MASK DesiredAccess OPTIONAL,
-  IN ULONG ObjectPointerBias,
-  OUT PVOID *NewObject OPTIONAL,
-  OUT PHANDLE Handle OPTIONAL);
+  _In_ PVOID Object,
+  _Inout_opt_ PACCESS_STATE PassedAccessState,
+  _In_opt_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG ObjectPointerBias,
+  _Out_opt_ PVOID *NewObject,
+  _Out_opt_ PHANDLE Handle);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByPointer(
-  IN PVOID Object,
-  IN ULONG HandleAttributes,
-  IN PACCESS_STATE PassedAccessState OPTIONAL,
-  IN ACCESS_MASK DesiredAccess OPTIONAL,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PHANDLE Handle);
+  _In_ PVOID Object,
+  _In_ ULONG HandleAttributes,
+  _In_opt_ PACCESS_STATE PassedAccessState,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PHANDLE Handle);
 
 NTKERNELAPI
 VOID
 NTAPI
 ObMakeTemporaryObject(
-  IN PVOID Object);
+  _In_ PVOID Object);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObQueryNameString(
-  IN PVOID Object,
-  OUT POBJECT_NAME_INFORMATION ObjectNameInfo OPTIONAL,
-  IN ULONG Length,
-  OUT PULONG ReturnLength);
+  _In_ PVOID Object,
+  _Out_writes_bytes_opt_(Length) POBJECT_NAME_INFORMATION ObjectNameInfo,
+  _In_ ULONG Length,
+  _Out_ PULONG ReturnLength);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObQueryObjectAuditingByHandle(
-  IN HANDLE Handle,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ HANDLE Handle,
+  _Out_ PBOOLEAN GenerateOnClose);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -110,7 +116,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ObDereferenceObjectDeferDelete(
-  IN PVOID Object);
+  _In_ PVOID Object);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
@@ -118,7 +124,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ObIsKernelHandle(
-  IN HANDLE Handle);
+  _In_ HANDLE Handle);
 $endif (_NTIFS_)
 #endif
 
@@ -128,14 +134,14 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ObRegisterCallbacks(
-  IN POB_CALLBACK_REGISTRATION CallbackRegistration,
-  OUT PVOID *RegistrationHandle);
+  _In_ POB_CALLBACK_REGISTRATION CallbackRegistration,
+  _Outptr_ PVOID *RegistrationHandle);
 
 NTKERNELAPI
 VOID
 NTAPI
 ObUnRegisterCallbacks(
-  IN PVOID RegistrationHandle);
+  _In_ PVOID RegistrationHandle);
 
 NTKERNELAPI
 USHORT
@@ -147,48 +153,52 @@ $endif (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 $if (_WDMDDK_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByHandleWithTag(
-  IN HANDLE Handle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  IN ULONG Tag,
-  OUT PVOID *Object,
-  OUT POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL);
+  _In_ HANDLE Handle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_ ULONG Tag,
+  _Out_ PVOID *Object,
+  _Out_opt_ POBJECT_HANDLE_INFORMATION HandleInformation);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG_PTR
 FASTCALL
 ObfReferenceObjectWithTag(
-  IN PVOID Object,
-  IN ULONG Tag);
+  _In_ PVOID Object,
+  _In_ ULONG Tag);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByPointerWithTag(
-  IN PVOID Object,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  IN ULONG Tag);
+  _In_ PVOID Object,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_ ULONG Tag);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG_PTR
 FASTCALL
 ObfDereferenceObjectWithTag(
-  IN PVOID Object,
-  IN ULONG Tag);
+  _In_ PVOID Object,
+  _In_ ULONG Tag);
 
 NTKERNELAPI
 VOID
 NTAPI
 ObDereferenceObjectDeferDeleteWithTag(
-  IN PVOID Object,
-  IN ULONG Tag);
+  _In_ PVOID Object,
+  _In_ ULONG Tag);
 
 #define ObDereferenceObject ObfDereferenceObject
 #define ObReferenceObject ObfReferenceObject
@@ -201,14 +211,14 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByPointerWithTag(
-  IN PVOID Object,
-  IN ULONG HandleAttributes,
-  IN PACCESS_STATE PassedAccessState OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  IN ULONG Tag,
-  OUT PHANDLE Handle);
+  _In_ PVOID Object,
+  _In_ ULONG HandleAttributes,
+  _In_opt_ PACCESS_STATE PassedAccessState,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_TYPE ObjectType,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_ ULONG Tag,
+  _Out_ PHANDLE Handle);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 

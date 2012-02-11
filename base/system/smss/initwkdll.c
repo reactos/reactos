@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 static NTSTATUS NTAPI
 SmpKnownDllsQueryRoutine(PWSTR ValueName,
 			ULONG ValueType,
@@ -82,7 +83,7 @@ SmpKnownDllsQueryRoutine(PWSTR ValueName,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ImageName,
-			     OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+			     OBJ_CASE_INSENSITIVE | OBJ_PERMANENT | OBJ_OPENIF,
 			     (HANDLE)EntryContext,
 			     NULL);
   Status = NtCreateSection(&SectionHandle,
@@ -236,6 +237,6 @@ SmLoadKnownDlls(VOID)
 
   return Status;
 }
-
+#endif
 
 /* EOF */

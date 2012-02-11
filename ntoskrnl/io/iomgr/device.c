@@ -486,7 +486,7 @@ IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject->ReferenceCount);
 
     /* Dereference the device */
-    DeviceObject->ReferenceCount--;
+    InterlockedDecrement(&DeviceObject->ReferenceCount);
 
     /*
      * Check if we can unload it and it's safe to unload (or if we're forcing

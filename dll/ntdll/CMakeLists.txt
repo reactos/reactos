@@ -27,7 +27,7 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE dispatch/i386/dispatch.S)
 elseif(ARCH MATCHES amd64)
-    list(APPEND SOURCE dispatch/amd64/stubs.c)
+    list(APPEND SOURCE dispatch/amd64/dispatch.S)
 elseif(ARCH MATCHES arm)
     list(APPEND SOURCE dispatch/arm/stubs_asm.s)
 else()

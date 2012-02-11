@@ -7,10 +7,10 @@
 @ stdcall ScriptFreeCache(ptr)
 @ stdcall ScriptGetCMap(ptr ptr ptr long long ptr)
 @ stub ScriptGetFontAlternateGlyphs
-@ stub ScriptGetFontFeatureTags
-@ stub ScriptGetFontLanguageTags
+@ stdcall ScriptGetFontFeatureTags(long ptr ptr long long long ptr ptr)
+@ stdcall ScriptGetFontLanguageTags(long ptr ptr long long ptr ptr)
 @ stdcall ScriptGetFontProperties(long ptr ptr)
-@ stub ScriptGetFontScriptTags
+@ stdcall ScriptGetFontScriptTags(long ptr ptr long ptr ptr)
 @ stdcall ScriptGetGlyphABCWidth(ptr ptr long ptr)
 @ stdcall ScriptGetLogicalWidths(ptr long long ptr ptr ptr ptr)
 @ stdcall ScriptGetProperties(ptr long)

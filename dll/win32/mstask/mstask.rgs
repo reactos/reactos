@@ -1,0 +1,17 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{148BD52A-A2AB-11CE-B11F-00AA00530503}' = s 'CTaskScheduler'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+        '{148BD520-A2AB-11CE-B11F-00AA00530503}' = s 'CTask'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

@@ -2,13 +2,13 @@
 
 [Section]
 Name = K Desktop Environment
-Version = 0.9.9-4
+Version = 0.9.9-5
 Licence = GPL
 Description = KDE for Windows.
-Size = 2.2MB
+Size = 2.21MB
 Category = 15
 URLSite = http://www.winkde.org/
-URLDownload = http://www.winkde.org/pub/kde/ports/win32/installer/kdewin-installer-gui-0.9.9-4.exe
+URLDownload = http://www.winkde.org/pub/kde/ports/win32/installer/kdewin-installer-gui-0.9.9-5.exe
 CDPath = none
 
 [Section.0407]

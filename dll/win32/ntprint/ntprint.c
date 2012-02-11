@@ -36,7 +36,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntprint);
 
-HINSTANCE NTPRINT_hInstance = NULL;
+static HINSTANCE NTPRINT_hInstance = NULL;
 
 typedef struct {
   LPMONITOR_INFO_2W mi2;    /* Buffer for installed Monitors */

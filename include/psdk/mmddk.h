@@ -380,6 +380,13 @@ typedef JOYDEVMSGPROC *LPJOYDEVMSGPROC;
 #define MCI_RECT                7
 #define MCI_CONSTANT            8
 #define MCI_END_CONSTANT        9
+#define MCI_HWND                10
+#define MCI_HPAL                11
+#define MCI_HDC                 12
+
+#ifdef _WIN64
+#define MCI_INTEGER64           13
+#endif /* _WIN64 */
 
 #define MAKEMCIRESOURCE(wRet, wRes) MAKELRESULT((wRet), (wRes))
 

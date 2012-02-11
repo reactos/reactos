@@ -24,19 +24,18 @@ PMMWSL MmWorkingSetList;
 
 VOID
 NTAPI
-MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
+MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID AllocatedBase = (PVOID)USER_SHARED_DATA;
+    PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
     BoundaryAddressMultiple.QuadPart = 0;
 
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
                                 &AllocatedBase,
-                                ((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - 1) -
-                                (ULONG_PTR)USER_SHARED_DATA,
+                                PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MemoryArea,
                                 TRUE,
@@ -831,7 +830,11 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
+#ifdef _M_AMD64
+        Teb->NtTib.ExceptionList = NULL;
+#else
         Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+#endif
         Teb->NtTib.Self = (PNT_TIB)Teb;
 
         //
@@ -913,7 +916,7 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     MmWorkingSetList->LastInitializedWsle = 4;
 
     /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
-    Pfn1 = MiGetPfnEntry(MiAddressToPte(PDE_BASE)->u.Hard.PageFrameNumber);
+    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
     Pfn1->u1.Event = (PKEVENT)CurrentProcess;
 }
@@ -963,13 +966,23 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Setup the PFN for the PDE base of this process */
+#ifdef _M_AMD64
+    PointerPte = MiAddressToPte(PXE_BASE);
+#else
     PointerPte = MiAddressToPte(PDE_BASE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE);
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
+#ifdef _M_AMD64
+    PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
+#else
     PointerPde = MiAddressToPde(HYPER_SPACE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
+    //ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE); // we're not lucky
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
 
     /* Setup the PFN for the PTE for the working set */
@@ -992,7 +1005,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
 
     /* Check if there's a Section Object */
     if (SectionObject)
@@ -1092,7 +1105,7 @@ INIT_FUNCTION
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
     return STATUS_SUCCESS;
 }
 
@@ -1325,6 +1338,173 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
     /* Release the address space */
     MmUnlockAddressSpace(&Process->Vm);
+}
+
+/* SESSION CODE TO MOVE TO SESSION.C ******************************************/
+
+KGUARDED_MUTEX MiSessionIdMutex;
+PRTL_BITMAP MiSessionIdBitmap;
+volatile LONG MiSessionLeaderExists;
+
+VOID
+NTAPI
+MiInitializeSessionIds(VOID)
+{
+    /* FIXME: Other stuff should go here */
+
+    /* Initialize the lock */
+    KeInitializeGuardedMutex(&MiSessionIdMutex);
+
+    /* Allocate the bitmap */
+    MiSessionIdBitmap = ExAllocatePoolWithTag(PagedPool,
+                                              sizeof(RTL_BITMAP) + ((64 + 31) / 32) * 4,
+                                              '  mM');
+    if (MiSessionIdBitmap)
+    {
+        /* Free all the bits */
+        RtlInitializeBitMap(MiSessionIdBitmap, (PVOID)(MiSessionIdBitmap + 1), 64);
+        RtlClearAllBits(MiSessionIdBitmap);
+    }
+    else
+    {
+        /* Die if we couldn't allocate the bitmap */
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MmLowestPhysicalPage,
+                     MmHighestPhysicalPage,
+                     0x200);
+    }
+}
+
+VOID
+NTAPI
+MiSessionLeader(IN PEPROCESS Process)
+{
+    KIRQL OldIrql;
+
+    /* Set the flag while under the expansion lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
+    Process->Vm.Flags.SessionLeader = TRUE;
+    KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+}
+
+NTSTATUS
+NTAPI
+MiSessionCreateInternal(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG NewFlags, Flags;
+
+    /* Loop so we can set the session-is-creating flag */
+    Flags = Process->Flags;
+    while (TRUE)
+    {
+        /* Check if it's already set */
+        if (Flags & PSF_SESSION_CREATION_UNDERWAY_BIT)
+        {
+            /* Bail out */
+            DPRINT1("Lost session race\n");
+            return STATUS_ALREADY_COMMITTED;
+        }
+
+        /* Now try to set it */
+        NewFlags = InterlockedCompareExchange((PLONG)&Process->Flags,
+                                              Flags | PSF_SESSION_CREATION_UNDERWAY_BIT,
+                                              Flags);
+        if (NewFlags == Flags) break;
+
+        /* It changed, try again */
+        Flags = NewFlags;
+    }
+
+    /* Now we should own the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+
+    /* Allocate a new Session ID */
+    KeAcquireGuardedMutex(&MiSessionIdMutex);
+    *SessionId = RtlFindClearBitsAndSet(MiSessionIdBitmap, 1, 0);
+    if (*SessionId == 0xFFFFFFFF)
+    {
+        DPRINT1("Too many sessions created. Expansion not yet supported\n");
+        return STATUS_NO_MEMORY;
+    }
+    KeReleaseGuardedMutex(&MiSessionIdMutex);
+
+    /* We're done, clear the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+    PspClearProcessFlag(Process, PSF_SESSION_CREATION_UNDERWAY_BIT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG SessionLeaderExists;
+    NTSTATUS Status;
+
+    /* Fail if the process is already in a session */
+    if (Process->Flags & PSF_PROCESS_IN_SESSION_BIT)
+    {
+        DPRINT1("Process already in session\n");
+        return STATUS_ALREADY_COMMITTED;
+    }
+
+    /* Check if the process is already the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        /* Atomically set it as the leader */
+        SessionLeaderExists = InterlockedCompareExchange(&MiSessionLeaderExists, 1, 0);
+        if (SessionLeaderExists)
+        {
+            DPRINT1("Session leader race\n");
+            return STATUS_INVALID_SYSTEM_SERVICE;
+        }
+
+        /* Do the work required to upgrade him */
+        MiSessionLeader(Process);
+    }
+
+    /* FIXME: Actually create a session */
+    KeEnterCriticalRegion();
+    Status = MiSessionCreateInternal(SessionId);
+    KeLeaveCriticalRegion();
+
+    /* Set and assert the flags, and return */
+    PspSetProcessFlag(Process, PSF_PROCESS_IN_SESSION_BIT);
+    ASSERT(MiSessionLeaderExists == 1);
+    if (NT_SUCCESS(Status)) DPRINT1("New session created: %lx\n", *SessionId);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+
+    /* Process must be in a session */
+    if (!(Process->Flags & PSF_PROCESS_IN_SESSION_BIT))
+    {
+        DPRINT1("Not in a session!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* It must be the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        DPRINT1("Not a session leader!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* Remove one reference count */
+    KeEnterCriticalRegion();
+    /* FIXME: Do it */
+    KeLeaveCriticalRegion();
+
+    /* All done */
+    return STATUS_SUCCESS;
 }
 
 /* SYSTEM CALLS ***************************************************************/

@@ -5,7 +5,7 @@
 @ stub HttpCreateAppPool
 @ stub HttpCreateConfigGroup
 @ stub HttpCreateFilter
-@ stub HttpCreateHttpHandle
+@ stdcall HttpCreateHttpHandle(ptr long)
 @ stub HttpDeleteConfigGroup
 @ stdcall HttpDeleteServiceConfiguration(ptr long ptr long ptr)
 @ stub HttpFilterAccept

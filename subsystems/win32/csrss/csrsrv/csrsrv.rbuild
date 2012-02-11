@@ -9,6 +9,7 @@
 	<library>ntdll</library>
 	<library>pseh</library>
 	<library>smdll</library>
+	<library>smlib</library>
 	<directory name="api">
 		<file>process.c</file>
 		<file>user.c</file>

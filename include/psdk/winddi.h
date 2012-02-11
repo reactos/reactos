@@ -846,6 +846,8 @@ typedef struct _PATHOBJ {
   ULONG  cCurves;
 } PATHOBJ;
 
+typedef BYTE GAMMA_TABLES[2][256];
+
 typedef struct _GLYPHBITS {
   POINTL  ptlOrigin;
   SIZEL  sizlBitmap;
@@ -1478,7 +1480,7 @@ EngCreateWnd(
     _In_ FLONG fl,
     _In_ INT iPixelFormat);
 
-//_Analysis_noreturn_
+_Analysis_noreturn_
 WIN32KAPI
 VOID
 APIENTRY
@@ -1528,7 +1530,7 @@ WIN32KAPI
 VOID
 APIENTRY
 EngDeletePath(
-    _Inout_ _Post_ptr_invalid_ PATHOBJ *ppo);
+    _In_ _Post_ptr_invalid_ PATHOBJ *ppo);
 
 WIN32KAPI
 VOID
@@ -1540,7 +1542,7 @@ WIN32KAPI
 VOID
 APIENTRY
 EngDeleteSemaphore(
-    _Inout_ _Post_ptr_invalid_ HSEMAPHORE hsem);
+    _In_ _Post_ptr_invalid_ HSEMAPHORE hsem);
 
 WIN32KAPI
 BOOL
@@ -1552,7 +1554,7 @@ WIN32KAPI
 VOID
 APIENTRY
 EngDeleteWnd(
-    _Inout_ _Post_ptr_invalid_ WNDOBJ *pwo);
+    _In_ _Post_ptr_invalid_ WNDOBJ *pwo);
 
 WIN32KAPI
 DWORD
@@ -1565,6 +1567,9 @@ EngDeviceIoControl(
     _Out_opt_bytecap_(cjOutBufferSize) LPVOID lpOutBuffer,
     _In_ DWORD cjOutBufferSize,
     _Out_ LPDWORD lpBytesReturned);
+
+#define DM_DEFAULT                        0x00000001
+#define DM_MONOCHROME                     0x00000002
 
 WIN32KAPI
 ULONG
@@ -3028,9 +3033,6 @@ typedef VOID
     _In_ DHPDEV dhpdev);
 typedef FN_DrvDisableSurface *PFN_DrvDisableSurface;
 extern FN_DrvDisableSurface DrvDisableSurface;
-
-#define DM_DEFAULT                        0x00000001
-#define DM_MONOCHROME                     0x00000002
 
 typedef ULONG
 (APIENTRY FN_DrvDitherColor)(

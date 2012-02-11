@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(csrsrv SHARED ${SOURCE})
 
-target_link_libraries(csrsrv ${PSEH_LIB})
+target_link_libraries(csrsrv ${PSEH_LIB} smlib)
 
 set_module_type(csrsrv nativedll)
 

@@ -11,6 +11,7 @@ TF_SAVE_ALL             = (TF_VOLATILES OR TF_NONVOLATILES OR TF_XMM OR TF_SEGME
 TF_HAS_ERROR_CODE       = HEX(40)
 TF_SEND_EOI             = HEX(80)
 //TF_SYSTEMSERVICE        = (TRAPFLAG_VOLATILES or TRAPFLAG_DEBUG)
+TF_CHECKUSERAPC         = HEX(100)
 
 /*
  * Stack Layout:
@@ -28,7 +29,7 @@ TF_SEND_EOI             = HEX(80)
  * EnterTrap - Allocate KTRAP_FRAME_LENGTH and save registers to it
  */
 MACRO(EnterTrap, Flags)
-    LOCAL dont_swap
+    LOCAL kernel_mode_entry
 
     /* Save the trap flags for this trap */
     CurrentTrapFlags = VAL(Flags)
@@ -45,21 +46,28 @@ MACRO(EnterTrap, Flags)
     /* Make room for a KTRAP_FRAME */
     sub rsp, (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
     .allocstack (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
-    .endprolog
 
     /* Save rbp and rax */
     mov [rsp + KTRAP_FRAME_Rbp], rbp
+    .savereg rbp, KTRAP_FRAME_Rbp
     mov [rsp + KTRAP_FRAME_Rax], rax
+    .savereg rax, KTRAP_FRAME_Rax
 
     /* Point rbp to the KTRAP_FRAME */
     lea rbp, [rsp]
+    .setframe rbp, 0
 
     if (Flags AND TF_NONVOLATILES)
         /* Save non-volatile registers */
         mov [rbp + KTRAP_FRAME_Rbx], rbx
+        .savereg rbx, KTRAP_FRAME_Rbx
         mov [rbp + KTRAP_FRAME_Rdi], rdi
+        .savereg rdi, KTRAP_FRAME_Rdi
         mov [rbp + KTRAP_FRAME_Rsi], rsi
+        .savereg rsi, KTRAP_FRAME_Rsi
     endif
+
+    .endprolog
 
     if (Flags AND TF_VOLATILES)
         /* Save volatile registers */
@@ -89,19 +97,25 @@ MACRO(EnterTrap, Flags)
         mov [rbp + KTRAP_FRAME_SegGs], gs
     endif
 
-    /* Save previous mode and swap gs when it was UserMode */
+    /* Save previous mode and check if it was user mode */
     mov ax, [rbp + KTRAP_FRAME_SegCs]
     and al, 1
     mov [rbp + KTRAP_FRAME_PreviousMode], al
-    jz dont_swap
-    swapgs
-dont_swap:
+    jz kernel_mode_entry
 
-    if (Flags AND TF_IRQL)
+    /* Set sane segments */
+    mov ax, (KGDT64_R3_DATA or RPL_MASK)
+    mov ds, ax
+    mov es, ax
+    swapgs
+
+kernel_mode_entry:
+
+//    if (Flags AND TF_IRQL)
         /* Save previous irql */
         mov rax, cr8
         mov [rbp + KTRAP_FRAME_PreviousIrql], al
-    endif
+//    endif
 
     if (Flags AND TF_DEBUG)
         /* Save debug registers */
@@ -127,7 +141,16 @@ ENDM
  *  ExitTrap - Restore registers and free stack space
  */
 MACRO(ExitTrap, Flags)
-    LOCAL dont_swap_back
+    LOCAL kernel_mode_return
+
+#if DBG
+        /* Check previous irql */
+        mov rax, cr8
+        cmp [rbp + KTRAP_FRAME_PreviousIrql], al
+        je .irql_ok
+        int 3
+    .irql_ok:
+#endif
 
     if (Flags AND TF_SEGMENTS)
         /* Restore segment selectors */
@@ -142,10 +165,22 @@ MACRO(ExitTrap, Flags)
         mov cr8, rax
     endif
 
-    test byte ptr [rbp + KTRAP_FRAME_PreviousMode], 1
-    jz dont_swap_back
+    /* Check if we came from user mode */
+    test byte ptr [rbp + KTRAP_FRAME_SegCs], 1
+    jz kernel_mode_return
+
+    if (Flags AND TF_CHECKUSERAPC)
+        /* Load current thread into r10 */
+        mov r10, gs:[PcCurrentThread]
+        cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
+        jne KiExitToUserApc
+
+    endif
+
+    /* Swap gs to user mode */
     swapgs
-dont_swap_back:
+
+kernel_mode_return:
 
     if (Flags AND TF_NONVOLATILES)
         /* Restore non-volatile registers */
@@ -204,6 +239,6 @@ MACRO(TRAP_ENTRY, Trap, Flags)
 
         /* Leave */
         ExitTrap Flags
-    ENDFUNC &Trap
+    ENDFUNC
 ENDM
 

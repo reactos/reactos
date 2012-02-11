@@ -500,7 +500,7 @@ SmDestroyClient (ULONG SubsystemId)
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Status;
 }
-
+#if 0
 /* === Utilities for SmQryInfo === */
 
 /**********************************************************************
@@ -566,5 +566,5 @@ SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION i)
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	return Status;
 }
-
+#endif
 /* EOF */

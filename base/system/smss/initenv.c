@@ -22,9 +22,11 @@ PWSTR SmSystemEnvironment = NULL;
 NTSTATUS
 SmCreateEnvironment(VOID)
 {
-    return RtlCreateEnvironment(FALSE, &SmSystemEnvironment);
+    return RtlCreateEnvironment(TRUE, &SmSystemEnvironment);
 }
 
+
+#if 0
 
 static NTSTATUS
 SmpSetEnvironmentVariable(IN PVOID Context,
@@ -60,7 +62,6 @@ SmpEnvironmentQueryRoutine(IN PWSTR ValueName,
     DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
     return SmpSetEnvironmentVariable(Context,ValueName,(PWSTR)ValueData);
 }
-
 
 NTSTATUS
 SmSetEnvironmentVariables(VOID)
@@ -280,14 +281,13 @@ done:
     return Status;
 }
 
-
 /**********************************************************************
  *  Set environment variables from registry
  */
 NTSTATUS
 SmUpdateEnvironment(VOID)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    //RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     WCHAR ValueBuffer[MAX_PATH];
     NTSTATUS Status;
 #ifndef NDEBUG
@@ -343,5 +343,5 @@ SmUpdateEnvironment(VOID)
 
     return Status;
 }
-
+#endif
 /* EOF */

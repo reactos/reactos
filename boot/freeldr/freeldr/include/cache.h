@@ -67,8 +67,8 @@ typedef struct
 extern	CACHE_DRIVE		CacheManagerDrive;
 extern	BOOLEAN			CacheManagerInitialized;
 extern	ULONG				CacheBlockCount;
-extern	ULONG				CacheSizeLimit;
-extern	ULONG				CacheSizeCurrent;
+extern	SIZE_T				CacheSizeLimit;
+extern	SIZE_T				CacheSizeCurrent;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

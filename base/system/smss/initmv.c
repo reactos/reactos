@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 
 /* FUNCTIONS *****************************************************************/
 
@@ -445,5 +446,7 @@ SmProcessFileRenameList( VOID )
 	does not exist, in this case smss hungs, therefore we always return STATUS_SUCCESS */
 	return (STATUS_SUCCESS);
 }
+
+#endif
 
 /* EOF */

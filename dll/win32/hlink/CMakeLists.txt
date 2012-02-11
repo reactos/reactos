@@ -2,6 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(hlink.dll hlink.spec)
 
 list(APPEND SOURCE
@@ -9,6 +10,7 @@ list(APPEND SOURCE
     extserv.c
     hlink_main.c
     link.c
+    hlink.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
 

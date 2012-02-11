@@ -27,3 +27,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: pstorec_tlb.tlb */
 1 TYPELIB pstorec_tlb.tlb
+
+2 WINE_REGISTRY pstorec.rgs

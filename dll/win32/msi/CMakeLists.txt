@@ -32,19 +32,16 @@ list(APPEND SOURCE
     font.c
     format.c
     handle.c
-    helpers.c
     insert.c
     install.c
-    join.c
     media.c
     msi.c
     msi_main.c
     msiquery.c
     package.c
-    preview.c
+    patch.c
     record.c
     registry.c
-    regsvr.c
     script.c
     select.c
     source.c
@@ -77,7 +74,7 @@ set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BIN
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader)
-add_delay_importlibs(msi odbccp32)
+add_delay_importlibs(msi odbccp32 crypt32 imagehlp wintrust)
 
 add_importlibs(msi
     advapi32

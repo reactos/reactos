@@ -150,6 +150,7 @@ static ULONG SectionCharacteristicsToProtect[16] =
     PAGE_EXECUTE_READWRITE, /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
 };
 
+ACCESS_MASK NTAPI MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection);
 static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,
          STANDARD_RIGHTS_WRITE | SECTION_MAP_WRITE,
@@ -401,7 +402,7 @@ l_ReadHeaderFromFile:
             break;
         }
 
-        /* PE32+ */
+        /* PE64 */
         case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
         {
             const IMAGE_OPTIONAL_HEADER64 * pioh64OptHeader;
@@ -462,7 +463,7 @@ l_ReadHeaderFromFile:
 
     if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
     {
-        ImageSectionObject->EntryPoint = piohOptHeader->ImageBase +
+        ImageSectionObject->EntryPoint = ImageSectionObject->ImageBase +
                                          piohOptHeader->AddressOfEntryPoint;
     }
 
@@ -1289,7 +1290,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   MM_REQUIRED_RESOURCES Resources = { };
+   MM_REQUIRED_RESOURCES Resources = {0};
+   NTSTATUS Status;
 
    Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
    Resources.FileOffset.QuadPart = SegOffset +
@@ -1299,7 +1301,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
    DPRINT1("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
 
-   NTSTATUS Status = MiReadFilePage(NULL, NULL, &Resources);
+   Status = MiReadFilePage(NULL, NULL, &Resources);
    *Page = Resources.Page[0];
    return Status;
 }
@@ -3012,22 +3014,10 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    Section->AllocationAttributes = AllocationAttributes;
 
    /*
-    * Check file access required
-    */
-   if (SectionPageProtection & PAGE_READWRITE ||
-         SectionPageProtection & PAGE_EXECUTE_READWRITE)
-   {
-      FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
-   }
-   else
-   {
-      FileAccess = FILE_READ_DATA;
-   }
-
-   /*
     * Reference the file handle
     */
-   Status = ObReferenceObjectByHandle(FileHandle,
+    FileAccess = MiArm3GetCorrectFileAccessMask(SectionPageProtection);
+    Status = ObReferenceObjectByHandle(FileHandle,
                                       FileAccess,
                                       IoFileObjectType,
                                       ExGetPreviousMode(),
@@ -3882,22 +3872,10 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    ULONG FileAccess = 0;
 
    /*
-    * Check file access required
-    */
-   if (SectionPageProtection & PAGE_READWRITE ||
-         SectionPageProtection & PAGE_EXECUTE_READWRITE)
-   {
-      FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
-   }
-   else
-   {
-      FileAccess = FILE_READ_DATA;
-   }
-
-   /*
     * Reference the file handle
     */
-   Status = ObReferenceObjectByHandle(FileHandle,
+    FileAccess = MiArm3GetCorrectFileAccessMask(SectionPageProtection);
+    Status = ObReferenceObjectByHandle(FileHandle,
                                       FileAccess,
                                       IoFileObjectType,
                                       ExGetPreviousMode(),

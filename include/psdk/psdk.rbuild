@@ -13,6 +13,8 @@
 	<file>bits.idl</file>
 	<file>commoncontrols.idl</file>
 	<file>control.idl</file>
+	<file>cor.idl</file>
+	<file>cordebug.idl</file>
 	<file>ctfutb.idl</file>
 	<file>ctxtcall.idl</file>
 	<file>dimm.idl</file>
@@ -27,8 +29,10 @@
 	<file>imnact.idl</file>
 	<file>imnxport.idl</file>
 	<file>indexsrv.idl</file>
+	<file>metahost.idl</file>
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
+	<file>mscoree.idl</file>
 	<file>msctf.idl</file>
 	<file>msdadc.idl</file>
 	<file>mshtml.idl</file>

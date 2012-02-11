@@ -1,3 +1,7 @@
+/* Превод на Български/ Bulgarian translation */
+/* http://www.reactos.org/wiki/Bulgarian_translation */
+/* LOCATION: \base\applications\rapps\lang */
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
@@ -185,8 +189,8 @@ BEGIN
 	IDS_UPDATES "Обновления"
 	IDS_APPLICATIONS "Приложения"
 	IDS_CHOOSE_FOLDER_TEXT "Изберете папка, в която да се свалят приложенията:"
-	IDS_CHOOSE_FOLDER_ERROR "Указали сте несъсшествуваща папка!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""Управителят за приложения на РеактОС""!"
+	IDS_CHOOSE_FOLDER_ERROR "Указали сте несъществуваща папка!"
+	IDS_USER_NOT_ADMIN "Трябва да имате управнически права, за да запуснете „Управителя за приложения на РеактОС“!"
 	IDS_APP_REG_REMOVE "Уверен ли сте, че искате да изтриете данните за сложеното приложение от регистъра?"
 	IDS_INFORMATION "Сведения"
 	IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"

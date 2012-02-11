@@ -59,7 +59,6 @@
 #include "Uk.rc"
 #include "Zh.rc"
 
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: mshtml.inf */

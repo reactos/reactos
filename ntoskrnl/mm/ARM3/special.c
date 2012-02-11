@@ -261,7 +261,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     RtlZeroMemory(Header, sizeof(POOL_HEADER));
 
     /* Save allocation size there */
-    Header->Ulong1 = NumberOfBytes;
+    Header->Ulong1 = (ULONG)NumberOfBytes;
 
     /* Make sure it's all good */
     ASSERT((NumberOfBytes <= PAGE_SIZE - sizeof(POOL_HEADER)) &&
@@ -286,7 +286,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
        That time will be used to check memory consistency within the allocated
        page. */
     Header->PoolTag = Tag;
-    Header->BlockSize = TickCount.LowPart;
+    Header->BlockSize = (USHORT)TickCount.LowPart;
     DPRINT1("%p\n", Entry);
     return Entry;
 }
@@ -305,7 +305,7 @@ MiSpecialPoolCheckPattern(PUCHAR P, PPOOL_HEADER Header)
     Ptr = P + BytesRequested;
 
     /* Calculate how many bytes to check */
-    BytesToCheck = (PUCHAR)PAGE_ALIGN(P) + PAGE_SIZE - Ptr;
+    BytesToCheck = (ULONG)((PUCHAR)PAGE_ALIGN(P) + PAGE_SIZE - Ptr);
 
     /* Remove pool header size if we're catching underruns */
     if (((ULONG_PTR)P & (PAGE_SIZE - 1)) == 0)
@@ -335,7 +335,7 @@ MmFreeSpecialPool(PVOID P)
     KIRQL Irql = KeGetCurrentIrql();
     POOL_TYPE PoolType;
     ULONG BytesRequested, BytesReal = 0;
-    ULONG_PTR PtrOffset;
+    ULONG PtrOffset;
     PUCHAR b;
     PMI_FREED_SPECIAL_POOL FreedHeader;
     LARGE_INTEGER TickCount;
@@ -358,7 +358,7 @@ MmFreeSpecialPool(PVOID P)
     }
 
     /* Determine if it's a underruns or overruns pool pointer */
-    PtrOffset = (ULONG_PTR)P & (PAGE_SIZE - 1);
+    PtrOffset = (ULONG)((ULONG_PTR)P & (PAGE_SIZE - 1));
     if (PtrOffset)
     {
         /* Pool catches overruns */

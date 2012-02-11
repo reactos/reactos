@@ -16,8 +16,6 @@ typedef struct _HOT_KEY
 #define IDHK_WINKEY    -7
 #define IDHK_REACTOS   -8
 
-INIT_FUNCTION NTSTATUS NTAPI InitHotkeyImpl(VOID);
-
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
 VOID FASTCALL UnregisterThreadHotKeys(struct _ETHREAD *pThread);
 BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);

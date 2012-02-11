@@ -145,10 +145,10 @@ MempIsPageMapped(PVOID VirtualAddress)
     return TRUE;
 }
 
-ULONG
-MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPages)
+PFN_NUMBER
+MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, PFN_NUMBER cPages)
 {
-	ULONG i;
+	PFN_NUMBER i;
 
 	for (i = 0; i < cPages; i++)
 	{
@@ -165,8 +165,8 @@ MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPage
 }
 
 BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages,
+MempSetupPaging(IN PFN_NUMBER StartPage,
+				IN PFN_NUMBER NumberOfPages,
 				IN BOOLEAN KernelMapping)
 {
     TRACE(">>> MempSetupPaging(0x%lx, %ld, %p)\n",
@@ -196,7 +196,7 @@ MempSetupPaging(IN ULONG StartPage,
 }
 
 VOID
-MempUnmapPage(ULONG Page)
+MempUnmapPage(PFN_NUMBER Page)
 {
    // TRACE(">>> MempUnmapPage\n");
 }
@@ -236,7 +236,7 @@ WinLdrpMapApic()
 BOOLEAN
 WinLdrMapSpecialPages()
 {
-	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
+	PHARDWARE_PTE PpeBase, PdeBase;
 
 	/* Map the PCR page */
 	if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
@@ -308,7 +308,7 @@ Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 
 	/* Set the new Gdt */
 	__lgdt(&GdtDesc.Limit);
-	DbgPrint("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
+	TRACE("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
 
 }
 
@@ -329,7 +329,7 @@ Amd64SetupIdt(PVOID IdtBase)
 
 	/* Set the new IDT */
 	__lidt(&IdtDesc.Limit);
-	DbgPrint("Idtr.Base = %p\n", IdtDesc.Base);
+	TRACE("Idtr.Base = %p\n", IdtDesc.Base);
 
 }
 

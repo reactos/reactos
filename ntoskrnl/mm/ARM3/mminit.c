@@ -14,6 +14,7 @@
 
 #define MODULE_INVOLVED_IN_ARM3
 #include "miarm.h"
+#undef MmSystemRangeStart
 
 /* GLOBALS ********************************************************************/
 
@@ -93,6 +94,7 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
 //
 PVOID MmNonPagedSystemStart;
+SIZE_T MiNonPagedSystemSize;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
@@ -169,7 +171,7 @@ PMMPDE MmSystemPagePtes;
 //
 // This should be 0xC0C00000 -- the cache itself starts at 0xC1000000
 //
-PMMWSL MmSystemCacheWorkingSetList = MI_SYSTEM_CACHE_WS_START;
+PMMWSL MmSystemCacheWorkingSetList = (PVOID)MI_SYSTEM_CACHE_WS_START;
 
 //
 // Windows NT seems to choose between 7000, 11000 and 50000
@@ -1283,9 +1285,9 @@ INIT_FUNCTION
 MiAddHalIoMappings(VOID)
 {
     PVOID BaseAddress;
-    PMMPDE PointerPde;
+    PMMPDE PointerPde, LastPde;
     PMMPTE PointerPte;
-    ULONG i, j, PdeCount;
+    ULONG j;
     PFN_NUMBER PageFrameIndex;
 
     /* HAL Heap address -- should be on a PDE boundary */
@@ -1294,8 +1296,9 @@ MiAddHalIoMappings(VOID)
 
     /* Check how many PDEs the heap has */
     PointerPde = MiAddressToPde(BaseAddress);
-    PdeCount = PDE_COUNT - MiGetPdeOffset(BaseAddress);
-    for (i = 0; i < PdeCount; i++)
+    LastPde = MiAddressToPde((PVOID)MM_HAL_VA_END);
+
+    while (PointerPde <= LastPde)
     {
         /* Does the HAL own this mapping? */
         if ((PointerPde->u.Hard.Valid == 1) &&
@@ -1604,7 +1607,10 @@ MiBuildPagedPool(VOID)
     KIRQL OldIrql;
     SIZE_T Size;
     ULONG BitMapSize;
-#if (_MI_PAGING_LEVELS == 2)
+#if (_MI_PAGING_LEVELS >= 3)
+    MMPPE TempPpe = ValidKernelPpe;
+    PMMPPE PointerPpe;
+#elif (_MI_PAGING_LEVELS == 2)
     MMPTE TempPte = ValidKernelPte;
 
     //
@@ -1681,17 +1687,32 @@ MiBuildPagedPool(VOID)
                               MmSizeOfPagedPoolInBytes) - 1);
 
     //
+    // Lock the PFN database
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+#if (_MI_PAGING_LEVELS >= 3)
+    /* On these systems, there's no double-mapping, so instead, the PPEs
+     * are setup to span the entire paged pool area, so there's no need for the
+     * system PD */
+    for (PointerPpe = MiAddressToPpe(MmPagedPoolStart);
+         PointerPpe <= MiAddressToPpe(MmPagedPoolEnd);
+         PointerPpe++)
+    {
+        /* Check if the PPE is already valid */
+        if (!PointerPpe->u.Hard.Valid)
+        {
+            /* It is not, so map a fresh zeroed page */
+            TempPpe.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
+            MI_WRITE_VALID_PPE(PointerPpe, TempPpe);
+        }
+    }
+#endif
+
+    //
     // So now get the PDE for paged pool and zero it out
     //
     PointerPde = MiAddressToPde(MmPagedPoolStart);
-
-#if (_MI_PAGING_LEVELS >= 3)
-    /* On these systems, there's no double-mapping, so instead, the PPE and PXEs
-     * are setup to span the entire paged pool area, so there's no need for the
-     * system PD */
-     ASSERT(FALSE);
-#endif
-
     RtlZeroMemory(PointerPde,
                   (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPDE));
 
@@ -1702,11 +1723,6 @@ MiBuildPagedPool(VOID)
     MmPagedPoolInfo.FirstPteForPagedPool = PointerPte;
     MmPagedPoolInfo.LastPteForPagedPool = MiAddressToPte(MmPagedPoolEnd);
 
-    //
-    // Lock the PFN database
-    //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
     /* Allocate a page and map the first paged pool PDE */
     MI_SET_USAGE(MI_USAGE_PAGED_POOL);
     MI_SET_PROCESS2("Kernel");
@@ -1716,7 +1732,11 @@ MiBuildPagedPool(VOID)
 #if (_MI_PAGING_LEVELS >= 3)
     /* Use the PPE of MmPagedPoolStart that was setup above */
 //    Bla = PFN_FROM_PTE(PpeAddress(MmPagedPool...));
-    ASSERT(FALSE);
+
+    /* Initialize the PFN entry for it */
+    MiInitializePfnForOtherProcess(PageFrameIndex,
+                                   (PMMPTE)PointerPde,
+                                   PFN_FROM_PTE(MiAddressToPpe(MmPagedPoolStart)));
 #else
     /* Do it this way */
 //    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]

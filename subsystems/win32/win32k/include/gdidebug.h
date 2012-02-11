@@ -55,11 +55,11 @@ NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN
 #if DBG
 void
 NTAPI
-DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
+GdiDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
 
 ULONG_PTR
 NTAPI
-DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
+GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 
 #define ID_Win32PreServiceHook 'WSH0'
 #define ID_Win32PostServiceHook 'WSH1'

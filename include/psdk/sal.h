@@ -308,6 +308,8 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #else
 #define _SA_Must_inspect_
 #endif
+#define _Old_(x)                    x
+#define __AuToQuOtE                 _SA_annotes0(SAL_AuToQuOtE)
 
 /******************************************************************************
  *                              Public macros                                 *
@@ -390,7 +392,14 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _At_buffer_(t, i, b, a)         _SA_annotes3(SAL_at_buffer, t, i, b) _Group_(a)
 #define _Must_inspect_result_           _SA_Must_inspect_ _Check_return_
 #define _Always_(annos)                 _Group_(annos) _On_failure_(annos)
+
+#if (_MSC_VER >= 1600)
 #define _Points_to_data_                _Pre_ _At_(*_Curr_, _SA_annotes1(SAL_mayBePointer, __no))
+#else
+// FIXME
+#define _Points_to_data_
+#endif
+
 #define _Return_type_success_(expr)     _Success_(expr)
 #define _Struct_size_bytes_(size)       _Writable_bytes_(size)
 #define _Unchanged_(e)                  _At_(e, _Post_equal_to_(_Old_(e)) _Const_)
@@ -940,6 +949,8 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Result_nullonfailure_          _On_failure_(_Notref_ _SA_Deref_ _Post_null_)
 #define _Result_zeroonfailure_          _On_failure_(_Notref_ _SA_Deref_ _Out_range_(==, 0))
 
+#define __inner_callback                _SA_annotes0(__callback)
+
 #define _Ret_                           _Ret_valid_
 #define _Ret_bytecap_(size)             _SA_Ret1_(__notnull_impl_notref) _SA_Ret1_(__bytecap_impl(size))
 #define _Ret_bytecap_c_(size)           _SA_Ret1_(__notnull_impl_notref) _SA_Ret1_(__bytecap_c_impl(size))
@@ -995,6 +1006,29 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 
 #define _Deref_ret_opt_z_               _SA_Deref_ret1_(__maybenull_impl_notref) _SA_Ret1_(__zterm_impl)
 #define _Deref_ret_z_                   _SA_Deref_ret1_(__notnull_impl_notref) _SA_Deref_ret1_(__zterm_impl)
+
+/* Additional annotation declarations */
+#define __ANNOTATION(fun) _SA_annotes0(SAL_annotation) void __SA_##fun
+#define __PRIMOP(type, fun) _SA_annotes0(SAL_primop) type __SA_##fun;
+#if (_MSC_VER < 1600)
+
+__ANNOTATION(SAL_satisfies(_In_ char);)
+
+#define _Inexpressible_(x) (x)
+
+#endif
+
+__ANNOTATION(SAL_constant(enum __SAL_YesNo);)
+__ANNOTATION(SAL_TypeName(__AuToQuOtE char *));
+
+__ANNOTATION(SAL_functionClassNew(_In_ char*);)
+__PRIMOP(int, _In_function_class_(_In_ char*);)
+#define _In_function_class_(x) _In_function_class_(#x)
+
+__ANNOTATION(SAL_interlocked(void);)
+
+__ANNOTATION(SAL_untrusted_data_source(__AuToQuOtE char *));
+
 
 #else /* _USE_ATTRIBUTES_FOR_SAL || _USE_DECLSPECS_FOR_SAL */
 
@@ -1567,6 +1601,7 @@ REPEATABLE DECLARE_ATTR(EndAttribute, int unused;) SAL_end;
 #define _Reserved_
 #define _Result_nullonfailure_
 #define _Result_zeroonfailure_
+#define __inner_callback
 #define _Ret_
 #define _Ret_bound_
 #define _Ret_bytecap_(size)

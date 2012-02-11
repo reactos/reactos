@@ -43,6 +43,8 @@ list(APPEND SOURCE
 
 add_library(crypt32 SHARED ${SOURCE})
 
+allow_warnings(crypt32)
+
 set_module_type(crypt32 win32dll)
 
 target_link_libraries(crypt32

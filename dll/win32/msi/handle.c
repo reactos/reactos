@@ -71,6 +71,8 @@ void msi_free_handle_table(void)
     msi_free( msihandletable );
     msihandletable = NULL;
     msihandletable_size = 0;
+    DeleteCriticalSection(&MSI_handle_cs);
+    DeleteCriticalSection(&MSI_object_cs);
 }
 
 static MSIHANDLE alloc_handle_table_entry(void)

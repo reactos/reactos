@@ -2068,14 +2068,15 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
  * Parse an extended menu resource and add items to the menu.
  * Return a pointer to the end of the resource.
  */
-static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
+static LPCSTR MENUEX_ParseResource(LPCSTR res, HMENU hMenu)
 {
     WORD resinfo;
-    do {
-        MENUITEMINFOW mii;
+    MENUITEMINFOW mii;
 
+    do
+    {
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_FTYPE;
+        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_TYPE;
         mii.fType = GET_DWORD(res);
         res += sizeof(DWORD);
         mii.fState = GET_DWORD(res);
@@ -2086,7 +2087,8 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
         res += sizeof(WORD);
         /* Align the text on a word boundary.  */
         res += (~((UINT_PTR)res - 1)) & 1;
-        mii.dwTypeData = (LPWSTR) res;
+        mii.dwTypeData = (LPWSTR)res;
+        mii.cch = strlenW(mii.dwTypeData);
         res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
         /* Align the following fields on a dword boundary.  */
         res += (~((UINT_PTR)res - 1)) & 3;
@@ -2094,25 +2096,32 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
         TRACE("Menu item: [%08x,%08x,%04x,%04x,%S]\n",
               mii.fType, mii.fState, mii.wID, resinfo, mii.dwTypeData);
 
-		if (resinfo & 1) { /* Pop-up? */
-            /* DWORD helpid = GET_DWORD(res); FIXME: use this.  */
+		if (resinfo & 1) /* Pop-up? */
+		{
+            /* DWORD helpid = GET_DWORD(res); FIXME: use this. */
             res += sizeof(DWORD);
             mii.hSubMenu = CreatePopupMenu();
             if (!mii.hSubMenu)
+            {
+                ERR("CreatePopupMenu failed\n");
                 return NULL;
-            if (!(res = MENUEX_ParseResource(res, mii.hSubMenu))) {
+            }
+
+            if (!(res = MENUEX_ParseResource(res, mii.hSubMenu)))
+            {
+                ERR("MENUEX_ParseResource failed\n");
                 DestroyMenu(mii.hSubMenu);
                 return NULL;
             }
             mii.fMask |= MIIM_SUBMENU;
             mii.fType |= MF_POPUP;
-            mii.wID = (UINT) mii.hSubMenu;
+            mii.wID = (UINT)mii.hSubMenu;
         }
-        else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
-        {
+        else if (!mii.dwTypeData[0])
             mii.fType |= MF_SEPARATOR;
-        }
-        InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
+
+        if (!InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii))
+            ERR("InsertMenuItemW failed\n");
     } while (!(resinfo & MF_END));
     return res;
 }
@@ -2159,14 +2168,14 @@ MenuInit(VOID)
     ncm.cbSize = sizeof(ncm);
     if(!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
     {
-      DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
+      ERR("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
       return FALSE;
     }
 
     hMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFont == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
 
@@ -2174,7 +2183,7 @@ MenuInit(VOID)
     hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFontBold == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
       DeleteObject(hMenuFont);
       hMenuFont = NULL;
       return FALSE;
@@ -4807,7 +4816,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       }
       return hMenu;
     default:
-      DbgPrint("LoadMenuIndirectW(): version %d not supported.\n", version);
+      ERR("Menu template version %d not supported.\n", version);
       return 0;
   }
 }

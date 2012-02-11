@@ -128,6 +128,7 @@ base\system\rundll32\rundll32.exe                   1
 base\system\runonce\runonce.exe                     1
 base\system\services\services.exe                   1
 base\system\smss\smss.exe                           1
+base\system\smss2\smss2.exe                         1
 base\system\userinit\userinit.exe                   1
 base\system\winlogon\winlogon.exe                   1
 
@@ -817,6 +818,7 @@ modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   o
 modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
 modules\rostests\winetests\msacm32\msacm32_winetest.exe                    7   optional
 modules\rostests\winetests\mscms\mscms_winetest.exe                        7   optional
+modules\rostests\winetests\mscoree\mscoree_winetest.exe                    7   optional
 modules\rostests\winetests\msctf\msctf_winetest.exe                        7   optional
 modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
 modules\rostests\winetests\msi\msi_winetest.exe                            7   optional

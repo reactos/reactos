@@ -78,6 +78,8 @@
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
+#define MiIsPteOnPdeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
@@ -164,7 +166,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #error Define these please!
 #endif
 
-extern const ULONG MmProtectToPteMask[32];
+extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
@@ -262,7 +264,11 @@ extern const ULONG MmProtectToValue[32];
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
+#ifdef _M_AMD64
+#define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
+#else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+#endif
 
 //
 // System views are binned into 64K chunks
@@ -444,6 +450,7 @@ extern SIZE_T MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
 extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
+extern SIZE_T MiNonPagedSystemSize;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
@@ -558,6 +565,50 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderBBTMemory));
 }
 
+#ifdef _M_AMD64
+BOOLEAN
+FORCEINLINE
+MiIsUserPxe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPpe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
+}
+#else
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
+            (Address <= (PVOID)MiHighestUserPde));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return (Address <= (PVOID)MiHighestUserPte);
+}
+#endif
 
 //
 // Figures out the hardware bits for a PTE
@@ -576,9 +627,15 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
     MI_MAKE_ACCESSED_PAGE(&TempPte);
 
     /* Is this for user-mode? */
-    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
-        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
-         (PointerPte <= (PVOID)MiHighestUserPde)))
+    if (
+#if (_MI_PAGING_LEVELS == 4)
+        MiIsUserPxe(PointerPte) ||
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        MiIsUserPpe(PointerPte) ||
+#endif
+        MiIsUserPde(PointerPte) ||
+        MiIsUserPte(PointerPte))
     {
         /* Set the owner bit */
         MI_MAKE_OWNER_PAGE(&TempPte);
@@ -974,6 +1031,12 @@ VOID
 NTAPI
 MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeSessionIds(
+    VOID
 );
 
 BOOLEAN
@@ -1379,7 +1442,14 @@ MiRemoveZeroPageSafe(IN ULONG Color)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
 #define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
 #define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
 #define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
 typedef struct _MMROSPFN

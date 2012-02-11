@@ -895,7 +895,7 @@
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 //@ stdcall RtlSetSecurityObjectEx
 //@ stdcall RtlSetThreadErrorMode
-//@ stdcall RtlSetThreadIsCritical
+@ stdcall RtlSetThreadIsCritical(long ptr long)
 //@ stdcall RtlSetThreadPoolStartFunc
 @ stdcall RtlSetTimeZoneInformation(ptr)
 //@ stdcall RtlSetTimer

@@ -58,8 +58,7 @@ static void MSI_CloseView( MSIOBJECTHDR *arg )
 
 UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n )
 {
-    LPWSTR col_name;
-    LPWSTR haystack_table_name;
+    LPCWSTR col_name, haystack_table_name;
     UINT i, count, r;
 
     r = table->ops->get_dimensions( table, NULL, &count );
@@ -70,7 +69,6 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n
     {
         INT x;
 
-        col_name = NULL;
         r = table->ops->get_column_info( table, i, &col_name, NULL,
                                          NULL, &haystack_table_name );
         if( r != ERROR_SUCCESS )
@@ -78,15 +76,12 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n
         x = strcmpW( name, col_name );
         if( table_name )
             x |= strcmpW( table_name, haystack_table_name );
-        msi_free( col_name );
-        msi_free( haystack_table_name );
         if( !x )
         {
             *n = i;
             return ERROR_SUCCESS;
         }
     }
-
     return ERROR_INVALID_PARAMETER;
 }
 
@@ -506,6 +501,8 @@ static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field,
         szType[0] = 'v';
     else if (type & MSITYPE_LOCALIZABLE)
         szType[0] = 'l';
+    else if (type & MSITYPE_UNKNOWN)
+        szType[0] = 'f';
     else if (type & MSITYPE_STRING)
     {
         if (temporary)
@@ -536,7 +533,7 @@ UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
     UINT r = ERROR_FUNCTION_FAILED, i, count = 0, type;
     MSIRECORD *rec;
     MSIVIEW *view = query->view;
-    LPWSTR name;
+    LPCWSTR name;
     BOOL temporary;
 
     if( !view )
@@ -558,17 +555,14 @@ UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
     for( i=0; i<count; i++ )
     {
         name = NULL;
-        r = view->ops->get_column_info( view, i+1, &name, &type, &temporary,
-                                        NULL );
+        r = view->ops->get_column_info( view, i+1, &name, &type, &temporary, NULL );
         if( r != ERROR_SUCCESS )
             continue;
         if (info == MSICOLINFO_NAMES)
             MSI_RecordSetStringW( rec, i+1, name );
         else
             msi_set_record_type_string( rec, i+1, type, temporary );
-        msi_free( name );
     }
-
     *prec = rec;
     return ERROR_SUCCESS;
 }
@@ -650,66 +644,66 @@ UINT WINAPI MsiViewModify( MSIHANDLE hView, MSIMODIFY eModifyMode,
     return r;
 }
 
-MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
-                              LPDWORD pcchBuf )
+MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buflen )
 {
-    MSIQUERY *query = NULL;
-    static const WCHAR szError[] = { 0 };
-    MSIDBERROR r = MSIDBERROR_NOERROR;
+    MSIQUERY *query;
+    const WCHAR *column;
+    MSIDBERROR r;
     DWORD len;
 
-    FIXME("%d %p %p - returns empty error string\n",
-          handle, szColumnNameBuffer, pcchBuf );
+    TRACE("%u %p %p\n", handle, buffer, buflen);
 
-    if( !pcchBuf )
+    if (!buflen)
         return MSIDBERROR_INVALIDARG;
 
     query = msihandle2msiinfo( handle, MSIHANDLETYPE_VIEW );
     if( !query )
         return MSIDBERROR_INVALIDARG;
 
-    len = strlenW( szError );
-    if( szColumnNameBuffer )
+    if ((r = query->view->error)) column = query->view->error_column;
+    else column = szEmpty;
+
+    len = strlenW( column );
+    if (buffer)
     {
-        if( *pcchBuf > len )
-            lstrcpyW( szColumnNameBuffer, szError );
+        if (*buflen > len)
+            strcpyW( buffer, column );
         else
             r = MSIDBERROR_MOREDATA;
     }
-    *pcchBuf = len;
-
+    *buflen = len;
     msiobj_release( &query->hdr );
     return r;
 }
 
-MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
-                              LPDWORD pcchBuf )
+MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD buflen )
 {
-    static const CHAR szError[] = { 0 };
-    MSIQUERY *query = NULL;
-    MSIDBERROR r = MSIDBERROR_NOERROR;
+    MSIQUERY *query;
+    const WCHAR *column;
+    MSIDBERROR r;
     DWORD len;
 
-    FIXME("%d %p %p - returns empty error string\n",
-          handle, szColumnNameBuffer, pcchBuf );
+    TRACE("%u %p %p\n", handle, buffer, buflen);
 
-    if( !pcchBuf )
+    if (!buflen)
         return MSIDBERROR_INVALIDARG;
 
     query = msihandle2msiinfo( handle, MSIHANDLETYPE_VIEW );
-    if( !query )
+    if (!query)
         return MSIDBERROR_INVALIDARG;
 
-    len = strlen( szError );
-    if( szColumnNameBuffer )
+    if ((r = query->view->error)) column = query->view->error_column;
+    else column = szEmpty;
+
+    len = WideCharToMultiByte( CP_ACP, 0, column, -1, NULL, 0, NULL, NULL );
+    if (buffer)
     {
-        if( *pcchBuf > len )
-            lstrcpyA( szColumnNameBuffer, szError );
+        if (*buflen >= len)
+            WideCharToMultiByte( CP_ACP, 0, column, -1, buffer, *buflen, NULL, NULL );
         else
             r = MSIDBERROR_MOREDATA;
     }
-    *pcchBuf = len;
-
+    *buflen = len - 1;
     msiobj_release( &query->hdr );
     return r;
 }
@@ -836,6 +830,12 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
         IWineMsiRemoteDatabase_Release( remote_database );
         WARN("not allowed during a custom action!\n");
 
+        return ERROR_SUCCESS;
+    }
+
+    if (db->mode == MSIDBOPEN_READONLY)
+    {
+        msiobj_release( &db->hdr );
         return ERROR_SUCCESS;
     }
 

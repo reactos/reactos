@@ -182,7 +182,7 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     }
 
     encname = encode_streamname(FALSE, name);
-    db_destroy_stream(sv->db, encname);
+    msi_destroy_stream(sv->db, encname);
 
     r = write_stream_data(sv->db->storage, name, data, count, FALSE);
     if (r != ERROR_SUCCESS)
@@ -267,16 +267,9 @@ static UINT STREAMS_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *co
     return ERROR_SUCCESS;
 }
 
-static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
-                                    LPWSTR *name, UINT *type, BOOL *temporary,
-                                    LPWSTR *table_name)
+static UINT STREAMS_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                     UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
-    LPCWSTR name_ptr = NULL;
-
-    static const WCHAR Name[] = {'N','a','m','e',0};
-    static const WCHAR Data[] = {'D','a','t','a',0};
-    static const WCHAR _Streams[] = {'_','S','t','r','e','a','m','s',0};
-
     TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary,
           table_name);
 
@@ -286,45 +279,29 @@ static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
     switch (n)
     {
     case 1:
-        name_ptr = Name;
+        if (name) *name = szName;
         if (type) *type = MSITYPE_STRING | MSITYPE_VALID | MAX_STREAM_NAME_LEN;
         break;
 
     case 2:
-        name_ptr = Data;
+        if (name) *name = szData;
         if (type) *type = MSITYPE_STRING | MSITYPE_VALID | MSITYPE_NULLABLE;
         break;
     }
-
-    if (name)
-    {
-        *name = strdupW(name_ptr);
-        if (!*name) return ERROR_FUNCTION_FAILED;
-    }
-
-    if (table_name)
-    {
-        *table_name = strdupW(_Streams);
-        if (!*table_name)
-        {
-            msi_free(name);
-            return ERROR_FUNCTION_FAILED;
-        }
-    }
-
-    if (temporary)
-        *temporary = FALSE;
-
+    if (table_name) *table_name = szStreams;
+    if (temporary) *temporary = FALSE;
     return ERROR_SUCCESS;
 }
 
 static UINT streams_find_row(MSISTREAMSVIEW *sv, MSIRECORD *rec, UINT *row)
 {
     LPCWSTR str;
-    UINT i, id, data;
+    UINT r, i, id, data;
 
     str = MSI_RecordGetString(rec, 1);
-    msi_string2idW(sv->db->strings, str, &id);
+    r = msi_string2idW(sv->db->strings, str, &id);
+    if (r != ERROR_SUCCESS)
+        return r;
 
     for (i = 0; i < sv->num_rows; i++)
     {
@@ -529,12 +506,12 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
         /* these streams appear to be unencoded */
         if (*stat.pwcsName == 0x0005)
         {
-            r = db_get_raw_stream(sv->db, stat.pwcsName, &stream->stream);
+            r = msi_get_raw_stream(sv->db, stat.pwcsName, &stream->stream);
         }
         else
         {
             encname = encode_streamname(FALSE, stat.pwcsName);
-            r = db_get_raw_stream(sv->db, encname, &stream->stream);
+            r = msi_get_raw_stream(sv->db, encname, &stream->stream);
             msi_free(encname);
         }
         CoTaskMemFree(stat.pwcsName);
@@ -566,7 +543,7 @@ UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
 
     TRACE("(%p, %p)\n", db, view);
 
-    sv = msi_alloc(sizeof(MSISTREAMSVIEW));
+    sv = msi_alloc_zero( sizeof(MSISTREAMSVIEW) );
     if (!sv)
         return ERROR_FUNCTION_FAILED;
 

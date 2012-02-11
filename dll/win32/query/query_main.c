@@ -98,3 +98,10 @@ HRESULT WINAPI LocateCatalogsW(WCHAR const *pwszScope, ULONG iBm,
           iBm, pwszMachine, pcMachine, pwszCat, pcCat);
     return CI_E_NOT_RUNNING;
 }
+
+HRESULT WINAPI LoadIFilter(WCHAR const *pwcsPath, IUnknown *pUnkOuter, void **ppIUnk)
+{
+    FIXME("%s %p %p\n", debugstr_w(pwcsPath), pUnkOuter, ppIUnk);
+    *ppIUnk = NULL;
+    return E_NOTIMPL;
+}

@@ -502,7 +502,7 @@ NTSTATUS NTAPI
 RtlUnicodeToMultiByteN (PCHAR MbString,
                         ULONG MbSize,
                         PULONG ResultSize,
-                        PWCHAR UnicodeString,
+                        PCWCH UnicodeString,
                         ULONG UnicodeSize)
 {
    ULONG Size = 0;

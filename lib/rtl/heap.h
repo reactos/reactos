@@ -78,6 +78,9 @@ RtlpHeapIsSpecial(ULONG Flags)
 /* Heap structures */
 struct _HEAP_COMMON_ENTRY
 {
+#ifdef _M_AMD64
+    PVOID PreviousBlockPrivateData;
+#endif
     union
     {
         struct
@@ -88,7 +91,11 @@ struct _HEAP_COMMON_ENTRY
         };
         struct
         {
+#ifndef _M_AMD64
             PVOID SubSegmentCode;
+#else
+            ULONG SubSegmentCodeDummy;
+#endif
             USHORT PreviousSize;
             union
             {

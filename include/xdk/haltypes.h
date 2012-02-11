@@ -3,17 +3,17 @@
 $if (_NTDDK_)
 typedef BOOLEAN
 (NTAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
-  IN ULONG Columns,
-  IN ULONG Rows);
+  _In_ ULONG Columns,
+  _In_ ULONG Rows);
 
 typedef PBUS_HANDLER
 (FASTCALL *pHalHandlerForBus)(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber);
+  _In_ INTERFACE_TYPE InterfaceType,
+  _In_ ULONG BusNumber);
 
 typedef VOID
 (FASTCALL *pHalReferenceBusHandler)(
-  IN PBUS_HANDLER BusHandler);
+  _In_ PBUS_HANDLER BusHandler);
 
 typedef enum _HAL_QUERY_INFORMATION_CLASS {
   HalInstalledBusInformation,
@@ -63,56 +63,55 @@ typedef enum _HAL_SET_INFORMATION_CLASS {
 
 typedef NTSTATUS
 (NTAPI *pHalQuerySystemInformation)(
-  IN HAL_QUERY_INFORMATION_CLASS InformationClass,
-  IN ULONG BufferSize,
-  IN OUT PVOID Buffer,
-  OUT PULONG ReturnedLength);
+  _In_ HAL_QUERY_INFORMATION_CLASS InformationClass,
+  _In_ ULONG BufferSize,
+  _Inout_updates_bytes_to_(BufferSize, *ReturnedLength) PVOID Buffer,
+  _Out_ PULONG ReturnedLength);
 
 typedef NTSTATUS
 (NTAPI *pHalSetSystemInformation)(
-  IN HAL_SET_INFORMATION_CLASS InformationClass,
-  IN ULONG BufferSize,
-  IN PVOID Buffer);
+  _In_ HAL_SET_INFORMATION_CLASS InformationClass,
+  _In_ ULONG BufferSize,
+  _In_ PVOID Buffer);
 
 typedef VOID
 (FASTCALL *pHalExamineMBR)(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG MBRTypeIdentifier,
-  OUT PVOID *Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG MBRTypeIdentifier,
+  _Out_ PVOID *Buffer);
 
 typedef NTSTATUS
 (FASTCALL *pHalIoReadPartitionTable)(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN BOOLEAN ReturnRecognizedPartitions,
-  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ BOOLEAN ReturnRecognizedPartitions,
+  _Out_ struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
 
 typedef NTSTATUS
 (FASTCALL *pHalIoSetPartitionInformation)(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG PartitionNumber,
-  IN ULONG PartitionType);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG PartitionNumber,
+  _In_ ULONG PartitionType);
 
 typedef NTSTATUS
 (FASTCALL *pHalIoWritePartitionTable)(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG SectorsPerTrack,
-  IN ULONG NumberOfHeads,
-  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG SectorsPerTrack,
+  _In_ ULONG NumberOfHeads,
+  _In_ struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
 typedef NTSTATUS
 (NTAPI *pHalQueryBusSlots)(
-  IN PBUS_HANDLER BusHandler,
-  IN ULONG BufferSize,
-  OUT PULONG SlotNumbers,
-  OUT PULONG ReturnedLength);
+  _In_ PBUS_HANDLER BusHandler,
+  _In_ ULONG BufferSize,
+  _Out_ PULONG SlotNumbers,
+  _Out_ PULONG ReturnedLength);
 
 typedef NTSTATUS
-(NTAPI *pHalInitPnpDriver)(
-  VOID);
+(NTAPI *pHalInitPnpDriver)(VOID);
 
 typedef struct _PM_DISPATCH_TABLE {
   ULONG Signature;
@@ -122,69 +121,66 @@ typedef struct _PM_DISPATCH_TABLE {
 
 typedef NTSTATUS
 (NTAPI *pHalInitPowerManagement)(
-  IN PPM_DISPATCH_TABLE PmDriverDispatchTable,
-  OUT PPM_DISPATCH_TABLE *PmHalDispatchTable);
+  _In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+  _Out_ PPM_DISPATCH_TABLE *PmHalDispatchTable);
 
 typedef struct _DMA_ADAPTER*
 (NTAPI *pHalGetDmaAdapter)(
-  IN PVOID Context,
-  IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
-  OUT PULONG NumberOfMapRegisters);
+  _In_ PVOID Context,
+  _In_ struct _DEVICE_DESCRIPTION *DeviceDescriptor,
+  _Out_ PULONG NumberOfMapRegisters);
 
 typedef NTSTATUS
 (NTAPI *pHalGetInterruptTranslator)(
-  IN INTERFACE_TYPE ParentInterfaceType,
-  IN ULONG ParentBusNumber,
-  IN INTERFACE_TYPE BridgeInterfaceType,
-  IN USHORT Size,
-  IN USHORT Version,
-  OUT PTRANSLATOR_INTERFACE Translator,
-  OUT PULONG BridgeBusNumber);
+  _In_ INTERFACE_TYPE ParentInterfaceType,
+  _In_ ULONG ParentBusNumber,
+  _In_ INTERFACE_TYPE BridgeInterfaceType,
+  _In_ USHORT Size,
+  _In_ USHORT Version,
+  _Out_ PTRANSLATOR_INTERFACE Translator,
+  _Out_ PULONG BridgeBusNumber);
 
 typedef NTSTATUS
-(NTAPI *pHalStartMirroring)(
-  VOID);
+(NTAPI *pHalStartMirroring)(VOID);
 
 typedef NTSTATUS
 (NTAPI *pHalEndMirroring)(
-  IN ULONG PassNumber);
+  _In_ ULONG PassNumber);
 
 typedef NTSTATUS
 (NTAPI *pHalMirrorPhysicalMemory)(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN LARGE_INTEGER NumberOfBytes);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ LARGE_INTEGER NumberOfBytes);
 
 typedef NTSTATUS
 (NTAPI *pHalMirrorVerify)(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN LARGE_INTEGER NumberOfBytes);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ LARGE_INTEGER NumberOfBytes);
 
 typedef BOOLEAN
 (NTAPI *pHalTranslateBusAddress)(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+  _In_ INTERFACE_TYPE InterfaceType,
+  _In_ ULONG BusNumber,
+  _In_ PHYSICAL_ADDRESS BusAddress,
+  _Inout_ PULONG AddressSpace,
+  _Out_ PPHYSICAL_ADDRESS TranslatedAddress);
 
 typedef NTSTATUS
 (NTAPI *pHalAssignSlotResources)(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+  _In_ PUNICODE_STRING RegistryPath,
+  _In_opt_ PUNICODE_STRING DriverClassName,
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _Inout_ PCM_RESOURCE_LIST *AllocatedResources);
 
 typedef VOID
-(NTAPI *pHalHaltSystem)(
-  VOID);
+(NTAPI *pHalHaltSystem)(VOID);
 
 typedef BOOLEAN
-(NTAPI *pHalResetDisplay)(
-  VOID);
+(NTAPI *pHalResetDisplay)(VOID);
 
 typedef struct _MAP_REGISTER_ENTRY {
   PVOID MapRegister;
@@ -197,49 +193,47 @@ typedef UCHAR
 
 typedef BOOLEAN
 (NTAPI *pHalFindBusAddressTranslation)(
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress,
-  IN OUT PULONG_PTR Context,
-  IN BOOLEAN NextBus);
+  _In_ PHYSICAL_ADDRESS BusAddress,
+  _Inout_ PULONG AddressSpace,
+  _Out_ PPHYSICAL_ADDRESS TranslatedAddress,
+  _Inout_ PULONG_PTR Context,
+  _In_ BOOLEAN NextBus);
 
 typedef VOID
-(NTAPI *pHalEndOfBoot)(
-  VOID);
+(NTAPI *pHalEndOfBoot)(VOID);
 
 typedef PVOID
 (NTAPI *pHalGetAcpiTable)(
-  IN ULONG Signature,
-  IN PCSTR OemId OPTIONAL,
-  IN PCSTR OemTableId OPTIONAL);
+  _In_ ULONG Signature,
+  _In_opt_ PCSTR OemId,
+  _In_opt_ PCSTR OemTableId);
 
 #if defined(_IA64_)
 typedef NTSTATUS
 (*pHalGetErrorCapList)(
-  IN OUT PULONG CapsListLength,
-  IN OUT PUCHAR ErrorCapList);
+  _Inout_ PULONG CapsListLength,
+  _Inout_updates_bytes_(*CapsListLength) PUCHAR ErrorCapList);
 
 typedef NTSTATUS
 (*pHalInjectError)(
-  IN ULONG BufferLength,
-  IN PUCHAR Buffer);
+  _In_ ULONG BufferLength,
+  _In_reads_bytes_(BufferLength) PUCHAR Buffer);
 #endif
 
 typedef VOID
-(NTAPI *PCI_ERROR_HANDLER_CALLBACK)(
-  VOID);
+(NTAPI *PCI_ERROR_HANDLER_CALLBACK)(VOID);
 
 typedef VOID
 (NTAPI *pHalSetPciErrorHandlerCallback)(
-  IN PCI_ERROR_HANDLER_CALLBACK Callback);
+  _In_ PCI_ERROR_HANDLER_CALLBACK Callback);
 
 #if 1 /* Not present in WDK 7600 */
 typedef VOID
 (FASTCALL *pHalIoAssignDriveLetters)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN PSTRING NtDeviceName,
-  OUT PUCHAR NtSystemPath,
-  OUT PSTRING NtSystemPathString);
+  _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  _In_ PSTRING NtDeviceName,
+  _Out_ PUCHAR NtSystemPath,
+  _Out_ PSTRING NtSystemPathString);
 #endif
 
 typedef struct {
@@ -367,10 +361,10 @@ typedef struct _HAL_PROCESSOR_FEATURE {
 
 typedef NTSTATUS
 (NTAPI *PHALIOREADWRITEHANDLER)(
-  IN BOOLEAN fRead,
-  IN ULONG dwAddr,
-  IN ULONG dwSize,
-  IN OUT PULONG pdwData);
+  _In_ BOOLEAN fRead,
+  _In_ ULONG dwAddr,
+  _In_ ULONG dwSize,
+  _Inout_ PULONG pdwData);
 
 typedef struct _HAL_AMLI_BAD_IO_ADDRESS_LIST {
   ULONG BadAddrBegin;
@@ -382,17 +376,15 @@ typedef struct _HAL_AMLI_BAD_IO_ADDRESS_LIST {
 #if defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
 
 typedef VOID
-(NTAPI *PHALMCAINTERFACELOCK)(
-  VOID);
+(NTAPI *PHALMCAINTERFACELOCK)(VOID);
 
 typedef VOID
-(NTAPI *PHALMCAINTERFACEUNLOCK)(
-  VOID);
+(NTAPI *PHALMCAINTERFACEUNLOCK)(VOID);
 
 typedef NTSTATUS
 (NTAPI *PHALMCAINTERFACEREADREGISTER)(
-  IN UCHAR BankNumber,
-  IN OUT PVOID Exception);
+  _In_ UCHAR BankNumber,
+  _Inout_ PVOID Exception);
 
 typedef struct _HAL_MCA_INTERFACE {
   PHALMCAINTERFACELOCK Lock;
@@ -414,10 +406,10 @@ struct _KEXCEPTION_FRAME;
 
 typedef ERROR_SEVERITY
 (NTAPI *PDRIVER_EXCPTN_CALLBACK)(
-  IN PVOID Context,
-  IN struct _KTRAP_FRAME *TrapFrame,
-  IN struct _KEXCEPTION_FRAME *ExceptionFrame,
-  IN PMCA_EXCEPTION Exception);
+  _In_ PVOID Context,
+  _In_ struct _KTRAP_FRAME *TrapFrame,
+  _In_ struct _KEXCEPTION_FRAME *ExceptionFrame,
+  _In_ PMCA_EXCEPTION Exception);
 
 #endif
 
@@ -429,8 +421,8 @@ ERROR_SEVERITY
 VOID
 #endif
 (NTAPI *PDRIVER_EXCPTN_CALLBACK)(
-  IN PVOID Context,
-  IN PMCA_EXCEPTION BankLog);
+  _In_ PVOID Context,
+  _In_ PMCA_EXCEPTION BankLog);
 #endif
 
 typedef PDRIVER_EXCPTN_CALLBACK PDRIVER_MCA_EXCEPTION_CALLBACK;
@@ -485,13 +477,13 @@ typedef struct _HAL_ERROR_INFO {
 
 typedef VOID
 (NTAPI *PDRIVER_CMC_EXCEPTION_CALLBACK)(
-  IN PVOID Context,
-  IN PCMC_EXCEPTION CmcLog);
+  _In_ PVOID Context,
+  _In_ PCMC_EXCEPTION CmcLog);
 
 typedef VOID
 (NTAPI *PDRIVER_CPE_EXCEPTION_CALLBACK)(
-  IN PVOID Context,
-  IN PCPE_EXCEPTION CmcLog);
+  _In_ PVOID Context,
+  _In_ PCPE_EXCEPTION CmcLog);
 
 typedef struct _CMC_DRIVER_INFO {
   PDRIVER_CMC_EXCEPTION_CALLBACK ExceptionCallback;
@@ -511,20 +503,20 @@ typedef struct _CPE_DRIVER_INFO {
 
 typedef NTSTATUS
 (*HALSENDCROSSPARTITIONIPI)(
-  IN USHORT ProcessorID,
-  IN UCHAR HardwareVector);
+  _In_ USHORT ProcessorID,
+  _In_ UCHAR HardwareVector);
 
 typedef NTSTATUS
 (*HALRESERVECROSSPARTITIONINTERRUPTVECTOR)(
-  OUT PULONG Vector,
-  OUT PKIRQL Irql,
-  IN OUT PGROUP_AFFINITY Affinity,
-  OUT PUCHAR HardwareVector);
+  _Out_ PULONG Vector,
+  _Out_ PKIRQL Irql,
+  _Inout_ PGROUP_AFFINITY Affinity,
+  _Out_ PUCHAR HardwareVector);
 
 typedef VOID
 (*HALFREECROSSPARTITIONINTERRUPTVECTOR)(
-  IN ULONG Vector,
-  IN PGROUP_AFFINITY Affinity);
+  _In_ ULONG Vector,
+  _In_ PGROUP_AFFINITY Affinity);
 
 typedef struct _HAL_CROSS_PARTITION_IPI_INTERFACE {
   HALSENDCROSSPARTITIONIPI HalSendCrossPartitionIpi;

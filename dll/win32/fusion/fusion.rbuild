@@ -15,4 +15,5 @@
 	<file>assembly.c</file>
 	<file>fusion.c</file>
 	<file>fusion_main.c</file>
+	<file>version.rc</file>
 </module>

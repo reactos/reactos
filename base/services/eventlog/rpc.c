@@ -158,7 +158,9 @@ ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
     /* Create the log file */
     Status = LogfCreate(&lpLogHandle->LogFile,
                         NULL,
-                        FileName);
+                        FileName,
+                        FALSE,
+                        TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create the log file! (Status 0x%08lx)\n", Status);
@@ -210,9 +212,7 @@ ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
     if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
         return STATUS_INVALID_HANDLE;
 
-    /* Close the log file if it is a backup file */
-    if (lpLogHandle->Flags & LOG_HANDLE_BACKUP_FILE)
-        LogfClose(lpLogHandle->LogFile);
+    LogfClose(lpLogHandle->LogFile, FALSE);
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     HeapFree(GetProcessHeap(),0,lpLogHandle);

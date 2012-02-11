@@ -866,7 +866,7 @@ CcRosGetCacheSegment(PBCB Bcb,
     */
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
-   DPRINT("*BaseAddress 0x%.8X\n", *BaseAddress);
+   DPRINT("*BaseAddress %p\n", *BaseAddress);
    *CacheSeg = current;
    *BaseOffset = current->FileOffset;
    return(STATUS_SUCCESS);

@@ -492,7 +492,7 @@ IntVideoPortFindAdapter(
       DeviceVideoBuffer,
       REG_SZ,
       DeviceExtension->RegistryPath.Buffer,
-      DeviceExtension->RegistryPath.MaximumLength);
+      DeviceExtension->RegistryPath.Length + sizeof(UNICODE_NULL));
 
    RtlWriteRegistryValue(
        RTL_REGISTRY_DEVICEMAP,

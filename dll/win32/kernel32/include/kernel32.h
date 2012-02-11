@@ -158,7 +158,7 @@ DWORD
 
 
 extern BOOLEAN InWindows;
-extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
+extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 
 /* GLOBAL VARIABLES **********************************************************/
 
@@ -491,6 +491,13 @@ WINAPI
 BaseMarkFileForDelete(
     IN HANDLE FileHandle,
     IN ULONG FileAttributes
+);
+
+BOOL
+WINAPI
+BaseCheckForVDM(
+    IN HANDLE ProcessHandle,
+    OUT LPDWORD ExitCode
 );
 
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */

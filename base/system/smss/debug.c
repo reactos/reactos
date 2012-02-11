@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 
 /* GLOBALS ***********************************************************/
 
@@ -163,6 +164,8 @@ SmInitializeDbgSs (VOID)
 	}
 	return STATUS_SUCCESS;
 }
+
+#endif
 
 /* EOF */
 

@@ -228,7 +228,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 BOOLEAN SetupUiInitialize(VOID)
 {
 	CHAR	DisplayModeText[260];
-	ULONG	Depth, Length;
+	ULONG	Depth;
+	SIZE_T	Length;
 
 
 	DisplayModeText[0] = '\0';
@@ -313,12 +314,12 @@ VOID UiUpdateDateTime(VOID)
 
 VOID UiInfoBox(PCSTR MessageText)
 {
-	ULONG		TextLength;
+	SIZE_T		TextLength;
 	ULONG		BoxWidth;
 	ULONG		BoxHeight;
 	ULONG		LineBreakCount;
-	ULONG		Index;
-	ULONG		LastIndex;
+	SIZE_T		Index;
+	SIZE_T		LastIndex;
 	ULONG		Left;
 	ULONG		Top;
 	ULONG		Right;
@@ -341,7 +342,7 @@ VOID UiInfoBox(PCSTR MessageText)
 		{
 			if ((Index - LastIndex) > BoxWidth)
 			{
-				BoxWidth = (Index - LastIndex);
+				BoxWidth = (ULONG)(Index - LastIndex);
 			}
 		}
 	}

@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
+#if 0
 /**********************************************************************
  * SmQryInfo/1							API
  */
@@ -50,6 +50,6 @@ SMAPI(SmQryInfo)
 	}
 	return Status;
 }
-
+#endif
 
 /* EOF */

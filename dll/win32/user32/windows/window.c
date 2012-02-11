@@ -1688,7 +1688,7 @@ HWND WINAPI
 RealChildWindowFromPoint(HWND hwndParent,
                          POINT ptParentClientCoords)
 {
-    return ChildWindowFromPointEx(hwndParent, ptParentClientCoords, CWP_SKIPTRANSPARENT);
+    return ChildWindowFromPointEx(hwndParent, ptParentClientCoords, CWP_SKIPTRANSPARENT | CWP_SKIPINVISIBLE);
 }
 
 /*

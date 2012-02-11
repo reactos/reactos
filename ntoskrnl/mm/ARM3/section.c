@@ -29,6 +29,18 @@ ACCESS_MASK MmMakeSectionAccess[8] =
     SECTION_MAP_EXECUTE | SECTION_MAP_READ
 };
 
+ACCESS_MASK MmMakeFileAccess[8] =
+{
+    FILE_READ_DATA,
+    FILE_READ_DATA,
+    FILE_EXECUTE,
+    FILE_EXECUTE | FILE_READ_DATA,
+    FILE_WRITE_DATA | FILE_READ_DATA,
+    FILE_READ_DATA,
+    FILE_EXECUTE | FILE_WRITE_DATA | FILE_READ_DATA,
+    FILE_EXECUTE | FILE_READ_DATA
+};
+
 CHAR MmUserProtectionToMask1[16] =
 {
     0,
@@ -72,6 +84,24 @@ CHAR MmUserProtectionToMask2[16] =
 MMSESSION MmSession;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+ACCESS_MASK
+NTAPI
+MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection)
+{
+    ULONG ProtectionMask;
+
+    /* Calculate the protection mask and make sure it's valid */
+    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
+
+    /* Now convert it to the required file access */
+    return MmMakeFileAccess[ProtectionMask & 0x7];
+}
 
 ULONG
 NTAPI
@@ -1353,8 +1383,75 @@ NTAPI
 NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
                         IN PVOID File2MappedAsFile)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PVOID AddressSpace;
+    PMEMORY_AREA MemoryArea1, MemoryArea2;
+    PROS_SECTION_OBJECT Section1, Section2;
+    
+    /* Lock address space */
+    AddressSpace = MmGetCurrentAddressSpace();
+    MmLockAddressSpace(AddressSpace);
+    
+    /* Locate the memory area for the process by address */
+    MemoryArea1 = MmLocateMemoryAreaByAddress(AddressSpace, File1MappedAsAnImage);
+    if (!MemoryArea1)
+    {
+        /* Fail, the address does not exist */
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_INVALID_ADDRESS;
+    }
+    
+    /* Check if it's a section view (RosMm section) or ARM3 section */
+    if (MemoryArea1->Type != MEMORY_AREA_SECTION_VIEW)
+    {
+        /* Fail, the address is not a section */
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    
+    /* Get the section pointer to the SECTION_OBJECT */
+    Section1 = MemoryArea1->Data.SectionData.Section;
+    if (Section1->FileObject == NULL)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES; 
+    }
+    
+    /* Locate the memory area for the process by address */
+    MemoryArea2 = MmLocateMemoryAreaByAddress(AddressSpace, File2MappedAsFile);
+    if (!MemoryArea2)
+    {
+        /* Fail, the address does not exist */
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_INVALID_ADDRESS;
+    }
+    
+    /* Check if it's a section view (RosMm section) or ARM3 section */
+    if (MemoryArea2->Type != MEMORY_AREA_SECTION_VIEW)
+    {
+        /* Fail, the address is not a section */
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    
+    /* Get the section pointer to the SECTION_OBJECT */
+    Section2 = MemoryArea2->Data.SectionData.Section;
+    if (Section2->FileObject == NULL)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_CONFLICTING_ADDRESSES; 
+    }
+    
+    /* The shared cache map seems to be the same if both of these are equal */
+    if (Section1->FileObject->SectionObjectPointer->SharedCacheMap ==
+        Section2->FileObject->SectionObjectPointer->SharedCacheMap)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_SUCCESS; 
+    }
+    
+    /* Unlock address space */
+    MmUnlockAddressSpace(AddressSpace);
+    return STATUS_NOT_SAME_DEVICE;
 }
 
 /*

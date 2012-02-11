@@ -235,8 +235,8 @@ static PCRYPTPROV CRYPT_LoadProvider(PCWSTR pImage)
 	 *        Does it need memory allocation?
 	 */
 	provider->pVTable->Version = 3;
-	provider->pVTable->pFuncVerifyImage = CRYPT_VerifyImage;
-	provider->pVTable->pFuncReturnhWnd = CRYPT_ReturnhWnd;
+	provider->pVTable->FuncVerifyImage = CRYPT_VerifyImage;
+	provider->pVTable->FuncReturnhWnd = CRYPT_ReturnhWnd;
 	provider->pVTable->dwProvType = 0;
 	provider->pVTable->pbContextInfo = NULL;
 	provider->pVTable->cbContextInfo = 0;

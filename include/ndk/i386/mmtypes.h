@@ -32,6 +32,11 @@ Author:
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
 
 //
+// Address of the shared user page
+//
+#define MM_SHARED_USER_DATA_VA 0x7FFE0000
+
+//
 // Sanity checks for Paging Macros
 //
 #ifdef C_ASSERT

@@ -19,7 +19,7 @@
 #define MEMORY_AREA_CACHE   (2)
 #define MM_SEGMENT_FINALIZE (0x40000000)
 
-#define RMAP_SEGMENT_MASK ~0xff
+#define RMAP_SEGMENT_MASK ~((ULONG_PTR)0xff)
 #define RMAP_IS_SEGMENT(x) (((ULONG_PTR)(x) & RMAP_SEGMENT_MASK) == RMAP_SEGMENT_MASK)
 
 #define MIN(x,y) (((x)<(y))?(x):(y))

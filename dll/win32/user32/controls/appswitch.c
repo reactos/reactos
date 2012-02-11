@@ -192,6 +192,7 @@ void OnPaint(HWND hWnd)
    int i;
    HBRUSH hBrush;
    HPEN hPen;
+   HFONT dcFont;
    COLORREF cr;
    int nch = GetWindowTextW(windowList[selectedWindow], windowText, 1023);
 
@@ -230,7 +231,7 @@ void OnPaint(HWND hWnd)
          DrawIcon(dialogDC, xpos, ypos, hIcon);
       }
 
-      SelectObject(dialogDC, dialogFont);
+      dcFont = SelectObject(dialogDC, dialogFont);
       SetTextColor(dialogDC, GetSysColor(COLOR_BTNTEXT));
       SetBkColor(dialogDC, GetSysColor(COLOR_BTNFACE));
 
@@ -239,6 +240,7 @@ void OnPaint(HWND hWnd)
       textRC.right = totalW - 8;
       textRC.bottom = totalH - 8;
       DrawTextW(dialogDC, windowText, nch, &textRC, DT_CENTER|DT_END_ELLIPSIS);
+      SelectObject(dialogDC, dcFont);
    }
    EndPaint(hWnd, &paint);
 }

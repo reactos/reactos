@@ -13,6 +13,7 @@
 	<file>linebreak.c</file>
 	<file>indicsyllable.c</file>
 	<file>mirror.c</file>
+	<file>opentype.c</file>
 	<file>shape.c</file>
 	<file>shaping.c</file>
 	<library>wine</library>

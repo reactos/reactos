@@ -111,16 +111,15 @@ static struct expr * EXPR_wildcard( void *info );
 %nonassoc END_OF_FILE ILLEGAL SPACE UNCLOSED_STRING COMMENT FUNCTION
           COLUMN AGG_FUNCTION.
 
-%type <string> table tablelist id
-%type <column_list> selcollist column column_and_type column_def table_def
+%type <string> table tablelist id string
+%type <column_list> selcollist collist selcolumn column column_and_type column_def table_def
 %type <column_list> column_assignment update_assign_list constlist
-%type <query> query from fromtable selectfrom unorderedsel
+%type <query> query from selectfrom unorderdfrom
 %type <query> oneupdate onedelete oneselect onequery onecreate oneinsert onealter onedrop
 %type <expr> expr val column_val const_val
 %type <column_type> column_type data_type data_type_l data_count
 %type <integer> number alterop
 
-/* Reference: http://mates.ms.mff.cuni.cz/oracle/doc/ora815nt/server.815/a67779/operator.htm */
 %left TK_OR
 %left TK_AND
 %left TK_NOT
@@ -148,7 +147,7 @@ onequery:
     ;
 
 oneinsert:
-    TK_INSERT TK_INTO table TK_LP selcollist TK_RP TK_VALUES TK_LP constlist TK_RP
+    TK_INSERT TK_INTO table TK_LP collist TK_RP TK_VALUES TK_LP constlist TK_RP
         {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL;
@@ -159,7 +158,7 @@ oneinsert:
 
             PARSER_BUBBLE_UP_VIEW( sql, $$,  insert );
         }
-  | TK_INSERT TK_INTO table TK_LP selcollist TK_RP TK_VALUES TK_LP constlist TK_RP TK_TEMPORARY
+  | TK_INSERT TK_INTO table TK_LP collist TK_RP TK_VALUES TK_LP constlist TK_RP TK_TEMPORARY
         {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL;
@@ -307,7 +306,7 @@ onedrop:
   ;
 
 table_def:
-    column_def TK_PRIMARY TK_KEY selcollist
+    column_def TK_PRIMARY TK_KEY collist
         {
             if( SQL_MarkPrimaryKeys( &$1, $4 ) )
                 $$ = $1;
@@ -409,23 +408,6 @@ data_count:
     ;
 
 oneselect:
-    unorderedsel TK_ORDER TK_BY selcollist
-        {
-            UINT r;
-
-            if( $4 )
-            {
-                r = $1->ops->sort( $1, $4 );
-                if ( r != ERROR_SUCCESS)
-                    YYABORT;
-            }
-
-            $$ = $1;
-        }
-  | unorderedsel
-    ;
-
-unorderedsel:
     TK_SELECT selectfrom
         {
             $$ = $2;
@@ -465,8 +447,20 @@ selectfrom:
     ;
 
 selcollist:
+    selcolumn
+  | selcolumn TK_COMMA selcollist
+        {
+            $1->next = $3;
+        }
+  | TK_STAR
+        {
+            $$ = NULL;
+        }
+    ;
+
+collist:
     column
-  | column TK_COMMA selcollist
+  | column TK_COMMA collist
         {
             $1->next = $3;
         }
@@ -477,22 +471,6 @@ selcollist:
     ;
 
 from:
-    fromtable
-  | fromtable TK_WHERE expr
-        {
-            SQL_input* sql = (SQL_input*) info;
-            MSIVIEW* where = NULL;
-            UINT r;
-
-            r = WHERE_CreateView( sql->db, &where, $1, $3 );
-            if( r != ERROR_SUCCESS )
-                YYABORT;
-
-            PARSER_BUBBLE_UP_VIEW( sql, $$, where );
-        }
-    ;
-
-fromtable:
     TK_FROM table
         {
             SQL_input* sql = (SQL_input*) info;
@@ -505,17 +483,46 @@ fromtable:
 
             PARSER_BUBBLE_UP_VIEW( sql, $$, table );
         }
-  | TK_FROM tablelist
+  | unorderdfrom TK_ORDER TK_BY collist
         {
-            SQL_input* sql = (SQL_input*) info;
-            MSIVIEW* join = NULL;
             UINT r;
 
-            r = JOIN_CreateView( sql->db, &join, $2 );
+            if( $4 )
+            {
+                r = $1->ops->sort( $1, $4 );
+                if ( r != ERROR_SUCCESS)
+                    YYABORT;
+            }
+
+            $$ = $1;
+        }
+  | unorderdfrom
+  ;
+
+unorderdfrom:
+    TK_FROM tablelist
+        {
+            SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* where = NULL;
+            UINT r;
+
+            r = WHERE_CreateView( sql->db, &where, $2, NULL );
             if( r != ERROR_SUCCESS )
                 YYABORT;
 
-            PARSER_BUBBLE_UP_VIEW( sql, $$, join );
+            PARSER_BUBBLE_UP_VIEW( sql, $$, where );
+        }
+  | TK_FROM tablelist TK_WHERE expr
+        {
+            SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* where = NULL;
+            UINT r;
+
+            r = WHERE_CreateView( sql->db, &where, $2, $4 );
+            if( r != ERROR_SUCCESS )
+                YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, where );
         }
     ;
 
@@ -524,8 +531,7 @@ tablelist:
         {
             $$ = $1;
         }
-  |
-    table TK_COMMA tablelist
+  | table TK_COMMA tablelist
         {
             $$ = parser_add_table( info, $3, $1 );
             if (!$$)
@@ -693,6 +699,27 @@ column:
         }
     ;
 
+selcolumn:
+    table TK_DOT id
+        {
+            $$ = parser_alloc_column( info, $1, $3 );
+            if( !$$ )
+                YYABORT;
+        }
+  | id
+        {
+            $$ = parser_alloc_column( info, NULL, $1 );
+            if( !$$ )
+                YYABORT;
+        }
+  | string
+        {
+            $$ = parser_alloc_column( info, NULL, $1 );
+            if( !$$ )
+                YYABORT;
+        }
+    ;
+
 table:
     id
         {
@@ -702,6 +729,14 @@ table:
 
 id:
     TK_ID
+        {
+            if ( SQL_getstring( info, &$1, &$$ ) != ERROR_SUCCESS || !$$ )
+                YYABORT;
+        }
+    ;
+
+string:
+    TK_STRING
         {
             if ( SQL_getstring( info, &$1, &$$ ) != ERROR_SUCCESS || !$$ )
                 YYABORT;
@@ -762,7 +797,7 @@ static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR colu
 
 static int sql_lex( void *SQL_lval, SQL_input *sql )
 {
-    int token;
+    int token, skip;
     struct sql_str * str = SQL_lval;
 
     do
@@ -772,11 +807,12 @@ static int sql_lex( void *SQL_lval, SQL_input *sql )
             return 0;  /* end of input */
 
         /* TRACE("string : %s\n", debugstr_w(&sql->command[sql->n])); */
-        sql->len = sqliteGetToken( &sql->command[sql->n], &token );
+        sql->len = sqliteGetToken( &sql->command[sql->n], &token, &skip );
         if( sql->len==0 )
             break;
         str->data = &sql->command[sql->n];
         str->len = sql->len;
+        sql->n += skip;
     }
     while( token == TK_SPACE );
 
@@ -877,8 +913,8 @@ static struct expr * EXPR_column( void *info, const column_info *column )
     if( e )
     {
         e->type = EXPR_COLUMN;
-        e->u.column.column = column->column;
-        e->u.column.table = column->table;
+        e->u.column.unparsed.column = column->column;
+        e->u.column.unparsed.table = column->table;
     }
     return e;
 }

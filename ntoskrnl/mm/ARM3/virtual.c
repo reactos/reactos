@@ -2360,7 +2360,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
 
     /* Check for illegal addresses in user-space, or the shared memory area */
     if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
-        (PAGE_ALIGN(BaseAddress) == (PVOID)USER_SHARED_DATA))
+        (PAGE_ALIGN(BaseAddress) == (PVOID)MM_SHARED_USER_DATA_VA))
     {
         Address = PAGE_ALIGN(BaseAddress);
 
@@ -2370,9 +2370,9 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         MemoryInfo.Type = MEM_PRIVATE;
 
         /* Special case for shared data */
-        if (Address == (PVOID)USER_SHARED_DATA)
+        if (Address == (PVOID)MM_SHARED_USER_DATA_VA)
         {
-            MemoryInfo.AllocationBase = (PVOID)USER_SHARED_DATA;
+            MemoryInfo.AllocationBase = (PVOID)MM_SHARED_USER_DATA_VA;
             MemoryInfo.State = MEM_COMMIT;
             MemoryInfo.Protect = PAGE_READONLY;
             MemoryInfo.RegionSize = PAGE_SIZE;

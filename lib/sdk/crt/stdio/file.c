@@ -966,7 +966,7 @@ void msvcrt_free_io(void)
             free(__pioinfo[i]);
 
     for(i=0; i<sizeof(fstream)/sizeof(fstream[0]); i++)
-            free(fstream[i/FD_BLOCK_SIZE]);
+            free(fstream[i]);
 
     file_cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&file_cs);

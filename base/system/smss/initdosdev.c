@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
+
 static NTSTATUS NTAPI
 SmpDosDevicesQueryRoutine(PWSTR ValueName,
 			 ULONG ValueType,
@@ -50,7 +52,7 @@ SmpDosDevicesQueryRoutine(PWSTR ValueName,
   /* create symbolic link */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
-			     OBJ_PERMANENT|OBJ_CASE_INSENSITIVE,
+			     OBJ_PERMANENT|OBJ_CASE_INSENSITIVE|OBJ_OPENIF,
 			     NULL,
 			     NULL);
   Status = NtCreateSymbolicLinkObject(&LinkHandle,
@@ -88,5 +90,7 @@ SmInitDosDevices(VOID)
 				  NULL);
   return(Status);
 }
+
+#endif
 
 /* EOF */

@@ -135,8 +135,12 @@ static UINT alter_add_column(MSIALTERVIEW *av)
     {
         r = MSI_IterateRecords(view, NULL, ITERATE_columns, &colnum);
         msiobj_release(&view->hdr);
+        if (r != ERROR_SUCCESS)
+        {
+            columns->ops->delete(columns);
+            return r;
+        }
     }
-
     r = columns->ops->add_column(columns, av->colinfo->table,
                                  colnum, av->colinfo->column,
                                  av->colinfo->type, (av->hold == 1));
@@ -185,9 +189,8 @@ static UINT ALTER_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *col
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT ALTER_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
-                LPWSTR *table_name)
+static UINT ALTER_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                   UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSIALTERVIEW *av = (MSIALTERVIEW*)view;
 

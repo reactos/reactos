@@ -5,6 +5,7 @@ add_definitions(-D__WINESRC__)
 spec2def(sxs.dll sxs.spec)
 
 list(APPEND SOURCE
+    cache.c
     sxs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)
@@ -14,7 +15,12 @@ set_module_type(sxs win32dll ENTRYPOINT 0 )
 
 target_link_libraries(sxs wine)
 
-add_importlibs(sxs kernel32 ntdll)
+if(MSVC)
+    set_source_files_properties(cache.c PROPERTIES COMPILE_FLAGS /FImsvchelper.h)
+    target_link_libraries(sxs uuid)
+endif()
+
+add_importlibs(sxs oleaut32 ole32 kernel32 ntdll)
 add_dependencies(sxs psdk)
 
 add_cd_file(TARGET sxs DESTINATION reactos/system32 FOR all)

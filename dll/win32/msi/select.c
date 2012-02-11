@@ -57,11 +57,15 @@ static UINT SELECT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    if( (col==0) || (col>sv->num_cols) )
+    if( !col || col > sv->num_cols )
          return ERROR_FUNCTION_FAILED;
 
     col = sv->cols[ col - 1 ];
-
+    if( !col )
+    {
+        *val = 0;
+        return ERROR_SUCCESS;
+    }
     return sv->table->ops->fetch_int( sv->table, row, col, val );
 }
 
@@ -74,11 +78,15 @@ static UINT SELECT_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IS
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    if( (col==0) || (col>sv->num_cols) )
+    if( !col || col > sv->num_cols )
          return ERROR_FUNCTION_FAILED;
 
     col = sv->cols[ col - 1 ];
-
+    if( !col )
+    {
+        *stm = NULL;
+        return ERROR_SUCCESS;
+    }
     return sv->table->ops->fetch_stream( sv->table, row, col, stm );
 }
 
@@ -208,9 +216,8 @@ static UINT SELECT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
     return sv->table->ops->get_dimensions( sv->table, rows, NULL );
 }
 
-static UINT SELECT_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
-                LPWSTR *table_name)
+static UINT SELECT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                    UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
@@ -219,11 +226,18 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view,
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    if( (n==0) || (n>sv->num_cols) )
+    if( !n || n > sv->num_cols )
          return ERROR_FUNCTION_FAILED;
 
     n = sv->cols[ n - 1 ];
-
+    if( !n )
+    {
+        if (name) *name = szEmpty;
+        if (type) *type = MSITYPE_UNKNOWN | MSITYPE_VALID;
+        if (temporary) *temporary = FALSE;
+        if (table_name) *table_name = szEmpty;
+        return ERROR_SUCCESS;
+    }
     return sv->table->ops->get_column_info( sv->table, n, name,
                                             type, temporary, table_name );
 }
@@ -232,7 +246,6 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
     UINT r, i, num_columns, col, type, val;
-    LPWSTR name;
     LPCWSTR str;
     MSIRECORD *mod;
 
@@ -248,8 +261,7 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
     {
         col = sv->cols[i];
 
-        r = SELECT_get_column_info(view, i + 1, &name, &type, NULL, NULL);
-        msi_free(name);
+        r = SELECT_get_column_info(view, i + 1, NULL, &type, NULL, NULL);
         if (r != ERROR_SUCCESS)
         {
             ERR("Failed to get column information: %d\n", r);
@@ -336,14 +348,6 @@ static UINT SELECT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
     return sv->table->ops->find_matching_rows( sv->table, col, val, row, handle );
 }
 
-static UINT SELECT_sort(struct tagMSIVIEW *view, column_info *columns)
-{
-    MSISELECTVIEW *sv = (MSISELECTVIEW *)view;
-
-    TRACE("%p %p\n", view, columns);
-
-    return sv->table->ops->sort( sv->table, columns );
-}
 
 static const MSIVIEWOPS select_ops =
 {
@@ -364,14 +368,14 @@ static const MSIVIEWOPS select_ops =
     NULL,
     NULL,
     NULL,
-    SELECT_sort,
+    NULL,
     NULL,
 };
 
 static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name,
                               LPCWSTR table_name )
 {
-    UINT r, n=0;
+    UINT r, n;
     MSIVIEW *table;
 
     TRACE("%p adding %s.%s\n", sv, debugstr_w( table_name ),
@@ -391,9 +395,13 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name,
     if( sv->num_cols >= sv->max_cols )
         return ERROR_FUNCTION_FAILED;
 
-    r = VIEW_find_column( table, name, table_name, &n );
-    if( r != ERROR_SUCCESS )
-        return r;
+    if ( !name[0] ) n = 0;
+    else
+    {
+        r = VIEW_find_column( table, name, table_name, &n );
+        if( r != ERROR_SUCCESS )
+            return r;
+    }
 
     sv->cols[sv->num_cols] = n;
     TRACE("Translating column %s from %d -> %d\n", 

@@ -178,7 +178,7 @@ NtUserInitialize(
 // InitializeGreCSRSS();
 // {
 //    Startup DxGraphics.
-//    calls ** IntGdiGetLanguageID() and sets it **.
+//    calls ** UserGetLanguageID() and sets it **.
 //    Enables Fonts drivers, Initialize Font table & Stock Fonts.
 // }
 

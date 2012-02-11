@@ -297,9 +297,11 @@ CcSetFileSizes(IN PFILE_OBJECT FileObject,
                IN PCC_FILE_SIZES FileSizes)
 {
     PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+    PNOCC_BCB Bcb;
+
     if (!Map) return;
     Map->FileSizes = *FileSizes;
-	PNOCC_BCB Bcb = Map->AssociatedBcb.Flink == &Map->AssociatedBcb ? 
+	Bcb = Map->AssociatedBcb.Flink == &Map->AssociatedBcb ?
 		NULL : CONTAINING_RECORD(Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
 	if (!Bcb) return;
 	MmExtendCacheSection(Bcb->SectionObject, &FileSizes->FileSize, FALSE);

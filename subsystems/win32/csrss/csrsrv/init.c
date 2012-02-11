@@ -383,9 +383,9 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 				    NULL);
 	Status = NtCreatePort ( Port,
 				& PortAttributes,
-				LPC_MAX_DATA_LENGTH, /* TODO: make caller set it*/
-				LPC_MAX_MESSAGE_LENGTH, /* TODO: make caller set it*/
-				0); /* TODO: make caller set it*/
+				sizeof(SB_CONNECTION_INFO),
+				sizeof(SB_API_MSG),
+				32 * sizeof(SB_API_MSG));
 	if(!NT_SUCCESS(Status))
 	{
 		DPRINT1("CSR: %s: NtCreatePort failed (Status=%08lx)\n",
@@ -540,6 +540,7 @@ CsrpCreateCallbackPort (int argc, char ** argv, char ** envp)
 /**********************************************************************
  * CsrpRegisterSubsystem/3
  */
+BOOLEAN g_ModernSm;
 static NTSTATUS
 CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 {
@@ -579,6 +580,11 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 				   hSbApiPort,
 				   IMAGE_SUBSYSTEM_WINDOWS_CUI,
 				   & hSmApiPort);
+    if (!NT_SUCCESS(Status))
+    {
+        Status = SmConnectToSm(&Name, hSbApiPort, IMAGE_SUBSYSTEM_WINDOWS_GUI, &hSmApiPort);
+        g_ModernSm = TRUE;
+    }
 	if(!NT_SUCCESS(Status))
 	{
 		DPRINT("CSR: %s unable to connect to the SM (Status=0x%08lx)\n",
@@ -598,6 +604,7 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 	return Status;
 }
 
+#if 0
 /**********************************************************************
  * 	CsrpLoadKernelModeDriver/3
  */
@@ -641,6 +648,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 	}
 	return Status;
 }
+#endif
 
 /**********************************************************************
  * CsrpCreateApiPort/2
@@ -696,6 +704,7 @@ CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
+    if (g_ModernSm) return STATUS_SUCCESS;
 
 	/* initialize the process parameters */
 	RtlInitUnicodeString (& ImagePath, L"\\SystemRoot\\system32\\winlogon.exe");
@@ -747,17 +756,17 @@ struct {
 	PCHAR ErrorMessage;
 } InitRoutine [] = {
         {TRUE, CsrpCreateBNODirectory,   "create base named objects directory"},
-	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
-	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
 	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
 	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
     {TRUE, CsrpCreateHardErrorPort,  "create the hard error port"},
 	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
-	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
+//	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
 	{TRUE, CsrpInitVideo,            "initialize video"},
 	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
 	{TRUE, CsrpCCTS,                 "connect client to server"},
 	{TRUE, CsrpInitWin32Csr,         "load usermode dll"},
+	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
+	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
 	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
 };
 

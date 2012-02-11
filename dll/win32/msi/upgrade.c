@@ -89,7 +89,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     strcatW(newprop,productid);
 
     r = msi_set_property( package->db, action_property, newprop );
-    if (r == ERROR_SUCCESS && !strcmpW( action_property, cszSourceDir ))
+    if (r == ERROR_SUCCESS && !strcmpW( action_property, szSourceDir ))
         msi_reset_folders( package, TRUE );
 
     TRACE("Found Related Product... %s now %s\n",
@@ -123,33 +123,31 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
     while (rc == ERROR_SUCCESS)
     {
         rc = RegEnumValueW(hkey, index, product, &sz, NULL, NULL, NULL, NULL);
-        TRACE("Looking at (%i) %s\n",index,debugstr_w(product));
         if (rc == ERROR_SUCCESS)
         {
             WCHAR productid[GUID_SIZE];
-            LPCWSTR ver;
-            LPCWSTR language;
-            LPCWSTR action_property;
-            DWORD check = 0x00000000;
-            DWORD comp_ver = 0x00000000;
-            DWORD sz = 0x100;
+            LPCWSTR ver, language, action_property;
+            DWORD check = 0, comp_ver, sz = 0x100;
             HKEY hukey;
             INT r;
 
+            TRACE("Looking at index %u product %s\n", index, debugstr_w(product));
+
             unsquash_guid(product, productid);
-            rc = MSIREG_OpenProductKey(productid, NULL, package->Context,
-                                       &hukey, FALSE);
-            if (rc != ERROR_SUCCESS)
+            if (MSIREG_OpenProductKey(productid, NULL, MSIINSTALLCONTEXT_USERMANAGED, &hukey, FALSE) &&
+                MSIREG_OpenProductKey(productid, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, &hukey, FALSE) &&
+                MSIREG_OpenProductKey(productid, NULL, MSIINSTALLCONTEXT_MACHINE, &hukey, FALSE))
             {
+                TRACE("product key not found\n");
                 rc = ERROR_SUCCESS;
                 index ++;
                 continue;
             }
 
             sz = sizeof(DWORD);
-            RegQueryValueExW(hukey, INSTALLPROPERTY_VERSIONW, NULL, NULL,
-                    (LPBYTE)&check, &sz);
-            /* check min */
+            RegQueryValueExW(hukey, INSTALLPROPERTY_VERSIONW, NULL, NULL, (LPBYTE)&check, &sz);
+
+            /* check version minimum */
             ver = MSI_RecordGetString(rec,2);
             if (ver)
             {
@@ -157,13 +155,14 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                 r = check - comp_ver;
                 if (r < 0 || (r == 0 && !(attributes & msidbUpgradeAttributesVersionMinInclusive)))
                 {
+                    TRACE("version below minimum\n");
                     RegCloseKey(hukey);
                     index ++;
                     continue;
                 }
             }
 
-            /* check max */
+            /* check version maximum */
             ver = MSI_RecordGetString(rec,3);
             if (ver)
             {
@@ -175,26 +174,26 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                     index ++;
                     continue;
                 }
+                TRACE("version above maximum\n");
             }
 
-            /* check language*/
+            /* check language */
             sz = sizeof(DWORD);
-            RegQueryValueExW(hukey, INSTALLPROPERTY_LANGUAGEW, NULL, NULL,
-                    (LPBYTE)&check, &sz);
+            RegQueryValueExW(hukey, INSTALLPROPERTY_LANGUAGEW, NULL, NULL, (LPBYTE)&check, &sz);
             RegCloseKey(hukey);
             language = MSI_RecordGetString(rec,4);
-            TRACE("Checking languages %x and %s\n", check, 
-                            debugstr_w(language));
             if (!check_language(check, language, attributes))
             {
                 index ++;
+                TRACE("language doesn't match\n");
                 continue;
             }
+            TRACE("found related product\n");
 
             action_property = MSI_RecordGetString(rec, 7);
             append_productcode(package, action_property, productid);
             MSI_RecordSetStringW(uirow, 1, productid);
-            ui_actiondata(package, szFindRelatedProducts, uirow);
+            msi_ui_actiondata(package, szFindRelatedProducts, uirow);
         }
         index ++;
     }
@@ -206,32 +205,30 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 
 UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
 {
-    static const WCHAR Query[] = 
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',
-         ' ','`','U','p','g','r','a','d','e','`',0};
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','U','p','g','r','a','d','e','`',0};
     MSIQUERY *view;
+    UINT rc;
 
     if (msi_get_property_int(package->db, szInstalled, 0))
     {
         TRACE("Skipping FindRelatedProducts action: product already installed\n");
         return ERROR_SUCCESS;
     }
-
-    if (check_unique_action(package, szFindRelatedProducts))
+    if (msi_action_is_unique(package, szFindRelatedProducts))
     {
         TRACE("Skipping FindRelatedProducts action: already done in UI sequence\n");
         return ERROR_SUCCESS;
     }
     else
-        register_unique_action(package, szFindRelatedProducts);
+        msi_register_unique_action(package, szFindRelatedProducts);
 
-    rc = MSI_DatabaseOpenViewW(package->db, Query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
     
     rc = MSI_IterateRecords(view, NULL, ITERATE_FindRelatedProducts, package);
     msiobj_release(&view->hdr);
-    
     return rc;
 }

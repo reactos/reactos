@@ -164,7 +164,7 @@ typedef struct tagFileStruct
     WORD uFileDate;     /*06*/
     WORD uFileTime;     /*08*/
     WORD uFileAttribs;      /*10*/
-    CHAR szNames[0];        /*12*/
+    CHAR szNames[1];        /*12*/
     /* Here are coming two strings. The first is the long name.
     The second the dos name when needed or just 0x00 */
 } FileStruct;
@@ -180,7 +180,7 @@ typedef struct tagFileStructW {
     WORD uLastAccessDate;
     WORD uLastAccessTime;
     BYTE dummy2[4];
-    WCHAR wszName[0];
+    WCHAR wszName[1];
 } FileStructW;
 
 typedef struct tagValueW

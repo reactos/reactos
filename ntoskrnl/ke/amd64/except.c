@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-extern ULONG64 InterruptDispatchTable[256];
+extern KI_INTERRUPT_DISPATCH_ENTRY KiUnexpectedRange[256];
 
 /* GLOBALS *******************************************************************/
 
@@ -74,7 +74,7 @@ KeInitExceptions(VOID)
         }
         else
         {
-            Offset = (ULONG64)&InterruptDispatchTable[i];
+            Offset = (ULONG64)&KiUnexpectedRange[i]._Op_push;
             KiIdt[i].Dpl = 0;
             KiIdt[i].IstIndex = 0;
         }
@@ -92,6 +92,146 @@ KeInitExceptions(VOID)
     __lidt(&KiIdtDescriptor.Limit);
 }
 
+static
+VOID
+KiDispatchExceptionToUser(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PCONTEXT Context,
+    IN PEXCEPTION_RECORD ExceptionRecord)
+{
+    EXCEPTION_RECORD LocalExceptRecord;
+    ULONG Size;
+    ULONG64 UserRsp;
+    PCONTEXT UserContext;
+    PEXCEPTION_RECORD UserExceptionRecord;
+
+    /* Make sure we have a valid SS */
+    if (TrapFrame->SegSs != (KGDT64_R3_DATA | RPL_MASK))
+    {
+        /* Raise an access violation instead */
+        LocalExceptRecord.ExceptionCode = STATUS_ACCESS_VIOLATION;
+        LocalExceptRecord.ExceptionFlags = 0;
+        LocalExceptRecord.NumberParameters = 0;
+        ExceptionRecord = &LocalExceptRecord;
+    }
+
+    /* Calculate the size of the exception record */
+    Size = FIELD_OFFSET(EXCEPTION_RECORD, ExceptionInformation) +
+           ExceptionRecord->NumberParameters * sizeof(ULONG64);
+
+    /* Get new stack pointer and align it to 16 bytes */
+    UserRsp = (Context->Rsp - Size - sizeof(CONTEXT)) & ~15;
+
+    /* Get pointers to the usermode context and exception record */
+    UserContext = (PVOID)UserRsp;
+    UserExceptionRecord = (PVOID)(UserRsp + sizeof(CONTEXT));
+
+    /* Set up the user-stack */
+    _SEH2_TRY
+    {
+        /* Probe stack and copy Context */
+        ProbeForWrite(UserContext, sizeof(CONTEXT), sizeof(ULONG64));
+        *UserContext = *Context;
+
+        /* Probe stack and copy exception record */
+        ProbeForWrite(UserExceptionRecord, Size, sizeof(ULONG64));
+        *UserExceptionRecord = *ExceptionRecord;
+    }
+    _SEH2_EXCEPT((LocalExceptRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord),
+                 EXCEPTION_EXECUTE_HANDLER)
+    {
+        // FIXNE: handle stack overflow
+
+        /* Nothing we can do here */
+        _SEH2_YIELD(return);
+    }
+    _SEH2_END;
+
+    /* Now set the two params for the user-mode dispatcher */
+    TrapFrame->Rcx = (ULONG64)UserContext;
+    TrapFrame->Rdx = (ULONG64)UserExceptionRecord;
+
+    /* Set new Stack Pointer */
+    TrapFrame->Rsp = UserRsp;
+
+    /* Force correct segments */
+    TrapFrame->SegCs = KGDT64_R3_CODE | RPL_MASK;
+    TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
+    TrapFrame->SegEs = KGDT64_R3_DATA | RPL_MASK;
+    TrapFrame->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+    TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
+    TrapFrame->SegSs = KGDT64_R3_DATA | RPL_MASK;
+
+    /* Set RIP to the User-mode Dispatcher */
+    TrapFrame->Rip = (ULONG64)KeUserExceptionDispatcher;
+
+    /* Exit to usermode */
+    KiServiceExit2(TrapFrame);
+}
+
+static
+VOID
+KiPageInDirectory(PVOID ImageBase, USHORT Directory)
+{
+    volatile CHAR *Pointer;
+    ULONG Size;
+
+   /* Get a pointer to the debug directory */
+    Pointer = RtlImageDirectoryEntryToData(ImageBase, 1, Directory, &Size);
+    if (!Pointer) return;
+
+    /* Loop all pages */
+    while ((LONG)Size > 0)
+    {
+        /* Touch it, to page it in */
+        (void)*Pointer;
+        Pointer += PAGE_SIZE;
+        Size -= PAGE_SIZE;
+    }
+}
+
+VOID
+KiPrepareUserDebugData(void)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PPEB_LDR_DATA PebLdr;
+    PLIST_ENTRY ListEntry;
+    PTEB Teb;
+
+    /* Get the Teb for this process */
+    Teb = KeGetCurrentThread()->Teb;
+    if (!Teb) return;
+
+    _SEH2_TRY
+    {
+        /* Get a pointer to the loader data */
+        PebLdr = Teb->ProcessEnvironmentBlock->Ldr;
+        if (!PebLdr) _SEH2_YIELD(return);
+
+        /* Now loop all entries in the module list */
+        for (ListEntry = PebLdr->InLoadOrderModuleList.Flink;
+             ListEntry != &PebLdr->InLoadOrderModuleList;
+             ListEntry = ListEntry->Flink)
+        {
+            /* Get the loader entry */
+            LdrEntry = CONTAINING_RECORD(ListEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+
+            KiPageInDirectory((PVOID)LdrEntry->DllBase,
+                              IMAGE_DIRECTORY_ENTRY_DEBUG);
+
+            KiPageInDirectory((PVOID)LdrEntry->DllBase,
+                              IMAGE_DIRECTORY_ENTRY_EXCEPTION);
+        }
+
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END
+}
+
 VOID
 NTAPI
 KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
@@ -101,9 +241,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     IN BOOLEAN FirstChance)
 {
     CONTEXT Context;
-
-//    FrLdrDbgPrint("KiDispatchException(%p, %p, %p, %d, %d)\n",
-//        ExceptionRecord, ExceptionFrame, TrapFrame, PreviousMode, FirstChance);
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -179,8 +316,66 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
     else
     {
-        /* FIXME: user-mode exception handling unimplemented */
-        ASSERT(FALSE);
+        /* User mode exception, was it first-chance? */
+        if (FirstChance)
+        {
+            /*
+             * Break into the kernel debugger unless a user mode debugger
+             * is present or user mode exceptions are ignored, except if this
+             * is a debug service which we must always pass to KD
+             */
+            if ((!(PsGetCurrentProcess()->DebugPort) &&
+                 !(KdIgnoreUmExceptions)) ||
+                 (KdIsThisAKdTrap(ExceptionRecord, &Context, PreviousMode)))
+            {
+                /* Make sure the debugger can access debug directories */
+                KiPrepareUserDebugData();
+
+                /* Call the kernel debugger */
+                if (KiDebugRoutine(TrapFrame,
+                                   ExceptionFrame,
+                                   ExceptionRecord,
+                                   &Context,
+                                   PreviousMode,
+                                   FALSE))
+                {
+                    /* Exception was handled */
+                    goto Handled;
+                }
+            }
+
+            /* Forward exception to user mode debugger */
+            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
+
+            //KiDispatchExceptionToUser()
+            __debugbreak();
+        }
+
+        /* Try second chance */
+        if (DbgkForwardException(ExceptionRecord, TRUE, TRUE))
+        {
+            /* Handled, get out */
+            return;
+        }
+        else if (DbgkForwardException(ExceptionRecord, FALSE, TRUE))
+        {
+            /* Handled, get out */
+            return;
+        }
+
+        /* 3rd strike, kill the process */
+        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %lx, BaseAddress: %lx\n",
+                PsGetCurrentProcess()->ImageFileName,
+                ExceptionRecord->ExceptionCode,
+                ExceptionRecord->ExceptionAddress,
+                PsGetCurrentProcess()->SectionBaseAddress);
+
+        ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+        KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
+                     ExceptionRecord->ExceptionCode,
+                     (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                     (ULONG_PTR)TrapFrame,
+                     0);
     }
 
 Handled:

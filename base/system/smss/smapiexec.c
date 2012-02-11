@@ -263,23 +263,9 @@ SMAPI(SmExecPgm)
 			else
 			{
 				/*
-				 * OK, the definition is empty, but check
-				 * if it is the name of an embedded subsystem.
+				 * Badly defined subsystem. Check the registry!
 				 */
-				if(0 == _wcsicmp(L"DEBUG", Name))
-				{
-					/*
-					 * Initialize the embedded DBGSS.
-					 */
-					Request->SmHeader.Status = SmInitializeDbgSs();
-				}
-				else
-				{
-					/*
-					 * Badly defined subsystem. Check the registry!
-					 */
-					Request->SmHeader.Status = STATUS_NOT_FOUND;
-				}
+				Request->SmHeader.Status = STATUS_NOT_FOUND;
 			}
 		} else {
 			/* It couldn't lookup the Name! */

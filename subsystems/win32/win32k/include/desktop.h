@@ -43,7 +43,6 @@ extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
-extern BOOL g_PaintDesktopVersion;
 
 typedef struct _SHELL_HOOK_WINDOW
 {
@@ -55,9 +54,6 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitDesktopImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupDesktopImpl(VOID);
 
 NTSTATUS
 APIENTRY
@@ -121,7 +117,6 @@ IntParseDesktopPath(PEPROCESS Process,
                     HWINSTA *hWinSta,
                     HDESK *hDesktop);
 
-BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable);
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);

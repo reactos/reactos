@@ -175,7 +175,7 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 
 VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 {
-	ULONG		NewCacheSize;
+	SIZE_T		NewCacheSize;
 
 	TRACE("CacheInternalCheckCacheSizeLimits()\n");
 

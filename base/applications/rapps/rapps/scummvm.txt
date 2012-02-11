@@ -2,13 +2,13 @@
 
 [Section]
 Name = ScummVM
-Version = 1.4.0
+Version = 1.4.1
 Licence = GPL
 Description = Sam and Max, Day of the Tentacle, etc on ReactOS.
-Size = 4.6MB
+Size = 5.28MB
 Category = 4
 URLSite = http://scummvm.org/
-URLDownload = http://kent.dl.sourceforge.net/project/scummvm/scummvm/1.4.0/scummvm-1.4.0-win32.exe
+URLDownload = http://kent.dl.sourceforge.net/project/scummvm/scummvm/1.4.1/scummvm-1.4.1-win32.exe
 CDPath = none
 
 [Section.0407]

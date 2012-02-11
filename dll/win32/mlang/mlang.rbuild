@@ -7,9 +7,10 @@
 	<include base="mlang">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="COM_NO_WINDOWS_H" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>mlang.c</file>
-	<file>regsvr.c</file>
+	<file>mlang.rc</file>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

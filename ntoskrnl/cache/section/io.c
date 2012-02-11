@@ -74,11 +74,11 @@ MiSimpleReadComplete
     PMDL Mdl = Irp->MdlAddress;
 
    /* Unlock MDL Pages, page 167. */
-	DPRINT("MiSimpleReadComplete %x\n", Irp);
+    DPRINT("MiSimpleReadComplete %p\n", Irp);
     while (Mdl)
     {
-		DPRINT("MDL Unlock %x\n", Mdl);
-		MmUnlockPages(Mdl);
+        DPRINT("MDL Unlock %p\n", Mdl);
+        MmUnlockPages(Mdl);
         Mdl = Mdl->Next;
     }
 
@@ -123,8 +123,8 @@ MiSimpleRead
     ASSERT(DeviceObject);
 
     DPRINT
-		("PAGING READ: FileObject %x <%wZ> Offset %08x%08x Length %d\n",
-		 &FileObject,
+		("PAGING READ: FileObject %p <%wZ> Offset %08x%08x Length %d\n",
+		 FileObject,
 		 &FileObject->FileName,
 		 FileOffset->HighPart,
 		 FileOffset->LowPart,
@@ -215,8 +215,8 @@ _MiSimpleWrite
     ASSERT(DeviceObject);
 
     DPRINT
-		("PAGING WRITE: FileObject %x Offset %x Length %d (%s:%d)\n",
-		 &FileObject,
+		("PAGING WRITE: FileObject %p Offset %x Length %d (%s:%d)\n",
+		 FileObject,
 		 FileOffset->LowPart,
 		 Length,
 		 File,

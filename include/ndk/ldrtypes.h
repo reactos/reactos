@@ -114,6 +114,10 @@ typedef struct _PEB_LDR_DATA
     LIST_ENTRY InMemoryOrderModuleList;
     LIST_ENTRY InInitializationOrderModuleList;
     PVOID EntryInProgress;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    UCHAR ShutdownInProgress;
+    PVOID ShutdownThreadId;
+#endif
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
 //

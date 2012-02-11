@@ -6,7 +6,7 @@
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>inseng_main.c</file>
-	<file>regsvr.c</file>
+	<file>inseng.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

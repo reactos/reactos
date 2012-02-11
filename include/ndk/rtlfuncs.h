@@ -1818,7 +1818,7 @@ RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1996,6 +1996,16 @@ RtlFillMemoryUlong(
     IN SIZE_T Length,
     IN ULONG Fill
 );
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    OUT PVOID Destination,
+    IN SIZE_T Length,
+    IN ULONGLONG Pattern
+);
+
 
 NTSYSAPI
 SIZE_T
@@ -2321,6 +2331,27 @@ RtlInitializeContext(
     IN PINITIAL_TEB InitialTeb
 );
 
+#ifdef _M_AMD64
+typedef struct _WOW64_CONTEXT *PWOW64_CONTEXT;
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64GetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN OUT PWOW64_CONTEXT ThreadContext
+);
+
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64SetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN PWOW64_CONTEXT ThreadContext
+);
+#endif
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2353,6 +2384,15 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetProcessIsCritical(
+    IN BOOLEAN NewValue,
+    OUT PBOOLEAN OldValue OPTIONAL,
+    IN BOOLEAN NeedBreaks
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetThreadIsCritical(
     IN BOOLEAN NewValue,
     OUT PBOOLEAN OldValue OPTIONAL,
     IN BOOLEAN NeedBreaks
@@ -2493,8 +2533,8 @@ RtlDosSearchPath_Ustr(
     IN PUNICODE_STRING CallerBuffer,
     IN OUT PUNICODE_STRING DynamicString OPTIONAL,
     OUT PUNICODE_STRING* FullNameOut OPTIONAL,
-    OUT PULONG FilePartSize OPTIONAL,
-    OUT PULONG LengthNeeded OPTIONAL
+    OUT PSIZE_T FilePartSize OPTIONAL,
+    OUT PSIZE_T LengthNeeded OPTIONAL
 );
 
 NTSYSAPI
@@ -2545,6 +2585,19 @@ RtlGetFullPathName_U(
     OUT PWSTR *ShortName
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetFullPathName_UEx(
+    IN PWSTR FileName,
+    IN ULONG BufferLength,
+    OUT PWSTR Buffer,
+    OUT OPTIONAL PWSTR *FilePart,
+    OUT OPTIONAL RTL_PATH_TYPE *InputPathType
+    );
+#endif
+
 ULONG
 NTAPI
 RtlGetFullPathName_UstrEx(
@@ -2555,7 +2608,7 @@ RtlGetFullPathName_UstrEx(
     IN PSIZE_T FilePartSize,
     OUT PBOOLEAN NameInvalid,
     OUT RTL_PATH_TYPE* PathType,
-    OUT PULONG LengthNeeded
+    OUT PSIZE_T LengthNeeded
 );
 
 NTSYSAPI
@@ -2586,9 +2639,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
-    PWSTR Environment,
-    PUNICODE_STRING Name,
-    PUNICODE_STRING Value
+    IN OPTIONAL PWSTR Environment,
+    IN PUNICODE_STRING Name,
+    OUT PUNICODE_STRING Value
 );
 
 VOID
@@ -3807,12 +3860,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSetBootStatusData(
-    HANDLE FileHandle,
-    BOOLEAN WriteMode,
-    DWORD DataClass,
-    PVOID Buffer,
-    ULONG BufferSize,
-    DWORD DataClass2
+    IN HANDLE FileHandle,
+    IN BOOLEAN WriteMode,
+    IN RTL_BSD_ITEM_TYPE DataClass,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
@@ -3837,7 +3890,7 @@ NTAPI
 RtlGUIDFromString(
   IN PUNICODE_STRING GuidString,
   OUT GUID *Guid);
-  
+
 NTSYSAPI
 NTSTATUS
 NTAPI

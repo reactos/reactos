@@ -2,13 +2,13 @@
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Runtime
-Version = 1.2.14
+Version = 1.2.15
 Licence = LGPL
 Description = Needed for many Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
-Size = 145kB
+Size = 136.67kB
 Category = 14
 URLSite = http://www.libsdl.org/
-URLDownload = http://www.libsdl.org/release/SDL-1.2.14-win32.zip
+URLDownload = http://www.libsdl.org/release/SDL-1.2.15-win32.zip
 CDPath = none
 
 [Section.0407]

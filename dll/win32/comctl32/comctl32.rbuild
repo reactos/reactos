@@ -57,5 +57,6 @@
 	<library>winmm</library>
 	<library>uxtheme</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 </module>
 </group>

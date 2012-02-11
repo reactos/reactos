@@ -14,8 +14,8 @@
 	<file>mimeintl.c</file>
 	<file>mimeole.c</file>
 	<file>pop3transport.c</file>
-	<file>regsvr.c</file>
 	<file>smtptransport.c</file>
+	<file>inetcomm.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

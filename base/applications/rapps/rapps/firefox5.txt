@@ -1,60 +1,60 @@
 ﻿; UTF-8
 
 [Section]
-Name = Mozilla Firefox 9
-Version = 9.0.1
+Name = Mozilla Firefox 10
+Version = 10.0
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
-Size = 14.6M
+Size = 15.06MB
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/en-US/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/en-US/Firefox%20Setup%2010.0.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
-Size = 14.4M
+Size = 14.92MB
 URLSite = http://www.mozilla-europe.org/de/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/de/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/de/Firefox%20Setup%2010.0.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
-Size = 14.4M
+Size = 14.88MB
 URLSite = http://www.mozilla-europe.org/es/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/es-ES/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/es-ES/Firefox%20Setup%2010.0.exe
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
-Size = 14.7M
+Size = 15.18MB
 URLSite = http://www.mozilla-europe.org/fr/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/fr/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/fr/Firefox%20Setup%2010.0.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
-Size = 14.4M
+Size = 14.91MB
 URLSite = http://www.mozilla-europe.org/no/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/nb-NO/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/nb-NO/Firefox%20Setup%2010.0.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
-Size = 15.3M
+Size = 15.76MB
 URLSite = http://www.mozilla-europe.org/pl/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/pl/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/pl/Firefox%20Setup%2010.0.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 14.8M
+Size = 15.33MB
 URLSite = http://www.mozilla-europe.org/ru/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/ru/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/ru/Firefox%20Setup%2010.0.exe
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
-Size = 15.1MB
+Size = 15.57MB
 URLSite = http://www.mozilla-europe.org/sk/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/sk/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/sk/Firefox%20Setup%2010.0.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
-Size = 14.8M
+Size = 15.32MB
 URLSite = http://www.mozilla-europe.org/uk/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-9.0/win32/uk/Firefox%20Setup%209.0.1.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0/win32/uk/Firefox%20Setup%2010.0.exe

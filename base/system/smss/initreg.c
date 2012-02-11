@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
 NTSTATUS
 SmInitializeRegistry(VOID)
 {
@@ -20,5 +21,6 @@ SmInitializeRegistry(VOID)
   /* Load remaining registry hives */
   return NtInitializeRegistry(CM_BOOT_FLAG_SMSS);
 }
+#endif
 
 /* EOF */

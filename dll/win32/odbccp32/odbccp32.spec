@@ -1,6 +1,6 @@
 @ stdcall ODBCCPlApplet( long long ptr ptr)
-@ stdcall SQLConfigDataSource(ptr long wstr wstr)
-@ stdcall SQLConfigDataSourceW(ptr long str str)
+@ stdcall SQLConfigDataSource(ptr long str str)
+@ stdcall SQLConfigDataSourceW(ptr long wstr wstr)
 @ stdcall SQLConfigDriver(ptr long str str ptr long ptr)
 @ stdcall SQLConfigDriverW(ptr long wstr wstr ptr long ptr)
 @ stdcall SQLCreateDataSource(ptr str)

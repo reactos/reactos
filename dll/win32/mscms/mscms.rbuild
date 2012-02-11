@@ -10,7 +10,6 @@
 	<file>stub.c</file>
 	<file>transform.c</file>
 	<file>version.rc</file>
-	<pch>mscms_priv.h</pch>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>ntdll</library>

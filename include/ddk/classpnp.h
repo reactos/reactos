@@ -129,8 +129,6 @@
 #define MEDIA_CHANGE_DEFAULT_TIME                  1
 #define MEDIA_CHANGE_TIMEOUT_TIME                  300
 
-#define MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS 0x3b9aca00
-
 #ifdef ALLOCATE_SRB_FROM_POOL
 
 #define ClasspAllocateSrb(ext)                      \
@@ -186,6 +184,8 @@
 #define GUID_CLASSPNP_WORKING_SET     {0x105701b0, 0x9e9b, 0x47cb, {0x97, 0x80, 0x81, 0x19, 0x8a, 0xf7, 0xb5, 0x24}}
 
 #define DEFAULT_FAILURE_PREDICTION_PERIOD 60 * 60 * 1
+
+#define MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS (0x3b9aca00)
 
 static inline ULONG CountOfSetBitsUChar(UCHAR _X)
 { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
@@ -286,139 +286,161 @@ typedef struct _CLASSPNP_SCAN_FOR_SPECIAL_INFO {
   ULONG_PTR Data;
 } CLASSPNP_SCAN_FOR_SPECIAL_INFO, *PCLASSPNP_SCAN_FOR_SPECIAL_INFO;
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI *PCLASS_ERROR)(
-  PDEVICE_OBJECT DeviceObject,
-  PSCSI_REQUEST_BLOCK Srb,
-  NTSTATUS *Status,
-  BOOLEAN *Retry);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _Out_ NTSTATUS *Status,
+  _Inout_ BOOLEAN *Retry);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_ADD_DEVICE)(
-  PDRIVER_OBJECT DriverObject,
-  PDEVICE_OBJECT Pdo);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDEVICE_OBJECT Pdo);
 
 typedef NTSTATUS
 (NTAPI *PCLASS_POWER_DEVICE)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_START_DEVICE)(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_STOP_DEVICE)(
-  PDEVICE_OBJECT DeviceObject,
-  UCHAR Type);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ UCHAR Type);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_INIT_DEVICE)(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_ENUM_DEVICE)(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_READ_WRITE)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_DEVICE_CONTROL)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_SHUTDOWN_FLUSH)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_CREATE_CLOSE)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_ID)(
-  PDEVICE_OBJECT DeviceObject,
-  BUS_QUERY_ID_TYPE IdType,
-  PUNICODE_STRING IdString);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BUS_QUERY_ID_TYPE IdType,
+  _In_ PUNICODE_STRING IdString);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_REMOVE_DEVICE)(
-  PDEVICE_OBJECT DeviceObject,
-  UCHAR Type);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ UCHAR Type);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef VOID
 (NTAPI *PCLASS_UNLOAD)(
-  PDRIVER_OBJECT DriverObject);
+  _In_ PDRIVER_OBJECT DriverObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_PNP_CAPABILITIES)(
-  PDEVICE_OBJECT PhysicalDeviceObject,
-  PDEVICE_CAPABILITIES Capabilities);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ PDEVICE_CAPABILITIES Capabilities);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI *PCLASS_TICK)(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_WMI_REGINFO_EX)(
-  PDEVICE_OBJECT DeviceObject,
-  ULONG *RegFlags,
-  PUNICODE_STRING Name,
-  PUNICODE_STRING MofResourceName);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ ULONG *RegFlags,
+  _Out_ PUNICODE_STRING Name,
+  _Out_ PUNICODE_STRING MofResourceName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_WMI_REGINFO)(
-  PDEVICE_OBJECT DeviceObject,
-  ULONG *RegFlags,
-  PUNICODE_STRING Name);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ ULONG *RegFlags,
+  _Out_ PUNICODE_STRING Name);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_WMI_DATABLOCK)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG GuidIndex,
-  ULONG BufferAvail,
-  PUCHAR Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _In_ ULONG BufferAvail,
+  _Out_writes_bytes_(BufferAvail) PUCHAR Buffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_SET_WMI_DATABLOCK)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG GuidIndex,
-  ULONG BufferSize,
-  PUCHAR Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _In_ ULONG BufferSize,
+  _In_reads_bytes_(BufferSize) PUCHAR Buffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_SET_WMI_DATAITEM)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG GuidIndex,
-  ULONG DataItemId,
-  ULONG BufferSize,
-  PUCHAR Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _In_ ULONG DataItemId,
+  _In_ ULONG BufferSize,
+  _In_reads_bytes_(BufferSize) PUCHAR Buffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_EXECUTE_WMI_METHOD)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG GuidIndex,
-  ULONG MethodId,
-  ULONG InBufferSize,
-  ULONG OutBufferSize,
-  PUCHAR Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _In_ ULONG MethodId,
+  _In_ ULONG InBufferSize,
+  _In_ ULONG OutBufferSize,
+  _In_reads_(_Inexpressible_(max(InBufferSize, OutBufferSize))) PUCHAR Buffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI *PCLASS_WMI_FUNCTION_CONTROL)(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG GuidIndex,
-  CLASSENABLEDISABLEFUNCTION Function,
-  BOOLEAN Enable);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _In_ CLASSENABLEDISABLEFUNCTION Function,
+  _In_ BOOLEAN Enable);
 
 typedef struct _SRB_HISTORY_ITEM {
   LARGE_INTEGER TickCountSent;
@@ -431,27 +453,32 @@ typedef struct _SRB_HISTORY_ITEM {
 
 typedef struct _SRB_HISTORY {
   ULONG_PTR ClassDriverUse[4];
-  ULONG TotalHistoryCount;
-  ULONG UsedHistoryCount;
-  SRB_HISTORY_ITEM History[1];
+  _Field_range_(1,30000) ULONG TotalHistoryCount;
+  _Field_range_(0,TotalHistoryCount) ULONG UsedHistoryCount;
+  _Field_size_part_(TotalHistoryCount, UsedHistoryCount) SRB_HISTORY_ITEM History[1];
 } SRB_HISTORY, *PSRB_HISTORY;
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef BOOLEAN
 (NTAPI *PCLASS_INTERPRET_SENSE_INFO)(
-  PDEVICE_OBJECT Fdo,
-  PIRP OriginalRequest,
-  PSCSI_REQUEST_BLOCK Srb,
-  UCHAR MajorFunctionCode,
-  ULONG IoDeviceCode,
-  ULONG PreviousRetryCount,
-  SRB_HISTORY *RequestHistory,
-  NTSTATUS *Status,
-  LONGLONG *RetryIn100nsUnits);
+  _In_ PDEVICE_OBJECT Fdo,
+  _In_opt_ PIRP OriginalRequest,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ UCHAR MajorFunctionCode,
+  _In_ ULONG IoDeviceCode,
+  _In_ ULONG PreviousRetryCount,
+  _In_opt_ SRB_HISTORY *RequestHistory,
+  _Out_ NTSTATUS *Status,
+  _Out_ _Deref_out_range_(0,MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS)
+    LONGLONG *RetryIn100nsUnits);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_At_(RequestHistory->UsedHistoryCount, _Pre_equal_to_(RequestHistory->TotalHistoryCount)
+   _Out_range_(0, RequestHistory->TotalHistoryCount - 1))
 typedef VOID
 (NTAPI *PCLASS_COMPRESS_RETRY_HISTORY_DATA)(
-  PDEVICE_OBJECT DeviceObject,
-  PSRB_HISTORY RequestHistory);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PSRB_HISTORY RequestHistory);
 
 typedef struct {
   GUID Guid;
@@ -509,16 +536,17 @@ typedef struct _FILE_OBJECT_EXTENSION {
 } FILE_OBJECT_EXTENSION, *PFILE_OBJECT_EXTENSION;
 
 typedef struct _CLASS_WORKING_SET {
-  ULONG Size;
-  ULONG XferPacketsWorkingSetMaximum;
-  ULONG XferPacketsWorkingSetMinimum;
+  _Field_range_(sizeof(CLASS_WORKING_SET),sizeof(CLASS_WORKING_SET)) ULONG Size;
+  _Field_range_(0,2048) ULONG XferPacketsWorkingSetMaximum;
+  _Field_range_(0,2048) ULONG XferPacketsWorkingSetMinimum;
 } CLASS_WORKING_SET, *PCLASS_WORKING_SET;
 
 typedef struct _CLASS_INTERPRET_SENSE_INFO2 {
-  ULONG Size;
-  ULONG HistoryCount;
-  PCLASS_COMPRESS_RETRY_HISTORY_DATA Compress;
-  PCLASS_INTERPRET_SENSE_INFO Interpret;
+  _Field_range_(sizeof(CLASS_INTERPRET_SENSE_INFO),sizeof(CLASS_INTERPRET_SENSE_INFO))
+    ULONG Size;
+  _Field_range_(1,30000) ULONG HistoryCount;
+  __callback PCLASS_COMPRESS_RETRY_HISTORY_DATA Compress;
+  __callback PCLASS_INTERPRET_SENSE_INFO Interpret;
 } CLASS_INTERPRET_SENSE_INFO2, *PCLASS_INTERPRET_SENSE_INFO2;
 
 C_ASSERT((MAXULONG - sizeof(SRB_HISTORY)) / 30000 >= sizeof(SRB_HISTORY_ITEM));
@@ -642,18 +670,20 @@ typedef struct _COMPLETION_CONTEXT {
   SCSI_REQUEST_BLOCK Srb;
 } COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ClassInitialize(
-  PVOID Argument1,
-  PVOID Argument2,
-  PCLASS_INIT_DATA InitializationData);
+  _In_ PVOID Argument1,
+  _In_ PVOID Argument2,
+  _In_ PCLASS_INIT_DATA InitializationData);
 
 typedef struct _CLASS_QUERY_WMI_REGINFO_EX_LIST {
   ULONG Size;
-  PCLASS_QUERY_WMI_REGINFO_EX ClassFdoQueryWmiRegInfoEx;
-  PCLASS_QUERY_WMI_REGINFO_EX ClassPdoQueryWmiRegInfoEx;
+  __callback PCLASS_QUERY_WMI_REGINFO_EX ClassFdoQueryWmiRegInfoEx;
+  __callback PCLASS_QUERY_WMI_REGINFO_EX ClassPdoQueryWmiRegInfoEx;
 } CLASS_QUERY_WMI_REGINFO_EX_LIST, *PCLASS_QUERY_WMI_REGINFO_EX_LIST;
 
 typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
@@ -738,50 +768,57 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
 
 } FUNCTIONAL_DEVICE_EXTENSION, *PFUNCTIONAL_DEVICE_EXTENSION;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ClassInitializeEx(
-  PDRIVER_OBJECT DriverObject,
-  LPGUID Guid,
-  PVOID Data);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ LPGUID Guid,
+  _In_ PVOID Data);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+_Post_satisfies_(return <= 0)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassCreateDeviceObject(
-  PDRIVER_OBJECT DriverObject,
-  PCCHAR ObjectNameBuffer,
-  PDEVICE_OBJECT LowerDeviceObject,
-  BOOLEAN IsFdo,
-  PDEVICE_OBJECT *DeviceObject);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_z_ PCCHAR ObjectNameBuffer,
+  _In_ PDEVICE_OBJECT LowerDeviceObject,
+  _In_ BOOLEAN IsFdo,
+  _Outptr_result_nullonfailure_ _At_(*DeviceObject, __drv_allocatesMem(Mem) __drv_aliasesMem)
+    PDEVICE_OBJECT *DeviceObject);
 
+_Must_inspect_result_
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassReadDriveCapacity(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassReleaseQueue(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassSplitRequest(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  ULONG MaximumBytes);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ ULONG MaximumBytes);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassDeviceControl(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp);
 
 SCSIPORTAPI
 NTSTATUS
@@ -803,281 +840,299 @@ SCSIPORTAPI
 BOOLEAN
 NTAPI
 ClassInterpretSenseInfo(
-  PDEVICE_OBJECT DeviceObject,
-  PSCSI_REQUEST_BLOCK Srb,
-  UCHAR MajorFunctionCode,
-  ULONG IoDeviceCode,
-  ULONG RetryCount,
-  NTSTATUS *Status,
-  ULONG *RetryInterval);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ UCHAR MajorFunctionCode,
+  _In_ ULONG IoDeviceCode,
+  _In_ ULONG RetryCount,
+  _Out_ NTSTATUS *Status,
+  _Out_opt_ _Deref_out_range_(0,100) ULONG *RetryInterval);
 
 VOID
 NTAPI
 ClassSendDeviceIoControlSynchronous(
-  ULONG IoControlCode,
-  PDEVICE_OBJECT TargetDeviceObject,
-  PVOID Buffer,
-  ULONG InputBufferLength,
-  ULONG OutputBufferLength,
-  BOOLEAN InternalDeviceIoControl,
-  PIO_STATUS_BLOCK IoStatus);
+  _In_ ULONG IoControlCode,
+  _In_ PDEVICE_OBJECT TargetDeviceObject,
+  _Inout_updates_opt_(_Inexpressible_(max(InputBufferLength, OutputBufferLength)))
+    PVOID Buffer,
+  _In_ ULONG InputBufferLength,
+  _In_ ULONG OutputBufferLength,
+  _In_ BOOLEAN InternalDeviceIoControl,
+  _Out_ PIO_STATUS_BLOCK IoStatus);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassSendIrpSynchronous(
-  PDEVICE_OBJECT TargetDeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT TargetDeviceObject,
+  _In_ PIRP Irp);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassForwardIrpSynchronous(
-  PCOMMON_DEVICE_EXTENSION CommonExtension,
-  PIRP Irp);
+  _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
+  _In_ PIRP Irp);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassSendSrbSynchronous(
-  PDEVICE_OBJECT DeviceObject,
-  PSCSI_REQUEST_BLOCK Srb,
-  PVOID BufferAddress,
-  ULONG BufferLength,
-  BOOLEAN WriteToDevice);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PSCSI_REQUEST_BLOCK Srb,
+  _In_reads_bytes_opt_(BufferLength) PVOID BufferAddress,
+  _In_ ULONG BufferLength,
+  _In_ BOOLEAN WriteToDevice);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassSendSrbAsynchronous(
-  PDEVICE_OBJECT DeviceObject,
-  PSCSI_REQUEST_BLOCK Srb,
-  PIRP Irp,
-  PVOID BufferAddress,
-  ULONG BufferLength,
-  BOOLEAN WriteToDevice);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ PIRP Irp,
+  _In_reads_bytes_opt_(BufferLength) __drv_aliasesMem PVOID BufferAddress,
+  _In_ ULONG BufferLength,
+  _In_ BOOLEAN WriteToDevice);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassBuildRequest(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
 SCSIPORTAPI
 ULONG
 NTAPI
 ClassModeSense(
-  PDEVICE_OBJECT DeviceObject,
-  PCHAR ModeSenseBuffer,
-  ULONG Length,
-  UCHAR PageMode);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_reads_bytes_(Length) PCHAR ModeSenseBuffer,
+  _In_ ULONG Length,
+  _In_ UCHAR PageMode);
 
 SCSIPORTAPI
 PVOID
 NTAPI
 ClassFindModePage(
-  PCHAR ModeSenseBuffer,
-  ULONG Length,
-  UCHAR PageMode,
-  BOOLEAN Use6Byte);
+  _In_reads_bytes_(Length) PCHAR ModeSenseBuffer,
+  _In_ ULONG Length,
+  _In_ UCHAR PageMode,
+  _In_ BOOLEAN Use6Byte);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassClaimDevice(
-  PDEVICE_OBJECT LowerDeviceObject,
-  BOOLEAN Release);
-  
+  _In_ PDEVICE_OBJECT LowerDeviceObject,
+  _In_ BOOLEAN Release);
+
 SCSIPORTAPI
 NTSTATUS
 NTAPI
-ClassInternalIoControl (
+ClassInternalIoControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassInitializeSrbLookasideList(
-  PCOMMON_DEVICE_EXTENSION CommonExtension,
-  ULONG NumberElements);
+  _Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension,
+  _In_ ULONG NumberElements);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassDeleteSrbLookasideList(
-  PCOMMON_DEVICE_EXTENSION CommonExtension);
+  _Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 ULONG
 NTAPI
 ClassQueryTimeOutRegistryValue(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassGetDescriptor(
-  PDEVICE_OBJECT DeviceObject,
-  PSTORAGE_PROPERTY_ID PropertyId,
-  PSTORAGE_DESCRIPTOR_HEADER *Descriptor);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PSTORAGE_PROPERTY_ID PropertyId,
+  _Outptr_ PSTORAGE_DESCRIPTOR_HEADER *Descriptor);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassInvalidateBusRelations(
-  PDEVICE_OBJECT Fdo);
+  _In_ PDEVICE_OBJECT Fdo);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassMarkChildrenMissing(
-  PFUNCTIONAL_DEVICE_EXTENSION Fdo);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION Fdo);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 BOOLEAN
 NTAPI
 ClassMarkChildMissing(
-  PPHYSICAL_DEVICE_EXTENSION PdoExtension,
-  BOOLEAN AcquireChildLock);
+  _In_ PPHYSICAL_DEVICE_EXTENSION PdoExtension,
+  _In_ BOOLEAN AcquireChildLock);
 
 SCSIPORTAPI
 VOID
 ClassDebugPrint(
-  CLASS_DEBUG_LEVEL DebugPrintLevel,
-  PCCHAR DebugMessage,
+  _In_ CLASS_DEBUG_LEVEL DebugPrintLevel,
+  _In_z_ PCCHAR DebugMessage,
   ...);
 
+__drv_aliasesMem
+_IRQL_requires_max_(DISPATCH_LEVEL)
 SCSIPORTAPI
 PCLASS_DRIVER_EXTENSION
 NTAPI
 ClassGetDriverExtension(
-  PDRIVER_OBJECT DriverObject);
+  _In_ PDRIVER_OBJECT DriverObject);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassCompleteRequest(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  CCHAR PriorityBoost);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ CCHAR PriorityBoost);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassReleaseRemoveLock(
-  PDEVICE_OBJECT DeviceObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
   PIRP Tag);
 
 SCSIPORTAPI
 ULONG
 NTAPI
 ClassAcquireRemoveLockEx(
-  PDEVICE_OBJECT DeviceObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
   PVOID Tag,
-  PCSTR File,
-  ULONG Line);
+  _In_ PCSTR File,
+  _In_ ULONG Line);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassUpdateInformationInRegistry(
-  PDEVICE_OBJECT Fdo,
-  PCHAR DeviceName,
-  ULONG DeviceNumber,
-  PINQUIRYDATA InquiryData,
-  ULONG InquiryDataLength);
+  _In_ PDEVICE_OBJECT Fdo,
+  _In_ PCHAR DeviceName,
+  _In_ ULONG DeviceNumber,
+  _In_reads_bytes_opt_(InquiryDataLength) PINQUIRYDATA InquiryData,
+  _In_ ULONG InquiryDataLength);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassWmiCompleteRequest(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  NTSTATUS Status,
-  ULONG BufferUsed,
-  CCHAR PriorityBoost);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp,
+  _In_ NTSTATUS Status,
+  _In_ ULONG BufferUsed,
+  _In_ CCHAR PriorityBoost);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassWmiFireEvent(
-  PDEVICE_OBJECT DeviceObject,
-  LPGUID Guid,
-  ULONG InstanceIndex,
-  ULONG EventDataSize,
-  PVOID EventData);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ LPGUID Guid,
+  _In_ ULONG InstanceIndex,
+  _In_ ULONG EventDataSize,
+  _In_reads_bytes_(EventDataSize) PVOID EventData);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassResetMediaChangeTimer(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassInitializeMediaChangeDetection(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PUCHAR EventPrefix);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ PUCHAR EventPrefix);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassInitializeTestUnitPolling(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  BOOLEAN AllowDriveToSleep);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ BOOLEAN AllowDriveToSleep);
 
 SCSIPORTAPI
 PVPB
 NTAPI
 ClassGetVpb(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassSpinDownPowerHandler(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
 NTSTATUS
 NTAPI
 ClassStopUnitPowerHandler(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ClassSetFailurePredictionPoll(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  FAILURE_PREDICTION_METHOD FailurePredictionMethod,
-  ULONG PollingPeriod);
+  _Inout_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ FAILURE_PREDICTION_METHOD FailurePredictionMethod,
+  _In_ ULONG PollingPeriod);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 NTAPI
 ClassNotifyFailurePredicted(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PUCHAR Buffer,
-  ULONG BufferSize,
-  BOOLEAN LogError,
-  ULONG UniqueErrorValue,
-  UCHAR PathId,
-  UCHAR TargetId,
-  UCHAR Lun);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_reads_bytes_(BufferSize) PUCHAR Buffer,
+  _In_ ULONG BufferSize,
+  _In_ BOOLEAN LogError,
+  _In_ ULONG UniqueErrorValue,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassAcquireChildLock(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ClassReleaseChildLock(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 NTSTATUS
 NTAPI
@@ -1089,14 +1144,15 @@ ClassSignalCompletion(
 VOID
 NTAPI
 ClassSendStartUnit(
-  PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 NTSTATUS
 NTAPI
 ClassRemoveDevice(
-  PDEVICE_OBJECT DeviceObject,
-  UCHAR RemoveType);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ UCHAR RemoveType);
 
 SCSIPORTAPI
 NTSTATUS
@@ -1110,7 +1166,7 @@ SCSIPORTAPI
 VOID
 NTAPI
 ClassCheckMediaState(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 SCSIPORTAPI
 NTSTATUS
@@ -1120,71 +1176,79 @@ ClassCheckVerifyComplete(
   PIRP Irp,
   PVOID Context);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassSetMediaChangeState(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  MEDIA_CHANGE_DETECTION_STATE State,
-  BOOLEAN Wait);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ MEDIA_CHANGE_DETECTION_STATE State,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassEnableMediaChangeDetection(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassDisableMediaChangeDetection(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 VOID
 NTAPI
 ClassCleanupMediaChangeDetection(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
 NTAPI
 ClassGetDeviceParameter(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PWSTR SubkeyName,
-  PWSTR ParameterName,
-  PULONG ParameterValue);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_opt_ PWSTR SubkeyName,
+  _In_ PWSTR ParameterName,
+  _Inout_ PULONG ParameterValue);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ClassSetDeviceParameter(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PWSTR SubkeyName,
-  PWSTR ParameterName,
-  ULONG ParameterValue);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_opt_ PWSTR SubkeyName,
+  _In_ PWSTR ParameterName,
+  _In_ ULONG ParameterValue);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PFILE_OBJECT_EXTENSION
 NTAPI
 ClassGetFsContext(
-  PCOMMON_DEVICE_EXTENSION CommonExtension,
-  PFILE_OBJECT FileObject);
+  _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
+  _In_ PFILE_OBJECT FileObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 NTAPI
 ClassSendNotification(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  const GUID *Guid,
-  ULONG ExtraDataSize,
-  PVOID ExtraData);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ const GUID *Guid,
+  _In_ ULONG ExtraDataSize,
+  _In_reads_bytes_opt_(ExtraDataSize) PVOID ExtraData);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 static __inline
 BOOLEAN
 PORT_ALLOCATED_SENSE(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PSCSI_REQUEST_BLOCK Srb)
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb)
 {
   return ((BOOLEAN)((TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_PORT_DRIVER_ALLOCSENSE) &&
           TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_FREE_SENSE_BUFFER))                &&
@@ -1194,8 +1258,8 @@ PORT_ALLOCATED_SENSE(
 static __inline
 VOID
 FREE_PORT_ALLOCATED_SENSE_BUFFER(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  PSCSI_REQUEST_BLOCK Srb)
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb)
 {
   ASSERT(TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_PORT_DRIVER_ALLOCSENSE));
   ASSERT(TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_FREE_SENSE_BUFFER));
@@ -1208,14 +1272,16 @@ FREE_PORT_ALLOCATED_SENSE_BUFFER(
   return;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef VOID
 (NTAPI *PCLASS_SCAN_FOR_SPECIAL_HANDLER)(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  ULONG_PTR Data);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ ULONG_PTR Data);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
 NTAPI
 ClassScanForSpecial(
-  PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-  CLASSPNP_SCAN_FOR_SPECIAL_INFO DeviceList[],
-  PCLASS_SCAN_FOR_SPECIAL_HANDLER Function);
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+  _In_ CLASSPNP_SCAN_FOR_SPECIAL_INFO DeviceList[],
+  _In_ PCLASS_SCAN_FOR_SPECIAL_HANDLER Function);

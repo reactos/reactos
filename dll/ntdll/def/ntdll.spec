@@ -60,9 +60,9 @@
 @ stdcall -arch=i386 KiFastSystemCall()
 @ stdcall -arch=i386 KiFastSystemCallRet()
 @ stdcall -arch=i386 KiIntSystemCall()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListEnd()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListFault()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListResume()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListEnd()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListFault()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListResume()
 @ stdcall KiRaiseUserExceptionDispatcher()
 @ stdcall KiUserApcDispatcher(ptr ptr ptr ptr)
 @ stdcall KiUserCallbackDispatcher(ptr ptr long) ; CHECKME
@@ -895,7 +895,7 @@
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 ;@ stdcall RtlSetSecurityObjectEx
 ;@ stdcall RtlSetThreadErrorMode
-;@ stdcall RtlSetThreadIsCritical
+@ stdcall RtlSetThreadIsCritical(long ptr long)
 ;@ stdcall RtlSetThreadPoolStartFunc
 @ stdcall RtlSetTimeZoneInformation(ptr)
 ;@ stdcall RtlSetTimer

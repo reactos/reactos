@@ -162,12 +162,12 @@ BOOLEAN
 MempAllocatePageTables();
 
 BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages,
+MempSetupPaging(IN PFN_NUMBER StartPage,
+				IN PFN_NUMBER NumberOfPages,
 				IN BOOLEAN KernelMapping);
 
 VOID
-MempUnmapPage(ULONG Page);
+MempUnmapPage(PFN_NUMBER Page);
 
 VOID
 MempDump();

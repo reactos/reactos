@@ -17,6 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 PWINSTATION_OBJECT gpwinstaCurrent = NULL;
+BOOL g_PaintDesktopVersion = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -27,6 +28,7 @@ PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 #define REQ_INTERACTIVE_WINSTA(err) \
     if (gpwinstaCurrent != InputWindowStation) \
     { \
+        ERR("NtUserSystemParametersInfo requires interactive window station\n"); \
         EngSetLastError(err); \
         return 0; \
     }
@@ -57,6 +59,8 @@ static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
 static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
+static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
+static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -266,6 +270,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
+    gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
@@ -319,7 +324,11 @@ NtUserUpdatePerUserSystemParameters(
     UserEnterExclusive();
 
     SpiUpdatePerUserSystemParameters();
-    bResult = IntDesktopUpdatePerUserSettings(bEnable);
+    if(bEnable)
+        g_PaintDesktopVersion = SpiLoadDWord(KEY_DESKTOP, VAL_PAINTDESKVER, 0);
+    else
+        g_PaintDesktopVersion = FALSE;
+    bResult = TRUE;
 
     TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
     UserLeave();
@@ -422,7 +431,7 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        TRACE("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
+        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
     }
     return NT_SUCCESS(Status);
 }
@@ -1536,6 +1545,7 @@ UserSystemParametersInfo(
     if (!gbSpiInitialized)
     {
         KeRosDumpStackFrames(NULL, 20);
+        //ASSERT(FALSE);
         return FALSE;
     }
 
@@ -1545,7 +1555,8 @@ UserSystemParametersInfo(
     if (!gpwinstaCurrent)
     {
         ERR("UserSystemParametersInfo called without active windowstation.\n");
-        //KeRosDumpStackFrames(NULL, 0);
+        //ASSERT(FALSE);
+        //return FALSE;
     }
 
     /* Do the actual operation */
