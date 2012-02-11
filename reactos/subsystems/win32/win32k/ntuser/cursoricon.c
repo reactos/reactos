@@ -1222,6 +1222,7 @@ UserDrawIconEx(
 
     if (diFlags & DI_MASK)
     {
+        DWORD rop = (diFlags & DI_IMAGE) ? SRCAND : SRCCOPY;
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
         NtGdiStretchBlt(hDestDC,
                         x,
@@ -1233,7 +1234,7 @@ UserDrawIconEx(
                         0,
                         pIcon->Size.cx,
                         pIcon->Size.cy,
-                        SRCAND,
+                        rop,
                         0);
         NtGdiSelectBitmap(hMemDC, hTmpBmp);
     }
