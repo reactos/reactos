@@ -649,8 +649,8 @@ NtUserGetObjectInformation(
    TRACE("Trying to open window station 0x%x\n", hObject);
    Status = IntValidateWindowStationHandle(
                hObject,
-               UserMode,/*ExGetPreviousMode(),*/
-               GENERIC_READ, /* FIXME: is this ok? */
+               UserMode,
+               0,
                &WinStaObject);
 
 
@@ -667,8 +667,8 @@ NtUserGetObjectInformation(
       TRACE("Trying to open desktop 0x%x\n", hObject);
       Status = IntValidateDesktopHandle(
                   hObject,
-                  UserMode,/*ExGetPreviousMode(),*/
-                  GENERIC_READ, /* FIXME: is this ok? */
+                  UserMode,
+                  0, 
                   &DesktopObject);
       if (!NT_SUCCESS(Status))
       {
