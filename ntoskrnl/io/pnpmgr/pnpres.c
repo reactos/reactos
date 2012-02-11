@@ -1060,6 +1060,9 @@ IopAssignDeviceResources(
    if (!DeviceNode->ResourceRequirements)
        goto Finish;
 
+   /* Call HAL to fixup our resource requirements list */
+   HalAdjustResourceList(&DeviceNode->ResourceRequirements);
+
    /* Add resource requirements that aren't in the list we already got */
    Status = IopFixupResourceListWithRequirements(DeviceNode->ResourceRequirements,
                                                  &DeviceNode->ResourceList);
