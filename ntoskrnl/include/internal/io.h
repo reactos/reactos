@@ -516,7 +516,7 @@ IopAssignDeviceResources(
 
 NTSTATUS
 NTAPI
-IopCreateResourceListFromRequirements(
+IopFixupResourceListWithRequirements(
     IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
     OUT PCM_RESOURCE_LIST *ResourceList
 );
