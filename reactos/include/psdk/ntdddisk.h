@@ -191,8 +191,16 @@ extern "C" {
 #define SMART_SEND_DRIVE_COMMAND \
   CTL_CODE(IOCTL_DISK_BASE, 0x0021, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
-#define IOCTL_DISK_UPDATE_PROPERTIES \
-  CTL_CODE(IOCTL_DISK_BASE, 0x50, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#if(_WIN32_WINNT >= 0x0500)
+#define IOCTL_DISK_UPDATE_DRIVE_SIZE        CTL_CODE(IOCTL_DISK_BASE, 0x0032, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_DISK_GROW_PARTITION           CTL_CODE(IOCTL_DISK_BASE, 0x0034, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_DISK_GET_CACHE_INFORMATION    CTL_CODE(IOCTL_DISK_BASE, 0x0035, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define IOCTL_DISK_SET_CACHE_INFORMATION    CTL_CODE(IOCTL_DISK_BASE, 0x0036, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_DISK_DELETE_DRIVE_LAYOUT      CTL_CODE(IOCTL_DISK_BASE, 0x0040, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_DISK_UPDATE_PROPERTIES        CTL_CODE(IOCTL_DISK_BASE, 0x0050, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_DISK_FORMAT_DRIVE             CTL_CODE(IOCTL_DISK_BASE, 0x00f3, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_DISK_SENSE_DEVICE             CTL_CODE(IOCTL_DISK_BASE, 0x00f8, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
 
 #define PARTITION_ENTRY_UNUSED            0x00
 #define PARTITION_FAT_12                  0x01
@@ -473,67 +481,10 @@ typedef struct _SET_PARTITION_INFORMATION_EX {
   } DUMMYUNIONNAME;
 } SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
 
-typedef struct _CREATE_DISK_GPT {
-    GUID DiskId;
-    ULONG MaxPartitionCount;
-} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
-
-typedef struct _CREATE_DISK_MBR {
-    ULONG Signature;
-} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
-
-typedef struct _CREATE_DISK {
-    PARTITION_STYLE PartitionStyle;
-    _ANONYMOUS_UNION union {
-        CREATE_DISK_MBR Mbr;
-        CREATE_DISK_GPT Gpt;
-    } DUMMYUNIONNAME;
-} CREATE_DISK, *PCREATE_DISK;
-
 typedef struct _VERIFY_INFORMATION {
   LARGE_INTEGER  StartingOffset;
   ULONG  Length;
 } VERIFY_INFORMATION, *PVERIFY_INFORMATION;
-
-#if (OSVER(NTDDI_VERSION) == NTDDI_WINXP)
-typedef enum _DISK_WRITE_CACHE_STATE {
-    DiskWriteCacheNormal,
-    DiskWriteCacheForceDisable,
-    DiskWriteCacheDisableNotSupported
-} DISK_WRITE_CACHE_STATE, *PDISK_WRITE_CACHE_STATE;
-#endif
-
-typedef enum {
-	EqualPriority,
-	KeepPrefetchedData,
-	KeepReadData
-} DISK_CACHE_RETENTION_PRIORITY;
-
-typedef struct _DISK_CACHE_INFORMATION {
-	BOOLEAN  ParametersSavable;
-	BOOLEAN  ReadCacheEnabled;
-	BOOLEAN  WriteCacheEnabled;
-	DISK_CACHE_RETENTION_PRIORITY  ReadRetentionPriority;
-	DISK_CACHE_RETENTION_PRIORITY  WriteRetentionPriority;
-	USHORT  DisablePrefetchTransferLength;
-	BOOLEAN  PrefetchScalar;
-	_ANONYMOUS_UNION union {
-		struct {
-			USHORT  Minimum;
-			USHORT  Maximum;
-			USHORT  MaximumBlocks;
-		} ScalarPrefetch;
-		struct {
-			USHORT  Minimum;
-			USHORT  Maximum;
-		} BlockPrefetch;
-	} DUMMYUNIONNAME;
-} DISK_CACHE_INFORMATION, *PDISK_CACHE_INFORMATION;
-
-typedef struct _DISK_GROW_PARTITION {
-  ULONG  PartitionNumber;
-  LARGE_INTEGER  BytesToGrow;
-} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;
 
 /* GETVERSIONINPARAMS.fCapabilities constants */
 #define CAP_ATA_ID_CMD                    1
@@ -638,6 +589,75 @@ typedef struct _MAPPED_ADDRESS {
     LARGE_INTEGER IoAddress;
     ULONG BusNumber;
 } MAPPED_ADDRESS, *PMAPPED_ADDRESS;
+
+
+
+#if(_WIN32_WINNT >= 0x0500)
+
+typedef struct _CREATE_DISK_GPT 
+{
+    GUID DiskId;
+    ULONG MaxPartitionCount;
+} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
+
+typedef struct _CREATE_DISK_MBR 
+{
+    ULONG Signature;
+} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
+
+
+typedef struct _CREATE_DISK 
+{
+    PARTITION_STYLE PartitionStyle;
+    union {
+        CREATE_DISK_MBR Mbr;
+        CREATE_DISK_GPT Gpt;
+    };
+} CREATE_DISK, *PCREATE_DISK;
+
+
+typedef enum {
+    EqualPriority,
+    KeepPrefetchedData,
+    KeepReadData
+} DISK_CACHE_RETENTION_PRIORITY;
+
+typedef enum _DISK_WRITE_CACHE_STATE {
+    DiskWriteCacheNormal,
+    DiskWriteCacheForceDisable,
+    DiskWriteCacheDisableNotSupported
+} DISK_WRITE_CACHE_STATE, *PDISK_WRITE_CACHE_STATE;
+
+
+typedef struct _DISK_CACHE_INFORMATION
+{
+    BOOLEAN ParametersSavable;
+    BOOLEAN ReadCacheEnabled;
+    BOOLEAN WriteCacheEnabled;
+    DISK_CACHE_RETENTION_PRIORITY ReadRetentionPriority;
+    DISK_CACHE_RETENTION_PRIORITY WriteRetentionPriority;
+    USHORT DisablePrefetchTransferLength;
+    BOOLEAN PrefetchScalar;
+    union {
+        struct {
+            USHORT Minimum;
+            USHORT Maximum;
+            USHORT MaximumBlocks;
+        } ScalarPrefetch;
+
+        struct {
+            USHORT Minimum;
+            USHORT Maximum;
+        } BlockPrefetch;
+    };
+
+} DISK_CACHE_INFORMATION, *PDISK_CACHE_INFORMATION;
+
+typedef struct _DISK_GROW_PARTITION {
+    ULONG PartitionNumber;
+    LARGE_INTEGER BytesToGrow;
+} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;
+#endif
 
 
 #ifdef __cplusplus
