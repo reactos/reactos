@@ -164,8 +164,7 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    OUT PULONG Length)
 {
     UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
