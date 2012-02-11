@@ -783,7 +783,7 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 {
     FILE_STANDARD_INFORMATION FileStandardInfo;
     PIMAGE_IMPORT_DESCRIPTOR ImportData;
-    PIMAGE_SECTION_HEADER LastSection;
+    PIMAGE_SECTION_HEADER LastSection = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
     HANDLE SectionHandle;
