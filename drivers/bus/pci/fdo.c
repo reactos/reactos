@@ -341,15 +341,13 @@ FdoQueryBusRelations(
       }
     }
 
-    if (!Device->RemovePending) {
-      /* Reference the physical device object. The PnP manager
-         will dereference it again when it is no longer needed */
-      ObReferenceObject(Device->Pdo);
+    /* Reference the physical device object. The PnP manager
+       will dereference it again when it is no longer needed */
+    ObReferenceObject(Device->Pdo);
 
-      Relations->Objects[i] = Device->Pdo;
+    Relations->Objects[i] = Device->Pdo;
 
-      i++;
-    }
+    i++;
 
     CurrentEntry = CurrentEntry->Flink;
   }
