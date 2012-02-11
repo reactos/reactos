@@ -1260,6 +1260,8 @@ PdoStartDevice(
         }
     }
 
+    Command = 0;
+
     DPRINT1("Enabling command flags for PCI device 0x%x on bus 0x%x: ",
             DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
             DeviceExtension->PciDevice->BusNumber);
