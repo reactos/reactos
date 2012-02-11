@@ -268,6 +268,13 @@ USBSTOR_CSWCompletionRoutine(
     }
 
     //
+    // sanity checks
+    //
+    ASSERT(Context->csw->Signature == CSW_SIGNATURE);
+    ASSERT(Context->csw->Tag == (ULONG)Context->csw);
+    ASSERT(Context->csw->Status == 0x00);
+
+    //
     // free cbw
     //
     FreeItem(Context->cbw);
@@ -535,12 +542,14 @@ USBSTOR_SendRequest(
     //
     // now build the cbw
     //
-    USBSTOR_BuildCBW(0xDEADDEAD, // FIXME tag
+    USBSTOR_BuildCBW((ULONG)Context->cbw,
                      TransferDataLength,
                      PDODeviceExtension->LUN,
                      CommandLength,
                      Command,
                      Context->cbw);
+
+    DPRINT1("CBW %p\n", Context->cbw);
 
     //
     // now initialize the urb
@@ -757,6 +766,21 @@ USBSTOR_SendInquiryCmd(
     //
     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
+    KeResetEvent(&Event);
+	DPRINT1("Resending request\n");
+
+    //
+    // now send the request
+    //
+    Status = USBSTOR_SendRequest(DeviceObject, NULL, &Event, UFI_INQUIRY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_INQUIRY_RESPONSE), (PUCHAR)Response);
+
+    //
+    // wait for the action to complete
+    //
+    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+
+
     DPRINT1("Response %p\n", Response);
     DPRINT1("DeviceType %x\n", Response->DeviceType);
     DPRINT1("RMB %x\n", Response->RMB);
@@ -791,16 +815,24 @@ USBSTOR_SendCapacityCmd(
     UFI_CAPACITY_CMD Cmd;
     PUFI_CAPACITY_RESPONSE Response;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
     //
     // get PDO device extension
     //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+
+    //
+    // get FDO device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+
+
     //
     // allocate capacity response
     //
-    Response = (PUFI_CAPACITY_RESPONSE)AllocateItem(NonPagedPool, sizeof(UFI_CAPACITY_RESPONSE));
+    Response = (PUFI_CAPACITY_RESPONSE)AllocateItem(NonPagedPool, PAGE_SIZE);
     if (!Response)
     {
         //

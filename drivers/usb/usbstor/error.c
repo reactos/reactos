@@ -12,6 +12,53 @@
 #include "usbstor.h"
 
 NTSTATUS
+USBSTOR_GetEndpointStatus(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR bEndpointAddress,
+    OUT PUSHORT Value)
+{
+    PURB Urb;
+    NTSTATUS Status;
+
+    //
+    // allocate urb
+    //
+    DPRINT1("Allocating URB\n");
+    Urb = (PURB)AllocateItem(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    if (!Urb)
+    {
+        //
+        // out of memory
+        //
+        DPRINT1("OutofMemory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // build status
+    //
+   UsbBuildGetStatusRequest(Urb, URB_FUNCTION_GET_STATUS_FROM_ENDPOINT, bEndpointAddress & 0x0F, Value, NULL, NULL);
+
+    //
+    // send the request
+    //
+    DPRINT1("Sending Request DeviceObject %x, Urb %x\n", DeviceObject, Urb);
+    Status = USBSTOR_SyncUrbRequest(DeviceObject, Urb);
+
+    //
+    // free urb
+    //
+    FreeItem(Urb);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+
+
+NTSTATUS
 USBSTOR_ResetPipeWithHandle(
     IN PDEVICE_OBJECT DeviceObject,
     IN USBD_PIPE_HANDLE PipeHandle)
@@ -57,6 +104,7 @@ USBSTOR_ResetPipeWithHandle(
     return Status;
 }
 
+
 NTSTATUS
 USBSTOR_HandleTransferError(
     PDEVICE_OBJECT DeviceObject,
@@ -95,7 +143,7 @@ USBSTOR_HandleTransferError(
             // First attempt to reset the pipe
             //
             DPRINT1("Resetting Pipe\n");
-            Status = USBSTOR_ResetPipeWithHandle(DeviceObject, PipeHandle);
+            Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, PipeHandle);
             if (NT_SUCCESS(Status))
             {
                 Status = STATUS_SUCCESS;
@@ -149,7 +197,7 @@ USBSTOR_HandleTransferError(
     {
 
         DPRINT1("Retrying\n");
-        Status = USBSTOR_HandleExecuteSCSI(DeviceObject, Context->Irp);
+        Status = USBSTOR_HandleExecuteSCSI(*Context->PDODeviceExtension->PDODeviceObject, Context->Irp);
 
         /* Cleanup the old IRP context */
         if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)

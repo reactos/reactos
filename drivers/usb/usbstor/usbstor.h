@@ -2,7 +2,7 @@
 #pragma once
 
 #include <ntddk.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <usbdi.h>
 #include <hubbusif.h>
@@ -86,6 +86,7 @@ typedef struct
 // max lun command identifier
 //
 #define USB_BULK_GET_MAX_LUN             0xFE
+#define USB_BULK_RESET_DEVICE             0xFF
 
 #include <pshpack1.h>
 typedef struct
@@ -103,6 +104,8 @@ C_ASSERT(sizeof(CBW) == 31);
 
 
 #define CBW_SIGNATURE 0x43425355
+#define CSW_SIGNATURE 0x53425355
+
 #define MAX_LUN 0xF
 
 typedef struct
@@ -351,6 +354,10 @@ USBSTOR_SyncForwardIrpCompletionRoutine(
     PIRP Irp, 
     PVOID Context);
 
+NTSTATUS
+USBSTOR_ResetDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PFDO_DEVICE_EXTENSION DeviceExtension);
 
 //---------------------------------------------------------------------
 //
@@ -443,3 +450,11 @@ VOID
 USBSTOR_QueueTerminateRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+/* error.c */
+NTSTATUS
+USBSTOR_GetEndpointStatus(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR bEndpointAddress,
+    OUT PUSHORT Value);
+

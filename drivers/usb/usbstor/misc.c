@@ -278,9 +278,15 @@ FreeItem(
 }
 
 NTSTATUS
-USBSTOR_GetMaxLUN(
+USBSTOR_ClassRequest(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PFDO_DEVICE_EXTENSION DeviceExtension)
+    IN PFDO_DEVICE_EXTENSION DeviceExtension,
+    IN UCHAR RequestType,
+    IN USHORT Index,
+    IN ULONG TransferFlags,
+    IN ULONG TransferBufferLength,
+    IN PVOID TransferBuffer)
+
 {
     PURB Urb;
     PUCHAR Buffer;
@@ -316,10 +322,11 @@ USBSTOR_GetMaxLUN(
     //
     Urb->UrbControlVendorClassRequest.Hdr.Length = sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST);
     Urb->UrbControlVendorClassRequest.Hdr.Function = URB_FUNCTION_CLASS_INTERFACE;
-    Urb->UrbControlVendorClassRequest.TransferFlags = USBD_TRANSFER_DIRECTION_IN;
-    Urb->UrbControlVendorClassRequest.TransferBufferLength = 1;
-    Urb->UrbControlVendorClassRequest.TransferBuffer = Buffer;
-    Urb->UrbControlVendorClassRequest.Request = USB_BULK_GET_MAX_LUN;
+    Urb->UrbControlVendorClassRequest.TransferFlags = TransferFlags;
+    Urb->UrbControlVendorClassRequest.TransferBufferLength = TransferBufferLength;
+    Urb->UrbControlVendorClassRequest.TransferBuffer = TransferBuffer;
+    Urb->UrbControlVendorClassRequest.Request = RequestType;
+    Urb->UrbControlVendorClassRequest.Index = Index;
 
     //
     // submit request
@@ -330,6 +337,39 @@ USBSTOR_GetMaxLUN(
     // free urb
     //
     FreeItem(Urb);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+
+NTSTATUS
+USBSTOR_GetMaxLUN(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    PUCHAR Buffer;
+    NTSTATUS Status;
+
+    //
+    // allocate 1-byte buffer
+    //
+    Buffer = (PUCHAR)AllocateItem(NonPagedPool, sizeof(UCHAR));
+    if (!Buffer)
+    {
+        //
+        // no memory
+        //
+        FreeItem(Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // execute request
+    //
+    Status = USBSTOR_ClassRequest(DeviceObject, DeviceExtension, USB_BULK_GET_MAX_LUN, DeviceExtension->InterfaceInformation->InterfaceNumber, USBD_TRANSFER_DIRECTION_IN, sizeof(UCHAR), Buffer);
 
     DPRINT1("MaxLUN: %x\n", *Buffer);
 
@@ -352,6 +392,26 @@ USBSTOR_GetMaxLUN(
     // free buffer
     //
     FreeItem(Buffer);
+
+    //
+    // done
+    //
+    return Status;
+
+}
+
+NTSTATUS
+USBSTOR_ResetDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+
+    //
+    // execute request
+    //
+    Status = USBSTOR_ClassRequest(DeviceObject, DeviceExtension, USB_BULK_RESET_DEVICE, DeviceExtension->InterfaceInformation->InterfaceNumber, USBD_TRANSFER_DIRECTION_OUT, 0, NULL);
+    DPRINT1("Status %x\n", Status);
 
     //
     // done
