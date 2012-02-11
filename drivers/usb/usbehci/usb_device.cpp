@@ -58,7 +58,7 @@ public:
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
     virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor, IN ULONG BufferLength, IN OUT PMDL Mdl);
-    virtual NTSTATUS CreateConfigurationDescriptor(ULONG ConfigurationIndex);
+    virtual NTSTATUS CreateConfigurationDescriptor(UCHAR ConfigurationIndex);
     virtual NTSTATUS CreateDeviceDescriptor();
     virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
     virtual VOID DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
@@ -302,7 +302,7 @@ CUSBDevice::SetDeviceAddress(
     PUSB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
     UCHAR OldAddress;
-    ULONG Index;
+    UCHAR Index;
 
     DPRINT1("CUSBDevice::SetDeviceAddress Address %d\n", DeviceAddress);
 
@@ -685,7 +685,7 @@ CUSBDevice::CreateDeviceDescriptor()
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBDevice::CreateConfigurationDescriptor(
-    ULONG Index)
+    UCHAR Index)
 {
     PVOID Buffer;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
@@ -722,14 +722,10 @@ CUSBDevice::CreateConfigurationDescriptor(
     CtrlSetup.bmRequestType._BM.Reserved = 0;
     CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
     CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
-    CtrlSetup.wValue.LowByte = 0;
+    CtrlSetup.wValue.LowByte = Index;
     CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;
     CtrlSetup.wIndex.W = 0;
     CtrlSetup.wLength = PAGE_SIZE;
-
-    //
-    // FIXME: where put configuration index?
-    //
 
     //
     // now build MDL describing the buffer
@@ -1077,65 +1073,20 @@ CUSBDevice::SelectConfiguration(
     IN PUSBD_INTERFACE_INFORMATION InterfaceInfo,
     OUT USBD_CONFIGURATION_HANDLE *ConfigurationHandle)
 {
-    ULONG ConfigurationIndex = 0;
     ULONG InterfaceIndex, PipeIndex;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
 
     //
-    // FIXME: support multiple configurations
+    // sanity checks
     //
-    PC_ASSERT(m_DeviceDescriptor.bNumConfigurations == 1);
-    PC_ASSERT(ConfigurationDescriptor->iConfiguration == m_ConfigurationDescriptors[ConfigurationIndex].ConfigurationDescriptor.iConfiguration);
+    ASSERT(ConfigurationDescriptor->iConfiguration < m_DeviceDescriptor.bNumConfigurations);
+    ASSERT(ConfigurationDescriptor->iConfiguration == m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor.iConfiguration);
 
     //
     // sanity check
     //
-    PC_ASSERT(ConfigurationDescriptor->bNumInterfaces <= m_ConfigurationDescriptors[ConfigurationIndex].ConfigurationDescriptor.bNumInterfaces);
-
-    //
-    // copy interface info and pipe info
-    //
-    for(InterfaceIndex = 0; InterfaceIndex < ConfigurationDescriptor->bNumInterfaces; InterfaceIndex++)
-    {
-        //
-        // sanity check: is the info pre-layed out
-        //
-        PC_ASSERT(InterfaceInfo->NumberOfPipes == m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints);
-        PC_ASSERT(InterfaceInfo->Length != 0);
-#ifdef _MSC_VER
-        PC_ASSERT(InterfaceInfo->Length == FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes[InterfaceInfo->NumberOfPipes]));
-#endif
-
-        //
-        // copy interface info
-        //
-        InterfaceInfo->InterfaceHandle = (USBD_INTERFACE_HANDLE)&m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex];
-        InterfaceInfo->Class = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceClass;
-        InterfaceInfo->SubClass = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceSubClass;
-        InterfaceInfo->Protocol = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceProtocol;
-        InterfaceInfo->Reserved = 0;
-
-        //
-        // copy endpoint info
-        //
-        for(PipeIndex = 0; PipeIndex < InterfaceInfo->NumberOfPipes; PipeIndex++)
-        {
-            //
-            // copy pipe info
-            //
-            InterfaceInfo->Pipes[PipeIndex].MaximumPacketSize = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.wMaxPacketSize;
-            InterfaceInfo->Pipes[PipeIndex].EndpointAddress = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bEndpointAddress;
-            InterfaceInfo->Pipes[PipeIndex].Interval = m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bInterval;
-            InterfaceInfo->Pipes[PipeIndex].PipeType = (USBD_PIPE_TYPE)m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bmAttributes;
-            InterfaceInfo->Pipes[PipeIndex].PipeHandle = (PVOID)&m_ConfigurationDescriptors[ConfigurationIndex].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor;
-        }
-
-        //
-        // move offset
-        //
-        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)PtrToUlong(InterfaceInfo) + InterfaceInfo->Length);
-    }
+    ASSERT(ConfigurationDescriptor->bNumInterfaces <= m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor.bNumInterfaces);
 
     //
     // now build setup packet
@@ -1153,18 +1104,71 @@ CUSBDevice::SelectConfiguration(
     // informal debug print
     //
     DPRINT1("CUsbDevice::SelectConfiguration New Configuration %x Old Configuration %x Result %x\n", ConfigurationDescriptor->iConfiguration, m_ConfigurationIndex, Status);
-
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         //
-        // store configuration device index
+        // failed
         //
-        m_ConfigurationIndex = ConfigurationDescriptor->iConfiguration;
+        return Status;
+    }
+
+    //
+    // store configuration device index
+    //
+    m_ConfigurationIndex = ConfigurationDescriptor->iConfiguration;
+
+    //
+    // store configuration handle
+    //
+    *ConfigurationHandle = &m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration];
+
+    //
+    // copy interface info and pipe info
+    //
+    for(InterfaceIndex = 0; InterfaceIndex < ConfigurationDescriptor->bNumInterfaces; InterfaceIndex++)
+    {
+        //
+        // sanity check: is the info pre-layed out
+        //
+        PC_ASSERT(InterfaceInfo->NumberOfPipes == m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints);
+        PC_ASSERT(InterfaceInfo->Length != 0);
+#ifdef _MSC_VER
+        PC_ASSERT(InterfaceInfo->Length == FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes[InterfaceInfo->NumberOfPipes]));
+#endif
 
         //
-        // store configuration handle
+        // copy interface info
         //
-        *ConfigurationHandle = &m_ConfigurationDescriptors[ConfigurationIndex];
+        InterfaceInfo->InterfaceHandle = (USBD_INTERFACE_HANDLE)&m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex];
+        InterfaceInfo->Class = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceClass;
+        InterfaceInfo->SubClass = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceSubClass;
+        InterfaceInfo->Protocol = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].InterfaceDescriptor.bInterfaceProtocol;
+        InterfaceInfo->Reserved = 0;
+
+        //
+        // copy endpoint info
+        //
+        for(PipeIndex = 0; PipeIndex < InterfaceInfo->NumberOfPipes; PipeIndex++)
+        {
+            //
+            // copy pipe info
+            //
+            InterfaceInfo->Pipes[PipeIndex].MaximumPacketSize = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.wMaxPacketSize;
+            InterfaceInfo->Pipes[PipeIndex].EndpointAddress = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bEndpointAddress;
+            InterfaceInfo->Pipes[PipeIndex].Interval = m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bInterval;
+            InterfaceInfo->Pipes[PipeIndex].PipeType = (USBD_PIPE_TYPE)m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor.bmAttributes;
+            InterfaceInfo->Pipes[PipeIndex].PipeHandle = (PVOID)&m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].EndPointDescriptor;
+
+            //
+            // data toggle is reset on configuration requests
+            //
+            m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].Interfaces[InterfaceIndex].EndPoints[PipeIndex].DataToggle = FALSE;
+        }
+
+        //
+        // move offset
+        //
+        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)PtrToUlong(InterfaceInfo) + InterfaceInfo->Length);
     }
 
     //
@@ -1179,21 +1183,50 @@ CUSBDevice::SelectInterface(
     IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     IN OUT PUSBD_INTERFACE_INFORMATION InterfaceInfo)
 {
-    ULONG ConfigurationIndex = 0;
     PUSB_CONFIGURATION Configuration;
     ULONG PipeIndex;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
 
     //
-    // FIXME support multiple configurations
-    //
-    PC_ASSERT(&m_ConfigurationDescriptors[ConfigurationIndex] == (PUSB_CONFIGURATION)ConfigurationHandle);
-
-    //
     // get configuration struct
     //
     Configuration = (PUSB_CONFIGURATION)ConfigurationHandle;
+
+    //
+    // sanity check
+    //
+    ASSERT(Configuration->ConfigurationDescriptor.bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE);
+    ASSERT(Configuration->ConfigurationDescriptor.bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    ASSERT(Configuration->ConfigurationDescriptor.iConfiguration < m_DeviceDescriptor.bNumConfigurations);
+    ASSERT(&m_ConfigurationDescriptors[Configuration->ConfigurationDescriptor.iConfiguration] == Configuration);
+
+    //
+    // initialize setup packet
+    //
+    RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    CtrlSetup.bRequest = USB_REQUEST_SET_INTERFACE;
+    CtrlSetup.wValue.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bAlternateSetting;
+    CtrlSetup.wIndex.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bInterfaceNumber;
+    CtrlSetup.bmRequestType.B = 0x01;
+
+    //
+    // issue request
+    //
+    Status = CommitSetupPacket(&CtrlSetup, 0, 0, 0);
+
+    //
+    // informal debug print
+    //
+    DPRINT1("CUSBDevice::SelectInterface AlternateSetting %x InterfaceNumber %x Status %x\n", InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber, Status);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to select interface
+        //
+        return Status;
+    }
+
 
     //
     // sanity checks
@@ -1224,6 +1257,11 @@ CUSBDevice::SelectInterface(
 
         InterfaceInfo->Pipes[PipeIndex].PipeHandle = &Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor;
 
+        //
+        // data toggle is reset on select interface requests
+        //
+        m_ConfigurationDescriptors[Configuration->ConfigurationDescriptor.iConfiguration].Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].DataToggle = FALSE;
+
         if (Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor.bmAttributes & (USB_ENDPOINT_TYPE_ISOCHRONOUS | USB_ENDPOINT_TYPE_INTERRUPT))
         {
             //
@@ -1232,24 +1270,6 @@ CUSBDevice::SelectInterface(
         }
     }
 
-    //
-    // initialize setup packet
-    //
-    RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
-    CtrlSetup.bRequest = USB_REQUEST_SET_INTERFACE;
-    CtrlSetup.wValue.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bAlternateSetting;
-    CtrlSetup.wIndex.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bInterfaceNumber;
-    CtrlSetup.bmRequestType.B = 0x01;
-
-    //
-    // issue request
-    //
-    Status = CommitSetupPacket(&CtrlSetup, 0, 0, 0);
-
-    //
-    // informal debug print
-    //
-    DPRINT1("CUSBDevice::SelectInterface AlternateSetting %x InterfaceNumber %x Status %x\n", InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber, Status);
 
     //
     // done
