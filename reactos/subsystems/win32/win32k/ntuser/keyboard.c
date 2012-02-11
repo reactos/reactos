@@ -1087,6 +1087,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     if (!pti->KeyboardLayout)
     {
        pti->KeyboardLayout = W32kGetDefaultKeyLayout();
+       pti->pClientInfo->hKL = pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL;
        pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
     }
     else

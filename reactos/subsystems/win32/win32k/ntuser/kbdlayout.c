@@ -377,6 +377,7 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
         UserDereferenceObject(pklPrev);
 
     pti->KeyboardLayout = pKl;
+    pti->pClientInfo->hKL = pKl->hkl;
     UserReferenceObject(pKl);
 
     if (Flags & KLF_SETFORPROCESS)
