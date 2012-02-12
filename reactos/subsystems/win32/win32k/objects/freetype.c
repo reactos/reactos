@@ -1349,6 +1349,7 @@ ftGdiGlyphCacheSet(
     error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
     if (error)
     {
+        FT_Done_Glyph(GlyphCopy);
         DPRINT1("Failure rendering glyph.\n");
         return NULL;
     };
