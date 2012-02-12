@@ -39,6 +39,32 @@ typedef struct _DESKTOP
 #define DF_DESKWNDDESTROYED 0x00010000
 #define DF_DYING            0x00020000
 
+#define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
+                           DESKTOP_ENUMERATE         | \
+                           DESKTOP_READOBJECTS
+
+#define DESKTOP_WRITE       STANDARD_RIGHTS_WRITE    | \
+                            DESKTOP_CREATEMENU       | \
+                            DESKTOP_CREATEWINDOW     | \
+                            DESKTOP_HOOKCONTROL      | \
+                            DESKTOP_JOURNALPLAYBACK  | \
+                            DESKTOP_JOURNALRECORD    | \
+                            DESKTOP_WRITEOBJECTS
+
+#define DESKTOP_EXECUTE     STANDARD_RIGHTS_EXECUTE  | \
+                            DESKTOP_SWITCHDESKTOP
+
+#define DESKTOP_ALL_ACCESS  STANDARD_RIGHTS_REQUIRED | \
+                            DESKTOP_CREATEMENU       | \
+                            DESKTOP_CREATEWINDOW     | \
+                            DESKTOP_ENUMERATE        | \
+                            DESKTOP_HOOKCONTROL      | \
+                            DESKTOP_JOURNALPLAYBACK  | \
+                            DESKTOP_JOURNALRECORD    | \
+                            DESKTOP_READOBJECTS      | \
+                            DESKTOP_SWITCHDESKTOP    | \
+                            DESKTOP_WRITEOBJECTS
+
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;

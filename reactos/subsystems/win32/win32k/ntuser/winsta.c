@@ -22,17 +22,6 @@ HWND hwndSAS = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
-static GENERIC_MAPPING IntWindowStationMapping =
-   {
-      STANDARD_RIGHTS_READ     | WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_READATTRIBUTES | WINSTA_READSCREEN,
-      STANDARD_RIGHTS_WRITE    | WINSTA_ACCESSCLIPBOARD   | WINSTA_CREATEDESKTOP     | WINSTA_WRITEATTRIBUTES,
-      STANDARD_RIGHTS_EXECUTE  | WINSTA_ACCESSGLOBALATOMS | WINSTA_EXITWINDOWS,
-      STANDARD_RIGHTS_REQUIRED | WINSTA_ACCESSCLIPBOARD   | WINSTA_ACCESSGLOBALATOMS | WINSTA_CREATEDESKTOP  |
-      WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_EXITWINDOWS    |
-      WINSTA_READATTRIBUTES    | WINSTA_READSCREEN        | WINSTA_WRITEATTRIBUTES
-   };
-
-
 INIT_FUNCTION
 NTSTATUS
 NTAPI
@@ -42,14 +31,17 @@ InitWindowStationImpl(VOID)
    HANDLE WindowStationsDirectory;
    UNICODE_STRING UnicodeString;
    NTSTATUS Status;
+   GENERIC_MAPPING IntWindowStationMapping = { WINSTA_READ,
+                                               WINSTA_WRITE,
+                                               WINSTA_EXECUTE,
+                                               WINSTA_ACCESS_ALL};
 
    /*
     * Create the '\Windows\WindowStations' directory
     */
 
    RtlInitUnicodeString(&UnicodeString, WINSTA_ROOT_NAME);
-   InitializeObjectAttributes(&ObjectAttributes, &UnicodeString,
-                              0, NULL, NULL);
+   InitializeObjectAttributes(&ObjectAttributes, &UnicodeString, 0, NULL, NULL);
    Status = ZwCreateDirectoryObject(&WindowStationsDirectory, 0,
                                     &ObjectAttributes);
    if (!NT_SUCCESS(Status))
@@ -62,6 +54,7 @@ InitWindowStationImpl(VOID)
    /* Set Winsta Object Attributes */
    ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
    ExWindowStationObjectType->TypeInfo.GenericMapping = IntWindowStationMapping;
+   ExWindowStationObjectType->TypeInfo.ValidAccessMask = WINSTA_ACCESS_ALL;
 
    return STATUS_SUCCESS;
 }

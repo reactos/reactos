@@ -24,28 +24,6 @@ PDESKTOP InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
 
-GENERIC_MAPPING IntDesktopMapping =
-{
-      STANDARD_RIGHTS_READ     | DESKTOP_ENUMERATE       |
-                                 DESKTOP_READOBJECTS,
-      STANDARD_RIGHTS_WRITE    | DESKTOP_CREATEMENU      |
-                                 DESKTOP_CREATEWINDOW    |
-                                 DESKTOP_HOOKCONTROL     |
-                                 DESKTOP_JOURNALPLAYBACK |
-                                 DESKTOP_JOURNALRECORD   |
-                                 DESKTOP_WRITEOBJECTS,
-      STANDARD_RIGHTS_EXECUTE  | DESKTOP_SWITCHDESKTOP,
-      STANDARD_RIGHTS_REQUIRED | DESKTOP_CREATEMENU      |
-                                 DESKTOP_CREATEWINDOW    |
-                                 DESKTOP_ENUMERATE       |
-                                 DESKTOP_HOOKCONTROL     |
-                                 DESKTOP_JOURNALPLAYBACK |
-                                 DESKTOP_JOURNALRECORD   |
-                                 DESKTOP_READOBJECTS     |
-                                 DESKTOP_SWITCHDESKTOP   |
-                                 DESKTOP_WRITEOBJECTS
-};
-
 /* OBJECT CALLBACKS **********************************************************/
 
 NTSTATUS
@@ -195,9 +173,15 @@ NTSTATUS
 NTAPI
 InitDesktopImpl(VOID)
 {
+    GENERIC_MAPPING IntDesktopMapping = { DESKTOP_READ,
+                                          DESKTOP_WRITE,
+                                          DESKTOP_EXECUTE,
+                                          DESKTOP_ALL_ACCESS};
+
     /* Set Desktop Object Attributes */
     ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP);
     ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
+    ExDesktopObjectType->TypeInfo.ValidAccessMask = DESKTOP_ALL_ACCESS;
     return STATUS_SUCCESS;
 }
 
@@ -346,7 +330,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                   ExWindowStationObjectType,
                                   KernelMode,
                                   NULL,
-                                  0,
+                                  WINSTA_ACCESS_ALL,
                                   NULL,
                                   (HANDLE*)hWinSta);
 
@@ -380,7 +364,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                   ExDesktopObjectType,
                                   KernelMode,
                                   NULL,
-                                  0,
+                                  DESKTOP_ALL_ACCESS,
                                   NULL,
                                   (HANDLE*)hDesktop);
 
