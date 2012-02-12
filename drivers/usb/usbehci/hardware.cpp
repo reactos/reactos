@@ -89,6 +89,7 @@ public:
 
     // local
     BOOLEAN InterruptService();
+    VOID PrintCapabilities();
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
@@ -292,6 +293,49 @@ CUSBHardwareDevice::EHCI_WRITE_REGISTER_ULONG(ULONG Offset, ULONG Value)
     WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + Offset), Value);
 }
 
+VOID
+CUSBHardwareDevice::PrintCapabilities()
+{
+    if (m_Capabilities.HCSParams.PortPowerControl)
+    {
+        DPRINT1("Controler EHCI has Port Power Control\n");
+    }
+
+    DPRINT1("Controller Port Routing Rules %d\n", m_Capabilities.HCSParams.PortRouteRules);
+    DPRINT1("Number of Ports per Companion Controller %d\n", m_Capabilities.HCSParams.PortPerCHC);
+    DPRINT1("Number of Companion Controller %d\n", m_Capabilities.HCSParams.CHCCount);
+
+    if (m_Capabilities.HCSParams.PortIndicator)
+    {
+        DPRINT1("Controller has Port Indicators Support\n");
+    }
+
+    if (m_Capabilities.HCSParams.DbgPortNum)
+    {
+        DPRINT1("Controller has Debug Port Support At Port %x\n", m_Capabilities.HCSParams.DbgPortNum);
+    }
+
+    if (m_Capabilities.HCCParams.EECPCapable)
+    {
+        DPRINT1("Controller has Extended Capabilities Support\n");
+    }
+
+    if (m_Capabilities.HCCParams.ParkMode)
+    {
+        DPRINT1("Controller supports Asynchronous Schedule Park\n");
+    }
+
+    if (m_Capabilities.HCCParams.VarFrameList)
+    {
+        DPRINT1("Controller supports Programmable Frame List Size\n");
+    }
+
+    if (m_Capabilities.HCCParams.CurAddrBits)
+    {
+        DPRINT1("Controller uses 64-Bit Addressing\n");
+    }
+}
+
 NTSTATUS
 CUSBHardwareDevice::PnpStart(
     PCM_RESOURCE_LIST RawResources,
@@ -368,31 +412,15 @@ CUSBHardwareDevice::PnpStart(
                 m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + EHCI_HCCPARAMS));
 
                 DPRINT1("Controller has %d Length\n", m_Capabilities.Length);
-                DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
                 DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
                 DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
                 DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
-                DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
+                DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
 
-                if (m_Capabilities.HCCParams.EECPCapable)
-                {
-                    DPRINT1("Controller has Extended Capabilities Support\n");
-                }
-
-                if (m_Capabilities.HCCParams.ParkMode)
-                {
-                    DPRINT1("Controller supports Asynchronous Schedule Park\n");
-                }
-
-                if (m_Capabilities.HCCParams.VarFrameList)
-                {
-                    DPRINT1("Controller supports Programmable Frame List Size\n");
-                }
-
-                if (m_Capabilities.HCCParams.CurAddrBits)
-                {
-                    DPRINT1("Controller uses 64-Bit Addressing\n");
-                }
+                //
+                // print capabilities
+                //
+                PrintCapabilities();
 
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
