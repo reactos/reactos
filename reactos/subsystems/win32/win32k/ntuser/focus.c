@@ -20,10 +20,17 @@ IntGetCaptureWindow(VOID)
 }
 
 HWND FASTCALL
-IntGetFocusWindow(VOID)
+UserGetFocusWindow(VOID)
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-   return ForegroundQueue != NULL ? ForegroundQueue->FocusWindow : 0;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+   /* Is it a foreground queue? */
+   if (!ThreadQueue || ThreadQueue != IntGetFocusMessageQueue())
+     return NULL;
+   return ThreadQueue->FocusWindow;
 }
 
 HWND FASTCALL
@@ -34,7 +41,9 @@ IntGetThreadFocusWindow(VOID)
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   return ThreadQueue != NULL ? ThreadQueue->FocusWindow : 0;
+   if (!ThreadQueue)
+     return NULL;
+   return ThreadQueue->FocusWindow;
 }
 
 VOID FASTCALL

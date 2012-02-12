@@ -164,7 +164,7 @@ NtUserGetThreadState(
          GetW32ThreadInfo();
          break;
       case THREADSTATE_FOCUSWINDOW:
-         ret = (DWORD_PTR)IntGetThreadFocusWindow();
+         ret = (DWORD_PTR)UserGetFocusWindow();
          break;
       case THREADSTATE_CAPTUREWINDOW:
          /* FIXME: Should use UserEnterShared */

@@ -4,7 +4,6 @@
  * These functions take the window handles from current message queue.
  */
 HWND FASTCALL IntGetCaptureWindow(VOID);
-HWND FASTCALL IntGetFocusWindow(VOID);
 HWND FASTCALL co_UserSetCapture(HWND hWnd);
 BOOL FASTCALL IntReleaseCapture(VOID);
 
@@ -13,6 +12,7 @@ BOOL FASTCALL IntReleaseCapture(VOID);
  */
 HWND FASTCALL IntGetThreadFocusWindow(VOID);
 HWND APIENTRY IntGetCapture(VOID);
+HWND FASTCALL UserGetFocusWindow(VOID);
 HWND FASTCALL UserGetActiveWindow(VOID);
 BOOL FASTCALL co_IntMouseActivateWindow(PWND Window);
 BOOL FASTCALL co_IntSetForegroundWindow(PWND Window);
