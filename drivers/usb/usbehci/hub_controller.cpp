@@ -827,7 +827,7 @@ CHubController::HandleBulkOrInterruptTransfer(
     PURB Urb)
 {
     PUSBDEVICE UsbDevice;
-    PUSB_ENDPOINT_DESCRIPTOR EndPointDesc = NULL;
+    PUSB_ENDPOINT EndPointDesc = NULL;
     //
     // First check if the request is for the Status Change Endpoint
     //
@@ -856,13 +856,13 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     // Check PipeHandle to determine if this is a Bulk or Interrupt Transfer Request
     //
-    EndPointDesc = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+    EndPointDesc = (PUSB_ENDPOINT)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
     //
     // sanity checks
     //
     ASSERT(EndPointDesc);
-    ASSERT((EndPointDesc->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_BULK || (EndPointDesc->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
+    ASSERT((EndPointDesc->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_BULK || (EndPointDesc->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
 
     //
     // check if this is a valid usb device handle
@@ -881,7 +881,6 @@ CHubController::HandleBulkOrInterruptTransfer(
     // get device
     //
     UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-
     return UsbDevice->SubmitIrp(Irp);
 }
 
@@ -1171,7 +1170,6 @@ CHubController::HandleGetStatusFromDevice(
     //
     // sanity checks
     //
-    PC_ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
     PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBufferLength >= sizeof(USHORT));
     PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBuffer);
 
@@ -1215,9 +1213,25 @@ CHubController::HandleGetStatusFromDevice(
      CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
      CtrlSetup.wValue.LowByte = 0;
      CtrlSetup.wValue.HiByte = 0;
-     CtrlSetup.wIndex.W = Urb->UrbControlGetStatusRequest.Index; 
+     CtrlSetup.wIndex.W = Urb->UrbControlGetStatusRequest.Index;
      CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
      CtrlSetup.bmRequestType.B = 0x80;
+
+
+     if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_INTERFACE)
+     {
+         //
+         // add interface type
+         //
+         CtrlSetup.bmRequestType.B |= 0x01;
+     }
+     else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_ENDPOINT)
+     {
+         //
+         // add interface type
+         //
+         CtrlSetup.bmRequestType.B |= 0x02;
+     }
 
     //
     // submit setup packet
@@ -2030,6 +2044,8 @@ CHubController::HandleDeviceControl(
                     Status = HandleClassDevice(Irp, Urb);
                     break;
                 case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
+                case URB_FUNCTION_GET_STATUS_FROM_INTERFACE:
+                case URB_FUNCTION_GET_STATUS_FROM_ENDPOINT:
                     Status = HandleGetStatusFromDevice(Irp, Urb);
                     break;
                 case URB_FUNCTION_SELECT_CONFIGURATION:
@@ -2523,7 +2539,7 @@ USBHI_CreateUsbDevice(
     //
     // now initialize device
     //
-    Status = NewUsbDevice->Initialize(PHUBCONTROLLER(Controller), Controller->GetUsbHardware(),PVOID(Controller), PortNumber, PortStatus);
+    Status = NewUsbDevice->Initialize(PHUBCONTROLLER(Controller), Controller->GetUsbHardware(), HubDeviceHandle, PortNumber, PortStatus);
 
     //
     // check for success

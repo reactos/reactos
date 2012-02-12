@@ -878,7 +878,7 @@ ClassPnp(
 	}
 
 	Irp->IoStatus.Status = Status;
-	if (NT_SUCCESS(Status))
+	if (NT_SUCCESS(Status) || Status == STATUS_NOT_SUPPORTED)
 	{
 		IoSkipCurrentIrpStackLocation(Irp);
 		return IoCallDriver(DeviceExtension->LowerDevice, Irp);

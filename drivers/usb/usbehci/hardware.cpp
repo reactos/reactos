@@ -737,7 +737,18 @@ CUSBHardwareDevice::StartController(void)
     UsbCmd.IntThreshold = 0x8; //1ms
     UsbCmd.Run = TRUE;
     UsbCmd.FrameListSize = 0x0; //1024
+
+    if (m_Capabilities.HCCParams.ParkMode)
+    {
+        //
+        // enable async park mode
+        //
+        UsbCmd.AsyncParkEnable = TRUE;
+        UsbCmd.AsyncParkCount = 3;
+    }
+
     SetCommandRegister(&UsbCmd);
+
 
     //
     // Wait for execution to start
