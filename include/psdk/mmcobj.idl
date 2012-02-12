@@ -1,0 +1,764 @@
+cpp_quote("#ifndef MMC_VER")
+cpp_quote("#define MMC_VER 0x0200")
+cpp_quote("#endif")
+
+cpp_quote("#if (MMC_VER >= 0x0200)")
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+#endif
+
+interface _Application;
+interface Column;
+interface Columns;
+interface ContextMenu;
+interface Document;
+interface Frame;
+interface ISnapinProperties;
+interface ISnapinPropertiesCallback;
+interface MenuItem;
+interface Node;
+interface Nodes;
+interface Properties;
+interface Property;
+interface ScopeNamespace;
+interface SnapIn;
+interface SnapIns;
+interface Extension;
+interface Extensions;
+interface View;
+interface Views;
+
+typedef     _Application*     PAPPLICATION;
+typedef     _Application**    PPAPPLICATION;
+typedef     Column*           PCOLUMN;
+typedef     Column**          PPCOLUMN;
+typedef     Columns*          PCOLUMNS;
+typedef     Columns**         PPCOLUMNS;
+typedef     ContextMenu*      PCONTEXTMENU;
+typedef     ContextMenu**     PPCONTEXTMENU;
+typedef     Document*         PDOCUMENT;
+typedef     Document**        PPDOCUMENT;
+typedef     Frame*            PFRAME;
+typedef     Frame**           PPFRAME;
+typedef     MenuItem*         PMENUITEM;
+typedef     MenuItem**        PPMENUITEM;
+typedef     Node*             PNODE;
+typedef     Node**            PPNODE;
+typedef     Nodes*            PNODES;
+typedef     Nodes**           PPNODES;
+typedef     Properties*       PPROPERTIES;
+typedef     Properties**      PPPROPERTIES;
+typedef     Property*         PPROPERTY;
+typedef     Property**        PPPROPERTY;
+typedef     ScopeNamespace*   PSCOPENAMESPACE;
+typedef     ScopeNamespace**  PPSCOPENAMESPACE;
+typedef     SnapIn*           PSNAPIN;
+typedef     SnapIn**          PPSNAPIN;
+typedef     SnapIns*          PSNAPINS;
+typedef     SnapIns**         PPSNAPINS;
+typedef     Extension*        PEXTENSION;
+typedef     Extension**       PPEXTENSION;
+typedef     Extensions*       PEXTENSIONS;
+typedef     Extensions**      PPEXTENSIONS;
+typedef     View*             PVIEW;
+typedef     View**            PPVIEW;
+typedef     Views*            PVIEWS;
+typedef     Views**           PPVIEWS;
+typedef     ISnapinProperties*          LPSNAPINPROPERTIES;
+typedef     ISnapinPropertiesCallback*  LPSNAPINPROPERTIESCALLBACK;
+
+typedef     BOOL*             PBOOL;
+typedef     int*              PINT;
+typedef     BSTR*             PBSTR;
+typedef     VARIANT*          PVARIANT;
+typedef     long*             PLONG;
+typedef     IDispatch*        PDISPATCH;
+typedef     IDispatch**       PPDISPATCH;
+
+[
+    object,
+    uuid(F7889DA9-4A02-4837-BF89-1A6F2A021010),
+    pointer_default(unique)
+]
+interface ISnapinProperties : IUnknown
+{
+    typedef enum _MMC_PROPERTY_ACTION
+    {
+        MMC_PROPACT_DELETING = 1,
+        MMC_PROPACT_CHANGING,
+        MMC_PROPACT_INITIALIZED
+    } MMC_PROPERTY_ACTION;
+
+    typedef struct _MMC_SNAPIN_PROPERTY
+    {
+        LPCOLESTR           pszPropName;
+        VARIANT             varValue;
+        MMC_PROPERTY_ACTION eAction;
+    } MMC_SNAPIN_PROPERTY;
+
+    HRESULT Initialize([in] Properties* pProperties);
+    HRESULT QueryPropertyNames([in] ISnapinPropertiesCallback* pCallback);
+    HRESULT PropertiesChanged([in] long cProperties, [in, size_is(cProperties)] MMC_SNAPIN_PROPERTY* pProperties);
+};
+
+[
+    object,
+    uuid(A50FA2E5-7E61-45EB-A8D4-9A07B3E851A8),
+    pointer_default(unique)
+]
+interface ISnapinPropertiesCallback : IUnknown
+{
+    const DWORD MMC_PROP_CHANGEAFFECTSUI = 0x00000001;
+    const DWORD MMC_PROP_MODIFIABLE      = 0x00000002;
+    const DWORD MMC_PROP_REMOVABLE       = 0x00000004;
+    const DWORD MMC_PROP_PERSIST         = 0x00000008;
+
+    HRESULT AddPropertyName([in] LPCOLESTR pszPropName, [in] DWORD dwFlags);
+};
+
+[
+    uuid(8E80422B-CAC4-472b-B272-9635F1DFEF3B),
+    version(1.0)
+]
+library MMC20
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    typedef enum DocumentMode
+    {
+        DocumentMode_Author,
+        DocumentMode_User,
+        DocumentMode_User_MDI,
+        DocumentMode_User_SDI
+    } _DocumentMode;
+    typedef enum DocumentMode DOCUMENTMODE;
+    typedef enum DocumentMode *PDOCUMENTMODE;
+    typedef enum DocumentMode **PPDOCUMENTMODE;
+
+    typedef enum ListViewMode
+    {
+       ListMode_Small_Icons,
+       ListMode_Large_Icons,
+       ListMode_List,
+       ListMode_Detail,
+       ListMode_Filtered
+    } _ListViewMode;
+    typedef enum ListViewMode LISTVIEWMODE;
+    typedef enum ListViewMode *PLISTVIEWMODE;
+    typedef enum ListViewMode **PPLISTVIEWMODE;
+
+    typedef enum ViewOptions
+    {
+       ViewOption_Default             = 0x0000,
+       ViewOption_ScopeTreeHidden     = 0x0001,
+       ViewOption_NoToolBars          = 0x0002,
+       ViewOption_NotPersistable      = 0x0004,
+       ViewOption_ActionPaneHidden    = 0x0008
+    } _ViewOptions;
+    typedef enum ViewOptions VIEWOPTIONS;
+    typedef enum ViewOptions *PVIEWOPTIONS;
+    typedef enum ViewOptions **PPVIEWOPTIONS;
+
+    typedef enum ExportListOptions
+    {
+        ExportListOptions_Default             = 0x0000,
+        ExportListOptions_Unicode             = 0x0001,
+        ExportListOptions_TabDelimited        = 0x0002,
+        ExportListOptions_SelectedItemsOnly   = 0x0004
+    } _ExportListOptions;
+    typedef enum ExportListOptions EXPORTLISTOPTIONS;
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(A3AFB9CC-B653-4741-86AB-F0470EC1384C) ,
+        dual
+    ]
+    interface _Application : IDispatch
+    {
+        [id(2)]
+        void Help();
+        [id(3)]
+        void Quit();
+        [id(4)]
+        HRESULT Document([out,retval] PPDOCUMENT Document);
+        [id(5)]
+        HRESULT Load([in] BSTR Filename);
+        [id(6)]
+        HRESULT Frame([out, retval] PPFRAME Frame);
+        [id(7)]
+        HRESULT Visible([out, retval] PBOOL Visible);
+        [id(8)]
+        HRESULT Show();
+        [id(9)]
+        HRESULT Hide();
+        [id(10), propget]
+        HRESULT UserControl([out, retval] PBOOL UserControl);
+        [id(10), propput]
+        HRESULT UserControl([in] BOOL UserControl);
+        [id(11), propget]
+        HRESULT VersionMajor([out, retval] PLONG VersionMajor);
+        [id(12), propget]
+        HRESULT VersionMinor([out, retval] PLONG VersionMinor);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(DE46CBDD-53F5-4635-AF54-4FE71E923D3F),
+        dual
+    ]
+    interface _AppEvents : IDispatch
+    {
+        [id(1)]
+        HRESULT OnQuit([in] PAPPLICATION Application);
+        [id(2)]
+        HRESULT OnDocumentOpen([in] PDOCUMENT Document, [in] BOOL New);
+        [id(3)]
+        HRESULT OnDocumentClose([in] PDOCUMENT Document);
+        [id(4)]
+        HRESULT OnSnapInAdded([in] PDOCUMENT Document, [in] PSNAPIN SnapIn);
+        [id(5)]
+        HRESULT OnSnapInRemoved([in] PDOCUMENT Document, [in] PSNAPIN SnapIn);
+        [id(6)]
+        HRESULT OnNewView([in] PVIEW View);
+        [id(7)]
+        HRESULT OnViewClose([in] PVIEW View);
+        [id(8)]
+        HRESULT OnViewChange([in] PVIEW View, [in] PNODE NewOwnerNode);
+        [id(9)]
+        HRESULT OnSelectionChange([in] PVIEW View, [in] PNODES NewNodes);
+        [id(11)]
+        HRESULT OnContextMenuExecuted([in] PMENUITEM MenuItem);
+        [id(12)]
+        HRESULT OnToolbarButtonClicked();
+        [id(13)]
+        HRESULT OnListUpdated([in] PVIEW View);
+    };
+
+    [
+        uuid(FC7A4252-78AC-4532-8C5A-563CFE138863)
+    ]
+    dispinterface AppEvents
+    {
+        interface _AppEvents;
+    };
+
+    [
+       uuid(49B2791A-B1AE-4C90-9B8E-E860BA07F889)
+    ]
+    coclass Application
+    {
+        [default] interface _Application;
+        [default, source] dispinterface AppEvents;
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(C0BCCD30-DE44-4528-8403-A05A6A1CC8EA) ,
+        dual
+    ]
+    interface _EventConnector : IDispatch
+    {
+        [id(1)]
+        HRESULT ConnectTo([in] PAPPLICATION Application);
+        [id(2)]
+        HRESULT Disconnect();
+    };
+
+    [
+        uuid(ADE6444B-C91F-4e37-92A4-5BB430A33340),
+    ]
+    coclass AppEventsDHTMLConnector
+    {
+        [default] interface _EventConnector;
+        [default, source] dispinterface AppEvents;
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(E5E2D970-5BB3-4306-8804-B0968A31C8E6),
+        dual
+    ]
+
+    interface Frame : IDispatch
+    {
+        [id(1)]
+        HRESULT Maximize();
+        [id(2)]
+        HRESULT Minimize();
+        [id(3)]
+        HRESULT Restore();
+        [id(4), propget]
+        HRESULT Top([out, retval] PINT Top);
+        [id(4), propput]
+        HRESULT Top([in] int top);
+        [id(5), propget]
+        HRESULT Bottom([out, retval] PINT Bottom);
+        [id(5), propput]
+        HRESULT Bottom([in] int bottom);
+        [id(6), propget]
+        HRESULT Left([out, retval] PINT Left);
+        [id(6), propput]
+        HRESULT Left([in] int left);
+        [id(7), propget]
+        HRESULT Right([out, retval] PINT Right);
+        [id(7), propput]
+        HRESULT Right([in] int right);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(F81ED800-7839-4447-945D-8E15DA59CA55),
+        dual
+    ]
+    interface Node : IDispatch
+    {
+        [id(1)]
+        HRESULT Name([out, retval] PBSTR  Name);
+        [id(2)]
+        HRESULT Property([in] BSTR PropertyName, [out, retval] PBSTR  PropertyValue);
+        [id(3)]
+        HRESULT Bookmark([out, retval] PBSTR Bookmark);
+        [id(4)]
+        HRESULT IsScopeNode([out, retval]PBOOL IsScopeNode);
+        [id(5)]
+        HRESULT Nodetype([out, retval] PBSTR Nodetype);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(EBBB48DC-1A3B-4D86-B786-C21B28389012),
+        dual
+    ]
+
+    interface ScopeNamespace : IDispatch
+    {
+        [id(1)]
+        HRESULT GetParent([in] PNODE Node, [out, retval] PPNODE Parent);
+        [id(2)]
+        HRESULT GetChild([in] PNODE Node, [out, retval] PPNODE Child);
+        [id(3)]
+        HRESULT GetNext([in] PNODE Node, [out, retval] PPNODE Next);
+        [id(4)]
+        HRESULT GetRoot([out, retval] PPNODE Root);
+        [id(5)]
+        HRESULT Expand([in] PNODE Node);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(225120D6-1E0F-40A3-93FE-1079E6A8017B),
+        dual
+    ]
+
+    interface Document : IDispatch
+    {
+        [id(1)]
+        HRESULT Save();
+        [id(2)]
+        HRESULT SaveAs([in] BSTR Filename);
+        [id(3)]
+        HRESULT Close([in] BOOL SaveChanges);
+        [id(4), propget]
+        HRESULT Views([out, retval] PPVIEWS Views);
+        [id(5), propget]
+        HRESULT SnapIns([out, retval] PPSNAPINS SnapIns);
+        [id(6), propget]
+        HRESULT ActiveView([out, retval] PPVIEW View);
+        [id(7), propget]
+        HRESULT Name([out, retval] PBSTR Name);
+        [id(7), propput]
+        HRESULT Name([in] BSTR Name);
+        [id(8), propget]
+        HRESULT Location([out, retval] PBSTR Location);
+        [id(9), propget]
+        HRESULT IsSaved([out, retval] PBOOL IsSaved);
+        [id(10), propget]
+        HRESULT Mode([out, retval] PDOCUMENTMODE Mode);
+        [id(10), propput]
+        HRESULT Mode([in] DOCUMENTMODE Mode);
+        [id(11), propget]
+        HRESULT RootNode([out, retval] PPNODE Node);
+        [id(12), propget]
+        HRESULT ScopeNamespace([out, retval] PPSCOPENAMESPACE ScopeNamespace);
+        [id(13)]
+        HRESULT CreateProperties([out, retval] PPPROPERTIES Properties);
+        [id(20), propget]
+        HRESULT Application([out, retval] PPAPPLICATION Application);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(3BE910F6-3459-49C6-A1BB-41E6BE9DF3EA),
+        dual
+    ]
+    interface SnapIn : IDispatch
+    {
+        [id(1), propget]
+        HRESULT Name([out, retval] PBSTR Name);
+        [id(2), propget]
+        HRESULT Vendor([out, retval] PBSTR Vendor);
+        [id(3), propget]
+        HRESULT Version([out, retval] PBSTR Version);
+        [id(4), propget]
+        HRESULT Extensions([out, retval] PPEXTENSIONS Extensions);
+        [id(5), propget]
+        HRESULT SnapinCLSID([out, retval] PBSTR SnapinCLSID);
+        [id(6), propget]
+        HRESULT Properties([out, retval] PPPROPERTIES Properties);
+        [id(7)]
+        HRESULT EnableAllExtensions([in] BOOL Enable);
+    }
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(2EF3DE1D-B12A-49D1-92C5-0B00798768F1),
+        dual
+    ]
+    interface SnapIns : IDispatch
+    {
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] long Index, [out, retval] PPSNAPIN SnapIn);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+        [id(2)]
+        HRESULT Add([in] BSTR SnapinNameOrCLSID, [in, optional] VARIANT ParentSnapin,
+                    [in, optional] VARIANT Properties, [out, retval] PPSNAPIN SnapIn);
+        [id(3)]
+        HRESULT Remove([in] PSNAPIN  SnapIn);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(AD4D6CA6-912F-409b-A26E-7FD234AEF542),
+        dual
+    ]
+    interface Extension : IDispatch
+    {
+        [id(1), propget]
+        HRESULT Name([out, retval] PBSTR Name);
+        [id(2), propget]
+        HRESULT Vendor([out, retval] PBSTR Vendor);
+        [id(3), propget]
+        HRESULT Version([out, retval] PBSTR Version);
+        [id(4), propget]
+        HRESULT Extensions([out, retval] PPEXTENSIONS Extensions);
+        [id(5), propget]
+        HRESULT SnapinCLSID([out, retval] PBSTR SnapinCLSID);
+        [id(6)]
+        HRESULT EnableAllExtensions([in] BOOL Enable);
+        [id(7)]
+        HRESULT Enable([in] BOOL Enable);
+    }
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(82DBEA43-8CA4-44bc-A2CA-D18741059EC8),
+        dual
+    ]
+    interface Extensions : IDispatch
+    {
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] long Index, [out, retval] PPEXTENSION Extension);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(383D4D97-FC44-478B-B139-6323DC48611C),
+        dual
+    ]
+    interface Columns : IDispatch
+    {
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] long Index, [out, retval] PPCOLUMN Column);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(FD1C5F63-2B16-4D06-9AB3-F45350B940AB),
+        dual
+    ]
+    interface Column : IDispatch
+    {
+        typedef enum ColumnSortOrder
+        {
+            SortOrder_Ascending,
+            SortOrder_Descending
+        } _ColumnSortOrder;
+        typedef enum ColumnSortOrder COLUMNSORTORDER;
+
+        [id(DISPID_VALUE)]
+        HRESULT Name([out, retval] BSTR *Name);
+        [id(1), propget]
+        HRESULT Width([out, retval] PLONG Width);
+        [id(1), propput]
+        HRESULT Width([in] long Width);
+        [id(2), propget]
+        HRESULT DisplayPosition([out, retval] PLONG DisplayPosition);
+        [id(2), propput]
+        HRESULT DisplayPosition([in] long Index);
+        [id(3), propget]
+        HRESULT Hidden([out, retval] PBOOL Hidden);
+        [id(3), propput]
+        HRESULT Hidden([in] BOOL Hidden);
+        [id(4)]
+        HRESULT SetAsSortColumn([in] COLUMNSORTORDER SortOrder);
+        [id(5)]
+        HRESULT IsSortColumn([out, retval] PBOOL IsSortColumn);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(D6B8C29D-A1FF-4D72-AAB0-E381E9B9338D),
+        dual
+    ]
+    interface Views : IDispatch
+    {
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] long Index, [out, retval] PPVIEW View);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+        [id(2)]
+        HRESULT Add([in] PNODE Node, [in, defaultvalue(ViewOption_Default)] VIEWOPTIONS viewOptions);
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(6EFC2DA2-B38C-457E-9ABB-ED2D189B8C38),
+        dual
+    ]
+    interface View : IDispatch
+    {
+        [id(1), propget]
+        HRESULT ActiveScopeNode([out, retval] PPNODE Node);
+        [id(1), propput]
+        HRESULT ActiveScopeNode([in] PNODE Node);
+        [id(2), propget]
+        HRESULT Selection([out, retval] PPNODES Nodes);
+        [id(3), propget]
+        HRESULT ListItems([out, retval] PPNODES Nodes);
+        [id(4)]
+        HRESULT SnapinScopeObject([in, optional] VARIANT ScopeNode, [out, retval] PPDISPATCH ScopeNodeObject);
+        [id(5)]
+        HRESULT SnapinSelectionObject([out, retval] PPDISPATCH SelectionObject);
+        [id(9)]
+        HRESULT Is([in] PVIEW View, [out, retval] VARIANT_BOOL *TheSame);
+        [id(10), propget]
+        HRESULT Document([out, retval] PPDOCUMENT Document);
+        [id(20)]
+        HRESULT SelectAll();
+        [id(21)]
+        HRESULT Select([in] PNODE Node);
+        [id(22)]
+        HRESULT Deselect([in] PNODE Node);
+        [id(23)]
+        HRESULT IsSelected([in] PNODE Node, [out, retval] PBOOL IsSelected);
+        [id(40)]
+        HRESULT DisplayScopeNodePropertySheet([in, optional] VARIANT ScopeNode);
+        [id(41)]
+        HRESULT DisplaySelectionPropertySheet();
+        [id(42)]
+        HRESULT CopyScopeNode([in, optional] VARIANT ScopeNode);
+        [id(43)]
+        HRESULT CopySelection();
+        [id(44)]
+        HRESULT DeleteScopeNode([in, optional] VARIANT ScopeNode);
+        [id(45)]
+        HRESULT DeleteSelection();
+        [id(46)]
+        HRESULT RenameScopeNode([in] BSTR NewName, [in, optional] VARIANT ScopeNode);
+        [id(47)]
+        HRESULT RenameSelectedItem([in] BSTR NewName);
+        [id(48), propget]
+        HRESULT ScopeNodeContextMenu([in, optional] VARIANT ScopeNode, [out, retval] PPCONTEXTMENU ContextMenu);
+        [id(49), propget]
+        HRESULT SelectionContextMenu([out, retval] PPCONTEXTMENU ContextMenu);
+        [id(50)]
+        HRESULT RefreshScopeNode([in, optional] VARIANT ScopeNode);
+        [id(51)]
+        HRESULT RefreshSelection();
+        [id(52)]
+        HRESULT ExecuteSelectionMenuItem([in] BSTR MenuItemPath);
+        [id(53)]
+        HRESULT ExecuteScopeNodeMenuItem([in] BSTR MenuItemPath, [in, optional] VARIANT ScopeNode);
+        [id(54)]
+        HRESULT ExecuteShellCommand([in] BSTR Command, [in] BSTR Directory, [in] BSTR Parameters, [in] BSTR WindowState);
+        [id(60), propget]
+        HRESULT Frame([out, retval] PPFRAME Frame);
+        [id(61)]
+        HRESULT Close();
+        [id(62), propget]
+        HRESULT ScopeTreeVisible([out, retval] PBOOL Visible);
+        [id(62), propput]
+        HRESULT ScopeTreeVisible([in] BOOL Visible);
+        [id(66)]
+        HRESULT Back();
+        [id(67)]
+        HRESULT Forward();
+        [id(68), propput]
+        HRESULT StatusBarText([in] BSTR StatusBarText);
+        [id(69), propget]
+        HRESULT Memento([out, retval] PBSTR Memento);
+        [id(70)]
+        HRESULT ViewMemento([in] BSTR Memento);
+        [id(80), propget]
+        HRESULT Columns([out, retval] PPCOLUMNS Columns);
+        [id(81), propget]
+        HRESULT CellContents([in] PNODE Node, [in] long Column, [out, retval] PBSTR CellContents);
+        [id(82)]
+        HRESULT ExportList([in] BSTR File, [in, defaultvalue(ExportListOptions_Default)] EXPORTLISTOPTIONS exportoptions);
+        [id(83), propget]
+        HRESULT ListViewMode([out, retval] PLISTVIEWMODE Mode);
+        [id(83), propput]
+        HRESULT ListViewMode([in] LISTVIEWMODE mode);
+        [id(100), propget]
+        HRESULT ControlObject([out, retval] PPDISPATCH Control);
+
+#if MMC_PERF_BUILD
+        [id(90)]
+        HRESULT SelectResultNodes([in] long count);
+        [id(91)]
+        HRESULT SelectChildNodes ([in] PNODE Node, [in] long count);
+#endif
+
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(313B01DF-B22F-4D42-B1B8-483CDCF51D35),
+        dual
+    ]
+    interface Nodes : IDispatch
+    {
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] long Index, [out, retval] PPNODE Node);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(DAB39CE0-25E6-4E07-8362-BA9C95706545),
+        dual
+    ]
+    interface ContextMenu : IDispatch
+    {
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+        [id(DISPID_VALUE), propget]
+        HRESULT Item([in] VARIANT IndexOrPath, [out, retval] PPMENUITEM MenuItem);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+    };
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(0178FAD1-B361-4B27-96AD-67C57EBF2E1D),
+        dual
+    ]
+    interface MenuItem : IDispatch
+    {
+        [id(1), propget]
+        HRESULT DisplayName([out, retval] PBSTR  DisplayName);
+        [id(2), propget]
+        HRESULT LanguageIndependentName([out, retval] PBSTR  LanguageIndependentName);
+        [id(3), propget]
+        HRESULT Path([out, retval] PBSTR  Path);
+        [id(4), propget]
+        HRESULT LanguageIndependentPath([out, retval] PBSTR  LanguageIndependentPath);
+        [id(5)]
+        HRESULT Execute();
+        [id(6), propget]
+        HRESULT Enabled([out, retval] PBOOL Enabled);
+    }
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(2886ABC2-A425-42b2-91C6-E25C0E04581C),
+        dual
+    ]
+    interface Properties : IDispatch
+    {
+        [id(DISPID_NEWENUM), propget]
+        HRESULT _NewEnum([out, retval] IUnknown** retval);
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] BSTR Name, [out, retval] PPPROPERTY Property);
+        [id(1), propget]
+        HRESULT Count([out, retval] PLONG Count);
+        [id(2)]
+        HRESULT Remove([in] BSTR Name);
+    }
+
+    [
+        oleautomation,
+        dual,
+        nonextensible,
+        uuid(4600C3A5-E301-41d8-B6D0-EF2E4212E0CA),
+        dual
+    ]
+    interface Property : IDispatch
+    {
+        [id(DISPID_VALUE), propget]
+        HRESULT Value([out, retval] PVARIANT Value);
+        [id(DISPID_VALUE), propput]
+        HRESULT Value([in] VARIANT Value);
+        [id(1), propget]
+        HRESULT Name([out, retval] PBSTR Name);
+    }
+};
+
+
+cpp_quote("#endif // MMC_VER >= 0x0200")

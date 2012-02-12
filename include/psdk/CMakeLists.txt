@@ -47,6 +47,7 @@ list(APPEND SOURCE
     mimeole.idl
     mlang.idl
     mmc.idl
+    mmcobj.idl
     mscoree.idl
     msctf.idl
     msdadc.idl

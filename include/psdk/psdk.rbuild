@@ -29,6 +29,7 @@
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
 	<file>mmc.idl</file>
+	<file>mmcobj.idl</file>
 	<file>msctf.idl</file>
 	<file>msdadc.idl</file>
 	<file>mshtml.idl</file>
