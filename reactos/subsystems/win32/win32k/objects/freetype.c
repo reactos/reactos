@@ -3495,8 +3495,7 @@ GreExtTextOutW(
          * brush.
          */
 
-        if (lprc &&
-                (fuOptions & ETO_CLIPPED) &&
+        if (lprc && (fuOptions & ETO_CLIPPED) &&
                 DestRect.right >= lprc->right + dc->ptlDCOrig.x)
         {
             // We do the check '>=' instead of '>' to possibly save an iteration
@@ -3504,6 +3503,11 @@ GreExtTextOutW(
             // and x is always incremented.
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
+        }
+        if (lprc && (fuOptions & ETO_CLIPPED) &&
+                DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+        {
+            DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
         }
         MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
         IntEngMaskBlt(
