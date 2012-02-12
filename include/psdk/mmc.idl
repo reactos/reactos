@@ -1,0 +1,1535 @@
+cpp_quote("#ifndef MMC_VER")
+cpp_quote("#define MMC_VER 0x0210")
+cpp_quote("#endif")
+
+#ifndef DO_NO_IMPORTS
+import "basetsd.h";
+import "oaidl.idl";
+#endif
+
+/* Interfaces implemented by mmcndmgr.dll */
+interface IConsole;
+interface IHeaderCtrl;
+interface IToolbar;
+interface IImageList;
+interface IResultData;
+interface IConsoleNameSpace;
+interface IPropertySheetProvider;
+interface IPropertySheetCallback;
+interface IContextMenuProvider;
+interface IContextMenuCallback;
+interface IControlbar;
+interface IConsoleVerb;
+interface IMenuButton;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+interface IConsole2;
+interface IHeaderCtrl2;
+interface IConsoleNameSpace2;
+interface IDisplayHelp;
+interface IStringTable;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+interface IColumnData;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+cpp_quote("#if (MMC_VER >= 0x0200)")
+interface IConsole3;
+interface IConsolePower;
+interface INodeProperties;
+interface IResultData2;
+cpp_quote("#endif // MMC_VER >= 0x0200")
+
+/* Interfaces implemented by the MMC snap-ins */
+interface IComponent;
+interface IComponentData;
+interface IExtendPropertySheet;
+interface IExtendContextMenu;
+interface IExtendControlbar;
+interface IResultDataCompare;
+interface ISnapinAbout;
+interface IResultOwnerData;
+interface ISnapinHelp;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+interface IEnumTASK;
+interface IExtendPropertySheet2;
+interface ISnapinHelp2;
+interface IExtendTaskPad;
+interface IRequiredExtensions;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+interface IResultDataCompareEx;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+cpp_quote("#if (MMC_VER >= 0x0200)")
+interface IComponent2;
+interface IComponentData2;
+interface IExtendView;
+interface IViewExtensionCallback;
+interface IConsolePowerSink;
+interface IConsole3;
+interface INodeProperties;
+interface IResultData2;
+cpp_quote("#endif // MMC_VER >= 0x0200")
+
+typedef IConsole*                   LPCONSOLE;
+typedef IHeaderCtrl*                LPHEADERCTRL;
+typedef IToolbar*                   LPTOOLBAR;
+typedef IImageList*                 LPIMAGELIST;
+typedef IResultData*                LPRESULTDATA;
+typedef IConsoleNameSpace*          LPCONSOLENAMESPACE;
+typedef IPropertySheetProvider*     LPPROPERTYSHEETPROVIDER;
+typedef IPropertySheetCallback*     LPPROPERTYSHEETCALLBACK;
+typedef IContextMenuProvider*       LPCONTEXTMENUPROVIDER;
+typedef IContextMenuCallback*       LPCONTEXTMENUCALLBACK;
+typedef IControlbar*                LPCONTROLBAR;
+typedef IConsoleVerb*               LPCONSOLEVERB;
+typedef IMenuButton*                LPMENUBUTTON;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+typedef IConsole2*                  LPCONSOLE2;
+typedef IHeaderCtrl2*               LPHEADERCTRL2;
+typedef IConsoleNameSpace2*         LPCONSOLENAMESPACE2;
+typedef IDisplayHelp*               LPDISPLAYHELP;
+typedef IStringTable*               LPSTRINGTABLE;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+typedef IColumnData*                LPCOLUMNDATA;
+typedef IResultDataCompareEx*       LPRESULTDATACOMPAREEX;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+typedef IComponent*                 LPCOMPONENT;
+typedef IComponentData*             LPCOMPONENTDATA;
+typedef IExtendPropertySheet*       LPEXTENDPROPERTYSHEET;
+typedef IExtendContextMenu*         LPEXTENDCONTEXTMENU;
+typedef IExtendControlbar*          LPEXTENDCONTROLBAR;
+typedef IResultDataCompare*         LPRESULTDATACOMPARE;
+typedef IResultOwnerData*           LPRESULTOWNERDATA;
+typedef ISnapinAbout*               LPSNAPABOUT;
+typedef ISnapinAbout*               LPSNAPINABOUT;
+typedef ISnapinHelp*                LPSNAPHELP;
+typedef ISnapinHelp*                LPSNAPINHELP;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+typedef IEnumTASK*                  LPENUMTASK;
+typedef IExtendPropertySheet2*      LPEXTENDPROPERTYSHEET2;
+typedef ISnapinHelp2*               LPSNAPINHELP2;
+typedef IExtendTaskPad*             LPEXTENDTASKPAD;
+typedef IRequiredExtensions*        LPREQUIREDEXTENSIONS;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+
+cpp_quote("#if (MMC_VER >= 0x0200)")
+typedef IComponent2*                LPCOMPONENT2;
+typedef IComponentData2*            LPCOMPONENTDATA2;
+typedef IExtendView*                LPEXTENDVIEW;
+typedef IViewExtensionCallback*     LPVIEWEXTENSIONCALLBACK;
+typedef IConsolePower*              LPCONSOLEPOWER;
+typedef IConsolePowerSink*          LPCONSOLEPOWERSINK;
+typedef IConsole3*                  LPCONSOLE3;
+typedef INodeProperties*            LPNODEPROPERTIES;
+typedef IResultData2*               LPRESULTDATA2;
+cpp_quote("#endif // MMC_VER >= 0x0200")
+
+typedef     BSTR*             PBSTR;
+
+#define LVS_ICON                0x0000
+#define LVS_REPORT              0x0001
+#define LVS_SMALLICON           0x0002
+#define LVS_LIST                0x0003
+#define LVSICF_NOINVALIDATEALL  0x00000001
+#define LVSICF_NOSCROLL         0x00000002
+
+const long  MMCLV_AUTO = -1;
+const long  MMCLV_NOPARAM = -2;
+const long  MMCLV_NOICON = -1;
+
+const long  MMCLV_VIEWSTYLE_ICON = LVS_ICON;
+const long  MMCLV_VIEWSTYLE_SMALLICON = LVS_SMALLICON;
+const long  MMCLV_VIEWSTYLE_LIST = LVS_LIST;
+const long  MMCLV_VIEWSTYLE_REPORT = LVS_REPORT;
+const long  MMCLV_VIEWSTYLE_FILTERED = 0x0004;
+
+const void* MMCLV_NOPTR = 0x0;
+const long  MMCLV_UPDATE_NOINVALIDATEALL = LVSICF_NOINVALIDATEALL;
+const long  MMCLV_UPDATE_NOSCROLL = LVSICF_NOSCROLL;
+
+static unsigned short* MMC_CALLBACK = ((unsigned short *)(-1));
+cpp_quote("#if (MMC_VER >= 0x0120)")
+cpp_quote("#define MMC_IMAGECALLBACK (-1)")
+cpp_quote("#define MMC_TEXTCALLBACK  MMC_CALLBACK")
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+typedef LONG_PTR     HSCOPEITEM;
+typedef long        COMPONENTID;
+typedef LONG_PTR     HRESULTITEM;
+
+const DWORD RDI_STR     = 0x0002;
+const DWORD RDI_IMAGE   = 0x0004;
+const DWORD RDI_STATE   = 0x0008;
+const DWORD RDI_PARAM   = 0x0010;
+const DWORD RDI_INDEX   = 0x0020;
+const DWORD RDI_INDENT  = 0x0040;
+
+cpp_quote("typedef enum _MMC_RESULT_VIEW_STYLE      ")
+cpp_quote("{                                        ")
+cpp_quote("    MMC_SINGLESEL           = 0x0001,    ")
+cpp_quote("    MMC_SHOWSELALWAYS       = 0x0002,    ")
+cpp_quote("    MMC_NOSORTHEADER        = 0x0004,    ")
+cpp_quote("#if (MMC_VER >= 0x0120)                  ")
+cpp_quote("    MMC_ENSUREFOCUSVISIBLE  = 0x0008     ")
+cpp_quote("#endif // MMC_VER >= 0x0120              ")
+cpp_quote("} MMC_RESULT_VIEW_STYLE;                 ")
+
+cpp_quote("#if 0")
+typedef enum _MMC_RESULT_VIEW_STYLE
+{
+    _MMC_VIEW_STYLE__dummy_
+} MMC_RESULT_VIEW_STYLE;
+cpp_quote("#endif")
+
+
+const long MMC_VIEW_OPTIONS_NONE                          = 0x00000000;
+const long MMC_VIEW_OPTIONS_NOLISTVIEWS                   = 0x00000001;
+const long MMC_VIEW_OPTIONS_MULTISELECT                   = 0x00000002;
+const long MMC_VIEW_OPTIONS_OWNERDATALIST                 = 0x00000004;
+const long MMC_VIEW_OPTIONS_FILTERED                      = 0x00000008;
+const long MMC_VIEW_OPTIONS_CREATENEW                     = 0x00000010;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+const long MMC_VIEW_OPTIONS_USEFONTLINKING                = 0x00000020;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+const long MMC_VIEW_OPTIONS_EXCLUDE_SCOPE_ITEMS_FROM_LIST = 0x00000040;
+const long MMC_VIEW_OPTIONS_LEXICAL_SORT                  = 0x00000080;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+const DWORD MMC_PSO_NOAPPLYNOW              = 0x00000001;
+const DWORD MMC_PSO_HASHELP                 = 0x00000002;
+const DWORD MMC_PSO_NEWWIZARDTYPE           = 0x00000004;
+const DWORD MMC_PSO_NO_PROPTITLE            = 0x00000008;
+
+typedef enum  _MMC_CONTROL_TYPE
+{
+    TOOLBAR,
+    MENUBUTTON,
+    COMBOBOXBAR
+} MMC_CONTROL_TYPE;
+
+cpp_quote("typedef enum _MMC_CONSOLE_VERB                               ")
+cpp_quote("{                                                            ")
+cpp_quote("    MMC_VERB_NONE            = 0x0000,                       ")
+cpp_quote("    MMC_VERB_OPEN            = 0x8000,                       ")
+cpp_quote("    MMC_VERB_COPY            = 0x8001,                       ")
+cpp_quote("    MMC_VERB_PASTE           = 0x8002,                       ")
+cpp_quote("    MMC_VERB_DELETE          = 0x8003,                       ")
+cpp_quote("    MMC_VERB_PROPERTIES      = 0x8004,                       ")
+cpp_quote("    MMC_VERB_RENAME          = 0x8005,                       ")
+cpp_quote("    MMC_VERB_REFRESH         = 0x8006,                       ")
+cpp_quote("    MMC_VERB_PRINT           = 0x8007,                       ")
+cpp_quote("#if (MMC_VER >= 0x0110)                                      ")
+cpp_quote("    MMC_VERB_CUT             = 0x8008,  // Used only to explicitly disable/hide")
+cpp_quote("                                        // the cut verb, when copy & paste are enabled.")
+cpp_quote("                                                             ")
+cpp_quote("    // must be last                                          ")
+cpp_quote("    MMC_VERB_MAX,                                            ")
+cpp_quote("    MMC_VERB_FIRST           = MMC_VERB_OPEN,                ")
+cpp_quote("    MMC_VERB_LAST            = MMC_VERB_MAX - 1              ")
+cpp_quote("#endif // MMC_VER >= 0x0110                                  ")
+cpp_quote("} MMC_CONSOLE_VERB;                                          ")
+
+cpp_quote("#if 0")
+typedef enum _MMC_CONSOLE_VERB
+{
+    MMC_VERB__dummy_
+} MMC_CONSOLE_VERB;
+cpp_quote("#endif")
+
+cpp_quote("#include <pshpack8.h>")
+typedef struct _MMCButton
+{
+    int      nBitmap;
+    int      idCommand;
+    BYTE     fsState;
+    BYTE     fsType;
+    LPOLESTR     lpButtonText;
+    LPOLESTR     lpTooltipText;
+
+} MMCBUTTON, *LPMMCBUTTON;
+cpp_quote("#include <poppack.h>")
+
+typedef enum _MMC_BUTTON_STATE
+{
+    ENABLED         = 0x01,
+    CHECKED         = 0x02,
+    HIDDEN          = 0x04,
+    INDETERMINATE   = 0x08,
+    BUTTONPRESSED   = 0x10,
+
+} MMC_BUTTON_STATE;
+
+typedef struct _RESULTDATAITEM
+{
+    DWORD       mask;
+    BOOL        bScopeItem;
+    HRESULTITEM itemID;
+    int         nIndex;
+    int         nCol;
+    LPOLESTR    str;
+    int         nImage;
+    UINT        nState;
+    LPARAM      lParam;
+    int         iIndent;
+} RESULTDATAITEM, *LPRESULTDATAITEM;
+
+const DWORD RFI_PARTIAL = 0x0001;
+const DWORD RFI_WRAP    = 0x0002;
+
+typedef struct _RESULTFINDINFO
+{
+    LPOLESTR    psz;
+    int         nStart;
+    DWORD       dwOptions;
+} RESULTFINDINFO, *LPRESULTFINDINFO;
+
+const DWORD RSI_DESCENDING = 0x0001;
+const DWORD RSI_NOSORTICON = 0x0002;
+
+const DWORD SDI_STR         = 0x00002;
+const DWORD SDI_IMAGE       = 0x00004;
+const DWORD SDI_OPENIMAGE   = 0x00008;
+const DWORD SDI_STATE       = 0x00010;
+const DWORD SDI_PARAM       = 0x00020;
+const DWORD SDI_CHILDREN    = 0x00040;
+
+const DWORD SDI_PARENT      = 0x00000000;
+const DWORD SDI_PREVIOUS    = 0x10000000;
+const DWORD SDI_NEXT        = 0x20000000;
+const DWORD SDI_FIRST       = 0x08000000;
+
+typedef struct _SCOPEDATAITEM
+{
+    DWORD       mask;
+    LPOLESTR    displayname;
+    int         nImage;
+    int         nOpenImage;
+    UINT        nState;
+    int         cChildren;
+    LPARAM      lParam;
+    HSCOPEITEM  relativeID;
+    HSCOPEITEM  ID;
+} SCOPEDATAITEM, *LPSCOPEDATAITEM;
+
+typedef enum _MMC_SCOPE_ITEM_STATE
+{
+    MMC_SCOPE_ITEM_STATE_NORMAL = 0x0001,
+    MMC_SCOPE_ITEM_STATE_BOLD = 0x0002,
+    MMC_SCOPE_ITEM_STATE_EXPANDEDONCE = 0x0003,
+
+} MMC_SCOPE_ITEM_STATE;
+
+typedef struct _CONTEXTMENUITEM
+{
+    LPWSTR      strName;
+    LPWSTR      strStatusBarText;
+    LONG        lCommandID;
+    LONG        lInsertionPointID;
+    LONG        fFlags;
+    LONG        fSpecialFlags;
+} CONTEXTMENUITEM, *LPCONTEXTMENUITEM;
+
+typedef enum _MMC_MENU_COMMAND_IDS
+{
+    MMCC_STANDARD_VIEW_SELECT = -1
+} MMC_MENU_COMMAND_IDS;
+
+typedef struct _MENUBUTTONDATA
+{
+    int      idCommand;
+    int      x;
+    int      y;
+} MENUBUTTONDATA, *LPMENUBUTTONDATA;
+
+typedef LONG_PTR MMC_COOKIE;
+
+const MMC_COOKIE MMC_MULTI_SELECT_COOKIE = -2;
+const MMC_COOKIE MMC_WINDOW_COOKIE = -3;
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+const MMC_COOKIE SPECIAL_COOKIE_MIN = -10;
+const MMC_COOKIE SPECIAL_COOKIE_MAX = -1;
+
+#define HDFT_ISSTRING       0x0000
+#define HDFT_ISNUMBER       0x0001
+#define HDFT_HASNOVALUE     0x8000
+
+typedef enum _MMC_FILTER_TYPE
+{
+    MMC_STRING_FILTER = HDFT_ISSTRING,
+    MMC_INT_FILTER    = HDFT_ISNUMBER,
+    MMC_FILTER_NOVALUE= HDFT_HASNOVALUE
+} MMC_FILTER_TYPE;
+
+typedef struct _MMC_FILTERDATA
+{
+    LPOLESTR   pszText; 
+    INT        cchTextMax;
+    LONG       lValue;
+} MMC_FILTERDATA;
+
+typedef enum _MMC_FILTER_CHANGE_CODE
+{
+    MFCC_DISABLE      = 0,
+    MFCC_ENABLE       = 1,
+    MFCC_VALUE_CHANGE = 2
+} MMC_FILTER_CHANGE_CODE;
+
+typedef struct _MMC_RESTORE_VIEW
+{
+    DWORD        dwSize;
+    MMC_COOKIE   cookie;
+    LPOLESTR     pViewType;
+    long         lViewOptions;
+} MMC_RESTORE_VIEW;
+
+typedef struct _MMC_EXPANDSYNC_STRUCT
+{
+    BOOL        bHandled;
+    BOOL        bExpanding;
+    HSCOPEITEM  hItem;
+} MMC_EXPANDSYNC_STRUCT;
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+typedef struct _MMC_VISIBLE_COLUMNS
+{
+    INT  nVisibleColumns;
+    INT  rgVisibleCols[1];
+} MMC_VISIBLE_COLUMNS;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+cpp_quote("typedef enum _MMC_NOTIFY_TYPE                                ")
+cpp_quote("{                                                            ")
+cpp_quote("    MMCN_ACTIVATE           = 0x8001,                        ")
+cpp_quote("    MMCN_ADD_IMAGES         = 0x8002,                        ")
+cpp_quote("    MMCN_BTN_CLICK          = 0x8003,                        ")
+cpp_quote("    MMCN_CLICK              = 0x8004,   // NOT USED          ")
+cpp_quote("    MMCN_COLUMN_CLICK       = 0x8005,                        ")
+cpp_quote("    MMCN_CONTEXTMENU        = 0x8006,   // NOT USED          ")
+cpp_quote("    MMCN_CUTORMOVE          = 0x8007,                        ")
+cpp_quote("    MMCN_DBLCLICK           = 0x8008,                        ")
+cpp_quote("    MMCN_DELETE             = 0x8009,                        ")
+cpp_quote("    MMCN_DESELECT_ALL       = 0x800A,                        ")
+cpp_quote("    MMCN_EXPAND             = 0x800B,                        ")
+cpp_quote("    MMCN_HELP               = 0x800C,   // NOT USED          ")
+cpp_quote("    MMCN_MENU_BTNCLICK      = 0x800D,                        ")
+cpp_quote("    MMCN_MINIMIZED          = 0x800E,                        ")
+cpp_quote("    MMCN_PASTE              = 0x800F,                        ")
+cpp_quote("    MMCN_PROPERTY_CHANGE    = 0x8010,                        ")
+cpp_quote("    MMCN_QUERY_PASTE        = 0x8011,                        ")
+cpp_quote("    MMCN_REFRESH            = 0x8012,                        ")
+cpp_quote("    MMCN_REMOVE_CHILDREN    = 0x8013,                        ")
+cpp_quote("    MMCN_RENAME             = 0x8014,                        ")
+cpp_quote("    MMCN_SELECT             = 0x8015,                        ")
+cpp_quote("    MMCN_SHOW               = 0x8016,                        ")
+cpp_quote("    MMCN_VIEW_CHANGE        = 0x8017,                        ")
+cpp_quote("    MMCN_SNAPINHELP         = 0x8018,                        ")
+cpp_quote("    MMCN_CONTEXTHELP        = 0x8019,                        ")
+cpp_quote("    MMCN_INITOCX            = 0x801A,                        ")
+cpp_quote("#if (MMC_VER >= 0x0110)                                      ")
+cpp_quote("    MMCN_FILTER_CHANGE      = 0x801B,                        ")
+cpp_quote("    MMCN_FILTERBTN_CLICK    = 0x801C,                        ")
+cpp_quote("    MMCN_RESTORE_VIEW       = 0x801D,                        ")
+cpp_quote("    MMCN_PRINT              = 0x801E,                        ")
+cpp_quote("    MMCN_PRELOAD            = 0x801F,                        ")
+cpp_quote("    MMCN_LISTPAD            = 0x8020,                        ")
+cpp_quote("    MMCN_EXPANDSYNC         = 0x8021,                        ")
+cpp_quote("#if (MMC_VER >= 0x0120)                                      ")
+cpp_quote("    MMCN_COLUMNS_CHANGED    = 0x8022,                        ")
+cpp_quote("#if (MMC_VER >= 0x0200)                                      ")
+cpp_quote("    MMCN_CANPASTE_OUTOFPROC = 0x8023,                        ")
+cpp_quote("#endif // MMC_VER >= 0x0200                                  ")
+cpp_quote("#endif // MMC_VER >= 0x0120                                  ")
+cpp_quote("#endif // MMC_VER >= 0x0110                                  ")
+cpp_quote("} MMC_NOTIFY_TYPE;                                           ")
+
+cpp_quote("#if 0")
+typedef enum _MMC_NOTIFY_TYPE
+{
+    MMCN__dummy_
+} MMC_NOTIFY_TYPE;
+cpp_quote("#endif")
+
+typedef enum _DATA_OBJECT_TYPES
+{
+    CCT_SCOPE            = 0x8000,
+    CCT_RESULT           = 0x8001,
+    CCT_SNAPIN_MANAGER   = 0x8002,
+    CCT_UNINITIALIZED    = 0xFFFF,
+} DATA_OBJECT_TYPES;
+
+const unsigned long MMC_NW_OPTION_NONE          = 0x0000;
+const unsigned long MMC_NW_OPTION_NOSCOPEPANE   = 0x0001;
+const unsigned long MMC_NW_OPTION_NOTOOLBARS    = 0x0002;
+const unsigned long MMC_NW_OPTION_SHORTTITLE    = 0x0004;
+const unsigned long MMC_NW_OPTION_CUSTOMTITLE   = 0x0008;
+const unsigned long MMC_NW_OPTION_NOPERSIST     = 0x0010;
+const unsigned long MMC_NW_OPTION_NOACTIONPANE  = 0x0020;
+
+const wchar_t* CCF_NODETYPE = L"CCF_NODETYPE";
+const wchar_t* CCF_SZNODETYPE = L"CCF_SZNODETYPE";
+const wchar_t* CCF_DISPLAY_NAME = L"CCF_DISPLAY_NAME";
+const wchar_t* CCF_SNAPIN_CLASSID = L"CCF_SNAPIN_CLASSID";
+
+cpp_quote("#if (MMC_VER >= 0x0210)")
+const wchar_t* CCF_SNAPIN_CLASS = L"CCF_SNAPIN_CLASS";
+cpp_quote("#endif // MMC_VER >= 0x0210")
+
+const wchar_t* CCF_WINDOW_TITLE = L"CCF_WINDOW_TITLE";
+const wchar_t* CCF_MMC_MULTISELECT_DATAOBJECT = L"CCF_MMC_MULTISELECT_DATAOBJECT";
+
+typedef struct _SMMCDataObjects
+{
+    DWORD           count;
+    LPDATAOBJECT    lpDataObject[1];
+
+} SMMCDataObjects;
+const wchar_t* CCF_MULTI_SELECT_SNAPINS = L"CCF_MULTI_SELECT_SNAPINS";
+
+typedef struct _SMMCObjectTypes
+{
+    DWORD   count;
+    GUID    guid[1];
+
+} SMMCObjectTypes;
+
+const wchar_t* CCF_OBJECT_TYPES_IN_MULTI_SELECT = L"CCF_OBJECT_TYPES_IN_MULTI_SELECT";
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+typedef SMMCObjectTypes SMMCDynamicExtensions;
+
+const wchar_t* CCF_MMC_DYNAMIC_EXTENSIONS = L"CCF_MMC_DYNAMIC_EXTENSIONS";
+const wchar_t* CCF_SNAPIN_PRELOADS = L"CCF_SNAPIN_PRELOADS";
+
+typedef struct _SNodeID
+{
+    DWORD   cBytes;
+    BYTE    id[1];
+} SNodeID;
+
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+typedef struct _SNodeID2
+{
+    DWORD   dwFlags;
+    DWORD   cBytes;
+    BYTE    id[1];
+} SNodeID2;
+
+const DWORD MMC_NODEID_SLOW_RETRIEVAL = 0x01;
+
+const wchar_t* CCF_NODEID2 = L"CCF_NODEID2";
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+const wchar_t* CCF_NODEID  = L"CCF_NODEID";
+
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+typedef struct _SColumnSetID
+{
+    DWORD   dwFlags;
+    DWORD   cBytes;
+    BYTE    id[1];
+} SColumnSetID;
+
+const wchar_t* CCF_COLUMN_SET_ID = L"CCF_COLUMN_SET_ID";
+cpp_quote("#endif // MMC_VER >= 0x0120")
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+/* From mmc.lib */
+cpp_quote("STDAPI MMCPropertyChangeNotify(LONG_PTR lNotifyHandle, LPARAM param);")
+cpp_quote("#if (MMC_VER >= 0x0110)")
+cpp_quote("STDAPI MMCPropertyHelp(LPOLESTR pszHelpTopic);")
+cpp_quote("#endif // MMC_VER >= 0x0110")
+cpp_quote("STDAPI MMCFreeNotifyHandle(LONG_PTR lNotifyHandle);")
+cpp_quote("// MMCPropPageCallback is only available in mmc.lib. See MMCAfxPropPageCallback if linking against mmcutil.lib.")
+cpp_quote("STDAPI MMCPropPageCallback(void* vpsp);")
+cpp_quote("EXTERN_C const CLSID CLSID_NodeManager;")
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+cpp_quote("EXTERN_C const CLSID CLSID_MessageView;")
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+cpp_quote("#if (MMC_VER >= 0x0210)")
+cpp_quote("// Snap-in implemented callback responsible for calling AFX_MANAGE_STATE() for the snapin-in's module.")
+cpp_quote("typedef void (STDAPICALLTYPE *PFNAfxManageStateCallback)();")
+cpp_quote("// Sets up a PROPSHEETPAGE structure for calling the snap-in's PFNAfxManageStateCallback.")
+cpp_quote("// MMCAfxPropPageCallback is available in both mmc.lib and mmcutil.lib.")
+cpp_quote("// Returns:")
+cpp_quote("// S_OK - success")
+cpp_quote("// E_POINTER - vpsp or pfnCallback is null")
+cpp_quote("// E_INVALIDARG - vpsp->pfnCallback must be the same for all property pages")
+cpp_quote("// E_INVALIDARG - pfnManageStateCallback must be the same for all property pages")
+cpp_quote("// E_UNEXPECTED - vpsp has already been passed to MMCAfxPropPageCallback")
+cpp_quote("STDAPI MMCAfxPropPageCallback(void* vpsp, PFNAfxManageStateCallback pfnManageStateCallback);")
+cpp_quote("#endif // MMC_VER >= 0x0210")
+
+cpp_quote("#define DOBJ_NULL        (LPDATAOBJECT)   0")
+cpp_quote("#define DOBJ_CUSTOMOCX   (LPDATAOBJECT)  -1")
+cpp_quote("#define DOBJ_CUSTOMWEB   (LPDATAOBJECT)  -2")
+cpp_quote("#if (MMC_VER >= 0x0110)")
+cpp_quote("#if (MMC_VER >= 0x0120)")
+cpp_quote("#define DOBJ_NOCONSOLE   (LPDATAOBJECT)  -3")
+cpp_quote("#endif // MMC_VER >= 0x0120")
+cpp_quote("#define SPECIAL_DOBJ_MIN                -10")
+cpp_quote("#define SPECIAL_DOBJ_MAX                  0")
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+cpp_quote("#define IS_SPECIAL_DATAOBJECT(d) (((LONG_PTR)(d) >= SPECIAL_DOBJ_MIN)   && ((LONG_PTR)(d) <= SPECIAL_DOBJ_MAX))")
+cpp_quote("#define IS_SPECIAL_COOKIE(c)     (((c)          >= SPECIAL_COOKIE_MIN) && ((c)          <= SPECIAL_COOKIE_MAX))")
+
+    [
+        object,
+        uuid(955AB28A-5218-11D0-A985-00C04FD8D565),
+        pointer_default(unique)
+    ]
+    interface IComponentData : IUnknown
+    {
+        HRESULT Initialize([in] LPUNKNOWN pUnknown);
+        HRESULT CreateComponent([out] LPCOMPONENT* ppComponent);
+        HRESULT Notify([in] LPDATAOBJECT lpDataObject, [in] MMC_NOTIFY_TYPE event,
+                       [in] LPARAM arg, [in] LPARAM param);
+        HRESULT Destroy();
+        HRESULT QueryDataObject([in] MMC_COOKIE cookie, [in] DATA_OBJECT_TYPES type,
+                                [out] LPDATAOBJECT* ppDataObject);
+        HRESULT GetDisplayInfo([in,out] SCOPEDATAITEM* pScopeDataItem);
+        HRESULT CompareObjects([in] LPDATAOBJECT lpDataObjectA, [in] LPDATAOBJECT lpDataObjectB);
+    };
+
+    [
+        object,
+        uuid(43136EB2-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IComponent : IUnknown
+    {
+        HRESULT Initialize([in] LPCONSOLE lpConsole);
+        HRESULT Notify([in] LPDATAOBJECT lpDataObject, [in] MMC_NOTIFY_TYPE event,
+                       [in] LPARAM arg, [in] LPARAM param);
+        HRESULT Destroy([in] MMC_COOKIE cookie);
+        HRESULT QueryDataObject([in] MMC_COOKIE cookie, [in] DATA_OBJECT_TYPES type,
+                                [out] LPDATAOBJECT* ppDataObject);
+        HRESULT GetResultViewType([in] MMC_COOKIE cookie, [out] LPOLESTR* ppViewType,
+                                  [out] long* pViewOptions);
+        HRESULT GetDisplayInfo([in,out] RESULTDATAITEM*  pResultDataItem);
+        HRESULT CompareObjects([in] LPDATAOBJECT lpDataObjectA, [in] LPDATAOBJECT lpDataObjectB);
+    };
+
+    [
+        object,
+        uuid(E8315A52-7A1A-11D0-A2D2-00C04FD909DD),
+        pointer_default(unique)
+    ]
+    interface IResultDataCompare : IUnknown
+    {
+        HRESULT Compare([in] LPARAM lUserParam, [in] MMC_COOKIE cookieA,
+                        [in] MMC_COOKIE cookieB, [in, out] int* pnResult);
+    }
+
+    [
+        object,
+        uuid(9CB396D8-EA83-11d0-AEF1-00C04FB6DD2C),
+        pointer_default(unique)
+    ]
+    interface IResultOwnerData : IUnknown
+    {
+        HRESULT FindItem([in] LPRESULTFINDINFO pFindInfo, [out] int* pnFoundIndex);
+        HRESULT CacheHint ([in] int nStartIndex, [in] int nEndIndex);
+        HRESULT SortItems([in] int nColumn, [in] DWORD dwSortOptions, [in] LPARAM lUserParam);
+    }
+
+    [
+        object,
+        uuid(43136EB1-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IConsole : IUnknown
+    {
+        HRESULT SetHeader([in] LPHEADERCTRL pHeader);
+        HRESULT SetToolbar([in] LPTOOLBAR pToolbar);
+        HRESULT QueryResultView([out] LPUNKNOWN* pUnknown);
+        HRESULT QueryScopeImageList([out] LPIMAGELIST* ppImageList);
+        HRESULT QueryResultImageList([out] LPIMAGELIST* ppImageList);
+        HRESULT UpdateAllViews([in] LPDATAOBJECT lpDataObject,
+                               [in] LPARAM data, [in] LONG_PTR hint);
+        HRESULT MessageBox([in] LPCWSTR lpszText, [in] LPCWSTR lpszTitle,
+                           [in] UINT fuStyle, [out] int* piRetval);
+        HRESULT QueryConsoleVerb([out] LPCONSOLEVERB * ppConsoleVerb);
+        HRESULT SelectScopeItem([in] HSCOPEITEM hScopeItem);
+        HRESULT GetMainWindow([out] HWND* phwnd);
+        HRESULT NewWindow([in] HSCOPEITEM hScopeItem, [in] unsigned long lOptions);
+
+    };
+
+    [
+        object,
+        uuid(43136EB3-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IHeaderCtrl : IUnknown
+    {
+        const int AUTO_WIDTH = -1;
+cpp_quote("#if (MMC_VER >= 0x0120)")
+        const int HIDE_COLUMN = -4;
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+        HRESULT InsertColumn([in] int nCol, [in,] LPCWSTR title, [in] int nFormat, [in] int nWidth);
+        HRESULT DeleteColumn([in] int nCol);
+        HRESULT SetColumnText([in] int nCol, [in] LPCWSTR title);
+        HRESULT GetColumnText([in] int nCol, [out] LPOLESTR* pText);
+        HRESULT SetColumnWidth([in] int nCol, [in] int nWidth);
+        HRESULT GetColumnWidth([in] int nCol, [out] int* pWidth);
+    };
+
+enum
+{
+    CCM_INSERTIONPOINTID_MASK_SPECIAL        = 0xFFFF0000,
+    CCM_INSERTIONPOINTID_MASK_SHARED         = 0x80000000,
+    CCM_INSERTIONPOINTID_MASK_CREATE_PRIMARY = 0x40000000,
+    CCM_INSERTIONPOINTID_MASK_ADD_PRIMARY    = 0x20000000,
+    CCM_INSERTIONPOINTID_MASK_ADD_3RDPARTY   = 0x10000000,
+    CCM_INSERTIONPOINTID_MASK_RESERVED       = 0x0FFF0000,
+    CCM_INSERTIONPOINTID_MASK_FLAGINDEX      = 0x0000001F,
+
+    CCM_INSERTIONPOINTID_PRIMARY_TOP   = 0xA0000000,
+    CCM_INSERTIONPOINTID_PRIMARY_NEW   = 0xA0000001,
+    CCM_INSERTIONPOINTID_PRIMARY_TASK  = 0xA0000002,
+    CCM_INSERTIONPOINTID_PRIMARY_VIEW  = 0xA0000003,
+    CCM_INSERTIONPOINTID_PRIMARY_HELP  = 0xA0000004,
+    CCM_INSERTIONPOINTID_3RDPARTY_NEW  = 0x90000001,
+    CCM_INSERTIONPOINTID_3RDPARTY_TASK = 0x90000002,
+    CCM_INSERTIONPOINTID_ROOT_MENU     = 0x80000000
+};
+
+#define INSERTALLOWED_FLAG(insertionID) \
+         (1L << (insertionID & CCM_INSERTIONPOINTID_MASK_FLAGINDEX))
+enum
+{
+   CCM_INSERTIONALLOWED_TOP  = INSERTALLOWED_FLAG(CCM_INSERTIONPOINTID_PRIMARY_TOP),
+   CCM_INSERTIONALLOWED_NEW  = INSERTALLOWED_FLAG(CCM_INSERTIONPOINTID_PRIMARY_NEW),
+   CCM_INSERTIONALLOWED_TASK = INSERTALLOWED_FLAG(CCM_INSERTIONPOINTID_PRIMARY_TASK),
+   CCM_INSERTIONALLOWED_VIEW = INSERTALLOWED_FLAG(CCM_INSERTIONPOINTID_PRIMARY_VIEW)
+};
+
+
+enum
+{
+    CCM_COMMANDID_MASK_RESERVED       = 0xFFFF0000
+};
+
+enum
+{
+    CCM_SPECIAL_SEPARATOR         = 0x0001,
+    CCM_SPECIAL_SUBMENU           = 0x0002,
+    CCM_SPECIAL_DEFAULT_ITEM      = 0x0004,
+    CCM_SPECIAL_INSERTION_POINT   = 0x0008,
+    CCM_SPECIAL_TESTONLY          = 0x0010
+};
+
+    [
+        object,
+        uuid(43136EB7-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IContextMenuCallback : IUnknown
+    {
+        HRESULT AddItem([in] CONTEXTMENUITEM* pItem);
+    };
+
+    [
+        object,
+        uuid(43136EB6-D36C-11CF-ADBC-00AA00A80033),
+        object,
+        pointer_default(unique)
+    ]
+
+    interface IContextMenuProvider : IContextMenuCallback
+    {
+        HRESULT EmptyMenuList();
+        HRESULT AddPrimaryExtensionItems([in] LPUNKNOWN piExtension, [in] LPDATAOBJECT piDataObject);
+        HRESULT AddThirdPartyExtensionItems([in] LPDATAOBJECT piDataObject);
+        HRESULT ShowContextMenu([in] HWND hwndParent, [in] long xPos, [in] long yPos, [out,retval] long* plSelected);
+    };
+
+    [
+        object,
+        uuid(4F3B7A4F-CFAC-11CF-B8E3-00C04FD8D5B0),
+        pointer_default(unique)
+    ]
+    interface IExtendContextMenu : IUnknown
+    {
+        HRESULT AddMenuItems([in] LPDATAOBJECT piDataObject, [in] LPCONTEXTMENUCALLBACK piCallback,
+                             [in,out] long *pInsertionAllowed);
+        HRESULT Command([in] long lCommandID, [in] LPDATAOBJECT piDataObject);
+    };
+
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+cpp_quote("#define ILSIF_LEAVE_LARGE_ICON  0x40000000")
+cpp_quote("#define ILSIF_LEAVE_SMALL_ICON  0x20000000")
+cpp_quote("#define ILSIF_LEAVE_MASK        (ILSIF_LEAVE_LARGE_ICON | ILSIF_LEAVE_SMALL_ICON)")
+
+cpp_quote("#define ILSI_LARGE_ICON(nLoc)   (nLoc | ILSIF_LEAVE_SMALL_ICON)")
+cpp_quote("#define ILSI_SMALL_ICON(nLoc)   (nLoc | ILSIF_LEAVE_LARGE_ICON)")
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+    [
+        object,
+        uuid(43136EB8-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IImageList : IUnknown
+    {
+        HRESULT ImageListSetIcon([in] LONG_PTR* pIcon, [in] long nLoc);
+        HRESULT ImageListSetStrip([in] LONG_PTR* pBMapSm, [in] LONG_PTR* pBMapLg,
+                                  [in] long nStartLoc, [in] COLORREF cMask);
+    };
+
+    [
+        object,
+        uuid(31DA5FA0-E0EB-11cf-9F21-00AA003CA9F6),
+        pointer_default(unique)
+    ]
+    interface IResultData : IUnknown
+    {
+        HRESULT InsertItem([in,out] LPRESULTDATAITEM item);
+        HRESULT DeleteItem([in] HRESULTITEM itemID, [in] int nCol);
+        HRESULT FindItemByLParam([in] LPARAM lParam, [out] HRESULTITEM *pItemID);
+        HRESULT DeleteAllRsltItems();
+        HRESULT SetItem([in] LPRESULTDATAITEM item);
+        HRESULT GetItem([in,out] LPRESULTDATAITEM item);
+        HRESULT GetNextItem([in,out] LPRESULTDATAITEM item);
+        HRESULT ModifyItemState([in] int nIndex, [in] HRESULTITEM itemID,
+                                [in] UINT uAdd, [in] UINT uRemove);
+        HRESULT ModifyViewStyle([in] MMC_RESULT_VIEW_STYLE add,
+                                [in] MMC_RESULT_VIEW_STYLE remove);
+        HRESULT SetViewMode([in] long lViewMode);
+        HRESULT GetViewMode([out] long* lViewMode);
+        HRESULT UpdateItem([in] HRESULTITEM itemID);
+        HRESULT Sort([in] int nColumn, [in] DWORD dwSortOptions, [in] LPARAM lUserParam);
+        HRESULT SetDescBarText([in] LPOLESTR DescText);
+        HRESULT SetItemCount([in] int nItemCount, [in] DWORD dwOptions);
+
+    };
+
+    [
+        object,
+        uuid(BEDEB620-F24D-11cf-8AFC-00AA003CA9F6),
+        pointer_default(unique)
+    ]
+    interface IConsoleNameSpace : IUnknown
+    {
+        import "oaidl.idl";
+        HRESULT InsertItem([in,out] LPSCOPEDATAITEM  item);
+        HRESULT DeleteItem([in] HSCOPEITEM hItem, [in] long fDeleteThis);
+        HRESULT SetItem([in] LPSCOPEDATAITEM item);
+        HRESULT GetItem([in,out] LPSCOPEDATAITEM item);
+        HRESULT GetChildItem([in] HSCOPEITEM item, [out] HSCOPEITEM* pItemChild,
+                             [out] MMC_COOKIE* pCookie);
+        HRESULT GetNextItem([in] HSCOPEITEM item, [out] HSCOPEITEM* pItemNext,
+                            [out] MMC_COOKIE* pCookie);
+        HRESULT GetParentItem([in] HSCOPEITEM item, [out] HSCOPEITEM* pItemParent,
+                              [out] MMC_COOKIE* pCookie);
+    };
+
+    [
+        object,
+        uuid(255F18CC-65DB-11D1-A7DC-00C04FD8D565),
+        pointer_default(unique)
+    ]
+    interface IConsoleNameSpace2 : IConsoleNameSpace
+    {
+        HRESULT Expand([in] HSCOPEITEM hItem);
+        HRESULT AddExtension([in] HSCOPEITEM hItem, [in] LPCLSID lpClsid);
+    };
+
+struct _PSP;
+typedef struct _PSP * HPROPSHEETPAGE;
+
+    [
+        local,
+        object,
+        uuid(85DE64DD-EF21-11cf-A285-00C04FD8DBE6),
+        pointer_default(unique)
+    ]
+    interface IPropertySheetCallback : IUnknown
+    {
+        HRESULT AddPage([in] HPROPSHEETPAGE hPage);
+        HRESULT RemovePage([in] HPROPSHEETPAGE  hPage);
+    };
+
+    [
+        object,
+        uuid(85DE64DE-EF21-11cf-A285-00C04FD8DBE6),
+        pointer_default(unique)
+    ]
+    interface IPropertySheetProvider : IUnknown
+    {
+        HRESULT CreatePropertySheet([in] LPCWSTR title, [in] boolean type,
+                                    [in] MMC_COOKIE cookie, [in] LPDATAOBJECT pIDataObjectm,
+                                    [in] DWORD dwOptions);
+        HRESULT FindPropertySheet([in] HSCOPEITEM hItem, [in] LPCOMPONENT lpComponent, [in] LPDATAOBJECT lpDataObject);
+        HRESULT AddPrimaryPages(LPUNKNOWN lpUnknown, BOOL bCreateHandle, HWND hNotifyWindow, BOOL bScopePane);
+        HRESULT AddExtensionPages();
+        HRESULT Show([in] LONG_PTR window, [in] int page);
+    };
+
+    [
+        object,
+        uuid(85DE64DC-EF21-11cf-A285-00C04FD8DBE6),
+        pointer_default(unique)
+    ]
+    interface IExtendPropertySheet : IUnknown
+    {
+        HRESULT CreatePropertyPages([in] LPPROPERTYSHEETCALLBACK lpProvider,
+                                    [in] LONG_PTR handle, [in] LPDATAOBJECT lpIDataObject);
+        HRESULT QueryPagesFor([in] LPDATAOBJECT lpDataObject);
+    };
+
+    [
+        object,
+        uuid(69FB811E-6C1C-11D0-A2CB-00C04FD909DD),
+        pointer_default(unique)
+    ]
+    interface IControlbar : IUnknown
+    {
+        HRESULT Create([in] MMC_CONTROL_TYPE nType, [in] LPEXTENDCONTROLBAR pExtendControlbar,
+                       [out] LPUNKNOWN* ppUnknown);
+        HRESULT Attach([in] MMC_CONTROL_TYPE nType, [in] LPUNKNOWN  lpUnknown);
+        HRESULT Detach([in] LPUNKNOWN lpUnknown);
+    };
+
+    [
+        object,
+        uuid(49506520-6F40-11D0-A98B-00C04FD8D565),
+        pointer_default(unique)
+    ]
+    interface IExtendControlbar : IUnknown
+    {
+        HRESULT SetControlbar([in] LPCONTROLBAR pControlbar);
+        HRESULT ControlbarNotify([in] MMC_NOTIFY_TYPE event, [in] LPARAM arg, [in] LPARAM param);
+    };
+
+    [
+        object,
+        uuid(43136EB9-D36C-11CF-ADBC-00AA00A80033),
+        pointer_default(unique)
+    ]
+    interface IToolbar : IUnknown
+    {
+        HRESULT AddBitmap([in] int nImages, [in] HBITMAP hbmp, [in] int cxSize, [in] int cySize, [in] COLORREF crMask );
+        HRESULT AddButtons([in] int nButtons, [in] LPMMCBUTTON lpButtons);
+        HRESULT InsertButton([in] int nIndex, [in] LPMMCBUTTON lpButton);
+        HRESULT DeleteButton([in] int nIndex);
+        HRESULT GetButtonState([in] int idCommand, [in] MMC_BUTTON_STATE nState, [out] BOOL* pState);
+        HRESULT SetButtonState([in] int idCommand, [in] MMC_BUTTON_STATE nState, [in] BOOL bState);
+    };
+
+    [
+        object,
+        uuid(E49F7A60-74AF-11D0-A286-00C04FD8FE93),
+        pointer_default(unique)
+    ]
+    interface IConsoleVerb : IUnknown
+    {
+        HRESULT GetVerbState([in] MMC_CONSOLE_VERB eCmdID, [in] MMC_BUTTON_STATE nState, [out] BOOL* pState);
+        HRESULT SetVerbState([in] MMC_CONSOLE_VERB eCmdID, [in] MMC_BUTTON_STATE nState, [in] BOOL bState);
+        HRESULT SetDefaultVerb([in] MMC_CONSOLE_VERB eCmdID);
+        HRESULT GetDefaultVerb([out] MMC_CONSOLE_VERB* peCmdID);
+    };
+
+    [
+        object,
+        uuid(1245208C-A151-11D0-A7D7-00C04FD909DD),
+        pointer_default(unique)
+    ]
+    interface ISnapinAbout : IUnknown
+    {
+        HRESULT GetSnapinDescription([out] LPOLESTR* lpDescription);
+        HRESULT GetProvider([out] LPOLESTR* lpName);
+        HRESULT GetSnapinVersion([out] LPOLESTR* lpVersion);
+        HRESULT GetSnapinImage([out] HICON* hAppIcon);
+        HRESULT GetStaticFolderImage([out] HBITMAP* hSmallImage, [out] HBITMAP* hSmallImageOpen,
+                                     [out] HBITMAP* hLargeImage, [out] COLORREF* cMask);
+    };
+
+    [
+        object,
+        uuid(951ED750-D080-11d0-B197-000000000000),
+        pointer_default(unique)
+    ]
+    interface IMenuButton : IUnknown
+    {
+        HRESULT AddButton([in] int idCommand,[in] LPOLESTR lpButtonText, [in] LPOLESTR lpTooltipText);
+        HRESULT SetButton([in] int idCommand,[in] LPOLESTR lpButtonText, [in] LPOLESTR lpTooltipText);
+        HRESULT SetButtonState([in] int idCommand, [in] MMC_BUTTON_STATE nState, [in] BOOL bState);
+    };
+
+    [
+        object,
+        uuid(A6B15ACE-DF59-11D0-A7DD-00C04FD909DD),
+        pointer_default(unique)
+    ]
+    interface ISnapinHelp : IUnknown
+    {
+        HRESULT GetHelpTopic([out] LPOLESTR* lpCompiledHelpFile);
+
+    };
+
+cpp_quote("#if (MMC_VER >= 0x0110)")
+
+    [
+        object,
+        uuid(B7A87232-4A51-11D1-A7EA-00C04FD909DD),
+        pointer_default(unique)
+    ]
+    interface IExtendPropertySheet2 : IExtendPropertySheet
+    {
+        HRESULT GetWatermarks([in]  LPDATAOBJECT lpIDataObject, [out] HBITMAP* lphWatermark,
+                              [out] HBITMAP* lphHeader, [out] HPALETTE* lphPalette, [out] BOOL* bStretch);
+    };
+
+    [
+        object,
+        uuid(9757abb8-1b32-11d1-a7ce-00c04fd8d565),
+        pointer_default(unique)
+    ]
+    interface IHeaderCtrl2 : IHeaderCtrl
+    {
+        HRESULT SetChangeTimeOut([in] unsigned long uTimeout);
+        HRESULT SetColumnFilter([in] UINT nColumn, [in] DWORD dwType, [in] MMC_FILTERDATA* pFilterData);
+        HRESULT GetColumnFilter([in] UINT nColumn, [in,out] LPDWORD pdwType, [in, out] MMC_FILTERDATA* pFilterData);
+    };
+
+    [
+        object,
+        uuid(4861A010-20F9-11d2-A510-00C04FB6DD2C),
+        pointer_default(unique)
+    ]
+    interface ISnapinHelp2 : ISnapinHelp
+    {
+        HRESULT GetLinkedTopics([out] LPOLESTR* lpCompiledHelpFiles);
+    };
+
+typedef enum _MMC_TASK_DISPLAY_TYPE
+{
+    MMC_TASK_DISPLAY_UNINITIALIZED = 0,
+    MMC_TASK_DISPLAY_TYPE_SYMBOL,
+    MMC_TASK_DISPLAY_TYPE_VANILLA_GIF,
+    MMC_TASK_DISPLAY_TYPE_CHOCOLATE_GIF,
+    MMC_TASK_DISPLAY_TYPE_BITMAP
+} MMC_TASK_DISPLAY_TYPE;
+
+typedef struct _MMC_TASK_DISPLAY_SYMBOL
+{
+    LPOLESTR szFontFamilyName;
+    LPOLESTR szURLtoEOT;
+    LPOLESTR szSymbolString;
+} MMC_TASK_DISPLAY_SYMBOL;
+
+typedef struct _MMC_TASK_DISPLAY_BITMAP
+{
+    LPOLESTR szMouseOverBitmap;
+    LPOLESTR szMouseOffBitmap;
+} MMC_TASK_DISPLAY_BITMAP;
+
+typedef struct _MMC_TASK_DISPLAY_OBJECT
+{
+    MMC_TASK_DISPLAY_TYPE eDisplayType;
+    [switch_type(MMC_TASK_DISPLAY_TYPE), switch_is((MMC_TASK_DISPLAY_TYPE)eDisplayType)]
+    _ANONYMOUS_UNION union
+    {
+    [case(MMC_TASK_DISPLAY_TYPE_BITMAP,MMC_TASK_DISPLAY_TYPE_VANILLA_GIF,MMC_TASK_DISPLAY_TYPE_CHOCOLATE_GIF)]
+        MMC_TASK_DISPLAY_BITMAP uBitmap;
+    [case(MMC_TASK_DISPLAY_TYPE_SYMBOL)]
+        MMC_TASK_DISPLAY_SYMBOL uSymbol;
+    [default];
+    } DUMMYUNIONNAME;
+} MMC_TASK_DISPLAY_OBJECT;
+
+typedef enum _MMC_ACTION_TYPE
+{
+    MMC_ACTION_UNINITIALIZED = -1,
+    MMC_ACTION_ID,
+    MMC_ACTION_LINK,
+    MMC_ACTION_SCRIPT,
+} MMC_ACTION_TYPE;
+
+typedef struct _MMC_TASK
+{
+    MMC_TASK_DISPLAY_OBJECT sDisplayObject;
+    LPOLESTR szText;
+    LPOLESTR szHelpString;
+    MMC_ACTION_TYPE eActionType;
+    _ANONYMOUS_UNION union
+    {
+        LONG_PTR nCommandID;
+        LPOLESTR szActionURL;
+        LPOLESTR szScript;
+    } DUMMYUNIONNAME;
+} MMC_TASK;
+
+typedef struct _MMC_LISTPAD_INFO
+{
+    LPOLESTR szTitle;
+    LPOLESTR szButtonText;
+    LONG_PTR nCommandID;
+} MMC_LISTPAD_INFO;
+
+typedef DWORD MMC_STRING_ID;
+
+    [
+        local,
+        object,
+        uuid(338698b1-5a02-11d1-9fec-00600832db4a),
+        pointer_default(unique)
+    ]
+    interface IEnumTASK : IUnknown
+    {
+        HRESULT Next([in] ULONG celt, [out, size_is(celt), length_is(*pceltFetched)] MMC_TASK *rgelt,
+                     [out] ULONG *pceltFetched);
+        HRESULT Skip([in] ULONG celt);
+        HRESULT Reset();
+        HRESULT Clone([out] IEnumTASK **ppenum);
+    };
+
+    [
+        local,
+        object,
+        uuid(8dee6511-554d-11d1-9fea-00600832db4a),
+        pointer_default(unique)
+    ]
+    interface IExtendTaskPad : IUnknown
+    {
+        HRESULT TaskNotify([in] IDataObject* pdo, [in] VARIANT* arg, [in] VARIANT* param);
+        HRESULT EnumTasks([in] IDataObject * pdo, [in,string] LPOLESTR szTaskGroup,
+                          [out] IEnumTASK** ppEnumTASK);
+        HRESULT GetTitle([in,string] LPOLESTR pszGroup, [out,string] LPOLESTR * pszTitle);
+        HRESULT GetDescriptiveText([in,string] LPOLESTR pszGroup, [out,string] LPOLESTR * pszDescriptiveText);
+        HRESULT GetBackground([in,string] LPOLESTR pszGroup, [out] MMC_TASK_DISPLAY_OBJECT * pTDO);
+        HRESULT GetListPadInfo ([in,string] LPOLESTR pszGroup, [out] MMC_LISTPAD_INFO * lpListPadInfo);
+    };
+
+    [
+        object,
+        uuid(103D842A-AA63-11D1-A7E1-00C04FD8D565),
+        pointer_default(unique)
+    ]
+    interface IConsole2 : IConsole
+    {
+        HRESULT Expand([in] HSCOPEITEM hItem, [in] BOOL bExpand);
+        HRESULT IsTaskpadViewPreferred();
+        HRESULT SetStatusText ([in, string] LPOLESTR pszStatusText);
+    };
+
+    [
+        object,
+        uuid(cc593830-b926-11d1-8063-0000f875a9ce),
+        pointer_default(unique)
+    ]
+    interface IDisplayHelp : IUnknown
+    {
+        HRESULT ShowTopic([in] LPOLESTR pszHelpTopic);
+    };
+
+    [
+        local,
+        object,
+        uuid(72782D7A-A4A0-11d1-AF0F-00C04FB6DD2C),
+        pointer_default(unique)
+    ]
+    interface IRequiredExtensions : IUnknown
+    {
+        HRESULT EnableAllExtensions();
+        HRESULT GetFirstExtension([out] LPCLSID pExtCLSID);
+        HRESULT GetNextExtension([out] LPCLSID pExtCLSID);
+    };
+
+    [
+        object,
+        uuid(DE40B7A4-0F65-11d2-8E25-00C04F8ECD78),
+        pointer_default(unique)
+    ]
+    interface IStringTable : IUnknown
+    {
+        HRESULT AddString([in] LPCOLESTR pszAdd, [out] MMC_STRING_ID* pStringID);
+        HRESULT GetString([in] MMC_STRING_ID StringID, [in] ULONG cchBuffer,
+                          [out, size_is(cchBuffer)] LPOLESTR lpBuffer, [out] ULONG* pcchOut);
+        HRESULT GetStringLength([in] MMC_STRING_ID StringID, [out] ULONG* pcchString);
+        HRESULT DeleteString([in] MMC_STRING_ID StringID);
+        HRESULT DeleteAllStrings ();
+        HRESULT FindString([in] LPCOLESTR pszFind, [out] MMC_STRING_ID* pStringID);
+        HRESULT Enumerate([out] IEnumString** ppEnum);
+    };
+cpp_quote("#endif // MMC_VER >= 0x0110")
+
+
+cpp_quote("#if (MMC_VER >= 0x0120)")
+const DWORD HDI_HIDDEN         = 0x0001;
+
+typedef struct _MMC_COLUMN_DATA
+{
+    int       nColIndex;
+    DWORD     dwFlags;
+    int       nWidth;
+    ULONG_PTR ulReserved;
+} MMC_COLUMN_DATA;
+
+typedef struct _MMC_COLUMN_SET_DATA
+{
+    int              cbSize;
+    int              nNumCols;
+    MMC_COLUMN_DATA* pColData;
+} MMC_COLUMN_SET_DATA;
+
+typedef struct _MMC_SORT_DATA
+{
+    int       nColIndex;
+    DWORD     dwSortOptions;
+    ULONG_PTR ulReserved;
+} MMC_SORT_DATA;
+
+typedef struct _MMC_SORT_SET_DATA
+{
+    int              cbSize;
+    int              nNumItems;
+    MMC_SORT_DATA*   pSortData;
+} MMC_SORT_SET_DATA;
+
+    [
+        object,
+        uuid(547C1354-024D-11d3-A707-00C04F8EF4CB),
+        pointer_default(unique)
+    ]
+    interface IColumnData : IUnknown
+    {
+        HRESULT SetColumnConfigData([in] SColumnSetID* pColID, [in] MMC_COLUMN_SET_DATA* pColSetData);
+        HRESULT GetColumnConfigData([in]  SColumnSetID* pColID, [out] MMC_COLUMN_SET_DATA** ppColSetData);
+        HRESULT SetColumnSortData([in] SColumnSetID* pColID, [in] MMC_SORT_SET_DATA* pColSortData);
+        HRESULT GetColumnSortData([in]  SColumnSetID* pColID, [out] MMC_SORT_SET_DATA** ppColSortData);
+    };
+
+    [
+        object,
+        uuid(80F94174-FCCC-11d2-B991-00C04F8ECD78),
+        pointer_default(unique)
+    ]
+    interface IMessageView : IUnknown
+    {
+        HRESULT SetTitleText([in] LPCOLESTR pszTitleText);
+        HRESULT SetBodyText([in] LPCOLESTR pszBodyText);
+
+        typedef enum tagIconIdentifier
+        {
+            Icon_None        =     0,
+            Icon_Error       = 32513,
+            Icon_Question    = 32514,
+            Icon_Warning     = 32515,
+            Icon_Information = 32516,
+
+            Icon_First       = Icon_Error,
+            Icon_Last        = Icon_Information,
+        } IconIdentifier;
+
+        HRESULT SetIcon([in] IconIdentifier id);
+        HRESULT Clear();
+    };
+
+    typedef struct _RDCITEMHDR
+    {
+        DWORD       dwFlags;
+        MMC_COOKIE  cookie;
+        LPARAM      lpReserved;
+    } RDITEMHDR;
+
+    const DWORD RDCI_ScopeItem = 0x80000000;
+
+    typedef struct _RDCOMPARE
+    {
+        DWORD       cbSize;
+        DWORD       dwFlags;
+        int         nColumn;
+        LPARAM      lUserParam;
+        RDITEMHDR*  prdch1;
+        RDITEMHDR*  prdch2;
+    } RDCOMPARE;
+
+    [
+        object,
+        uuid(96933476-0251-11d3-AEB0-00C04F8ECD78),
+        pointer_default(unique)
+    ]
+    interface IResultDataCompareEx : IUnknown
+    {
+        HRESULT Compare([in] RDCOMPARE* prdc, [out] int* pnResult);
+    }
+
+cpp_quote("#endif // MMC_VER >= 0x0120")
+
+
+cpp_quote("#if (MMC_VER >= 0x0200)")
+typedef enum _MMC_VIEW_TYPE
+{
+   MMC_VIEW_TYPE_LIST,
+   MMC_VIEW_TYPE_HTML,
+   MMC_VIEW_TYPE_OCX
+
+} MMC_VIEW_TYPE;
+
+const DWORD RVTI_MISC_OPTIONS_NOLISTVIEWS                      = 0x0001;
+
+const DWORD RVTI_LIST_OPTIONS_NONE                             = 0x0000;
+const DWORD RVTI_LIST_OPTIONS_OWNERDATALIST                    = 0x0002;
+const DWORD RVTI_LIST_OPTIONS_MULTISELECT                      = 0x0004;
+const DWORD RVTI_LIST_OPTIONS_FILTERED                         = 0x0008;
+const DWORD RVTI_LIST_OPTIONS_USEFONTLINKING                   = 0x0020;
+const DWORD RVTI_LIST_OPTIONS_EXCLUDE_SCOPE_ITEMS_FROM_LIST    = 0x0040;
+const DWORD RVTI_LIST_OPTIONS_LEXICAL_SORT                     = 0x0080;
+const DWORD RVTI_LIST_OPTIONS_ALLOWPASTE                       = 0x0100;
+
+const DWORD RVTI_HTML_OPTIONS_NONE                             = 0x0000;
+const DWORD RVTI_HTML_OPTIONS_NOLISTVIEW                       = 0x0001;
+
+const DWORD RVTI_OCX_OPTIONS_NONE                              = 0x0000;
+const DWORD RVTI_OCX_OPTIONS_NOLISTVIEW                        = 0x0001;
+const DWORD RVTI_OCX_OPTIONS_CACHE_OCX                         = 0x0002;
+
+typedef struct _RESULT_VIEW_TYPE_INFO
+{
+    LPOLESTR      pstrPersistableViewDescription;
+    MMC_VIEW_TYPE eViewType;
+    DWORD         dwMiscOptions;
+
+    [switch_type(MMC_VIEW_TYPE), switch_is((MMC_VIEW_TYPE)eViewType)]
+    _ANONYMOUS_UNION union
+    {
+
+    [case(MMC_VIEW_TYPE_LIST)]
+        DWORD dwListOptions;
+
+    [case(MMC_VIEW_TYPE_HTML)]
+        _ANONYMOUS_STRUCT struct
+        {
+            DWORD       dwHTMLOptions;
+            LPOLESTR    pstrURL;
+        } DUMMYSTRUCTNAME;
+
+    [case(MMC_VIEW_TYPE_OCX)]
+        _ANONYMOUS_STRUCT struct
+        {
+            DWORD       dwOCXOptions;
+            LPUNKNOWN   pUnkControl;
+        } DUMMYSTRUCTNAME2;
+
+    [default];
+    } DUMMYUNIONNAME;
+} RESULT_VIEW_TYPE_INFO, *PRESULT_VIEW_TYPE_INFO;
+
+const wchar_t* CCF_DESCRIPTION  = L"CCF_DESCRIPTION";
+const wchar_t* CCF_HTML_DETAILS = L"CCF_HTML_DETAILS";
+
+typedef struct _CONTEXTMENUITEM2
+{
+    LPWSTR      strName;
+    LPWSTR      strStatusBarText;
+    LONG        lCommandID;
+    LONG        lInsertionPointID;
+    LONG        fFlags;
+    LONG        fSpecialFlags;
+    LPWSTR      strLanguageIndependentName;
+} CONTEXTMENUITEM2;
+
+typedef CONTEXTMENUITEM2* LPCONTEXTMENUITEM2;
+
+typedef struct _MMC_EXT_VIEW_DATA
+{
+    GUID        viewID;
+    LPCOLESTR   pszURL;
+    LPCOLESTR   pszViewTitle;
+    LPCOLESTR   pszTooltipText;
+    BOOL        bReplacesDefaultView;
+} MMC_EXT_VIEW_DATA, *PMMC_EXT_VIEW_DATA;
+
+const DWORD MMC_DEFAULT_OPERATION_COPY           = 0x0001;
+
+    [
+        object,
+        uuid(CCA0F2D2-82DE-41B5-BF47-3B2076273D5C),
+        pointer_default(unique)
+    ]
+    interface IComponentData2 : IComponentData
+    {
+        HRESULT QueryDispatch([in] MMC_COOKIE cookie, [in] DATA_OBJECT_TYPES type,
+                              [out] LPDISPATCH* ppDispatch);
+    };
+
+    [
+        object,
+        uuid(79A2D615-4A10-4ED4-8C65-8633F9335095),
+        pointer_default(unique)
+    ]
+    interface IComponent2 : IComponent
+    {
+        HRESULT QueryDispatch([in] MMC_COOKIE cookie, [in] DATA_OBJECT_TYPES type,
+                              [out] LPDISPATCH* ppDispatch);
+        HRESULT GetResultViewType2([in] MMC_COOKIE cookie, [in, out] PRESULT_VIEW_TYPE_INFO pResultViewType);
+        HRESULT RestoreResultView([in] MMC_COOKIE cookie, [in] PRESULT_VIEW_TYPE_INFO pResultViewType);
+    };
+
+    [
+        object,
+        uuid(E178BC0E-2ED0-4b5e-8097-42C9087E8B33),
+        pointer_default(unique)
+    ]
+    interface IContextMenuCallback2 : IUnknown
+    {
+        HRESULT AddItem([in] CONTEXTMENUITEM2* pItem);
+    };
+
+    [
+        uuid(A8D2C5FE-CDCB-4b9d-BDE5-A27343FF54BC),
+    ]
+    interface IMMCVersionInfo : IUnknown
+    {
+       HRESULT GetMMCVersion([out] long * pVersionMajor, [out] long * pVersionMinor);
+    }
+
+   [
+       uuid(9EECDD85-B715-4188-8A72-61159ABDB8C4),
+       version(1.0),
+   ]
+   library MMCVersionLib
+   {
+       importlib("stdole2.tlb");
+
+       [
+          uuid(D6FEDB1D-CF21-4bd9-AF3B-C5468E9C6684)
+       ]
+       coclass MMCVersionInfo
+       {
+           [default] interface IMMCVersionInfo;
+       };
+
+       [
+          uuid(f0285374-dff1-11d3-b433-00c04f8ecd78)
+       ]
+       coclass ConsolePower
+       {
+           [default] interface IConsolePower;
+       };
+   };
+
+    [
+        object,
+        uuid(89995CEE-D2ED-4c0e-AE5E-DF7E76F3FA53),
+        pointer_default(unique)
+    ]
+    interface IExtendView : IUnknown
+    {
+        HRESULT GetViews([in] LPDATAOBJECT pDataObject, [in] LPVIEWEXTENSIONCALLBACK pViewExtensionCallback);
+    };
+
+   [
+       object,
+       uuid(34DD928A-7599-41E5-9F5E-D6BC3062C2DA),
+       pointer_default(unique)
+   ]
+   interface IViewExtensionCallback : IUnknown
+   {
+        HRESULT AddView([in] PMMC_EXT_VIEW_DATA pExtViewData);
+   }
+
+    [
+        object,
+        uuid(1cfbdd0e-62ca-49ce-a3af-dbb2de61b068),
+        pointer_default(unique)
+    ]
+    interface IConsolePower : IUnknown
+    {
+        HRESULT SetExecutionState([in] DWORD dwAdd, [in] DWORD dwRemove);
+        HRESULT ResetIdleTimer([in] DWORD dwFlags);
+    };
+
+    [
+        object,
+        uuid(3333759f-fe4f-4975-b143-fec0a5dd6d65),
+        pointer_default(unique)
+    ]
+    interface IConsolePowerSink : IUnknown
+    {
+        HRESULT OnPowerBroadcast([in] UINT nEvent, [in] LPARAM lParam, [out] LRESULT* plReturn);
+    };
+
+    [
+        object,
+        uuid(15BC4D24-A522-4406-AA55-0749537A6865),
+        pointer_default(unique)
+    ]
+    interface INodeProperties : IUnknown
+    {
+        HRESULT GetProperty([in] LPDATAOBJECT pDataObject, [in] BSTR szPropertyName, [out] PBSTR pbstrProperty);
+    };
+
+    [
+        object,
+        uuid(4F85EFDB-D0E1-498c-8D4A-D010DFDD404F),
+        pointer_default(unique)
+    ]
+    interface IConsole3 : IConsole2
+    {
+        HRESULT RenameScopeItem([in] HSCOPEITEM hScopeItem);
+    };
+
+    [
+        object,
+        uuid(0F36E0EB-A7F1-4a81-BE5A-9247F7DE4B1B),
+        pointer_default(unique)
+    ]
+    interface IResultData2 : IResultData
+    {
+        HRESULT RenameResultItem([in] HRESULTITEM itemID);
+    };
+
+cpp_quote("#endif // MMC_VER >= 0x0200")
+
+cpp_quote("#if (MMC_VER >= 0x0210)")
+typedef enum _MMC_ITEM_OVERLAY
+{
+    MMC_ITEM_OVERLAY_NONE = 0,
+    MMC_ITEM_OVERLAY_ERROR = 1,
+    MMC_ITEM_OVERLAY_WARNING = 2,
+    MMC_ITEM_OVERLAY_INFO = 3,
+    MMC_ITEM_OVERLAY_BUSY = 4,
+    MMC_ITEM_OVERLAY_UNAVAILABLE = 5,
+    MMC_ITEM_OVERLAY_SHORTCUT = 6,
+    MMC_ITEM_OVERLAY_RUNNING = 7,
+    MMC_ITEM_OVERLAY_PAUSED = 8,
+    MMC_ITEM_OVERLAY_STOPPED = 9,
+    MMC_ITEM_OVERLAY_COMPLETE = 10
+} MMC_ITEM_OVERLAY;
+
+const DWORD MMC_ITEM_OVERLAY_STATE_MASK = 0x0F00;
+const DWORD MMC_ITEM_OVERLAY_STATE_SHIFT = 8;
+
+cpp_quote("#define MMC_OVERLAY_ITEM_INDEX_TO_ITEM_STATE(i) (((i) << MMC_ITEM_OVERLAY_STATE_SHIFT) & MMC_ITEM_OVERLAY_STATE_MASK)")
+cpp_quote("#define MMC_OVERLAY_ITEM_INDEX_FROM_ITEM_STATE(state) (((state) & MMC_ITEM_OVERLAY_STATE_MASK) >> MMC_ITEM_OVERLAY_STATE_SHIFT)")
+
+const DWORD MMC_ITEM_STATE_MASK = 0x00FF;
+
+
+cpp_quote("#endif // MMC_VER >= 0x0210")

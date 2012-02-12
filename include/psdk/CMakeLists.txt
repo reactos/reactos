@@ -46,6 +46,7 @@ list(APPEND SOURCE
     mimeinfo.idl
     mimeole.idl
     mlang.idl
+    mmc.idl
     mscoree.idl
     msctf.idl
     msdadc.idl
