@@ -1296,7 +1296,7 @@ Hid_SetIdle(
 }
 
 
-NTSTATUS
+VOID
 Hid_GetProtocol(
     IN PDEVICE_OBJECT DeviceObject)
 {
@@ -1312,6 +1312,15 @@ Hid_GetProtocol(
     DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
 
+    if (HidDeviceExtension->InterfaceInfo->SubClass != 0x1)
+    {
+        //
+        // device does not support the boot protocol
+        //
+        return;
+    }
+
+
     //
     // allocate urb
     //
@@ -1321,7 +1330,7 @@ Hid_GetProtocol(
         //
         // no memory
         //
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return;
     }
 
     //
@@ -1356,15 +1365,19 @@ Hid_GetProtocol(
     ExFreePool(Urb);
 
     //
-    // print status
+    // boot protocol active 0x00 disabled 0x1
     //
-    DPRINT("Status %x Protocol %x\n", Status, Protocol[0] & 0xFF);
-
-    //
-    // assert when boot protocol is still active
-    //
-    ASSERT(Protocol[0] == 0x1); 
-    return Status;
+    if (Protocol[0] != 0x1)
+    {
+        if (Protocol[0] == 0x00)
+        {
+            DPRINT1("[HIDUSB] Need to disable boot protocol!\n");
+        }
+        else
+        {
+            DPRINT1("[HIDUSB] Unexpected protocol value %x\n", Protocol[0] & 0xFF);
+        }
+    }
 }
 
 NTSTATUS
@@ -1474,7 +1487,10 @@ Hid_PnpStart(
     //
     Hid_SetIdle(DeviceObject);
 
-   Hid_GetProtocol(DeviceObject);
+    //
+    // get protocol
+    //
+    Hid_GetProtocol(DeviceObject);
 
     //
     // move to next descriptor
