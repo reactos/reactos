@@ -15,7 +15,6 @@
 #include <ntddk.h>
 #include <hidpddi.h>
 #include <hidpi.h>
-#define NDEBUG
 #include <debug.h>
 
 //
