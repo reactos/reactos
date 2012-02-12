@@ -203,7 +203,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	//BOOLEAN Status;
 
 	/* Cleanup heap */
-	HeapCleanupAll();
+	//HeapCleanupAll();
 
 	//
 	// Creating a suitable memory map for Windows can be tricky, so let's

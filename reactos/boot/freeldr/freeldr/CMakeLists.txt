@@ -155,6 +155,7 @@ endif()
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
+    rtl/bget.c
     rtl/libsupp.c)
 
 if (NOT MSVC)
