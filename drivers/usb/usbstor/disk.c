@@ -251,7 +251,7 @@ USBSTOR_HandleQueryProperty(
     ANSI_STRING AnsiString;
     NTSTATUS Status;
 
-    DPRINT1("USBSTOR_HandleQueryProperty\n");
+    DPRINT("USBSTOR_HandleQueryProperty\n");
 
     //
     // get current stack location
@@ -305,7 +305,7 @@ USBSTOR_HandleQueryProperty(
     //
     if (PropertyQuery->PropertyId == StorageDeviceProperty)
     {
-        DPRINT1("USBSTOR_HandleQueryProperty StorageDeviceProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+        DPRINT("USBSTOR_HandleQueryProperty StorageDeviceProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
         //
         // get device extension
@@ -467,7 +467,7 @@ USBSTOR_HandleQueryProperty(
         //
         // adapter property query request
         //
-        DPRINT1("USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+        DPRINT("USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR))
         {

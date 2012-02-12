@@ -440,7 +440,7 @@ USBD_ParseDescriptors(
        if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)DescriptorBuffer + TotalLength))
        {
            /* end reached */
-           DPRINT1("End reached %p\n", CommonDescriptor);
+           DPRINT("End reached %p\n", CommonDescriptor);
            return NULL;
        }
 

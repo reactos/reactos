@@ -394,7 +394,7 @@ CHCDController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO\n");
 
             //
             // first start lower device object
@@ -423,12 +423,12 @@ CHCDController::HandlePnp(
                 Status = SetSymbolicLink(TRUE);
             }
 
-            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
+            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (m_HubController == NULL)
             {
@@ -508,7 +508,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
 
             if (m_Hardware)
             {
@@ -550,7 +550,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
 
             //
             // delete the symbolic link
@@ -673,7 +673,7 @@ CHCDController::CreateFDO(
     //
     m_FDODeviceNumber = UsbDeviceNumber;
 
-    DPRINT1("CreateFDO: DeviceName %wZ\n", &DeviceName);
+    DPRINT("CreateFDO: DeviceName %wZ\n", &DeviceName);
 
     /* done */
     return Status;

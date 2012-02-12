@@ -640,6 +640,6 @@ DriverEntry(
     IN PUNICODE_STRING RegPath)
 {
 
-    DPRINT1("********* HID PARSE *********\n");
+    DPRINT("********* HID PARSE *********\n");
     return STATUS_SUCCESS;
 }

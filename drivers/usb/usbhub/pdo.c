@@ -160,7 +160,7 @@ USBHUB_PdoHandleInternalDeviceControl(
         {
             PHUB_DEVICE_EXTENSION DeviceExtension;
 
-            DPRINT1("IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
+            DPRINT("IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
             if (Irp->AssociatedIrp.SystemBuffer == NULL
                 || Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
             {
@@ -273,7 +273,7 @@ USBHUB_PdoHandleInternalDeviceControl(
             // USBD_PORT_ENABLED (bit 0) or USBD_PORT_CONNECTED (bit 1)
             //
             DPRINT1("IOCTL_INTERNAL_USB_GET_PORT_STATUS\n");
-            DPRINT1("Arg1 %x\n", *PortStatusBits);
+            DPRINT("Arg1 %x\n", *PortStatusBits);
             *PortStatusBits = 0;
             if (Stack->Parameters.Others.Argument1)
             {
@@ -282,8 +282,8 @@ USBHUB_PdoHandleInternalDeviceControl(
                     Status = GetPortStatusAndChange(RootHubDeviceObject, PortId, &PortStatus);
                     if (NT_SUCCESS(Status))
                     {
-                        DPRINT1("Connect %x\n", ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2));
-                        DPRINT1("Enable %x\n", ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
+                        DPRINT("Connect %x\n", ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2));
+                        DPRINT("Enable %x\n", ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
                         *PortStatusBits +=
                             (((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2)) +
                             (((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
@@ -329,7 +329,7 @@ USBHUB_PdoStartDevice(
 {
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
     //NTSTATUS Status;
-    DPRINT1("USBHUB_PdoStartDevice %x\n", DeviceObject);
+    DPRINT("USBHUB_PdoStartDevice %x\n", DeviceObject);
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
@@ -364,25 +364,25 @@ USBHUB_PdoQueryId(
     {
         case BusQueryDeviceID:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
             SourceString = &ChildDeviceExtension->usDeviceId;
             break;
         }
         case BusQueryHardwareIDs:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
             SourceString = &ChildDeviceExtension->usHardwareIds;
             break;
         }
         case BusQueryCompatibleIDs:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
             SourceString = &ChildDeviceExtension->usCompatibleIds;
             break;
         }
         case BusQueryInstanceID:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
             SourceString = &ChildDeviceExtension->usInstanceId;
             break;
         }
@@ -442,7 +442,7 @@ USBHUB_PdoQueryDeviceText(
         case DeviceTextDescription:
         case DeviceTextLocationInformation:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 
             //
             // does the device provide a text description
@@ -497,7 +497,7 @@ USBHUB_PdoHandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
             Status = USBHUB_PdoStartDevice(DeviceObject, Irp);
             break;
         }
@@ -505,7 +505,7 @@ USBHUB_PdoHandlePnp(
         {
             PDEVICE_CAPABILITIES DeviceCapabilities;
             ULONG i;
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
 
             DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
             // FIXME: capabilities can change with connected device
@@ -533,7 +533,7 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_QUERY_RESOURCES:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
 
             Information = Irp->IoStatus.Information;
             Status = Irp->IoStatus.Status;
@@ -541,7 +541,7 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
         {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             
             Information = Irp->IoStatus.Information;
             Status = Irp->IoStatus.Status;
@@ -576,7 +576,7 @@ USBHUB_PdoHandlePnp(
             PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbChildExtension->ParentDeviceObject->DeviceExtension;
             PUSB_BUS_INTERFACE_HUB_V5 HubInterface = &HubDeviceExtension->HubInterface;
 
-            DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
             /* remove us from pdo list */
             bFound = FALSE;

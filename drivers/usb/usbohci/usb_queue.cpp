@@ -258,7 +258,7 @@ CUSBQueue::AddUSBRequest(
         //
         CurrentDescriptor = (POHCI_ISO_TD)Descriptor->HeadLogicalDescriptor;
 
-        DPRINT1("ISO: NextFrameNumber %x\n", FrameNumber);
+        DPRINT("ISO: NextFrameNumber %x\n", FrameNumber);
         Frame = (FrameNumber & 0xFFFF);
 
         while(CurrentDescriptor)
@@ -284,7 +284,7 @@ CUSBQueue::AddUSBRequest(
         //
         m_Hardware->GetCurrentFrameNumber(&FrameNumber);
 
-        DPRINT1("Hardware 1ms %p Iso %p\n",m_InterruptEndpoints[0], m_IsoHeadEndpointDescriptor);
+        DPRINT("Hardware 1ms %p Iso %p\n",m_InterruptEndpoints[0], m_IsoHeadEndpointDescriptor);
 		ASSERT(m_InterruptEndpoints[0]->NextPhysicalEndpoint == m_IsoHeadEndpointDescriptor->PhysicalAddress.LowPart);
 
         PrintEndpointList(m_IsoHeadEndpointDescriptor);
@@ -684,8 +684,8 @@ CUSBQueue::TransferDescriptorCompletionCallback(
             //
             // cleanup endpoint
             //
-            DPRINT1("ISO endpoint complete\n");
-            ASSERT(FALSE);
+            DPRINT("ISO endpoint complete\n");
+            //ASSERT(FALSE);
             CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
 
             //

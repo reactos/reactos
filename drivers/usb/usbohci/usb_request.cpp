@@ -768,7 +768,7 @@ CUSBRequest::BuildIsochronousEndpoint(
             // store buffer offset
             //
             CurrentDescriptor->Offset[SubIndex] = Urb->UrbIsochronousTransfer.IsoPacket[Index+SubIndex].Offset + PageOffset;
-            DPRINT1("Index %lu PacketOffset %lu FinalOffset %lu\n", SubIndex+Index, Urb->UrbIsochronousTransfer.IsoPacket[Index+SubIndex].Offset, CurrentDescriptor->Offset[SubIndex]);
+            DPRINT("Index %lu PacketOffset %lu FinalOffset %lu\n", SubIndex+Index, Urb->UrbIsochronousTransfer.IsoPacket[Index+SubIndex].Offset, CurrentDescriptor->Offset[SubIndex]);
         }
 
         //
@@ -817,7 +817,7 @@ CUSBRequest::BuildIsochronousEndpoint(
         // store as previous descriptor
         //
         PreviousDescriptor = CurrentDescriptor;
-        DPRINT1("Current Descriptor %p Logical %lx StartAddress %x EndAddress %x\n", CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress);
+        DPRINT("Current Descriptor %p Logical %lx StartAddress %x EndAddress %x\n", CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress);
 
     //
     // fire interrupt as soon transfer is finished
@@ -1575,11 +1575,11 @@ CUSBRequest::FreeEndpointDescriptor(
             //
             PacketCount = OHCI_ITD_GET_FRAME_COUNT(IsoTransferDescriptor->Flags);
 
-            DPRINT1("CUSBRequest::FreeEndpointDescriptor Descriptor %p Logical %x Buffer Physical %x EndAddress %x PacketCount %lu\n", IsoTransferDescriptor, IsoTransferDescriptor->PhysicalAddress.LowPart, IsoTransferDescriptor->BufferPhysical, IsoTransferDescriptor->LastPhysicalByteAddress, PacketCount);
+            DPRINT("CUSBRequest::FreeEndpointDescriptor Descriptor %p Logical %x Buffer Physical %x EndAddress %x PacketCount %lu\n", IsoTransferDescriptor, IsoTransferDescriptor->PhysicalAddress.LowPart, IsoTransferDescriptor->BufferPhysical, IsoTransferDescriptor->LastPhysicalByteAddress, PacketCount);
 
             for(Index = 0; Index < PacketCount; Index++)
             {
-                DPRINT1("PSW Index %lu Value %x\n", Index, IsoTransferDescriptor->Offset[Index]);
+                DPRINT("PSW Index %lu Value %x\n", Index, IsoTransferDescriptor->Offset[Index]);
             }
 
             //

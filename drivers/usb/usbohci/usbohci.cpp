@@ -24,7 +24,7 @@ OHCI_AddDevice(
     NTSTATUS Status;
     PHCDCONTROLLER HcdController;
 
-    DPRINT1("OHCI_AddDevice\n");
+    DPRINT("OHCI_AddDevice\n");
 
     /* first create the controller object */
     Status = CreateHCDController(&HcdController);

@@ -126,7 +126,7 @@ USBSTOR_FdoHandleRemoveDevice(
 {
     NTSTATUS Status;
 
-    DPRINT1("Handling FDO removal\n");
+    DPRINT("Handling FDO removal\n");
 
     /* We don't need to request removal of our children here */
 
@@ -200,7 +200,7 @@ USBSTOR_FdoHandleStartDevice(
     ASSERT(InterfaceDesc->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
 
-    DPRINT1("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
+    DPRINT("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
     if (InterfaceDesc->bInterfaceProtocol != 0x50)
     {
         DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
@@ -303,7 +303,7 @@ USBSTOR_FdoHandleStartDevice(
     //
     // fdo is now initialized
     //
-    DPRINT1("USBSTOR_FdoHandleStartDevice FDO is initialized\n");
+    DPRINT("USBSTOR_FdoHandleStartDevice FDO is initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -346,7 +346,7 @@ USBSTOR_FdoHandlePnp(
        }
        case IRP_MN_REMOVE_DEVICE:
        {
-           DPRINT1("IRP_MN_REMOVE_DEVICE\n");
+           DPRINT("IRP_MN_REMOVE_DEVICE\n");
 
            return USBSTOR_FdoHandleRemoveDevice(DeviceObject, DeviceExtension, Irp);
        }

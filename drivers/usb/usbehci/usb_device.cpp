@@ -270,7 +270,7 @@ CUSBDevice::GetType()
     }
 
     DPRINT1("CUSBDevice::GetType Unknown bcdUSB Type %x\n", m_DeviceDescriptor.bcdUSB);
-    PC_ASSERT(FALSE);
+    //PC_ASSERT(FALSE);
 
     return Usb11Device;
 }

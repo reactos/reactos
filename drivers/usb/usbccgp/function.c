@@ -131,7 +131,7 @@ USBCCGP_CustomEnumWithInterface(
                                                                   DeviceObject,
                                                                   FDODeviceExtension->PhysicalDeviceObject);
 
-    DPRINT1("USBCCGP_CustomEnumWithInterface Status %x\n", Status);
+    DPRINT("USBCCGP_CustomEnumWithInterface Status %x\n", Status);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -140,8 +140,8 @@ USBCCGP_CustomEnumWithInterface(
         return Status;
     }
 
-    DPRINT1("FunctionDescriptorBufferLength %lu\n", FunctionDescriptorBufferLength);
-    DPRINT1("FunctionDescriptorBuffer %p\n", FunctionDescriptorBuffer);
+    DPRINT("FunctionDescriptorBufferLength %lu\n", FunctionDescriptorBufferLength);
+    DPRINT("FunctionDescriptorBuffer %p\n", FunctionDescriptorBuffer);
 
     //
     // assume length % function buffer size
@@ -777,7 +777,7 @@ USBCCGP_EnumWithAudioLegacy(
     //
     // this is an composite audio device
     //
-    DPRINT1("[USBCCGP] Audio Composite Device detected\n");
+    DPRINT("[USBCCGP] Audio Composite Device detected\n");
 
     //
     // audio interfaces are all grouped into one single function

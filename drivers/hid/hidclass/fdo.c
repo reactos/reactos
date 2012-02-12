@@ -183,7 +183,7 @@ HidClassFDO_DispatchRequestSynchronous(
     //
     // call driver
     //
-    DPRINT1("IoStack MajorFunction %x MinorFunction %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
+    DPRINT("IoStack MajorFunction %x MinorFunction %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
     Status = CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
 
     //

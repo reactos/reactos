@@ -298,7 +298,7 @@ MouHid_Create(
     KEVENT Event;
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("MOUHID: IRP_MJ_CREATE\n");
+    DPRINT("MOUHID: IRP_MJ_CREATE\n");
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -347,7 +347,7 @@ MouHid_Create(
 
              /* initiating read */
              Status = MouHid_InitiateRead(DeviceExtension);
-             DPRINT1("[MOUHID] MouHid_InitiateRead: status %x\n", Status);
+             DPRINT("[MOUHID] MouHid_InitiateRead: status %x\n", Status);
              if (Status == STATUS_PENDING)
              {
                  /* report irp is pending */
@@ -414,7 +414,7 @@ MouHid_InternalDeviceControl(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("[MOUHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DPRINT("[MOUHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -447,10 +447,10 @@ MouHid_InternalDeviceControl(
          /* queue length */
          Attributes->InputDataQueueLength = 2;
 
-         DPRINT1("[MOUHID] MouseIdentifier %x\n", Attributes->MouseIdentifier);
-         DPRINT1("[MOUHID] NumberOfButtons %x\n", Attributes->NumberOfButtons);
-         DPRINT1("[MOUHID] SampleRate %x\n", Attributes->SampleRate);
-         DPRINT1("[MOUHID] InputDataQueueLength %x\n", Attributes->InputDataQueueLength);
+         DPRINT("[MOUHID] MouseIdentifier %x\n", Attributes->MouseIdentifier);
+         DPRINT("[MOUHID] NumberOfButtons %x\n", Attributes->NumberOfButtons);
+         DPRINT("[MOUHID] SampleRate %x\n", Attributes->SampleRate);
+         DPRINT("[MOUHID] InputDataQueueLength %x\n", Attributes->InputDataQueueLength);
 
          /* complete request */
          Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
@@ -645,7 +645,7 @@ MouHid_StartDevice(
         return Status;
     }
 
-    DPRINT1("[MOUHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
+    DPRINT("[MOUHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
 
     /* verify capabilities */
     if ((Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE) || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)
@@ -671,7 +671,7 @@ MouHid_StartDevice(
 
     /* get max number of buttons */
     Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_BUTTON, PreparsedData);
-    DPRINT1("[MOUHID] Buttons %lu\n", Buttons);
+    DPRINT("[MOUHID] Buttons %lu\n", Buttons);
     ASSERT(Buttons > 0);
 
     /* now allocate an array for those buttons */
@@ -713,7 +713,7 @@ MouHid_StartDevice(
         /* mouse has wheel support */
         DeviceExtension->MouseIdentifier = WHEELMOUSE_HID_HARDWARE;
         DeviceExtension->WheelUsagePage = ValueCaps.UsagePage;
-        DPRINT1("[MOUHID] mouse wheel support detected\n", Status);
+        DPRINT("[MOUHID] mouse wheel support detected\n", Status);
     }
     else
     {
@@ -725,7 +725,7 @@ MouHid_StartDevice(
             /* wheel support */
             DeviceExtension->MouseIdentifier = WHEELMOUSE_HID_HARDWARE;
             DeviceExtension->WheelUsagePage = ValueCaps.UsagePage;
-            DPRINT1("[MOUHID] mouse wheel support detected with z-axis\n", Status);
+            DPRINT("[MOUHID] mouse wheel support detected with z-axis\n", Status);
         }
     }
 
@@ -786,7 +786,7 @@ MouHid_Pnp(
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[MOUHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
+    DPRINT("[MOUHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
 
     if (IoStack->MinorFunction == IRP_MN_STOP_DEVICE ||
         IoStack->MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE ||
@@ -867,7 +867,7 @@ MouHid_Pnp(
 
         /* lets start the device */
         Status = MouHid_StartDevice(DeviceObject);
-        DPRINT1("MouHid_StartDevice %x\n", Status);
+        DPRINT("MouHid_StartDevice %x\n", Status);
 
         /* complete request */
         Irp->IoStatus.Status = Status;

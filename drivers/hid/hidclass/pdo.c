@@ -131,7 +131,7 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // store result
     //
-    DPRINT1("NewBuffer %S\n", NewBuffer);
+    DPRINT("NewBuffer %S\n", NewBuffer);
     Irp->IoStatus.Information = (ULONG_PTR)NewBuffer;
     return STATUS_SUCCESS;
 }
@@ -510,14 +510,14 @@ HidClassPDO_PnP(
             // now register the device interface
             //
             Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject, &GUID_DEVINTERFACE_HID, NULL, &PDODeviceExtension->DeviceInterface);
-            DPRINT1("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
+            DPRINT("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
             if (NT_SUCCESS(Status))
             {
                 //
                 // enable device interface
                 //
                 Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
-                DPRINT1("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
+                DPRINT("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
             }
 
             //

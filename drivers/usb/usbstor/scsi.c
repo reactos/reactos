@@ -549,7 +549,7 @@ USBSTOR_SendRequest(
                      Command,
                      Context->cbw);
 
-    DPRINT1("CBW %p\n", Context->cbw);
+    DPRINT("CBW %p\n", Context->cbw);
 
     //
     // now initialize the urb
@@ -767,7 +767,7 @@ USBSTOR_SendInquiryCmd(
     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
     KeResetEvent(&Event);
-	DPRINT1("Resending request\n");
+	DPRINT("Resending request\n");
 
     //
     // now send the request
@@ -1204,7 +1204,7 @@ USBSTOR_HandleExecuteSCSI(
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
     {
-        DPRINT1("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
+        DPRINT("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
         ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
         ASSERT(Request->DataBuffer);
 

@@ -262,7 +262,7 @@ DeviceStatusChangeThread(
     LONG PortId;
     BOOLEAN SignalResetComplete = FALSE;
 
-    DPRINT1("Entered DeviceStatusChangeThread, Context %x\n", Context);
+    DPRINT("Entered DeviceStatusChangeThread, Context %x\n", Context);
 
     WorkItemData = (PWORK_ITEM_DATA)Context;
     DeviceObject = (PDEVICE_OBJECT)WorkItemData->Context;
@@ -418,7 +418,7 @@ DeviceStatusChangeThread(
     //
     // Send another SCE Request
     //
-    DPRINT1("Sending another SCE!\n");
+    DPRINT("Sending another SCE!\n");
     QueryStatusChangeEndpoint(DeviceObject);
 
     //
@@ -450,7 +450,7 @@ StatusChangeEndpointCompletion(
     //
     // NOTE: USBPORT frees this IRP
     //
-    DPRINT1("Received Irp %x, HubDeviceExtension->PendingSCEIrp %x\n", Irp, HubDeviceExtension->PendingSCEIrp);
+    DPRINT("Received Irp %x, HubDeviceExtension->PendingSCEIrp %x\n", Irp, HubDeviceExtension->PendingSCEIrp);
     //IoFreeIrp(Irp);
 
     //
@@ -464,7 +464,7 @@ StatusChangeEndpointCompletion(
     }
     WorkItemData->Context = RealDeviceObject;
 
-    DPRINT1("Queuing work item\n");
+    DPRINT("Queuing work item\n");
 
     //
     // Queue the work item to handle initializing the device
@@ -524,7 +524,7 @@ QueryStatusChangeEndpoint(
     HubDeviceExtension->PendingSCEIrp = IoAllocateIrp(RootHubDeviceObject->StackSize,
                                   FALSE);
 */
-    DPRINT1("Allocated IRP %x\n", HubDeviceExtension->PendingSCEIrp);
+    DPRINT("Allocated IRP %x\n", HubDeviceExtension->PendingSCEIrp);
 
     if (!HubDeviceExtension->PendingSCEIrp)
     {
@@ -567,8 +567,8 @@ QueryStatusChangeEndpoint(
     //
     // Send to RootHub
     //
-    DPRINT1("DeviceObject is %x\n", DeviceObject);
-    DPRINT1("Iocalldriver %x with irp %x\n", RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
+    DPRINT("DeviceObject is %x\n", DeviceObject);
+    DPRINT("Iocalldriver %x with irp %x\n", RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
     Status = IoCallDriver(RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
 
     return STATUS_PENDING;
@@ -791,13 +791,12 @@ GetUsbStringDescriptor(
         ExFreePool(StringDesc);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-	DPRINT1("Buffer %p\n", Buffer);
+	DPRINT("Buffer %p\n", Buffer);
     RtlZeroMemory(Buffer, SizeNeeded);
 
-	DPRINT1("Buffer %p\n", Buffer);
-	DPRINT1("SizeNeeded %lu\n", SizeNeeded);
-	DPRINT1("Offset %lu\n", FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
-    DPRINT1("Length %lu\n", SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+	DPRINT("SizeNeeded %lu\n", SizeNeeded);
+	DPRINT("Offset %lu\n", FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+    DPRINT("Length %lu\n", SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
 
     //
     // Copy the string to destination
@@ -978,7 +977,7 @@ CreateDeviceIds(
     UsbChildExtension->usCompatibleIds.Buffer = DeviceString;
     UsbChildExtension->usCompatibleIds.Length = Index * sizeof(WCHAR);
     UsbChildExtension->usCompatibleIds.MaximumLength = (Index + 1) * sizeof(WCHAR);
-    DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
+    DPRINT("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
 
     //
     // Construct DeviceId string
@@ -1004,7 +1003,7 @@ CreateDeviceIds(
     UsbChildExtension->usDeviceId.Buffer = DeviceString;
     UsbChildExtension->usDeviceId.Length = (Index-1) * sizeof(WCHAR);
     UsbChildExtension->usDeviceId.MaximumLength = Index * sizeof(WCHAR);
-    DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usDeviceId);
+    DPRINT("usDeviceId %wZ\n", &UsbChildExtension->usDeviceId);
 
     //
     // Construct HardwareIds
@@ -1037,7 +1036,7 @@ CreateDeviceIds(
     UsbChildExtension->usHardwareIds.Buffer = DeviceString;
     UsbChildExtension->usHardwareIds.Length = (Index + 1) * sizeof(WCHAR);
     UsbChildExtension->usHardwareIds.MaximumLength = (Index + 1) * sizeof(WCHAR);
-    DPRINT1("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
+    DPRINT("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
 
     //
     // FIXME: Handle Lang ids
@@ -1061,7 +1060,7 @@ CreateDeviceIds(
         else
         {
             UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
-            DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
+            DPRINT("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
         }
     }
 
@@ -1082,7 +1081,7 @@ CreateDeviceIds(
         }
 
         UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
-        DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
+        DPRINT("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
     else
     {
@@ -1104,7 +1103,7 @@ CreateDeviceIds(
        RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
        UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
 
-       DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
+       DPRINT("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
 
     return Status;
@@ -1120,7 +1119,7 @@ DestroyUsbChildDeviceObject(
     PDEVICE_OBJECT ChildDeviceObject = NULL;
     ULONG Index = 0;
 
-    DPRINT1("Removing device on port %d (Child index: %d)\n", PortId, Index);
+    DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
 
     for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
@@ -1185,7 +1184,7 @@ CreateUsbChildDeviceObject(
     {
         if (HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] == NULL)
         {
-        DPRINT1("Found unused entry at %d\n", ChildDeviceCount);
+        DPRINT("Found unused entry at %d\n", ChildDeviceCount);
             break;
         }
     }
@@ -1243,7 +1242,7 @@ CreateUsbChildDeviceObject(
             return Status;
         }
 
-        DPRINT1("USBHUB: Created Device %x\n", NewChildDeviceObject);
+        DPRINT("USBHUB: Created Device %x\n", NewChildDeviceObject);
         break;
     }
 
@@ -1281,7 +1280,7 @@ CreateUsbChildDeviceObject(
         goto Cleanup;
     }
 
-    DPRINT1("Usb Device Handle %x\n", UsbChildExtension->UsbDeviceHandle);
+    DPRINT("Usb Device Handle %x\n", UsbChildExtension->UsbDeviceHandle);
 
     ConfigDescSize = sizeof(USB_CONFIGURATION_DESCRIPTOR);
     DeviceDescSize = sizeof(USB_DEVICE_DESCRIPTOR);
@@ -1451,7 +1450,7 @@ RootHubInitCallbackFunction(
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
-    DPRINT1("RootHubInitCallbackFunction Sending the initial SCE Request %x\n", DeviceObject);
+    DPRINT("RootHubInitCallbackFunction Sending the initial SCE Request %x\n", DeviceObject);
 
     //
     // Send the first SCE Request
@@ -1524,7 +1523,7 @@ USBHUB_FdoHandlePnp(
             PURB ConfigUrb = NULL;
             ULONG HubStatus;
 
-            DPRINT1("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
             //
             // Allocated size including the sizeof USBD_INTERFACE_LIST_ENTRY
@@ -1543,7 +1542,7 @@ USBHUB_FdoHandlePnp(
             RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
             ASSERT(HubDeviceExtension->RootHubPhysicalDeviceObject);
             ASSERT(HubDeviceExtension->RootHubFunctionalDeviceObject);
-            DPRINT1("RootPdo %x, RootFdo %x\n",
+            DPRINT("RootPdo %x, RootFdo %x\n",
                     HubDeviceExtension->RootHubPhysicalDeviceObject,
                     HubDeviceExtension->RootHubFunctionalDeviceObject);
 
@@ -1670,7 +1669,7 @@ USBHUB_FdoHandlePnp(
                                          sizeof(USB_CONFIGURATION_DESCRIPTOR) + sizeof(USB_INTERFACE_DESCRIPTOR) + sizeof(USB_ENDPOINT_DESCRIPTOR),
                                          NULL);
 
-            DPRINT1("RootHub Handle %x\n", HubDeviceExtension->RootHubHandle);
+            DPRINT("RootHub Handle %x\n", HubDeviceExtension->RootHubHandle);
             Urb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
 
             Status = SubmitRequestToRootHub(RootHubDeviceObject,
@@ -1782,7 +1781,7 @@ USBHUB_FdoHandlePnp(
 
             HubDeviceExtension->ConfigurationHandle = ConfigUrb->UrbSelectConfiguration.ConfigurationHandle;
             HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
-            DPRINT1("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
+            DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
 
             //
             // check if function is available
@@ -1799,7 +1798,7 @@ USBHUB_FdoHandlePnp(
                     //
                     Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubInterfaceBusContext,
                                                                               HubDeviceExtension->RootHubHandle, 1);
-                    DPRINT1("Status %x\n", Status);
+                    DPRINT("Status %x\n", Status);
 
                     //
                     // FIXME handle error
@@ -1814,7 +1813,7 @@ USBHUB_FdoHandlePnp(
             // Enable power on all ports
             //
 
-            DPRINT1("Enabling PortPower on all ports!\n");
+            DPRINT("Enabling PortPower on all ports!\n");
 
             for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
             {
@@ -1827,7 +1826,7 @@ USBHUB_FdoHandlePnp(
                     DPRINT1("Failed to power on port %d\n", PortId);
             }
 
-            DPRINT1("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
+            DPRINT("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
 
             //
             // init root hub notification
@@ -1901,7 +1900,7 @@ USBHUB_FdoHandlePnp(
                 case BusRelations:
                 {
                     PDEVICE_RELATIONS DeviceRelations = NULL;
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 
                     Status = USBHUB_FdoQueryBusRelations(DeviceObject, &DeviceRelations);
 
@@ -1910,11 +1909,11 @@ USBHUB_FdoHandlePnp(
                 }
                 case RemovalRelations:
                 {
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
                     return ForwardIrpAndForget(DeviceObject, Irp);
                 }
                 default:
-                    DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                             Stack->Parameters.QueryDeviceRelations.Type);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
@@ -1938,22 +1937,22 @@ USBHUB_FdoHandlePnp(
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
-            DPRINT1("IRP_MN_QUERY_BUS_INFORMATION\n");
+            DPRINT("IRP_MN_QUERY_BUS_INFORMATION\n");
             break;
         }
         case IRP_MN_QUERY_ID:
         {
-            DPRINT1("IRP_MN_QUERY_ID\n");
+            DPRINT("IRP_MN_QUERY_ID\n");
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
-            DPRINT1("IRP_MN_QUERY_CAPABILITIES\n");
+            DPRINT("IRP_MN_QUERY_CAPABILITIES\n");
             break;
         }
         default:
         {
-            DPRINT1(" IRP_MJ_PNP / unknown minor function 0x%lx\n", Stack->MinorFunction);
+            DPRINT(" IRP_MJ_PNP / unknown minor function 0x%lx\n", Stack->MinorFunction);
             return ForwardIrpAndForget(DeviceObject, Irp);
         }
     }

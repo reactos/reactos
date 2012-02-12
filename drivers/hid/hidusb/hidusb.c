@@ -305,7 +305,7 @@ HidCreate(
     //
     // informal debug print
     //
-    DPRINT1("HIDUSB Request: %x\n", IoStack->MajorFunction);
+    DPRINT("HIDUSB Request: %x\n", IoStack->MajorFunction);
 
     //
     // done
@@ -324,7 +324,7 @@ HidUsb_ResetWorkerRoutine(
     PHID_USB_RESET_CONTEXT ResetContext;
     PHID_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("[HIDUSB] ResetWorkerRoutine\n");
+    DPRINT("[HIDUSB] ResetWorkerRoutine\n");
 
     //
     // get context
@@ -340,7 +340,7 @@ HidUsb_ResetWorkerRoutine(
     // get port status
     //
     Status = HidUsb_GetPortStatus(ResetContext->DeviceObject, &PortStatus);
-    DPRINT1("[HIDUSB] ResetWorkerRoutine GetPortStatus %x PortStatus %x\n", Status, PortStatus);
+    DPRINT("[HIDUSB] ResetWorkerRoutine GetPortStatus %x PortStatus %x\n", Status, PortStatus);
     if (NT_SUCCESS(Status))
     {
         if (!(PortStatus & USB_PORT_STATUS_ENABLE))
@@ -661,7 +661,7 @@ HidUsb_GetReportDescriptor(
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[HIDUSB] GetReportDescriptor: Status %x ReportLength %lu OutputBufferLength %lu TransferredLength %lu\n", Status, HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, BufferLength);
+    DPRINT("[HIDUSB] GetReportDescriptor: Status %x ReportLength %lu OutputBufferLength %lu TransferredLength %lu\n", Status, HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, BufferLength);
 
     //
     // get length to copy
@@ -727,7 +727,7 @@ HidInternalDeviceControl(
             //
             // store result
             //
-            DPRINT1("[HIDUSB] IOCTL_HID_GET_DEVICE_ATTRIBUTES\n");
+            DPRINT("[HIDUSB] IOCTL_HID_GET_DEVICE_ATTRIBUTES\n");
             ASSERT(HidDeviceExtension->DeviceDescriptor);
             Irp->IoStatus.Information = sizeof(HID_DESCRIPTOR);
             Attributes = (PHID_DEVICE_ATTRIBUTES)Irp->UserBuffer;
@@ -749,7 +749,7 @@ HidInternalDeviceControl(
             // sanity check
             //
             ASSERT(HidDeviceExtension->HidDescriptor);
-            DPRINT1("[HIDUSB] IOCTL_HID_GET_DEVICE_DESCRIPTOR DescriptorLength %lu OutputBufferLength %lu\n", HidDeviceExtension->HidDescriptor->bLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+            DPRINT("[HIDUSB] IOCTL_HID_GET_DEVICE_DESCRIPTOR DescriptorLength %lu OutputBufferLength %lu\n", HidDeviceExtension->HidDescriptor->bLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
             //
             // store length
@@ -774,7 +774,7 @@ HidInternalDeviceControl(
         case IOCTL_HID_GET_REPORT_DESCRIPTOR:
         {
             Status = HidUsb_GetReportDescriptor(DeviceObject, Irp);
-            DPRINT1("[HIDUSB] IOCTL_HID_GET_REPORT_DESCRIPTOR Status %x\n", Status);
+            DPRINT("[HIDUSB] IOCTL_HID_GET_REPORT_DESCRIPTOR Status %x\n", Status);
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
@@ -1000,7 +1000,7 @@ Hid_DispatchUrb(
         Status = IoStatus.Status;
     }
 
-    DPRINT1("[HIDUSB] DispatchUrb %x\n", Status);
+    DPRINT("[HIDUSB] DispatchUrb %x\n", Status);
 
 
     //
@@ -1291,7 +1291,7 @@ Hid_SetIdle(
     //
     // print status
     //
-    DPRINT1("Status %x\n", Status);
+    DPRINT("Status %x\n", Status);
     return Status;
 }
 
@@ -1358,7 +1358,7 @@ Hid_GetProtocol(
     //
     // print status
     //
-    DPRINT1("Status %x Protocol %x\n", Status, Protocol[0] & 0xFF);
+    DPRINT("Status %x Protocol %x\n", Status, Protocol[0] & 0xFF);
 
     //
     // assert when boot protocol is still active
@@ -1501,7 +1501,7 @@ Hid_PnpStart(
         //
         // done
         //
-        DPRINT1("[HIDUSB] SelectConfiguration %x\n", Status);
+        DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
         return Status;
     }
 
@@ -1536,7 +1536,7 @@ HidPnp(
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[HIDUSB] Pnp %x\n", IoStack->MinorFunction);
+    DPRINT("[HIDUSB] Pnp %x\n", IoStack->MinorFunction);
 
     //
     // handle requests based on request type
@@ -1714,7 +1714,7 @@ HidPnp(
             // complete request
             //
             Irp->IoStatus.Status = Status;
-            DPRINT1("[HIDUSB] IRP_MN_START_DEVICE Status %x\n", Status);
+            DPRINT("[HIDUSB] IRP_MN_START_DEVICE Status %x\n", Status);
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
@@ -1807,8 +1807,8 @@ DriverEntry(
     //
     // informal debug
     //
-    DPRINT1("********* HIDUSB *********\n");
-    DPRINT1("HIDUSB Registration Status %x\n", Status);
+    DPRINT("********* HIDUSB *********\n");
+    DPRINT("HIDUSB Registration Status %x\n", Status);
 
     return Status;
 }

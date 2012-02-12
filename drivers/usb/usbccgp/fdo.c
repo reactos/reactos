@@ -404,7 +404,7 @@ FDO_StartDevice(
     //
     // done
     //
-    DPRINT1("[USBCCGP] FDO initialized successfully\n");
+    DPRINT("[USBCCGP] FDO initialized successfully\n");
     return Status;
 }
 
@@ -424,7 +424,7 @@ FDO_HandlePnp(
 
     // get stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
+    DPRINT("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
     switch(IoStack->MinorFunction)
     {
         case IRP_MN_REMOVE_DEVICE:
@@ -536,7 +536,7 @@ FDO_HandleResetCyclePort(
 
     // get stack location 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("FDO_HandleResetCyclePort IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DPRINT("FDO_HandleResetCyclePort IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT)
     {
@@ -671,7 +671,7 @@ FDO_HandleInternalDeviceControl(
         // handle reset / cycle ports
         //
         Status = FDO_HandleResetCyclePort(DeviceObject, Irp);
-        DPRINT1("FDO_HandleResetCyclePort Status %x\n", Status);
+        DPRINT("FDO_HandleResetCyclePort Status %x\n", Status);
         if (Status != STATUS_PENDING)
         {
             //

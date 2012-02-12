@@ -371,7 +371,7 @@ USBSTOR_GetMaxLUN(
     //
     Status = USBSTOR_ClassRequest(DeviceObject, DeviceExtension, USB_BULK_GET_MAX_LUN, DeviceExtension->InterfaceInformation->InterfaceNumber, USBD_TRANSFER_DIRECTION_IN, sizeof(UCHAR), Buffer);
 
-    DPRINT1("MaxLUN: %x\n", *Buffer);
+    DPRINT("MaxLUN: %x\n", *Buffer);
 
     if (*Buffer > 0xF)
     {

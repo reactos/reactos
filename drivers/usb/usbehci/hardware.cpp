@@ -163,7 +163,7 @@ CUSBHardwareDevice::Initialize(
     NTSTATUS Status;
     ULONG BytesRead;
 
-    DPRINT1("CUSBHardwareDevice::Initialize\n");
+    DPRINT("CUSBHardwareDevice::Initialize\n");
 
     //
     // Create DMAMemoryManager for use with QueueHeads and Transfer Descriptors.
@@ -306,7 +306,7 @@ CUSBHardwareDevice::PnpStart(
     UCHAR Value;
     UCHAR PortCount;
 
-    DPRINT1("CUSBHardwareDevice::PnpStart\n");
+    DPRINT("CUSBHardwareDevice::PnpStart\n");
     for(Index = 0; Index < TranslatedResources->List[0].PartialResourceList.Count; Index++)
     {
         //
@@ -680,7 +680,7 @@ CUSBHardwareDevice::StartController(void)
     if ((UsbSts & (EHCI_STS_PSS | EHCI_STS_ASS)))
     {
         DPRINT1("Failed to stop running schedules %x\n", UsbSts);
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
     }
 
 
@@ -767,14 +767,14 @@ CUSBHardwareDevice::StartController(void)
     if (UsbSts & EHCI_STS_HALT)
     {
         DPRINT1("Could not start execution on the controller\n");
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
     if (!(UsbSts & EHCI_STS_PSS))
     {
         DPRINT1("Could not enable periodic scheduling\n");
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -815,7 +815,7 @@ CUSBHardwareDevice::StartController(void)
     if (!(UsbSts & EHCI_STS_ASS))
     {
         DPRINT1("Failed to enable async schedule UsbSts %x\n", UsbSts);
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -996,7 +996,11 @@ CUSBHardwareDevice::ResetPort(
     //
     // this must be enabled now
     //
-    ASSERT(PortStatus & EHCI_PRT_ENABLED);
+    if (PortStatus & EHCI_PRT_ENABLED)
+    {
+        DPRINT1("Port is not enabled after reset\n");
+        //ASSERT(FALSE);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -1281,7 +1285,7 @@ InterruptServiceRoutine(
     CStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
 
     CStatus &= (EHCI_ERROR_INT | EHCI_STS_INT | EHCI_STS_IAA | EHCI_STS_PCD | EHCI_STS_FLR);
-    DPRINT1("CStatus %x\n", CStatus);
+    DPRINT("CStatus %x\n", CStatus);
 
     //
     // Check that it belongs to EHCI
@@ -1350,7 +1354,7 @@ EhciDefferedRoutine(
                 // controller reported error
                 //
                 DPRINT1("CStatus %x\n", CStatus);
-                ASSERT(FALSE);
+                //ASSERT(FALSE);
             }
 
             //

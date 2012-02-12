@@ -16,7 +16,7 @@ USBHUB_Create(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("USBHUB: IRP_MJ_CREATE\n");
+    DPRINT("USBHUB: IRP_MJ_CREATE\n");
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -29,7 +29,7 @@ USBHUB_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("USBHUB: IRP_MJ_CLOSE\n");
+    DPRINT("USBHUB: IRP_MJ_CLOSE\n");
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -42,7 +42,7 @@ USBHUB_Cleanup(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("USBHUB: IRP_MJ_CLEANUP\n");
+    DPRINT("USBHUB: IRP_MJ_CLEANUP\n");
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -59,7 +59,7 @@ USBHUB_AddDevice(
     PDEVICE_OBJECT DeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     NTSTATUS Status;
-    DPRINT1("USBHUB: AddDevice\n");
+    DPRINT("USBHUB: AddDevice\n");
     //
     // Create the Device Object
     //
@@ -148,7 +148,7 @@ USBHUB_DispatchDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("Usbhub: DispatchDeviceControl\n");
+    DPRINT("Usbhub: DispatchDeviceControl\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_FdoHandleDeviceControl(DeviceObject, Irp);
     else
@@ -160,7 +160,7 @@ USBHUB_DispatchInternalDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    //DPRINT1("Usbhub: DispatchInternalDeviceControl\n");
+    DPRINT("Usbhub: DispatchInternalDeviceControl\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_IrpStub(DeviceObject, Irp);
     else
@@ -172,7 +172,7 @@ USBHUB_DispatchPnp(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("USBHUB: DispatchPnp\n");
+    DPRINT("USBHUB: DispatchPnp\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_FdoHandlePnp(DeviceObject, Irp);
     else
@@ -205,7 +205,7 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = USBHUB_AddDevice;
     DriverObject->DriverUnload = USBHUB_Unload;
 
-    DPRINT1("USBHUB: DriverEntry\n");
+    DPRINT("USBHUB: DriverEntry\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = USBHUB_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBHUB_Close;

@@ -195,7 +195,7 @@ CUSBQueue::InitializeSyncSchedule(
         //
         DPRINT1("Failed to allocate sync frame list\n");
         ExFreePool(m_SyncFrameListQueueHeads);
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -800,7 +800,7 @@ CUSBQueue::QueueHeadCleanup(
             return;
         }
         DPRINT1("Unable to create a new QueueHead\n");
-        PC_ASSERT(FALSE);
+        //ASSERT(FALSE);
 
         //
         // Else there was a problem
@@ -808,7 +808,11 @@ CUSBQueue::QueueHeadCleanup(
         UrbStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (UrbStatus != USBD_STATUS_SUCCESS) PC_ASSERT(FALSE);
+    if (UrbStatus != USBD_STATUS_SUCCESS)
+    {
+        DPRINT1("URB failed with status 0x%x\n", UrbStatus);
+        //PC_ASSERT(FALSE);
+    }
 
     //
     // notify request that a transfer has completed

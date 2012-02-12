@@ -51,7 +51,7 @@ KbdHid_InsertScanCodes(
 
     for(Index = 0; Index < Length; Index++)
     {
-        DPRINT1("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
+        DPRINT("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
 
         /* init input data */
         RtlZeroMemory(&InputData, sizeof(KEYBOARD_INPUT_DATA));
@@ -114,7 +114,7 @@ KbdHid_ReadCompletion(
     // print out raw report
     //
     ASSERT(DeviceExtension->ReportLength >= 9);
-    DPRINT1("[KBDHID] ReadCompletion %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", DeviceExtension->Report[0], DeviceExtension->Report[1], DeviceExtension->Report[2],
+    DPRINT("[KBDHID] ReadCompletion %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", DeviceExtension->Report[0], DeviceExtension->Report[1], DeviceExtension->Report[2],
         DeviceExtension->Report[3], DeviceExtension->Report[4], DeviceExtension->Report[5],
         DeviceExtension->Report[6], DeviceExtension->Report[7], DeviceExtension->Report[8]);
 
@@ -207,7 +207,7 @@ KbdHid_Create(
     KEVENT Event;
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("[KBDHID]: IRP_MJ_CREATE\n");
+    DPRINT("[KBDHID]: IRP_MJ_CREATE\n");
 
     /* get device extension */
     DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -256,7 +256,7 @@ KbdHid_Create(
 
              /* initiating read */
              Status = KbdHid_InitiateRead(DeviceExtension);
-             DPRINT1("[KBDHID] KbdHid_InitiateRead: status %x\n", Status);
+             DPRINT("[KBDHID] KbdHid_InitiateRead: status %x\n", Status);
              if (Status == STATUS_PENDING)
              {
                  /* report irp is pending */
@@ -323,7 +323,7 @@ KbdHid_InternalDeviceControl(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("[KBDHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DPRINT("[KBDHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
     DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -622,7 +622,7 @@ KbdHid_StartDevice(
         return Status;
     }
 
-    DPRINT1("[KBDHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
+    DPRINT("[KBDHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
 
     /* init input report*/
     DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
@@ -640,7 +640,7 @@ KbdHid_StartDevice(
 
     /* get max number of buttons */
     Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_KEYBOARD, PreparsedData);
-    DPRINT1("[KBDHID] Buttons %lu\n", Buttons);
+    DPRINT("[KBDHID] Buttons %lu\n", Buttons);
     ASSERT(Buttons > 0);
 
     /* now allocate an array for those buttons */
@@ -735,7 +735,7 @@ KbdHid_Pnp(
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT1("[KBDHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
+    DPRINT("[KBDHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
 
     if (IoStack->MinorFunction == IRP_MN_STOP_DEVICE ||
         IoStack->MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE ||
@@ -803,7 +803,7 @@ KbdHid_Pnp(
 
         /* lets start the device */
         Status = KbdHid_StartDevice(DeviceObject);
-        DPRINT1("KbdHid_StartDevice %x\n", Status);
+        DPRINT("KbdHid_StartDevice %x\n", Status);
 
         /* complete request */
         Irp->IoStatus.Status = Status;

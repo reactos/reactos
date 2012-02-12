@@ -159,7 +159,7 @@ CUSBHardwareDevice::Initialize(
     NTSTATUS Status;
     ULONG BytesRead;
 
-    DPRINT1("CUSBHardwareDevice::Initialize\n");
+    DPRINT("CUSBHardwareDevice::Initialize\n");
 
     //
     // Create DMAMemoryManager for use with QueueHeads and Transfer Descriptors.
@@ -271,7 +271,7 @@ CUSBHardwareDevice::PnpStart(
     NTSTATUS Status;
     ULONG Version;
 
-    DPRINT1("CUSBHardwareDevice::PnpStart\n");
+    DPRINT("CUSBHardwareDevice::PnpStart\n");
     for(Index = 0; Index < TranslatedResources->List[0].PartialResourceList.Count; Index++)
     {
         //
@@ -329,7 +329,7 @@ CUSBHardwareDevice::PnpStart(
                 //
                 Version = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)ResourceBase + OHCI_REVISION_OFFSET));
 
-                DPRINT1("Version %x\n", Version);
+                DPRINT("Version %x\n", Version);
 
                 //
                 // Store Resource base
@@ -400,7 +400,6 @@ CUSBHardwareDevice::PnpStart(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to Initialize the controller \n");
-        ASSERT(FALSE);
         return Status;
     }
 
@@ -422,7 +421,6 @@ CUSBHardwareDevice::PnpStart(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to stop the controller \n");
-        ASSERT(FALSE);
         return Status;
     }
 
@@ -565,7 +563,7 @@ CUSBHardwareDevice::StartController(void)
     //
     Periodic = OHCI_PERIODIC(m_IntervalValue);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
-    DPRINT1("Periodic Start %x\n", Periodic);
+    DPRINT("Periodic Start %x\n", Periodic);
 
     //
     // start the controller
@@ -950,7 +948,7 @@ CUSBHardwareDevice::StopController(void)
         }
         else
         {
-            DPRINT1("SMM has given up ownership\n");
+            DPRINT("SMM has given up ownership\n");
         }
     }
     else
@@ -959,7 +957,7 @@ CUSBHardwareDevice::StopController(void)
         // read contents of control register
         //
         Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-        DPRINT1("Controller State %x\n", Control);
+        DPRINT("Controller State %x\n", Control);
 
         if (Control != OHCI_HC_FUNCTIONAL_STATE_RESET)
         {
@@ -1263,7 +1261,7 @@ CUSBHardwareDevice::SetPortFeature(
 {
     ULONG Value;
 
-    DPRINT1("CUSBHardwareDevice::SetPortFeature PortId %x Feature %x\n", PortId, Feature);
+    DPRINT("CUSBHardwareDevice::SetPortFeature PortId %x Feature %x\n", PortId, Feature);
 
     //
     // read port status
@@ -1426,7 +1424,7 @@ CUSBHardwareDevice::GetCurrentFrameNumber(
 
 
     Number = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_NUMBER_OFFSET));
-    DPRINT1("FrameNumberInterval %x Frame %x\n", Number, m_HCCA->CurrentFrameNumber);
+    DPRINT("FrameNumberInterval %x Frame %x\n", Number, m_HCCA->CurrentFrameNumber);
 
     //
     // remove reserved bits
@@ -1484,7 +1482,7 @@ InterruptServiceRoutine(
         // the interrupt was not caused by DoneHead update
         // check if something important happened
         //
-        DPRINT1("InterruptStatus %x  InterruptEnable %x\n", READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), 
+        DPRINT("InterruptStatus %x  InterruptEnable %x\n", READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), 
                                                             READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)));
         Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)) & (~OHCI_WRITEBACK_DONE_HEAD); 
         if (Status == 0)

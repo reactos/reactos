@@ -430,7 +430,7 @@ CHubController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_START_DEVICE\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_START_DEVICE\n");
             //
             // register device interface 
             //
@@ -448,7 +448,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_ID:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_ID Type %x\n", IoStack->Parameters.QueryId.IdType);
+            DPRINT("CHubController::HandlePnp IRP_MN_QUERY_ID Type %x\n", IoStack->Parameters.QueryId.IdType);
 
             if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
             {
@@ -474,7 +474,7 @@ CHubController::HandlePnp(
                         swprintf(Buffer, L"USB\\ROOT_HUB");
                     }
 
-                    DPRINT1("Name %S\n", Buffer);
+                    DPRINT("Name %S\n", Buffer);
 
                     //
                     // calculate length
@@ -585,7 +585,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_CAPABILITIES\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_QUERY_CAPABILITIES\n");
 
             DeviceCapabilities = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
 
@@ -617,7 +617,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_INTERFACE:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_INTERFACE\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_QUERY_INTERFACE\n");
 
             //
             // handle device interface requests
@@ -627,7 +627,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_REMOVE_DEVICE\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_REMOVE_DEVICE\n");
 
             //
             // deactivate device interface for BUS PDO
@@ -657,7 +657,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %x\n", IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("CHubController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %x\n", IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
             {
@@ -698,7 +698,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_BUS_INFORMATION\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_QUERY_BUS_INFORMATION\n");
 
             //
             // allocate buffer for bus information
@@ -731,7 +731,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT1("CHubController::HandlePnp IRP_MN_STOP_DEVICE\n");
+            DPRINT("CHubController::HandlePnp IRP_MN_STOP_DEVICE\n");
             //
             // stop device
             //
@@ -847,7 +847,7 @@ CHubController::HandleBulkOrInterruptTransfer(
         //
         // Else pend the IRP, to be completed when a device connects or disconnects.
         //
-        DPRINT1("Pending SCE Irp\n");;
+        DPRINT("Pending SCE Irp\n");
         m_PendingSCEIrp = Irp;
         IoMarkIrpPending(Irp);
         return STATUS_PENDING;

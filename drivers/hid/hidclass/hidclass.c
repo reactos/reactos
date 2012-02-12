@@ -177,9 +177,9 @@ HidClass_Create(
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("ShareAccess %x\n", IoStack->Parameters.Create.ShareAccess);
-    DPRINT1("Options %x\n", IoStack->Parameters.Create.Options);
-    DPRINT1("DesiredAccess %x\n", IoStack->Parameters.Create.SecurityContext->DesiredAccess);
+    DPRINT("ShareAccess %x\n", IoStack->Parameters.Create.ShareAccess);
+    DPRINT("Options %x\n", IoStack->Parameters.Create.Options);
+    DPRINT("DesiredAccess %x\n", IoStack->Parameters.Create.SecurityContext->DesiredAccess);
 
     //
     // allocate context

@@ -75,7 +75,7 @@ USBCCGP_PdoHandleDeviceRelations(
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("USBCCGP_PdoHandleDeviceRelations\n");
+    DPRINT("USBCCGP_PdoHandleDeviceRelations\n");
 
     //
     // get current irp stack location
@@ -165,7 +165,7 @@ USBCCGP_PdoAppendInterfaceNumber(
     {
         StringLength = swprintf(String, L"%s&MI_%02x", DeviceId) + 1;
         Length = wcslen(DeviceId) + 1;
-        DPRINT1("String %p\n", String);
+        DPRINT("String %p\n", String);
 
         //
         // next string
@@ -222,7 +222,7 @@ USBCCGP_PdoHandleQueryId(
                 //
                 ASSERT(Irp->IoStatus.Information);
                 swprintf(Buffer, L"%s&MI_%02x", (LPWSTR)Irp->IoStatus.Information, PDODeviceExtension->FunctionDescriptor->FunctionNumber);
-                DPRINT1("BusQueryDeviceID %S\n", Buffer);
+                DPRINT("BusQueryDeviceID %S\n", Buffer);
 
                 ExFreePool((PVOID)Irp->IoStatus.Information);
                 Irp->IoStatus .Information = (ULONG_PTR)Buffer;
@@ -410,7 +410,7 @@ PDO_HandlePnp(
            //
            // no-op for PDO
            //
-           DPRINT1("[USBCCGP] PDO IRP_MN_START\n");
+           DPRINT("[USBCCGP] PDO IRP_MN_START\n");
            Status = STATUS_SUCCESS;
            break;
        }
@@ -466,7 +466,7 @@ USBCCGP_BuildConfigurationDescriptor(
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("USBCCGP_BuildConfigurationDescriptor\n");
+    DPRINT("USBCCGP_BuildConfigurationDescriptor\n");
 
     //
     // get device extension
@@ -694,7 +694,7 @@ USBCCGP_PDOSelectConfiguration(
     InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
     Index = 0;
     Entry = NULL;
-    DPRINT1("Count %x\n", InterfaceInformationCount);
+    DPRINT("Count %x\n", InterfaceInformationCount);
     do
     {
         DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);

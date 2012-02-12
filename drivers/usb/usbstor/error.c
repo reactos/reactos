@@ -23,7 +23,7 @@ USBSTOR_GetEndpointStatus(
     //
     // allocate urb
     //
-    DPRINT1("Allocating URB\n");
+    DPRINT("Allocating URB\n");
     Urb = (PURB)AllocateItem(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
     if (!Urb)
     {
@@ -69,7 +69,7 @@ USBSTOR_ResetPipeWithHandle(
     //
     // allocate urb
     //
-    DPRINT1("Allocating URB\n");
+    DPRINT("Allocating URB\n");
     Urb = (PURB)AllocateItem(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
     if (!Urb)
     {

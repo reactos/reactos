@@ -224,7 +224,7 @@ DriverEntry(
     IN PUNICODE_STRING RegPath)
 {
 
-    DPRINT1("********* USB Storage *********\n");
+    DPRINT("********* USB Storage *********\n");
 
     //
     // driver unload routine

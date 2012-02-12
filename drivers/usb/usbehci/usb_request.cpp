@@ -329,7 +329,7 @@ CUSBRequest::InitializeWithIrp(
         }
         default:
             DPRINT1("URB Function: not supported %x\n", Urb->UrbHeader.Function);
-            PC_ASSERT(FALSE);
+            //ASSERT(FALSE);
     }
 
     //
@@ -1014,7 +1014,7 @@ CUSBRequest::BuildControlTransferQueueHead(
     //
     //DumpQueueHead(QueueHead);
 
-    DPRINT1("BuildControlTransferQueueHead done\n");
+    DPRINT("BuildControlTransferQueueHead done\n");
     //
     // done
     //
@@ -1711,7 +1711,7 @@ CUSBRequest::IsQueueHeadComplete(
         //
         DPRINT1("Found halted queue head %p\n", QueueHead);
         DumpQueueHead(QueueHead);
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         return TRUE;
     }
 

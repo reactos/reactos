@@ -196,7 +196,7 @@ USBSTOR_PdoHandleQueryDeviceText(
 
     if (IoStack->Parameters.QueryDeviceText.DeviceTextType == DeviceTextDescription)
     {
-        DPRINT1("USBSTOR_PdoHandleQueryDeviceText DeviceTextDescription\n");
+        DPRINT("USBSTOR_PdoHandleQueryDeviceText DeviceTextDescription\n");
 
         //
         // allocate item
@@ -224,7 +224,7 @@ USBSTOR_PdoHandleQueryDeviceText(
     }
     else
     {
-        DPRINT1("USBSTOR_PdoHandleQueryDeviceText DeviceTextLocationInformation\n");
+        DPRINT("USBSTOR_PdoHandleQueryDeviceText DeviceTextLocationInformation\n");
 
         //
         // allocate item
@@ -339,7 +339,7 @@ USBSTOR_PdoHandleQueryDeviceId(
         Irp->IoStatus.Information = (ULONG_PTR)DeviceId.Buffer;
     }
 
-    DPRINT1("DeviceId %wZ Status %x\n", &DeviceId, Status);
+    DPRINT("DeviceId %wZ Status %x\n", &DeviceId, Status);
 
     //
     // done
@@ -451,7 +451,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->Product, &Id1[Offset], 16);
     Offset += CopyField(InquiryData->Revision, &Id1[Offset], 4);
     Id1Length = strlen(Id1) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
 
     //
     // generate id 2
@@ -464,7 +464,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->Vendor, &Id2[Offset], 8);
     Offset += CopyField(InquiryData->Product, &Id2[Offset], 16);
     Id2Length = strlen(Id2) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
 
     //
     // generate id 3
@@ -476,7 +476,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += sprintf(&Id3[Offset], DeviceType);
     Offset += CopyField(InquiryData->Vendor, &Id3[Offset], 8);
     Id3Length = strlen(Id3) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
 
     //
     // generate id 4
@@ -490,7 +490,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->Product, &Id4[Offset], 16);
     Offset += CopyField(InquiryData->Revision, &Id4[Offset], 1);
     Id4Length = strlen(Id4) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
     //
     // generate id 5
@@ -501,7 +501,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset = sprintf(&Id5[Offset], "USBSTOR\\");
     Offset += sprintf(&Id5[Offset], GenericType);
     Id5Length = strlen(Id5) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
     //
     // generate id 6
@@ -511,7 +511,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset = 0;
     Offset = sprintf(&Id6[Offset], GenericType);
     Id6Length = strlen(Id6) + 1;
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
     //
     // compute total length
@@ -619,7 +619,7 @@ USBSTOR_PdoHandleQueryCompatibleId(
     USBSTOR_ConvertToUnicodeString(Buffer, Length, 0, InstanceId, &Offset);
     USBSTOR_ConvertToUnicodeString(&Buffer[Offset], Length, Offset, InstanceId, &Offset);
 
-    DPRINT1("USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
+    DPRINT("USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
 
     //
     // store result
@@ -694,7 +694,7 @@ USBSTOR_PdoHandleQueryInstanceId(
     //
     wcscpy(InstanceId, Buffer);
 
-    DPRINT1("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
+    DPRINT("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
 
     //
     // store result
@@ -715,7 +715,7 @@ USBSTOR_PdoHandleDeviceRelations(
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("USBSTOR_PdoHandleDeviceRelations\n");
+    DPRINT("USBSTOR_PdoHandleDeviceRelations\n");
 
     //
     // get current irp stack location
@@ -844,7 +844,7 @@ USBSTOR_PdoHandlePnp(
        }
        case IRP_MN_REMOVE_DEVICE:
        {
-           DPRINT1("IRP_MN_REMOVE_DEVICE\n");
+           DPRINT("IRP_MN_REMOVE_DEVICE\n");
 
            if(*DeviceExtension->PDODeviceObject != NULL)
            {
