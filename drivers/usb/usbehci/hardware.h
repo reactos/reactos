@@ -145,14 +145,15 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
         ULONG DWord;
     } Token;
     ULONG BufferPointer[5];
-    
+    ULONG ExtendedBufferPointer[5];
+
     //Software
     ULONG PhysicalAddr;
     LIST_ENTRY DescriptorEntry;
     ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
-C_ASSERT(FIELD_OFFSET(QUEUE_TRANSFER_DESCRIPTOR, PhysicalAddr) == 0x20);
+C_ASSERT(FIELD_OFFSET(QUEUE_TRANSFER_DESCRIPTOR, PhysicalAddr) == 0x34);
 
 //
 // EndPointSpeeds Flags and END_POINT_CHARACTERISTICS
@@ -212,6 +213,7 @@ typedef struct _QUEUE_HEAD
         ULONG DWord;
     } Token;
     ULONG BufferPointer[5];
+    ULONG ExtendedBufferPointer[5];
 
     //Software
     ULONG PhysicalAddr;
@@ -231,7 +233,7 @@ C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, NextPointer) == 0x10);
 C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, AlternateNextPointer) == 0x14);
 C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, Token) == 0x18);
 C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, BufferPointer) == 0x1C);
-C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, PhysicalAddr) == 0x30);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, PhysicalAddr) == 0x44);
 
 
 //

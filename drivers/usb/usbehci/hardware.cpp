@@ -374,6 +374,26 @@ CUSBHardwareDevice::PnpStart(
                 DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
                 DPRINT1("Controler EHCI Caps PowerControl %x\n", m_Capabilities.HCSParams.PortPowerControl);
 
+                if (m_Capabilities.HCCParams.EECPCapable)
+                {
+                    DPRINT1("Controller has Extended Capabilities Support\n");
+                }
+
+                if (m_Capabilities.HCCParams.ParkMode)
+                {
+                    DPRINT1("Controller supports Asynchronous Schedule Park\n");
+                }
+
+                if (m_Capabilities.HCCParams.VarFrameList)
+                {
+                    DPRINT1("Controller supports Programmable Frame List Size\n");
+                }
+
+                if (m_Capabilities.HCCParams.CurAddrBits)
+                {
+                    DPRINT1("Controller uses 64-Bit Addressing\n");
+                }
+
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
                     Count = 0;
