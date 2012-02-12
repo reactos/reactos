@@ -802,6 +802,7 @@ HalpDebugPciDumpBus(IN ULONG i,
     if (PciData->u.type0.InterruptPin != 0 &&
         PciData->u.type0.InterruptLine != 0 &&
         PciData->u.type0.InterruptLine != 0xFF) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
+    else if (PciData->u.type0.InterruptPin != 0) DbgPrint(", IRQ assignment required");
     DbgPrint("\n");
 
     /* Scan addresses */

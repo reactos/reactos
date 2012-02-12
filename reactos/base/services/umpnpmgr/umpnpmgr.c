@@ -2811,7 +2811,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
                       &DeviceKey) == ERROR_SUCCESS)
     {
         if (RegQueryValueExW(DeviceKey,
-                             L"ClassGUID",
+                             L"Class",
                              NULL,
                              NULL,
                              NULL,

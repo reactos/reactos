@@ -420,10 +420,10 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
         /*
          * Check if we have an attached device and fail if we're attached
-         * and still have a reference count.
+         * or still have a reference count.
          */
         AttachedDeviceObject = DeviceObject->AttachedDevice;
-        if ((AttachedDeviceObject) && (DeviceObject->ReferenceCount)) return;
+        if ((AttachedDeviceObject) || (DeviceObject->ReferenceCount)) return;
 
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)

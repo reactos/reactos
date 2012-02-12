@@ -1208,4 +1208,30 @@ ObQueryDeviceMapInformation(IN PEPROCESS Process,
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
 }
 
+NTSTATUS
+NTAPI
+ObIsDosDeviceLocallyMapped(
+    IN ULONG Index,
+    OUT PUCHAR DosDeviceState)
+{
+    /* check parameters */
+    if (Index < 1 || Index > 26)
+    {
+        /* invalid index */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* acquire lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+    /* get drive mapping status */
+    *DosDeviceState = (ObSystemDeviceMap->DriveMap & (1 << Index)) != 0;
+
+    /* release lock */
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* done */
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

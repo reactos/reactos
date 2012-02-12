@@ -1,17 +1,100 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         USB hub driver
- * FILE:            drivers/usb/cromwell/hub/misc.c
- * PURPOSE:         Misceallenous operations
- *
- * PROGRAMMERS:     Herv� Poussineau (hpoussin@reactos.com),
+ * PROJECT:         ReactOS Universal Serial Bus Hub Driver
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            drivers/usb/usbhub/fdo.c
+ * PURPOSE:         Misc helper functions
+ * PROGRAMMERS:
+ *                  Michael Martin (michael.martin@reactos.org)
+ *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
-
-#define NDEBUG
 #include "usbhub.h"
 #include <stdarg.h>
 
-NTSTATUS NTAPI
+VOID
+DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
+{
+    DPRINT1("Dumping Device Descriptor %x\n", DeviceDescriptor);
+    DPRINT1("bLength %x\n", DeviceDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
+    DPRINT1("bcdUSB %x\n", DeviceDescriptor->bcdUSB);
+    DPRINT1("bDeviceClass %x\n", DeviceDescriptor->bDeviceClass);
+    DPRINT1("bDeviceSubClass %x\n", DeviceDescriptor->bDeviceSubClass);
+    DPRINT1("bDeviceProtocol %x\n", DeviceDescriptor->bDeviceProtocol);
+    DPRINT1("bMaxPacketSize0 %x\n", DeviceDescriptor->bMaxPacketSize0);
+    DPRINT1("idVendor %x\n", DeviceDescriptor->idVendor);
+    DPRINT1("idProduct %x\n", DeviceDescriptor->idProduct);
+    DPRINT1("bcdDevice %x\n", DeviceDescriptor->bcdDevice);
+    DPRINT1("iManufacturer %x\n", DeviceDescriptor->iManufacturer);
+    DPRINT1("iProduct %x\n", DeviceDescriptor->iProduct);
+    DPRINT1("iSerialNumber %x\n", DeviceDescriptor->iSerialNumber);
+    DPRINT1("bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
+}
+
+//----------------------------------------------------------------------------------------
+VOID
+DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+}
+
+VOID
+DumpFullConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    LONG i, j;
+
+    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR) ((ULONG_PTR)ConfigurationDescriptor + sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    for (i=0; i < ConfigurationDescriptor->bNumInterfaces; i++)
+    {
+        DPRINT1("- Dumping InterfaceDescriptor %x\n", InterfaceDescriptor);
+        DPRINT1("  bLength %x\n", InterfaceDescriptor->bLength);
+        DPRINT1("  bDescriptorType %x\n", InterfaceDescriptor->bDescriptorType);
+        DPRINT1("  bInterfaceNumber %x\n", InterfaceDescriptor->bInterfaceNumber);
+        DPRINT1("  bAlternateSetting %x\n", InterfaceDescriptor->bAlternateSetting);
+        DPRINT1("  bNumEndpoints %x\n", InterfaceDescriptor->bNumEndpoints);
+        DPRINT1("  bInterfaceClass %x\n", InterfaceDescriptor->bInterfaceClass);
+        DPRINT1("  bInterfaceSubClass %x\n", InterfaceDescriptor->bInterfaceSubClass);
+        DPRINT1("  bInterfaceProtocol %x\n", InterfaceDescriptor->bInterfaceProtocol);
+        DPRINT1("  iInterface %x\n", InterfaceDescriptor->iInterface);
+
+        EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR) ((ULONG_PTR)InterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR));
+
+        for (j=0; j < InterfaceDescriptor->bNumEndpoints; j++)
+        {
+            DPRINT1("   bLength %x\n", EndpointDescriptor->bLength);
+            DPRINT1("   bDescriptorType %x\n", EndpointDescriptor->bDescriptorType);
+            DPRINT1("   bEndpointAddress %x\n", EndpointDescriptor->bEndpointAddress);
+            DPRINT1("   bmAttributes %x\n", EndpointDescriptor->bmAttributes);
+            DPRINT1("   wMaxPacketSize %x\n", EndpointDescriptor->wMaxPacketSize);
+            DPRINT1("   bInterval %x\n", EndpointDescriptor->bInterval);
+            EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR) ((ULONG_PTR)EndpointDescriptor + sizeof(USB_ENDPOINT_DESCRIPTOR));
+        }
+        InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)(ULONG_PTR)EndpointDescriptor;
+    }
+}
+
+NTSTATUS
+NTAPI
 ForwardIrpAndWaitCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -19,6 +102,7 @@ ForwardIrpAndWaitCompletion(
 {
     if (Irp->PendingReturned)
         KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -46,12 +130,12 @@ ForwardIrpAndWait(
     return Status;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
 ForwardIrpAndForget(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PDEVICE_OBJECT LowerDevice = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+    PDEVICE_OBJECT LowerDevice = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDeviceObject;
 
     ASSERT(LowerDevice);
 
@@ -59,104 +143,3 @@ ForwardIrpAndForget(
     return IoCallDriver(LowerDevice, Irp);
 }
 
-/* I really want PCSZ strings as last arguments because
- * PnP ids are ANSI-encoded in PnP device string
- * identification */
-NTSTATUS
-UsbhubInitMultiSzString(
-    OUT PUNICODE_STRING Destination,
-    ... /* list of PCSZ */)
-{
-    va_list args;
-    PCSZ Source;
-    ANSI_STRING AnsiString;
-    UNICODE_STRING UnicodeString;
-    ULONG DestinationSize = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    ASSERT(Destination);
-
-    /* Calculate length needed for destination unicode string */
-    va_start(args, Destination);
-    Source = va_arg(args, PCSZ);
-    while (Source != NULL)
-    {
-        RtlInitAnsiString(&AnsiString, Source);
-        DestinationSize += RtlAnsiStringToUnicodeSize(&AnsiString)
-            + sizeof(WCHAR) /* final NULL */;
-        Source = va_arg(args, PCSZ);
-    }
-    va_end(args);
-    if (DestinationSize == 0)
-    {
-        RtlInitUnicodeString(Destination, NULL);
-        return STATUS_SUCCESS;
-    }
-
-    /* Initialize destination string */
-    DestinationSize += sizeof(WCHAR); // final NULL
-    Destination->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, DestinationSize, USB_HUB_TAG);
-    if (!Destination->Buffer)
-        return STATUS_INSUFFICIENT_RESOURCES;
-    Destination->Length = 0;
-    Destination->MaximumLength = (USHORT)DestinationSize;
-
-    /* Copy arguments to destination string */
-    /* Use a temporary unicode string, which buffer is shared with
-     * destination string, to copy arguments */
-    UnicodeString.Length = Destination->Length;
-    UnicodeString.MaximumLength = Destination->MaximumLength;
-    UnicodeString.Buffer = Destination->Buffer;
-    va_start(args, Destination);
-    Source = va_arg(args, PCSZ);
-    while (Source != NULL)
-    {
-        RtlInitAnsiString(&AnsiString, Source);
-        Status = RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(Destination->Buffer, USB_HUB_TAG);
-            break;
-        }
-        Destination->Length += UnicodeString.Length + sizeof(WCHAR);
-        UnicodeString.MaximumLength -= UnicodeString.Length + sizeof(WCHAR);
-        UnicodeString.Buffer += UnicodeString.Length / sizeof(WCHAR) + 1;
-        UnicodeString.Length = 0;
-        Source = va_arg(args, PCSZ);
-    }
-    va_end(args);
-    if (NT_SUCCESS(Status))
-    {
-        /* Finish multi-sz string */
-        Destination->Buffer[Destination->Length / sizeof(WCHAR)] = L'\0';
-        Destination->Length += sizeof(WCHAR);
-    }
-    return Status;
-}
-
-NTSTATUS
-UsbhubDuplicateUnicodeString(
-    OUT PUNICODE_STRING Destination,
-    IN PUNICODE_STRING Source,
-    IN POOL_TYPE PoolType)
-{
-    ASSERT(Destination);
-
-    if (Source == NULL)
-    {
-        RtlInitUnicodeString(Destination, NULL);
-        return STATUS_SUCCESS;
-    }
-
-    Destination->Buffer = ExAllocatePool(PoolType, Source->MaximumLength);
-    if (Destination->Buffer == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Destination->MaximumLength = Source->MaximumLength;
-    Destination->Length = Source->Length;
-    RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
-
-    return STATUS_SUCCESS;
-}

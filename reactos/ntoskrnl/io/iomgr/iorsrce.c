@@ -930,9 +930,10 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
     NTSTATUS Status;
     
     DPRINT1("IoAssignResources is halfplemented!\n");
-    
-    Status = IopCreateResourceListFromRequirements(RequestedResources,
-                                                   AllocatedResources);
+
+    *AllocatedResources = NULL;
+    Status = IopFixupResourceListWithRequirements(RequestedResources,
+                                                  AllocatedResources);
     if (!NT_SUCCESS(Status))
     {
         if (Status == STATUS_CONFLICTING_ADDRESSES)

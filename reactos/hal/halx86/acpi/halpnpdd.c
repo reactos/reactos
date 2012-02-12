@@ -59,8 +59,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PFDO_EXTENSION FdoExtension = Context;
     PPDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT PdoDeviceObject;
-    NTSTATUS Status;
     PDESCRIPTION_HEADER Wdrt;
+    NTSTATUS Status;
 
     /* Create the PDO */
     Status = IoCreateDevice(DriverObject,
@@ -83,11 +83,11 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PdoExtension->PhysicalDeviceObject = PdoDeviceObject;
     PdoExtension->ParentFdoExtension = FdoExtension;
     PdoExtension->PdoType = AcpiPdo;
-    
+
     /* Add the PDO to the head of the list */
     PdoExtension->Next = FdoExtension->ChildPdoList;
     FdoExtension->ChildPdoList = PdoExtension;
-    
+
     /* Initialization is finished */
     PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -99,8 +99,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
     }
 
-    /* Invalidate device relations since we added a new device */
-    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    /* This will synchronously load the ACPI driver (needed because we're critical for boot) */
+    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS
@@ -111,6 +111,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     PFDO_EXTENSION FdoExtension;
     PDEVICE_OBJECT DeviceObject, AttachedDevice;
+
     DPRINT("HAL: PnP Driver ADD!\n");
 
     /* Create the FDO */
@@ -151,9 +152,9 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->AttachedDeviceObject = AttachedDevice;
 
     /* Register for reinitialization to report devices later */
-    IoRegisterDriverReinitialization(DriverObject,
-                                     HalpReportDetectedDevices,
-                                     FdoExtension);
+    IoRegisterBootDriverReinitialization(DriverObject,
+                                         HalpReportDetectedDevices,
+                                         FdoExtension);
 
     /* Return status */
     DPRINT("Device added %lx\n", Status);
@@ -171,8 +172,7 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    OUT PULONG Length)
 {
     UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS

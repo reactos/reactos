@@ -40,7 +40,7 @@ typedef PVOID PMDL;
 #endif
 #endif
 
-#define USBDI_VERSION    0x00000600
+#define USBDI_VERSION    0x00000500
 
 #include "usb200.h"
 
