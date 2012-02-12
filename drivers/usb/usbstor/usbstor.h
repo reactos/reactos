@@ -2,7 +2,7 @@
 #pragma once
 
 #include <ntddk.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <usbdi.h>
 #include <hubbusif.h>

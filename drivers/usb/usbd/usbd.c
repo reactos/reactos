@@ -34,6 +34,7 @@
 
 #include <ntddk.h>
 #include <usbdi.h>
+#define NDEBUG
 #include <debug.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2

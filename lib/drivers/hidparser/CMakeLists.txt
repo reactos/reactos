@@ -1,7 +1,7 @@
 
 add_definitions(
     -DUNICODE -D_UNICODE
-    -DNDEBUG=1)
+    -DNDEBUG)
 
 list(APPEND SOURCE
     context.c

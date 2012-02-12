@@ -11,7 +11,6 @@ list(APPEND SOURCE
 add_library(hidclass SHARED ${SOURCE})
 
 set_entrypoint(hidclass 0)
-set_image_base(hidclass 0x00010000)
 set_subsystem(hidclass native)
 set_target_properties(hidclass PROPERTIES SUFFIX ".sys")
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="mountmgr" type="kernelmodedriver" installbase="system32/drivers" installname="mountmgr.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+<module name="mountmgr" type="kernelmodedriver" installbase="system32/drivers" installname="mountmgr.sys" allowwarnings="true">
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<define name="NTDDI_VERSION">0x05020400</define>
 	<include base="mountmgr">.</include>
 	<library>ntoskrnl</library>
