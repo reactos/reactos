@@ -365,6 +365,11 @@ RtlAreBitsClear(
     IN ULONG StartingIndex,
     IN ULONG Length)
 {
+    /* Verify parameters */
+    if ((StartingIndex + Length > BitMapHeader->SizeOfBitMap) ||
+        (StartingIndex + Length <= StartingIndex))
+        return FALSE;
+
     return RtlpGetLengthOfRunClear(BitMapHeader, StartingIndex, Length) >= Length;
 }
 
@@ -375,6 +380,11 @@ RtlAreBitsSet(
     IN ULONG StartingIndex,
     IN ULONG Length)
 {
+    /* Verify parameters */
+    if ((StartingIndex + Length > BitMapHeader->SizeOfBitMap) ||
+        (StartingIndex + Length <= StartingIndex))
+        return FALSE;
+
     return RtlpGetLengthOfRunSet(BitMapHeader, StartingIndex, Length) >= Length;
 }
 
