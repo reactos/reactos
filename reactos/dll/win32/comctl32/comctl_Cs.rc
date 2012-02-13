@@ -41,10 +41,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    HKY_NONE "#-#-#-#-#  cs.po (Wine)  #-#-#-#-#\n\
-Žádná klávesová zkratka.\n\
-#-#-#-#-#  cs.po (Wine)  #-#-#-#-#\n\
-Žádný"
+    HKY_NONE "Žádný"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140
