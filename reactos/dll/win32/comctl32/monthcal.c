@@ -160,8 +160,8 @@ static const WCHAR themeClass[] = { 'S','c','r','o','l','l','b','a','r',0 };
 /* empty SYSTEMTIME const */
 static const SYSTEMTIME st_null;
 /* valid date limits */
-static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDay = 31 };
-static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9,  .wDay = 14 };
+static const SYSTEMTIME max_allowed_date = { /* wYear */ 9999, /* wMonth */ 12, /* wDayOfWeek */ 0, /* wDay */ 31 };
+static const SYSTEMTIME min_allowed_date = { /* wYear */ 1752, /* wMonth */ 9,  /* wDayOfWeek */ 0, /* wDay */ 14 };
 
 /* Prev/Next buttons */
 enum nav_direction
