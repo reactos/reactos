@@ -1,3 +1,126 @@
+Index: commctrl.c
+===================================================================
+--- commctrl.c	(revision 55577)
++++ commctrl.c	(working copy)
+@@ -1593,12 +1593,114 @@
+  *
+  * Draw text with shadow.
+  */
+-int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD dwFlags,
++int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD dwFlags,
+                           COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset)
+ {
+-    FIXME("(%p, %s, %d, %p, %d, 0x%08x, 0x%08x, %d, %d): stub\n", hdc, debugstr_w(pszText), cch, rect, dwFlags,
+-                                                                  crText, crShadow, ixOffset, iyOffset);
+-    return DrawTextW(hdc, pszText, cch, rect, DT_LEFT);
++    COLORREF crOldText;
++    RECT rcText;
++    INT iRet, x, y, x2, y2;
++    BYTE *pBits;
++    HBITMAP hbm, hbmOld;
++    BITMAPINFO bi;
++    HDC hdcMem;
++    HFONT hOldFont;
++    BLENDFUNCTION bf;
++
++    /* Create 32 bit DIB section for the shadow */
++    ZeroMemory(&bi, sizeof(bi));
++    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
++    bi.bmiHeader.biWidth = prc->right - prc->left + 4;
++    bi.bmiHeader.biHeight = prc->bottom - prc->top + 5; // bottom-up DIB
++    bi.bmiHeader.biPlanes = 1;
++    bi.bmiHeader.biBitCount = 32;
++    bi.bmiHeader.biCompression = BI_RGB;
++    hbm = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, (PVOID*)&pBits, NULL, 0);
++    if(!hbm)
++    {
++        ERR("CreateDIBSection failed\n");
++        return 0;
++    }
++
++    /* Create memory device context for new DIB section and select it */
++    hdcMem = CreateCompatibleDC(hdc);
++    if(!hdcMem)
++    {
++        ERR("CreateCompatibleDC failed\n");
++        DeleteObject(hbm);
++        return 0;
++    }
++
++    hbmOld = (HBITMAP)SelectObject(hdcMem, hbm);
++
++    /* Draw text on our helper bitmap */
++    hOldFont = (HFONT)SelectObject(hdcMem, GetCurrentObject(hdc, OBJ_FONT));
++    SetTextColor(hdcMem, RGB(16, 16, 16));
++    SetBkColor(hdcMem, RGB(0, 0, 0));
++    SetBkMode(hdcMem, TRANSPARENT);
++    SetRect(&rcText, 0, 0, prc->right - prc->left, prc->bottom - prc->top);
++    DrawTextW(hdcMem, pszText, cch, &rcText, dwFlags);
++    SelectObject(hdcMem, hOldFont);
++
++    /* Flush GDI so data pointed by pBits is valid */
++    GdiFlush();
++
++    /* Set alpha of pixels (forget about colors for now. They will be changed in next loop).
++       We copy text image 4*5 times and each time alpha is added */
++    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
++        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
++        {
++            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
++            UINT Alpha = 0;
++
++            for (x2 = x - 4 + 1; x2 <= x; ++x2)
++                for (y2 = y; y2 < y + 5; ++y2)
++                {
++                    if (x2 >= 0 && x2 < bi.bmiHeader.biWidth && y2 >= 0 && y2 < bi.bmiHeader.biHeight)
++                    {
++                        BYTE *pSrc = &pBits[(y2 * bi.bmiHeader.biWidth + x2) * 4];
++                        Alpha += pSrc[0];
++                    }
++                }
++
++            if (Alpha > 255)
++                Alpha = 255;
++            pDest[3] = Alpha;
++        }
++
++    /* Now set the color of each pixel to shadow color * alpha (see GdiAlphaBlend) */
++    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
++        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
++        {
++            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
++            pDest[0] = GetBValue(crShadow) * pDest[3] / 255;
++            pDest[1] = GetGValue(crShadow) * pDest[3] / 255;
++            pDest[2] = GetRValue(crShadow) * pDest[3] / 255;
++        }
++
++    /* Fix ixOffset of the shadow (tested on Win) */
++    ixOffset -= 3;
++    iyOffset -= 3;
++
++    /* Alpha blend helper image to destination DC */
++    bf.BlendOp = AC_SRC_OVER;
++    bf.BlendFlags = 0;
++    bf.SourceConstantAlpha = 255;
++    bf.AlphaFormat = AC_SRC_ALPHA;
++    if (!GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf))
++        ERR("GdiAlphaBlend failed: %lu\n", GetLastError());
++
++    /* Delete the helper bitmap */
++    SelectObject(hdcMem, hbmOld);
++    DeleteObject(hbm);
++    DeleteDC(hdcMem);
++
++    /* Finally draw the text over shadow */
++    crOldText = SetTextColor(hdc, crText);
++    SetBkMode(hdc, TRANSPARENT);
++    iRet = DrawTextW(hdc, pszText, cch, prc, dwFlags);
++    SetTextColor(hdc, crOldText);
++
++    return iRet;
+ }
+ 
+ /***********************************************************************
 Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 38890)
