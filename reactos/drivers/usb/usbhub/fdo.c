@@ -1570,7 +1570,7 @@ USBHUB_FdoHandlePnp(
             Status = QueryInterface(RootHubDeviceObject,
                                     USB_BUS_INTERFACE_HUB_GUID,
                                     sizeof(USB_BUS_INTERFACE_HUB_V5),
-                                    5,
+                                    USB_BUSIF_HUB_VERSION_5,
                                     (PVOID)&HubDeviceExtension->HubInterface);
 
             if (!NT_SUCCESS(Status))
@@ -1587,7 +1587,7 @@ USBHUB_FdoHandlePnp(
             Status = QueryInterface(RootHubDeviceObject,
                                     USB_BUS_INTERFACE_USBDI_GUID,
                                     sizeof(USB_BUS_INTERFACE_USBDI_V2),
-                                    2,
+                                    USB_BUSIF_USBDI_VERSION_2,
                                     (PVOID)&HubDeviceExtension->UsbDInterface);
 
             if (!NT_SUCCESS(Status))
