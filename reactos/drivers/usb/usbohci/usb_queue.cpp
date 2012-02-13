@@ -285,7 +285,7 @@ CUSBQueue::AddUSBRequest(
         m_Hardware->GetCurrentFrameNumber(&FrameNumber);
 
         DPRINT("Hardware 1ms %p Iso %p\n",m_InterruptEndpoints[0], m_IsoHeadEndpointDescriptor);
-		ASSERT(m_InterruptEndpoints[0]->NextPhysicalEndpoint == m_IsoHeadEndpointDescriptor->PhysicalAddress.LowPart);
+        ASSERT(m_InterruptEndpoints[0]->NextPhysicalEndpoint == m_IsoHeadEndpointDescriptor->PhysicalAddress.LowPart);
 
         PrintEndpointList(m_IsoHeadEndpointDescriptor);
     }

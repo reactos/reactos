@@ -48,7 +48,6 @@ public:
     virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
     virtual UCHAR GetInterval();
 
-
     // local functions
     ULONG InternalGetTransferType();
     UCHAR InternalGetPidDirection();
@@ -65,6 +64,7 @@ public:
     UCHAR GetEndpointAddress();
     USHORT GetMaxPacketSize();
     VOID CheckError(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
+    VOID DumpEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR *Descriptor);
 
 
     // constructor / destructor
@@ -460,9 +460,10 @@ CUSBRequest::GetMaxPacketSize()
     if (!m_EndpointDescriptor)
     {
         //
-        // control request
+        // FIXME: use DeviceDescriptor.bMaxPacketSize0
+        // control pipe request
         //
-        return 0;
+        return 8;
     }
 
     ASSERT(m_Irp);
@@ -541,15 +542,22 @@ CUSBRequest::InternalGetTransferType()
 UCHAR
 CUSBRequest::InternalGetPidDirection()
 {
-    ASSERT(m_Irp);
-    ASSERT(m_EndpointDescriptor);
-
-    //
-    // end point is defined in the low byte of bEndpointAddress
-    //
-    return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+    if (m_EndpointDescriptor)
+    {
+        //
+        // end point direction is highest bit in bEndpointAddress
+        //
+        return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+    }
+    else
+    {
+        //
+        // request arrives on the control pipe, extract direction from setup packet
+        //
+        ASSERT(m_SetupPacket);
+        return (m_SetupPacket->bmRequestType.B >> 7);
+    }
 }
-
 
 //----------------------------------------------------------------------------------------
 UCHAR
@@ -983,7 +991,13 @@ CUSBRequest::AllocateEndpointDescriptor(
             //
             Descriptor->Flags |= OHCI_ENDPOINT_DIRECTION_IN;
         }
-
+    }
+    else
+    {
+        //
+        // get it from transfer descriptor
+        //
+        Descriptor->Flags |= OHCI_ENDPOINT_DIRECTION_DESCRIPTOR;
     }
 
     //
@@ -1230,6 +1244,35 @@ CUSBRequest::BuildBulkInterruptEndpoint(
     return STATUS_SUCCESS;
 }
 
+VOID
+CUSBRequest::DumpEndpointDescriptor(
+    POHCI_ENDPOINT_DESCRIPTOR Descriptor)
+{
+    ULONG Count = 0;
+    POHCI_GENERAL_TD GeneralDescriptor;
+
+    DPRINT1("EndpointDescriptor %p Addr %x\n", Descriptor, Descriptor->PhysicalAddress.LowPart);
+    DPRINT1("EndpointDescriptor HeadPhysicalDescriptor %x HeadLogicalDescriptor %p\n", Descriptor->HeadPhysicalDescriptor, Descriptor->HeadLogicalDescriptor);
+    DPRINT1("EndpointDescriptor TailPhysicalDescriptor %x\n", Descriptor->TailPhysicalDescriptor);
+    DPRINT1("EndpointDescriptor NextDescriptor %x\n", Descriptor->NextDescriptor);
+    DPRINT1("EndpointDescriptor NextPhysicalEndpoint %x\n", Descriptor->NextPhysicalEndpoint);
+    DPRINT1("EndpointDescriptor Flags %x\n", Descriptor->Flags);
+
+
+    GeneralDescriptor = (POHCI_GENERAL_TD)Descriptor->HeadLogicalDescriptor;
+    while(GeneralDescriptor)
+    {
+        DPRINT1("Descriptor %d Address %p Addr %x\n", Count, GeneralDescriptor, GeneralDescriptor->PhysicalAddress);
+        DPRINT1("Descriptor %d BufferLogical %p BufferPhysical %x\n", Count, GeneralDescriptor->BufferLogical, GeneralDescriptor->BufferPhysical);
+        DPRINT1("Descriptor %d BufferSize %d\n", Count, GeneralDescriptor->BufferSize);
+        DPRINT1("Descriptor %d LastPhysicalByteAddress %x\n", Count, GeneralDescriptor->LastPhysicalByteAddress);
+        DPRINT1("Descriptor %d Flags %x\n", Count, GeneralDescriptor->Flags);
+        DPRINT1("Descriptor %d NextLogicalDescriptor %p NextPhysicalDescriptor %x\n", Count, GeneralDescriptor->NextLogicalDescriptor, GeneralDescriptor->NextPhysicalDescriptor);
+
+        Count++;
+        GeneralDescriptor = (POHCI_GENERAL_TD)GeneralDescriptor->NextLogicalDescriptor;
+    }
+}
 
 NTSTATUS
 CUSBRequest::BuildControlTransferDescriptor(
@@ -1293,6 +1336,31 @@ CUSBRequest::BuildControlTransferDescriptor(
         return Status;
     }
 
+    //
+    // initialize setup descriptor
+    //
+    SetupDescriptor->Flags = OHCI_TD_BUFFER_ROUNDING | OHCI_TD_DIRECTION_PID_SETUP | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_0 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);
+
+    //
+    // initialize status descriptor
+    //
+    StatusDescriptor->Flags = OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_1 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
+
+    if (m_SetupPacket)
+    {
+        //
+        // copy setup packet
+        //
+        RtlCopyMemory(SetupDescriptor->BufferLogical, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    }
+    else
+    {
+        //
+        // generate setup packet from urb
+        //
+        ASSERT(FALSE);
+    }
+
     if (m_TransferBufferLength)
     {
         //
@@ -1312,7 +1380,6 @@ CUSBRequest::BuildControlTransferDescriptor(
             m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
             FreeDescriptor(SetupDescriptor);
             FreeDescriptor(StatusDescriptor);
-            FreeDescriptor(LastDescriptor);
             return Status;
         }
 
@@ -1321,30 +1388,10 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         DataDescriptor->Flags = OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY | OHCI_TD_TOGGLE_1;
 
-        if (m_EndpointDescriptor)
-        {
-            if (USB_ENDPOINT_DIRECTION_OUT(m_EndpointDescriptor->bEndpointAddress))
-            {
-                //
-                // direction out
-                //
-                DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_OUT;
-            }
-            else
-            {
-                //
-                // direction in
-                //
-                DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
-            }
-        }
-        else
-        {
-            //
-            // no end point address provided - assume its an in direction
-            //
-            DataDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
-        }
+        //
+        // setup pid direction
+        //
+        DataDescriptor->Flags |= InternalGetPidDirection() == TRUE ? OHCI_TD_DIRECTION_PID_IN : OHCI_TD_DIRECTION_PID_OUT;
 
         //
         // use short packets
@@ -1355,53 +1402,13 @@ CUSBRequest::BuildControlTransferDescriptor(
         // store physical address of buffer
         //
         DataDescriptor->BufferPhysical = MmGetPhysicalAddress(MmGetMdlVirtualAddress(m_TransferBufferMDL)).LowPart;
-        DataDescriptor->LastPhysicalByteAddress = DataDescriptor->BufferPhysical + m_TransferBufferLength - 1; 
-    }
+        DataDescriptor->LastPhysicalByteAddress = DataDescriptor->BufferPhysical + m_TransferBufferLength - 1;
 
-    //
-    // initialize setup descriptor
-    //
-    SetupDescriptor->Flags = OHCI_TD_BUFFER_ROUNDING | OHCI_TD_DIRECTION_PID_SETUP | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_0 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);
+        //
+        // flip status pid direction
+        //
+        StatusDescriptor->Flags |= InternalGetPidDirection() == TRUE ? OHCI_TD_DIRECTION_PID_OUT : OHCI_TD_DIRECTION_PID_IN;
 
-    if (m_SetupPacket)
-    {
-        //
-        // copy setup packet
-        //
-        RtlCopyMemory(SetupDescriptor->BufferLogical, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
-    }
-    else
-    {
-        //
-        // generate setup packet from urb
-        //
-        ASSERT(FALSE);
-    }
-
-    //
-    // initialize status descriptor
-    //
-    StatusDescriptor->Flags = OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_1 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
-    if (m_TransferBufferLength == 0)
-    {
-        //
-        // input direction is flipped for the status descriptor
-        //
-        StatusDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
-    }
-    else
-    {
-        //
-        // output direction is flipped for the status descriptor
-        //
-        StatusDescriptor->Flags |= OHCI_TD_DIRECTION_PID_OUT;
-    }
-
-    //
-    // now link the descriptors
-    //
-    if (m_TransferBufferLength)
-    {
          //
          // link setup descriptor to data descriptor
          //
@@ -1423,12 +1430,16 @@ CUSBRequest::BuildControlTransferDescriptor(
     }
     else
     {
+        //
+        // status descriptor is always in
+        //
+        StatusDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
+
          //
          // link setup descriptor to status descriptor
          //
          SetupDescriptor->NextPhysicalDescriptor = StatusDescriptor->PhysicalAddress.LowPart;
          SetupDescriptor->NextLogicalDescriptor = StatusDescriptor;
-
          //
          // link status descriptor to last descriptor
          //
@@ -1447,6 +1458,11 @@ CUSBRequest::BuildControlTransferDescriptor(
     // store result
     //
     *OutEndpointDescriptor = EndpointDescriptor;
+
+    //
+    // dump descriptor
+    //
+    //DumpEndpointDescriptor(EndpointDescriptor);
 
     //
     // done

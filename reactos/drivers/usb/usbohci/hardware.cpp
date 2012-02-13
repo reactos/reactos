@@ -329,7 +329,7 @@ CUSBHardwareDevice::PnpStart(
                 //
                 Version = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)ResourceBase + OHCI_REVISION_OFFSET));
 
-                DPRINT("Version %x\n", Version);
+                DPRINT("Version %x\n", Version & 0xFFFF);
 
                 //
                 // Store Resource base
