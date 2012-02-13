@@ -81,7 +81,7 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "uxtheme.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(toolbar);
@@ -325,13 +325,13 @@ TOOLBAR_ButtonHasString(const TBUTTON_INFO *btnPtr)
 * 		TOOLBAR_CheckStyle
 *
 * This function validates that the styles set are implemented and
-* issues FIXME's warning of possible problems. In a perfect world this
+* issues FIXMEs warning of possible problems. In a perfect world this
 * function should be null.
 */
 static void
-TOOLBAR_CheckStyle (const TOOLBAR_INFO *infoPtr, DWORD dwStyle)
+TOOLBAR_CheckStyle (const TOOLBAR_INFO *infoPtr)
 {
-    if (dwStyle & TBSTYLE_REGISTERDROP)
+    if (infoPtr->dwStyle & TBSTYLE_REGISTERDROP)
 	FIXME("[%p] TBSTYLE_REGISTERDROP not implemented\n", infoPtr->hwndSelf);
 }
 
@@ -574,7 +574,7 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
     UINT state = tbcd->nmcd.uItemState;
 
     /* draw text */
-    if (lpText) {
+    if (lpText && infoPtr->nMaxTextRows > 0) {
         TRACE("string=%s rect=(%s)\n", debugstr_w(lpText),
               wine_dbgstr_rect(rcText));
 
@@ -1467,7 +1467,7 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
 *
 * +--------------------------------------------------------+ ^
 * |                    ^                     ^             | |
-* |                    | pad.cy / 2          | centred     | |
+* |                    | pad.cy / 2          | centered    | |
 * | pad.cx/2 + cxedge +--------------+     +------------+  | | DEFPAD_CY +
 * |<----------------->| nBitmapWidth |     | Text       |  | | max(nBitmapHeight, szText.cy)
 * |                   |<------------>|     |            |  | |
@@ -1483,7 +1483,7 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
 *
 * +-----------------------------------+ ^
 * |                     ^             | |
-* |                     | centred     | | LISTPAD_CY +
+* |                     | centered    | | LISTPAD_CY +
 * |                   +------------+  | | szText.cy
 * |                   | Text       |  | |
 * |                   |            |  | |
@@ -1521,13 +1521,13 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
 * |                     | pad.cy / 2  | | nBitmapHeight +
 * |                     -             | | szText.cy +
 * |                   +------------+  | | DEFPAD_CY + 1
-* |    centred        |   Bitmap   |  | |
+* |    centered       |   Bitmap   |  | |
 * |<----------------->|            |  | |
 * |                   +------------+  | |
 * |                         ^         | |
 * |                       1 |         | |
 * |                         -         | |
-* |     centred     +---------------+ | |
+* |     centered    +---------------+ | |
 * |<--------------->|      Text     | | |
 * |                 +---------------+ | |
 * +-----------------------------------+ -
@@ -1540,7 +1540,7 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
 * |                     ^                 | |
 * |                     | 2 + pad.cy / 2  | |
 * |                     -                 | | szText.cy +
-* |    centred      +-----------------+   | | pad.cy + 2
+* |    centered     +-----------------+   | | pad.cy + 2
 * |<--------------->|   Text          |   | |
 * |                 +-----------------+   | |
 * |                                       | |
@@ -2305,7 +2305,7 @@ static LRESULT TOOLBAR_Cust_AvailDragListNotification(const CUSTDLG_INFO *custIn
     return 0;
 }
 
-extern UINT uDragListMessage;
+extern UINT uDragListMessage DECLSPEC_HIDDEN;
 
 /***********************************************************************
  * TOOLBAR_CustomizeDialogProc
@@ -3066,8 +3066,8 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
 
         if (infoPtr->dwStyle & WS_BORDER)
         {
-            cy += 2 * GetSystemMetrics(SM_CXBORDER);
-            cx += 2 * GetSystemMetrics(SM_CYBORDER);
+            cx += 2 * GetSystemMetrics(SM_CXBORDER);
+            cy += 2 * GetSystemMetrics(SM_CYBORDER);
         }
 
         SetWindowPos(infoPtr->hwndSelf, NULL, x, y, cx, cy, uPosFlags);
@@ -4378,7 +4378,7 @@ TOOLBAR_SetButtonSize (TOOLBAR_INFO *infoPtr, LPARAM lParam)
     /*
      * The documentation also does not mention that if 0 is supplied for
      * either size, the system changes it to the default of 24 wide and
-     * 22 high. Demonstarted in ControlSpy Toolbar. GLA 3/02
+     * 22 high. Demonstrated in ControlSpy Toolbar. GLA 3/02
      */
     if (cx == 0) cx = 24;
     if (cy == 0) cy = 22;
@@ -4908,11 +4908,10 @@ TOOLBAR_SetState (TOOLBAR_INFO *infoPtr, INT Id, LPARAM lParam)
 
 
 static LRESULT
-TOOLBAR_SetStyle (TOOLBAR_INFO *infoPtr, LPARAM lParam)
+TOOLBAR_SetStyle (TOOLBAR_INFO *infoPtr, DWORD style)
 {
-    SetWindowLongW(infoPtr->hwndSelf, GWL_STYLE, lParam);
-
-    return TRUE;
+    infoPtr->dwStyle = style;
+    return 0;
 }
 
 
@@ -5152,12 +5151,11 @@ static LRESULT
 TOOLBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 {
     TOOLBAR_INFO *infoPtr = (TOOLBAR_INFO *)GetWindowLongPtrW(hwnd, 0);
-    DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
     LOGFONTW logFont;
 
-    TRACE("hwnd = %p\n", hwnd);
+    TRACE("hwnd = %p, style=0x%08x\n", hwnd, lpcs->style);
 
-    infoPtr->dwStyle = dwStyle;
+    infoPtr->dwStyle = lpcs->style;
     GetClientRect(hwnd, &infoPtr->client_rect);
     infoPtr->bUnicode = infoPtr->hwndNotify && 
         (NFR_UNICODE == SendMessageW(hwnd, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_REQUERY));
@@ -5168,7 +5166,7 @@ TOOLBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     
     OpenThemeData (hwnd, themeClass);
 
-    TOOLBAR_CheckStyle (infoPtr, dwStyle);
+    TOOLBAR_CheckStyle (infoPtr);
 
     return 0;
 }
@@ -6370,11 +6368,10 @@ TOOLBAR_StyleChanged (TOOLBAR_INFO *infoPtr, INT nType, const STYLESTRUCT *lpSty
         else
             infoPtr->dwDTFlags = DT_CENTER | DT_END_ELLIPSIS;
 
-        TOOLBAR_CheckStyle (infoPtr, lpStyle->styleNew);
-
         TRACE("new style 0x%08x\n", lpStyle->styleNew);
 
         infoPtr->dwStyle = lpStyle->styleNew;
+        TOOLBAR_CheckStyle (infoPtr);
 
         if ((dwOldStyle ^ lpStyle->styleNew) & (TBSTYLE_WRAPABLE | CCS_VERT))
             TOOLBAR_LayoutToolbar(infoPtr);

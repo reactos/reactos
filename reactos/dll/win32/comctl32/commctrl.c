@@ -72,57 +72,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
 
-#define NAME       "microsoft.windows.common-controls"
-#define FILE       "comctl32.dll"
-#define VERSION    "6.0.2600.2982"
-#define PUBLIC_KEY "6595b64144ccf1df"
-
-#ifdef __i386__
-#define ARCH "x86"
-#elif defined __x86_64__
-#define ARCH "amd64"
-#else
-#define ARCH "none"
-#endif
-
-static const char manifest[] =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-    "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n"
-    "  <assemblyIdentity type=\"win32\" name=\"" NAME "\" version=\"" VERSION "\" processorArchitecture=\"" ARCH "\" publicKeyToken=\"" PUBLIC_KEY "\"/>\n"
-    "  <file name=\"" FILE "\">\n"
-    "    <windowClass>Button</windowClass>\n"
-    "    <windowClass>ButtonListBox</windowClass>\n"
-    "    <windowClass>ComboBoxEx32</windowClass>\n"
-    "    <windowClass>ComboLBox</windowClass>\n"
-    "    <windowClass>Combobox</windowClass>\n"
-    "    <windowClass>Edit</windowClass>\n"
-    "    <windowClass>Listbox</windowClass>\n"
-    "    <windowClass>NativeFontCtl</windowClass>\n"
-    "    <windowClass>ReBarWindow32</windowClass>\n"
-    "    <windowClass>ScrollBar</windowClass>\n"
-    "    <windowClass>Static</windowClass>\n"
-    "    <windowClass>SysAnimate32</windowClass>\n"
-    "    <windowClass>SysDateTimePick32</windowClass>\n"
-    "    <windowClass>SysHeader32</windowClass>\n"
-    "    <windowClass>SysIPAddress32</windowClass>\n"
-    "    <windowClass>SysLink</windowClass>\n"
-    "    <windowClass>SysListView32</windowClass>\n"
-    "    <windowClass>SysMonthCal32</windowClass>\n"
-    "    <windowClass>SysPager</windowClass>\n"
-    "    <windowClass>SysTabControl32</windowClass>\n"
-    "    <windowClass>SysTreeView32</windowClass>\n"
-    "    <windowClass>ToolbarWindow32</windowClass>\n"
-    "    <windowClass>msctls_hotkey32</windowClass>\n"
-    "    <windowClass>msctls_progress32</windowClass>\n"
-    "    <windowClass>msctls_statusbar32</windowClass>\n"
-    "    <windowClass>msctls_trackbar32</windowClass>\n"
-    "    <windowClass>msctls_updown32</windowClass>\n"
-    "    <windowClass>tooltips_class32</windowClass>\n"
-    "  </file>\n"
-    "</assembly>\n";
-
-static const char manifest_filename[] = ARCH "_" NAME "_" PUBLIC_KEY "_" VERSION "_none_deadbeef.manifest";
-
 static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static LPWSTR COMCTL32_wSubclass = NULL;
@@ -143,46 +92,6 @@ static const WCHAR strCC32SubclassInfo[] = {
     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
 };
 
-static BOOL create_manifest( BOOL install )
-{
-    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s',0};
-    static const WCHAR manifestsW[] = {'\\','m','a','n','i','f','e','s','t','s','\\',0};
-
-    DWORD len, written;
-    WCHAR *buffer;
-    HANDLE file;
-    BOOL ret = FALSE;
-
-    len = MultiByteToWideChar( CP_UTF8, 0, manifest_filename, sizeof(manifest_filename), NULL, 0 );
-    len += GetWindowsDirectoryW( NULL, 0 );
-    len += lstrlenW(winsxsW);
-    len += lstrlenW(manifestsW);
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
-    GetWindowsDirectoryW( buffer, len );
-    lstrcatW( buffer, winsxsW );
-    CreateDirectoryW( buffer, NULL );
-    lstrcatW( buffer, manifestsW );
-    CreateDirectoryW( buffer, NULL );
-    MultiByteToWideChar( CP_UTF8, 0, manifest_filename, sizeof(manifest_filename),
-                         buffer + lstrlenW(buffer), len );
-    if (install)
-    {
-        file = CreateFileW( buffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-        if (file != INVALID_HANDLE_VALUE)
-        {
-            ret = (WriteFile( file, manifest, sizeof(manifest)-1, &written, NULL ) &&
-                   written == sizeof(manifest)-1);
-            CloseHandle( file );
-            if (!ret) DeleteFileW( buffer );
-            else TRACE("created %s\n", debugstr_w(buffer));
-        }
-    }
-    else ret = DeleteFileW( buffer );
-
-    HeapFree( GetProcessHeap(), 0, buffer );
-    return ret;
-}
-
 
 /***********************************************************************
  * DllMain [Internal]
@@ -192,7 +101,7 @@ static BOOL create_manifest( BOOL install )
  * PARAMS
  *     hinstDLL    [I] handle to the 'dlls' instance
  *     fdwReason   [I]
- *     lpvReserved [I] reserverd, must be NULL
+ *     lpvReserved [I] reserved, must be NULL
  *
  * RETURNS
  *     Success: TRUE
@@ -701,7 +610,7 @@ CreateUpDownControl (DWORD style, INT x, INT y, INT cx, INT cy,
  *
  * NOTES
  *     This function is just a dummy - all the controls are registered at
- *     the DLL's initialization. See InitCommonContolsEx for details.
+ *     the DLL initialization time. See InitCommonContolsEx for details.
  */
 
 VOID WINAPI
@@ -887,7 +796,10 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
         nColorTableSize = (1 << lpBitmap->biBitCount);
     else
         nColorTableSize = 0;
-    nSize = lpBitmap->biSize + nColorTableSize * sizeof(RGBQUAD);
+    nSize = lpBitmap->biSize;
+    if (nSize == sizeof(BITMAPINFOHEADER) && lpBitmap->biCompression == BI_BITFIELDS)
+        nSize += 3 * sizeof(DWORD);
+    nSize += nColorTableSize * sizeof(RGBQUAD);
     lpBitmapInfo = GlobalAlloc (GMEM_FIXED, nSize);
     if (lpBitmapInfo == NULL)
 	return 0;
@@ -1018,7 +930,6 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
-    if (!create_manifest( bInstall )) return HRESULT_FROM_WIN32(GetLastError());
     return S_OK;
 }
 
@@ -1088,7 +999,7 @@ VOID WINAPI InitMUILanguage (LANGID uiLang)
  * PARAMS
  *     hWnd [in] handle to window subclass.
  *     pfnSubclass [in] Pointer to new window procedure.
- *     uIDSubclass [in] Unique identifier of sublass together with pfnSubclass.
+ *     uIDSubclass [in] Unique identifier of subclass together with pfnSubclass.
  *     dwRef [in] Reference data to pass to window procedure.
  *
  * RETURNS
@@ -1177,7 +1088,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * PARAMS
  *     hWnd [in] Handle to window which were subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
- *     uID [in] Unique indentifier of the subclassing procedure
+ *     uID [in] Unique identifier of the subclassing procedure
  *     pdwRef [out] Pointer to the reference data
  *
  * RETURNS
@@ -1320,7 +1231,7 @@ static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam
 /***********************************************************************
  * DefSubclassProc [COMCTL32.413]
  *
- * Calls the next window procedure (ie. the one before this subclass)
+ * Calls the next window procedure (i.e. the one before this subclass)
  *
  * PARAMS
  *     hWnd [in] The window that we're subclassing
@@ -1696,9 +1607,34 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD 
 HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *pTaskConfig, int *pnButton,
                                   int *pnRadioButton, BOOL *pfVerificationFlagChecked)
 {
+    UINT uType = 0;
+    INT  ret;
     FIXME("%p, %p, %p, %p\n", pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
 
-    if (pnButton) *pnButton = IDYES;
+    if (pTaskConfig->dwCommonButtons & TDCBF_YES_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_NO_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_YESNOCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_YES_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_NO_BUTTON)
+        uType |= MB_YESNO;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_RETRY_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_RETRYCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_OK_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_OKCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_OK_BUTTON)
+        uType |= MB_OK;
+    ret = MessageBoxW(pTaskConfig->hwndParent, pTaskConfig->pszMainInstruction,
+                      pTaskConfig->pszWindowTitle, uType);
+    FIXME("dwCommonButtons=%x uType=%x ret=%x\n", pTaskConfig->dwCommonButtons, uType, ret);
+
+    if (pnButton) *pnButton = ret;
     if (pnRadioButton) *pnRadioButton = pTaskConfig->nDefaultButton;
     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
     return S_OK;

@@ -39,7 +39,7 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "uxtheme.h"
 #include "wine/debug.h"
 

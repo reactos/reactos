@@ -79,8 +79,8 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static void IPADDRESS_UpdateText (const IPADDRESS_INFO *infoPtr)
 {
-    static const WCHAR zero[2] = {'0', 0};
-    static const WCHAR dot[2]  = {'.', 0};
+    static const WCHAR zero[] = {'0', 0};
+    static const WCHAR dot[]  = {'.', 0};
     WCHAR field[4];
     WCHAR ip[16];
     INT i;
@@ -339,7 +339,7 @@ static BOOL IPADDRESS_SetRange (IPADDRESS_INFO *infoPtr, int index, WORD range)
 
 static void IPADDRESS_ClearAddress (const IPADDRESS_INFO *infoPtr)
 {
-    WCHAR nil[1] = { 0 };
+    static const WCHAR nil[] = { 0 };
     int i;
 
     TRACE("\n");
@@ -384,15 +384,16 @@ static void IPADDRESS_SetFocusToField (const IPADDRESS_INFO *infoPtr, INT index)
 
 static BOOL IPADDRESS_ConstrainField (const IPADDRESS_INFO *infoPtr, int currentfield)
 {
-    const IPPART_INFO *part = &infoPtr->Part[currentfield];
-    WCHAR field[10];
     static const WCHAR fmt[] = { '%', 'd', 0 };
+    const IPPART_INFO *part;
     int curValue, newValue;
+    WCHAR field[10];
 
     TRACE("(currentfield=%d)\n", currentfield);
 
     if (currentfield < 0 || currentfield > 3) return FALSE;
 
+    part = &infoPtr->Part[currentfield];
     if (!GetWindowTextW (part->EditHwnd, field, 4)) return FALSE;
 
     curValue = atoiW(field);

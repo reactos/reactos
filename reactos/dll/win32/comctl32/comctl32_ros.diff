@@ -151,7 +151,7 @@ Index: listview.c
  
    /* font */
    HFONT hDefaultFont;
-@@ -1635,8 +1636,19 @@
+@@ -1699,8 +1700,19 @@
  /* used to handle collapse main item column case */
  static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
  {
@@ -173,7 +173,7 @@ Index: listview.c
  }
  
  /* Listview invalidation functions: use _only_ these functions to invalidate */
-@@ -5042,7 +5054,11 @@
+@@ -5117,7 +5129,11 @@
  
      /* Draw marquee rectangle if appropriate */
      if (infoPtr->bMarqueeSelect)
@@ -185,15 +185,15 @@ Index: listview.c
  
      if (cdmode & CDRF_NOTIFYPOSTPAINT)
  	notify_postpaint(infoPtr, &nmlvcd);
-@@ -7856,6 +7872,7 @@
+@@ -7927,6 +7943,7 @@
  {
-     TRACE("(clrBk=%x)\n", clrBk);
+     TRACE("(color=%x)\n", color);
  
 +    infoPtr->bDefaultBkColor = FALSE;
-     if(infoPtr->clrBk != clrBk) {
+     if(infoPtr->clrBk != color) {
  	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
- 	infoPtr->clrBk = clrBk;
-@@ -9248,6 +9265,7 @@
+ 	infoPtr->clrBk = color;
+@@ -9314,6 +9331,7 @@
    infoPtr->clrText = CLR_DEFAULT;
    infoPtr->clrTextBk = CLR_DEFAULT;
    LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
@@ -201,7 +201,7 @@ Index: listview.c
  
    /* set default values */
    infoPtr->nFocusedItem = -1;
-@@ -11510,6 +11528,11 @@
+@@ -11570,6 +11588,12 @@
  
    case WM_SYSCOLORCHANGE:
      COMCTL32_RefreshSysColors();
@@ -209,6 +209,7 @@ Index: listview.c
 +    {
 +        LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
 +        infoPtr->bDefaultBkColor = TRUE;
++        LISTVIEW_InvalidateList(infoPtr);
 +    }
      return 0;
  

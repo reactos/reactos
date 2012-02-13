@@ -52,8 +52,7 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "uxtheme.h"
-//#include "vssym32.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(statusbar);
@@ -1285,7 +1284,7 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return STATUSBAR_WMGetText (infoPtr, (INT)wParam, (LPWSTR)lParam);
 
 	case WM_GETTEXTLENGTH:
-	    return LOWORD(STATUSBAR_GetTextLength (infoPtr, 0));
+	    return STATUSBAR_GetTextLength (infoPtr, 0);
 
 	case WM_LBUTTONDBLCLK:
             return STATUSBAR_SendMouseNotify(infoPtr, NM_DBLCLK, msg, wParam, lParam);

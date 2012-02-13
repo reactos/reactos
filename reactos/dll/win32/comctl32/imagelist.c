@@ -3094,7 +3094,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 
     if ((ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32) || ilc == ILC_COLOR)
     {
-        char buffer[sizeof(BITMAPINFO) + (256 - 1) * sizeof(RGBQUAD)];
+        char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
         BITMAPINFO *bmi = (BITMAPINFO *)buffer;
 
         TRACE("Creating DIBSection %d x %d, %d Bits per Pixel\n",
