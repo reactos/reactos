@@ -240,7 +240,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     if (Pfn1->u3.e1.PrototypePte == 1)
     {
         /* Get the PDE and make sure it's faulted in */
-        PointerPde = MiAddressToPde(PointerPte);
+        PointerPde = MiPteToPde(PointerPte);
         if (PointerPde->u.Hard.Valid == 0)
         {
 #if (_MI_PAGING_LEVELS == 2)
