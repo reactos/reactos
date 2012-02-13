@@ -41,10 +41,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    HKY_NONE "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Fără\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Niciuna"
+    HKY_NONE "Niciuna"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140

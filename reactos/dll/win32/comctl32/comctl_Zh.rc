@@ -41,10 +41,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    HKY_NONE "#-#-#-#-#  zh_CN.po (Wine)  #-#-#-#-#\n\
-未定义\n\
-#-#-#-#-#  zh_CN.po (Wine)  #-#-#-#-#\n\
-无"
+    HKY_NONE "无"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140

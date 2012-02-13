@@ -41,10 +41,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    HKY_NONE "#-#-#-#-#  sr_RS@latin.po (Wine)  #-#-#-#-#\n\
-Ništa\n\
-#-#-#-#-#  sr_RS@latin.po (Wine)  #-#-#-#-#\n\
-Nista"
+    HKY_NONE "Nista"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140

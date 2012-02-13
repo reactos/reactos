@@ -41,10 +41,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    HKY_NONE "#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Nincs\n\
-#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Semmi"
+    HKY_NONE "Semmi"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140
