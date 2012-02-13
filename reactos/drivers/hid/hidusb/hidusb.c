@@ -1311,6 +1311,7 @@ Hid_GetProtocol(
     //
     DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    ASSERT(HidDeviceExtension->InterfaceInfo);
 
     if (HidDeviceExtension->InterfaceInfo->SubClass != 0x1)
     {
@@ -1488,11 +1489,6 @@ Hid_PnpStart(
     Hid_SetIdle(DeviceObject);
 
     //
-    // get protocol
-    //
-    Hid_GetProtocol(DeviceObject);
-
-    //
     // move to next descriptor
     //
     HidDescriptor = (PHID_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
@@ -1518,6 +1514,11 @@ Hid_PnpStart(
         // done
         //
         DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
+
+        //
+        // get protocol
+        //
+        Hid_GetProtocol(DeviceObject);
         return Status;
     }
 
@@ -1526,6 +1527,11 @@ Hid_PnpStart(
     //
     UNIMPLEMENTED
     ASSERT(FALSE);
+
+    //
+    // get protocol
+    //
+    Hid_GetProtocol(DeviceObject);
     return STATUS_SUCCESS;
 }
 
