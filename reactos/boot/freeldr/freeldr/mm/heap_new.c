@@ -375,6 +375,9 @@ HeapAllocate(
         TRACE("HeapAllocate(%p, %ld, %.4s) -> return %p\n",
               HeapHandle, ByteSize, &Tag, Block->Data);
 
+        /* HACK: zero out the allocation */
+        RtlZeroMemory(Block->Data, Block->Size * sizeof(HEAP_BLOCK));
+
 #ifdef FREELDR_HEAP_VERIFIER
         /* Write size and redzones */
         *REDZONE_SIZE(Block) = ByteSize - REDZONE_ALLOCATION;
