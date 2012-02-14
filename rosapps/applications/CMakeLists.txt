@@ -1,4 +1,4 @@
-#add_subdirectory(cmdutils)
+add_subdirectory(cmdutils)
 #add_subdirectory(devutils)
 #add_subdirectory(fraginator)
 #add_subdirectory(net)

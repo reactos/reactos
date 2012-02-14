@@ -18,10 +18,10 @@
 	<directory name="touch">
 		<xi:include href="touch/touch.rbuild" />
 	</directory>
-	<directory name="y">
-		<xi:include href="y/y.rbuild" />
-	</directory>
 	<directory name="uptime">
 		<xi:include href="uptime/uptime.rbuild" />
+	</directory>
+	<directory name="y">
+		<xi:include href="y/y.rbuild" />
 	</directory>
 </group>

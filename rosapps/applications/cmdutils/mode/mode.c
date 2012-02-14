@@ -72,7 +72,7 @@ int Usage()
 
 int QueryDevices()
 {
-    TCHAR buffer[10240];
+    TCHAR buffer[20240];
     int len;
     TCHAR* ptr = buffer;
 
@@ -87,12 +87,12 @@ int QueryDevices()
             } else if (_tcsstr(ptr, _T("LPT"))) {
                 _tprintf(_T("    Found parallel device - %s\n"), ptr);
             } else {
-                _tprintf(_T("    Found other device - %s\n"), ptr);
+                //_tprintf(_T("    Found other device - %s\n"), ptr);
             }
             ptr += (len+1);
         }
     } else {
-        _tprintf(_T("    ERROR: QueryDosDevice(...) failed.\n"));
+        _tprintf(_T("    ERROR: QueryDosDevice(...) failed.%ld\n"), GetLastError());
     }
     return 1;
 }
