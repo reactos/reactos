@@ -4710,7 +4710,7 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
         rcLabel.bottom--;
 
-    if (!lprcFocus && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
+    if ((!(lvItem.state & LVIS_SELECTED) || !infoPtr->bFocus) && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
         DrawShadowText(hdc, lvItem.pszText, -1, &rcLabel, uFormat, RGB(255, 255, 255), RGB(0, 0, 0), 2, 2);
     else
         DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
