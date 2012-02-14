@@ -43,7 +43,7 @@ typedef struct _SM_CREATE_FOREIGN_SESSION_MSG
 typedef struct _SM_SESSION_COMPLETE_MSG
 {
     ULONG SessionId;
-    NTSTATUS Status;
+    NTSTATUS SessionStatus;
 } SM_SESSION_COMPLETE_MSG, *PSM_SESSION_COMPLETE_MSG;
 
 typedef struct _SM_TERMINATE_FOREIGN_SESSION_MSG
@@ -219,6 +219,15 @@ C_ASSERT(sizeof(SB_API_MSG) == 0x110);
 #endif
 
 //
+// SB Message Handler
+//
+typedef
+BOOLEAN
+(NTAPI *PSB_API_ROUTINE)(
+    IN PSB_API_MSG SbApiMsg
+);
+
+//
 // The actual server functions that a client linking with smlib can call
 //
 NTSTATUS
@@ -236,6 +245,14 @@ SmExecPgm(
     IN HANDLE SmApiPort,
     IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
     IN BOOLEAN DebugFlag
+);
+
+NTSTATUS
+NTAPI
+SmSessionComplete(
+    IN HANDLE SmApiPort,
+    IN ULONG SessionId,
+    IN NTSTATUS SessionStatus
 );
 
 #endif

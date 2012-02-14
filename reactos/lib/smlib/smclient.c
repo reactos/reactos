@@ -128,3 +128,41 @@ SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
     /* Return if the connection was successful or not */
     return Status;
 }
+
+NTSTATUS
+NTAPI
+SmSessionComplete(IN HANDLE SmApiPort,
+                  IN ULONG SessionId,
+                  IN NTSTATUS SessionStatus)
+{
+    NTSTATUS Status;
+    SM_API_MSG ApiMessage;
+    PSM_SESSION_COMPLETE_MSG SessionComplete = &ApiMessage.u.SessionComplete;
+
+    /* Set the message data */
+    SessionComplete->SessionId = SessionId;
+    SessionComplete->SessionStatus = SessionStatus;
+
+    /* Set the API Message Port Message header */
+    ApiMessage.ApiNumber = SmSessionCompleteApi;
+    ApiMessage.h.u1.s1.DataLength = sizeof(SM_SESSION_COMPLETE_MSG) + 8;
+    ApiMessage.h.u1.s1.TotalLength = sizeof(SM_API_MSG);
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    /* Sent the message and wait for a reply */
+    Status = NtRequestWaitReplyPort(SmApiPort,
+                                    &ApiMessage.h,
+                                    &ApiMessage.h);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the real status */
+        Status = ApiMessage.ReturnValue;
+    }
+    else
+    {
+        DPRINT1("SmCompleteSession: NtRequestWaitReply failed\n");
+    }
+
+    /* Return status */
+    return Status;
+}
