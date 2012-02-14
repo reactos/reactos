@@ -1589,7 +1589,7 @@ OhciDefferedRoutine(
 {
     CUSBHardwareDevice *This;
     ULONG CStatus, Index, PortStatus;
-    ULONG DoneHead;
+    ULONG DoneHead, QueueSCEWorkItem;
 
     //
     // get parameters
@@ -1612,6 +1612,7 @@ OhciDefferedRoutine(
         //
         // device connected, lets check which port
         //
+        QueueSCEWorkItem = FALSE;
         for(Index = 0; Index < This->m_NumberOfPorts; Index++)
         {
             //
@@ -1648,20 +1649,23 @@ OhciDefferedRoutine(
                 }
 
                 //
-                // is there a status change callback
+                // work to do
                 //
-                if (This->m_SCECallBack != NULL)
-                {
-                    //
-                    // queue work item for processing
-                    //
-                    ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
-                }
+                QueueSCEWorkItem = TRUE;
             }
         }
+
+        //
+        // is there a status change callback and a device connected / disconnected
+        //
+        if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
+        {
+            //
+            // queue work item for processing
+            //
+            ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+        }
     }
-
-
 }
 
 VOID

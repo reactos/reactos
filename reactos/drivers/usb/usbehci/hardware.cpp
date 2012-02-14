@@ -1377,7 +1377,7 @@ EhciDefferedRoutine(
     IN PVOID SystemArgument2)
 {
     CUSBHardwareDevice *This;
-    ULONG CStatus, PortStatus, PortCount, i, ShouldRingDoorBell;
+    ULONG CStatus, PortStatus, PortCount, i, ShouldRingDoorBell, QueueSCEWorkItem;
     NTSTATUS Status = STATUS_SUCCESS;
     EHCI_USBCMD_CONTENT UsbCmd;
 
@@ -1462,10 +1462,10 @@ EhciDefferedRoutine(
     This->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
     if (CStatus & EHCI_STS_PCD)
     {
+        QueueSCEWorkItem = FALSE;
         for (i = 0; i < PortCount; i++)
         {
             PortStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * i));
-
             //
             // Device connected or removed
             //
@@ -1492,27 +1492,33 @@ EhciDefferedRoutine(
                             continue;
                         }
                     }
+
+                    //
+                    // work to do
+                    //
+                    QueueSCEWorkItem = TRUE;
                 }
                 else
                 {
                     DPRINT1("Device disconnected on port %d\n", i);
-                }
 
-                //
-                // is there a status change callback
-                //
-                if (This->m_SCECallBack != NULL)
-                {
                     //
-                    // queue work item for processing
+                    // work to do
                     //
-                    ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+                    QueueSCEWorkItem = TRUE;
                 }
-
-                //
-                // FIXME: This needs to be saved somewhere
-                //
             }
+        }
+
+        //
+        // is there a status change callback and a high speed device connected / disconnected
+        //
+        if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
+        {
+            //
+            // queue work item for processing
+            //
+            ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
         }
     }
     return;
