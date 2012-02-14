@@ -300,10 +300,10 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
     if ((NT_SUCCESS(Status)) && (CidSubsystem))
     {
         /* This was an actual subsystem, so connect back to it */
-        DPRINT1("Connecting back to %wZ\n", &SubsystemPort);
         SbApiMsg->ConnectionInfo.SbApiPortName[119] = UNICODE_NULL;
         RtlCreateUnicodeString(&SubsystemPort,
                                SbApiMsg->ConnectionInfo.SbApiPortName);
+        DPRINT1("Connecting back to %wZ\n", &SubsystemPort);
         Status = NtConnectPort(&CidSubsystem->SbApiPort,
                                &SubsystemPort,
                                &SecurityQos,
