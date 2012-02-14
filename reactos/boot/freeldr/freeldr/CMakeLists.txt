@@ -54,7 +54,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     inifile/parse.c
     mm/meminit.c
     mm/mm.c
-    mm/heap.c
+    mm/heap_new.c
     reactos/registry.c
     reactos/arcname.c
     reactos/archwsup.c
@@ -155,7 +155,6 @@ endif()
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    rtl/bget.c
     rtl/libsupp.c)
 
 if (NOT MSVC)

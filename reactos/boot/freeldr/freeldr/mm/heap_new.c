@@ -168,7 +168,7 @@ HeapRelease(
         if (Block->Size == 0)
         {
             /* Align the end address up to cover the end of the heap */
-            EndAddress = ALIGN_DOWN_POINTER_BY(Block->Data, PAGE_SIZE);
+            EndAddress = ALIGN_UP_POINTER_BY(Block->Data, PAGE_SIZE);
         }
         else
         {
@@ -176,14 +176,19 @@ HeapRelease(
             EndAddress = ALIGN_DOWN_POINTER_BY(Block->Data, PAGE_SIZE);
         }
 
-        FreePages = (PFN_COUNT)((EndAddress - StartAddress) / MM_PAGE_SIZE);
-        AllFreePages += FreePages;
+        /* Check if we have free pages */
+        if (EndAddress > StartAddress)
+        {
+            /* Calculate the size of the free region in pages */
+            FreePages = (PFN_COUNT)((EndAddress - StartAddress) / MM_PAGE_SIZE);
+            AllFreePages += FreePages;
 
-        /* Now mark the pages free */
-        MmMarkPagesInLookupTable(PageLookupTableAddress,
-                                 (ULONG_PTR)StartAddress / MM_PAGE_SIZE,
-                                 FreePages,
-                                 LoaderFree);
+            /* Now mark the pages free */
+            MmMarkPagesInLookupTable(PageLookupTableAddress,
+                                     (ULONG_PTR)StartAddress / MM_PAGE_SIZE,
+                                     FreePages,
+                                     LoaderFree);
+        }
 
         /* bail out, if it was the last block */
         if (Block->Size == 0) break;
@@ -460,8 +465,6 @@ MmHeapFree(PVOID MemoryPointer)
     HeapFree(FrLdrDefaultHeap, MemoryPointer, 'pHmM');
 }
 
-
-#undef ExAllocatePoolWithTag
 PVOID
 NTAPI
 ExAllocatePoolWithTag(
@@ -481,7 +484,6 @@ ExAllocatePool(
     return HeapAllocate(FrLdrDefaultHeap, NumberOfBytes, 0);
 }
 
-#undef ExFreePool
 VOID
 NTAPI
 ExFreePool(
@@ -490,7 +492,6 @@ ExFreePool(
     HeapFree(FrLdrDefaultHeap, P, 0);
 }
 
-#undef ExFreePoolWithTag
 VOID
 NTAPI
 ExFreePoolWithTag(

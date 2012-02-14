@@ -40,7 +40,7 @@
 		<file>parse.c</file>
 	</directory>
 	<directory name="mm">
-		<file>heap.c</file>
+		<file>heap_new.c</file>
 		<file>meminit.c</file>
 		<file>mm.c</file>
 	</directory>
@@ -51,7 +51,6 @@
 		<file>binhive.c</file>
 	</directory>
 	<directory name="rtl">
-		<file>bget.c</file>
 		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">
