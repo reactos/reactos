@@ -27,113 +27,6 @@ HANDLE hApiPort = (HANDLE) 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-ULONG
-InitializeVideoAddressSpace(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
-    NTSTATUS Status;
-    HANDLE PhysMemHandle;
-    PVOID BaseAddress;
-    LARGE_INTEGER Offset;
-    SIZE_T ViewSize;
-    CHAR IVTAndBda[1024+256];
-    
-    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
-    BaseAddress = 0;
-    ViewSize = 1024 * 1024;
-    Status = ZwFreeVirtualMemory(NtCurrentProcess(), 
-                                 &BaseAddress,
-                                 &ViewSize,
-                                 MEM_RELEASE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
-        return 0;
-    }
-    
-    /* Open the physical memory section */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &PhysMemName,
-                               0,
-                               NULL,
-                               NULL);
-    Status = ZwOpenSection(&PhysMemHandle,
-                           SECTION_ALL_ACCESS,
-                           &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
-        return 0;
-    }
-
-    /* Map the BIOS and device registers into the address space */
-    Offset.QuadPart = 0xa0000;
-    ViewSize = 0x100000 - 0xa0000;
-    BaseAddress = (PVOID)0xa0000;
-    Status = ZwMapViewOfSection(PhysMemHandle,
-                                NtCurrentProcess(),
-                                &BaseAddress,
-                                0,
-                                ViewSize,
-                                &Offset,
-                                &ViewSize,
-                                ViewUnmap,
-                                0,
-                                PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't map physical memory (%x)\n", Status);
-        ZwClose(PhysMemHandle);
-        return 0;
-    }
-
-    /* Close physical memory section handle */
-    ZwClose(PhysMemHandle);
-
-    if (BaseAddress != (PVOID)0xa0000)
-    {
-        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
-                BaseAddress);
-        return 0;
-    }
-
-    /* Allocate some low memory to use for the non-BIOS
-     * parts of the v86 mode address space
-     */
-    BaseAddress = (PVOID)0x1;
-    ViewSize = 0xa0000 - 0x1000;
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     &BaseAddress,
-                                     0,
-                                     &ViewSize,
-                                     MEM_RESERVE | MEM_COMMIT,
-                                     PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
-        return 0;
-    }
-    if (BaseAddress != (PVOID)0x0)
-    {
-        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
-                BaseAddress);
-        return 0;
-    }
-
-    /* Get the real mode IVT and BDA from the kernel */
-    Status = NtVdmControl(VdmInitialize, IVTAndBda);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtVdmControl failed (status %x)\n", Status);
-        return 0;
-    }
-
-    /* Return success */
-    return 1;
-}
-
-
 static NTSTATUS FASTCALL
 CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
 {
@@ -258,43 +151,6 @@ CsrpCreateObjectDirectory (int argc, char ** argv, char ** envp)
 	                               DIRECTORY_ALL_ACCESS,
 	                               &Attributes);
 	return Status;
-}
-
-/**********************************************************************
- * CsrpInitVideo/3
- *
- * TODO: we need a virtual device for sessions other than
- * TODO: the console one
- */
-static NTSTATUS
-CsrpInitVideo (int argc, char ** argv, char ** envp)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
-  IO_STATUS_BLOCK Iosb;
-  HANDLE VideoHandle = (HANDLE) 0;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  InitializeVideoAddressSpace();
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DeviceName,
-			     0,
-			     NULL,
-			     NULL);
-  Status = NtOpenFile(&VideoHandle,
-		      FILE_ALL_ACCESS,
-		      &ObjectAttributes,
-		      &Iosb,
-		      0,
-		      0);
-  if (NT_SUCCESS(Status))
-    {
-      NtClose(VideoHandle);
-    }
-  return Status;
 }
 
 /**********************************************************************
@@ -604,52 +460,6 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 	return Status;
 }
 
-#if 0
-/**********************************************************************
- * 	CsrpLoadKernelModeDriver/3
- */
-static NTSTATUS
-CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
-{
-	NTSTATUS        Status = STATUS_SUCCESS;
-	WCHAR           Data [MAX_PATH + 1];
-	ULONG           DataLength = sizeof Data;
-	ULONG           DataType = 0;
-	//UNICODE_STRING  Environment;
-
-
-	DPRINT1("SM: %s called\n", __FUNCTION__);
-
-
-	//EnvpToUnicodeString (envp, & Environment);
-	Status = SmLookupSubsystem (L"Kmode",
-				    Data,
-				    & DataLength,
-				    & DataType,
-				    NULL);
-	//RtlFreeUnicodeString (& Environment);
-	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
-	{
-		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
-		UNICODE_STRING             ModuleName;
-
-		wcscpy (ImagePath, L"\\SYSTEMROOT\\system32\\win32k.sys");
-//		wcscat (ImagePath, Data);
-		RtlInitUnicodeString (& ModuleName, ImagePath);
-		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */
-		                                SystemExtendServiceTableInformation,
-						& ModuleName,
-						sizeof ModuleName);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-		}
-	}
-	return Status;
-}
-#endif
-
 /**********************************************************************
  * CsrpCreateApiPort/2
  */
@@ -673,75 +483,6 @@ CsrpApiRegisterDef (int argc, char ** argv, char ** envp)
 	return CsrApiRegisterDefinitions(NativeDefinitions);
 }
 
-/**********************************************************************
- * CsrpCCTS/2
- */
-static NTSTATUS
-CsrpCCTS (int argc, char ** argv, char ** envp)
-{
-    ULONG Dummy;
-    ULONG DummyLength = sizeof(Dummy);
-	return CsrClientConnectToServer(L"\\Windows",
-			0, &Dummy, &DummyLength, NULL);
-}
-
-/**********************************************************************
- * CsrpRunWinlogon/0
- *
- * Start the logon process (winlogon.exe).
- *
- * TODO: this should be moved in CsrpCreateSession/x (one per session)
- * TODO: in its own desktop (one logon desktop per winstation).
- */
-static NTSTATUS
-CsrpRunWinlogon (int argc, char ** argv, char ** envp)
-{
-	NTSTATUS                      Status = STATUS_SUCCESS;
-	UNICODE_STRING                ImagePath;
-	UNICODE_STRING                CommandLine;
-	PRTL_USER_PROCESS_PARAMETERS  ProcessParameters = NULL;
-	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
-
-
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-    if (g_ModernSm) return STATUS_SUCCESS;
-
-	/* initialize the process parameters */
-	RtlInitUnicodeString (& ImagePath, L"\\SystemRoot\\system32\\winlogon.exe");
-	RtlInitUnicodeString (& CommandLine, L"");
-	RtlCreateProcessParameters(& ProcessParameters,
-				   & ImagePath,
-				   NULL,
-				   NULL,
-				   & CommandLine,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL);
-	/* Create the winlogon process */
-	Status = RtlCreateUserProcess (& ImagePath,
-				       OBJ_CASE_INSENSITIVE,
-				       ProcessParameters,
-				       NULL,
-				       NULL,
-				       NULL,
-				       FALSE,
-				       NULL,
-				       NULL,
-				       & ProcessInfo);
-	/* Cleanup */
-	RtlDestroyProcessParameters (ProcessParameters);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
-				__FUNCTION__, Status);
-	}
-
-   ZwResumeThread(ProcessInfo.ThreadHandle, NULL);
-	return Status;
-}
-
 static NTSTATUS
 CsrpCreateHardErrorPort (int argc, char ** argv, char ** envp)
 {
@@ -755,19 +496,15 @@ struct {
 	CSR_INIT_ROUTINE EntryPoint;
 	PCHAR ErrorMessage;
 } InitRoutine [] = {
-        {TRUE, CsrpCreateBNODirectory,   "create base named objects directory"},
+    {TRUE, CsrpCreateBNODirectory,   "create base named objects directory"},
 	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
 	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
     {TRUE, CsrpCreateHardErrorPort,  "create the hard error port"},
 	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
-//	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
-	{TRUE, CsrpInitVideo,            "initialize video"},
 	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
-	{TRUE, CsrpCCTS,                 "connect client to server"},
 	{TRUE, CsrpInitWin32Csr,         "load usermode dll"},
 	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
 	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
-	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -799,7 +536,6 @@ CsrServerInitialization(ULONG ArgumentCount,
 	}
 	if (CallInitComplete())
 	{
-		Status = SmCompleteSession (hSmApiPort,hSbApiPort,hApiPort);
 		return STATUS_SUCCESS;
 	}
     

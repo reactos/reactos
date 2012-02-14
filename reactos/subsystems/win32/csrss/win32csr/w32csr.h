@@ -2,10 +2,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/mmtypes.h>
-#include <ndk/mmfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/umfuncs.h>
+#include <ndk/ntndk.h>
 #include <psapi.h>
 
 /* External Winlogon Header */
