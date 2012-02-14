@@ -125,37 +125,17 @@ Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 38890)
 +++ propsheet.c	(working copy)
-@@ -2417,6 +2417,29 @@
-   return FALSE;
- }
+@@ -2425,6 +2425,9 @@
+   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
+   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
+   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
++  HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
++  INT iDefItem = 0;
++  HWND hwndFocus;
  
-+BOOL CALLBACK
-+EnumChildProc(HWND hwnd, LPARAM lParam)
-+{
-+    WCHAR szType[20];
-+    RealGetWindowClassW(hwnd, szType, 20);
-+
-+    if (strcmpW(szType, WC_EDITW) == 0)
-+    {
-+        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
-+        {
-+            SetFocus(hwnd);
-+            return FALSE;
-+        }
-+    } 
-+    else
-+    {
-+        EnumChildWindows(hwnd, EnumChildProc, 0);
-+    }
-+
-+    return TRUE;
-+}
-+
-+
- /******************************************************************************
-  *            PROPSHEET_SetWizButtons
-  *
-@@ -2438,17 +2461,6 @@
+   TRACE("%d\n", dwFlags);
+ 
+@@ -2432,17 +2435,6 @@
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -173,35 +153,26 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2478,6 +2490,31 @@
+@@ -2472,6 +2464,22 @@
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);
 +
-+  /* set the default pushbutton to an enabled button and give it focus */
++  /* set the default pushbutton to an enabled button */
 +  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-+    SetFocus(hwndFinish);
-+  }
++    iDefItem = IDC_FINISH_BUTTON;
 +  else if (dwFlags & PSWIZB_NEXT)
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-+    SetFocus(hwndNext);
-+  }
++    iDefItem = IDC_NEXT_BUTTON;
 +  else if (dwFlags & PSWIZB_BACK)
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-+    SetFocus(hwndBack);
-+  }
++    iDefItem = IDC_BACK_BUTTON;
 +  else
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-+    SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
-+  }
++    iDefItem = IDCANCEL;
++  SendMessageW(hwndDlg, DM_SETDEFID, iDefItem, 0);
 +
-+  /* Now try to find an edit control that deserves focus */
-+  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
++  /* Set focus if no control has it */
++  hwndFocus = GetFocus();
++  if (!hwndFocus || hwndFocus == hwndCancel)
++    SetFocus(GetDlgItem(hwndDlg, iDefItem));
  }
  
  /******************************************************************************

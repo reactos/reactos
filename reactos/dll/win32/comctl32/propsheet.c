@@ -2425,23 +2425,15 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
+  HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
+  INT iDefItem = 0;
+  HWND hwndFocus;
 
   TRACE("%d\n", dwFlags);
 
   EnableWindow(hwndBack, FALSE);
   EnableWindow(hwndNext, FALSE);
   EnableWindow(hwndFinish, FALSE);
-
-  /* set the default pushbutton to an enabled button */
-  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-  else if (dwFlags & PSWIZB_NEXT)
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-  else if (dwFlags & PSWIZB_BACK)
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-  else
-    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-
 
   if (dwFlags & PSWIZB_BACK)
     EnableWindow(hwndBack, TRUE);
@@ -2472,6 +2464,22 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   }
   else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
     EnableWindow(hwndFinish, TRUE);
+
+  /* set the default pushbutton to an enabled button */
+  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
+    iDefItem = IDC_FINISH_BUTTON;
+  else if (dwFlags & PSWIZB_NEXT)
+    iDefItem = IDC_NEXT_BUTTON;
+  else if (dwFlags & PSWIZB_BACK)
+    iDefItem = IDC_BACK_BUTTON;
+  else
+    iDefItem = IDCANCEL;
+  SendMessageW(hwndDlg, DM_SETDEFID, iDefItem, 0);
+
+  /* Set focus if no control has it */
+  hwndFocus = GetFocus();
+  if (!hwndFocus || hwndFocus == hwndCancel)
+    SetFocus(GetDlgItem(hwndDlg, iDefItem));
 }
 
 /******************************************************************************
