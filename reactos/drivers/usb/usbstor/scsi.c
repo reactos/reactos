@@ -270,9 +270,20 @@ USBSTOR_CSWCompletionRoutine(
     //
     // sanity checks
     //
-    ASSERT(Context->csw->Signature == CSW_SIGNATURE);
-    ASSERT(Context->csw->Tag == (ULONG)Context->csw);
-    ASSERT(Context->csw->Status == 0x00);
+    if (Context->csw->Signature != CSW_SIGNATURE)
+    {
+        DPRINT1("[USBSTOR] Expected Signature %x but got %x\n", CSW_SIGNATURE, Context->csw->Signature);
+    }
+
+    if (Context->csw->Tag != (ULONG)Context->csw)
+    {
+        DPRINT1("[USBSTOR] Expected Tag %x but got %x\n", (ULONG)Context->csw, Context->csw->Tag);
+    }
+
+    if (Context->csw->Status != 0x00)
+    {
+        DPRINT1("[USBSTOR] Expected Status 0x00 but got %x\n", Context->csw->Status);
+    }
 
     //
     // free cbw
