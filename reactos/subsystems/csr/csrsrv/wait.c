@@ -62,7 +62,8 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
            WaitApiMessage->Header.u1.s1.TotalLength;
 
     /* Allocate the Wait Block */
-    if (!(WaitBlock = RtlAllocateHeap(CsrHeap, 0, Size)))
+    WaitBlock = RtlAllocateHeap(CsrHeap, 0, Size);
+    if (!WaitBlock)
     {
         /* Fail */
         WaitApiMessage->Status = STATUS_NO_MEMORY;
@@ -74,8 +75,9 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
     WaitBlock->WaitThread = CsrWaitThread;
     WaitBlock->WaitContext = WaitContext;
     WaitBlock->WaitFunction = WaitFunction;
-    InitializeListHead(&WaitBlock->UserWaitList);
-    InitializeListHead(&WaitBlock->WaitList);
+    WaitBlock->UserWaitList.Flink = NULL;
+    WaitBlock->UserWaitList.Blink = NULL;
+    WaitBlock->WaitList = WaitBlock->UserWaitList;
 
     /* Copy the message */
     RtlMoveMemory(&WaitBlock->WaitApiMessage,
@@ -173,7 +175,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
             WaitBlock->WaitFunction = NULL;
         }
     
-        /* The wait suceeded*/
+        /* The wait suceeded */
         return TRUE;
     }
     
@@ -237,10 +239,9 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
     CsrAcquireWaitLock();
 
     /* Make sure the thread wasn't destroyed */
-    if (CsrWaitThread && (CsrWaitThread->Flags & CsrThreadTerminated))
+    if (CsrWaitThread->Flags & CsrThreadTerminated)
     {
         /* Fail the wait */
-        CsrWaitThread->WaitBlock = NULL;
         RtlFreeHeap(CsrHeap, 0, WaitBlock);
         CsrReleaseWaitLock();
         return FALSE;
@@ -275,7 +276,7 @@ VOID
 NTAPI
 CsrDereferenceWait(IN PLIST_ENTRY WaitList)
 {
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY NextEntry;
     PCSR_WAIT_BLOCK WaitBlock;
 
     /* Acquire the Process and Wait Locks */
@@ -283,11 +284,10 @@ CsrDereferenceWait(IN PLIST_ENTRY WaitList)
     CsrAcquireWaitLock();
 
     /* Set the list pointers */
-    ListHead = WaitList;
-    NextEntry = ListHead->Flink;
+    NextEntry = WaitList->Flink;
 
     /* Start the loop */
-    while (NextEntry != ListHead)
+    while (NextEntry != WaitList)
     {
         /* Get the wait block */
         WaitBlock = CONTAINING_RECORD(NextEntry, CSR_WAIT_BLOCK, WaitList);
@@ -346,18 +346,17 @@ NTAPI
 CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
                      IN PLIST_ENTRY WaitList)
 {
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY NextEntry;
     PCSR_WAIT_BLOCK WaitBlock;
 
     /* Acquire the Wait Lock */
     CsrAcquireWaitLock();
 
     /* Set the List pointers */
-    ListHead = WaitList;
-    NextEntry = ListHead->Flink;
+    NextEntry = WaitList->Flink;
 
     /* Start looping */
-    while (NextEntry != ListHead)
+    while (NextEntry != WaitList)
     {
         /* Get the Wait block */
         WaitBlock = CONTAINING_RECORD(NextEntry, CSR_WAIT_BLOCK, WaitList);
@@ -407,7 +406,7 @@ CsrNotifyWait(IN PLIST_ENTRY WaitList,
               IN PVOID WaitArgument1,
               IN PVOID WaitArgument2)
 {
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY NextEntry;
     PCSR_WAIT_BLOCK WaitBlock;
     BOOLEAN NotifySuccess = FALSE;
 
@@ -415,11 +414,10 @@ CsrNotifyWait(IN PLIST_ENTRY WaitList,
     CsrAcquireWaitLock();
 
     /* Set the List pointers */
-    ListHead = WaitList;
-    NextEntry = ListHead->Flink;
+    NextEntry = WaitList->Flink;
 
     /* Start looping */
-    while (NextEntry != ListHead)
+    while (NextEntry != WaitList)
     {
         /* Get the Wait block */
         WaitBlock = CONTAINING_RECORD(NextEntry, CSR_WAIT_BLOCK, WaitList);

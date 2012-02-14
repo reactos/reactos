@@ -10,6 +10,7 @@
 
 /* CSR Header */
 #include <csr/server.h>
+#include <sm/smmsg.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
@@ -38,6 +39,9 @@
 
 #define CsrHashThread(t) \
     (HandleToUlong(t)&(256 - 1))
+    
+#define ProcessStructureListLocked() \
+    (CsrProcessLock.OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
 
 #define SM_REG_KEY \
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager"
@@ -72,10 +76,18 @@ extern SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 extern UNICODE_STRING CsrDirectoryName;
 extern HANDLE CsrObjectDirectory;
 extern PSB_API_ROUTINE CsrServerSbApiDispatch[5];
+extern ULONG CsrDebug;
 
 /* FUNCTIONS *****************************************************************/
 
 /* FIXME: Public APIs should go in the CSR Server Include */
+BOOLEAN
+NTAPI
+CsrCaptureArguments(
+    IN PCSR_THREAD CsrThread,
+    IN PCSR_API_MESSAGE ApiMessage
+);
+
 NTSTATUS
 NTAPI
 CsrLoadServerDll(
@@ -91,6 +103,18 @@ CsrServerInitialization(
     PCHAR Arguments[]
 );
 
+BOOLEAN
+NTAPI
+UnProtectHandle(IN HANDLE ObjectHandle);
+
+VOID
+NTAPI
+CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrLockedReferenceThread(IN PCSR_THREAD CsrThread);
+
 NTSTATUS
 NTAPI
 CsrCreateSessionObjectDirectory(IN ULONG SessionId);
@@ -105,11 +129,11 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
 
 NTSTATUS
 NTAPI
-CsrInitializeNtSessions(VOID);
+CsrInitializeNtSessionList(VOID);
 
 NTSTATUS
 NTAPI
-CsrInitializeProcesses(VOID);
+CsrInitializeProcessStructure(VOID);
 
 NTSTATUS
 NTAPI
@@ -121,19 +145,19 @@ CsrSbApiPortInitialize(VOID);
 
 BOOLEAN
 NTAPI
-CsrSbCreateSession(IN PSB_API_MESSAGE ApiMessage);
+CsrSbCreateSession(IN PSB_API_MSG ApiMessage);
 
 BOOLEAN
 NTAPI
-CsrSbTerminateSession(IN PSB_API_MESSAGE ApiMessage);
+CsrSbTerminateSession(IN PSB_API_MSG ApiMessage);
 
 BOOLEAN
 NTAPI
-CsrSbForeignSessionComplete(IN PSB_API_MESSAGE ApiMessage);
+CsrSbForeignSessionComplete(IN PSB_API_MSG ApiMessage);
 
 BOOLEAN
 NTAPI
-CsrSbCreateProcess(IN PSB_API_MESSAGE ApiMessage);
+CsrSbCreateProcess(IN PSB_API_MSG ApiMessage);
 
 PCSR_PROCESS
 NTAPI
@@ -254,6 +278,10 @@ NTSTATUS
 NTAPI
 CsrApiRequestThread(IN PVOID Parameter);
 
+BOOLEAN
+NTAPI
+ProtectHandle(IN HANDLE ObjectHandle);
+
 PCSR_THREAD
 NTAPI
 CsrAddStaticServerThread(
@@ -275,7 +303,7 @@ CsrLocateThreadInProcess(
 
 NTSTATUS
 NTAPI
-CsrSbApiHandleConnectionRequest(IN PSB_API_MESSAGE Message);
+CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message);
 
 NTSTATUS
 NTAPI
