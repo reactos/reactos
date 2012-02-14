@@ -1577,11 +1577,6 @@ CHubController::HandleGetDescriptor(
                 UsbDevice->GetConfigurationDescriptors((PUSB_CONFIGURATION_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength, &Length);
 
                 //
-                // sanity check
-                //
-                PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= Length);
-
-                //
                 // store result size
                 //
                 Urb->UrbControlDescriptorRequest.TransferBufferLength = Length;

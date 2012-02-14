@@ -55,11 +55,9 @@ typedef struct _USB_INTERFACE
 
 typedef struct _USB_CONFIGURATION
 {
-    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
     USB_INTERFACE *Interfaces;
 } USB_CONFIGURATION, *PUSB_CONFIGURATION;
-
-
 
 typedef struct
 {
