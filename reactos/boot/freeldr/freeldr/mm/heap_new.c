@@ -20,10 +20,19 @@
 #include <freeldr.h>
 #include <debug.h>
 
+#define FREELDR_HEAP_VERIFIER
+
 DBG_DEFAULT_CHANNEL(HEAP);
 
 #define DEFAULT_HEAP_SIZE (1024 * 1024)
 #define TEMP_HEAP_SIZE (1024 * 1024)
+
+#define REDZONE_MARK 0xCCCCCCCCCCCCCCCCULL
+#define REDZONE_ALLOCATION 24
+#define REDZONE_LOW_OFFSET 16
+#define REDZONE_SIZE(Block) ((ULONG64*)Block->Data)
+#define REDZONE_LOW(Block) ((ULONG64*)Block->Data + 1)
+#define REDZONE_HI(Block) ((ULONG64*)((PUCHAR)Block->Data + 16 + *REDZONE_SIZE(Block)))
 
 PVOID FrLdrDefaultHeap;
 PVOID FrLdrTempHeap;
@@ -156,7 +165,16 @@ HeapRelease(
          Block = Block + 1 + Block->Size)
     {
         /* Continue, if its not free */
-        if (Block->Tag != 0) continue;
+        if (Block->Tag != 0)
+        {
+#ifdef FREELDR_HEAP_VERIFIER
+            /* Verify size and redzones */
+            ASSERT(*REDZONE_SIZE(Block) <= Block->Size * sizeof(HEAP_BLOCK));
+            ASSERT(*REDZONE_LOW(Block) == REDZONE_MARK);
+            ASSERT(*REDZONE_HI(Block) == REDZONE_MARK);
+#endif
+            continue;
+        }
 
         /* Calculate page aligned start address of the free region */
         StartAddress = ALIGN_UP_POINTER_BY(Block->Data, PAGE_SIZE);
@@ -277,6 +295,11 @@ HeapAllocate(
     USHORT BlockSize, Remaining;
     ULONGLONG Time = __rdtsc();
 
+#ifdef FREELDR_HEAP_VERIFIER
+    /* Add space for a size field and 2 redzones */
+    ByteSize += REDZONE_ALLOCATION;
+#endif
+
     /* Check if the allocation is too large */
     if ((ByteSize +  sizeof(HEAP_BLOCK)) > MAXUSHORT * sizeof(HEAP_BLOCK))
     {
@@ -352,6 +375,15 @@ HeapAllocate(
         TRACE("HeapAllocate(%p, %ld, %.4s) -> return %p\n",
               HeapHandle, ByteSize, &Tag, Block->Data);
 
+#ifdef FREELDR_HEAP_VERIFIER
+        /* Write size and redzones */
+        *REDZONE_SIZE(Block) = ByteSize - REDZONE_ALLOCATION;
+        *REDZONE_LOW(Block) = REDZONE_MARK;
+        *REDZONE_HI(Block) = REDZONE_MARK;
+
+        /* Allcoation starts after size field and redzone */
+        return (PUCHAR)Block->Data + REDZONE_LOW_OFFSET;
+#endif
         /* Return pointer to the data */
         return Block->Data;
     }
@@ -382,6 +414,14 @@ HeapFree(
     }
 
     Block = ((PHEAP_BLOCK)Pointer) - 1;
+#ifdef FREELDR_HEAP_VERIFIER
+    Block = (PHEAP_BLOCK)((PUCHAR)Block - REDZONE_LOW_OFFSET);
+
+    /* Verify size and redzones */
+    ASSERT(*REDZONE_SIZE(Block) <= Block->Size * sizeof(HEAP_BLOCK));
+    ASSERT(*REDZONE_LOW(Block) == REDZONE_MARK);
+    ASSERT(*REDZONE_HI(Block) == REDZONE_MARK);
+#endif
 
     /* Check if the tag matches */
     if ((Tag && (Block->Tag != Tag)) || (Block->Tag == 0))
