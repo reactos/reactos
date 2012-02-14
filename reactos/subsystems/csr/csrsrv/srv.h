@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _SRV_H
+#define _SRV_H
 
 /* PSDK/NDK Headers */
 #define NTOS_MODE_USER
@@ -391,3 +392,4 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 NTSTATUS
 NTAPI
 CsrSetDirectorySecurity(IN HANDLE ObjectDirectory);
+#endif
