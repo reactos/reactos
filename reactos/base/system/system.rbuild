@@ -37,9 +37,6 @@
 	<directory name="services">
 		<xi:include href="services/services.rbuild" />
 	</directory>
-	<directory name="smss">
-		<xi:include href="smss/smss.rbuild" />
-	</directory>
 	<directory name="smss2">
 		<xi:include href="smss2/smss2.rbuild" />
 	</directory>

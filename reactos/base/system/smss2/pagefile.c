@@ -457,8 +457,7 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
     NTSTATUS Status;
 
     /* Tell the kernel to create the pagefile */
-    //Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
-    Status = STATUS_SUCCESS;
+    Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
     if (NT_SUCCESS(Status))
     {
         DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",

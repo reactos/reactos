@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="smss2" type="nativecui" installbase="system32" installname="smss2.exe">
-	<bootstrap installbase="$(CDOUTPUT)/system32" />
-	<include base="smss2">.</include>
+<module name="smss" type="nativecui" installbase="system32" installname="smss.exe">
+	<include base="smss">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<library>nt</library>
 	<library>pseh</library>

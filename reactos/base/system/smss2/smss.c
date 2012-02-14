@@ -14,18 +14,6 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef struct _INIT_BUFFER
-{
-    WCHAR DebugBuffer[256];
-    RTL_USER_PROCESS_INFORMATION ProcessInfo;
-} INIT_BUFFER, *PINIT_BUFFER;
-
-/* NT Initial User Application */
-WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss.exe";
-ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
-                                         sizeof(WCHAR);
-ULONG NtInitialUserProcessBufferType = REG_SZ;
-
 UNICODE_STRING SmpSystemRoot;
 ULONG AttachedSessionId = -1;
 BOOLEAN SmpDebug, SmpEnableDots;
@@ -398,234 +386,6 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 
 NTSTATUS
 NTAPI
-ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
-                      OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
-                      OUT PCHAR *ProcessEnvironment)
-{
-    NTSTATUS Status;
-    SIZE_T Size;
-    PWSTR p;
-    UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
-    UNICODE_STRING SmssName, DebugString;
-    PVOID EnvironmentPtr = NULL;
-    PRTL_USER_PROCESS_INFORMATION ProcessInformation;
-    PRTL_USER_PROCESS_PARAMETERS ProcessParams = NULL;
-
-    NullString.Length = sizeof(WCHAR);
-
-    /* Use the initial buffer, after the strings */
-    ProcessInformation = &InitBuffer->ProcessInfo;
-
-    /* Allocate memory for the process parameters */
-    Size = sizeof(*ProcessParams) + ((MAX_PATH * 6) * sizeof(WCHAR));
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     (PVOID*)&ProcessParams,
-                                     0,
-                                     &Size,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
-                   L"INIT: Unable to allocate Process Parameters. 0x%lx",
-                   Status);
-        RtlInitUnicodeString(&DebugString, p);
-        ZwDisplayString(&DebugString);
-
-        /* Bugcheck the system */
-        return Status;
-    }
-
-    /* Setup the basic header, and give the process the low 1MB to itself */
-    ProcessParams->Length = (ULONG)Size;
-    ProcessParams->MaximumLength = (ULONG)Size;
-    ProcessParams->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED |
-                           RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
-
-    /* Allocate a page for the environment */
-    Size = PAGE_SIZE;
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     &EnvironmentPtr,
-                                     0,
-                                     &Size,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
-                   L"INIT: Unable to allocate Process Environment. 0x%lx",
-                   Status);
-        RtlInitUnicodeString(&DebugString, p);
-        ZwDisplayString(&DebugString);
-
-        /* Bugcheck the system */
-        return Status;
-    }
-
-    /* Write the pointer */
-    ProcessParams->Environment = EnvironmentPtr;
-
-    /* Make a buffer for the DOS path */
-    p = (PWSTR)(ProcessParams + 1);
-    ProcessParams->CurrentDirectory.DosPath.Buffer = p;
-    ProcessParams->CurrentDirectory.DosPath.MaximumLength = MAX_PATH *
-                                                            sizeof(WCHAR);
-
-    /* Copy the DOS path */
-    RtlCopyUnicodeString(&ProcessParams->CurrentDirectory.DosPath,
-                         &SmpSystemRoot);
-
-    /* Make a buffer for the DLL Path */
-    p = (PWSTR)((PCHAR)ProcessParams->CurrentDirectory.DosPath.Buffer +
-                ProcessParams->CurrentDirectory.DosPath.MaximumLength);
-    ProcessParams->DllPath.Buffer = p;
-    ProcessParams->DllPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-
-    /* Copy the DLL path and append the system32 directory */
-    RtlCopyUnicodeString(&ProcessParams->DllPath,
-                         &ProcessParams->CurrentDirectory.DosPath);
-    RtlAppendUnicodeToString(&ProcessParams->DllPath, L"\\System32");
-
-    /* Make a buffer for the image name */
-    p = (PWSTR)((PCHAR)ProcessParams->DllPath.Buffer +
-                ProcessParams->DllPath.MaximumLength);
-    ProcessParams->ImagePathName.Buffer = p;
-    ProcessParams->ImagePathName.MaximumLength = MAX_PATH * sizeof(WCHAR);
-
-    /* Make sure the buffer is a valid string which within the given length */
-    if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != MAXULONG) &&
-         ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
-          (NtInitialUserProcessBufferLength >
-           sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
-    {
-        /* Invalid initial process string, bugcheck */
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Cut out anything after a space */
-    p = NtInitialUserProcessBuffer;
-    while ((*p) && (*p != L' ')) p++;
-
-    /* Set the image path length */
-    ProcessParams->ImagePathName.Length =
-        (USHORT)((PCHAR)p - (PCHAR)NtInitialUserProcessBuffer);
-
-    /* Copy the actual buffer */
-    RtlCopyMemory(ProcessParams->ImagePathName.Buffer,
-                  NtInitialUserProcessBuffer,
-                  ProcessParams->ImagePathName.Length);
-
-    /* Null-terminate it */
-    ProcessParams->ImagePathName.Buffer[ProcessParams->ImagePathName.Length /
-                                        sizeof(WCHAR)] = UNICODE_NULL;
-
-    /* Make a buffer for the command line */
-    p = (PWSTR)((PCHAR)ProcessParams->ImagePathName.Buffer +
-                ProcessParams->ImagePathName.MaximumLength);
-    ProcessParams->CommandLine.Buffer = p;
-    ProcessParams->CommandLine.MaximumLength = MAX_PATH * sizeof(WCHAR);
-
-    /* Add the image name to the command line */
-    RtlAppendUnicodeToString(&ProcessParams->CommandLine,
-                             NtInitialUserProcessBuffer);
-
-    /* Create the environment string */
-    ProcessParams->Environment = SmpDefaultEnvironment;
-
-    /* Create SMSS process */
-    SmssName = ProcessParams->ImagePathName;
-    Status = RtlCreateUserProcess(&SmssName,
-                                  OBJ_CASE_INSENSITIVE,
-                                  RtlDeNormalizeProcessParams(ProcessParams),
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  FALSE,
-                                  NULL,
-                                  NULL,
-                                  ProcessInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
-                   L"INIT: Unable to create Session Manager. 0x%lx",
-                   Status);
-        RtlInitUnicodeString(&DebugString, p);
-        ZwDisplayString(&DebugString);
-
-        /* Bugcheck the system */
-        return Status;
-    }
-
-    /* Resume the thread */
-    Status = ZwResumeThread(ProcessInformation->ThreadHandle, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
-                   L"INIT: Unable to resume Session Manager. 0x%lx",
-                   Status);
-        RtlInitUnicodeString(&DebugString, p);
-        ZwDisplayString(&DebugString);
-
-        /* Bugcheck the system */
-        return Status;
-    }
-
-    /* Return success */
-    *ProcessParameters = ProcessParams;
-    *ProcessEnvironment = EnvironmentPtr;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-LaunchOldSmss(VOID)
-{
-    PINIT_BUFFER InitBuffer;
-    PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
-    PRTL_USER_PROCESS_INFORMATION ProcessInfo;
-    NTSTATUS Status;
-    PCHAR Environment;
-
-    /* Initialize the system root */
-    RtlInitUnicodeString(&SmpSystemRoot, SharedUserData->NtSystemRoot);
-
-    /* Allocate the initialization buffer */
-    InitBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(INIT_BUFFER));
-    if (!InitBuffer)
-    {
-        /* Bugcheck */
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Launch initial process */
-    ProcessInfo = &InitBuffer->ProcessInfo;
-    Status = ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, display error */
-        DPRINT1("INIT: Session Manager failed to load.\n");
-        return Status;
-    }
-
-    /* Return the handle and status */
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 SmpTerminate(IN PULONG_PTR Parameters,
              IN ULONG ParameterMask,
              IN ULONG ParameterCount)
@@ -719,8 +479,6 @@ _main(IN INT argc,
     /* Enter SEH so we can terminate correctly if anything goes wrong */
     _SEH2_TRY
     {
-        LARGE_INTEGER Infinite = {{0x80000000, 0x7FFFFFFF}};
-
         /* Initialize SMSS */
         Status = SmpInit(&InitialCommand, Handles);
         if (!NT_SUCCESS(Status))
@@ -728,11 +486,7 @@ _main(IN INT argc,
             DPRINT1("SMSS: SmpInit return failure - Status == %x\n", Status);
             RtlInitUnicodeString(&DbgString, L"Session Manager Initialization");
             Parameters[1] = Status;
-            DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
-            //_SEH2_LEAVE; Hack so that setup can work. will go away later
-            Status = LaunchOldSmss();
-            if (!NT_SUCCESS(Status)) return Status;
-            return NtDelayExecution(FALSE, &Infinite);
+            _SEH2_LEAVE;
         }
 
         /* Get the global flags */
@@ -758,11 +512,7 @@ _main(IN INT argc,
             RtlInitUnicodeString(&DbgString,
                                  L"Session Manager ExecuteInitialCommand");
             Parameters[1] = Status;
-            //_SEH2_LEAVE;
-            DPRINT1("SMSS-2 Loaded... Launching original SMSS\n");
-            Status = LaunchOldSmss();
-            if (!NT_SUCCESS(Status)) return Status;
-            return NtDelayExecution(FALSE, &Infinite);
+            _SEH2_LEAVE;
         }
 
         /*  Check if we're already attached to a session */
