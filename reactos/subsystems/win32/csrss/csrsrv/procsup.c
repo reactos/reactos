@@ -16,7 +16,6 @@
 
 #define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
 #define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
-#define CsrHeap RtlGetProcessHeap()
 
 #define CsrAcquireProcessLock() LOCK
 #define CsrReleaseProcessLock() UNLOCK
