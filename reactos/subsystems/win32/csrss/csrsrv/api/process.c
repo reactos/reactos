@@ -83,7 +83,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
    }
    if (pProcessData == NULL)
    {
-      pProcessData = RtlAllocateHeap(CsrssApiHeap,
+      pProcessData = RtlAllocateHeap(CsrHeap,
 	                             HEAP_ZERO_MEMORY,
 				     sizeof(CSRSS_PROCESS_DATA));
       if (pProcessData)
@@ -109,7 +109,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
          if (!NT_SUCCESS(Status))
          {
             ProcessData[hash] = pProcessData->next;
-	    RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
+	    RtlFreeHeap(CsrHeap, 0, pProcessData);
 	    pProcessData = NULL;
          }
          else
@@ -187,7 +187,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 
       *pPrevLink = pProcessData->next;
 
-      RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
+      RtlFreeHeap(CsrHeap, 0, pProcessData);
       UNLOCK;
       if (Process)
         {

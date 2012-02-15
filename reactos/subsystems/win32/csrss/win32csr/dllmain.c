@@ -335,14 +335,14 @@ BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRPLUGIN_SERVER_PROCS ServerProcs,
                        PCSRSS_EXPORTED_FUNCS Exports,
-                       HANDLE CsrssApiHeap)
+                       HANDLE CsrHeap)
 {
     HANDLE ServerThread;
     CLIENT_ID ClientId;
     NTSTATUS Status;
 
     CsrExports = *Exports;
-    Win32CsrApiHeap = CsrssApiHeap;
+    Win32CsrApiHeap = CsrHeap;
     
     CsrpInitVideo();
 

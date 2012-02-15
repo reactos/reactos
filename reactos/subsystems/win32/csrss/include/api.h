@@ -121,14 +121,18 @@ CSR_API(CsrSrvCreateThread);
 CSR_API(CsrGetShutdownParameters);
 CSR_API(CsrSetShutdownParameters);
 
+PCSR_THREAD
+NTAPI
+CsrAllocateThread(IN PCSRSS_PROCESS_DATA CsrProcess);
+
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSR_API_MESSAGE Request);
-DWORD WINAPI ServerSbApiPortThread (PVOID PortHandle);
+VOID WINAPI CsrSbApiRequestThread (PVOID PortHandle);
 VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 
-extern HANDLE CsrssApiHeap;
+extern HANDLE CsrSbApiPort;
 
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,

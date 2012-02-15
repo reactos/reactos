@@ -19,10 +19,17 @@
 
 extern HANDLE hApiPort;
 
-HANDLE CsrssApiHeap = (HANDLE) 0;
-
 static unsigned ApiDefinitionsCount = 0;
 static PCSRSS_API_DEFINITION ApiDefinitions = NULL;
+
+PCHAR CsrServerSbApiName[5] =
+{
+    "SbCreateSession",
+    "SbTerminateSession",
+    "SbForeignSessionComplete",
+    "SbCreateProcess",
+    "Unknown Csr Sb Api Number"
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -41,7 +48,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
       NewCount++;
     }
 
-  New = RtlAllocateHeap(CsrssApiHeap, 0,
+  New = RtlAllocateHeap(CsrHeap, 0,
                         (ApiDefinitionsCount + NewCount)
                         * sizeof(CSRSS_API_DEFINITION));
   if (NULL == New)
@@ -53,7 +60,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
     {
       RtlCopyMemory(New, ApiDefinitions,
                     ApiDefinitionsCount * sizeof(CSRSS_API_DEFINITION));
-      RtlFreeHeap(CsrssApiHeap, 0, ApiDefinitions);
+      RtlFreeHeap(CsrHeap, 0, ApiDefinitions);
     }
   RtlCopyMemory(New + ApiDefinitionsCount, NewDefinitions,
                 NewCount * sizeof(CSRSS_API_DEFINITION));
@@ -180,7 +187,6 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
 
     /* Multiply by 1024 entries and round to page size */
     CsrSrvSharedSectionSize = ROUND_UP(Size * 1024, CsrNtSysInfo.PageSize);
-    DPRINT1("Size: %lx\n", CsrSrvSharedSectionSize);
 
     /* Create the Secion */
     SectionSize.LowPart = CsrSrvSharedSectionSize;
@@ -980,115 +986,391 @@ ClientConnectionThread(HANDLE ServerPort)
     RtlExitUserThread(STATUS_SUCCESS);
 }
 
-/**********************************************************************
- * NAME
- *	ServerSbApiPortThread/1
+/* SESSION MANAGER FUNCTIONS**************************************************/
+
+/*++
+ * @name CsrSbCreateSession
  *
- * DESCRIPTION
- * 	Handle connection requests from SM to the port
- * 	"\Windows\SbApiPort". We will accept only one
- * 	connection request (from the SM).
- */
-DWORD WINAPI
-ServerSbApiPortThread (HANDLE hSbApiPortListen)
+ * The CsrSbCreateSession API is called by the Session Manager whenever a new
+ * session is created.
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbCreateSession routine will initialize a new CSR NT
+ *          Session and allocate a new CSR Process for the subsystem process.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
 {
-    HANDLE          hConnectedPort = (HANDLE) 0;
-    SB_API_MSG    Request;
-    PVOID           Context = NULL;
-    NTSTATUS        Status = STATUS_SUCCESS;
-    PPORT_MESSAGE Reply = NULL;
+    PSB_CREATE_SESSION_MSG CreateSession = &ApiMessage->CreateSession;
+    HANDLE hProcess, hThread;
+//    PCSR_PROCESS CsrProcess;
+    NTSTATUS Status;
+    KERNEL_USER_TIMES KernelTimes;
+    //PCSR_THREAD CsrThread;
+    //PVOID ProcessData;
+    //ULONG i;
 
-    DPRINT("CSR: %s called\n", __FUNCTION__);
+    /* Save the Process and Thread Handles */
+    hProcess = CreateSession->ProcessInfo.ProcessHandle;
+    hThread = CreateSession->ProcessInfo.ThreadHandle;
 
-    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
-    Status = NtListenPort (hSbApiPortListen, & Request.h);
+#if 0
+    /* Lock the Processes */
+    CsrAcquireProcessLock();
 
+    /* Allocate a new process */
+    CsrProcess = CsrAllocateProcess();
+    if (!CsrProcess)
+    {
+        /* Fail */
+        ApiMessage->ReturnValue = STATUS_NO_MEMORY;
+        CsrReleaseProcessLock();
+        return TRUE;
+    }
+#endif
+
+    /* Set the exception port */
+    Status = NtSetInformationProcess(hProcess,
+                                     ProcessExceptionPort,
+                                     &hApiPort,//&CsrApiPort,
+                                     sizeof(HANDLE));
+
+    /* Check for success */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSR: %s: NtListenPort(SB) failed (Status=0x%08lx)\n",
-                __FUNCTION__, Status);
-    } else {
-        DPRINT("-- 1\n");
-        Status = NtAcceptConnectPort(&hConnectedPort,
-                                     NULL,
-                                     &Request.h,
-                                     TRUE,
-                                     NULL,
-                                     NULL);
-        if(!NT_SUCCESS(Status))
+        /* Fail the request */
+#if 0
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+#endif
+        /* Strange as it seems, NTSTATUSes are actually returned */
+        return (BOOLEAN)STATUS_NO_MEMORY;
+    }
+
+    /* Get the Create Time */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      &KernelTimes,
+                                      sizeof(KERNEL_USER_TIMES),
+                                      NULL);
+
+    /* Check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail the request */
+#if 0
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+#endif
+
+        /* Strange as it seems, NTSTATUSes are actually returned */
+        return (BOOLEAN)Status;
+    }
+
+    /* Allocate a new Thread */
+#if 0
+    CsrThread = CsrAllocateThread(CsrProcess);
+    if (!CsrThread)
+    {
+        /* Fail the request */
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+
+        ApiMessage->ReturnValue = STATUS_NO_MEMORY;
+        return TRUE;
+    }
+
+    /* Setup the Thread Object */
+    CsrThread->CreateTime = KernelTimes.CreateTime;
+    CsrThread->ClientId = CreateSession->ProcessInfo.ClientId;
+    CsrThread->ThreadHandle = hThread;
+    ProtectHandle(hThread);
+    CsrThread->Flags = 0;
+
+    /* Insert it into the Process List */
+    CsrInsertThread(CsrProcess, CsrThread);
+
+    /* Setup Process Data */
+    CsrProcess->ClientId = CreateSession->ProcessInfo.ClientId;
+    CsrProcess->ProcessHandle = hProcess;
+    CsrProcess->NtSession = CsrAllocateNtSession(CreateSession->SessionId);
+
+    /* Set the Process Priority */
+    CsrSetBackgroundPriority(CsrProcess);
+
+    /* Get the first data location */
+    ProcessData = &CsrProcess->ServerData[CSR_SERVER_DLL_MAX];
+
+    /* Loop every DLL */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Check if the DLL is loaded and has Process Data */
+        if (CsrLoadedServerDll[i] && CsrLoadedServerDll[i]->SizeOfProcessData)
         {
-            DPRINT1("CSR: %s: NtAcceptConnectPort() failed (Status=0x%08lx)\n",
-                    __FUNCTION__, Status);
-        } else {
-            DPRINT("-- 2\n");
-            Status = NtCompleteConnectPort (hConnectedPort);
-            if(!NT_SUCCESS(Status))
-            {
-                DPRINT1("CSR: %s: NtCompleteConnectPort() failed (Status=0x%08lx)\n",
-                        __FUNCTION__, Status);
-            } else {
-                DPRINT("-- 3\n");
-                /*
-                 * Tell the init thread the SM gave the
-                 * green light for boostrapping.
-                 */
-                Status = NtSetEvent (hBootstrapOk, NULL);
-                if(!NT_SUCCESS(Status))
-                {
-                    DPRINT1("CSR: %s: NtSetEvent failed (Status=0x%08lx)\n",
-                            __FUNCTION__, Status);
-                }
-                /* Wait for messages from the SM */
-                DPRINT("-- 4\n");
-                while (TRUE)
-                {
-                    Status = NtReplyWaitReceivePort(hConnectedPort,
-                                                    Context,
-                                                    Reply,
-                                                    &Request.h);
-                    if(!NT_SUCCESS(Status))
-                    {
-                        DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
-                                __FUNCTION__, Status);
-                        break;
-                    }
+            /* Write the pointer to the data */
+            CsrProcess->ServerData[i] = ProcessData;
 
-                    switch (Request.h.u2.s2.Type) //fix .h PORT_MESSAGE_TYPE(Request))
-                    {
-                        /* TODO */
-                        case LPC_PORT_CLOSED:
-                        case LPC_CLIENT_DIED:
-                            DPRINT1("CSR: SMSS died\n");
-                            Reply = NULL;
-                            break;
-
-                        default:
-                        DPRINT1("CSR: %s received message (type=%d)\n",
-                                __FUNCTION__, Request.h.u2.s2.Type);
-
-                        if (Request.ApiNumber == SbpCreateSession)
-                        {
-                            DPRINT("Session create... legacy CSRSS resuming thread as minimum work done\n");
-                            Request.ReturnValue = NtResumeThread(Request.CreateSession.ProcessInfo.ThreadHandle, NULL);
-                        }
-                        else
-                        {
-                            DPRINT1("CSR: %d Not implemented in legacy CSRSS... faking success\n", Request.ApiNumber);
-                            Request.ReturnValue = STATUS_SUCCESS;
-                        }
-                        Reply = &Request.h;
-                    }
-                    DPRINT("-- 5\n");
-                }
-            }
+            /* Move to the next data location */
+            ProcessData = (PVOID)((ULONG_PTR)ProcessData +
+                                  CsrLoadedServerDll[i]->SizeOfProcessData);
+        }
+        else
+        {
+            /* Nothing for this Process */
+            CsrProcess->ServerData[i] = NULL;
         }
     }
 
-    DPRINT("CSR: %s: terminating!\n", __FUNCTION__);
-    if(hConnectedPort) NtClose (hConnectedPort);
-    NtClose (hSbApiPortListen);
-    NtTerminateThread (NtCurrentThread(), Status);
-    return 0;
+    /* Insert the Process */
+    CsrInsertProcess(NULL, NULL, CsrProcess);
+#endif
+    /* Activate the Thread */
+    ApiMessage->ReturnValue = NtResumeThread(hThread, NULL);
+
+    /* Release lock and return */
+//    CsrReleaseProcessLock();
+    return TRUE;
+}
+
+/*++
+ * @name CsrSbForeignSessionComplete
+ *
+ * The CsrSbForeignSessionComplete API is called by the Session Manager
+ * whenever a foreign session is completed (ie: terminated).
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbForeignSessionComplete API is not yet implemented.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbForeignSessionComplete(IN PSB_API_MSG ApiMessage)
+{
+    /* Deprecated/Unimplemented in NT */
+    ApiMessage->ReturnValue = STATUS_NOT_IMPLEMENTED;
+    return TRUE;
+}
+
+/*++
+ * @name CsrSbTerminateSession
+ *
+ * The CsrSbTerminateSession API is called by the Session Manager
+ * whenever a foreign session should be destroyed.
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbTerminateSession API is not yet implemented.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbTerminateSession(IN PSB_API_MSG ApiMessage)
+{
+    ApiMessage->ReturnValue = STATUS_NOT_IMPLEMENTED;
+    return TRUE;
+}
+
+/*++
+ * @name CsrSbCreateProcess
+ *
+ * The CsrSbCreateProcess API is called by the Session Manager
+ * whenever a foreign session is created and a new process should be started.
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbCreateProcess API is not yet implemented.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbCreateProcess(IN PSB_API_MSG ApiMessage)
+{
+    ApiMessage->ReturnValue = STATUS_NOT_IMPLEMENTED;
+    return TRUE;
+}
+
+PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
+{
+    CsrSbCreateSession,
+    CsrSbTerminateSession,
+    CsrSbForeignSessionComplete,
+    CsrSbCreateProcess,
+    NULL
+};
+
+/*++
+ * @name CsrSbApiHandleConnectionRequest
+ *
+ * The CsrSbApiHandleConnectionRequest routine handles and accepts a new
+ * connection request to the SM API LPC Port.
+ *
+ * @param ApiMessage
+ *        Pointer to the incoming CSR API Message which contains the
+ *        connection request.
+ *
+ * @return STATUS_SUCCESS in case of success, or status code which caused
+ *         the routine to error.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message)
+{
+    NTSTATUS Status;
+    REMOTE_PORT_VIEW RemotePortView;
+    HANDLE hPort;
+
+    /* Set the Port View Structure Length */
+    RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
+
+    /* Accept the connection */
+    Status = NtAcceptConnectPort(&hPort,
+                                 NULL,
+                                 (PPORT_MESSAGE)Message,
+                                 TRUE,
+                                 NULL,
+                                 &RemotePortView);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: Sb Accept Connection failed %lx\n", Status);
+        return Status;
+    }
+
+    /* Complete the Connection */
+    Status = NtCompleteConnectPort(hPort);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: Sb Complete Connection failed %lx\n",Status);
+    }
+
+    /* Return status */
+    return Status;
+}
+
+/*++
+ * @name CsrSbApiRequestThread
+ *
+ * The CsrSbApiRequestThread routine handles incoming messages or connection
+ * requests on the SM API LPC Port.
+ *
+ * @param Parameter
+ *        System-default user-defined parameter. Unused.
+ *
+ * @return The thread exit code, if the thread is terminated.
+ *
+ * @remarks Before listening on the port, the routine will first attempt
+ *          to connect to the user subsystem.
+ *
+ *--*/
+VOID
+NTAPI
+CsrSbApiRequestThread(IN PVOID Parameter)
+{
+    NTSTATUS Status;
+    SB_API_MSG ReceiveMsg;
+    PSB_API_MSG ReplyMsg = NULL;
+    PVOID PortContext;
+    ULONG MessageType;
+
+    /* Start the loop */
+    while (TRUE)
+    {
+        /* Wait for a message to come in */
+        Status = NtReplyWaitReceivePort(CsrSbApiPort,
+                                        &PortContext,
+                                        &ReplyMsg->h,
+                                        &ReceiveMsg.h);
+
+        /* Check if we didn't get success */
+        if (Status != STATUS_SUCCESS)
+        {
+            /* If we only got a warning, keep going */
+            if (NT_SUCCESS(Status)) continue;
+
+            /* We failed big time, so start out fresh */
+            ReplyMsg = NULL;
+            DPRINT1("CSRSS: ReceivePort failed - Status == %X\n", Status);
+            continue;
+        }
+
+        /* Save the message type */
+        MessageType = ReceiveMsg.h.u2.s2.Type;
+
+        /* Check if this is a connection request */
+        if (MessageType == LPC_CONNECTION_REQUEST)
+        {
+            /* Handle connection request */
+            CsrSbApiHandleConnectionRequest(&ReceiveMsg);
+
+            /* Start over */
+            ReplyMsg = NULL;
+            continue;
+        }
+
+        /* Check if the port died */
+        if (MessageType == LPC_PORT_CLOSED)
+        {
+            /* Close the handle if we have one */
+            if (PortContext) NtClose((HANDLE)PortContext);
+
+            /* Client died, start over */
+            ReplyMsg = NULL;
+            continue;
+        }
+        else if (MessageType == LPC_CLIENT_DIED)
+        {
+            /* Client died, start over */
+            ReplyMsg = NULL;
+            continue;
+        }
+
+        /*
+         * It's an API Message, check if it's within limits. If it's not, the
+         * NT Behaviour is to set this to the Maximum API.
+         */
+        if (ReceiveMsg.ApiNumber > SbpMaxApiNumber)
+        {
+            ReceiveMsg.ApiNumber = SbpMaxApiNumber;
+            DPRINT1("CSRSS: %lx is invalid Sb ApiNumber\n", ReceiveMsg.ApiNumber);
+         }
+
+        /* Reuse the message */
+        ReplyMsg = &ReceiveMsg;
+
+        /* Make sure that the message is supported */
+        if (ReceiveMsg.ApiNumber < SbpMaxApiNumber)
+        {
+            /* Call the API */
+            if (!CsrServerSbApiDispatch[ReceiveMsg.ApiNumber](&ReceiveMsg))
+            {
+                /* It failed, so return nothing */
+                ReplyMsg = NULL;
+            }
+        }
+        else
+        {
+            /* We don't support this API Number */
+            ReplyMsg->ReturnValue = STATUS_NOT_IMPLEMENTED;
+        }
+    }
 }
 
 /* EOF */
