@@ -14,6 +14,7 @@
 	<file>filedlgbrowser.c</file>
 	<file>finddlg.c</file>
 	<file>fontdlg.c</file>
+	<file>itemdlg.c</file>
 	<file>printdlg.c</file>
 	<file>rsrc.rc</file>
 	<library>wine</library>

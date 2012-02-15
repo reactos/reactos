@@ -441,7 +441,7 @@ static LRESULT FD31_FileListSelect( const FD31_DATA *lfs )
     if (lRet == LB_ERR)
         return TRUE;
 
-    /* set the edit control to the choosen file */
+    /* set the edit control to the chosen file */
     if ((pstr = HeapAlloc(GetProcessHeap(), 0, BUFFILEALLOC)))
     {
         SendDlgItemMessageW(hWnd, lst1, LB_GETTEXT, lRet,
@@ -630,7 +630,8 @@ static LRESULT FD31_FileTypeChange( const FD31_DATA *lfs )
     if (lRet == LB_ERR)
         return TRUE;
     lfs->ofnW->nFilterIndex = lRet + 1;
-    lfs->ofnA->nFilterIndex = lRet + 1;
+    if (lfs->ofnA)
+        lfs->ofnA->nFilterIndex = lRet + 1;
     pstr = (LPWSTR)SendDlgItemMessageW(lfs->hwnd, cmb1, CB_GETITEMDATA, lRet, 0);
     TRACE("Selected filter : %s\n", debugstr_w(pstr));
 
@@ -737,7 +738,7 @@ static LPWSTR FD31_DupToW(LPCSTR str, DWORD size)
  *                              FD31_MapOfnStructA          [internal]
  *      map a 32 bits Ansi structure to a Unicode one
  */
-void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open)
+static void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open)
 {
     UNICODE_STRING usBuffer;
 
@@ -795,7 +796,7 @@ void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL op
  *                              FD31_FreeOfnW          [internal]
  *      Undo all allocations done by FD31_MapOfnStructA
  */
-void FD31_FreeOfnW(OPENFILENAMEW *ofnW)
+static void FD31_FreeOfnW(OPENFILENAMEW *ofnW)
 {
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrFilter);
    HeapFree(GetProcessHeap(), 0, ofnW->lpstrCustomFilter);
