@@ -503,7 +503,7 @@ CsrpMessageBox(
 BOOL
 WINAPI
 Win32CsrHardError(
-    IN PCSRSS_PROCESS_DATA ProcessData,
+    IN PCSR_PROCESS ProcessData,
     IN PHARDERROR_MSG Message)
 {
     ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];

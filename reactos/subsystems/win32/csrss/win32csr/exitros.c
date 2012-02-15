@@ -462,7 +462,7 @@ NotifyTopLevelWindows(PNOTIFY_CONTEXT Context)
 }
 
 static BOOL FASTCALL
-NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
+NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
                           PSHUTDOWN_SETTINGS ShutdownSettings,
                           UINT Flags)
 {
@@ -481,7 +481,7 @@ NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
         }
         else
         {
-            Context.ProcessId = (DWORD_PTR) ProcessData->ProcessId;
+            Context.ProcessId = (DWORD_PTR) ProcessData->ClientId.UniqueProcess;
             Context.wParam = 0;
             Context.lParam = (0 != (Flags & EWX_INTERNAL_FLAG_LOGOFF) ?
                               ENDSESSION_LOGOFF : 0);
@@ -527,10 +527,10 @@ NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 
     /* Terminate this process */
     Process = OpenProcess(PROCESS_TERMINATE, FALSE,
-                          (DWORD_PTR) ProcessData->ProcessId);
+                          (DWORD_PTR) ProcessData->ClientId.UniqueProcess);
     if (NULL == Process)
     {
-        DPRINT1("Unable to open process %d, error %d\n", ProcessData->ProcessId,
+        DPRINT1("Unable to open process %d, error %d\n", ProcessData->ClientId.UniqueProcess,
                 GetLastError());
         return TRUE;
     }
@@ -543,35 +543,35 @@ NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 typedef struct tagPROCESS_ENUM_CONTEXT
 {
     UINT ProcessCount;
-    PCSRSS_PROCESS_DATA *ProcessData;
+    PCSR_PROCESS *ProcessData;
     TOKEN_ORIGIN TokenOrigin;
     DWORD ShellProcess;
     DWORD CsrssProcess;
 } PROCESS_ENUM_CONTEXT, *PPROCESS_ENUM_CONTEXT;
 
 static NTSTATUS WINAPI
-ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
+ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
 {
     HANDLE Process;
     HANDLE Token;
     TOKEN_ORIGIN Origin;
     DWORD ReturnLength;
     PPROCESS_ENUM_CONTEXT Context = (PPROCESS_ENUM_CONTEXT) Data;
-    PCSRSS_PROCESS_DATA *NewData;
+    PCSR_PROCESS *NewData;
 
     /* Do not kill winlogon or csrss */
-    if ((DWORD_PTR) ProcessData->ProcessId == Context->CsrssProcess ||
-            ProcessData->ProcessId == LogonProcess)
+    if ((DWORD_PTR) ProcessData->ClientId.UniqueProcess == Context->CsrssProcess ||
+            ProcessData->ClientId.UniqueProcess == LogonProcess)
     {
         return STATUS_SUCCESS;
     }
 
     /* Get the login session of this process */
     Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
-                          (DWORD_PTR) ProcessData->ProcessId);
+                          (DWORD_PTR) ProcessData->ClientId.UniqueProcess);
     if (NULL == Process)
     {
-        DPRINT1("Unable to open process %d, error %d\n", ProcessData->ProcessId,
+        DPRINT1("Unable to open process %d, error %d\n", ProcessData->ClientId.UniqueProcess,
                 GetLastError());
         return STATUS_UNSUCCESSFUL;
     }
@@ -579,7 +579,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
     if (! OpenProcessToken(Process, TOKEN_QUERY, &Token))
     {
         DPRINT1("Unable to open token for process %d, error %d\n",
-                ProcessData->ProcessId, GetLastError());
+                ProcessData->ClientId.UniqueProcess, GetLastError());
         CloseHandle(Process);
         return STATUS_UNSUCCESSFUL;
     }
@@ -589,7 +589,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
                               sizeof(TOKEN_ORIGIN), &ReturnLength))
     {
         DPRINT1("GetTokenInformation failed for process %d with error %d\n",
-                ProcessData->ProcessId, GetLastError());
+                ProcessData->ClientId.UniqueProcess, GetLastError());
         CloseHandle(Token);
         return STATUS_UNSUCCESSFUL;
     }
@@ -600,12 +600,12 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
                      &(Origin.OriginatingLogonSession)))
     {
         /* Kill the shell process last */
-        if ((DWORD_PTR) ProcessData->ProcessId == Context->ShellProcess)
+        if ((DWORD_PTR) ProcessData->ClientId.UniqueProcess == Context->ShellProcess)
         {
             ProcessData->ShutdownLevel = 0;
         }
         NewData = HeapAlloc(Win32CsrApiHeap, 0, (Context->ProcessCount + 1)
-                            * sizeof(PCSRSS_PROCESS_DATA));
+                            * sizeof(PCSR_PROCESS));
         if (NULL == NewData)
         {
             return STATUS_NO_MEMORY;
@@ -613,7 +613,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
         if (0 != Context->ProcessCount)
         {
             memcpy(NewData, Context->ProcessData,
-                   Context->ProcessCount * sizeof(PCSRSS_PROCESS_DATA));
+                   Context->ProcessCount * sizeof(PCSR_PROCESS));
             HeapFree(Win32CsrApiHeap, 0, Context->ProcessData);
         }
         Context->ProcessData = NewData;
@@ -627,8 +627,8 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
 static int
 ProcessDataCompare(const void *Elem1, const void *Elem2)
 {
-    const PCSRSS_PROCESS_DATA *ProcessData1 = (PCSRSS_PROCESS_DATA *) Elem1;
-    const PCSRSS_PROCESS_DATA *ProcessData2 = (PCSRSS_PROCESS_DATA *) Elem2;
+    const PCSR_PROCESS *ProcessData1 = (PCSR_PROCESS *) Elem1;
+    const PCSR_PROCESS *ProcessData2 = (PCSR_PROCESS *) Elem2;
 
     if ((*ProcessData1)->ShutdownLevel < (*ProcessData2)->ShutdownLevel)
     {
@@ -638,11 +638,11 @@ ProcessDataCompare(const void *Elem1, const void *Elem2)
     {
         return -1;
     }
-    else if ((*ProcessData1)->ProcessId < (*ProcessData2)->ProcessId)
+    else if ((*ProcessData1)->ClientId.UniqueProcess < (*ProcessData2)->ClientId.UniqueProcess)
     {
         return +1;
     }
-    else if ((*ProcessData2)->ProcessId < (*ProcessData1)->ProcessId)
+    else if ((*ProcessData2)->ClientId.UniqueProcess < (*ProcessData1)->ClientId.UniqueProcess)
     {
         return -1;
     }
@@ -864,7 +864,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
         return Status;
     }
 
-    qsort(Context.ProcessData, Context.ProcessCount, sizeof(PCSRSS_PROCESS_DATA),
+    qsort(Context.ProcessData, Context.ProcessCount, sizeof(PCSR_PROCESS),
           ProcessDataCompare);
 
     /* Terminate processes, stop if we find one kicking and screaming it doesn't

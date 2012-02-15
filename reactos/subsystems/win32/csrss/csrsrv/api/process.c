@@ -18,15 +18,15 @@
 #define CsrAcquireProcessLock() LOCK
 #define CsrReleaseProcessLock() UNLOCK
 
-extern NTSTATUS CallProcessInherit(PCSRSS_PROCESS_DATA, PCSRSS_PROCESS_DATA);
-extern NTSTATUS CallProcessDeleted(PCSRSS_PROCESS_DATA);
+extern NTSTATUS CallProcessInherit(PCSR_PROCESS, PCSR_PROCESS);
+extern NTSTATUS CallProcessDeleted(PCSR_PROCESS);
 
 /* GLOBALS *******************************************************************/
 
 static ULONG NrProcess;
-PCSRSS_PROCESS_DATA ProcessData[256];
+PCSR_PROCESS ProcessData[256];
 RTL_CRITICAL_SECTION ProcessDataLock;
-extern PCSRSS_PROCESS_DATA CsrRootProcess;
+extern PCSR_PROCESS CsrRootProcess;
 extern LIST_ENTRY CsrThreadHashTable[256];
 
 /* FUNCTIONS *****************************************************************/
@@ -44,10 +44,10 @@ VOID WINAPI CsrInitProcessData(VOID)
    for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
 }
 
-PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId)
+PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId)
 {
    ULONG hash;
-   PCSRSS_PROCESS_DATA pProcessData;
+   PCSR_PROCESS pProcessData;
 
    hash = ((ULONG_PTR)ProcessId >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
 
@@ -55,7 +55,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId)
 
    pProcessData = ProcessData[hash];
 
-   while (pProcessData && pProcessData->ProcessId != ProcessId)
+   while (pProcessData && pProcessData->ClientId.UniqueProcess != ProcessId)
    {
       pProcessData = pProcessData->next;
    }
@@ -63,10 +63,10 @@ PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId)
    return pProcessData;
 }
 
-PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
+PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId)
 {
    ULONG hash;
-   PCSRSS_PROCESS_DATA pProcessData;
+   PCSR_PROCESS pProcessData;
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId;
    NTSTATUS Status;
@@ -77,7 +77,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
 
    pProcessData = ProcessData[hash];
 
-   while (pProcessData && pProcessData->ProcessId != ProcessId)
+   while (pProcessData && pProcessData->ClientId.UniqueProcess != ProcessId)
    {
       pProcessData = pProcessData->next;
    }
@@ -85,15 +85,15 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
    {
       pProcessData = RtlAllocateHeap(CsrHeap,
 	                             HEAP_ZERO_MEMORY,
-				     sizeof(CSRSS_PROCESS_DATA));
+				     sizeof(CSR_PROCESS));
       if (pProcessData)
       {
-	 pProcessData->ProcessId = ProcessId;
+	 pProcessData->ClientId.UniqueProcess = ProcessId;
 	 pProcessData->next = ProcessData[hash];
 	 ProcessData[hash] = pProcessData;
 
          ClientId.UniqueThread = NULL;
-         ClientId.UniqueProcess = pProcessData->ProcessId;
+         ClientId.UniqueProcess = pProcessData->ClientId.UniqueProcess;
          InitializeObjectAttributes(&ObjectAttributes,
                                     NULL,
                                     0,
@@ -101,11 +101,11 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
                                     NULL);
 
          /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
-         Status = NtOpenProcess(&pProcessData->Process,
+         Status = NtOpenProcess(&pProcessData->ProcessHandle,
                                 PROCESS_ALL_ACCESS,
                                 &ObjectAttributes,
                                 &ClientId);
-         DPRINT("CSR Process: %p Handle: %p\n", pProcessData, pProcessData->Process);
+         DPRINT("CSR Process: %p Handle: %p\n", pProcessData, pProcessData->ProcessHandle);
          if (!NT_SUCCESS(Status))
          {
             ProcessData[hash] = pProcessData->next;
@@ -129,7 +129,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
    }
    else
    {
-      pProcessData->Terminated = FALSE;
+      pProcessData->Flags = ~CsrProcessTerminated;
 
       /* Set default shutdown parameters */
       pProcessData->ShutdownLevel = 0x280;
@@ -144,7 +144,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
 NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
-  PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
+  PCSR_PROCESS pProcessData, *pPrevLink;
   HANDLE Process;
   PLIST_ENTRY NextEntry;
   PCSR_THREAD Thread;
@@ -154,7 +154,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 
   LOCK;
 
-  while ((pProcessData = *pPrevLink) && pProcessData->ProcessId != Pid)
+  while ((pProcessData = *pPrevLink) && pProcessData->ClientId.UniqueProcess != Pid)
     {
       pPrevLink = &pProcessData->next;
     }
@@ -162,7 +162,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
-      Process = pProcessData->Process;
+      Process = pProcessData->ProcessHandle;
       CallProcessDeleted(pProcessData);
 
       /* Dereference all process threads */
@@ -175,14 +175,14 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
         CsrThreadRefcountZero(Thread);
       }
 
-      if (pProcessData->CsrSectionViewBase)
+      if (pProcessData->ClientViewBase)
         {
-          NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
+          NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)pProcessData->ClientViewBase);
         }
 
-      if (pProcessData->ServerCommunicationPort)
+      if (pProcessData->ClientPort)
         {
-          NtClose(pProcessData->ServerCommunicationPort);
+          NtClose(pProcessData->ClientPort);
         }
 
       *pPrevLink = pProcessData->next;
@@ -206,7 +206,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 
 CSR_API(CsrCreateProcess)
 {
-   PCSRSS_PROCESS_DATA NewProcessData;
+   PCSR_PROCESS NewProcessData;
 
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -229,11 +229,11 @@ CSR_API(CsrCreateProcess)
 
    if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_PROCESS_GROUP)
      {
-       NewProcessData->ProcessGroup = (DWORD)(ULONG_PTR)NewProcessData->ProcessId;
+       NewProcessData->ProcessGroupId = (DWORD)(ULONG_PTR)NewProcessData->ClientId.UniqueProcess;
      }
    else
      {
-       NewProcessData->ProcessGroup = ProcessData->ProcessGroup;
+       NewProcessData->ProcessGroupId = ProcessData->ProcessGroupId;
      }
 
    return(STATUS_SUCCESS);
@@ -244,7 +244,7 @@ CSR_API(CsrSrvCreateThread)
     PCSR_THREAD CurrentThread;
     HANDLE ThreadHandle;
     NTSTATUS Status;
-    PCSRSS_PROCESS_DATA CsrProcess;
+    PCSR_PROCESS CsrProcess;
     
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
@@ -253,11 +253,11 @@ CSR_API(CsrSrvCreateThread)
     CsrProcess = CurrentThread->Process;
 //    DPRINT1("Current thread: %p %p\n", CurrentThread, CsrProcess);
 //    DPRINT1("Request CID: %lx %lx %lx\n", 
-//            CsrProcess->ProcessId, 
+//            CsrProcess->ClientId.UniqueProcess, 
 //            NtCurrentTeb()->ClientId.UniqueProcess,
  //           Request->Data.CreateThreadRequest.ClientId.UniqueProcess);
     
-    if (CsrProcess->ProcessId != Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
+    if (CsrProcess->ClientId.UniqueProcess != Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
     {
         if (Request->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
         {
@@ -270,12 +270,12 @@ CSR_API(CsrSrvCreateThread)
         if (!NT_SUCCESS(Status)) return Status;
     }
     
-//    DPRINT1("PIDs: %lx %lx\n", CurrentThread->Process->ProcessId, CsrProcess->ProcessId);
+//    DPRINT1("PIDs: %lx %lx\n", CurrentThread->Process->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueProcess);
 //    DPRINT1("Thread handle is: %lx Process Handle is: %lx %lx\n",
        //     Request->Data.CreateThreadRequest.ThreadHandle,
-     //       CurrentThread->Process->Process,
+     //       CurrentThread->Process->ProcessHandle,
    //         CsrProcess->Process);
-    Status = NtDuplicateObject(CsrProcess->Process,
+    Status = NtDuplicateObject(CsrProcess->ProcessHandle,
                                Request->Data.CreateThreadRequest.ThreadHandle,
                                NtCurrentProcess(),
                                &ThreadHandle,
@@ -285,7 +285,7 @@ CSR_API(CsrSrvCreateThread)
     //DPRINT1("Duplicate status: %lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
-        Status = NtDuplicateObject(CurrentThread->Process->Process,
+        Status = NtDuplicateObject(CurrentThread->Process->ProcessHandle,
                                    Request->Data.CreateThreadRequest.ThreadHandle,
                                    NtCurrentProcess(),
                                    &ThreadHandle,
@@ -327,7 +327,7 @@ CSR_API(CsrTerminateProcess)
    }
    
 
-   ProcessData->Terminated = TRUE;
+   ProcessData->Flags |= CsrProcessTerminated;
    return STATUS_SUCCESS;
 }
 

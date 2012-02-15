@@ -45,31 +45,47 @@ typedef enum _CSR_PROCESS_FLAGS
     CsrProcessIsConsoleApp = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
 
-typedef struct _CSRSS_PROCESS_DATA
+typedef struct _CSRSS_CON_PROCESS_DATA
 {
-  struct tagCSRSS_CONSOLE *Console;
-  struct tagCSRSS_CONSOLE *ParentConsole;
-  BOOL bInheritHandles;
-  RTL_CRITICAL_SECTION HandleTableLock;
-  ULONG HandleTableSize;
-  struct _CSRSS_HANDLE *HandleTable;
-  HANDLE ProcessId;
-  DWORD ProcessGroup;
-  HANDLE Process;
-  ULONG ShutdownLevel;
-  ULONG ShutdownFlags;
-  HANDLE ConsoleEvent;
-  PVOID CsrSectionViewBase;
-  ULONG CsrSectionViewSize;
-  HANDLE ServerCommunicationPort;
-  struct _CSRSS_PROCESS_DATA * next;
-  LIST_ENTRY ProcessEntry;
-  PCONTROLDISPATCHER CtrlDispatcher;
-  BOOL Terminated;
-  ULONG Flags;
-  ULONG ThreadCount;
-  LIST_ENTRY ThreadList;
-} CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
+    HANDLE ConsoleEvent;
+    struct tagCSRSS_CONSOLE *Console;
+    struct tagCSRSS_CONSOLE *ParentConsole;
+    BOOL bInheritHandles;
+    RTL_CRITICAL_SECTION HandleTableLock;
+    ULONG HandleTableSize;
+    struct _CSRSS_HANDLE *HandleTable;
+    PCONTROLDISPATCHER CtrlDispatcher;
+} CSRSS_CON_PROCESS_DATA, *PCSRSS_CON_PROCESS_DATA;
+
+typedef struct _CSR_PROCESS
+{
+    CLIENT_ID ClientId;
+    LIST_ENTRY ListLink;
+    LIST_ENTRY ThreadList;
+    struct _CSR_PROCESS *Parent;
+//    PCSR_NT_SESSION NtSession;
+    ULONG ExpectedVersion;
+    HANDLE ClientPort;
+    ULONG_PTR ClientViewBase;
+    ULONG_PTR ClientViewBounds;
+    HANDLE ProcessHandle;
+    ULONG SequenceNumber;
+    ULONG Flags;
+    ULONG DebugFlags;
+    CLIENT_ID DebugCid;
+    ULONG ReferenceCount;
+    ULONG ProcessGroupId;
+    ULONG ProcessGroupSequence;
+    ULONG fVDM;
+    ULONG ThreadCount;
+    ULONG PriorityClass;
+    ULONG Reserved;
+    ULONG ShutdownLevel;
+    ULONG ShutdownFlags;
+//    PVOID ServerData[ANYSIZE_ARRAY];
+    struct _CSR_PROCESS* next;
+    CSRSS_CON_PROCESS_DATA;
+} CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
 {
@@ -77,7 +93,7 @@ typedef struct _CSR_THREAD
     LIST_ENTRY Link;
     LIST_ENTRY HashLinks;
     CLIENT_ID ClientId;
-    PCSRSS_PROCESS_DATA Process;
+    PCSR_PROCESS Process;
     //struct _CSR_WAIT_BLOCK *WaitBlock;
     HANDLE ThreadHandle;
     ULONG Flags;
@@ -85,7 +101,7 @@ typedef struct _CSR_THREAD
     ULONG ImpersonationCount;
 } CSR_THREAD, *PCSR_THREAD;
 
-typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSR_PROCESS ProcessData,
                                            PCSR_API_MESSAGE Request);
 
 typedef struct _CSRSS_API_DEFINITION
@@ -106,7 +122,7 @@ typedef struct _CSRSS_LISTEN_DATA
 } CSRSS_LISTEN_DATA, *PCSRSS_LISTEN_DATA;
 
 #define CSR_API(n) NTSTATUS WINAPI n (\
-PCSRSS_PROCESS_DATA ProcessData,\
+PCSR_PROCESS ProcessData,\
 PCSR_API_MESSAGE Request)
 
 /* init.c */
@@ -123,11 +139,11 @@ CSR_API(CsrSetShutdownParameters);
 
 PCSR_THREAD
 NTAPI
-CsrAllocateThread(IN PCSRSS_PROCESS_DATA CsrProcess);
+CsrAllocateThread(IN PCSR_PROCESS CsrProcess);
 
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
-VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
+VOID FASTCALL CsrApiCallHandler(PCSR_PROCESS ProcessData,
                                 PCSR_API_MESSAGE Request);
 VOID WINAPI CsrSbApiRequestThread (PVOID PortHandle);
 VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
@@ -135,19 +151,19 @@ VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 extern HANDLE CsrSbApiPort;
 
 /* api/process.c */
-typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
                                                     PVOID Context);
 VOID WINAPI CsrInitProcessData(VOID);
-PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId);
-PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId);
+PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId);
+PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId);
 NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );
 NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
 PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
-PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
-PCSR_THREAD NTAPI CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL, IN PCLIENT_ID ClientId);
-NTSTATUS NTAPI CsrLockProcessByClientId(IN HANDLE Pid, OUT PCSRSS_PROCESS_DATA *CsrProcess OPTIONAL);
-NTSTATUS NTAPI CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess, IN HANDLE hThread, IN PCLIENT_ID ClientId);
-NTSTATUS NTAPI CsrUnlockProcess(IN PCSRSS_PROCESS_DATA CsrProcess);
+PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
+PCSR_THREAD NTAPI CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL, IN PCLIENT_ID ClientId);
+NTSTATUS NTAPI CsrLockProcessByClientId(IN HANDLE Pid, OUT PCSR_PROCESS *CsrProcess OPTIONAL);
+NTSTATUS NTAPI CsrCreateThread(IN PCSR_PROCESS CsrProcess, IN HANDLE hThread, IN PCLIENT_ID ClientId);
+NTSTATUS NTAPI CsrUnlockProcess(IN PCSR_PROCESS CsrProcess);
 
 //hack
 VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);

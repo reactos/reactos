@@ -72,7 +72,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
 
 VOID
 FASTCALL
-CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
+CsrApiCallHandler(PCSR_PROCESS ProcessData,
                   PCSR_API_MESSAGE Request)
 {
   unsigned DefIndex;
@@ -108,13 +108,13 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
 }
 
 BOOL
-CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+CallHardError(IN PCSR_PROCESS ProcessData,
               IN PHARDERROR_MSG HardErrorMessage);
 
 static
 VOID
 NTAPI
-CsrHandleHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+CsrHandleHardError(IN PCSR_PROCESS ProcessData,
                    IN OUT PHARDERROR_MSG Message)
 {
     DPRINT1("CSR: received hard error %lx\n", Message->Status);
@@ -275,7 +275,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
  *--*/
 NTSTATUS
 NTAPI
-CsrSrvAttachSharedSection(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
+CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
                           OUT PCSR_CONNECTION_INFO ConnectInfo)
 {
     NTSTATUS Status;
@@ -285,9 +285,9 @@ CsrSrvAttachSharedSection(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
     if (CsrProcess)
     {
         /* Map the section into this process */
-        DPRINT("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->Process, CsrProcess);
+        DPRINT("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->ProcessHandle, CsrProcess);
         Status = NtMapViewOfSection(CsrSrvSharedSection,
-                                    CsrProcess->Process,
+                                    CsrProcess->ProcessHandle,
                                     &CsrSrvSharedSectionBase,
                                     0,
                                     0,
@@ -701,7 +701,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
 {
     NTSTATUS Status;
     HANDLE ServerPort = NULL, ServerThread = NULL;
-    PCSRSS_PROCESS_DATA ProcessData = NULL;
+    PCSR_PROCESS ProcessData = NULL;
     REMOTE_PORT_VIEW LpcRead;
     CLIENT_ID ClientId;
     BOOLEAN AllowConnection = FALSE;
@@ -728,7 +728,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         }
     }
 
-    if (ProcessData->Process == NULL)
+    if (ProcessData->ProcessHandle == NULL)
     {
         OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -739,11 +739,11 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
                                    NULL);
         DPRINT1("WARNING: CSR PROCESS WITH NO CSR PROCESS HANDLE???\n");
         ClientId.UniqueThread = 0;
-        Status = NtOpenProcess(&ProcessData->Process,
+        Status = NtOpenProcess(&ProcessData->ProcessHandle,
                                PROCESS_ALL_ACCESS,
                                &ObjectAttributes,
                                &Request->ClientId);
-        DPRINT1("Status: %lx. Handle: %lx\n", Status, ProcessData->Process);
+        DPRINT1("Status: %lx. Handle: %lx\n", Status, ProcessData->ProcessHandle);
     }
 
     if (ProcessData)
@@ -773,9 +773,9 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         return Status;
     }
 
-    ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
-    ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
-    ProcessData->ServerCommunicationPort = ServerPort;
+    ProcessData->ClientViewBase = (ULONG_PTR)LpcRead.ViewBase;
+    ProcessData->ClientViewBounds = LpcRead.ViewSize;
+    ProcessData->ClientPort = ServerPort;
 
     if (AllowConnection) Status = NtCompleteConnectPort(ServerPort);
     if (!NT_SUCCESS(Status))
@@ -866,7 +866,7 @@ ClientConnectionThread(HANDLE ServerPort)
     BYTE RawRequest[LPC_MAX_DATA_LENGTH];
     PCSR_API_MESSAGE Request = (PCSR_API_MESSAGE)RawRequest;
     PCSR_API_MESSAGE Reply;
-    PCSRSS_PROCESS_DATA ProcessData;
+    PCSR_PROCESS ProcessData;
     PCSR_THREAD ServerThread;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
@@ -947,7 +947,7 @@ ClientConnectionThread(HANDLE ServerPort)
                     Request->Header.ClientId.UniqueProcess);
             break;
         }
-        if (ProcessData->Terminated)
+        if (ProcessData->Flags & CsrProcessTerminated)
         {
             DPRINT1("Message %d: process %d already terminated\n",
                     Request->Type, Request->Header.ClientId.UniqueProcess);
@@ -963,7 +963,7 @@ ClientConnectionThread(HANDLE ServerPort)
         else
         {
             PCSR_THREAD Thread;
-            PCSRSS_PROCESS_DATA Process = NULL;
+            PCSR_PROCESS Process = NULL;
 
             //DPRINT1("locate thread %lx/%lx\n", Request->Header.ClientId.UniqueProcess, Request->Header.ClientId.UniqueThread);
             Thread = CsrLocateThreadByClientId(&Process, &Request->Header.ClientId);

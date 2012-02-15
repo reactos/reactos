@@ -278,7 +278,7 @@ DllMain(HANDLE hDll,
 
 /* Ensure that a captured buffer is safe to access */
 BOOL FASTCALL
-Win32CsrValidateBuffer(PCSRSS_PROCESS_DATA ProcessData, PVOID Buffer,
+Win32CsrValidateBuffer(PCSR_PROCESS ProcessData, PVOID Buffer,
                        SIZE_T NumElements, SIZE_T ElementSize)
 {
     /* Check that the following conditions are true:
@@ -289,14 +289,14 @@ Win32CsrValidateBuffer(PCSRSS_PROCESS_DATA ProcessData, PVOID Buffer,
      *    instead of division; remember that 2147483648 * 2 = 0.)
      * 3. The buffer is DWORD-aligned.
      */
-    ULONG_PTR Offset = (BYTE *)Buffer - (BYTE *)ProcessData->CsrSectionViewBase;
-    if (Offset >= ProcessData->CsrSectionViewSize
-            || NumElements > (ProcessData->CsrSectionViewSize - Offset) / ElementSize
+    ULONG_PTR Offset = (BYTE *)Buffer - (BYTE *)ProcessData->ClientViewBase;
+    if (Offset >= ProcessData->ClientViewBounds
+            || NumElements > (ProcessData->ClientViewBounds - Offset) / ElementSize
             || (Offset & (sizeof(DWORD) - 1)) != 0)
     {
         DPRINT1("Invalid buffer %p(%u*%u); section view is %p(%u)\n",
                 Buffer, NumElements, ElementSize,
-                ProcessData->CsrSectionViewBase, ProcessData->CsrSectionViewSize);
+                ProcessData->ClientViewBase, ProcessData->ClientViewBounds);
         return FALSE;
     }
     return TRUE;

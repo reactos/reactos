@@ -65,7 +65,7 @@ CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
 }
 
 BOOL
-CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+CallHardError(IN PCSR_PROCESS ProcessData,
               IN PHARDERROR_MSG HardErrorMessage)
 {
     BOOL Ok;
@@ -83,8 +83,8 @@ CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS
-CallProcessInherit(IN PCSRSS_PROCESS_DATA SourceProcessData,
-                   IN PCSRSS_PROCESS_DATA TargetProcessData)
+CallProcessInherit(IN PCSR_PROCESS SourceProcessData,
+                   IN PCSR_PROCESS TargetProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     unsigned i;
@@ -98,7 +98,7 @@ CallProcessInherit(IN PCSRSS_PROCESS_DATA SourceProcessData,
 }
 
 NTSTATUS
-CallProcessDeleted(IN PCSRSS_PROCESS_DATA ProcessData)
+CallProcessDeleted(IN PCSR_PROCESS ProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     unsigned i;

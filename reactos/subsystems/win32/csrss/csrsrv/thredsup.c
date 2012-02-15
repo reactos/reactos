@@ -26,9 +26,9 @@
 /* GLOBALS ********************************************************************/
 
 LIST_ENTRY CsrThreadHashTable[256];
-extern PCSRSS_PROCESS_DATA CsrRootProcess;
+extern PCSR_PROCESS CsrRootProcess;
 extern RTL_CRITICAL_SECTION ProcessDataLock;
-extern PCSRSS_PROCESS_DATA ProcessData[256];
+extern PCSR_PROCESS ProcessData[256];
 
 /* FUNCTIONS ******************************************************************/
 
@@ -112,7 +112,7 @@ UnProtectHandle(IN HANDLE ObjectHandle)
 
 PCSR_THREAD
 NTAPI
-CsrAllocateThread(IN PCSRSS_PROCESS_DATA CsrProcess)
+CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
 {
     PCSR_THREAD CsrThread;
 
@@ -133,7 +133,7 @@ CsrAllocateThread(IN PCSRSS_PROCESS_DATA CsrProcess)
 
 PCSR_THREAD
 NTAPI
-CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL,
+CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
                           IN PCLIENT_ID ClientId)
 {
     ULONG i;
@@ -174,7 +174,7 @@ CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL,
 
 PCSR_THREAD
 NTAPI
-CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
+CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
                          IN PCLIENT_ID Cid)
 {
     PLIST_ENTRY ListHead, NextEntry;
@@ -208,7 +208,7 @@ CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
 
 VOID
 NTAPI
-CsrInsertThread(IN PCSRSS_PROCESS_DATA Process,
+CsrInsertThread(IN PCSR_PROCESS Process,
                 IN PCSR_THREAD Thread)
 {
     ULONG i;
@@ -295,12 +295,12 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
 
 NTSTATUS
 NTAPI
-CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess,
+CsrCreateThread(IN PCSR_PROCESS CsrProcess,
                 IN HANDLE hThread,
                 IN PCLIENT_ID ClientId)
 {
     PCSR_THREAD CsrThread;
-    //PCSRSS_PROCESS_DATA CurrentProcess;
+    //PCSR_PROCESS CurrentProcess;
     //PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
     //CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;

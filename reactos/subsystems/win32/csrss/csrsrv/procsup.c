@@ -23,8 +23,8 @@
 /* GLOBALS ********************************************************************/
 
 extern RTL_CRITICAL_SECTION ProcessDataLock;
-extern PCSRSS_PROCESS_DATA ProcessData[256];
-PCSRSS_PROCESS_DATA CsrRootProcess;
+extern PCSR_PROCESS ProcessData[256];
+PCSR_PROCESS CsrRootProcess;
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
     sizeof(SECURITY_QUALITY_OF_SERVICE),
@@ -221,12 +221,12 @@ CsrRevertToSelf(VOID)
     return NT_SUCCESS(Status);
 }
 
-PCSRSS_PROCESS_DATA
+PCSR_PROCESS
 NTAPI
 FindProcessForShutdown(IN PLUID CallerLuid)
 {
     ULONG Hash;
-    PCSRSS_PROCESS_DATA CsrProcess, ReturnCsrProcess = NULL;
+    PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
     NTSTATUS Status;
     ULONG Level = 0;
     LUID ProcessLuid;
@@ -243,7 +243,7 @@ FindProcessForShutdown(IN PLUID CallerLuid)
             if (CsrProcess->Flags & CsrProcessSkipShutdown) goto Next;
         
             /* Get the LUID of this Process */
-            Status = CsrGetProcessLuid(CsrProcess->Process, &ProcessLuid);
+            Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
 
             /* Check if we didn't get access to the LUID */
             if (Status == STATUS_ACCESS_DENIED)
@@ -303,7 +303,7 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
 {
     PVOID* RealContext = (PVOID*)Context;
     PLUID CallerLuid = RealContext[0];
-    PCSRSS_PROCESS_DATA CsrProcess = NULL;
+    PCSR_PROCESS CsrProcess = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     BOOLEAN FirstTry;
     ULONG Result = 0;
@@ -349,7 +349,7 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
 
 LoopAgain:
         /* Release the lock, make the callback, and acquire it back */
-        //DPRINT1("Found process: %lx\n", CsrProcess->ProcessId);
+        //DPRINT1("Found process: %lx\n", CsrProcess->ClientId.UniqueProcess);
         CsrReleaseProcessLock();
         Result = (ULONG)EnumProc(CsrProcess, (PVOID)((ULONG_PTR)Context | FirstTry));
         CsrAcquireProcessLock();
@@ -391,10 +391,10 @@ Quickie:
 NTSTATUS
 NTAPI
 CsrLockProcessByClientId(IN HANDLE Pid,
-                         OUT PCSRSS_PROCESS_DATA *CsrProcess OPTIONAL)
+                         OUT PCSR_PROCESS *CsrProcess OPTIONAL)
 {
     ULONG Hash;
-    PCSRSS_PROCESS_DATA CurrentProcess = NULL;
+    PCSR_PROCESS CurrentProcess = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Acquire the lock */
@@ -408,7 +408,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
         while (CurrentProcess)
         {
             /* Check for PID match */
-            if (CurrentProcess->ProcessId == Pid)
+            if (CurrentProcess->ClientId.UniqueProcess == Pid)
             {
                 /* Get out of here with success */
 //                DPRINT1("Found %p for PID %lx\n", CurrentProcess, Pid);
@@ -432,7 +432,7 @@ Found:
 
 NTSTATUS
 NTAPI
-CsrUnlockProcess(IN PCSRSS_PROCESS_DATA CsrProcess)
+CsrUnlockProcess(IN PCSR_PROCESS CsrProcess)
 {
     /* Dereference the process */
     //CsrLockedDereferenceProcess(CsrProcess);

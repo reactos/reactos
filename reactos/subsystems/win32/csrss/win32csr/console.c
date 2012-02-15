@@ -15,7 +15,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
-ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console)
+ConioConsoleFromProcessData(PCSR_PROCESS ProcessData, PCSRSS_CONSOLE *Console)
 {
     PCSRSS_CONSOLE ProcessConsole;
 
@@ -38,16 +38,16 @@ ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Con
 }
 
 VOID FASTCALL
-ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD Timeout)
+ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
 {
     HANDLE Thread;
 
-    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ProcessId);
+    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ClientId.UniqueProcess);
 
     if (ProcessData->CtrlDispatcher)
     {
 
-        Thread = CreateRemoteThread(ProcessData->Process, NULL, 0,
+        Thread = CreateRemoteThread(ProcessData->ProcessHandle, NULL, 0,
                                     (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
                                     UlongToPtr(Event), 0, NULL);
         if (NULL == Thread)
@@ -61,7 +61,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD
 }
 
 VOID FASTCALL
-ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
+ConioConsoleCtrlEvent(DWORD Event, PCSR_PROCESS ProcessData)
 {
     ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
@@ -215,7 +215,7 @@ CSR_API(CsrAllocConsole)
         /* initialize list head */
         InitializeListHead(&Console->ProcessList);
         /* insert process data required for GUI initialization */
-        InsertHeadList(&Console->ProcessList, &ProcessData->ProcessEntry);
+        InsertHeadList(&Console->ProcessList, &ProcessData->ListLink);
         /* Initialize the Console */
         Status = CsrInitConsole(Console, Request->Data.AllocConsoleRequest.ShowCmd);
         if (!NT_SUCCESS(Status))
@@ -280,7 +280,7 @@ CSR_API(CsrAllocConsole)
     /* Duplicate the Event */
     if (!DuplicateHandle(GetCurrentProcess(),
                          ProcessData->Console->ActiveEvent,
-                         ProcessData->Process,
+                         ProcessData->ProcessHandle,
                          &ProcessData->ConsoleEvent,
                          EVENT_ALL_ACCESS,
                          FALSE,
@@ -307,7 +307,7 @@ CSR_API(CsrAllocConsole)
     if (!NewConsole)
     {
         /* Insert into the list if it has not been added */
-        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ListLink);
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -762,7 +762,7 @@ CSR_API(CsrGetProcessList)
 {
     PDWORD Buffer;
     PCSRSS_CONSOLE Console;
-    PCSRSS_PROCESS_DATA current;
+    PCSR_PROCESS current;
     PLIST_ENTRY current_entry;
     ULONG nItems = 0;
     NTSTATUS Status;
@@ -786,10 +786,10 @@ CSR_API(CsrGetProcessList)
          current_entry != &Console->ProcessList;
          current_entry = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
         if (++nItems <= Request->Data.GetProcessListRequest.nMaxIds)
         {
-            *Buffer++ = HandleToUlong(current->ProcessId);
+            *Buffer++ = HandleToUlong(current->ClientId.UniqueProcess);
         }
     }
 
@@ -802,7 +802,7 @@ CSR_API(CsrGetProcessList)
 CSR_API(CsrGenerateCtrlEvent)
 {
     PCSRSS_CONSOLE Console;
-    PCSRSS_PROCESS_DATA current;
+    PCSR_PROCESS current;
     PLIST_ENTRY current_entry;
     DWORD Group;
     NTSTATUS Status;
@@ -822,8 +822,8 @@ CSR_API(CsrGenerateCtrlEvent)
             current_entry != &Console->ProcessList;
             current_entry = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-        if (Group == 0 || current->ProcessGroup == Group)
+        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
+        if (Group == 0 || current->ProcessGroupId == Group)
         {
             ConioConsoleCtrlEvent(Request->Data.GenerateCtrlEvent.Event, current);
             Status = STATUS_SUCCESS;
