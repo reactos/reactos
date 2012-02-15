@@ -110,104 +110,157 @@ USBSTOR_HandleTransferError(
     PDEVICE_OBJECT DeviceObject,
     PIRP_CONTEXT Context)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION Stack;
-    USBD_PIPE_HANDLE PipeHandle;
+    //USBD_PIPE_HANDLE PipeHandle;
     PSCSI_REQUEST_BLOCK Request;
     PCDB pCDB;
 
-    DPRINT1("Entered Handle Transfer Error\n");
+
     //
-    // Determine pipehandle
+    // first perform a mass storage reset step 1 in 5.3.4 USB Mass Storage Bulk Only Specification
     //
-    if (Context->cbw->CommandBlock[0] == SCSIOP_WRITE)
+    Status = USBSTOR_ResetDevice(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension);
+    if (NT_SUCCESS(Status))
     {
         //
-        // write request used bulk out pipe
-        // 
-        PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle;
+        // step 2 reset bulk in pipe section 5.3.4
+        //
+        Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // finally reset bulk out pipe
+            //
+            Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle);
+        }
+    }
+
+    if (Context->Irp)
+    {
+        //
+        // get next stack location
+        //
+        Stack = IoGetCurrentIrpStackLocation(Context->Irp);
+
+        //
+        // get request block
+        //
+        Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
+        ASSERT(Request);
+
+        //
+        // obtain request type
+        //
+        pCDB = (PCDB)Request->Cdb;
+        ASSERT(pCDB);
+
+        //
+        // Cleanup the IRP context
+        if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
+        {
+            FreeItem(Context->TransferData);
+        }
+
+        if (Status != STATUS_SUCCESS)
+        {
+            //
+            // Complete the master IRP
+            //
+            Context->Irp->IoStatus.Status = Status;
+            Context->Irp->IoStatus.Information = 0;
+            USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
+            IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
+
+             //
+            // Start the next request
+            //
+            USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
+        }
     }
     else
     {
-        //
-        // default bulk in pipe
-        //
-        PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
-    }
-
-    switch (Context->Urb.UrbHeader.Status)
-    {
-        case USBD_STATUS_STALL_PID:
+        if (Status != STATUS_SUCCESS)
         {
             //
-            // First attempt to reset the pipe
+            // Signal the context event
             //
-            DPRINT1("Resetting Pipe\n");
-            Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, PipeHandle);
-            if (NT_SUCCESS(Status))
-            {
-                Status = STATUS_SUCCESS;
-                break;
-            }
-
-            DPRINT1("Failed to reset pipe %x\n", Status);
-
-            //
-            // FIXME: Reset of pipe failed, attempt to reset port
-            //
-            
-            Status = STATUS_UNSUCCESSFUL;
-            break;
-        }
-        //
-        // FIXME: Handle more errors
-        //
-        default:
-        {
-            DPRINT1("Error not handled\n");
-            Status = STATUS_UNSUCCESSFUL;
-        }
-    }
-
-    Stack = IoGetCurrentIrpStackLocation(Context->Irp);
-    Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
-    pCDB = (PCDB)Request->Cdb;
-    if (Status != STATUS_SUCCESS)
-    {
-        /* Complete the master IRP */
-        Context->Irp->IoStatus.Status = Status;
-        Context->Irp->IoStatus.Information = 0;
-        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
-        IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
-
-        /* Start the next request */
-        USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
-
-        /* Signal the context event */
-        if (Context->Event)
+            ASSERT(Context->Event);
             KeSetEvent(Context->Event, 0, FALSE);
-
-        /* Cleanup the IRP context */
-        if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
-            FreeItem(Context->TransferData);
-        FreeItem(Context->cbw);
-        FreeItem(Context);
+        }
     }
-    else
+
+    if (NT_SUCCESS(Status))
     {
-
         DPRINT1("Retrying\n");
-        Status = USBSTOR_HandleExecuteSCSI(*Context->PDODeviceExtension->PDODeviceObject, Context->Irp);
-
-        /* Cleanup the old IRP context */
-        if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
-            FreeItem(Context->TransferData);
-        FreeItem(Context->cbw);
-        FreeItem(Context);
+        USBSTOR_HandleExecuteSCSI(*Context->PDODeviceExtension->PDODeviceObject, Context->Irp);
     }
+
+    //
+    // cleanup irp context
+    //
+    FreeItem(Context->cbw);
+    FreeItem(Context);
+
 
     DPRINT1("USBSTOR_HandleTransferError returning with Status %x\n", Status);
     return Status;
+}
+
+VOID
+NTAPI
+USBSTOR_ResetHandlerWorkItemRoutine(
+    PVOID Context)
+{
+    NTSTATUS Status;
+    USHORT Value;
+    PIO_STACK_LOCATION IoStack;
+
+    PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
+
+    //
+    // clear stall on BulkIn pipe
+    //
+    Status = USBSTOR_ResetPipeWithHandle(WorkItemData->Context->FDODeviceExtension->LowerDeviceObject, WorkItemData->Context->FDODeviceExtension->InterfaceInformation->Pipes[WorkItemData->Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle);
+    DPRINT1("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
+
+    //
+    // get next stack location
+    //
+
+    IoStack = IoGetNextIrpStackLocation(WorkItemData->Irp);
+
+    //
+    // now initialize the urb for sending the csw
+    //
+    UsbBuildInterruptOrBulkTransferRequest(&WorkItemData->Context->Urb,
+                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                           WorkItemData->Context->FDODeviceExtension->InterfaceInformation->Pipes[WorkItemData->Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                           WorkItemData->Context->csw,
+                                           NULL,
+                                           512, //FIXME
+                                           USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                                           NULL);
+
+    //
+    // initialize stack location
+    //
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+    IoStack->Parameters.Others.Argument1 = (PVOID)&WorkItemData->Context->Urb;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = WorkItemData->Context->Urb.UrbHeader.Length;
+    WorkItemData->Irp->IoStatus.Status = STATUS_SUCCESS;
+
+
+    //
+    // setup completion routine
+    //
+    IoSetCompletionRoutine(WorkItemData->Irp, USBSTOR_CSWCompletionRoutine, Context, TRUE, TRUE, TRUE);
+
+    //
+    // call driver
+    //
+    IoCallDriver(WorkItemData->Context->FDODeviceExtension->LowerDeviceObject, WorkItemData->Irp);
 }
 
 VOID
@@ -217,8 +270,21 @@ ErrorHandlerWorkItemRoutine(
 {
     NTSTATUS Status;
     PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
-    
-    Status = USBSTOR_HandleTransferError(WorkItemData->DeviceObject, WorkItemData->Context);
+
+    if (WorkItemData->Context->ErrorIndex == 2)
+    {
+        //
+        // reset device
+        //
+        Status = USBSTOR_HandleTransferError(WorkItemData->DeviceObject, WorkItemData->Context);
+    }
+    else
+    {
+        //
+        // clear stall
+        //
+        USBSTOR_ResetHandlerWorkItemRoutine(WorkItemData);
+    }
 
     //
     // Free Work Item Data

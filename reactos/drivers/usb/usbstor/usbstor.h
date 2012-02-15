@@ -279,6 +279,7 @@ typedef struct
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PMDL TransferBufferMDL;
     PKEVENT Event;
+    ULONG ErrorIndex;
 }IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
@@ -286,6 +287,7 @@ typedef struct _ERRORHANDLER_WORKITEM_DATA
 	PDEVICE_OBJECT DeviceObject;
 	PIRP_CONTEXT Context;
 	WORK_QUEUE_ITEM WorkQueueItem;
+    PIRP Irp;
 } ERRORHANDLER_WORKITEM_DATA, *PERRORHANDLER_WORKITEM_DATA;
 
 
@@ -390,6 +392,13 @@ NTSTATUS
 USBSTOR_SendInquiryCmd(
     IN PDEVICE_OBJECT DeviceObject);
 
+NTSTATUS
+NTAPI
+USBSTOR_CSWCompletionRoutine(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp, 
+    PVOID Ctx);
+
 //---------------------------------------------------------------------
 //
 // disk.c routines
@@ -443,6 +452,13 @@ ErrorHandlerWorkItemRoutine(
 	PVOID Context);
 
 VOID
+NTAPI
+ResetHandlerWorkItemRoutine(
+    PVOID Context);
+
+
+
+VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject);
 
@@ -457,4 +473,9 @@ USBSTOR_GetEndpointStatus(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR bEndpointAddress,
     OUT PUSHORT Value);
+
+NTSTATUS
+USBSTOR_ResetPipeWithHandle(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN USBD_PIPE_HANDLE PipeHandle);
 

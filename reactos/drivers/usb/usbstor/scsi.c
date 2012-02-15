@@ -83,6 +83,75 @@ USBSTOR_AllocateIrpContext()
 
 }
 
+BOOLEAN
+USBSTOR_IsCSWValid(
+    PIRP_CONTEXT Context)
+{
+    //
+    // sanity checks
+    //
+    if (Context->csw->Signature != CSW_SIGNATURE)
+    {
+        DPRINT1("[USBSTOR] Expected Signature %x but got %x\n", CSW_SIGNATURE, Context->csw->Signature);
+        return FALSE;
+    }
+
+    if (Context->csw->Tag != (ULONG)Context->csw)
+    {
+        DPRINT1("[USBSTOR] Expected Tag %x but got %x\n", (ULONG)Context->csw, Context->csw->Tag);
+        return FALSE;
+    }
+
+    if (Context->csw->Status != 0x00)
+    {
+        DPRINT1("[USBSTOR] Expected Status 0x00 but got %x\n", Context->csw->Status);
+        return FALSE;
+    }
+
+    //
+    // CSW is valid
+    //
+    return TRUE;
+
+}
+
+NTSTATUS
+USBSTOR_QueueWorkItem(
+    PIRP_CONTEXT Context,
+    PIRP Irp)
+{
+    PERRORHANDLER_WORKITEM_DATA ErrorHandlerWorkItemData;
+
+    //
+    // Allocate Work Item Data
+    //
+    ErrorHandlerWorkItemData = ExAllocatePoolWithTag(NonPagedPool, sizeof(ERRORHANDLER_WORKITEM_DATA), USB_STOR_TAG);
+    if (!ErrorHandlerWorkItemData)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Initialize and queue the work item to handle the error
+    //
+    ExInitializeWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem,
+                         ErrorHandlerWorkItemRoutine,
+                         ErrorHandlerWorkItemData);
+
+    ErrorHandlerWorkItemData->DeviceObject = Context->FDODeviceExtension->FunctionalDeviceObject;
+    ErrorHandlerWorkItemData->Context = Context;
+    ErrorHandlerWorkItemData->Irp = Irp;
+    ErrorHandlerWorkItemData->DeviceObject = Context->FDODeviceExtension->FunctionalDeviceObject;
+
+    DPRINT1("Queuing WorkItemROutine\n");
+    ExQueueWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem, DelayedWorkQueue);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
 //
 // driver verifier
 //
@@ -102,7 +171,7 @@ USBSTOR_CSWCompletionRoutine(
     PREAD_CAPACITY_DATA_EX CapacityDataEx;
     PREAD_CAPACITY_DATA CapacityData;
     PUFI_CAPACITY_RESPONSE Response;
-    PERRORHANDLER_WORKITEM_DATA ErrorHandlerWorkItemData;
+
     NTSTATUS Status;
     PURB Urb;
 
@@ -143,6 +212,48 @@ USBSTOR_CSWCompletionRoutine(
         }
     }
 
+    DPRINT1("USBSTOR_CSWCompletionRoutine Status %x\n", Irp->IoStatus.Status);
+
+    if (!NT_SUCCESS(Irp->IoStatus.Information))
+    {
+        if (Context->ErrorIndex == 0)
+        {
+            //
+            // increment error index
+            //
+            Context->ErrorIndex = 1;
+
+            //
+            // clear stall and resend cbw
+            //
+            Status = USBSTOR_QueueWorkItem(Context, Irp);
+            ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+            return STATUS_MORE_PROCESSING_REQUIRED;
+        }
+
+        //
+        // perform reset recovery
+        //
+        Context->ErrorIndex = 2;
+        IoFreeIrp(Irp);
+        Status = USBSTOR_QueueWorkItem(Context, NULL);
+        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
+
+    if (!USBSTOR_IsCSWValid(Context))
+    {
+        //
+        // perform reset recovery
+        //
+        Context->ErrorIndex = 2;
+        IoFreeIrp(Irp);
+        Status = USBSTOR_QueueWorkItem(Context, NULL);
+        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
+
+
     if (Context->Irp)
     {
         //
@@ -164,55 +275,6 @@ USBSTOR_CSWCompletionRoutine(
         // get SCSI command data block
         //
         pCDB = (PCDB)Request->Cdb;
-
-        //
-        // check status
-        //
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Status %x\n", Status);
-            DPRINT1("UrbStatus %x\n", Urb->UrbHeader.Status);
-
-            //
-            // Check for errors that can be handled
-            // FIXME: Verify all usb errors that can be recovered via pipe reset/port reset/controller reset
-            //
-            if ((Urb->UrbHeader.Status & USB_RECOVERABLE_ERRORS) == Urb->UrbHeader.Status)
-            {
-                DPRINT1("Attempting Error Recovery\n");
-                //
-                // free the allocated irp
-                //
-                IoFreeIrp(Irp);
-
-                //
-                // Allocate Work Item Data
-                //
-                ErrorHandlerWorkItemData = ExAllocatePoolWithTag(NonPagedPool, sizeof(ERRORHANDLER_WORKITEM_DATA), USB_STOR_TAG);
-                if (!ErrorHandlerWorkItemData)
-                {
-                    DPRINT1("Failed to allocate memory\n");
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                }
-                else
-                {
-                    //
-                    // Initialize and queue the work item to handle the error
-                    //
-                    ExInitializeWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem,
-                                        ErrorHandlerWorkItemRoutine,
-                                        ErrorHandlerWorkItemData);
-    
-                    ErrorHandlerWorkItemData->DeviceObject = Context->FDODeviceExtension->FunctionalDeviceObject;
-                    ErrorHandlerWorkItemData->Context = Context;
-                    DPRINT1("Queuing WorkItemROutine\n");
-                    ExQueueWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem, DelayedWorkQueue);
-
-                    return STATUS_MORE_PROCESSING_REQUIRED;
-                }
-            }
-        }
-
         Request->SrbStatus = SRB_STATUS_SUCCESS;
 
         //
@@ -268,28 +330,9 @@ USBSTOR_CSWCompletionRoutine(
     }
 
     //
-    // sanity checks
-    //
-    if (Context->csw->Signature != CSW_SIGNATURE)
-    {
-        DPRINT1("[USBSTOR] Expected Signature %x but got %x\n", CSW_SIGNATURE, Context->csw->Signature);
-    }
-
-    if (Context->csw->Tag != (ULONG)Context->csw)
-    {
-        DPRINT1("[USBSTOR] Expected Tag %x but got %x\n", (ULONG)Context->csw, Context->csw->Tag);
-    }
-
-    if (Context->csw->Status != 0x00)
-    {
-        DPRINT1("[USBSTOR] Expected Status 0x00 but got %x\n", Context->csw->Status);
-    }
-
-    //
     // free cbw
     //
     FreeItem(Context->cbw);
-
 
     if (Context->Irp)
     {
@@ -511,6 +554,19 @@ USBSTOR_CBWCompletionRoutine(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+VOID
+DumpCBW(
+    PUCHAR Block)
+{
+    DPRINT1("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+        Block[0] & 0xFF, Block[1] & 0xFF, Block[2] & 0xFF, Block[3] & 0xFF, Block[4] & 0xFF, Block[5] & 0xFF, Block[6] & 0xFF, Block[7] & 0xFF, Block[8] & 0xFF, Block[9] & 0xFF,
+        Block[10] & 0xFF, Block[11] & 0xFF, Block[12] & 0xFF, Block[13] & 0xFF, Block[14] & 0xFF, Block[15] & 0xFF, Block[16] & 0xFF, Block[17] & 0xFF, Block[18] & 0xFF, Block[19] & 0xFF,
+        Block[20] & 0xFF, Block[21] & 0xFF, Block[22] & 0xFF, Block[23] & 0xFF, Block[24] & 0xFF, Block[25] & 0xFF, Block[26] & 0xFF, Block[27] & 0xFF, Block[28] & 0xFF, Block[29] & 0xFF, 
+        Block[30] & 0xFF);
+
+}
+
+
 NTSTATUS
 USBSTOR_SendRequest(
     IN PDEVICE_OBJECT DeviceObject,
@@ -561,6 +617,7 @@ USBSTOR_SendRequest(
                      Context->cbw);
 
     DPRINT("CBW %p\n", Context->cbw);
+    DumpCBW((PUCHAR)Context->cbw);
 
     //
     // now initialize the urb
@@ -776,21 +833,6 @@ USBSTOR_SendInquiryCmd(
     // wait for the action to complete
     //
     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-    KeResetEvent(&Event);
-	DPRINT("Resending request\n");
-
-    //
-    // now send the request
-    //
-    Status = USBSTOR_SendRequest(DeviceObject, NULL, &Event, UFI_INQUIRY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_INQUIRY_RESPONSE), (PUCHAR)Response);
-
-    //
-    // wait for the action to complete
-    //
-    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-
 
     DPRINT1("Response %p\n", Response);
     DPRINT1("DeviceType %x\n", Response->DeviceType);

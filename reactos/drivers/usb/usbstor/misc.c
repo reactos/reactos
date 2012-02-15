@@ -411,7 +411,6 @@ USBSTOR_ResetDevice(
     // execute request
     //
     Status = USBSTOR_ClassRequest(DeviceObject, DeviceExtension, USB_BULK_RESET_DEVICE, DeviceExtension->InterfaceInformation->InterfaceNumber, USBD_TRANSFER_DIRECTION_OUT, 0, NULL);
-    DPRINT1("Status %x\n", Status);
 
     //
     // done
