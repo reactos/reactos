@@ -324,32 +324,37 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
     ULONG ResultLength, SidLength, AclLength;
 
     /* Create the SD */
-    RtlCreateSecurityDescriptor(DosDevicesSd, SECURITY_DESCRIPTOR_REVISION);
+    Status = RtlCreateSecurityDescriptor(DosDevicesSd, SECURITY_DESCRIPTOR_REVISION);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Initialize the System SID */
-    RtlAllocateAndInitializeSid(&NtSidAuthority, 1,
-                                SECURITY_LOCAL_SYSTEM_RID,
-                                0, 0, 0, 0, 0, 0, 0,
-                                &SystemSid);
+    Status = RtlAllocateAndInitializeSid(&NtSidAuthority, 1,
+                                         SECURITY_LOCAL_SYSTEM_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &SystemSid);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Initialize the World SID */
-    RtlAllocateAndInitializeSid(&WorldAuthority, 1,
-                                SECURITY_WORLD_RID,
-                                0, 0, 0, 0, 0, 0, 0,
-                                &WorldSid);
+    Status = RtlAllocateAndInitializeSid(&WorldAuthority, 1,
+                                         SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &WorldSid);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Initialize the Admin SID */
-    RtlAllocateAndInitializeSid(&NtSidAuthority, 2,
-                                SECURITY_BUILTIN_DOMAIN_RID,
-                                DOMAIN_ALIAS_RID_ADMINS,
-                                0, 0, 0, 0, 0, 0,
-                                &AdminSid);
+    Status = RtlAllocateAndInitializeSid(&NtSidAuthority, 2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &AdminSid);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Initialize the Creator SID */
-    RtlAllocateAndInitializeSid(&CreatorAuthority, 1,
-                                SECURITY_CREATOR_OWNER_RID,
-                                0, 0, 0, 0, 0, 0, 0,
-                                &CreatorSid);
+    Status = RtlAllocateAndInitializeSid(&CreatorAuthority, 1,
+                                         SECURITY_CREATOR_OWNER_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &CreatorSid);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Open the Session Manager Key */
     RtlInitUnicodeString(&KeyName, SM_REG_KEY);
@@ -372,7 +377,7 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 
         /* Make sure it's what we expect it to be */
         KeyValuePartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyValueBuffer;
-        if ((KeyValuePartialInfo->Type == REG_DWORD) &&
+        if ((NT_SUCCESS(Status)) && (KeyValuePartialInfo->Type == REG_DWORD) &&
             (*(PULONG)KeyValuePartialInfo->Data))
         {
             /* Save the Protection Mode */
@@ -393,23 +398,33 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 
         /* Allocate memory for the DACL */
         Dacl = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, AclLength);
+        ASSERT(Dacl != NULL);
 
         /* Build the ACL and add 3 ACEs */
         Status = RtlCreateAcl(Dacl, AclLength, ACL_REVISION2);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, SystemSid);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, AdminSid);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, CreatorSid);
+        ASSERT(NT_SUCCESS(Status));
 
         /* Edit the ACEs to make them inheritable */
         Status = RtlGetAce(Dacl, 0, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
         Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE;
         Status = RtlGetAce(Dacl, 1, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
         Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE;
         Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
         Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE;
 
         /* Set this DACL with the SD */
         Status = RtlSetDaclSecurityDescriptor(DosDevicesSd, TRUE, Dacl, FALSE);
+        ASSERT(NT_SUCCESS(Status));
+        goto Quickie;
     }
     else
     {
@@ -419,19 +434,27 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 
         /* Allocate memory for the DACL */
         Dacl = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, AclLength);
+        ASSERT(Dacl != NULL);
 
         /* Build the ACL and add 3 ACEs */
         Status = RtlCreateAcl(Dacl, AclLength, ACL_REVISION2);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE, WorldSid);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, SystemSid);
+        ASSERT(NT_SUCCESS(Status));
         Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, WorldSid);
+        ASSERT(NT_SUCCESS(Status));
 
         /* Edit the last ACE to make it inheritable */
         Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
         Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE;
 
         /* Set this DACL with the SD */
         Status = RtlSetDaclSecurityDescriptor(DosDevicesSd, TRUE, Dacl, FALSE);
+        ASSERT(NT_SUCCESS(Status));
+        goto Quickie;
     }
 
 /* FIXME: failure cases! Fail: */
@@ -439,6 +462,7 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
     RtlFreeHeap(CsrHeap, 0, Dacl);
 
 /* FIXME: semi-failure cases! Quickie: */
+Quickie:
     /* Free the SIDs */
     RtlFreeSid(SystemSid);
     RtlFreeSid(WorldSid);
