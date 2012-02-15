@@ -75,10 +75,7 @@ Introduceți vă rog un număr între 1 și %d."
     PD32_MARGINS_IN_MILLIMETERS           "Margini [mm]"
     PD32_MILLIMETERS                      "mm"
 
-    PD32_PRINTER_STATUS_READY             "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Pregătit\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Gata"
+    PD32_PRINTER_STATUS_READY             "Gata"
     PD32_PRINTER_STATUS_PAUSED            "Pauză; "
     PD32_PRINTER_STATUS_ERROR             "Eroare; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Aștept stergerea; "
@@ -119,39 +116,18 @@ STRINGTABLE /* Color names */
     IDS_COLOR_BLACK     "Negru"
     IDS_COLOR_MAROON    "Maro"
     IDS_COLOR_GREEN     "Verde"
-    IDS_COLOR_OLIVE     "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Oliv\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Oliviu"
-    IDS_COLOR_NAVY      "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Bleumarin\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Ultramarin"
+    IDS_COLOR_OLIVE     "Oliviu"
+    IDS_COLOR_NAVY      "Ultramarin"
     IDS_COLOR_PURPLE    "Violet"
-    IDS_COLOR_TEAL      "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verde-albăstrui\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verde-albastru"
-    IDS_COLOR_GRAY      "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Gri\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Griu"
+    IDS_COLOR_TEAL      "Verde-albastru"
+    IDS_COLOR_GRAY      "Griu"
     IDS_COLOR_SILVER    "Argintiu"
     IDS_COLOR_RED       "Roșu"
-    IDS_COLOR_LIME      "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Lămâie verde\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verde deschis"
+    IDS_COLOR_LIME      "Verde deschis"
     IDS_COLOR_YELLOW    "Galben"
     IDS_COLOR_BLUE      "Albastru"
-    IDS_COLOR_FUCHSIA   "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Fuchsia\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Roz"
-    IDS_COLOR_AQUA      "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Culoarea apei\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Azur"
+    IDS_COLOR_FUCHSIA   "Roz"
+    IDS_COLOR_AQUA      "Azur"
     IDS_COLOR_WHITE     "Alb"
 }
 

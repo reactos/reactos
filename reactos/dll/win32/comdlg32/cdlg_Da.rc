@@ -64,10 +64,7 @@ Angiv en værdi mellem 1 og %d."
     PD32_PRINT_ERROR                      "Der opstod en printer fejl."
     PD32_NO_DEFAULT_PRINTER               "Ingen standard printer defineret."
     PD32_CANT_FIND_PRINTER                "Kan ikke finde printeren."
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  da.po (Wine)  #-#-#-#-#\n\
-Ikke nok hukommelse.\n\
-#-#-#-#-#  da.po (Wine)  #-#-#-#-#\n\
-Ikke mere hukommelse."
+    PD32_OUT_OF_MEMORY                    "Ikke mere hukommelse."
     PD32_GENERIC_ERROR                    "Der opstod en fejl."
     PD32_DRIVER_UNKNOWN                   "Ukendt printer driver."
     PD32_NO_DEVICES                       "Før du kan udføre printer-relaterede opgaver, som f.eks sideopsætning eller udskrivning af dokumenter, skal du installere en printer. Installer venligst en og prøv igen."

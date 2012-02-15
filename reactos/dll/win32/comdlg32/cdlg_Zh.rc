@@ -64,10 +64,7 @@ STRINGTABLE
     PD32_PRINT_ERROR                      "打印机错误。"
     PD32_NO_DEFAULT_PRINTER               "没有默认打印机。"
     PD32_CANT_FIND_PRINTER                "找不到打印机。"
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  zh_CN.po (Wine)  #-#-#-#-#\n\
-内存溢出。\n\
-#-#-#-#-#  zh_CN.po (Wine)  #-#-#-#-#\n\
-内存不够。"
+    PD32_OUT_OF_MEMORY                    "内存不够。"
     PD32_GENERIC_ERROR                    "出现了错误。"
     PD32_DRIVER_UNKNOWN                   "找不到打印机驱动程序。"
     PD32_NO_DEVICES                       "在安装打印机后才能使用和打印机相关的功能。请安装后再试。"

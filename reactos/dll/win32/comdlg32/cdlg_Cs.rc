@@ -64,10 +64,7 @@ Zadejte prosím hodnotu mezi 1 a %d."
     PD32_PRINT_ERROR                      "Nastala chyba tisku."
     PD32_NO_DEFAULT_PRINTER               "Výchozí tiskárna neexistuje."
     PD32_CANT_FIND_PRINTER                "Nemohu najít tiskárnu."
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  cs.po (Wine)  #-#-#-#-#\n\
-Došla paměť.\n\
-#-#-#-#-#  cs.po (Wine)  #-#-#-#-#\n\
-Dostupná paměť byla vyčerpána."
+    PD32_OUT_OF_MEMORY                    "Dostupná paměť byla vyčerpána."
     PD32_GENERIC_ERROR                    "Vyskytla se chyba."
     PD32_DRIVER_UNKNOWN                   "Neznámý ovladač tiskárny."
     PD32_NO_DEVICES                       ""

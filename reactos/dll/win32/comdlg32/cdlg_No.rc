@@ -64,10 +64,7 @@ Velg en verdi mellom 1 og %d."
     PD32_PRINT_ERROR                      "En skriverfeil har oppstått."
     PD32_NO_DEFAULT_PRINTER               "Ingen standardskriver er definert."
     PD32_CANT_FIND_PRINTER                "Kunne ikke finne skriveren."
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Ikke nok minne.\n\
-#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Ikke mer minne."
+    PD32_OUT_OF_MEMORY                    "Ikke mer minne."
     PD32_GENERIC_ERROR                    "En feil har oppstått."
     PD32_DRIVER_UNKNOWN                   "Ukjent skriverdriver."
     PD32_NO_DEVICES                       "Du må installere en skriver før du kan gjøre skriver-relaterte oppgaver som å endre sideoppsettet og skrive ut et dokument. Installer en og prøv på nytt."
@@ -122,10 +119,7 @@ STRINGTABLE /* Color names */
     IDS_COLOR_OLIVE     "Oliven"
     IDS_COLOR_NAVY      "Marineblå"
     IDS_COLOR_PURPLE    "Purpur"
-    IDS_COLOR_TEAL      "#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Blågrønn\n\
-#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Teal"
+    IDS_COLOR_TEAL      "Teal"
     IDS_COLOR_GRAY      "Grå"
     IDS_COLOR_SILVER    "Sølv"
     IDS_COLOR_RED       "Rød"
@@ -133,10 +127,7 @@ Teal"
     IDS_COLOR_YELLOW    "Gul"
     IDS_COLOR_BLUE      "Blå"
     IDS_COLOR_FUCHSIA   "Fuchsia"
-    IDS_COLOR_AQUA      "#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Turkis\n\
-#-#-#-#-#  nb_NO.po (Wine)  #-#-#-#-#\n\
-Aqua"
+    IDS_COLOR_AQUA      "Aqua"
     IDS_COLOR_WHITE     "Hvit"
 }
 

@@ -64,10 +64,7 @@ Por favor indique um valor entre 1 e %d."
     PD32_PRINT_ERROR                      "Ocorreu um erro de impressão."
     PD32_NO_DEFAULT_PRINTER               "Não existe uma impressora predefinida."
     PD32_CANT_FIND_PRINTER                "Não é possível encontrar uma impressora."
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Sem memória.\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Memória insuficiente."
+    PD32_OUT_OF_MEMORY                    "Memória insuficiente."
     PD32_GENERIC_ERROR                    "Ocorreu algum erro."
     PD32_DRIVER_UNKNOWN                   "Controlador de impressora desconhecido."
     PD32_NO_DEVICES                       "Antes de realizar tarefas relacionadas com a impressora tais como configuração de páginas ou imprimir um documento, precisa instalar uma impressora. Por favor instale uma e tente novamente."

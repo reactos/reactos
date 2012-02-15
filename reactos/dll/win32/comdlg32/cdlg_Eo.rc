@@ -477,10 +477,7 @@ STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_S
 CAPTION "Malfermu"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "#-#-#-#-#  eo.po (Wine)  #-#-#-#-#\n\
-Dosiero\n\
-#-#-#-#-#  eo.po (Wine)  #-#-#-#-#\n\
-&Dosiero", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    LTEXT           "&Dosiero", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
     EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
     LTEXT           "Dosier&speco:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT

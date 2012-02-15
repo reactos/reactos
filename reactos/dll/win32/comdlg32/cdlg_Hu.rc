@@ -64,10 +64,7 @@ Kérem adjon meg egy értéket 1 és %d között."
     PD32_PRINT_ERROR                      "Nyomtatási hiba történt."
     PD32_NO_DEFAULT_PRINTER               "Nincs alapértelmezett nyomtató megadva."
     PD32_CANT_FIND_PRINTER                "Nem találom a nyomtatót."
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Rendkívül kevés a memória\n\
-#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Elfogyott a memória."
+    PD32_OUT_OF_MEMORY                    "Elfogyott a memória."
     PD32_GENERIC_ERROR                    "Hiba történt."
     PD32_DRIVER_UNKNOWN                   "Ismeretlen nyomtató eszközmeghajtó."
     PD32_NO_DEVICES                       "mielõtt nyomtatási feladatokat hajtana végre mint például oldalbeállítás vagy dokumentum nyomtatása, Önnek telepítenie kell egy nyomtatót. Please install one and retry."

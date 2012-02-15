@@ -64,10 +64,7 @@ STRINGTABLE
     PD32_PRINT_ERROR                      "印表機錯誤。"
     PD32_NO_DEFAULT_PRINTER               "沒有默認印表機。"
     PD32_CANT_FIND_PRINTER                "找不到印表機。"
-    PD32_OUT_OF_MEMORY                    "#-#-#-#-#  zh_TW.po (Wine)  #-#-#-#-#\n\
-內存溢出。\n\
-#-#-#-#-#  zh_TW.po (Wine)  #-#-#-#-#\n\
-內存不夠。"
+    PD32_OUT_OF_MEMORY                    "內存不夠。"
     PD32_GENERIC_ERROR                    "出現一些錯誤。"
     PD32_DRIVER_UNKNOWN                   "找不到印表機驅動器。"
     PD32_NO_DEVICES                       "在使用與印表機有關功能(版面設定, 列印檔案)之前, 你必須先裝印表機。請裝一個印表機再試。"
