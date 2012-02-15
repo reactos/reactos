@@ -5,7 +5,9 @@
 	<include base="comdlg32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>filedlg.c</file>
+	<file>finddlg.c</file>
 	<file>fontdlg.c</file>
+	<file>itemdlg.c</file>
 	<file>printdlg.c</file>
 	<file>testlist.c</file>
 	<file>rsrc.rc</file>
@@ -15,5 +17,8 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>ntdll</library>
+	<library>ole32</library>
+	<library>uuid</library>
+	<library>shell32</library>
 </module>
 </group>

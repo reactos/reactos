@@ -320,18 +320,14 @@ static void test_abort_proc(void)
     if (!PrintDlgA(&pd))
     {
         skip("No default printer available.\n");
-        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
-        return;
+        goto end;
     }
     GlobalFree(pd.hDevMode);
     GlobalFree(pd.hDevNames);
 
     ok(pd.hDC != NULL, "PrintDlg didn't return a DC.\n");
     if (!(print_dc = pd.hDC))
-    {
-        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
-        return;
-    }
+        goto end;
 
     ok(SetAbortProc(print_dc, abort_proc) > 0, "SetAbortProc failed\n");
     ok(!abort_proc_called, "AbortProc got called unexpectedly by SetAbortProc.\n");
@@ -371,7 +367,9 @@ static void test_abort_proc(void)
     abort_proc_called = FALSE;
 
 end:
-    ok(DeleteFileA(filename), "Failed to delete temporary file\n");
+    SetLastError(0xdeadbeef);
+    if(!DeleteFileA(filename))
+        trace("Failed to delete temporary file (err = %x)\n", GetLastError());
 }
 
 /* ########################### */
