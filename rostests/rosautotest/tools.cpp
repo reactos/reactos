@@ -96,7 +96,7 @@ void
 StringOut(const string& String)
 {
     char DbgString[DBGPRINT_BUFSIZE + 1];
-    size_t i;
+    size_t i, start = 0, last_newline = 0, size = 0, curr_pos = 0;
     string NewString;
 
     /* Unify the line endings (the piped output of the tests may use CRLF) */
@@ -113,26 +113,44 @@ StringOut(const string& String)
             /* Otherwise copy the string */
             NewString += String[i];
         }
+
+        curr_pos = NewString.size();
+
+        /* Try to print whole lines but obey the 512 bytes chunk size limit*/
+        if(NewString[curr_pos - 1] == '\n' || (curr_pos - start) == DBGPRINT_BUFSIZE)
+        {
+            if((curr_pos - start) > DBGPRINT_BUFSIZE || NewString[curr_pos - 1] != '\n')
+            {
+                /* No newlines, print what we have and start over*/
+                if(NewString[curr_pos - 1] != '\n')
+                {
+                    size = curr_pos - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = curr_pos;
+                }
+                else
+                {
+                    size = last_newline - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = last_newline;
+                }
+
+                DbgString[size] = 0;
+                DbgPrint(DbgString);
+            }
+
+            last_newline = curr_pos;
+        }
     }
 
-    /* Output the string.
-       For DbgPrint, this must be done in chunks of 512 bytes. */
+    /* The rest of the string is <= DBGPRINT_BUFSIZE so just print it*/
+    size = curr_pos - start;
+    memcpy(DbgString, NewString.c_str() + start, size);
+    DbgString[size] = 0;
+    DbgPrint(DbgString);
+
+    /* Output the string */
     cout << NewString;
-
-    for(i = 0; i < NewString.size(); i += DBGPRINT_BUFSIZE)
-    {
-        size_t BytesToCopy;
-
-        if(NewString.size() - i > DBGPRINT_BUFSIZE)
-            BytesToCopy = DBGPRINT_BUFSIZE;
-        else
-            BytesToCopy = NewString.size() - i;
-
-        memcpy(DbgString, NewString.c_str() + i, BytesToCopy);
-        DbgString[BytesToCopy] = 0;
-
-        DbgPrint(DbgString);
-    }
 }
 
 /**
