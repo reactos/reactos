@@ -66,7 +66,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
     /* Save our Session ID, and create a Directory for it */
     SessionId = NtCurrentPeb()->SessionId;
     Status = CsrCreateSessionObjectDirectory(SessionId);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSRSS: CsrCreateSessionObjectDirectory failed (%lx)\n",
                 Status);
@@ -82,9 +82,9 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         /* Split Name and Value */
         ParameterName = Arguments[i];
         ParameterValue = NULL;
-        ParameterValue = strchr(ParameterName, L'=');
-        if (ParameterValue) *ParameterValue++ = '\0';
-        DPRINT("Name=%S, Value=%S\n", ParameterName, ParameterValue);
+        ParameterValue = strchr(ParameterName, '=');
+        if (ParameterValue) *ParameterValue++ = ANSI_NULL;
+        DPRINT1("Name=%s, Value=%s\n", ParameterName, ParameterValue);
 
         /* Check for Object Directory */
         if (!_stricmp(ParameterName, "ObjectDirectory"))
@@ -107,8 +107,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             /* Create it */
             InitializeObjectAttributes(&ObjectAttributes,
                                        &CsrDirectoryName,
-                                       OBJ_OPENIF | OBJ_CASE_INSENSITIVE |
-                                       (SessionId) ? 0 : OBJ_PERMANENT,
+                                       OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                        NULL,
                                        NULL);
             Status = NtCreateDirectoryObject(&CsrObjectDirectory,

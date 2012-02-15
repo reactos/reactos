@@ -51,7 +51,6 @@ _main(int argc,
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
-
     /* Set the Priority */
     NtSetInformationProcess(NtCurrentProcess(),
                             ProcessBasePriority,
@@ -81,7 +80,7 @@ _main(int argc,
     {
         /* Kill us */
         DPRINT1("CSRSS: CsrServerInitialization failed:% lx\n", Status);
-        NtTerminateProcess (NtCurrentProcess(), Status);
+        NtTerminateProcess(NtCurrentProcess(), Status);
     }
 
     /* Disable errors */
@@ -91,7 +90,7 @@ _main(int argc,
     if (!NtCurrentPeb()->SessionId) RtlSetProcessIsCritical(TRUE, NULL, FALSE);
 
     /* Kill this thread. CSRSRV keeps us going */
-    NtTerminateThread (NtCurrentThread(), Status);
+    NtTerminateThread(NtCurrentThread(), Status);
     return 0;
 }
 
