@@ -212,7 +212,7 @@ HeapRelease(
         if (Block->Size == 0) break;
     }
 
-    ERR("HeapRelease() done, freed %ld pages\n", AllFreePages);
+    TRACE("HeapRelease() done, freed %ld pages\n", AllFreePages);
 }
 
 VOID
@@ -221,12 +221,12 @@ HeapCleanupAll(VOID)
     PHEAP Heap;
 
     Heap = FrLdrDefaultHeap;
-    ERR("Heap statistics for default heap:\n"
+    TRACE("Heap statistics for default heap:\n"
           "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
           "NumAllocs=%ld, NumFrees=%ld\n",
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
           Heap->NumAllocs, Heap->NumFrees);
-    ERR("AllocTime = %I64d, FreeTime = %I64d, sum = %I64d\n",
+    TRACE("AllocTime = %I64d, FreeTime = %I64d, sum = %I64d\n",
         Heap->AllocationTime, Heap->FreeTime, Heap->AllocationTime + Heap->FreeTime);
 
 
@@ -234,7 +234,7 @@ HeapCleanupAll(VOID)
     HeapRelease(FrLdrDefaultHeap);
 
     Heap = FrLdrTempHeap;
-    ERR("Heap statistics for temp heap:\n"
+    TRACE("Heap statistics for temp heap:\n"
           "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
           "NumAllocs=%ld, NumFrees=%ld\n",
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
