@@ -6,7 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu
  */
- 
+
 /* INCLUDES *******************************************************************/
 
 #include <srv.h>
@@ -31,6 +31,84 @@ extern RTL_CRITICAL_SECTION ProcessDataLock;
 extern PCSRSS_PROCESS_DATA ProcessData[256];
 
 /* FUNCTIONS ******************************************************************/
+
+/*++
+ * @name ProtectHandle
+ * @implemented NT5.2
+ *
+ * The ProtectHandle routine protects an object handle against closure.
+ *
+ * @return TRUE or FALSE.
+ *
+ * @remarks None.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+ProtectHandle(IN HANDLE ObjectHandle)
+{
+    NTSTATUS Status;
+    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+
+    /* Query current state */
+    Status = NtQueryObject(ObjectHandle,
+                           ObjectHandleFlagInformation,
+                           &HandleInfo,
+                           sizeof(HandleInfo),
+                           NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Enable protect from close */
+        HandleInfo.ProtectFromClose = TRUE;
+        Status = NtSetInformationObject(ObjectHandle,
+                                        ObjectHandleFlagInformation,
+                                        &HandleInfo,
+                                        sizeof(HandleInfo));
+        if (NT_SUCCESS(Status)) return TRUE;
+    }
+
+    /* We failed to or set the state */
+    return FALSE;
+}
+
+/*++
+ * @name UnProtectHandle
+ * @implemented NT5.2
+ *
+ * The UnProtectHandle routine unprotects an object handle against closure.
+ *
+ * @return TRUE or FALSE.
+ *
+ * @remarks None.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+UnProtectHandle(IN HANDLE ObjectHandle)
+{
+    NTSTATUS Status;
+    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+
+    /* Query current state */
+    Status = NtQueryObject(ObjectHandle,
+                           ObjectHandleFlagInformation,
+                           &HandleInfo,
+                           sizeof(HandleInfo),
+                           NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Disable protect from close */
+        HandleInfo.ProtectFromClose = FALSE;
+        Status = NtSetInformationObject(ObjectHandle,
+                                        ObjectHandleFlagInformation,
+                                        &HandleInfo,
+                                        sizeof(HandleInfo));
+        if (NT_SUCCESS(Status)) return TRUE;
+    }
+
+    /* We failed to or set the state */
+    return FALSE;
+}
 
 PCSR_THREAD
 NTAPI
@@ -64,7 +142,7 @@ CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL,
 
     /* Hash the Thread */
     i = CsrHashThread(ClientId->UniqueThread);
-    
+
     /* Set the list pointers */
     ListHead = &CsrThreadHashTable[i];
     NextEntry = ListHead->Flink;
@@ -192,6 +270,8 @@ VOID
 NTAPI
 CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
 {
+    NTSTATUS Status;
+
     /* Remove this thread */
     CsrRemoveThread(CsrThread);
 
@@ -199,8 +279,13 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
     //CsrReleaseProcessLock();
 
     /* Close the NT Thread Handle */
-    if (CsrThread->ThreadHandle) NtClose(CsrThread->ThreadHandle);
-    
+    if (CsrThread->ThreadHandle)
+    {
+        UnProtectHandle(CsrThread->ThreadHandle);
+        Status = NtClose(CsrThread->ThreadHandle);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
     /* De-allocate the CSR Thread Object */
     CsrDeallocateThread(CsrThread);
 
@@ -270,6 +355,30 @@ CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess,
     return STATUS_SUCCESS;
 }
 
+/*++
+ * @name CsrAddStaticServerThread
+ * @implemented NT4
+ *
+ * The CsrAddStaticServerThread routine adds a new CSR Thread to the
+ * CSR Server Process (CsrRootProcess).
+ *
+ * @param hThread
+ *        Handle to an existing NT Thread to which to associate this
+ *        CSR Thread.
+ *
+ * @param ClientId
+ *        Pointer to the Client ID structure of the NT Thread to associate
+ *        with this CSR Thread.
+ *
+ * @param ThreadFlags
+ *        Initial CSR Thread Flags to associate to this CSR Thread. Usually
+ *        CsrThreadIsServerThread.
+ *
+ * @return Pointer to the newly allocated CSR Thread.
+ *
+ * @remarks None.
+ *
+ *--*/
 PCSR_THREAD
 NTAPI
 CsrAddStaticServerThread(IN HANDLE hThread,
@@ -282,11 +391,12 @@ CsrAddStaticServerThread(IN HANDLE hThread,
     CsrAcquireProcessLock();
 
     /* Allocate the Server Thread */
-    if ((CsrThread = CsrAllocateThread(CsrRootProcess)))
+    CsrThread = CsrAllocateThread(CsrRootProcess);
+    if (CsrThread)
     {
         /* Setup the Object */
-//        DPRINT1("New CSR thread created: %lx PID/TID: %lx/%lx\n", CsrThread, ClientId->UniqueProcess, ClientId->UniqueThread);
         CsrThread->ThreadHandle = hThread;
+        ProtectHandle(hThread);
         CsrThread->ClientId = *ClientId;
         CsrThread->Flags = ThreadFlags;
 
@@ -295,6 +405,10 @@ CsrAddStaticServerThread(IN HANDLE hThread,
 
         /* Increment the thread count */
         CsrRootProcess->ThreadCount++;
+    }
+    else
+    {
+        DPRINT1("CsrAddStaticServerThread: alloc failed for thread 0x%x\n", hThread);
     }
 
     /* Release the Process Lock and return */
