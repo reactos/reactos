@@ -55,6 +55,7 @@ typedef struct _CSRSS_CON_PROCESS_DATA
     ULONG HandleTableSize;
     struct _CSRSS_HANDLE *HandleTable;
     PCONTROLDISPATCHER CtrlDispatcher;
+    LIST_ENTRY ConsoleLink;
 } CSRSS_CON_PROCESS_DATA, *PCSRSS_CON_PROCESS_DATA;
 
 typedef struct _CSR_PROCESS

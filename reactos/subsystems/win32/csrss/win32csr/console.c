@@ -215,7 +215,7 @@ CSR_API(CsrAllocConsole)
         /* initialize list head */
         InitializeListHead(&Console->ProcessList);
         /* insert process data required for GUI initialization */
-        InsertHeadList(&Console->ProcessList, &ProcessData->ListLink);
+        InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
         /* Initialize the Console */
         Status = CsrInitConsole(Console, Request->Data.AllocConsoleRequest.ShowCmd);
         if (!NT_SUCCESS(Status))
@@ -307,7 +307,7 @@ CSR_API(CsrAllocConsole)
     if (!NewConsole)
     {
         /* Insert into the list if it has not been added */
-        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ListLink);
+        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -786,7 +786,7 @@ CSR_API(CsrGetProcessList)
          current_entry != &Console->ProcessList;
          current_entry = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
+        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
         if (++nItems <= Request->Data.GetProcessListRequest.nMaxIds)
         {
             *Buffer++ = HandleToUlong(current->ClientId.UniqueProcess);
@@ -822,7 +822,7 @@ CSR_API(CsrGenerateCtrlEvent)
             current_entry != &Console->ProcessList;
             current_entry = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
+        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
         if (Group == 0 || current->ProcessGroupId == Group)
         {
             ConioConsoleCtrlEvent(Request->Data.GenerateCtrlEvent.Event, current);

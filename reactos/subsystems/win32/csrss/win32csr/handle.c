@@ -154,7 +154,7 @@ Win32CsrReleaseConsole(
     {
         ProcessData->Console = NULL;
         EnterCriticalSection(&Console->Lock);
-        RemoveEntryList(&ProcessData->ListLink);
+        RemoveEntryList(&ProcessData->ConsoleLink);
         LeaveCriticalSection(&Console->Lock);
         if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
             ConioDeleteConsole(&Console->Header);

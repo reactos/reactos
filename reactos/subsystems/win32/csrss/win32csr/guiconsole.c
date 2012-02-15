@@ -400,7 +400,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
         DPRINT("GuiConsoleWriteUserSettings: No Process!!!\n");
         return;
     }
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ListLink);
+    ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ConsoleLink);
     if (!GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ClientId.UniqueProcess), &hKey, KEY_READ | KEY_WRITE, TRUE))
     {
         return;
@@ -704,7 +704,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     GuiConsoleUseDefaults(Console, GuiData, Console->ActiveBuffer);
     if (Console->ProcessList.Flink != &Console->ProcessList)
     {
-        ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ListLink);
+        ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ConsoleLink);
         if (GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ClientId.UniqueProcess), &hKey, KEY_READ, FALSE))
         {
             GuiConsoleReadUserSettings(hKey, Console, GuiData, Console->ActiveBuffer);
@@ -1272,7 +1272,7 @@ GuiConsoleHandleClose(HWND hWnd)
     current_entry = Console->ProcessList.Flink;
     while (current_entry != &Console->ProcessList)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
+        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
         current_entry = current_entry->Flink;
 
         /* FIXME: Windows will wait up to 5 seconds for the thread to exit.

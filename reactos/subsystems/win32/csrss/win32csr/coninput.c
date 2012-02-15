@@ -373,7 +373,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
         current_entry = Console->ProcessList.Flink;
         while (current_entry != &Console->ProcessList)
         {
-            current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ListLink);
+            current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
             current_entry = current_entry->Flink;
             ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
         }
