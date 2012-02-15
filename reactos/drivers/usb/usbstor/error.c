@@ -213,7 +213,6 @@ USBSTOR_ResetHandlerWorkItemRoutine(
     PVOID Context)
 {
     NTSTATUS Status;
-    USHORT Value;
     PIO_STACK_LOCATION IoStack;
 
     PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
