@@ -4523,12 +4523,4 @@ library ShellObjects
     coclass DestinationList {
         interface ICustomDestinationList;
     }
-
-    [
-        uuid(2d3468c1-36a7-43b6-ac24-d3f02fd9607a)
-    ]
-    coclass EnumerableObjectCollection
-    {
-        interface IEnumObjects;
-    }
 }
