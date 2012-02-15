@@ -153,15 +153,15 @@ CsrSbApiPortInitialize(VOID)
     InitializeObjectAttributes(&ObjectAttributes,
                                &CsrSbApiPortName,
                                0,
-                               PortSd,
-                               NULL);
+                               NULL,
+                               PortSd);
 
     /* Create the Port Object */
     Status = NtCreatePort(&CsrSbApiPort,
                           &ObjectAttributes,
                           sizeof(SB_CONNECTION_INFO),
-                          sizeof(PSB_API_MSG),
-                          32 * sizeof(PSB_API_MSG));
+                          sizeof(SB_API_MSG),
+                          32 * sizeof(SB_API_MSG));
     if (PortSd) RtlFreeHeap(CsrHeap, 0, PortSd);
 
     if (NT_SUCCESS(Status))

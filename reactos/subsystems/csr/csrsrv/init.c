@@ -771,8 +771,8 @@ CsrSetDirectorySecurity(IN HANDLE ObjectDirectory)
  *--*/
 NTSTATUS
 NTAPI
-CsrServerInitialization(ULONG ArgumentCount,
-                        PCHAR Arguments[])
+CsrServerInitialization(IN ULONG ArgumentCount,
+                        IN PCHAR Arguments[])
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG i = 0;
@@ -865,7 +865,7 @@ CsrServerInitialization(ULONG ArgumentCount,
         ServerDll = CsrLoadedServerDll[i];
 
         /* Is it loaded, and does it have per process data? */
-        if (ServerDll && ServerDll->SizeOfProcessData)
+        if ((ServerDll) && (ServerDll->SizeOfProcessData))
         {
             /* It does, give it part of our allocated heap */
             CsrRootProcess->ServerData[i] = ProcessData;
@@ -888,10 +888,10 @@ CsrServerInitialization(ULONG ArgumentCount,
         ServerDll = CsrLoadedServerDll[i];
 
         /* Is it loaded, and does it a callback for new processes? */
-        if (ServerDll && ServerDll->NewProcessCallback)
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
         {
             /* Call the callback */
-            (*ServerDll->NewProcessCallback)(NULL, CsrRootProcess);
+            ServerDll->NewProcessCallback(NULL, CsrRootProcess);
         }
     }
 
