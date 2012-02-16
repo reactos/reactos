@@ -113,7 +113,7 @@ CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
 
     /* Reference the Thread and Process */
     CsrThread->ReferenceCount++;
-   // CsrProcess->ReferenceCount++;
+    CsrProcess->ReferenceCount++;
 
     /* Set the Parent Process */
     CsrThread->Process = CsrProcess;
@@ -230,6 +230,8 @@ VOID
 NTAPI
 CsrRemoveThread(IN PCSR_THREAD CsrThread)
 {
+    ASSERT(ProcessStructureListLocked());
+
     /* Remove it from the List */
     RemoveEntryList(&CsrThread->Link);
 
@@ -246,10 +248,10 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
         if (!(CsrThread->Process->Flags & CsrProcessLastThreadTerminated))
         {
             /* Let everyone know this process is about to lose the thread */
-            //CsrThread->Process->Flags |= CsrProcessLastThreadTerminated;
+            CsrThread->Process->Flags |= CsrProcessLastThreadTerminated;
 
             /* Reference the Process */
-            //CsrLockedDereferenceProcess(CsrThread->Process);
+            CsrLockedDereferenceProcess(CsrThread->Process);
         }
     }
 
@@ -261,13 +263,15 @@ VOID
 NTAPI
 CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
 {
+    PCSR_PROCESS CsrProcess = CsrThread->Process;
     NTSTATUS Status;
+    ASSERT(ProcessStructureListLocked());
 
     /* Remove this thread */
     CsrRemoveThread(CsrThread);
 
     /* Release the Process Lock */
-    //CsrReleaseProcessLock();
+    CsrReleaseProcessLock();
 
     /* Close the NT Thread Handle */
     if (CsrThread->ThreadHandle)
@@ -281,7 +285,7 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
     CsrDeallocateThread(CsrThread);
 
     /* Remove a reference from the process */
-    //CsrDereferenceProcess(CsrProcess);
+    CsrDereferenceProcess(CsrProcess);
 }
 
 NTSTATUS

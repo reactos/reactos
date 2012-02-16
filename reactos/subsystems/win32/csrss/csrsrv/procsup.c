@@ -382,12 +382,141 @@ Quickie:
     return Status;
 }
 
+/*++
+ * @name CsrProcessRefcountZero
+ *
+ * The CsrProcessRefcountZero routine is executed when a CSR Process has lost
+ * all its active references. It removes and de-allocates the CSR Process.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process that is to be deleted.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Process has lost all
+ *          its references.
+ *
+ *          This routine is called with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
+{
+    ASSERT(ProcessStructureListLocked());
+
+    /* Remove the Process from the list */
+    CsrRemoveProcess(CsrProcess);
+
+    /* Check if there's a session */
+    if (CsrProcess->NtSession)
+    {
+        /* Dereference the Session */
+        //CsrDereferenceNtSession(CsrProcess->NtSession, 0);
+    }
+
+    /* Close the Client Port if there is one */
+    if (CsrProcess->ClientPort) NtClose(CsrProcess->ClientPort);
+
+    /* Close the process handle */
+    NtClose(CsrProcess->ProcessHandle);
+
+    /* Free the Proces Object */
+    CsrDeallocateProcess(CsrProcess);
+}
+
+/*++
+ * @name CsrLockedDereferenceProcess
+ *
+ * The CsrLockedDereferenceProcess dereferences a CSR Process while the
+ * Process Lock is already being held.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process to be dereferenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
+{
+    LONG LockCount;
+
+    /* Decrease reference count */
+    LockCount = --CsrProcess->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        DPRINT1("Should kill process: %p\n", CsrProcess);
+        //CsrProcessRefcountZero(CsrProcess);
+        CsrAcquireProcessLock();
+    }
+}
+
+/*++
+ * @name CsrDereferenceProcess
+ * @implemented NT4
+ *
+ * The CsrDereferenceProcess routine removes a reference from a CSR Process.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Process to dereference.
+ *
+ * @return None.
+ *
+ * @remarks If the reference count has reached zero (ie: the CSR Process has
+ *          no more active references), it will be deleted.
+ *
+ *--*/
+VOID
+NTAPI
+CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess)
+{
+    LONG LockCount;
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Decrease reference count */
+    LockCount = --CsrProcess->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        CsrProcessRefcountZero(CsrProcess);
+    }
+    else
+    {
+        /* Just release the lock */
+        CsrReleaseProcessLock();
+    }
+}
+
+/*++
+ * @name CsrUnlockProcess
+ * @implemented NT4
+ *
+ * The CsrUnlockProcess undoes a previous CsrLockProcessByClientId operation.
+ *
+ * @param CsrProcess
+ *        Pointer to a previously locked CSR Process.
+ *
+ * @return STATUS_SUCCESS.
+ *
+ * @remarks This routine must be called with the Process Lock held.
+ *
+ *--*/
 NTSTATUS
 NTAPI
 CsrUnlockProcess(IN PCSR_PROCESS CsrProcess)
 {
     /* Dereference the process */
-    //CsrLockedDereferenceProcess(CsrProcess);
+    CsrLockedDereferenceProcess(CsrProcess);
 
     /* Release the lock and return */
     CsrReleaseProcessLock();

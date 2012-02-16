@@ -106,7 +106,9 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
         Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
         NextEntry = NextEntry->Flink;
 
+        ASSERT(ProcessStructureListLocked());
         CsrThreadRefcountZero(Thread);
+        LOCK;
     }
 
     if (pProcessData->ClientViewBase)
@@ -233,17 +235,21 @@ CSR_API(CsrTerminateProcess)
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    
+   LOCK;
+   
    NextEntry = ProcessData->ThreadList.Flink;
    while (NextEntry != &ProcessData->ThreadList)
    {
         Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
         NextEntry = NextEntry->Flink;
         
+        ASSERT(ProcessStructureListLocked());
         CsrThreadRefcountZero(Thread);
+        LOCK;
         
    }
    
-
+   UNLOCK;
    ProcessData->Flags |= CsrProcessTerminated;
    return STATUS_SUCCESS;
 }

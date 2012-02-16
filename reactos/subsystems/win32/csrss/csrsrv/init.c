@@ -783,9 +783,6 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
                 return Status;
             }
 
-            /* Hackito ergo sum */
-            BasepFakeStaticServerData();
-
             /* Load us */
             Status = CsrLoadServerDll("CSRSS", NULL, CSR_SRV_SERVER);
         }
@@ -825,6 +822,10 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
 
             /* Load it */
             if (CsrDebug & 1) DPRINT1("CSRSS: Should be loading ServerDll=%s:%s\n", ParameterValue, EntryPoint);
+
+            /* Hackito ergo sum */
+            BasepFakeStaticServerData();
+
             Status = STATUS_SUCCESS;
             if (!NT_SUCCESS(Status))
             {
@@ -1061,7 +1062,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
-    
+
     /* Set up Session Support */
     Status = CsrInitializeNtSessionList();
     if (!NT_SUCCESS(Status))

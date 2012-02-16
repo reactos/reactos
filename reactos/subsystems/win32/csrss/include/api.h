@@ -385,12 +385,20 @@ CsrSrvSetPriorityClass(
     IN OUT PULONG Reply
 );
 
+VOID
+NTAPI
+CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess);
+
 NTSTATUS
 NTAPI
 CsrLoadServerDll(IN PCHAR DllString,
                  IN PCHAR EntryPoint OPTIONAL,
                  IN ULONG ServerId);
-                 
+
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);
 
