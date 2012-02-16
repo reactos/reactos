@@ -14,21 +14,12 @@
 #define NDEBUG
 #include <debug.h>
 
-#define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
-#define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
-#define CsrHeap RtlGetProcessHeap()
 #define CsrHashThread(t) \
     (HandleToUlong(t)&(256 - 1))
-
-#define CsrAcquireProcessLock() LOCK
-#define CsrReleaseProcessLock() UNLOCK
 
 /* GLOBALS ********************************************************************/
 
 LIST_ENTRY CsrThreadHashTable[256];
-extern PCSR_PROCESS CsrRootProcess;
-extern RTL_CRITICAL_SECTION ProcessDataLock;
-extern PCSR_PROCESS ProcessData[256];
 
 /* FUNCTIONS ******************************************************************/
 

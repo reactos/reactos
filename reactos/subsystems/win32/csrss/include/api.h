@@ -14,6 +14,14 @@
 
 #include <csrss/csrss.h>
 
+#define CSR_SERVER_DLL_MAX 4
+#define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
+#define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
+#define CsrAcquireProcessLock() LOCK
+#define CsrReleaseProcessLock() UNLOCK
+#define ProcessStructureListLocked() \
+    (ProcessDataLock.OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
+
 typedef enum _CSR_THREAD_FLAGS
 {
     CsrThreadAltertable = 0x1,
@@ -137,9 +145,32 @@ CSR_API(CsrSrvCreateThread);
 CSR_API(CsrGetShutdownParameters);
 CSR_API(CsrSetShutdownParameters);
 
+VOID
+NTAPI
+CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess);
+
 PCSR_THREAD
 NTAPI
 CsrAllocateThread(IN PCSR_PROCESS CsrProcess);
+
+PCSR_PROCESS
+NTAPI
+CsrAllocateProcess(VOID);
+
+VOID
+NTAPI
+CsrDeallocateProcess(IN PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
+                 IN PCSR_PROCESS CurrentProcess OPTIONAL,
+                 IN PCSR_PROCESS CsrProcess);
+
 
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
@@ -149,6 +180,18 @@ VOID WINAPI CsrSbApiRequestThread (PVOID PortHandle);
 VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 
 extern HANDLE CsrSbApiPort;
+extern LIST_ENTRY CsrThreadHashTable[256];
+extern PCSR_PROCESS CsrRootProcess;
+extern RTL_CRITICAL_SECTION ProcessDataLock, CsrWaitListsLock;
+
+BOOLEAN
+NTAPI
+ProtectHandle(IN HANDLE ObjectHandle);
+
+VOID
+NTAPI
+CsrInsertThread(IN PCSR_PROCESS Process,
+IN PCSR_THREAD Thread);
 
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
