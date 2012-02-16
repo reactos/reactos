@@ -249,9 +249,9 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
         ServerDll = CsrLoadedServerDll[i];
 
         /* Make sure it's valid and that it has callback */
-        if (ServerDll && ServerDll->NewProcessCallback)
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
         {
-            (*ServerDll->NewProcessCallback)(CurrentProcess, CsrProcess);
+            ServerDll->NewProcessCallback(CurrentProcess, CsrProcess);
         }
     }
 }
