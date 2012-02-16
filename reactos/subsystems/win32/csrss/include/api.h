@@ -91,7 +91,7 @@ typedef struct _CSR_PROCESS
     LIST_ENTRY ListLink;
     LIST_ENTRY ThreadList;
     struct _CSR_PROCESS *Parent;
-//    PCSR_NT_SESSION NtSession;
+    PCSR_NT_SESSION NtSession;
     ULONG ExpectedVersion;
     HANDLE ClientPort;
     ULONG_PTR ClientViewBase;
@@ -229,6 +229,7 @@ VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
 
+extern HANDLE hApiPort;
 extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
