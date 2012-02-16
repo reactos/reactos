@@ -1740,13 +1740,26 @@ CHubController::HandleSyncResetAndClearStall(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("HandleAbortPipe invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("HandleSyncResetAndClearStall invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
         //
         return STATUS_DEVICE_NOT_CONNECTED;
     }
+
+    //
+    // abort pipe
+    //
+    Status = HandleAbortPipe(Irp, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed
+        //
+        DPRINT1("[USBEHCI] failed to reset pipe %x\n", Status)
+    }
+ 
 
     //
     // get endpoint descriptor

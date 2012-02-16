@@ -427,7 +427,7 @@ CUSBQueue::LinkQueueHead(
     //
     // Link the LIST_ENTRYs
     //
-    ASSERT(IsListEmpty(&HeadQueueHead->LinkedQueueHeads));
+    //ASSERT(IsListEmpty(&HeadQueueHead->LinkedQueueHeads));
     InsertTailList(&HeadQueueHead->LinkedQueueHeads, &NewQueueHead->LinkedQueueHeads);
 
     //
@@ -435,7 +435,7 @@ CUSBQueue::LinkQueueHead(
     //
     Entry = NewQueueHead->LinkedQueueHeads.Blink;
     LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-    ASSERT(LastQueueHead == HeadQueueHead);
+    //ASSERT(LastQueueHead == HeadQueueHead);
     LastQueueHead->HorizontalLinkPointer = (NewQueueHead->PhysicalAddr | QH_TYPE_QH);
 
     //
@@ -443,7 +443,7 @@ CUSBQueue::LinkQueueHead(
     //
     Entry = NewQueueHead->LinkedQueueHeads.Flink;
     NextQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-    ASSERT(NextQueueHead == HeadQueueHead);
+    //ASSERT(NextQueueHead == HeadQueueHead);
     NewQueueHead->HorizontalLinkPointer = (NextQueueHead->PhysicalAddr | QH_TYPE_QH);
 
     //
@@ -858,7 +858,6 @@ CUSBQueue::CompleteAsyncRequests()
     KIRQL OldLevel;
     PLIST_ENTRY Entry;
     PQUEUE_HEAD CurrentQH;
-    IUSBRequest *Request;
 
     DPRINT("CUSBQueue::CompleteAsyncRequests\n");
 
@@ -883,11 +882,6 @@ CUSBQueue::CompleteAsyncRequests()
         // get queue head structure
         //
         CurrentQH = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-
-        //
-        // Get the Request for this QueueHead
-        //
-        Request = (IUSBRequest*) CurrentQH->Request;
 
         //
         // release lock
@@ -937,8 +931,82 @@ CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    KIRQL OldLevel;
+    PLIST_ENTRY Entry;
+    PQUEUE_HEAD QueueHead;
+    LIST_ENTRY ListHead;
+
+    //
+    // lock completed async list
+    //
+    KeAcquireSpinLock(m_Lock, &OldLevel);
+
+    DPRINT1("AbortDevicePipe DeviceAddress %x EndpointDescriptor %p Addr %x\n", DeviceAddress, EndpointDescriptor, EndpointDescriptor->bEndpointAddress);
+
+    //
+    // init list head	
+    //
+    InitializeListHead(&ListHead);
+
+
+    //
+    // walk async list 
+    //
+    ASSERT(AsyncListQueueHead);
+    Entry = AsyncListQueueHead->LinkedQueueHeads.Flink;
+
+    while(Entry != &AsyncListQueueHead->LinkedQueueHeads)
+    {
+        //
+        // get queue head structure
+        //
+        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+        ASSERT(QueueHead);
+
+        //
+        // move to next entry
+        //
+        Entry = Entry->Flink;
+
+        if (QueueHead->EndPointCharacteristics.DeviceAddress == DeviceAddress &&
+            QueueHead->EndPointCharacteristics.EndPointNumber == (EndpointDescriptor->bEndpointAddress & 0xF) && QueueHead->Token.Bits.Halted)
+        {
+            //
+            // unlink queue head
+            //
+            UnlinkQueueHead(QueueHead);
+
+            //
+            // add to temp list
+            //
+            InsertTailList(&ListHead, &QueueHead->LinkedQueueHeads);
+        }
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(m_Lock, OldLevel);
+
+    while(!IsListEmpty(&ListHead))
+    {
+        //
+        // remove entry
+        //
+        Entry = RemoveHeadList(&ListHead);
+
+        //
+        // get queue head structure
+        //
+        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+        ASSERT(QueueHead);
+
+        //
+        // cleanup queue head
+        //
+        QueueHeadCleanup(QueueHead);
+    }
+    return STATUS_SUCCESS;
 }
 
 

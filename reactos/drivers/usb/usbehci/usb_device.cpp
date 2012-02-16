@@ -819,6 +819,7 @@ CUSBDevice::CreateConfigurationDescriptor(
             //
             // move to next descriptor
             //
+            ASSERT(InterfaceDescriptor->bLength);
             InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
         }
 

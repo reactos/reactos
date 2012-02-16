@@ -62,10 +62,9 @@ public:
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
     ULONG InternalCalculateTransferLength();
-    NTSTATUS BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
+    NTSTATUS BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, IN PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
     VOID InitDescriptor(IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR DataToggle, OUT PULONG OutDescriptorLength);
     VOID DumpQueueHead(IN PQUEUE_HEAD QueueHead);
-
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -734,6 +733,7 @@ CUSBRequest::BuildTransferDescriptorChain(
     IN ULONG TransferBufferLength,
     IN UCHAR PidCode,
     IN UCHAR InitialDataToggle,
+    IN  PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor,
     OUT PUCHAR OutDataToggle,
@@ -742,6 +742,19 @@ CUSBRequest::BuildTransferDescriptorChain(
     PQUEUE_TRANSFER_DESCRIPTOR FirstDescriptor = NULL, CurrentDescriptor, LastDescriptor = NULL;
     NTSTATUS Status;
     ULONG DescriptorLength, TransferBufferOffset  = 0;
+    ULONG MaxPacketSize = 0, TransferSize;
+
+    //
+    // is there an endpoint descriptor
+    //
+    if (m_EndpointDescriptor)
+    {
+        //
+        // use endpoint packet size
+        //
+        MaxPacketSize = m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
+    }
+
 
     do
     {
@@ -754,8 +767,22 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             // failed to allocate transfer descriptor
             //
-            ASSERT(FALSE);
-            return Status;
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        if (MaxPacketSize)
+        {
+            //
+            // transfer size is minimum available buffer or endpoint size
+            //
+            TransferSize = min(TransferBufferLength - TransferBufferOffset, MaxPacketSize);
+        }
+        else
+        {
+            //
+            // use available buffer
+            //
+            TransferSize = TransferBufferLength - TransferBufferOffset;
         }
 
         //
@@ -763,7 +790,7 @@ CUSBRequest::BuildTransferDescriptorChain(
         //
         InitDescriptor(CurrentDescriptor, 
                        (PVOID)((ULONG_PTR)TransferBuffer + TransferBufferOffset),
-                       TransferBufferLength - TransferBufferOffset,
+                       TransferSize,
                        PidCode,
                        InitialDataToggle,
                        &DescriptorLength);
@@ -783,9 +810,17 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             // link to current descriptor
             //
-            LastDescriptor->AlternateNextPointer = CurrentDescriptor->PhysicalAddr;
             LastDescriptor->NextPointer = CurrentDescriptor->PhysicalAddr;
             LastDescriptor = CurrentDescriptor;
+
+            if (AlternativeDescriptor)
+            {
+                //
+                // link to alternative next pointer
+                //
+                LastDescriptor->AlternateNextPointer = AlternativeDescriptor->PhysicalAddr;
+            }
+
         }
         else
         {
@@ -795,6 +830,11 @@ CUSBRequest::BuildTransferDescriptorChain(
             LastDescriptor = FirstDescriptor = CurrentDescriptor;
         }
 
+        //
+        // flip data toggle
+        //
+        InitialDataToggle = !InitialDataToggle;
+
         if(TransferBufferLength == TransferBufferOffset)
         {
             //
@@ -802,6 +842,7 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             break;
         }
+
     }while(TRUE);
 
     if (OutFirstDescriptor)
@@ -822,11 +863,6 @@ CUSBRequest::BuildTransferDescriptorChain(
 
     if (OutDataToggle)
     {
-        //
-        // flip data toggle
-        //
-        InitialDataToggle = !InitialDataToggle;
-
         //
         // store result data toggle
         //
@@ -918,14 +954,7 @@ CUSBRequest::BuildControlTransferQueueHead(
     //
     QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
 
-    if (m_EndpointDescriptor)
-    {
-        //
-        // set endpoint address and max packet length
-        //
-        QueueHead->EndPointCharacteristics.EndPointNumber = m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress & 0x0F;
-        QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
-    }
+    ASSERT(m_EndpointDescriptor == FALSE);
 
     //
     // init setup descriptor
@@ -954,6 +983,7 @@ CUSBRequest::BuildControlTransferQueueHead(
                                               m_TransferBufferLength,
                                               InternalGetPidDirection(),
                                               TRUE,
+                                              NULL,
                                               &FirstDescriptor,
                                               &LastDescriptor,
                                               NULL,
@@ -1137,13 +1167,19 @@ CUSBRequest::BuildBulkTransferQueueHead(
     ASSERT(m_EndpointDescriptor);
 
     //
+    // use 4 * PAGE_SIZE at max for each new request
+    //
+    ULONG MaxTransferLength = min(4 * PAGE_SIZE, m_TransferBufferLength - m_TransferBufferLengthCompleted);
+
+    //
     // build bulk transfer descriptor chain
     //
     Status = BuildTransferDescriptorChain(QueueHead,
                                           Base,
-                                          m_TransferBufferLength - m_TransferBufferLengthCompleted,
+                                          MaxTransferLength,
                                           InternalGetPidDirection(),
                                           m_EndpointDescriptor->DataToggle,
+                                          NULL,
                                           &FirstDescriptor,
                                           &LastDescriptor,
                                           &m_EndpointDescriptor->DataToggle,
@@ -1152,7 +1188,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
     //
     // FIXME: handle errors
     //
-    ASSERT(ChainDescriptorLength == m_TransferBufferLength);
+    //ASSERT(ChainDescriptorLength == m_TransferBufferLength);
 
     //
     // move to next offset
@@ -1279,7 +1315,7 @@ CUSBRequest::CreateQueueHead(
     //
     // Set NakCountReload to max value possible
     //
-    QueueHead->EndPointCharacteristics.NakCountReload = 0xF;
+    QueueHead->EndPointCharacteristics.NakCountReload = 0x3;
 
     //
     // Get the Initial Data Toggle from the QEDT
@@ -1290,7 +1326,7 @@ CUSBRequest::CreateQueueHead(
     // FIXME: check if High Speed Device
     //
     QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
-    QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
+    QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x01;
     QueueHead->Token.DWord = 0;
     QueueHead->Token.Bits.InterruptOnComplete = FALSE;
 
