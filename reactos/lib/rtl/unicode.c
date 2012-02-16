@@ -2545,7 +2545,7 @@ RtlFindCharInUnicodeString(
     Length = SearchString->Length / sizeof(WCHAR);
     if (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END)
     {
-        for (i = Length - 1; i >= 0; i--)
+        for (i = Length - 1; (SHORT)i >= 0; i--)
         {
             Found = RtlpIsCharInUnicodeString(SearchString->Buffer[i], MatchString, CaseInSensitive);
             if (Found == WantToFind)
