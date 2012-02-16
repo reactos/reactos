@@ -634,6 +634,7 @@ CUSBRequest::InitDescriptor(
     OUT PULONG OutDescriptorLength)
 {
     ULONG Index, Length = 0, PageOffset, BufferLength;
+    PHYSICAL_ADDRESS Address;
 
     //
     // init transfer descriptor
@@ -654,9 +655,15 @@ CUSBRequest::InitDescriptor(
     do
     {
         //
+        // get address
+        //
+        Address = MmGetPhysicalAddress(TransferBuffer);
+
+        //
         // use physical address
         //
-        CurrentDescriptor->BufferPointer[Index] = MmGetPhysicalAddress(TransferBuffer).LowPart;
+        CurrentDescriptor->BufferPointer[Index] = Address.LowPart;
+        CurrentDescriptor->ExtendedBufferPointer[Index] = Address.HighPart;
 
         //
         // Get the offset from page size
@@ -754,7 +761,6 @@ CUSBRequest::BuildTransferDescriptorChain(
         //
         MaxPacketSize = m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
     }
-
 
     do
     {
@@ -962,7 +968,8 @@ CUSBRequest::BuildControlTransferQueueHead(
     SetupDescriptor->Token.Bits.PIDCode = PID_CODE_SETUP_TOKEN;
     SetupDescriptor->Token.Bits.TotalBytesToTransfer = sizeof(USB_DEFAULT_PIPE_SETUP_PACKET);
     SetupDescriptor->Token.Bits.DataToggle = FALSE;
-    SetupDescriptor->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorSetupPacket.LowPart);
+    SetupDescriptor->BufferPointer[0] = m_DescriptorSetupPacket.LowPart;
+    SetupDescriptor->ExtendedBufferPointer[0] = m_DescriptorSetupPacket.HighPart;
     InsertTailList(&QueueHead->TransferDescriptorListHead, &SetupDescriptor->DescriptorEntry);
 
 
@@ -1331,7 +1338,7 @@ CUSBRequest::CreateQueueHead(
     QueueHead->Token.Bits.InterruptOnComplete = FALSE;
 
     //
-    // FIXME check if that is really needed
+    // store address
     //
     QueueHead->PhysicalAddr = QueueHeadPhysicalAddress.LowPart;
 
