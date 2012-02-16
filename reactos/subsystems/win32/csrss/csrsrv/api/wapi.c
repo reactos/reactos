@@ -650,7 +650,7 @@ BasepFakeStaticServerData(VOID)
 
         /* Make local point back to \Sessions\x\BNO */
         RtlInitUnicodeString(&DirectoryName, L"Local");
-        RtlInitUnicodeString(&SymlinkName, Buffer);
+        ASSERT(SessionId == 0);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &DirectoryName,
                                    OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
