@@ -407,4 +407,40 @@ CsrAddStaticServerThread(IN HANDLE hThread,
     return CsrThread;
 }
 
+/*++
+ * @name CsrDereferenceThread
+ * @implemented NT4
+ *
+ * The CsrDereferenceThread routine removes a reference from a CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to dereference.
+ *
+ * @return None.
+ *
+ * @remarks If the reference count has reached zero (ie: the CSR Thread has
+ *          no more active references), it will be deleted.
+ *
+ *--*/
+VOID
+NTAPI
+CsrDereferenceThread(IN PCSR_THREAD CsrThread)
+{
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Decrease reference count */
+    ASSERT(CsrThread->ReferenceCount > 0);
+    if (!(--CsrThread->ReferenceCount))
+    {
+        /* Call the generic cleanup code */
+        CsrThreadRefcountZero(CsrThread);
+    }
+    else
+    {
+        /* Just release the lock */
+        CsrReleaseProcessLock();
+    }
+}
+
 /* EOF */

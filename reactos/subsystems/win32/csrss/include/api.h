@@ -22,6 +22,18 @@
 #define ProcessStructureListLocked() \
     (ProcessDataLock.OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
 
+#define CsrAcquireWaitLock() \
+    RtlEnterCriticalSection(&CsrWaitListsLock);
+
+#define CsrReleaseWaitLock() \
+    RtlLeaveCriticalSection(&CsrWaitListsLock);
+
+#define CsrAcquireNtSessionLock() \
+    RtlEnterCriticalSection(&CsrNtSessionLock);
+
+#define CsrReleaseNtSessionLock() \
+    RtlLeaveCriticalSection(&CsrNtSessionLock);
+
 typedef enum _CSR_THREAD_FLAGS
 {
     CsrThreadAltertable = 0x1,
@@ -66,6 +78,13 @@ typedef struct _CSRSS_CON_PROCESS_DATA
     LIST_ENTRY ConsoleLink;
 } CSRSS_CON_PROCESS_DATA, *PCSRSS_CON_PROCESS_DATA;
 
+typedef struct _CSR_NT_SESSION
+{
+    ULONG ReferenceCount;
+    LIST_ENTRY SessionLink;
+    ULONG SessionId;
+} CSR_NT_SESSION, *PCSR_NT_SESSION;
+
 typedef struct _CSR_PROCESS
 {
     CLIENT_ID ClientId;
@@ -102,12 +121,35 @@ typedef struct _CSR_THREAD
     LIST_ENTRY HashLinks;
     CLIENT_ID ClientId;
     PCSR_PROCESS Process;
-    //struct _CSR_WAIT_BLOCK *WaitBlock;
+    struct _CSR_WAIT_BLOCK *WaitBlock;
     HANDLE ThreadHandle;
     ULONG Flags;
     ULONG ReferenceCount;
     ULONG ImpersonationCount;
 } CSR_THREAD, *PCSR_THREAD;
+
+typedef
+BOOLEAN
+(*CSR_WAIT_FUNCTION)(
+    IN PLIST_ENTRY WaitList,
+    IN PCSR_THREAD WaitThread,
+    IN PCSR_API_MESSAGE WaitApiMessage,
+    IN PVOID WaitContext,
+    IN PVOID WaitArgument1,
+    IN PVOID WaitArgument2,
+    IN ULONG WaitFlags
+);
+
+typedef struct _CSR_WAIT_BLOCK
+{
+    ULONG Size;
+    LIST_ENTRY WaitList;
+    LIST_ENTRY UserWaitList;
+    PVOID WaitContext;
+    PCSR_THREAD WaitThread;
+    CSR_WAIT_FUNCTION WaitFunction;
+    CSR_API_MESSAGE WaitApiMessage;
+} CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
 
 typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSR_PROCESS ProcessData,
                                            PCSR_API_MESSAGE Request);
@@ -167,6 +209,10 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
+CsrDereferenceThread(IN PCSR_THREAD CsrThread);
+
+VOID
+NTAPI
 CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
                  IN PCSR_PROCESS CurrentProcess OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
@@ -179,6 +225,11 @@ VOID FASTCALL CsrApiCallHandler(PCSR_PROCESS ProcessData,
 VOID WINAPI CsrSbApiRequestThread (PVOID PortHandle);
 VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 
+VOID
+NTAPI
+CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
+
+extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
 extern PCSR_PROCESS CsrRootProcess;
@@ -210,6 +261,10 @@ NTSTATUS NTAPI CsrUnlockProcess(IN PCSR_PROCESS CsrProcess);
 
 //hack
 VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
+
+NTSTATUS
+NTAPI
+CsrInitializeNtSessionList(VOID);
 
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);

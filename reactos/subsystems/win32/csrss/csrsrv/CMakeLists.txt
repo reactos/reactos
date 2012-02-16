@@ -11,6 +11,8 @@ list(APPEND SOURCE
     procsup.c
     thredsup.c
     init.c
+    wait.c
+    session.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})

@@ -1116,6 +1116,15 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
+    
+    /* Set up Session Support */
+    Status = CsrInitializeNtSessionList();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
 
     /* Set up Process Support */
     Status = CsrInitializeProcessStructure();

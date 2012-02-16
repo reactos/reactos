@@ -986,6 +986,70 @@ ClientConnectionThread(HANDLE ServerPort)
     RtlExitUserThread(STATUS_SUCCESS);
 }
 
+/*++
+ * @name CsrReleaseCapturedArguments
+ * @implemented NT5.1
+ *
+ * The CsrReleaseCapturedArguments routine releases a Capture Buffer
+ * that was previously captured with CsrCaptureArguments.
+ *
+ * @param ApiMessage
+ *        Pointer to the CSR API Message containing the Capture Buffer
+ *        that needs to be released.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
+{
+    PCSR_CAPTURE_BUFFER RemoteCaptureBuffer, LocalCaptureBuffer;
+    SIZE_T BufferDistance;
+    ULONG PointerCount;
+    ULONG_PTR **PointerOffsets, *CurrentPointer;
+
+    /* Get the capture buffers */
+    RemoteCaptureBuffer = ApiMessage->CsrCaptureData;
+    LocalCaptureBuffer = RemoteCaptureBuffer->PreviousCaptureBuffer;
+
+    /* Free the previous one */
+    RemoteCaptureBuffer->PreviousCaptureBuffer = NULL;
+
+    /* Find out the difference between the two buffers */
+    BufferDistance = (ULONG_PTR)LocalCaptureBuffer - (ULONG_PTR)RemoteCaptureBuffer;
+
+    /* Save the pointer count and offset pointer */
+    PointerCount = RemoteCaptureBuffer->PointerCount;
+    PointerOffsets = (ULONG_PTR**)(RemoteCaptureBuffer + 1);
+
+    /* Start the loop */
+    while (PointerCount)
+    {
+        /* Get the current pointer */
+        CurrentPointer = *PointerOffsets++;
+        if (CurrentPointer)
+        {
+            /* Add it to the CSR Message structure */
+            CurrentPointer += (ULONG_PTR)ApiMessage;
+
+            /* Modify the pointer to take into account its new position */
+            *CurrentPointer += BufferDistance;
+        }
+
+        /* Move to the next Pointer */
+        PointerCount--;
+    }
+
+    /* Copy the data back */
+    RtlMoveMemory(LocalCaptureBuffer, RemoteCaptureBuffer, RemoteCaptureBuffer->Size);
+
+    /* Free our allocated buffer */
+    RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
+}
+
 /* SESSION MANAGER FUNCTIONS**************************************************/
 
 /*++

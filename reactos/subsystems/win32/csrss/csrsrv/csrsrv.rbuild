@@ -18,5 +18,7 @@
 	<file>procsup.c</file>
 	<file>thredsup.c</file>
 	<file>init.c</file>
+	<file>wait.c</file>
+	<file>session.c</file
 	<pch>srv.h</pch>
 </module>

@@ -16,7 +16,7 @@
 
 /* GLOBALS ********************************************************************/
 
-RTL_CRITICAL_SECTION ProcessDataLock, CsrWaitListsLock;
+RTL_CRITICAL_SECTION ProcessDataLock;
 PCSR_PROCESS CsrRootProcess;
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
