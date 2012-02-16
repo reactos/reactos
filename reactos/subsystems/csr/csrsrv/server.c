@@ -173,7 +173,7 @@ CsrLoadServerDll(IN PCHAR DllString,
     if (NT_SUCCESS(Status))
     {
         /* Get the result from the Server DLL */
-        Status = (*ServerDllInitProcedure)(ServerDll);
+        Status = ServerDllInitProcedure(ServerDll);
 
         /* Check for Success */
         if (NT_SUCCESS(Status))
@@ -283,7 +283,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     {
         return STATUS_TOO_MANY_NAMES;
     }
-    else if (!(CsrLoadedServerDll[ClientConnect->ServerId]))
+    else if (!CsrLoadedServerDll[ClientConnect->ServerId])
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -305,9 +305,9 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     if (ServerDll->ConnectCallback)
     {
         /* Call the callback */
-        Status = (ServerDll->ConnectCallback)(CurrentProcess,
-                                              ClientConnect->ConnectionInfo,
-                                              &ClientConnect->ConnectionInfoSize);
+        Status = ServerDll->ConnectCallback(CurrentProcess,
+                                            ClientConnect->ConnectionInfo,
+                                            &ClientConnect->ConnectionInfoSize);
     }
     else
     {
@@ -347,7 +347,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     PPEB Peb = NtCurrentPeb();
 
     /* If there's no parameter, fail */
-    if (ParameterValue) return STATUS_INVALID_PARAMETER;
+    if (!ParameterValue) return STATUS_INVALID_PARAMETER;
 
     /* Find the first comma, and null terminate */
     while (*SizeValue)
@@ -400,7 +400,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     {
         /* Fail */
         NtClose(CsrSrvSharedSection);
-        return(Status);
+        return Status;
     }
 
     /* FIXME: Write the value to registry */
