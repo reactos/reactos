@@ -16,9 +16,10 @@
 #include <time.h>
 #include <typedefs.h>
 #include <unistd.h>
+#endif
+
 #ifndef MAX_PATH
 #define MAX_PATH 260
-#endif
 #endif
 
 #include <stdlib.h>
