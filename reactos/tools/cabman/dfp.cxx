@@ -1281,7 +1281,7 @@ bool CDFParser::ReadLine()
         return false;
 
     i = 0;
-    while (((j = CurrentOffset + i) < FileBufferSize) && (i < 127) &&
+    while (((j = CurrentOffset + i) < FileBufferSize) && (i < sizeof(Line) - 1) &&
         ((ch = FileBuffer[j]) != 0x0D && (ch = FileBuffer[j]) != 0x0A))
     {
         Line[i] = ch;
