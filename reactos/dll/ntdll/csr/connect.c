@@ -438,7 +438,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
 #if 0
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
-                                     CSR_MAKE_OPCODE(CsrSrvClientConnect,
+                                     CSR_MAKE_OPCODE(CsrpClientConnect,
                                                      CSR_SRV_DLL),
                                      sizeof(CSR_CLIENT_CONNECT));
 #endif

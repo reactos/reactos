@@ -182,10 +182,6 @@ VOID
 WINAPI
 BasepFakeStaticServerData(VOID);
 
-NTSTATUS
-NTAPI
-CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
-
 /*++
  * @name CsrSetProcessSecurity
  *

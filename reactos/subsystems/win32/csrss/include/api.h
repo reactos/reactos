@@ -14,6 +14,7 @@
 
 #include <csrss/csrss.h>
 
+#define CSR_SRV_SERVER 0
 #define CSR_SERVER_DLL_MAX 4
 #define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
 #define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
@@ -151,6 +152,75 @@ typedef struct _CSR_WAIT_BLOCK
     CSR_API_MESSAGE WaitApiMessage;
 } CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
 
+typedef
+NTSTATUS
+(NTAPI *PCSR_CONNECT_CALLBACK)(
+    IN PCSR_PROCESS CsrProcess,
+    IN OUT PVOID ConnectionInfo,
+    IN OUT PULONG ConnectionInfoLength
+);
+
+typedef
+VOID
+(NTAPI *PCSR_DISCONNECT_CALLBACK)(IN PCSR_PROCESS CsrProcess);
+
+typedef
+NTSTATUS
+(NTAPI *PCSR_NEWPROCESS_CALLBACK)(
+    IN PCSR_PROCESS Parent,
+    IN PCSR_PROCESS CsrProcess
+);
+
+typedef
+VOID
+(NTAPI *PCSR_HARDERROR_CALLBACK)(
+    IN PCSR_THREAD CsrThread,
+    IN PHARDERROR_MSG HardErrorMessage
+);
+
+typedef
+ULONG
+(NTAPI *PCSR_SHUTDOWNPROCESS_CALLBACK)(
+    IN PCSR_PROCESS CsrProcess,
+    IN ULONG Flags,
+    IN BOOLEAN FirstPhase
+);
+
+typedef
+NTSTATUS
+(NTAPI *PCSR_API_ROUTINE)(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG Reply
+);
+
+typedef struct _CSR_SERVER_DLL
+{
+    ULONG Length;
+    HANDLE Event;
+    ANSI_STRING Name;
+    HANDLE ServerHandle;
+    ULONG ServerId;
+    ULONG Unknown;
+    ULONG ApiBase;
+    ULONG HighestApiSupported;
+    PCSR_API_ROUTINE *DispatchTable;
+    PBOOLEAN ValidTable;
+    PCHAR *NameTable;
+    ULONG SizeOfProcessData;
+    PCSR_CONNECT_CALLBACK ConnectCallback;
+    PCSR_DISCONNECT_CALLBACK DisconnectCallback;
+    PCSR_HARDERROR_CALLBACK HardErrorCallback;
+    PVOID SharedSection;
+    PCSR_NEWPROCESS_CALLBACK NewProcessCallback;
+    PCSR_SHUTDOWNPROCESS_CALLBACK ShutdownProcessCallback;
+    ULONG Unknown2[3];
+} CSR_SERVER_DLL, *PCSR_SERVER_DLL;
+
+typedef
+NTSTATUS
+(NTAPI *PCSR_SERVER_DLL_INIT_CALLBACK)(IN PCSR_SERVER_DLL ServerDll);
+
+
 typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSR_PROCESS ProcessData,
                                            PCSR_API_MESSAGE Request);
 
@@ -237,6 +307,11 @@ extern PCSR_PROCESS CsrRootProcess;
 extern RTL_CRITICAL_SECTION ProcessDataLock, CsrWaitListsLock;
 extern UNICODE_STRING CsrDirectoryName;
 extern ULONG CsrDebug;
+extern ULONG CsrTotalPerProcessDataLength;
+extern SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
+extern PVOID CsrSrvSharedSectionHeap;
+extern PVOID *CsrSrvSharedStaticServerData;
+extern HANDLE CsrInitializationEvent;
 
 NTSTATUS
 NTAPI
@@ -272,6 +347,43 @@ VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 NTSTATUS
 NTAPI
 CsrInitializeNtSessionList(VOID);
+
+NTSTATUS
+NTAPI
+CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
+OUT PCSR_CONNECTION_INFO ConnectInfo);
+
+NTSTATUS
+NTAPI
+CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
+
+NTSTATUS
+NTAPI
+CsrSrvClientConnect(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG Reply
+);
+
+NTSTATUS
+NTAPI
+CsrSrvUnusedFunction(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG Reply
+);
+
+NTSTATUS
+NTAPI
+CsrSrvIdentifyAlertableThread(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG Reply
+);
+
+NTSTATUS
+NTAPI
+CsrSrvSetPriorityClass(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG Reply
+);
 
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);

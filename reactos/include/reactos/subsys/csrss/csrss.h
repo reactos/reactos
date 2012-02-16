@@ -864,9 +864,15 @@ typedef struct _BASE_STATIC_SERVER_DATA
 /* Types used in the new CSR. Temporarly here for proper compile of NTDLL */
 #define CSR_SRV_SERVER 0
 
-#define CsrSrvClientConnect             0
-#define CsrSrvIdentifyAlertableThread   3
-#define CsrSrvSetPriorityClass          4
+typedef enum _CSR_SRV_API_NUMBER
+{
+    CsrpClientConnect,
+    CsrpThreadConnect,
+    CsrpProfileControl,
+    CsrpIdentifyAlertable,
+    CsrpSetPriorityClass,
+    CsrpMaxApiNumber
+} CSR_SRV_API_NUMBER, *PCSR_SRV_API_NUMBER;
 
 #define CSR_MAKE_OPCODE(s,m) ((s) << 16) | (m)
 

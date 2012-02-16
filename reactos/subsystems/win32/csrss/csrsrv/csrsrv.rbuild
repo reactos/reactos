@@ -20,5 +20,6 @@
 	<file>init.c</file>
 	<file>wait.c</file>
 	<file>session.c</file>
+	<file>server.c</file>
 	<pch>srv.h</pch>
 </module>

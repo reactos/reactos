@@ -13,6 +13,7 @@ list(APPEND SOURCE
     init.c
     wait.c
     session.c
+    server.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})
