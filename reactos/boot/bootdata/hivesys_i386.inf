@@ -34,8 +34,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubCl
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","Service",0x00000000,"usbccgp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","Service",0x00000000,"usbhub"
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","Service",0x00000000,"usbhub"
+;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB","Service",0x00000000,"usbhub"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"

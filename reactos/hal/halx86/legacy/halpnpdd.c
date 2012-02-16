@@ -384,8 +384,8 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ResourceList->Count = 1;
 
         /* Setup the list fields */
-        ResourceList->List[0].BusNumber = -1;
-        ResourceList->List[0].InterfaceType = PNPBus;
+        ResourceList->List[0].BusNumber = 0;
+        ResourceList->List[0].InterfaceType = PCIBus;
         ResourceList->List[0].PartialResourceList.Version = 1;
         ResourceList->List[0].PartialResourceList.Revision = 1;
         ResourceList->List[0].PartialResourceList.Count = 0;
