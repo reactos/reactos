@@ -380,7 +380,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     /* Compute page length, make sure the boundary address is valid */
     Length = ROUND_TO_PAGES(Length);
     PageCount = Length >> PAGE_SHIFT;
-    if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
+    if ((BoundaryAddress + 1) < Length) return TableFoundNode;
 
     /* Check if the table is empty */
     if (Table->NumberGenericTableElements == 0)
