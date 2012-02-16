@@ -131,7 +131,7 @@ CreateNewDriveLetterName(OUT PUNICODE_STRING DriveLetter,
                          IN UCHAR Letter,
                          IN PMOUNTDEV_UNIQUE_ID UniqueId OPTIONAL)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Allocate a big enough buffer to contain the symbolic link */
     DriveLetter->MaximumLength = sizeof(DosDevices.Buffer) + 3 * sizeof(WCHAR);
@@ -907,7 +907,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
 /*
  * @implemented
  */
-ULONG
+BOOLEAN
 MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
 {
     NTSTATUS Status;
@@ -931,10 +931,10 @@ MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
                                     NULL);
     if (!NT_SUCCESS(Status))
     {
-        return Default;
+        return (Default != 0);
     }
 
-    return Result;
+    return (Result != 0);
 }
 
 /*
@@ -1009,7 +1009,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
 
             if (RtlEqualUnicodeString(&(DeviceInformation->SymbolicName), &(CurrentDevice->SymbolicName), TRUE))
             {
-                break;            
+                break;
             }
         }
 
@@ -1054,7 +1054,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     /* If it's OK, set it and save its letter (if any) */
     if (SuggestedLinkName.Buffer && IsDriveLetter(&SuggestedLinkName))
     {
-        DeviceInformation->SuggestedDriveLetter = SuggestedLinkName.Buffer[LETTER_POSITION];
+        DeviceInformation->SuggestedDriveLetter = (UCHAR)SuggestedLinkName.Buffer[LETTER_POSITION];
     }
 
     /* Acquire driver exclusively */
@@ -1069,7 +1069,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
 
         if (RtlEqualUnicodeString(&(DeviceInformation->DeviceName), &TargetDeviceName, TRUE))
         {
-            break;            
+            break;
         }
     }
 

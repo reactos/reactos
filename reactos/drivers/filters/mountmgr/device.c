@@ -94,7 +94,7 @@ MountmgrWriteNoAutoMount(IN PDEVICE_EXTENSION DeviceExtension)
                                  REG_DWORD,
                                  &Value,
                                  sizeof(Value));
-                                 
+
 }
 
 /*
@@ -221,10 +221,10 @@ NTSTATUS
 MountMgrScrubRegistry(IN PDEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status;
-    BOOLEAN Continue = TRUE;
+    BOOLEAN Continue;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
-    while (Continue)
+    do
     {
         RtlZeroMemory(QueryTable, sizeof(QueryTable));
         QueryTable[0].QueryRoutine = ScrubRegistryRoutine;
@@ -237,6 +237,7 @@ MountMgrScrubRegistry(IN PDEVICE_EXTENSION DeviceExtension)
                                         DeviceExtension,
                                         NULL);
     }
+    while (Continue);
 
     return Status;
 }
@@ -513,7 +514,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         if (IsDriveLetter(&(SymlinkInformation->Name)) && SymlinkInformation->Online)
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
-            DriveLetterInfo->CurrentDriveLetter = SymlinkInformation->Name.Buffer[LETTER_POSITION];
+            DriveLetterInfo->CurrentDriveLetter = (CHAR)SymlinkInformation->Name.Buffer[LETTER_POSITION];
             break;
         }
 
@@ -972,8 +973,8 @@ MountMgrQueryPoints(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* We can't go beyond */
-    if (MountPoint->SymbolicLinkNameLength + MountPoint->UniqueIdLength +
-        MountPoint->DeviceNameLength < Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (((ULONG)MountPoint->SymbolicLinkNameLength + MountPoint->UniqueIdLength +
+        MountPoint->DeviceNameLength) < Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1234,7 +1235,7 @@ MountMgrDeletePointsDbOnly(IN PDEVICE_EXTENSION DeviceExtension,
 NTSTATUS
 MountMgrVolumeMountPointChanged(IN PDEVICE_EXTENSION DeviceExtension,
                                 IN PIRP Irp,
-                                IN NTSTATUS LockStatus, 
+                                IN NTSTATUS LockStatus,
                                 OUT PUNICODE_STRING SourceDeviceName,
                                 OUT PUNICODE_STRING SourceSymbolicName,
                                 OUT PUNICODE_STRING TargetVolumeName)
@@ -1265,7 +1266,7 @@ MountMgrVolumeMountPointChanged(IN PDEVICE_EXTENSION DeviceExtension,
 
     VolumeMountPoint = (PMOUNTMGR_VOLUME_MOUNT_POINT)Irp->AssociatedIrp.SystemBuffer;
 
-    if (VolumeMountPoint->SourceVolumeNameLength + VolumeMountPoint->TargetVolumeNameLength <
+    if (((ULONG)VolumeMountPoint->SourceVolumeNameLength + VolumeMountPoint->TargetVolumeNameLength) <
         Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
@@ -1406,7 +1407,7 @@ MountMgrVolumeMountPointChanged(IN PDEVICE_EXTENSION DeviceExtension,
 
     /* Return symbolic name */
     SourceSymbolicName->Length =
-    SourceSymbolicName->MaximumLength = FileNameInfo->FileNameLength;
+    SourceSymbolicName->MaximumLength = (USHORT)FileNameInfo->FileNameLength;
     SourceSymbolicName->Buffer = (PWSTR)FileNameInfo;
     /* memmove allows memory overlap */
     RtlMoveMemory(SourceSymbolicName->Buffer, FileNameInfo->FileName, SourceSymbolicName->Length);

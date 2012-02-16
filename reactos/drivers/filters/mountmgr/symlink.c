@@ -852,7 +852,7 @@ RedirectSavedLink(IN PSAVED_LINK_INFORMATION SavedLinkInformation,
             RemoveEntryList(&(SymlinkInformation->SymbolicLinksListEntry));
             FreePool(SymlinkInformation->Name.Buffer);
             FreePool(SymlinkInformation);
-                
+
             return TRUE;
         }
     }

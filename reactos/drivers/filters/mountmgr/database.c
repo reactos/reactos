@@ -175,7 +175,9 @@ GetRemoteDatabaseEntry(IN HANDLE Database,
                         &ByteOffset,
                         NULL);
     /* If it fails or returns inconsistent data, drop it (= truncate) */
-    if (!NT_SUCCESS(Status) || IoStatusBlock.Information != EntrySize || EntrySize < sizeof(DATABASE_ENTRY))
+    if (!NT_SUCCESS(Status) ||
+        (IoStatusBlock.Information != EntrySize) ||
+        (EntrySize < sizeof(DATABASE_ENTRY)) )
     {
         TruncateRemoteDatabase(Database, StartingOffset);
         FreePool(Entry);
@@ -184,7 +186,7 @@ GetRemoteDatabaseEntry(IN HANDLE Database,
 
     /* Validate entry */
     if (MAX(Entry->SymbolicNameOffset + Entry->SymbolicNameLength,
-            Entry->UniqueIdOffset + Entry->UniqueIdLength) > EntrySize)
+            Entry->UniqueIdOffset + Entry->UniqueIdLength) > (LONG)EntrySize)
     {
         TruncateRemoteDatabase(Database, StartingOffset);
         FreePool(Entry);
@@ -201,10 +203,10 @@ NTSTATUS
 DeleteRemoteDatabaseEntry(IN HANDLE Database,
                           IN LONG StartingOffset)
 {
-    LONG EndSize;
+    ULONG EndSize;
     PVOID TmpBuffer;
     NTSTATUS Status;
-    LONG DatabaseSize;
+    ULONG DatabaseSize;
     PDATABASE_ENTRY Entry;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER EndEntriesOffset;
@@ -423,7 +425,8 @@ WorkerThread(IN PDEVICE_OBJECT DeviceObject,
     /* Acquire workers lock */
     KeWaitForSingleObject(&(DeviceExtension->WorkerSemaphore), Executive, KernelMode, FALSE, NULL);
 
-    OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+    KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
+
     /* Ensure there are workers */
     while (!IsListEmpty(&(DeviceExtension->WorkerQueueListHead)))
     {
@@ -433,7 +436,7 @@ WorkerThread(IN PDEVICE_OBJECT DeviceObject,
                                      RECONCILE_WORK_ITEM,
                                      WorkerQueueListEntry);
 
-        KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+        KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 
         /* Call it */
         WorkItem->WorkerRoutine(WorkItem->Context);
@@ -447,9 +450,9 @@ WorkerThread(IN PDEVICE_OBJECT DeviceObject,
         }
 
         KeWaitForSingleObject(&(DeviceExtension->WorkerSemaphore), Executive, KernelMode, FALSE, NULL);
-        OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+        KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
     }
-    KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+    KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 
     InterlockedDecrement(&(DeviceExtension->WorkerReferences));
 
@@ -478,10 +481,10 @@ QueueWorkItem(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Otherwise queue worker for delayed execution */
-    OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+    KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
     InsertTailList(&(DeviceExtension->WorkerQueueListHead),
                    &(WorkItem->WorkerQueueListEntry));
-    KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+    KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 
     KeReleaseSemaphore(&(DeviceExtension->WorkerSemaphore), IO_NO_INCREMENT, 1, FALSE);
 
@@ -638,8 +641,8 @@ QueryVolumeName(IN HANDLE RootDirectory,
     }
 
     /* Return the volume name */
-    VolumeName->Length = FileNameInfo->FileNameLength;
-    VolumeName->MaximumLength = FileNameInfo->FileNameLength + sizeof(WCHAR);
+    VolumeName->Length = (USHORT)FileNameInfo->FileNameLength;
+    VolumeName->MaximumLength = (USHORT)FileNameInfo->FileNameLength + sizeof(WCHAR);
     VolumeName->Buffer = AllocatePool(VolumeName->MaximumLength);
     if (!VolumeName->Buffer)
     {
@@ -993,7 +996,7 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
     }
     if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        Status == STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         Complete = TRUE;
     }
     if (!NT_SUCCESS(Status) || Complete)
@@ -1022,7 +1025,7 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* And write them into new database */
-        Length = IoStatusBlock.Information;
+        Length = (ULONG)IoStatusBlock.Information;
         Status = ZwWriteFile(Database,
                              NULL,
                              NULL,
@@ -1228,7 +1231,7 @@ QueryUniqueIdQueryRoutine(IN PWSTR ValueName,
     if (IntUniqueId)
     {
         /* Copy data & return */
-        IntUniqueId->UniqueIdLength = ValueLength;
+        IntUniqueId->UniqueIdLength = (USHORT)ValueLength;
         RtlCopyMemory(&(IntUniqueId->UniqueId), ValueData, ValueLength);
 
         UniqueId = Context;

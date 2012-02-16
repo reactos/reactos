@@ -107,7 +107,7 @@ SendOnlineNotificationWorker(IN PVOID Parameter)
     /* First, send the notification */
     SendOnlineNotification(&(WorkItem->SymbolicName));
 
-    OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+    KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
     /* If there are no notifications running any longer, reset event */
     if (--DeviceExtension->OnlineNotificationCount == 0)
     {
@@ -120,7 +120,7 @@ SendOnlineNotificationWorker(IN PVOID Parameter)
         /* Queue a new one for execution */
         Head = RemoveHeadList(&(DeviceExtension->OnlineNotificationListHead));
         NewWorkItem = CONTAINING_RECORD(Head, ONLINE_NOTIFICATION_WORK_ITEM, List);
-        KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+        KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
         NewWorkItem->List.Blink = NULL;
         NewWorkItem->List.Flink = NULL;
         ExQueueWorkItem((PWORK_QUEUE_ITEM)NewWorkItem, DelayedWorkQueue);
@@ -129,7 +129,7 @@ SendOnlineNotificationWorker(IN PVOID Parameter)
     {
         /* Mark it's over */
         DeviceExtension->OnlineNotificationWorkerActive = 0;
-        KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+        KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
     }
 
     FreePool(WorkItem->SymbolicName.Buffer);
@@ -171,14 +171,14 @@ PostOnlineNotification(IN PDEVICE_EXTENSION DeviceExtension,
     RtlCopyMemory(WorkItem->SymbolicName.Buffer, SymbolicName->Buffer, SymbolicName->Length);
     WorkItem->SymbolicName.Buffer[SymbolicName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+    KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
     DeviceExtension->OnlineNotificationCount++;
 
     /* If no worker are active */
     if (DeviceExtension->OnlineNotificationWorkerActive == 0)
     {
         /* Queue that one for execution */
-        DeviceExtension->OnlineNotificationWorkerActive == 1;
+        DeviceExtension->OnlineNotificationWorkerActive = 1;
         ExQueueWorkItem((PWORK_QUEUE_ITEM)WorkItem, DelayedWorkQueue);
     }
     else
@@ -187,7 +187,7 @@ PostOnlineNotification(IN PDEVICE_EXTENSION DeviceExtension,
         InsertTailList(&(DeviceExtension->OnlineNotificationListHead), &(WorkItem->List));
     }
 
-    KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+    KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 
     return;
 }
@@ -202,13 +202,13 @@ WaitForOnlinesToComplete(IN PDEVICE_EXTENSION DeviceExtension)
 
     KeInitializeEvent(&(DeviceExtension->OnlineNotificationEvent), NotificationEvent, FALSE);
 
-    OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+    KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
 
     /* Just wait all the worker are done */
     if (DeviceExtension->OnlineNotificationCount != 1)
     {
         DeviceExtension->OnlineNotificationCount--;
-        KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+        KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 
         KeWaitForSingleObject(&(DeviceExtension->OnlineNotificationEvent),
                               Executive,
@@ -216,11 +216,11 @@ WaitForOnlinesToComplete(IN PDEVICE_EXTENSION DeviceExtension)
                               FALSE,
                               NULL);
 
-        OldIrql = KfAcquireSpinLock(&(DeviceExtension->WorkerLock));
+        KeAcquireSpinLock(&(DeviceExtension->WorkerLock), &OldIrql);
         DeviceExtension->OnlineNotificationCount++;
     }
 
-    KfReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
+    KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
 }
 
 /*
@@ -477,7 +477,7 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
 VOID
 RemoveWorkItem(IN PUNIQUE_ID_WORK_ITEM WorkItem)
 {
-    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_EXTENSION DeviceExtension = WorkItem->DeviceExtension;
 
     KeWaitForSingleObject(&(DeviceExtension->DeviceLock), Executive, KernelMode, FALSE, NULL);
 
@@ -605,7 +605,7 @@ IssueUniqueIdChangeNotifyWorker(IN PUNIQUE_ID_WORK_ITEM WorkItem,
 
     /* Initialize the IRP */
     Irp = WorkItem->Irp;
-    IoInitializeIrp(Irp, IoSizeOfIrp(WorkItem->StackSize), WorkItem->StackSize);
+    IoInitializeIrp(Irp, IoSizeOfIrp(WorkItem->StackSize), (CCHAR)WorkItem->StackSize);
 
     if (InterlockedExchange((PLONG)&(WorkItem->Event), 0) != 0)
     {
