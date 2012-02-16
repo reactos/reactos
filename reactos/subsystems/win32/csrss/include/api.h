@@ -84,7 +84,6 @@ typedef struct _CSR_PROCESS
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
 //    PVOID ServerData[ANYSIZE_ARRAY];
-    struct _CSR_PROCESS* next;
     CSRSS_CON_PROCESS_DATA;
 } CSR_PROCESS, *PCSR_PROCESS;
 
@@ -154,7 +153,7 @@ extern HANDLE CsrSbApiPort;
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
                                                     PVOID Context);
-VOID WINAPI CsrInitProcessData(VOID);
+NTSTATUS WINAPI CsrInitializeProcessStructure(VOID);
 PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId);
 PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId);
 NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );

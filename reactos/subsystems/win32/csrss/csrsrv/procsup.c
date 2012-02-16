@@ -23,7 +23,6 @@
 /* GLOBALS ********************************************************************/
 
 extern RTL_CRITICAL_SECTION ProcessDataLock;
-extern PCSR_PROCESS ProcessData[256];
 PCSR_PROCESS CsrRootProcess;
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
@@ -225,63 +224,63 @@ PCSR_PROCESS
 NTAPI
 FindProcessForShutdown(IN PLUID CallerLuid)
 {
-    ULONG Hash;
     PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
     NTSTATUS Status;
     ULONG Level = 0;
     LUID ProcessLuid;
     LUID SystemLuid = SYSTEM_LUID;
     BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
+    PLIST_ENTRY NextEntry;
     
-    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    /* Set the List Pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
     {
-        /* Get this process hash bucket */
-        CsrProcess = ProcessData[Hash];
-        while (CsrProcess)
-        {
-            /* Skip this process if it's already been processed*/
-            if (CsrProcess->Flags & CsrProcessSkipShutdown) goto Next;
+        /* Get the process */
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
         
-            /* Get the LUID of this Process */
-            Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
+        /* Skip this process if it's already been processed */
+        if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
+    
+        /* Get the LUID of this Process */
+        Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
 
-            /* Check if we didn't get access to the LUID */
-            if (Status == STATUS_ACCESS_DENIED)
-            {
-                /* FIXME:Check if we have any threads */
-            }
-            
-            if (!NT_SUCCESS(Status))
-            {
-                /* We didn't have access, so skip it */
-                CsrProcess->Flags |= CsrProcessSkipShutdown;
-                goto Next;
-            }
-            
-            /* Check if this is the System LUID */
-            if ((IsSystemLuid = RtlEqualLuid(&ProcessLuid, &SystemLuid)))
-            {
-                /* Mark this process */
-                CsrProcess->ShutdownFlags |= CsrShutdownSystem;
-            }
-            else if (!(IsOurLuid = RtlEqualLuid(&ProcessLuid, CallerLuid)))
-            {
-                /* Our LUID doesn't match with the caller's */
-                CsrProcess->ShutdownFlags |= CsrShutdownOther;
-            }
-            
-            /* Check if we're past the previous level */
-            if (CsrProcess->ShutdownLevel > Level)
-            {
-                /* Update the level */
-                Level = CsrProcess->ShutdownLevel;
+        /* Check if we didn't get access to the LUID */
+        if (Status == STATUS_ACCESS_DENIED)
+        {
+            /* FIXME:Check if we have any threads */
+        }
+        
+        if (!NT_SUCCESS(Status))
+        {
+            /* We didn't have access, so skip it */
+            CsrProcess->Flags |= CsrProcessSkipShutdown;
+            continue;
+        }
+        
+        /* Check if this is the System LUID */
+        if ((IsSystemLuid = RtlEqualLuid(&ProcessLuid, &SystemLuid)))
+        {
+            /* Mark this process */
+            CsrProcess->ShutdownFlags |= CsrShutdownSystem;
+        }
+        else if (!(IsOurLuid = RtlEqualLuid(&ProcessLuid, CallerLuid)))
+        {
+            /* Our LUID doesn't match with the caller's */
+            CsrProcess->ShutdownFlags |= CsrShutdownOther;
+        }
+        
+        /* Check if we're past the previous level */
+        if (CsrProcess->ShutdownLevel > Level)
+        {
+            /* Update the level */
+            Level = CsrProcess->ShutdownLevel;
 
-                /* Set the final process */
-                ReturnCsrProcess = CsrProcess;
-            }
-Next:
-            /* Next process */
-            CsrProcess = CsrProcess->next;
+            /* Set the final process */
+            ReturnCsrProcess = CsrProcess;
         }
     }
     
@@ -306,28 +305,27 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
     PCSR_PROCESS CsrProcess = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     BOOLEAN FirstTry;
+    PLIST_ENTRY NextEntry;
     ULONG Result = 0;
-    ULONG Hash;
 
     /* Acquire process lock */
     CsrAcquireProcessLock();
-
-    /* Start the loop */
-    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    
+    /* Get the list pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
     {
         /* Get the Process */
-        CsrProcess = ProcessData[Hash];
-        while (CsrProcess)
-        {
-           /* Remove the skip flag, set shutdown flags to 0*/
-            CsrProcess->Flags &= ~CsrProcessSkipShutdown;
-            CsrProcess->ShutdownFlags = 0;
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
 
-            /* Move to the next */
-            CsrProcess = CsrProcess->next;
-        }
+        /* Remove the skip flag, set shutdown flags to 0*/
+        CsrProcess->Flags &= ~CsrProcessSkipShutdown;
+        CsrProcess->ShutdownFlags = 0;
+
+        /* Move to the next */
+        NextEntry = NextEntry->Flink;
     }
-
+    
     /* Set shudown Priority */
     CsrSetToShutdownPriority();
 
@@ -385,48 +383,6 @@ LoopAgain:
 Quickie:
     /* Return to normal priority */
     CsrSetToNormalPriority();
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-CsrLockProcessByClientId(IN HANDLE Pid,
-                         OUT PCSR_PROCESS *CsrProcess OPTIONAL)
-{
-    ULONG Hash;
-    PCSR_PROCESS CurrentProcess = NULL;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
-
-    /* Acquire the lock */
-    CsrAcquireProcessLock();
-
-    /* Start the loop */
-    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
-    {
-        /* Get the Process */
-        CurrentProcess = ProcessData[Hash];
-        while (CurrentProcess)
-        {
-            /* Check for PID match */
-            if (CurrentProcess->ClientId.UniqueProcess == Pid)
-            {
-                /* Get out of here with success */
-//                DPRINT1("Found %p for PID %lx\n", CurrentProcess, Pid);
-                Status = STATUS_SUCCESS;
-                goto Found;
-            }
-            
-            /* Move to the next */
-            CurrentProcess = CurrentProcess->next;
-        }
-    }
-    
-    /* Nothing found, release the lock */
-Found:
-    if (!CurrentProcess) CsrReleaseProcessLock();
-
-    /* Return the status and process */
-    if (CsrProcess) *CsrProcess = CurrentProcess;
     return Status;
 }
 

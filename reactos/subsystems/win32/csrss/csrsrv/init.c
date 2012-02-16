@@ -1117,6 +1117,15 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
+    /* Set up Process Support */
+    Status = CsrInitializeProcessStructure();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
     /* Parse the command line */
     Status = CsrParseServerCommandLine(ArgumentCount, Arguments);
     if (!NT_SUCCESS(Status))
@@ -1125,8 +1134,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
-
-    CsrInitProcessData();
 
     Status = CsrApiRegisterDefinitions(NativeDefinitions);
     if (!NT_SUCCESS(Status))
