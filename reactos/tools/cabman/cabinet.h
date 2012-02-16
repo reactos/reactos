@@ -16,9 +16,6 @@
 #include <time.h>
 #include <typedefs.h>
 #include <unistd.h>
-#ifndef MAX_PATH
-#define MAX_PATH 260
-#endif
 #endif
 
 #include <stdlib.h>
@@ -303,7 +300,7 @@ public:
     ULONG ReadBlock(PCFDATA Data, void* Buffer, PULONG BytesRead);
     ULONG WriteBlock(PCFDATA Data, void* Buffer, PULONG BytesWritten);
 private:
-    char FullName[MAX_PATH];
+    char FullName[PATH_MAX];
     bool FileCreated;
     FILEHANDLE FileHandle;
 };
@@ -449,8 +446,8 @@ private:
     ULONG FolderUncompSize;     // Uncompressed size of folder
     ULONG BytesLeftInBlock;     // Number of bytes left in current block
     bool ReuseBlock;
-    char DestPath[MAX_PATH];
-    char CabinetReservedFile[MAX_PATH];
+    char DestPath[PATH_MAX];
+    char CabinetReservedFile[PATH_MAX];
     void* CabinetReservedFileBuffer;
     ULONG CabinetReservedFileSize;
     FILEHANDLE FileHandle;
