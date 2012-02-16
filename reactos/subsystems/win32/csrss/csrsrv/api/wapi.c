@@ -172,8 +172,8 @@ CsrApiPortInitialize(VOID)
     /* Create the Port Object */
     Status = NtCreatePort(&hApiPort, //&CsrApiPort,
                           &ObjectAttributes,
-                          sizeof(CSR_CONNECTION_INFO),
-                          sizeof(CSR_API_MESSAGE),
+                          LPC_MAX_DATA_LENGTH, // hack
+                          LPC_MAX_MESSAGE_LENGTH, // hack
                           16 * PAGE_SIZE);
     if (NT_SUCCESS(Status))
     {
