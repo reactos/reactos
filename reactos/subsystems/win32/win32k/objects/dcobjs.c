@@ -263,7 +263,7 @@ NtGdiSelectBitmap(
     PDC pdc;
     PDC_ATTR pdcattr;
     HBITMAP hbmpOld;
-    PSURFACE psurfNew;
+    PSURFACE psurfNew, psurfOld;
     HRGN hVisRgn;
     SIZEL sizlBitmap = {1, 1};
     HDC hdcOld;
@@ -287,17 +287,8 @@ NtGdiSelectBitmap(
         return NULL;
     }
 
-    /* Check if there was a bitmap selected before */
-    if (pdc->dclevel.pSurface)
-    {
-        /* Return its handle */
-        hbmpOld = pdc->dclevel.pSurface->BaseObject.hHmgr;
-    }
-    else
-    {
-        /* Return default bitmap */
-        hbmpOld = StockObjects[DEFAULT_BITMAP];
-    }
+    /* Save the old bitmap */
+    psurfOld = pdc->dclevel.pSurface;
 
     /* Check if the default bitmap was passed */
     if (hbmp == StockObjects[DEFAULT_BITMAP])
@@ -342,14 +333,26 @@ NtGdiSelectBitmap(
         }
     }
 
-    /* Select the new surface, release the old */
-    DC_vSelectSurface(pdc, psurfNew);
+    /* Select the new bitmap */
+    pdc->dclevel.pSurface = psurfNew;
 
-    /* Set the new size */
-    pdc->dclevel.sizl = sizlBitmap;
+    /* Check if there was a bitmap selected before */
+    if (psurfOld)
+    {
+        /* Get the old bitmap's handle */
+        hbmpOld = psurfOld->BaseObject.hHmgr;
 
-    /* Release one reference we added */
-    SURFACE_ShareUnlockSurface(psurfNew);
+        /* Reset hdc of the old bitmap,it isn't selected anymore */
+        psurfOld->hdc = NULL;
+
+        /* Dereference the old bitmap */
+        SURFACE_ShareUnlockSurface(psurfOld);
+    }
+    else
+    {
+        /* Return default bitmap */
+        hbmpOld = StockObjects[DEFAULT_BITMAP];
+    }
 
     /* Mark the dc brushes invalid */
     pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
