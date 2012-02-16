@@ -1757,7 +1757,7 @@ CHubController::HandleSyncResetAndClearStall(
         //
         // failed
         //
-        DPRINT1("[USBEHCI] failed to reset pipe %x\n", Status)
+        DPRINT1("[USBEHCI] failed to reset pipe %x\n", Status);
     }
  
 
