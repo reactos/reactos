@@ -71,7 +71,7 @@ CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll)
 {
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = 0;
-    LoadedServerDll->HighestApiSupported = 5;
+    LoadedServerDll->HighestApiSupported = CsrpMaxApiNumber;
     LoadedServerDll->DispatchTable = CsrServerApiDispatchTable;
     LoadedServerDll->ValidTable = CsrServerApiServerValidTable;
     LoadedServerDll->NameTable = CsrServerApiNameTable;

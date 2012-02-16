@@ -783,11 +783,11 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
                 return Status;
             }
 
-            /* Load us */
+            /* Hackito ergo sum */
             BasepFakeStaticServerData();
-            #if 0
+
+            /* Load us */
             Status = CsrLoadServerDll("CSRSS", NULL, CSR_SRV_SERVER);
-            #endif
         }
         else if (!_stricmp(ParameterName, "ServerDLL"))
         {

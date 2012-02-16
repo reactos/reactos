@@ -385,6 +385,12 @@ CsrSrvSetPriorityClass(
     IN OUT PULONG Reply
 );
 
+NTSTATUS
+NTAPI
+CsrLoadServerDll(IN PCHAR DllString,
+                 IN PCHAR EntryPoint OPTIONAL,
+                 IN ULONG ServerId);
+                 
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);
 
