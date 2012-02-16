@@ -235,6 +235,12 @@ extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
 extern PCSR_PROCESS CsrRootProcess;
 extern RTL_CRITICAL_SECTION ProcessDataLock, CsrWaitListsLock;
+extern UNICODE_STRING CsrDirectoryName;
+extern ULONG CsrDebug;
+
+NTSTATUS
+NTAPI
+CsrApiPortInitialize(VOID);
 
 BOOLEAN
 NTAPI

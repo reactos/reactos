@@ -176,57 +176,6 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     { 0, 0, NULL }
   };
 
-static NTSTATUS WINAPI
-CsrpCreateListenPort (IN     LPWSTR  Name,
-		      IN OUT PHANDLE Port,
-		      IN     PTHREAD_START_ROUTINE ListenThread)
-{
-	NTSTATUS           Status = STATUS_SUCCESS;
-	OBJECT_ATTRIBUTES  PortAttributes;
-	UNICODE_STRING     PortName;
-    HANDLE ServerThread;
-    CLIENT_ID ClientId;
-
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	RtlInitUnicodeString (& PortName, Name);
-	InitializeObjectAttributes (& PortAttributes,
-				    & PortName,
-				    0,
-				    NULL,
-				    NULL);
-	Status = NtCreatePort ( Port,
-				& PortAttributes,
-				sizeof(SB_CONNECTION_INFO),
-				sizeof(SB_API_MSG),
-				32 * sizeof(SB_API_MSG));
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT1("CSR: %s: NtCreatePort failed (Status=%08lx)\n",
-			__FUNCTION__, Status);
-		return Status;
-	}
-	Status = RtlCreateUserThread(NtCurrentProcess(),
-                               NULL,
-                               TRUE,
-                               0,
-                               0,
-                               0,
-                               (PTHREAD_START_ROUTINE) ListenThread,
-                               *Port,
-                               &ServerThread,
-                               &ClientId);
-
-    if (ListenThread == (PVOID)ClientConnectionThread)
-    {
-        CsrAddStaticServerThread(ServerThread, &ClientId, 0);
-    }
-
-    NtResumeThread(ServerThread, NULL);
-    NtClose(ServerThread);
-	return Status;
-}
-
 /* === INIT ROUTINES === */
 
 VOID
@@ -1150,10 +1099,13 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrApiRegisterDefinitions", Status);
     }
 
-    Status = CsrpCreateListenPort(L"\\Windows\\ApiPort", &hApiPort, (PTHREAD_START_ROUTINE)ClientConnectionThread);
+    /* Now initialize our API Port */
+    Status = CsrApiPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrpCreateApiPort", Status);
+        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
     }
 
     Status = CsrpInitWin32Csr();
