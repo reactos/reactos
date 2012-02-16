@@ -119,10 +119,10 @@ StringOut(const string& String)
         /* Try to print whole lines but obey the 512 bytes chunk size limit*/
         if(NewString[curr_pos - 1] == '\n' || (curr_pos - start) == DBGPRINT_BUFSIZE)
         {
-            if((curr_pos - start) > DBGPRINT_BUFSIZE || NewString[curr_pos - 1] != '\n')
+            if((curr_pos - start) >= DBGPRINT_BUFSIZE)
             {
-                /* No newlines, print what we have and start over*/
-                if(NewString[curr_pos - 1] != '\n')
+                /* No newlines so far, or the string just fits */
+                if(last_newline <= start || (curr_pos - start) == DBGPRINT_BUFSIZE)
                 {
                     size = curr_pos - start;
                     memcpy(DbgString, NewString.c_str() + start, size);
