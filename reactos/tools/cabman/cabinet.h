@@ -23,6 +23,10 @@
 #include <string.h>
 #include <limits.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+
 #if defined(_WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
