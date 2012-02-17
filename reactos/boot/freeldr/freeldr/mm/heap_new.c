@@ -39,8 +39,8 @@ PVOID FrLdrTempHeap;
 
 typedef struct _BLOCK_DATA
 {
-    ULONG_PTR Flink;
-    ULONG_PTR Blink;
+    ULONG_PTR Flink:32;
+    ULONG_PTR Blink:32;
 } BLOCK_DATA, *PBLOCK_DATA;
 
 typedef struct _HEAP_BLOCK
