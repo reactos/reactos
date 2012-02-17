@@ -418,3 +418,100 @@ USBSTOR_ResetDevice(
     return Status;
 
 }
+
+BOOLEAN
+USBSTOR_IsFloppy(
+    IN PUCHAR Buffer,
+    IN ULONG BufferLength,
+    OUT PUCHAR MediumTypeCode)
+{
+    PUFI_CAPACITY_FORMAT_HEADER FormatHeader;
+    PUFI_CAPACITY_DESCRIPTOR Descriptor;
+    ULONG Length, Index, BlockCount, BlockLength;
+
+    //
+    // get format header
+    //
+    FormatHeader = (PUFI_CAPACITY_FORMAT_HEADER)Buffer;
+
+    //
+    // sanity checks
+    //
+    ASSERT(FormatHeader->Reserved1 == 0x00);
+    ASSERT(FormatHeader->Reserved2 == 0x00);
+    ASSERT(FormatHeader->Reserved3 == 0x00);
+
+    //
+    // is there capacity data
+    //
+    if (!FormatHeader->CapacityLength)
+    {
+        //
+        // no data provided
+        //
+        DPRINT1("[USBSTOR] No capacity length\n");
+        return FALSE;
+    }
+
+    //
+    // the format header are always 8 bytes in length
+    //
+    ASSERT((FormatHeader->CapacityLength & 0x7) == 0);
+    DPRINT1("CapacityLength %x\n", FormatHeader->CapacityLength);
+
+    //
+    // grab length and locate first descriptor
+    //
+    Length = FormatHeader->CapacityLength;
+    Descriptor = (PUFI_CAPACITY_DESCRIPTOR)(FormatHeader + 1);
+    for(Index = 0; Index < Length / sizeof(UFI_CAPACITY_DESCRIPTOR); Index++)
+    {
+        //
+        // blocks are little endian format
+        //
+        BlockCount = NTOHL(Descriptor->BlockCount);
+
+        //
+        // get block length
+        //
+        BlockLength = NTOHL((Descriptor->BlockLengthByte0 << 24 | Descriptor->BlockLengthByte1 << 16 | Descriptor->BlockLengthByte2 << 8));
+
+        DPRINT1("BlockCount %x BlockLength %x Code %x\n", BlockCount, BlockLength, Descriptor->Code);
+
+        if (BlockLength == 512 && BlockCount == 1440)
+        {
+            //
+            // 720 KB DD
+            //
+            *MediumTypeCode = 0x1E;
+            return TRUE;
+        }
+        else if (BlockLength == 1024 && BlockCount == 1232)
+        {
+            //
+            // 1,25 MB
+            //
+            *MediumTypeCode = 0x93;
+            return TRUE;
+        }
+        else if (BlockLength == 512 && BlockCount == 2880)
+        {
+            //
+            // 1,44MB KB DD
+            //
+            *MediumTypeCode = 0x94;
+            return TRUE;
+        }
+
+        //
+        // move to next descriptor
+        //
+        Descriptor = (Descriptor + 1);
+    }
+
+    //
+    // no floppy detected
+    //
+    return FALSE;
+}
+

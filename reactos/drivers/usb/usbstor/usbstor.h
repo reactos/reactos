@@ -68,6 +68,9 @@ typedef struct
     ULONG IrpPendingCount;                                                               // count of irp pending
     PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
     KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
+    PSCSI_REQUEST_BLOCK LastTimerActiveSrb;                                              // last timer tick active srb
+    ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
+    ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -76,10 +79,14 @@ typedef struct
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
     PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    PUCHAR FormatData;                                                                   // USB SCSI Read Format Capacity Data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
     ULONG LastLogicBlockAddress;                                                         // last block address
     PDEVICE_OBJECT *PDODeviceObject;                                                     // entry in pdo list
+    PDEVICE_OBJECT Self;                                                                 // self
+    UCHAR MediumTypeCode;                                                                // floppy medium type code
+    UCHAR IsFloppy;                                                                      // is device floppy
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 //
@@ -250,6 +257,51 @@ C_ASSERT(sizeof(UFI_TIMER_PROTECT_PAGE) == 8);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
+// UFI read capacity cmd
+//
+
+typedef struct
+{
+    UCHAR Code;
+    UCHAR LUN;
+    UCHAR Reserved[5];
+    UCHAR AllocationLengthMsb;
+    UCHAR AllocationLengthLsb;
+    UCHAR Reserved1[3];
+}UFI_READ_FORMAT_CAPACITY, *PUFI_READ_FORMAT_CAPACITY;
+
+C_ASSERT(sizeof(UFI_READ_FORMAT_CAPACITY) == 12);
+
+#define UFI_READ_FORMAT_CAPACITY_CMD_LEN (10)
+
+typedef struct
+{
+    UCHAR Reserved1;
+    UCHAR Reserved2;
+    UCHAR Reserved3;
+    UCHAR CapacityLength;
+}UFI_CAPACITY_FORMAT_HEADER, *PUFI_CAPACITY_FORMAT_HEADER;
+
+C_ASSERT(sizeof(UFI_CAPACITY_FORMAT_HEADER) == 4);
+
+typedef struct
+{
+    ULONG BlockCount;
+    UCHAR Code;
+    UCHAR BlockLengthByte0;
+    UCHAR BlockLengthByte1;
+    UCHAR BlockLengthByte2;
+}UFI_CAPACITY_DESCRIPTOR, *PUFI_CAPACITY_DESCRIPTOR;
+
+#define UNFORMATED_MEDIA_CODE_DESCRIPTORY_TYPE (1)
+#define FORMAT_MEDIA_CODE_DESCRIPTOR_TYPE      (2)
+#define CARTRIDGE_MEDIA_CODE_DESCRIPTOR_TYPE   (3)
+
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
 // UFI test unit command
 //
 
@@ -280,6 +332,7 @@ typedef struct
     PMDL TransferBufferMDL;
     PKEVENT Event;
     ULONG ErrorIndex;
+    ULONG RetryCount;
 }IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
@@ -361,6 +414,12 @@ USBSTOR_ResetDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension);
 
+BOOLEAN
+USBSTOR_IsFloppy(
+    IN PUCHAR Buffer,
+    IN ULONG BufferLength,
+    OUT PUCHAR MediumTypeCode);
+
 //---------------------------------------------------------------------
 //
 // descriptor.c routines
@@ -386,11 +445,20 @@ USBSTOR_GetPipeHandles(
 NTSTATUS
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
+    IN PIRP Irp,
+    IN ULONG RetryCount);
 
 NTSTATUS
 USBSTOR_SendInquiryCmd(
-    IN PDEVICE_OBJECT DeviceObject);
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG RetryCount);
+
+NTSTATUS
+USBSTOR_SendFormatCapacity(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG RetryCount);
+
+
 
 NTSTATUS
 NTAPI
@@ -398,6 +466,17 @@ USBSTOR_CSWCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp, 
     PVOID Ctx);
+
+NTSTATUS
+USBSTOR_SendCBW(
+    PIRP_CONTEXT Context,
+    PIRP Irp);
+
+VOID
+USBSTOR_SendCSW(
+    PIRP_CONTEXT Context,
+    PIRP Irp);
+
 
 //---------------------------------------------------------------------
 //
@@ -478,4 +557,10 @@ NTSTATUS
 USBSTOR_ResetPipeWithHandle(
     IN PDEVICE_OBJECT DeviceObject,
     IN USBD_PIPE_HANDLE PipeHandle);
+
+VOID
+NTAPI
+USBSTOR_TimerRoutine(
+    PDEVICE_OBJECT DeviceObject,
+     PVOID Context);
 

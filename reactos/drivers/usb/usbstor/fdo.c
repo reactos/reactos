@@ -300,6 +300,13 @@ USBSTOR_FdoHandleStartDevice(
     }
 #endif
 
+
+    //
+    // start the timer
+    //
+    //IoStartTimer(DeviceObject);
+
+
     //
     // fdo is now initialized
     //
@@ -341,8 +348,14 @@ USBSTOR_FdoHandlePnp(
        case IRP_MN_STOP_DEVICE:
        {
            DPRINT1("USBSTOR_FdoHandlePnp: IRP_MN_STOP_DEVICE unimplemented\n");
-           Status = STATUS_NOT_SUPPORTED;
-           break;
+           IoStopTimer(DeviceObject);
+           Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
        }
        case IRP_MN_REMOVE_DEVICE:
        {

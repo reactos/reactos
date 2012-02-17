@@ -660,7 +660,7 @@ USBSTOR_StartIo(
     //
     // execute scsi
     //
-    Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
+    Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp, 0);
 
     //
     // FIXME: handle error

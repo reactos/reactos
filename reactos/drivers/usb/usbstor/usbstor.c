@@ -60,6 +60,11 @@ USBSTOR_AddDevice(
     DeviceExtension->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
 
     //
+    // init timer
+    //
+    IoInitializeTimer(DeviceObject, USBSTOR_TimerRoutine, (PVOID)DeviceExtension);
+
+    //
     // did attaching fail
     //
     if (!DeviceExtension->LowerDeviceObject)

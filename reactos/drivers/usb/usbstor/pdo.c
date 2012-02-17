@@ -13,19 +13,24 @@
 
 LPCSTR
 USBSTOR_GetDeviceType(
-    IN PUFI_INQUIRY_RESPONSE InquiryData)
+    IN PUFI_INQUIRY_RESPONSE InquiryData,
+    IN UCHAR IsFloppy)
 {
     //
     // check if device type is zero
     //
     if (InquiryData->DeviceType == 0)
     {
-        //
-        // direct access device
-        //
+        if (IsFloppy)
+        {
+            //
+            // floppy device
+            //
+            return "SFloppy";
+        }
 
         //
-        // FIXME: check if floppy
+        // direct access device
         //
         return "Disk";
     }
@@ -82,19 +87,24 @@ USBSTOR_GetDeviceType(
 
 LPCSTR
 USBSTOR_GetGenericType(
-    IN PUFI_INQUIRY_RESPONSE InquiryData)
+    IN PUFI_INQUIRY_RESPONSE InquiryData,
+    IN UCHAR IsFloppy)
 {
     //
     // check if device type is zero
     //
     if (InquiryData->DeviceType == 0)
     {
-        //
-        // direct access device
-        //
+        if (IsFloppy)
+        {
+            //
+            // floppy device
+            //
+            return "GenSFloppy";
+        }
 
         //
-        // FIXME: check if floppy
+        // direct access device
         //
         return "GenDisk";
     }
@@ -286,7 +296,7 @@ USBSTOR_PdoHandleQueryDeviceId(
     //
     // get device type
     //
-    DeviceType = USBSTOR_GetDeviceType(InquiryData);
+    DeviceType = USBSTOR_GetDeviceType(InquiryData, DeviceExtension->IsFloppy);
 
     //
     // zero buffer
@@ -434,8 +444,8 @@ USBSTOR_PdoHandleQueryHardwareId(
     //
     // get device type and generic type
     //
-    DeviceType = USBSTOR_GetDeviceType(InquiryData);
-    GenericType = USBSTOR_GetGenericType(InquiryData);
+    DeviceType = USBSTOR_GetDeviceType(InquiryData, PDODeviceExtension->IsFloppy);
+    GenericType = USBSTOR_GetGenericType(InquiryData, PDODeviceExtension->IsFloppy);
 
     ASSERT(GenericType);
 
@@ -590,7 +600,7 @@ USBSTOR_PdoHandleQueryCompatibleId(
     //
     // get target device type
     //
-    DeviceType = USBSTOR_GetDeviceType((PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData);
+    DeviceType = USBSTOR_GetDeviceType((PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData, PDODeviceExtension->IsFloppy);
 
     //
     // zero memory
@@ -984,6 +994,7 @@ USBSTOR_CreatePDO(
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->LowerDeviceObject = DeviceObject;
     PDODeviceExtension->PDODeviceObject = ChildDeviceObject;
+    PDODeviceExtension->Self = PDO;
 
     //
     // set device flags
@@ -1000,7 +1011,24 @@ USBSTOR_CreatePDO(
     //
     *ChildDeviceObject = PDO;
 
-    USBSTOR_SendInquiryCmd(PDO);
+    //
+    // send inquiry command
+    //
+    USBSTOR_SendInquiryCmd(PDO, 0);
+
+    //
+    // retrieve format capacity
+    //
+    if (NT_SUCCESS(USBSTOR_SendFormatCapacity(PDO, 0)))
+    {
+        //
+        // check if its a floppy
+        //
+        PDODeviceExtension->IsFloppy = USBSTOR_IsFloppy(PDODeviceExtension->FormatData, PAGE_SIZE /*FIXME*/, &PDODeviceExtension->MediumTypeCode);
+        DPRINT1("[USBSTOR] IsFloppy %x MediumTypeCode %x\n", PDODeviceExtension->IsFloppy, PDODeviceExtension->MediumTypeCode);
+    }
+
+
 
     //
     // done
