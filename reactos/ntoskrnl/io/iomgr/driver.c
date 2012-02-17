@@ -422,6 +422,10 @@ IopLoadServiceModule(
    return Status;
 }
 
+VOID
+NTAPI
+MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+
 /*
  * IopInitializeDriverModule
  *
@@ -513,6 +517,8 @@ IopInitializeDriverModule(
       DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
       return Status;
    }
+   
+   MmFreeDriverInitialization((PLDR_DATA_TABLE_ENTRY)Driver->DriverSection);
 
    /* Set the driver as initialized */
    IopReadyDeviceObjects(Driver);
