@@ -977,20 +977,9 @@ CUSBHardwareDevice::ResetPort(
     EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
 
     //
-    // delay is 20 ms for port reset as per USB 2.0 spec
+    // Wait for reset to start
     //
-    Timeout.QuadPart = 20;
-    DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
-
-    //
-    // convert to 100 ns units (absolute)
-    //
-    Timeout.QuadPart *= -10000;
-
-    //
-    // perform the wait
-    //
-    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+    KeStallExecutionProcessor(100);
 
     //
     // Clear reset
@@ -1042,13 +1031,24 @@ CUSBHardwareDevice::ResetPort(
     }
 
     //
-    // this must be enabled now
+    // this will be enabled now since we're high-speed
     //
-    if (PortStatus & EHCI_PRT_ENABLED)
+    do
     {
-        DPRINT1("Port is not enabled after reset\n");
-        //ASSERT(FALSE);
-    }
+        //
+        // wait
+        //
+        KeStallExecutionProcessor(100);
+
+        //
+        // Check that the port is enabled
+        //
+        PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+        if (PortStatus & EHCI_PRT_ENABLED)
+            break;
+    } while (TRUE);
+
+    DPRINT1("Port is back up after reset\n");
 
     return STATUS_SUCCESS;
 }
@@ -1143,6 +1143,13 @@ CUSBHardwareDevice::ClearPortStatus(
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
 
+    //
+    // reset status change bits
+    //
+    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+    Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
+    EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
     if (Status == C_PORT_RESET)
     {
         //
@@ -1151,16 +1158,9 @@ CUSBHardwareDevice::ClearPortStatus(
         m_ResetInProgress[PortId] = FALSE;
     }
 
-    if (Status == C_PORT_CONNECTION)
+    if (Status == C_PORT_CONNECTION && (Value & EHCI_PRT_CONNECTED))
     {
         LARGE_INTEGER Timeout;
-
-        //
-        // reset status change bits
-        //
-        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-        Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
 
         //
         // delay is 100 ms

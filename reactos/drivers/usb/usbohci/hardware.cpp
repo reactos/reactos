@@ -1193,7 +1193,6 @@ CUSBHardwareDevice::ClearPortStatus(
         return STATUS_UNSUCCESSFUL;
 
     Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
-    KeStallExecutionProcessor(100);
 
     if (Status == C_PORT_RESET)
     {
@@ -1223,7 +1222,7 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // wait for port to stabilize
         //
-        if (Status == C_PORT_CONNECTION)
+        if (Status == C_PORT_CONNECTION && (Value & OHCI_RH_PORTSTATUS_CCS))
         {
             LARGE_INTEGER Timeout;
 
@@ -1248,6 +1247,7 @@ CUSBHardwareDevice::ClearPortStatus(
     //
     // re-enable root hub change
     //
+    DPRINT1("Enabling status change\n");
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
 
     return STATUS_SUCCESS;
@@ -1324,8 +1324,6 @@ CUSBHardwareDevice::SetPortFeature(
     }
     else if (Feature == PORT_RESET)
     {
-        LARGE_INTEGER Timeout;
-
         //
         // assert
         //
@@ -1343,7 +1341,8 @@ CUSBHardwareDevice::SetPortFeature(
            //
            Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
 
-           if ((Value & OHCI_RH_PORTSTATUS_PRS)  == 0)
+           if ((Value & OHCI_RH_PORTSTATUS_PRS) == 0 &&
+               (Value & OHCI_RH_PORTSTATUS_PRSC) != 0)
            {
                //
                // reset is complete
@@ -1357,32 +1356,6 @@ CUSBHardwareDevice::SetPortFeature(
            KeStallExecutionProcessor(100);
         }while(TRUE);
 
-        //
-        // delay is 10 ms
-        //
-        Timeout.QuadPart = 10;
-        DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
-        
-        //
-        // convert to 100 ns units (absolute)
-        //
-        Timeout.QuadPart *= -10000;
-        
-        //
-        // perform the wait
-        //
-        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-
-        //
-        // is there a status change callback
-        //
-        if (m_SCECallBack != NULL)
-        {
-            //
-            // issue callback
-            //
-            m_SCECallBack(m_SCEContext);
-        }
         return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
@@ -1552,6 +1525,7 @@ InterruptServiceRoutine(
         //
         // disable interrupt as it will fire untill the port has been reset
         //
+        DPRINT1("Disabling status change interrupt\n");
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_DISABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
         Acknowledge |= OHCI_ROOT_HUB_STATUS_CHANGE;
     }
@@ -1650,6 +1624,18 @@ OhciDefferedRoutine(
 
                 //
                 // work to do
+                //
+                QueueSCEWorkItem = TRUE;
+            }
+            else if (PortStatus & OHCI_RH_PORTSTATUS_PRSC)
+            {
+                //
+                // This is a port reset complete interrupt
+                //
+                DPRINT1("Port %d completed reset\n", Index);
+
+                //
+                // Queue a work item
                 //
                 QueueSCEWorkItem = TRUE;
             }
