@@ -54,7 +54,7 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCSR_PROCESS ProcessData,
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
                                         HANDLE Object);
-NTSTATUS WINAPI Win32CsrReleaseConsole(PCSR_PROCESS ProcessData);
+ULONG WINAPI Win32CsrReleaseConsole(PCSR_PROCESS ProcessData, ULONG Flags, BOOLEAN First);
 NTSTATUS WINAPI Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
                                              PCSR_PROCESS TargetProcessData);
 CSR_API(CsrGetHandle);

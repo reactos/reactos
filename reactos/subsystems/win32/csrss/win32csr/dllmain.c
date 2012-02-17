@@ -21,7 +21,6 @@ extern RTL_CRITICAL_SECTION Win32CsrDefineDosDeviceCritSec;
 
 HANDLE Win32CsrApiHeap;
 HINSTANCE Win32CsrDllHandle = NULL;
-static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
 {
@@ -306,13 +305,7 @@ NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {
-    return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
-}
-
-static BOOL WINAPI
-Win32CsrInitComplete(void)
-{
-    return TRUE;
+    return CsrEnumProcesses(EnumProc, Context);
 }
 
 VOID
@@ -331,18 +324,20 @@ CreateSystemThreads(PVOID pParam)
     return 0;
 }
 
-BOOL WINAPI
+NTSTATUS
+WINAPI
+#if 0
+Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
+#else
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
-                       PCSRPLUGIN_SERVER_PROCS ServerProcs,
-                       PCSRSS_EXPORTED_FUNCS Exports,
-                       HANDLE CsrHeap)
+                       PCSRPLUGIN_SERVER_PROCS ServerProcs)
+#endif
 {
     HANDLE ServerThread;
     CLIENT_ID ClientId;
     NTSTATUS Status;
 
-    CsrExports = *Exports;
-    Win32CsrApiHeap = CsrHeap;
+    Win32CsrApiHeap = RtlGetProcessHeap();
     
     CsrpInitVideo();
 
@@ -351,11 +346,20 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     PrivateCsrssManualGuiCheck(0);
     CsrInitConsoleSupport();
 
+    /* HACK */
+#if 0
+    ServerDll->DispatchTable = (PVOID)Win32CsrApiDefinitions;
+    ServerDll->HighestApiSupported = 0xDEADBABE;
+    
+    ServerDll->HardErrorCallback = Win32CsrHardError;
+    ServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
+    ServerDll->ShutdownProcessCallback = Win32CsrReleaseConsole;
+#else
     *ApiDefinitions = Win32CsrApiDefinitions;
-    ServerProcs->InitCompleteProc = Win32CsrInitComplete;
     ServerProcs->HardErrorProc = Win32CsrHardError;
     ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
     ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
+#endif
 
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);

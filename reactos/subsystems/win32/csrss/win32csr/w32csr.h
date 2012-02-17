@@ -23,10 +23,10 @@
 /* shared header with console.dll */
 #include "console.h"
 
-BOOL
+VOID
 WINAPI
 Win32CsrHardError(
-    IN PCSR_PROCESS ProcessData,
+    IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message);
 
 /* EOF */

@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
     
-extern NTSTATUS CallProcessInherit(PCSR_PROCESS, PCSR_PROCESS);
+extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS);
 extern NTSTATUS CallProcessDeleted(PCSR_PROCESS);
 
 /* GLOBALS *******************************************************************/
@@ -154,11 +154,9 @@ CSR_API(CsrCreateProcess)
      {
        NewProcessData->ParentConsole = ProcessData->Console;
        NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
-       if (Request->Data.CreateProcessRequest.bInheritHandles)
-         {
-           CallProcessInherit(ProcessData, NewProcessData);
-         }
      }
+     
+     CallProcessCreated(ProcessData, NewProcessData);
 
    if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_PROCESS_GROUP)
      {

@@ -132,10 +132,10 @@ Win32CsrUnlockObject(Object_t *Object)
         ConioDeleteConsole(&Console->Header);
 }
 
-NTSTATUS
+ULONG
 WINAPI
 Win32CsrReleaseConsole(
-    PCSR_PROCESS ProcessData)
+    PCSR_PROCESS ProcessData, ULONG Flags, BOOLEAN First)
 {
     PCSRSS_CONSOLE Console;
     ULONG i;
@@ -161,10 +161,10 @@ Win32CsrReleaseConsole(
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_SUCCESS;
+        return 0;
     }
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return STATUS_INVALID_PARAMETER;
+    return -1;
 }
 
 NTSTATUS
@@ -223,6 +223,9 @@ Win32CsrDuplicateHandleTable(
     PCSR_PROCESS TargetProcessData)
 {
     ULONG i;
+    
+    /* Only inherit if the flag was set */
+    if (!TargetProcessData->bInheritHandles) return STATUS_SUCCESS;
 
     if (TargetProcessData->HandleTableSize)
     {

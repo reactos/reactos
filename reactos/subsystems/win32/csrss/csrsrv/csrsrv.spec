@@ -12,6 +12,7 @@
 ;@ stdcall CsrDereferenceWait(ptr)
 ;@ stdcall CsrDestroyProcess(ptr long)
 ;@ stdcall CsrDestroyThread(ptr)
+@ stdcall CsrEnumProcesses(ptr ptr) ; Temporary hack
 ;@ stdcall CsrExecServerThread(ptr long)
 @ stdcall CsrGetProcessLuid(ptr ptr)
 @ stdcall CsrImpersonateClient(ptr)

@@ -312,6 +312,7 @@ extern SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 extern PVOID CsrSrvSharedSectionHeap;
 extern PVOID *CsrSrvSharedStaticServerData;
 extern HANDLE CsrInitializationEvent;
+extern PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
 
 NTSTATUS
 NTAPI

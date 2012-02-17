@@ -64,26 +64,22 @@ CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
   return STATUS_SUCCESS;
 }
 
-BOOL
-CallHardError(IN PCSR_PROCESS ProcessData,
+VOID
+CallHardError(IN PCSR_THREAD ThreadData,
               IN PHARDERROR_MSG HardErrorMessage)
 {
-    BOOL Ok;
     unsigned i;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    Ok = TRUE;
-    for (i = 0; i < ServerProcCount && Ok; i++)
+    for (i = 0; i < ServerProcCount; i++)
     {
-        Ok = (*ServerProcs[i].HardErrorProc)(ProcessData, HardErrorMessage);
+        ServerProcs[i].HardErrorProc(ThreadData, HardErrorMessage);
     }
-
-    return Ok;
 }
 
 NTSTATUS
-CallProcessInherit(IN PCSR_PROCESS SourceProcessData,
+CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
                    IN PCSR_PROCESS TargetProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -91,8 +87,11 @@ CallProcessInherit(IN PCSR_PROCESS SourceProcessData,
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
-        Status = (*ServerProcs[i].ProcessInheritProc)(SourceProcessData, TargetProcessData);
+    for (i = 0; i < ServerProcCount; i++)
+    {
+        Status = ServerProcs[i].ProcessInheritProc(SourceProcessData, TargetProcessData);
+        if (!NT_SUCCESS(Status)) break;
+    }
 
     return Status;
 }
@@ -100,15 +99,15 @@ CallProcessInherit(IN PCSR_PROCESS SourceProcessData,
 NTSTATUS
 CallProcessDeleted(IN PCSR_PROCESS ProcessData)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Result = 0;
     unsigned i;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
-        Status = (*ServerProcs[i].ProcessDeletedProc)(ProcessData);
+    for (i = 0; i < ServerProcCount; i++)
+        Result = ServerProcs[i].ProcessDeletedProc(ProcessData, 0, FALSE);
 
-    return Status;
+    return Result;
 }
 
 /**********************************************************************
@@ -131,7 +130,6 @@ CsrpInitWin32Csr (VOID)
   HINSTANCE hInst;
   ANSI_STRING ProcName;
   CSRPLUGIN_INITIALIZE_PROC InitProc;
-  CSRSS_EXPORTED_FUNCS Exports;
   PCSRSS_API_DEFINITION ApiDefinitions;
   CSRPLUGIN_SERVER_PROCS ServerProcs;
 
@@ -149,8 +147,8 @@ CsrpInitWin32Csr (VOID)
     {
       return Status;
     }
-  Exports.CsrEnumProcessesProc = CsrEnumProcesses;
-  if (! (*InitProc)(&ApiDefinitions, &ServerProcs, &Exports, CsrHeap))
+    
+  if (! (*InitProc)(&ApiDefinitions, &ServerProcs))
     {
       return STATUS_UNSUCCESSFUL;
     }

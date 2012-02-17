@@ -500,12 +500,13 @@ CsrpMessageBox(
     return ResponseNotHandled;
 }
 
-BOOL
+VOID
 WINAPI
 Win32CsrHardError(
-    IN PCSR_PROCESS ProcessData,
+    IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message)
 {
+    PCSR_PROCESS ProcessData = ThreadData->Process;
     ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING TextU, CaptionU;
@@ -514,6 +515,7 @@ Win32CsrHardError(
     ULONG Size;
 
     /* Default to not handled */
+    ASSERT(ProcessData != NULL);
     Message->Response = ResponseNotHandled;
 
     /* Make sure we don't have too many parameters */
@@ -532,7 +534,7 @@ Win32CsrHardError(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenProcess failed with code: %lx\n", Status);
-        return FALSE;
+        return;
     }
 
     /* Capture all string parameters from the process memory */
@@ -540,7 +542,7 @@ Win32CsrHardError(
     if (!NT_SUCCESS(Status))
     {
         NtClose(hProcess);
-        return FALSE;
+        return;
     }
 
     /* Format the caption and message box text */
@@ -557,7 +559,7 @@ Win32CsrHardError(
 
     if (!NT_SUCCESS(Status))
     {
-        return FALSE;
+        return;
     }
 
     /* Display the message box */
@@ -569,6 +571,6 @@ Win32CsrHardError(
     RtlFreeUnicodeString(&TextU);
     RtlFreeUnicodeString(&CaptionU);
 
-    return TRUE;
+    return;
 }
 

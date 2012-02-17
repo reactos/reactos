@@ -97,20 +97,20 @@ CsrApiCallHandler(PCSR_PROCESS ProcessData,
   Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
 }
 
-BOOL
-CallHardError(IN PCSR_PROCESS ProcessData,
+VOID
+CallHardError(IN PCSR_THREAD ThreadData,
               IN PHARDERROR_MSG HardErrorMessage);
 
 static
 VOID
 NTAPI
-CsrHandleHardError(IN PCSR_PROCESS ProcessData,
+CsrHandleHardError(IN PCSR_THREAD ThreadData,
                    IN OUT PHARDERROR_MSG Message)
 {
     DPRINT1("CSR: received hard error %lx\n", Message->Status);
 
     /* Call the hard error handler in win32csr */
-    (VOID)CallHardError(ProcessData, Message);
+    CallHardError(ThreadData, Message);
 }
 
 /*++
@@ -935,7 +935,9 @@ ClientConnectionThread(IN PVOID Parameter)
         if (MessageType == LPC_ERROR_EVENT)
         {
             /* Call the Handler */
-            CsrHandleHardError(ProcessData, (PHARDERROR_MSG)Request);
+            PCSR_THREAD Thread;
+            Thread = CsrLocateThreadByClientId(NULL, &Request->Header.ClientId);
+            CsrHandleHardError(Thread, (PHARDERROR_MSG)Request);
         }
         else
         {
