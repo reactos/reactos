@@ -198,62 +198,6 @@ ProtectToPTE(ULONG flProtect)
     return(Attributes);
 }
 
-VOID
-FORCEINLINE
-MmDeletePageDirectoryEntry(PMMPDE PointerPde)
-{
-    KIRQL OldIrql;
-    PMMPFN Page;
-
-    Page = MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber);
-
-    /* This should not be a legacy allocation*/
-    ASSERT(MI_IS_ROS_PFN(Page) == FALSE);
-    
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-    /* Free it using the ARM3 API */
-    MI_SET_PFN_DELETED(Page);
-    MiDecrementShareCount(Page, PointerPde->u.Hard.PageFrameNumber);
-
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-}
-
-VOID
-NTAPI
-MmDeleteProcessPageDirectory(PEPROCESS Process)
-{
-    PMMPDE PdeBase, PointerPde;
-    ULONG PdeOffset;
-    KIRQL OldIrql;
-
-    /* Map the page directory in hyperspace */
-    PdeBase = MiMapPageInHyperSpace(PsGetCurrentProcess(),
-        Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT,
-        &OldIrql);
-
-    /* Loop the user land page directory */
-    for (PdeOffset = 0; PdeOffset < MiGetPdeOffset(MmSystemRangeStart); PdeOffset++)
-    {
-        PointerPde = PdeBase + PdeOffset;
-        /* Check if a valid PDE exists here */
-        if (PointerPde->u.Hard.Valid)
-        {
-            /* Free the page that backs it */
-            MmDeletePageDirectoryEntry(PointerPde);
-        }
-    }
-
-    /* Free the hyperspace mapping page (ARM3) */
-    MmDeletePageDirectoryEntry(PdeBase + MiGetPdeOffset(HYPERSPACE));
-
-    /* Delete the hyperspace mapping */
-    MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PdeBase, OldIrql);
-
-    /* Free the PDE page itself (ARM3) */
-    MmDeletePageDirectoryEntry((PMMPDE)&Process->Pcb.DirectoryTableBase[0]);
-}
-
 /* Taken from ARM3/pagfault.c */
 BOOLEAN
 FORCEINLINE

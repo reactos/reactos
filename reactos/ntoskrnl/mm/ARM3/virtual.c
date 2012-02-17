@@ -264,8 +264,21 @@ MiDeletePte(IN PMMPTE PointerPte,
         /* Drop the share count */
         MiDecrementShareCount(Pfn1, PageFrameIndex);
 
-        /* No fork yet */
-        if (PointerPte <= MiHighestUserPte) ASSERT(PrototypePte == Pfn1->PteAddress);
+        /* Either a fork, or this is the shared user data page */
+        if (PointerPte <= MiHighestUserPte)
+        {
+            /* If it's not the shared user page, then crash, since there's no fork() yet */
+            if ((PAGE_ALIGN(VirtualAddress) != (PVOID)USER_SHARED_DATA) ||
+                 (MmHighestUserAddress <= (PVOID)USER_SHARED_DATA))
+            {
+                /* Must be some sort of memory corruption */
+                KeBugCheckEx(MEMORY_MANAGEMENT,
+                             0x400, 
+                             (ULONG_PTR)PointerPte,
+                             (ULONG_PTR)PrototypePte,
+                             (ULONG_PTR)Pfn1->PteAddress);
+            }
+        }
     }
     else
     {
@@ -284,7 +297,8 @@ MiDeletePte(IN PMMPTE PointerPte,
         ASSERT(Pfn1->u2.ShareCount == 1);
 
         /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
-        //MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+        //DPRINT1("Dropping a ref...\n");
+        MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
 
         /* Mark the PFN for deletion and dereference what should be the last ref */
         MI_SET_PFN_DELETED(Pfn1);
@@ -312,6 +326,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     KIRQL OldIrql;
     BOOLEAN AddressGap = FALSE;
     PSUBSECTION Subsection;
+    PUSHORT UsedPageTableEntries;
 
     /* Get out if this is a fake VAD, RosMm will free the marea pages */
     if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
@@ -368,6 +383,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* Now we should have a valid PDE, mapped in, and still have some VA */
         ASSERT(PointerPde->u.Hard.Valid == 1);
         ASSERT(Va <= EndingAddress);
+        UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Va)];
 
         /* Check if this is a section VAD with gaps in it */
         if ((AddressGap) && (LastPrototypePte))
@@ -397,6 +413,11 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             TempPte = *PointerPte;
             if (TempPte.u.Long)
             {
+                DPRINT("Decrement used PTEs by address: %lx\n", Va);
+                (*UsedPageTableEntries)--;
+                ASSERT((*UsedPageTableEntries) < PTE_COUNT);
+                DPRINT("Refs: %lx\n", (*UsedPageTableEntries));
+                
                 /* Check if the PTE is actually mapped in */
                 if (TempPte.u.Long & 0xFFFFFC01)
                 {
@@ -456,6 +477,22 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* The PDE should still be valid at this point */
         ASSERT(PointerPde->u.Hard.Valid == 1);
 
+        DPRINT("Should check if handles for: %p are zero (PDE: %lx)\n", Va, PointerPde->u.Hard.PageFrameNumber);
+        if (!(*UsedPageTableEntries))
+        {
+            DPRINT("They are!\n");
+            if (PointerPde->u.Long != 0)
+            {
+                DPRINT("PDE active: %lx in %16s\n", PointerPde->u.Hard.PageFrameNumber, CurrentProcess->ImageFileName);
+
+                /* Delete the PTE proper */
+                MiDeletePte(PointerPde,
+                            MiPteToAddress(PointerPde),
+                            CurrentProcess,
+                            NULL);
+            }
+        }
+        
         /* Release the lock and get out if we're done */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         if (Va > EndingAddress) return;

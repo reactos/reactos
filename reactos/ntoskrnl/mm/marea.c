@@ -994,6 +994,10 @@ MmMapMemoryArea(PVOID BaseAddress,
    }
 }
 
+VOID
+NTAPI
+MmDeleteProcessAddressSpace2(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
@@ -1036,11 +1040,10 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
       }
    }
 
-   MmDeleteProcessPageDirectory(Process);
-
    MmUnlockAddressSpace(&Process->Vm);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
+   MmDeleteProcessAddressSpace2(Process);
    return(STATUS_SUCCESS);
 }
 
