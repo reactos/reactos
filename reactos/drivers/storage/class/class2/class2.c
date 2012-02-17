@@ -145,6 +145,7 @@ typedef struct _CLASS_DEVICE_INFO {
 
 typedef struct _CLASS_DRIVER_EXTENSION {
   ULONG PortNumber;
+  UNICODE_STRING RegistryPath;
   CLASS_INIT_DATA InitializationData;
 } CLASS_DRIVER_EXTENSION, *PCLASS_DRIVER_EXTENSION;
 
@@ -353,7 +354,7 @@ ScsiClassAddDevice(
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
 
-    if (DriverExtension->InitializationData.ClassFindDevices(DriverObject, NULL, &DriverExtension->InitializationData,
+    if (DriverExtension->InitializationData.ClassFindDevices(DriverObject, &DriverExtension->RegistryPath, &DriverExtension->InitializationData,
                                                              PhysicalDeviceObject, DriverExtension->PortNumber))
     {
         /* Create a device object */
@@ -440,6 +441,7 @@ Return Value:
     CCHAR           deviceNameBuffer[256];
     BOOLEAN         deviceFound = FALSE;
     PCLASS_DRIVER_EXTENSION DriverExtension;
+    PUNICODE_STRING RegistryPath = Argument2;
 
     DebugPrint((3,"\n\nSCSI Class Driver\n"));
 
@@ -479,6 +481,17 @@ Return Value:
 
     RtlCopyMemory(&DriverExtension->InitializationData, InitializationData, sizeof(CLASS_INIT_DATA));
     DriverExtension->PortNumber = 0;
+
+    DriverExtension->RegistryPath.Buffer = ExAllocatePool(PagedPool, RegistryPath->MaximumLength);
+    if (!DriverExtension->RegistryPath.Buffer)
+        return STATUS_NO_MEMORY;
+
+    DriverExtension->RegistryPath.Length = RegistryPath->Length;
+    DriverExtension->RegistryPath.MaximumLength = RegistryPath->MaximumLength;
+
+    RtlCopyMemory(DriverExtension->RegistryPath.Buffer,
+                  RegistryPath->Buffer,
+                  RegistryPath->Length);
 
     //
     // Update driver object with entry points.
