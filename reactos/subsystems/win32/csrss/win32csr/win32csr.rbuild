@@ -15,6 +15,7 @@
 	<library>win32ksys</library>
 	<library>psapi</library>
 	<library>pseh</library>
+	<library>csrsrv</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
 	<file>coninput.c</file>
