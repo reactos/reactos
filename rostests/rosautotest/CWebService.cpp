@@ -207,7 +207,7 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
     Response.reset(DoRequest(Data));
 
     ss << "The server responded:" << endl << Response << endl;
-    StringOut(ss.str());
+    StringOut(ss.str(), TRUE);
 
     if(strcmp(Response, "OK"))
         EXCEPTION("Aborted!\n");

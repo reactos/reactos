@@ -266,9 +266,10 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     stringstream ss, ssFinish;
     DWORD StartTime = GetTickCount();
     float TotalTime;
+    string tailString;
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
-    StringOut(ss.str());
+    StringOut(ss.str(), TRUE);
 
     StartTime = GetTickCount();
 
@@ -299,9 +300,9 @@ CWineTest::RunTest(CTestInfo* TestInfo)
                 if(!ReadFile(m_hReadPipe, Buffer, BytesAvailable, &Temp, NULL))
                     FATAL("ReadFile failed for the test run\n");
 
-                /* Output all test output through StringOut, even while the test is still running */
+                /* Output text through StringOut, even while the test is still running */
                 Buffer[BytesAvailable] = 0;
-                StringOut(string(Buffer));
+                tailString = StringOut(tailString.append(string(Buffer)), FALSE);
 
                 if(Configuration.DoSubmit())
                     TestInfo->Log += Buffer;
@@ -310,10 +311,14 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         while(!BreakLoop);
     }
 
+    /* Print what's left */
+    if(!tailString.empty())
+        StringOut(tailString, TRUE);
+
     TotalTime = ((float)GetTickCount() - StartTime)/1000;
     ssFinish << "Test " << TestInfo->Test << " completed in ";
     ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
-    StringOut(ssFinish.str());
+    StringOut(ssFinish.str(), TRUE);
 }
 
 /**
@@ -370,6 +375,6 @@ CWineTest::Run()
         if(Configuration.DoSubmit() && !TestInfo->Log.empty())
             WebService->Submit("wine", TestInfo);
 
-        StringOut("\n\n");
+        StringOut("\n\n", TRUE);
     }
 }

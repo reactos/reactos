@@ -92,8 +92,8 @@ IsNumber(const char* Input)
  * @param String
  * The std::string to output
  */
-void
-StringOut(const string& String)
+string
+StringOut(const string& String, const BOOL forcePrint)
 {
     char DbgString[DBGPRINT_BUFSIZE + 1];
     size_t i, start = 0, last_newline = 0, size = 0, curr_pos = 0;
@@ -122,7 +122,7 @@ StringOut(const string& String)
             if((curr_pos - start) >= DBGPRINT_BUFSIZE)
             {
                 /* No newlines so far, or the string just fits */
-                if(last_newline <= start || (curr_pos - start) == DBGPRINT_BUFSIZE)
+                if(last_newline <= start || ((curr_pos - start == DBGPRINT_BUFSIZE) && NewString[curr_pos - 1] == '\n'))
                 {
                     size = curr_pos - start;
                     memcpy(DbgString, NewString.c_str() + start, size);
@@ -143,14 +143,24 @@ StringOut(const string& String)
         }
     }
 
-    /* The rest of the string is <= DBGPRINT_BUFSIZE so just print it*/
-    size = curr_pos - start;
-    memcpy(DbgString, NewString.c_str() + start, size);
-    DbgString[size] = 0;
-    DbgPrint(DbgString);
-
     /* Output the string */
     cout << NewString;
+
+    size = curr_pos - start;
+
+    /* Only print if forced to or if the rest is a whole line */
+    if(forcePrint == true || NewString[curr_pos - 1] == '\n')
+    {
+        memcpy(DbgString, NewString.c_str() + start, size);
+        DbgString[size] = 0;
+        DbgPrint(DbgString);
+
+        NewString.clear();
+        return NewString;
+    }
+
+    /* Return the remaining chunk */
+    return NewString.substr(start, size);
 }
 
 /**

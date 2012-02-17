@@ -20,14 +20,14 @@ bool ShutdownSystem()
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
     {
-        StringOut("OpenProcessToken failed\n");
+        StringOut("OpenProcessToken failed\n", TRUE);
         return false;
     }
 
     /* Get the LUID for the Shutdown privilege */
     if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
     {
-        StringOut("LookupPrivilegeValue failed\n");
+        StringOut("LookupPrivilegeValue failed\n", TRUE);
         return false;
     }
 
@@ -37,14 +37,14 @@ bool ShutdownSystem()
 
     if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
     {
-        StringOut("AdjustTokenPrivileges failed\n");
+        StringOut("AdjustTokenPrivileges failed\n", TRUE);
         return false;
     }
 
     /* Finally shut down the system */
     if(!ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
     {
-        StringOut("ExitWindowsEx failed\n");
+        StringOut("ExitWindowsEx failed\n", TRUE);
         return false;
     }
 

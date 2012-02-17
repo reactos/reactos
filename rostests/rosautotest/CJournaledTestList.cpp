@@ -144,7 +144,7 @@ CJournaledTestList::WriteInitialJournalFile()
     CTestInfo* TestInfo;
     DWORD BytesWritten;
 
-    StringOut("Writing initial journal file...\n\n");
+    StringOut("Writing initial journal file...\n\n", TRUE);
 
     m_ListIterator = 0;
 
@@ -189,7 +189,7 @@ CJournaledTestList::LoadJournalFile()
     DWORD BytesRead;
     DWORD RemainingSize;
 
-    StringOut("Loading journal file...\n\n");
+    StringOut("Loading journal file...\n\n", TRUE);
 
     OpenJournal(GENERIC_READ);
     RemainingSize = GetFileSize(m_hJournal, NULL);
