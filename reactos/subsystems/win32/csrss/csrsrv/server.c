@@ -226,6 +226,15 @@ CsrLoadServerDll(IN PCHAR DllString,
                 /* No, save the pointer to its shared section in our list */
                 CsrSrvSharedStaticServerData[ServerDll->ServerId] = ServerDll->SharedSection;
             }
+            
+            /* ReactOS Specific hax */
+            if (ServerDll->HighestApiSupported == 0xDEADBABE)
+            {
+                DPRINT1("Registering: %p\n", (PVOID)ServerDll->DispatchTable);
+                Status = CsrApiRegisterDefinitions((PVOID)ServerDll->DispatchTable);
+                DPRINT1("Status: %lx\n", Status);
+                goto LoadFailed;
+            }
         }
         else
         {
