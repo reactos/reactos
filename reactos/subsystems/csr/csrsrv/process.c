@@ -1253,9 +1253,9 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
                 {
                     /* Release the lock, make the callback, and acquire it back */
                     CsrReleaseProcessLock();
-                    Result = (*ServerDll->ShutdownProcessCallback)(CsrProcess,
-                                                                   Flags,
-                                                                   FirstTry);
+                    Result = ServerDll->ShutdownProcessCallback(CsrProcess,
+                                                                Flags,
+                                                                FirstTry);
                     CsrAcquireProcessLock();
 
                     /* Check the result */
