@@ -1351,8 +1351,6 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     PMMPFN Pfn1, Pfn2;
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
-    PULONG PageDir;
-    ULONG i;
 
     //ASSERT(Process->CommitCharge == 0);
 
@@ -1370,27 +1368,6 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     /* Check for fully initialized process */
     if (Process->AddressSpaceInitialized == 2)
     {
-        /* Map the PDE */
-        PageDir = MmCreateHyperspaceMapping(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
-        for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
-        {
-            /* Loop all page tables */
-            if (PageDir[i] != 0)
-            {
-                /* Check if they are RosMm-owned */
-                if (MI_IS_ROS_PFN(MiGetPfnEntry(PageDir[i] >> PAGE_SHIFT)))
-                {
-                    /* Free them through the RosMm ABI */
-                    //DPRINT1("Freeing MC_SYSTEM: %lx\n", PageDir[i]);
-                    MmReleasePageMemoryConsumer(MC_SYSTEM, PageDir[i] >> PAGE_SHIFT);
-                }
-            }
-        }
-        
-        /* Unmap the PDE */
-        //DPRINT1("Done\n");
-        MmDeleteHyperspaceMapping(PageDir);
-        
         /* Map the working set page and its page table */
         Pfn1 = MiGetPfnEntry(Process->WorkingSetPage);
         Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);
