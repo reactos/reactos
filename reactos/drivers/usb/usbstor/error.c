@@ -210,7 +210,15 @@ USBSTOR_HandleTransferError(
 
     if (NT_SUCCESS(Status))
     {
-        DPRINT1("Retrying Count %x\n", Context->RetryCount);
+        //
+        // FIXME: inquiry cmd / read format capacity are send w/o irp
+        //
+        ASSERT(Context);
+        ASSERT(Context->PDODeviceExtension);
+        ASSERT(Context->PDODeviceExtension->Self);
+        ASSERT(Context->Irp);
+
+        DPRINT1("Retrying Count %x %p\n", Context->RetryCount, Context->PDODeviceExtension->Self);
 
         //
         // re-schedule request

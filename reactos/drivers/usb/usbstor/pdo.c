@@ -964,6 +964,7 @@ USBSTOR_CreatePDO(
     PDEVICE_OBJECT PDO;
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PUFI_INQUIRY_RESPONSE Response;
 
     //
     // create child device object
@@ -1012,22 +1013,36 @@ USBSTOR_CreatePDO(
     *ChildDeviceObject = PDO;
 
     //
-    // send inquiry command
+    // FIXME: send inquiry command by irp
     //
     USBSTOR_SendInquiryCmd(PDO, 0);
 
     //
-    // retrieve format capacity
+    // check response data
     //
-    if (NT_SUCCESS(USBSTOR_SendFormatCapacity(PDO, 0)))
+    Response = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+    ASSERT(Response);
+
+    if (Response->DeviceType == 0)
     {
         //
-        // check if its a floppy
+        // check if it is a floppy
         //
-        PDODeviceExtension->IsFloppy = USBSTOR_IsFloppy(PDODeviceExtension->FormatData, PAGE_SIZE /*FIXME*/, &PDODeviceExtension->MediumTypeCode);
-        DPRINT1("[USBSTOR] IsFloppy %x MediumTypeCode %x\n", PDODeviceExtension->IsFloppy, PDODeviceExtension->MediumTypeCode);
-    }
+        Status = USBSTOR_SendFormatCapacity(PDO, 0);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // check if its a floppy
+            //
+            PDODeviceExtension->IsFloppy = USBSTOR_IsFloppy(PDODeviceExtension->FormatData, PAGE_SIZE /*FIXME*/, &PDODeviceExtension->MediumTypeCode);
+            DPRINT1("[USBSTOR] IsFloppy %x MediumTypeCode %x\n", PDODeviceExtension->IsFloppy, PDODeviceExtension->MediumTypeCode);
+        }
 
+        //
+        // failing command is non critical
+        //
+        Status = STATUS_SUCCESS;
+    }
 
 
     //
