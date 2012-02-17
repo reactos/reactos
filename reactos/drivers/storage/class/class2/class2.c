@@ -4604,6 +4604,8 @@ Return Value:
         }
     }
 
+    deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
     *DeviceObject = deviceObject;
 
     RtlFreeUnicodeString(&ntUnicodeString);
