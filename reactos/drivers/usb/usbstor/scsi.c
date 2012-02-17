@@ -449,7 +449,7 @@ USBSTOR_DataCompletionRoutine(
     PVOID Ctx)
 {
     PIRP_CONTEXT Context;
-    NTSTATUS Status;
+
 
     DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
