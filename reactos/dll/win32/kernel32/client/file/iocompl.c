@@ -123,7 +123,12 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
       *lpOverlapped = NULL;
-      BaseSetLastNTError(errCode);
+
+      if(errCode == STATUS_TIMEOUT)
+         SetLastError(WAIT_TIMEOUT);
+      else
+         BaseSetLastNTError(errCode);
+
       return FALSE;
    }
 
