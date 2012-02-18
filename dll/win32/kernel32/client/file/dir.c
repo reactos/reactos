@@ -2,15 +2,9 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/dir.c
+ * FILE:            lib/kernel32/client/file/dir.c
  * PURPOSE:         Directory functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
- */
-
-/*
- * NOTES: Changed to using ZwCreateFile
+ * PROGRAMMER:      Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,9 +12,53 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
-UNICODE_STRING BaseDllDirectory = {0, 0, NULL};
+/* Short File Name length in chars (8.3) */
+#define SFN_LENGTH 12
+
+/* Match a volume name like:
+ * \\?\Volume{GUID}
+ */
+#define IS_VOLUME_NAME(s, l)                       \
+  ((l == 96 || (l == 98 && s[48] == '\\')) &&      \
+   s[0] == '\\'&& (s[1] == '?' || s[1] == '\\') && \
+   s[2] == '?' && s[3] == '\\' && s[4] == 'V' &&   \
+   s[5] == 'o' && s[6] == 'l' && s[7] == 'u' &&    \
+   s[8] == 'm' && s[9] == 'e' && s[10] == '{' &&   \
+   s[19] == '-' && s[24] == '-' && s[29] == '-' && \
+   s[34] == '-' && s[47] == '}')
+
+/* FIXME - Get it out of here */
+typedef struct _REPARSE_DATA_BUFFER {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            ULONG Flags;
+            WCHAR PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR PathBuffer[1];
+        } MountPointReparseBuffer;
+        struct {
+            UCHAR  DataBuffer[1];
+        } GenericReparseBuffer;
+    };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
+    ULONG FileAttributes;
+    ULONG ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,1039 +67,50 @@ UNICODE_STRING BaseDllDirectory = {0, 0, NULL};
  */
 BOOL
 WINAPI
-CreateDirectoryA (
-        LPCSTR                  lpPathName,
-        LPSECURITY_ATTRIBUTES   lpSecurityAttributes
-        )
+CreateDirectoryA(IN LPCSTR lpPathName,
+                 IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-   PWCHAR PathNameW;
+    PUNICODE_STRING PathNameW;
 
-   if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
-      return FALSE;
+    PathNameW = Basep8BitStringToStaticUnicodeString(lpPathName);
+    if (!PathNameW)
+    {
+        return FALSE;
+    }
 
-   return CreateDirectoryW (PathNameW,
+    return CreateDirectoryW(PathNameW->Buffer,
                             lpSecurityAttributes);
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-CreateDirectoryExA (
-        LPCSTR                  lpTemplateDirectory,
-        LPCSTR                  lpNewDirectory,
-        LPSECURITY_ATTRIBUTES   lpSecurityAttributes)
+CreateDirectoryExA(IN LPCSTR lpTemplateDirectory,
+                   IN LPCSTR lpNewDirectory,
+                   IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-   PWCHAR TemplateDirectoryW;
-   PWCHAR NewDirectoryW;
-   BOOL ret;
+    PUNICODE_STRING TemplateDirectoryW;
+    UNICODE_STRING NewDirectoryW;
+    BOOL ret;
 
-   if (!(TemplateDirectoryW = FilenameA2W(lpTemplateDirectory, TRUE)))
-      return FALSE;
+    TemplateDirectoryW = Basep8BitStringToStaticUnicodeString(lpTemplateDirectory);
+    if (!TemplateDirectoryW)
+    {
+        return FALSE;
+    }
 
-   if (!(NewDirectoryW = FilenameA2W(lpNewDirectory, FALSE)))
-   {
-      RtlFreeHeap (RtlGetProcessHeap (),
-                   0,
-                   TemplateDirectoryW);
-      return FALSE;
-   }
+    if (!Basep8BitStringToDynamicUnicodeString(&NewDirectoryW, lpNewDirectory))
+    {
+        return FALSE;
+    }
 
-   ret = CreateDirectoryExW (TemplateDirectoryW,
-                             NewDirectoryW,
+    ret = CreateDirectoryExW(TemplateDirectoryW->Buffer,
+                             NewDirectoryW.Buffer,
                              lpSecurityAttributes);
 
-   RtlFreeHeap (RtlGetProcessHeap (),
-                0,
-                TemplateDirectoryW);
-
-   return ret;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CreateDirectoryW (
-        LPCWSTR                 lpPathName,
-        LPSECURITY_ATTRIBUTES   lpSecurityAttributes
-        )
-{
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        IO_STATUS_BLOCK IoStatusBlock;
-        UNICODE_STRING NtPathU;
-        HANDLE DirectoryHandle = NULL;
-        NTSTATUS Status;
-
-        TRACE ("lpPathName %S lpSecurityAttributes %p\n",
-                lpPathName, lpSecurityAttributes);
-
-        if (!RtlDosPathNameToNtPathName_U (lpPathName,
-                                           &NtPathU,
-                                           NULL,
-                                           NULL))
-        {
-                SetLastError(ERROR_PATH_NOT_FOUND);
-                return FALSE;
-        }
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtPathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
-
-        Status = NtCreateFile (&DirectoryHandle,
-                               FILE_LIST_DIRECTORY | SYNCHRONIZE,
-                               &ObjectAttributes,
-                               &IoStatusBlock,
-                               NULL,
-                               FILE_ATTRIBUTE_NORMAL,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
-                               FILE_CREATE,
-                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT,
-                               NULL,
-                               0);
-
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtPathU.Buffer);
-
-        if (!NT_SUCCESS(Status))
-        {
-                WARN("NtCreateFile failed with Status %lx\n", Status);
-                BaseSetLastNTError(Status);
-                return FALSE;
-        }
-
-        NtClose (DirectoryHandle);
-
-        return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CreateDirectoryExW (
-        LPCWSTR                 lpTemplateDirectory,
-        LPCWSTR                 lpNewDirectory,
-        LPSECURITY_ATTRIBUTES   lpSecurityAttributes
-        )
-{
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        IO_STATUS_BLOCK IoStatusBlock;
-        UNICODE_STRING NtPathU, NtTemplatePathU;
-        HANDLE DirectoryHandle = NULL;
-        HANDLE TemplateHandle = NULL;
-        FILE_EA_INFORMATION EaInformation;
-        FILE_BASIC_INFORMATION FileBasicInfo;
-        NTSTATUS Status;
-        ULONG OpenOptions, CreateOptions;
-        ACCESS_MASK DesiredAccess;
-        BOOLEAN ReparsePoint = FALSE;
-        PVOID EaBuffer = NULL;
-        ULONG EaLength = 0;
-
-        OpenOptions = FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT |
-                      FILE_OPEN_FOR_BACKUP_INTENT;
-        CreateOptions = FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT;
-        DesiredAccess = FILE_LIST_DIRECTORY | SYNCHRONIZE | FILE_WRITE_ATTRIBUTES |
-                        FILE_READ_ATTRIBUTES;
-
-        TRACE ("lpTemplateDirectory %ws lpNewDirectory %ws lpSecurityAttributes %p\n",
-                lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
-
-        /*
-         * Translate the template directory path
-         */
-
-        if (!RtlDosPathNameToNtPathName_U (lpTemplateDirectory,
-                                           &NtTemplatePathU,
-                                           NULL,
-                                           NULL))
-        {
-                SetLastError(ERROR_PATH_NOT_FOUND);
-                return FALSE;
-        }
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtTemplatePathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-
-        /*
-         * Open the template directory
-         */
-
-OpenTemplateDir:
-        Status = NtOpenFile (&TemplateHandle,
-                             FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | FILE_READ_EA,
-                             &ObjectAttributes,
-                             &IoStatusBlock,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             OpenOptions);
-        if (!NT_SUCCESS(Status))
-        {
-            if (Status == STATUS_INVALID_PARAMETER &&
-                (OpenOptions & FILE_OPEN_REPARSE_POINT))
-            {
-                /* Some FSs (FAT) don't support reparse points, try opening
-                   the directory without FILE_OPEN_REPARSE_POINT */
-                OpenOptions &= ~FILE_OPEN_REPARSE_POINT;
-
-                TRACE("Reparse points not supported, try with less options\n");
-
-                /* try again */
-                goto OpenTemplateDir;
-            }
-            else
-            {
-                WARN("Failed to open the template directory: 0x%x\n", Status);
-                goto CleanupNoNtPath;
-            }
-        }
-
-        /*
-         * Translate the new directory path and check if they're the same
-         */
-
-        if (!RtlDosPathNameToNtPathName_U (lpNewDirectory,
-                                           &NtPathU,
-                                           NULL,
-                                           NULL))
-        {
-            Status = STATUS_OBJECT_PATH_NOT_FOUND;
-            goto CleanupNoNtPath;
-        }
-
-        if (RtlEqualUnicodeString(&NtPathU,
-                                  &NtTemplatePathU,
-                                  TRUE))
-        {
-            WARN("Both directory paths are the same!\n");
-            Status = STATUS_OBJECT_NAME_INVALID;
-            goto Cleanup;
-        }
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtPathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
-
-        /*
-         * Query the basic file attributes from the template directory
-         */
-
-        /* Make sure FILE_ATTRIBUTE_NORMAL is used in case the information
-           isn't set by the FS */
-        FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
-        Status = NtQueryInformationFile(TemplateHandle,
-                                        &IoStatusBlock,
-                                        &FileBasicInfo,
-                                        sizeof(FILE_BASIC_INFORMATION),
-                                        FileBasicInformation);
-        if (!NT_SUCCESS(Status))
-        {
-            WARN("Failed to query the basic directory attributes\n");
-            goto Cleanup;
-        }
-
-        /* clear the reparse point attribute if present. We're going to set the
-           reparse point later which will cause the attribute to be set */
-        if (FileBasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
-        {
-            FileBasicInfo.FileAttributes &= ~FILE_ATTRIBUTE_REPARSE_POINT;
-
-            /* writing the extended attributes requires the FILE_WRITE_DATA
-               access right */
-            DesiredAccess |= FILE_WRITE_DATA;
-
-            CreateOptions |= FILE_OPEN_REPARSE_POINT;
-            ReparsePoint = TRUE;
-        }
-
-        /*
-         * Read the Extended Attributes if present
-         */
-
-        for (;;)
-        {
-          Status = NtQueryInformationFile(TemplateHandle,
-                                          &IoStatusBlock,
-                                          &EaInformation,
-                                          sizeof(FILE_EA_INFORMATION),
-                                          FileEaInformation);
-          if (NT_SUCCESS(Status) && (EaInformation.EaSize != 0))
-          {
-            EaBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       0,
-                                       EaInformation.EaSize);
-            if (EaBuffer == NULL)
-            {
-               Status = STATUS_INSUFFICIENT_RESOURCES;
-               break;
-            }
-
-            Status = NtQueryEaFile(TemplateHandle,
-                                   &IoStatusBlock,
-                                   EaBuffer,
-                                   EaInformation.EaSize,
-                                   FALSE,
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   TRUE);
-
-            if (NT_SUCCESS(Status))
-            {
-               /* we successfully read the extended attributes */
-               EaLength = EaInformation.EaSize;
-               break;
-            }
-            else
-            {
-               RtlFreeHeap(RtlGetProcessHeap(),
-                           0,
-                           EaBuffer);
-               EaBuffer = NULL;
-
-               if (Status != STATUS_BUFFER_TOO_SMALL)
-               {
-                  /* unless we just allocated not enough memory, break the loop
-                     and just continue without copying extended attributes */
-                  break;
-               }
-            }
-          }
-          else
-          {
-            /* failure or no extended attributes present, break the loop */
-            break;
-          }
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            WARN("Querying the EA data failed: 0x%x\n", Status);
-            goto Cleanup;
-        }
-
-        /*
-         * Create the new directory
-         */
-
-        Status = NtCreateFile (&DirectoryHandle,
-                               DesiredAccess,
-                               &ObjectAttributes,
-                               &IoStatusBlock,
-                               NULL,
-                               FileBasicInfo.FileAttributes,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
-                               FILE_CREATE,
-                               CreateOptions,
-                               EaBuffer,
-                               EaLength);
-        if (!NT_SUCCESS(Status))
-        {
-            if (ReparsePoint &&
-                (Status == STATUS_INVALID_PARAMETER || Status == STATUS_ACCESS_DENIED))
-            {
-                /* The FS doesn't seem to support reparse points... */
-                WARN("Cannot copy the hardlink, destination doesn\'t support reparse points!\n");
-            }
-
-            goto Cleanup;
-        }
-
-        if (ReparsePoint)
-        {
-            /*
-             * Copy the reparse point
-             */
-
-            PREPARSE_GUID_DATA_BUFFER ReparseDataBuffer =
-                (PREPARSE_GUID_DATA_BUFFER)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                           0,
-                                                           MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-
-            if (ReparseDataBuffer == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto Cleanup;
-            }
-
-            /* query the size of the reparse data buffer structure */
-            Status = NtFsControlFile(TemplateHandle,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     &IoStatusBlock,
-                                     FSCTL_GET_REPARSE_POINT,
-                                     NULL,
-                                     0,
-                                     ReparseDataBuffer,
-                                     MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-            if (NT_SUCCESS(Status))
-            {
-                /* write the reparse point */
-                Status = NtFsControlFile(DirectoryHandle,
-                                         NULL,
-                                         NULL,
-                                         NULL,
-                                         &IoStatusBlock,
-                                         FSCTL_SET_REPARSE_POINT,
-                                         ReparseDataBuffer,
-                                         MAXIMUM_REPARSE_DATA_BUFFER_SIZE,
-                                         NULL,
-                                         0);
-            }
-
-            RtlFreeHeap(RtlGetProcessHeap(),
-                        0,
-                        ReparseDataBuffer);
-
-            if (!NT_SUCCESS(Status))
-            {
-                /* fail, we were unable to read the reparse point data! */
-                WARN("Querying or setting the reparse point failed: 0x%x\n", Status);
-                goto Cleanup;
-            }
-        }
-        else
-        {
-            /*
-             * Copy alternate file streams, if existing
-             */
-
-            /* FIXME - enumerate and copy the file streams */
-        }
-
-        /*
-         * We successfully created the directory and copied all information
-         * from the template directory
-         */
-        Status = STATUS_SUCCESS;
-
-Cleanup:
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtPathU.Buffer);
-
-CleanupNoNtPath:
-        if (TemplateHandle != NULL)
-        {
-                NtClose(TemplateHandle);
-        }
-
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtTemplatePathU.Buffer);
-
-        /* free the he extended attributes buffer */
-        if (EaBuffer != NULL)
-        {
-                RtlFreeHeap (RtlGetProcessHeap (),
-                             0,
-                             EaBuffer);
-        }
-
-        if (DirectoryHandle != NULL)
-        {
-                NtClose(DirectoryHandle);
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-                BaseSetLastNTError(Status);
-                return FALSE;
-        }
-
-        return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RemoveDirectoryA (
-        LPCSTR  lpPathName
-        )
-{
-   PWCHAR PathNameW;
-
-   TRACE("RemoveDirectoryA(%s)\n",lpPathName);
-
-   if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
-       return FALSE;
-
-   return RemoveDirectoryW (PathNameW);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RemoveDirectoryW (
-        LPCWSTR lpPathName
-        )
-{
-        FILE_DISPOSITION_INFORMATION FileDispInfo;
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        IO_STATUS_BLOCK IoStatusBlock;
-        UNICODE_STRING NtPathU;
-        HANDLE DirectoryHandle = NULL;
-        NTSTATUS Status;
-
-        TRACE("lpPathName %S\n", lpPathName);
-
-        if (!RtlDosPathNameToNtPathName_U (lpPathName,
-                                           &NtPathU,
-                                           NULL,
-                                           NULL))
-        {
-                SetLastError(ERROR_PATH_NOT_FOUND);
-                return FALSE;
-        }
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtPathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-
-        TRACE("NtPathU '%S'\n", NtPathU.Buffer);
-
-        Status = NtOpenFile(&DirectoryHandle,
-                            DELETE | SYNCHRONIZE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
-
-        RtlFreeUnicodeString(&NtPathU);
-
-        if (!NT_SUCCESS(Status))
-        {
-                WARN("Status 0x%08x\n", Status);
-                BaseSetLastNTError (Status);
-                return FALSE;
-        }
-
-        FileDispInfo.DeleteFile = TRUE;
-
-        Status = NtSetInformationFile (DirectoryHandle,
-                                       &IoStatusBlock,
-                                       &FileDispInfo,
-                                       sizeof(FILE_DISPOSITION_INFORMATION),
-                                       FileDispositionInformation);
-        NtClose(DirectoryHandle);
-
-        if (!NT_SUCCESS(Status))
-        {
-                BaseSetLastNTError (Status);
-                return FALSE;
-        }
-
-        return TRUE;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetFullPathNameA (
-        LPCSTR  lpFileName,
-        DWORD   nBufferLength,
-        LPSTR   lpBuffer,
-        LPSTR   *lpFilePart
-        )
-{
-   WCHAR BufferW[MAX_PATH];
-   PWCHAR FileNameW;
-   DWORD ret;
-   LPWSTR FilePartW = NULL;
-
-   TRACE("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
-        "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
-
-   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
-      return 0;
-
-   ret = GetFullPathNameW(FileNameW, MAX_PATH, BufferW, &FilePartW);
-
-   if (!ret)
-      return 0;
-
-   if (ret > MAX_PATH)
-   {
-      SetLastError(ERROR_FILENAME_EXCED_RANGE);
-      return 0;
-   }
-
-   ret = FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
-
-   if (ret < nBufferLength && lpFilePart)
-   {
-      /* if the path closed with '\', FilePart is NULL */
-      if (!FilePartW)
-         *lpFilePart=NULL;
-      else
-         *lpFilePart = (FilePartW - BufferW) + lpBuffer;
-   }
-
-   TRACE("GetFullPathNameA ret: lpBuffer %s lpFilePart %s\n",
-        lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart);
-
-   return ret;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetFullPathNameW (
-        LPCWSTR lpFileName,
-        DWORD   nBufferLength,
-        LPWSTR  lpBuffer,
-        LPWSTR  *lpFilePart
-        )
-{
-    ULONG Length;
-
-    TRACE("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
-           "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
-
-    Length = RtlGetFullPathName_U ((LPWSTR)lpFileName,
-                                   nBufferLength * sizeof(WCHAR),
-                                   lpBuffer,
-                                   lpFilePart);
-
-    TRACE("GetFullPathNameW ret: lpBuffer %S lpFilePart %S Length %ld\n",
-           lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
-
-    if (!lpFileName)
-    {
-#if (WINVER >= _WIN32_WINNT_WIN7)
-        SetLastError(ERROR_INVALID_PARAMETER);
-#endif
-        return 0;
-    }
-
-    return Length/sizeof(WCHAR);
-}
-
-
-/*
- * NOTE: Copied from Wine.
- * @implemented
- */
-DWORD
-WINAPI
-GetShortPathNameA (
-        LPCSTR  longpath,
-        LPSTR   shortpath,
-        DWORD   shortlen
-        )
-{
-    PWCHAR LongPathW;
-    WCHAR ShortPathW[MAX_PATH];
-    DWORD ret;
-
-    if (!longpath)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    if (!(LongPathW = FilenameA2W(longpath, FALSE)))
-      return 0;
-
-    ret = GetShortPathNameW(LongPathW, ShortPathW, MAX_PATH);
-
-    if (!ret)
-        return 0;
-
-    if (ret > MAX_PATH)
-    {
-        SetLastError(ERROR_FILENAME_EXCED_RANGE);
-        return 0;
-    }
-
-    return FilenameW2A_FitOrFail(shortpath, shortlen, ShortPathW, ret+1);
-}
-
-
-/*
- * NOTE: Copied from Wine.
- * @implemented
- */
-DWORD
-WINAPI
-GetShortPathNameW (
-        LPCWSTR longpath,
-        LPWSTR  shortpath,
-        DWORD   shortlen
-        )
-{
-    WCHAR               tmpshortpath[MAX_PATH];
-    LPCWSTR             p;
-    DWORD               sp = 0, lp = 0;
-    DWORD               tmplen;
-    WIN32_FIND_DATAW    wfd;
-    HANDLE              goit;
-    UNICODE_STRING      ustr;
-    WCHAR               ustr_buf[8+1+3+1];
-
-   TRACE("GetShortPathNameW: %S\n",longpath);
-
-    if (!longpath)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-    if (!longpath[0])
-    {
-        SetLastError(ERROR_BAD_PATHNAME);
-        return 0;
-    }
-
-    /* check for drive letter */
-    if (longpath[0] != '/' && longpath[1] == ':' )
-    {
-        tmpshortpath[0] = longpath[0];
-        tmpshortpath[1] = ':';
-        sp = lp = 2;
-    }
-
-    ustr.Buffer = ustr_buf;
-    ustr.Length = 0;
-    ustr.MaximumLength = sizeof(ustr_buf);
-
-    while (longpath[lp])
-    {
-        /* check for path delimiters and reproduce them */
-        if (longpath[lp] == '\\' || longpath[lp] == '/')
-        {
-            if (!sp || tmpshortpath[sp-1] != '\\')
-            {
-                /* strip double "\\" */
-                tmpshortpath[sp] = '\\';
-                sp++;
-            }
-            tmpshortpath[sp] = 0; /* terminate string */
-            lp++;
-            continue;
-        }
-
-        for (p = longpath + lp; *p && *p != '/' && *p != '\\'; p++);
-        tmplen = p - (longpath + lp);
-        lstrcpynW(tmpshortpath + sp, longpath + lp, tmplen + 1);
-        /* Check, if the current element is a valid dos name */
-        if (tmplen <= 8+1+3)
-        {
-            BOOLEAN spaces;
-            memcpy(ustr_buf, longpath + lp, tmplen * sizeof(WCHAR));
-            ustr_buf[tmplen] = '\0';
-            ustr.Length = (USHORT)tmplen * sizeof(WCHAR);
-            if (RtlIsNameLegalDOS8Dot3(&ustr, NULL, &spaces) && !spaces)
-            {
-                sp += tmplen;
-                lp += tmplen;
-                continue;
-            }
-        }
-
-        /* Check if the file exists and use the existing short file name */
-        goit = FindFirstFileW(tmpshortpath, &wfd);
-        if (goit == INVALID_HANDLE_VALUE) goto notfound;
-        FindClose(goit);
-        lstrcpyW(tmpshortpath + sp, wfd.cAlternateFileName);
-        sp += lstrlenW(tmpshortpath + sp);
-        lp += tmplen;
-    }
-    tmpshortpath[sp] = 0;
-
-    tmplen = lstrlenW(tmpshortpath) + 1;
-    if (tmplen <= shortlen)
-    {
-        lstrcpyW(shortpath, tmpshortpath);
-        tmplen--; /* length without 0 */
-    }
-
-    return tmplen;
-
- notfound:
-    SetLastError ( ERROR_FILE_NOT_FOUND );
-    return 0;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-SearchPathA (
-        LPCSTR  lpPath,
-        LPCSTR  lpFileName,
-        LPCSTR  lpExtension,
-        DWORD   nBufferLength,
-        LPSTR   lpBuffer,
-        LPSTR   *lpFilePart
-        )
-{
-        UNICODE_STRING PathU      = { 0, 0, NULL };
-        UNICODE_STRING FileNameU  = { 0, 0, NULL };
-        UNICODE_STRING ExtensionU = { 0, 0, NULL };
-        UNICODE_STRING BufferU    = { 0, 0, NULL };
-        ANSI_STRING Path;
-        ANSI_STRING FileName;
-        ANSI_STRING Extension;
-        ANSI_STRING Buffer;
-        PWCHAR FilePartW;
-        DWORD RetValue = 0;
-        NTSTATUS Status = STATUS_SUCCESS;
-
-        if (!lpFileName)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
-
-        RtlInitAnsiString (&Path,
-                           (LPSTR)lpPath);
-        RtlInitAnsiString (&FileName,
-                           (LPSTR)lpFileName);
-        RtlInitAnsiString (&Extension,
-                           (LPSTR)lpExtension);
-
-        /* convert ansi (or oem) strings to unicode */
-        if (bIsFileApiAnsi)
-        {
-                Status = RtlAnsiStringToUnicodeString (&PathU,
-                                                       &Path,
-                                                       TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-
-                Status = RtlAnsiStringToUnicodeString (&FileNameU,
-                                                       &FileName,
-                                                       TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-
-                Status = RtlAnsiStringToUnicodeString (&ExtensionU,
-                                                       &Extension,
-                                                       TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-        }
-        else
-        {
-                Status = RtlOemStringToUnicodeString (&PathU,
-                                                      &Path,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-                Status = RtlOemStringToUnicodeString (&FileNameU,
-                                                      &FileName,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-
-                Status = RtlOemStringToUnicodeString (&ExtensionU,
-                                                      &Extension,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-        }
-
-        BufferU.MaximumLength = min(nBufferLength * sizeof(WCHAR), USHRT_MAX);
-        BufferU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-                                          0,
-                                          BufferU.MaximumLength);
-        if (BufferU.Buffer == NULL)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto Cleanup;
-        }
-
-        Buffer.MaximumLength = min(nBufferLength, USHRT_MAX);
-        Buffer.Buffer = lpBuffer;
-
-        RetValue = SearchPathW (NULL == lpPath ? NULL : PathU.Buffer,
-                                NULL == lpFileName ? NULL : FileNameU.Buffer,
-                                NULL == lpExtension ? NULL : ExtensionU.Buffer,
-                                nBufferLength,
-                                BufferU.Buffer,
-                                &FilePartW);
-
-        if (0 != RetValue)
-        {
-                BufferU.Length = wcslen(BufferU.Buffer) * sizeof(WCHAR);
-                /* convert ansi (or oem) string to unicode */
-                if (bIsFileApiAnsi)
-                    Status = RtlUnicodeStringToAnsiString(&Buffer,
-                                                          &BufferU,
-                                                          FALSE);
-                else
-                    Status = RtlUnicodeStringToOemString(&Buffer,
-                                                         &BufferU,
-                                                         FALSE);
-
-                if (NT_SUCCESS(Status) && Buffer.Buffer)
-                {
-                    /* nul-terminate ascii string */
-                    Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
-
-                    if (NULL != lpFilePart && BufferU.Length != 0)
-                    {
-                        *lpFilePart = strrchr (lpBuffer, '\\') + 1;
-                    }
-                }
-        }
-
-Cleanup:
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     PathU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     FileNameU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     ExtensionU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     BufferU.Buffer);
-
-        if (!NT_SUCCESS(Status))
-        {
-            BaseSetLastNTError(Status);
-            return 0;
-        }
-
-        return RetValue;
-}
-
-
-/***********************************************************************
- *           ContainsPath (Wine name: contains_pathW)
- *
- * Check if the file name contains a path; helper for SearchPathW.
- * A relative path is not considered a path unless it starts with ./ or ../
- */
-static
-BOOL
-ContainsPath(LPCWSTR name)
-{
-    if (RtlDetermineDosPathNameType_U(name) != RtlPathTypeRelative) return TRUE;
-    if (name[0] != '.') return FALSE;
-    if (name[1] == '/' || name[1] == '\\' || name[1] == '\0') return TRUE;
-    return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-SearchPathW(LPCWSTR lpPath,
-            LPCWSTR lpFileName,
-            LPCWSTR lpExtension,
-            DWORD nBufferLength,
-            LPWSTR lpBuffer,
-            LPWSTR *lpFilePart)
-{
-    DWORD ret = 0;
-
-    if (!lpFileName || !lpFileName[0])
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    /* If the name contains an explicit path, ignore the path */
-    if (ContainsPath(lpFileName))
-    {
-        /* try first without extension */
-        if (RtlDoesFileExists_U(lpFileName))
-            return GetFullPathNameW(lpFileName, nBufferLength, lpBuffer, lpFilePart);
-
-        if (lpExtension)
-        {
-            LPCWSTR p = wcsrchr(lpFileName, '.');
-            if (p && !strchr((const char *)p, '/') && !wcschr( p, '\\' ))
-                lpExtension = NULL;  /* Ignore the specified extension */
-        }
-
-        /* Allocate a buffer for the file name and extension */
-        if (lpExtension)
-        {
-            LPWSTR tmp;
-            DWORD len = wcslen(lpFileName) + wcslen(lpExtension);
-
-            if (!(tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, (len + 1) * sizeof(WCHAR))))
-            {
-                SetLastError(ERROR_OUTOFMEMORY);
-                return 0;
-            }
-            wcscpy(tmp, lpFileName);
-            wcscat(tmp, lpExtension);
-            if (RtlDoesFileExists_U(tmp))
-                ret = GetFullPathNameW(tmp, nBufferLength, lpBuffer, lpFilePart);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, tmp);
-        }
-    }
-    else if (lpPath && lpPath[0])  /* search in the specified path */
-    {
-        ret = RtlDosSearchPath_U(lpPath,
-                                 lpFileName,
-                                 lpExtension,
-                                 nBufferLength * sizeof(WCHAR),
-                                 lpBuffer,
-                                 lpFilePart) / sizeof(WCHAR);
-    }
-    else  /* search in the default path */
-    {
-        WCHAR *DllPath = GetDllLoadPath(NULL);
-
-        if (DllPath)
-        {
-            ret = RtlDosSearchPath_U(DllPath,
-                                     lpFileName,
-                                     lpExtension,
-                                     nBufferLength * sizeof(WCHAR),
-                                     lpBuffer,
-                                     lpFilePart) / sizeof(WCHAR);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);
-        }
-        else
-        {
-            SetLastError(ERROR_OUTOFMEMORY);
-            return 0;
-        }
-    }
-
-    if (!ret) SetLastError(ERROR_FILE_NOT_FOUND);
+    RtlFreeUnicodeString(&NewDirectoryW);
 
     return ret;
 }
@@ -1071,45 +120,102 @@ SearchPathW(LPCWSTR lpPath,
  */
 BOOL
 WINAPI
-SetDllDirectoryW(
-    LPCWSTR lpPathName
-    )
+CreateDirectoryW(IN LPCWSTR lpPathName,
+                 IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  UNICODE_STRING PathName;
+    DWORD Length;
+    NTSTATUS Status;
+    HANDLE DirectoryHandle;
+    UNICODE_STRING NtPathU;
+    PWSTR PathUBuffer, FilePart;
+    IO_STATUS_BLOCK IoStatusBlock;
+    RTL_RELATIVE_NAME_U RelativeName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
-  RtlInitUnicodeString(&PathName, lpPathName);
-
-  RtlEnterCriticalSection(&BaseDllDirectoryLock);
-  if(PathName.Length > 0)
-  {
-    if(PathName.Length + sizeof(WCHAR) <= BaseDllDirectory.MaximumLength)
+    /* Get relative name */
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpPathName, &NtPathU, NULL, &RelativeName))
     {
-      RtlCopyUnicodeString(&BaseDllDirectory, &PathName);
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
+    }
+
+    /* Check if path length is < MAX_PATH (with space for file name).
+     * If not, prefix is required.
+     */
+    if (NtPathU.Length > (MAX_PATH - SFN_LENGTH) * sizeof(WCHAR) && lpPathName[0] != L'\\' &&
+        lpPathName[1] != L'\\' && lpPathName[2] != L'?' && lpPathName[3] != L'\\')
+    {
+        /* Get file name position and full path length */
+        Length = GetFullPathNameW(lpPathName, 0, NULL, &FilePart);
+        if (Length == 0)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+            return FALSE;
+        }
+
+        /* Keep place for 8.3 file name */
+        Length += SFN_LENGTH;
+        /* No prefix, so, must be smaller than MAX_PATH */
+        if (Length > MAX_PATH)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(GetProcessHeap(), 0, NtPathU.Buffer);
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+            return FALSE;
+        }
+    }
+
+    /* Save buffer to allow later freeing */
+    PathUBuffer = NtPathU.Buffer;
+
+    /* If we have relative name (and root dir), use them instead */
+    if (RelativeName.RelativeName.Length != 0)
+    {
+        NtPathU.Length = RelativeName.RelativeName.Length;
+        NtPathU.MaximumLength = RelativeName.RelativeName.MaximumLength;
+        NtPathU.Buffer = RelativeName.RelativeName.Buffer;
     }
     else
     {
-      RtlFreeUnicodeString(&BaseDllDirectory);
-      if(!(BaseDllDirectory.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                            0,
-                                                            PathName.Length + sizeof(WCHAR))))
-      {
-        RtlLeaveCriticalSection(&BaseDllDirectoryLock);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-      }
-      BaseDllDirectory.Length = 0;
-      BaseDllDirectory.MaximumLength = PathName.Length + sizeof(WCHAR);
-
-      RtlCopyUnicodeString(&BaseDllDirectory, &PathName);
+        RelativeName.ContainingDirectory = NULL;
     }
-  }
-  else
-  {
-    RtlFreeUnicodeString(&BaseDllDirectory);
-  }
-  RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
-  return TRUE;
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               RelativeName.ContainingDirectory,
+                               (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
+
+    Status = NtCreateFile(&DirectoryHandle,
+                          FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_CREATE,
+                          FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT,
+                          NULL,
+                          0);
+
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+
+    if (NT_SUCCESS(Status))
+    {
+        NtClose(DirectoryHandle);
+        return TRUE;
+    }
+
+    if (RtlIsDosDeviceName_U(lpPathName))
+    {
+        Status = STATUS_NOT_A_DIRECTORY;
+    }
+
+    BaseSetLastNTError(Status);
+    return FALSE;
 }
 
 /*
@@ -1117,260 +223,777 @@ SetDllDirectoryW(
  */
 BOOL
 WINAPI
-SetDllDirectoryA(
-    LPCSTR lpPathName /* can be NULL */
-    )
+CreateDirectoryExW(IN LPCWSTR lpTemplateDirectory,
+                   IN LPCWSTR lpNewDirectory,
+                   IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  PWCHAR PathNameW=NULL;
+    DWORD Length;
+    NTSTATUS Status;
+    PVOID EaBuffer = NULL;
+    BOOL ReparsePoint = FALSE;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_EA_INFORMATION FileEaInfo;
+    ULONG EaLength = 0, StreamSize;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_BASIC_INFORMATION FileBasicInfo;
+    PREPARSE_DATA_BUFFER ReparseDataBuffer;
+    HANDLE TemplateHandle, DirectoryHandle;
+    PFILE_STREAM_INFORMATION FileStreamInfo;
+    FILE_ATTRIBUTE_TAG_INFORMATION FileTagInfo;
+    UNICODE_STRING NtPathU, NtTemplatePathU, NewDirectory;
+    RTL_RELATIVE_NAME_U RelativeName, TemplateRelativeName;
+    PWSTR TemplateBuffer, PathUBuffer, FilePart, SubstituteName;        
 
-  if(lpPathName)
-  {
-     if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
-        return FALSE;
-  }
-
-  return SetDllDirectoryW(PathNameW);
-}
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetDllDirectoryW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
-{
-  DWORD Ret;
-
-  RtlEnterCriticalSection(&BaseDllDirectoryLock);
-  if(nBufferLength > 0)
-  {
-    Ret = BaseDllDirectory.Length / sizeof(WCHAR);
-    if(Ret > nBufferLength - 1)
-    {
-      Ret = nBufferLength - 1;
-    }
-
-    if(Ret > 0)
-    {
-      RtlCopyMemory(lpBuffer, BaseDllDirectory.Buffer, Ret * sizeof(WCHAR));
-    }
-    lpBuffer[Ret] = L'\0';
-  }
-  else
-  {
-    /* include termination character, even if the string is empty! */
-    Ret = (BaseDllDirectory.Length / sizeof(WCHAR)) + 1;
-  }
-  RtlLeaveCriticalSection(&BaseDllDirectoryLock);
-
-  return Ret;
-}
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetDllDirectoryA(
-    DWORD nBufferLength,
-    LPSTR lpBuffer
-    )
-{
-  WCHAR BufferW[MAX_PATH];
-  DWORD ret;
-
-  ret = GetDllDirectoryW(MAX_PATH, BufferW);
-
-  if (!ret)
-     return 0;
-
-  if (ret > MAX_PATH)
-  {
-     SetLastError(ERROR_FILENAME_EXCED_RANGE);
-     return 0;
-  }
-
-  return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
-{
-    static const WCHAR env_name[] = {'N','o','D','e','f','a','u','l','t',
-                                     'C','u','r','r','e','n','t',
-                                     'D','i','r','e','c','t','o','r','y',
-                                     'I','n','E','x','e','P','a','t','h',0};
-    WCHAR env_val;
-
-    /* MSDN mentions some 'registry location'. We do not use registry. */
-    FIXME("(%s): partial stub\n", debugstr_w(ExeName));
-
-    if (wcschr(ExeName, L'\\'))
-        return TRUE;
-
-    /* Check the existence of the variable, not value */
-    if (!GetEnvironmentVariableW( env_name, &env_val, 1 ))
-        return TRUE;
-
-    return FALSE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
-{
-    WCHAR *ExeNameW;
-
-    if (!(ExeNameW = FilenameA2W(ExeName, FALSE)))
-        return TRUE;
-
-    return NeedCurrentDirectoryForExePathW(ExeNameW);
-}
-
-
-
-
-
-/***********************************************************************
- * @implemented
- *
- *           GetLongPathNameW   (KERNEL32.@)
- *
- * NOTES
- *  observed (Win2000):
- *  shortpath=NULL: LastError=ERROR_INVALID_PARAMETER, ret=0
- *  shortpath="":   LastError=ERROR_PATH_NOT_FOUND, ret=0
- */
-DWORD WINAPI GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longlen )
-{
-#define    MAX_PATHNAME_LEN 1024
-
-    WCHAR               tmplongpath[MAX_PATHNAME_LEN];
-    LPCWSTR             p;
-    DWORD               sp = 0, lp = 0;
-    DWORD               tmplen;
-    BOOL                unixabsolute;
-    WIN32_FIND_DATAW    wfd;
-    HANDLE              goit;
-
-    if (!shortpath)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-    if (!shortpath[0])
+    /* Get relative name of the template */
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpTemplateDirectory, &NtTemplatePathU, NULL, &TemplateRelativeName))
     {
         SetLastError(ERROR_PATH_NOT_FOUND);
-        return 0;
+        return FALSE;
     }
 
-    TRACE("GetLongPathNameW(%s,%p,%ld)\n", shortpath, longpath, longlen);
+    /* Save buffer for further freeing */
+    TemplateBuffer = NtTemplatePathU.Buffer;
 
-    if (shortpath[0] == '\\' && shortpath[1] == '\\')
+    /* If we have relative name (and root dir), use them instead */
+    if (TemplateRelativeName.RelativeName.Length != 0)
     {
-        WARN("ERR: UNC pathname %s\n", shortpath);
-        lstrcpynW( longpath, shortpath, longlen );
-        return wcslen(longpath);
+        NtTemplatePathU.Length = TemplateRelativeName.RelativeName.Length;
+        NtTemplatePathU.MaximumLength = TemplateRelativeName.RelativeName.MaximumLength;
+        NtTemplatePathU.Buffer = TemplateRelativeName.RelativeName.Buffer;
     }
-    unixabsolute = (shortpath[0] == '/');
-    /* check for drive letter */
-    if (!unixabsolute && shortpath[1] == ':' )
+    else
     {
-        tmplongpath[0] = shortpath[0];
-        tmplongpath[1] = ':';
-        lp = sp = 2;
+        TemplateRelativeName.ContainingDirectory = NULL;
     }
 
-    while (shortpath[sp])
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtTemplatePathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open template directory */
+    Status = NtOpenFile(&TemplateHandle,
+                        FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | FILE_READ_EA,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT);
+    if (!NT_SUCCESS(Status))
     {
-        /* check for path delimiters and reproduce them */
-        if (shortpath[sp] == '\\' || shortpath[sp] == '/')
+        if (Status != STATUS_INVALID_PARAMETER)
         {
-            if (!lp || tmplongpath[lp-1] != '\\')
+            RtlReleaseRelativeName(&TemplateRelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+
+OpenWithoutReparseSupport:
+        /* Opening failed due to lacking reparse points support in the FSD, try without */
+        Status = NtOpenFile(&TemplateHandle,
+                            FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | FILE_READ_EA,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT);
+
+        if (!NT_SUCCESS(Status))
+        {
+            RtlReleaseRelativeName(&TemplateRelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+
+        /* Request file attributes */
+        FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        Status = NtQueryInformationFile(TemplateHandle,
+                                        &IoStatusBlock,
+                                        &FileBasicInfo,
+                                        sizeof(FileBasicInfo),
+                                        FileBasicInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlReleaseRelativeName(&TemplateRelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+            CloseHandle(TemplateHandle);
+            BaseSetLastNTError(Status);
+            return FALSE;
+
+        }
+    }
+    else
+    {
+        /* Request file attributes */
+        FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        Status = NtQueryInformationFile(TemplateHandle,
+                                        &IoStatusBlock,
+                                        &FileBasicInfo,
+                                        sizeof(FileBasicInfo),
+                                        FileBasicInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlReleaseRelativeName(&TemplateRelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+            CloseHandle(TemplateHandle);
+            BaseSetLastNTError(Status);
+            return FALSE;
+
+        }
+
+        /* If it is a reparse point, then get information about it */
+        if (FileBasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+        {
+            Status = NtQueryInformationFile(TemplateHandle,
+                                            &IoStatusBlock,
+                                            &FileTagInfo,
+                                            sizeof(FileTagInfo),
+                                            FileAttributeTagInformation);
+            if (!NT_SUCCESS(Status))
             {
-                /* strip double "\\" */
-                tmplongpath[lp++] = '\\';
+                RtlReleaseRelativeName(&TemplateRelativeName);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+                CloseHandle(TemplateHandle);
+                BaseSetLastNTError(Status);
+                return FALSE;
             }
-            tmplongpath[lp] = 0; /* terminate string */
-            sp++;
-            continue;
-        }
 
-        p = shortpath + sp;
-        if (sp == 0 && p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
-        {
-            tmplongpath[lp++] = *p++;
-            tmplongpath[lp++] = *p++;
+            /* Only mount points are supported, retry without if anything different */
+            if (FileTagInfo.ReparseTag != IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                CloseHandle(TemplateHandle);
+                goto OpenWithoutReparseSupport;
+            }
+
+            /* Mark we are playing with a reparse point */
+            ReparsePoint = TRUE;
         }
-        for (; *p && *p != '/' && *p != '\\'; p++);
-        tmplen = p - (shortpath + sp);
-        lstrcpynW(tmplongpath + lp, shortpath + sp, tmplen + 1);
-        /* Check if the file exists and use the existing file name */
-        goit = FindFirstFileW(tmplongpath, &wfd);
-        if (goit == INVALID_HANDLE_VALUE)
-        {
-            TRACE("not found %s!\n", tmplongpath);
-            SetLastError ( ERROR_FILE_NOT_FOUND );
-            return 0;
-        }
-        FindClose(goit);
-        wcscpy(tmplongpath + lp, wfd.cFileName);
-        lp += wcslen(tmplongpath + lp);
-        sp += tmplen;
     }
-    tmplen = wcslen(shortpath) - 1;
-    if ((shortpath[tmplen] == '/' || shortpath[tmplen] == '\\') &&
-        (tmplongpath[lp - 1] != '/' && tmplongpath[lp - 1] != '\\'))
-        tmplongpath[lp++] = shortpath[tmplen];
-    tmplongpath[lp] = 0;
 
-    tmplen = wcslen(tmplongpath) + 1;
-    if (tmplen <= longlen)
+    /* Get relative name of the directory */
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpNewDirectory, &NtPathU, NULL, &RelativeName))
     {
-        wcscpy(longpath, tmplongpath);
-        TRACE("returning %s\n", longpath);
-        tmplen--; /* length without 0 */
+        RtlReleaseRelativeName(&TemplateRelativeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+        NtClose(TemplateHandle);
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
     }
 
-    return tmplen;
+    /* Save its buffer for further freeing */
+    PathUBuffer = NtPathU.Buffer;
+
+    /* Template & directory can't be the same */
+    if (RtlEqualUnicodeString(&NtPathU,
+                              &NtTemplatePathU,
+                              TRUE))
+    {
+        RtlReleaseRelativeName(&RelativeName);
+        RtlReleaseRelativeName(&TemplateRelativeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+        NtClose(TemplateHandle);
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+
+    RtlReleaseRelativeName(&TemplateRelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TemplateBuffer);
+
+    /* Check if path length is < MAX_PATH (with space for file name).
+     * If not, prefix is required.
+     */
+    if (NtPathU.Length > (MAX_PATH - SFN_LENGTH) * sizeof(WCHAR) && lpNewDirectory[0] != L'\\' &&
+        lpNewDirectory[1] != L'\\' && lpNewDirectory[2] != L'?' && lpNewDirectory[3] != L'\\')
+    {
+        /* Get file name position and full path length */
+        Length = GetFullPathNameW(lpNewDirectory, 0, NULL, &FilePart);
+        if (Length == 0)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+            CloseHandle(TemplateHandle);
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+            return FALSE;
+        }
+
+        /* Keep place for 8.3 file name */
+        Length += SFN_LENGTH;
+        /* No prefix, so, must be smaller than MAX_PATH */
+        if (Length > MAX_PATH)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+            CloseHandle(TemplateHandle);
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+            return FALSE;
+        }
+    }
+
+    /* If we have relative name (and root dir), use them instead */
+    if (RelativeName.RelativeName.Length != 0)
+    {
+        NtPathU.Length = RelativeName.RelativeName.Length;
+        NtPathU.MaximumLength = RelativeName.RelativeName.MaximumLength;
+        NtPathU.Buffer = RelativeName.RelativeName.Buffer;
+    }
+    else
+    {
+        RelativeName.ContainingDirectory = NULL;
+    }
+
+    /* Get extended attributes */
+    Status = NtQueryInformationFile(TemplateHandle,
+                                    &IoStatusBlock,
+                                    &FileEaInfo,
+                                    sizeof(FileEaInfo),
+                                    FileEaInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlReleaseRelativeName(&RelativeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+        CloseHandle(TemplateHandle);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    } 
+
+    /* Start reading extended attributes */
+    if (FileEaInfo.EaSize != 0)
+    {
+        for (EaLength = FileEaInfo.EaSize * 2; ; EaLength = EaLength * 2)
+        {
+            /* Allocate buffer for reading */
+            EaBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, EaLength);
+            if (!EaBuffer)
+            {
+                RtlReleaseRelativeName(&RelativeName);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+                CloseHandle(TemplateHandle);
+                BaseSetLastNTError(STATUS_NO_MEMORY);
+                return FALSE;
+            }
+
+            /* Query EAs */
+            Status = NtQueryEaFile(TemplateHandle,
+                                   &IoStatusBlock,
+                                   EaBuffer,
+                                   EaLength,
+                                   FALSE,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   TRUE);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
+                IoStatusBlock.Information = 0;
+            }
+
+            /* If we don't fail because of too small buffer, stop here */
+            if (Status != STATUS_BUFFER_OVERFLOW &&
+                Status != STATUS_BUFFER_TOO_SMALL)
+            {
+                EaLength = IoStatusBlock.Information;
+                break;
+            }
+        }
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               RelativeName.ContainingDirectory,
+                               (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
+
+    /* Ensure attributes are valid */
+    FileBasicInfo.FileAttributes &= FILE_ATTRIBUTE_VALID_FLAGS;
+
+    /* Create the new directory */
+    Status = NtCreateFile(&DirectoryHandle,
+                          FILE_LIST_DIRECTORY | SYNCHRONIZE | FILE_WRITE_ATTRIBUTES |
+                          FILE_READ_ATTRIBUTES | (FileBasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT ? FILE_ADD_FILE : 0),
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FileBasicInfo.FileAttributes,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_CREATE,
+                          FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                          FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT,
+                          EaBuffer,
+                          EaLength);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_INVALID_PARAMETER || Status == STATUS_ACCESS_DENIED)
+        {
+            /* If creation failed, it might be because FSD doesn't support reparse points
+             * Retry without asking for such support in case template is not a reparse point
+             */
+            if (!ReparsePoint)
+            {
+                Status = NtCreateFile(&DirectoryHandle,
+                                      FILE_LIST_DIRECTORY | SYNCHRONIZE |
+                                      FILE_WRITE_ATTRIBUTES | FILE_READ_ATTRIBUTES,
+                                      &ObjectAttributes,
+                                      &IoStatusBlock,
+                                      NULL,
+                                      FileBasicInfo.FileAttributes,
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                      FILE_CREATE,
+                                      FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                                      FILE_OPEN_FOR_BACKUP_INTENT,
+                                      EaBuffer,
+                                      EaLength);
+            }
+            else
+            {
+                RtlReleaseRelativeName(&RelativeName);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+                if (EaBuffer)
+                {
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
+                }
+                CloseHandle(TemplateHandle);
+                BaseSetLastNTError(Status);
+                return FALSE;
+            }
+        }
+    }
+
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+    if (EaBuffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EaBuffer);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        NtClose(TemplateHandle);
+        if (RtlIsDosDeviceName_U(lpNewDirectory))
+        {
+            Status = STATUS_NOT_A_DIRECTORY;
+        }
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* If template is a reparse point, copy reparse data */
+    if (ReparsePoint)
+    {
+        ReparseDataBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                            MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+        if (!ReparseDataBuffer)
+        {
+            NtClose(TemplateHandle);
+            NtClose(DirectoryHandle);
+            SetLastError(STATUS_NO_MEMORY);
+            return FALSE;
+        }
+
+        /* First query data */
+        Status = NtFsControlFile(TemplateHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_GET_REPARSE_POINT,
+                                 NULL,
+                                 0,
+                                 ReparseDataBuffer,
+                                 MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+            NtClose(TemplateHandle);
+            NtClose(DirectoryHandle);
+            SetLastError(Status);
+            return FALSE;
+        }
+
+        /* Once again, ensure it is a mount point */
+        if (ReparseDataBuffer->ReparseTag != IO_REPARSE_TAG_MOUNT_POINT)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+            NtClose(TemplateHandle);
+            NtClose(DirectoryHandle);
+            SetLastError(STATUS_OBJECT_NAME_INVALID);
+            return FALSE;
+        }
+
+        /* Get volume name */
+        SubstituteName = (PWSTR)((ULONG_PTR)ReparseDataBuffer->MountPointReparseBuffer.PathBuffer +
+                                 ReparseDataBuffer->MountPointReparseBuffer.SubstituteNameOffset);
+        if (IS_VOLUME_NAME(SubstituteName, ReparseDataBuffer->MountPointReparseBuffer.SubstituteNameLength))
+        {
+            /* Prepare to define a new mount point for that volume */
+            RtlInitUnicodeString(&NewDirectory, lpNewDirectory);
+            NewDirectory.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, NewDirectory.Length + 2 * sizeof(WCHAR));
+            if (!NewDirectory.Buffer)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+                NtClose(TemplateHandle);
+                NtClose(DirectoryHandle);
+                return FALSE;
+            }
+
+            RtlCopyMemory(&NewDirectory.Buffer, lpNewDirectory, NewDirectory.Length);
+            if (NewDirectory.Buffer[NewDirectory.Length / sizeof(WCHAR)] != L'\\')
+            {
+                NewDirectory.Buffer[NewDirectory.Length / sizeof(WCHAR)] = L'\\';
+                NewDirectory.Buffer[(NewDirectory.Length / sizeof(WCHAR)) + 1] = UNICODE_NULL;
+            }
+
+            /* Define a new mount point for that volume */
+            SetVolumeMountPointW(NewDirectory.Buffer, SubstituteName);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NewDirectory.Buffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+            NtClose(TemplateHandle);
+            NtClose(DirectoryHandle);
+            return TRUE;
+        }
+
+        /* Otherwise copy data raw */
+        Status = NtFsControlFile(DirectoryHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_SET_REPARSE_POINT,
+                                 ReparseDataBuffer,
+                                 ReparseDataBuffer->ReparseDataLength +
+                                 FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer.PathBuffer),
+                                 NULL,
+                                 0);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+        NtClose(TemplateHandle);
+        NtClose(DirectoryHandle);
+
+        if (NT_SUCCESS(Status))
+        {
+            return TRUE;
+        }
+
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+    /* In case it's not a reparse point, handle streams on the file */
+    else
+    {
+        for (StreamSize = 0x1000; ; StreamSize = StreamSize * 2)
+        {
+            FileStreamInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, StreamSize);
+            if (!FileStreamInfo)
+            {
+                BaseMarkFileForDelete(DirectoryHandle, FileBasicInfo.FileAttributes);
+                SetLastError(STATUS_NO_MEMORY);
+                break;
+            }
+
+            /* Query stream information */
+            Status = NtQueryInformationFile(TemplateHandle,
+                                            &IoStatusBlock,
+                                            FileStreamInfo,
+                                            StreamSize,
+                                            FileStreamInformation);
+            if (NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
+            FileStreamInfo = NULL;
+
+            /* If it failed, ensure that's not because of too small buffer */
+            if (Status != STATUS_BUFFER_OVERFLOW &&
+                Status != STATUS_BUFFER_TOO_SMALL)
+            {
+                break;
+            }
+        }
+
+        if (!NT_SUCCESS(Status) || IoStatusBlock.Information == 0)
+        {
+            if (FileStreamInfo)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
+            }
+
+            NtClose(TemplateHandle);
+            NtClose(DirectoryHandle);
+            return TRUE;
+        }
+
+#if 1
+        /* FIXME: TODO */
+        DPRINT1("Warning: streams copying is unimplemented!\n");
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileStreamInfo);
+        NtClose(TemplateHandle);
+        NtClose(DirectoryHandle);
+#endif
+        return TRUE;
+    }
 }
 
-
-
-/***********************************************************************
- *           GetLongPathNameA   (KERNEL32.@)
+/*
+ * @implemented
  */
-DWORD WINAPI GetLongPathNameA( LPCSTR shortpath, LPSTR longpath, DWORD longlen )
+BOOL
+WINAPI
+RemoveDirectoryA(IN LPCSTR lpPathName)
 {
-    WCHAR *shortpathW;
-    WCHAR longpathW[MAX_PATH];
-    DWORD ret;
+    PUNICODE_STRING PathNameW;
 
-    TRACE("GetLongPathNameA %s, %i\n",shortpath,longlen );
-
-    if (!(shortpathW = FilenameA2W( shortpath, FALSE )))
-      return 0;
-
-    ret = GetLongPathNameW(shortpathW, longpathW, MAX_PATH);
-
-    if (!ret) return 0;
-    if (ret > MAX_PATH)
+    PathNameW = Basep8BitStringToStaticUnicodeString(lpPathName);
+    if (!PathNameW)
     {
-        SetLastError(ERROR_FILENAME_EXCED_RANGE);
-        return 0;
+        return FALSE;
     }
 
-    return FilenameW2A_FitOrFail(longpath, longlen, longpathW,  ret+1 );
+    return RemoveDirectoryW(PathNameW->Buffer);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+RemoveDirectoryW(IN LPCWSTR lpPathName)
+{
+    NTSTATUS Status;
+    DWORD BytesReturned;
+    HANDLE DirectoryHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING NtPathU, PathName;
+    RTL_RELATIVE_NAME_U RelativeName;
+    PWSTR PathUBuffer, SubstituteName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PREPARSE_DATA_BUFFER ReparseDataBuffer;
+    FILE_DISPOSITION_INFORMATION FileDispInfo;
+    FILE_ATTRIBUTE_TAG_INFORMATION FileTagInfo;
+
+    /* Get relative name */
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpPathName, &NtPathU, NULL, &RelativeName))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
+    }
+
+    /* Save buffer to allow later freeing */
+    PathUBuffer = NtPathU.Buffer;
+
+    /* If we have relative name (and root dir), use them instead */
+    if (RelativeName.RelativeName.Length != 0)
+    {
+        NtPathU.Length = RelativeName.RelativeName.Length;
+        NtPathU.MaximumLength = RelativeName.RelativeName.MaximumLength;
+        NtPathU.Buffer = RelativeName.RelativeName.Buffer;
+    }
+    else
+    {
+        RelativeName.ContainingDirectory = NULL;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               RelativeName.ContainingDirectory,
+                               NULL);
+
+    /* Try to open directory */
+    Status = NtOpenFile(&DirectoryHandle,
+                        DELETE | SYNCHRONIZE | FAILED_ACCESS_ACE_FLAG,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                        FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We only accept failure for reparse points not being supported */
+        if (Status != STATUS_INVALID_PARAMETER)
+        {
+            goto Cleanup;
+        }
+
+        /* Try to open, with reparse points support */
+        Status = NtOpenFile(&DirectoryHandle,
+                            DELETE | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                            FILE_OPEN_FOR_BACKUP_INTENT);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+
+        /* Success, mark directory */
+        goto MarkFileForDelete;
+    }
+
+    /* Get information about file (and reparse point) */
+    Status = NtQueryInformationFile(DirectoryHandle,
+                                    &IoStatusBlock,
+                                    &FileTagInfo,
+                                    sizeof(FileTagInfo),
+                                    FileAttributeTagInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        /* FSD might not support querying reparse points information */
+        if (Status != STATUS_NOT_IMPLEMENTED &&
+            Status != STATUS_INVALID_PARAMETER)
+        {
+            goto CleanupHandle;
+        }
+
+        /* If that's the case, then just delete directory */
+        goto MarkFileForDelete;
+    }
+
+    /* If that's not a reparse point, nothing more to do than just delete */
+    if (!(FileTagInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+    {
+        goto MarkFileForDelete;
+    }
+
+    /* Check if that's a mount point */
+    if (FileTagInfo.ReparseTag != IO_REPARSE_TAG_MOUNT_POINT)
+    {
+        /* It's not */
+        NtClose(DirectoryHandle);
+
+        /* So, try to reopen directory, ignoring mount point */
+        Status = NtOpenFile(&DirectoryHandle,
+                            DELETE | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                            FILE_OPEN_FOR_BACKUP_INTENT);
+        if (NT_SUCCESS(Status))
+        {
+            /* It succeed, we can safely delete directory (and ignore reparse point) */
+            goto MarkFileForDelete;
+        }
+
+        /* If it failed, only allow case where IO mount point was ignored */
+        if (Status != STATUS_IO_REPARSE_TAG_NOT_HANDLED)
+        {
+            goto Cleanup;
+        }
+
+        /* Reopen with reparse point support */
+        Status = NtOpenFile(&DirectoryHandle,
+                            DELETE | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                            FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
+        if (NT_SUCCESS(Status))
+        {
+            /* And mark for delete */
+            goto MarkFileForDelete;
+        }
+
+        goto Cleanup;
+    }
+
+    /* Here, we have a mount point, prepare to query information about it */
+    ReparseDataBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                        MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+    if (!ReparseDataBuffer)
+    {
+        RtlReleaseRelativeName(&RelativeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+        NtClose(DirectoryHandle);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Query */
+    if (!DeviceIoControl(DirectoryHandle,
+                         FSCTL_GET_REPARSE_POINT,
+                         NULL, 0,
+                         ReparseDataBuffer,
+                         MAXIMUM_REPARSE_DATA_BUFFER_SIZE,
+                         &BytesReturned,
+                         NULL))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+        goto MarkFileForDelete;
+    }
+
+    /* Get volume name */
+    SubstituteName = (PWSTR)((ULONG_PTR)ReparseDataBuffer->MountPointReparseBuffer.PathBuffer +
+                             ReparseDataBuffer->MountPointReparseBuffer.SubstituteNameOffset);
+    if (!IS_VOLUME_NAME(SubstituteName, ReparseDataBuffer->MountPointReparseBuffer.SubstituteNameLength))
+    {
+        /* This is not a volume, we can safely delete */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+        goto MarkFileForDelete;
+    }
+
+    /* Prepare to delete mount point */
+    RtlInitUnicodeString(&PathName, lpPathName);
+    PathName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathName.Length + 2 * sizeof(WCHAR));
+    if (!PathName.Buffer)
+    {
+        RtlReleaseRelativeName(&RelativeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+        NtClose(DirectoryHandle);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    RtlCopyMemory(&PathName.Buffer, lpPathName, PathName.Length);
+    if (PathName.Buffer[PathName.Length / sizeof(WCHAR)] != L'\\')
+    {
+        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = L'\\';
+        PathName.Buffer[(PathName.Length / sizeof(WCHAR)) + 1] = UNICODE_NULL;
+    }
+
+    /* Delete mount point for that volume */
+    DeleteVolumeMountPointW(PathName.Buffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ReparseDataBuffer);
+
+    /* And mark directory for delete */
+MarkFileForDelete:
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+
+    /* Mark & set */
+    FileDispInfo.DeleteFile = TRUE;
+    Status = NtSetInformationFile(DirectoryHandle,
+                                  &IoStatusBlock,
+                                  &FileDispInfo,
+                                  sizeof(FILE_DISPOSITION_INFORMATION),
+                                  FileDispositionInformation);
+    NtClose(DirectoryHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+
+CleanupHandle:
+    NtClose(DirectoryHandle);
+
+Cleanup:
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+    BaseSetLastNTError(Status);
+    return FALSE;
 }
 
 /* EOF */

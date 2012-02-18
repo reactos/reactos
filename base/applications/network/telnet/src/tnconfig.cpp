@@ -394,8 +394,8 @@ void TConfig::print_vars(char *s) {
 	}
 
 	// See if the group exists
-	int j, flag;
-	for(j = 0, flag = 0; j < MAX_INI_GROUPS; j++)
+	int j;
+	for(j = 0; j < MAX_INI_GROUPS; j++)
 		if(!stricmp(ini_groups[j], s)) break;
 	// If not, print out the value of the variable by that name
 	if(j == MAX_INI_GROUPS) {

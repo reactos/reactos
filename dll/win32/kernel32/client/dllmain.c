@@ -19,9 +19,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern UNICODE_STRING SystemDirectory;
-extern UNICODE_STRING WindowsDirectory;
-
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 BOOLEAN BaseRunningInServerProcess;
@@ -31,11 +28,9 @@ WCHAR BaseDefaultPathBuffer[6140];
 HANDLE BaseNamedObjectDirectory;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
-HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
-UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 static BOOL DllInitialized = FALSE;
 
 BOOL WINAPI
@@ -62,60 +57,6 @@ BOOLEAN InWindows = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-WINAPI
-BaseGetNamedObjectDirectory(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &BaseStaticServerData->NamedObjectDirectory,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
-                                   DIRECTORY_ALL_ACCESS &
-                                   ~(DELETE | WRITE_DAC | WRITE_OWNER),
-                                   &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
-    return Status;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-BaseQueryModuleData(IN LPSTR ModuleName,
-                    IN LPSTR Unknown,
-                    IN PVOID Unknown2,
-                    IN PVOID Unknown3,
-                    IN PVOID Unknown4)
-{
-    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
-            ModuleName,
-            Unknown,
-            Unknown2,
-            Unknown3,
-            Unknown4);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-BaseProcessInitPostImport(VOID)
-{
-    /* FIXME: Initialize TS pointers */
-    return STATUS_SUCCESS;
-}
-
 BOOL
 WINAPI
 BasepInitConsole(VOID)
@@ -126,6 +67,7 @@ BasepInitConsole(VOID)
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
+    STARTUPINFO si;
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
@@ -145,8 +87,9 @@ BasepInitConsole(VOID)
     else
     {
         /* Assume one is needed */
+        GetStartupInfo(&si);
         Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-        Request.Data.AllocConsoleRequest.Visible = TRUE;
+        Request.Data.AllocConsoleRequest.ShowCmd = si.wShowWindow;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -167,7 +110,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            Request.Data.AllocConsoleRequest.Visible = FALSE;
+            Request.Data.AllocConsoleRequest.ShowCmd = SW_HIDE;
         }
         else
         {
@@ -264,6 +207,9 @@ DllMain(HANDLE hDll,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+        
+        /* Set no filter intially */
+        GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);
@@ -323,12 +269,10 @@ DllMain(HANDLE hDll,
         /* Set the directories */
         BaseWindowsDirectory = BaseStaticServerData->WindowsDirectory;
         BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
-        SystemDirectory = BaseWindowsSystemDirectory;
-        WindowsDirectory = BaseWindowsDirectory;
 
         /* Construct the default path (using the static buffer) */
         _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
-            L".;%wZ;%wZ\\system;%wZ;", &SystemDirectory, &WindowsDirectory, &WindowsDirectory);
+            L".;%wZ;%wZ\\system;%wZ;", &BaseWindowsSystemDirectory, &BaseWindowsDirectory, &BaseWindowsDirectory);
 
         BaseDefaultPath.Buffer = BaseDefaultPathBuffer;
         BaseDefaultPath.Length = wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
@@ -341,15 +285,6 @@ DllMain(HANDLE hDll,
 
         /* Initialize command line */
         InitCommandLines();
-
-        /* Open object base directory */
-        Status = BaseGetNamedObjectDirectory();
-        hBaseDir = BaseNamedObjectDirectory;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to open object base directory (Status %lx)\n", Status);
-            return FALSE;
-        }
 
         /* Initialize the DLL critical section */
         RtlInitializeCriticalSection(&BaseDllDirectoryLock);
@@ -367,6 +302,10 @@ DllMain(HANDLE hDll,
             DPRINT1("Failure to set up console\n");
             return FALSE;
         }
+
+        /* Initialize application certification globals */
+        InitializeListHead(&BasepAppCertDllsList);
+        RtlInitializeCriticalSection(&gcsAppCert);
 
         /* Insert more dll attach stuff here! */
         DllInitialized = TRUE;
@@ -388,9 +327,6 @@ DllMain(HANDLE hDll,
                     RtlDeleteCriticalSection (&ConsoleLock);
                 }
                 RtlDeleteCriticalSection (&BaseDllDirectoryLock);
-
-                /* Close object base directory */
-                NtClose(hBaseDir);
             }
             break;
 
@@ -399,52 +335,6 @@ DllMain(HANDLE hDll,
     }
 
     return TRUE;
-}
-
-#undef InterlockedIncrement
-#undef InterlockedDecrement
-#undef InterlockedExchange
-#undef InterlockedExchangeAdd
-#undef InterlockedCompareExchange
-
-LONG
-WINAPI
-InterlockedIncrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedIncrement(lpAddend);
-}
-
-LONG
-WINAPI
-InterlockedDecrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedDecrement(lpAddend);
-}
-
-#undef InterlockedExchange
-LONG
-WINAPI
-InterlockedExchange(IN OUT LONG volatile *Target,
-                    IN LONG Value)
-{
-    return _InterlockedExchange(Target, Value);
-}
-
-LONG
-WINAPI
-InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
-                       IN LONG Value)
-{
-    return _InterlockedExchangeAdd(Addend, Value);
-}
-
-LONG
-WINAPI
-InterlockedCompareExchange(IN OUT LONG volatile *Destination,
-                           IN LONG Exchange,
-                           IN LONG Comperand)
-{
-    return _InterlockedCompareExchange(Destination, Exchange, Comperand);
 }
 
 /* EOF */

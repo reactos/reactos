@@ -4,6 +4,7 @@
 	<include base="query">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="COM_NO_WINDOWS_H" />
 	<file>query_main.c</file>
 	<library>wine</library>
 	<library>uuid</library>

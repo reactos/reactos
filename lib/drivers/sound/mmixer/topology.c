@@ -525,15 +525,11 @@ MMixerExploreTopology(
     IN OUT PTOPOLOGY Topology)
 {
     ULONG Index;
-    LPGUID Guids;
     PKSTOPOLOGY_CONNECTION Connection;
     MIXER_STATUS Status;
 
     /* sanity check */
     ASSERT(Topology->TopologyNodesCount == NodeTypes->Count);
-
-    /* get topology node types */
-    Guids = (LPGUID)(NodeTypes + 1);
 
     /* get node connections */
     Connection = (PKSTOPOLOGY_CONNECTION)(NodeConnections + 1);

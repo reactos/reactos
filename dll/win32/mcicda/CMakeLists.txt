@@ -10,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(mcicda SHARED ${SOURCE})
 
-set_entrypoint(mcicda 0)
+set_module_type(mcicda win32dll ENTRYPOINT 0 )
 target_link_libraries(mcicda wine)
 add_importlibs(mcicda winmm user32 kernel32 ntdll)
 add_dependencies(mcicda psdk)

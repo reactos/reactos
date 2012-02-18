@@ -60,3 +60,9 @@ ReactOS = "ReactOS Team"
 
 AMDMfg = "Advanced Micro Devices (AMD)"
 PCNET.DeviceDesc = "AMD 79c970 [PCnet32 LANCE]"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"

@@ -59,7 +59,7 @@ typedef struct _UNWIND_INFO
         OPTIONAL ULONG ExceptionHandler;
         OPTIONAL ULONG FunctionEntry;
     };
-    OPTIONAL ULONG ExceptionData[]; 
+    OPTIONAL ULONG ExceptionData[];
 */
 } UNWIND_INFO, *PUNWIND_INFO;
 
@@ -69,7 +69,7 @@ typedef struct _UNWIND_INFO
  * \brief Locates the table of RUNTIME_FUNCTION entries for a code address.
  * \param ControlPc
  *            Address of the code, for which the table should be searched.
- * \param ImageBase 
+ * \param ImageBase
  *            Pointer to a DWORD64 that receives the base address of the
  *            corresponding executable image.
  * \param Length
@@ -354,7 +354,7 @@ RtlVirtualUnwind(
     IN OUT PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
 {
     PUNWIND_INFO UnwindInfo;
-    ULONG CodeOffset;
+    ULONG_PTR CodeOffset;
     ULONG i;
     UNWIND_CODE UnwindCode;
     BYTE Reg;
@@ -524,7 +524,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     ULONG64 ControlPc, ImageBase, EstablisherFrame;
     ULONG64 StackLow, StackHigh;
     PVOID HandlerData;
-    INT i;
+    ULONG i;
     PRUNTIME_FUNCTION FunctionEntry;
 
     DPRINT("Enter RtlWalkFrameChain\n");

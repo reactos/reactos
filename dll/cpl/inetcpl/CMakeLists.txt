@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -17,7 +16,7 @@ list(APPEND SOURCE
 
 add_library(inetcpl SHARED ${SOURCE})
 
-set_module_type(inetcpl cpl)
+set_module_type(inetcpl cpl UNICODE)
 
 target_link_libraries(inetcpl wine)
 

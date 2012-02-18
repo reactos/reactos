@@ -1333,7 +1333,8 @@ DWORD PNP_GetClassRegProp(
     }
 
 done:;
-    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+    if (ret == CR_SUCCESS)
+        *pulTransferLen = *pulLength;
 
     if (hPropKey != NULL)
         RegCloseKey(hPropKey);
@@ -2145,8 +2146,128 @@ DWORD PNP_GetHwProfInfo(
     DWORD ulProfileInfoSize,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    WCHAR szProfileName[5];
+    HKEY hKeyConfig = NULL;
+    HKEY hKeyProfiles = NULL;
+    HKEY hKeyProfile = NULL;
+    DWORD dwDisposition;
+    DWORD dwSize;
+    LONG lError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetHwProfInfo() called\n");
+
+    if (ulProfileInfoSize == 0)
+    {
+        ret = CR_INVALID_DATA;
+        goto done;
+    }
+
+    if (ulFlags != 0)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    /* Initialize the profile information */
+    pHWProfileInfo->HWPI_ulHWProfile = 0;
+    pHWProfileInfo->HWPI_szFriendlyName[0] = 0;
+    pHWProfileInfo->HWPI_dwFlags = 0;
+
+    /* Open the 'IDConfigDB' key */
+    lError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                             L"System\\CurrentControlSet\\Control\\IDConfigDB",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_QUERY_VALUE,
+                             NULL,
+                             &hKeyConfig,
+                             &dwDisposition);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    /* Open the 'Hardware Profiles' subkey */
+    lError = RegCreateKeyExW(hKeyConfig,
+                             L"Hardware Profiles",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                             NULL,
+                             &hKeyProfiles,
+                             &dwDisposition);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    if (ulIndex == (ULONG)-1)
+    {
+        dwSize = sizeof(ULONG);
+        lError = RegQueryValueExW(hKeyConfig,
+                                  L"CurrentConfig",
+                                  NULL,
+                                  NULL,
+                                  (LPBYTE)&pHWProfileInfo->HWPI_ulHWProfile,
+                                  &dwSize);
+        if (lError != ERROR_SUCCESS)
+        {
+            pHWProfileInfo->HWPI_ulHWProfile = 0;
+            ret = CR_REGISTRY_ERROR;
+            goto done;
+        }
+    }
+    else
+    {
+        /* FIXME: not implemented yet */
+        ret = CR_CALL_NOT_IMPLEMENTED;
+        goto done;
+    }
+
+    swprintf(szProfileName, L"%04lu", pHWProfileInfo->HWPI_ulHWProfile);
+
+    lError = RegOpenKeyExW(hKeyProfiles,
+                           szProfileName,
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hKeyProfile);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    dwSize = sizeof(pHWProfileInfo->HWPI_szFriendlyName);
+    lError = RegQueryValueExW(hKeyProfile,
+                              L"FriendlyName",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&pHWProfileInfo->HWPI_szFriendlyName,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+done:
+    if (hKeyProfile != NULL)
+        RegCloseKey(hKeyProfile);
+
+    if (hKeyProfiles != NULL)
+        RegCloseKey(hKeyProfiles);
+
+    if (hKeyConfig != NULL)
+        RegCloseKey(hKeyConfig);
+
+    return ret;
 }
 
 
@@ -2427,8 +2548,86 @@ DWORD PNP_GetCustomDevProp(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hDeviceKey = NULL;
+    HKEY hParamKey = NULL;
+    LONG lError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetCustomDevProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags & ~CM_CUSTOMDEVPROP_BITS)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
+
+    lError = RegOpenKeyExW(hEnumKey,
+                           pDeviceID,
+                           0,
+                           KEY_READ,
+                           &hDeviceKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    lError = RegOpenKeyExW(hDeviceKey,
+                           L"Device Parameters",
+                           0,
+                           KEY_READ,
+                           &hParamKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    lError = RegQueryValueExW(hParamKey,
+                              CustomPropName,
+                              NULL,
+                              pulRegDataType,
+                              Buffer,
+                              pulLength);
+    if (lError != ERROR_SUCCESS)
+    {
+        if (lError == ERROR_MORE_DATA)
+        {
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            *pulLength = 0;
+            ret = CR_NO_SUCH_VALUE;
+        }
+    }
+
+done:;
+    if (ret == CR_SUCCESS)
+        *pulTransferLen = *pulLength;
+
+    if (hParamKey != NULL)
+        RegCloseKey(hParamKey);
+
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    DPRINT("PNP_GetCustomDevProp() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 
@@ -2437,6 +2636,8 @@ DWORD PNP_GetVersionInternal(
     handle_t hBinding,
     WORD *pwVersion)
 {
+    *pwVersion = 0x501;
+    return CR_SUCCESS;
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
 }
@@ -2610,7 +2811,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
                       &DeviceKey) == ERROR_SUCCESS)
     {
         if (RegQueryValueExW(DeviceKey,
-                             L"ClassGUID",
+                             L"Class",
                              NULL,
                              NULL,
                              NULL,
@@ -2940,7 +3141,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT1("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2962,7 +3163,7 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
-            DPRINT1("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
             /* FIXME: ? */
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_EJECT_VETOED, &RpcStatus))
@@ -3066,6 +3267,8 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("  SERVICE_CONTROL_SHUTDOWN received\n");
+            /* Stop listening to RPC Messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 

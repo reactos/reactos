@@ -580,37 +580,35 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
-    UNIMPLEMENTED;
-#if 0
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PLIST_ENTRY Entry;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
 
-  DPRINT("ScsiPortGetLogicalUnit() called\n");
+    DPRINT("ScsiPortGetLogicalUnit() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
-  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
-    return NULL;
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  Entry = DeviceExtension->LunExtensionListHead.Flink;
-  while (Entry != &DeviceExtension->LunExtensionListHead)
+    /* Check the extension size */
+    if (!DeviceExtension->LunExtensionSize)
     {
-      LunExtension = CONTAINING_RECORD(Entry,
-				       SCSI_PORT_LUN_EXTENSION,
-				       List);
-      if (LunExtension->PathId == PathId &&
-	  LunExtension->TargetId == TargetId &&
-	  LunExtension->Lun == Lun)
-	{
-	  return (PVOID)&LunExtension->MiniportLunExtension;
-	}
-
-      Entry = Entry->Flink;
+        /* They didn't want one */
+        return NULL;
     }
-#endif
-  return NULL;
+
+    LunExtension = SpiGetLunExtension(DeviceExtension,
+                                      PathId,
+                                      TargetId,
+                                      Lun);
+    /* Check that the logical unit exists */
+    if (!LunExtension)
+    {
+        /* Nope, return NULL */
+        return NULL;
+    }
+
+    /* Return the logical unit miniport extension */
+    return (LunExtension + 1);
 }
 
 
@@ -1055,7 +1053,6 @@ ScsiPortInitialize(IN PVOID Argument1,
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ScsiPortDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
     /* Obtain configuration information */
@@ -1836,13 +1833,11 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN ULONG ErrorCode,
 		 IN ULONG UniqueId)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  //PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT1("ScsiPortLogError() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+  //DeviceExtension = CONTAINING_RECORD(HwDeviceExtension, SCSI_PORT_DEVICE_EXTENSION, MiniPortDeviceExtension);
 
 
   DPRINT("ScsiPortLogError() done\n");
@@ -4209,7 +4204,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     LONG Result;
     PIRP Irp;
-    ULONG SequenceNumber;
+    //ULONG SequenceNumber;
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
@@ -4309,7 +4304,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     /* Save transfer length in the IRP */
     Irp->IoStatus.Information = Srb->DataTransferLength;
 
-    SequenceNumber = SrbInfo->SequenceNumber;
+    //SequenceNumber = SrbInfo->SequenceNumber;
     SrbInfo->SequenceNumber = 0;
 
     /* Decrement the queue count */
@@ -4577,7 +4572,6 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
             IN PVOID ServiceContext)
 {
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    BOOLEAN Result;
 
     DPRINT("ScsiPortIsr() called!\n");
 
@@ -4588,7 +4582,7 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
         return FALSE;
 
     /* Call miniport's HwInterrupt routine */
-    Result = DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+    DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
 
     /* If flag of notification is set - queue a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)

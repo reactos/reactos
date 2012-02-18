@@ -12,23 +12,23 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "ƒIƒvƒVƒ‡ƒ“"
+CAPTION "ã‚ªãƒ—ã‚·ãƒ§ãƒ³"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX        "ƒJ[ƒh", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "1 –‡‚¸‚ÂŽæ‚é(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "3 –‡‚¸‚ÂŽæ‚é(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    GROUPBOX        "ã‚«ãƒ¼ãƒ‰", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "1 æžšãšã¤å–ã‚‹(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "3 æžšãšã¤å–ã‚‹(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "ŽžŠÔ‚ð•\\Ž¦‚·‚é(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "ƒXƒe[ƒ^ƒXƒo[‚ð•\\Ž¦‚·‚é(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "æ™‚é–“ã‚’è¡¨\ç¤ºã™ã‚‹(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã‚’è¡¨\ç¤ºã™ã‚‹(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "ƒJ[ƒh‚Ì”wŒi‚ð‘I‘ð"
+CAPTION "ã‚«ãƒ¼ãƒ‰ã®èƒŒæ™¯ã‚’é¸æŠž"
 FONT 9, "MS UI Gothic"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -37,7 +37,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -45,7 +45,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "ƒLƒƒƒ“ƒZƒ‹", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -53,11 +53,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "ƒ\\ƒŠƒeƒBƒA"
-    IDS_SOL_ABOUT   "J Brown ‚É‚æ‚éƒ\\ƒŠƒeƒBƒA\n\nCardLib ƒo[ƒWƒ‡ƒ“ 1.0B"
-    IDS_SOL_QUIT    "Œ»Ý‚ÌƒQ[ƒ€‚ðI—¹‚µ‚Ü‚·‚©?"
-    IDS_SOL_WIN     "‚¨‚ß‚Å‚Æ‚¤A‚ ‚È‚½‚ÌŸ‚¿‚Å‚·!"
-    IDS_SOL_DEAL    "‚à‚¤ˆê“xƒJ[ƒh‚ð”z‚è‚Ü‚·‚©?"
+    IDS_SOL_NAME    "ã‚½\ãƒªãƒ†ã‚£ã‚¢"
+    IDS_SOL_ABOUT   "J Brown ã«ã‚ˆã‚‹ã‚½\ãƒªãƒ†ã‚£ã‚¢\n\nCardLib ãƒãƒ¼ã‚¸ãƒ§ãƒ³ 1.0ã€‚"
+    IDS_SOL_QUIT    "ç¾åœ¨ã®ã‚²ãƒ¼ãƒ ã‚’çµ‚äº†ã—ã¾ã™ã‹?"
+    IDS_SOL_WIN     "ãŠã‚ã§ã¨ã†ã€ã‚ãªãŸã®å‹ã¡ã§ã™!"
+    IDS_SOL_DEAL    "ã‚‚ã†ä¸€åº¦ã‚«ãƒ¼ãƒ‰ã‚’é…ã‚Šã¾ã™ã‹?"
 END
 
 
@@ -65,19 +65,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "ƒQ[ƒ€(&G)"
+    POPUP "ã‚²ãƒ¼ãƒ (&G)"
     BEGIN
-        MENUITEM "ƒJ[ƒh‚ð”z‚é(&D)\tF2",        IDM_GAME_NEW
+        MENUITEM "ã‚«ãƒ¼ãƒ‰ã‚’é…ã‚‹(&D)\tF2",        IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "ƒJ[ƒh‚Ì‘•ü(&C)...",         IDM_GAME_DECK
-        MENUITEM "ƒIƒvƒVƒ‡ƒ“(&O)...",           IDM_GAME_OPTIONS
+        MENUITEM "ã‚«ãƒ¼ãƒ‰ã®è£…é£¾(&C)...",         IDM_GAME_DECK
+        MENUITEM "ã‚ªãƒ—ã‚·ãƒ§ãƒ³(&O)...",           IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "I—¹(&E)",                    IDM_GAME_EXIT
+        MENUITEM "çµ‚äº†(&E)",                    IDM_GAME_EXIT
     END
-    POPUP "ƒwƒ‹ƒv(&H)"
+    POPUP "ãƒ˜ãƒ«ãƒ—(&H)"
     BEGIN
-        MENUITEM "–ÚŽŸ(&C)\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "ƒo[ƒWƒ‡ƒ“î•ñ(&A)",          IDM_HELP_ABOUT
+        MENUITEM "ç›®æ¬¡(&C)\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±(&A)",          IDM_HELP_ABOUT
     END
 END
 

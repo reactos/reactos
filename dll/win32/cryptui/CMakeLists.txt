@@ -16,10 +16,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui.def)
 
 add_library(cryptui SHARED ${SOURCE})
-
 set_module_type(cryptui win32dll)
-
 target_link_libraries(cryptui uuid wine)
+add_delay_importlibs(cryptui urlmon wintrust)
 
 add_importlibs(cryptui
     user32
@@ -27,8 +26,6 @@ add_importlibs(cryptui
     crypt32
     gdi32
     advapi32
-    urlmon
-    wintrust
     comctl32
     comdlg32
     msvcrt

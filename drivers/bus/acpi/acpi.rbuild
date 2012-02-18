@@ -17,7 +17,7 @@
 	</group>
 </if>
 
-<module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
+<module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys">
 	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="acpi">include</include>
 	<include base="acpica">include</include>
@@ -25,6 +25,7 @@
 	<library>hal</library>
 	<library>wdmguid</library>
 	<library>acpica</library>
+    <library>pseh</library>
 	<directory name="busmgr">
 		<file>bus.c</file>
 		<file>button.c</file>

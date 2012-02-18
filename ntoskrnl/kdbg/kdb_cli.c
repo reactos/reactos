@@ -90,7 +90,7 @@ static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
 
@@ -107,6 +107,7 @@ static LONG KdbCommandHistoryIndex = 0;
 static ULONG KdbNumberOfRowsPrinted = 0;
 static ULONG KdbNumberOfColsPrinted = 0;
 static BOOLEAN KdbOutputAborted = FALSE;
+static BOOLEAN KdbRepeatLastCommand = FALSE;
 static LONG KdbNumberOfRowsTerminal = -1;
 static LONG KdbNumberOfColsTerminal = -1;
 
@@ -139,7 +140,7 @@ static const struct
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame addr", KdbpCmdBackTrace },
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
     { "dt", "dt [mod] [type] [addr]", "Print a struct.  Addr is optional.", KdbpCmdPrintStruct },
 #endif
 
@@ -460,7 +461,7 @@ KdbpCmdEvalExpression(
     return TRUE;
 }
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 
 /*!\brief Print a struct
  */
@@ -947,6 +948,86 @@ KdbpCmdRegs(
     return TRUE;
 }
 
+static BOOLEAN
+KdbpTrapFrameFromPrevTss(
+    PKTRAP_FRAME TrapFrame)
+{
+    ULONG_PTR Eip, Ebp;
+    KDESCRIPTOR Gdtr;
+    KGDTENTRY Desc;
+    USHORT Sel;
+    PKTSS Tss;
+
+    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+    Sel = Ke386GetTr();
+
+    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
+        (Sel < sizeof(KGDTENTRY)) ||
+        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
+                                       (PVOID)(Gdtr.Base + Sel),
+                                       sizeof(KGDTENTRY))))
+        return FALSE;
+
+    if (Desc.HighWord.Bits.Type != 0xB)
+        return FALSE;
+
+    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
+                             Desc.HighWord.Bytes.BaseMid << 16 |
+                             Desc.HighWord.Bytes.BaseHi << 24);
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Sel,
+                                       (PVOID)&Tss->Backlink,
+                                       sizeof(USHORT))))
+        return FALSE;
+
+    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
+        (Sel < sizeof(KGDTENTRY)) ||
+        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
+                                       (PVOID)(Gdtr.Base + Sel),
+                                       sizeof(KGDTENTRY))))
+        return FALSE;
+
+    if (Desc.HighWord.Bits.Type != 0xB)
+        return FALSE;
+
+    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
+                             Desc.HighWord.Bytes.BaseMid << 16 |
+                             Desc.HighWord.Bytes.BaseHi << 24);
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Eip,
+                                       (PVOID)&Tss->Eip,
+                                       sizeof(ULONG_PTR))))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Ebp,
+                                       (PVOID)&Tss->Ebp,
+                                       sizeof(ULONG_PTR))))
+        return FALSE;
+
+    TrapFrame->Eip = Eip;
+    TrapFrame->Ebp = Ebp;
+    return TRUE;
+}
+
+VOID __cdecl KiTrap02(VOID);
+VOID FASTCALL KiTrap03Handler(IN PKTRAP_FRAME);
+VOID __cdecl KiTrap08(VOID);
+VOID __cdecl KiTrap09(VOID);
+
+static BOOLEAN
+KdbpInNmiOrDoubleFaultHandler(
+    ULONG_PTR Address)
+{
+    return (Address > (ULONG_PTR)KiTrap02 && Address < (ULONG_PTR)KiTrap03Handler) ||
+           (Address > (ULONG_PTR)KiTrap08 && Address < (ULONG_PTR)KiTrap09);
+}
+
 /*!\brief Displays a backtrace.
  */
 static BOOLEAN
@@ -1053,6 +1134,20 @@ KdbpCmdBackTrace(
 
         if (Address == 0)
             break;
+
+        if (KdbpInNmiOrDoubleFaultHandler(Address))
+        {
+            if ((GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame)))
+            {
+                Address = TrapFrame.Eip;
+                Frame = TrapFrame.Ebp;
+
+                if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
+                    KdbpPrint("<%08x>\n", Address);
+                else
+                    KdbpPrint("\n");
+            }
+        }
 
         if (!GotNextFrame)
         {
@@ -2469,6 +2564,8 @@ KdbpPrint(
         if (KdbNumberOfRowsTerminal > 0 &&
             (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
         {
+            KdbRepeatLastCommand = FALSE;
+
             if (KdbNumberOfColsPrinted > 0)
                 DbgPrint("\n");
 
@@ -2789,6 +2886,8 @@ KdbpPager(
         if (KdbNumberOfRowsTerminal > 0 &&
             (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
         {
+            KdbRepeatLastCommand = FALSE;
+
             if (KdbNumberOfColsPrinted > 0)
                 DbgPrint("\n");
 
@@ -2987,7 +3086,7 @@ KdbpReadCommand(
     PCHAR Orig = Buffer;
     ULONG ScanCode = 0;
     BOOLEAN EchoOn;
-    static CHAR LastCommand[1024] = "";
+    static CHAR LastCommand[1024];
     static CHAR NextKey = '\0';
     INT CmdHistIndex = -1;
     INT i;
@@ -3059,15 +3158,16 @@ KdbpReadCommand(
              * Repeat the last command if the user presses enter. Reduces the
              * risk of RSI when single-stepping.
              */
-            if (Buffer == Orig)
+            if (Buffer != Orig)
             {
-                RtlStringCbCopyA(Buffer, Size, LastCommand);
-            }
-            else
-            {
+                KdbRepeatLastCommand = TRUE;
                 *Buffer = '\0';
                 RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
             }
+            else if (KdbRepeatLastCommand)
+                RtlStringCbCopyA(Buffer, Size, LastCommand);
+            else
+                *Buffer = '\0';
 
             return;
         }
@@ -3489,6 +3589,9 @@ KdpPrompt(IN LPSTR InString,
                         *(KdpPromptString.Buffer + i));
     }
 
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdDisableMouse();
+
     /* Loop the whole string */
     for (i = 0; i < OutStringLength; i++)
     {
@@ -3555,6 +3658,9 @@ KdpPrompt(IN LPSTR InString,
         *(PCHAR)(OutString + i) = Response;
         KdPortPutByteEx(&SerialPortInfo, Response);
     }
+
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdEnableMouse();
 
     /* Print a new line */
     KdPortPutByteEx(&SerialPortInfo, '\r');

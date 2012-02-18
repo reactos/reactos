@@ -53,9 +53,9 @@ static void
 qst(size_t size, int (__cdecl *compar)(const void*, const void*), char *base, char *max)
 {
   char c, *i, *j, *jj;
-  int ii;
+  size_t ii;
   char *mid, *tmp;
-  int lo, hi;
+  size_t lo, hi;
   size_t thresh;
   size_t mthresh;
 
@@ -186,7 +186,8 @@ qsort(void *base0, size_t n, size_t size, int (__cdecl *compar)(const void*, con
   if (n <= 1)
     return;
 
-  size = size;
+  if (size == 0)
+    return;
   compar = compar;
   thresh = size * THRESH;
   max = base + n * size;

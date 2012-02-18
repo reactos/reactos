@@ -40,7 +40,16 @@
   * NETCON_create
 --- wine-1.3.4/dlls/wininet/internet.c	2010-10-01 14:46:44.000000000 -0400
 +++ dll/win32/wininet/internet.c	2010-10-09 15:33:04.000000000 -0400
-@@ -3569,19 +3569,22 @@
+@@ -292,8 +292,6 @@
+ 	    if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
+ 		return FALSE;
+ 
+-            URLCacheContainers_CreateDefaults();
+-
+             WININET_hModule = hinstDLL;
+ 
+         case DLL_THREAD_ATTACH:
+@@ -3569,19 +3567,22 @@
  
  LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
  {
@@ -71,7 +80,15 @@ Index: dll/win32/wininet/urlcache.c
 ===================================================================
 --- dll/win32/wininet/urlcache.c	(revision 50814)
 +++ dll/win32/wininet/urlcache.c	(working copy)
-@@ -527,6 +527,7 @@
+@@ -182,6 +182,7 @@
+ 
+ /* List of all containers available */
+ static struct list UrlContainers = LIST_INIT(UrlContainers);
++BOOL bDefaultContainersAdded = FALSE;
+ 
+ static DWORD URLCache_CreateHashTable(LPURLCACHE_HEADER pHeader, HASH_CACHEFILE_ENTRY *pPrevHash, HASH_CACHEFILE_ENTRY **ppHash);
+ 
+@@ -527,6 +528,7 @@
      static const WCHAR HistoryPrefix[] = {'V','i','s','i','t','e','d',':',0};
      static const WCHAR CookieSuffix[] = {0};
      static const WCHAR CookiePrefix[] = {'C','o','o','k','i','e',':',0};
@@ -79,7 +96,7 @@ Index: dll/win32/wininet/urlcache.c
      static const struct
      {
          int nFolder; /* CSIDL_* constant */
-@@ -540,6 +541,12 @@
+@@ -540,6 +542,12 @@
      };
      DWORD i;
  
@@ -92,3 +109,71 @@ Index: dll/win32/wininet/urlcache.c
      for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
      {
          WCHAR wszCachePath[MAX_PATH];
+@@ -584,6 +592,9 @@
+     if(!lpwszUrl)
+         return ERROR_INVALID_PARAMETER;
+ 
++    if (!bDefaultContainersAdded)
++        URLCacheContainers_CreateDefaults();
++
+     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
+     {
+         int prefix_len = strlenW(pContainer->cache_prefix);
+@@ -622,6 +633,9 @@
+     if (lpwszSearchPattern && dwIndex > 0)
+         return FALSE;
+ 
++    if (!bDefaultContainersAdded)
++        URLCacheContainers_CreateDefaults();
++
+     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
+     {
+         if (lpwszSearchPattern)
+@@ -1525,6 +1539,9 @@
+         return FALSE;
+     }
+ 
++    if (!bDefaultContainersAdded)
++        URLCacheContainers_CreateDefaults();
++
+     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
+     {
+         /* The URL cache has prefix L"" (unlike Cookies and History) */
+Index: dll/win32/wininet/http.c
+===================================================================
+--- dll/win32/wininet/http.c	(revision 54234)
++++ dll/win32/wininet/http.c	(working copy)
+@@ -245,8 +245,17 @@
+     if(InterlockedDecrement(&server->ref))
+         return;
+ 
++#ifndef __REACTOS__
+     if(!server->ref)
+         server->keep_until = (DWORD64)GetTickCount() + COLLECT_TIME;
++#else
++    EnterCriticalSection(&connection_pool_cs);
++    list_remove(&server->entry);
++    LeaveCriticalSection(&connection_pool_cs);
++    
++    heap_free(server->name);
++    heap_free(server);
++#endif
+ }
+ 
+ static server_t *get_server(const WCHAR *name, INTERNET_PORT port)
+@@ -1861,6 +1870,7 @@
+     if(!req->netconn)
+         return;
+ 
++#ifndef __REACTOS__
+     if(reuse && req->netconn->keep_alive) {
+         BOOL run_collector;
+ 
+@@ -1893,6 +1903,7 @@
+         }
+         return;
+     }
++#endif
+ 
+     INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,
+                           INTERNET_STATUS_CLOSING_CONNECTION, 0, 0);

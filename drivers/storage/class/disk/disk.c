@@ -651,16 +651,16 @@ Return Value:
     HANDLE         handle;
     NTSTATUS       status;
     PDEVICE_OBJECT deviceObject = NULL;
-    PDEVICE_OBJECT physicalDevice;
+    //PDEVICE_OBJECT physicalDevice;
     PDISK_GEOMETRY_EX diskGeometry = NULL;
     PDEVICE_EXTENSION deviceExtension = NULL;
-    PDEVICE_EXTENSION physicalDeviceExtension;
+    //PDEVICE_EXTENSION physicalDeviceExtension;
     UCHAR          pathId = LunInfo->PathId;
     UCHAR          targetId = LunInfo->TargetId;
     UCHAR          lun = LunInfo->Lun;
-    BOOLEAN        writeCache;
+    //BOOLEAN        writeCache;
     PVOID          senseData = NULL;
-    ULONG          srbFlags;
+    //ULONG          srbFlags;
     ULONG          timeOut = 0;
     BOOLEAN        srbListInitialized = FALSE;
 
@@ -822,8 +822,8 @@ Return Value:
     // This is the physical device object.
     //
 
-    physicalDevice = deviceObject;
-    physicalDeviceExtension = deviceExtension;
+    //physicalDevice = deviceObject;
+    //physicalDeviceExtension = deviceExtension;
 
     //
     // Save address of port driver capabilities.
@@ -874,7 +874,7 @@ Return Value:
                     LunInfo,
                     PortCapabilities);
 
-    srbFlags = deviceExtension->SrbFlags;
+    //srbFlags = deviceExtension->SrbFlags;
 
     //
     // Allocate buffer for drive geometry.
@@ -966,7 +966,7 @@ Return Value:
 
     DisableWriteCache(deviceObject,LunInfo);
 
-    writeCache = deviceExtension->DeviceFlags & DEV_WRITE_CACHE;
+    //writeCache = deviceExtension->DeviceFlags & DEV_WRITE_CACHE;
 
     //
     // NOTE: At this point one device object has been successfully created.

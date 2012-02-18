@@ -20,7 +20,7 @@ BEGIN
     AUTORADIOBUTTON "Dra &Tre", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
     AUTOCHECKBOX    "&Visa Tid", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "&Statusf‰lt", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Statusf√§lt", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Avbryt", IDCANCEL, 101, 97, 50, 14
@@ -28,7 +28,7 @@ END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "V‰lj Kort Baksida" 
+CAPTION "V√§lj Kort Baksida"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -37,7 +37,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire av J Brown\n÷vers‰tt av Ronny K Svensson\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT   "Solitaire av J Brown\n√ñvers√§tt av Ronny K Svensson\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Avsluta nuvarande spel?"
     IDS_SOL_WIN     "Grattis, du vann!"
     IDS_SOL_DEAL    "Ge igen?"
@@ -74,9 +74,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta",                       IDM_GAME_EXIT
     END
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
-        MENUITEM "&InnehÂll\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Inneh√•ll\tF1",               IDM_HELP_CONTENTS
         MENUITEM "&Om",                      IDM_HELP_ABOUT
     END
 END

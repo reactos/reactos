@@ -33,7 +33,7 @@ DoReaderMode(
 
 VOID
 WINAPI
-comctl32_389(
+SHGetProcessDword(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
 {

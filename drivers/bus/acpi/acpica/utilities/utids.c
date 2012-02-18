@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -123,51 +123,6 @@
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utids")
 
-/* Local prototypes */
-
-static void
-AcpiUtCopyIdString (
-    char                    *Destination,
-    char                    *Source);
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiUtCopyIdString
- *
- * PARAMETERS:  Destination         - Where to copy the string
- *              Source              - Source string
- *
- * RETURN:      None
- *
- * DESCRIPTION: Copies an ID string for the _HID, _CID, and _UID methods.
- *              Performs removal of a leading asterisk if present -- workaround
- *              for a known issue on a bunch of machines.
- *
- ******************************************************************************/
-
-static void
-AcpiUtCopyIdString (
-    char                    *Destination,
-    char                    *Source)
-{
-
-    /*
-     * Workaround for ID strings that have a leading asterisk. This construct
-     * is not allowed by the ACPI specification  (ID strings must be
-     * alphanumeric), but enough existing machines have this embedded in their
-     * ID strings that the following code is useful.
-     */
-    if (*Source == '*')
-    {
-        Source++;
-    }
-
-    /* Do the actual copy */
-
-    ACPI_STRCPY (Destination, Source);
-}
-
 
 /*******************************************************************************
  *
@@ -240,7 +195,7 @@ AcpiUtExecute_HID (
     }
     else
     {
-        AcpiUtCopyIdString (Hid->String, ObjDesc->String.Pointer);
+        ACPI_STRCPY (Hid->String, ObjDesc->String.Pointer);
     }
 
     Hid->Length = Length;
@@ -327,7 +282,7 @@ AcpiUtExecute_UID (
     }
     else
     {
-        AcpiUtCopyIdString (Uid->String, ObjDesc->String.Pointer);
+        ACPI_STRCPY (Uid->String, ObjDesc->String.Pointer);
     }
 
     Uid->Length = Length;
@@ -471,7 +426,7 @@ AcpiUtExecute_CID (
         {
             /* Copy the String CID from the returned object */
 
-            AcpiUtCopyIdString (NextIdString, CidObjects[i]->String.Pointer);
+            ACPI_STRCPY (NextIdString, CidObjects[i]->String.Pointer);
             Length = CidObjects[i]->String.Length + 1;
         }
 

@@ -8,7 +8,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 [AddReg]
 
 ; Default locale for the keyboard layout
-HKU,".DEFAULT\Keyboard Layout\Preload","1",0x00020000,"00000409"
+HKU,".DEFAULT\Keyboard Layout\Preload","1",0x00000000,"00000409"
 
 ; Cdfs (ISO96660) filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000000
@@ -35,8 +35,9 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","De
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","Personal",0x00020000,"%SystemDrive%\Profiles\Default User\My Documents"
 
 ; User Profile environment variables
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","USERPROFILE",0x00020000,"%SystemRoot%\Profiles\Default User"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ALLUSERSPROFILE",0x00020000,"%SystemRoot%\Profiles\All Users"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","USERPROFILE",0x00020000,"%SystemDrive%\Profiles\Default User"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ALLUSERSPROFILE",0x00020000,"%SystemDrive%\Profiles\All Users"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00000000,""
 
 ; Font Substitution
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
@@ -48,5 +49,22 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
+
+; FIXME: Registration
+
+; IRemUnknown
+HKCR,"Interface\{00000131-0000-0000-C000-000000000046}","",0x00000000,"IRemUnknown"
+HKCR,"Interface\{00000131-0000-0000-C000-000000000046}\NumMethods","",0x00000000,"6"
+HKCR,"Interface\{00000131-0000-0000-C000-000000000046}\ProxyStubClsid32","",0x00000000,"{00000320-0000-0000-C000-000000000046}"
+
+; IDropTarget
+HKCR,"Interface\{00000122-0000-0000-C000-000000000046}","",0x00000000,"IDropTarget"
+HKCR,"Interface\{00000122-0000-0000-C000-000000000046}\NumMethods","",0x00000000,"7"
+HKCR,"Interface\{00000122-0000-0000-C000-000000000046}\ProxyStubClsid32","",0x00000000,"{00000320-0000-0000-C000-000000000046}"
+
+; PSFactoryBuffer
+HKCR,"CLSID\{00000320-0000-0000-C000-000000000046}","",0x00000000,"PSFactoryBuffer"
+HKCR,"CLSID\{00000320-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"ole32.dll"
+HKCR,"CLSID\{00000320-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Both"
 
 ; EOF

@@ -21,7 +21,7 @@ typedef struct _APPLET
 
 typedef struct _GLOBAL_DATA
 {
-    /* keyboard page */
+    /* Keyboard page */
     STICKYKEYS stickyKeys;
     STICKYKEYS oldStickyKeys;
     FILTERKEYS filterKeys;
@@ -30,11 +30,11 @@ typedef struct _GLOBAL_DATA
     TOGGLEKEYS oldToggleKeys;
     BOOL bKeyboardPref;
 
-    /* sound page */
+    /* Sound page */
     SOUNDSENTRY ssSoundSentry;
     BOOL bShowSounds;
 
-    /* display page */
+    /* Display page */
     HIGHCONTRAST highContrast;
     UINT uCaretBlinkTime;
     UINT uCaretWidth;
@@ -42,10 +42,10 @@ typedef struct _GLOBAL_DATA
     RECT rcCaret;
     RECT rcOldCaret;
 
-    /* mouse page */
+    /* Mouse page */
     MOUSEKEYS mouseKeys;
 
-    /* general page */
+    /* General page */
     ACCESSTIMEOUT accessTimeout;
     SERIALKEYS serialKeys;
     TCHAR szActivePort[MAX_PATH];

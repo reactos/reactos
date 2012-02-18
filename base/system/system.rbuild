@@ -7,6 +7,9 @@
 	<directory name="bootok">
 		<xi:include href="bootok/bootok.rbuild" />
 	</directory>
+	<directory name="diskpart">
+		<xi:include href="diskpart/diskpart.rbuild" />
+	</directory>
 	<directory name="expand">
 		<xi:include href="expand/expand.rbuild" />
 	</directory>
@@ -34,8 +37,8 @@
 	<directory name="services">
 		<xi:include href="services/services.rbuild" />
 	</directory>
-	<directory name="smss">
-		<xi:include href="smss/smss.rbuild" />
+	<directory name="smss2">
+		<xi:include href="smss2/smss2.rbuild" />
 	</directory>
 	<directory name="userinit">
 		<xi:include href="userinit/userinit.rbuild" />

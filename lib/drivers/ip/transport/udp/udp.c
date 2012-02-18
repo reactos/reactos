@@ -105,33 +105,37 @@ NTSTATUS BuildUDPPacket(
     Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
 
     /* Prepare packet */
-    Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
-				       NULL,
-				       Packet->TotalSize );
+    Status = AllocatePacketWithBuffer(&Packet->NdisPacket,
+                                      NULL,
+                                      Packet->TotalSize );
 
-    if( !NT_SUCCESS(Status) ) return Status;
+    if( !NT_SUCCESS(Status) )
+    {
+        Packet->Free(Packet);
+        return Status;
+    }
 
     TI_DbgPrint(MID_TRACE, ("Allocated packet: %x\n", Packet->NdisPacket));
     TI_DbgPrint(MID_TRACE, ("Local Addr : %s\n", A2S(LocalAddress)));
     TI_DbgPrint(MID_TRACE, ("Remote Addr: %s\n", A2S(RemoteAddress)));
 
     switch (RemoteAddress->Type) {
-    case IP_ADDRESS_V4:
-	Status = AddUDPHeaderIPv4(AddrFile, RemoteAddress, RemotePort,
-				  LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
-	break;
-    case IP_ADDRESS_V6:
-	/* FIXME: Support IPv6 */
-	TI_DbgPrint(MIN_TRACE, ("IPv6 UDP datagrams are not supported.\n"));
-    default:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
+        case IP_ADDRESS_V4:
+            Status = AddUDPHeaderIPv4(AddrFile, RemoteAddress, RemotePort,
+                                      LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
+            break;
+        case IP_ADDRESS_V6:
+            /* FIXME: Support IPv6 */
+            TI_DbgPrint(MIN_TRACE, ("IPv6 UDP datagrams are not supported.\n"));
+        default:
+            Status = STATUS_UNSUCCESSFUL;
+            break;
     }
     if (!NT_SUCCESS(Status)) {
-	TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n",
-				Status));
-	FreeNdisPacket(Packet->NdisPacket);
-	return Status;
+        TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n",
+                                Status));
+        Packet->Free(Packet);
+        return Status;
     }
 
     TI_DbgPrint(MID_TRACE, ("Displaying packet\n"));
@@ -141,11 +145,6 @@ NTSTATUS BuildUDPPacket(
     TI_DbgPrint(MID_TRACE, ("Leaving\n"));
 
     return STATUS_SUCCESS;
-}
-
-VOID UDPSendPacketComplete
-( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
-    FreeNdisPacket( Packet );
 }
 
 NTSTATUS UDPSendDatagram(
@@ -201,8 +200,8 @@ NTSTATUS UDPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_NETWORK_UNREACHABLE;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_NETWORK_UNREACHABLE;
         }
 
         LocalAddress = NCE->Interface->Unicast;
@@ -210,8 +209,8 @@ NTSTATUS UDPSendDatagram(
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_INVALID_PARAMETER;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_INVALID_PARAMETER;
         }
     }
 
@@ -229,12 +228,10 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) )
 		return Status;
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL )))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
+    Status = IPSendDatagram(&Packet, NCE);
+    if (!NT_SUCCESS(Status))
         return Status;
-    }
-    
+
     *DataUsed = DataSize;
 
     return STATUS_SUCCESS;

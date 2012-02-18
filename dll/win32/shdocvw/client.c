@@ -227,7 +227,6 @@ static HRESULT WINAPI InPlaceSite_GetWindowContext(IOleInPlaceSite *iface,
     GetClientRect(This->hwnd, lprcPosRect);
     *lprcClipRect = *lprcPosRect;
 
-    lpFrameInfo->cb = sizeof(*lpFrameInfo);
     lpFrameInfo->fMDIApp = FALSE;
     lpFrameInfo->hwndFrame = This->frame_hwnd;
     lpFrameInfo->haccel = NULL;

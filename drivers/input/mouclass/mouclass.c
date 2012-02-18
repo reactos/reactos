@@ -119,7 +119,7 @@ ClassDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PCLASS_DEVICE_EXTENSION DeviceExtension;
+	//PCLASS_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
 	TRACE_(CLASS_NAME, "IRP_MJ_DEVICE_CONTROL\n");
@@ -127,7 +127,7 @@ ClassDeviceControl(
 	if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
-	DeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	//DeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	switch (IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode)
 	{
@@ -738,6 +738,7 @@ HandleReadIrp(
 {
 	PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 	NTSTATUS Status;
+	KIRQL OldIrql;
 
 	TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -781,8 +782,8 @@ HandleReadIrp(
 	}
 	else
 	{
-		(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
-		if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
+		IoAcquireCancelSpinLock(&OldIrql);
+		if (Irp->Cancel)
 		{
 			DeviceExtension->PendingIrp = NULL;
 			Status = STATUS_CANCELLED;
@@ -791,10 +792,78 @@ HandleReadIrp(
 		{
 			IoMarkIrpPending(Irp);
 			DeviceExtension->PendingIrp = Irp;
+			(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
 			Status = STATUS_PENDING;
 		}
+		IoReleaseCancelSpinLock(OldIrql);
 	}
 	return Status;
+}
+
+static NTSTATUS NTAPI
+ClassPnp(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	PPORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+	PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK Iosb;
+	NTSTATUS Status;
+	
+	switch (IrpSp->MinorFunction)
+	{
+		case IRP_MN_START_DEVICE:
+		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (NT_SUCCESS(Status))
+			{
+				InitializeObjectAttributes(&ObjectAttributes,
+										   &DeviceExtension->InterfaceName,
+										   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+										   NULL,
+										   NULL);
+
+				Status = ZwOpenFile(&DeviceExtension->FileHandle,
+									FILE_READ_DATA,
+									&ObjectAttributes,
+									&Iosb,
+									0,
+									0);
+				if (!NT_SUCCESS(Status))
+					DeviceExtension->FileHandle = NULL;
+			}
+			else
+				DeviceExtension->FileHandle = NULL;
+			Irp->IoStatus.Status = Status;
+			IoCompleteRequest(Irp, IO_NO_INCREMENT);
+			return Status;
+			
+		case IRP_MN_REMOVE_DEVICE:
+		case IRP_MN_STOP_DEVICE:
+			if (DeviceExtension->FileHandle)
+			{
+				ZwClose(DeviceExtension->FileHandle);
+				DeviceExtension->FileHandle = NULL;
+			}
+			Status = STATUS_SUCCESS;
+			break;
+
+		default:
+			Status = Irp->IoStatus.Status;
+			break;
+	}
+
+	Irp->IoStatus.Status = Status;
+	if (NT_SUCCESS(Status) || Status == STATUS_NOT_SUPPORTED)
+	{
+		IoSkipCurrentIrpStackLocation(Irp);
+		return IoCallDriver(DeviceExtension->LowerDevice, Irp);
+	}
+	else
+	{
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return Status;
+	}
 }
 
 static VOID NTAPI
@@ -990,6 +1059,7 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_CLOSE]          = ClassClose;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP]        = ClassCleanup;
 	DriverObject->MajorFunction[IRP_MJ_READ]           = ClassRead;
+	DriverObject->MajorFunction[IRP_MJ_PNP]            = ClassPnp;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ForwardIrpAndForget;
 	DriverObject->DriverStartIo                        = ClassStartIo;

@@ -52,10 +52,12 @@ void MakeWindowActive(HWND hwnd)
 {
    WINDOWPLACEMENT wpl;
 
+   wpl.length = sizeof(WINDOWPLACEMENT);
    GetWindowPlacement(hwnd, &wpl);
-
+  
+   TRACE("GetWindowPlacement wpl.showCmd %d\n",wpl.showCmd);
    if (wpl.showCmd == SW_SHOWMINIMIZED)
-      ShowWindow(hwnd, SW_RESTORE);
+      ShowWindowAsync(hwnd, SW_RESTORE);
 
    BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
    SetForegroundWindow(hwnd);
@@ -190,6 +192,7 @@ void OnPaint(HWND hWnd)
    int i;
    HBRUSH hBrush;
    HPEN hPen;
+   HFONT dcFont;
    COLORREF cr;
    int nch = GetWindowTextW(windowList[selectedWindow], windowText, 1023);
 
@@ -228,7 +231,7 @@ void OnPaint(HWND hWnd)
          DrawIcon(dialogDC, xpos, ypos, hIcon);
       }
 
-      SelectObject(dialogDC, dialogFont);
+      dcFont = SelectObject(dialogDC, dialogFont);
       SetTextColor(dialogDC, GetSysColor(COLOR_BTNTEXT));
       SetBkColor(dialogDC, GetSysColor(COLOR_BTNFACE));
 
@@ -237,6 +240,7 @@ void OnPaint(HWND hWnd)
       textRC.right = totalW - 8;
       textRC.bottom = totalH - 8;
       DrawTextW(dialogDC, windowText, nch, &textRC, DT_CENTER|DT_END_ELLIPSIS);
+      SelectObject(dialogDC, dcFont);
    }
    EndPaint(hWnd, &paint);
 }

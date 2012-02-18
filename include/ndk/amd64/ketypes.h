@@ -162,6 +162,10 @@ Author:
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     100
+#define HYPERSPACE_BASE         0xfffff70000000000ULL
+#define MM_HAL_VA_START         0xFFFFFFFFFFC00000ULL /* This is Vista+ */
+#define MM_HAL_VA_END           0xFFFFFFFFFFFFFFFFULL
+#define APIC_BASE               0xFFFFFFFFFFFE0000ULL
 
 //
 // IOPM Definitions
@@ -181,11 +185,7 @@ Author:
 //
 // Synchronization-level IRQL
 //
-#ifndef CONFIG_SMP
-#define SYNCH_LEVEL             DISPATCH_LEVEL
-#else
-#define SYNCH_LEVEL             (IPI_LEVEL - 2)
-#endif
+#define SYNCH_LEVEL 12
 
 #define NMI_STACK_SIZE 0x2000
 

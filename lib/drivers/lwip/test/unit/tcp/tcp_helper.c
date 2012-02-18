@@ -1,6 +1,6 @@
 #include "tcp_helper.h"
 
-#include "lwip/tcp.h"
+#include "lwip/tcp_impl.h"
 #include "lwip/stats.h"
 #include "lwip/pbuf.h"
 #include "lwip/inet_chksum.h"
@@ -27,7 +27,6 @@ tcp_remove(struct tcp_pcb* pcb_list)
 void
 tcp_remove_all(void)
 {
-  //tcp_remove(tcp_bound_pcbs);
   tcp_remove(tcp_listen_pcbs.pcbs);
   tcp_remove(tcp_active_pcbs);
   tcp_remove(tcp_tw_pcbs);
@@ -51,14 +50,14 @@ tcp_create_rx_segment(struct tcp_pcb* pcb, void* data, size_t data_len, u32_t se
 
 /** Create a TCP segment usable for passing to tcp_input */
 struct pbuf*
-tcp_create_segment(struct ip_addr* src_ip, struct ip_addr* dst_ip,
+tcp_create_segment(ip_addr_t* src_ip, ip_addr_t* dst_ip,
                    u16_t src_port, u16_t dst_port, void* data, size_t data_len,
                    u32_t seqno, u32_t ackno, u8_t headerflags)
 {
   struct pbuf* p;
   struct ip_hdr* iphdr;
   struct tcp_hdr* tcphdr;
-  u16_t pbuf_len = sizeof(struct ip_hdr) + sizeof(struct tcp_hdr) + data_len;
+  u16_t pbuf_len = (u16_t)(sizeof(struct ip_hdr) + sizeof(struct tcp_hdr) + data_len);
 
   p = pbuf_alloc(PBUF_RAW, pbuf_len, PBUF_POOL);
   EXPECT_RETNULL(p != NULL);
@@ -83,13 +82,14 @@ tcp_create_segment(struct ip_addr* src_ip, struct ip_addr* dst_ip,
   tcphdr->ackno = htonl(ackno);
   TCPH_HDRLEN_SET(tcphdr, sizeof(struct tcp_hdr)/4);
   TCPH_FLAGS_SET(tcphdr, headerflags);
-  tcphdr->wnd   = htonl(TCP_WND);
+  tcphdr->wnd   = htons(TCP_WND);
 
   /* copy data */
   memcpy((char*)tcphdr + sizeof(struct tcp_hdr), data, data_len);
 
   /* calculate checksum */
-  tcphdr->chksum = inet_chksum_pseudo(p, &(iphdr->src), &(iphdr->dest),
+
+  tcphdr->chksum = inet_chksum_pseudo(p, src_ip, dst_ip,
           IP_PROTO_TCP, p->tot_len);
 
   pbuf_header(p, sizeof(struct ip_hdr));
@@ -99,8 +99,8 @@ tcp_create_segment(struct ip_addr* src_ip, struct ip_addr* dst_ip,
 
 /** Safely bring a tcp_pcb into the requested state */
 void
-tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, struct ip_addr* local_ip,
-                   struct ip_addr* remote_ip, u16_t local_port, u16_t remote_port)
+tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, ip_addr_t* local_ip,
+                   ip_addr_t* remote_ip, u16_t local_port, u16_t remote_port)
 {
   /* @todo: are these all states? */
   /* @todo: remove from previous list */
@@ -193,4 +193,21 @@ test_tcp_new_counters_pcb(struct test_tcp_counters* counters)
     tcp_err(pcb, test_tcp_counters_err);
   }
   return pcb;
+}
+
+/** Calls tcp_input() after adjusting current_iphdr_dest */
+void test_tcp_input(struct pbuf *p, struct netif *inp)
+{
+  struct ip_hdr *iphdr = (struct ip_hdr*)p->payload;
+  ip_addr_copy(current_iphdr_dest, iphdr->dest);
+  ip_addr_copy(current_iphdr_src, iphdr->src);
+  current_netif = inp;
+  current_header = iphdr;
+
+  tcp_input(p, inp);
+
+  current_iphdr_dest.addr = 0;
+  current_iphdr_src.addr = 0;
+  current_netif = NULL;
+  current_header = NULL;
 }

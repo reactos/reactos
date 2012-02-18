@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_app
 {
-    const INetFwAuthorizedApplicationVtbl *vtbl;
+    INetFwAuthorizedApplication INetFwAuthorizedApplication_iface;
     LONG refs;
 } fw_app;
 
 static inline fw_app *impl_from_INetFwAuthorizedApplication( INetFwAuthorizedApplication *iface )
 {
-    return (fw_app *)((char *)iface - FIELD_OFFSET( fw_app, vtbl ));
+    return CONTAINING_RECORD(iface, fw_app, INetFwAuthorizedApplication_iface);
 }
 
 static ULONG WINAPI fw_app_AddRef(
@@ -262,7 +262,7 @@ static HRESULT WINAPI fw_app_put_Enabled(
     fw_app *This = impl_from_INetFwAuthorizedApplication( iface );
 
     FIXME("%p, %d\n", This, enabled);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static const struct INetFwAuthorizedApplicationVtbl fw_app_vtbl =
@@ -297,23 +297,23 @@ HRESULT NetFwAuthorizedApplication_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fa = HeapAlloc( GetProcessHeap(), 0, sizeof(*fa) );
     if (!fa) return E_OUTOFMEMORY;
 
-    fa->vtbl = &fw_app_vtbl;
+    fa->INetFwAuthorizedApplication_iface.lpVtbl = &fw_app_vtbl;
     fa->refs = 1;
 
-    *ppObj = &fa->vtbl;
+    *ppObj = &fa->INetFwAuthorizedApplication_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;
 }
 typedef struct fw_apps
 {
-    const INetFwAuthorizedApplicationsVtbl *vtbl;
+    INetFwAuthorizedApplications INetFwAuthorizedApplications_iface;
     LONG refs;
 } fw_apps;
 
 static inline fw_apps *impl_from_INetFwAuthorizedApplications( INetFwAuthorizedApplications *iface )
 {
-    return (fw_apps *)((char *)iface - FIELD_OFFSET( fw_apps, vtbl ));
+    return CONTAINING_RECORD(iface, fw_apps, INetFwAuthorizedApplications_iface);
 }
 
 static ULONG WINAPI fw_apps_AddRef(
@@ -490,10 +490,10 @@ HRESULT NetFwAuthorizedApplications_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fa = HeapAlloc( GetProcessHeap(), 0, sizeof(*fa) );
     if (!fa) return E_OUTOFMEMORY;
 
-    fa->vtbl = &fw_apps_vtbl;
+    fa->INetFwAuthorizedApplications_iface.lpVtbl = &fw_apps_vtbl;
     fa->refs = 1;
 
-    *ppObj = &fa->vtbl;
+    *ppObj = &fa->INetFwAuthorizedApplications_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

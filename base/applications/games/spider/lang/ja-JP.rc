@@ -5,16 +5,13 @@
  * PURPOSE:      Japanese Language File for Spider Solitaire
  * TRANSLATOR:   Tomoya Kitagawa
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "ƒJ[ƒh‚Ì”wŒi‚ð‘I‘ð"
+CAPTION "ã‚«ãƒ¼ãƒ‰ã®èƒŒæ™¯ã‚’é¸æŠž"
 FONT 9, "MS UI Gothic"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -23,7 +20,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -31,31 +28,31 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "ƒLƒƒƒ“ƒZƒ‹", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "“ïˆÕ“x"
+CAPTION "é›£æ˜“åº¦"
 FONT 9, "MS UI Gothic"
 BEGIN
-    AUTORADIOBUTTON "‰‹‰: 1 F(&O)", IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "’†‹‰: 2 F(&T)", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "ã‹‰: 4 F(&F)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    AUTORADIOBUTTON "åˆç´š: 1 è‰²(&O)", IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "ä¸­ç´š: 2 è‰²(&T)", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "ä¸Šç´š: 4 è‰²(&F)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹", IDCANCEL, 58, 58, 40, 14
+    PUSHBUTTON      "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "ƒXƒpƒCƒ_"
-    IDS_SPI_ABOUT   "Gregor Schneider ‚É‚æ‚éƒXƒpƒCƒ_ ƒ\\ƒŠƒeƒBƒA\n\nCardLib ƒo[ƒWƒ‡ƒ“ 1.0"
-    IDS_SPI_QUIT    "Œ»Ý‚ÌƒQ[ƒ€‚ðI—¹‚µ‚Ü‚·‚©?"
-    IDS_SPI_WIN     "‚¨‚ß‚Å‚Æ‚¤A‚ ‚È‚½‚ÌŸ‚¿‚Å‚·!"
-    IDS_SPI_DEAL    "‚à‚¤ˆê“xƒJ[ƒh‚ð”z‚è‚Ü‚·‚©?"
+    IDS_SPI_NAME    "ã‚¹ãƒ‘ã‚¤ãƒ€"
+    IDS_SPI_ABOUT   "Gregor Schneider ã«ã‚ˆã‚‹ã‚¹ãƒ‘ã‚¤ãƒ€ ã‚½\ãƒªãƒ†ã‚£ã‚¢\n\nCardLib ãƒãƒ¼ã‚¸ãƒ§ãƒ³ 1.0"
+    IDS_SPI_QUIT    "ç¾åœ¨ã®ã‚²ãƒ¼ãƒ ã‚’çµ‚äº†ã—ã¾ã™ã‹?"
+    IDS_SPI_WIN     "ãŠã‚ã§ã¨ã†ã€ã‚ãªãŸã®å‹ã¡ã§ã™!"
+    IDS_SPI_DEAL    "ã‚‚ã†ä¸€åº¦ã‚«ãƒ¼ãƒ‰ã‚’é…ã‚Šã¾ã™ã‹?"
 END
 
 
@@ -63,18 +60,18 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "ƒQ[ƒ€(&G)"
+    POPUP "ã‚²ãƒ¼ãƒ (&G)"
     BEGIN
-        MENUITEM "V‹KƒQ[ƒ€(&N)\tF2",          IDM_GAME_NEW
+        MENUITEM "æ–°è¦ã‚²ãƒ¼ãƒ (&N)\tF2",          IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "ƒJ[ƒh‚Ì‘•ü(&D)...",         IDM_GAME_DECK
+        MENUITEM "ã‚«ãƒ¼ãƒ‰ã®è£…é£¾(&D)...",         IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "ƒXƒpƒCƒ_‚ÌI—¹(&E)",          IDM_GAME_EXIT
+        MENUITEM "ã‚¹ãƒ‘ã‚¤ãƒ€ã®çµ‚äº†(&E)",          IDM_GAME_EXIT
     END
-    POPUP "ƒwƒ‹ƒv(&H)"
+    POPUP "ãƒ˜ãƒ«ãƒ—(&H)"
     BEGIN
-        MENUITEM "–ÚŽŸ(&C)\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "ƒo[ƒWƒ‡ƒ“î•ñ(&A)",          IDM_HELP_ABOUT
+        MENUITEM "ç›®æ¬¡(&C)\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±(&A)",          IDM_HELP_ABOUT
     END
 END
 

@@ -12,21 +12,19 @@ LibIPInsertPacket(void *ifarg,
                   const void *const data,
                   const u32_t size)
 {
-    struct pbuf *p, *p1;
-    u32_t i;
-    
+    struct pbuf *p;
+
     ASSERT(ifarg);
     ASSERT(data);
     ASSERT(size > 0);
 
-    p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_POOL);
+    p = pbuf_alloc(PBUF_RAW, size, PBUF_RAM);
     if (p)
     {
-        for (i = 0, p1 = p; i < size; i += p1->len, p1 = p1->next)
-        {
-            ASSERT(p1);
-            RtlCopyMemory(p1->payload, ((PUCHAR)data) + i, p1->len);
-        }
+        ASSERT(p->tot_len == p->len);
+        ASSERT(p->len == size);
+
+        RtlCopyMemory(p->payload, data, p->len);
 
         ((PNETIF)ifarg)->input(p, (PNETIF)ifarg);
     }

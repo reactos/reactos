@@ -23,125 +23,6 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL
-PlaySoundRoutine(
-	IN LPCWSTR FileName,
-	IN UINT bLogon,
-	IN UINT Flags)
-{
-	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
-	typedef UINT (WINAPI *WAVEOUTGETNUMDEVS)(VOID);
-	PLAYSOUNDW Play;
-	WAVEOUTGETNUMDEVS waveOutGetNumDevs;
-	UINT NumDevs;
-	HMODULE hLibrary;
-	BOOL Ret = FALSE;
-
-	hLibrary = LoadLibraryW(L"winmm.dll");
-	if (hLibrary)
-	{
-		waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
-		if (waveOutGetNumDevs)
-		{
-			NumDevs = waveOutGetNumDevs();
-			if (!NumDevs)
-			{
-				if (!bLogon)
-				{
-					Beep(500, 500);
-				}
-				FreeLibrary(hLibrary);
-				return FALSE;
-			}
-		}
-
-		Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
-		if (Play)
-		{
-			Ret = Play(FileName, NULL, Flags);
-		}
-		FreeLibrary(hLibrary);
-	}
-
-	return Ret;
-}
-
-DWORD
-WINAPI
-PlayLogonSoundThread(
-	IN LPVOID lpParameter)
-{
-	HKEY hKey;
-	WCHAR szBuffer[MAX_PATH] = {0};
-	WCHAR szDest[MAX_PATH];
-	DWORD dwSize = sizeof(szBuffer);
-	SERVICE_STATUS_PROCESS Info;
-
-	ULONG Index = 0;
-
-	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-	{
-		ExitThread(0);
-	}
-
-	if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szBuffer, &dwSize) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		ExitThread(0);
-	}
-
-
-	RegCloseKey(hKey);
-
-	if (!szBuffer[0])
-		ExitThread(0);
-
-
-	szBuffer[MAX_PATH-1] = L'\0';
-	if (ExpandEnvironmentStringsW(szBuffer, szDest, MAX_PATH))
-	{
-		SC_HANDLE hSCManager, hService;
-
-		hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-		if (!hSCManager)
-			ExitThread(0);;
-
-		hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
-		if (!hService)
-		{
-			CloseServiceHandle(hSCManager);
-			TRACE("WL: failed to open sysaudio Status %x\n", GetLastError());
-			ExitThread(0);
-		}
-
-		do
-		{
-			if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
-			{
-				TRACE("WL: QueryServiceStatusEx failed %x\n", GetLastError());
-				break;
-			}
-
-			if (Info.dwCurrentState == SERVICE_RUNNING)
-				break;
-
-			Sleep(1000);
-
-		}while(Index++ < 20);
-
-		CloseServiceHandle(hService);
-		CloseServiceHandle(hSCManager);
-
-		if (Info.dwCurrentState != SERVICE_RUNNING)
-			ExitThread(0);
-
-		PlaySoundRoutine(szDest, TRUE, SND_FILENAME);
-	}
-	ExitThread(0);
-}
-
-
-
 static BOOL
 StartServicesManager(VOID)
 {
@@ -267,6 +148,70 @@ WaitForLsass(VOID)
 }
 
 
+static BOOL
+InitKeyboardLayouts()
+{
+    WCHAR wszKeyName[12], wszKLID[10];
+	DWORD dwSize = sizeof(wszKLID), dwType, i = 1;
+    HKEY hKey;
+    UINT Flags;
+    BOOL bRet = FALSE;
+
+    /* Open registry key with preloaded layouts */
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	{
+        while(TRUE)
+        {
+            /* Read values with integer names only */
+            swprintf(wszKeyName, L"%d", i++);
+            if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
+            {
+                /* There is no more entries */
+                break;
+            }
+
+            /* Only REG_SZ values are valid */
+            if (dwType != REG_SZ)
+            {
+                ERR("Wrong type: %ws!\n", wszKLID);
+                continue;
+            }
+
+            /* Load keyboard layout with given locale id */
+            Flags = KLF_SUBSTITUTE_OK;
+            if (i > 1)
+                Flags |= KLF_NOTELLSHELL|KLF_REPLACELANG;
+            else // First layout
+                Flags |= KLF_ACTIVATE; // |0x40000000
+            if (!LoadKeyboardLayoutW(wszKLID, Flags))
+            {
+                ERR("LoadKeyboardLayoutW(%ws) failed!\n", wszKLID);
+                continue;
+            }
+            else
+            {
+                /* We loaded at least one layout - success */
+                bRet = TRUE;
+            }
+        }
+
+        /* Close the key now */
+        RegCloseKey(hKey);
+	}
+	else
+	    WARN("RegOpenKeyExW(Keyboard Layout\\Preload) failed!\n");
+
+    if (!bRet)
+    {
+        /* If we failed, load US keyboard layout */
+        if (LoadKeyboardLayoutW(L"00000409", 0x04090409))
+            bRet = TRUE;
+    }
+
+    return bRet;
+}
+
+
 BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,
@@ -357,7 +302,6 @@ WinMain(
 #endif
 	ULONG HardErrorResponse;
 	MSG Msg;
-	HANDLE hThread;
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -368,7 +312,6 @@ WinMain(
 	if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
 	{
 		ERR("WL: Could not register logon process\n");
-		HandleShutdown(NULL, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
 		NtShutdownSystem(ShutdownNoReboot);
 		ExitProcess(0);
 	}
@@ -390,6 +333,14 @@ WinMain(
 		ExitProcess(1);
 	}
 	LockWorkstation(WLSession);
+
+    /* Load default keyboard layouts */
+    if (!InitKeyboardLayouts())
+    {
+        ERR("WL: Could not preload keyboard layouts\n");
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+		ExitProcess(1);
+    }
 
 	if (!StartServicesManager())
 	{
@@ -477,13 +428,6 @@ WinMain(
 	}
 	else
 		PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
-
-	/* Play logon sound */
-	hThread = CreateThread(NULL, 0, PlayLogonSoundThread, NULL, 0, NULL);
-	if (hThread)
-	{
-		CloseHandle(hThread);
-	}
 
 	/* Tell kernel that CurrentControlSet is good (needed
 	 * to support Last good known configuration boot) */

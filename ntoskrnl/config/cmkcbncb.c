@@ -153,7 +153,8 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
     ULONG i;
     BOOLEAN IsCompressed = TRUE, Found = FALSE;
     PCM_NAME_HASH HashEntry;
-    ULONG Length, NcbSize;
+    ULONG NcbSize;
+    USHORT Length;
 
     /* Loop the name */
     p = NodeName->Buffer;
@@ -519,7 +520,7 @@ NTAPI
 CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     PCM_KEY_NODE KeyNode;
-    
+
     /* Sanity check */
     ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
            (CmpTestRegistryLockExclusive() == TRUE));
@@ -533,7 +534,7 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
             /* Kill it */
             CmpFree(Kcb->IndexHint, 0);
         }
-        
+
         /* Remove subkey flags */
         Kcb->ExtFlags &= ~(CM_KCB_NO_SUBKEY | CM_KCB_SUBKEY_ONE | CM_KCB_SUBKEY_HINT);
     }
@@ -581,7 +582,7 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Get the ref count and update it */
     OldRefCount = *(PLONG)&Kcb->RefCount;
     NewRefCount = OldRefCount - 1;
-   
+
     /* Check if we still have references */
     if ((NewRefCount & 0xFFFF) > 0)
     {
@@ -594,7 +595,7 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
             return;
         }
     }
-    
+
     /* Save the key */
     ConvKey = Kcb->ConvKey;
 
@@ -901,7 +902,8 @@ NTAPI
 CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     PUNICODE_STRING KeyName;
-    ULONG NameLength, i;
+    ULONG i;
+    USHORT NameLength;
     PCM_KEY_CONTROL_BLOCK MyKcb;
     PCM_KEY_NODE KeyNode;
     BOOLEAN DeletedKey = FALSE;

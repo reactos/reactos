@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -117,7 +117,6 @@
 
 #include "acpi.h"
 #include "accommon.h"
-#include "amlcode.h"
 #include "acdispat.h"
 #include "acinterp.h"
 #include "acnamesp.h"
@@ -291,7 +290,7 @@ AcpiDsBeginMethodExecution (
     /*
      * If this method is serialized, we need to acquire the method mutex.
      */
-    if (ObjDesc->Method.MethodFlags & AML_METHOD_SERIALIZED)
+    if (ObjDesc->Method.InfoFlags & ACPI_METHOD_SERIALIZED)
     {
         /*
          * Create a mutex for the method if it is defined to be Serialized
@@ -318,7 +317,7 @@ AcpiDsBeginMethodExecution (
             (WalkState->Thread->CurrentSyncLevel > ObjDesc->Method.Mutex->Mutex.SyncLevel))
         {
             ACPI_ERROR ((AE_INFO,
-                "Cannot acquire Mutex for method [%4.4s], current SyncLevel is too large (%d)",
+                "Cannot acquire Mutex for method [%4.4s], current SyncLevel is too large (%u)",
                 AcpiUtGetNodeName (MethodNode),
                 WalkState->Thread->CurrentSyncLevel));
 
@@ -517,9 +516,9 @@ AcpiDsCallControlMethod (
 
     /* Invoke an internal method if necessary */
 
-    if (ObjDesc->Method.MethodFlags & AML_METHOD_INTERNAL_ONLY)
+    if (ObjDesc->Method.InfoFlags & ACPI_METHOD_INTERNAL_ONLY)
     {
-        Status = ObjDesc->Method.Extra.Implementation (NextWalkState);
+        Status = ObjDesc->Method.Dispatch.Implementation (NextWalkState);
         if (Status == AE_OK)
         {
             Status = AE_CTRL_TERMINATE;
@@ -694,13 +693,31 @@ AcpiDsTerminateControlMethod (
 
         /*
          * Delete any namespace objects created anywhere within the
-         * namespace by the execution of this method. Unless this method
-         * is a module-level executable code method, in which case we
-         * want make the objects permanent.
+         * namespace by the execution of this method. Unless:
+         * 1) This method is a module-level executable code method, in which
+         *    case we want make the objects permanent.
+         * 2) There are other threads executing the method, in which case we
+         *    will wait until the last thread has completed.
          */
-        if (!(MethodDesc->Method.Flags & AOPOBJ_MODULE_LEVEL))
+        if (!(MethodDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL) &&
+             (MethodDesc->Method.ThreadCount == 1))
         {
-            AcpiNsDeleteNamespaceByOwner (MethodDesc->Method.OwnerId);
+            /* Delete any direct children of (created by) this method */
+
+            AcpiNsDeleteNamespaceSubtree (WalkState->MethodNode);
+
+            /*
+             * Delete any objects that were created by this method
+             * elsewhere in the namespace (if any were created).
+             * Use of the ACPI_METHOD_MODIFIED_NAMESPACE optimizes the
+             * deletion such that we don't have to perform an entire
+             * namespace walk for every control method execution.
+             */
+            if (MethodDesc->Method.InfoFlags & ACPI_METHOD_MODIFIED_NAMESPACE)
+            {
+                AcpiNsDeleteNamespaceByOwner (MethodDesc->Method.OwnerId);
+                MethodDesc->Method.InfoFlags &= ~ACPI_METHOD_MODIFIED_NAMESPACE;
+            }
         }
     }
 
@@ -725,7 +742,7 @@ AcpiDsTerminateControlMethod (
          * we immediately reuse it for the next thread executing this method
          */
         ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-            "*** Completed execution of one thread, %d threads remaining\n",
+            "*** Completed execution of one thread, %u threads remaining\n",
             MethodDesc->Method.ThreadCount));
     }
     else
@@ -737,20 +754,39 @@ AcpiDsTerminateControlMethod (
          * Serialized if it appears that the method is incorrectly written and
          * does not support multiple thread execution. The best example of this
          * is if such a method creates namespace objects and blocks. A second
-         * thread will fail with an AE_ALREADY_EXISTS exception
+         * thread will fail with an AE_ALREADY_EXISTS exception.
          *
          * This code is here because we must wait until the last thread exits
-         * before creating the synchronization semaphore.
+         * before marking the method as serialized.
          */
-        if ((MethodDesc->Method.MethodFlags & AML_METHOD_SERIALIZED) &&
-            (!MethodDesc->Method.Mutex))
+        if (MethodDesc->Method.InfoFlags & ACPI_METHOD_SERIALIZED_PENDING)
         {
-            (void) AcpiDsCreateMethodMutex (MethodDesc);
+            if (WalkState)
+            {
+                ACPI_INFO ((AE_INFO,
+                    "Marking method %4.4s as Serialized because of AE_ALREADY_EXISTS error",
+                    WalkState->MethodNode->Name.Ascii));
+            }
+
+            /*
+             * Method tried to create an object twice and was marked as
+             * "pending serialized". The probable cause is that the method
+             * cannot handle reentrancy.
+             *
+             * The method was created as NotSerialized, but it tried to create
+             * a named object and then blocked, causing the second thread
+             * entrance to begin and then fail. Workaround this problem by
+             * marking the method permanently as Serialized when the last
+             * thread exits here.
+             */
+            MethodDesc->Method.InfoFlags &= ~ACPI_METHOD_SERIALIZED_PENDING;
+            MethodDesc->Method.InfoFlags |= ACPI_METHOD_SERIALIZED;
+            MethodDesc->Method.SyncLevel = 0;
         }
 
         /* No more threads, we can free the OwnerId */
 
-        if (!(MethodDesc->Method.Flags & AOPOBJ_MODULE_LEVEL))
+        if (!(MethodDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL))
         {
             AcpiUtReleaseOwnerId (&MethodDesc->Method.OwnerId);
         }

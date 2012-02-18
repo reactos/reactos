@@ -137,8 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Introduzca el puerto COM (p.e. COM1):",IDC_STATIC,7,7,150,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Introduzca la velocidad de transmisión (p.e. 115200):",IDC_STATIC,7,38,185,
-                    8
+    LTEXT           "Introduzca la velocidad de transmisión (p.e. 115200):",IDC_STATIC,7,38,185,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,45,79,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,100,79,50,14
@@ -174,7 +173,7 @@ BEGIN
     IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-#endif    // 
+#endif    //
 /////////////////////////////////////////////////////////////////////////////
 
 

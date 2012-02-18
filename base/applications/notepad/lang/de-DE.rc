@@ -45,7 +45,7 @@ BEGIN
     POPUP "&Datei"
     BEGIN
         MENUITEM "&Neu\tStrg+N",           CMD_NEW
-        MENUITEM "Ö&ffnen\tStrg+O",        CMD_OPEN
+        MENUITEM "Ã–&ffnen\tStrg+O",        CMD_OPEN
         MENUITEM "&Speichern\tStrg+S",     CMD_SAVE
         MENUITEM "Speichern &unter...",    CMD_SAVE_AS
         MENUITEM SEPARATOR
@@ -57,12 +57,12 @@ BEGIN
     END
     POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "&Rückgängig\tStrg+Z",   CMD_UNDO
+        MENUITEM "&RÃ¼ckgÃ¤ngig\tStrg+Z",   CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Ausschneiden\tStrg+X", CMD_CUT
         MENUITEM "&Kopieren\tStrg+C",     CMD_COPY
-        MENUITEM "&Einfügen\tStrg+V",     CMD_PASTE
-        MENUITEM "&Löschen\tEntf",        CMD_DELETE
+        MENUITEM "&EinfÃ¼gen\tStrg+V",     CMD_PASTE
+        MENUITEM "&LÃ¶schen\tEntf",        CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Suchen...",             CMD_SEARCH
         MENUITEM "&Weitersuchen\tF3",     CMD_SEARCH_NEXT
@@ -87,7 +87,7 @@ BEGIN
         MENUITEM "&Suchen...",      CMD_HELP_SEARCH
         MENUITEM "&Hilfe benutzen", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Über",           CMD_ABOUT
+        MENUITEM "&Ãœber",           CMD_ABOUT
         MENUITEM "Inf&o",           CMD_ABOUT_WINE
     END
 END
@@ -101,10 +101,10 @@ CAPTION "Seite einrichten"
 BEGIN
 LTEXT    "&Kopfzeile:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Fußzeile:",  0x142,   10, 24, 40, 15
+LTEXT    "&FuÃŸzeile:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "Ränder",      0x144,     10, 43,160, 45
+GROUPBOX "RÃ¤nder",      0x144,     10, 43,160, 45
 LTEXT    "&Links:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "&Oben:",         0x148,    20, 73, 30, 10, WS_CHILD
@@ -121,8 +121,7 @@ END
 
 /* Dialog `Enkodierung' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Enkodierung"
 BEGIN
@@ -146,14 +145,14 @@ END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Über ReactOS Notepad"
+CAPTION "Ãœber ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         "",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Schließen",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "SchlieÃŸen",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -161,7 +160,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "Dieses Programm ist kostenlos; Sie kÃ¶nnen es frei verteilen mit od. ohne Ã„nderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation verÃ¶ffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spÃ¤tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -183,19 +182,19 @@ STRING_UNTITLED,                                "(unbenannt)"
 STRING_ALL_FILES,                               "Alle Dateien (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textdateien (*.txt)"
 
-STRING_TOOLARGE,                                "Die Datei '%s' ist zu groß für den Editor.\n \
+STRING_TOOLARGE,                                "Die Datei '%s' ist zu groÃŸ fÃ¼r den Editor.\n \
 Benutzen Sie bitte einen anderen Editor, um diese Datei zu bearbeiten."
 STRING_NOTEXT,                                  "Sie haben keinen Text eingegeben, der \
-gespeichert\n werden könnte. Geben Sie Text ein, und versuchen Sie es \
+gespeichert\n werden kÃ¶nnte. Geben Sie Text ein, und versuchen Sie es \
 \nerneut."
 STRING_DOESNOTEXIST,                            "Die Datei '%s'\nexistiert nicht.\n\n \
-Möchten Sie eine neue Datei erstellen ?"
-STRING_NOTSAVED,                                "Datei %s\n wurde geändert.\n\n \
-Möchten Sie die Änderungen speichern ?"
+MÃ¶chten Sie eine neue Datei erstellen ?"
+STRING_NOTSAVED,                                "Datei %s\n wurde geÃ¤ndert.\n\n \
+MÃ¶chten Sie die Ã„nderungen speichern ?"
 STRING_NOTFOUND,                                        "'%s' kann nicht gefunden werden."
-STRING_OUT_OF_MEMORY,                   "Nicht genügend Arbeitsspeicher, \
-um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
-\nAnwendungen, um den verfügbaren Arbeitsspeicher zu \nerhöhen."
+STRING_OUT_OF_MEMORY,                   "Nicht genÃ¼gend Arbeitsspeicher, \
+um diese Funktion \nabzuschlieÃŸen. Beenden Sie eine oder mehrere \
+\nAnwendungen, um den verfÃ¼gbaren Arbeitsspeicher zu \nerhÃ¶hen."
 STRING_CANNOTFIND                               "'%s' wurde nicht gefunden."
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"

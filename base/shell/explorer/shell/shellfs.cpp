@@ -221,14 +221,14 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
-HRESULT ShellEntry::do_context_menu(HWND hwnd, LPPOINT pptScreen, CtxMenuInterfaces& cm_ifs)
+HRESULT ShellEntry::do_context_menu(HWND hwnd, const POINT& pptScreen, CtxMenuInterfaces& cm_ifs)
 {
 	ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
 	ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 	LPCITEMIDLIST pidl = _pidl;
 
-	return ShellFolderContextMenu(folder, hwnd, 1, &pidl, pptScreen->x, pptScreen->y, cm_ifs);
+	return ShellFolderContextMenu(folder, hwnd, 1, &pidl, pptScreen.x, pptScreen.y, cm_ifs);
 }
 
 

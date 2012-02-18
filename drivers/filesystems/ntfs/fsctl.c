@@ -324,7 +324,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   PNTFS_FCB Fcb = NULL;
   PNTFS_CCB Ccb = NULL;
   PNTFS_VCB Vcb = NULL;
-  PVPB Vpb;
   NTSTATUS Status;
 
   DPRINT1("NtfsMountVolume() called\n");
@@ -337,7 +336,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
   DeviceToMount = Stack->Parameters.MountVolume.DeviceObject;
-  Vpb = Stack->Parameters.MountVolume.Vpb;
 
   Status = NtfsHasFileSystem(DeviceToMount);
   if (!NT_SUCCESS(Status))

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "window.h"
-#include "clipboard.h"
-
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
 #define WINSTA_ROOT_NAME_LENGTH	23
 
@@ -19,7 +16,7 @@ typedef enum
 
 typedef struct _WINSTATION_OBJECT
 {
-    PVOID SharedHeap; /* points to kmode memory! */
+    PVOID SharedHeap; /* Points to kmode memory! */
 
     CSHORT Type;
     CSHORT Size;
@@ -33,7 +30,7 @@ typedef struct _WINSTATION_OBJECT
     HANDLE ShellListView;
 
     /* Effects */
-    BOOL FontSmoothing; /* enable */
+    BOOL FontSmoothing; /* Enable */
     UINT FontSmoothingType; /* 1:Standard,2:ClearType */
     /* FIXME: Big Icons (SPI_GETICONMETRICS?) */
     BOOL DropShadow;
@@ -42,7 +39,7 @@ typedef struct _WINSTATION_OBJECT
 
     /* ScreenSaver */
     BOOL ScreenSaverRunning;
-    UINT  ScreenSaverTimeOut;
+    UINT ScreenSaverTimeOut;
    /* Should this be on each desktop ? */
     BOOL ScreenSaverActive;
 
@@ -54,8 +51,17 @@ typedef struct _WINSTATION_OBJECT
     ULONG Flags;
     struct _DESKTOP* ActiveDesktop;
 
-    PCLIPBOARDSYSTEM Clipboard;
-    DWORD           ClipboardSequenceNumber;
+    PTHREADINFO    ptiClipLock;
+    PTHREADINFO    ptiDrawingClipboard;
+    PWND           spwndClipOpen;
+    PWND           spwndClipViewer;
+    PWND           spwndClipOwner;
+    PCLIP          pClipBase;     // Not a clip object.
+    DWORD          cNumClipFormats;
+    INT            iClipSerialNumber;
+    INT            iClipSequenceNumber;
+    INT            fClipboardChanged : 1;
+    INT            fInDelayedRendering : 1;
 
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
@@ -63,17 +69,36 @@ extern WINSTATION_OBJECT *InputWindowStation;
 extern PPROCESSINFO LogonProcess;
 extern HWND hwndSAS;
 
+#define WINSTA_READ       STANDARD_RIGHTS_READ     | \
+                          WINSTA_ENUMDESKTOPS      | \
+                          WINSTA_ENUMERATE         | \
+                          WINSTA_READATTRIBUTES    | \
+                          WINSTA_READSCREEN
+
+#define WINSTA_WRITE      STANDARD_RIGHTS_WRITE    | \
+                          WINSTA_ACCESSCLIPBOARD   | \
+                          WINSTA_CREATEDESKTOP     | \
+                          WINSTA_WRITEATTRIBUTES
+
+#define WINSTA_EXECUTE    STANDARD_RIGHTS_EXECUTE  | \
+                          WINSTA_ACCESSGLOBALATOMS | \
+                          WINSTA_EXITWINDOWS
+
+#define WINSTA_ACCESS_ALL STANDARD_RIGHTS_REQUIRED | \
+                          WINSTA_ACCESSCLIPBOARD   | \
+                          WINSTA_ACCESSGLOBALATOMS | \
+                          WINSTA_CREATEDESKTOP     | \
+                          WINSTA_ENUMDESKTOPS      | \
+                          WINSTA_ENUMERATE         | \
+                          WINSTA_EXITWINDOWS       | \
+                          WINSTA_READATTRIBUTES    | \
+                          WINSTA_READSCREEN        | \
+                          WINSTA_WRITEATTRIBUTES
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupWindowStationImpl(VOID);
-
-NTSTATUS
-APIENTRY
-IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
 
 VOID APIENTRY
 IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);

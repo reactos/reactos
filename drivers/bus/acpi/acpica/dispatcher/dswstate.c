@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -277,7 +277,7 @@ AcpiDsResultPush (
     if (!Object)
     {
         ACPI_ERROR ((AE_INFO,
-            "Null Object! Obj=%p State=%p Num=%X",
+            "Null Object! Obj=%p State=%p Num=%u",
             Object, WalkState, WalkState->ResultCount));
         return (AE_BAD_PARAMETER);
     }
@@ -323,7 +323,7 @@ AcpiDsResultStackPush (
     if (((UINT32) WalkState->ResultSize + ACPI_RESULTS_FRAME_OBJ_NUM) >
         ACPI_RESULTS_OBJ_NUM_MAX)
     {
-        ACPI_ERROR ((AE_INFO, "Result stack overflow: State=%p Num=%X",
+        ACPI_ERROR ((AE_INFO, "Result stack overflow: State=%p Num=%u",
             WalkState, WalkState->ResultSize));
         return (AE_STACK_OVERFLOW);
     }
@@ -426,7 +426,7 @@ AcpiDsObjStackPush (
     if (WalkState->NumOperands >= ACPI_OBJ_NUM_OPERANDS)
     {
         ACPI_ERROR ((AE_INFO,
-            "Object stack overflow! Obj=%p State=%p #Ops=%X",
+            "Object stack overflow! Obj=%p State=%p #Ops=%u",
             Object, WalkState, WalkState->NumOperands));
         return (AE_STACK_OVERFLOW);
     }
@@ -480,7 +480,7 @@ AcpiDsObjStackPop (
         if (WalkState->NumOperands == 0)
         {
             ACPI_ERROR ((AE_INFO,
-                "Object stack underflow! Count=%X State=%p #Ops=%X",
+                "Object stack underflow! Count=%X State=%p #Ops=%u",
                 PopCount, WalkState, WalkState->NumOperands));
             return (AE_STACK_UNDERFLOW);
         }
@@ -491,7 +491,7 @@ AcpiDsObjStackPop (
         WalkState->Operands [WalkState->NumOperands] = NULL;
     }
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Count=%X State=%p #Ops=%X\n",
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Count=%X State=%p #Ops=%u\n",
         PopCount, WalkState, WalkState->NumOperands));
 
     return (AE_OK);

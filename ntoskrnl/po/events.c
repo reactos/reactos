@@ -64,9 +64,6 @@ PopGetSysButtonCompletion(
 	PSYS_BUTTON_CONTEXT SysButtonContext = Context;
 	ULONG SysButton;
 
-	if (Irp->PendingReturned)
-		IoMarkIrpPending(Irp);
-
 	/* The DeviceObject can be NULL, so use the one we stored */
 	DeviceObject = SysButtonContext->DeviceObject;
 
@@ -87,7 +84,6 @@ PopGetSysButtonCompletion(
             
             ZwShutdownSystem(ShutdownNoReboot);
         }
-            
 	}
 
 	/* Allocate a new workitem to send the next IOCTL_GET_SYS_BUTTON_EVENT */
@@ -175,9 +171,9 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 		return STATUS_REVISION_MISMATCH;
 	if (Notification->Size != sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION))
 		return STATUS_INVALID_PARAMETER;
-	if (RtlCompareMemory(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID) == sizeof(GUID)))
+	if (RtlCompareMemory(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID)) == sizeof(GUID))
 		Arrival = TRUE;
-	else if (RtlCompareMemory(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID) == sizeof(GUID)))
+	else if (RtlCompareMemory(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID)) == sizeof(GUID))
 		Arrival = FALSE;
 	else
 		return STATUS_INVALID_PARAMETER;
@@ -209,7 +205,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			FileHandle,
 			FILE_READ_DATA,
 			IoFileObjectType,
-			ExGetPreviousMode(),
+			KernelMode,
 			(PVOID*)&FileObject,
 			NULL);
 		if (!NT_SUCCESS(Status))

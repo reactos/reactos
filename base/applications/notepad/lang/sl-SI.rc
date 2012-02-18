@@ -47,8 +47,8 @@ BEGIN
         MENUITEM "&Shrani\tCtrl+S",      CMD_SAVE
         MENUITEM "Shrani &kot ...",      CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Na&tisni\tCtrl+P",     CMD_PRINT
         MENUITEM "P&riprava strani ...", CMD_PAGE_SETUP
+        MENUITEM "Na&tisni\tCtrl+P",     CMD_PRINT
         MENUITEM "&Tiskalnik ...",       CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "Iz&hod",               CMD_EXIT
@@ -57,10 +57,10 @@ BEGIN
     BEGIN
         MENUITEM "&Razveljavi\tCtrl+Z",   CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Izreûi\tCtrl+X",       CMD_CUT
+        MENUITEM "&Izre≈æi\tCtrl+X",       CMD_CUT
         MENUITEM "&Kopiraj\tCtrl+C",      CMD_COPY
         MENUITEM "&Prilepi\tCtrl+V",      CMD_PASTE
-        MENUITEM "Izbri&öi\tDel",         CMD_DELETE
+        MENUITEM "Izbri&≈°i\tDel",         CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Najdi ...",            CMD_SEARCH
         MENUITEM "Na&daljuj iskanje\tF3", CMD_SEARCH_NEXT
@@ -68,7 +68,7 @@ BEGIN
         MENUITEM "Go To...\tCtrl+G",      CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Izberi &vse",           CMD_SELECT_ALL
-        MENUITEM "»as/&Datum\tF5",        CMD_TIME_DATE
+        MENUITEM "√àas/&Datum\tF5",        CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
@@ -79,11 +79,11 @@ BEGIN
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "&PomoË"
+    POPUP "&Pomo√®"
     BEGIN
-        MENUITEM "&Teme pomoËi",     CMD_HELP_CONTENTS
+        MENUITEM "&Teme pomo√®i",     CMD_HELP_CONTENTS
         MENUITEM "&Najdi ...",       CMD_HELP_SEARCH
-        MENUITEM "&O pomoËi",        CMD_HELP_ON_HELP
+        MENUITEM "&O pomo√®i",        CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About",           CMD_ABOUT
         MENUITEM "Inf&ormacije ...", CMD_ABOUT_WINE
@@ -113,14 +113,13 @@ LTEXT    "&Spodaj:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "V redu",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "PrekliËi",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&PomoË",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Prekli√®i",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Pomo√®",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN
@@ -171,7 +170,7 @@ STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Beleûnica"
+STRING_NOTEPAD,                                 "Bele≈ænica"
 STRING_ERROR,                                   "NAPAKA"
 STRING_WARNING,                                 "OPOZORILO"
 STRING_INFO,                                    "Informacija"
@@ -181,17 +180,17 @@ STRING_UNTITLED,                                "Neimenovana"
 STRING_ALL_FILES,                               "Vse datoteke (*.*)"
 STRING_TEXT_FILES_TXT,                  "Datoteke z besedilom (*.txt)"
 
-STRING_TOOLARGE,                                "Datoteka '%s' je prevelika za Beleûnico.\n \
+STRING_TOOLARGE,                                "Datoteka '%s' je prevelika za Bele≈ænico.\n \
 Uporabite drug urejevalnik."
 STRING_NOTEXT,                                  "Niste vnesli besedila. \
 \nVnesite besedilo in poskusite znova."
 STRING_DOESNOTEXIST,                            "Datoteka '%s' ne obstaja.\n\n \
-Ali ûelite ustvariti novo datoteko?"
+Ali ≈æelite ustvariti novo datoteko?"
 STRING_NOTSAVED,                                "Vsebina datoteke '%s'je bila spremenjena.\n\n \
-Ali ûelite shraniti spremembe?"
-STRING_NOTFOUND,                                        "Ni mogoËe najti '%s'."
-STRING_OUT_OF_MEMORY,                   "Na voljo ni dovolj pomnilnika, da bi bilo mogoËe dokonËati to \
-operacijo. \n»e ga ûelite sprostiti, konËajte enega ali veË programov in poskusite znova. "
+Ali ≈æelite shraniti spremembe?"
+STRING_NOTFOUND,                                        "Ni mogo√®e najti '%s'."
+STRING_OUT_OF_MEMORY,                   "Na voljo ni dovolj pomnilnika, da bi bilo mogo√®e dokon√®ati to \
+operacijo. \n√àe ga ≈æelite sprostiti, kon√®ajte enega ali ve√® programov in poskusite znova. "
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"

@@ -1,22 +1,10 @@
 /*
-*  ReactOS W32 Subsystem
-*  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id: bitmaps.c 28300 2007-08-12 15:20:09Z tkreuzer $ */
+ * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * PURPOSE:          Bit blit functions
+ * FILE:             subsys/win32k/objects/bitblt.c
+ * PROGRAMER:        Unknown
+ */
 
 #include <win32k.h>
 
@@ -136,7 +124,7 @@ NtGdiAlphaBlend(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     /* Perform the alpha blend operation */
-    DPRINT("Performing the alpha Blend\n");
+    DPRINT("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
                                DCDest->rosdc.CombinedClip,
@@ -170,7 +158,7 @@ NtGdiBitBlt(
     IN FLONG fl)
 {
     /* Forward to NtGdiMaskBlt */
-    // TODO : what's fl for?
+    // TODO: What's fl for?
     return NtGdiMaskBlt(hDCDest,
                         XDest,
                         YDest,
@@ -549,7 +537,7 @@ GreStretchBltMask(
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return TRUE;
     }
 
     if (!hDCDest || (UsesSource && !hDCSrc) || (UsesMask && !hDCMask))
@@ -667,7 +655,7 @@ GreStretchBltMask(
         MaskPoint.y = YOriginMask;
         IntLPtoDP(DCMask, &MaskPoint, 1);
         MaskPoint.x += DCMask->ptlDCOrig.x;
-        MaskPoint.y += DCMask->ptlDCOrig.x;
+        MaskPoint.y += DCMask->ptlDCOrig.y;
     }
 
     /* Perform the bitblt operation */
@@ -872,7 +860,6 @@ IntGdiPolyPatBlt(
     return TRUE;
 }
 
-
 BOOL APIENTRY
 NtGdiPatBlt(
     HDC hDC,
@@ -890,7 +877,7 @@ NtGdiPatBlt(
     BOOL UsesSource = ROP_USES_SOURCE(ROP);
     if (UsesSource)
     {
-        /* in this case we call on GdiMaskBlt */
+        /* In this case we call on GdiMaskBlt */
         return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
     }
 

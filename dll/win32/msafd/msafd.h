@@ -148,17 +148,17 @@ WSPAddressToString(
 INT
 WSPAPI
 WSPAsyncSelect(
-    IN  SOCKET s, 
-    IN  HWND hWnd, 
-    IN  UINT wMsg, 
-    IN  LONG lEvent, 
+    IN  SOCKET s,
+    IN  HWND hWnd,
+    IN  UINT wMsg,
+    IN  LONG lEvent,
     OUT LPINT lpErrno);
 
 INT
 WSPAPI WSPBind(
     IN  SOCKET s,
-    IN  CONST SOCKADDR *name, 
-    IN  INT namelen, 
+    IN  CONST SOCKADDR *name,
+    IN  INT namelen,
     OUT LPINT lpErrno);
 
 INT
@@ -200,9 +200,9 @@ WSPDuplicateSocket(
 INT
 WSPAPI
 WSPEnumNetworkEvents(
-    IN  SOCKET s, 
-    IN  WSAEVENT hEventObject, 
-    OUT LPWSANETWORKEVENTS lpNetworkEvents, 
+    IN  SOCKET s,
+    IN  WSAEVENT hEventObject,
+    OUT LPWSANETWORKEVENTS lpNetworkEvents,
     OUT LPINT lpErrno);
 
 INT
@@ -226,17 +226,17 @@ WSPGetOverlappedResult(
 INT
 WSPAPI
 WSPGetPeerName(
-    IN      SOCKET s, 
-    OUT     LPSOCKADDR name, 
-    IN OUT  LPINT namelen, 
+    IN      SOCKET s,
+    OUT     LPSOCKADDR name,
+    IN OUT  LPINT namelen,
     OUT     LPINT lpErrno);
 
 BOOL
 WSPAPI
 WSPGetQOSByName(
-    IN      SOCKET s, 
-    IN OUT  LPWSABUF lpQOSName, 
-    OUT     LPQOS lpQOS, 
+    IN      SOCKET s,
+    IN OUT  LPWSABUF lpQOSName,
+    OUT     LPQOS lpQOS,
     OUT     LPINT lpErrno);
 
 INT
@@ -443,7 +443,7 @@ int SockAsyncThread(
 	PVOID ThreadParam
 );
 
-VOID 
+VOID
 SockProcessAsyncSelect(
 	PSOCKET_INFORMATION Socket,
 	PASYNC_DATA AsyncData
@@ -476,7 +476,7 @@ SockReenableAsyncSelectEvent (
     );
 
 typedef VOID (*PASYNC_COMPLETION_ROUTINE)(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock);
-    
+
 DWORD
 FORCEINLINE
 MsafdReturnWithErrno(NTSTATUS Status,
@@ -495,7 +495,7 @@ MsafdReturnWithErrno(NTSTATUS Status,
     }
     else
     {
-        DbgPrint("%s: Received invalid lpErrno pointer! %s\n", __FUNCTION__);
+        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
 
         if (ReturnedBytes)
             *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;

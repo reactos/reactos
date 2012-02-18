@@ -185,36 +185,88 @@ VOID ARPReceive(
     PARP_HEADER Header;
     IP_ADDRESS SrcAddress;
     IP_ADDRESS DstAddress;
-    PVOID SenderHWAddress;
-    PVOID SenderProtoAddress;
-    PVOID TargetProtoAddress;
+    PCHAR SenderHWAddress, SenderProtoAddress, TargetProtoAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
+    ULONG BytesCopied, DataSize;
+    PCHAR DataBuffer;
+    
+    PAGED_CODE();
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
+
+    Packet->Header = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(ARP_HEADER),
+                                           PACKET_BUFFER_TAG);
+    if (!Packet->Header)
+    {
+        TI_DbgPrint(DEBUG_ARP, ("Unable to allocate header buffer\n"));
+        Packet->Free(Packet);
+        return;
+    }
+    Packet->MappedHeader = FALSE;
+
+    BytesCopied = CopyPacketToBuffer((PCHAR)Packet->Header,
+                                     Packet->NdisPacket,
+                                     Packet->Position,
+                                     sizeof(ARP_HEADER));
+    if (BytesCopied != sizeof(ARP_HEADER))
+    {
+        TI_DbgPrint(DEBUG_ARP, ("Unable to copy in header buffer\n"));
+        Packet->Free(Packet);
+        return;
+    }
 
     Header = (PARP_HEADER)Packet->Header;
 
     /* FIXME: Ethernet only */
     if (WN2H(Header->HWType) != 1) {
         TI_DbgPrint(DEBUG_ARP, ("Unknown ARP hardware type (0x%X).\n", WN2H(Header->HWType)));
+        Packet->Free(Packet);
         return;
     }
 
     /* Check protocol type */
     if (Header->ProtoType != ETYPE_IPv4) {
         TI_DbgPrint(DEBUG_ARP, ("Unknown ARP protocol type (0x%X).\n", WN2H(Header->ProtoType)));
+        Packet->Free(Packet);
         return;
     }
 
-    SenderHWAddress    = (PVOID)((ULONG_PTR)Header + sizeof(ARP_HEADER));
-    SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
-    TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress + Header->ProtoAddrLen + Header->HWAddrLen);
+    DataSize = (2 * Header->HWAddrLen) + (2 * Header->ProtoAddrLen);
+    DataBuffer = ExAllocatePool(PagedPool,
+                                DataSize);
+    if (!DataBuffer)
+    {
+        TI_DbgPrint(DEBUG_ARP, ("Unable to allocate data buffer\n"));
+        Packet->Free(Packet);
+        return;
+    }
+
+    BytesCopied = CopyPacketToBuffer(DataBuffer,
+                                     Packet->NdisPacket,
+                                     Packet->Position + sizeof(ARP_HEADER),
+                                     DataSize);
+    if (BytesCopied != DataSize)
+    {
+        TI_DbgPrint(DEBUG_ARP, ("Unable to copy in data buffer\n"));
+        ExFreePool(DataBuffer);
+        Packet->Free(Packet);
+        return;
+    }
+
+    SenderHWAddress    = (PVOID)(DataBuffer);
+    SenderProtoAddress = (PVOID)(SenderHWAddress + Header->HWAddrLen);
+    TargetProtoAddress = (PVOID)(SenderProtoAddress + Header->ProtoAddrLen + Header->HWAddrLen);
 
     AddrInitIPv4(&DstAddress, *((PULONG)TargetProtoAddress));
     if (!AddrIsEqual(&DstAddress, &Interface->Unicast))
+    {
+        ExFreePool(DataBuffer);
+        Packet->Free(Packet);
         return;
+    }
 
     AddrInitIPv4(&SrcAddress, *((PULONG)SenderProtoAddress));
 
@@ -228,12 +280,16 @@ VOID ARPReceive(
         /* The packet had our protocol address as target. The sender
            may want to communicate with us soon, so add his address
            to our address cache */
-        NCE = NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
-            Header->HWAddrLen, 0, ARP_TIMEOUT);
+        NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
+                      Header->HWAddrLen, 0, ARP_COMPLETE_TIMEOUT);
     }
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)
+    {
+        ExFreePool(DataBuffer);
+        Packet->Free(Packet);
         return;
+    }
 
     /* This is a request for our address. Swap the addresses and
        send an ARP reply back to the sender */
@@ -257,6 +313,7 @@ VOID ARPReceive(
                                LAN_PROTO_ARP);
     }
 
+    ExFreePool(DataBuffer);
     Packet->Free(Packet);
 }
 

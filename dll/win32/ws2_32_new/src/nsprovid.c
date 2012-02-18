@@ -80,25 +80,24 @@ WsNpInitialize(IN PNS_PROVIDER Provider,
                IN LPWSTR DllName,
                IN LPGUID ProviderId)
 {
-    DWORD ExpandedPathLength, PathLength;
     INT ErrorCode = ERROR_SUCCESS;
     LPNSPSTARTUP NSPStartupProc;
     CHAR AnsiPath[MAX_PATH], ExpandedDllPath[MAX_PATH];
     
     /* Convert the path to ANSI */
-    PathLength = WideCharToMultiByte(CP_ACP,
-                                     0,
-                                     DllName,
-                                     -1,
-                                     AnsiPath,
-                                     MAX_PATH,
-                                     NULL,
-                                     NULL);
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        DllName,
+                        -1,
+                        AnsiPath,
+                        MAX_PATH,
+                        NULL,
+                        NULL);
 
     /* Expand the DLL Path */
-    ExpandedPathLength = ExpandEnvironmentStringsA(AnsiPath,
-                                                   ExpandedDllPath,
-                                                   MAX_PATH);
+    ExpandEnvironmentStringsA(AnsiPath,
+                              ExpandedDllPath,
+                              MAX_PATH);
 
     /* Load the DLL */
     Provider->DllHandle = LoadLibraryA(ExpandedDllPath);

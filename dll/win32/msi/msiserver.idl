@@ -23,12 +23,6 @@ import "wtypes.idl";
 import "objidl.idl";
 import "oaidl.idl";
 
-#ifndef __WIDL__
-#define threading(model)
-#define progid(str)
-#define vi_progid(str)
-#endif
-
 cpp_quote("#if 0")
 typedef unsigned long MSIHANDLE;
 typedef int INSTALLMESSAGE;
@@ -60,14 +54,14 @@ interface IWineMsiRemotePackage : IUnknown
 {
     HRESULT SetMsiHandle( [in] MSIHANDLE handle );
     HRESULT GetActiveDatabase( [out] MSIHANDLE *handle );
-    HRESULT GetProperty( [in] BSTR property, [out] BSTR *value, [out] DWORD *size );
+    HRESULT GetProperty( [in] BSTR property, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
     HRESULT SetProperty( [in] BSTR property, [in] BSTR value );
     HRESULT ProcessMessage( [in] INSTALLMESSAGE message, [in] MSIHANDLE record );
     HRESULT DoAction( [in] BSTR action );
     HRESULT Sequence( [in] BSTR table, [in] int sequence );
-    HRESULT GetTargetPath( [in] BSTR folder, [out] BSTR *value, [out] DWORD *size );
+    HRESULT GetTargetPath( [in] BSTR folder, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
     HRESULT SetTargetPath( [in] BSTR folder, [in] BSTR value );
-    HRESULT GetSourcePath( [in] BSTR folder, [out] BSTR *value, [out] DWORD *size );
+    HRESULT GetSourcePath( [in] BSTR folder, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
     HRESULT GetMode( [in] MSIRUNMODE mode, [out] BOOL *ret );
     HRESULT SetMode( [in] MSIRUNMODE mode, [in] BOOL state );
     HRESULT GetFeatureState( [in] BSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
@@ -78,7 +72,9 @@ interface IWineMsiRemotePackage : IUnknown
     HRESULT SetInstallLevel( [in] int level );
     HRESULT FormatRecord( [in] MSIHANDLE record, [out] BSTR *value );
     HRESULT EvaluateCondition( [in] BSTR condition );
-    HRESULT GetFeatureCost( [in] BSTR feature, [in] INT cost_tree, [in] INSTALLSTATE state, [out] INT *cost);
+    HRESULT GetFeatureCost( [in] BSTR feature, [in] INT cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
+    HRESULT EnumComponentCosts( [in] BSTR component, [in] DWORD index, [in] INSTALLSTATE state,
+                                [out, size_is(*buflen)] BSTR drive, [in, out] DWORD *buflen, [out] INT *cost, [out] INT *temp );
 }
 
 [

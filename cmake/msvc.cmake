@@ -1,6 +1,6 @@
 
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
-    # no optimitation
+    # no optimization
 elseif(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -19,12 +19,22 @@ endif()
 
 add_definitions(/Dinline=__inline /D__STDC__=1)
 
-add_compiler_flags(/X /GR- /GS- /Zl /W3)
+add_compile_flags("/X /GR- /GS- /Zl /W3")
+
+# Debugging
+if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+    if(NOT _PREFAST_)
+        add_compile_flags("/Zi")
+    endif()
+    add_compile_flags("/Ob0 /Od")
+elseif(${CMAKE_BUILD_TYPE} MATCHES Release)
+    add_compile_flags("/Ob2 /D NDEBUG")
+endif()
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 endif()
 
 if(${ARCH} MATCHES amd64)
@@ -43,13 +53,30 @@ if(MSVC_IDE)
     # We may temporarily use just the global defines, but this is not a solution as some modules (minihal for example) apply additional definitions to source files, so we get an incorrect build of such targets.
     get_directory_property(definitions DEFINITIONS)
     set(CMAKE_ASM_COMPILE_OBJECT
-        "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+        "cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
 else()
     # NMake Makefiles
     set(CMAKE_ASM_COMPILE_OBJECT
-        "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+        "cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
+endif()
+
+if(_PREFAST_)
+    if(MSVC_VERSION EQUAL 1600 OR MSVC_VERSION GREATER 1600)
+        add_compile_flags("/analyze")
+    else()
+        message("PREFAST enabled!")
+        set(CMAKE_C_COMPILE_OBJECT "prefast cl ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
+    "prefast LIST")
+        set(CMAKE_CXX_COMPILE_OBJECT "prefast cl ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <FLAGS> <DEFINES> /TP /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
+    "prefast LIST")
+        set(CMAKE_C_LINK_EXECUTABLE
+    "cl ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
+        set(CMAKE_CXX_LINK_EXECUTABLE
+    "cl ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
+    endif()
+    
 endif()
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
@@ -61,73 +88,31 @@ endmacro()
 
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")
-        add_linkerflag(${_module} "/NOENTRY")
+        add_target_link_flags(${_module} "/NOENTRY")
     elseif(ARCH MATCHES i386)
         set(_entrysymbol ${_entrypoint})
-        if (${ARGC} GREATER 2)
+        if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        add_linkerflag(${_module} "/ENTRY:${_entrysymbol}")
+        add_target_link_flags(${_module} "/ENTRY:${_entrysymbol}")
     else()
-        add_linkerflag(${_module} "/ENTRY:${_entrypoint}")
+        add_target_link_flags(${_module} "/ENTRY:${_entrypoint}")
     endif()
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_linkerflag(${MODULE} "/subsystem:${SUBSYSTEM}")
+    add_target_link_flags(${MODULE} "/subsystem:${SUBSYSTEM}")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
-    add_linkerflag(${MODULE} "/BASE:${IMAGE_BASE}")
+    add_target_link_flags(${MODULE} "/BASE:${IMAGE_BASE}")
 endfunction()
 
-function(set_module_type MODULE TYPE)
-    add_dependencies(${MODULE} psdk)
-    if(${TYPE} MATCHES nativecui)
-        set_subsystem(${MODULE} native)
-        set_entrypoint(${MODULE} NtProcessStartup 4)
-    elseif (${TYPE} MATCHES win32gui)
-        set_subsystem(${MODULE} windows)
-        if(IS_UNICODE)
-            set_entrypoint(${MODULE} wWinMainCRTStartup)
-        else()
-            set_entrypoint(${MODULE} WinMainCRTStartup)
-        endif(IS_UNICODE)
-    elseif (${TYPE} MATCHES win32cui)
-        set_subsystem(${MODULE} console)
-        if(IS_UNICODE)
-            set_entrypoint(${MODULE} wmainCRTStartup)
-        else()
-            set_entrypoint(${MODULE} mainCRTStartup)
-        endif(IS_UNICODE)
-    elseif(${TYPE} MATCHES win32dll)
-        # Need this only because mingw library is broken
-        set_entrypoint(${MODULE} DllMainCRTStartup 12)
-        if(DEFINED baseaddress_${MODULE})
-            set_image_base(${MODULE} ${baseaddress_${MODULE}})
-        else()
-            message(STATUS "${MODULE} has no base address")
-        endif()
-        add_linkerflag(${MODULE} "/DLL")
-    elseif(${TYPE} MATCHES win32ocx)
-        set_entrypoint(${MODULE} DllMainCRTStartup 12)
-        set_target_properties(${MODULE} PROPERTIES SUFFIX ".ocx")
-        add_linkerflag(${MODULE} "/DLL")
-    elseif(${TYPE} MATCHES cpl)
-        set_entrypoint(${MODULE} DllMainCRTStartup 12)
-        set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
-        add_linkerflag(${MODULE} "/DLL")
-    elseif(${TYPE} MATCHES kernelmodedriver)
-        set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
-        set_entrypoint(${MODULE} DriverEntry 8)
-        set_subsystem(${MODULE} native)
-        set_image_base(${MODULE} 0x00010000)
-        add_linkerflag(${MODULE} "/DRIVER")
-        add_dependencies(${MODULE} bugcodes)
-    elseif(${TYPE} MATCHES nativedll)
-        set_subsystem(${MODULE} native)
-    else()
-        message(FATAL_ERROR "Unknown module type : ${TYPE}")
+function(set_module_type_toolchain MODULE TYPE)
+    if((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx) OR (${TYPE} STREQUAL cpl))
+        add_target_link_flags(${MODULE} "/DLL")
+    elseif(${TYPE} STREQUAL kernelmodedriver)
+        add_target_link_flags(${MODULE} "/DRIVER")
     endif()
 endfunction()
 
@@ -195,7 +180,7 @@ endfunction()
 
 macro(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
-        add_linkerflag(${MODULE} "/DELAYLOAD:${LIB}.dll")
+        add_target_link_flags(${MODULE} "/DELAYLOAD:${LIB}.dll")
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.LIB)
         add_dependencies(${MODULE} lib${LIB})
     endforeach()
@@ -216,8 +201,8 @@ function(spec2def _dllname _spec_file)
         PROPERTIES GENERATED TRUE)
 endfunction()
 
-macro(macro_mc FILE)
-    set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+macro(macro_mc FLAG FILE)
+    set(COMMAND_MC mc ${FLAG} -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
@@ -239,7 +224,7 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 
     add_custom_command(
         OUTPUT ${_temp_file}
-        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
+        COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
     add_custom_command(
@@ -255,4 +240,7 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
     set_source_files_properties(${_object_file} ${_temp_file} ${_binary_file} PROPERTIES GENERATED TRUE)
 
     add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
+endfunction()
+
+function(allow_warnings __module)
 endfunction()

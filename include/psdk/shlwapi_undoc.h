@@ -45,6 +45,43 @@ struct IEThreadParamBlock
 	long							filler4;		// unknown contents
 };
 
+BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
+BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
+HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
+HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
+LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags);
+HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent);
+HRESULT WINAPI ConnectToConnectionPoint(IUnknown *lpUnkSink, REFIID riid, BOOL bAdviseOnly, IUnknown *lpUnknown, LPDWORD lpCookie, IConnectionPoint **lppCP);
+DWORD WINAPI IUnknown_AtomicRelease(IUnknown **lpUnknown);
+BOOL WINAPI SHIsSameObject(IUnknown *lpInt1, IUnknown *lpInt2);
+HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd);
+HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg);
+HRESULT WINAPI IUnknown_SetSite(IUnknown *obj, IUnknown *site);
+HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *lpClassId);
+HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID riid, LPVOID *lppOut);
+HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg);
+BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName);
+void WINAPI SHPropagateMessage(HWND hWnd, UINT uiMsgId, WPARAM wParam, LPARAM lParam, BOOL bSend);
+DWORD WINAPI SHRemoveAllSubMenus(HMENU hMenu);
+UINT WINAPI SHEnableMenuItem(HMENU hMenu, UINT wItemID, BOOL bEnable);
+DWORD WINAPI SHCheckMenuItem(HMENU hMenu, UINT uID, BOOL bCheck);
+DWORD WINAPI SHRegisterClassA(WNDCLASSA *wndclass);
+BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj, DWORD grfKeyState, PPOINTL lpPt, DWORD* pdwEffect);
+HRESULT WINAPI IUnknown_TranslateAcceleratorOCS(IUnknown *lpUnknown, LPMSG lpMsg, DWORD dwModifiers);
+HRESULT WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, BOOL fGotFocus);
+HRESULT WINAPI IUnknown_HandleIRestrict(LPUNKNOWN lpUnknown, PVOID lpArg1, PVOID lpArg2, PVOID lpArg3, PVOID lpArg4);
+HMENU WINAPI SHGetMenuFromID(HMENU hMenu, UINT uID);
+DWORD WINAPI SHGetCurColorRes(void);
+DWORD WINAPI SHWaitForSendMessageThread(HANDLE hand, DWORD dwTimeout);
+HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
+DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
+int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
+VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown);
+HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved, REFGUID riidCmdGrp, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
+HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
+BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
+
 void WINAPI InitOCHostClass(long param8);
 long WINAPI SHOpenFolderWindow(IEThreadParamBlock *param8);
 void WINAPI SHCreateSavedWindows(void);

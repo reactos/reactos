@@ -19,6 +19,10 @@
 #ifndef _APPMGMT_H
 #define _APPMGMT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* defined(__cplusplus) */
+
 typedef struct _MANAGEDAPPLICATION
 {
     LPWSTR pszPackageName;
@@ -41,5 +45,9 @@ typedef struct _MANAGEDAPPLICATION
 
 DWORD WINAPI CommandLineFromMsiDescriptor(WCHAR*,WCHAR*,DWORD*);
 DWORD WINAPI GetManagedApplications(GUID*,DWORD,DWORD,LPDWORD,PMANAGEDAPPLICATION*);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* defined(__cplusplus) */
 
 #endif /* _APPMGMT_H */

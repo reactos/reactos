@@ -57,12 +57,12 @@ NpfsAddListeningServerInstance(PIRP Irp,
 
     KeLockMutex(&Ccb->Fcb->CcbListLock);
 
-    IoMarkIrpPending(Irp);
-    InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
-
     IoAcquireCancelSpinLock(&oldIrql);
     if (!Irp->Cancel)
     {
+        Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
+        IoMarkIrpPending(Irp);
+        InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
         (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
         IoReleaseCancelSpinLock(oldIrql);
         KeUnlockMutex(&Ccb->Fcb->CcbListLock);
@@ -92,6 +92,7 @@ NpfsConnectPipe(PIRP Irp,
     PNPFS_FCB Fcb;
     PNPFS_CCB ClientCcb;
     NTSTATUS Status;
+    KPROCESSOR_MODE WaitMode;
 
     DPRINT("NpfsConnectPipe()\n");
 
@@ -124,6 +125,7 @@ NpfsConnectPipe(PIRP Irp,
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     Flags = FileObject->Flags;
+    WaitMode = Irp->RequestorMode;
 
     /* search for a listening client fcb */
     KeLockMutex(&Fcb->CcbListLock);
@@ -175,18 +177,16 @@ NpfsConnectPipe(PIRP Irp,
     /* no listening client fcb found */
     DPRINT("No listening client fcb found -- waiting for client\n");
 
-    Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
-
     Status = NpfsAddListeningServerInstance(Irp, Ccb);
 
     KeUnlockMutex(&Fcb->CcbListLock);
 
-    if (Flags & FO_SYNCHRONOUS_IO)
+    if ((Status == STATUS_PENDING) && (Flags & FO_SYNCHRONOUS_IO))
     {
         KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
-            Irp->RequestorMode,
-            FALSE,
+            WaitMode,
+            (Flags & FO_ALERTABLE_IO),
             NULL);
     }
 
@@ -287,7 +287,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
             {
                 RemoveEntryList(Entry);
                 Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DriverContext);
-                Complete = (NULL == IoSetCancelRoutine(Irp, NULL));
+                Complete = (NULL != IoSetCancelRoutine(Irp, NULL));
                 break;
             }
             Entry = Entry->Flink;
@@ -403,11 +403,13 @@ NpfsWaitPipe(PIRP Irp,
         TimeOut = NULL;
     }
 
-     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
-                                    UserRequest,
-                                    KernelMode,
-                                    TRUE,
-                                    TimeOut);
+    Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
+                                   UserRequest,
+                                   Irp->RequestorMode,
+                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+                                   TimeOut);
+    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
+        Status = STATUS_CANCELLED;
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 
@@ -523,9 +525,11 @@ NpfsWaitPipe2(PIRP Irp,
     /* Wait for one */
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
         UserRequest,
-        KernelMode,
-        FALSE,
+        Irp->RequestorMode,
+        (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
         &TimeOut);
+    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
+        Status = STATUS_CANCELLED;
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 
@@ -557,7 +561,7 @@ NpfsPeekPipe(PIRP Irp,
     ULONG OutputBufferLength;
     ULONG ReturnLength = 0;
     PFILE_PIPE_PEEK_BUFFER Reply;
-    PNPFS_FCB Fcb;
+    //PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     NTSTATUS Status;
     ULONG MessageCount = 0;
@@ -579,7 +583,7 @@ NpfsPeekPipe(PIRP Irp,
 
     Ccb = IoStack->FileObject->FsContext2;
     Reply = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-    Fcb = Ccb->Fcb;
+    //Fcb = Ccb->Fcb;
 
 
     Reply->NamedPipeState = Ccb->PipeState;
@@ -667,13 +671,13 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
 
     DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT("IoStack: %p\n", IoStack);
     FileObject = IoStack->FileObject;

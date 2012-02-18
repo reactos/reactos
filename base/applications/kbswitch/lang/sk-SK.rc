@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  24-04-2008
  */
 
@@ -10,6 +10,6 @@ BEGIN
     BEGIN
         MENUITEM "&Nastavenia...",  ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Zavrieù",            ID_EXIT
+        MENUITEM "&Zavrie≈•",            ID_EXIT
     END
 END

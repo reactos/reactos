@@ -5,763 +5,645 @@
  * FILE:             subsys/win32k/ntuser/clipboard.c
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  *                   Pablo Borobia <pborobia@gmail.com>
+ *                   Rafal Harabien <rafalh@reactos.org>
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserClipbrd);
 
-#define DATA_DELAYED_RENDER  0
-#define DATA_SYNTHESIZED_RENDER -1
+#define DATA_DELAYED     (HANDLE)0
+#define DATA_SYNTH_USER  (HANDLE)1
+#define DATA_SYNTH_KRNL  (HANDLE)2
+#define IS_DATA_DELAYED(ce)     ((ce)->hData == DATA_DELAYED)
+#define IS_DATA_SYNTHESIZED(ce) ((ce)->hData == DATA_SYNTH_USER || (ce)->hData == DATA_SYNTH_KRNL)
 
-PTHREADINFO      ClipboardThread;
-PTHREADINFO      ClipboardOwnerThread;
-PWND  ClipboardWindow;
-PWND  ClipboardViewerWindow;
-PWND  ClipboardOwnerWindow;
-BOOL            sendDrawClipboardMsg;
-BOOL            recentlySetClipboard;
-BOOL            delayedRender;
-UINT            lastEnumClipboardFormats;
-DWORD           ClipboardSequenceNumber = 0;
-
-PCLIPBOARDCHAINELEMENT WindowsChain = NULL;
-PCLIPBOARDELEMENT      ClipboardData = NULL;
-
-PCHAR synthesizedData;
-DWORD synthesizedDataSize;
-
-
-/*==============================================================*/
-
-/* return the pointer to the prev window of the finded window,
-   if NULL does not exists in the chain */
-PCLIPBOARDCHAINELEMENT FASTCALL
-IntIsWindowInChain(PWND window)
+PWINSTATION_OBJECT static FASTCALL
+IntGetWinStaForCbAccess()
 {
-    PCLIPBOARDCHAINELEMENT wce = WindowsChain;
+    HWINSTA hWinSta;
+    PWINSTATION_OBJECT pWinStaObj;
+    NTSTATUS Status;
 
-    while (wce)
+    hWinSta = UserGetProcessWindowStation();
+    Status = IntValidateWindowStationHandle(hWinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &pWinStaObj);
+    if (!NT_SUCCESS(Status))
     {
-        if (wce->window == window)
-        {
-            break;
-        }
-        wce = wce->next;
-    }
-
-    return wce;
-}
-
-VOID FASTCALL printChain(VOID)
-{
-    /*test*/
-    PCLIPBOARDCHAINELEMENT wce2 = WindowsChain;
-    while (wce2)
-    {
-        ERR("chain: %p\n", wce2->window->head.h);
-        wce2 = wce2->next;
-    }
-}
-
-/* the new window always have to be the first in the chain */
-PCLIPBOARDCHAINELEMENT FASTCALL
-IntAddWindowToChain(PWND window)
-{
-    PCLIPBOARDCHAINELEMENT wce = NULL;
-
-    if (!IntIsWindowInChain(window))
-    {
-        wce = WindowsChain;
-
-        wce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDCHAINELEMENT), USERTAG_CLIPBOARD);
-        if (wce == NULL)
-        {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto exit_addChain;
-        }
-
-        wce->window = window;
-        wce->next = WindowsChain;
-
-        WindowsChain = wce;
-
-        //printChain();
-    }
-exit_addChain:
-
-    /* return the next window to beremoved later */
-    return wce;
-}
-
-PCLIPBOARDCHAINELEMENT FASTCALL
-IntRemoveWindowFromChain(PWND window)
-{
-    PCLIPBOARDCHAINELEMENT wce = WindowsChain;
-	PCLIPBOARDCHAINELEMENT *link = &WindowsChain;
-
-    if (IntIsWindowInChain(window))
-    {
-        while (wce != NULL)
-        {
-            if (wce->window == window)
-            {
-                *link = wce->next;
-                break;
-            }
-
-            link = &wce->next;
-            wce = wce->next;
-        }
-
-        //printChain();
-
-        return wce;
-    }
-    else
-    {
-        return NULL;
-    }
-}
-
-
-/*==============================================================*/
-/* if format exists, returns a non zero value (pointing to format object) */
-PCLIPBOARDELEMENT FASTCALL
-intIsFormatAvailable(UINT format)
-{
-    PCLIPBOARDELEMENT ret = NULL;
-    PCLIPBOARDELEMENT ce = ClipboardData;
-
-    while(ce)
-    {
-	    if (ce->format == format)
-	    {
-	        ret = ce;
-	        break;
-	    }
-	    ce = ce->next;
-    }
-    return ret;
-}
-
-/* counts how many distinct format were are in the clipboard */
-DWORD FASTCALL
-IntCountClipboardFormats(VOID)
-{
-    DWORD ret = 0;
-    PCLIPBOARDELEMENT ce = ClipboardData;
-
-    while(ce)
-    {
-        ret++;
-	    ce = ce->next;
-    }
-    return ret;
-}
-
-/* adds a new format and data to the clipboard */
-PCLIPBOARDELEMENT FASTCALL
-intAddFormatedData(UINT format, HANDLE hData, DWORD size)
-{
-    PCLIPBOARDELEMENT ce = NULL;
-
-    ce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDELEMENT), USERTAG_CLIPBOARD);
-    if (ce == NULL)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    }
-    else
-    {
-        ce->format = format;
-        ce->size = size;
-        ce->hData = hData;
-        ce->next = ClipboardData;
-
-        ClipboardData = ce;
-
-        IntIncrementSequenceNumber();
-    }
-
-    return ce;
-}
-
-/* removes a format and its data from the clipboard */
-BOOL FASTCALL
-intRemoveFormatedData(UINT format)
-{
-    BOOL ret = FALSE;
-    PCLIPBOARDELEMENT ce = ClipboardData;
-    PCLIPBOARDELEMENT *link = &ClipboardData;
-
-    if (intIsFormatAvailable(format))
-    {
-        while (ce != NULL)
-        {
-            if (ce->format == format)
-            {
-                *link = ce->next;
-                break;
-            }
-
-            link = &ce->next;
-            ce = ce->next;
-        }
-
-        if (ce->hData)
-        {
-            ExFreePool(ce->hData);
-        }
-        ExFreePool(ce);
-        ret = TRUE;
-    }
-
-    return ret;
-}
-
-VOID FASTCALL
-IntEmptyClipboardData(VOID)
-{
-    PCLIPBOARDELEMENT ce = ClipboardData;
-    PCLIPBOARDELEMENT tmp;
-
-    while(ce)
-    {
-        tmp = ce->next;
-		if (ce->hData)
-		{
-            ExFreePool(ce->hData);
-        }
-	    ExFreePool(ce);
-	    ce = tmp;
-    }
-
-    ClipboardData = NULL;
-}
-
-/*==============================================================*/
-
-HANDLE FASTCALL
-renderBITMAPfromDIB(LPBYTE pDIB)
-{
-    HDC hdc;
-    HBITMAP hbitmap;
-    PBITMAPINFO pBmi, pConvertedBmi = NULL;
-    NTSTATUS Status ;
-	UINT offset = 0; /* Stupid compiler */
-
-	pBmi = (BITMAPINFO*)pDIB;
-
-    //hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
-    hdc = UserGetDCEx(ClipboardWindow, NULL, DCX_USESTYLE);
-
-    /* Probe it */
-    _SEH2_TRY
-    {
-        ProbeForRead(&pBmi->bmiHeader.biSize, sizeof(DWORD), 1);
-		ProbeForRead(pBmi, pBmi->bmiHeader.biSize, 1);
-		ProbeForRead(pBmi, DIB_BitmapInfoSize(pBmi, DIB_RGB_COLORS), 1);
-		pConvertedBmi = DIB_ConvertBitmapInfo(pBmi, DIB_RGB_COLORS);
-		if(!pConvertedBmi)
-		{
-			Status = STATUS_INVALID_PARAMETER;
-		}
-		else
-		{
-			offset = DIB_BitmapInfoSize((BITMAPINFO*)pBmi, DIB_RGB_COLORS);
-			ProbeForRead(pDIB + offset, pConvertedBmi->bmiHeader.biSizeImage, 1);
-		}
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if(!NT_SUCCESS(Status))
-    {
-        UserReleaseDC(ClipboardWindow, hdc, FALSE);
+        ERR("Cannot open winsta\n");
+        SetLastNtError(Status);
         return NULL;
     }
 
-    hbitmap = GreCreateDIBitmapInternal(hdc,
-                                        pConvertedBmi->bmiHeader.biWidth,
-                                        pConvertedBmi->bmiHeader.biHeight,
-                                        CBM_INIT,
-                                        pDIB+offset,
-                                        pConvertedBmi,
-                                        DIB_RGB_COLORS,
-                                        0,
-                                        0);
-    //UserReleaseDC(NULL, hdc, FALSE);
-    UserReleaseDC(ClipboardWindow, hdc, FALSE);
-
-	DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi);
-
-    return hbitmap;
+    return pWinStaObj;
 }
 
-BOOL FASTCALL
-canSinthesize(UINT format)
+/* If format exists, returns a non zero value (pointing to formated object) */
+PCLIP static FASTCALL
+IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 {
-    BOOL ret = FALSE;
+    unsigned i = 0;
 
-    switch(format)
+    for (i = 0; i < pWinStaObj->cNumClipFormats; ++i)
     {
-        case CF_BITMAP:
-        case CF_METAFILEPICT:
-            ret = TRUE;
+	    if (pWinStaObj->pClipBase[i].fmt == fmt)
+            return &pWinStaObj->pClipBase[i];
     }
 
-    return ret;
+    return NULL;
 }
 
-/* returns the size of the sinthesized data */
-DWORD FASTCALL
-synthesizeData(UINT format)
+VOID static FASTCALL
+IntFreeElementData(PCLIP pElement)
 {
-    DWORD ret = 0;
-
-    synthesizedData = NULL;
-    synthesizedDataSize = 0;
-
-    if (!canSinthesize(format))
+    if (!IS_DATA_DELAYED(pElement) &&
+        !IS_DATA_SYNTHESIZED(pElement))
     {
-        return 0;
-    }
-
-    switch (format)
-    {
-        case CF_BITMAP:
+        if (pElement->fGlobalHandle)
+            UserDeleteObject(pElement->hData, otClipBoardData);
+        else if (pElement->fmt == CF_BITMAP || pElement->fmt == CF_PALETTE ||
+                 pElement->fmt == CF_DSPBITMAP)
         {
-            break;
-        }
-
-        case CF_METAFILEPICT:
-        {
-            break;
+            GreSetObjectOwner(pElement->hData, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(pElement->hData);
         }
     }
-
-    ret = 1;
-
-    return ret;
 }
 
-VOID FASTCALL
-freeSynthesizedData(VOID)
+/* Adds a new format and data to the clipboard */
+PCLIP static NTAPI
+IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEAN fGlobalHandle, BOOL bEnd)
 {
-    ExFreePool(synthesizedData);
-}
+    PCLIP pElement = NULL;
 
-/*==============================================================*/
+    /* Use exisiting entry with specified format */
+    if (!bEnd)
+        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
 
-BOOL FASTCALL
-intIsClipboardOpenByMe(VOID)
-{
-    /* check if we open the clipboard */
-    if (ClipboardThread && ClipboardThread == PsGetCurrentThreadWin32Thread())
+    /* Put new entry at the end if nothing was found */
+    if (!pElement)
     {
-        /* yes, we got a thread and its the same that opens the clipboard */
+        /* Allocate bigger clipboard if needed. We could use lists but Windows uses array */
+        if (pWinStaObj->cNumClipFormats % 4 == 0)
+        {
+            PCLIP pNewClip;
+
+            /* Allocate new clipboard */
+            pNewClip = ExAllocatePoolWithTag(PagedPool,
+                                             (pWinStaObj->cNumClipFormats + 4) * sizeof(CLIP),
+                                             USERTAG_CLIPBOARD);
+            if (!pNewClip)
+            {
+                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return NULL;
+            }
+
+            /* Copy data */
+            memcpy(pNewClip, pWinStaObj->pClipBase, pWinStaObj->cNumClipFormats * sizeof(CLIP));
+
+            /* Free old clipboard */
+            if (pWinStaObj->pClipBase)
+                ExFreePoolWithTag(pWinStaObj->pClipBase, USERTAG_CLIPBOARD);
+
+            /* Update WinSta */
+            pWinStaObj->pClipBase = pNewClip;
+        }
+
+        /* New element is at the end */
+        pElement = &pWinStaObj->pClipBase[pWinStaObj->cNumClipFormats];
+        pElement->fmt = fmt;
+        pWinStaObj->cNumClipFormats++;
+    }
+    else
+        IntFreeElementData(pElement);
+
+    pElement->hData = hData;
+    pElement->fGlobalHandle = fGlobalHandle;
+
+    return pElement;
+}
+
+BOOL static FASTCALL
+IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
+{
+    /* Check if current thread has opened the clipboard */
+    if (pWinSta->ptiClipLock &&
+        pWinSta->ptiClipLock == PsGetCurrentThreadWin32Thread())
+    {
         return TRUE;
-
     }
-    /* will fail if not thread (closed) or not open by me*/
+
     return FALSE;
 }
 
-/* IntClipboardFreeWindow it's called when a window was destroyed */
-VOID FASTCALL
-IntClipboardFreeWindow(PWND window)
+VOID static NTAPI
+IntSynthesizeDib(PWINSTATION_OBJECT pWinStaObj, HBITMAP hBm)
 {
-    /* called from co_UserFreeWindow in window.c */
-    /* check if clipboard is not locked by this window, if yes, unlock it */
-    if (ClipboardThread == PsGetCurrentThreadWin32Thread())
+    HDC hdc;
+    BITMAP bm;
+    BITMAPINFO bi;
+    SURFACE *psurf;
+    PCLIPBOARDDATA pMemObj;
+    HANDLE hMem;
+
+    hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
+    if (!hdc)
+        return;
+
+    psurf = SURFACE_ShareLockSurface(hBm);
+    if (!psurf)
+        goto cleanup;
+    BITMAP_GetObject(psurf, sizeof(BITMAP), (PVOID)&bm);
+    SURFACE_ShareUnlockSurface(psurf);
+
+    bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = bm.bmWidth;
+    bi.bmiHeader.biHeight = bm.bmHeight;
+    bi.bmiHeader.biPlanes = bm.bmPlanes;
+    bi.bmiHeader.biBitCount	= bm.bmBitsPixel;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = 0;
+    bi.bmiHeader.biYPelsPerMeter = 0;
+    bi.bmiHeader.biClrUsed = 0;
+
+    NtGdiGetDIBitsInternal(hdc, hBm, 0, bm.bmHeight, NULL, &bi, DIB_RGB_COLORS, 0, 0);
+
+    pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData,
+                                               sizeof(BITMAPINFOHEADER) + bi.bmiHeader.biSizeImage);
+    if(pMemObj)
     {
-        /* the window that opens the clipboard was destroyed */
-        ClipboardThread = NULL;
-        ClipboardWindow = NULL;
-        //TODO: free clipboard
+        pMemObj->cbData = sizeof(BITMAPINFOHEADER) + bi.bmiHeader.biSizeImage;
+        memcpy(pMemObj->Data, &bi, sizeof(BITMAPINFOHEADER));
+        NtGdiGetDIBitsInternal(hdc, pMemObj->Data, 0, bm.bmHeight, (LPBYTE)pMemObj->Data + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
+        IntAddFormatedData(pWinStaObj, CF_DIB, hMem, TRUE, TRUE);
     }
-    if (window == ClipboardOwnerWindow)
+
+cleanup:
+    UserReleaseDC(NULL, hdc, FALSE);
+}
+
+VOID static WINAPI
+IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
+{
+    HDC hdc = NULL;
+    PBITMAPINFO pBmi, pConvertedBmi = NULL;
+    HBITMAP hBm = NULL;
+    PCLIPBOARDDATA pMemObj;
+    PCLIP pDibEl;
+    ULONG Offset;
+
+    TRACE("IntSynthesizeBitmap(%p, %p)\n", pWinStaObj, pBmEl);
+
+    pDibEl = IntIsFormatAvailable(pWinStaObj, CF_DIB);
+    ASSERT(pDibEl && !IS_DATA_SYNTHESIZED(pDibEl));
+    if(!pDibEl->fGlobalHandle)
+        return;
+
+    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, pDibEl->hData, otClipBoardData);
+    if (!pMemObj)
+        return;
+
+	pBmi = (BITMAPINFO*)pMemObj->Data;
+
+    if (pMemObj->cbData < sizeof(DWORD) && pMemObj->cbData < pBmi->bmiHeader.biSize)
+        goto cleanup;
+
+    pConvertedBmi = DIB_ConvertBitmapInfo(pBmi, DIB_RGB_COLORS);
+    if (!pConvertedBmi)
+        goto cleanup;
+
+    Offset = DIB_BitmapInfoSize(pBmi, DIB_RGB_COLORS);
+
+    hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
+    if (!hdc)
+        goto cleanup;
+
+    hBm = GreCreateDIBitmapInternal(hdc,
+                                    pConvertedBmi->bmiHeader.biWidth,
+                                    pConvertedBmi->bmiHeader.biHeight,
+                                    CBM_INIT,
+                                    pMemObj->Data + Offset,
+                                    pConvertedBmi,
+                                    DIB_RGB_COLORS,
+                                    0,
+                                    0);
+
+    if (hBm)
     {
-        /* the owner window was destroyed */
-        ClipboardOwnerWindow = NULL;
-        ClipboardOwnerThread = NULL;
+        GreSetObjectOwner(hBm, GDI_OBJ_HMGR_PUBLIC);
+        pBmEl->hData = hBm;
     }
-    /* remove window from window chain */
-    if (IntIsWindowInChain(window))
+
+cleanup:
+    if (hdc)
+        UserReleaseDC(NULL, hdc, FALSE);
+
+    if (pConvertedBmi)
+        DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi);
+}
+
+VOID static NTAPI
+IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
+{
+    PCLIP pTextEl, pUniTextEl, pOemTextEl, pLocaleEl, pBmEl, pDibEl;
+
+    pTextEl = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
+    pOemTextEl = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
+    pUniTextEl = IntIsFormatAvailable(pWinStaObj, CF_UNICODETEXT);
+    pLocaleEl = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
+    pBmEl = IntIsFormatAvailable(pWinStaObj, CF_BITMAP);
+    pDibEl = IntIsFormatAvailable(pWinStaObj, CF_DIB);
+
+    /* Add CF_LOCALE format if we have CF_TEXT */
+    if (!pLocaleEl && pTextEl)
     {
-		PCLIPBOARDCHAINELEMENT w = IntRemoveWindowFromChain(window);
-		if (w)
-		{
-            ExFreePool(w);
-		}
+        PCLIPBOARDDATA pMemObj;
+        HANDLE hMem;
+
+        pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData,
+                                                   sizeof(CLIPBOARDDATA) + sizeof(LCID));
+        if (pMemObj)
+        {
+            pMemObj->cbData = sizeof(LCID);
+            *((LCID*)pMemObj->Data) = NtCurrentTeb()->CurrentLocale;
+            IntAddFormatedData(pWinStaObj, CF_LOCALE, hMem, TRUE, TRUE);
+        }
     }
+
+    /* Add CF_TEXT. Note: it is synthesized in user32.dll */
+    if (!pTextEl && (pUniTextEl || pOemTextEl))
+        IntAddFormatedData(pWinStaObj, CF_TEXT, DATA_SYNTH_USER, FALSE, TRUE);
+
+    /* Add CF_OEMTEXT. Note: it is synthesized in user32.dll */
+    if (!pOemTextEl && (pUniTextEl || pTextEl))
+        IntAddFormatedData(pWinStaObj, CF_OEMTEXT, DATA_SYNTH_USER, FALSE, TRUE);
+
+    /* Add CF_UNICODETEXT. Note: it is synthesized in user32.dll */
+    if (!pUniTextEl && (pTextEl || pOemTextEl))
+        IntAddFormatedData(pWinStaObj, CF_UNICODETEXT, DATA_SYNTH_USER, FALSE, TRUE);
+
+    /* Add CF_BITMAP. Note: it is synthesized on demand */
+    if (!pBmEl && pDibEl)
+        IntAddFormatedData(pWinStaObj, CF_BITMAP, DATA_SYNTH_KRNL, FALSE, TRUE);
+
+    /* Note: We need to render the DIB or DIBV5 format as soon as possible
+       because pallette information may change */
+    if (!pDibEl && pBmEl)
+        IntSynthesizeDib(pWinStaObj, pBmEl->hData);
+}
+
+VOID NTAPI
+UserEmptyClipboardData(PWINSTATION_OBJECT pWinSta)
+{
+    unsigned i;
+    PCLIP pElement;
+
+    for (i = 0; i < pWinSta->cNumClipFormats; ++i)
+    {
+        pElement = &pWinSta->pClipBase[i];
+		IntFreeElementData(pElement);
+    }
+
+    if(pWinSta->pClipBase)
+        ExFreePoolWithTag(pWinSta->pClipBase, USERTAG_CLIPBOARD);
+    pWinSta->pClipBase = NULL;
+    pWinSta->cNumClipFormats = 0;
+}
+
+/* UserClipboardFreeWindow is called from co_UserFreeWindow in window.c */
+VOID FASTCALL
+UserClipboardFreeWindow(PWND pWindow)
+{
+    PWINSTATION_OBJECT pWinStaObj;
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        return;
+
+    /* Check if clipboard is not locked by this window, if yes, unlock it */
+    if (pWindow == pWinStaObj->spwndClipOpen)
+    {
+        /* The window that opens the clipboard was destroyed */
+        pWinStaObj->spwndClipOpen = NULL;
+        pWinStaObj->ptiClipLock = NULL;
+    }
+    if (pWindow == pWinStaObj->spwndClipOwner)
+    {
+        /* The owner window was destroyed */
+        pWinStaObj->spwndClipOwner = NULL;
+    }
+    /* Remove window from window chain */
+    if (pWindow == pWinStaObj->spwndClipViewer)
+        pWinStaObj->spwndClipViewer = NULL;
+
+    ObDereferenceObject(pWinStaObj);
+}
+
+UINT APIENTRY
+UserEnumClipboardFormats(UINT fmt)
+{
+    UINT Ret = 0;
+    PCLIP pElement;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    /* Check if clipboard has been opened */
+    if (!IntIsClipboardOpenByMe(pWinStaObj))
+    {
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
+        goto cleanup;
+    }
+
+    if (fmt == 0)
+    {
+        /* Return first format */
+        if (pWinStaObj->pClipBase)
+            Ret = pWinStaObj->pClipBase[0].fmt;
+    }
+    else
+    {
+        /* Return next format */
+        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+        ++pElement;
+        if (pElement < &pWinStaObj->pClipBase[pWinStaObj->cNumClipFormats])
+            Ret = pElement->fmt;
+    }
+
+cleanup:
+    if(pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+
+    return Ret;
+}
+
+BOOL NTAPI
+UserOpenClipboard(HWND hWnd)
+{
+    PWND pWindow = NULL;
+    BOOL bRet = FALSE;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
+
+    if (hWnd)
+    {
+        pWindow = UserGetWindowObject(hWnd);
+        if (!pWindow)
+            goto cleanup;
+    }
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    if (pWinStaObj->ptiClipLock)
+    {
+        /* Clipboard is already open */
+        if (pWinStaObj->spwndClipOpen != pWindow)
+        {
+            EngSetLastError(ERROR_ACCESS_DENIED);
+            ERR("Access denied!\n");
+            goto cleanup;
+        }
+    }
+
+    /* Open clipboard */
+    pWinStaObj->spwndClipOpen = pWindow;
+    pWinStaObj->ptiClipLock = PsGetCurrentThreadWin32Thread();
+    bRet = TRUE;
+
+cleanup:
+    if (pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+
+    return bRet;
 }
 
 BOOL APIENTRY
 NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
 {
-
-    PWND Window;
-    BOOL ret = FALSE;
+    BOOL bRet;
 
     UserEnterExclusive();
-
-    sendDrawClipboardMsg = FALSE;
-    recentlySetClipboard = FALSE;
-
-    if (ClipboardThread)
-    {
-        /* clipboard is already open */
-        if (ClipboardThread == PsGetCurrentThreadWin32Thread())
-        {
-            if  (ClipboardOwnerWindow)
-            {
-                if (ClipboardOwnerWindow->head.h == hWnd)
-                {
-                    ret = TRUE;
-                }
-            }
-            else
-            {
-                 if (hWnd == NULL)
-                 {
-                    ret = TRUE;
-                 }
-            }
-        }
-    }
-    else
-    {
-
-        if (hWnd != NULL)
-        {
-            Window = UserGetWindowObject(hWnd);
-
-            if (Window != NULL)
-            {
-                ClipboardWindow =  Window;
-                ClipboardThread = PsGetCurrentThreadWin32Thread();
-                ret = TRUE;
-            }
-            else
-            {
-                ClipboardWindow = NULL;
-                ClipboardThread = NULL;
-                ClipboardOwnerWindow = NULL;
-                ClipboardOwnerThread = NULL;
-            }
-        }
-        else
-        {
-            ClipboardWindow =  NULL;
-            ClipboardThread = PsGetCurrentThreadWin32Thread();
-            ret = TRUE;
-        }
-    }
-
+    bRet = UserOpenClipboard(hWnd);
     UserLeave();
 
-    return ret;
+    return bRet;
+}
+
+BOOL NTAPI
+UserCloseClipboard(VOID)
+{
+    BOOL bRet = FALSE;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    if (!IntIsClipboardOpenByMe(pWinStaObj))
+    {
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
+        goto cleanup;
+    }
+
+    /* Clipboard is no longer open */
+    pWinStaObj->spwndClipOpen = NULL;
+    pWinStaObj->ptiClipLock = NULL;
+    bRet = TRUE;
+
+    if (pWinStaObj->fClipboardChanged)
+    {
+        /* Add synthesized formats - they are rendered later */
+        IntAddSynthesizedFormats(pWinStaObj);
+
+        /* Notify viewer windows in chain */
+        if (pWinStaObj->spwndClipViewer)
+        {
+            TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", pWinStaObj->spwndClipViewer->head.h);
+            co_IntSendMessage(pWinStaObj->spwndClipViewer->head.h, WM_DRAWCLIPBOARD, 0, 0);
+        }
+
+        pWinStaObj->fClipboardChanged = FALSE;
+    }
+
+cleanup:
+    if (pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+
+    return bRet;
 }
 
 BOOL APIENTRY
 NtUserCloseClipboard(VOID)
 {
-    BOOL ret = FALSE;
-
+    BOOL bRet;
+    
     UserEnterExclusive();
-
-    if (intIsClipboardOpenByMe())
-    {
-        ClipboardWindow = NULL;
-        ClipboardThread = NULL;
-        ret = TRUE;
-    }
-    else
-    {
-        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
-    }
-
-    recentlySetClipboard = FALSE;
-
+    bRet = UserCloseClipboard();
     UserLeave();
 
-    if (sendDrawClipboardMsg && WindowsChain)
-    {
-        /* only send message to the first window in the chain, then they'll do the chain */
-        /* commented because it makes a crash in co_MsqSendMessage
-        ASSERT(WindowsChain->window);
-        ASSERT(WindowsChain->window->hSelf);
-        ERR("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", WindowsChain->window->hSelf);
-        co_IntSendMessage(WindowsChain->window->hSelf, WM_DRAWCLIPBOARD, 0, 0);
-        */
-    }
-
-    return ret;
+    return bRet;
 }
 
 HWND APIENTRY
 NtUserGetOpenClipboardWindow(VOID)
 {
-    HWND ret = NULL;
+    HWND hWnd = NULL;
+    PWINSTATION_OBJECT pWinStaObj;
 
     UserEnterShared();
 
-    if (ClipboardWindow)
-    {
-        ret = ClipboardWindow->head.h;
-    }
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
+    if (pWinStaObj->spwndClipOpen)
+        hWnd = pWinStaObj->spwndClipOpen->head.h;
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
     UserLeave();
 
-    return ret;
+    return hWnd;
 }
 
 BOOL APIENTRY
 NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
-    BOOL ret = FALSE;
-    PCLIPBOARDCHAINELEMENT w = NULL;
-    PWND removeWindow;
+    BOOL bRet = FALSE;
+    PWND pWindowRemove;
+    PWINSTATION_OBJECT pWinStaObj;
+
+    TRACE("NtUserChangeClipboardChain(%p, %p)\n", hWndRemove, hWndNewNext);
+
     UserEnterExclusive();
 
-    removeWindow = UserGetWindowObject(hWndRemove);
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
-    if (removeWindow)
+    pWindowRemove = UserGetWindowObject(hWndRemove);
+
+    if (pWindowRemove && pWinStaObj->spwndClipViewer)
     {
-        if ((ret = !!IntIsWindowInChain(removeWindow)))
-        {
-            w = IntRemoveWindowFromChain(removeWindow);
-            if (w)
-            {
-                ExFreePool(w);
-            }
-        }
+        if(pWindowRemove == pWinStaObj->spwndClipViewer)
+            pWinStaObj->spwndClipViewer = UserGetWindowObject(hWndNewNext);
+
+        if(pWinStaObj->spwndClipViewer)
+            bRet = (BOOL)co_IntSendMessage(pWinStaObj->spwndClipViewer->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, (LPARAM)hWndNewNext);
     }
 
-    if (ret && WindowsChain)
-    {
-        // only send message to the first window in the chain,
-        // then they do the chain
+    ObDereferenceObject(pWinStaObj);
 
-        /* WindowsChain->window may be NULL */
-        LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->head.h;
-        ERR("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->head.h);
-        co_IntSendMessage(WindowsChain->window->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, lparam);
-    }
-
+cleanup:
     UserLeave();
 
-    return ret;
+    return bRet;
 }
 
 DWORD APIENTRY
 NtUserCountClipboardFormats(VOID)
 {
-    DWORD ret = 0;
-
-    if (ClipboardData)
-    {
-       ret = IntCountClipboardFormats();
-    }
-
-    return ret;
-}
-
-DWORD APIENTRY
-NtUserEmptyClipboard(VOID)
-{
-    BOOL ret = FALSE;
-
-    UserEnterExclusive();
-
-    if (intIsClipboardOpenByMe())
-    {
-        if (ClipboardData)
-        {
-            IntEmptyClipboardData();
-        }
-
-        ClipboardOwnerWindow = ClipboardWindow;
-        ClipboardOwnerThread = ClipboardThread;
-
-        IntIncrementSequenceNumber();
-
-        ret = TRUE;
-    }
-    else
-    {
-        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
-    }
-
-    if (ret && ClipboardOwnerWindow)
-    {
-        TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->head.h);
-        co_IntSendMessageNoWait( ClipboardOwnerWindow->head.h, WM_DESTROYCLIPBOARD, 0, 0);
-    }
-
-    UserLeave();
-
-    return ret;
-}
-
-HANDLE APIENTRY
-NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
-{
-    HANDLE ret = NULL;
+    DWORD cFormats = 0;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
 
     UserEnterShared();
 
-    if (intIsClipboardOpenByMe())
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    cFormats = pWinStaObj->cNumClipFormats;
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
+    UserLeave();
+
+    return cFormats;
+}
+
+BOOL NTAPI
+UserEmptyClipboard(VOID)
+{
+    BOOL bRet = FALSE;
+    PWINSTATION_OBJECT pWinStaObj;
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        return FALSE;
+
+    if (IntIsClipboardOpenByMe(pWinStaObj))
     {
-        /* when Unknown1 is zero, we returns to user32 the data size */
-        if (!pBuffer)
+        UserEmptyClipboardData(pWinStaObj);
+
+        if (pWinStaObj->spwndClipOwner)
         {
-            PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
-
-            if (data)
-            {
-                /* format exists in clipboard */
-                if (data->size == DATA_DELAYED_RENDER)
-                {
-                    /* tell owner what data needs to be rendered */
-                    if (ClipboardOwnerWindow)
-                    {
-                        ASSERT(ClipboardOwnerWindow->head.h);
-                        co_IntSendMessage(ClipboardOwnerWindow->head.h, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
-                        data = intIsFormatAvailable(uFormat);
-                        ASSERT(data->size);
-                        ret = (HANDLE)(ULONG_PTR)data->size;
-                    }
-                }
-                else
-                {
-                    if (data->size == DATA_SYNTHESIZED_RENDER)
-                    {
-                        data->size = synthesizeData(uFormat);
-                    }
-
-                }
-                ret = (HANDLE)(ULONG_PTR)data->size;
-            }
-            else
-            {
-                /* there is no data in this format */
-                //ret = (HANDLE)FALSE;
-            }
+            TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p", pWinStaObj->spwndClipOwner->head.h);
+            co_IntSendMessageNoWait(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
         }
-        else
-        {
-            PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
 
-            if (data)
-            {
-                if (data->size == DATA_DELAYED_RENDER)
-                {
-                    // we rendered it in 1st call of getclipboard data
-                }
-                else
-                {
-                    if (data->size == DATA_SYNTHESIZED_RENDER)
-                    {
-                        if (uFormat == CF_BITMAP)
-                        {
-                            /* BITMAP & METAFILEs returns a GDI handle */
-                            PCLIPBOARDELEMENT data = intIsFormatAvailable(CF_DIB);
-                            if (data)
-                            {
-                                ret = renderBITMAPfromDIB(data->hData);
-                            }
-                        }
-                        else
-                        {
-                            ret = (HANDLE)pBuffer;
+        pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
 
-                            _SEH2_TRY
-                            {
-                                ProbeForWrite(pBuffer, synthesizedDataSize, 1);
-                                memcpy(pBuffer, (PCHAR)synthesizedData, synthesizedDataSize);
-                            }
-                            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                            {
-                                ret = NULL;
-                            }
-                            _SEH2_END
+        pWinStaObj->iClipSequenceNumber++;
 
-                            freeSynthesizedData();
-                        }
-                    }
-                    else
-                    {
-                        ret = (HANDLE)pBuffer;
-
-                        _SEH2_TRY
-                        {
-                            ProbeForWrite(pBuffer, data->size, 1);
-                            memcpy(pBuffer, (PCHAR)data->hData, data->size);
-                        }
-                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                        {
-                            ret = NULL;
-                        }
-                        _SEH2_END
-                    }
-                }
-
-            }
-
-        }
+        bRet = TRUE;
     }
     else
     {
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
+        ERR("Access denied!\n");
     }
 
+    ObDereferenceObject(pWinStaObj);
+
+    return bRet;
+}
+
+BOOL APIENTRY
+NtUserEmptyClipboard(VOID)
+{
+    BOOL bRet;
+
+    TRACE("NtUserEmptyClipboard()\n");
+
+    UserEnterExclusive();
+    bRet = UserEmptyClipboard();
     UserLeave();
 
-    return ret;
+    return bRet;
 }
 
 INT APIENTRY
-NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
-                             INT cchMaxCount)
+NtUserGetClipboardFormatName(UINT fmt, LPWSTR lpszFormatName, INT cchMaxCount)
 {
-    UNICODE_STRING sFormatName;
-    INT ret = 0;
+    INT iRet = 0;
 
-    /* if the format is built-in we fail */
-    if (format < 0xc000)
+    UserEnterShared();
+
+    /* If the format is built-in we fail */
+    if (fmt < 0xc000)
     {
-        /* registetrated formats are >= 0xc000 */
-        return 0;
+        /* Registetrated formats are >= 0xc000 */
+        goto cleanup;
     }
 
-    if((cchMaxCount < 1) || !FormatName)
+    if (cchMaxCount < 1 || !lpszFormatName)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        goto cleanup;
     }
 
     _SEH2_TRY
     {
-        ProbeForWriteUnicodeString(FormatName);
-        sFormatName = *(volatile UNICODE_STRING *)FormatName;
-        ProbeForWrite(sFormatName.Buffer, sFormatName.MaximumLength, 1);
+        ProbeForWrite(lpszFormatName, cchMaxCount * sizeof(WCHAR), 1);
 
-        ret = IntGetAtomName((RTL_ATOM)format, sFormatName.Buffer, cchMaxCount * sizeof(WCHAR));
-
-        if (ret >= 0)
-        {
-            ret = ret / sizeof(WCHAR);
-            sFormatName.Length = ret;
-        }
-        else
-        {
-            ret = 0;
-        }
+        iRet = IntGetAtomName((RTL_ATOM)fmt,
+                              lpszFormatName,
+                              cchMaxCount * sizeof(WCHAR));
+        iRet /= sizeof(WCHAR);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -769,76 +651,217 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
     }
     _SEH2_END;
 
-    return ret;
+cleanup:
+    UserLeave();
+
+    return iRet;
 }
 
 HWND APIENTRY
 NtUserGetClipboardOwner(VOID)
 {
-    HWND ret = NULL;
+    HWND hWnd = NULL;
+    PWINSTATION_OBJECT pWinStaObj;
 
     UserEnterShared();
 
-    if (ClipboardOwnerWindow)
-    {
-        ret = ClipboardOwnerWindow->head.h;
-    }
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
+    if (pWinStaObj->spwndClipOwner)
+        hWnd = pWinStaObj->spwndClipOwner->head.h;
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
     UserLeave();
 
-    return ret;
+    return hWnd;
 }
 
 HWND APIENTRY
 NtUserGetClipboardViewer(VOID)
 {
-    HWND ret = NULL;
+    HWND hWnd = NULL;
+    PWINSTATION_OBJECT pWinStaObj;
 
     UserEnterShared();
 
-    if (WindowsChain)
-    {
-        ret = WindowsChain->window->head.h;
-    }
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if(!pWinStaObj)
+        goto cleanup;
 
+    if (pWinStaObj->spwndClipViewer)
+        hWnd = pWinStaObj->spwndClipViewer->head.h;
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
     UserLeave();
 
-    return ret;
+    return hWnd;
 }
 
 INT APIENTRY
 NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 {
-    INT i;
-    UINT *priorityList;
-    INT ret = 0;
+    INT i, iRet = 0;
+    PWINSTATION_OBJECT pWinStaObj;
 
-    UserEnterExclusive();
+    UserEnterShared();
 
-    _SEH2_TRY
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+    
+    if (pWinStaObj->pClipBase == NULL)
     {
-        if (IntCountClipboardFormats() == 0)
+        iRet = 0;
+    }
+    else
+    {
+        _SEH2_TRY
         {
-            ret = 0;
-        }
-        else
-        {
-            ProbeForRead(paFormatPriorityList, cFormats, sizeof(UINT));
+            ProbeForRead(paFormatPriorityList, cFormats * sizeof(UINT), sizeof(UINT));
 
-            priorityList = paFormatPriorityList;
+            iRet = -1;
 
-            ret = -1;
-
-            for (i = 0; i < cFormats; i++)
+            for (i = 0; i < cFormats; ++i)
             {
-                if (intIsFormatAvailable(priorityList[i]))
+                if (IntIsFormatAvailable(pWinStaObj, paFormatPriorityList[i]))
                 {
-                    ret = priorityList[i];
+                    iRet = paFormatPriorityList[i];
                     break;
                 }
             }
-
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
+    UserLeave();
+
+    return iRet;
+
+}
+
+BOOL APIENTRY
+NtUserIsClipboardFormatAvailable(UINT fmt)
+{
+    BOOL bRet = FALSE;
+    PWINSTATION_OBJECT pWinStaObj;
+
+    TRACE("NtUserIsClipboardFormatAvailable(%x)\n", fmt);
+
+    UserEnterShared();
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    if (IntIsFormatAvailable(pWinStaObj, fmt))
+        bRet = TRUE;
+
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
+    UserLeave();
+
+    return bRet;
+}
+
+HANDLE APIENTRY
+NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
+{
+    HANDLE hRet = NULL;
+    PCLIP pElement;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
+
+    TRACE("NtUserGetClipboardData(%x, %p)\n", fmt, pgcd);
+
+    UserEnterShared();
+
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
+
+    if (!IntIsClipboardOpenByMe(pWinStaObj))
+    {
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
+        goto cleanup;
+    }
+
+    pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+    if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
+    {
+        /* Send WM_RENDERFORMAT message */
+        pWinStaObj->fInDelayedRendering = TRUE;
+        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)fmt, 0);
+        pWinStaObj->fInDelayedRendering = FALSE;
+
+        /* Data should be in clipboard now */
+        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+    }
+
+    if (!pElement || IS_DATA_DELAYED(pElement))
+        goto cleanup;
+
+
+    if (IS_DATA_SYNTHESIZED(pElement))
+    {
+        /* Note: Data is synthesized in usermode */
+        /* TODO: Add more formats */
+        switch (fmt)
+        {
+            case CF_UNICODETEXT:
+            case CF_TEXT:
+            case CF_OEMTEXT:
+                pElement = IntIsFormatAvailable(pWinStaObj, CF_UNICODETEXT);
+                if (IS_DATA_SYNTHESIZED(pElement))
+                    pElement = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
+                if (IS_DATA_SYNTHESIZED(pElement))
+                    pElement = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
+                break;
+            case CF_BITMAP:
+                IntSynthesizeBitmap(pWinStaObj, pElement);
+                break;
+            default:
+                ASSERT(FALSE);
+        }
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(pgcd, sizeof(*pgcd), 1);
+        pgcd->uFmtRet = pElement->fmt;
+        pgcd->fGlobalHandle = pElement->fGlobalHandle;
+
+        /* Text and bitmap needs more data */
+        if (fmt == CF_TEXT)
+        {
+            PCLIP pLocaleEl;
+
+            pLocaleEl = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
+            if (pLocaleEl && !IS_DATA_DELAYED(pLocaleEl))
+                pgcd->hLocale = pLocaleEl->hData;
+        }
+        else if (fmt == CF_BITMAP)
+        {
+            PCLIP pPaletteEl;
+
+            pPaletteEl = IntIsFormatAvailable(pWinStaObj, CF_PALETTE);
+            if (pPaletteEl && !IS_DATA_DELAYED(pPaletteEl))
+                pgcd->hPalette = pPaletteEl->hData;
+        }
+
+        hRet = pElement->hData;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -846,355 +869,260 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
     }
     _SEH2_END;
 
+cleanup:
+    if(pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+
     UserLeave();
 
-    return ret;
+    TRACE("NtUserGetClipboardData returns %p\n", hRet);
 
+    return hRet;
 }
 
-BOOL APIENTRY
-NtUserIsClipboardFormatAvailable(UINT format)
+HANDLE NTAPI
+UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
 {
-    BOOL ret = FALSE;
+    HANDLE hRet = NULL;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
 
-    UserEnterShared();
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
-    ret = (intIsFormatAvailable(format) != NULL);
+    /* If it's delayed rendering we don't have to open clipboard */
+    if ((pWinStaObj->fInDelayedRendering &&
+        pWinStaObj->spwndClipOwner->head.pti != PsGetCurrentThreadWin32Thread()) ||
+        !IntIsClipboardOpenByMe(pWinStaObj))
+    {
+        ERR("Access denied!\n");
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
+        goto cleanup;
+    }
 
-    UserLeave();
+    if (scd->fIncSerialNumber)
+        pWinStaObj->iClipSerialNumber++;
 
-    return ret;
+    /* Is it a delayed render? */
+    if (hData)
+    {
+        /* Is it a bitmap? */
+        if (fmt == CF_BITMAP)
+        {
+            /* Make bitmap public */
+            GreSetObjectOwner(hData, GDI_OBJ_HMGR_PUBLIC);
+        }
+
+        /* Save data in the clipboard */
+        IntAddFormatedData(pWinStaObj, fmt, hData, scd->fGlobalHandle, FALSE);
+        TRACE("hData stored\n");
+
+        pWinStaObj->iClipSequenceNumber++;
+        pWinStaObj->fClipboardChanged = TRUE;
+
+        /* Note: Synthesized formats are added in NtUserCloseClipboard */
+    }
+    else
+    {
+        /* This is a delayed render */
+        IntAddFormatedData(pWinStaObj, fmt, DATA_DELAYED, FALSE, FALSE);
+        TRACE("SetClipboardData delayed format: %u\n", fmt);
+    }
+
+    /* Return hData on success */
+    hRet = hData;
+
+cleanup:
+    TRACE("NtUserSetClipboardData returns: %p\n", hRet);
+
+    if(pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+
+    return hRet;
 }
-
-
 
 HANDLE APIENTRY
-NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
+NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA pUnsafeScd)
 {
-    HANDLE hCBData = NULL;
-    UNICODE_STRING unicodeString;
-    OEM_STRING oemString;
-    ANSI_STRING ansiString;
+    SETCLIPBDATA scd;
+    HANDLE hRet;
+
+    TRACE("NtUserSetClipboardData(%x %p %p)\n", fmt, hData, pUnsafeScd);
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pUnsafeScd, sizeof(*pUnsafeScd), 1);
+        RtlCopyMemory(&scd, pUnsafeScd, sizeof(scd));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return NULL;)
+    }
+    _SEH2_END
 
     UserEnterExclusive();
 
-    /* to place data here the we need to be the owner */
-    if (ClipboardOwnerThread == PsGetCurrentThreadWin32Thread())
-    {
-        PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
-        if (data)
-        {
-
-            if (data->size == DATA_DELAYED_RENDER)
-            {
-                intRemoveFormatedData(uFormat);
-            }
-            else
-            {
-                // we already have this format on clipboard
-                goto exit_setCB;
-            }
-        }
-
-        if (hMem)
-        {
-            _SEH2_TRY
-            {
-                ProbeForRead(hMem, size, 1);
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                SetLastNtError(_SEH2_GetExceptionCode());
-                _SEH2_YIELD(goto exit_setCB);
-            }
-            _SEH2_END;
-
-            if (intIsClipboardOpenByMe())
-            {
-                delayedRender = FALSE;
-            }
-
-            if (!canSinthesize(uFormat))
-            {
-                hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
-                memcpy(hCBData, hMem, size);
-                intAddFormatedData(uFormat, hCBData, size);
-                ERR("Data stored\n");
-            }
-
-            sendDrawClipboardMsg = TRUE;
-            recentlySetClipboard = TRUE;
-            lastEnumClipboardFormats = uFormat;
-
-            /* conversions */
-            switch (uFormat)
-            {
-                case CF_TEXT:
-                    {
-                        //TODO : sinthesize CF_UNICODETEXT & CF_OEMTEXT
-                        // CF_TEXT -> CF_UNICODETEXT
-                        ansiString.Buffer = hCBData;
-                        ansiString.Length = size;
-                        RtlAnsiStringToUnicodeString(&unicodeString, &ansiString, TRUE);
-                        intAddFormatedData(CF_UNICODETEXT, unicodeString.Buffer, unicodeString.Length * sizeof(WCHAR));
-                        // CF_TEXT -> CF_OEMTEXT
-                        RtlUnicodeStringToOemString(&oemString, &unicodeString, TRUE);
-                        intAddFormatedData(CF_OEMTEXT, oemString.Buffer, oemString.Length);
-                        //HKCU\Control Panel\International\Locale
-                        //intAddFormatedData(CF_LOCALE, oemString.Buffer, oemString.Length);
-                        break;
-                    }
-                case CF_UNICODETEXT:
-                {
-                    //TODO : sinthesize CF_TEXT & CF_OEMTEXT
-                    //CF_UNICODETEXT -> CF_TEXT
-                    unicodeString.Buffer = hCBData;
-                    unicodeString.Length = size;
-                    RtlUnicodeStringToAnsiString(&ansiString, &unicodeString, TRUE);
-                    intAddFormatedData(CF_TEXT, ansiString.Buffer, ansiString.Length);
-                    //CF_UNICODETEXT -> CF_OEMTEXT
-                    RtlUnicodeStringToOemString(&oemString, &unicodeString, TRUE);
-                    intAddFormatedData(CF_OEMTEXT, oemString.Buffer, oemString.Length);
-                    break;
-                }
-                case CF_OEMTEXT:
-                {
-                    //TODO : sinthesize CF_TEXT & CF_UNICODETEXT
-                    //CF_OEMTEXT -> CF_UNICODETEXT
-                    oemString.Buffer = hCBData;
-                    oemString.Length = size;
-                    RtlOemStringToUnicodeString(&unicodeString, &oemString, TRUE);
-                    intAddFormatedData(CF_UNICODETEXT, unicodeString.Buffer, unicodeString.Length * sizeof(WCHAR));
-                    //CF_OEMTEXT -> CF_TEXT
-                    RtlUnicodeStringToAnsiString(&ansiString, &unicodeString, TRUE);
-                    intAddFormatedData(CF_TEXT, ansiString.Buffer, ansiString.Length);
-                    break;
-                }
-                case CF_BITMAP:
-                {
-                    // we need to render the DIB or DIBV5 format as soon as possible
-                    // because pallette information may change
-
-                    HDC hdc;
-                    BITMAP bm;
-                    BITMAPINFO bi;
-                    SURFACE *psurf;
-
-                    hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
-
-
-                    psurf = SURFACE_ShareLockSurface(hMem);
-                    BITMAP_GetObject(psurf, sizeof(BITMAP), (PVOID)&bm);
-                    if(psurf)
-                    {
-                        SURFACE_ShareUnlockSurface(psurf);
-                    }
-
-                    bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);
-                    bi.bmiHeader.biWidth = bm.bmWidth;
-                    bi.bmiHeader.biHeight = bm.bmHeight;
-                    bi.bmiHeader.biPlanes = 1;
-                    bi.bmiHeader.biBitCount	= bm.bmPlanes * bm.bmBitsPixel;
-                    bi.bmiHeader.biCompression = BI_RGB;
-                    bi.bmiHeader.biSizeImage = 0;
-                    bi.bmiHeader.biXPelsPerMeter = 0;
-                    bi.bmiHeader.biYPelsPerMeter = 0;
-                    bi.bmiHeader.biClrUsed = 0;
-
-                    NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS, 0, 0);
-
-                    size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
-
-                    hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
-                    memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
-
-                    NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
-
-                    UserReleaseDC(NULL, hdc, FALSE);
-
-                    intAddFormatedData(CF_DIB, hCBData, size);
-                    intAddFormatedData(CF_BITMAP, 0, DATA_SYNTHESIZED_RENDER);
-                    // intAddFormatedData(CF_DIBV5, hCBData, size);
-
-                    break;
-                }
-                case CF_DIB:
-                {
-                    intAddFormatedData(CF_BITMAP, 0, DATA_SYNTHESIZED_RENDER);
-                    // intAddFormatedData(CF_DIBV5, hCBData, size);
-                    /* investigate */
-                    // intAddFormatedData(CF_PALETTE, hCBData, size);
-                    break;
-                }
-                case CF_DIBV5:
-                    // intAddFormatedData(CF_BITMAP, hCBData, size);
-                    // intAddFormatedData(CF_PALETTE, hCBData, size);
-                    // intAddFormatedData(CF_DIB, hCBData, size);
-                    break;
-                case CF_ENHMETAFILE:
-                    // intAddFormatedData(CF_METAFILEPICT, hCBData, size);
-                    break;
-                case CF_METAFILEPICT:
-                    // intAddFormatedData(CF_ENHMETAFILE, hCBData, size);
-                    break;
-            }
-
-        }
-        else
-        {
-            // the window provides data in the specified format
-            delayedRender = TRUE;
-            sendDrawClipboardMsg = TRUE;
-            intAddFormatedData(uFormat, NULL, 0);
-            ERR("SetClipboardData delayed format: %d\n", uFormat);
-        }
-
-
-    }
-
-exit_setCB:
+    /* Call internal function */
+    hRet = UserSetClipboardData(fmt, hData, &scd);
 
     UserLeave();
 
-    return hMem;
+    return hRet;
 }
 
 HWND APIENTRY
 NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
-    HWND ret = NULL;
-    PCLIPBOARDCHAINELEMENT newWC = NULL;
-    PWND window;
+    HWND hWndNext = NULL;
+    PWINSTATION_OBJECT pWinStaObj = NULL;
+    PWND pWindow;
 
     UserEnterExclusive();
 
-    window = UserGetWindowObject(hWndNewViewer);
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
-    if (window)
+    pWindow = UserGetWindowObject(hWndNewViewer);
+    if (!pWindow)
     {
-        if ((newWC = IntAddWindowToChain(window)))
-        {
-            if (newWC)
-            {
-                // newWC->next may be NULL if we are the first window in the chain
-                if (newWC->next)
-                {
-                    // return the next HWND available window in the chain
-                    ret = newWC->next->window->head.h;
-                }
-            }
-        }
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        goto cleanup;
     }
 
+    /* Return previous viewer. New viever window should
+       send messages to rest of the chain */
+    if (pWinStaObj->spwndClipViewer)
+        hWndNext = pWinStaObj->spwndClipViewer->head.h;
+
+    /* Set new viewer window */
+    pWinStaObj->spwndClipViewer = pWindow;
+
+cleanup:
+    if(pWinStaObj)
+        ObDereferenceObject(pWinStaObj);
+    
     UserLeave();
 
-    return ret;
+    return hWndNext;
 }
 
-UINT APIENTRY
-IntEnumClipboardFormats(UINT uFormat)
-{
-    UINT ret = 0;
-
-    if (intIsClipboardOpenByMe())
-    {
-            if (uFormat == 0)
-            {
-                if (recentlySetClipboard)
-                {
-                    ret = lastEnumClipboardFormats;
-                }
-                else
-                {
-                    /* return the first available format */
-                    if (ClipboardData)
-                    {
-                        ret = ClipboardData->format;
-                    }
-                }
-            }
-            else
-            {
-                if (recentlySetClipboard)
-                {
-                    ret = 0;
-                }
-                else
-                {
-                    /* querying nextt available format */
-                    PCLIPBOARDELEMENT data = intIsFormatAvailable(uFormat);
-
-                    if (data)
-                    {
-                        if (data->next)
-                        {
-                            ret = data->next->format;
-                        }
-                        else
-                        {
-                            /* reached the end */
-                            ret = 0;
-                        }
-                    }
-                }
-
-            }
-    }
-    else
-    {
-        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
-    }
-
-    return ret;
-}
-
-// This number is incremented whenever the contents of the clipboard change
-// or the clipboard is emptied.
-// If clipboard rendering is delayed,
+// Sequence number is incremented whenever the contents of the clipboard change
+// or the clipboard is emptied. If clipboard rendering is delayed,
 // the sequence number is not incremented until the changes are rendered.
-VOID FASTCALL
-IntIncrementSequenceNumber(VOID)
-{
-    PTHREADINFO pti;
-    PWINSTATION_OBJECT WinStaObj;
-
-    pti = PsGetCurrentThreadWin32Thread();
-    WinStaObj = pti->rpdesk->rpwinstaParent;
-
-    WinStaObj->Clipboard->ClipboardSequenceNumber++;
-}
 
 DWORD APIENTRY
 NtUserGetClipboardSequenceNumber(VOID)
 {
-    //windowstation sequence number
-    //if no WINSTA_ACCESSCLIPBOARD access to the window station,
-    //the function returns zero.
-    DWORD sn;
+    DWORD dwRet = 0;
+    PWINSTATION_OBJECT pWinStaObj;
 
-    HWINSTA WinSta;
-    PWINSTATION_OBJECT WinStaObj;
-    NTSTATUS Status;
+    UserEnterShared();
 
-    WinSta = UserGetProcessWindowStation();
+    pWinStaObj = IntGetWinStaForCbAccess();
+    if (!pWinStaObj)
+        goto cleanup;
 
-    Status = IntValidateWindowStationHandle(WinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
+    /* Get windowstation sequence number */
+    dwRet = (DWORD)pWinStaObj->iClipSequenceNumber;
 
-    if (!NT_SUCCESS(Status))
+    ObDereferenceObject(pWinStaObj);
+
+cleanup:
+    UserLeave();
+
+    return dwRet;
+}
+
+HANDLE APIENTRY
+NtUserConvertMemHandle(
+   PVOID pData,
+   DWORD cbData)
+{
+    HANDLE hMem = NULL;
+    PCLIPBOARDDATA pMemObj;
+
+    UserEnterExclusive();
+
+    /* Create Clipboard data object */
+    pMemObj = UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData, sizeof(CLIPBOARDDATA) + cbData);
+    if (!pMemObj)
+        goto cleanup;
+
+    pMemObj->cbData = cbData;
+
+    /* Copy data */
+    _SEH2_TRY
     {
-        ERR("No WINSTA_ACCESSCLIPBOARD access\n");
-        SetLastNtError(Status);
-        return 0;
+        ProbeForRead(pData, cbData, 1);
+        memcpy(pMemObj->Data, pData, cbData);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        pMemObj = NULL;
+    }
+    _SEH2_END;
+
+    /* If we failed to copy data, remove handle */
+    if (!pMemObj)
+    {
+        UserDeleteObject(hMem, otClipBoardData);
+        hMem = NULL;
     }
 
-    sn = WinStaObj->ClipboardSequenceNumber;
+cleanup:
+    UserLeave();
 
-    ObDereferenceObject(WinStaObj);
+    return hMem;
+}
 
-    //local copy
-    //sn = ClipboardSequenceNumber;
+NTSTATUS APIENTRY
+NtUserCreateLocalMemHandle(
+   HANDLE hMem,
+   PVOID pData,
+   DWORD cbData,
+   DWORD *pcbData)
+{
+    PCLIPBOARDDATA pMemObj;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    return sn;
+    UserEnterShared();
+
+    /* Get Clipboard data object */
+    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, hMem, otClipBoardData);
+    if (!pMemObj)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto cleanup;
+    }
+
+    /* Don't overrun */
+    if (cbData > pMemObj->cbData)
+        cbData = pMemObj->cbData;
+
+    /* Copy data to usermode */
+    _SEH2_TRY
+    {
+        if (pcbData)
+        {
+            ProbeForWrite(pcbData, sizeof(*pcbData), 1);
+            *pcbData = pMemObj->cbData;
+        }
+
+        ProbeForWrite(pData, cbData, 1);
+        memcpy(pData, pMemObj->Data, cbData);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+cleanup:
+    UserLeave();
+
+    return Status;
 }
 
 /* EOF */

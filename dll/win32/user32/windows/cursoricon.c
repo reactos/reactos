@@ -241,7 +241,9 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *compr  = 0;
         return 0;
     }
-    else if (header->biSize >= sizeof(BITMAPINFOHEADER))
+    else if (header->biSize == sizeof(BITMAPINFOHEADER) ||
+             header->biSize == sizeof(BITMAPV4HEADER) ||
+             header->biSize == sizeof(BITMAPV5HEADER))
     {
         *width  = header->biWidth;
         *height = header->biHeight;
@@ -883,7 +885,8 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
 {
     HANDLE handle = 0;
     HICON hIcon = 0;
-    HRSRC hRsrc, hGroupRsrc;
+    HRSRC hRsrc;
+    //HRSRC hGroupRsrc;
     CURSORICONDIR *dir;
     CURSORICONDIRENTRY *dirEntry;
     LPBYTE bits;
@@ -906,7 +909,7 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
     if (!(hRsrc = FindResourceW( hInstance, name,
                                  (LPWSTR)(fCursor ? RT_GROUP_CURSOR : RT_GROUP_ICON) )))
         return 0;
-    hGroupRsrc = hRsrc;
+    //hGroupRsrc = hRsrc;
 
     /* Find the best entry in the directory */
 
@@ -1450,31 +1453,31 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         // the size of the mask bitmap always determines the icon size!
         width = bmpAnd.bmWidth;
         height = bmpAnd.bmHeight;
-        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
+        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1 )
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
-			if(!color)
-			{
-				ERR("Unable to create color bitmap!\n");
-				return NULL;
-			}
+            if(!color)
+            {
+                ERR("Unable to create color bitmap!\n");
+		return NULL;
+            }
             mask = CreateBitmap( width, height, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				DeleteObject(color);
-				return NULL;
-			}
+	    if(!mask)
+	    {
+               ERR("Unable to create mask bitmap!\n");
+               DeleteObject(color);
+               return NULL;
+	    }
         }
         else 
-		{
-			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				return NULL;
-			}
-		}
+	{
+           mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+           if(!mask)
+           {
+              ERR("Unable to create mask bitmap!\n");
+              return NULL;
+           }
+        }
     }
     else
     {
@@ -1702,13 +1705,13 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
     else
         new_height = height;
 
-    if(bm_type == 0)
+    if (bm_type == 0)
     {
         BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)&scaled_info->bmiHeader;
         core->bcWidth = new_width;
         core->bcHeight = new_height;
     }
-    else
+    else if (bm_type == 1)
     {
         /* Some sanity checks for BITMAPINFO (not applicable to BITMAPCOREINFO) */
         if (info->bmiHeader.biHeight > 65535 || info->bmiHeader.biWidth > 65535) {
@@ -1719,6 +1722,8 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
         scaled_info->bmiHeader.biWidth = new_width;
         scaled_info->bmiHeader.biHeight = new_height;
     }
+    else
+        goto end;
 
     if (new_height < 0) new_height = -new_height;
 

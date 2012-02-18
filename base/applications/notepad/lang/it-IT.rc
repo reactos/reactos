@@ -52,8 +52,8 @@ BEGIN
         MENUITEM "&Salva\tCtrl+S",               CMD_SAVE
         MENUITEM "Sal&va con nome...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "S&tampa\tCtrl+P",              CMD_PRINT
         MENUITEM "I&mposta pagina...",           CMD_PAGE_SETUP
+        MENUITEM "S&tampa\tCtrl+P",              CMD_PRINT
         MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Esci",                        CMD_EXIT
@@ -104,7 +104,7 @@ CAPTION "Imposta pagina"
 BEGIN
 LTEXT    "&Intestazione:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Piè di pagina:",  0x142,   10, 24, 40, 15
+LTEXT    "&PiÃ¨ di pagina:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Margini:",      0x144,     10, 43,160, 45
@@ -124,8 +124,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Codifica"
 BEGIN
@@ -164,7 +163,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "Questo programma Ã¨ software libero; puÃ² redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma Ã¨ distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se cosÃ¬ non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -186,17 +185,17 @@ STRING_UNTITLED,                                "(senza nome)"
 STRING_ALL_FILES,                               "Tutti i file (*.*)"
 STRING_TEXT_FILES_TXT,                  "File di testo (*.txt)"
 
-STRING_TOOLARGE,                                "Il file '%s' è troppo grande per il blocco note.\n \
+STRING_TOOLARGE,                                "Il file '%s' Ã¨ troppo grande per il blocco note.\n \
 Per favore usare un altro editore."
-STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
+STRING_NOTEXT,                                  "Non Ã¨ stato inserito alcun testo. \
 \nPer favore digitare qualcosa e riprovare"
 STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
 Creare un nuovo file ?"
-STRING_NOTSAVED,                                "Il file '%s'\nè stato modificato\n \
+STRING_NOTSAVED,                                "Il file '%s'\nÃ¨ stato modificato\n \
 Salvare le modifiche ?"
-STRING_NOTFOUND,                                        "'%s' non è stato trovato."
+STRING_NOTFOUND,                                        "'%s' non Ã¨ stato trovato."
 STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare \
-questa operazione. \nChiudere una o più applicazioni per aumentare la quantità \
+questa operazione. \nChiudere una o piÃ¹ applicazioni per aumentare la quantitÃ  \
 di memoria libera."
 STRING_CANNOTFIND                               "Impossibile trovare '%s'"
 STRING_ANSI,                                    "ANSI"

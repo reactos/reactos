@@ -121,6 +121,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 IN KPROCESSOR_MODE PreviousMode)
 {
     PUNICODE_STRING KeyName;
+    ULONG BytesToCopy;
     NTSTATUS Status = STATUS_SUCCESS;
     PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
     PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
@@ -155,16 +156,32 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     /* Set the returned length */
     *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
 
-    /* Check if it fits into the provided buffer */
-    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
-        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    /* Calculate amount of bytes to copy into the buffer */
+    BytesToCopy = KeyName->Length + sizeof(WCHAR);
+
+    /* Check if the provided buffer is too small to fit even anything */
+    if ((Length <= sizeof(OBJECT_NAME_INFORMATION)) ||
+        ((Length < (*ReturnLength)) && (BytesToCopy < sizeof(WCHAR))))
     {
         /* Free the buffer allocated by CmpConstructName */
         ExFreePool(KeyName);
 
-        /* Return buffer length failure */
+        /* Return buffer length failure without writing anything there because nothing fits */
         return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+    /* Check if the provided buffer can be partially written */
+    if (Length < (*ReturnLength))
+    {
+        /* Yes, indicate so in the return status */
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+
+        /* Calculate amount of bytes which the provided buffer could handle */
+        BytesToCopy = Length - sizeof(OBJECT_NAME_INFORMATION);
+    }
+
+    /* Remove the null termination character from the size */
+    BytesToCopy -= sizeof(WCHAR);
 
     /* Fill in the result */
     _SEH2_TRY
@@ -177,7 +194,10 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         /* Copy string content*/
         RtlCopyMemory(ObjectNameInfo->Name.Buffer,
                       KeyName->Buffer,
-                      *ReturnLength);
+                      BytesToCopy);
+
+        /* Null terminate it */
+        ObjectNameInfo->Name.Buffer[BytesToCopy / sizeof(WCHAR)] = 0;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -313,7 +333,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName, ValueName = { 0, 0, NULL };
-    HANDLE KeyHandle;
+    HANDLE KeyHandle = NULL;
     NTSTATUS Status;
     ASSERT(LoaderBlock != NULL);
 
@@ -354,7 +374,7 @@ Quickie:
     RtlFreeUnicodeString(&ValueName);
 
     /* Close the key and return */
-    NtClose(KeyHandle);
+    if (KeyHandle) NtClose(KeyHandle);
 
     /* Return the status */
     return (ExpInTextModeSetup ? STATUS_SUCCESS : Status);
@@ -1078,7 +1098,9 @@ CmpLoadHiveThread(IN PVOID StartContext)
 {
     WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
-    ULONG FileStart, RegStart, i, ErrorResponse, WorkerCount, Length;
+    ULONG i, ErrorResponse, WorkerCount, Length;
+    USHORT FileStart;
+    //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
     HANDLE PrimaryHandle, LogHandle;
@@ -1106,10 +1128,9 @@ CmpLoadHiveThread(IN PVOID StartContext)
     /* And build the registry root path */
     RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
-    RegStart = RegName.Length;
+    //RegStart = RegName.Length;
 
     /* Build the base name */
-    RegName.Length = RegStart;
     RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
 
@@ -1239,7 +1260,8 @@ CmpInitializeHiveList(IN USHORT Flag)
     UNICODE_STRING TempName, FileName, RegName;
     HANDLE Thread;
     NTSTATUS Status;
-    ULONG RegStart, i;
+    ULONG i;
+    USHORT RegStart;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -1591,25 +1613,25 @@ CmpFreeDriverList(IN PHHIVE Hive,
     PLIST_ENTRY NextEntry, OldEntry;
     PBOOT_DRIVER_NODE DriverNode;
     PAGED_CODE();
-    
+
     /* Parse the current list */
     NextEntry = DriverList->Flink;
     while (NextEntry != DriverList)
     {
         /* Get the driver node */
         DriverNode = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_NODE, ListEntry.Link);
-        
+
         /* Get the next entry now, since we're going to free it later */
         OldEntry = NextEntry;
         NextEntry = NextEntry->Flink;
-        
+
         /* Was there a name? */
         if (DriverNode->Name.Buffer)
         {
             /* Free it */
             CmpFree(DriverNode->Name.Buffer, DriverNode->Name.Length);
         }
-        
+
         /* Was there a registry path? */
         if (DriverNode->ListEntry.RegistryPath.Buffer)
         {
@@ -1617,7 +1639,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
             CmpFree(DriverNode->ListEntry.RegistryPath.Buffer,
                     DriverNode->ListEntry.RegistryPath.MaximumLength);
         }
-        
+
         /* Was there a file path? */
         if (DriverNode->ListEntry.FilePath.Buffer)
         {
@@ -1625,7 +1647,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
             CmpFree(DriverNode->ListEntry.FilePath.Buffer,
                     DriverNode->ListEntry.FilePath.MaximumLength);
         }
-        
+
         /* Now free the node, and move on */
         CmpFree(OldEntry, sizeof(BOOT_DRIVER_NODE));
     }
@@ -1653,7 +1675,7 @@ CmGetSystemDriverList(VOID)
 
     /* Initialize the driver list */
     InitializeListHead(&DriverList);
-    
+
     /* Open the system hive key */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System");
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1663,7 +1685,7 @@ CmGetSystemDriverList(VOID)
                                NULL);
     Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status)) return NULL;
-    
+
     /* Reference the key object to get the root hive/cell to access directly */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
@@ -1677,38 +1699,38 @@ CmGetSystemDriverList(VOID)
         NtClose(KeyHandle);
         return NULL;
     }
-    
+
     /* Do all this under the registry lock */
     CmpLockRegistryExclusive();
-    
+
     /* Get the hive and key cell */
     Hive = KeyBody->KeyControlBlock->KeyHive;
     RootCell = KeyBody->KeyControlBlock->KeyCell;
-    
+
     /* Open the current control set key */
     RtlInitUnicodeString(&KeyName, L"Current");
     ControlCell = CmpFindControlSet(Hive, RootCell, &KeyName, &AutoSelect);
     if (ControlCell == HCELL_NIL) goto EndPath;
-    
+
     /* Find all system drivers */
     Success = CmpFindDrivers(Hive, ControlCell, SystemLoad, NULL, &DriverList);
     if (!Success) goto EndPath;
-    
+
     /* Sort by group/tag */
     if (!CmpSortDriverList(Hive, ControlCell, &DriverList)) goto EndPath;
-    
+
     /* Remove circular dependencies (cycles) and sort */
     if (!CmpResolveDriverDependencies(&DriverList)) goto EndPath;
-    
+
     /* Loop the list to count drivers */
     for (i = 0, NextEntry = DriverList.Flink;
          NextEntry != &DriverList;
          i++, NextEntry = NextEntry->Flink);
-    
+
     /* Allocate the array */
     ServicePath = ExAllocatePool(NonPagedPool, (i + 1) * sizeof(PUNICODE_STRING));
     if (!ServicePath) KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
-    
+
     /* Loop the driver list */
     for (i = 0, NextEntry = DriverList.Flink;
          NextEntry != &DriverList;
@@ -1723,17 +1745,17 @@ CmGetSystemDriverList(VOID)
                                   &DriverEntry->RegistryPath,
                                   ServicePath[i]);
     }
-    
+
     /* Terminate the list */
     ServicePath[i] = NULL;
-    
+
 EndPath:
     /* Free the driver list if we had one */
     if (!IsListEmpty(&DriverList)) CmpFreeDriverList(Hive, &DriverList);
-    
+
     /* Unlock the registry */
     CmpUnlockRegistry();
-    
+
     /* Close the key handle and dereference the object, then return the path */
     ObDereferenceObject(KeyBody);
     NtClose(KeyHandle);
@@ -1933,9 +1955,13 @@ VOID
 NTAPI
 CmShutdownSystem(VOID)
 {
-    /* Kill the workers and flush all hives */
+    /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
+
+    /* Flush all hives */
+    CmpLockRegistryExclusive();
     CmpDoFlushAll(TRUE);
+    CmpUnlockRegistry();
 }
 
 VOID

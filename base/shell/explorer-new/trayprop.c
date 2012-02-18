@@ -331,6 +331,10 @@ DisplayTrayProperties(ITrayWindow *Tray)
                     szCaption,
                     sizeof(szCaption) / sizeof(szCaption[0])))
     {
+        HeapFree(hProcessHeap,
+                 0,
+                 pPropInfo);
+
         return NULL;
     }
 

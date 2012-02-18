@@ -45,5 +45,3 @@ BEGIN
   IDS_24BPP "Benetako kolorea (24 bit)"
   IDS_32BPP "Benetako kolorea (32 bit)"
 END
-
-

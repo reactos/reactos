@@ -55,13 +55,11 @@
 #define TAG_BUS_HANDLER 'BusH'
 
 /* Internal HAL Headers */
-#include "apic.h"
 #include "bus.h"
 #include "halirq.h"
 #include "haldma.h"
 #include "halp.h"
 #include "mps.h"
-#include "ioapic.h"
 #include "halacpi.h"
 
 /* EOF */

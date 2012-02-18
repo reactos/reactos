@@ -451,7 +451,6 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
     FILE_INFORMATION_CLASS FileInformationClass;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
-    PFCB Fcb;
     PVOID SystemBuffer;
 
     NTSTATUS Status = STATUS_SUCCESS;
@@ -461,7 +460,6 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
     FileObject = Stack->FileObject;
-    Fcb = FileObject->FsContext;
 
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 

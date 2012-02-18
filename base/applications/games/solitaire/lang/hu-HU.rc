@@ -13,23 +13,23 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Be·llÌt·sok"
+CAPTION "Be√°ll√≠t√°sok"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "K·rty·k", -1, 7, 7, 90, 40
+    GROUPBOX        "K√°rty√°k", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "&Egy lap", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&H·rom lap", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    AUTORADIOBUTTON "&H√°rom lap", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Idı mutat·sa", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "¡&llapotsor", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Id√µ mutat√°sa", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "√Å&llapotsor", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "MÈgsem", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "M√©gsem", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "A k·rty·k h·tlapja"
+CAPTION "A k√°rty√°k h√°tlapja"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -38,7 +38,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -46,7 +46,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "MÈgsem", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "M√©gsem", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -54,11 +54,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Paszi·nsz"
-    IDS_SOL_ABOUT   "Paszi·nsz, kÈszÌtette J Brown\n\nCardLib verziÛ 1.0."
-    IDS_SOL_QUIT    "KilÈpÈs ebbıl a j·tÈkbÛl?"
-    IDS_SOL_WIN     "Gratul·lok, ÷n nyert!"
-    IDS_SOL_DEAL    "⁄j leoszt·s?"
+    IDS_SOL_NAME    "Paszi√°nsz"
+    IDS_SOL_ABOUT   "Paszi√°nsz, k√©sz√≠tette J Brown\n\nCardLib verzi√≥ 1.0."
+    IDS_SOL_QUIT    "Kil√©p√©s ebb√µl a j√°t√©kb√≥l?"
+    IDS_SOL_WIN     "Gratul√°lok, √ñn nyert!"
+    IDS_SOL_DEAL    "√öj leoszt√°s?"
 END
 
 
@@ -66,19 +66,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&J·tlÈk"
+    POPUP "&J√°tl√©k"
     BEGIN
-        MENUITEM "&Oszt·s\tF2",                   IDM_GAME_NEW
+        MENUITEM "&Oszt√°s\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&H·tlap...",                    IDM_GAME_DECK
-        MENUITEM "&Be·llÌt·sok...",                 IDM_GAME_OPTIONS
+        MENUITEM "&H√°tlap...",                    IDM_GAME_DECK
+        MENUITEM "&Be√°ll√≠t√°sok...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&KilÈpÈs",                       IDM_GAME_EXIT
+        MENUITEM "&Kil√©p√©s",                       IDM_GAME_EXIT
     END
-    POPUP "&S˙gÛ"
+    POPUP "&S√∫g√≥"
     BEGIN
         MENUITEM "&Tartalom\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "&NÈvjegy",                      IDM_HELP_ABOUT
+        MENUITEM "&N√©vjegy",                      IDM_HELP_ABOUT
     END
 END
 

@@ -32,13 +32,13 @@ IntCreatePrimarySurface()
     SURFOBJ *pso;
     BOOL calledFromUser;
 
-    calledFromUser = UserIsEntered(); //fixme: possibly upgrade a shared lock
+    calledFromUser = UserIsEntered(); // FIXME: Possibly upgrade a shared lock
     if (!calledFromUser)
     {
         UserEnterExclusive();
     }
 
-    /* attach monitor */
+    /* Attach monitor */
     IntAttachMonitor(gppdevPrimary, 0);
 
     DPRINT("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",

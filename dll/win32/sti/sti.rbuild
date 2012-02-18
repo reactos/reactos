@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="sti" type="win32dll" baseaddress="${BASEADDRESS_STI}" installbase="system32" installname="sti.dll" allowwarnings="true" entrypoint="0">
+<module name="sti" type="win32dll" baseaddress="${BASEADDRESS_STI}" installbase="system32" installname="sti.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="sti.spec" />
 	<include base="sti">.</include>

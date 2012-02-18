@@ -17,12 +17,12 @@
 	<library>ws2_32</library>
 	<library>comctl32</library>
 	<pch>precomp.h</pch>
-	<file>netshell.c</file>
-	<file>shfldr_netconnect.c</file>
-	<file>enumlist.c</file>
+	<file>netshell.cpp</file>
+	<file>shfldr_netconnect.cpp</file>
+	<file>enumlist.cpp</file>
 	<file>netshell.rc</file>
-	<file>classfactory.c</file>
-	<file>connectmanager.c</file>
-	<file>lanconnectui.c</file>
-	<file>lanstatusui.c</file>
+	<file>classfactory.cpp</file>
+	<file>connectmanager.cpp</file>
+	<file>lanconnectui.cpp</file>
+	<file>lanstatusui.cpp</file>
 </module>

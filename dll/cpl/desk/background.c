@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/background.c
+ * FILE:            dll/cpl/desk/background.c
  * PURPOSE:         Background property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
@@ -40,6 +40,9 @@ typedef struct
 
 typedef struct _DATA
 {
+    BOOL bWallpaperChanged;
+    BOOL bClrBackgroundChanged;
+
     BackgroundItem backgroundItems[MAX_BACKGROUNDS];
 
     PDIBITMAP pWallpaperBitmap;
@@ -131,7 +134,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
         {
             _tcscpy(wallpaperFilename, buffer);
         }
-        
+
         himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
                                          0,
                                          &sfi,
@@ -277,7 +280,7 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
         DWORD dwDisposition = 0;
         result = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,
             &regKey, &dwDisposition );
-        /* now the key must be created & opened and regKey points to opened key */
+        /* Now the key must be created & opened and regKey points to opened key */
         /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
         /* this case :( */
     }
@@ -365,6 +368,7 @@ OnColorButton(HWND hwndDlg, PDATA pData)
     {
         /* Save selected color to var */
         g_GlobalData.desktop_color = cc.rgbResult;
+        pData->bClrBackgroundChanged = TRUE;
 
         /* Apply button will be activated */
         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -397,10 +401,10 @@ CheckListViewFilenameExists(HWND hwndList, LPCTSTR tszFileName)
     LVFINDINFO lvfi;
     int retVal;
 
-    lvfi.flags = LVFI_STRING; /* search item by EXACT string */
-    lvfi.psz   = tszFileName; /* string to search */
+    lvfi.flags = LVFI_STRING; /* Search item by EXACT string */
+    lvfi.psz   = tszFileName; /* String to search */
 
-    /* other items of this structure are not valid, besacuse flags are not set. */
+    /* Other items of this structure are not valid, besacuse flags are not set. */
     retVal = ListView_FindItem(hwndList, -1, &lvfi);
     if (retVal != -1)
         return TRUE; /* item found! */
@@ -510,6 +514,8 @@ ListViewItemChanged(HWND hwndDlg, PDATA pData, int itemIndex)
             return;
     }
 
+    pData->bWallpaperChanged = TRUE;
+
     InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW),
                    NULL, TRUE);
 
@@ -546,7 +552,7 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
 
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == FALSE)
     {
-        /* update desktop background color image */
+        /* Update desktop background color image */
         hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
         FillRect(hDC, &rcItem, hBrush);
         DeleteObject(hBrush);
@@ -649,14 +655,14 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
         }
     }
 
-    TransparentBlt(draw->hDC,
-                   draw->rcItem.left, draw->rcItem.top,
-                   draw->rcItem.right-draw->rcItem.left+1,
-                   draw->rcItem.bottom-draw->rcItem.top+1,
-                   hDC,
-                   0, 0,
-                   pData->cxSource, pData->cySource,
-                   0xFF00FF);
+    GdiTransparentBlt(draw->hDC,
+                      draw->rcItem.left, draw->rcItem.top,
+                      draw->rcItem.right-draw->rcItem.left+1,
+                      draw->rcItem.bottom-draw->rcItem.top+1,
+                      hDC,
+                      0, 0,
+                      pData->cxSource, pData->cySource,
+                      0xFF00FF);
 
     SelectObject(hDC, hOldObj);
     DeleteDC(hDC);
@@ -726,7 +732,7 @@ SetDesktopBackColor(HWND hwndDlg, DATA *pData)
         red   = GetRValue(g_GlobalData.desktop_color);
         green = GetGValue(g_GlobalData.desktop_color);
         blue  = GetBValue(g_GlobalData.desktop_color);
-        /* format string to be set to registry */
+        /* Format string to be set to registry */
         wsprintf(clText, TEXT("%d %d %d"), red, green, blue);
         RegSetValueEx(hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText,
                       (lstrlen(clText) + 1) * sizeof(TCHAR));
@@ -802,8 +808,11 @@ BackgroundPageProc(HWND hwndDlg,
                 switch(lpnm->code)
                 {
                     case PSN_APPLY:
-                        SetWallpaper(pData);
-                        SetDesktopBackColor(hwndDlg, pData);
+                        if(pData->bWallpaperChanged)
+                            SetWallpaper(pData);
+                        if(pData->bClrBackgroundChanged)
+                            SetDesktopBackColor(hwndDlg, pData);
+                        SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T(""));
                         return TRUE;
 
                     case LVN_ITEMCHANGED:

@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions for amd64
- * FILE:              lib/rtl/i386/rtlswap.S
+ * FILE:              lib/rtl/amd64/rtlmem.S
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -14,7 +14,7 @@
 
 .code64
 
-/* SIZE_T 
+/* SIZE_T
  * RtlCompareMemory(
  *   IN CONST VOID *Source1, <rcx>
  *   IN CONST VOID *Source2, <rdx>
@@ -81,7 +81,7 @@ RtlCompareMemory6:
     pop rdi
     pop rsi
     ret
-.endp RtlCompareMemory
+.endp
 
 END
 

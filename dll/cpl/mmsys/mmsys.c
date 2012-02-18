@@ -310,7 +310,8 @@ InstallSystemSoundScheme()
             RegCloseKey(hNames);
             if (dwDisposition & REG_CREATED_NEW_KEY)
             {
-                RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)L".Default", (wcslen(L".Default")+1) * sizeof(WCHAR)); //FIXME
+                // FIXME
+                RegSetValueExW(hSubKey, NULL, 0, REG_SZ, (LPBYTE)L".Default", (wcslen(L".Default")+1) * sizeof(WCHAR));
             }
         }
 
@@ -404,7 +405,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
     if (hService)
     {
-        /* make RosAudioSrv start automatically */
+        /* Make RosAudioSrv start automatically */
         ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         StartService(hService, 0, NULL);
@@ -439,7 +440,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
 
                     if (!wcsicmp(Buffer, szBuffer))
                     {
-                        /* an entry already exists */
+                        /* An entry already exists */
                         break;
                     }
                 }
@@ -525,7 +526,7 @@ HardwareDlgProc(HWND hwndDlg,
             Guids[0] = GUID_DEVCLASS_CDROM;
             Guids[1] = GUID_DEVCLASS_MEDIA;
 
-            /* create the hardware page */
+            /* Create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
                                        Guids,
                                        sizeof(Guids) / sizeof(Guids[0]),
@@ -544,7 +545,7 @@ MmSysApplet(HWND hwnd,
             LPARAM lParam)
 {
     PROPSHEETPAGE psp[5];
-    PROPSHEETHEADER psh; //= {0};
+    PROPSHEETHEADER psh; // = { 0 };
     TCHAR Caption[256];
 
     UNREFERENCED_PARAMETER(lParam);

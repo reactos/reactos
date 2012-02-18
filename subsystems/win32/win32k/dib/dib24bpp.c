@@ -344,37 +344,37 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
        * So, taking endianness into account again, we need to fill with these
        * ULONGs: CABC BCAB ABCA */
 
-       /* This is about 30% faster than the generic C code below */
-       __asm__ __volatile__ (
-"      movl %1, %%ecx\n"
-"      andl $0xffffff, %%ecx\n"         /* 0ABC */
-"      movl %%ecx, %%ebx\n"             /* Construct BCAB in ebx */
-"      shrl $8, %%ebx\n"
-"      movl %%ecx, %%eax\n"
-"      shll $16, %%eax\n"
-"      orl  %%eax, %%ebx\n"
-"      movl %%ecx, %%edx\n"             /* Construct ABCA in edx */
-"      shll $8, %%edx\n"
-"      movl %%ecx, %%eax\n"
-"      shrl $16, %%eax\n"
-"      orl  %%eax, %%edx\n"
-"      movl %%ecx, %%eax\n"             /* Construct CABC in eax */
-"      shll $24, %%eax\n"
-"      orl  %%ecx, %%eax\n"
-"      movl %2, %%ecx\n"                /* Load count */
-"      shr  $2, %%ecx\n"
-"      movl %3, %%edi\n"                /* Load dest */
-".FL1:\n"
-"      movl %%eax, (%%edi)\n"           /* Store 4 pixels, 12 bytes */
-"      movl %%ebx, 4(%%edi)\n"
-"      movl %%edx, 8(%%edi)\n"
-"      addl $12, %%edi\n"
-"      dec  %%ecx\n"
-"      jnz  .FL1\n"
-"      movl %%edi, %0\n"
-  : "=m"(addr)
-  : "m"(color), "m"(Count), "m"(addr)
-  : "%eax", "%ebx", "%ecx", "%edx", "%edi");
+      /* This is about 30% faster than the generic C code below */
+      __asm__ __volatile__ (
+        "movl %1, %%ecx\n\t"
+        "andl $0xffffff, %%ecx\n\t"     /* 0ABC */
+        "movl %%ecx, %%ebx\n\t"         /* Construct BCAB in ebx */
+        "shrl $8, %%ebx\n\t"
+        "movl %%ecx, %%eax\n\t"
+        "shll $16, %%eax\n\t"
+        "orl  %%eax, %%ebx\n\t"
+        "movl %%ecx, %%edx\n\t"         /* Construct ABCA in edx */
+        "shll $8, %%edx\n\t"
+        "movl %%ecx, %%eax\n\t"
+        "shrl $16, %%eax\n\t"
+        "orl  %%eax, %%edx\n\t"
+        "movl %%ecx, %%eax\n\t"         /* Construct CABC in eax */
+        "shll $24, %%eax\n\t"
+        "orl  %%ecx, %%eax\n\t"
+        "movl %2, %%ecx\n\t"            /* Load count */
+        "shr  $2, %%ecx\n\t"
+        "movl %3, %%edi\n"              /* Load dest */
+        "1:\n\t"
+        "movl %%eax, (%%edi)\n\t"       /* Store 4 pixels, 12 bytes */
+        "movl %%ebx, 4(%%edi)\n\t"
+        "movl %%edx, 8(%%edi)\n\t"
+        "addl $12, %%edi\n\t"
+        "dec  %%ecx\n\t"
+        "jnz  1b\n\t"
+        "movl %%edi, %0"
+        : "=m"(addr)
+        : "m"(color), "m"(Count), "m"(addr)
+        : "%eax", "%ebx", "%ecx", "%edx", "%edi");
       Count = Count & 0x03;
       while (0 != Count--)
       {
@@ -468,7 +468,8 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
    register PUCHAR Dst;
    BLENDFUNCTION BlendFunc;
    register NICEPIXEL32 DstPixel, SrcPixel;
-   UCHAR Alpha, SrcBpp;
+   UCHAR Alpha;
+   //UCHAR SrcBpp;
 
    DPRINT("DIB_24BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -499,7 +500,7 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
 
    Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
                              (DestRect->left * 3));
-   SrcBpp = BitsPerFormat(Source->iBitmapFormat);
+   //SrcBpp = BitsPerFormat(Source->iBitmapFormat);
 
    Rows = 0;
    SrcY = SourceRect->top;

@@ -92,7 +92,7 @@ ColorsProc(
 				}
 				else
 				{
-					/* options have already been applied */
+					/* Options have already been applied */
 					SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 					return TRUE;
 				}
@@ -121,7 +121,7 @@ ColorsProc(
 				red = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_RED), UDM_GETPOS, 0, 0);
 				if (HIWORD(red))
 				{
-					//TODO: handle error
+					// TODO: Handle error
 					break;
 				}
 				red = LOBYTE(red);
@@ -132,7 +132,7 @@ ColorsProc(
 				green = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_GREEN), UDM_GETPOS, 0, 0);
 				if (HIWORD(green))
 				{
-					//TODO: handle error
+					// TODO: Handle error
 					break;
 				}
 				green = LOBYTE(green);
@@ -143,7 +143,7 @@ ColorsProc(
 				blue = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_BLUE), UDM_GETPOS, 0, 0);
 				if (HIWORD(blue))
 				{
-					//TODO: handle error
+					// TODO: Handle error
 					break;
 				}
 				blue = LOBYTE(blue);
@@ -201,7 +201,7 @@ ColorsProc(
 
 				if (index == pConInfo->ActiveStaticControl)
 				{
-					/* same static control was re-clicked */
+					/* Same static control was re-clicked */
 					break;
 				}
 
@@ -209,7 +209,7 @@ ColorsProc(
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->Colors[index]), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->Colors[index]), FALSE);
 
-				/* update global struct */
+				/* Update global struct */
 				if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_TEXT))
 				{
 					pConInfo->ScreenText = pConInfo->Colors[index];
@@ -235,7 +235,6 @@ ColorsProc(
 				break;
 			}
 		}
-
 
 		default:
 			break;

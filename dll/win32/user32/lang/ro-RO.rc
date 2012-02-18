@@ -1,3 +1,4 @@
+//2011.12.17 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
@@ -11,9 +12,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 FONT 8, "MS Shell Dlg"
 CAPTION "Alegere fereastră"
 BEGIN
-  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
-  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&Anulare", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  LISTBOX                  100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "Con&firmă",  1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "A&nulează",  2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -25,27 +26,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Anulare", EM_UNDO
+    MENUITEM "Des&face",         EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "D&ecupare", WM_CUT
-    MENUITEM "&Copiere", WM_COPY
-    MENUITEM "&Lipire", WM_PASTE
-    MENUITEM "&Ștergere", WM_CLEAR
+    MENUITEM "&Decupează",       WM_CUT
+    MENUITEM "&Copiază",         WM_COPY
+    MENUITEM "&Lipește",         WM_PASTE
+    MENUITEM "Șt&erge",          WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Selectare &totală", EM_SETSEL
+    MENUITEM "Selecte&ază tot",  EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Restabilire", SC_RESTORE
-  MENUITEM "&Mutare", SC_MOVE
-  MENUITEM "&Redimensionare", SC_SIZE
-  MENUITEM "Mi&nimizare", SC_MINIMIZE
-  MENUITEM "Ma&ximizare", SC_MAXIMIZE
+  MENUITEM "&Restabilește",      SC_RESTORE
+  MENUITEM "&Mută",              SC_MOVE
+  MENUITEM "Re&dimensionează",   SC_SIZE
+  MENUITEM "Mi&nimizează",       SC_MINIMIZE
+  MENUITEM "Ma&ximizează",       SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Închidere\tAlt-F4", SC_CLOSE
+  MENUITEM "Închid&e\tAlt-F4",   SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -56,20 +57,20 @@ END
 STRINGTABLE
 BEGIN
   IDS_ERROR,    "Eroare"
-  IDS_OK,       "OK"
-  IDS_CANCEL,   "Anulare"
-  IDS_ABORT,    "&Abandon"
-  IDS_RETRY,    "&Reîncercare"
-  IDS_IGNORE,   "&Ignorare"
+  IDS_OK,       "Con&firmă"
+  IDS_CANCEL,   "A&nulează"
+  IDS_ABORT,    "Aba&ndon"
+  IDS_RETRY,    "&Reîncearcă"
+  IDS_IGNORE,   "&Ignoră"
   IDS_YES,      "&Da"
-  IDS_NO,       "&Nu"
-  IDS_HELP,     "Ajutor"
-  IDS_TRYAGAIN, "&Reîncercare"
-  IDS_CONTINUE, "&Continuare"
+  IDS_NO,       "N&u"
+  IDS_HELP,     "&Manual"
+  IDS_TRYAGAIN, "&Reîncearcă"
+  IDS_CONTINUE, "&Continuă"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Mai multe ferestre..."
+  IDS_MDI_MOREWINDOWS, "&Mai multe ferestre…"
 END
 

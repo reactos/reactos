@@ -22,13 +22,13 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Bearbeiten...",     ID_EDIT, GRAYED
     MENUITEM "Erstellen...",   ID_CREATE, GRAYED
-    MENUITEM "Löschen...",   ID_DELETE, GRAYED
+    MENUITEM "LÃ¶schen...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Eigenschaften...", ID_PROP, GRAYED
   END
   POPUP "Ansicht"
   BEGIN
-    MENUITEM "Große Symbole", ID_VIEW_LARGE
+    MENUITEM "GroÃŸe Symbole", ID_VIEW_LARGE
     MENUITEM "Kleine Symbole", ID_VIEW_SMALL
     MENUITEM "Liste",        ID_VIEW_LIST
     MENUITEM "Details",     ID_VIEW_DETAILS
@@ -55,7 +55,7 @@ BEGIN
     MENUITEM "Aktualisieren",     ID_REFRESH
     MENUITEM SEPARATOR
     MENUITEM "Bearbeiten...",     ID_EDIT, GRAYED
-    MENUITEM "Löschen...",   ID_DELETE, GRAYED
+    MENUITEM "LÃ¶schen...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Eigenschaften...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
@@ -64,12 +64,12 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Info über Dienst-Manager"
+CAPTION "Info Ã¼ber Dienst-Manager"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Dienst-Manager v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 26
-  PUSHBUTTON "Schließen", IDOK, 75, 162, 44, 15
+  PUSHBUTTON "SchlieÃŸen", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -95,21 +95,21 @@ BEGIN
   LTEXT "Starttyp:", IDC_STATIC, 6, 108, 53, 11
   LTEXT "Dienststatus:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-  LTEXT "Sie können die Startparameter angeben, die übernommen werden sollen, wenn der Dienst von hier aus gestartet wird.",IDC_STATIC, 6,177,240,20
+  LTEXT "Sie kÃ¶nnen die Startparameter angeben, die Ã¼bernommen werden sollen, wenn der Dienst von hier aus gestartet wird.",IDC_STATIC, 6,177,240,20
   LTEXT "Startparameter:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   PUSHBUTTON "Bearbeiten", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
-CAPTION "Abhängigkeiten"
+CAPTION "AbhÃ¤ngigkeiten"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-  LTEXT "Einige Dienste sind von anderen Diensten, Systemtreibern und Ladegruppen abhängig. Falls eine Systemkomponente anhält oder nicht einwandfrei ausgeführt wird, kann dies Auswirkungen auf abhängige Dienste haben.", IDC_STATIC,8, 7, 238, 38
-  LTEXT "Dieser Dienst ist von diesen Systemkomponenten abhängig", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "Einige Dienste sind von anderen Diensten, Systemtreibern und Ladegruppen abhÃ¤ngig. Falls eine Systemkomponente anhÃ¤lt oder nicht einwandfrei ausgefÃ¼hrt wird, kann dies Auswirkungen auf abhÃ¤ngige Dienste haben.", IDC_STATIC,8, 7, 238, 38
+  LTEXT "Dieser Dienst ist von diesen Systemkomponenten abhÃ¤ngig", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
@@ -129,22 +129,35 @@ BEGIN
   LTEXT "Beschreibung :", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
   PUSHBUTTON "Abbrechen", IDCANCEL, 176, 192, 46, 13
-  LTEXT "Weitere Optionen (klicken Sie auf Hilfe für Details)", IDC_STATIC, 10, 151, 170, 9
+  LTEXT "Weitere Optionen (klicken Sie auf Hilfe fÃ¼r Details)", IDC_STATIC, 10, 151, 170, 9
   PUSHBUTTON "Hilfe", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
-CAPTION "Dienst löschen"
+CAPTION "Dienst lÃ¶schen"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "Sind Sie sicher, dass der folgende Dienst gelöscht werden soll? Dies kann nicht rückgängig gemacht werden!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Sind Sie sicher, dass der folgende Dienst gelÃ¶scht werden soll? Dies kann nicht rÃ¼ckgÃ¤ngig gemacht werden!", IDC_STATIC, 50, 6, 125, 25
   LTEXT "Dienstname:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
   PUSHBUTTON "Ja", IDOK, 26, 129, 54, 13
   DEFPUSHBUTTON "Nein", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stop Other Services"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Do you want to stop these services?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Ja", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "Nein", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
@@ -165,7 +178,7 @@ BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-  PUSHBUTTON "&Schließen", IDOK, 100, 70, 54, 13
+  PUSHBUTTON "&SchlieÃŸen", IDOK, 100, 70, 54, 13
 END
 
 
@@ -193,7 +206,7 @@ BEGIN
   IDS_NUM_SERVICES "Anzahl der Dienste: %d"
   IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
   IDS_NO_DEPENDS "<No Dependencies>"
-  IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Dieses Programm ist kostenlos; Sie kÃ¶nnen es frei verteilen mit od. ohne Ã„nderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation verÃ¶ffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spÃ¤tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -202,7 +215,7 @@ BEGIN
   IDS_TOOLTIP_REFRESH "Aktualisieren"
   IDS_TOOLTIP_EXPORT "Liste exportieren"
   IDS_TOOLTIP_CREATE "Neuen Dienst erstellen"
-  IDS_TOOLTIP_DELETE "Vorhandenen Dienst löschen"
+  IDS_TOOLTIP_DELETE "Vorhandenen Dienst lÃ¶schen"
   IDS_TOOLTIP_START "Dienst starten"
   IDS_TOOLTIP_STOP "Dienst beenden"
   IDS_TOOLTIP_PAUSE "Dienst anhalten"
@@ -216,14 +229,14 @@ BEGIN
   IDS_PROGRESS_INFO_PAUSE  "ReactOS versucht den folgenden Dienst zu pausieren"
   IDS_PROGRESS_INFO_RESUME "ReactOS versucht den folgenden Dienst fortzusetzen"
   IDS_CREATE_SUCCESS "Der Dienst wurde erfolgreich erstellt"
-  IDS_DELETE_SUCCESS "Der Dienst wurde erfolgreich gelöscht"
+  IDS_DELETE_SUCCESS "Der Dienst wurde erfolgreich gelÃ¶scht"
   IDS_CREATE_REQ "Mit einem Sternchen gekennzeichnete Felder sind erforderlich"
-  IDS_DELETE_STOP "Sie müssen den Dienst manuell beenden, bevor er gelöscht werden kann!"
+  IDS_DELETE_STOP "Sie mÃ¼ssen den Dienst manuell beenden, bevor er gelÃ¶scht werden kann!"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_HELP_OPTIONS "ERSTELLOPTIONEN:\r\nBEACHTEN SIE: Der Optionsname enthält das Gleichheitszeichen.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Standard = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Standard = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Standard = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Abhängigkeiten (getrennt durch / (Schrägstrich))>\r\n obj= <KontoName|ObjektName>\r\n       (Standard = LocalSystem)\r\n password= <Passwort>\r\n"
+  IDS_HELP_OPTIONS "ERSTELLOPTIONEN:\r\nBEACHTEN SIE: Der Optionsname enthÃ¤lt das Gleichheitszeichen.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Standard = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Standard = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Standard = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <AbhÃ¤ngigkeiten (getrennt durch / (SchrÃ¤gstrich))>\r\n obj= <KontoName|ObjektName>\r\n       (Standard = LocalSystem)\r\n password= <Passwort>\r\n"
 END
 
 /* Hints */
@@ -234,32 +247,32 @@ BEGIN
   IDS_HINT_EXIT         " Das Programm beenden."
 
   IDS_HINT_CONNECT      " Einen anderen Computer verwalten."
-  IDS_HINT_START        " Den gewählten Dienst starten."
-  IDS_HINT_STOP         " Den gewählten Dienst beenden."
-  IDS_HINT_PAUSE        " Den gewählten Dienst anhalten."
-  IDS_HINT_RESUME       " Den gewählten Dienst fortsetzen."
-  IDS_HINT_RESTART      " Den gewählten Dienst beenden und neu starten."
+  IDS_HINT_START        " Den gewÃ¤hlten Dienst starten."
+  IDS_HINT_STOP         " Den gewÃ¤hlten Dienst beenden."
+  IDS_HINT_PAUSE        " Den gewÃ¤hlten Dienst anhalten."
+  IDS_HINT_RESUME       " Den gewÃ¤hlten Dienst fortsetzen."
+  IDS_HINT_RESTART      " Den gewÃ¤hlten Dienst beenden und neu starten."
   IDS_HINT_REFRESH      " Die Liste der Dienste aktualisieren."
-  IDS_HINT_EDIT         " Die Eigenschaften des gewählten Dienst bearbeiten."
+  IDS_HINT_EDIT         " Die Eigenschaften des gewÃ¤hlten Dienst bearbeiten."
   IDS_HINT_CREATE       " Einen neuen Dienst erstellen."
-  IDS_HINT_DELETE       " Den gewählten Dienst löschen."
-  IDS_HINT_PROP         " Öffnet die Eigenschaften des aktuellen Objekts."
+  IDS_HINT_DELETE       " Den gewÃ¤hlten Dienst lÃ¶schen."
+  IDS_HINT_PROP         " Ã–ffnet die Eigenschaften des aktuellen Objekts."
 
-  IDS_HINT_LARGE        " Zeigt die Dienste mit großen Symbolen an."
+  IDS_HINT_LARGE        " Zeigt die Dienste mit groÃŸen Symbolen an."
   IDS_HINT_SMALL        " Zeigt die Dienste mit kleinen Symbolen an."
   IDS_HINT_LIST         " Zeigt die Dienste in einer Liste an."
-  IDS_HINT_DETAILS      " Zeigt Informationen über jeden Dienst im Fenster an."
+  IDS_HINT_DETAILS      " Zeigt Informationen Ã¼ber jeden Dienst im Fenster an."
   IDS_HINT_CUST         " Passt die Ansicht an."
 
-  IDS_HINT_HELP         " Öffnet die Hilfe."
-  IDS_HINT_ABOUT        " Info über den ReactOS Dienst-Manager."
+  IDS_HINT_HELP         " Ã–ffnet die Hilfe."
+  IDS_HINT_ABOUT        " Info Ã¼ber den ReactOS Dienst-Manager."
 
-  IDS_HINT_SYS_RESTORE  " Stellt die Normalgröße dieses Fensters wieder her."
+  IDS_HINT_SYS_RESTORE  " Stellt die NormalgrÃ¶ÃŸe dieses Fensters wieder her."
   IDS_HINT_SYS_MOVE     " Verschiebt dieses Fenster."
-  IDS_HINT_SYS_SIZE     " Ändert die Größe dieses Fensters."
+  IDS_HINT_SYS_SIZE     " Ã„ndert die GrÃ¶ÃŸe dieses Fensters."
   IDS_HINT_SYS_MINIMIZE " Minimiert dieses Fenster zu einem Symbol."
-  IDS_HINT_SYS_MAXIMIZE " Maximiert dieses Fenster auf Bildschirmgröße."
-  IDS_HINT_SYS_CLOSE    " Schließt dieses Fenster."
+  IDS_HINT_SYS_MAXIMIZE " Maximiert dieses Fenster auf BildschirmgrÃ¶ÃŸe."
+  IDS_HINT_SYS_CLOSE    " SchlieÃŸt dieses Fenster."
 END
 
 /* Application title */

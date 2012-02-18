@@ -9,6 +9,7 @@
 	<library>ntdll</library>
 	<library>pseh</library>
 	<library>smdll</library>
+	<library>smlib</library>
 	<directory name="api">
 		<file>process.c</file>
 		<file>user.c</file>
@@ -17,5 +18,8 @@
 	<file>procsup.c</file>
 	<file>thredsup.c</file>
 	<file>init.c</file>
+	<file>wait.c</file>
+	<file>session.c</file>
+	<file>server.c</file>
 	<pch>srv.h</pch>
 </module>

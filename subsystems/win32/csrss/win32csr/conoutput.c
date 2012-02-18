@@ -389,7 +389,7 @@ CSR_API(CsrWriteConsole)
     if (Console->UnpauseEvent)
     {
         Status = NtDuplicateObject(GetCurrentProcess(), Console->UnpauseEvent,
-                                   ProcessData->Process, &Request->Data.WriteConsoleRequest.UnpauseEvent,
+                                   ProcessData->ProcessHandle, &Request->Data.WriteConsoleRequest.UnpauseEvent,
                                    SYNCHRONIZE, 0, 0);
         ConioUnlockScreenBuffer(Buff);
         return NT_SUCCESS(Status) ? STATUS_PENDING : Status;

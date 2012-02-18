@@ -7,8 +7,6 @@
  *
  */
 
-#include <include/palette.h>
-
 struct _EXLATEOBJ;
 
 typedef ULONG (FASTCALL *PFN_XLATE)(struct _EXLATEOBJ *pexlo, ULONG iColor);
@@ -47,9 +45,3 @@ VOID NTAPI EXLATEOBJ_vInitialize(PEXLATEOBJ pexlo, PALETTE *ppalSrc, PALETTE *pp
 VOID NTAPI EXLATEOBJ_vInitXlateFromDCs(PEXLATEOBJ pexlo, PDC pdcSrc, PDC pdcDst);
 VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(PEXLATEOBJ pexlo, PPALETTE ppalDst, ULONG Color0, ULONG Color1);
 VOID NTAPI EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo);
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitXlateImpl(VOID);
-
-//#define XLATEOBJ_iXlate(pxo, Color) ((EXLATEOBJ*)pxo)->pfnXlate(pxo, Color)

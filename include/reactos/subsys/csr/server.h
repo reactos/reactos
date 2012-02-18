@@ -18,7 +18,7 @@
 typedef struct _CSR_NT_SESSION
 {
     ULONG ReferenceCount;
-    LIST_ENTRY SessionList;
+    LIST_ENTRY SessionLink;
     ULONG SessionId;
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
 
@@ -71,11 +71,20 @@ typedef enum _CSR_PROCESS_FLAGS
 {
     CsrProcessTerminating = 0x1,
     CsrProcessSkipShutdown = 0x2,
+    CsrProcessNormalPriority = 0x10,
+    CsrProcessIdlePriority = 0x20,
+    CsrProcessHighPriority = 0x40,
+    CsrProcessRealtimePriority = 0x80,
     CsrProcessCreateNewGroup = 0x100,
     CsrProcessTerminated = 0x200,
     CsrProcessLastThreadTerminated = 0x400,
     CsrProcessIsConsoleApp = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
+
+#define CsrProcessPriorityFlags (CsrProcessNormalPriority | \
+                                 CsrProcessIdlePriority | \
+                                 CsrProcessHighPriority | \
+                                 CsrProcessRealtimePriority)
 
 typedef enum _CSR_THREAD_FLAGS
 {
@@ -251,75 +260,6 @@ typedef struct _CSR_WAIT_BLOCK
     CSR_WAIT_FUNCTION WaitFunction;
     CSR_API_MESSAGE WaitApiMessage;
 } CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
-
-/* FIXME: Put into new SM headers */
-typedef struct _SB_CREATE_SESSION
-{
-    ULONG SessionId;
-    RTL_USER_PROCESS_INFORMATION ProcessInfo;
-} SB_CREATE_SESSION, *PSB_CREATE_SESSION;
-
-typedef struct _SB_TERMINATE_SESSION
-{
-    ULONG SessionId;
-} SB_TERMINATE_SESSION, *PSB_TERMINATE_SESSION;
-
-typedef struct _SB_FOREIGN_SESSION_COMPLETE
-{
-    ULONG SessionId;
-} SB_FOREIGN_SESSION_COMPLETE, *PSB_FOREIGN_SESSION_COMPLETE;
-
-typedef struct _SB_CREATE_PROCESS
-{
-    ULONG SessionId;
-} SB_CREATE_PROCESS, *PSB_CREATE_PROCESS;
-
-typedef struct _SB_CONNECTION_INFO
-{
-    ULONG SubsystemId;
-} SB_CONNECTION_INFO, *PSB_CONNECTION_INFO;
-
-typedef struct _SB_API_MESSAGE
-{
-    PORT_MESSAGE Header;
-    union
-    {
-        SB_CONNECTION_INFO ConnectionInfo;
-        struct
-        {
-            ULONG Opcode;
-            NTSTATUS Status;
-            union
-            {
-                SB_CREATE_SESSION SbCreateSession;
-                SB_TERMINATE_SESSION SbTerminateSession;
-                SB_FOREIGN_SESSION_COMPLETE SbForeignSessionComplete;
-                SB_CREATE_PROCESS SbCreateProcess;
-            };
-        };
-    };
-} SB_API_MESSAGE, *PSB_API_MESSAGE;
-
-typedef
-BOOLEAN
-(NTAPI *PSB_API_ROUTINE)(IN PSB_API_MESSAGE ApiMessage);
-
-NTSTATUS
-NTAPI
-SmSessionComplete(
-    IN HANDLE hApiPort,
-    IN ULONG SessionId,
-    IN NTSTATUS Status
-);
-
-NTSTATUS
-NTAPI
-SmConnectToSm(
-    IN PUNICODE_STRING SbApiPortName OPTIONAL,
-    IN HANDLE hSbApiPort OPTIONAL,
-    IN ULONG SubsystemType OPTIONAL,
-    OUT PHANDLE hSmApiPort
-);
 
 /* PROTOTYPES ****************************************************************/
 

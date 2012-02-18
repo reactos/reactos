@@ -146,7 +146,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
        || 0 == _wcsicmp(L"CONIN$", lpFileName))
    {
       return OpenConsoleW(lpFileName,
-                          dwDesiredAccess, 
+                          dwDesiredAccess,
                           lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
                           FILE_SHARE_READ | FILE_SHARE_WRITE);
    }
@@ -361,14 +361,228 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
   */
   if (dwCreationDisposition == FILE_OPEN_IF)
   {
-    SetLastError(IoStatusBlock.Information == FILE_OPENED ? ERROR_ALREADY_EXISTS : 0);
+    SetLastError(IoStatusBlock.Information == FILE_OPENED ? ERROR_ALREADY_EXISTS : ERROR_SUCCESS);
   }
   else if (dwCreationDisposition == FILE_OVERWRITE_IF)
   {
-    SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
+    SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : ERROR_SUCCESS);
+  }
+  else
+  {
+    SetLastError(ERROR_SUCCESS);
   }
 
   return FileHandle;
+}
+
+/*
+ * @implemented
+ */
+HFILE WINAPI
+OpenFile(LPCSTR lpFileName,
+	 LPOFSTRUCT lpReOpenBuff,
+	 UINT uStyle)
+{
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING FileNameString;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	WCHAR PathNameW[MAX_PATH];
+	HANDLE FileHandle = NULL;
+	NTSTATUS errCode;
+	PWCHAR FilePart;
+	ULONG Len;
+
+	TRACE("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
+
+	if (lpReOpenBuff == NULL)
+	{
+		return HFILE_ERROR;
+	}
+
+    lpReOpenBuff->nErrCode = 0;
+
+	if (uStyle & OF_REOPEN) lpFileName = lpReOpenBuff->szPathName;
+
+	if (!lpFileName)
+	{
+		return HFILE_ERROR;
+	}
+
+	if (!GetFullPathNameA(lpFileName,
+						  sizeof(lpReOpenBuff->szPathName),
+						  lpReOpenBuff->szPathName,
+						  NULL))
+	{
+	    lpReOpenBuff->nErrCode = GetLastError();
+		return HFILE_ERROR;
+	}
+
+    if (uStyle & OF_PARSE)
+    {
+        lpReOpenBuff->fFixedDisk = (GetDriveTypeA(lpReOpenBuff->szPathName) != DRIVE_REMOVABLE);
+        TRACE("(%s): OF_PARSE, res = '%s'\n", lpFileName, lpReOpenBuff->szPathName);
+        return 0;
+    }
+
+    if ((uStyle & OF_EXIST) && !(uStyle & OF_CREATE))
+    {
+        DWORD dwAttributes = GetFileAttributesA(lpReOpenBuff->szPathName);
+
+        switch (dwAttributes)
+        {
+            case 0xFFFFFFFF: /* File does not exist */
+                SetLastError(ERROR_FILE_NOT_FOUND);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_FILE_NOT_FOUND;
+                return -1;
+
+            case FILE_ATTRIBUTE_DIRECTORY:
+                SetLastError(ERROR_ACCESS_DENIED);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_ACCESS_DENIED;
+                return -1;
+
+            default:
+                lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
+                return 1;
+        }
+    }
+    lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
+	if ((uStyle & OF_CREATE) == OF_CREATE)
+	{
+		DWORD Sharing;
+		switch (uStyle & 0x70)
+		{
+			case OF_SHARE_EXCLUSIVE: Sharing = 0; break;
+			case OF_SHARE_DENY_WRITE: Sharing = FILE_SHARE_READ; break;
+			case OF_SHARE_DENY_READ: Sharing = FILE_SHARE_WRITE; break;
+			case OF_SHARE_DENY_NONE:
+			case OF_SHARE_COMPAT:
+			default:
+				Sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		}
+		return (HFILE) CreateFileA (lpFileName,
+		                            GENERIC_READ | GENERIC_WRITE,
+		                            Sharing,
+		                            NULL,
+		                            CREATE_ALWAYS,
+		                            FILE_ATTRIBUTE_NORMAL,
+		                            0);
+	}
+
+	RtlInitAnsiString (&FileName, (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU, &FileName, TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU, &FileName, TRUE);
+
+	Len = SearchPathW (NULL,
+	                   FileNameU.Buffer,
+        	           NULL,
+	                   OFS_MAXPATHNAME,
+	                   PathNameW,
+        	           &FilePart);
+
+	RtlFreeUnicodeString(&FileNameU);
+
+	if (Len == 0 || Len > OFS_MAXPATHNAME)
+	{
+		lpReOpenBuff->nErrCode = GetLastError();
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+    if (uStyle & OF_DELETE)
+    {
+        if (!DeleteFileW(PathNameW))
+		{
+			lpReOpenBuff->nErrCode = GetLastError();
+			return HFILE_ERROR;
+		}
+        TRACE("(%s): OF_DELETE return = OK\n", lpFileName);
+        return TRUE;
+    }
+
+	FileName.Buffer = lpReOpenBuff->szPathName;
+	FileName.Length = 0;
+	FileName.MaximumLength = OFS_MAXPATHNAME;
+
+	RtlInitUnicodeString(&FileNameU, PathNameW);
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName, &FileNameU, FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName, &FileNameU, FALSE);
+
+	if (!RtlDosPathNameToNtPathName_U (PathNameW,
+					   &FileNameString,
+					   NULL,
+					   NULL))
+	{
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+	// FILE_SHARE_READ
+	// FILE_NO_INTERMEDIATE_BUFFERING
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &FileNameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	errCode = NtOpenFile (&FileHandle,
+	                      GENERIC_READ|SYNCHRONIZE,
+	                      &ObjectAttributes,
+	                      &IoStatusBlock,
+	                      FILE_SHARE_READ,
+	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
+
+	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
+
+	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
+
+	if (!NT_SUCCESS(errCode))
+	{
+		BaseSetLastNTError (errCode);
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+	if (uStyle & OF_EXIST)
+	{
+		NtClose(FileHandle);
+		return (HFILE)1;
+	}
+
+	return (HFILE)FileHandle;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+OpenDataFile(HANDLE hFile, DWORD dwUnused)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+ReOpenFile(IN HANDLE hOriginalFile,
+           IN DWORD dwDesiredAccess,
+           IN DWORD dwShareMode,
+           IN DWORD dwFlags)
+{
+   STUB;
+   return INVALID_HANDLE_VALUE;
 }
 
 /* EOF */

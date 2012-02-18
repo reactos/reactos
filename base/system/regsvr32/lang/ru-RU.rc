@@ -1,5 +1,3 @@
-#include "resource.h"
-
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -24,5 +22,5 @@ IDS_MissingEntry,    "%s был загружен, но точка входа %s 
 
 IDS_FailureMessage,  "%s в %s завершился неудачей.\nВозвращенный код: 0x%08x"
 
-IDS_SuccessMessage   "%s в %s успешно завершено."
+IDS_SuccessMessage,  "%s в %s успешно завершено."
 END

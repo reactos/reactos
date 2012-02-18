@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/mingw-w64)
 add_definitions(-D_CRTBLD)
 
 if(NOT MSVC)
-    add_definitions(-Wno-main)
+    add_compile_flags("-Wno-main")
 endif()
 
 list(APPEND MINGW_COMMON_SOURCE
@@ -47,26 +47,25 @@ if(NOT MSVC)
     target_link_libraries(mingw_common oldnames)
 endif()
 
-set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
+add_target_compile_definitions(mingw_common _M_CEE_PURE)
 add_dependencies(mingw_common psdk)
 
 add_library(mingw_main crt0_c.c crtexe.c dllargv.c)
-set_property(TARGET mingw_main PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_target_compile_definitions(mingw_main _DLL __USE_CRTIMP)
 add_dependencies(mingw_main psdk)
 
 add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
-set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
+add_target_compile_definitions(mingw_wmain WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
 
 add_library(mingw_dllmain crtdll.c dllargv.c)
-set_property(TARGET mingw_dllmain PROPERTY COMPILE_DEFINITIONS CRTDLL _WINDOWS_)
+add_target_compile_definitions(mingw_dllmain CRTDLL _WINDOWS_)
 add_dependencies(mingw_dllmain psdk)
 
 if(NOT MSVC)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
-        COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
-        COMMAND ${MINGW_PREFIX}ar -rc ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
+        COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
 
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES GENERATED TRUE)
 
@@ -74,5 +73,5 @@ if(NOT MSVC)
 endif()
 
 add_library(getopt getopt.c)
-set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)

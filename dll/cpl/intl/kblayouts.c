@@ -238,6 +238,5 @@ AddNewKbLayoutsByLcid(LCID Lcid)
             }
         }
     }
-
     SetupCloseInfFile(hIntlInf);
 }

@@ -1,7 +1,7 @@
 /*
  *         PROJECT:     PAINT for ReactOS
  *         LICENSE:     unknown (LGPL assumed)
- *         FILE:        base/applications/paint/lang/pl-PL.rc
+ *         FILE:        base/applications/mspaint/lang/pl-PL.rc
  *         PURPOSE:     Polish Language resource file
  *         TRANSLATORS: Caemyr - Olaf Siejka (May,2009), Use ReactOS forum PM or IRC to contact me
  *         UTF-8 conversion by Caemyr (May, 2011) 
@@ -61,12 +61,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Pokaż siatkę", IDM_VIEWSHOWGRID
+            MENUITEM "Pokaż siatkę\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Pokaż miniaturkę", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Pełny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Obraz"
     BEGIN
         MENUITEM "Obrót/Odbicie...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -77,12 +77,12 @@ BEGIN
         MENUITEM "Wyczyść obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Kolory"
     BEGIN
         MENUITEM "Edytuj kolory...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Tematy pomocy", IDM_HELPHELPTOPICS
@@ -105,6 +105,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE

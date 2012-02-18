@@ -1,6 +1,8 @@
 /*
+ * Resources for Common Dialogs
+ *
+ * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
- * Copyright 2008 Frans Kool
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,362 +22,19 @@
 #include "cdlg.h"
 #include "filedlgbrowser.h"
 
-/*
- * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
- */
-
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
-
-#pragma code_page(65001)
-
-OPEN_FILE DIALOG 36, 24, 275, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Bestand openen"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "Bestands&naam:", 1090, 6, 6, 76, 9
- EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
- LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Zoeken in:", -1, 110, 6, 92, 9
- LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
- LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Bestands&typen:", 1089, 6, 104, 90, 9
- COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "Schij&ven:", 1091, 110, 104, 92, 9
- COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "&Openen", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Alleen-&lezen", 1040, 208, 68, 55, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-}
-
-
-SAVE_FILE DIALOG 36, 24, 275, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opslaan als..."
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "Bestands&naam:", 1090, 6, 6, 76, 9
- EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
- LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Zoeken in:", -1, 110, 6, 92, 9
- LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
- LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Bestands&typen:", 1089, 6, 104, 90, 9
- COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "Schij&ven:", 1091, 110, 104, 92, 9
- COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "&Opslaan als", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Alleen-&lezen", 1040, 208, 68, 55, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-}
-
-
-PRINT DIALOG 36, 24, 264, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Afdrukken"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "Printer:", 1088, 6, 6, 40, 9
- LTEXT "", 1089, 60, 6, 150, 9
- GROUPBOX "Afdrukbereik", 1072, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "&Alles", 1056, 16, 45, 60, 12
- RADIOBUTTON "Sele&ctie", 1057, 16, 60, 60, 12
- RADIOBUTTON "&Pagina's", 1058, 16, 75, 60, 12
- DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Eigenschappen", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- LTEXT "&van:", 1090, 60, 80, 30, 9
- LTEXT "&t/m:", 1091, 120, 80, 30, 9
- LTEXT "Afdruk&kwaliteit:", 1092, 6, 100, 76, 9
- COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "Naar &bestand", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Verkort", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-}
-
-
-PRINT_SETUP DIALOG 36, 24, 264, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Afdrukeigenschappen"
-FONT 8, "MS Shell Dlg"
-{
- GROUPBOX "Printer", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "Stan&daardprinter", 1056, 16, 20, 80, 12
- LTEXT "[geen]", 1088, 35, 35, 120, 9
- RADIOBUTTON "Specifieke &Printer", 1057, 16, 50, 80, 12
- COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Setup", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "Oriëntatie", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "S&taand", 1058, 50, 100, 40, 12
- RADIOBUTTON "&Liggend", 1059, 50, 115, 40, 12
- ICON "LANDSCAP", 1097, 10, 95, 32, 32
- ICON "PORTRAIT", 1098, 10, 95, 32, 32
- GROUPBOX "Papier", 1074, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "&Formaat", 1089, 130, 95, 30, 9
- LTEXT "&Bron", 1090, 130, 110, 30, 9
- COMBOBOX 1137, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- COMBOBOX 1138, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
-}
-
-
-CHOOSE_FONT DIALOG  13, 54, 264, 147
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Lettertype"
-FONT 8, "MS Shell Dlg"
-{
-    LTEXT           "&Lettertype:",1088 ,6,3,40,9
-    COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
-                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "Teken&stijl:",1089 ,108,3,44,9
-    COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
-                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Grootte:",1090,179,3,30,9
-    COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
-                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
-    DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Annuleren",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Toepassen", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Help" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "Effecten",1072,6,72,84,34,WS_GROUP
-    CHECKBOX	    "&Doorhalen", 1040, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&Onderstrepen", 1041, 10,94,60,10, BS_AUTOCHECKBOX
-    LTEXT           "&Kleur:", 1091 ,6,110,30,9
-    COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
-		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Voorbeeld",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Schr&ift:",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
-		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
-}
-
-
-CHOOSE_COLOR DIALOG 36, 24, 300, 185
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kleur"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "&Basiskleuren:",   1088, 4,    4,  140, 10
- LTEXT "&Aangepaste kleuren:",  1089, 4,   106, 140, 10
- LTEXT "Kleur |  &Effen",  1090, 157, 151,  48, 10
- LTEXT   "&Rood:", 726 /*1094*/,       256,126,24,10
- EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Groen:",727/*1095*/,        256,140,24,10
- EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "Blau&w:",728 /*1096*/,       256,154,24,10
- EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "Ti&nt:" ,723 /*1091*/,        196,126,22,10
- EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Intensiteit:" ,724 /*1092*/, 196,140,22,10
- EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Helderheid:" ,725 /*1093*/,  196,154,22,10
- EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
- CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
- CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
- CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
- CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
- DEFPUSHBUTTON "OK",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Help", 1038,100,166, 44, 14
- PUSHBUTTON "&Toevoegen aan Aangepaste kleuren",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Definieer Aangepaste kleuren >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
-}
-
-
-FINDDLGORD DIALOG 36, 24, 246, 72
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Tekst zoeken"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "&Zoek naar:", -1, 4, 8, 42, 8
- EDITTEXT 1152, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Heel &woord", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Gelijke &hoofd-/kleine letters", 1041, 4, 52, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Zoekrichting", 1072, 117, 26, 58, 38
- CONTROL "&Omhoog", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 121, 38, 40, 12
- CONTROL "Om&laag", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 121, 50, 40, 12
-
- DEFPUSHBUTTON "&Volgende zoeken", IDOK, 182,  5, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Annuleren", IDCANCEL, 182, 23, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Help", pshHelp	 , 182, 45, 60, 14, WS_GROUP | WS_TABSTOP
-}
-
-
-REPLACEDLGORD DIALOG 36, 24, 240, 94
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Tekst vervangen"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "&Zoek naar:", -1, 4, 9, 48, 8
- EDITTEXT 1152, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "Vervang &door:", -1, 4, 26, 48, 8
- EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Heel &woord", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Gelijke &hoofd-/kleine letters", 1041, 5, 62, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
- DEFPUSHBUTTON "Volgende zoeken", IDOK, 174,  4, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ve&rvangen", psh1	 , 174, 21, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Alles vervangen", psh2 , 174, 38, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Annuleren", IDCANCEL, 174, 55, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Help", pshHelp	 , 174, 75, 60, 14, WS_GROUP | WS_TABSTOP
-}
-
-NEWFILEOPENORD DIALOG 0, 0, 280, 164
-STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Openen"
-FONT 8, "MS Shell Dlg"
-{
-    LTEXT	"&Zoeken in",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
-    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-
-    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
-    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
-
-    LTEXT	"Bestands&naam:",IDC_FILENAMESTATIC,5,112,48,8, SS_NOTIFY
-    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
-
-    LTEXT	"Bestands&typen:",IDC_FILETYPESTATIC,5,128,48,8, SS_NOTIFY
-    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-
-    CONTROL	"Openen met als kenmerk &Alleen-lezen",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,140,10
-
-    DEFPUSHBUTTON	"&Openen",		 IDOK,222,110,50,14
-    PUSHBUTTON		"Annuleren",		 IDCANCEL,222,128,50,14
-    PUSHBUTTON		"&Help",		 pshHelp,222,145,50,14
-}
-
-PRINT32 DIALOG  32, 32, 288, 186
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
-      DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Afdrukken"
-FONT 8, "MS Shell Dlg"
-{
-    DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Annuleren", IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&Help",  pshHelp,  50, 161, 48,14, WS_GROUP
-
-    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "Naar &bestand",  chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&Eigenschappen", psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Naam:",         stc6,  16, 20,  36,8
-    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Status",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Waar:",          stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Locatie", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Opmerking:",     stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Opmerking",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-
-    GROUPBOX        "Aantal",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "Aantal e&xemplaren:",stc5,168,108,68,8
-    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "&Sorteren",      chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
-    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
-
-    GROUPBOX        "Afdrukbereik",   grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Alle",          rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Pagina's",      rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "Sele&ctie",      rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
-    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
-    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&van:",          stc2,  52,124,  20,8
-    RTEXT           "&t/m:",           stc3, 100,124,  16,8
-}
-
-PRINT32_SETUP DIALOG  32, 32, 288, 178
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
-      DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Afdrukeigenschappen"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "Annuleren",IDCANCEL,232,156,48,14
-
-    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Eigenschappen", psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Naam:",         stc6,  16, 20,  36,8
-    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Status",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Waar:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Locatie", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Opmerking:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Opmerking",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-
-    GROUPBOX        "Papier",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "&Grootte:",         stc2,  16,108,  36, 8
-    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Bron:",       stc3,  16,128,  36, 8
-    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-
-    GROUPBOX        "Oriëntatie",    grp1, 180, 92, 100,56, WS_GROUP
-    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "S&taand",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "L&iggend",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
-END
-
-PAGESETUPDLGORD DIALOG 32, 32, 240, 240
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pagina-instellingen"
-FONT 8, "MS Shell Dlg"
-BEGIN
-  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
-  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
-  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
-  GROUPBOX "Papier", grp2, 8, 96, 224, 56, BS_GROUPBOX
-  LTEXT "&Grootte:", stc2, 16, 112, 36, 8
-  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  LTEXT "La&de:", stc3, 16, 132, 36, 8
-  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Oriëntatie", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Staand", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Liggend", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
-  GROUPBOX "Randen", grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT "L&inks:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "&Rechts:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "B&oven:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "&Onder:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
-  PUSHBUTTON "Annuleren", IDCANCEL, 126, 220, 50, 14
-  PUSHBUTTON "P&rinter...", psh3, 184, 220, 48, 14
-END
-
+LANGUAGE LANG_DUTCH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ABOUTBOX            "&Info over FolderPicker"
-    IDS_DOCUMENTFOLDERS     "Documenten Mappen"
-    IDS_PERSONAL            "Mijn Documenten"
-    IDS_FAVORITES           "Mijn Favorieten"
-    IDS_PATH                "Systeem Pad"
-    IDS_DESKTOP             "Bureaublad"
-    IDS_FONTS               "Lettertype"
-    IDS_MYCOMPUTER          "Deze Computer"
-}
-
-STRINGTABLE
-{
-    IDS_SYSTEMFOLDERS       "Systeemmappen"
-    IDS_LOCALHARDRIVES      "Lokale vaste schijven"
     IDS_FILENOTFOUND        "Bestand niet gevonden"
     IDS_VERIFYFILE          "Controleer of de juiste bestandsnaam is opgegeven"
-    IDS_CREATEFILE          "Dit bestand bestaat nog niet\nWilt u het bestand aanmaken?"
-    IDS_OVERWRITEFILE       "Bestand bestaat al.\nWilt u het vervangen?"
+    IDS_CREATEFILE          "Dit bestand bestaat nog niet\n\
+Wilt u het bestand aanmaken?"
+    IDS_OVERWRITEFILE       "Bestand bestaat al.\n\
+Wilt u het vervangen?"
     IDS_INVALID_FILENAME_TITLE "De naam van het pad bevat ongeldige tekens"
-    IDS_INVALID_FILENAME    "De volgende tekens mogen niet in de bestandsnaam voorkomen:\n                          / : < > |"
+    IDS_INVALID_FILENAME    "De volgende tekens mogen niet in de bestandsnaam voorkomen:\n\
+                          / : < > |"
     IDS_PATHNOTEXISTING     "Het pad bestaat niet"
     IDS_FILENOTEXISTING     "Kan het bestand niet vinden"
 }
@@ -394,36 +53,28 @@ STRINGTABLE
     PD32_PRINT_TITLE       "Afdrukken"
 
     PD32_VALUE_UREADABLE                  "Onleesbare ingave"
-    PD32_INVALID_PAGE_RANGE "Deze waarde ligt niet binnen het bereik\n\
-Voert u s.v.p. een waarde tussen %d en %d in."
-    PD32_FROM_NOT_ABOVE_TO                "De VAN ingave kan niet groter zijn \
-dan de TO waarde"
-    PD32_MARGINS_OVERLAP                  "De marges overlappen of vallen \
-buiten het papier.\nVoer s.v.p. nieuwe marges in."
-    PD32_NR_OF_COPIES_EMPTY               "Het aantal invoerveld kan niet leeg \
-zijn."
-    PD32_TOO_LARGE_COPIES                 "Zoveel exemplaren kan de printer \
-niet in een keer aan, het maximum is %d"
+    PD32_INVALID_PAGE_RANGE "Deze waarde ligt niet binnen het paginabereik\n\
+Voert u s.v.p. een waarde tussen %1!d! en %2!d! in."
+    PD32_FROM_NOT_ABOVE_TO                "De VAN ingave kan niet groter zijn dan de TO waarde"
+    PD32_MARGINS_OVERLAP                  "De marges overlappen of vallen buiten het papier.\n\
+Voer s.v.p. nieuwe marges in."
+    PD32_NR_OF_COPIES_EMPTY               "Het invoerveld 'Aantal kopieën' kan niet leeg zijn."
+    PD32_TOO_LARGE_COPIES                 "Zoveel exemplaren kan de printer niet in een keer aan, het maximum is %d"
     PD32_PRINT_ERROR                      "Er heeft zich een fout voorgedaan met de printer."
     PD32_NO_DEFAULT_PRINTER               "Er is geen standaardprinter"
     PD32_CANT_FIND_PRINTER                "De printer werd niet gevonden"
-    PD32_OUT_OF_MEMORY                    "Er was onvoldoende geheugen \
-beschikbaar"
-    PD32_GENERIC_ERROR                    "Er ontstond een niet nader \
-gespecificeerde fout"
+    PD32_OUT_OF_MEMORY                    "Onvoldoende geheugen beschikbaar"
+    PD32_GENERIC_ERROR                    "Er ontstond een niet nader gespecificeerde fout"
     PD32_DRIVER_UNKNOWN                   "De printer driver is onbekend"
-    PD32_NO_DEVICES                       "Voordat u printer-gerelateerde taken \
-zoals pagina instellingen of het printen van een document kun uitvoeren, moet u een \
-printer installeren. Installeer een printer en probeer het opnieuw."
+    PD32_NO_DEVICES                       "Voordat u printer-gerelateerde taken zoals pagina instellingen of het printen van een document kun uitvoeren, moet u een printer installeren. Installeer een printer en probeer het opnieuw."
 
     PD32_DEFAULT_PRINTER                  "Standaard Printer, "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de \
-wachtrij"
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de wachtrij"
     PD32_MARGINS_IN_INCHES                "Marges [inch]"
     PD32_MARGINS_IN_MILLIMETERS           "Marges [mm]"
     PD32_MILLIMETERS                      "mm"
 
-    PD32_PRINTER_STATUS_READY             "Klaar"
+    PD32_PRINTER_STATUS_READY             "Gereed"
     PD32_PRINTER_STATUS_PAUSED            "Gepauzeerd, "
     PD32_PRINTER_STATUS_ERROR             "Fout, "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Bezig met verwijderen, "
@@ -461,30 +112,378 @@ STRINGTABLE /* Font styles */
 
 STRINGTABLE /* Color names */
 {
-   IDS_COLOR_BLACK      "Zwart"
-   IDS_COLOR_MAROON     "Kastanjebruin"
-   IDS_COLOR_GREEN      "Groen"
-   IDS_COLOR_OLIVE      "Olijfgroen"
-   IDS_COLOR_NAVY       "Marineblauw"
-   IDS_COLOR_PURPLE     "Paars"
-   IDS_COLOR_TEAL       "Groenblauw"
-   IDS_COLOR_GRAY       "Grijs"
-   IDS_COLOR_SILVER     "Zilver"
-   IDS_COLOR_RED        "Rood"
-   IDS_COLOR_LIME       "Lichtgroen"
-   IDS_COLOR_YELLOW     "Geel"
-   IDS_COLOR_BLUE       "Blauw"
-   IDS_COLOR_FUCHSIA    "Fuchsiapaars"
-   IDS_COLOR_AQUA       "Zeeblauw"
-   IDS_COLOR_WHITE      "Wit"
+    IDS_COLOR_BLACK     "Zwart"
+    IDS_COLOR_MAROON    "Kastanjebruin"
+    IDS_COLOR_GREEN     "Groen"
+    IDS_COLOR_OLIVE     "Olijfgroen"
+    IDS_COLOR_NAVY      "Marineblauw"
+    IDS_COLOR_PURPLE    "Paars"
+    IDS_COLOR_TEAL      "Groenblauw"
+    IDS_COLOR_GRAY      "Grijs"
+    IDS_COLOR_SILVER    "Zilver"
+    IDS_COLOR_RED       "Rood"
+    IDS_COLOR_LIME      "Lichtgroen"
+    IDS_COLOR_YELLOW    "Geel"
+    IDS_COLOR_BLUE      "Blauw"
+    IDS_COLOR_FUCHSIA   "Fuchsiapaars"
+    IDS_COLOR_AQUA      "Zeeblauw"
+    IDS_COLOR_WHITE     "Wit"
 }
 
 STRINGTABLE
 {
-   IDS_FONT_SIZE        "Selecteer een lettertype tussen %d en %d punten."
-   IDS_SAVE_BUTTON      "&Opslaan"
-   IDS_SAVE_IN          "Op&slaan in:"
-   IDS_SAVE             "Opslaan"
-   IDS_SAVE_AS          "Opslaan als"
-   IDS_OPEN_FILE        "Open bestand"
+    IDS_FONT_SIZE   "Selecteer een lettergrootte tussen %1!d! en %2!d! punten."
+    IDS_SAVE_BUTTON "Op&slaan"
+    IDS_SAVE_IN     "Op&slaan in:"
+    IDS_SAVE        "Opslaan"
+    IDS_SAVE_AS     "&Opslaan als"
+    IDS_OPEN_FILE   "Open bestand"
+}
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+OPEN_FILE DIALOG 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Openen"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Bestands&naam:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Zoeken in:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Bestands&typen:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "Schij&ven:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Openen", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Help", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "A&lleen-lezen", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Opslaan als..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Bestands&naam:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Zoeken in:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Bestands&typen:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "Schij&ven:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "&Opslaan als", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Help", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "A&lleen-lezen", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Afdrukken"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Printer:", stc1, 6, 6, 40, 9
+ LTEXT "", stc2, 60, 6, 150, 9
+ GROUPBOX "Afdrukbereik", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Alles", rad1, 16, 45, 60, 12
+ RADIOBUTTON "Sele&ctie", rad2, 16, 60, 60, 12
+ RADIOBUTTON "&Pagina's", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "Afdrukken", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Eigenschappen", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&van:", stc3, 60, 80, 30, 9
+ LTEXT "&t/m:", stc4, 120, 80, 30, 9
+ LTEXT "Afdruk&kwaliteit:", stc5, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Naar &bestand", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Verkort", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Afdrukeigenschappen"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Printer", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "Stan&daardprinter", rad1, 16, 16, 150, 12
+ LTEXT "[geen]", stc1, 35, 30, 120, 9
+ RADIOBUTTON "Specifieke &Printer", rad2, 16, 44, 150, 12
+ COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Eigenschappen", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Oriëntatie", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "S&taand", rad3, 50, 95, 50, 12
+ RADIOBUTTON "&Liggend", rad4, 50, 110, 50, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "Papier", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ LTEXT "&Formaat", stc2, 126, 95, 35, 9
+ LTEXT "&Bron", stc3, 126, 110, 35, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG  13, 54, 274, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Lettertype"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Lettertype:",stc1 ,6,3,90,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "Teken&stijl:",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "Tekstgrootte:",stc3,179,3,32,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "OK",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Annuleren",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Toepassen", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Help" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Effecten",grp1,6,72,84,36,WS_GROUP
+    CHECKBOX	    "&Doorhalen", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Onderstrepen", chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    LTEXT           "Kleuren:", stc4 ,6,114,80,9
+    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Voorbeeld",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Schr&ift:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG 36, 24, 300, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Kleur"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Basiskleuren:",   stc1, 4,    4,  140, 10
+ LTEXT "&Aangepaste kleuren:",  stc2, 4,   106, 140, 10
+ LTEXT "Kleur |  &Effen",  stc3, 150, 151,  48, 10
+ LTEXT   "&Rood:", 726 /*1094*/,247,126,27,10
+ EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Groen:",727/*1095*/,247,140,27,10
+ EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "Blau&w:",728 /*1096*/,247,154,27,10
+ EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "Ti&nt:" ,723 /*1091*/,200,126,24,10
+ EDITTEXT 703, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Intensiteit:" ,724 /*1092*/,200,140,24,10
+ EDITTEXT 704, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Helderheid:" ,725 /*1093*/,200,154,24,10
+ EDITTEXT 705, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "OK",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Help", pshHelp,100,166, 44, 14
+ PUSHBUTTON "&Toevoegen aan Aangepaste kleuren",    712/*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Definieer Aangepaste kleuren >>", 719/*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Kleur |  &Effen",713,300,200,4,14   /* just a dummy */
+}
+
+
+FINDDLGORD DIALOG 36, 24, 276, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zoeken"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Zoek naar:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Heel &woord", chx1, 4, 26, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Gelijke &hoofd-/kleine letters", chx2, 4, 42, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Zoekrichting", grp1, 127, 26, 78, 28
+ CONTROL "&Omhoog", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 131, 38, 35, 12
+ CONTROL "O&mlaag", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 163, 38, 35, 12
+
+ DEFPUSHBUTTON "&Volgende zoeken", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Annuleren", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Help", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG 36, 24, 276, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tekst vervangen"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Zoek naar:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "Vervang &door:", -1, 4, 26, 52, 8
+ EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Heel &woord", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Gelijke &hoofd-/kleine letters", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "&Volgende zoeken", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Ve&rvangen", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Alles vervangen", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuleren", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Help", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Afdrukken"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "OK",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Annuleren", IDCANCEL, 230,164, 50,14, WS_GROUP
+    PUSHBUTTON      "&Help",  pshHelp,  50, 161, 50,14, WS_GROUP
+
+    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Naar &bestand", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "&Eigenschappen",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Naam:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Status:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Type:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Waar:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Opmerking:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Aantal",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Aantal e&xemplaren:",stc5,168,105,68,8
+    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "&Sorteren",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Afdrukbereik",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Alles",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Pagina's",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "Sele&ctie",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&van:",         stc2,  52,124,  20,8
+    RTEXT           "&t/m:",           stc3,  99,124,  20,8
+}
+
+PRINT32_SETUP DIALOG  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Afdrukeigenschappen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,176,156,50,14,WS_GROUP
+    PUSHBUTTON      "Annuleren",IDCANCEL,230,156,50,14
+/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Eigenschappen",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Naam:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Status:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Type:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Waar:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Opmerking:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Papier",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Grootte:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Bron:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Oriëntatie",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "S&taand",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "L&iggend",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Pagina-instellingen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Papier", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "Tekstgrootte:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "La&de:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Oriëntatie", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Staand", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Liggend", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Randen", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "L&inks:", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Rechts:", stc16, 159, 172, 30, 8
+  EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "B&oven:", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Onder:", stc18, 159, 192, 30, 8
+  EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "OK", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Annuleren", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "P&rinter...", psh3, 182, 220, 50, 14
+END
+
+NEWFILEOPENORD DIALOG 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Openen"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"&Zoeken in",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Bestands&naam:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+
+    LTEXT	"Bestands&typen:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Openen met als kenmerk &Alleen-lezen",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+
+    DEFPUSHBUTTON	"&Openen",		 IDOK,222,110,54,14
+    PUSHBUTTON		"Annuleren",		 IDCANCEL,222,128,54,14
+    PUSHBUTTON		"&Help",		 pshHelp,222,145,54,14
+}
+
+NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+      WS_THICKFRAME
+CAPTION "Openen"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "Bestandsnaam:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
+
+    LTEXT           "Bestanden van het type:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+                    CBS_HASSTRINGS | CBS_DROPDOWNLIST
+
+    DEFPUSHBUTTON   "&Openen",  IDOK,     350, 240, 40, 14, WS_GROUP
+    PUSHBUTTON      "Annuleren", IDCANCEL, 395, 240, 40, 14
+    PUSHBUTTON      "&Help",  pshHelp,  350, 272, 40, 14
 }

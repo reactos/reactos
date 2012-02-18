@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/numbers.c
+ * FILE:            dll/cpl/intl/numbers.c
  * PURPOSE:         Numbers property page
  * PROGRAMMER:      Eric Kohl
  */
@@ -95,7 +95,7 @@ InitNumDecimalSepCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)(LPCSTR)szNumSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
@@ -116,7 +116,6 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     TCHAR szFracNum[MAX_SAMPLES_STR_SIZE];
     TCHAR szFracCount[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current number of fractional symbols */
     GetLocaleInfo(lcid,
@@ -133,7 +132,7 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     /* Create standard list of fractional symbols */
     for (nCBIndex = 0; nCBIndex < MAX_FRAC_NUM_SAMPLES; nCBIndex++)
     {
-        /* convert to wide char */
+        /* Convert to wide char */
         _itot(nCBIndex, szFracCount, DECIMAL_RADIX);
 
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
@@ -143,10 +142,10 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szFracNum),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szFracNum),
+                (LPARAM)0);
 }
 
 /* Init field separator control box */
@@ -190,7 +189,7 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szFieldSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not success, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
@@ -244,7 +243,7 @@ InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)pszFieldDigNumSmpl);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
@@ -301,7 +300,7 @@ InitNegSignCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szNegSign);
 
-    /* if is not success, add new value to list and select them */
+    /* If  it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
@@ -325,7 +324,6 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
     TCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
     LPTSTR pszResultStr;
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current negative numbers format */
     GetLocaleInfo(lcid,
@@ -372,10 +370,10 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szNegNumFmt),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szNegNumFmt),
+                (LPARAM)0);
 }
 
 /* Init leading zeroes control box */
@@ -386,7 +384,6 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
     TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
     LPTSTR pszResultStr;
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current leading zeroes format */
     GetLocaleInfo(lcid,
@@ -420,10 +417,10 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szLeadNumFmt),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szLeadNumFmt),
+                (LPARAM)0);
 }
 
 static VOID
@@ -467,7 +464,7 @@ InitListSepCB(HWND hwndDlg,
                            -1,
                            (LPARAM)szListSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
@@ -587,7 +584,7 @@ SetFracSymNum(HWND hwndDlg,
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szFracSymNum, DECIMAL_RADIX);
 
     /* Save number of fractional symbols */
@@ -690,7 +687,7 @@ SetNumLeadZero(HWND hwndDlg,
                             (WPARAM)0,
                             (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szLeadZero, DECIMAL_RADIX);
 
     /* Save leading zero format */

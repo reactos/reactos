@@ -7,7 +7,7 @@
 PUBLIC _tcscpy
 .code
 
-FUNC tcscpy
+FUNC _tcscpy
     FPO 0, 2, 2, 2, 0, FRAME_FPO
     push esi
     push edi
@@ -27,7 +27,7 @@ FUNC tcscpy
     pop edi
     pop esi
     ret
-ENDFUNC tcscpy
+ENDFUNC
 
 END
 /* EOF */

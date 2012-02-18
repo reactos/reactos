@@ -8,7 +8,7 @@
 	<library>advapi32</library>
 	<library>uuid</library>
 	<library>iphlpapi</library>
-	<library>iphlpapi</library>
+	<library>dhcpcsvc</library>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

@@ -18,8 +18,8 @@
 
 /* GLOBALS *******************************************************************/
 
-HKEY ImageExecOptionsKey;
-HKEY Wow64ExecOptionsKey;
+HANDLE ImageExecOptionsKey;
+HANDLE Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
@@ -87,6 +87,7 @@ ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
+void actctx_init(void);
 
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
@@ -103,9 +104,9 @@ NTSTATUS
 NTAPI
 LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
                            IN BOOLEAN Wow64,
-                           OUT PHKEY NewKeyHandle)
+                           OUT PHANDLE NewKeyHandle)
 {
-    PHKEY RootKeyLocation;
+    PHANDLE RootKeyLocation;
     HANDLE RootKey;
     UNICODE_STRING SubKeyString;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -123,7 +124,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
 
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                               Wow64 ? 
+                               Wow64 ?
                                &Wow64OptionsString : &ImageExecOptionsString,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
@@ -173,7 +174,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
+LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
                            IN PCWSTR ValueName,
                            IN ULONG Type,
                            OUT PVOID Buffer,
@@ -206,7 +207,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
         KeyValueInformation = RtlAllocateHeap(RtlGetProcessHeap(),
                                               0,
                                               KeyInfoSize);
-        if (KeyInfo == NULL)
+        if (KeyValueInformation == NULL)
         {
             /* Give up this time */
             Status = STATUS_NO_MEMORY;
@@ -294,9 +295,9 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
                 {
                     /* OK, we know what you want... */
                     IntegerString.Buffer = (PWSTR)KeyValueInformation->Data;
-                    IntegerString.Length = KeyValueInformation->DataLength -
+                    IntegerString.Length = (USHORT)KeyValueInformation->DataLength -
                                            sizeof(WCHAR);
-                    IntegerString.MaximumLength = KeyValueInformation->DataLength;
+                    IntegerString.MaximumLength = (USHORT)KeyValueInformation->DataLength;
                     Status = RtlUnicodeStringToInteger(&IntegerString, 0, (PULONG)Buffer);
                 }
             }
@@ -344,7 +345,7 @@ LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
                                     IN BOOLEAN Wow64)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
 
     /* Open a handle to the key */
     Status = LdrOpenImageFileOptionsKey(SubKey, Wow64, &KeyHandle);
@@ -440,7 +441,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PULONG_PTR Cookie;
     LARGE_INTEGER Counter;
-    //ULONG NewCookie;
+    ULONG_PTR NewCookie;
 
     /* Fetch address of the cookie */
     Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
@@ -448,40 +449,39 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (Cookie)
     {
         /* Check if it's a default one */
-        if (*Cookie == DEFAULT_SECURITY_COOKIE ||
-            *Cookie == 0xBB40)
+        if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+            (*Cookie == 0xBB40))
         {
-            /* We need to initialize it */
-
+            /* Make up a cookie from a bunch of values which may uniquely represent
+               current moment of time, environment, etc */
             NtQueryPerformanceCounter(&Counter, NULL);
-#if 0
-            GetSystemTimeAsFileTime (&systime.ft_struct);
-#ifdef _WIN64
-            cookie = systime.ft_scalar;
-#else
-            cookie = systime.ft_struct.dwLowDateTime;
-            cookie ^= systime.ft_struct.dwHighDateTime;
-#endif
 
-            cookie ^= GetCurrentProcessId ();
-            cookie ^= GetCurrentThreadId ();
-            cookie ^= GetTickCount ();
+            NewCookie = Counter.LowPart ^ Counter.HighPart;
+            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueProcess;
+            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueThread;
 
-            QueryPerformanceCounter (&perfctr);
-#ifdef _WIN64
-            cookie ^= perfctr.QuadPart;
-#else
-            cookie ^= perfctr.LowPart;
-            cookie ^= perfctr.HighPart;
-#endif
+            /* Loop like it's done in KeQueryTickCount(). We don't want to call it directly. */
+            while (SharedUserData->SystemTime.High1Time != SharedUserData->SystemTime.High2Time)
+            {
+                YieldProcessor();
+            };
 
-#ifdef _WIN64
-            cookie &= 0x0000ffffffffffffll;
-#endif
-#endif
-            *Cookie = Counter.LowPart;
+            /* Calculate the milliseconds value and xor it to the cookie */
+            NewCookie ^= Int64ShrlMod32(UInt32x32To64(SharedUserData->TickCountMultiplier, SharedUserData->TickCount.LowPart), 24) +
+                (SharedUserData->TickCountMultiplier * (SharedUserData->TickCount.High1Time << 8));
 
-            //Cookie = NULL;
+            /* Make the cookie 16bit if necessary */
+            if (*Cookie == 0xBB40) NewCookie &= 0xFFFF;
+
+            /* If the result is 0 or the same as we got, just subtract one from the existing value
+               and that's it */
+            if ((NewCookie == 0) || (NewCookie == *Cookie))
+            {
+                NewCookie = *Cookie - 1;
+            }
+
+            /* Set the new cookie value */
+            *Cookie = NewCookie;
         }
     }
 
@@ -499,23 +499,17 @@ LdrpInitializeThread(IN PCONTEXT Context)
     NTSTATUS Status;
     PVOID EntryPoint;
 
-    DPRINT("LdrpInitializeThread() called for %wZ\n",
-            &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpInitializeThread() called for %wZ (%lx/%lx)\n",
+            &LdrpImageEntry->BaseDllName,
+            NtCurrentTeb()->RealClientId.UniqueProcess,
+            NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Allocate an Activation Context Stack */
-    /* FIXME: This is a hack for Wine's actctx stuff */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
-    if (!(NtCurrentTeb()->ActivationContextStackPointer))
+    Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
+    if (!NT_SUCCESS(Status))
     {
-        Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
-        if (NT_SUCCESS(Status))
-        {
-            DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
-            DPRINT("ActiveFrame %p\n", ((PACTIVATION_CONTEXT_STACK)NtCurrentTeb()->ActivationContextStackPointer)->ActiveFrame);
-            NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
-        }
-        else
-            DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
+        DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
     }
 
     /* Make sure we are not shutting down */
@@ -542,7 +536,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                 EntryPoint = LdrEntry->EntryPoint;
 
                 /* Check if we are ready to call it */
-                if ((EntryPoint) && 
+                if ((EntryPoint) &&
                     (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                     (LdrEntry->Flags & LDRP_IMAGE_DLL))
                 {
@@ -570,8 +564,10 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     if (!LdrpShutdownInProgress)
                     {
                         /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %x for thread attaching\n",
-                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %lx/%lx\n",
+                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
+                                NtCurrentTeb()->RealClientId.UniqueProcess,
+                                NtCurrentTeb()->RealClientId.UniqueThread);
                         LdrpCallInitRoutine(LdrEntry->EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_THREAD_ATTACH,
@@ -628,7 +624,10 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     PTEB OldTldTeb;
     BOOLEAN DllStatus;
 
-    DPRINT("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpRunInitializeRoutines() called for %wZ (%lx/%lx)\n",
+        &LdrpImageEntry->BaseDllName,
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check the Loader Lock */
     LdrpEnsureLoaderLockIsHeld();
@@ -721,7 +720,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
 
         /* Clear it */
         //Kernel32ProcessInitPostImportfunction = NULL;
-        UNIMPLEMENTED;
+        //UNIMPLEMENTED;
     }
 
     /* No root entry? return */
@@ -940,7 +939,7 @@ LdrShutdownProcess(VOID)
             EntryPoint = LdrEntry->EntryPoint;
 
             /* Check if we are ready to call it */
-            if (EntryPoint && 
+            if (EntryPoint &&
                 (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                 LdrEntry->Flags)
             {
@@ -1213,7 +1212,7 @@ LdrpAllocateTls(VOID)
     PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
-    ULONG TlsDataSize;
+    SIZE_T TlsDataSize;
     PVOID *TlsVector;
 
     /* Check if we have any entries */
@@ -1237,7 +1236,7 @@ LdrpAllocateTls(VOID)
         NextEntry = NextEntry->Flink;
 
         /* Allocate this vector */
-        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData - 
+        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
         TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
                                                                            0,
@@ -1327,10 +1326,10 @@ LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb
 
 NTSTATUS
 NTAPI
-LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
+LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE OptionsKey)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
     ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
@@ -1468,12 +1467,12 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PPEB Peb = NtCurrentPeb();
     BOOLEAN IsDotNetImage = FALSE;
     BOOLEAN FreeCurDir = FALSE;
-    //HKEY CompatKey;
+    //HANDLE CompatKey;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
     //LPWSTR ImagePathBuffer;
     ULONG ConfigSize;
     UNICODE_STRING CurrentDirectory;
-    HKEY OptionsKey;
+    HANDLE OptionsKey;
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;
@@ -1940,6 +1939,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     InsertHeadList(&Peb->Ldr->InInitializationOrderModuleList,
                    &LdrpNtDllDataTableEntry->InInitializationOrderModuleList);
 
+    /* Initialize Wine's active context implementation for the current process */
+    actctx_init();
+
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);
     if (!NT_SUCCESS(Status))
@@ -1981,7 +1983,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
     {
         /* Load kernel32 and call BasePostImportInit... */
-        DPRINT1("Unimplemented codepath!\n");
+        DPRINT("Unimplemented codepath!\n");
     }
 
     /* Walk the IAT and load all the DLLs */
@@ -2088,7 +2090,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         /* Check for Application Compatibility Goo */
         //LdrQueryApplicationCompatibilityGoo(hKey);
-        DPRINT1("Querying app compat hacks is missing!\n");
+        DPRINT("Querying app compat hacks is missing!\n");
     }
 
     /*
@@ -2151,7 +2153,9 @@ LdrpInit(PCONTEXT Context,
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
     PPEB Peb = NtCurrentPeb();
 
-    DPRINT("LdrpInit()\n");
+    DPRINT("LdrpInit() %lx/%lx\n",
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check if we have a deallocation stack */
     if (!Teb->DeallocationStack)

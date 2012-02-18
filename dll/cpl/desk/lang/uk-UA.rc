@@ -3,12 +3,12 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/desk/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Display Control Panel Applet
- * TRANSLATOR:  Artem Reznikov, Sakara Yevhen, Igor Paliychuk 
+ * TRANSLATOR:  Artem Reznikov, Sakara Yevhen, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 205
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Робочий стіл"
 FONT 8, "MS Shell Dlg"
@@ -18,11 +18,11 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Виберіть зображення для шпалер робочого столу:",
+    LTEXT           "Виберіть зображення для шпалер робочого столу",
                     IDC_STATIC, 8, 103, 180, 9
     PUSHBUTTON      "&Огляд...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
     PUSHBUTTON      "&Колір...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Розташування:", IDC_STATIC, 188, 138, 51, 9
+    LTEXT           "Розташування", IDC_STATIC, 188, 138, 51, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -34,33 +34,35 @@ FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Заставка", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "П&араметри",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "&Перегляд",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Інтервал",IDC_WAITTEXT, 14, 125, 30, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 48, 123, 32, 13, ES_RIGHT | WS_GROUP
+    PUSHBUTTON      "П&араметри", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "&Перегляд", IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&Інтервал", IDC_WAITTEXT, 14, 125, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "хв", IDC_MINTEXT, 84, 125, 26, 9
-    CONTROL         "За&хист паролем",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
+    LTEXT           "хв", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "За&хист паролем", IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX        "&Енергозбереження", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Щоб змінити параметри живлення монітора, натисніть кнопку ""Живлення"".",
-                    IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "&Живлення...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+                    IDC_STATIC, 14, 166, 146, 20
+    PUSHBUTTON      "&Живлення...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оформлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Колірна схема", IDC_STATIC, 7, 140, 64, 7
-    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
+    COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Колірна схема", IDC_STATIC, 7, 160, 64, 7
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Ефекти...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Додатково", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
@@ -74,26 +76,26 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Елемент:", 8, 5, 160, 50, 9
+    LTEXT "Елемент", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "&Розмір", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "Колір &1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "Колір &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "Колір &2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "Колір &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Шрифт:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "Шрифт", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Розмір:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "Розмір", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Колір:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Колір", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     AUTOCHECKBOX   "Ж", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
@@ -109,12 +111,12 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Ефекти"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Застосовувати наступний перехідний ефект для меню та підказок:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "&Застосовувати наступний перехідний ефект для меню та підказок",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
-    COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "З&астосовувати наступний метод згладжування для екранних шрифтів:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "З&астосовувати наступний метод згладжування для екранних шрифтів",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
-    COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     CONTROL         "Застосовувати &великі значки",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
     CONTROL         "Відображати тіні від меню",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
@@ -127,26 +129,26 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
-IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Розташуйте значки моніторів відповідно до фактичного розташування моніторів.",-1,3,1,240,16
-    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Дисплей:",1820,3,100,30,8
-    LTEXT           "<немає>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "&Область екрану",1818,3,120,115,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,130,58,17
-    LTEXT           "Менше",1815,6,130,24,8,NOT WS_GROUP
-    LTEXT           "Більше",1816,90,130,24,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Якість кольоропередачі",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+    LTEXT           "Розташуйте значки моніторів відповідно до фактичного розташування моніторів.",-1,3,1,240,20
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Дисплей",1820,3,107,30,8
+    LTEXT           "<немає>",IDC_SETTINGS_DEVICE,9,116,224,8
+    GROUPBOX        "&Область екрану",1818,3,127,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30,137,58,17
+    LTEXT           "Менше",1815,9,137,24,8,NOT WS_GROUP
+    LTEXT           "Більше",1816,93,137,24,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10, NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Якість кольоропередачі",1817,125,127,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "Дод&атково...",IDC_SETTINGS_ADVANCED,170,165,70,14
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
+    PUSHBUTTON      "Дод&атково...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
@@ -155,11 +157,11 @@ CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Екран", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Розмір шрифту:", -1, 14, 20, 222, 8
+    LTEXT "Розмір шрифту", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
     GROUPBOX "Сумісність", -1, 7, 67, 237, 97
-    LTEXT "Деякі програми працюватимуть неправильно, якщо ви не перезавантажите комп'ютер після зміни параметрів кольору.\r\n\nПісля зміни параметрів кольору слід:", -1, 12, 78, 228, 34
+    LTEXT "Деякі програми працюватимуть неправильно, якщо ви не перезавантажите комп'ютер після зміни параметрів кольору.\r\n\nПісля зміни параметрів кольору слід", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Перезавантажити комп'ютер із новими параметрами кольору.", IDC_RESTART_RB, 14, 116, 224, 10
     AUTORADIOBUTTON "&Застосувати нові параметри кольору без перезавантаження.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
     AUTORADIOBUTTON "Запитати перед застосуванням нових параметрів кольору.", IDC_ASKME_RB, 14, 146, 224, 10

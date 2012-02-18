@@ -133,10 +133,7 @@ DeviceInterfaceChangeCallback(
 {
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
     NTSTATUS Status = STATUS_SUCCESS;
-    PSYSAUDIODEVEXT DeviceExtension;
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
-
-    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
     Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
 

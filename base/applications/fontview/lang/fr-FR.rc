@@ -4,12 +4,10 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUIT, "Quitter"
 	IDS_PRINT, "Imprimer"
-	IDS_STRING, "Voix ambiguÎ d'un c∂ur qui au zÈphyr prÈfËre les jattes de kiwis. 1234567890"
+	IDS_STRING, "Voix ambigu√´ d'un c≈õur qui au z√©phyr pr√©fƒçre les jattes de kiwis. 1234567890"
 	IDS_ERROR, "Erreur"
-	IDS_ERROR_NOMEM, "MÈmoire insuffisante pour terminer l'opÈration."
+	IDS_ERROR_NOMEM, "M√©moire insuffisante pour terminer l'op√©ration."
 	IDS_ERROR_NOFONT, "Le fichier %1 n'est pas un fichier police valide."
-	IDS_ERROR_NOCLASS, "Impossible d'initialiser la classe de fenÍtre."
+	IDS_ERROR_NOCLASS, "Impossible d'initialiser la classe de fenƒôtre."
 	IDS_ERROR_BADCMD, "Aucun fichier police transmis.\nSyntaxe:\n  fontview.exe <fichier police>"
 END
-
-

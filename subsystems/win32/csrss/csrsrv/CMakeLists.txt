@@ -11,11 +11,14 @@ list(APPEND SOURCE
     procsup.c
     thredsup.c
     init.c
+    wait.c
+    session.c
+    server.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})
 
-target_link_libraries(csrsrv ${PSEH_LIB})
+target_link_libraries(csrsrv ${PSEH_LIB} smlib)
 
 set_module_type(csrsrv nativedll)
 

@@ -13,14 +13,16 @@
 #include <ks386.inc>
 #include <internal/i386/asmmacro.S>
 
-MACRO(GENERATE_IDT_STUB, Number)
-idt _KiUnexpectedInterrupt&Number, INT_32_DPL0
+MACRO(GENERATE_IDT_STUB, Vector)
+idt _KiUnexpectedInterrupt&Vector, INT_32_DPL0
 ENDM
 
-MACRO(GENERATE_INT_HANDLER, Number)
+MACRO(GENERATE_INT_HANDLER, Vector)
 //.func KiUnexpectedInterrupt&Number
-_KiUnexpectedInterrupt&Number:
-    push PRIMARY_VECTOR_BASE + Number
+_KiUnexpectedInterrupt&Vector:
+    /* This is a push instruction with 8bit operand. Since the instruction
+       sign extends the value to 32 bits, we need to offset it */
+    push (Vector - 128)
     jmp _KiEndUnexpectedRange@0
 //.endfunc
 ENDM
@@ -66,7 +68,7 @@ idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
 idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
-i = 0
+i = HEX(30)
 REPEAT 208
     GENERATE_IDT_STUB %i
     i = i + 1
@@ -80,10 +82,18 @@ _KiIdtDescriptor:
 
 PUBLIC _KiUnexpectedEntrySize
 _KiUnexpectedEntrySize:
-    .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
+    .long _KiUnexpectedInterrupt49 - _KiUnexpectedInterrupt48
 
 /******************************************************************************/
 .code
+
+PUBLIC _KiStartUnexpectedRange@0
+_KiStartUnexpectedRange@0:
+i = HEX(30)
+REPEAT 208
+    GENERATE_INT_HANDLER %i
+    i = i + 1
+ENDR
 
 TRAP_ENTRY KiTrap00, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap01, KI_PUSH_FAKE_ERROR_CODE
@@ -126,29 +136,24 @@ _KiInterruptTemplateDispatch:
 
 EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
-.PROC KiSystemService
+.PROC _KiSystemService
     FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_PUSH_FAKE_ERROR_CODE OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiSystemServiceHandler@8
-.ENDP KiSystemService
+.ENDP
 
 EXTERN @KiFastCallEntryHandler@8:PROC
 PUBLIC _KiFastCallEntry
-.PROC KiFastCallEntry
+.PROC _KiFastCallEntry
     FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiFastCallEntryHandler@8
-.ENDP KiFastCallEntry
+.ENDP
 
-PUBLIC _KiStartUnexpectedRange@0
-_KiStartUnexpectedRange@0:
-i = 0
-REPEAT 208
-    GENERATE_INT_HANDLER %i
-    i = i + 1
-ENDR
+
 PUBLIC _KiEndUnexpectedRange@0
 _KiEndUnexpectedRange@0:
+    add dword ptr[esp], 128
     jmp _KiUnexpectedInterruptTail
 
 

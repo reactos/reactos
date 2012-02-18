@@ -554,6 +554,7 @@ WINAPI
 CreateSystemThreads(DWORD dwUnknown)
 {
     NtUserxCreateSystemThreads(dwUnknown);
+    ExitThread(0);
 }
 
 BOOL
@@ -572,12 +573,13 @@ DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
     return FALSE;
 }
 
-BOOL
+HCURSOR
 WINAPI
-GetCursorFrameInfo(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+GetCursorFrameInfo(HCURSOR hCursor, LPCWSTR name, DWORD istep, PDWORD rate_jiffies, INT *num_steps)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+   if (hCursor) return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
+
+   return LoadImageW( NULL, name, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
 }
 
 BOOL

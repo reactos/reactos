@@ -163,9 +163,6 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject;
     PAFD_POLL_INFO PollReq = Irp->AssociatedIrp.SystemBuffer;
     PAFD_DEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-    UINT CopySize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
-    UINT AllocSize =
-	CopySize + sizeof(AFD_ACTIVE_POLL) - sizeof(AFD_POLL_INFO);
     KIRQL OldIrql;
     UINT i, Signalled = 0;
     ULONG Exclusive = PollReq->Exclusive;
@@ -223,7 +220,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
        PAFD_ACTIVE_POLL Poll = NULL;
 
-       Poll = ExAllocatePool( NonPagedPool, AllocSize );
+       Poll = ExAllocatePool( NonPagedPool, sizeof(AFD_ACTIVE_POLL) );
 
        if (Poll){
           Poll->Irp = Irp;

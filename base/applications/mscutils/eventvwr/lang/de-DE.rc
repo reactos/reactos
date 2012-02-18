@@ -27,7 +27,7 @@ BEGIN
 	BEGIN
 		MENUITEM "H&ilfe",                    IDM_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "Ü&ber...",                  IDM_ABOUT
+		MENUITEM "Ãœ&ber...",                  IDM_ABOUT
 	END
 END
 
@@ -39,7 +39,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Über"
+CAPTION "Ãœber"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
@@ -62,9 +62,9 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Ereignisdetails"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-	DEFPUSHBUTTON   "&Schließen",IDOK,12,258,50,14
+	DEFPUSHBUTTON   "&SchlieÃŸen",IDOK,12,258,50,14
 	PUSHBUTTON      "&Vorige",IDPREVIOUS,78,258,50,14
-	PUSHBUTTON      "&Nächste",IDNEXT,144,258,50,14
+	PUSHBUTTON      "&NÃ¤chste",IDNEXT,144,258,50,14
 	PUSHBUTTON      "&Hilfe",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
 	LTEXT           "&Bezeichnung:",IDC_STATIC,15,70,39,8
@@ -93,7 +93,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Ereignisanzeige"
-	IDS_EVENTSTRINGIDNOTFOUND      "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt."
+	IDS_EVENTSTRINGIDNOTFOUND      "Die Bezeichnung fÃ¼r die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es kÃ¶nnte sein, dass der Lokale Computer die notwendigen Registry EintrÃ¤ge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt."
 	IDS_EVENTLOG_ERROR_TYPE        "Fehler"
 	IDS_EVENTLOG_WARNING_TYPE      "Warnung"
 	IDS_EVENTLOG_INFORMATION_TYPE  "Informationen"
@@ -119,5 +119,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_NONE          "Keine"
-    IDS_NOT_AVAILABLE "Nicht verfügbar"
+    IDS_NOT_AVAILABLE "Nicht verfÃ¼gbar"
 END

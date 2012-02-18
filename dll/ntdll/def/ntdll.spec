@@ -60,9 +60,9 @@
 @ stdcall -arch=i386 KiFastSystemCall()
 @ stdcall -arch=i386 KiFastSystemCallRet()
 @ stdcall -arch=i386 KiIntSystemCall()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListEnd()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListFault()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListResume()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListEnd()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListFault()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListResume()
 @ stdcall KiRaiseUserExceptionDispatcher()
 @ stdcall KiUserApcDispatcher(ptr ptr ptr ptr)
 @ stdcall KiUserCallbackDispatcher(ptr ptr long) ; CHECKME
@@ -83,12 +83,12 @@
 @ stdcall LdrFindResource_U(long ptr long ptr)
 ;@ stdcall LdrFlushAlternateResourceModules
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
-;@ stdcall LdrGetDllHandleEx
+@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr) 
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 ;@ stdcall LdrHotPatchRoutine
 ;@ stdcall LdrInitShimEngineDynamic
 @ stdcall LdrInitializeThunk(long long long long)
-;@ stdcall LdrLoadAlternateResourceModule
+@ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stdcall LdrLoadDll(wstr long ptr ptr)
 @ stdcall LdrLockLoaderLock(long ptr ptr)
 ;@ stdcall LdrOpenImageFileOptionsKey ; 5.2 SP1 and higher
@@ -483,7 +483,7 @@
 @ stdcall RtlCompareUnicodeString (ptr ptr long)
 @ stdcall RtlCompressBuffer(long ptr long ptr long long ptr ptr)
 @ stdcall RtlComputeCrc32(long ptr long)
-;@ stdcall RtlComputeImportTableHash
+@ stdcall RtlComputeImportTableHash(ptr ptr long)
 ;@ stdcall RtlComputePrivatizedDllName_U
 ;@ stdcall RtlConsoleMultiByteToUnicodeN
 @ stdcall RtlConvertExclusiveToShared(ptr)
@@ -566,13 +566,13 @@
 @ stdcall RtlDllShutdownInProgress()
 @ stdcall RtlDnsHostNameToComputerName(ptr ptr long)
 @ stdcall RtlDoesFileExists_U(wstr)
-;@ stdcall RtlDosApplyFileIsolationRedirection_Ustr
+@ stdcall RtlDosApplyFileIsolationRedirection_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDosPathNameToNtPathName_U(wstr ptr ptr ptr)
 ;@ stdcall RtlDosPathNameToNtPathName_U_WithStatus ; 5.2 SP1, and higher
 @ stdcall RtlDosPathNameToRelativeNtPathName_U(ptr ptr ptr ptr) ; CHECKME
 ;@ stdcall RtlDosPathNameToRelativeNtPathName_U_WithStatus
 @ stdcall RtlDosSearchPath_U(wstr wstr wstr long ptr ptr)
-;@ stdcall RtlDosSearchPath_Ustr
+@ stdcall RtlDosSearchPath_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDowncaseUnicodeChar(long)
 @ stdcall RtlDowncaseUnicodeString(ptr ptr long)
 @ stdcall RtlDumpResource(ptr)
@@ -662,7 +662,7 @@
 @ stdcall RtlGetFirstRange(ptr ptr ptr)
 ;@ stdcall RtlGetFrame
 @ stdcall RtlGetFullPathName_U(wstr long ptr ptr)
-;@ stdcall RtlGetFullPathName_UstrEx
+@ stdcall RtlGetFullPathName_UstrEx(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlGetGroupSecurityDescriptor(ptr ptr ptr)
 @ stdcall RtlGetLastNtStatus()
 @ stdcall RtlGetLastWin32Error()
@@ -690,7 +690,7 @@
 @ stdcall RtlIdentifierAuthoritySid(ptr)
 @ stdcall RtlImageDirectoryEntryToData(long long long ptr)
 @ stdcall RtlImageNtHeader(long)
-;@ stdcall RtlImageNtHeaderEx
+@ stdcall RtlImageNtHeaderEx(long ptr double ptr)
 @ stdcall RtlImageRvaToSection(ptr long long)
 @ stdcall RtlImageRvaToVa(ptr long long ptr)
 @ stdcall RtlImpersonateSelf(long)
@@ -849,6 +849,7 @@
 ;@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
 @ stdcall RtlReleasePrivilege(ptr)
+@ stdcall RtlReleaseRelativeName(ptr)
 @ stdcall RtlReleaseResource(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
@@ -894,7 +895,7 @@
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 ;@ stdcall RtlSetSecurityObjectEx
 ;@ stdcall RtlSetThreadErrorMode
-;@ stdcall RtlSetThreadIsCritical
+@ stdcall RtlSetThreadIsCritical(long ptr long)
 ;@ stdcall RtlSetThreadPoolStartFunc
 @ stdcall RtlSetTimeZoneInformation(ptr)
 ;@ stdcall RtlSetTimer
@@ -972,8 +973,8 @@
 @ stdcall -arch=x86_64 RtlVirtualUnwind(long long long ptr ptr ptr ptr ptr)
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWalkHeap(long ptr)
-;@ stdcall RtlWow64EnableFsRedirection(long)
-;@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
+@ stdcall RtlWow64EnableFsRedirection(long)
+@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
 ;@ stdcall RtlWriteMemoryStream

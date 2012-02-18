@@ -169,7 +169,10 @@ VfatxUpdateProgress(IN PFORMAT_CONTEXT Context,
     if (NewPercent > Context->Percent)
     {
         Context->Percent = NewPercent;
-        Context->Callback(PROGRESS, 0, &Context->Percent);
+        if (Context->Callback != NULL)
+        {
+            Context->Callback(PROGRESS, 0, &Context->Percent);
+        }
     }
 }
 

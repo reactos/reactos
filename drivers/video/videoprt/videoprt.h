@@ -198,6 +198,11 @@ IntVideoPortSetupInterrupt(
 /* resource.c */
 
 NTSTATUS NTAPI
+IntVideoPortFilterResourceRequirements(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
+
+NTSTATUS NTAPI
 IntVideoPortMapPhysicalMemory(
    IN HANDLE Process,
    IN PHYSICAL_ADDRESS PhysicalAddress,

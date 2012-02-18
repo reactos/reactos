@@ -226,7 +226,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState, POWER_ACTION PowerAction)
     POWER_STATE_TRAVERSE_CONTEXT PowerContext;
     
     Status = IopGetSystemPowerDeviceObject(&DeviceObject);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("No system power driver available\n");
         Fdo = NULL;
@@ -787,7 +787,7 @@ NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
     PreviousState = Thread->PowerState | ES_CONTINUOUS;
 
     /* Check if we need to update the power state */
-    if (esFlags & ES_CONTINUOUS) Thread->PowerState = esFlags;
+    if (esFlags & ES_CONTINUOUS) Thread->PowerState = (UCHAR)esFlags;
 
     /* Protect the write back to user mode */
     _SEH2_TRY
@@ -822,12 +822,12 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         (MinSystemState <= PowerSystemUnspecified) ||
         (SystemAction > PowerActionWarmEject) ||
         (SystemAction < PowerActionReserved) ||
-        (Flags & ~(POWER_ACTION_QUERY_ALLOWED  |  
-                   POWER_ACTION_UI_ALLOWED     | 
-                   POWER_ACTION_OVERRIDE_APPS  | 
-                   POWER_ACTION_LIGHTEST_FIRST | 
-                   POWER_ACTION_LOCK_CONSOLE   | 
-                   POWER_ACTION_DISABLE_WAKES  | 
+        (Flags & ~(POWER_ACTION_QUERY_ALLOWED  |
+                   POWER_ACTION_UI_ALLOWED     |
+                   POWER_ACTION_OVERRIDE_APPS  |
+                   POWER_ACTION_LIGHTEST_FIRST |
+                   POWER_ACTION_LOCK_CONSOLE   |
+                   POWER_ACTION_DISABLE_WAKES  |
                    POWER_ACTION_CRITICAL)))
     {
         DPRINT1("NtSetSystemPowerState: Bad parameters!\n");
@@ -902,7 +902,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         
 #ifndef NEWCC
         /* Flush dirty cache pages */
-        CcRosFlushDirtyPages(-1, &Dummy);
+        CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
 #else
         Dummy = 0;
 #endif

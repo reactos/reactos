@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -193,6 +193,10 @@
 
 #define ACPI_MAX_LOOP_ITERATIONS        0xFFFF
 
+/* Maximum sleep allowed via Sleep() operator */
+
+#define ACPI_MAX_SLEEP                  2000    /* 2000 millisec == two seconds */
+
 
 /******************************************************************************
  *
@@ -236,7 +240,6 @@
 
 /* Operation regions */
 
-#define ACPI_NUM_PREDEFINED_REGIONS     9
 #define ACPI_USER_REGION_BEGIN          0x80
 
 /* Maximum SpaceIds for Operation Regions */
@@ -269,7 +272,8 @@
  *
  *****************************************************************************/
 
-#define ACPI_DEBUGGER_MAX_ARGS          8  /* Must be max method args + 1 */
+#define ACPI_DEBUGGER_MAX_ARGS          ACPI_METHOD_NUM_ARGS + 2 /* Max command line arguments */
+#define ACPI_DB_LINE_BUFFER_SIZE        512
 
 #define ACPI_DEBUGGER_COMMAND_PROMPT    '-'
 #define ACPI_DEBUGGER_EXECUTE_PROMPT    '%'

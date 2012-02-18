@@ -19,14 +19,8 @@
  */
 
 #include <precomp.h>
-#include <internal/wine/msvcrt.h>
-
 #include <malloc.h>
 #include <process.h>
-
-void _amsg_exit (int errnum);
-/* Index to TLS */
-DWORD MSVCRT_tls_index;
 
 typedef void (*_beginthread_start_routine_t)(void *);
 typedef unsigned int (__stdcall *_beginthreadex_start_routine_t)(void *);
@@ -34,31 +28,10 @@ typedef unsigned int (__stdcall *_beginthreadex_start_routine_t)(void *);
 /********************************************************************/
 
 typedef struct {
+  HANDLE thread;
   _beginthread_start_routine_t start_address;
   void *arglist;
 } _beginthread_trampoline_t;
-
-/*********************************************************************
- *		msvcrt_get_thread_data
- *
- * Return the thread local storage structure.
- */
-MSVCRT_thread_data *msvcrt_get_thread_data(void)
-{
-    MSVCRT_thread_data *ptr;
-    DWORD err = GetLastError();  /* need to preserve last error */
-
-    if (!(ptr = TlsGetValue( MSVCRT_tls_index )))
-    {
-        if (!(ptr = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ptr) )))
-            _amsg_exit( _RT_THREAD );
-        if (!TlsSetValue( MSVCRT_tls_index, ptr )) _amsg_exit( _RT_THREAD );
-        ptr->random_seed = 1;
-    }
-    SetLastError( err );
-    return ptr;
-}
-
 
 /*********************************************************************
  *		_beginthread_trampoline
@@ -66,12 +39,11 @@ MSVCRT_thread_data *msvcrt_get_thread_data(void)
 static DWORD CALLBACK _beginthread_trampoline(LPVOID arg)
 {
     _beginthread_trampoline_t local_trampoline;
+    thread_data_t *data = msvcrt_get_thread_data();
 
-    /* Maybe it's just being paranoid, but freeing arg right
-     * away seems safer.
-     */
     memcpy(&local_trampoline,arg,sizeof(local_trampoline));
-	free(arg);
+    data->handle = local_trampoline.thread;
+    free(arg);
 
     local_trampoline.start_address(local_trampoline.arglist);
     return 0;
@@ -86,20 +58,35 @@ uintptr_t _beginthread(
   void *arglist)           /* [in] Argument list to be passed to new thread or NULL */
 {
   _beginthread_trampoline_t* trampoline;
+  HANDLE thread;
 
   TRACE("(%p, %d, %p)\n", start_address, stack_size, arglist);
 
-  /* Allocate the trampoline here so that it is still valid when the thread
-   * starts... typically after this function has returned.
-   * _beginthread_trampoline is responsible for freeing the trampoline
-   */
-  trampoline=malloc(sizeof(*trampoline));
+  trampoline = malloc(sizeof(*trampoline));
+  if(!trampoline) {
+      *_errno() = EAGAIN;
+      return -1;
+  }
+
+  thread = CreateThread(NULL, stack_size, _beginthread_trampoline,
+          trampoline, CREATE_SUSPENDED, NULL);
+  if(!thread) {
+      free(trampoline);
+      *_errno() = EAGAIN;
+      return -1;
+  }
+
+  trampoline->thread = thread;
   trampoline->start_address = start_address;
   trampoline->arglist = arglist;
 
-  /* FIXME */
-  return (uintptr_t)CreateThread(NULL, stack_size, _beginthread_trampoline,
-				     trampoline, 0, NULL);
+  if(ResumeThread(thread) == -1) {
+      free(trampoline);
+      *_errno() = EAGAIN;
+      return -1;
+  }
+
+  return (uintptr_t)thread;
 }
 
 /*********************************************************************
@@ -112,4 +99,3 @@ void CDECL _endthread(void)
   /* FIXME */
   ExitThread(0);
 }
-

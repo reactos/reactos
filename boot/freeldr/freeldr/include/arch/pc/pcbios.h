@@ -1,5 +1,29 @@
 #ifndef __ASM__
 
+typedef enum
+{
+	BiosMemoryUsable=1,
+	BiosMemoryReserved,
+	BiosMemoryAcpiReclaim,
+	BiosMemoryAcpiNvs
+} BIOS_MEMORY_TYPE;
+
+typedef struct
+{
+	ULONGLONG		BaseAddress;
+	ULONGLONG		Length;
+	ULONG		Type;
+	ULONG		Reserved;
+} BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+
+/* FIXME: Should be moved to NDK, and respective ACPI header files */
+typedef struct _ACPI_BIOS_DATA
+{
+    PHYSICAL_ADDRESS RSDTAddress;
+    ULONGLONG Count;
+    BIOS_MEMORY_MAP MemoryMap[1]; /* Count of BIOS memory map entries */
+} ACPI_BIOS_DATA, *PACPI_BIOS_DATA;
+
 #include <pshpack1.h>
 typedef struct
 {
@@ -10,6 +34,7 @@ typedef struct
 
 	unsigned long	esi;
 	unsigned long	edi;
+	unsigned long	ebp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -29,6 +54,7 @@ typedef struct
 
 	unsigned short	si, _upper_si;
 	unsigned short	di, _upper_di;
+	unsigned short	bp, _upper_bp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -56,6 +82,7 @@ typedef struct
 
 	unsigned short	si, _upper_si;
 	unsigned short	di, _upper_di;
+	unsigned short	bp, _upper_bp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -96,3 +123,19 @@ VOID	SoftReboot(VOID);					// Implemented in boot.S
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
 #endif /* ! __ASM__ */
+
+/* Layout of the REGS structure */
+#define REGS_EAX 0
+#define REGS_EBX 4
+#define REGS_ECX 8
+#define REGS_EDX 12
+#define REGS_ESI 16
+#define REGS_EDI 20
+#define REGS_EBP 24
+#define REGS_DS 28
+#define REGS_ES 30
+#define REGS_FS 32
+#define REGS_GS 34
+#define REGS_EFLAGS 36
+#define REGS_SIZE 40
+

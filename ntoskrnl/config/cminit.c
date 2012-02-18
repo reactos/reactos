@@ -265,7 +265,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     if (Extension)
     {
         /* Update the name length */
-        Length += wcslen(Extension) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+        Length += (USHORT)wcslen(Extension) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
         /* Allocate the buffer for the full name */
         NameBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
@@ -309,10 +309,11 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* Setup the flags */
-    IoFlags = FILE_OPEN_FOR_BACKUP_INTENT |
+    // FIXME : FILE_OPEN_FOR_BACKUP_INTENT is unimplemented and breaks 3rd stage boot
+    IoFlags = //FILE_OPEN_FOR_BACKUP_INTENT |
               FILE_NO_COMPRESSION |
               FILE_RANDOM_ACCESS |
-              (NoBuffering) ? FILE_NO_INTERMEDIATE_BUFFERING : 0;
+              (NoBuffering ? FILE_NO_INTERMEDIATE_BUFFERING : 0);
 
     /* Set share and access modes */
     if ((CmpMiniNTBoot) && (CmpShareSystemHives))
@@ -343,7 +344,19 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                           FILE_SYNCHRONOUS_IO_NONALERT | IoFlags,
                           NULL,
                           0);
-    if ((NT_SUCCESS(Status)) && (MarkAsSystemHive))
+    /* Check if anything failed until now */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Close handles and free buffers */
+        if (NameBuffer) ExFreePool(NameBuffer);
+        ObDereferenceObject(Event);
+        ZwClose(EventHandle);
+        DPRINT1("ZwCreateFile failed : %lx.\n", Status);
+        *Primary = NULL;
+        return Status;
+    }
+                          
+    if (MarkAsSystemHive)
     {
         /* We opened it, mark it as a system hive */
         Status = ZwFsControlFile(*Primary,
@@ -370,18 +383,16 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         /* If we don't support it, ignore the failure */
         if (Status == STATUS_INVALID_DEVICE_REQUEST) Status = STATUS_SUCCESS;
 
-        /* If we failed, close the handle */
-        if (!NT_SUCCESS(Status)) ZwClose(*Primary);
-    }
-
-    /* Check if anything failed until now */
-    if (!NT_SUCCESS(Status))
-    {
-        /* Close handles and free buffers */
-        if (NameBuffer) ExFreePool(NameBuffer);
-        ObDereferenceObject(Event);
-        ZwClose(EventHandle);
-        return Status;
+        if (!NT_SUCCESS(Status))
+        {
+            /* Close handles and free buffers */
+            if (NameBuffer) ExFreePool(NameBuffer);
+            ObDereferenceObject(Event);
+            ZwClose(EventHandle);
+            ZwClose(*Primary);
+            *Primary = NULL;
+            return Status;
+        }
     }
 
     /* Disable compression */
@@ -407,7 +418,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* Get the disposition */
-    *PrimaryDisposition = IoStatusBlock.Information;
+    *PrimaryDisposition = (ULONG)IoStatusBlock.Information;
     if (IoStatusBlock.Information != FILE_CREATED)
     {
         /* Check how large the file is */
@@ -570,7 +581,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         }
 
         /* Return the disposition */
-        *LogDisposition = IoStatusBlock.Information;
+        *LogDisposition = (ULONG)IoStatusBlock.Information;
     }
 
     /* We're done, close handles and free buffers */

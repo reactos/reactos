@@ -76,11 +76,16 @@ AUDIOClassName = "Audio-, Video- und Gamecontroller"
 [Strings.040a]
 AUDIOClassName = "Dispositivos de sonido, vídeo y juegos"
 
-[Strings.0416]
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
 AUDIOClassName = "Kontrolery audio, wideo i gier"
 
 [Strings.0416]
 AUDIOClassName = "Controladores de som, vídeo e jogo"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+AUDIOClassName = "Dispozitive audio & video"
 
 [Strings.0427]
 AUDIOClassName = "Garso, vaizdo ir žaidimu irenginiai"

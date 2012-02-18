@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(winfax SHARED ${SOURCE})
 
-set_entrypoint(winfax 0)
+set_module_type(winfax win32dll ENTRYPOINT 0 )
 
 add_importlibs(winfax kernel32 ntdll)
 add_dependencies(winfax psdk)

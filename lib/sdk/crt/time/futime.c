@@ -44,7 +44,7 @@ HANDLE fdtoh(int fd);
 
 /******************************************************************************
  * \name _futime
- * \brief Set a files modification time.
+ * \brief Set a file's modification time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
  *        recieves the current time.
  * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
@@ -65,25 +65,28 @@ _futime(int fd, struct _utimbuf *filetime)
     {
         time_t currTime;
         _time(&currTime);
-        RtlSecondsSince1970ToTime(currTime, (LARGE_INTEGER *)&at);
+        RtlSecondsSince1970ToTime((ULONG)currTime,
+                                  (LARGE_INTEGER *)&at);
         wt = at;
     }
     else
     {
-        RtlSecondsSince1970ToTime(filetime->actime, (LARGE_INTEGER *)&at);
+        RtlSecondsSince1970ToTime((ULONG)filetime->actime,
+                                  (LARGE_INTEGER *)&at);
         if (filetime->actime == filetime->modtime)
         {
             wt = at;
         }
         else
         {
-            RtlSecondsSince1970ToTime(filetime->modtime, (LARGE_INTEGER *)&wt);
+            RtlSecondsSince1970ToTime((ULONG)filetime->modtime,
+                                      (LARGE_INTEGER *)&wt);
         }
     }
 
     if (!SetFileTime(handle, NULL, &at, &wt))
     {
-        __set_errno(GetLastError());
+        _dosmaperr(GetLastError());
         return -1 ;
     }
 

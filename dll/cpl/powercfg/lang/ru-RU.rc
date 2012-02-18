@@ -9,9 +9,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 5,5,32,32
   LTEXT "Выберите схему управления электропитанием с наиболее подходящими параметрами для этого компьютера. Изменение нижеследующих параметров изменит выбранную схему.",
-	-1,37,5,194,36
+        -1,37,5,194,36
   GROUPBOX "&Схемы управления питанием", -1, 7,57,240,46
-  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "Сохранить &как...", IDC_SAVEAS_BTN, 103,85,75,15,WS_DISABLED
   PUSHBUTTON "&Удалить", IDC_DELETE_BTN, 183,85,55,15,WS_DISABLED
   GROUPBOX "Нет данных", IDC_GRPDETAIL, 7,108,240,105
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Спящий режим"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,32,32
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE,5,5,32,32
     LTEXT           "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.",
                     -1,37,5,195,35
     GROUPBOX        "Спящий режим",-1,5,57,235,25
@@ -158,11 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "через 4 часа"
   IDS_TIMEOUT15 "через 5 часов"
   IDS_TIMEOUT16 "никогда"
-  
+
   IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
   IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
-
-
-
-

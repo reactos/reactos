@@ -1,7 +1,7 @@
 /*
-*Spanish Language resource file
-* Traducido por: Javier Remacha 2008
-*/
+ * Spanish Language resource file
+ * Traducido por: Javier Remacha 2008
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -9,13 +9,13 @@ IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Programa de diagnóstico de ReactX"
+CAPTION "Programa de diagnÃ³stico de ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
     PUSHBUTTON "Ay&uda", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "&Siguiente página", IDC_BUTTON_NEXT, 107, 261, 80, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Guardar toda la información...", IDC_BUTTON_SAVE_INFO, 201, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Siguiente pÃ¡gina", IDC_BUTTON_NEXT, 107, 261, 80, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Guardar toda la informaciÃ³n...", IDC_BUTTON_SAVE_INFO, 201, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Sa&lir", IDC_BUTTON_EXIT, 323, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -23,9 +23,9 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Esta herramienta reporta información detallada acerca de los componentes de ReactX y controladores instalados en su equipo.", -1, 10, 10, 443, 17
-    LTEXT "Si sabe que área está causando el problema, presione la pestaña superior apropiada. Si no puede usar el botón ""Siguiente página"" para visitar las páginas en secuencia.", -1, 10, 30, 443, 25
-    GROUPBOX "Información del sistema ", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Esta herramienta reporta informaciÃ³n detallada acerca de los componentes de ReactX y controladores instalados en su equipo.", -1, 10, 10, 443, 17
+    LTEXT "Si sabe que Ã¡rea estÃ¡ causando el problema, presione la pestaÃ±a superior apropiada. Si no puede usar el botÃ³n ""Siguiente pÃ¡gina"" para visitar las pÃ¡ginas en secuencia.", -1, 10, 30, 443, 25
+    GROUPBOX "InformaciÃ³n del sistema ", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Fecha/hora actual:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Nombre del equipo:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "Sistema operativo:", -1, 70, 90, 80, 10, SS_RIGHT
@@ -35,8 +35,8 @@ BEGIN
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Procesador:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Memoria:", -1, 70, 150, 80, 10, SS_RIGHT
-    LTEXT "Archivo de paginación:", -1, 70, 160, 80, 10, SS_RIGHT
-    LTEXT "Versión de ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "Archivo de paginaciÃ³n:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "VersiÃ³n de ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
@@ -60,7 +60,7 @@ BEGIN
     RTEXT "Tipo de Chip:", -1, 20, 45, 70, 10
     RTEXT "Ipo de DAC:", -1, 20, 55, 70, 10
     RTEXT "Memoria total aprox.:", -1, 20, 65, 70, 10
-    RTEXT "Resolución actual:", -1, 20, 75, 70, 10
+    RTEXT "ResoluciÃ³n actual:", -1, 20, 75, 70, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -72,12 +72,12 @@ BEGIN
 
     GROUPBOX "Controlador ", -1, 270, 10, 190, 100
     RTEXT "Controlador:", -1, 275, 25, 55, 10
-    RTEXT "Versión:", -1, 275, 35, 55, 10
+    RTEXT "VersiÃ³n:", -1, 275, 35, 55, 10
     RTEXT "Fecha:", -1, 275, 45, 55, 10
     RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
     RTEXT "Mini-VDD:", -1, 275, 65, 55, 10
     RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
-    RTEXT "Versión DDI:", -1, 275, 85, 55, 10
+    RTEXT "VersiÃ³n DDI:", -1, 275, 85, 55, 10
     LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
@@ -86,10 +86,10 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
 
-    GROUPBOX "Características ReactX ", -1, 10, 115, 450, 60
-    RTEXT "Aceleración DirectDraw:", -1, 15, 130, 110, 12
-    RTEXT "AceleraciónDirect3D:", -1, 15, 145, 110, 12
-    RTEXT "Aceleración texturas AGP:", -1, 15, 160, 110, 12
+    GROUPBOX "CaracterÃ­sticas ReactX ", -1, 10, 115, 450, 60
+    RTEXT "AceleraciÃ³n DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT "AceleraciÃ³nDirect3D:", -1, 15, 145, 110, 12
+    RTEXT "AceleraciÃ³n texturas AGP:", -1, 15, 160, 110, 12
     LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
     LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
     LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
@@ -97,7 +97,7 @@ BEGIN
     PUSHBUTTON "Permita", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "Permita", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Test DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Test Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Test Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "Notas ", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -123,7 +123,7 @@ BEGIN
     LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
     GROUPBOX "Controlador ", -1, 270, 10, 190, 100
     RTEXT "Nombre:", -1, 275, 25, 55, 10
-    RTEXT "Versión:", -1, 275, 35, 55, 10
+    RTEXT "VersiÃ³n:", -1, 275, 35, 55, 10
     RTEXT "Fecha:", -1, 275, 45, 55, 10
     RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
     RTEXT "Otros archivos:", -1, 275, 65, 55, 10
@@ -134,9 +134,9 @@ BEGIN
     LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
-    GROUPBOX "Características ReactX ", -1, 10, 115, 450, 60
+    GROUPBOX "CaracterÃ­sticas ReactX ", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Sonido Hardware\nNivel de aceleración:", -1, 20, 135, 90, 20
+    RTEXT "Sonido Hardware\nNivel de aceleraciÃ³n:", -1, 20, 135, 90, 20
     PUSHBUTTON "Test DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Notas", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -157,7 +157,7 @@ BEGIN
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Dispositivos de entrada ", -1, 10, 100, 452, 60
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
-    GROUPBOX "Información ", -1, 10, 170, 452, 50
+    GROUPBOX "InformaciÃ³n ", -1, 10, 170, 452, 50
     EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
@@ -177,11 +177,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_MAIN_DIALOG "Herramienta de diagnóstico de ReactX"
+	IDS_MAIN_DIALOG "Herramienta de diagnÃ³stico de ReactX"
 	IDS_SYSTEM_DIALOG "Sistema"
 	IDS_DISPLAY_DIALOG "Pantalla"
 	IDS_SOUND_DIALOG "Sonido"
-	IDS_MUSIC_DIALOG "Música"
+	IDS_MUSIC_DIALOG "MÃºsica"
 	IDS_INPUT_DIALOG "Entrada"
 	IDS_NETWORK_DIALOG "Red"
 	IDS_HELP_DIALOG "Ayuda"
@@ -189,7 +189,7 @@ BEGIN
 	IDS_FORMAT_SWAP "%I64u MB usados, %I64u MB disponibles"
 	IDS_FORMAT_UNIPROC "%s (%u CPU)"
 	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
-	IDS_VERSION_UNKNOWN "Versión desconocida"
+	IDS_VERSION_UNKNOWN "VersiÃ³n desconocida"
 	IDS_DEVICE_STATUS_ATTACHED "Conectado"
 	IDS_DEVICE_STATUS_MISSING "Desconectado"
 	IDS_DEVICE_STATUS_UNKNOWN "Desconocido"
@@ -198,32 +198,34 @@ BEGIN
 	IDS_DEVICE_CONTROLLER "ID del controlador"
 	IDS_DEVICE_MANUFACTURER "ID del fabricante"
 	IDS_DEVICE_PRODUCT "ID del producto"
-	IDS_DEVICE_FORCEFEEDBACK "Forzar recuperación del controlador"
+	IDS_DEVICE_FORCEFEEDBACK "Forzar recuperaciÃ³n del controlador"
 	IDS_NOT_APPLICABLE "No aplicable"
-	IDS_OPTION_YES "Sí"
+	IDS_OPTION_YES "SÃ­"
 	IDS_DIRECTPLAY_COL_NAME1 "Nombre"
 	IDS_DIRECTPLAY_COL_NAME2 "Registro"
 	IDS_DIRECTPLAY_COL_NAME3 "Archivo"
-	IDS_DIRECTPLAY_COL_NAME4 "Versión"
-	IDS_DIRECTPLAY8_MODEMSP "Proveedor servicio módem-DirectPlay8"
+	IDS_DIRECTPLAY_COL_NAME4 "VersiÃ³n"
+	IDS_DIRECTPLAY8_MODEMSP "Proveedor servicio mÃ³dem-DirectPlay8"
 	IDS_DIRECTPLAY8_SERIALSP "Proveedor servicio serie-DirectPlay8"
 	IDS_DIRECTPLAY8_IPXSP "Proveedor servicio IPX-DirectPlay8"
 	IDS_DIRECTPLAY8_TCPSP "Proveedor servicio TCP/IP-DirectPlay8"
-	IDS_DIRECTPLAY_TCPCONN "Conexión Internet TCP/IP para DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "Conexión IPX para DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Conexión módem para DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Conexión serie para DirectPlay"
+	IDS_DIRECTPLAY_TCPCONN "ConexiÃ³n Internet TCP/IP para DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "ConexiÃ³n IPX para DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "ConexiÃ³n mÃ³dem para DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "ConexiÃ³n serie para DirectPlay"
 	IDS_REG_SUCCESS "Aceptar"
 	IDS_REG_FAIL "Error"
-	IDS_DDTEST_ERROR "¡El test ha fallado!"
-	IDS_DDTEST_DESCRIPTION "Va ha comenzar el test de interface DirecDraw. ¿Desea continuar?"
-	IDS_DDPRIMARY_DESCRIPTION "Este test usará DirectDraw para dibujar en la pantalla principal. Deben dibujarse rectángulos blancos y negros. ¿Desea continuar?"
-	IDS_DDPRIMARY_RESULT "¿Ve rectángulos blancos y negros?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Este test usará DirectDraw para dibujar en pantalla. Un rectángulo blanco moviendose debe dibujarse. ¿Desea continuar?"
-	IDS_DDOFFSCREEN_RESULT "¿Ve un rectángulo blanco moviendose?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Este test usará DirectDraw para dibujar en pantalla completa. Un rectángulo blanco moviendose debe dibujarse. ¿Desea continuar?"
-	IDS_DDFULLSCREEN_RESULT "¿Ve un rectángulo blanco moviendose en pantalla completa?"
+	IDS_DDTEST_ERROR "Â¡El test ha fallado!"
+	IDS_DDTEST_DESCRIPTION "Va ha comenzar el test de interface DirecDraw. Â¿Desea continuar?"
+	IDS_DDPRIMARY_DESCRIPTION "Este test usarÃ¡ DirectDraw para dibujar en la pantalla principal. Deben dibujarse rectÃ¡ngulos blancos y negros. Â¿Desea continuar?"
+	IDS_DDPRIMARY_RESULT "Â¿Ve rectÃ¡ngulos blancos y negros?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Este test usarÃ¡ DirectDraw para dibujar en pantalla. Un rectÃ¡ngulo blanco moviendose debe dibujarse. Â¿Desea continuar?"
+	IDS_DDOFFSCREEN_RESULT "Â¿Ve un rectÃ¡ngulo blanco moviendose?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Este test usarÃ¡ DirectDraw para dibujar en pantalla completa. Un rectÃ¡ngulo blanco moviendose debe dibujarse. Â¿Desea continuar?"
+	IDS_DDFULLSCREEN_RESULT "Â¿Ve un rectÃ¡ngulo blanco moviendose en pantalla completa?"
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "No"
+	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

@@ -200,7 +200,7 @@ ClearUserApiHook(HINSTANCE hInstance)
   if ( ghmodUserApiHook == hInstance )
   {
      pfn1 = gpfnInitUserApi;
-     if ( --gcLoadUserApiHook == 1 )
+     if ( --gcLoadUserApiHook == 0 )
      {
         gfUserApiHook = 0;
         ResetUserApiHook(&guah);
@@ -228,7 +228,7 @@ ClearUserApiHook(HINSTANCE hInstance)
      RtlEnterCriticalSection(&gcsUserApiHook);
      pfn1 = gpfnInitUserApi;
 
-     if ( --gcLoadUserApiHook == 1 )
+     if ( --gcLoadUserApiHook == 0 )
      {
         if ( gcCallUserApiHook )
         {
@@ -260,7 +260,7 @@ InitUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC pfn)
 
   RtlEnterCriticalSection(&gcsUserApiHook);
 
-  if (!pfn(uahLoadInit,(ULONG_PTR)&uah) ||  // Swap data, User32 to and Uxtheme from!
+  if (!pfn(uahLoadInit,&uah) ||  // Swap data, User32 to and Uxtheme from!
        uah.ForceResetUserApiHook != (FARPROC)ForceResetUserApiHook ||
        uah.size <= 0 )
   {
@@ -392,7 +392,5 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah)
  */
 BOOL WINAPI UnregisterUserApiHook(VOID)
 {
-  // Direct call to Win32k! Here only as a prototype.....
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserUnregisterUserApiHook();
 }

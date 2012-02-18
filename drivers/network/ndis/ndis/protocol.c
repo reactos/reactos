@@ -516,7 +516,7 @@ ProSend(
     } else {
         if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
         {
-            NDIS_DbgPrint(MIN_TRACE, ("Using Scatter/Gather DMA\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Using Scatter/Gather DMA\n"));
 
             NdisQueryPacket(Packet,
                             NULL,

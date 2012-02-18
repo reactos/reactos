@@ -14,8 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID MmPrintMemoryStatistic(VOID);
-
 FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -88,7 +86,7 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
                 }
 
                 /* Set the offset */
-                ModuleInfo->OffsetToFileName = p - ModuleName.Buffer;
+                ModuleInfo->OffsetToFileName = (USHORT)(p - ModuleName.Buffer);
             }
             else
             {
@@ -478,8 +476,8 @@ QSI_DEF(SystemBasicInformation)
     Sbi->TimerResolution = KeMaximumIncrement;
     Sbi->PageSize = PAGE_SIZE;
     Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
-    Sbi->LowestPhysicalPageNumber = MmLowestPhysicalPage;
-    Sbi->HighestPhysicalPageNumber = MmHighestPhysicalPage;
+    Sbi->LowestPhysicalPageNumber = (ULONG)MmLowestPhysicalPage;
+    Sbi->HighestPhysicalPageNumber = (ULONG)MmHighestPhysicalPage;
     Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
     Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
     Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
@@ -542,7 +540,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->IoWriteOperationCount = IoWriteOperationCount;
     Spi->IoOtherOperationCount = IoOtherOperationCount;
 
-    Spi->AvailablePages = MmAvailablePages;
+    Spi->AvailablePages = (ULONG)MmAvailablePages;
     /*
      *   Add up all the used "Committed" memory + pagefile.
      *   Not sure this is right. 8^\
@@ -759,7 +757,7 @@ QSI_DEF(SystemProcessInformation)
             }
             if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
             {
-              ImageNameLength = strlen(Process->ImageFileName) * sizeof(WCHAR);
+              ImageNameLength = (USHORT)strlen(Process->ImageFileName) * sizeof(WCHAR);
             }
 
             /* Round up the image name length as NT does */
@@ -1298,10 +1296,6 @@ QSI_DEF(SystemFullMemoryInformation)
            MiFreeSwapPages,
            MiUsedSwapPages);
 
-#ifndef NDEBUG
-    MmPrintMemoryStatistic();
-#endif
-
     *Spi = MiMemoryConsumers[MC_USER].PagesUsed;
 
     return STATUS_SUCCESS;
@@ -1397,7 +1391,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
     /* Give time values to our caller */
     TimeInfo->TimeIncrement = KeMaximumIncrement;
     TimeInfo->TimeAdjustment = KeTimeAdjustment;
-    TimeInfo->Enable = TRUE;
+    TimeInfo->Enable = !KiTimeAdjustmentEnabled;
 
     return STATUS_SUCCESS;
 }
@@ -1405,8 +1399,8 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    /*PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
-        (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;*/
+    PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
+        (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;
 
     /* Check size of a buffer, it must match our expectations */
     if (sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION) != Size)
@@ -1422,9 +1416,24 @@ SSI_DEF(SystemTimeAdjustmentInformation)
         }
     }
 
-    /* TODO: Set time adjustment information */
-    DPRINT1("Setting of SystemTimeAdjustmentInformation is not implemented yet!\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* FIXME: behaviour suggests the member be named 'Disable' */
+    if (TimeInfo->Enable)
+    {
+        /* Disable time adjustment and set default value */
+        KiTimeAdjustmentEnabled = FALSE;
+        KeTimeAdjustment = KeMaximumIncrement;
+    }
+    else
+    {
+        /* Check if a valid time adjustment value is given */
+        if (TimeInfo->TimeAdjustment == 0) return STATUS_INVALID_PARAMETER_2;
+
+        /* Enable time adjustment and set the adjustment value */
+        KiTimeAdjustmentEnabled = TRUE;
+        KeTimeAdjustment = TimeInfo->TimeAdjustment;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 29 - Summary Memory Information */
@@ -1746,22 +1755,57 @@ SSI_DEF(SystemSetTimeSlipEvent)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId);
+
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId);
 
 /* Class 47 - Create a new session (TSE) */
 SSI_DEF(SystemCreateSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemCreateSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status;
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    Status = MmSessionCreate(&SessionId);
+    if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
+
+    return Status;
 }
 
 
 /* Class 48 - Delete an existing session (TSE) */
 SSI_DEF(SystemDeleteSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemDeleteSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    SessionId = *(PULONG)Buffer;
+    
+    return MmSessionDelete(SessionId);
 }
 
 
@@ -1781,9 +1825,9 @@ QSI_DEF(SystemRangeStartInformation)
     if (Size != sizeof(ULONG_PTR)) return STATUS_INFO_LENGTH_MISMATCH;
 
     *(PULONG_PTR)Buffer = (ULONG_PTR)MmSystemRangeStart;
-    
+
     if (ReqSize) *ReqSize = sizeof(ULONG_PTR);
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -1948,17 +1992,10 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
             FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
                                                             Length,
                                                             &ResultLength);
-            if (UnsafeResultLength != NULL)
-            {
-                if (PreviousMode != KernelMode)
-                {
-                    *UnsafeResultLength = ResultLength;
-                }
-                else
-                {
-                    *UnsafeResultLength = ResultLength;
-                }
-            }
+
+            /* Save the result length to the caller */
+            if (UnsafeResultLength)
+                *UnsafeResultLength = ResultLength;
         }
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())

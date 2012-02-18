@@ -3,7 +3,6 @@ add_rpc_files(server
     ${REACTOS_SOURCE_DIR}/include/reactos/wine/epm.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/wine/irot.idl)
     
-set_unicode()
 
 list(APPEND SOURCE
     epmp.c
@@ -22,7 +21,7 @@ target_link_libraries(rpcss
     ${PSEH_LIB}
     wine)
 
-set_module_type(rpcss win32cui)
+set_module_type(rpcss win32cui UNICODE)
 
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_cd_file(TARGET rpcss DESTINATION reactos/system32 FOR all)

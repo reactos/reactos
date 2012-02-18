@@ -1523,7 +1523,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
 
     /* Clear DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(Thread->DispatcherHeader.DebugActive & 0xFF, 0))
+    if (__builtin_expect(Thread->Header.DebugActive & 0xFF, 0))
     {
         UNIMPLEMENTED;
         while (TRUE);

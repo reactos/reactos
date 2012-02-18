@@ -8,28 +8,19 @@
 
 #include <precomp.h>
 
-extern FDINFO *fdesc;
-
 /*
  * @implemented
  */
 int _cputs(const char *_str)
 {
-#if 0
   DWORD count;
   int retval = EOF;
+  HANDLE console_out = GetStdHandle(STD_OUTPUT_HANDLE);
 
-  LOCK_CONSOLE;
-  if (WriteConsoleA(console_out, str, strlen(str), &count, NULL)
+  //LOCK_CONSOLE;
+  if (WriteConsoleA(console_out, _str, strlen(_str), &count, NULL)
       && count == 1)
     retval = 0;
-  UNLOCK_CONSOLE;
+  //UNLOCK_CONSOLE;
   return retval;
-#else
-  int len = strlen(_str);
-  DWORD written = 0;
-  if (!WriteFile( fdesc[stdout->_file].hFile ,_str,len,&written,NULL))
-    return -1;
-  return 0;
-#endif
 }

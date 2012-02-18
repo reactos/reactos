@@ -243,7 +243,8 @@ NdisMWanIndicateReceive(
 VOID
 EXPORT
 NdisMWanIndicateReceiveComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
+    IN NDIS_HANDLE MiniportAdapterHandle,
+    IN NDIS_HANDLE NdisLinkContext)
 {
     UNIMPLEMENTED
 }
@@ -483,25 +484,6 @@ NdisIMInitializeDeviceInstanceEx(
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReturnPackets(
-    IN  PNDIS_PACKET    *PacketsToReturn,
-    IN  UINT            NumberOfPackets)
-/*
- * FUNCTION: Releases ownership of one or more packets
- * ARGUMENTS:
- *     PacketsToReturn = Pointer to an array of pointers to packet descriptors
- *     NumberOfPackets = Number of pointers in descriptor pointer array
- */
-{
-    UNIMPLEMENTED
 }
 
 

@@ -4,29 +4,30 @@
 
 #pragma once
 
-#ifdef CONFIG_SMP
-
-#define FIRST_DEVICE_VECTOR	(0x30)
-#define FIRST_SYSTEM_VECTOR	(0xef)
-
-#define IRQ_BASE		FIRST_DEVICE_VECTOR
-#define	NR_IRQS			(FIRST_SYSTEM_VECTOR - FIRST_DEVICE_VECTOR)
-
-/*
- * FIXME:
- *   This does not work if we have more than 24 IRQs (ie. more than one I/O APIC)
- */
-#define VECTOR2IRQ(vector)	(23 - (vector - IRQ_BASE) / 8)
+#ifdef _MINIHAL_
+#define VECTOR2IRQ(vector)	((vector) - PRIMARY_VECTOR_BASE)
 #define VECTOR2IRQL(vector)	(PROFILE_LEVEL - VECTOR2IRQ(vector))
-#define IRQ2VECTOR(irq)		(((23 - (irq)) * 8) + FIRST_DEVICE_VECTOR)
-
+#define IRQ2VECTOR(irq)		((irq) + PRIMARY_VECTOR_BASE)
+#define HalpVectorToIrq(vector)	((vector) - PRIMARY_VECTOR_BASE)
+#define HalpVectorToIrql(vector)	(PROFILE_LEVEL - VECTOR2IRQ(vector))
+#define HalpIrqToVector(irq)		((irq) + PRIMARY_VECTOR_BASE)
 #else
 
-#define IRQ_BASE		(0x30)
-#define	NR_IRQS			(16)
+UCHAR
+FASTCALL
+HalpIrqToVector(UCHAR Irq);
 
-#define VECTOR2IRQ(vector)	((vector) - IRQ_BASE)
-#define VECTOR2IRQL(vector)	(PROFILE_LEVEL - VECTOR2IRQ(vector))
-#define IRQ2VECTOR(irq)		((irq) + IRQ_BASE)
+KIRQL
+FASTCALL
+HalpVectorToIrql(UCHAR Vector);
+
+UCHAR
+FASTCALL
+HalpVectorToIrq(UCHAR Vector);
+
+#define VECTOR2IRQ(vector)	HalpVectorToIrq(vector)
+#define VECTOR2IRQL(vector)	HalpVectorToIrql(vector)
+#define IRQ2VECTOR(irq)		HalpIrqToVector(irq)
 
 #endif
+

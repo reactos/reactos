@@ -1,7 +1,7 @@
 
 /* pngwtran.c - transforms the data in a row for PNG writers
  *
- * Last changed in libpng 1.5.2 [March 31, 2011]
+ * Last changed in libpng 1.5.4 [July 7, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -15,6 +15,7 @@
 
 #ifdef PNG_WRITE_SUPPORTED
 
+#ifdef PNG_WRITE_TRANSFORMS_SUPPORTED
 /* Transform the data according to the user's wishes.  The order of
  * transformations is significant.
  */
@@ -45,7 +46,7 @@ png_do_write_transformations(png_structp png_ptr)
 #ifdef PNG_WRITE_FILLER_SUPPORTED
    if (png_ptr->transformations & PNG_FILLER)
       png_do_strip_channel(&(png_ptr->row_info), png_ptr->row_buf + 1,
-         !(png_ptr->flags & PNG_FILLER_AFTER));
+         !(png_ptr->flags & PNG_FLAG_FILLER_AFTER));
 #endif
 
 #ifdef PNG_WRITE_PACKSWAP_SUPPORTED
@@ -563,6 +564,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
    }
 }
 #endif
+#endif /* PNG_WRITE_TRANSFORMS_SUPPORTED */
 
 #ifdef PNG_MNG_FEATURES_SUPPORTED
 /* Undoes intrapixel differencing  */

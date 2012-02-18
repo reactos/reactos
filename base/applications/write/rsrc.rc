@@ -30,6 +30,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Sv.rc"
 
 /* UTF-8 */
+#include "Bg.rc"
 #include "De.rc"
 #include "Es.rc"
 #include "Fr.rc"

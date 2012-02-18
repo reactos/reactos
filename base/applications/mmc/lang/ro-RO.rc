@@ -1,0 +1,28 @@
+/* 
+ * FILE:             base/applications/mmc/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-21  initial translation
+ */
+ 
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&?"
+    BEGIN
+        MENUITEM "&Despre…",        ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Consola de gestiune ReactOS"
+    IDS_CONSOLETITLE "Consola%1!u!"
+END

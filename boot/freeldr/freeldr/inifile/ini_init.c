@@ -18,6 +18,8 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(INIFILE);
 
 static LONG IniOpenIniFile(ULONG* FileId)
 {
@@ -44,6 +46,7 @@ BOOLEAN IniFileInitialize(VOID)
 	ULONG FreeLoaderIniFileSize, Count;
 	LONG ret;
 	BOOLEAN Success;
+	TRACE("IniFileInitialize()\n");
 
 	//
 	// Open freeldr.ini

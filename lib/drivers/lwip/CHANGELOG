@@ -1,17 +1,28 @@
-FUTURE
-
-  * TODO: The lwIP source code makes some invalid assumptions on processor
-    word-length, storage sizes and alignment. See the mailing lists for
-    problems with exoteric (/DSP) architectures showing these problems.
-    We still have to fix some of these issues neatly.
-
 HISTORY
 
 (CVS HEAD)
 
   * [Enter new changes just after this line - do not remove this line]
 
+ ++ New features:
+
+
+ ++ Bugfixes:
+
+
+
+
+(STABLE-1.4.0)
+
   ++ New features:
+
+  2011-03-27: Simon Goldschmidt
+  * tcp_impl.h, tcp_in.c, tcp_out.c: Removed 'dataptr' from 'struct tcp_seg' and
+    calculate it in tcp_zero_window_probe (the only place where it was used).
+
+  2010-11-21: Simon Goldschmidt
+  * dhcp.c/.h: Added a function to deallocate the struct dhcp from a netif
+    (fixes bug #31525).
 
   2010-07-12: Simon Goldschmidt (patch by Stephane Lesage)
   * ip.c, udp.c/.h, pbuf.h, sockets.c: task #10495: Added support for
@@ -228,6 +239,137 @@ HISTORY
 
 
   ++ Bugfixes:
+
+  2011-04-20: Simon Goldschmidt
+  * sys_arch.txt: sys_arch_timeouts() is not needed any more.
+
+  2011-04-13: Simon Goldschmidt
+  * tcp.c, udp.c: Fixed bug #33048 (Bad range for IP source port numbers) by
+    using ports in the IANA private/dynamic range (49152 through 65535).
+
+  2011-03-29: Simon Goldschmidt, patch by Emil Lhungdahl:
+  * etharp.h/.c: Fixed broken VLAN support.
+
+  2011-03-27: Simon Goldschmidt
+  * tcp.c: Fixed bug #32926 (TCP_RMV(&tcp_bound_pcbs) is called on unbound tcp
+    pcbs) by checking if the pcb was bound (local_port != 0).
+
+  2011-03-27: Simon Goldschmidt
+  * ppp.c: Fixed bug #32280 (ppp: a pbuf is freed twice)
+
+  2011-03-27: Simon Goldschmidt
+  * sockets.c: Fixed bug #32906: lwip_connect+lwip_send did not work for udp and
+    raw pcbs with LWIP_TCPIP_CORE_LOCKING==1.
+  
+  2011-03-27: Simon Goldschmidt
+  * tcp_out.c: Fixed bug #32820 (Outgoing TCP connections created before route
+    is present never times out) by starting retransmission timer before checking
+    route.
+
+  2011-03-22: Simon Goldschmidt
+  * ppp.c: Fixed bug #32648 (PPP code crashes when terminating a link) by only
+    calling sio_read_abort() if the file descriptor is valid.
+
+  2011-03-14: Simon Goldschmidt
+  * err.h/.c, sockets.c, api_msg.c: fixed bug #31748 (Calling non-blocking connect
+    more than once can render a socket useless) since it mainly involves changing
+    "FATAL" classification of error codes: ERR_USE and ERR_ISCONN just aren't fatal.
+
+  2011-03-13: Simon Goldschmidt
+  * sockets.c: fixed bug #32769 (ESHUTDOWN is linux-specific) by fixing
+    err_to_errno_table (ERR_CLSD: ENOTCONN instead of ESHUTDOWN), ERR_ISCONN:
+    use EALRADY instead of -1
+
+  2011-03-13: Simon Goldschmidt
+  * api_lib.c: netconn_accept: return ERR_ABRT instead of ERR_CLSD if the
+    connection has been aborted by err_tcp (since this is not a normal closing
+    procedure).
+
+  2011-03-13: Simon Goldschmidt
+  * tcp.c: tcp_bind: return ERR_VAL instead of ERR_ISCONN when trying to bind
+    with pcb->state != CLOSED
+
+  2011-02-17: Simon Goldschmidt
+  * rawapi.txt: Fixed bug #32561 tcp_poll argument definition out-of-order in
+    documentation
+
+  2011-02-17: Simon Goldschmidt
+  * many files: Added missing U/UL modifiers to fix 16-bit-arch portability.
+
+  2011-01-24: Simon Goldschmidt
+  * sockets.c: Fixed bug #31741: lwip_select seems to have threading problems
+
+  2010-12-02: Simon Goldschmidt
+  * err.h: Fixed ERR_IS_FATAL so that ERR_WOULDBLOCK is not fatal.
+
+  2010-11-23: Simon Goldschmidt
+  * api.h, api_lib.c, api_msg.c, sockets.c: netconn.recv_avail is only used for
+    LWIP_SO_RCVBUF and ioctl/FIONREAD.
+
+  2010-11-23: Simon Goldschmidt
+  * etharp.c: Fixed bug #31720: ARP-queueing: RFC 1122 recommends to queue at
+    least 1 packet -> ARP_QUEUEING==0 now queues the most recent packet.
+
+  2010-11-23: Simon Goldschmidt
+  * tcp_in.c: Fixed bug #30577: tcp_input: don't discard ACK-only packets after
+    refusing 'refused_data' again.
+  
+  2010-11-22: Simon Goldschmidt
+  * sockets.c: Fixed bug #31590: getsockopt(... SO_ERROR ...) gives EINPROGRESS
+    after a successful nonblocking connection.
+
+  2010-11-22: Simon Goldschmidt
+  * etharp.c: Fixed bug #31722: IP packets sent with an AutoIP source addr
+    must be sent link-local
+
+  2010-11-22: Simon Goldschmidt
+  * timers.c: patch #7329: tcp_timer_needed prototype was ifdef'ed out for
+    LWIP_TIMERS==0
+
+  2010-11-20: Simon Goldschmidt
+  * sockets.c: Fixed bug #31170: lwip_setsockopt() does not set socket number
+
+  2010-11-20: Simon Goldschmidt
+  * sockets.h: Fixed bug #31304: Changed SHUT_RD, SHUT_WR and SHUT_RDWR to
+    resemble other stacks.
+
+  2010-11-20: Simon Goldschmidt
+  * dns.c: Fixed bug #31535: TCP_SND_QUEUELEN must be at least 2 or else
+    no-copy TCP writes will never succeed.
+
+  2010-11-20: Simon Goldschmidt
+  * dns.c: Fixed bug #31701: Error return value from dns_gethostbyname() does
+    not match documentation: return ERR_ARG instead of ERR_VAL if not
+    initialized or wrong argument.
+
+  2010-10-20: Simon Goldschmidt
+  * sockets.h: Fixed bug #31385: sizeof(struct sockaddr) is 30 but should be 16
+
+  2010-10-05: Simon Goldschmidt
+  * dhcp.c: Once again fixed #30038: DHCP/AutoIP cooperation failed when
+    replugging the network cable after an AutoIP address was assigned.
+
+  2010-08-10: Simon Goldschmidt
+  * tcp.c: Fixed bug #30728: tcp_new_port() did not check listen pcbs
+
+  2010-08-03: Simon Goldschmidt
+  * udp.c, raw.c: Don't chain empty pbufs when sending them (fixes bug #30625)
+
+  2010-08-01: Simon Goldschmidt (patch by Greg Renda)
+  * ppp.c: Applied patch #7264 (PPP protocols are rejected incorrectly on big
+    endian architectures)
+  
+  2010-07-28: Simon Goldschmidt
+  * api_lib.c, api_msg.c, sockets.c, mib2.c: Fixed compilation with TCP or UDP
+    disabled.
+  
+  2010-07-27: Simon Goldschmidt
+  * tcp.c: Fixed bug #30565 (tcp_connect() check bound list): that check did no
+    harm but never did anything
+  
+  2010-07-21: Simon Goldschmidt
+  * ip.c: Fixed invalid fix for bug #30402 (CHECKSUM_GEN_IP_INLINE does not
+    add IP options)
 
   2010-07-16: Kieran Mansley
   * msg_in.c: Fixed SNMP ASN constant defines to not use ! operator 

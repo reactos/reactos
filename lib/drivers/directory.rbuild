@@ -4,6 +4,9 @@
 	<directory name="csq">
 		<xi:include href="csq/csq.rbuild" />
 	</directory>
+	<directory name="hidparser">
+		<xi:include href="hidparser/hidparser.rbuild" />
+	</directory>
 	<directory name="ip">
 		<xi:include href="ip/ip.rbuild" />
 	</directory>

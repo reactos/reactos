@@ -468,6 +468,18 @@ MMixerCountMixerControls(
     /* get next nodes */
     MMixerGetNextNodesFromPinIndex(MixerContext, Topology, PinId, bUpStream, &NodesCount, Nodes);
 
+    if (NodesCount == 0)
+    {
+        /* a pin which is not connected from any node
+         * a) it is a topology bug (driver bug)
+         * b) the request is from an alternative mixer
+              alternative mixer code scans all pins which have not been used and tries to build lines
+         */
+        DPRINT1("MMixerCountMixerControls PinId %lu is not connected by any node\n", PinId);
+        MMixerPrintTopology(Topology);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
     /* assume no topology split before getting line terminator */
     ASSERT(NodesCount == 1);
 
@@ -1168,7 +1180,7 @@ MMixerAddMixerControlsToDestinationLine(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* out of memory */
-        return MM_STATUS_NO_MEMORY;
+        return Status;
     }
 
     /* get all destination line controls */

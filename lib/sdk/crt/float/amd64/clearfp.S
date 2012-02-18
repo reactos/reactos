@@ -10,6 +10,6 @@ FUNC _clearfp
     .ENDPROLOG
     fnclex
 
-ENDFUNC _clearfp
+ENDFUNC
 
 END

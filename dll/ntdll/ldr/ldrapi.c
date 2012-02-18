@@ -19,8 +19,17 @@ LIST_ENTRY LdrpUnloadHead;
 LONG LdrpLoaderLockAcquisitonCount;
 BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
+ULONG AlternateResourceModuleCount;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+LdrAlternateResourcesEnabled(VOID)
+{
+    /* ReactOS does not support this */
+    return FALSE;
+}
 
 ULONG_PTR
 FORCEINLINE
@@ -774,7 +783,7 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 {
     FILE_STANDARD_INFORMATION FileStandardInfo;
     PIMAGE_IMPORT_DESCRIPTOR ImportData;
-    PIMAGE_SECTION_HEADER LastSection;
+    PIMAGE_SECTION_HEADER LastSection = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
     HANDLE SectionHandle;
@@ -911,7 +920,7 @@ NTSTATUS
 NTAPI
 LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
                                    IN ULONG Reserved,
-                                   IN PRTL_PROCESS_MODULES ModuleInformation,
+                                   OUT PRTL_PROCESS_MODULES ModuleInformation,
                                    IN ULONG Size,
                                    OUT PULONG ReturnedSize OPTIONAL)
 {
@@ -929,21 +938,21 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
     /* Acquire loader lock */
     RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
 
-    /* Check if we were given enough space */
-    if (Size < UsedSize)
-    {
-        Status = STATUS_INFO_LENGTH_MISMATCH;
-    }
-    else
-    {
-        ModuleInformation->NumberOfModules = 0;
-        ModulePtr = &ModuleInformation->Modules[0];
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Traverse the list of modules */
     _SEH2_TRY
     {
+        /* Check if we were given enough space */
+        if (Size < UsedSize)
+        {
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+            ModuleInformation->NumberOfModules = 0;
+            ModulePtr = &ModuleInformation->Modules[0];
+            Status = STATUS_SUCCESS;
+        }
+
+        /* Traverse the list of modules */
         ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
         Entry = ModuleListHead->Flink;
 
@@ -1374,18 +1383,6 @@ LdrUnloadDll(IN PVOID BaseAddress)
     NextEntry = LdrpUnloadHead.Flink;
     while (NextEntry != &LdrpUnloadHead)
     {
-        /* If we have an active entry */
-        if (CurrentEntry)
-        {
-            /* Remove it */
-            RemoveEntryList(&CurrentEntry->InLoadOrderLinks);
-            CurrentEntry = NULL;
-
-            /* Reset list pointers */
-            NextEntry = LdrpUnloadHead.Flink;
-            if (NextEntry == &LdrpUnloadHead) break;
-        }
-
         /* Get the current entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
 
@@ -1536,15 +1533,46 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
 {
-    static BOOLEAN WarnedOnce = FALSE;
-    if (WarnedOnce == FALSE) { UNIMPLEMENTED; WarnedOnce = TRUE; }
-    return FALSE;
+    ULONG_PTR Cookie;
+    
+    /* Acquire the loader lock */
+    LdrLockLoaderLock(TRUE, NULL, &Cookie);
+    
+    /* Check if there's any alternate resources loaded */
+    if (AlternateResourceModuleCount)
+    {
+        UNIMPLEMENTED;
+    }
+    
+    /* Release the loader lock */
+    LdrUnlockLoaderLock(1, Cookie);
+    
+    /* All done */
+    return TRUE;
 }
 
+/* FIXME: Add to ntstatus.mc */
+#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrLoadAlternateResourceModule(IN PVOID Module,
+                               IN PWSTR Buffer)
+{
+    /* Is MUI Support enabled? */
+    if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
+    
+    UNIMPLEMENTED;
+    return STATUS_MUI_FILE_NOT_FOUND;
+}
+    
 /* EOF */

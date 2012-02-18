@@ -88,7 +88,7 @@ DWORD ScmCreateServiceKey(LPCWSTR lpServiceName,
                           PHKEY phKey);
 
 DWORD ScmWriteDependencies(HKEY hServiceKey,
-                           LPWSTR lpDependencies,
+                           LPCWSTR lpDependencies,
                            DWORD dwDependenciesLength);
 
 DWORD ScmMarkServiceForDelete(PSERVICE pService);

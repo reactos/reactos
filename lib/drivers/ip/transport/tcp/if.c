@@ -7,24 +7,17 @@
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
 
-void TCPPacketSendComplete(PVOID Context, PNDIS_PACKET NdisPacket, NDIS_STATUS NdisStatus)
-{
-    FreeNdisPacket(NdisPacket);
-}
-
 err_t
 TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
 {
     NDIS_STATUS NdisStatus;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    IP_PACKET Packet = { 0 };
+    IP_PACKET Packet;
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
-    UINT i;
-    struct pbuf *p1;
-    
+
     /* The caller frees the pbuf struct */
-    
+
     if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
     {
         Header = p->payload;
@@ -40,6 +33,8 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
         return ERR_IF;
     }
 
+    IPInitializePacket(&Packet, LocalAddress.Type);
+
     if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
     {
         return ERR_RTE;
@@ -50,26 +45,24 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     {
         return ERR_MEM;
     }
-    
-    GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.ContigSize);
-    
-    for (i = 0, p1 = p; i < p->tot_len; i += p1->len, p1 = p1->next)
-    {
-        ASSERT(p1);
-        RtlCopyMemory(((PUCHAR)Packet.Header) + i, p1->payload, p1->len);
-    }
-    
+
+    GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.TotalSize);
+    Packet.MappedHeader = TRUE;
+
+    ASSERT(p->tot_len == p->len);
+    ASSERT(Packet.TotalSize == p->len);
+
+    RtlCopyMemory(Packet.Header, p->payload, p->len);
+
     Packet.HeaderSize = sizeof(IPv4_HEADER);
     Packet.TotalSize = p->tot_len;
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
-    
-    if (!NT_SUCCESS(IPSendDatagram(&Packet, NCE, TCPPacketSendComplete, NULL)))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
-        return ERR_IF;
-    }
-    
+
+    NdisStatus = IPSendDatagram(&Packet, NCE);
+    if (!NT_SUCCESS(NdisStatus))
+        return ERR_RTE;
+
     return 0;
 }
 

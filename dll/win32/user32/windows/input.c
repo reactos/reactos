@@ -45,58 +45,58 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 BOOL
 WINAPI
 DragDetect(
-  HWND hWnd,
-  POINT pt)
+    HWND hWnd,
+    POINT pt)
 {
-  return NtUserDragDetect(hWnd, pt);
+    return NtUserDragDetect(hWnd, pt);
 #if 0
-  MSG msg;
-  RECT rect;
-  POINT tmp;
-  ULONG dx = GetSystemMetrics(SM_CXDRAG);
-  ULONG dy = GetSystemMetrics(SM_CYDRAG);
+    MSG msg;
+    RECT rect;
+    POINT tmp;
+    ULONG dx = GetSystemMetrics(SM_CXDRAG);
+    ULONG dy = GetSystemMetrics(SM_CYDRAG);
 
-  rect.left = pt.x - dx;
-  rect.right = pt.x + dx;
-  rect.top = pt.y - dy;
-  rect.bottom = pt.y + dy;
+    rect.left = pt.x - dx;
+    rect.right = pt.x + dx;
+    rect.top = pt.y - dy;
+    rect.bottom = pt.y + dy;
 
-  SetCapture(hWnd);
+    SetCapture(hWnd);
 
-  for (;;)
-  {
-    while (
-    PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
-    PeekMessageW(&msg, 0, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE)
-    )
+    for (;;)
     {
-      if (msg.message == WM_LBUTTONUP)
-      {
-        ReleaseCapture();
-        return FALSE;
-      }
-      if (msg.message == WM_MOUSEMOVE)
-      {
-        tmp.x = LOWORD(msg.lParam);
-        tmp.y = HIWORD(msg.lParam);
-        if (!PtInRect(&rect, tmp))
+        while (
+            PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
+            PeekMessageW(&msg, 0, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE)
+        )
         {
-          ReleaseCapture();
-          return TRUE;
+            if (msg.message == WM_LBUTTONUP)
+            {
+                ReleaseCapture();
+                return FALSE;
+            }
+            if (msg.message == WM_MOUSEMOVE)
+            {
+                tmp.x = LOWORD(msg.lParam);
+                tmp.y = HIWORD(msg.lParam);
+                if (!PtInRect(&rect, tmp))
+                {
+                    ReleaseCapture();
+                    return TRUE;
+                }
+            }
+            if (msg.message == WM_KEYDOWN)
+            {
+                if (msg.wParam == VK_ESCAPE)
+                {
+                    ReleaseCapture();
+                    return TRUE;
+                }
+            }
         }
-      }
-      if (msg.message == WM_KEYDOWN)
-      {
-         if (msg.wParam == VK_ESCAPE)
-         {
-             ReleaseCapture();
-             return TRUE;
-         }
-      }
+        WaitMessage();
     }
-    WaitMessage();
-  }
-  return 0;
+    return 0;
 #endif
 }
 
@@ -106,7 +106,7 @@ DragDetect(
 BOOL WINAPI
 EnableWindow(HWND hWnd, BOOL bEnable)
 {
-  return NtUserxEnableWindow(hWnd, bEnable);
+    return NtUserxEnableWindow(hWnd, bEnable);
 }
 
 /*
@@ -115,9 +115,9 @@ EnableWindow(HWND hWnd, BOOL bEnable)
 SHORT WINAPI
 GetAsyncKeyState(int vKey)
 {
- if (vKey < 0 || vKey > 256)
-    return 0;
- return (SHORT) NtUserGetAsyncKeyState((DWORD) vKey);
+    if (vKey < 0 || vKey > 256)
+        return 0;
+    return (SHORT)NtUserGetAsyncKeyState((DWORD)vKey);
 }
 
 
@@ -127,7 +127,7 @@ GetAsyncKeyState(int vKey)
 HKL WINAPI
 GetKeyboardLayout(DWORD idThread)
 {
-  return NtUserxGetKeyboardLayout(idThread);
+    return NtUserxGetKeyboardLayout(idThread);
 }
 
 
@@ -137,7 +137,7 @@ GetKeyboardLayout(DWORD idThread)
 UINT WINAPI
 GetKBCodePage(VOID)
 {
-  return GetOEMCP();
+    return GetOEMCP();
 }
 
 
@@ -146,27 +146,27 @@ GetKBCodePage(VOID)
  */
 int WINAPI
 GetKeyNameTextA(LONG lParam,
-		LPSTR lpString,
-		int nSize)
+                LPSTR lpString,
+                int nSize)
 {
-  LPWSTR intermediateString =
-    HeapAlloc(GetProcessHeap(),0,nSize * sizeof(WCHAR));
-  int ret = 0;
-  UINT wstrLen = 0;
-  BOOL defChar = FALSE;
+    LPWSTR pwszBuf;
+    UINT cchBuf = 0;
+    int iRet = 0;
+    BOOL defChar = FALSE;
 
-  if( !intermediateString ) return 0;
-  ret = GetKeyNameTextW(lParam,intermediateString,nSize);
-  if( ret == 0 ) { lpString[0] = 0; return 0; }
+    pwszBuf = HeapAlloc(GetProcessHeap(), 0, nSize * sizeof(WCHAR));
+    if (!pwszBuf)
+        return 0;
 
-  wstrLen = wcslen( intermediateString );
-  ret = WideCharToMultiByte(CP_ACP, 0,
-			    intermediateString, wstrLen,
-			    lpString, nSize, ".", &defChar );
-  lpString[ret] = 0;
-  HeapFree(GetProcessHeap(),0,intermediateString);
+    cchBuf = NtUserGetKeyNameText(lParam, pwszBuf, nSize);
 
-  return ret;
+    iRet = WideCharToMultiByte(CP_ACP, 0,
+                              pwszBuf, cchBuf,
+                              lpString, nSize, ".", &defChar); // FIXME: do we need defChar?
+    lpString[iRet] = 0;
+    HeapFree(GetProcessHeap(), 0, pwszBuf);
+
+    return iRet;
 }
 
 /*
@@ -174,10 +174,10 @@ GetKeyNameTextA(LONG lParam,
  */
 int WINAPI
 GetKeyNameTextW(LONG lParam,
-		LPWSTR lpString,
-		int nSize)
+                LPWSTR lpString,
+                int nSize)
 {
-  return NtUserGetKeyNameText( lParam, lpString, nSize );
+    return NtUserGetKeyNameText(lParam, lpString, nSize);
 }
 
 /*
@@ -186,7 +186,7 @@ GetKeyNameTextW(LONG lParam,
 SHORT WINAPI
 GetKeyState(int nVirtKey)
 {
- return (SHORT) NtUserGetKeyState((DWORD) nVirtKey);
+    return (SHORT)NtUserGetKeyState((DWORD)nVirtKey);
 }
 
 /*
@@ -195,13 +195,16 @@ GetKeyState(int nVirtKey)
 BOOL WINAPI
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
-  WCHAR buf[KL_NAMELENGTH];
+    WCHAR buf[KL_NAMELENGTH];
 
-  if (GetKeyboardLayoutNameW(buf))
-    return WideCharToMultiByte( CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL ) != 0;
-  return FALSE;
+    if (!GetKeyboardLayoutNameW(buf))
+        return FALSE;
+
+    if (!WideCharToMultiByte(CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL))
+        return FALSE;
+
+    return TRUE;
 }
-
 
 /*
  * @implemented
@@ -209,9 +212,8 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
 BOOL WINAPI
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
-  return NtUserGetKeyboardLayoutName( pwszKLID );
+    return NtUserGetKeyboardLayoutName(pwszKLID);
 }
-
 
 /*
  * @implemented
@@ -219,7 +221,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 int WINAPI
 GetKeyboardType(int nTypeFlag)
 {
-  return NtUserxGetKeyboardType( nTypeFlag );
+    return NtUserxGetKeyboardType(nTypeFlag);
 }
 
 /*
@@ -228,28 +230,34 @@ GetKeyboardType(int nTypeFlag)
 BOOL WINAPI
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
-  TRACE("%p\n", plii);
+    TRACE("%p\n", plii);
 
-  if (plii->cbSize != sizeof (*plii) )
-  {
-     SetLastError(ERROR_INVALID_PARAMETER);
-     return FALSE;
-  }
+    if (plii->cbSize != sizeof (*plii))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  plii->dwTime = gpsi->dwLastRITEventTickCount;
-  return TRUE;
+    plii->dwTime = gpsi->dwLastRITEventTickCount;
+    return TRUE;
 }
 
 /*
  * @implemented
  */
 HKL WINAPI
-LoadKeyboardLayoutA(LPCSTR pwszKLID,
-		    UINT Flags)
+LoadKeyboardLayoutA(LPCSTR pszKLID,
+                    UINT Flags)
 {
-  return NtUserLoadKeyboardLayoutEx( NULL, 0, NULL, NULL, NULL,
-               strtoul(pwszKLID, NULL, 16),
-               Flags);
+    WCHAR wszKLID[16];
+
+    if (!MultiByteToWideChar(CP_ACP, 0, pszKLID, -1,
+                             wszKLID, sizeof(wszKLID)/sizeof(wszKLID[0])))
+    {
+        return FALSE;
+    }
+
+    return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
 /*
@@ -257,13 +265,70 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
  */
 HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
-		    UINT Flags)
+                    UINT Flags)
 {
-  // Look at revision 25596 to see how it's done in windows.
-  // We will do things our own way. Also be compatible too!
-  return NtUserLoadKeyboardLayoutEx( NULL, 0, NULL, NULL, NULL,
-               wcstoul(pwszKLID, NULL, 16),
-               Flags);
+    DWORD dwhkl, dwType, dwSize;
+    UNICODE_STRING ustrKbdName;
+    UNICODE_STRING ustrKLID;
+    WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
+    WCHAR wszLayoutId[10], wszNewKLID[10];
+    HKEY hKey;
+
+    /* LOWORD of dwhkl is Locale Identifier */
+    dwhkl = wcstol(pwszKLID, NULL, 16);
+
+    if (Flags & KLF_SUBSTITUTE_OK)
+    {
+        /* Check substitutes key */
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0,
+                          KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            dwSize = sizeof(wszNewKLID);
+            if (RegQueryValueExW(hKey, pwszKLID, NULL, &dwType, (LPBYTE)wszNewKLID, &dwSize) == ERROR_SUCCESS)
+            {
+                /* Use new KLID value */
+                pwszKLID = wszNewKLID;
+            }
+
+            /* Close the key now */
+            RegCloseKey(hKey);
+        }
+    }
+
+    /* Append KLID at the end of registry key */
+    StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
+
+    /* Open layout registry key for read */
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
+                      KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(wszLayoutId);
+        if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId, &dwSize) == ERROR_SUCCESS)
+        {
+            /* If Layout Id is specified, use this value | f000 as HIWORD */
+            /* FIXME: Microsoft Office expects this value to be something specific
+             * for Japanese and Korean Windows with an IME the value is 0xe001
+             * We should probably check to see if an IME exists and if so then
+             * set this word properly.
+             */
+            dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+        }
+
+        /* Close the key now */
+        RegCloseKey(hKey);
+    }
+    else
+	    ERR("RegOpenKeyExW failed!\n");
+
+    /* If Layout Id is not given HIWORD == LOWORD (for dwhkl) */
+	if (!HIWORD(dwhkl))
+        dwhkl |= dwhkl << 16;
+
+    ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
+    RtlInitUnicodeString(&ustrKLID, pwszKLID);
+    return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
+                                      NULL, &ustrKLID,
+                                      dwhkl, Flags);
 }
 
 /*
@@ -271,9 +336,9 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
  */
 UINT WINAPI
 MapVirtualKeyA(UINT uCode,
-	       UINT uMapType)
+               UINT uMapType)
 {
-  return MapVirtualKeyExA( uCode, uMapType, GetKeyboardLayout( 0 ) );
+    return MapVirtualKeyExA(uCode, uMapType, GetKeyboardLayout(0));
 }
 
 /*
@@ -281,10 +346,10 @@ MapVirtualKeyA(UINT uCode,
  */
 UINT WINAPI
 MapVirtualKeyExA(UINT uCode,
-		 UINT uMapType,
-		 HKL dwhkl)
+                 UINT uMapType,
+                 HKL dwhkl)
 {
-  return MapVirtualKeyExW( uCode, uMapType, dwhkl );
+    return MapVirtualKeyExW(uCode, uMapType, dwhkl);
 }
 
 
@@ -293,10 +358,10 @@ MapVirtualKeyExA(UINT uCode,
  */
 UINT WINAPI
 MapVirtualKeyExW(UINT uCode,
-		 UINT uMapType,
-		 HKL dwhkl)
+                 UINT uMapType,
+                 HKL dwhkl)
 {
-  return NtUserMapVirtualKeyEx( uCode, uMapType, 0, dwhkl );
+    return NtUserMapVirtualKeyEx(uCode, uMapType, 0, dwhkl);
 }
 
 
@@ -305,9 +370,9 @@ MapVirtualKeyExW(UINT uCode,
  */
 UINT WINAPI
 MapVirtualKeyW(UINT uCode,
-	       UINT uMapType)
+               UINT uMapType)
 {
-  return MapVirtualKeyExW( uCode, uMapType, GetKeyboardLayout( 0 ) );
+    return MapVirtualKeyExW(uCode, uMapType, GetKeyboardLayout(0));
 }
 
 
@@ -317,19 +382,19 @@ MapVirtualKeyW(UINT uCode,
 DWORD WINAPI
 OemKeyScan(WORD wOemChar)
 {
-  WCHAR p;
-  SHORT Vk;
-  UINT Scan;
+    WCHAR p;
+    SHORT Vk;
+    UINT Scan;
 
-  MultiByteToWideChar(CP_OEMCP, 0, (PCSTR)&wOemChar, 1, &p, 1);
-  Vk = VkKeyScanW(p);
-  Scan = MapVirtualKeyW((Vk & 0x00ff), 0);
-  if(!Scan) return -1;
-  /*
-     Page 450-1, MS W2k SuperBible by SAMS. Return, low word has the
-     scan code and high word has the shift state.
-   */
-  return ((Vk & 0xff00) << 8) | Scan;
+    MultiByteToWideChar(CP_OEMCP, 0, (PCSTR)&wOemChar, 1, &p, 1);
+    Vk = VkKeyScanW(p);
+    Scan = MapVirtualKeyW((Vk & 0x00ff), 0);
+    if (!Scan) return -1;
+    /*
+       Page 450-1, MS W2k SuperBible by SAMS. Return, low word has the
+       scan code and high word has the shift state.
+     */
+    return ((Vk & 0xff00) << 8) | Scan;
 }
 
 
@@ -339,10 +404,10 @@ OemKeyScan(WORD wOemChar)
 BOOL WINAPI
 SetDoubleClickTime(UINT uInterval)
 {
-  return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
-                                             uInterval,
-                                             NULL,
-                                             0);
+    return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
+                                            uInterval,
+                                            NULL,
+                                            0);
 }
 
 
@@ -352,9 +417,9 @@ SetDoubleClickTime(UINT uInterval)
 BOOL
 WINAPI
 SwapMouseButton(
-  BOOL fSwap)
+    BOOL fSwap)
 {
-  return NtUserxSwapMouseButton(fSwap);
+    return NtUserxSwapMouseButton(fSwap);
 }
 
 
@@ -363,12 +428,12 @@ SwapMouseButton(
  */
 int WINAPI
 ToAscii(UINT uVirtKey,
-	UINT uScanCode,
-	CONST BYTE *lpKeyState,
-	LPWORD lpChar,
-	UINT uFlags)
+        UINT uScanCode,
+        CONST BYTE *lpKeyState,
+        LPWORD lpChar,
+        UINT uFlags)
 {
-  return ToAsciiEx(uVirtKey, uScanCode, lpKeyState, lpChar, uFlags, 0);
+    return ToAsciiEx(uVirtKey, uScanCode, lpKeyState, lpChar, uFlags, 0);
 }
 
 
@@ -377,20 +442,20 @@ ToAscii(UINT uVirtKey,
  */
 int WINAPI
 ToAsciiEx(UINT uVirtKey,
-	  UINT uScanCode,
-	  CONST BYTE *lpKeyState,
-	  LPWORD lpChar,
-	  UINT uFlags,
-	  HKL dwhkl)
+          UINT uScanCode,
+          CONST BYTE *lpKeyState,
+          LPWORD lpChar,
+          UINT uFlags,
+          HKL dwhkl)
 {
-  WCHAR UniChars[2];
-  int Ret, CharCount;
+    WCHAR UniChars[2];
+    int Ret, CharCount;
 
-  Ret = ToUnicodeEx(uVirtKey, uScanCode, lpKeyState, UniChars, 2, uFlags, dwhkl);
-  CharCount = (Ret < 0 ? 1 : Ret);
-  WideCharToMultiByte(CP_ACP, 0, UniChars, CharCount, (LPSTR) lpChar, 2, NULL, NULL);
+    Ret = ToUnicodeEx(uVirtKey, uScanCode, lpKeyState, UniChars, 2, uFlags, dwhkl);
+    CharCount = (Ret < 0 ? 1 : Ret);
+    WideCharToMultiByte(CP_ACP, 0, UniChars, CharCount, (LPSTR)lpChar, 2, NULL, NULL);
 
-  return Ret;
+    return Ret;
 }
 
 
@@ -399,14 +464,14 @@ ToAsciiEx(UINT uVirtKey,
  */
 int WINAPI
 ToUnicode(UINT wVirtKey,
-	  UINT wScanCode,
-	  CONST BYTE *lpKeyState,
-	  LPWSTR pwszBuff,
-	  int cchBuff,
-	  UINT wFlags)
+          UINT wScanCode,
+          CONST BYTE *lpKeyState,
+          LPWSTR pwszBuff,
+          int cchBuff,
+          UINT wFlags)
 {
-  return ToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
-		      wFlags, 0 );
+    return ToUnicodeEx(wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
+                       wFlags, 0);
 }
 
 
@@ -415,15 +480,15 @@ ToUnicode(UINT wVirtKey,
  */
 int WINAPI
 ToUnicodeEx(UINT wVirtKey,
-	    UINT wScanCode,
-	    CONST BYTE *lpKeyState,
-	    LPWSTR pwszBuff,
-	    int cchBuff,
-	    UINT wFlags,
-	    HKL dwhkl)
+            UINT wScanCode,
+            CONST BYTE *lpKeyState,
+            LPWSTR pwszBuff,
+            int cchBuff,
+            UINT wFlags,
+            HKL dwhkl)
 {
-  return NtUserToUnicodeEx( wVirtKey, wScanCode, (PBYTE)lpKeyState, pwszBuff, cchBuff,
-			    wFlags, dwhkl );
+    return NtUserToUnicodeEx(wVirtKey, wScanCode, (PBYTE)lpKeyState, pwszBuff, cchBuff,
+                             wFlags, dwhkl);
 }
 
 
@@ -434,12 +499,13 @@ ToUnicodeEx(UINT wVirtKey,
 SHORT WINAPI
 VkKeyScanA(CHAR ch)
 {
-  WCHAR wChar;
+    WCHAR wChar;
 
-  if (IsDBCSLeadByte(ch)) return -1;
+    if (IsDBCSLeadByte(ch))
+        return -1;
 
-  MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
-  return VkKeyScanW(wChar);
+    MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
+    return VkKeyScanW(wChar);
 }
 
 
@@ -448,14 +514,15 @@ VkKeyScanA(CHAR ch)
  */
 SHORT WINAPI
 VkKeyScanExA(CHAR ch,
-	     HKL dwhkl)
+             HKL dwhkl)
 {
-  WCHAR wChar;
+    WCHAR wChar;
 
-  if (IsDBCSLeadByte(ch)) return -1;
+    if (IsDBCSLeadByte(ch))
+        return -1;
 
-  MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
-  return VkKeyScanExW(wChar, dwhkl);
+    MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
+    return VkKeyScanExW(wChar, dwhkl);
 }
 
 
@@ -464,9 +531,9 @@ VkKeyScanExA(CHAR ch,
  */
 SHORT WINAPI
 VkKeyScanExW(WCHAR ch,
-	     HKL dwhkl)
+             HKL dwhkl)
 {
-  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, TRUE);
+    return (SHORT)NtUserVkKeyScanEx(ch, dwhkl, TRUE);
 }
 
 
@@ -476,7 +543,7 @@ VkKeyScanExW(WCHAR ch,
 SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
-  return (SHORT) NtUserVkKeyScanEx(ch, 0, FALSE);
+    return (SHORT)NtUserVkKeyScanEx(ch, 0, FALSE);
 }
 
 
@@ -486,23 +553,21 @@ VkKeyScanW(WCHAR ch)
 VOID
 WINAPI
 keybd_event(
-	    BYTE bVk,
-	    BYTE bScan,
-	    DWORD dwFlags,
-	    ULONG_PTR dwExtraInfo)
-
-
+    BYTE bVk,
+    BYTE bScan,
+    DWORD dwFlags,
+    ULONG_PTR dwExtraInfo)
 {
-  INPUT Input;
+    INPUT Input;
 
-  Input.type = INPUT_KEYBOARD;
-  Input.ki.wVk = bVk;
-  Input.ki.wScan = bScan;
-  Input.ki.dwFlags = dwFlags;
-  Input.ki.time = 0;
-  Input.ki.dwExtraInfo = dwExtraInfo;
+    Input.type = INPUT_KEYBOARD;
+    Input.ki.wVk = bVk;
+    Input.ki.wScan = bScan;
+    Input.ki.dwFlags = dwFlags;
+    Input.ki.time = 0;
+    Input.ki.dwExtraInfo = dwExtraInfo;
 
-  NtUserSendInput(1, &Input, sizeof(INPUT));
+    NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 
 
@@ -512,23 +577,23 @@ keybd_event(
 VOID
 WINAPI
 mouse_event(
-	    DWORD dwFlags,
-	    DWORD dx,
-	    DWORD dy,
-	    DWORD dwData,
-	    ULONG_PTR dwExtraInfo)
+    DWORD dwFlags,
+    DWORD dx,
+    DWORD dy,
+    DWORD dwData,
+    ULONG_PTR dwExtraInfo)
 {
-  INPUT Input;
+    INPUT Input;
 
-  Input.type = INPUT_MOUSE;
-  Input.mi.dx = dx;
-  Input.mi.dy = dy;
-  Input.mi.mouseData = dwData;
-  Input.mi.dwFlags = dwFlags;
-  Input.mi.time = 0;
-  Input.mi.dwExtraInfo = dwExtraInfo;
+    Input.type = INPUT_MOUSE;
+    Input.mi.dx = dx;
+    Input.mi.dy = dy;
+    Input.mi.mouseData = dwData;
+    Input.mi.dwFlags = dwFlags;
+    Input.mi.time = 0;
+    Input.mi.dwExtraInfo = dwExtraInfo;
 
-  NtUserSendInput(1, &Input, sizeof(INPUT));
+    NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 
 /* EOF */

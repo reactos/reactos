@@ -1,6 +1,4 @@
 
-set_unicode()
-
 spec2def(user32.dll user32.spec)
 
 include_directories(
@@ -66,8 +64,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
 add_library(user32 SHARED ${SOURCE})
-
-set_module_type(user32 win32dll)
+set_module_type(user32 win32dll UNICODE)
 
 target_link_libraries(user32
     user32_wsprintf
@@ -75,7 +72,8 @@ target_link_libraries(user32
     win32ksys
     ${PSEH_LIB})
 
-add_importlibs(user32 gdi32 advapi32 imm32 msvcrt kernel32 ntdll)
+add_delay_importlibs(user32 imm32 usp10)
+add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(user32 include/user32.h)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(user32.spec)

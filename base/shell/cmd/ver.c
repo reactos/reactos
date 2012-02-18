@@ -22,13 +22,12 @@
  */
 
 #include <precomp.h>
-
+#include <reactos/buildno.h>
+#include <reactos/version.h>
 
 VOID ShortVersion (VOID)
 {
 	OSVERSIONINFO VersionInfo;
-	unsigned RosVersionLen;
-	LPTSTR RosVersion;
 
 	ConOutResPrintf(STRING_CMD_SHELLINFO, _T(KERNEL_RELEASE_STR), _T(KERNEL_VERSION_BUILD_STR));
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -36,6 +35,9 @@ VOID ShortVersion (VOID)
 	memset(VersionInfo.szCSDVersion, 0, sizeof(VersionInfo.szCSDVersion));
 	if (GetVersionEx(&VersionInfo))
 	{
+		LPTSTR RosVersion;
+		unsigned RosVersionLen;
+
 		RosVersion = VersionInfo.szCSDVersion + _tcslen(VersionInfo.szCSDVersion) + 1;
 		RosVersionLen = sizeof(VersionInfo.szCSDVersion) / sizeof(VersionInfo.szCSDVersion[0]) -
 	                        (RosVersion - VersionInfo.szCSDVersion);

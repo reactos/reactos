@@ -1,0 +1,18 @@
+/*
+ * Translated by Elton Chung aka MfldElton <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "用法: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  沒有參數或 -?\t顯示這個訊息\n\
+  -l\t\t\t登出\n\
+  -s\t\t\t將電腦關機\n\
+  -r\t\t\t重新啟動電腦\n\
+  -f\t\t\t無警告地強制關閉正在執行的程式\n\
+    \t\t\t如果您沒有指定其他任何參數，這個選項\n\
+    \t\t\t也會引致登出"
+END

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/no-NO.rc
+ * FILE:        base/applications/mspaint/lang/no-NO.rc
  * PURPOSE:     NO-Norwegian Language resource file
  * TRANSLATORS: first times touched from no-NO.rc file by Lars Martin Hambro
  */
@@ -13,7 +13,7 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Åpne...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Ã…pne...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Lagre\tCtrl+S", IDM_FILESAVE
         MENUITEM "Lagre &som...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
@@ -42,12 +42,12 @@ BEGIN
 
     POPUP "&Vis"
     BEGIN
-        MENUITEM "Verktøykasse\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "VerktÃ¸ykasse\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "Farger\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
         MENUITEM "Statuslinje", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Tekstverktøylinje", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "TekstverktÃ¸ylinje", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Forstørre"
+        POPUP "ForstÃ¸rre"
         BEGIN
             POPUP "Egendefinert"
             BEGIN
@@ -60,28 +60,28 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Vis rutenett", IDM_VIEWSHOWGRID
+            MENUITEM "Vis rutenett\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Vis miniatyr", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Full skjerm\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Bilde"
     BEGIN
         MENUITEM "Roter/speile...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Endre størrelse...\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "Beskjær", IDM_IMAGECROP
+        MENUITEM "Endre stÃ¸rrelse...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "BeskjÃ¦r", IDM_IMAGECROP
         MENUITEM "Invertere farger\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attributter...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Fjern bilde\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Gjør ugjennomsiktig", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "GjÃ¸r ugjennomsiktig", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Farger"
     BEGIN
         MENUITEM "Rediger farger...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Hjelp?"
     BEGIN
         MENUITEM "Emner i hjelp", IDM_HELPHELPTOPICS
@@ -104,6 +104,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -121,9 +122,9 @@ BEGIN
     AUTORADIOBUTTON "Vend horisontalt", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Vend vertikalt", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Roter med vinkelen", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 125, 24, 48, 14
 END
@@ -136,10 +137,10 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "Bredde:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Høyde:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "HÃ¸yde:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Fildato:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Filstørrelse:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Oppløsning:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "FilstÃ¸rrelse:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "OpplÃ¸sning:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Ikke tilgjengelig", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Ikke tilgjengelig", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
     LTEXT "Ikke tilgjengelig", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
@@ -158,9 +159,9 @@ END
 IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Endre størrelse"
+CAPTION "Endre stÃ¸rrelse"
 BEGIN
-    GROUPBOX "Endre størrelse", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
+    GROUPBOX "Endre stÃ¸rrelse", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
     LTEXT "Horisontalt:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
@@ -178,16 +179,16 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint for ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS er nå tilgjengelig under GNU Lesser General Public License (LGPL) versjon 3 (se http://www.gnu.org/home.nb.html)"
+    IDS_INFOTEXT, "Paint for ReactOS er nÃ¥ tilgjengelig under GNU Lesser General Public License (LGPL) versjon 3 (se http://www.gnu.org/home.nb.html)"
     IDS_SAVEPROMPTTEXT, "Vil du lagre endringene til %s?"
     IDS_DEFAULTFILENAME, "Utennavn.bmp"
     IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Frihåndmerking"
+    IDS_TOOLTIP1, "FrihÃ¥ndmerking"
     IDS_TOOLTIP2, "Merk"
-    IDS_TOOLTIP3, "Viskelær"
+    IDS_TOOLTIP3, "ViskelÃ¦r"
     IDS_TOOLTIP4, "Fyll med farger"
     IDS_TOOLTIP5, "Velg farge"
-    IDS_TOOLTIP6, "Forstørre"
+    IDS_TOOLTIP6, "ForstÃ¸rre"
     IDS_TOOLTIP7, "Blyant"
     IDS_TOOLTIP8, "Pensel"
     IDS_TOOLTIP9, "Spraymaling"

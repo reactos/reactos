@@ -123,7 +123,12 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
       *lpOverlapped = NULL;
-      BaseSetLastNTError(errCode);
+
+      if(errCode == STATUS_TIMEOUT)
+         SetLastError(WAIT_TIMEOUT);
+      else
+         BaseSetLastNTError(errCode);
+
       return FALSE;
    }
 
@@ -168,27 +173,61 @@ PostQueuedCompletionStatus(
    return TRUE;
 }
 
-
 /*
  * @implemented
  */
-BOOL WINAPI
-CancelIo(HANDLE hFile)
+BOOL
+WINAPI
+GetOverlappedResult(IN HANDLE hFile,
+                    IN LPOVERLAPPED lpOverlapped,
+                    OUT LPDWORD lpNumberOfBytesTransferred,
+                    IN BOOL bWait)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
+    DWORD WaitStatus;
+    HANDLE hObject;
 
-  Status = NtCancelIoFile(hFile,
-			  &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
+    /* Check for pending operation */
+    if (lpOverlapped->Internal == STATUS_PENDING)
     {
-      BaseSetLastNTError(Status);
-      return(FALSE);
+        /* Check if the caller is okay with waiting */
+        if (!bWait)
+        {
+            /* Set timeout */
+            WaitStatus = WAIT_TIMEOUT;
+        }
+        else
+        {
+            /* Wait for the result */
+            hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
+            WaitStatus = WaitForSingleObject(hObject, INFINITE);
+        }
+
+        /* Check for timeout */
+        if (WaitStatus == WAIT_TIMEOUT)
+        {
+            /* We have to override the last error with INCOMPLETE instead */
+            SetLastError(ERROR_IO_INCOMPLETE);
+            return FALSE;
+        }
+
+        /* Fail if we had an error -- the last error is already set */
+        if (WaitStatus != 0) return FALSE;
     }
 
-  return(TRUE);
-}
+    /* Return bytes transferred */
+    *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
+    /* Check for failure during I/O */
+    if (!NT_SUCCESS(lpOverlapped->Internal))
+    {
+        /* Set the error and fail */
+        BaseSetLastNTError(lpOverlapped->Internal);
+        return FALSE;
+    }
+
+    /* All done */
+    return TRUE;
+}
 
 /*
  * @implemented

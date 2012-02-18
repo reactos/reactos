@@ -7,41 +7,490 @@
 
 #include <acpi.h>
 
+#include <pseh/pseh2.h>
 #define NDEBUG
 #include <debug.h>
-
-#define NUM_SEMAPHORES      128
 
 static PKINTERRUPT AcpiInterrupt;
 static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static ACPI_OSD_HANDLER AcpiIrqHandler = NULL;
 static PVOID AcpiIrqContext = NULL;
 static ULONG AcpiIrqNumber = 0;
-static KDPC AcpiDpc;
-static PVOID IVTVirtualAddress = NULL;
 
-
-typedef struct semaphore_entry
+ACPI_STATUS
+AcpiOsInitialize (void)
 {
-    UINT16                  MaxUnits;
-    UINT16                  CurrentUnits;
-    void                    *OsHandle;
-} SEMAPHORE_ENTRY;
+    DPRINT("AcpiOsInitialize called\n");
 
-static SEMAPHORE_ENTRY AcpiGbl_Semaphores[NUM_SEMAPHORES];
+#ifndef NDEBUG
+    /* Verboseness level of the acpica core */
+    AcpiDbgLevel = 0x00FFFFFF;
+    AcpiDbgLayer = 0xFFFFFFFF;
+#endif
 
-VOID NTAPI
-OslDpcStub(
-  IN PKDPC Dpc,
-  IN PVOID DeferredContext,
-  IN PVOID SystemArgument1,
-  IN PVOID SystemArgument2)
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsTerminate(void)
 {
-    ACPI_OSD_EXEC_CALLBACK Routine = (ACPI_OSD_EXEC_CALLBACK)SystemArgument1;
+    DPRINT("AcpiOsTerminate() called\n");
 
-    DPRINT("OslDpcStub()\n");
-    DPRINT("Calling [%p]([%p])\n", Routine, SystemArgument2);
-    (*Routine)(SystemArgument2);
+    return AE_OK;
+}
+
+ACPI_PHYSICAL_ADDRESS
+AcpiOsGetRootPointer (
+    void)
+{
+    ACPI_PHYSICAL_ADDRESS pa = 0;
+
+    DPRINT("AcpiOsGetRootPointer\n");
+    
+    AcpiFindRootPointer(&pa);
+    return pa;
+}
+
+ACPI_STATUS
+AcpiOsPredefinedOverride(
+    const ACPI_PREDEFINED_NAMES *PredefinedObject,
+    ACPI_STRING                 *NewValue)
+{
+    if (!PredefinedObject || !NewValue)
+    {
+        DPRINT1("Invalid parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    /* No override */
+    *NewValue = NULL;
+    
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsTableOverride(
+    ACPI_TABLE_HEADER *ExistingTable,
+    ACPI_TABLE_HEADER **NewTable)
+{
+    if (!ExistingTable || !NewTable)
+    {
+        DPRINT1("Invalid parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    /* No override */
+    *NewTable = NULL;
+    
+    return AE_OK;
+}
+
+void *
+AcpiOsMapMemory (
+    ACPI_PHYSICAL_ADDRESS   phys,
+    ACPI_SIZE               length)
+{
+    PHYSICAL_ADDRESS Address;
+    PVOID Ptr;
+    
+    DPRINT("AcpiOsMapMemory(phys 0x%p  size 0x%X)\n", phys, length);
+    
+    ASSERT(phys);
+
+    Address.QuadPart = (ULONG)phys;
+    Ptr = MmMapIoSpace(Address, length, MmNonCached);
+    if (!Ptr)
+    {
+        DPRINT1("Mapping failed\n");
+    }
+    
+    return Ptr;
+}
+
+void
+AcpiOsUnmapMemory (
+    void                    *virt,
+    ACPI_SIZE               length)
+{
+    DPRINT("AcpiOsMapMemory(phys 0x%p  size 0x%X)\n", virt, length);
+
+    ASSERT(virt);
+
+    MmUnmapIoSpace(virt, length);
+}
+
+ACPI_STATUS
+AcpiOsGetPhysicalAddress(
+    void *LogicalAddress,
+    ACPI_PHYSICAL_ADDRESS *PhysicalAddress)
+{
+    PHYSICAL_ADDRESS PhysAddr;
+
+    if (!LogicalAddress || !PhysicalAddress)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    PhysAddr = MmGetPhysicalAddress(LogicalAddress);
+
+    *PhysicalAddress = (ACPI_PHYSICAL_ADDRESS)PhysAddr.QuadPart;
+
+    return AE_OK;
+}
+
+void *
+AcpiOsAllocate (ACPI_SIZE size)
+{
+    DPRINT("AcpiOsAllocate size %d\n",size);
+    return ExAllocatePoolWithTag(NonPagedPool, size, 'IPCA');
+}
+
+void
+AcpiOsFree(void *ptr)
+{
+    if (!ptr)
+        DPRINT1("Attempt to free null pointer!!!\n");	
+    ExFreePoolWithTag(ptr, 'IPCA');
+}
+
+BOOLEAN
+AcpiOsReadable(
+    void *Memory,
+    ACPI_SIZE Length)
+{
+    BOOLEAN Ret = FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Memory, Length, sizeof(UCHAR));
+        
+        Ret = TRUE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = FALSE;
+    }
+    _SEH2_END;
+    
+    return Ret;
+}
+
+BOOLEAN
+AcpiOsWritable(
+    void *Memory,
+    ACPI_SIZE Length)
+{
+    BOOLEAN Ret = FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(Memory, Length, sizeof(UCHAR));
+        
+        Ret = TRUE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = FALSE;
+    }
+    _SEH2_END;
+    
+    return Ret;
+}
+
+ACPI_THREAD_ID
+AcpiOsGetThreadId (void)
+{
+    /* Thread ID must be non-zero */
+    return (ULONG)PsGetCurrentThreadId() + 1;
+}
+
+ACPI_STATUS
+AcpiOsExecute (
+    ACPI_EXECUTE_TYPE       Type,
+    ACPI_OSD_EXEC_CALLBACK  Function,
+    void                    *Context)
+{
+    HANDLE ThreadHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+	DPRINT("AcpiOsExecute\n");
+
+	InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+                               
+    Status = PsCreateSystemThread(&ThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  NULL,
+                                  NULL,
+                                  (PKSTART_ROUTINE)Function,
+                                  Context);
+    if (!NT_SUCCESS(Status))
+        return AE_ERROR;
+
+    ZwClose(ThreadHandle);
+    
+    return AE_OK;
+}
+
+void
+AcpiOsSleep (UINT64 milliseconds)
+{
+    DPRINT("AcpiOsSleep %d\n", milliseconds);
+	KeStallExecutionProcessor(milliseconds*1000);
+}
+
+void
+AcpiOsStall (UINT32 microseconds)
+{
+    DPRINT("AcpiOsStall %d\n",microseconds);
+    KeStallExecutionProcessor(microseconds);
+}
+
+ACPI_STATUS
+AcpiOsCreateMutex(
+    ACPI_MUTEX *OutHandle)
+{
+    PFAST_MUTEX Mutex;
+
+    if (!OutHandle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
+    Mutex = ExAllocatePool(PagedPool, sizeof(FAST_MUTEX));
+    if (!Mutex) return AE_NO_MEMORY;
+    
+    ExInitializeFastMutex(Mutex);
+    
+    *OutHandle = (ACPI_MUTEX)Mutex;
+    
+    return AE_OK;
+}
+
+void
+AcpiOsDeleteMutex(
+    ACPI_MUTEX Handle)
+{
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return;
+    }
+    
+    ExFreePool(Handle);
+}
+
+ACPI_STATUS
+AcpiOsAcquireMutex(
+    ACPI_MUTEX Handle,
+    UINT16 Timeout)
+{
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    ExAcquireFastMutex((PFAST_MUTEX)Handle);
+    
+    return AE_OK;
+}
+
+void
+AcpiOsReleaseMutex(
+    ACPI_MUTEX Handle)
+{
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return;
+    }
+    
+    ExReleaseFastMutex((PFAST_MUTEX)Handle);
+}
+
+typedef struct _ACPI_SEM {
+    UINT32 CurrentUnits;
+    KEVENT Event;
+    KSPIN_LOCK Lock;
+} ACPI_SEM, *PACPI_SEM;
+
+ACPI_STATUS
+AcpiOsCreateSemaphore(
+    UINT32 MaxUnits,
+    UINT32 InitialUnits,
+    ACPI_SEMAPHORE *OutHandle)
+{
+    PACPI_SEM Sem;
+
+    if (!OutHandle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
+    Sem = ExAllocatePool(NonPagedPool, sizeof(ACPI_SEM));
+    if (!Sem) return AE_NO_MEMORY;
+
+    Sem->CurrentUnits = InitialUnits;
+    KeInitializeEvent(&Sem->Event, SynchronizationEvent, Sem->CurrentUnits != 0);
+    KeInitializeSpinLock(&Sem->Lock);
+    
+    *OutHandle = (ACPI_SEMAPHORE)Sem;
+ 
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsDeleteSemaphore(
+    ACPI_SEMAPHORE Handle)
+{
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
+    ExFreePool(Handle);
+    
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsWaitSemaphore(
+    ACPI_SEMAPHORE Handle,
+    UINT32 Units,
+    UINT16 Timeout)
+{
+    PACPI_SEM Sem = Handle;
+    KIRQL OldIrql;
+
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
+    KeAcquireSpinLock(&Sem->Lock, &OldIrql);
+    while (Sem->CurrentUnits < Units)
+    {
+        KeReleaseSpinLock(&Sem->Lock, OldIrql);
+        KeWaitForSingleObject(&Sem->Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        KeAcquireSpinLock(&Sem->Lock, &OldIrql);
+    }
+    
+    Sem->CurrentUnits -= Units;
+    
+    if (Sem->CurrentUnits != 0) KeSetEvent(&Sem->Event, IO_NO_INCREMENT, FALSE);
+    
+    KeReleaseSpinLock(&Sem->Lock, OldIrql);
+    
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsSignalSemaphore(
+    ACPI_SEMAPHORE Handle,
+    UINT32 Units)
+{
+    PACPI_SEM Sem = Handle;
+    KIRQL OldIrql;
+
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    KeAcquireSpinLock(&Sem->Lock, &OldIrql);
+    
+    Sem->CurrentUnits += Units;
+    KeSetEvent(&Sem->Event, IO_NO_INCREMENT, FALSE);
+    
+    KeReleaseSpinLock(&Sem->Lock, OldIrql);
+    
+    return AE_OK;
+}
+
+ACPI_STATUS
+AcpiOsCreateLock(
+    ACPI_SPINLOCK *OutHandle)
+{
+    PKSPIN_LOCK SpinLock;
+
+    if (!OutHandle)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
+    SpinLock = ExAllocatePool(NonPagedPool, sizeof(KSPIN_LOCK));
+    if (!SpinLock) return AE_NO_MEMORY;
+    
+    KeInitializeSpinLock(SpinLock);
+    
+    *OutHandle = (ACPI_SPINLOCK)SpinLock;
+    
+    return AE_OK;
+}
+
+void
+AcpiOsDeleteLock(
+    ACPI_SPINLOCK Handle)
+{
+    if (!Handle)
+    {
+        DPRINT1("Bad parameter\n");
+        return;
+    }
+    
+    ExFreePool(Handle);
+}
+
+ACPI_CPU_FLAGS
+AcpiOsAcquireLock(
+    ACPI_SPINLOCK Handle)
+{
+    KIRQL OldIrql;
+ 
+    if ((OldIrql = KeGetCurrentIrql()) >= DISPATCH_LEVEL)
+    {
+        KeAcquireSpinLockAtDpcLevel((PKSPIN_LOCK)Handle);
+    }
+    else
+    {
+        KeAcquireSpinLock((PKSPIN_LOCK)Handle, &OldIrql);
+    }
+    
+    return (ACPI_CPU_FLAGS)OldIrql;
+}
+
+void
+AcpiOsReleaseLock(
+    ACPI_SPINLOCK Handle,
+    ACPI_CPU_FLAGS Flags)
+{
+    KIRQL OldIrql = (KIRQL)Flags;
+    
+    if (OldIrql >= DISPATCH_LEVEL)
+    {
+        KeReleaseSpinLockFromDpcLevel((PKSPIN_LOCK)Handle);
+    }
+    else
+    {
+        KeReleaseSpinLock((PKSPIN_LOCK)Handle, OldIrql);
+    }
 }
 
 BOOLEAN NTAPI
@@ -53,205 +502,10 @@ OslIsrStub(
 
   Status = (*AcpiIrqHandler)(AcpiIrqContext);
 
-  if (ACPI_SUCCESS(Status))
+  if (Status == ACPI_INTERRUPT_HANDLED)
     return TRUE;
   else
     return FALSE;
-}
-
-ACPI_STATUS
-AcpiOsRemoveInterruptHandler (
-    UINT32                  InterruptNumber,
-    ACPI_OSD_HANDLER        ServiceRoutine);
-
-ACPI_STATUS
-AcpiOsInitialize (void)
-{
-    UINT32 i;
-
-    DPRINT("AcpiOsInitialize called\n");
-
-#ifndef NDEBUG
-    /* Verboseness level of the acpica core */
-    AcpiDbgLevel = 0x00FFFFFF;
-    AcpiDbgLayer = 0xFFFFFFFF;
-#endif
-
-    for (i = 0; i < NUM_SEMAPHORES; i++)
-    {
-        AcpiGbl_Semaphores[i].OsHandle = NULL;
-    }
-
-    KeInitializeDpc(&AcpiDpc, OslDpcStub, NULL);
-
-    return AE_OK;
-}
-
-ACPI_STATUS
-AcpiOsTerminate(void)
-{
-    DPRINT("AcpiOsTerminate() called\n");
-
-    if (AcpiInterruptHandlerRegistered)
-        AcpiOsRemoveInterruptHandler(AcpiIrqNumber, AcpiIrqHandler);
-
-    return AE_OK;
-}
-
-void ACPI_INTERNAL_VAR_XFACE
-AcpiOsPrintf (
-    const char              *Fmt,
-    ...)
-{
-    va_list                 Args;
-    va_start (Args, Fmt);
-
-    AcpiOsVprintf (Fmt, Args);
-
-    va_end (Args);
-    return;
-}
-
-void
-AcpiOsVprintf (
-    const char              *Fmt,
-    va_list                 Args)
-{
-#ifndef NDEBUG
-    vDbgPrintEx (-1, DPFLTR_ERROR_LEVEL, Fmt, Args);
-#endif
-    return;
-}
-
-void *
-AcpiOsAllocate (ACPI_SIZE size)
-{
-    DPRINT("AcpiOsAllocate size %d\n",size);
-    return ExAllocatePool(NonPagedPool, size);
-}
-
-void *
-AcpiOsCallocate(ACPI_SIZE size)
-{
-  PVOID ptr = ExAllocatePool(NonPagedPool, size);
-  if (ptr)
-    memset(ptr, 0, size);
-  return ptr;
-}
-
-void
-AcpiOsFree(void *ptr)
-{
-    if (!ptr)
-        DPRINT1("Attempt to free null pointer!!!\n");	
-    ExFreePool(ptr);
-}
-
-#ifndef ACPI_USE_LOCAL_CACHE
-
-ACPI_STATUS
-AcpiOsCreateCache (
-    char                    *CacheName,
-    UINT16                  ObjectSize,
-    UINT16                  MaxDepth,
-    ACPI_CACHE_T            **ReturnCache)
-{
-    PNPAGED_LOOKASIDE_LIST Lookaside = 
-        ExAllocatePool(NonPagedPool,sizeof(NPAGED_LOOKASIDE_LIST));
-
-    ExInitializeNPagedLookasideList(Lookaside,
-        NULL,
-        NULL,
-        0,
-        ObjectSize,
-        'IPCA',
-        0);
-    *ReturnCache = (ACPI_CACHE_T *)Lookaside;
-
-    DPRINT("AcpiOsCreateCache %p\n", Lookaside);
-    return (AE_OK);
-}
-
-ACPI_STATUS
-AcpiOsDeleteCache (
-    ACPI_CACHE_T            *Cache)
-{
-    DPRINT("AcpiOsDeleteCache %p\n", Cache);
-    ExDeleteNPagedLookasideList(
-        (PNPAGED_LOOKASIDE_LIST) Cache);
-    ExFreePool(Cache);
-    return (AE_OK);
-}
-
-ACPI_STATUS
-AcpiOsPurgeCache (
-    ACPI_CACHE_T            *Cache)
-{
-    DPRINT("AcpiOsPurgeCache\n");
-    /* No such functionality for LookAside lists */
-    return (AE_OK);
-}
-
-void *
-AcpiOsAcquireObject (
-    ACPI_CACHE_T            *Cache)
-{
-    void* ptr;
-	PNPAGED_LOOKASIDE_LIST List = (PNPAGED_LOOKASIDE_LIST)Cache;
-
-    DPRINT("AcpiOsAcquireObject from %p\n", Cache);
-    ptr = ExAllocateFromNPagedLookasideList(List);
-    ASSERT(ptr);
-
-	RtlZeroMemory(ptr,List->L.Size);
-    return ptr;
-}
-
-ACPI_STATUS
-AcpiOsReleaseObject (
-    ACPI_CACHE_T            *Cache,
-    void                    *Object)
-{
-    DPRINT("AcpiOsReleaseObject %p from %p\n",Object, Cache);
-    ExFreeToNPagedLookasideList(
-        (PNPAGED_LOOKASIDE_LIST)Cache,
-        Object);
-    return (AE_OK);
-}
-
-#endif
-
-void *
-AcpiOsMapMemory (
-    ACPI_PHYSICAL_ADDRESS   phys,
-    ACPI_SIZE               length)
-{
-    PHYSICAL_ADDRESS Address;
-
-    DPRINT("AcpiOsMapMemory(phys 0x%X  size 0x%X)\n", (ULONG)phys, length);
-    if (phys == 0x0)
-    {
-        IVTVirtualAddress = ExAllocatePool(NonPagedPool, length);
-        return IVTVirtualAddress;
-    }
-
-    Address.QuadPart = (ULONG)phys;
-    return MmMapIoSpace(Address, length, MmNonCached);
-}
-
-void
-AcpiOsUnmapMemory (
-    void                    *virt,
-    ACPI_SIZE               length)
-{
-    DPRINT("AcpiOsUnmapMemory()\n");
-
-    if (virt == 0x0)
-    {
-        ExFreePool(IVTVirtualAddress);
-        return;
-    }
-    MmUnmapIoSpace(virt, length);
 }
 
 UINT32
@@ -264,6 +518,18 @@ AcpiOsInstallInterruptHandler (
     KIRQL DIrql;
     KAFFINITY Affinity;
     NTSTATUS Status;
+    
+    if (AcpiInterruptHandlerRegistered)
+    {
+        DPRINT1("Reregister interrupt attempt failed\n");
+        return AE_ALREADY_EXISTS;
+    }
+    
+    if (!ServiceRoutine)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
 
     DPRINT("AcpiOsInstallInterruptHandler()\n");
     Vector = HalGetInterruptVector(
@@ -287,7 +553,7 @@ AcpiOsInstallInterruptHandler (
         Vector,
         DIrql,
         DIrql,
-        LevelSensitive, /* FIXME: LevelSensitive or Latched? */
+        LevelSensitive,
         TRUE,
         Affinity,
         FALSE);
@@ -306,30 +572,81 @@ AcpiOsRemoveInterruptHandler (
     ACPI_OSD_HANDLER        ServiceRoutine)
 {
     DPRINT("AcpiOsRemoveInterruptHandler()\n");
+    
+    if (!ServiceRoutine)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+    
     if (AcpiInterruptHandlerRegistered)
     {
         IoDisconnectInterrupt(AcpiInterrupt);
         AcpiInterrupt = NULL;
         AcpiInterruptHandlerRegistered = FALSE;
     }
+    else
+    {
+        DPRINT1("Trying to remove non-existing interrupt handler\n");
+        return AE_NOT_EXIST;
+    }
 
     return AE_OK;
 }
 
-void
-AcpiOsStall (UINT32 microseconds)
+ACPI_STATUS
+AcpiOsReadMemory (
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT32                  *Value,
+    UINT32                  Width)
 {
-    DPRINT("AcpiOsStall %d\n",microseconds);
-    KeStallExecutionProcessor(microseconds);
-    return;
+    DPRINT("AcpiOsReadMemory %p\n", Address);
+    switch (Width)
+    {
+    case 8:
+        *Value = (*(PUCHAR)(ULONG_PTR)Address);
+        break;
+    case 16:
+        *Value = (*(PUSHORT)(ULONG_PTR)Address);
+        break;
+    case 32:
+        *Value = (*(PULONG)(ULONG_PTR)Address);
+        break;
+
+    default:
+        DPRINT1("AcpiOsReadMemory got bad width: %d\n",Width);
+        return (AE_BAD_PARAMETER);
+        break;
+    }
+    return (AE_OK);
 }
 
-void
-AcpiOsSleep (ACPI_INTEGER milliseconds)
+ACPI_STATUS
+AcpiOsWriteMemory (
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT32                  Value,
+    UINT32                  Width)
 {
-    DPRINT("AcpiOsSleep %d\n", milliseconds);
-	KeStallExecutionProcessor(milliseconds*1000);
-    return;
+    DPRINT("AcpiOsWriteMemory %p\n", Address);
+    switch (Width)
+    {
+    case 8:
+        *(PUCHAR)(ULONG_PTR)Address = Value;
+        break;
+    case 16:
+        *(PUSHORT)(ULONG_PTR)Address = Value;
+        break;
+    case 32:
+        *(PULONG)(ULONG_PTR)Address = Value;
+        break;
+
+    default:
+        DPRINT1("AcpiOsWriteMemory got bad width: %d\n",Width);
+        return (AE_BAD_PARAMETER);
+        break;
+    }
+
+    return (AE_OK);
 }
 
 ACPI_STATUS
@@ -390,242 +707,139 @@ AcpiOsWritePort (
     return (AE_OK);
 }
 
-ACPI_STATUS
-AcpiOsReadMemory (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT32                  *Value,
-    UINT32                  Width)
+BOOLEAN
+OslIsPciDevicePresent(ULONG BusNumber, ULONG SlotNumber)
 {
-    DPRINT("AcpiOsReadMemory %p\n", Address);
-    switch (Width)
+    UINT32 ReadLength;
+    PCI_COMMON_CONFIG PciConfig;
+
+    /* Detect device presence by reading the PCI configuration space */
+
+    ReadLength = HalGetBusDataByOffset(PCIConfiguration,
+                                       BusNumber,
+                                       SlotNumber,
+                                       &PciConfig,
+                                       0,
+                                       sizeof(PciConfig));
+    if (ReadLength == 0)
     {
-    case 8:
-        *Value = (*(PUCHAR)(ULONG)Address);
-        break;
-    case 16:
-        *Value = (*(PUSHORT)(ULONG)Address);
-        break;
-    case 32:
-        *Value = (*(PULONG)(ULONG)Address);
-        break;
-
-    default:
-        DPRINT1("AcpiOsReadMemory got bad width: %d\n",Width);
-        return (AE_BAD_PARAMETER);
-        break;
-    }
-    return (AE_OK);
-}
-
-
-ACPI_STATUS
-AcpiOsWriteMemory (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT32                  Value,
-    UINT32                  Width)
-{
-    DPRINT("AcpiOsWriteMemory %p\n", Address);
-    switch (Width)
-    {
-    case 8:
-        *(PUCHAR)(ULONG)Address = Value;
-        break;
-    case 16:
-        *(PUSHORT)(ULONG)Address = Value;
-        break;
-    case 32:
-        *(PULONG)(ULONG)Address = Value;
-        break;
-
-    default:
-        DPRINT1("AcpiOsWriteMemory got bad width: %d\n",Width);
-        return (AE_BAD_PARAMETER);
-        break;
+        DPRINT("PCI device is not present\n");
+        return FALSE;
     }
 
-    return (AE_OK);
+    ASSERT(ReadLength >= 2);
+
+    if (PciConfig.VendorID == PCI_INVALID_VENDORID)
+    {
+        DPRINT("Invalid vendor ID in PCI configuration space\n");
+        return FALSE;
+    }
+
+    DPRINT("PCI device is present\n");
+
+    return TRUE;
 }
 
 ACPI_STATUS
 AcpiOsReadPciConfiguration (
     ACPI_PCI_ID             *PciId,
-    UINT32                  Register,
-    void                    *Value,
+    UINT32                  Reg,
+    UINT64                  *Value,
     UINT32                  Width)
 {
-    NTSTATUS Status;
     PCI_SLOT_NUMBER slot;
-
-    if (Register == 0 || PciId->Device == 0 ||
-        Register + Width > PCI_COMMON_HDR_LENGTH)
-        return AE_ERROR;
 
     slot.u.AsULONG = 0;
     slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
-    DPRINT("AcpiOsReadPciConfiguration, slot=0x%X, func=0x%X\n", slot.u.AsULONG, Register);
-    Status = HalGetBusDataByOffset(PCIConfiguration,
+    DPRINT("AcpiOsReadPciConfiguration, slot=0x%X, func=0x%X\n", slot.u.AsULONG, Reg);
+
+    if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
+        return AE_NOT_FOUND;
+
+    /* Width is in BITS */
+    HalGetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
         Value,
-        Register,
-        Width);
+        Reg,
+        (Width >> 3));
 
-    if (NT_SUCCESS(Status))
-        return AE_OK;
-    else
-        return AE_ERROR;
+    return AE_OK;
 }
 
 ACPI_STATUS
 AcpiOsWritePciConfiguration (
     ACPI_PCI_ID              *PciId,
-    UINT32                   Register,
-    ACPI_INTEGER             Value,
+    UINT32                   Reg,
+    UINT64                   Value,
     UINT32                   Width)
 {
-    NTSTATUS Status;
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
-
-    if (Register == 0 || PciId->Device == 0 ||
-        Register + Width > PCI_COMMON_HDR_LENGTH)
-        return AE_ERROR;
 
     slot.u.AsULONG = 0;
     slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
     DPRINT("AcpiOsWritePciConfiguration, slot=0x%x\n", slot.u.AsULONG);
-    Status = HalSetBusDataByOffset(PCIConfiguration,
+    if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
+        return AE_NOT_FOUND;
+
+    /* Width is in BITS */
+    HalSetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
         &buf,
-        Register,
-        Width);
-
-    if (NT_SUCCESS(Status))
-        return AE_OK;
-    else
-        return AE_ERROR;
-}
-
-ACPI_STATUS
-AcpiOsCreateSemaphore (
-    UINT32              MaxUnits,
-    UINT32              InitialUnits,
-    ACPI_SEMAPHORE      *OutHandle)
-{
-    PFAST_MUTEX Mutex;
-
-    Mutex = ExAllocatePool(NonPagedPool, sizeof(FAST_MUTEX));
-    if (!Mutex)
-    return AE_NO_MEMORY;
-
-    DPRINT("AcpiOsCreateSemaphore() at 0x%X\n", Mutex);
-
-    ExInitializeFastMutex(Mutex);
-
-    *OutHandle = Mutex;
-    return AE_OK;
-}
-
-ACPI_STATUS
-AcpiOsDeleteSemaphore (
-    ACPI_SEMAPHORE      Handle)
-{
-    PFAST_MUTEX Mutex = (PFAST_MUTEX)Handle;
-
-    DPRINT("AcpiOsDeleteSemaphore(handle 0x%X)\n", Handle);
-
-    if (!Mutex)
-    return AE_BAD_PARAMETER;
-
-    ExFreePool(Mutex);
-    return AE_OK;
-}
-
-ACPI_STATUS
-AcpiOsWaitSemaphore(
-    ACPI_SEMAPHORE             Handle,
-    UINT32                     units,
-    UINT16                     timeout)
-{
-    PFAST_MUTEX Mutex = (PFAST_MUTEX)Handle;
-
-    if (!Mutex || (units < 1))
-    {
-        DPRINT("AcpiOsWaitSemaphore(handle 0x%X, units %d) Bad parameters\n",
-            Mutex, units);
-        return AE_BAD_PARAMETER;
-    }
-
-    DPRINT("Waiting for semaphore %p\n", Handle);
-    ASSERT(Mutex);
-
-    /* HACK: We enter here at a high IRQL sometimes
-     * because we get called from DPCs and ISRs and
-     * we can't use a fast mutex at that IRQL */
-    if (KeGetCurrentIrql() <= APC_LEVEL)
-        ExAcquireFastMutex(Mutex);
+        Reg,
+        (Width >> 3));
 
     return AE_OK;
 }
 
-ACPI_STATUS
-AcpiOsSignalSemaphore (
-    ACPI_HANDLE         Handle,
-    UINT32              Units)
+void ACPI_INTERNAL_VAR_XFACE
+AcpiOsPrintf (
+    const char              *Fmt,
+    ...)
 {
-    PFAST_MUTEX  Mutex = (PFAST_MUTEX)Handle;
+    va_list                 Args;
+    va_start (Args, Fmt);
 
-    DPRINT("AcpiOsSignalSemaphore %p\n",Handle);
-    ASSERT(Mutex);
+    AcpiOsVprintf (Fmt, Args);
 
-    /* HACK: We enter here at a high IRQL sometimes
-     * because we get called from DPCs and ISRs and
-     * we can't use a fast mutex at that IRQL */
-    if (KeGetCurrentIrql() <= APC_LEVEL)
-        ExReleaseFastMutex(Mutex);
-
-    return AE_OK;
-}
-
-ACPI_STATUS
-AcpiOsCreateLock (
-    ACPI_SPINLOCK           *OutHandle)
-{
-    DPRINT("AcpiOsCreateLock\n");
-    return (AcpiOsCreateSemaphore (1, 1, OutHandle));
+    va_end (Args);
+    return;
 }
 
 void
-AcpiOsDeleteLock (
-    ACPI_SPINLOCK           Handle)
+AcpiOsVprintf (
+    const char              *Fmt,
+    va_list                 Args)
 {
-    DPRINT("AcpiOsDeleteLock %p\n", Handle);
-    AcpiOsDeleteSemaphore (Handle);
+#ifndef NDEBUG
+    vDbgPrintEx (-1, DPFLTR_ERROR_LEVEL, Fmt, Args);
+#endif
+    return;
 }
-
-
-ACPI_CPU_FLAGS
-AcpiOsAcquireLock (
-    ACPI_HANDLE             Handle)
-{
-    DPRINT("AcpiOsAcquireLock, %p\n", Handle);
-    AcpiOsWaitSemaphore (Handle, 1, 0xFFFF);
-    return (0);
-}
-
 
 void
-AcpiOsReleaseLock (
-    ACPI_SPINLOCK           Handle,
-    ACPI_CPU_FLAGS          Flags)
+AcpiOsRedirectOutput(
+    void *Destination)
 {
-    DPRINT("AcpiOsReleaseLock %p\n",Handle);
-    AcpiOsSignalSemaphore (Handle, 1);
+    /* No-op */
+    DPRINT1("Output redirection not supported\n");
+}
+
+UINT64
+AcpiOsGetTimer(
+    void)
+{
+    LARGE_INTEGER CurrentTime;
+    
+    KeQuerySystemTime(&CurrentTime);
+    
+    return CurrentTime.QuadPart;
 }
 
 ACPI_STATUS
@@ -633,125 +847,35 @@ AcpiOsSignal (
     UINT32                  Function,
     void                    *Info)
 {
-
+    ACPI_SIGNAL_FATAL_INFO *FatalInfo = Info;
+    
     switch (Function)
     {
     case ACPI_SIGNAL_FATAL:
         if (Info)
-            AcpiOsPrintf ("AcpiOsBreakpoint: %s ****\n", Info);
+            DPRINT1 ("AcpiOsBreakpoint: %d %d %d ****\n", FatalInfo->Type, FatalInfo->Code, FatalInfo->Argument);
         else
-            AcpiOsPrintf ("AcpiOsBreakpoint ****\n");
+            DPRINT1 ("AcpiOsBreakpoint ****\n");
         break;
     case ACPI_SIGNAL_BREAKPOINT:
         if (Info)
-            AcpiOsPrintf ("AcpiOsBreakpoint: %s ****\n", Info);
+            DPRINT1 ("AcpiOsBreakpoint: %s ****\n", Info);
         else
-            AcpiOsPrintf ("AcpiOsBreakpoint ****\n");
+            DPRINT1 ("AcpiOsBreakpoint ****\n");
         break;
     }
-
-    return (AE_OK);
-}
-
-
-ACPI_THREAD_ID
-AcpiOsGetThreadId (void)
-{
-    return (ULONG)PsGetCurrentThreadId();
-}
-
-ACPI_STATUS
-AcpiOsExecute (
-    ACPI_EXECUTE_TYPE       Type,
-    ACPI_OSD_EXEC_CALLBACK  Function,
-    void                    *Context)
-{
-	DPRINT("AcpiOsExecute\n");
-
-	KeInsertQueueDpc(&AcpiDpc, (PVOID)Function, (PVOID)Context);
-
-#ifdef _MULTI_THREADED
-    //_beginthread (Function, (unsigned) 0, Context);
-#endif
-
-    return 0;
-}
-
-UINT64
-AcpiOsGetTimer (void)
-{
-    LARGE_INTEGER Timer;
-
-    DPRINT("AcpiOsGetTimer\n");
     
-    KeQueryTickCount(&Timer);
+    ASSERT(FALSE);
 
-    return Timer.QuadPart;
-}
-
-void
-AcpiOsDerivePciId(
-    ACPI_HANDLE             rhandle,
-    ACPI_HANDLE             chandle,
-    ACPI_PCI_ID             **PciId)
-{
-    DPRINT("AcpiOsDerivePciId\n");
-    return;
-}
-
-ACPI_STATUS
-AcpiOsPredefinedOverride (
-    const ACPI_PREDEFINED_NAMES *InitVal,
-    ACPI_STRING                 *NewVal)
-{
-    if (!InitVal || !NewVal)
-        return AE_BAD_PARAMETER;
-
-    *NewVal = ACPI_OS_NAME;
-    DPRINT("AcpiOsPredefinedOverride\n");
-    return AE_OK;
-}
-
-ACPI_PHYSICAL_ADDRESS
-AcpiOsGetRootPointer (
-    void);
-
-ACPI_STATUS
-AcpiOsTableOverride (
-    ACPI_TABLE_HEADER       *ExistingTable,
-    ACPI_TABLE_HEADER       **NewTable)
-{
-    DPRINT("AcpiOsTableOverride\n");
-    *NewTable = NULL;
     return (AE_OK);
 }
 
 ACPI_STATUS
-AcpiOsValidateInterface (
-    char                    *Interface)
+AcpiOsGetLine(
+    char *Buffer,
+    UINT32 BufferLength,
+    UINT32 *BytesRead)
 {
-    DPRINT("AcpiOsValidateInterface\n");
-    return (AE_OK);
-}
-
-ACPI_STATUS
-AcpiOsValidateAddress (
-    UINT8                   SpaceId,
-    ACPI_PHYSICAL_ADDRESS   Address,
-    ACPI_SIZE               Length)
-{
-    DPRINT("AcpiOsValidateAddress\n");
-    return (AE_OK);
-}
-
-ACPI_PHYSICAL_ADDRESS
-AcpiOsGetRootPointer (
-    void)
-{
-    ACPI_PHYSICAL_ADDRESS pa = 0;
-
-    DPRINT("AcpiOsGetRootPointer\n");
-    
-    AcpiFindRootPointer(&pa);
-    return pa;
+    DPRINT1("File reading not supported\n");
+    return AE_ERROR;
 }

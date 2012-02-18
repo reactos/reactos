@@ -34,7 +34,7 @@ void _makepath(char* path, const char* drive, const char* dir, const char* fname
     }
     if (dir && dir[0])
     {
-        unsigned int len = strlen(dir);
+        size_t len = strlen(dir);
         memmove(p, dir, len);
         p += len;
         if (p[-1] != '/' && p[-1] != '\\')
@@ -42,7 +42,7 @@ void _makepath(char* path, const char* drive, const char* dir, const char* fname
     }
     if (fname && fname[0])
     {
-        unsigned int len = strlen(fname);
+        size_t len = strlen(fname);
         memmove(p, fname, len);
         p += len;
     }

@@ -1,11 +1,8 @@
 /*
- *  Indonesian language file by Zaenal Mutaqin 2007-02-15
+ * Indonesian language file by Zaenal Mutaqin 2007-02-15
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-
 STRINGTABLE DISCARDABLE
 BEGIN
 
@@ -29,5 +26,5 @@ IDS_MissingEntry,    "%s sudah diambil, tapi %s entry point tidak ditemukan.\n\n
 
 IDS_FailureMessage,  "%s dalam %s gagal.\nKode dihasilkan: 0x%08x"
 
-IDS_SuccessMessage   "%s dalam %s sukses."
+IDS_SuccessMessage,  "%s dalam %s sukses."
 END

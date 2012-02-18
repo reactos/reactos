@@ -105,34 +105,6 @@ const struct builtin_class_descr STATIC_builtin_class =
     0                    /* brush */
 };
 
-static void setup_clipping(HWND hwnd, HDC hdc, HRGN *orig)
-{
-    RECT rc;
-    HRGN hrgn;
-
-    /* Native control has always a clipping region set (this may be because
-     * builtin controls uses CS_PARENTDC) and an application depends on it
-     */
-    hrgn = CreateRectRgn(0, 0, 1, 1);
-    if (GetClipRgn(hdc, hrgn) != 1)
-    {
-        DeleteObject(hrgn);
-        *orig = NULL;
-    } else
-        *orig = hrgn;
-
-    GetClientRect(hwnd, &rc);
-    DPtoLP(hdc, (POINT *)&rc, 2);
-    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
-}
-
-static void restore_clipping(HDC hdc, HRGN hrgn)
-{
-    SelectClipRgn(hdc, hrgn);
-    if (hrgn != NULL)
-        DeleteObject(hrgn);
-}
-
 /***********************************************************************
  *           STATIC_SetIcon
  *
@@ -314,32 +286,20 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
     if (!IsRectEmpty(&rc) && IsWindowVisible(hwnd) && staticPaintFunc[style])
     {
 	HDC hdc;
-        HRGN hOrigClipping;
+        HRGN hrgn;
 
 	hdc = GetDC( hwnd );
-        setup_clipping(hwnd, hdc, &hOrigClipping);
+        hrgn = set_control_clipping( hdc, &rc );
 	(staticPaintFunc[style])( hwnd, hdc, full_style );
-        restore_clipping(hdc, hOrigClipping);
+        SelectClipRgn( hdc, hrgn );
+        if (hrgn) DeleteObject( hrgn );
 	ReleaseDC( hwnd, hdc );
     }
 }
 
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
-    HBRUSH hBrush;
-    HWND parent = GetParent(hwnd);
-
-    if (!parent) parent = hwnd;
-    hBrush = (HBRUSH) SendMessageW( parent,
-                    WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
-    if (!hBrush) /* did the app forget to call DefWindowProc ? */
-    {
-        /* FIXME: DefWindowProc should return different colors if a
-                  manifest is present */
-        hBrush = (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC,
-                                        (WPARAM)hdc, (LPARAM)hwnd);
-    }
-    return hBrush;
+    return GetControlBrush( hwnd, hdc, WM_CTLCOLORSTATIC);
 }
 
 static VOID STATIC_InitColours(void)
@@ -388,6 +348,14 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
        {
           NtUserSetWindowFNID(hwnd, FNID_STATIC);
        }
+       else
+       {
+          if (pWnd->fnid != FNID_STATIC)
+          {
+             ERR("Wrong window class for Static! fnId 0x%x\n",pWnd->fnid);
+             return 0;
+          }
+       }
     }
 #endif
 
@@ -431,13 +399,15 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
+            RECT rect;
             HDC hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
+            GetClientRect( hwnd, &rect );
             if (staticPaintFunc[style])
             {
-                HRGN hOrigClipping;
-                setup_clipping(hwnd, hdc, &hOrigClipping);
+                HRGN hrgn = set_control_clipping( hdc, &rect );
                 (staticPaintFunc[style])( hwnd, hdc, full_style );
-                restore_clipping(hdc, hOrigClipping);
+                SelectClipRgn( hdc, hrgn );
+                if (hrgn) DeleteObject( hrgn );
             }
             if (!wParam) EndPaint(hwnd, &ps);
         }
@@ -505,10 +475,10 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	    if (HIWORD(lParam))
 	    {
 	        if(unicode)
-		     lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
+                    lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
                 else
                     lResult = DefWindowProcA( hwnd, uMsg, wParam, lParam );
-	        STATIC_TryPaintFcn( hwnd, full_style );
+                STATIC_TryPaintFcn( hwnd, full_style );
 	    }
 	}
         break;
@@ -623,6 +593,7 @@ LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 {
   DRAWITEMSTRUCT dis;
+  HBRUSH hBrush;
   HFONT font, oldFont = NULL;
   UINT id = (UINT)GetWindowLongPtrW( hwnd, GWLP_ID );
 
@@ -638,7 +609,7 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 
   font = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
   if (font) oldFont = SelectObject( hdc, font );
-  SendMessageW( GetParent(hwnd), WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
+  hBrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
   SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
   if (font) SelectObject( hdc, oldFont );
 }

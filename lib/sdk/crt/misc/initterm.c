@@ -1,20 +1,49 @@
-#include <stdlib.h>
+#include <precomp.h>
+
+typedef void (CDECL *_INITTERMFUN)(void);
+typedef int (CDECL *_INITTERM_E_FN)(void);
 
 
-/*
- * @implemented
+/*********************************************************************
+ *		_initterm (MSVCRT.@)
  */
-void _initterm(void (*fStart[])(void), void (*fEnd[])(void))
+void CDECL _initterm(_INITTERMFUN *start,_INITTERMFUN *end)
 {
-   int i = 0;
+  _INITTERMFUN* current = start;
 
-   if ( fStart == NULL || fEnd == NULL )
-     return;
+  TRACE("(%p,%p)\n",start,end);
+  while (current<end)
+  {
+    if (*current)
+    {
+      TRACE("Call init function %p\n",*current);
+      (**current)();
+      TRACE("returned\n");
+    }
+    current++;
+  }
+}
 
-   while ( &fStart[i] < fEnd )
-     {
-	if ( fStart[i] != NULL )
-	  (*fStart[i])();
-	i++;
-     }
+/*********************************************************************
+ *  _initterm_e (MSVCRT.@)
+ *
+ * call an array of application initialization functions and report the return value
+ */
+int CDECL _initterm_e(_INITTERM_E_FN *table, _INITTERM_E_FN *end)
+{
+    int res = 0;
+
+    TRACE("(%p, %p)\n", table, end);
+
+    while (!res && table < end) {
+        if (*table) {
+            TRACE("calling %p\n", **table);
+            res = (**table)();
+            if (res)
+                TRACE("function %p failed: 0x%x\n", *table, res);
+
+        }
+        table++;
+    }
+    return res;
 }

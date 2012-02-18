@@ -110,7 +110,7 @@ typedef struct _ROSSYM_CALLBACKS {
   BOOLEAN (*MemGetProc)(PVOID FileContext, ULONG_PTR *Target, PVOID SourceMem, ULONG Size);
 } ROSSYM_CALLBACKS, *PROSSYM_CALLBACKS;
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 typedef struct _ROSSYM_OWN_FILECONTEXT {
   BOOLEAN (*ReadFileProc)(PVOID FileContext, PVOID Buffer, ULONG Size);
   BOOLEAN (*SeekFileProc)(PVOID FileContext, ULONG_PTR Position);
@@ -123,7 +123,7 @@ typedef struct _ROSSYM_INFO *PROSSYM_INFO;
 #endif
 
 VOID RosSymInit(PROSSYM_CALLBACKS Callbacks);
-#ifndef __ROS_CMAKE__
+#ifndef __ROS_DWARF__
 VOID RosSymInitKernelMode(VOID);
 #endif
 VOID RosSymInitUserMode(VOID);
@@ -135,7 +135,7 @@ BOOLEAN RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize,
 BOOLEAN RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo);
 ULONG RosSymGetRawDataLength(PROSSYM_INFO RosSymInfo);
 VOID RosSymGetRawData(PROSSYM_INFO RosSymInfo, PVOID RawData);
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 BOOLEAN RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
                                     ULONG_PTR RelativeAddress,
                                     PROSSYM_LINEINFO RosSymLineInfo);

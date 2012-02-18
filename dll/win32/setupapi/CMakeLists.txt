@@ -11,8 +11,6 @@ add_definitions(
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
 
-set_unicode()
-
 set_rc_compiler()
 
 spec2def(setupapi.dll setupapi.spec)
@@ -40,13 +38,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/pnp_c.c)
 
 add_library(setupapi SHARED ${SOURCE})
-
-set_module_type(setupapi win32dll)
-
-target_link_libraries(setupapi
-    uuid
-    wine
-    ${PSEH_LIB})
+set_module_type(setupapi win32dll UNICODE)
+target_link_libraries(setupapi uuid wine ${PSEH_LIB})
+add_delay_importlibs(setupapi shell32)
 
 add_importlibs(setupapi
     msvcrt
@@ -56,7 +50,6 @@ add_importlibs(setupapi
     user32
     rpcrt4
     version
-    shell32
     kernel32
     ntdll)
 

@@ -1,28 +1,23 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/wndproc.c
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Callback to usermode support
+ * FILE:             subsystems/win32/win32k/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  * NOTES:            Please use the Callback Memory Management functions for
  *                   callbacks to make sure, the memory is freed on thread
  *                   termination!
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserCallback);
 
 /* CALLBACK MEMORY MANAGEMENT ************************************************/
 
 typedef struct _INT_CALLBACK_HEADER
 {
-   /* list entry in the THREADINFO structure */
+   /* List entry in the THREADINFO structure */
    LIST_ENTRY ListEntry;
 }
 INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
@@ -42,7 +37,7 @@ IntCbAllocateMemory(ULONG Size)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* insert the callback memory into the thread's callback list */
+   /* Insert the callback memory into the thread's callback list */
 
    InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
 
@@ -62,10 +57,10 @@ IntCbFreeMemory(PVOID Data)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* remove the memory block from the thread's callback list */
+   /* Remove the memory block from the thread's callback list */
    RemoveEntryList(&Mem->ListEntry);
 
-   /* free memory */
+   /* Free memory */
    ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
 }
 
@@ -81,18 +76,17 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
       Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER,
                               ListEntry);
 
-      /* free memory */
+      /* Free memory */
       ExFreePool(Mem);
    }
 }
-
 
 //
 // Pass the Current Window handle and pointer to the Client Callback.
 // This will help user space programs speed up read access with the window object.
 //
 static VOID
-IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
+IntSetTebWndCallback (HWND * hWnd, PWND * pWnd, PVOID * pActCtx)
 {
   HWND hWndS = *hWnd;
   PWND Window = UserGetWindowObject(*hWnd);
@@ -100,21 +94,132 @@ IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
 
   *hWnd = ClientInfo->CallbackWnd.hWnd;
   *pWnd = ClientInfo->CallbackWnd.pWnd;
+  *pActCtx = ClientInfo->CallbackWnd.pActCtx;
 
   ClientInfo->CallbackWnd.hWnd  = hWndS;
   ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
+  ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
 }
 
 static VOID
-IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
+IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 {
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->CallbackWnd.hWnd = hWnd;
   ClientInfo->CallbackWnd.pWnd = pWnd;
+  ClientInfo->CallbackWnd.pActCtx = pActCtx;
 }
 
 /* FUNCTIONS *****************************************************************/
+
+/* Calls ClientLoadLibrary in user32 */
+HMODULE
+co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName, 
+                        PUNICODE_STRING pstrInitFunc, 
+                        BOOL Unload,
+                        BOOL ApiHook)
+{
+   PVOID ResultPointer;
+   ULONG ResultLength;
+   ULONG ArgumentLength;
+   PCLIENT_LOAD_LIBRARY_ARGUMENTS pArguments;
+   NTSTATUS Status;
+   HMODULE Result;
+   ULONG_PTR pLibNameBuffer = 0, pInitFuncBuffer = 0;
+
+   TRACE("co_IntClientLoadLibrary: %S, %S, %d, %d\n", pstrLibName->Buffer, pstrLibName->Buffer, Unload, ApiHook);
+
+   /* Calculate the size of the argument */
+   ArgumentLength = sizeof(CLIENT_LOAD_LIBRARY_ARGUMENTS);
+   if(pstrLibName)
+   {
+       pLibNameBuffer = ArgumentLength;
+       ArgumentLength += pstrLibName->Length + sizeof(WCHAR);
+   }
+   if(pstrInitFunc)
+   {
+       pInitFuncBuffer = ArgumentLength; 
+       ArgumentLength += pstrInitFunc->Length + sizeof(WCHAR);
+   }
+
+   /* Allocate the argument */
+   pArguments = IntCbAllocateMemory(ArgumentLength);
+   if(pArguments == NULL)
+   {
+       return FALSE;
+   }
+
+   /* Fill the argument */
+   pArguments->Unload = Unload;
+   pArguments->ApiHook = ApiHook;
+   if(pstrLibName)
+   {
+       /* Copy the string to the callback memory */
+       pLibNameBuffer += (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)pLibNameBuffer;
+       pArguments->strLibraryName.MaximumLength = pstrLibName->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strLibraryName, pstrLibName);
+
+       /* Fix argument pointer to be relative to the argument */
+       pLibNameBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)(pLibNameBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strLibraryName, sizeof(UNICODE_STRING));
+   }
+
+   if(pstrInitFunc)
+   {
+       /* Copy the strings to the callback memory */
+       pInitFuncBuffer += (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)pInitFuncBuffer;
+       pArguments->strInitFuncName.MaximumLength = pstrInitFunc->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strInitFuncName, pstrInitFunc);
+
+       /* Fix argument pointers to be relative to the argument */
+       pInitFuncBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)(pInitFuncBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strInitFuncName, sizeof(UNICODE_STRING));
+   }
+
+   /* Do the callback */
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_CLIENTLOADLIBRARY,
+                               pArguments,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   /* Free the argument */
+   IntCbFreeMemory(pArguments);
+
+   if(!NT_SUCCESS(Status))
+   {
+       return FALSE;
+   }
+
+   _SEH2_TRY
+   {
+       ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
+       /* Simulate old behaviour: copy into our local buffer */
+       Result = *(HMODULE*)ResultPointer;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       Result = 0;
+   }
+   _SEH2_END;
+
+   return Result;
+}
 
 VOID APIENTRY
 co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
@@ -124,7 +229,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
@@ -135,7 +240,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    Arguments.Context = CompletionCallbackContext;
    Arguments.Result = Result;
 
-   IntSetTebWndCallback (&hWnd, &pWnd);
+   IntSetTebWndCallback (&hWnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -147,7 +252,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (hWnd, pWnd);
+   IntRestoreTebWndCallback (hWnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {
@@ -168,13 +273,11 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
    LRESULT Result;
-
-   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
 
    if (0 < lParamBufferSize)
    {
@@ -203,7 +306,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    ResultPointer = NULL;
    ResultLength = ArgumentLength;
 
-   IntSetTebWndCallback (&Wnd, &pWnd);
+   IntSetTebWndCallback (&Wnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -220,18 +323,18 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      ERR_CH(UserMsgCall,"Failed to copy result from user mode!\n");
+      ERR("Failed to copy result from user mode!\n");
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (Wnd, pWnd);
+   IntRestoreTebWndCallback (Wnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {
-     ERR_CH(UserMsgCall,"Call to user mode failed!\n");
+     ERR("Call to user mode failed!\n");
       if (0 < lParamBufferSize)
       {
          IntCbFreeMemory(Arguments);
@@ -720,6 +823,5 @@ co_IntClientThreadSetup(VOID)
 
    return Status;
 }
-
 
 /* EOF */

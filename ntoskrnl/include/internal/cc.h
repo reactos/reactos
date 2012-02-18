@@ -145,8 +145,8 @@ typedef struct _CACHE_SEGMENT
     LIST_ENTRY CacheSegmentLRUListEntry;
     /* Offset in the file which this cache segment maps. */
     ULONG FileOffset;
-    /* Lock. */
-    EX_PUSH_LOCK Lock;
+    /* Mutex */
+    KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
     /* Pointer to the BCB for the file which this cache segment maps data for. */
@@ -261,7 +261,8 @@ NTSTATUS
 NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
-    PULONG Count
+    PULONG Count,
+    BOOLEAN Wait
 );
 
 VOID

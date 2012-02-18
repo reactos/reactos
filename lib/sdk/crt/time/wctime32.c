@@ -8,5 +8,5 @@
 #define UNICODE
 #define _UNICODE
 
-#define _USE_EXPLITIT_32BIT_TIME
+#define _USE_EXPLICIT_32BIT_TIME
 #include "ctime.c"

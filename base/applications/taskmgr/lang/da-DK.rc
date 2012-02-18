@@ -1,31 +1,20 @@
-/////////////////////////////////////////////////////////////////////////////
-// Danish resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Fil"
     BEGIN
-        MENUITEM "&Ny Opgave (Kør...)",          ID_FILE_NEW
+        MENUITEM "&Ny Opgave (KÃ¸r...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "A&slut Opgavestyring",          ID_FILE_EXIT
     END
     POPUP "&Indstillinger"
     BEGIN
-        MENUITEM "&Altid Øverst",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Altid Ã˜verst",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
         MENUITEM "&Minimere Ved Brug",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Skjul Når Minimeret",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Skjul NÃ¥r Minimeret",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
         MENUITEM "&Vis 16-bit Opgaver",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
@@ -35,7 +24,7 @@ BEGIN
         MENUITEM "&Opdatere Nu",                ID_VIEW_REFRESH
         POPUP "&Opdaterings Hastighed"
         BEGIN
-            MENUITEM "&Høj",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&HÃ¸j",                       ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normal",                     ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
             MENUITEM "&Lav",                        ID_VIEW_UPDATESPEED_LOW
@@ -44,9 +33,9 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "St&ore Ikoner",                ID_VIEW_LARGE
-        MENUITEM "S&må Ikoner",                ID_VIEW_SMALL
+        MENUITEM "S&mÃ¥ Ikoner",                ID_VIEW_SMALL
         MENUITEM "&Detaljer",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Vælg Kolonner...",          ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&VÃ¦lg Kolonner...",          ID_VIEW_SELECTCOLUMNS
         POPUP "&CPU Historie"
         BEGIN
             MENUITEM "&En Graf, Alle CPUer",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
@@ -65,9 +54,9 @@ BEGIN
         MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
         MENUITEM "&Bring til front",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "&Hjælp"
+    POPUP "&HjÃ¦lp"
     BEGIN
-        MENUITEM "Opgavestyring &Hjælpe Emner",   ID_HELP_TOPICS
+        MENUITEM "Opgavestyring &HjÃ¦lpe Emner",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Omkring Opgavestyring",         ID_HELP_ABOUT
     END
@@ -87,10 +76,10 @@ IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Ny Opgave (Kør...)",          ID_FILE_NEW
+        MENUITEM "&Ny Opgave (KÃ¸r...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "St&ore ikoner",                ID_VIEW_LARGE
-        MENUITEM "S&må Ikoner",                ID_VIEW_SMALL
+        MENUITEM "S&mÃ¥ Ikoner",                ID_VIEW_SMALL
         MENUITEM "&Detaljer",                    ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -109,7 +98,7 @@ BEGIN
         MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Afslut Opgave",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Gå Til Process",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&GÃ¥ Til Process",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -121,7 +110,7 @@ BEGIN
         MENUITEM "&Gendan",                    ID_RESTORE
         MENUITEM "&Luk",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Altid Øverest",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Altid Ã˜verest",              ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,15 +119,15 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Afslut Process",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Afslut Process &Træ",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Afslut Process &TrÃ¦",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Debug",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Sæt &prioritet"
+        POPUP "SÃ¦t &prioritet"
         BEGIN
-            MENUITEM "&Højeste",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&HÃ¸jeste",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "&Høj",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&HÃ¸j",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
             MENUITEM "&Over Normal",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
@@ -149,7 +138,7 @@ BEGIN
             MENUITEM "&Lav",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Sæt &Affinitet...",            ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "SÃ¦t &Affinitet...",            ID_PROCESS_PAGE_SETAFFINITY
 	MENUITEM "Redigere Debug &Kanaler...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
@@ -206,8 +195,8 @@ BEGIN
     GROUPBOX        "Aftaget Forbrug (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Fysisk Hukommelse (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Kernel Hukommelse (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Håndtag",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "Tråde",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "HÃ¥ndtag",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "TrÃ¥de",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Processor",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -216,7 +205,7 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Ialt",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Begrænsning",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
+    LTEXT           "BegrÃ¦nsning",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
     LTEXT           "Top",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -225,7 +214,7 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Ialt",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Tilgængelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "TilgÃ¦ngelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
     LTEXT           "System Cache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -244,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU Usage History",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Hukommelses Forbrug Historik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU Forbrug Visning",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Hukommelses Forbrug Visning",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU Forbrug Visning",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Hukommelses Forbrug Visning",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU Forbrug Historik",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Hukommelses Forbrug Historik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -272,7 +259,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
     PUSHBUTTON      "Fortryd",IDCANCEL,174,133,50,14
-    LTEXT           "Processor Affinitets indstillingen kontrollere hvilken CPUer processen har lov at eksekvere på.",
+    LTEXT           "Processor Affinitets indstillingen kontrollere hvilken CPUer processen har lov at eksekvere pÃ¥.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -342,12 +329,12 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vælg Kolonner"
+CAPTION "VÃ¦lg Kolonner"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "Fortryd",IDCANCEL,138,178,50,14
-    LTEXT           "Vælg de Kolonner som skal vises under Processor.",
+    LTEXT           "VÃ¦lg de Kolonner som skal vises under Processor.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Billede Navn",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
@@ -367,9 +354,9 @@ BEGIN
                     WS_TABSTOP,7,105,53,10
     CONTROL         "&USER Objektor",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "I/O Læsning",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O LÃ¦sning",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "I/O Læste Bytes",IDC_IOREADBYTES,"Button",
+    CONTROL         "I/O LÃ¦ste Bytes",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
     CONTROL         "&Session ID",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
@@ -377,7 +364,7 @@ BEGIN
                     WS_TABSTOP,7,160,51,10
     CONTROL         "Side F&ejl Delta",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "&Virtuel Huk. Størrelse",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "&Virtuel Huk. StÃ¸rrelse",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
     CONTROL         "Cach&ed Pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
@@ -385,9 +372,9 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
     CONTROL         "Base P&rioritet",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
-    CONTROL         "Antal Af &Håndtag",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Antal Af &HÃ¥ndtag",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,59,10
-    CONTROL         "&Antal Af Tråde",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Antal Af TrÃ¥de",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,59,10
     CONTROL         "GDI Objektor",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
@@ -529,14 +516,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Kører et nyt Program"
+    ID_FILE_NEW             "KÃ¸rer et nyt Program"
     ID_OPTIONS_ALWAYSONTOP  "Opgavestyring bliver i front af alle de andre vinduer med mindre Opgavestyring er minimeret"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Opgavestyring er minimeret når en Gå til operation er fortaget"
+                            "Opgavestyring er minimeret nÃ¥r en GÃ¥ til operation er fortaget"
     ID_OPTIONS_HIDEWHENMINIMIZED "Skjul Opgavestyring ved minimering"
     ID_VIEW_REFRESH         "Gennemtving Opgavestyring til at opdatere nu"
     ID_VIEW_LARGE           "Vis Opgaver med store ikoner"
-    ID_VIEW_SMALL           "Vis Opgaver med små ikoner"
+    ID_VIEW_SMALL           "Vis Opgaver med smÃ¥ ikoner"
     ID_VIEW_DETAILS         "Vis information om alle opgaver"
     ID_VIEW_UPDATESPEED_HIGH "Opdatere visning 2 gange per sekund"
     ID_VIEW_UPDATESPEED_NORMAL "Opdatere visning hvert 2 sekund"
@@ -553,12 +540,12 @@ BEGIN
     ID_WINDOWS_MAXIMIZE     "Maximizes the windows"
     ID_WINDOWS_CASCADE      "Cascades the windows diagonally on the desktop"
     ID_WINDOWS_BRINGTOFRONT "Brings the window front, but does not switch to it"
-    ID_HELP_TOPICS          "Viser Opgavestyring Hjælpe Emner"
+    ID_HELP_TOPICS          "Viser Opgavestyring HjÃ¦lpe Emner"
     ID_HELP_ABOUT           "Viser program information, version nummer, of kopibeskyttelse"
     ID_FILE_EXIT            "Exits the Task Manager application"
     ID_OPTIONS_SHOW16BITTASKS
-                            "Viser 16-bit opgaver som kører under ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS   "Vælg hvilke kolonner der vil være tilgængelig under Processor Siden"
+                            "Viser 16-bit opgaver som kÃ¸rer under ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS   "VÃ¦lg hvilke kolonner der vil vÃ¦re tilgÃ¦ngelig under Processor Siden"
     ID_VIEW_SHOWKERNELTIMES "Viser kernel tider i performance graffen"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
                             "En enkelt Historie graf der viser det totale CPU forbrug"
@@ -569,7 +556,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "Fortæller den valgt opgave at den skal lukkes"
+    ID_ENDTASK              "FortÃ¦ller den valgt opgave at den skal lukkes"
     ID_GOTOPROCESS          "Switches the focus to the process of the selected task"
     ID_RESTORE              "Gendanner Opgavestyring fra sin skjule position"
     ID_PROCESS_PAGE_ENDPROCESS "Removes the process from the system"
@@ -577,17 +564,17 @@ BEGIN
                             "Removes this process and all descendants from the system"
     ID_PROCESS_PAGE_DEBUG   "Attaches the debugger to this process"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Kontrollere hvilken processorer processen er tilladt at køre på!"
+                            "Kontrollere hvilken processorer processen er tilladt at kÃ¸re pÃ¥!"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
                             "Sets process to the REALTIME priority class"
     ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sets process to the HIGH priority class"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Sæt proces til Over Normal Priotet Klasse"
+                            "SÃ¦t proces til Over Normal Priotet Klasse"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Sæt proces til Normal Priotet Klasse"
+                            "SÃ¦t proces til Normal Priotet Klasse"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Sæt proces til Under Normal Priotet Klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sæt proces til Lav Priotet Klasse"
+                            "SÃ¦t proces til Under Normal Priotet Klasse"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "SÃ¦t proces til Lav Priotet Klasse"
 END
 
 
@@ -652,20 +639,3 @@ BEGIN
     IDS_Not_Responding            "Not Responding"
     IDS_Running                   "Running"
 END
-
-
-#endif    // Danish resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

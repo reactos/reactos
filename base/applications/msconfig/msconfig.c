@@ -160,7 +160,6 @@ SetDialogIcon(HWND hDlg)
 INT_PTR CALLBACK
 MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int             idctrl;
     LPNMHDR         pnmh;
     UINT            uXIconNew, uYIconNew;
 
@@ -202,7 +201,6 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NOTIFY:
-            idctrl = wParam;
             pnmh = (LPNMHDR)lParam;
             if ((pnmh->hwndFrom == hTabWnd) &&
                 (pnmh->idFrom == IDC_TAB) &&

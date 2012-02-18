@@ -379,7 +379,7 @@ wWinMain(HINSTANCE hInstance,
         ExitThread(0);
     }
 
-    DPRINT("SERVICES: created start event with handle %x.\n", hScmStartEvent);
+    DPRINT("SERVICES: created start event with handle %p.\n", hScmStartEvent);
 
 //    ScmInitThreadManager();
 

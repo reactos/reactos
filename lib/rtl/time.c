@@ -37,15 +37,15 @@
 #endif
 
 
-static const int YearLengths[2] =
-   {
-      DAYSPERNORMALYEAR, DAYSPERLEAPYEAR
-   };
-static const int MonthLengths[2][MONSPERYEAR] =
-   {
-      { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
-      { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
-   };
+static const unsigned int YearLengths[2] =
+{
+    DAYSPERNORMALYEAR, DAYSPERLEAPYEAR
+};
+static const UCHAR MonthLengths[2][MONSPERYEAR] =
+{
+    { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+    { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+};
 
 static __inline int IsLeapYear(int Year)
 {
@@ -76,7 +76,7 @@ RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
   TIME_FIELDS CurrentTimeFields;
   TIME_FIELDS CutoverSystemTimeFields;
   LARGE_INTEGER CutoverSystemTime;
-  CSHORT MonthLength;
+  UCHAR MonthLength;
   CSHORT Days;
   BOOLEAN NextYearsCutover = FALSE;
 
@@ -255,31 +255,19 @@ RtlTimeToTimeFields(
    IN PLARGE_INTEGER Time,
    OUT PTIME_FIELDS TimeFields)
 {
-   const int *Months;
-   int SecondsInDay, CurYear;
-   int LeapYear, CurMonth;
-   long int Days;
-   LONGLONG IntTime = (LONGLONG)Time->QuadPart;
+   const UCHAR *Months;
+   ULONG SecondsInDay, CurYear;
+   ULONG LeapYear, CurMonth;
+   ULONG Days;
+   ULONGLONG IntTime = Time->QuadPart;
 
    /* Extract millisecond from time and convert time into seconds */
    TimeFields->Milliseconds = (CSHORT) ((IntTime % TICKSPERSEC) / TICKSPERMSEC);
    IntTime = IntTime / TICKSPERSEC;
 
    /* Split the time into days and seconds within the day */
-   Days = IntTime / SECSPERDAY;
+   Days = (ULONG)(IntTime / SECSPERDAY);
    SecondsInDay = IntTime % SECSPERDAY;
-
-   /* Adjust the values for days and seconds in day */
-   while (SecondsInDay < 0)
-   {
-      SecondsInDay += SECSPERDAY;
-      Days--;
-   }
-   while (SecondsInDay >= SECSPERDAY)
-   {
-      SecondsInDay -= SECSPERDAY;
-      Days++;
-   }
 
    /* compute time of day */
    TimeFields->Hour = (CSHORT) (SecondsInDay / SECSPERHOUR);
@@ -297,20 +285,20 @@ RtlTimeToTimeFields(
    while (1)
    {
       LeapYear = IsLeapYear(CurYear);
-      if (Days < (long) YearLengths[LeapYear])
+      if (Days < YearLengths[LeapYear])
       {
          break;
       }
       CurYear++;
-      Days = Days - (long) YearLengths[LeapYear];
+      Days = Days - YearLengths[LeapYear];
    }
    TimeFields->Year = (CSHORT) CurYear;
 
    /* Compute month of year */
    LeapYear = IsLeapYear(CurYear);
    Months = MonthLengths[LeapYear];
-   for (CurMonth = 0; Days >= (long) Months[CurMonth]; CurMonth++)
-      Days = Days - (long) Months[CurMonth];
+   for (CurMonth = 0; Days >= Months[CurMonth]; CurMonth++)
+      Days = Days - Months[CurMonth];
    TimeFields->Month = (CSHORT) (CurMonth + 1);
    TimeFields->Day = (CSHORT) (Days + 1);
 }

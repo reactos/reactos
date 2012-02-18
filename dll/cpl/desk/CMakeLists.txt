@@ -1,7 +1,6 @@
 
 add_definitions(-D_WIN32)
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(desk.cpl desk.spec)
@@ -27,7 +26,7 @@ add_library(desk SHARED
     theme.c
     ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 
-set_module_type(desk cpl)
+set_module_type(desk cpl UNICODE)
 
 target_link_libraries(desk uuid)
 
@@ -41,7 +40,7 @@ add_importlibs(desk
     ole32
     setupapi
     shell32
-    msimg32
+    uxtheme
     kernel32
     ntdll)
 

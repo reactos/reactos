@@ -77,6 +77,7 @@ typedef struct _SERVICE_HANDLE
    SERVICE_STOP | \
    SERVICE_START)
 
+#define TAG_ARRAY_SIZE 32
 
 /* VARIABLES ***************************************************************/
 
@@ -143,18 +144,18 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     if (_wcsicmp(lpDatabaseName, SERVICES_FAILED_DATABASEW) == 0)
     {
-        DPRINT("Database %S, does not exist\n",lpDatabaseName);
+        DPRINT("Database %S, does not exist\n", lpDatabaseName);
         return ERROR_DATABASE_DOES_NOT_EXIST;
     }
     else if (_wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
     {
-        DPRINT("Invalid Database name %S.\n",lpDatabaseName);
+        DPRINT("Invalid Database name %S.\n", lpDatabaseName);
         return ERROR_INVALID_NAME;
     }
 
-    Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
+    Ptr = HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
-                    sizeof(MANAGER_HANDLE) + (wcslen(lpDatabaseName) + 1) * sizeof(WCHAR));
+                    FIELD_OFFSET(MANAGER_HANDLE, DatabaseName[wcslen(lpDatabaseName) + 1]));
     if (Ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -174,7 +175,7 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
 {
     PSERVICE_HANDLE Ptr;
 
-    Ptr = (SERVICE_HANDLE*) HeapAlloc(GetProcessHeap(),
+    Ptr = HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(SERVICE_HANDLE));
     if (Ptr == NULL)
@@ -263,10 +264,523 @@ ScmCheckAccess(SC_HANDLE Handle,
 DWORD
 ScmAssignNewTag(PSERVICE lpService)
 {
-    /* FIXME */
-    DPRINT("Assigning new tag to service %S\n", lpService->lpServiceName);
-    lpService->dwTag = 0;
-    return ERROR_SUCCESS;
+    HKEY hKey = NULL;
+    DWORD dwError;
+    DWORD dwGroupTagCount = 0;
+    PDWORD pdwGroupTags = NULL;
+    DWORD dwFreeTag = 0;
+    DWORD dwTagUsedBase = 1;
+    BOOLEAN TagUsed[TAG_ARRAY_SIZE];
+    INT nTagOffset;
+    DWORD i;
+    DWORD cbDataSize;
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    ASSERT(lpService != NULL);
+    ASSERT(lpService->lpGroup != NULL);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Control\\GroupOrderList",
+                            0,
+                            KEY_READ,
+                            &hKey);
+
+    if (dwError != ERROR_SUCCESS)
+        goto findFreeTag;
+
+    /* query value length */
+    cbDataSize = 0;
+    dwError = RegQueryValueExW(hKey,
+                               lpService->lpGroup->szGroupName,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &cbDataSize);
+
+    if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
+        goto findFreeTag;
+
+    pdwGroupTags = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
+    if (!pdwGroupTags)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto cleanup;
+    }
+
+    dwError = RegQueryValueExW(hKey,
+                               lpService->lpGroup->szGroupName,
+                               NULL,
+                               NULL,
+                               (LPBYTE)pdwGroupTags,
+                               &cbDataSize);
+
+    if (dwError != ERROR_SUCCESS)
+        goto findFreeTag;
+
+    if (cbDataSize < sizeof(pdwGroupTags[0]))
+        goto findFreeTag;
+
+    dwGroupTagCount = min(pdwGroupTags[0], cbDataSize / sizeof(pdwGroupTags[0]) - 1);
+
+findFreeTag:
+    do
+    {
+        /* mark all tags as unused */
+        for (i = 0; i < TAG_ARRAY_SIZE; i++)
+            TagUsed[i] = FALSE;
+
+        /* mark tags in GroupOrderList as used */
+        for (i = 1; i <= dwGroupTagCount; i++)
+        {
+            nTagOffset = pdwGroupTags[i] - dwTagUsedBase;
+            if (nTagOffset >= 0 && nTagOffset < TAG_ARRAY_SIZE)
+                TagUsed[nTagOffset] = TRUE;
+        }
+
+        /* mark tags in service list as used */
+        ServiceEntry = lpService->ServiceListEntry.Flink;
+        while (ServiceEntry != &lpService->ServiceListEntry)
+        {
+            ASSERT(ServiceEntry != NULL);
+            CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+            if (CurrentService->lpGroup == lpService->lpGroup)
+            {
+                nTagOffset = CurrentService->dwTag - dwTagUsedBase;
+                if (nTagOffset >= 0 && nTagOffset < TAG_ARRAY_SIZE)
+                    TagUsed[nTagOffset] = TRUE;
+            }
+
+            ServiceEntry = ServiceEntry->Flink;
+        }
+
+        /* find unused tag, if any */
+        for (i = 0; i < TAG_ARRAY_SIZE; i++)
+        {
+            if (!TagUsed[i])
+            {
+                dwFreeTag = dwTagUsedBase + i;
+                break;
+            }
+        }
+
+        dwTagUsedBase += TAG_ARRAY_SIZE;
+    } while (!dwFreeTag);
+
+cleanup:
+    if (pdwGroupTags)
+        HeapFree(GetProcessHeap(), 0, pdwGroupTags);
+
+    if (hKey)
+        RegCloseKey(hKey);
+
+    if (dwFreeTag)
+    {
+        lpService->dwTag = dwFreeTag;
+        DPRINT("Assigning new tag %lu to service %S in group %S\n",
+               lpService->dwTag, lpService->lpServiceName, lpService->lpGroup->szGroupName);
+        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("Failed to assign new tag to service %S, error=%lu\n",
+                lpService->lpServiceName, dwError);
+    }
+
+    return dwError;
+}
+
+
+/* Create a path suitable for the bootloader out of the full path */
+DWORD
+ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
+{
+    DWORD ServiceNameLen, BufferSize, ExpandedLen;
+    WCHAR Dest;
+    WCHAR *Expanded;
+    UNICODE_STRING NtPathName, SystemRoot, LinkTarget;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE SymbolicLinkHandle;
+
+    DPRINT("ScmConvertToBootPathName %S\n", CanonName);
+
+    ServiceNameLen = wcslen(CanonName);
+
+    /* First check, if it's already good */
+    if (ServiceNameLen > 12 &&
+        !_wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
+    {
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  (ServiceNameLen + 1) * sizeof(WCHAR));
+        if (*RelativeName == NULL)
+        {
+            DPRINT("Error allocating memory for boot driver name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        /* Copy it */
+        wcscpy(*RelativeName, CanonName);
+
+        DPRINT("Bootdriver name %S\n", *RelativeName);
+        return ERROR_SUCCESS;
+    }
+
+    /* If it has %SystemRoot% prefix, substitute it to \System*/
+    if (ServiceNameLen > 13 &&
+        !_wcsnicmp(L"%SystemRoot%\\", CanonName, 13))
+    {
+        /* There is no +sizeof(wchar_t) because the name is less by 1 wchar */
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  ServiceNameLen * sizeof(WCHAR));
+
+        if (*RelativeName == NULL)
+        {
+            DPRINT("Error allocating memory for boot driver name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        /* Copy it */
+        wcscpy(*RelativeName, L"\\SystemRoot\\");
+        wcscat(*RelativeName, CanonName + 13);
+
+        DPRINT("Bootdriver name %S\n", *RelativeName);
+        return ERROR_SUCCESS;
+    }
+
+    /* Get buffer size needed for expanding env strings */
+    BufferSize = ExpandEnvironmentStringsW(L"%SystemRoot%\\", &Dest, 1);
+
+    if (BufferSize <= 1)
+    {
+        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
+        return ERROR_INVALID_ENVIRONMENT;
+    }
+
+    /* Allocate memory, since the size is known now */
+    Expanded = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         (BufferSize + 1) * sizeof(WCHAR));
+    if (!Expanded)
+    {
+        DPRINT("Error allocating memory for boot driver name!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Expand it */
+    if (ExpandEnvironmentStringsW(L"%SystemRoot%\\", Expanded, BufferSize) >
+        BufferSize)
+    {
+        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
+        HeapFree(GetProcessHeap(), 0, Expanded);
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Convert to NY-style path */
+    if (!RtlDosPathNameToNtPathName_U(Expanded, &NtPathName, NULL, NULL))
+    {
+        DPRINT("Error during a call to RtlDosPathNameToNtPathName_U()\n");
+        return ERROR_INVALID_ENVIRONMENT;
+    }
+
+    DPRINT("Converted to NT-style %wZ\n", &NtPathName);
+
+    /* No need to keep the dos-path anymore */
+    HeapFree(GetProcessHeap(), 0, Expanded);
+
+    /* Copy it to the allocated place */
+    Expanded = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         NtPathName.Length + sizeof(UNICODE_NULL));
+    if (!Expanded)
+    {
+            DPRINT("Error allocating memory for boot driver name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    ExpandedLen = NtPathName.Length / sizeof(WCHAR);
+    wcsncpy(Expanded, NtPathName.Buffer, ExpandedLen);
+    Expanded[ExpandedLen] = UNICODE_NULL;
+
+    if (ServiceNameLen > ExpandedLen &&
+        !_wcsnicmp(Expanded, CanonName, ExpandedLen))
+    {
+        /* Only \SystemRoot\ is missing */
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
+        if (*RelativeName == NULL)
+        {
+            DPRINT("Error allocating memory for boot driver name!\n");
+            HeapFree(GetProcessHeap(), 0, Expanded);
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        wcscpy(*RelativeName, L"\\SystemRoot\\");
+        wcscat(*RelativeName, CanonName + ExpandedLen);
+
+        RtlFreeUnicodeString(&NtPathName);
+        return ERROR_SUCCESS;
+    }
+
+    /* The most complex case starts here */
+    RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SystemRoot,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open this symlink */
+    Status = NtOpenSymbolicLinkObject(&SymbolicLinkHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
+
+    if (NT_SUCCESS(Status))
+    {
+        LinkTarget.Length = 0;
+        LinkTarget.MaximumLength = 0;
+
+        DPRINT("Opened symbolic link object\n");
+
+        Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
+        if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* Check if required buffer size is sane */
+            if (BufferSize > 0xFFFD)
+            {
+                DPRINT("Too large buffer required\n");
+                *RelativeName = 0;
+
+                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                HeapFree(GetProcessHeap(), 0, Expanded);
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            /* Alloc the string */
+            LinkTarget.Length = (USHORT)BufferSize;
+            LinkTarget.MaximumLength = LinkTarget.Length + sizeof(UNICODE_NULL);
+            LinkTarget.Buffer = HeapAlloc(GetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          LinkTarget.MaximumLength);
+            if (!LinkTarget.Buffer)
+            {
+                DPRINT("Unable to alloc buffer\n");
+                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                HeapFree(GetProcessHeap(), 0, Expanded);
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            /* Do a real query now */
+            Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("LinkTarget: %wZ\n", &LinkTarget);
+
+                ExpandedLen = LinkTarget.Length / sizeof(WCHAR);
+                if ((ServiceNameLen > ExpandedLen) &&
+                    !_wcsnicmp(LinkTarget.Buffer, CanonName, ExpandedLen))
+                {
+                    *RelativeName = HeapAlloc(GetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
+
+                    if (*RelativeName == NULL)
+                    {
+                        DPRINT("Unable to alloc buffer\n");
+                        if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                        HeapFree(GetProcessHeap(), 0, Expanded);
+                        RtlFreeUnicodeString(&NtPathName);
+                        return ERROR_NOT_ENOUGH_MEMORY;
+                    }
+
+                    /* Copy it over, substituting the first part
+                       with SystemRoot */
+                    wcscpy(*RelativeName, L"\\SystemRoot\\");
+                    wcscat(*RelativeName, CanonName+ExpandedLen+1);
+
+                    /* Cleanup */
+                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                    HeapFree(GetProcessHeap(), 0, Expanded);
+                    RtlFreeUnicodeString(&NtPathName);
+
+                    /* Return success */
+                    return ERROR_SUCCESS;
+                }
+                else
+                {
+                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                    HeapFree(GetProcessHeap(), 0, Expanded);
+                    RtlFreeUnicodeString(&NtPathName);
+                    return ERROR_INVALID_PARAMETER;
+                }
+            }
+            else
+            {
+                DPRINT("Error, Status = %08X\n", Status);
+                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+                HeapFree(GetProcessHeap(), 0, Expanded);
+                RtlFreeUnicodeString(&NtPathName);
+                return ERROR_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            DPRINT("Error, Status = %08X\n", Status);
+            if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
+            HeapFree(GetProcessHeap(), 0, Expanded);
+            RtlFreeUnicodeString(&NtPathName);
+            return ERROR_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        DPRINT("Error, Status = %08X\n", Status);
+        HeapFree(GetProcessHeap(), 0, Expanded);
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Failure */
+    *RelativeName = NULL;
+    return ERROR_INVALID_PARAMETER;
+}
+
+
+DWORD
+ScmCanonDriverImagePath(DWORD dwStartType,
+                        const wchar_t *lpServiceName,
+                        wchar_t **lpCanonName)
+{
+    DWORD ServiceNameLen, Result;
+    UNICODE_STRING NtServiceName;
+    WCHAR *RelativeName;
+    const WCHAR *SourceName = lpServiceName;
+
+    /* Calculate the length of the service's name */
+    ServiceNameLen = wcslen(lpServiceName);
+
+    /* 12 is wcslen(L"\\SystemRoot\\") */
+    if (ServiceNameLen > 12 &&
+        !_wcsnicmp(L"\\SystemRoot\\", lpServiceName, 12))
+    {
+        /* SystemRoot prefix is already included */
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
+
+        if (*lpCanonName == NULL)
+        {
+            DPRINT("Error allocating memory for canonized service name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        /* If it's a boot-time driver, it must be systemroot relative */
+        if (dwStartType == SERVICE_BOOT_START)
+            SourceName += 12;
+
+        /* Copy it */
+        wcscpy(*lpCanonName, SourceName);
+
+        DPRINT("Canonicalized name %S\n", *lpCanonName);
+        return NO_ERROR;
+    }
+
+    /* Check if it has %SystemRoot% (len=13) */
+    if (ServiceNameLen > 13 &&
+        !_wcsnicmp(L"%SystemRoot%\\", lpServiceName, 13))
+    {
+        /* Substitute %SystemRoot% with \\SystemRoot\\ */
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
+
+        if (*lpCanonName == NULL)
+        {
+            DPRINT("Error allocating memory for canonized service name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        /* If it's a boot-time driver, it must be systemroot relative */
+        if (dwStartType == SERVICE_BOOT_START)
+            wcscpy(*lpCanonName, L"\\SystemRoot\\");
+
+        wcscat(*lpCanonName, lpServiceName + 13);
+
+        DPRINT("Canonicalized name %S\n", *lpCanonName);
+        return NO_ERROR;
+    }
+
+    /* Check if it's a relative path name */
+    if (lpServiceName[0] != L'\\' && lpServiceName[1] != L':')
+    {
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
+
+        if (*lpCanonName == NULL)
+        {
+            DPRINT("Error allocating memory for canonized service name!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        /* Just copy it over without changing */
+        wcscpy(*lpCanonName, lpServiceName);
+
+        return NO_ERROR;
+    }
+
+    /* It seems to be a DOS path, convert it */
+    if (!RtlDosPathNameToNtPathName_U(lpServiceName, &NtServiceName, NULL, NULL))
+    {
+        DPRINT("RtlDosPathNameToNtPathName_U() failed!\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    *lpCanonName = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             NtServiceName.Length + sizeof(WCHAR));
+
+    if (*lpCanonName == NULL)
+    {
+        DPRINT("Error allocating memory for canonized service name!\n");
+        RtlFreeUnicodeString(&NtServiceName);
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Copy the string */
+    wcsncpy(*lpCanonName, NtServiceName.Buffer, NtServiceName.Length / sizeof(WCHAR));
+
+    /* The unicode string is not needed anymore */
+    RtlFreeUnicodeString(&NtServiceName);
+
+    if (dwStartType != SERVICE_BOOT_START)
+    {
+        DPRINT("Canonicalized name %S\n", *lpCanonName);
+        return NO_ERROR;
+    }
+
+    /* The service is boot-started, so must be relative */
+    Result = ScmConvertToBootPathName(*lpCanonName, &RelativeName);
+    if (Result)
+    {
+        /* There is a problem, free name and return */
+        HeapFree(GetProcessHeap(), 0, *lpCanonName);
+        DPRINT("Error converting named!\n");
+        return Result;
+    }
+
+    ASSERT(RelativeName);
+
+    /* Copy that string */
+    wcscpy(*lpCanonName, RelativeName + 12);
+
+    /* Free the allocated buffer */
+    HeapFree(GetProcessHeap(), 0, RelativeName);
+
+    DPRINT("Canonicalized name %S\n", *lpCanonName);
+
+    /* Success */
+    return NO_ERROR;
 }
 
 
@@ -507,7 +1021,7 @@ DWORD RCloseServiceHandle(
                                            &pcbBytesNeeded,
                                            &dwServicesReturned);
 
-                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
+                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service */
                 if (pcbBytesNeeded)
                 {
                     DPRINT("Deletion failed due to running dependencies.\n");
@@ -580,7 +1094,6 @@ DWORD RControlService(
         return ERROR_INVALID_HANDLE;
     }
 
-
     /* Check the service entry point */
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
@@ -609,17 +1122,18 @@ DWORD RControlService(
             if (dwControl >= 128 && dwControl <= 255)
                 DesiredAccess = SERVICE_USER_DEFINED_CONTROL;
             else
-                DesiredAccess = SERVICE_QUERY_CONFIG |
-                                SERVICE_CHANGE_CONFIG |
-                                SERVICE_QUERY_STATUS |
-                                SERVICE_START |
-                                SERVICE_PAUSE_CONTINUE;
+                return ERROR_INVALID_PARAMETER;
             break;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
         return ERROR_ACCESS_DENIED;
+
+    /* Return the current service status information */
+    RtlCopyMemory(lpServiceStatus,
+                  &lpService->Status,
+                  sizeof(SERVICE_STATUS));
 
     if (dwControl == SERVICE_CONTROL_STOP)
     {
@@ -668,6 +1182,10 @@ DWORD RControlService(
     {
         dwControlsAccepted = lpService->Status.dwControlsAccepted;
         dwCurrentState = lpService->Status.dwCurrentState;
+
+        /* Return ERROR_SERVICE_NOT_ACTIVE if the service has not been started */
+        if (lpService->lpImage == NULL || dwCurrentState == SERVICE_STOPPED)
+            return ERROR_SERVICE_NOT_ACTIVE;
 
         /* Check the current state before sending a control request */
         switch (dwCurrentState)
@@ -862,7 +1380,9 @@ DWORD RQueryServiceObjectSecurity(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service list */
+    /* Lock the service database */
+    ScmLockDatabaseShared();
+
 
     /* hack */
     Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
@@ -873,7 +1393,8 @@ DWORD RQueryServiceObjectSecurity(
                                     cbBufSize,
                                     &dwBytesNeeded);
 
-    /* FIXME: Unlock the service list */
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     if (NT_SUCCESS(Status))
     {
@@ -975,9 +1496,12 @@ DWORD RSetServiceObjectSecurity(
         return RtlNtStatusToDosError(Status);
 
     RpcRevertToSelf();
+#endif
 
-    /* FIXME: Lock service database */
+    /* Lock the service database exclusive */
+    ScmLockDatabaseExclusive();
 
+#if 0
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                   &lpService->lpSecurityDescriptor,
@@ -1011,7 +1535,8 @@ Done:
         NtClose(hToken);
 #endif
 
-    /* FIXME: Unlock service database */
+    /* Unlock service database */
+    ScmUnlockDatabase();
 
     DPRINT("RSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
@@ -1053,7 +1578,7 @@ DWORD RQueryServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* Lock the srevice database shared */
+    /* Lock the service database shared */
     ScmLockDatabaseShared();
 
     /* Return service status information */
@@ -1213,6 +1738,7 @@ DWORD RChangeServiceConfigW(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpImagePathW = NULL;
 
     DPRINT("RChangeServiceConfigW() called\n");
     DPRINT("dwServiceType = %lu\n", dwServiceType);
@@ -1275,9 +1801,9 @@ DWORD RChangeServiceConfigW(
                        (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
 
         /* Update the display name */
-        lpDisplayNameW = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                           0,
-                                           (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(),
+                                   0,
+                                   (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpDisplayNameW == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -1335,39 +1861,34 @@ DWORD RChangeServiceConfigW(
         lpService->dwErrorControl = dwErrorControl;
     }
 
-#if 0
-    /* FIXME: set the new ImagePath value */
+    if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+    {
+        /* Set the image path */
+        lpImagePathW = lpBinaryPathName;
 
-    /* Set the image path */
-    if (dwServiceType & SERVICE_WIN32)
-    {
-        if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
         {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpBinaryPathName,
-                                     (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+            dwError = ScmCanonDriverImagePath(lpService->dwStartType,
+                                              lpBinaryPathName,
+                                              &lpImagePathW);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
+
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_EXPAND_SZ,
+                                 (LPBYTE)lpImagePathW,
+                                 (wcslen(lpImagePathW) + 1) * sizeof(WCHAR));
+
+        if (lpImagePathW != lpBinaryPathName)
+            HeapFree(GetProcessHeap(), 0, lpImagePathW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
-    else if (dwServiceType & SERVICE_DRIVER)
-    {
-        if (lpImagePath != NULL && *lpImagePath != 0)
-        {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpImagePath,
-                                     (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-    }
-#endif
 
     /* Set the group name */
     if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
@@ -1433,380 +1954,6 @@ done:
 }
 
 
-/* Create a path suitable for the bootloader out of the full path */
-DWORD
-ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
-{
-    DWORD ServiceNameLen, BufferSize, ExpandedLen;
-    WCHAR Dest;
-    WCHAR *Expanded;
-    UNICODE_STRING NtPathName, SystemRoot, LinkTarget;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-    HANDLE SymbolicLinkHandle;
-
-    DPRINT("ScmConvertToBootPathName %S\n", CanonName);
-
-    ServiceNameLen = wcslen(CanonName);
-
-    /* First check, if it's already good */
-    if (ServiceNameLen > 12 &&
-        !_wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
-    {
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
-        if (*RelativeName == NULL)
-        {
-            DPRINT("Error allocating memory for boot driver name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        /* Copy it */
-        wcscpy(*RelativeName, CanonName);
-
-        DPRINT("Bootdriver name %S\n", *RelativeName);
-        return ERROR_SUCCESS;
-    }
-
-    /* If it has %SystemRoot% prefix, substitute it to \System*/
-    if (ServiceNameLen > 13 &&
-        !_wcsnicmp(L"%SystemRoot%\\", CanonName, 13))
-    {
-        /* There is no +sizeof(wchar_t) because the name is less by 1 wchar */
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR));
-
-        if (*RelativeName == NULL)
-        {
-            DPRINT("Error allocating memory for boot driver name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        /* Copy it */
-        wcscpy(*RelativeName, L"\\SystemRoot\\");
-        wcscat(*RelativeName, CanonName + 13);
-
-        DPRINT("Bootdriver name %S\n", *RelativeName);
-        return ERROR_SUCCESS;
-    }
-
-    /* Get buffer size needed for expanding env strings */
-    BufferSize = ExpandEnvironmentStringsW(L"%SystemRoot%\\", &Dest, 1);
-
-    if (BufferSize <= 1)
-    {
-        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
-        return ERROR_INVALID_ENVIRONMENT;
-    }
-
-    /* Allocate memory, since the size is known now */
-    Expanded = LocalAlloc(LMEM_ZEROINIT, BufferSize * sizeof(WCHAR) + sizeof(WCHAR));
-    if (!Expanded)
-    {
-        DPRINT("Error allocating memory for boot driver name!\n");
-        return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    /* Expand it */
-    if (ExpandEnvironmentStringsW(L"%SystemRoot%\\", Expanded, BufferSize) >
-        BufferSize)
-    {
-        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
-        LocalFree(Expanded);
-        return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    /* Convert to NY-style path */
-    if (!RtlDosPathNameToNtPathName_U(Expanded, &NtPathName, NULL, NULL))
-    {
-        DPRINT("Error during a call to RtlDosPathNameToNtPathName_U()\n");
-        return ERROR_INVALID_ENVIRONMENT;
-    }
-
-    DPRINT("Converted to NT-style %wZ\n", &NtPathName);
-
-    /* No need to keep the dos-path anymore */
-    LocalFree(Expanded);
-
-    /* Copy it to the allocated place */
-    Expanded = LocalAlloc(LMEM_ZEROINIT, NtPathName.Length + sizeof(WCHAR));
-    if (!Expanded)
-    {
-            DPRINT("Error allocating memory for boot driver name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    ExpandedLen = NtPathName.Length / sizeof(WCHAR);
-    wcsncpy(Expanded, NtPathName.Buffer, ExpandedLen);
-    Expanded[ExpandedLen] = 0;
-
-    if (ServiceNameLen > ExpandedLen &&
-        !_wcsnicmp(Expanded, CanonName, ExpandedLen))
-    {
-        /* Only \SystemRoot\ is missing */
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT,
-            (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
-        if (*RelativeName == NULL)
-        {
-            DPRINT("Error allocating memory for boot driver name!\n");
-            LocalFree(Expanded);
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        wcscpy(*RelativeName, L"\\SystemRoot\\");
-        wcscat(*RelativeName, CanonName + ExpandedLen);
-
-        RtlFreeUnicodeString(&NtPathName);
-        return ERROR_SUCCESS;
-    }
-
-    /* The most complex case starts here */
-    RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SystemRoot,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    /* Open this symlink */
-    Status = NtOpenSymbolicLinkObject(&SymbolicLinkHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
-
-    if (NT_SUCCESS(Status))
-    {
-        LinkTarget.Length = 0;
-        LinkTarget.MaximumLength = 0;
-
-        DPRINT("Opened symbolic link object\n");
-
-        Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
-        if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
-        {
-            /* Check if required buffer size is sane */
-            if (BufferSize > 0xFFFD)
-            {
-                DPRINT("Too large buffer required\n");
-                *RelativeName = 0;
-
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
-                return ERROR_NOT_ENOUGH_MEMORY;
-            }
-
-            /* Alloc the string */
-            LinkTarget.Buffer = LocalAlloc(LMEM_ZEROINIT, BufferSize + sizeof(WCHAR));
-            if (!LinkTarget.Buffer)
-            {
-                DPRINT("Unable to alloc buffer\n");
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
-                return ERROR_NOT_ENOUGH_MEMORY;
-            }
-
-            /* Do a real query now */
-            LinkTarget.Length = (USHORT)BufferSize;
-            LinkTarget.MaximumLength = LinkTarget.Length + sizeof(WCHAR);
-
-            Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
-            if (NT_SUCCESS(Status))
-            {
-                DPRINT("LinkTarget: %wZ\n", &LinkTarget);
-
-                ExpandedLen = LinkTarget.Length / sizeof(WCHAR);
-                if ((ServiceNameLen > ExpandedLen) &&
-                    !_wcsnicmp(LinkTarget.Buffer, CanonName, ExpandedLen))
-                {
-                    *RelativeName = LocalAlloc(LMEM_ZEROINIT,
-                       (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
-
-                    if (*RelativeName == NULL)
-                    {
-                        DPRINT("Unable to alloc buffer\n");
-                        if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                        LocalFree(Expanded);
-                        RtlFreeUnicodeString(&NtPathName);
-                        return ERROR_NOT_ENOUGH_MEMORY;
-                    }
-
-                    /* Copy it over, substituting the first part
-                       with SystemRoot */
-                    wcscpy(*RelativeName, L"\\SystemRoot\\");
-                    wcscat(*RelativeName, CanonName+ExpandedLen+1);
-
-                    /* Cleanup */
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    LocalFree(Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
-
-                    /* Return success */
-                    return ERROR_SUCCESS;
-                }
-                else
-                {
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    LocalFree(Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
-                    return ERROR_INVALID_PARAMETER;
-                }
-            }
-            else
-            {
-                DPRINT("Error, Status = %08X\n", Status);
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
-                RtlFreeUnicodeString(&NtPathName);
-                return ERROR_INVALID_PARAMETER;
-            }
-        }
-        else
-        {
-            DPRINT("Error, Status = %08X\n", Status);
-            if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-            LocalFree(Expanded);
-            RtlFreeUnicodeString(&NtPathName);
-            return ERROR_INVALID_PARAMETER;
-        }
-    }
-    else
-    {
-        DPRINT("Error, Status = %08X\n", Status);
-        LocalFree(Expanded);
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    /* Failure */
-    *RelativeName = NULL;
-    return ERROR_INVALID_PARAMETER;
-}
-
-DWORD
-ScmCanonDriverImagePath(DWORD dwStartType,
-                        const wchar_t *lpServiceName,
-                        wchar_t **lpCanonName)
-{
-    DWORD ServiceNameLen, Result;
-    UNICODE_STRING NtServiceName;
-    WCHAR *RelativeName;
-    const WCHAR *SourceName = lpServiceName;
-
-    /* Calculate the length of the service's name */
-    ServiceNameLen = wcslen(lpServiceName);
-
-    /* 12 is wcslen(L"\\SystemRoot\\") */
-    if (ServiceNameLen > 12 &&
-        !_wcsnicmp(L"\\SystemRoot\\", lpServiceName, 12))
-    {
-        /* SystemRoot prefix is already included */
-
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
-
-        if (*lpCanonName == NULL)
-        {
-            DPRINT("Error allocating memory for canonized service name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        /* If it's a boot-time driver, it must be systemroot relative */
-        if (dwStartType == SERVICE_BOOT_START)
-            SourceName += 12;
-
-        /* Copy it */
-        wcscpy(*lpCanonName, SourceName);
-
-        DPRINT("Canonicalized name %S\n", *lpCanonName);
-        return NO_ERROR;
-    }
-
-    /* Check if it has %SystemRoot% (len=13) */
-    if (ServiceNameLen > 13 &&
-        !_wcsnicmp(L"%%SystemRoot%%\\", lpServiceName, 13))
-    {
-        /* Substitute %SystemRoot% with \\SystemRoot\\ */
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
-
-        if (*lpCanonName == NULL)
-        {
-            DPRINT("Error allocating memory for canonized service name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        /* If it's a boot-time driver, it must be systemroot relative */
-        if (dwStartType == SERVICE_BOOT_START)
-            wcscpy(*lpCanonName, L"\\SystemRoot\\");
-
-        wcscat(*lpCanonName, lpServiceName + 13);
-
-        DPRINT("Canonicalized name %S\n", *lpCanonName);
-        return NO_ERROR;
-    }
-
-    /* Check if it's a relative path name */
-    if (lpServiceName[0] != L'\\' && lpServiceName[1] != L':')
-    {
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
-
-        if (*lpCanonName == NULL)
-        {
-            DPRINT("Error allocating memory for canonized service name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
-
-        /* Just copy it over without changing */
-        wcscpy(*lpCanonName, lpServiceName);
-
-        return NO_ERROR;
-    }
-
-    /* It seems to be a DOS path, convert it */
-    if (!RtlDosPathNameToNtPathName_U(lpServiceName, &NtServiceName, NULL, NULL))
-    {
-        DPRINT("RtlDosPathNameToNtPathName_U() failed!\n");
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    *lpCanonName = LocalAlloc(LMEM_ZEROINIT, NtServiceName.Length + sizeof(WCHAR));
-
-    if (*lpCanonName == NULL)
-    {
-        DPRINT("Error allocating memory for canonized service name!\n");
-        RtlFreeUnicodeString(&NtServiceName);
-        return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    /* Copy the string */
-    wcsncpy(*lpCanonName, NtServiceName.Buffer, NtServiceName.Length / sizeof(WCHAR));
-
-    /* The unicode string is not needed anymore */
-    RtlFreeUnicodeString(&NtServiceName);
-
-    if (dwStartType != SERVICE_BOOT_START)
-    {
-        DPRINT("Canonicalized name %S\n", *lpCanonName);
-        return NO_ERROR;
-    }
-
-    /* The service is boot-started, so must be relative */
-    Result = ScmConvertToBootPathName(*lpCanonName, &RelativeName);
-    if (Result)
-    {
-        /* There is a problem, free name and return */
-        LocalFree(*lpCanonName);
-        DPRINT("Error converting named!\n");
-        return Result;
-    }
-
-    ASSERT(RelativeName);
-
-    /* Copy that string */
-    wcscpy(*lpCanonName, RelativeName + 12);
-
-    /* Free the allocated buffer */
-    LocalFree(RelativeName);
-
-    DPRINT("Canonicalized name %S\n", *lpCanonName);
-
-    /* Success */
-    return NO_ERROR;
-}
-
-
 /* Function 12 */
 DWORD RCreateServiceW(
     SC_RPC_HANDLE hSCManager,
@@ -1843,6 +1990,7 @@ DWORD RCreateServiceW(
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
     DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
     DPRINT("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT("lpdwTagId = %p\n", lpdwTagId);
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -1873,20 +2021,44 @@ DWORD RCreateServiceW(
         return ERROR_INVALID_PARAMETER;
     }
 
+    /* Check for invalid service type value */
+    if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
+        (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS))
+            return ERROR_INVALID_PARAMETER;
+
+    /* Check for invalid start type value */
+    if ((dwStartType != SERVICE_BOOT_START) &&
+        (dwStartType != SERVICE_SYSTEM_START) &&
+        (dwStartType != SERVICE_AUTO_START) &&
+        (dwStartType != SERVICE_DEMAND_START) &&
+        (dwStartType != SERVICE_DISABLED))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Only drivers can be boot start or system start services */
+    if ((dwStartType == SERVICE_BOOT_START) ||
+        (dwStartType == SERVICE_SYSTEM_START))
+    {
+        if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
+            (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER))
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Check for invalid error control value */
+    if ((dwErrorControl != SERVICE_ERROR_IGNORE) &&
+        (dwErrorControl != SERVICE_ERROR_NORMAL) &&
+        (dwErrorControl != SERVICE_ERROR_SEVERE) &&
+        (dwErrorControl != SERVICE_ERROR_CRITICAL))
+        return ERROR_INVALID_PARAMETER;
+
     if ((dwServiceType == (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
         (lpServiceStartName))
     {
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceType > SERVICE_WIN32_SHARE_PROCESS) &&
-        (dwServiceType != (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
-        (dwServiceType != (SERVICE_WIN32_SHARE_PROCESS | SERVICE_INTERACTIVE_PROCESS)))
-    {
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    if (dwStartType > SERVICE_DISABLED)
+    if (lpdwTagId && (!lpLoadOrderGroup || !*lpLoadOrderGroup))
     {
         return ERROR_INVALID_PARAMETER;
     }
@@ -1900,9 +2072,10 @@ DWORD RCreateServiceW(
         /* Unlock the service database */
         ScmUnlockDatabase();
 
-        /* check if it is marked for deletion */
+        /* Check if it is marked for deletion */
         if (lpService->bDeleted)
             return ERROR_SERVICE_MARKED_FOR_DELETE;
+
         /* Return Error exist */
         return ERROR_SERVICE_EXISTS;
     }
@@ -1952,7 +2125,7 @@ DWORD RCreateServiceW(
         *lpDisplayName != 0 &&
         _wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
-        lpService->lpDisplayName = (WCHAR*) HeapAlloc(GetProcessHeap(), 0,
+        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(), 0,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpService->lpDisplayName == NULL)
         {
@@ -2081,7 +2254,7 @@ DWORD RCreateServiceW(
     if (lpDependencies != NULL && *lpDependencies != 0)
     {
         dwError = ScmWriteDependencies(hServiceKey,
-                                       (LPWSTR)lpDependencies,
+                                       (LPCWSTR)lpDependencies,
                                        dwDependSize);
         if (dwError != ERROR_SUCCESS)
             goto done;
@@ -2136,9 +2309,12 @@ done:;
     }
     else
     {
-        /* Release the display name buffer */
-        if (lpService->lpServiceName != NULL)
+        if (lpService != NULL &&
+            lpService->lpServiceName != NULL)
+        {
+            /* Release the display name buffer */
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
+        }
 
         if (hServiceHandle)
         {
@@ -2235,7 +2411,7 @@ DWORD REnumDependentServicesW(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT("Could not allocate a buffer!!\n");
+        DPRINT1("Could not allocate a buffer!!\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -2334,13 +2510,16 @@ DWORD REnumServicesStatusW(
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    if ((dwServiceType == 0) ||
+        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    if ((dwServiceState != SERVICE_ACTIVE) &&
+        (dwServiceState != SERVICE_INACTIVE) &&
+        (dwServiceState != SERVICE_STATE_ALL))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
@@ -2490,7 +2669,7 @@ DWORD REnumServicesStatusW(
         dwRequiredSize += dwSize;
     }
 
-    if (dwError == 0)
+    if (dwError == ERROR_SUCCESS)
     {
         *pcbBytesNeeded = 0;
         if (lpResumeHandle) *lpResumeHandle = 0;
@@ -3087,7 +3266,8 @@ DWORD RChangeServiceConfigA(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDisplayNameW = NULL;
-    // LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpCanonicalImagePathW = NULL;
     LPWSTR lpLoadOrderGroupW = NULL;
     LPWSTR lpDependenciesW = NULL;
     // LPWSTR lpPasswordW = NULL;
@@ -3221,41 +3401,51 @@ DWORD RChangeServiceConfigA(
         lpService->dwErrorControl = dwErrorControl;
     }
 
-#if 0
-    /* FIXME: set the new ImagePath value */
+    if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+    {
+        /* Set the image path */
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(),
+                                      0,
+                                      (strlen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+        if (lpBinaryPathNameW == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
 
-    /* Set the image path */
-    if (dwServiceType & SERVICE_WIN32)
-    {
-        if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+        MultiByteToWideChar(CP_ACP,
+                            0,
+                            lpBinaryPathName,
+                            -1,
+                            lpBinaryPathNameW,
+                            strlen(lpBinaryPathName) + 1);
+
+        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
         {
-            lpBinaryPathNameW=HeapAlloc(GetProcessHeap(),0, (strlen(lpBinaryPathName)+1) * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, strlen(lpBinaryPathName)+1);
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpBinaryPathNameW,
-                                     (wcslen(lpBinaryPathNameW) + 1) * sizeof(WCHAR));
+            dwError = ScmCanonDriverImagePath(lpService->dwStartType,
+                                              lpBinaryPathNameW,
+                                              &lpCanonicalImagePathW);
+
+            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
+
+            lpBinaryPathNameW = lpCanonicalImagePathW;
         }
+
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_EXPAND_SZ,
+                                 (LPBYTE)lpBinaryPathNameW,
+                                 (wcslen(lpBinaryPathNameW) + 1) * sizeof(WCHAR));
+
+        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
-    else if (dwServiceType & SERVICE_DRIVER)
-    {
-        if (lpImagePath != NULL && *lpImagePath != 0)
-        {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpImagePath,
-                                     (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-    }
-#endif
 
     /* Set the group name */
     if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
@@ -3388,7 +3578,7 @@ DWORD RCreateServiceA(
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
     int len;
-    LPSTR lpStr;
+    LPCSTR lpStr;
 
     if (lpServiceName)
     {
@@ -3440,7 +3630,7 @@ DWORD RCreateServiceA(
 
     if (lpDependencies)
     {
-        lpStr = (LPSTR)lpDependencies;
+        lpStr = (LPCSTR)lpDependencies;
         while (*lpStr)
         {
             dwLength = strlen(lpStr) + 1;
@@ -3455,7 +3645,7 @@ DWORD RCreateServiceA(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        MultiByteToWideChar(CP_ACP, 0, (LPSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
+        MultiByteToWideChar(CP_ACP, 0, (LPCSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
     }
 
     if (lpServiceStartName)
@@ -4086,6 +4276,9 @@ DWORD RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    LPWSTR *lpVector = NULL;
+    DWORD i;
+    DWORD dwLength;
 
     DPRINT("RStartServiceA() called\n");
 
@@ -4119,12 +4312,56 @@ DWORD RStartServiceA(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    /* FIXME: Convert argument vector to Unicode */
+    /* Build a Unicode argument vector */
+    if (argc > 0)
+    {
+        lpVector = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             argc * sizeof(LPWSTR));
+        if (lpVector == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
+
+        for (i = 0; i < argc; i++)
+        {
+            dwLength = MultiByteToWideChar(CP_ACP,
+                                           0,
+                                           ((LPSTR*)argv)[i],
+                                           -1,
+                                           NULL,
+                                           0);
+
+            lpVector[i] = HeapAlloc(GetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    dwLength * sizeof(WCHAR));
+            if (lpVector[i] == NULL)
+            {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
+                goto done;
+            }
+
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                ((LPSTR*)argv)[i],
+                                -1,
+                                lpVector[i],
+                                dwLength);
+        }
+    }
 
     /* Start the service */
-    dwError = ScmStartService(lpService, 0, NULL);
+    dwError = ScmStartService(lpService, argc, lpVector);
 
-    /* FIXME: Free argument vector */
+done:
+    /* Free the Unicode argument vector */
+    if (lpVector != NULL)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            if (lpVector[i] != NULL)
+                HeapFree(GetProcessHeap(), 0, lpVector[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, lpVector);
+    }
 
     return dwError;
 }
@@ -4362,9 +4599,9 @@ DWORD RChangeServiceConfig2A(
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescriptonW;
-        LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
+        //LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
 
-        lpServiceDescriptonA = Info.psd;
+        //lpServiceDescriptonA = Info.psd;
 
         ///if (lpServiceDescriptonA &&
         ///lpServiceDescriptonA->lpDescription)
@@ -4372,8 +4609,8 @@ DWORD RChangeServiceConfig2A(
             dwLength = (strlen(Info.lpDescription) + 1) * sizeof(WCHAR);
 
             lpServiceDescriptonW = HeapAlloc(GetProcessHeap(),
-                                            0,
-                                            dwLength + sizeof(SERVICE_DESCRIPTIONW));
+                                             0,
+                                             dwLength + sizeof(SERVICE_DESCRIPTIONW));
             if (!lpServiceDescriptonW)
             {
                 return ERROR_NOT_ENOUGH_MEMORY;
@@ -4565,7 +4802,6 @@ DWORD RQueryServiceConfig2A(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDescriptionW = NULL;
-    LPSTR lpDescription = NULL;
 
     DPRINT("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
@@ -4659,8 +4895,8 @@ done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    if (lpDescription != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDescription);
+    if (lpDescriptionW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDescriptionW);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -5069,13 +5305,16 @@ DWORD REnumServicesStatusExW(
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    if ((dwServiceType == 0) ||
+        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    if ((dwServiceState != SERVICE_ACTIVE) &&
+        (dwServiceState != SERVICE_INACTIVE) &&
+        (dwServiceState != SERVICE_STATE_ALL))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;

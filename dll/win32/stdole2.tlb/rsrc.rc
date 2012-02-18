@@ -29,3 +29,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: std_ole_v2.tlb */
 1 TYPELIB std_ole_v2.tlb
+
+2 WINE_REGISTRY stdole2.tlb.rgs

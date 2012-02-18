@@ -26,7 +26,7 @@ int access_dirT(const _TCHAR *_path)
 
     if ((Attributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
     {
-      __set_errno(EACCES);
+      _set_errno(EACCES);
       return -1;
     }
 

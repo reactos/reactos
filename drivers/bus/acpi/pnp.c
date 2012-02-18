@@ -312,7 +312,7 @@ Bus_StartFdo (
     /* Initialize ACPI bus manager */
     AcpiStatus = acpi_init();
     if (!ACPI_SUCCESS(AcpiStatus)) {
-        DPRINT("acpi_init() failed with status 0x%X\n", AcpiStatus);
+        DPRINT1("acpi_init() failed with status 0x%X\n", AcpiStatus);
         AcpiTerminate();
         return STATUS_UNSUCCESSFUL;
     }
@@ -406,7 +406,7 @@ Bus_DestroyPdo (
     //
 
     if (PdoData->HardwareIDs) {
-        ExFreePool (PdoData->HardwareIDs);
+        ExFreePoolWithTag (PdoData->HardwareIDs, 'IPCA');
         PdoData->HardwareIDs = NULL;
     }
 

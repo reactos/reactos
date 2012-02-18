@@ -170,7 +170,7 @@ _FUNCTION_ {
 		base = 0;
 	    number: {
 		    /* read an integer */
-		    ULONGLONG cur = 0;
+		    __int64 cur = 0;
 		    int negative = 0;
 		    int seendigit=0;
                     /* skip initial whitespace */
@@ -224,7 +224,7 @@ _FUNCTION_ {
 		    if (!seendigit) break; /* not a valid number */
                     st = 1;
                     if (!suppress) {
-#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -cur : cur
+#define _SET_NUMBER_(type) *va_arg(ap, type*) = (type)(negative ? -cur : cur)
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
 			else if (l_prefix) _SET_NUMBER_(LONG);
 			else if (h_prefix) _SET_NUMBER_(short int);
@@ -296,7 +296,7 @@ _FUNCTION_ {
 			    if (width>0) width--;
                         }
 			/* update 'cur' with this exponent. */
-			expcnt =  negexp ? .1 : 10;
+			expcnt =  negexp ? 0.1f : 10.0f;
 			while (exponent!=0) {
 			    if (exponent&1)
 				cur*=expcnt;

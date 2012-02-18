@@ -416,7 +416,7 @@ typedef struct _BOOT_DRIVER_NODE
     ULONG Tag;
     ULONG ErrorControl;
 } BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
- 
+
 //
 // List of Bus Type GUIDs
 //
@@ -516,7 +516,7 @@ IopAssignDeviceResources(
 
 NTSTATUS
 NTAPI
-IopCreateResourceListFromRequirements(
+IopFixupResourceListWithRequirements(
     IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
     OUT PCM_RESOURCE_LIST *ResourceList
 );
@@ -536,7 +536,7 @@ NTSTATUS
 NTAPI
 PipCallDriverAddDevice(
     IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN LoadDriver,     
+    IN BOOLEAN LoadDriver,
     IN PDRIVER_OBJECT DriverObject
 );
 
@@ -618,7 +618,7 @@ NTAPI
 IopInitiatePnpIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG MinorFunction,
+    IN UCHAR MinorFunction,
     IN PIO_STACK_LOCATION Stack
 );
 
@@ -743,7 +743,7 @@ PnpRegSzToString(
     IN ULONG RegSzLength,
     OUT PUSHORT StringLength OPTIONAL
 );
-                                               
+
 //
 // Initialization Routines
 //

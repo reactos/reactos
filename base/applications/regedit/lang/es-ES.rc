@@ -1,10 +1,10 @@
 /*
  * Regedit resources
  *
- * Copyright 2003 José Manuel Ferrer Ortiz
- * Copyright 2005 Patricio Martínez Ros
- * Copyright 2005 Samuel Serapión Vega
- *	     2008 Javier Remacha
+ * Copyright 2003 JosÃ© Manuel Ferrer Ortiz
+ * Copyright 2005 Patricio MartÃ­nez Ros
+ * Copyright 2005 Samuel SerapiÃ³n Vega
+ *	         2008 Javier Remacha
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -106,10 +106,8 @@ BEGIN
     END
     POPUP "&Favoritos"
     BEGIN
-        MENUITEM "&Añadir a Favoritos",         ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Eliminar Favorito",          ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&AÃ±adir a Favoritos",         ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Eliminar Favorito",          ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Ayuda"
     BEGIN
@@ -135,10 +133,10 @@ BEGIN
         BEGIN
             MENUITEM "&Clave",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor &Alfanumérico",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &AlfanumÃ©rico",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor de cadena-&múltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor de cadena-&mÃºltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valor de cadena e&xpandible",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
@@ -149,10 +147,10 @@ BEGIN
         BEGIN
             MENUITEM "&Clave",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor &Alfanumérico",              ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &AlfanumÃ©rico",              ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binario",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor de cadena-&múltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor de cadena-&mÃºltiple",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valor de cadena e&xpandible",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Buscar",                           ID_EDIT_FIND
@@ -180,16 +178,6 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -199,7 +187,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
+    LTEXT           "&InformaciÃ³n del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,142,64,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,64,50,14
@@ -213,7 +201,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
+    LTEXT           "&InformaciÃ³n del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "Aceptar",IDOK,142,64,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,64,50,14
@@ -227,7 +215,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
+    LTEXT           "&InformaciÃ³n del valor:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "Aceptar",IDOK,142,154,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,196,154,50,14
@@ -242,7 +230,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Nombre de Valor:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Información del valor:",IDC_STATIC,6,35,161,8
+    LTEXT           "&InformaciÃ³n del valor:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
     GROUPBOX        "Base ",IDC_STATIC,130,35,116,39
     AUTORADIOBUTTON "&Hexadecimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
@@ -322,17 +310,17 @@ BEGIN
     ID_EDIT_MENU            "Contiene comandos para editar valores o claves"
     ID_VIEW_MENU            "Contiene comandos para personalizar la ventana de registro"
     ID_FAVOURITES_MENU      "Contiene comandos para acceder a claves usadas frecuentemente"
-    ID_HELP_MENU            "Contiene comandos para mostrar ayuda e información sobre el editor de registro"
+    ID_HELP_MENU            "Contiene comandos para mostrar ayuda e informaciÃ³n sobre el editor de registro"
     ID_EDIT_NEW_MENU        "Contiene comandos para crear nuevas claves o valores"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_MODIFY          "Modifica los datos del valor"
-    ID_EDIT_NEW_KEY         "Añade una nueva clave"
-    ID_EDIT_NEW_STRINGVALUE "Añade un nuevo valor de cadena"
-    ID_EDIT_NEW_BINARYVALUE "Añade un nuevo valor binario"
-    ID_EDIT_NEW_DWORDVALUE  "Añade un nuevo valor de doble palabra"
+    ID_EDIT_NEW_KEY         "AÃ±ade una nueva clave"
+    ID_EDIT_NEW_STRINGVALUE "AÃ±ade un nuevo valor de cadena"
+    ID_EDIT_NEW_BINARYVALUE "AÃ±ade un nuevo valor binario"
+    ID_EDIT_NEW_DWORDVALUE  "AÃ±ade un nuevo valor de doble palabra"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa un archivo de texto al registro"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporta todo o parte del registro a un archivo de texto"
@@ -346,22 +334,22 @@ BEGIN
                             "Se desconecta del registro de un ordenador remoto"
     ID_REGISTRY_PRINT       "Imprime todo o parte del registro"
 /*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
-    ID_HELP_ABOUT           "Muestra información del programa, número de versión y derechos de autor"
+    ID_HELP_ABOUT           "Muestra informaciÃ³n del programa, nÃºmero de versiÃ³n y derechos de autor"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_EXIT        "Sale del editor de registro"
-    ID_FAVOURITES_ADDTOFAVOURITES "Añade claves a la lista de favoritos"
+    ID_FAVOURITES_ADDTOFAVOURITES "AÃ±ade claves a la lista de favoritos"
     ID_FAVOURITES_REMOVEFAVOURITE "Elimina claves de la lista de favoritos"
     ID_VIEW_STATUSBAR       "Muestra u oculta la barra de estado"
-    ID_VIEW_SPLIT           "Cambia la posición del separador entre dos paneles"
+    ID_VIEW_SPLIT           "Cambia la posiciÃ³n del separador entre dos paneles"
     ID_VIEW_REFRESH         "Actualiza la ventana"
-    ID_EDIT_DELETE          "Elimina la selección"
-    ID_EDIT_RENAME          "Renombra la selección"
+    ID_EDIT_DELETE          "Elimina la selecciÃ³n"
+    ID_EDIT_RENAME          "Renombra la selecciÃ³n"
     ID_EDIT_COPYKEYNAME     "Copia el nombre de la clave seleccionada al portapapeles"
     ID_EDIT_FIND            "Busca una cadena de texto en una clave, valor o datos"
-    ID_EDIT_FINDNEXT        "Busca la siguiente ocurrencia del texto especificado en la búsqueda anterior"
+    ID_EDIT_FINDNEXT        "Busca la siguiente ocurrencia del texto especificado en la bÃºsqueda anterior"
 END
 
 STRINGTABLE DISCARDABLE
@@ -373,14 +361,14 @@ BEGIN
     IDS_UNSUPPORTED_TYPE    "No puede editar claves de este tipo (%ld)"
     IDS_TOO_BIG_VALUE       "Valor es muy grande (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Datos del tipo REG_MULTI_SZ no pueden contener lineas vacias.\nLas lineas vacias han sido eliminadas."
-    IDS_QUERY_DELETE_KEY_ONE    "¿Esta seguro que quiere borrar esta clave?"
-    IDS_QUERY_DELETE_KEY_MORE   "¿Esta seguro que quiere borrar estas claves?"
+    IDS_QUERY_DELETE_KEY_ONE    "Â¿Esta seguro que quiere borrar esta clave?"
+    IDS_QUERY_DELETE_KEY_MORE   "Â¿Esta seguro que quiere borrar estas claves?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirme borrar clave"
-    IDS_QUERY_DELETE_ONE    "¿Esta seguro que quiere borrar este valor?"
-    IDS_QUERY_DELETE_MORE   "¿Esta seguro que quiere borrar estos valores?"
+    IDS_QUERY_DELETE_ONE    "Â¿Esta seguro que quiere borrar este valor?"
+    IDS_QUERY_DELETE_MORE   "Â¿Esta seguro que quiere borrar estos valores?"
     IDS_QUERY_DELETE_CONFIRM "Confirme borrar valor"
     IDS_ERR_DELVAL_CAPTION  "Error borrando valores"
-    IDS_ERR_DELETEVALUE     "¡Incapaz de borrar todos los valores especificados!"
+    IDS_ERR_DELETEVALUE     "Â¡Incapaz de borrar todos los valores especificados!"
     IDS_ERR_RENVAL_CAPTION  "Error Renombrando Valor"
     IDS_ERR_RENVAL_TOEMPTY  "No puede renombrar %s. El nombre de valor especificado esta vacio. Trate otro nombre y comienze otra vez."
     IDS_NEW_KEY             "Nueva Clave #%d"
@@ -421,7 +409,7 @@ BEGIN
   IDS_ACCESS_CREATESUBKEY       "Crear Subclave"
   IDS_ACCESS_ENUMERATESUBKEYS   "Enumerar Subclaves"
   IDS_ACCESS_NOTIFY             "Notificar"
-  IDS_ACCESS_CREATELINK         "Crear vínculo"
+  IDS_ACCESS_CREATELINK         "Crear vÃ­nculo"
   IDS_ACCESS_DELETE             "Borrar"
   IDS_ACCESS_WRITEDAC           "Escribir DAC"
   IDS_ACCESS_WRITEOWNER         "Escribir propietario"
@@ -446,7 +434,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_IMPORT_PROMPT             "Agregar los datos al registro?"
-  IDS_IMPORTED_OK               "La información ha sido agregada al registro"
+  IDS_IMPORTED_OK               "La informaciÃ³n ha sido agregada al registro"
 END
 
 STRINGTABLE DISCARDABLE
@@ -511,19 +499,29 @@ END
  */
 
 IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Intervalo de exportación ",IDC_STATIC,2,0,276,48
+   GROUPBOX "Intervalo de exportaciÃ³n ",IDC_STATIC,2,0,276,48
    CONTROL "&Todos",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,35,11
    CONTROL "&Rama seleccionada",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22,100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,25,34,245,12
 END
 
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
+
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Añadir a Favoritos"
+CAPTION "AÃ±adir a Favoritos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,129,7,50,14
@@ -560,7 +558,7 @@ BEGIN
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Datos",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Sólo c&adenas completas",IDC_MATCHSTRING,"Button",
+    CONTROL         "SÃ³lo c&adenas completas",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
     CONTROL         "Coincidencia e&xacta",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
@@ -596,7 +594,7 @@ END
  *STRINGTABLE DISCARDABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Abre la ayuda del Editor de registro."
- *    ID_HELP_ABOUT           "Despliega información del programa, versión y licencia."
+ *    ID_HELP_ABOUT           "Despliega informaciÃ³n del programa, versiÃ³n y licencia."
  *END
  */
 

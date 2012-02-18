@@ -680,13 +680,13 @@ NTAPI
 PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                                 IN PPCI_COMMON_HEADER PciData)
 {
-    BOOLEAN IoActive;
+    //BOOLEAN IoActive;
     PPCI_FDO_EXTENSION FdoExtension;
     PPCI_FUNCTION_RESOURCES PciResources;
     ULONG i;
 
     /* Check if I/O Decodes are enabled */
-    IoActive = (PciData->u.type1.IOBase & 0xF) == 1;
+    //IoActive = (PciData->u.type1.IOBase & 0xF) == 1;
 
     /*
      * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,

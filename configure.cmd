@@ -38,6 +38,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "14." > NUL && set BUILD_ENVIRONMENT=VS8
     cl 2>&1 | find "15." > NUL && set BUILD_ENVIRONMENT=VS9
     cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
+    cl 2>&1 | find "17." > NUL && set BUILD_ENVIRONMENT=VS11
     if not defined BUILD_ENVIRONMENT (
         echo Error: Visual Studio version too old or version detection failed.
         exit /b
@@ -62,6 +63,12 @@ if defined ROS_ARCH (
                 set CMAKE_GENERATOR="Visual Studio 10 Win64"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 10"
+            )
+        ) else if "%BUILD_ENVIRONMENT%" == "VS11" (
+            if "%ARCH%" == "amd64" (
+                set CMAKE_GENERATOR="Visual Studio 11 Win64"
+            ) else (
+                set CMAKE_GENERATOR="Visual Studio 11"
             )
         )
     ) else (

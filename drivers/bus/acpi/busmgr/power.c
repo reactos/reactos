@@ -214,7 +214,7 @@ acpi_power_on (
 	}
 
 	if (!found) {
-		ref = ExAllocatePool(NonPagedPool,sizeof (struct acpi_power_reference));
+		ref = ExAllocatePoolWithTag(NonPagedPool,sizeof (struct acpi_power_reference),'IPCA');
 		if (!ref) {
 			ACPI_DEBUG_PRINT((ACPI_DB_INFO, "kmalloc() failed\n"));
 			//mutex_unlock(&resource->resource_lock);
@@ -556,7 +556,7 @@ acpi_power_add (
 	if (!device)
 		return_VALUE(-1);
 
-	resource = ExAllocatePool(NonPagedPool,sizeof(struct acpi_power_resource));
+	resource = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_power_resource),'IPCA');
 	if (!resource)
 		return_VALUE(-4);
 

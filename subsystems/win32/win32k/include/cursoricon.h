@@ -68,30 +68,11 @@ VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Pr
 BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth,
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
-
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
-
+BOOL APIENTRY UserClipCursor(RECTL *prcl);
 PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)
-
-ULONG
-NTAPI
-GreSetPointerShape(
-    HDC hdc,
-    HBITMAP hbmMask,
-    HBITMAP hbmColor,
-    LONG xHot,
-    LONG yHot,
-    LONG x,
-    LONG y);
-
-VOID
-NTAPI
-GreMovePointer(
-    HDC hdc,
-    LONG x,
-    LONG y);
 
 /* EOF */

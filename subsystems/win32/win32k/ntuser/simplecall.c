@@ -4,12 +4,9 @@
  * PURPOSE:          NtUserCallXxx call stubs
  * FILE:             subsystem/win32/win32k/ntuser/simplecall.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
- * REVISION HISTORY:
- *       2008/03/20  Split from misc.c
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* registered Logon process */
@@ -119,6 +116,9 @@ NtUserCallNoParam(DWORD Routine)
 
       case NOPARAM_ROUTINE_RELEASECAPTURE:
          RETURN( (DWORD_PTR)IntReleaseCapture());
+
+      case NOPARAM_ROUTINE_LOADUSERAPIHOOK:
+          RETURN(UserLoadApiHook());
 
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
@@ -313,7 +313,7 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
          /* FIXME: Should use UserEnterShared */
-         RETURN(IntEnumClipboardFormats(Param));
+         RETURN(UserEnumClipboardFormats(Param));
 
       case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
           IntUserManualGuiCheck(Param);
@@ -378,6 +378,8 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_MESSAGEBEEP:
           RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
 		  /* TODO: Implement sound sentry */
+      case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
+          RETURN(CreateSystemThreads(Param));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -631,7 +633,7 @@ NtUserCallHwnd(
          
          UserDerefObjectCo(Window);
          UserLeave();
-         return (DWORD)HelpId;
+         return (DWORD)HelpId->Data;
       }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))

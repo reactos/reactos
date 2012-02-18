@@ -13,8 +13,8 @@
 	<library>setupapi</library>
 	<library>shell32</library>
 	<library>ntdll</library>
-	<library>msimg32</library>
 	<library>uuid</library>
+	<library>uxtheme</library>
 	<file>advmon.c</file>
 	<file>appearance.c</file>
 	<file>background.c</file>

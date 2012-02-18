@@ -1,6 +1,6 @@
 #pragma once
 
-/* metrics */
+/* Metrics */
 #define PROPSHEETWIDTH                  246
 #define PROPSHEETHEIGHT                 228
 #define PROPSHEETPADDING                6
@@ -96,6 +96,7 @@
 #define IDC_APPEARANCE_FONTSIZE         1502
 #define IDC_APPEARANCE_EFFECTS          1503
 #define IDC_APPEARANCE_ADVANCED         1504
+#define IDC_APPEARANCE_VISUAL_STYLE     1505
 
 #define IDS_INACTWIN                    1510
 #define IDS_ACTWIN                      1511

@@ -39,11 +39,11 @@ _DIB_32BPP_ColorFill:
 
         mov     ebx, [edx+8]      /* ebx = prcl->right; */
         sub     ebx, [edx]        /* ebx = prcl->right - prcl->left; */
-        jbe     .end               /* if (ebx <= 0) goto end; */
+        jle     .end               /* if (ebx <= 0) goto end; */
 
         mov     edx, [edx+12]     /* edx = prcl->bottom; */
         sub     edx, edi          /* edx -= prcl->top; */
-        jbe     .end               /* if (eax <= 0) goto end; */
+        jle     .end               /* if (eax <= 0) goto end; */
 
         mov     eax, [ebp+16]     /* eax = iColor; */
         cld

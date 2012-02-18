@@ -1081,7 +1081,7 @@ BOOL APIENTRY IntUseFontOutlinesW(HDC hDC, DWORD first, DWORD count, DWORD listB
 
         glyphSize = GetGlyphOutline(hDC, glyphIndex, GGO_NATIVE, &glyphMetrics, 0, NULL, &matrix);
 
-        if (glyphSize < 0)
+        if (glyphSize == GDI_ERROR)
             return FALSE; /*WGL_STATUS_FAILURE*/
 
         if (glyphSize > glyphBufSize)
@@ -1096,7 +1096,7 @@ BOOL APIENTRY IntUseFontOutlinesW(HDC hDC, DWORD first, DWORD count, DWORD listB
         /*
         * Get the glyph's outlines.
         */
-        if (GetGlyphOutline(hDC, glyphIndex, GGO_NATIVE, &glyphMetrics, glyphBufSize, glyphBuf, &matrix) < 0)
+        if (GetGlyphOutline(hDC, glyphIndex, GGO_NATIVE, &glyphMetrics, glyphBufSize, glyphBuf, &matrix) == GDI_ERROR)
         {
             HeapFree(GetProcessHeap(), 0, glyphBuf);
             return FALSE; /*WGL_STATUS_FAILURE*/

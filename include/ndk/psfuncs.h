@@ -137,6 +137,13 @@ PsReturnProcessNonPagedPoolQuota(
     IN SIZE_T    Amount
 );
 
+NTKERNELAPI
+ULONG
+NTAPI
+PsGetCurrentProcessSessionId(
+    VOID
+);
+    
 //
 // Process Impersonation Functions
 //
@@ -189,6 +196,19 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsGetProcessExitStatus(
+    PEPROCESS Process
+);
+
+HANDLE
+NTAPI
+PsGetProcessSessionId(
+    IN PEPROCESS Process
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsGetProcessExitProcessCalled(
     PEPROCESS Process
 );
 

@@ -7,18 +7,17 @@
  */
 
 #include <win32k.h>
-#include <bugcodes.h>
 
 #define NDEBUG
 #include <debug.h>
 
-//FIXME: windows uses 0x0012009f
+// FIXME: Windows uses 0x0012009f
 #define DIRTY_DEFAULT DIRTY_CHARSET|DIRTY_BACKGROUND|DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL
 
 PSURFACE psurfDefaultBitmap = NULL;
 PBRUSH pbrDefaultBrush = NULL;
 
-// FIXME: these should go to floatobj.h or something
+// FIXME: These should go to floatobj.h or something
 #ifdef _M_IX86
 #define FLOATOBJ_0 {0x00000000, 0x00000000}
 #define FLOATOBJ_1 {0x40000000, 0x00000002}
@@ -199,10 +198,10 @@ DC_vInitDc(
         pdc->erclBounds.bottom = 0;
         pdc->erclBoundsApp = pdc->erclBounds;
         pdc->erclClip = pdc->erclWindow;
-//        pdc->co = NULL
+        //pdc->co = NULL
     }
 
-//        pdc->dcattr.VisRectRegion:
+      //pdc->dcattr.VisRectRegion:
 
     /* Setup coordinate transformation data */
 	pdc->dclevel.mxWorldToDevice = gmxWorldToDeviceDefault;
@@ -351,7 +350,7 @@ DC_vInitDc(
 }
 
 BOOL
-INTERNAL_CALL
+NTAPI
 DC_Cleanup(PVOID ObjectBody)
 {
     PDC pdc = (PDC)ObjectBody;
@@ -456,9 +455,6 @@ GreSetDCOwner(HDC hdc, ULONG ulOwner)
     DC_UnlockDc(pdc);
     return TRUE;
 }
-
-int FASTCALL
-CLIPPING_UpdateGCRegion(DC* Dc);
 
 static
 void
@@ -630,7 +626,7 @@ GreOpenDCW(
 
     DC_UnlockDc(pdc);
 
-    DPRINT("returning hdc = %p\n", hdc);
+    DPRINT("Returning hdc = %p\n", hdc);
 
     return hdc;
 }
@@ -824,8 +820,8 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
             DC_UnlockDc(DCToDelete);
             if(UserReleaseDC(NULL, hDC, FALSE))
             {
-                /* ReactOs feature : call UserReleaseDC
-                 * I don't think windows does it.
+                /* ReactOS feature: Call UserReleaseDC
+                 * I don't think Windows does it.
                  * Still, complain, no one should ever call DeleteDC
                  * on a window DC */
                  DPRINT1("No, you naughty application!\n");
@@ -862,7 +858,7 @@ APIENTRY
 NtGdiDeleteObjectApp(HANDLE hobj)
 {
     /* Complete all pending operations */
-    NtGdiFlushUserBatch(); // FIXME: we shouldn't need this
+    NtGdiFlushUserBatch(); // FIXME: We shouldn't need this
 
     if (GDI_HANDLE_IS_STOCKOBJ(hobj)) return TRUE;
 
@@ -875,7 +871,7 @@ NtGdiDeleteObjectApp(HANDLE hobj)
     if (GDI_HANDLE_GET_TYPE(hobj) != GDI_OBJECT_TYPE_DC)
         return GreDeleteObject(hobj);
 
-    // FIXME: everything should be callback based
+    // FIXME: Everything should be callback based
     return IntGdiDeleteDC(hobj, FALSE);
 }
 

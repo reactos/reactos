@@ -216,6 +216,7 @@ list(APPEND SOURCE
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
     mm/ARM3/section.c
+    mm/ARM3/special.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
     mm/ARM3/vadnode.c
@@ -314,6 +315,7 @@ elseif(ARCH MATCHES amd64)
         ke/amd64/interrupt.c
         ke/amd64/irql.c
         ke/amd64/kiinit.c
+        ke/amd64/krnlinit.c
         ke/amd64/spinlock.c
         ke/amd64/stubs.c
         ke/amd64/thrdini.c
@@ -389,7 +391,8 @@ if(NOT _WINKD_)
     endif()
 
     if(DBG OR KDBG)
-        list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        #list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        list(APPEND SOURCE kdbg/kdb_symbols.c)
     endif()
 
     list(APPEND SOURCE

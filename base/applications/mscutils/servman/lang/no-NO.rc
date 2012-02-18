@@ -29,7 +29,7 @@ BEGIN
   POPUP "Vis"
   BEGIN
     MENUITEM "Store ikoner", ID_VIEW_LARGE
-    MENUITEM "Små ikoner", ID_VIEW_SMALL
+    MENUITEM "SmÃ¥ ikoner", ID_VIEW_SMALL
     MENUITEM "Liste",        ID_VIEW_LIST
     MENUITEM "Detaljer",     ID_VIEW_DETAILS
     MENUITEM SEPARATOR
@@ -91,11 +91,11 @@ BEGIN
   LTEXT "Tjenestenavn:", IDC_STATIC, 4, 11, 53, 11
   LTEXT "Visningnavn:", IDC_STATIC, 4, 29, 53, 11
   LTEXT "Beskrivelse:", IDC_STATIC, 4, 51, 53, 11
-  LTEXT "Bane til kjørbar fil:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "Bane til kjÃ¸rbar fil:", IDC_STATIC, 6, 73, 82, 9
   LTEXT "Oppstart type:", IDC_STATIC, 6, 108, 53, 11
   LTEXT "Tjenestestatus:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-  LTEXT "Du kan angi startparameteret som gjelder når du starter tjenesten herfra.",IDC_STATIC, 6,177,240,15
+  LTEXT "Du kan angi startparameteret som gjelder nÃ¥r du starter tjenesten herfra.",IDC_STATIC, 6,177,240,15
   LTEXT "startparameteret:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   PUSHBUTTON "Rediger", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
@@ -108,8 +108,8 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THIC
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-  LTEXT "Noen tjenester depend på andre tjenester, system drivere og laster system grupper. Hvis system komponenten er stoppet eller ikke kjøre riktig, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26
-  LTEXT "Denne tjenesten depends på følgende komponenter", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "Noen tjenester depend pÃ¥ andre tjenester, system drivere og laster system grupper. Hvis system komponenten er stoppet eller ikke kjÃ¸re riktig, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "Denne tjenesten depends pÃ¥ fÃ¸lgende komponenter", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
@@ -125,7 +125,7 @@ BEGIN
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
   LTEXT "*Tjenestenavn:", IDC_STATIC, 12, 12, 54, 9
   LTEXT "*Visningsnavn:", IDC_STATIC, 12, 33, 54, 9
-  LTEXT "*Bane til kjørbar fil:", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "*Bane til kjÃ¸rbar fil:", IDC_STATIC, 10, 51, 68, 9
   LTEXT "Beskrivelse:", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
   PUSHBUTTON "Avbryt", IDCANCEL, 176, 192, 46, 13
@@ -139,12 +139,25 @@ FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "Er du sikker på at du vil slette denne tjenesten? Den kan ikke bli åpnet hvis den blir fjernet!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Er du sikker pÃ¥ at du vil slette denne tjenesten? Den kan ikke bli Ã¥pnet hvis den blir fjernet!", IDC_STATIC, 50, 6, 125, 25
   LTEXT "Tjenestenavn:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
   PUSHBUTTON "Ja", IDOK, 26, 129, 54, 13
   DEFPUSHBUTTON "Nei", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stop Other Services"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Do you want to stop these services?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Ja", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "Nei", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
@@ -176,7 +189,7 @@ BEGIN
   IDS_SECONDCOLUMN "Beskrivelse"
   IDS_THIRDCOLUMN "Status"
   IDS_FOURTHCOLUMN "Oppstart type"
-  IDS_FITHCOLUMN "Logg på som"
+  IDS_FITHCOLUMN "Logg pÃ¥ som"
 END
 
 STRINGTABLE DISCARDABLE
@@ -193,7 +206,7 @@ BEGIN
   IDS_NUM_SERVICES "Num tjeneste: %d"
   IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
   IDS_NO_DEPENDS "<No Dependencies>"
-  IDS_LICENSE "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i hÃ¥p for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÃ…L.  Se pÃ¥ GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -211,14 +224,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_PROGRESS_INFO_START  "ReactOS forsøker å starte følgende tjeneste"
-  IDS_PROGRESS_INFO_STOP   "ReactOS forsøker å stoppe følgende tjeneste"
-  IDS_PROGRESS_INFO_PAUSE  "ReactOS forsøker å pause følgende tjeneste"
-  IDS_PROGRESS_INFO_RESUME "ReactOS forsøker å fortsette følgende tjeneste"
+  IDS_PROGRESS_INFO_START  "ReactOS forsÃ¸ker Ã¥ starte fÃ¸lgende tjeneste"
+  IDS_PROGRESS_INFO_STOP   "ReactOS forsÃ¸ker Ã¥ stoppe fÃ¸lgende tjeneste"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS forsÃ¸ker Ã¥ pause fÃ¸lgende tjeneste"
+  IDS_PROGRESS_INFO_RESUME "ReactOS forsÃ¸ker Ã¥ fortsette fÃ¸lgende tjeneste"
   IDS_CREATE_SUCCESS "Tjenesten ble opprettet"
   IDS_DELETE_SUCCESS "Tjenesten ble slettet"
   IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
-  IDS_DELETE_STOP "Du må manuelt stoppe tjenesten før den kan slettes!"
+  IDS_DELETE_STOP "Du mÃ¥ manuelt stoppe tjenesten fÃ¸r den kan slettes!"
 END
 
 STRINGTABLE DISCARDABLE
@@ -230,7 +243,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXPORT       " Eksporter nåværende liste til en fil."
+  IDS_HINT_EXPORT       " Eksporter nÃ¥vÃ¦rende liste til en fil."
   IDS_HINT_EXIT         " Avslutt programmet."
 
   IDS_HINT_CONNECT      " Behandle en annen datamaskin."
@@ -243,10 +256,10 @@ BEGIN
   IDS_HINT_EDIT         " Edit the properties of the selected service."
   IDS_HINT_CREATE       " Opprett en ny tjeneste."
   IDS_HINT_DELETE       " Slett valgte tjeneste."
-  IDS_HINT_PROP         " Åpne egenskap ark for nåværende utvalg."
+  IDS_HINT_PROP         " Ã…pne egenskap ark for nÃ¥vÃ¦rende utvalg."
 
-  IDS_HINT_LARGE        " Vis elementer med å bruke store ikoner."
-  IDS_HINT_SMALL        " Vis elementer med å bruke mindre ikoner."
+  IDS_HINT_LARGE        " Vis elementer med Ã¥ bruke store ikoner."
+  IDS_HINT_SMALL        " Vis elementer med Ã¥ bruke mindre ikoner."
   IDS_HINT_LIST         " Vis elementer i en liste."
   IDS_HINT_DETAILS      " Vis informasjon om hver element i et vindu."
   IDS_HINT_CUST         " Tilpass bildet."
@@ -254,11 +267,11 @@ BEGIN
   IDS_HINT_HELP         " Vis hjelp vinduet."
   IDS_HINT_ABOUT        " Om ReactOS Tjenestebehandler."
 
-  IDS_HINT_SYS_RESTORE  " Gjenopprett vinduet til normal størrelse."
+  IDS_HINT_SYS_RESTORE  " Gjenopprett vinduet til normal stÃ¸rrelse."
   IDS_HINT_SYS_MOVE     " Flytt dette vinduet."
-  IDS_HINT_SYS_SIZE     " Endre størrelsen på dette vinduet."
-  IDS_HINT_SYS_MINIMIZE " Endre størrelsen på dette vinduet til en ikon."
-  IDS_HINT_SYS_MAXIMIZE " Endre størrelsen på dette vinduet til fullskjerm."
+  IDS_HINT_SYS_SIZE     " Endre stÃ¸rrelsen pÃ¥ dette vinduet."
+  IDS_HINT_SYS_MINIMIZE " Endre stÃ¸rrelsen pÃ¥ dette vinduet til en ikon."
+  IDS_HINT_SYS_MAXIMIZE " Endre stÃ¸rrelsen pÃ¥ dette vinduet til fullskjerm."
   IDS_HINT_SYS_CLOSE    " Lukk dette vinduet."
 END
 

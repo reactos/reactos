@@ -106,6 +106,7 @@ list(APPEND SOURCE
     ntuser/metric.c
     ntuser/misc.c
     ntuser/monitor.c
+    ntuser/mouse.c
     ntuser/msgqueue.c
     ntuser/ntstubs.c
     ntuser/ntuser.c

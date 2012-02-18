@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  07-07-2008
  * LAST CHANGE:  29-07-2010 
  */ 
@@ -20,84 +20,82 @@ END
 
 IDC_REGEDIT MENU DISCARDABLE
 BEGIN
-    POPUP "&S˙bor"
+    POPUP "&S√∫bor"
     BEGIN
-        MENUITEM "S&konËiù",                    ID_REGISTRY_EXIT
+        MENUITEM "S&konƒçi≈•",                    ID_REGISTRY_EXIT
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
-        MENUITEM "»&o je ...",                  ID_HELP_ABOUT
+        MENUITEM "ƒå&o je ...",                  ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "&S˙bor"
+    POPUP "&S√∫bor"
     BEGIN
-        MENUITEM "&Importovaù...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Importova≈•...",    ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "&Exportovaù...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Exportova≈•...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
 		MENUITEM "Load Hive...",          ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Unload Hive...",        ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "&Pripojiù registre v sieti...",
+        MENUITEM "&Pripoji≈• registre v sieti...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Odpojiù registre v sieti...",
+        MENUITEM "&Odpoji≈• registre v sieti...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&TlaËiù\tCtrl+P",             ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Tlaƒçi≈•\tCtrl+P",             ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "S&konËiù",                    ID_REGISTRY_EXIT
+        MENUITEM "S&konƒçi≈•",                    ID_REGISTRY_EXIT
     END
-    POPUP "&Upraviù"
+    POPUP "&Upravi≈•"
     BEGIN
-        MENUITEM "&Zmeniù",                     ID_EDIT_MODIFY
+        MENUITEM "&Zmeni≈•",                     ID_EDIT_MODIFY
         MENUITEM SEPARATOR
-        POPUP "&Nov˝"
+        POPUP "&Nov√Ω"
         BEGIN
-            MENUITEM "&Kæ˙Ë",                       ID_EDIT_NEW_KEY
+            MENUITEM "&Kƒæ√∫ƒç",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Reùazcov· hodnota",          ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin·rna hodnota",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Re≈•azcov√° hodnota",          ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√°rna hodnota",            ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD hodnota",              ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Viacreùazcov· hodnota",			      ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "RozöÌrit&eæn· reùazcov· hodnota",	  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+			MENUITEM "&Viacre≈•azcov√° hodnota",			      ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "Roz≈°√≠rit&eƒæn√° re≈•azcov√° hodnota",	  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Opr·vnenia...",		        ID_EDIT_PERMISSIONS
+        MENUITEM "&Opr√°vnenia...",		        ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Vymazaù\tDel",             ID_EDIT_DELETE
-        MENUITEM "&Premenovaù",               ID_EDIT_RENAME
+        MENUITEM "&Vymaza≈•\tDel",             ID_EDIT_DELETE
+        MENUITEM "&Premenova≈•",               ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&KopÌrovaù n·zov kæ˙Ëa",    ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kop√≠rova≈• n√°zov kƒæ√∫ƒça",    ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Hæadaù\tCtrl+F",           ID_EDIT_FIND
-        MENUITEM "Hæa&daù Ôalej\tF3",         ID_EDIT_FINDNEXT
+        MENUITEM "&Hƒæada≈•\tCtrl+F",           ID_EDIT_FIND
+        MENUITEM "Hƒæa&da≈• ƒèalej\tF3",         ID_EDIT_FINDNEXT
     END
-    POPUP "&Zobraziù"
+    POPUP "&Zobrazi≈•"
     BEGIN
-        MENUITEM "Stavov˝ &riadok",       ID_VIEW_STATUSBAR
+        MENUITEM "Stavov√Ω &riadok",       ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "Rozde&lenie",           ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviù\tF5",          ID_VIEW_REFRESH
+        MENUITEM "&Obnovi≈•\tF5",          ID_VIEW_REFRESH
     END
-    POPUP "&Obæ˙benÈ"
+    POPUP "&Obƒæ√∫ben√©"
     BEGIN
-        MENUITEM "&Pridaù k obæ˙ben˝m",       ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Odstr·niù z obæ˙ben˝ch",   ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&Prida≈• k obƒæ√∫ben√Ωm",       ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Odstr√°ni≈• z obƒæ√∫ben√Ωch",   ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
-        MENUITEM "&TÈmy pomocnÌka\tF1",         ID_HELP_HELPTOPICS
+        MENUITEM "&T√©my pomocn√≠ka\tF1",         ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "»&o je Editor registrov",     ID_HELP_ABOUT
+        MENUITEM "ƒå&o je Editor registrov",     ID_HELP_ABOUT
     END
 END
 
@@ -105,42 +103,42 @@ IDR_POPUP_MENUS MENU DISCARDABLE
 BEGIN
   POPUP ""
   BEGIN
-	MENUITEM "&Zmeniù",                     ID_EDIT_MODIFY
-	MENUITEM "Zmeniù bin·re ˙daje",         ID_EDIT_MODIFY_BIN
+	MENUITEM "&Zmeni≈•",                     ID_EDIT_MODIFY
+	MENUITEM "Zmeni≈• bin√°re √∫daje",         ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
-	MENUITEM "&Vymazaù\tDel",               ID_EDIT_DELETE
-	MENUITEM "&Premenovaù",                 ID_EDIT_RENAME
+	MENUITEM "&Vymaza≈•\tDel",               ID_EDIT_DELETE
+	MENUITEM "&Premenova≈•",                 ID_EDIT_RENAME
   END
   POPUP ""
   BEGIN
-        POPUP "&Nov˝"
+        POPUP "&Nov√Ω"
         BEGIN
-            MENUITEM "&Kæ˙Ë",                             ID_EDIT_NEW_KEY
+            MENUITEM "&Kƒæ√∫ƒç",                             ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Reùazcov· hodnota",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin·rna hodnota",                  ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Re≈•azcov√° hodnota",                ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√°rna hodnota",                  ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD hodnota",                    ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Viacreùazcov· hodnota",            ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "RozöÌrit&eæn· reùazcov· hodnota",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Viacre≈•azcov√° hodnota",            ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Roz≈°√≠rit&eƒæn√° re≈•azcov√° hodnota",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
   BEGIN
         MENUITEM "Expand/Collapse",                       ID_TREE_EXPANDBRANCH
-        POPUP "&Nov˝"
+        POPUP "&Nov√Ω"
         BEGIN
-            MENUITEM "&Kæ˙Ë",                             ID_EDIT_NEW_KEY
+            MENUITEM "&Kƒæ√∫ƒç",                             ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Reùazcov· hodnota",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin·rna hodnota",                  ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Re≈•azcov√° hodnota",                ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√°rna hodnota",                  ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD hodnota",                    ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Viacreùazcov· hodnota",            ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "RozöÌrit&eæn· reùazcov· hodnota",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Viacre≈•azcov√° hodnota",            ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Roz≈°√≠rit&eƒæn√° re≈•azcov√° hodnota",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Find",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Vymazaù",                        ID_TREE_DELETE
-        MENUITEM "&Premenovaù",                     ID_TREE_RENAME
+        MENUITEM "&Vymaza≈•",                        ID_TREE_DELETE
+        MENUITEM "&Premenova≈•",                     ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export",                         ID_TREE_EXPORT
         MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
@@ -162,21 +160,11 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "⁄prava reùazca"
+CAPTION "√öprava re≈•azca"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
@@ -184,13 +172,13 @@ BEGIN
     LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,196,64,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,196,64,50,14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "⁄prava viacn·sobnÈho reùazca"
+CAPTION "√öprava viacn√°sobn√©ho re≈•azca"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
@@ -198,13 +186,13 @@ BEGIN
     LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,196,154,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,196,154,50,14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "⁄prava bin·rnej hodnoty" //upraviù, upravenie
+CAPTION "√öprava bin√°rnej hodnoty" //upravi≈•, upravenie
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
@@ -212,14 +200,14 @@ BEGIN
     LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,196,154,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,196,154,50,14
 END
 
 
 IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "⁄prava DWORD hodnoty"
+CAPTION "√öprava DWORD hodnoty"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
@@ -230,7 +218,7 @@ BEGIN
     AUTORADIOBUTTON "&Hexadecimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
     AUTORADIOBUTTON "&Decimal",IDC_FORMAT_DEC,141,59,60,10
     DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,196,82,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,196,82,50,14
 END
 
 
@@ -286,9 +274,9 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "N·zov"
+    IDS_LIST_COLUMN_NAME    "N√°zov"
     IDS_LIST_COLUMN_TYPE    "Typ"
-    IDS_LIST_COLUMN_DATA    "⁄daje"
+    IDS_LIST_COLUMN_DATA    "√ödaje"
 END
 
 STRINGTABLE DISCARDABLE
@@ -311,10 +299,10 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_MODIFY          "Modifies the value's data"
-    ID_EDIT_NEW_KEY         "Prid· nov˝ kæ˙Ë"
-    ID_EDIT_NEW_STRINGVALUE "Prid· nov˙ reùazcov˙ hodnotu"
-    ID_EDIT_NEW_BINARYVALUE "Prid· nov˙ bin·rnu hodnotu"
-    ID_EDIT_NEW_DWORDVALUE  "Prid· nov˙ double word hodnotu"
+    ID_EDIT_NEW_KEY         "Prid√° nov√Ω kƒæ√∫ƒç"
+    ID_EDIT_NEW_STRINGVALUE "Prid√° nov√∫ re≈•azcov√∫ hodnotu"
+    ID_EDIT_NEW_BINARYVALUE "Prid√° nov√∫ bin√°rnu hodnotu"
+    ID_EDIT_NEW_DWORDVALUE  "Prid√° nov√∫ double word hodnotu"
     ID_REGISTRY_IMPORTREGISTRYFILE "Imports a text file into the registry"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exports all or part of the registry to a text file"
@@ -333,10 +321,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "UkonËÌ editor registrov"
+    ID_REGISTRY_EXIT        "Ukonƒç√≠ editor registrov"
     ID_FAVOURITES_ADDTOFAVOURITES "Adds keys to the favourites list"
     ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
-    ID_VIEW_STATUSBAR       "ZobrazÌ alebo skryje stavov˝ riadok"
+    ID_VIEW_STATUSBAR       "Zobraz√≠ alebo skryje stavov√Ω riadok"
     ID_VIEW_SPLIT           "Change position of split between two panes"
     ID_VIEW_REFRESH         "Refreshes the window"
     ID_EDIT_DELETE          "Deletes the selection"
@@ -353,34 +341,34 @@ BEGIN
     IDS_BAD_KEY             "Can't query key '%s'"
     IDS_BAD_VALUE           "Can't query value '%s'"
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
-    IDS_TOO_BIG_VALUE       "Hodnota je prÌliö veæk· (%ld)"
+    IDS_TOO_BIG_VALUE       "Hodnota je pr√≠li≈° veƒæk√° (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
-    IDS_QUERY_DELETE_KEY_ONE    "Naozaj chcete vymazaù tento kæ˙Ë?"
-    IDS_QUERY_DELETE_KEY_MORE   "Naozaj chcete vymazaù tieto kæ˙Ëe?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Potvrdiù vymazanie kæ˙Ëa"
-    IDS_QUERY_DELETE_ONE    "Naozaj chcete vymazaù t˙to hodnotu?"
-    IDS_QUERY_DELETE_MORE   "Naozaj chcete vymazaù tieto hodnoty?"
-    IDS_QUERY_DELETE_CONFIRM "Potvrdiù vymazanie hodnoty"
+    IDS_QUERY_DELETE_KEY_ONE    "Naozaj chcete vymaza≈• tento kƒæ√∫ƒç?"
+    IDS_QUERY_DELETE_KEY_MORE   "Naozaj chcete vymaza≈• tieto kƒæ√∫ƒçe?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Potvrdi≈• vymazanie kƒæ√∫ƒça"
+    IDS_QUERY_DELETE_ONE    "Naozaj chcete vymaza≈• t√∫to hodnotu?"
+    IDS_QUERY_DELETE_MORE   "Naozaj chcete vymaza≈• tieto hodnoty?"
+    IDS_QUERY_DELETE_CONFIRM "Potvrdi≈• vymazanie hodnoty"
     IDS_ERR_DELVAL_CAPTION  "Error Deleting Values"
     IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
     IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
     IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
-    IDS_NEW_KEY             "Nov˝ kæ˙Ë #%d"
-    IDS_NEW_VALUE           "Nov· hodnota #%d"
+    IDS_NEW_KEY             "Nov√Ω kƒæ√∫ƒç #%d"
+    IDS_NEW_VALUE           "Nov√° hodnota #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY        "(bin·rna hodnota nulovej dÂûky)"
-    IDS_DEFAULT_VALUE_NAME  "(PredvolenÈ)"
-    IDS_VALUE_NOT_SET       "(hodnota nie nastaven·)"
-    IDS_UNKNOWN_TYPE        "Nezn·my typ: (0x%lx)"
-    IDS_MY_COMPUTER         "Tento poËÌtaË"
+    IDS_BINARY_EMPTY        "(bin√°rna hodnota nulovej dƒ∫≈æky)"
+    IDS_DEFAULT_VALUE_NAME  "(Predvolen√©)"
+    IDS_VALUE_NOT_SET       "(hodnota nie nastaven√°)"
+    IDS_UNKNOWN_TYPE        "Nezn√°my typ: (0x%lx)"
+    IDS_MY_COMPUTER         "Tento poƒç√≠taƒç"
     IDS_IMPORT_REG_FILE     "Import Registry File"
     IDS_EXPORT_REG_FILE     "Export Registry File"
     IDS_LOAD_HIVE           "Load Hive"
     IDS_UNLOAD_HIVE         "Unload Hive"
-    IDS_INVALID_DWORD       "(neplatn· DWORD hodnota)"
+    IDS_INVALID_DWORD       "(neplatn√° DWORD hodnota)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -390,7 +378,7 @@ BEGIN
     IDS_FLT_REGFILES_FLT    "*.reg"
     IDS_FLT_REGEDIT4        "Win9x/NT4 Registration Files (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "Vöetky s˙bory (*.*)"
+    IDS_FLT_ALLFILES        "V≈°etky s√∫bory (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
@@ -502,13 +490,24 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
+
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Add to Favorites"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,129,24,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,129,24,50,14
     LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
@@ -519,7 +518,7 @@ CAPTION "Remove Favorites"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,7,114,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
     LTEXT           "Select Favorite(s):",IDC_STATIC,7,7,99,12
@@ -531,15 +530,15 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "&Find Next",IDOK,197,7,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,197,24,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,197,24,50,14
     GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
     LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Kæ˙Ëe",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Kƒæ√∫ƒçe",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Hodnoty",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
-    CONTROL         "⁄&daje",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "√ö&daje",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
     CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
@@ -554,7 +553,7 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "&Zruöiù",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Zru≈°i≈•",IDCANCEL,93,29,45,14
     LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
 END
 
@@ -576,8 +575,8 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "OtvorÌ pomocnÌka pre Editor registrov."
- *    ID_HELP_ABOUT           "Zobrazuje inform·cie programu, ËÌslo verzie a autorskÈ pr·va."
+ *    ID_HELP_HELPTOPICS      "Otvor√≠ pomocn√≠ka pre Editor registrov."
+ *    ID_HELP_ABOUT           "Zobrazuje inform√°cie programu, ƒç√≠slo verzie a autorsk√© pr√°va."
  *END
  */
 

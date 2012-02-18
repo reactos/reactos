@@ -1,40 +1,15 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
- *  FILE:             subsys/win32k/ntuser/winsta.c
+ *  FILE:             subsystems/win32/win32k/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- *  REVISION HISTORY:
- *       06-06-2001  CSH  Created
- *  NOTES:            Exported functions set the Win32 last error value
- *                    on errors. The value can be retrieved with the Win32
- *                    function GetLastError().
  *  TODO:             The process window station is created on
  *                    the first USER32/GDI32 call not related
  *                    to window station/desktop handling
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserWinsta);
 
 /* GLOBALS *******************************************************************/
@@ -42,21 +17,10 @@ DBG_DEFAULT_CHANNEL(UserWinsta);
 /* Currently active window station */
 PWINSTATION_OBJECT InputWindowStation = NULL;
 
-/* Winlogon sas window*/
+/* Winlogon SAS window */
 HWND hwndSAS = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
-
-static GENERIC_MAPPING IntWindowStationMapping =
-   {
-      STANDARD_RIGHTS_READ     | WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_READATTRIBUTES | WINSTA_READSCREEN,
-      STANDARD_RIGHTS_WRITE    | WINSTA_ACCESSCLIPBOARD   | WINSTA_CREATEDESKTOP     | WINSTA_WRITEATTRIBUTES,
-      STANDARD_RIGHTS_EXECUTE  | WINSTA_ACCESSGLOBALATOMS | WINSTA_EXITWINDOWS,
-      STANDARD_RIGHTS_REQUIRED | WINSTA_ACCESSCLIPBOARD   | WINSTA_ACCESSGLOBALATOMS | WINSTA_CREATEDESKTOP  |
-      WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_EXITWINDOWS    |
-      WINSTA_READATTRIBUTES    | WINSTA_READSCREEN        | WINSTA_WRITEATTRIBUTES
-   };
-
 
 INIT_FUNCTION
 NTSTATUS
@@ -67,14 +31,17 @@ InitWindowStationImpl(VOID)
    HANDLE WindowStationsDirectory;
    UNICODE_STRING UnicodeString;
    NTSTATUS Status;
+   GENERIC_MAPPING IntWindowStationMapping = { WINSTA_READ,
+                                               WINSTA_WRITE,
+                                               WINSTA_EXECUTE,
+                                               WINSTA_ACCESS_ALL};
 
    /*
     * Create the '\Windows\WindowStations' directory
     */
 
    RtlInitUnicodeString(&UnicodeString, WINSTA_ROOT_NAME);
-   InitializeObjectAttributes(&ObjectAttributes, &UnicodeString,
-                              0, NULL, NULL);
+   InitializeObjectAttributes(&ObjectAttributes, &UnicodeString, 0, NULL, NULL);
    Status = ZwCreateDirectoryObject(&WindowStationsDirectory, 0,
                                     &ObjectAttributes);
    if (!NT_SUCCESS(Status))
@@ -87,26 +54,9 @@ InitWindowStationImpl(VOID)
    /* Set Winsta Object Attributes */
    ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
    ExWindowStationObjectType->TypeInfo.GenericMapping = IntWindowStationMapping;
+   ExWindowStationObjectType->TypeInfo.ValidAccessMask = WINSTA_ACCESS_ALL;
 
    return STATUS_SUCCESS;
-}
-
-NTSTATUS FASTCALL
-CleanupWindowStationImpl(VOID)
-{
-   return STATUS_SUCCESS;
-}
-
-BOOL FASTCALL
-IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
-{
-    WinStaObj->Clipboard = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDSYSTEM), TAG_WINSTA);
-    if (WinStaObj->Clipboard)
-    {
-        RtlZeroMemory(WinStaObj->Clipboard, sizeof(CLIPBOARDSYSTEM));
-        return TRUE;
-    }
-    return FALSE;
 }
 
 /* OBJECT CALLBACKS  **********************************************************/
@@ -117,6 +67,8 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
 
    TRACE("Deleting window station (0x%X)\n", WinSta);
+
+   UserEmptyClipboardData(WinSta);
 
    RtlDestroyAtomTable(WinSta->AtomTable);
 
@@ -240,14 +192,14 @@ IntGetFullWindowStationName(
    Buffer += WINSTA_ROOT_NAME_LENGTH;
    if (WinStaName != NULL)
    {
-      memcpy(Buffer, L"\\", sizeof(WCHAR));
+      *Buffer = L'\\';
       Buffer ++;
       memcpy(Buffer, WinStaName->Buffer, WinStaName->Length);
 
       if (DesktopName != NULL)
       {
          Buffer += WinStaName->Length / sizeof(WCHAR);
-         memcpy(Buffer, L"\\", sizeof(WCHAR));
+         *Buffer = L'\\';
          Buffer ++;
          memcpy(Buffer, DesktopName->Buffer, DesktopName->Length);
       }
@@ -277,7 +229,7 @@ IntValidateWindowStationHandle(
 
    if (WindowStation == NULL)
    {
-      //      ERR("Invalid window station handle\n");
+      WARN("Invalid window station handle\n");
       EngSetLastError(ERROR_INVALID_HANDLE);
       return STATUS_INVALID_HANDLE;
    }
@@ -336,11 +288,17 @@ co_IntInitializeDesktopGraphics(VOID)
    NtGdiSelectFont(hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
    GreSetDCOwner(hSystemBM, GDI_OBJ_HMGR_PUBLIC);
 
-   // FIXME! Move these to a update routine.
+   // FIXME: Move these to a update routine.
    gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
    gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
    gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
    gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
+   if (NtGdiGetDeviceCaps(ScreenDeviceContext, RASTERCAPS) & RC_PALETTE)
+   {
+      gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
+   }
+   else
+      gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
    // Font is realized and this dc was previously set to internal DC_ATTR.
    gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
    gpsi->tmSysFont     = tmw;
@@ -503,11 +461,6 @@ NtUserCreateWindowStation(
    WindowStationObject->Name = WindowStationName;
    WindowStationObject->ScreenSaverRunning = FALSE;
    WindowStationObject->FlatMenu = FALSE;
-
-   if (!IntSetupClipboard(WindowStationObject))
-   {
-       ERR("WindowStation: Error Setting up the clipboard!!!\n");
-   }
 
    if (InputWindowStation == NULL)
    {
@@ -689,8 +642,8 @@ NtUserGetObjectInformation(
    TRACE("Trying to open window station 0x%x\n", hObject);
    Status = IntValidateWindowStationHandle(
                hObject,
-               UserMode,/*ExGetPreviousMode(),*/
-               GENERIC_READ, /* FIXME: is this ok? */
+               UserMode,
+               0,
                &WinStaObject);
 
 
@@ -707,8 +660,8 @@ NtUserGetObjectInformation(
       TRACE("Trying to open desktop 0x%x\n", hObject);
       Status = IntValidateDesktopHandle(
                   hObject,
-                  UserMode,/*ExGetPreviousMode(),*/
-                  GENERIC_READ, /* FIXME: is this ok? */
+                  UserMode,
+                  0, 
                   &DesktopObject);
       if (!NT_SUCCESS(Status))
       {
@@ -842,34 +795,11 @@ NtUserSetObjectInformation(
 HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
-   NTSTATUS Status;
-   PTHREADINFO pti;
-   HWINSTA WinSta;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   if(PsGetCurrentProcess() != CsrProcess)
-   {
-      return PsGetCurrentProcess()->Win32WindowStation;
-   }
-   else
-   {
-      ERR("Should use ObFindHandleForObject\n");
-      pti = PsGetCurrentThreadWin32Thread();
-      Status = ObOpenObjectByPointer(pti->rpdesk->rpwinstaParent,
-                                     0,
-                                     NULL,
-                                     WINSTA_ALL_ACCESS,
-                                     ExWindowStationObjectType,
-                                     UserMode,
-                                     (PHANDLE) &WinSta);
-      if (! NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         ERR("Unable to open handle for CSRSSs winsta, status 0x%08x\n",
-                 Status);
-         return NULL;
-      }
-      return WinSta;
-   }
+    //ASSERT(ppi->hwinsta);
+
+    return ppi->hwinsta;
 }
 
 
@@ -896,36 +826,19 @@ NtUserGetProcessWindowStation(VOID)
 PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
-   PWINSTATION_OBJECT WinStaObj;
-   PTHREADINFO Win32Thread;
-   PEPROCESS CurrentProcess;
-
-   /*
-    * just a temporary hack, this will be gone soon
-    */
-
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if(Win32Thread != NULL && Win32Thread->rpdesk != NULL)
-   {
-      WinStaObj = Win32Thread->rpdesk->rpwinstaParent;
-      ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
-   }
-   else if((CurrentProcess = PsGetCurrentProcess()) != CsrProcess)
-   {
-      NTSTATUS Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
+    PWINSTATION_OBJECT WinStaObj;
+    NTSTATUS Status;
+   
+    Status = IntValidateWindowStationHandle(
+                        UserGetProcessWindowStation(),
                         KernelMode,
                         0,
                         &WinStaObj);
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         return NULL;
-      }
-   }
-   else
-   {
-      WinStaObj = NULL;
-   }
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
 
    return WinStaObj;
 }
@@ -972,7 +885,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    }
 
    /*
-    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
+    * FIXME: Don't allow changing the window station if there are threads that are attached to desktops and own GUI objects.
     */
 
    PsSetProcessWindowStation(ppi->peProcess, hWindowStation);

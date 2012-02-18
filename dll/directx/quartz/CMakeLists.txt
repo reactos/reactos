@@ -72,3 +72,7 @@ add_importlibs(quartz
 
 add_pch(quartz quartz_private.h)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(quartz)
+endif()

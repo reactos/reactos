@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -116,11 +116,11 @@
 #ifndef __ACINTEL_H__
 #define __ACINTEL_H__
 
+/* Configuration specific to Intel 64-bit C compiler */
 
-#define COMPILER_DEPENDENT_INT64   __int64
-#define COMPILER_DEPENDENT_UINT64  unsigned __int64
-
-#define inline                  __inline
+#define COMPILER_DEPENDENT_INT64    __int64
+#define COMPILER_DEPENDENT_UINT64   unsigned __int64
+#define ACPI_INLINE                 __inline
 
 /*
  * Calling conventions:
@@ -134,20 +134,6 @@
 #define ACPI_EXTERNAL_XFACE
 #define ACPI_INTERNAL_XFACE
 #define ACPI_INTERNAL_VAR_XFACE
-
-/*
- * Math helper functions
- */
-#define ACPI_DIV_64_BY_32(n, n_hi, n_lo, d32, q32, r32) \
-{ \
-    q32 = n / d32; \
-    r32 = n % d32; \
-}
-
-#define ACPI_SHIFT_RIGHT_64(n, n_hi, n_lo) \
-{ \
-    n <<= 1; \
-}
 
 /* remark 981 - operands evaluated in no particular order */
 #pragma warning(disable:981)

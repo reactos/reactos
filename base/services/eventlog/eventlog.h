@@ -19,7 +19,7 @@
 #include <lpcfuncs.h>
 #include <rtlfuncs.h>
 #include <obfuncs.h>
-#include <iotypes.h>
+#include <iofuncs.h>
 #include <debug.h>
 #include "eventlogrpc_s.h"
 
@@ -42,7 +42,7 @@ typedef struct _IO_ERROR_LPC
  */
 #define ELF_LOGFILE_HEADER_DIRTY 1
 #define ELF_LOGFILE_HEADER_WRAP 2
-#define ELF_LOGGFILE_LOGFULL_WRITTEN 4
+#define ELF_LOGFILE_LOGFULL_WRITTEN 4
 #define ELF_LOGFILE_ARCHIVE_SET 8
 
 /* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
@@ -88,10 +88,11 @@ typedef struct _LOGFILE
     EVENTLOGHEADER Header;
     WCHAR *LogName;
     WCHAR *FileName;
-    CRITICAL_SECTION cs;
+    RTL_RESOURCE Lock;
     PEVENT_OFFSET_INFO OffsetInfo;
     ULONG OffsetInfoSize;
     ULONG OffsetInfoNext;
+    BOOL Permanent;
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
@@ -102,12 +103,17 @@ typedef struct _EVENTSOURCE
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
+
+/* Log Handle Flags */
+#define LOG_HANDLE_BACKUP_FILE 1
+
 typedef struct _LOGHANDLE
 {
     LIST_ENTRY LogHandleListEntry;
     PEVENTSOURCE EventSource;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
+    ULONG Flags;
     WCHAR szName[1];
 } LOGHANDLE, *PLOGHANDLE;
 
@@ -134,22 +140,33 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
-                   DWORD * BytesNeeded);
+                   DWORD * BytesNeeded,
+                   BOOL Ansi);
 
 BOOL LogfWriteData(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer);
 
-PLOGFILE LogfCreate(WCHAR * LogName,
-                    WCHAR * FileName);
+NTSTATUS
+LogfClearFile(PLOGFILE LogFile,
+              PUNICODE_STRING BackupFileName);
 
-VOID LogfClose(PLOGFILE LogFile);
+NTSTATUS
+LogfBackupFile(PLOGFILE LogFile,
+               PUNICODE_STRING BackupFileName);
+
+NTSTATUS
+LogfCreate(PLOGFILE *Logfile,
+           WCHAR * LogName,
+           PUNICODE_STRING FileName,
+           BOOL Permanent,
+           BOOL Backup);
+
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOL ForceClose);
 
 VOID LogfCloseAll(VOID);
-
-BOOL LogfInitializeNew(PLOGFILE LogFile);
-
-BOOL LogfInitializeExisting(PLOGFILE LogFile);
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 

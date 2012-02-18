@@ -48,7 +48,7 @@ CsrSetPriorityClass(HANDLE hProcess,
     /* Call it */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_MAKE_OPCODE(CsrSrvSetPriorityClass,
+                                 CSR_MAKE_OPCODE(CsrpSetPriorityClass,
                                                  CSR_SRV_SERVER),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
     
@@ -78,7 +78,7 @@ CsrIdentifyAlertableThread (VOID)
     /* Call it */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_MAKE_OPCODE(CsrSrvIdentifyAlertableThread,
+                                 CSR_MAKE_OPCODE(CsrpIdentifyAlertable,
                                                  CSR_SRV_SERVER),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
 

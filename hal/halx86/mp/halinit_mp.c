@@ -15,12 +15,13 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ***************************************************************/
+/* GLOBALS ******************************************************************/
 
+const USHORT HalpBuildType = HAL_BUILD_TYPE;
 extern BOOLEAN HaliFindSmpConfig(VOID);
 ULONG_PTR KernelBase;
 
-/***************************************************************************/
+/* FUNCTIONS ****************************************************************/
 
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 {

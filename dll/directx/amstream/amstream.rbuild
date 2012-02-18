@@ -9,8 +9,6 @@
 	<file>main.c</file>
 	<file>mediastream.c</file>
 	<file>mediastreamfilter.c</file>
-	<file>regsvr.c</file>
-	<file>amstream_i.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
 	<library>strmiids</library>

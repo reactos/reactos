@@ -4,6 +4,7 @@
  * FILE:            hal/halx86/generic/timer.c
  * PURPOSE:         HAL Timer Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -14,6 +15,10 @@
 
 /* GLOBALS *******************************************************************/
 
+#define PIT_LATCH  0x00
+
+LARGE_INTEGER HalpLastPerfCounter;
+LARGE_INTEGER HalpPerfCounter;
 ULONG HalpPerfCounterCutoff;
 BOOLEAN HalpClockSetMSRate;
 ULONG HalpCurrentTimeIncrement;
@@ -21,53 +26,55 @@ ULONG HalpCurrentRollOver;
 ULONG HalpNextMSRate = 14;
 ULONG HalpLargestClockMS = 15;
 
-LARGE_INTEGER HalpRolloverTable[15] =
+static struct _HALP_ROLLOVER
 {
-    {{1197, 10032}},
-    {{2394, 20064}},
-    {{3591, 30096}},
-    {{4767, 39952}},
-    {{5964, 49984}},
-    {{7161, 60016}},
-    {{8358, 70048}},
-    {{9555, 80080}},
-    {{10731, 89936}},
-    {{11949, 100144}},
-    {{13125, 110000}},
-    {{14322, 120032}},
-    {{15519, 130064}},
-    {{16695, 139920}},
-    {{17892, 149952}}
+    ULONG RollOver;
+    ULONG Increment;
+} HalpRolloverTable[15] =
+{
+    {1197, 10032},
+    {2394, 20064},
+    {3591, 30096},
+    {4767, 39952},
+    {5964, 49984},
+    {7161, 60016},
+    {8358, 70048},
+    {9555, 80080},
+    {10731, 89936},
+    {11949, 100144},
+    {13125, 110000},
+    {14322, 120032},
+    {15519, 130064},
+    {16695, 139920},
+    {17892, 149952}
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+FORCEINLINE
+ULONG
+HalpRead8254Value(void)
+{
+    ULONG TimerValue;
+
+    /* Send counter latch command for channel 0 */
+    __outbyte(TIMER_CONTROL_PORT, PIT_LATCH);
+    __nop();
+
+    /* Read the value, LSB first */
+    TimerValue = __inbyte(TIMER_CHANNEL0_DATA_PORT);
+    __nop();
+    TimerValue |= __inbyte(TIMER_CHANNEL0_DATA_PORT) << 8;
+
+    return TimerValue;
+}
+
 VOID
 NTAPI
-INIT_FUNCTION
-HalpInitializeClock(VOID)
+HalpSetTimerRollOver(USHORT RollOver)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    ULONG Increment;
-    USHORT RollOver;
     ULONG_PTR Flags;
     TIMER_CONTROL_PORT_REGISTER TimerControl;
-
-    /* Check the CPU Type */
-    if (Prcb->CpuType <= 4)
-    {
-        /* 486's or equal can't go higher then 10ms */
-        HalpLargestClockMS = 10;
-        HalpNextMSRate = 9;
-    }
-
-    /* Get increment and rollover for the largest time clock ms possible */
-    Increment = HalpRolloverTable[HalpLargestClockMS - 1].HighPart;
-    RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].LowPart;
-
-    /* Set the maximum and minimum increment with the kernel */
-    HalpCurrentTimeIncrement = Increment;
-    KeSetTimeIncrement(Increment, HalpRolloverTable[0].HighPart);
 
     /* Disable interrupts */
     Flags = __readeflags();
@@ -98,9 +105,31 @@ HalpInitializeClock(VOID)
 
     /* Restore interrupts if they were previously enabled */
     __writeeflags(Flags);
+}
 
-    /* Save rollover and return */
+VOID
+NTAPI
+INIT_FUNCTION
+HalpInitializeClock(VOID)
+{
+    ULONG Increment;
+    USHORT RollOver;
+
+    DPRINT("HalpInitializeClock()\n");
+
+    /* Get increment and rollover for the largest time clock ms possible */
+    Increment = HalpRolloverTable[HalpLargestClockMS - 1].Increment;
+    RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].RollOver;
+
+    /* Set the maximum and minimum increment with the kernel */
+    KeSetTimeIncrement(Increment, HalpRolloverTable[0].Increment);
+
+    /* Set the rollover value for the timer */
+    HalpSetTimerRollOver(RollOver);
+
+    /* Save rollover and increment */
     HalpCurrentRollOver = RollOver;
+    HalpCurrentTimeIncrement = Increment;
 }
 
 #ifdef _M_IX86
@@ -109,6 +138,7 @@ VOID
 FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
+    ULONG LastIncrement;
     KIRQL Irql;
 
     /* Enter trap */
@@ -121,16 +151,25 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
         HalpPerfCounter.QuadPart += HalpCurrentRollOver;
         HalpPerfCounterCutoff = KiEnableTimerWatchdog;
 
+        /* Save increment */
+        LastIncrement = HalpCurrentTimeIncrement;
+
         /* Check if someone changed the time rate */
         if (HalpClockSetMSRate)
         {
-            /* Not yet supported */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
+            /* Update the global values */
+            HalpCurrentTimeIncrement = HalpRolloverTable[HalpNextMSRate - 1].Increment;
+            HalpCurrentRollOver = HalpRolloverTable[HalpNextMSRate - 1].RollOver;
+
+            /* Set new timer rollover */
+            HalpSetTimerRollOver((USHORT)HalpCurrentRollOver);
+
+            /* We're done */
+            HalpClockSetMSRate = FALSE;
         }
 
         /* Update the system time -- the kernel will exit this trap  */
-        KeUpdateSystemTime(TrapFrame, HalpCurrentTimeIncrement, Irql);
+        KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
     }
 
     /* Spurious, just end the interrupt */
@@ -206,7 +245,71 @@ HalSetTimeIncrement(IN ULONG Increment)
     HalpClockSetMSRate = TRUE;
 
     /* Return the increment */
-    return HalpRolloverTable[Increment - 1].HighPart;
+    return HalpRolloverTable[Increment - 1].Increment;
+}
+
+LARGE_INTEGER
+NTAPI
+KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
+{
+    LARGE_INTEGER CurrentPerfCounter;
+    ULONG CounterValue, ClockDelta;
+    KIRQL OldIrql;
+
+    /* If caller wants performance frequency, return hardcoded value */
+    if (PerformanceFrequency) PerformanceFrequency->QuadPart = PIT_FREQUENCY;
+
+    /* Check if we were called too early */
+    if (HalpCurrentRollOver == 0) return HalpPerfCounter;
+
+    /* Check if interrupts are disabled */
+    if(!(__readeflags() & EFLAGS_INTERRUPT_MASK)) return HalpPerfCounter;
+
+    /* Raise irql to DISPATCH_LEVEL */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < DISPATCH_LEVEL) KfRaiseIrql(DISPATCH_LEVEL);
+
+    do
+    {
+        /* Get the current performance counter value */
+        CurrentPerfCounter = HalpPerfCounter;
+
+        /* Read the 8254 counter value */
+        CounterValue = HalpRead8254Value();
+
+    /* Repeat if the value has changed (a clock interrupt happened) */
+    } while (CurrentPerfCounter.QuadPart != HalpPerfCounter.QuadPart);
+
+    /* After someone changed the clock rate, during the first clock cycle we
+       might see a counter value larger than the rollover. In this case we
+       pretend it already has the new rollover value. */
+    if (CounterValue > HalpCurrentRollOver) CounterValue = HalpCurrentRollOver;
+
+    /* The interrupt is issued on the falling edge of the OUT line, when the
+       counter changes from 1 to max. Calculate a clock delta, so that directly
+       after the interrupt it is 0, going up to (HalpCurrentRollOver - 1). */
+    ClockDelta = HalpCurrentRollOver - CounterValue;
+
+    /* Add the clock delta */
+    CurrentPerfCounter.QuadPart += ClockDelta;
+
+    /* Check if the value is smaller then before, this means, we somehow
+       missed an interrupt. This is a sign that the timer interrupt
+       is very inaccurate. Probably a virtual machine. */
+    if (CurrentPerfCounter.QuadPart < HalpLastPerfCounter.QuadPart)
+    {
+        /* We missed an interrupt. Assume we will receive it later */
+        CurrentPerfCounter.QuadPart += HalpCurrentRollOver;
+    }
+
+    /* Update the last counter value */
+    HalpLastPerfCounter = CurrentPerfCounter;
+
+    /* Restore previous irql */
+    if (OldIrql < DISPATCH_LEVEL) KfLowerIrql(OldIrql);
+
+    /* Return the result */
+    return CurrentPerfCounter;
 }
 
 /* EOF */

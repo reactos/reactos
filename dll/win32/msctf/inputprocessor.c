@@ -782,7 +782,7 @@ HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut
 }
 
 /**************************************************
- * IEnumGUID implementaion for ITfInputProcessorProfiles::EnumInputProcessorInfo
+ * IEnumGUID implementation for ITfInputProcessorProfiles::EnumInputProcessorInfo
  **************************************************/
 static void ProfilesEnumGuid_Destructor(ProfilesEnumGuid *This)
 {
@@ -924,7 +924,10 @@ static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut)
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szwSystemTIPKey, 0, NULL, 0,
                     KEY_READ | KEY_WRITE, NULL, &This->key, NULL) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
         return E_FAIL;
+    }
 
     TRACE("returning %p\n", This);
     *ppOut = (IEnumGUID*)This;
@@ -932,7 +935,7 @@ static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut)
 }
 
 /**************************************************
- * IEnumTfLanguageProfiles implementaion
+ * IEnumTfLanguageProfiles implementation
  **************************************************/
 static void EnumTfLanguageProfiles_Destructor(EnumTfLanguageProfiles *This)
 {
@@ -1161,7 +1164,10 @@ static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguage
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szwSystemTIPKey, 0, NULL, 0,
                     KEY_READ | KEY_WRITE, NULL, &This->tipkey, NULL) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
         return E_FAIL;
+    }
 
     TRACE("returning %p\n", This);
     *ppOut = (IEnumTfLanguageProfiles*)This;

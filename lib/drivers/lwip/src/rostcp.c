@@ -196,7 +196,6 @@ err_t
 InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    u32_t len;
 
     /* Make sure the socket didn't get closed */
     if (!arg)

@@ -1,29 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI WNDOBJ Functions
  * FILE:              subsystems/win32/win32k/eng/engwindow.c
  * PROGRAMER:         Gregor Anich
- * REVISION HISTORY:
- *                 16/11/2004: Created
  */
 
 /* TODO: Check how the WNDOBJ implementation should behave with a driver on windows.
@@ -155,14 +135,19 @@ IntEngWindowChanged(
   PWND  Window,
   FLONG           flChanged)
 {
+  PPROPERTY pprop;
   WNDGDI *Current;
   HWND hWnd;
 
   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
   hWnd = Window->head.h;
-  Current = (WNDGDI *)IntGetProp(Window, AtomWndObj);
-
+  pprop = IntGetProp(Window, AtomWndObj);
+  if (!pprop)
+  {
+     return;
+  }
+  Current = (WNDGDI *)pprop->Data;
   if ( gcountPWO &&
        Current &&
        Current->Hwnd == hWnd &&

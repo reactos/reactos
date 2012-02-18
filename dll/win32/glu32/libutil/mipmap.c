@@ -6608,7 +6608,7 @@ static void gluTexImage3D( GLenum target, GLint level,
 	 pTexImage3D = (TexImage3Dproc) wglGetProcAddress("glTexImage3DEXT");
 #else
       void *libHandle = dlopen("libgl.so", RTLD_LAZY);
-      pTexImage3D = TexImage3Dproc) dlsym(libHandle, "glTexImage3D" );
+      pTexImage3D = (TexImage3Dproc) dlsym(libHandle, "glTexImage3D" );
       if (!pTexImage3D)
 	 pTexImage3D = (TexImage3Dproc) dlsym(libHandle,"glTexImage3DEXT");
       dlclose(libHandle);

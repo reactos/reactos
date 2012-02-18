@@ -31,6 +31,7 @@
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>
+#include <mountmgr.h>
 #undef NTHALAPI
 #define NTHALAPI __declspec(dllimport)
 #include <ndk/asm.h>
@@ -86,14 +87,6 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-/* Internal Headers */
-#include "internal/ntoskrnl.h"
-#include "config.h"
-
-#include <reactos/probe.h>
-#include "internal/probe.h"
-#include "resource.h"
-
 //
 // Define the internal versions of external and public global data
 //
@@ -106,6 +99,8 @@
 #define KdDebuggerNotPresent            _KdDebuggerNotPresent
 #define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
 extern PUSHORT _NlsOemLeadByteInfo;
+#define KeNumberProcessors              _KeNumberProcessors
+extern UCHAR _KeNumberProcessors;
 #define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
 #undef LEGAL_ANSI_CHARACTER_ARRAY
 #undef NLS_MB_CODE_PAGE_TAG
@@ -121,3 +116,12 @@ extern PUSHORT _NlsOemLeadByteInfo;
 #undef HALDISPATCH
 #define HALDISPATCH                     (&HalDispatchTable)
 #define ExRaiseStatus RtlRaiseStatus
+
+/* Internal Headers */
+#include "internal/ntoskrnl.h"
+#include "config.h"
+
+#include <reactos/probe.h>
+#include "internal/probe.h"
+#include "resource.h"
+

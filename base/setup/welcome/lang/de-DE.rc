@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * German (Austria) resources by Klemens Friedl (frik85 at hotmail dot com)
  */
@@ -14,7 +12,7 @@ BEGIN
     IDS_APPTITLE            "ReactOS - Willkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
     IDS_DEFAULTTOPICDESC    "Willkommen in ReactOS.\n\nKlicken Sie auf ein Thema auf der linken Seite."
-//    IDS_CHECKTEXT           "Dialog beim n‰chsen Start wieder anzeigen"
+//    IDS_CHECKTEXT           "Dialog beim n√§chsen Start wieder anzeigen"
 //    IDS_CLOSETEXT           "Beenden"
 END
 

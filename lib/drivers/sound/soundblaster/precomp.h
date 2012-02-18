@@ -1,4 +1,3 @@
-#include <ntddk.h>
-#include <debug.h>
+#include <wdm.h>
 #include <time.h>
 #include <sbdsp.h>

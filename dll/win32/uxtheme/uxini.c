@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-
+#include "uxthemep.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
@@ -42,7 +35,7 @@ typedef struct _UXINI_FILE {
     LPCWSTR lpIni;
     LPCWSTR lpCurLoc;
     LPCWSTR lpEnd;
-} UXINI_FILE, *PUXINI_FILE;
+} UXINI_FILE;
 
 /***********************************************************************/
 

@@ -2,40 +2,40 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Τερματισμός Υπολογιστή"
+CAPTION "Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚ Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Τώρα είναι ασφαλές να κλείσετε τον υπολογιστή σας.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Ξ¤ΟΟΞ± ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟƒΟ†Ξ±Ξ»Ξ­Ο‚ Ξ½Ξ± ΞΊΞ»ΞµΞ―ΟƒΞµΟ„Ξµ Ο„ΞΏΞ½ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® ΟƒΞ±Ο‚.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "&Επανεκκίνηση", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&Ξ•Ο€Ξ±Ξ½ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Αποτυχία Διεπαφής Χρήστη"
+CAPTION "Ξ‘Ο€ΞΏΟ„Ο…Ο‡Ξ―Ξ± Ξ”ΞΉΞµΟ€Ξ±Ο†Ξ®Ο‚ Ξ§ΟΞ®ΟƒΟ„Ξ·"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Η Logon  Διεπαφή Χρήστη DLL %s απέτυχε να φορτωθεί.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Επικοινωνείστε με τον διαχειριστή του συστήματός σας για να αντικαταστήσει το DLL, ή να επαναφέρει το αρχικό DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "Ξ— Logon  Ξ”ΞΉΞµΟ€Ξ±Ο†Ξ® Ξ§ΟΞ®ΟƒΟ„Ξ· DLL %s Ξ±Ο€Ξ­Ο„Ο…Ο‡Ξµ Ξ½Ξ± Ο†ΞΏΟΟ„Ο‰ΞΈΞµΞ―.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Ξ•Ο€ΞΉΞΊΞΏΞΉΞ½Ο‰Ξ½ΞµΞ―ΟƒΟ„Ξµ ΞΌΞµ Ο„ΞΏΞ½ Ξ΄ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ® Ο„ΞΏΟ… ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΟΟ‚ ΟƒΞ±Ο‚ Ξ³ΞΉΞ± Ξ½Ξ± Ξ±Ξ½Ο„ΞΉΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ®ΟƒΞµΞΉ Ο„ΞΏ DLL, Ξ® Ξ½Ξ± ΞµΟ€Ξ±Ξ½Ξ±Ο†Ξ­ΟΞµΞΉ Ο„ΞΏ Ξ±ΟΟ‡ΞΉΞΊΟ DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Γίνεται προετοιμασία των συνδέσεων δικτύου..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Γίνεται εφαρμογή των ρυθμίσεων του υπολογιστή..."
+    IDS_PREPARENETWORKCONNECTIONS "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ Ο€ΟΞΏΞµΟ„ΞΏΞΉΞΌΞ±ΟƒΞ―Ξ± Ο„Ο‰Ξ½ ΟƒΟ…Ξ½Ξ΄Ξ­ΟƒΞµΟ‰Ξ½ Ξ΄ΞΉΞΊΟ„ΟΞΏΟ…..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ ΞµΟ†Ξ±ΟΞΌΞΏΞ³Ξ® Ο„Ο‰Ξ½ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟ‰Ξ½ Ο„ΞΏΟ… Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®..."
     IDS_RUNNINGSTARTUPSCRIPTS "Running startup scripts..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Running shutdown scripts..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Γίνεται εφαρμογή των προσωπικών σας ρυθμίσεων..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ ΞµΟ†Ξ±ΟΞΌΞΏΞ³Ξ® Ο„Ο‰Ξ½ Ο€ΟΞΏΟƒΟ‰Ο€ΞΉΞΊΟΞ½ ΟƒΞ±Ο‚ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟ‰Ξ½..."
     IDS_RUNNINGLOGOFFSCRIPTS "Running logoff scripts..."
     IDS_RUNNINGLOGONSCRIPTS "Running logon scripts..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Γίνεται φόρτωση των ρυθμίσεών σας..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ Ο†ΟΟΟ„Ο‰ΟƒΞ· Ο„Ο‰Ξ½ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟΞ½ ΟƒΞ±Ο‚..."
     IDS_CLOSINGNETWORKCONNECTIONS "Closing network connections..."
-    IDS_REACTOSISSHUTTINGDOWN "Το ReactOS τερματίζει..."
-    IDS_PREPARETOSTANDBY "Γίνεται προετοιμασία για αναμονή..."
+    IDS_REACTOSISSHUTTINGDOWN "Ξ¤ΞΏ ReactOS Ο„ΞµΟΞΌΞ±Ο„Ξ―Ξ¶ΞµΞΉ..."
+    IDS_PREPARETOSTANDBY "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ Ο€ΟΞΏΞµΟ„ΞΏΞΉΞΌΞ±ΟƒΞ―Ξ± Ξ³ΞΉΞ± Ξ±Ξ½Ξ±ΞΌΞΏΞ½Ξ®..."
     IDS_PREPARETOHIBERNATE "Preparing to Hibernate..."
-    IDS_SAVEYOURSETTINGS "Γίνεται αποθήκευση των ρυθμίσεών σας..."
-    IDS_REACTOSISSTARTINGUP "Το ReactOS ξεκινά..."
+    IDS_SAVEYOURSETTINGS "Ξ“Ξ―Ξ½ΞµΟ„Ξ±ΞΉ Ξ±Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ· Ο„Ο‰Ξ½ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟΞ½ ΟƒΞ±Ο‚..."
+    IDS_REACTOSISSTARTINGUP "Ξ¤ΞΏ ReactOS ΞΎΞµΞΊΞΉΞ½Ξ¬..."
 END
 
 STRINGTABLE

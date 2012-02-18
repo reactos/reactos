@@ -666,46 +666,25 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     UCHAR HeadLoadTime;
     UCHAR HeadUnloadTime;
     UCHAR StepRateTime;
+    UCHAR ControllerVersion;
 
     PAGED_CODE();
     ASSERT(ControllerInfo);
 
     TRACE_(FLOPPY, "InitController called with Controller 0x%p\n", ControllerInfo);
 
-    KeClearEvent(&ControllerInfo->SynchEvent);
+    /* Get controller in a known state */
+    HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0);
 
-    INFO_(FLOPPY, "InitController: resetting the controller\n");
+    /* Get the controller version */
+    ControllerVersion = HwGetVersion(ControllerInfo);
+
+    KeClearEvent(&ControllerInfo->SynchEvent);
 
     /* Reset the controller */
     if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "InitController: unable to reset controller\n");
-        return STATUS_IO_DEVICE_ERROR;
-    }
-
-    /* All controllers should support this so
-     * if we get something strange back then we
-     * know that this isn't a floppy controller
-     */
-    if (HwGetVersion(ControllerInfo) <= 0)
-    {
-        WARN_(FLOPPY, "InitController: unable to contact controller\n");
-        return STATUS_NO_SUCH_DEVICE;
-    }
-
-    /* Reset the controller to avoid interrupt garbage on certain controllers */
-    if(HwReset(ControllerInfo) != STATUS_SUCCESS)
-    {
-        WARN_(FLOPPY, "InitController: unable to reset controller #2\n");
-        return STATUS_IO_DEVICE_ERROR;
-    }
-
-    INFO_(FLOPPY, "InitController: setting data rate\n");
-
-    /* Set data rate */
-    if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
-    {
-        WARN_(FLOPPY, "InitController: unable to set data rate\n");
         return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -729,10 +708,10 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     INFO_(FLOPPY, "InitController: done sensing interrupts\n");
 
     /* Next, see if we have the right version to do implied seek */
-    if(HwGetVersion(ControllerInfo) == VERSION_ENHANCED)
+    if(ControllerVersion == VERSION_ENHANCED)
     {
         /* If so, set that up -- all defaults below except first TRUE for EIS */
-        if(HwConfigure(ControllerInfo, TRUE, TRUE, FALSE, 0, 0) != STATUS_SUCCESS)
+        if(HwConfigure(ControllerInfo, TRUE, TRUE, TRUE, 0, 0) != STATUS_SUCCESS)
         {
             WARN_(FLOPPY, "InitController: unable to set up implied seek\n");
             ControllerInfo->ImpliedSeeks = FALSE;
@@ -776,6 +755,15 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     HeadLoadTime = SPECIFY_HLT_500K;
     HeadUnloadTime = SPECIFY_HUT_500K;
     StepRateTime = SPECIFY_SRT_500K;
+    
+    INFO_(FLOPPY, "InitController: setting data rate\n");
+    
+    /* Set data rate */
+    if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
+    {
+        WARN_(FLOPPY, "InitController: unable to set data rate\n");
+        return STATUS_IO_DEVICE_ERROR;
+    }
 
     INFO_(FLOPPY, "InitController: issuing specify command to controller\n");
 
@@ -850,7 +838,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
     }
 
     /* Now that we have a controller, set it up with the system */
-    for(i = 0; i < gNumberOfControllers; i++)
+    for(i = 0; i < gNumberOfControllers && gControllerInfo[i].NumberOfDrives > 0; i++)
     {
         /* 0: Report resource usage to the kernel, to make sure they aren't assigned to anyone else */
         /* FIXME: Implement me. */
@@ -994,7 +982,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
     INFO_(FLOPPY, "AddControllers: --------------------------------------------> finished adding controllers\n");
 
-    return TRUE;
+    return (IoGetConfigurationInformation()->FloppyCount != 0);
 }
 
 

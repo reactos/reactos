@@ -672,8 +672,7 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
                              pdwMsgAndCertEncodingType, NULL, NULL,
                              phCertStore, phMsg);
                             if (ret && pdwContentType)
-                                *pdwContentType =
-                                 CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED;
+                                *pdwContentType = CERT_QUERY_CONTENT_PKCS7_SIGNED_EMBED;
                         }
                         CryptMemFree(blob.pbData);
                     }
@@ -1112,7 +1111,6 @@ static BOOL WINAPI CRYPT_FormatBasicConstraints2(DWORD dwCertEncodingType,
             strcpyW(str, pathLengthHeader);
             str += strlenW(pathLengthHeader);
             strcpyW(str, pathLength);
-            str += strlenW(pathLength);
         }
         LocalFree(info);
     }
@@ -1170,7 +1168,7 @@ static const WCHAR indent[] = { ' ',' ',' ',' ',' ',0 };
 static const WCHAR colonCrlf[] = { ':','\r','\n',0 };
 
 static BOOL CRYPT_FormatAltNameEntry(DWORD dwFormatStrType, DWORD indentLevel,
- CERT_ALT_NAME_ENTRY *entry, LPWSTR str, DWORD *pcbStr)
+ const CERT_ALT_NAME_ENTRY *entry, LPWSTR str, DWORD *pcbStr)
 {
     BOOL ret;
     WCHAR buf[MAX_STRING_RESOURCE_LEN];
@@ -1354,7 +1352,7 @@ static BOOL CRYPT_FormatAltNameEntry(DWORD dwFormatStrType, DWORD indentLevel,
 }
 
 static BOOL CRYPT_FormatAltNameInfo(DWORD dwFormatStrType, DWORD indentLevel,
- CERT_ALT_NAME_INFO *name, LPWSTR str, DWORD *pcbStr)
+ const CERT_ALT_NAME_INFO *name, LPWSTR str, DWORD *pcbStr)
 {
     DWORD i, size, bytesNeeded = 0;
     BOOL ret = TRUE;
@@ -1437,7 +1435,7 @@ static BOOL WINAPI CRYPT_FormatAltName(DWORD dwCertEncodingType,
 }
 
 static BOOL CRYPT_FormatCertIssuer(DWORD dwFormatStrType,
- CERT_ALT_NAME_INFO *issuer, LPWSTR str, DWORD *pcbStr)
+ const CERT_ALT_NAME_INFO *issuer, LPWSTR str, DWORD *pcbStr)
 {
     WCHAR buf[MAX_STRING_RESOURCE_LEN];
     DWORD bytesNeeded, sepLen;
@@ -2469,7 +2467,6 @@ static BOOL WINAPI CRYPT_FormatSpcFinancialCriteria(DWORD dwCertEncodingType,
             else
             {
                 strcpyW(str, notAvailable);
-                str += strlenW(notAvailable);
             }
         }
     }

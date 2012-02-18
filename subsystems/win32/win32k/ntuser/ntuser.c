@@ -3,17 +3,10 @@
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
  *  FILE:             subsystems/win32/win32k/ntuser/ntuser.c
- *  REVISION HISTORY:
- *       16 July 2005   Created (hardon)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
-
-BOOL InitSysParams();
 
 /* GLOBALS *******************************************************************/
 
@@ -48,6 +41,11 @@ InitUserAtoms(VOID)
   /* System Context Help Id Atom */
   gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
+  gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
+  gpsi->atomIconProp = IntAddGlobalAtom(L"SysIC", TRUE);
+
+  gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
+  
   AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
   AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
   AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
@@ -180,7 +178,7 @@ NtUserInitialize(
 // InitializeGreCSRSS();
 // {
 //    Startup DxGraphics.
-//    calls ** IntGdiGetLanguageID() and sets it **.
+//    calls ** UserGetLanguageID() and sets it **.
 //    Enables Fonts drivers, Initialize Font table & Stock Fonts.
 // }
 

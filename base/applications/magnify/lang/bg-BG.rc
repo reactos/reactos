@@ -2,12 +2,12 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "Из&ход",                       IDM_EXIT
-        MENUITEM "На&стройки",                    IDM_OPTIONS
+        MENUITEM "РР·&С…РѕРґ",                       IDM_EXIT
+        MENUITEM "РќР°&СЃС‚СЂРѕР№РєРё",                    IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&За...",                  IDM_ABOUT
+        MENUITEM "&Р—Р°...",                  IDM_ABOUT
     END
 END
 
@@ -19,49 +19,46 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "За"
+CAPTION "Р—Р°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_ICON,IDC_MYICON,14,9,20,20
-    LTEXT           "Увеличител, версия 1,0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "РЈРІРµР»РёС‡РёС‚РµР», РІРµСЂСЃРёСЏ 1,0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
-    PUSHBUTTON      "Добре",IDOK,162,48,50,14
+    PUSHBUTTON      "Р”РѕР±СЂРµ",IDOK,162,48,50,14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 210, 182
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройки на увеличителя"
+CAPTION "РќР°СЃС‚СЂРѕР№РєРё РЅР° СѓРІРµР»РёС‡РёС‚РµР»СЏ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Изход",IDOK,96,161,50,14
-    PUSHBUTTON      "Помощ",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "Увеличение:",IDC_STATIC,6,8,68,8
+    DEFPUSHBUTTON   "РР·С…РѕРґ",IDOK,96,161,50,14
+    PUSHBUTTON      "РџРѕРјРѕС‰",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "РЈРІРµР»РёС‡РµРЅРёРµ:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Проследяване",IDC_STATIC,7,25,195,59
-    GROUPBOX        "Представяне",IDC_STATIC,7,87,195,57
-    CONTROL         "Следване показалеца на мишката",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,164,10
-    CONTROL         "Следване съсредоточаването на клавиатурата",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,180,10
-    CONTROL         "Следване на словообработката",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,180,10
-    CONTROL         "Обръщане на цветовете",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,180,10
-    CONTROL         "Смаляване при пускане",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,180,10
-    CONTROL         "Показване на увеличителя",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,180,10
+    GROUPBOX        "РџСЂРѕСЃР»РµРґСЏРІР°РЅРµ",IDC_STATIC,7,25,195,59
+    GROUPBOX        "РџСЂРµРґСЃС‚Р°РІСЏРЅРµ",IDC_STATIC,7,87,195,57
+    CONTROL         "РЎР»РµРґРІР°РЅРµ РїРѕРєР°Р·Р°Р»РµС†Р° РЅР° РјРёС€РєР°С‚Р°",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,164,10
+    CONTROL         "РЎР»РµРґРІР°РЅРµ СЃСЉСЃСЂРµРґРѕС‚РѕС‡Р°РІР°РЅРµС‚Рѕ РЅР° РєР»Р°РІРёР°С‚СѓСЂР°С‚Р°",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,180,10
+    CONTROL         "РЎР»РµРґРІР°РЅРµ РЅР° СЃР»РѕРІРѕРѕР±СЂР°Р±РѕС‚РєР°С‚Р°",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,180,10
+    CONTROL         "РћР±СЂСЉС‰Р°РЅРµ РЅР° С†РІРµС‚РѕРІРµС‚Рµ",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,180,10
+    CONTROL         "РЎРјР°Р»СЏРІР°РЅРµ РїСЂРё РїСѓСЃРєР°РЅРµ",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,180,10
+    CONTROL         "РџРѕРєР°Р·РІР°РЅРµ РЅР° СѓРІРµР»РёС‡РёС‚РµР»СЏ",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,180,10
 END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Увеличителят на РеактОС"
+CAPTION "РЈРІРµР»РёС‡РёС‚РµР»СЏС‚ РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Добре",IDOK,193,76,50,14
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Целта на увеличителя е осигуряване на начална използваемост за потребители с малки зрителни недъзи. За всекидневна употреба повечето потребители със зрителни недъзи се нуждаят от по- добро увеличаващо средство.",IDC_STATIC,36,7,207,33
-    CONTROL         "Съобщението да не се показва повече",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,147,10
+    LTEXT           "Р¦РµР»С‚Р° РЅР° СѓРІРµР»РёС‡РёС‚РµР»СЏ Рµ РѕСЃРёРіСѓСЂСЏРІР°РЅРµ РЅР° РЅР°С‡Р°Р»РЅР° РёР·РїРѕР»Р·РІР°РµРјРѕСЃС‚ Р·Р° РїРѕС‚СЂРµР±РёС‚РµР»Рё СЃ РјР°Р»РєРё Р·СЂРёС‚РµР»РЅРё РЅРµРґСЉР·Рё. Р—Р° РІСЃРµРєРёРґРЅРµРІРЅР° СѓРїРѕС‚СЂРµР±Р° РїРѕРІРµС‡РµС‚Рѕ РїРѕС‚СЂРµР±РёС‚РµР»Рё СЃСЉСЃ Р·СЂРёС‚РµР»РЅРё РЅРµРґСЉР·Рё СЃРµ РЅСѓР¶РґР°СЏС‚ РѕС‚ РїРѕ- РґРѕР±СЂРѕ СѓРІРµР»РёС‡Р°РІР°С‰Рѕ СЃСЂРµРґСЃС‚РІРѕ.",IDC_STATIC,36,7,207,33
+    CONTROL         "РЎСЉРѕР±С‰РµРЅРёРµС‚Рѕ РґР° РЅРµ СЃРµ РїРѕРєР°Р·РІР° РїРѕРІРµС‡Рµ",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,147,10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Увеличително стъкло"
+    IDS_APP_TITLE           "РЈРІРµР»РёС‡РёС‚РµР»РЅРѕ СЃС‚СЉРєР»Рѕ"
 END
-
-
-

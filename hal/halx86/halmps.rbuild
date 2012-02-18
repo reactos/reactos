@@ -16,11 +16,9 @@
 		<library>libcntpr</library>
 		<directory name="mp">
 			<if property="ARCH" value="i386">
-				<directory name="i386">
-					<file>mps.S</file>
-					<file>mpsboot.asm</file>
-					<file>mpsirql.c</file>
-				</directory>
+				<file>mps.S</file>
+				<file>mpsboot.asm</file>
+				<file>mpsirql.c</file>
 			</if>
 		</directory>
 	</module>

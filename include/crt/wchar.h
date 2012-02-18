@@ -820,5 +820,5 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 
 #pragma pack(pop)
 
-//#include <sec_api/wchar_s.h>
+#include <sec_api/wchar_s.h>
 #endif

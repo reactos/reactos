@@ -14,7 +14,6 @@
 	<define name="LIBXML_STATIC" />
 	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 	<library>libxml2</library>
-	<library>libxslt</library>
 	<library>wine</library>
 	<library>wineldr</library>
 	<library>urlmon</library>

@@ -745,7 +745,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  WINDOWPLACEMENT wp;
+//  WINDOWPLACEMENT wp;
   POINT Pt;
   LRESULT lResult;
 
@@ -763,30 +763,24 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_SIZE:
 	DefWndDoSizeMove(hWnd, wParam);
 	break;
-      case SC_MINIMIZE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_MINIMIZE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+    case SC_MINIMIZE:
+        if (hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,FALSE);
+        ShowWindow( hWnd, SW_MINIMIZE );
         break;
-      case SC_MAXIMIZE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_MAXIMIZE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+
+    case SC_MAXIMIZE:
+        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,TRUE);
+        ShowWindow( hWnd, SW_MAXIMIZE );
         break;
-      case SC_RESTORE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_RESTORE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+
+    case SC_RESTORE:
+        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,TRUE);
+        ShowWindow( hWnd, SW_RESTORE );
         break;
+
       case SC_CLOSE:
         return SendMessageW(hWnd, WM_CLOSE, 0, 0);
 //      case SC_DEFAULT:
@@ -1901,6 +1895,15 @@ RealDefWindowProcA(HWND hWnd,
     LRESULT Result = 0;
     PWND Wnd;
 
+    Wnd = ValidateHwnd(hWnd);
+
+    if ( !Wnd &&
+         Msg != WM_CTLCOLORMSGBOX &&
+         Msg != WM_CTLCOLORBTN    &&
+         Msg != WM_CTLCOLORDLG    &&
+         Msg != WM_CTLCOLORSTATIC )
+       return 0;
+
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
@@ -1925,7 +1928,6 @@ RealDefWindowProcA(HWND hWnd,
             PWSTR buf;
             ULONG len;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && Wnd->strName.Length != 0)
             {
                 buf = DesktopPtrToUser(Wnd->strName.Buffer);
@@ -1948,7 +1950,6 @@ RealDefWindowProcA(HWND hWnd,
             PSTR outbuf = (PSTR)lParam;
             UINT copy;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
                 if (Wnd->strName.Buffer != NULL)
@@ -1984,7 +1985,15 @@ RealDefWindowProcA(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                /* FIXME: this is not 100% correct */
+                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+                {
+                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
+                }
+                else
+                {
+                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                }
             }
             Result = 1;
             break;
@@ -2053,6 +2062,15 @@ RealDefWindowProcW(HWND hWnd,
     LRESULT Result = 0;
     PWND Wnd;
 
+    Wnd = ValidateHwnd(hWnd);
+
+    if ( !Wnd &&
+         Msg != WM_CTLCOLORMSGBOX &&
+         Msg != WM_CTLCOLORBTN    &&
+         Msg != WM_CTLCOLORDLG    &&
+         Msg != WM_CTLCOLORSTATIC )
+       return 0;
+
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
@@ -2077,7 +2095,6 @@ RealDefWindowProcW(HWND hWnd,
             PWSTR buf;
             ULONG len;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && Wnd->strName.Length != 0)
             {
                 buf = DesktopPtrToUser(Wnd->strName.Buffer);
@@ -2099,7 +2116,6 @@ RealDefWindowProcW(HWND hWnd,
             PWSTR buf = NULL;
             PWSTR outbuf = (PWSTR)lParam;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
                 if (Wnd->strName.Buffer != NULL)
@@ -2130,7 +2146,15 @@ RealDefWindowProcW(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                /* FIXME: this is not 100% correct */
+                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+                {
+                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
+                }
+                else
+                {
+                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                }
             }
             Result = 1;
             break;
@@ -2200,7 +2224,13 @@ DefWindowProcA(HWND hWnd,
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
+   {
       msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+      if(msgOverride == FALSE)
+      {
+          EndUserApiHook();
+      }
+   }
 
    /* Bypass SEH and go direct. */
    if (!Hook || !msgOverride)
@@ -2233,7 +2263,13 @@ DefWindowProcW(HWND hWnd,
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
+   {
       msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+      if(msgOverride == FALSE)
+      {
+          EndUserApiHook();
+      }
+   }
 
    /* Bypass SEH and go direct. */
    if (!Hook || !msgOverride)

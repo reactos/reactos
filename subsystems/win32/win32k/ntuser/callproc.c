@@ -1,25 +1,19 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsystems/win32/win32k/ntuser/class.c
+ * PURPOSE:          Callproc support
+ * FILE:             subsystems/win32/win32k/ntuser/callproc.c
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  */
-/* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
 
 /* CALLPROC ******************************************************************/
 
 WNDPROC
 GetCallProcHandle(IN PCALLPROCDATA CallProc)
 {
-    /* FIXME - check for 64 bit architectures... */
+    /* FIXME: Check for 64 bit architectures... */
     return (WNDPROC)((ULONG_PTR)UserHMGetHandle(CallProc) | 0xFFFF0000);
 }
 
@@ -28,28 +22,6 @@ DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROCDATA CallProc)
 {
     UserDeleteObject(UserHMGetHandle(CallProc), otCallProc);
-}
-
-PCALLPROCDATA
-CloneCallProc(IN PDESKTOP Desktop,
-              IN PCALLPROCDATA CallProc)
-{
-    PCALLPROCDATA NewCallProc;
-    HANDLE Handle;
-
-    NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
-                                             Desktop,
-                                             &Handle,
-                                             otCallProc,
-                                             sizeof(CALLPROCDATA));
-    if (NewCallProc != NULL)
-    {
-        NewCallProc->pfnClientPrevious = CallProc->pfnClientPrevious;
-        NewCallProc->wType = CallProc->wType;
-        NewCallProc->spcpdNext = NULL;
-    }
-
-    return NewCallProc;
 }
 
 PCALLPROCDATA
@@ -81,8 +53,6 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
                     OUT PWNDPROC_INFO wpInfo)
 {
     PCALLPROCDATA CallProc;
-
-    /* NOTE: Accessing the WNDPROC_INFO structure may raise an exception! */
 
     CallProc = UserGetObject(gHandleTable,
                              hCallProc,

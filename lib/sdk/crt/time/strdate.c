@@ -21,3 +21,25 @@ char* _strdate(char* date)
    return date;
 
 }
+
+/*
+ * @implemented
+ */
+int CDECL _strdate_s(char* date, size_t size)
+{
+    if(date && size)
+        date[0] = '\0';
+
+    if(!date) {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    if(size < 9) {
+        *_errno() = ERANGE;
+        return ERANGE;
+    }
+
+    _strdate(date);
+    return 0;
+}

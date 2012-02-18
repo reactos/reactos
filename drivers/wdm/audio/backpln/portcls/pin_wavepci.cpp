@@ -496,7 +496,7 @@ NTAPI
 CPortPinWavePci::HandleKsProperty(
     IN PIRP Irp)
 {
-    PKSPROPERTY Property;
+    //PKSPROPERTY Property;
     NTSTATUS Status;
     //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
@@ -521,7 +521,7 @@ CPortPinWavePci::HandleKsProperty(
 
     if (Status == STATUS_NOT_FOUND)
     {
-        Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        //Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 #if 0
         RtlStringFromGUID(Property->Set, &GuidString);
         //DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);

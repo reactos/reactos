@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS APPS
- * FILE:            \base\applications\mscutils\servman\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:      ReactOS Service Manager
+ * FILE:         base\applications\mscutils\servman\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -14,14 +15,14 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "A&vsluta",       ID_EXIT
   END
-  POPUP "≈tg‰rd"
+  POPUP "√Ötg√§rd"
   BEGIN
     MENUITEM "Koppla till...", ID_CONNECT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Starta",       ID_START, GRAYED
     MENUITEM "Stoppa",        ID_STOP, GRAYED
     MENUITEM "Pausa",       ID_PAUSE, GRAYED
-    MENUITEM "Forts‰tta",      ID_RESUME, GRAYED
+    MENUITEM "Forts√§tta",      ID_RESUME, GRAYED
     MENUITEM "Starta om",     ID_RESTART, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Uppdatera",     ID_REFRESH
@@ -35,15 +36,15 @@ BEGIN
   POPUP "Visa"
   BEGIN
     MENUITEM "Stora ikoner", ID_VIEW_LARGE
-    MENUITEM "SmÂ ikoner", ID_VIEW_SMALL
+    MENUITEM "Sm√• ikoner", ID_VIEW_SMALL
     MENUITEM "Lista",        ID_VIEW_LIST
     MENUITEM "Detaljer",     ID_VIEW_DETAILS
     MENUITEM SEPARATOR
     MENUITEM "Anpassa...",ID_VIEW_CUST, GRAYED
   END
-  POPUP "Hj‰lp"
+  POPUP "Hj√§lp"
   BEGIN
-    MENUITEM "Hj‰lp",        ID_HELP
+    MENUITEM "Hj√§lp",        ID_HELP
     MENUITEM "Om",       ID_ABOUT
   END
 END
@@ -55,7 +56,7 @@ BEGIN
     MENUITEM "Starta",       ID_START, GRAYED
     MENUITEM "Stoppa",        ID_STOP, GRAYED
     MENUITEM "Pausa",       ID_PAUSE, GRAYED
-    MENUITEM "Forts‰tta",      ID_RESUME, GRAYED
+    MENUITEM "Forts√§tta",      ID_RESUME, GRAYED
     MENUITEM "Starta om",     ID_RESTART, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Uppdatera",     ID_REFRESH
@@ -65,23 +66,23 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Egenskaper...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Hj‰lp...",     ID_HELP
+    MENUITEM "Hj√§lp...",     ID_HELP
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Om Tj‰nster"
+CAPTION "Om Tj√§nster"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Tj‰nster v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
-  PUSHBUTTON "St‰ng", IDOK, 75, 162, 44, 15
+  LTEXT "Tj√§nster v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
+  PUSHBUTTON "St√§ng", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
-CAPTION "Allm‰nnt"
+CAPTION "Allm√§nnt"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -93,15 +94,15 @@ BEGIN
   PUSHBUTTON "Starta", IDC_START, 6, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Stoppa", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Pausa", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "Forts‰tta", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-  LTEXT "Tj‰nstenamn:", IDC_STATIC, 4, 11, 53, 11
+  PUSHBUTTON "Forts√§tta", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "Tj√§nstenamn:", IDC_STATIC, 4, 11, 53, 11
   LTEXT "Visningsnamn:", IDC_STATIC, 4, 29, 53, 11
   LTEXT "Beskrivning:", IDC_STATIC, 4, 51, 53, 11
-  LTEXT "V‰g till kˆrbar fil:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "V√§g till k√∂rbar fil:", IDC_STATIC, 6, 73, 82, 9
   LTEXT "Startmetod:", IDC_STATIC, 6, 108, 53, 11
-  LTEXT "Tj‰nstestatus:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "Tj√§nstestatus:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-  LTEXT "Du kan ange startparametrar som g‰ller n‰r du startar tj‰nsten h‰rifrÂn.",IDC_STATIC, 6,177,240,15
+  LTEXT "Du kan ange startparametrar som g√§ller n√§r du startar tj√§nsten h√§rifr√•n.",IDC_STATIC, 6,177,240,15
   LTEXT "startparametrar:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   PUSHBUTTON "Redigera", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
@@ -114,13 +115,13 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THIC
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-  LTEXT "NÂgra tj‰nster ‰r beroende av andra tj‰nster, systemdrivrutiner och laddsystemsgrupper. Om systemkomponenten ‰r stoppad eller inte kˆr korrekt, kan tj‰nster som ‰r beroende av den bli pÂverkade.", IDC_STATIC,8, 7, 238, 26
-  LTEXT "Denna tj‰nsten ‰r beroende av fˆljande komponenter", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "N√•gra tj√§nster √§r beroende av andra tj√§nster, systemdrivrutiner och laddsystemsgrupper. Om systemkomponenten √§r stoppad eller inte k√∂r korrekt, kan tj√§nster som √§r beroende av den bli p√•verkade.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "Denna tj√§nsten √§r beroende av f√∂ljande komponenter", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
-CAPTION "Skapa en tj‰nst"
+CAPTION "Skapa en tj√§nst"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -129,24 +130,24 @@ BEGIN
   EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
-  LTEXT "*Tj‰nstenamn:", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Tj√§nstenamn:", IDC_STATIC, 12, 12, 54, 9
   LTEXT "*Visningsnamn:", IDC_STATIC, 12, 33, 54, 9
-  LTEXT "*V‰g till kˆrbar fil:", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "*V√§g till k√∂rbar fil:", IDC_STATIC, 10, 51, 68, 9
   LTEXT "Beskrivning:", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
   PUSHBUTTON "Avbryt", IDCANCEL, 176, 192, 46, 13
-  LTEXT "'Ytterligere val (klicka hj‰lp fˆr detaljer)", IDC_STATIC, 10, 151, 134, 9
-  PUSHBUTTON "Hj‰lp", ID_CREATE_HELP, 10, 192, 44, 13
+  LTEXT "'Ytterligere val (klicka hj√§lp f√∂r detaljer)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Hj√§lp", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
-CAPTION "Ta bort en tj‰nt"
+CAPTION "Ta bort en tj√§nt"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "ƒr du s‰ker pÂ att du vill ta bort denna tj‰nsten? Detta kan inte Ângras n‰r den blivit raderad!", IDC_STATIC, 50, 6, 125, 25
-  LTEXT "Tjˆnstenamn:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "√Ñr du s√§ker p√• att du vill ta bort denna tj√§nsten? Detta kan inte √•ngras n√§r den blivit raderad!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Tj√∂nstenamn:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
   PUSHBUTTON "Ja", IDOK, 26, 129, 54, 13
@@ -154,14 +155,14 @@ BEGIN
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
-CAPTION "Stoppa Annan Tj‰nst"
+CAPTION "Stoppa Annan Tj√§nst"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
   LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
   LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
-  LTEXT "Vill du stoppa dessa tj‰nster?",IDC_STATIC, 15, 110, 150, 10
+  LTEXT "Vill du stoppa dessa tj√§nster?",IDC_STATIC, 15, 110, 150, 10
   DEFPUSHBUTTON "Ja", IDOK, 60, 129, 54, 14
   PUSHBUTTON "Nej", IDCANCEL, 120, 129, 54, 14
 END
@@ -176,7 +177,7 @@ BEGIN
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
-CAPTION "Tj‰nst kontroll"
+CAPTION "Tj√§nst kontroll"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
@@ -184,7 +185,7 @@ BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-  PUSHBUTTON "&St‰ng", IDOK, 100, 70, 54, 13
+  PUSHBUTTON "&St√§ng", IDOK, 100, 70, 54, 13
 END
 
 
@@ -195,7 +196,7 @@ BEGIN
   IDS_SECONDCOLUMN "Beskrivning"
   IDS_THIRDCOLUMN "Status"
   IDS_FOURTHCOLUMN "Startmetod"
-  IDS_FITHCOLUMN "Logga pÂ som"
+  IDS_FITHCOLUMN "Logga p√• som"
 END
 
 STRINGTABLE DISCARDABLE
@@ -209,10 +210,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_NUM_SERVICES "Num tj‰nster: %d"
-  IDS_STOP_DEPENDS "N‰r %s stoppas, kommer ocksÂ dessa tj‰nster att stanna"
+  IDS_NUM_SERVICES "Num tj√§nster: %d"
+  IDS_STOP_DEPENDS "N√§r %s stoppas, kommer ocks√• dessa tj√§nster att stanna"
   IDS_NO_DEPENDS "<No Dependencies>"
-  IDS_LICENSE "Detta programmet ‰r fri programvara; du kan distribuera det och/eller ‰ndra det under villkoren enligt GNU General Public License som ‰r utgivet av Free Software Foundation;  version 2, eller (om du sÂ ˆnskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne anv‰ndas, men DET FINNS INGA GARANTIER; ‰ven utan underfˆrstÂdd garanti om SƒLJBARHET eller LƒMPLIGHET F÷R ETT VISST ƒNDAM≈L.  Se pÂ GNU General Public Licensen fˆr mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har fÂtt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Detta programmet √§r fri programvara; du kan distribuera det och/eller √§ndra det under villkoren enligt GNU General Public License som √§r utgivet av Free Software Foundation;  version 2, eller (om du s√• √∂nskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne anv√§ndas, men DET FINNS INGA GARANTIER; √§ven utan underf√∂rst√•dd garanti om S√ÑLJBARHET eller L√ÑMPLIGHET F√ñR ETT VISST √ÑNDAM√ÖL.  Se p√• GNU General Public Licensen f√∂r mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har f√•tt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -220,24 +221,24 @@ BEGIN
   IDS_TOOLTIP_PROP "Egenskaper"
   IDS_TOOLTIP_REFRESH "Uppdatera"
   IDS_TOOLTIP_EXPORT "Exportera lista"
-  IDS_TOOLTIP_CREATE "Skapa en ny tj‰nst"
-  IDS_TOOLTIP_DELETE "Tar bort en exiterande tj‰nst"
-  IDS_TOOLTIP_START "Starta tj‰nest"
-  IDS_TOOLTIP_STOP "Stoppa tj‰nst"
-  IDS_TOOLTIP_PAUSE "Pausa tj‰nst"
-  IDS_TOOLTIP_RESTART "Starta om tj‰nest"
+  IDS_TOOLTIP_CREATE "Skapa en ny tj√§nst"
+  IDS_TOOLTIP_DELETE "Tar bort en exiterande tj√§nst"
+  IDS_TOOLTIP_START "Starta tj√§nest"
+  IDS_TOOLTIP_STOP "Stoppa tj√§nst"
+  IDS_TOOLTIP_PAUSE "Pausa tj√§nst"
+  IDS_TOOLTIP_RESTART "Starta om tj√§nest"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_PROGRESS_INFO_START  "ReactOS fˆrsˆker att starta fˆljande tj‰nst"
-  IDS_PROGRESS_INFO_STOP   "ReactOS fˆrsˆker att stoppa fˆljande tj‰nst"
-  IDS_PROGRESS_INFO_PAUSE  "ReactOS fˆrsˆker att pausa fˆljande tj‰nst"
-  IDS_PROGRESS_INFO_RESUME "ReactOS fˆrsˆker att forts‰tta fˆljende tj‰nst"
-  IDS_CREATE_SUCCESS "Tj‰nsten blev skapad"
-  IDS_DELETE_SUCCESS "Tj‰nsten togs bort"
-  IDS_CREATE_REQ "F‰lt markerade med en\nasterisk ‰r obligatoriska"
-  IDS_DELETE_STOP "Du mÂste manuellt stoppa tj‰nsten fˆre den kan raderas!"
+  IDS_PROGRESS_INFO_START  "ReactOS f√∂rs√∂ker att starta f√∂ljande tj√§nst"
+  IDS_PROGRESS_INFO_STOP   "ReactOS f√∂rs√∂ker att stoppa f√∂ljande tj√§nst"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS f√∂rs√∂ker att pausa f√∂ljande tj√§nst"
+  IDS_PROGRESS_INFO_RESUME "ReactOS f√∂rs√∂ker att forts√§tta f√∂ljende tj√§nst"
+  IDS_CREATE_SUCCESS "Tj√§nsten blev skapad"
+  IDS_DELETE_SUCCESS "Tj√§nsten togs bort"
+  IDS_CREATE_REQ "F√§lt markerade med en\nasterisk √§r obligatoriska"
+  IDS_DELETE_STOP "Du m√•ste manuellt stoppa tj√§nsten f√∂re den kan raderas!"
 END
 
 STRINGTABLE DISCARDABLE
@@ -253,36 +254,36 @@ BEGIN
   IDS_HINT_EXIT         " Avsluta programmet."
 
   IDS_HINT_CONNECT      " Kontrollera en annan dator."
-  IDS_HINT_START        " Starta valda tj‰nster."
-  IDS_HINT_STOP         " Stoppa valda tj‰nster."
-  IDS_HINT_PAUSE        " Pausa valda tj‰nster."
-  IDS_HINT_RESUME       " Forts‰tt valda tj‰nster."
-  IDS_HINT_RESTART      " Stoppa och starta valda tj‰nster."
-  IDS_HINT_REFRESH      " Uppdatera tj‰nstelistan."
-  IDS_HINT_EDIT         " Editera egenskaperna fˆr den valda tj‰nsten."
-  IDS_HINT_CREATE       " Skapa en ny tj‰nst."
-  IDS_HINT_DELETE       " Radera valda tj‰nster."
-  IDS_HINT_PROP         " ÷ppna egenskaperna fˆr nuvarande val."
+  IDS_HINT_START        " Starta valda tj√§nster."
+  IDS_HINT_STOP         " Stoppa valda tj√§nster."
+  IDS_HINT_PAUSE        " Pausa valda tj√§nster."
+  IDS_HINT_RESUME       " Forts√§tt valda tj√§nster."
+  IDS_HINT_RESTART      " Stoppa och starta valda tj√§nster."
+  IDS_HINT_REFRESH      " Uppdatera tj√§nstelistan."
+  IDS_HINT_EDIT         " Editera egenskaperna f√∂r den valda tj√§nsten."
+  IDS_HINT_CREATE       " Skapa en ny tj√§nst."
+  IDS_HINT_DELETE       " Radera valda tj√§nster."
+  IDS_HINT_PROP         " √ñppna egenskaperna f√∂r nuvarande val."
 
   IDS_HINT_LARGE        " Visa objekt med store ikoner."
   IDS_HINT_SMALL        " Visa objekt med mindre ikoner."
   IDS_HINT_LIST         " Visa objekt i en liste."
-  IDS_HINT_DETAILS      " Visa information om varje objekt i ett fˆnster."
+  IDS_HINT_DETAILS      " Visa information om varje objekt i ett f√∂nster."
   IDS_HINT_CUST         " Anpassa vy."
 
-  IDS_HINT_HELP         " Visa hj‰lpfˆnstret."
-  IDS_HINT_ABOUT        " Om ReactOS tj‰nster."
+  IDS_HINT_HELP         " Visa hj√§lpf√∂nstret."
+  IDS_HINT_ABOUT        " Om ReactOS tj√§nster."
 
-  IDS_HINT_SYS_RESTORE  " ≈terst‰ll fˆnstret till normal storlek."
-  IDS_HINT_SYS_MOVE     " Flytta detta fˆnstret."
-  IDS_HINT_SYS_SIZE     " ƒndra storleken pÂ dette fˆnstret."
-  IDS_HINT_SYS_MINIMIZE " Minimera dette fˆnstret till en ikon."
-  IDS_HINT_SYS_MAXIMIZE " Maximera dette fˆnstret till fullsk‰rm."
-  IDS_HINT_SYS_CLOSE    " St‰ng detta fˆnstret."
+  IDS_HINT_SYS_RESTORE  " √Öterst√§ll f√∂nstret till normal storlek."
+  IDS_HINT_SYS_MOVE     " Flytta detta f√∂nstret."
+  IDS_HINT_SYS_SIZE     " √Ñndra storleken p√• dette f√∂nstret."
+  IDS_HINT_SYS_MINIMIZE " Minimera dette f√∂nstret till en ikon."
+  IDS_HINT_SYS_MAXIMIZE " Maximera dette f√∂nstret till fullsk√§rm."
+  IDS_HINT_SYS_CLOSE    " St√§ng detta f√∂nstret."
 END
 
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS tj‰nster"
+  IDS_APPNAME "ReactOS tj√§nster"
 END

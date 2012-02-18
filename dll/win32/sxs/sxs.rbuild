@@ -5,7 +5,10 @@
 	<include base="sxs">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<file>cache.c</file>
 	<file>sxs.c</file>
+	<library>oleaut32</library>
+	<library>ole32</library>
 	<library>wine</library>
 	<library>ntdll</library>
 </module>

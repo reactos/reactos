@@ -3,99 +3,70 @@
 #include <internal/tls.h>
 #include <internal/rterror.h>
 
+/* Index to TLS */
+static DWORD msvcrt_tls_index;
 
-static unsigned long TlsIndex = (unsigned long)-1;
-
-
-static void InitThreadData(PTHREADDATA ThreadData)
+inline BOOL msvcrt_init_tls(void)
 {
-   ThreadData->terrno = 0;
-   ThreadData->tdoserrno = 0;
+  msvcrt_tls_index = TlsAlloc();
 
-   ThreadData->fpecode = 0;
-
-   ThreadData->tnext = 1;
-
-   /* FIXME: init more thread local data */
-
+  if (msvcrt_tls_index == TLS_OUT_OF_INDEXES)
+  {
+    ERR("TlsAlloc() failed!\n");
+    return FALSE;
+  }
+  return TRUE;
 }
 
-
-int CreateThreadData(void)
+inline BOOL msvcrt_free_tls(void)
 {
-   PTHREADDATA ThreadData;
-
-   TlsIndex = TlsAlloc();
-   if (TlsIndex == (unsigned long)-1)
-     return FALSE;
-
-   ThreadData = (PTHREADDATA)calloc(1, sizeof(THREADDATA));
-   if (ThreadData == NULL)
-     return FALSE;
-
-   if(!TlsSetValue(TlsIndex, (LPVOID)ThreadData))
-     return FALSE;
-
-   InitThreadData(ThreadData);
-
-   return TRUE;
+  if (!TlsFree(msvcrt_tls_index))
+  {
+    ERR("TlsFree() failed!\n");
+    return FALSE;
+  }
+  return TRUE;
 }
 
-
-void DestroyThreadData(void)
+thread_data_t *msvcrt_get_thread_data(void)
 {
-   if (TlsIndex != (unsigned long)-1)
-     {
-	TlsFree(TlsIndex);
-	TlsIndex = (unsigned long)-1;
-     }
+    thread_data_t *ptr;
+    DWORD err = GetLastError();  /* need to preserve last error */
+
+    if (!(ptr = TlsGetValue( msvcrt_tls_index )))
+    {
+        if (!(ptr = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ptr) )))
+            _amsg_exit( _RT_THREAD );
+        if (!TlsSetValue( msvcrt_tls_index, ptr )) _amsg_exit( _RT_THREAD );
+        ptr->tid = GetCurrentThreadId();
+        ptr->handle = INVALID_HANDLE_VALUE;
+        ptr->random_seed = 1;
+        //ptr->locinfo = MSVCRT_locale->locinfo;
+        //ptr->mbcinfo = MSVCRT_locale->mbcinfo;
+    }
+    SetLastError( err );
+    return ptr;
 }
 
-
-void FreeThreadData(PTHREADDATA ThreadData)
+inline void msvcrt_free_tls_mem(void)
 {
-   if (TlsIndex != (unsigned long)-1)
-     {
-	if (ThreadData == NULL)
-	   ThreadData = TlsGetValue(TlsIndex);
+  thread_data_t *tls = TlsGetValue(msvcrt_tls_index);
 
-	if (ThreadData != NULL)
-	  {
-	     /* FIXME: free more thread local data */
-
-	     free(ThreadData);
-	  }
-
-	TlsSetValue(TlsIndex, NULL);
-     }
-}
-
-
-PTHREADDATA GetThreadData(void)
-{
-   PTHREADDATA ThreadData;
-   DWORD LastError;
-
-   LastError = GetLastError();
-   ThreadData = TlsGetValue(TlsIndex);
-   if (ThreadData == NULL)
-     {
-	ThreadData = (PTHREADDATA)calloc(1, sizeof(THREADDATA));
-	if (ThreadData != NULL)
-	  {
-	     TlsSetValue(TlsIndex, (LPVOID)ThreadData);
-
-	     InitThreadData(ThreadData);
-	  }
-	else
-	  {
-	    _amsg_exit(_RT_THREAD); /* write message and die */
-	  }
-     }
-
-   SetLastError(LastError);
-
-   return ThreadData;
+  if (tls)
+  {
+    CloseHandle(tls->handle);
+    HeapFree(GetProcessHeap(),0,tls->efcvt_buffer);
+    HeapFree(GetProcessHeap(),0,tls->asctime_buffer);
+    HeapFree(GetProcessHeap(),0,tls->wasctime_buffer);
+    HeapFree(GetProcessHeap(),0,tls->strerror_buffer);
+    HeapFree(GetProcessHeap(),0,tls->wcserror_buffer);
+    HeapFree(GetProcessHeap(),0,tls->time_buffer);
+    //if(tls->have_locale) {
+    //    free_locinfo(tls->locinfo);
+    //    free_mbcinfo(tls->mbcinfo);
+    //}
+  }
+  HeapFree(GetProcessHeap(), 0, tls);
 }
 
 /* EOF */

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/nl-NL.rc
+ * FILE:        base/applications/mspaint/lang/nl-NL.rc
  * PURPOSE:     Dutch Language resource file
  * TRANSLATORS: Wouter De Vlieger
  */
@@ -30,13 +30,13 @@ BEGIN
         MENUITEM "Opnieuw\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "Knippen\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiëren\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "KopiÃ«ren\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Plakken\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Selectie wissen\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectie omkeren", IDM_EDITINVERTSELECTION
         MENUITEM "Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopiëren naar...", IDM_EDITCOPYTO
+        MENUITEM "KopiÃ«ren naar...", IDM_EDITCOPYTO
         MENUITEM "Plakken uit...", IDM_EDITPASTEFROM
     END
 
@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
+            MENUITEM "Show grid\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Volledig scherm\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Afbeelding"
     BEGIN
         MENUITEM "Spiegelen/draaien...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Afbeelding wissen", IDM_IMAGEDELETEIMAGE
         MENUITEM "Ondoorzichtig tekenen", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Kleuren"
     BEGIN
         MENUITEM "Kleurenpalet bewerken...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Help-onderwerpen", IDM_HELPHELPTOPICS
@@ -104,6 +104,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -121,9 +122,9 @@ BEGIN
     AUTORADIOBUTTON "Horizontaal spiegelen", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Verticaal spiegelen", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Draaihoek", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Annuleren", IDCANCEL, 125, 24, 48, 14
 END

@@ -337,7 +337,7 @@ HvpCreateHiveFreeCellList(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   SIZE_T Size,
+   ULONG Size,
    HSTORAGE_TYPE Storage,
    HCELL_INDEX Vicinity)
 {
@@ -546,7 +546,7 @@ HvTrackCellRef(PHV_TRACK_CELL_REF CellRef,
         CellRef->StaticCount++;
         return TRUE;
     }
-    
+
     /* FIXME: TODO */
     DPRINT1("ERROR: Too many references\n");
     while (TRUE);
@@ -562,10 +562,10 @@ HvReleaseFreeCellRefArray(PHV_TRACK_CELL_REF CellRef)
 
     /* Any references? */
     if (CellRef->StaticCount > 0)
-    { 
+    {
         /* Sanity check */
         ASSERT(CellRef->StaticCount <= STATIC_CELL_PAIR_COUNT);
-        
+
         /* Loop them */
         for (i = 0; i < CellRef->StaticCount;i++)
         {

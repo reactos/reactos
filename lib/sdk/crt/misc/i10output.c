@@ -59,7 +59,7 @@ int CDECL MSVCRT_I10_OUTPUT(long double ld, int prec, int flag, struct _I10_OUTP
     }
 
     if(flag&1) {
-        int exp = 1+floor(log10(d));
+        int exp = (int)(1+floor(log10(d)));
 
         prec += exp;
         if(exp < 0)
@@ -83,7 +83,7 @@ int CDECL MSVCRT_I10_OUTPUT(long double ld, int prec, int flag, struct _I10_OUTP
         data->pos++;
 
     for(p = buf+prec+1; p>buf+1 && *p=='0'; p--);
-    data->len = p-buf;
+    data->len = (BYTE)(p - buf);
 
     memcpy(data->str, buf+1, data->len);
     data->str[data->len] = '\0';

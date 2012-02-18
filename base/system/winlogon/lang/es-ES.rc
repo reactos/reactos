@@ -17,31 +17,31 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Error del Interfaz de Usuario"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La DLL %s del interfaz de Logon diÛ un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Contacte con el administrador de su sistema para sustituir la DLL, Û reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "La DLL %s del interfaz de Logon di√≥ un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Contacte con el administrador de su sistema para sustituir la DLL, √≥ reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Reiniciar", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Preparando las conexiones de red..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Aplicando los par·metros de configuraciÛn..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Aplicando los par√°metros de configuraci√≥n..."
     IDS_RUNNINGSTARTUPSCRIPTS "Ejecutando los scripts de inicio..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Ejecutando los scripts de apagado..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Aplicando su configuraciÛn personal..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Ejecutando los scripts de fin de sesiÛn..."
-    IDS_RUNNINGLOGONSCRIPTS "Ejecutando los scripts de inicio de sesiÛn..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Cargando su configuraciÛn personal..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Aplicando su configuraci√≥n personal..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Ejecutando los scripts de fin de sesi√≥n..."
+    IDS_RUNNINGLOGONSCRIPTS "Ejecutando los scripts de inicio de sesi√≥n..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Cargando su configuraci√≥n personal..."
     IDS_CLOSINGNETWORKCONNECTIONS "Cerrando las conexiones de red..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS se est· apagando..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS se est√° apagando..."
     IDS_PREPARETOSTANDBY "Preparando para entrar en estado de espera (Standby)..."
     IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
-    IDS_SAVEYOURSETTINGS "Guardando su configuraciÛn personal..."
-    IDS_REACTOSISSTARTINGUP "ReactOS se est· iniciando..."
+    IDS_SAVEYOURSETTINGS "Guardando su configuraci√≥n personal..."
+    IDS_REACTOSISSTARTINGUP "ReactOS se est√° iniciando..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "!Winlogon fallÛ al activar el shell de usuario!"
+    IDS_FAILEDACTIVATEUSERSHELL "!Winlogon fall√≥ al activar el shell de usuario!"
 END
 

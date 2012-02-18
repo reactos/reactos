@@ -1,8 +1,6 @@
-#include "resource.h"
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary ‚Í '%s' ‚Ì“Ç‚Ýž‚Ý‚ÉŽ¸”s‚µ‚Ü‚µ‚½B"
-    IDS_MissingEntry,   "ƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ª‚ ‚è‚Ü‚¹‚ñ:%s\n( %s ’†)"
+    IDS_DllNotLoaded,   "LoadLibrary ã¯ '%s' ã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸã€‚"
+    IDS_MissingEntry,   "ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆãŒã‚ã‚Šã¾ã›ã‚“:%s\n( %s ä¸­)"
 END

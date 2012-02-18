@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsys/win32k/ntddraw/dd.c
+ * FILE:             subsystems/win32/win32k/ntddraw/dd.c
  * PROGRAMER:        Magnus Olsen (greatlord@reactos.org)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
@@ -102,8 +102,8 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
 
 
 /************************************************************************/
-/* This is not part of the ddsurface interface but it have              */
-/* deal with the surface                                                */
+/* This is not part of the ddsurface interface but it                   */
+/* deals with the surface                                               */
 /************************************************************************/
 
 /************************************************************************/

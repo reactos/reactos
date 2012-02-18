@@ -753,12 +753,10 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx for %p. HC PC %lx %lx\n",
+            "%s - Closed handle: %lx for %p.\n",
             __FUNCTION__,
             Handle,
-            Body,
-            ObjectHeader->HandleCount,
-            ObjectHeader->PointerCount);
+            Body);
     return STATUS_SUCCESS;
 }
 
@@ -1712,6 +1710,9 @@ ObpCloseHandle(IN HANDLE Handle,
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
 
+    if (AccessMode == KernelMode && Handle == (HANDLE)-1)
+        return STATUS_INVALID_HANDLE;
+
     /* Check if we're dealing with a kernel handle */
     if (ObIsKernelHandle(Handle, AccessMode))
     {
@@ -2455,6 +2456,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
     /* Capture all the info */
     Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
+                                               AccessMode,
                                                AccessMode,
                                                TRUE,
                                                &TempBuffer->ObjectCreateInfo,

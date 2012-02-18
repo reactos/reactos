@@ -16,7 +16,6 @@
 	<library>ntdll</library>
 	<file>factory.c</file>
 	<file>objsel.c</file>
-	<file>regsvr.c</file>
 	<file>objsel.rc</file>
 	<pch>objsel_private.h</pch>
 </module>

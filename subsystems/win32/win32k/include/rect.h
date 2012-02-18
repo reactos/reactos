@@ -41,8 +41,8 @@ BOOL
 FORCEINLINE
 RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
 {
-    return (x >= prcl->left && x <= prcl->right &&
-            y >= prcl->top  && y <= prcl->bottom);
+    return (x >= prcl->left && x < prcl->right &&
+            y >= prcl->top  && y < prcl->bottom);
 }
 
 BOOL

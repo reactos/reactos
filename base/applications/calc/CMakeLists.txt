@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
@@ -13,7 +12,7 @@ add_executable(calc
     winmain.c
     resource.rc)
 
-set_module_type(calc win32gui)
+set_module_type(calc win32gui UNICODE)
 add_importlibs(calc advapi32 user32 gdi32 msvcrt kernel32)
 if(MSVC)
 add_importlibs(calc ntdll)

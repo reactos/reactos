@@ -5,8 +5,6 @@
  *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -32,5 +30,5 @@ IDS_MissingEntry,    "%s został załadowany, jednak punkt wejścia %s nie zosta
 
 IDS_FailureMessage,  "%s w %s nie powiodła się.\nKod rezultatu: 0x%08x"
 
-IDS_SuccessMessage   "%s w %s zakończona sukcesem."
+IDS_SuccessMessage,  "%s w %s zakończona sukcesem."
 END

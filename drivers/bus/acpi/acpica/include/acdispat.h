@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -123,7 +123,7 @@
 
 
 /*
- * dsopcode - support for late evaluation
+ * dsargs - execution of dynamic arguments for static objects
  */
 ACPI_STATUS
 AcpiDsGetBufferFieldArguments (
@@ -145,6 +145,24 @@ ACPI_STATUS
 AcpiDsGetPackageArguments (
     ACPI_OPERAND_OBJECT     *ObjDesc);
 
+
+/*
+ * dscontrol - support for execution control opcodes
+ */
+ACPI_STATUS
+AcpiDsExecBeginControlOp (
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       *Op);
+
+ACPI_STATUS
+AcpiDsExecEndControlOp (
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       *Op);
+
+
+/*
+ * dsopcode - support for late operand evaluation
+ */
 ACPI_STATUS
 AcpiDsEvalBufferFieldOperands (
     ACPI_WALK_STATE         *WalkState,
@@ -174,20 +192,6 @@ AcpiDsEvalBankFieldOperands (
 ACPI_STATUS
 AcpiDsInitializeRegion (
     ACPI_HANDLE             ObjHandle);
-
-
-/*
- * dsctrl - Parser/Interpreter interface, control stack routines
- */
-ACPI_STATUS
-AcpiDsExecBeginControlOp (
-    ACPI_WALK_STATE         *WalkState,
-    ACPI_PARSE_OBJECT       *Op);
-
-ACPI_STATUS
-AcpiDsExecEndControlOp (
-    ACPI_WALK_STATE         *WalkState,
-    ACPI_PARSE_OBJECT       *Op);
 
 
 /*
@@ -241,8 +245,13 @@ AcpiDsInitFieldObjects (
 
 
 /*
- * dsload - Parser/Interpreter interface, namespace load callbacks
+ * dsload - Parser/Interpreter interface, pass 1 namespace load callbacks
  */
+ACPI_STATUS
+AcpiDsInitCallbacks (
+    ACPI_WALK_STATE         *WalkState,
+    UINT32                  PassNumber);
+
 ACPI_STATUS
 AcpiDsLoad1BeginOp (
     ACPI_WALK_STATE         *WalkState,
@@ -252,6 +261,10 @@ ACPI_STATUS
 AcpiDsLoad1EndOp (
     ACPI_WALK_STATE         *WalkState);
 
+
+/*
+ * dsload - Parser/Interpreter interface, pass 2 namespace load callbacks
+ */
 ACPI_STATUS
 AcpiDsLoad2BeginOp (
     ACPI_WALK_STATE         *WalkState,
@@ -260,11 +273,6 @@ AcpiDsLoad2BeginOp (
 ACPI_STATUS
 AcpiDsLoad2EndOp (
     ACPI_WALK_STATE         *WalkState);
-
-ACPI_STATUS
-AcpiDsInitCallbacks (
-    ACPI_WALK_STATE         *WalkState,
-    UINT32                  PassNumber);
 
 
 /*

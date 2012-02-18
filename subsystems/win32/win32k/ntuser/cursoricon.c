@@ -1,22 +1,10 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Cursor and icon functions
+ * FILE:             subsystems/win32/win32k/ntuser/cursoricon.c
+ * PROGRAMER:        ReactOS Team
  */
-
 /*
  * We handle two types of cursors/icons:
  * - Private
@@ -37,10 +25,9 @@
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserIcon);
 
-static PAGED_LOOKASIDE_LIST gProcessLookasideList;
+static PPAGED_LOOKASIDE_LIST pgProcessLookasideList;
 static LIST_ENTRY gCurIconList;
 
 SYSTEM_CURSORINFO gSysCursorInfo;
@@ -48,7 +35,11 @@ SYSTEM_CURSORINFO gSysCursorInfo;
 BOOL
 InitCursorImpl()
 {
-    ExInitializePagedLookasideList(&gProcessLookasideList,
+    pgProcessLookasideList = ExAllocatePool(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST));
+    if(!pgProcessLookasideList)
+        return FALSE;
+        
+    ExInitializePagedLookasideList(pgProcessLookasideList,
                                    NULL,
                                    NULL,
                                    0,
@@ -89,7 +80,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, otCursorIcon);
     if (!CurIcon)
     {
-        /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
+        /* We never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
         EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
@@ -129,7 +120,7 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
 
     /* 1. Generate a mouse move message, this sets the htEx and Track Window too. */
     Msg.message = WM_MOUSEMOVE;
-    Msg.wParam = CurInfo->ButtonsDown;
+    Msg.wParam = UserGetMouseButtonsState();
     Msg.lParam = MAKELPARAM(x, y);
     Msg.pt = pt;
     co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
@@ -167,7 +158,7 @@ ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
     }
 
     /* Not registered yet */
-    Current = ExAllocateFromPagedLookasideList(&gProcessLookasideList);
+    Current = ExAllocateFromPagedLookasideList(pgProcessLookasideList);
     if (NULL == Current)
     {
         return FALSE;
@@ -187,7 +178,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
     LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
     {
 
-        //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) //<- huh????
+        // if (NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) // <- huh????
 //      UserReferenceObject(  CurIcon);
 //      {
         if ((CurIcon->hModule == hModule) && (CurIcon->hRsrc == hRsrc))
@@ -279,7 +270,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
         }
     }
 
-    ExFreeToPagedLookasideList(&gProcessLookasideList, Current);
+    ExFreeToPagedLookasideList(pgProcessLookasideList, Current);
 
     /* If there are still processes referencing this object we can't destroy it yet */
     if (! IsListEmpty(&CurIcon->ProcessList))
@@ -304,7 +295,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
     bmpMask = CurIcon->IconInfo.hbmMask;
     bmpColor = CurIcon->IconInfo.hbmColor;
 
-    /* delete bitmaps */
+    /* Delete bitmaps */
     if (bmpMask)
     {
         GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
@@ -367,9 +358,9 @@ APIENTRY
 NtUserGetIconInfo(
     HANDLE hCurIcon,
     PICONINFO IconInfo,
-    PUNICODE_STRING lpInstName, // optional
-    PUNICODE_STRING lpResName,  // optional
-    LPDWORD pbpp,               // optional
+    PUNICODE_STRING lpInstName, // Optional
+    PUNICODE_STRING lpResName,  // Optional
+    LPDWORD pbpp,               // Optional
     BOOL bInternal)
 {
     ICONINFO ii;
@@ -482,7 +473,7 @@ NtUserGetIconSize(
     if (NT_SUCCESS(Status))
         bRet = TRUE;
     else
-        SetLastNtError(Status); // maybe not, test this
+        SetLastNtError(Status); // Maybe not, test this
 
     UserDereferenceObject(CurIcon);
 
@@ -556,7 +547,7 @@ APIENTRY
 UserClipCursor(
     RECTL *prcl)
 {
-    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+    /* FIXME: Check if process has WINSTA_WRITEATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     PWND DesktopWindow = NULL;
 
@@ -564,13 +555,29 @@ UserClipCursor(
 
     DesktopWindow = UserGetDesktopWindow();
 
-    if (prcl != NULL &&
-       (prcl->right > prcl->left) &&
-       (prcl->bottom > prcl->top) &&
-        DesktopWindow != NULL)
+    if (prcl != NULL && DesktopWindow != NULL)
     {
+        if (prcl->right < prcl->left || prcl->bottom < prcl->top)
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
         CurInfo->bClipped = TRUE;
-        RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
+
+        /* Set nw cliping region. Note: we can't use RECTL_bIntersectRect because
+           it sets rect to 0 0 0 0 when it's empty. For more info see monitor winetest */
+        CurInfo->rcClip.left = max(prcl->left, DesktopWindow->rcWindow.left);
+        CurInfo->rcClip.right = min(prcl->right, DesktopWindow->rcWindow.right);
+        if (CurInfo->rcClip.right < CurInfo->rcClip.left)
+            CurInfo->rcClip.right = CurInfo->rcClip.left;
+
+        CurInfo->rcClip.top = max(prcl->top, DesktopWindow->rcWindow.top);
+        CurInfo->rcClip.bottom = min(prcl->bottom, DesktopWindow->rcWindow.bottom);
+        if (CurInfo->rcClip.bottom < CurInfo->rcClip.top)
+            CurInfo->rcClip.bottom = CurInfo->rcClip.top;
+
+        /* Make sure cursor is in clipping region */
         UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, 0, 0, FALSE);
     }
     else
@@ -677,7 +684,7 @@ NtUserFindExistingCursorIcon(
     {
         Ret = CurIcon->Self;
 
-//      IntReleaseCurIconObject(CurIcon);//faxme: is this correct? does IntFindExistingCurIconObject add a ref?
+//      IntReleaseCurIconObject(CurIcon); // FIXME: Is this correct? Does IntFindExistingCurIconObject add a ref?
         RETURN(Ret);
     }
 
@@ -699,7 +706,7 @@ APIENTRY
 NtUserGetClipCursor(
     RECTL *lpRect)
 {
-    /* FIXME - check if process has WINSTA_READATTRIBUTES */
+    /* FIXME: Check if process has WINSTA_READATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
@@ -1150,8 +1157,8 @@ UserDrawIconEx(
     }
 
     /* Set Background/foreground colors */
-    iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
-    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
+    iOldTxtColor = IntGdiSetTextColor(hDc, 0);          // Black
+    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF);    // White
 
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
@@ -1176,7 +1183,7 @@ UserDrawIconEx(
             goto CleanupAlpha;
         }
 
-        /* premultiply with the alpha channel value */
+        /* Premultiply with the alpha channel value */
         for (i = 0; i < psurf->SurfObj.sizlBitmap.cy; i++)
         {
 			ptr = (PBYTE)psurf->SurfObj.pvScan0 + i*psurf->SurfObj.lDelta;
@@ -1215,6 +1222,7 @@ UserDrawIconEx(
 
     if (diFlags & DI_MASK)
     {
+        DWORD rop = (diFlags & DI_IMAGE) ? SRCAND : SRCCOPY;
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
         NtGdiStretchBlt(hDestDC,
                         x,
@@ -1226,7 +1234,7 @@ UserDrawIconEx(
                         0,
                         pIcon->Size.cx,
                         pIcon->Size.cy,
-                        SRCAND,
+                        rop,
                         0);
         NtGdiSelectBitmap(hMemDC, hTmpBmp);
     }
@@ -1343,3 +1351,4 @@ NtUserDrawIconEx(
     return Ret;
 }
 
+/* EOF */

@@ -29,7 +29,82 @@ MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
                       PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)}};
 
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiInitializeSessionSpaceLayout()
+{
+    //
+    // Set the size of session view, pool, and image
+    //
+    MmSessionSize = MI_SESSION_SIZE;
+    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
+    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
+
+    //
+    // Set the size of system view
+    //
+    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+
+    //
+    // This is where it all ends
+    //
+    MiSessionImageEnd = (PVOID)PTE_BASE;
+
+    //
+    // This is where we will load Win32k.sys and the video driver
+    //
+    MiSessionImageStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
+                                  MmSessionImageSize);
+
+    //
+    // So the view starts right below the session working set (itself below
+    // the image area)
+    //
+    MiSessionViewStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
+                                 MmSessionImageSize -
+                                 MI_SESSION_WORKING_SET_SIZE -
+                                 MmSessionViewSize);
+
+    //
+    // Session pool follows
+    //
+    MiSessionPoolEnd = MiSessionViewStart;
+    MiSessionPoolStart = (PVOID)((ULONG_PTR)MiSessionPoolEnd -
+                                 MmSessionPoolSize);
+
+    //
+    // And it all begins here
+    //
+    MmSessionBase = MiSessionPoolStart;
+
+    //
+    // Sanity check that our math is correct
+    //
+    ASSERT((ULONG_PTR)MmSessionBase + MmSessionSize == PTE_BASE);
+
+    //
+    // Session space ends wherever image session space ends
+    //
+    MiSessionSpaceEnd = MiSessionImageEnd;
+
+    //
+    // System view space ends at session space, so now that we know where
+    // this is, we can compute the base address of system view space itself.
+    //
+    MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
+                                MmSystemViewSize);
+
+    /* Compute the PTE addresses for all the addresses we carved out */
+    MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+    MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+    MiSessionBasePte = MiAddressToPte(MmSessionBase);
+    MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+}
 
 VOID
 NTAPI
@@ -152,9 +227,6 @@ NTAPI
 INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    ULONG FreePages = 0;
     PFN_NUMBER PageFrameIndex;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
@@ -162,28 +234,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIRQL OldIrql;
     PMMPFN Pfn1;
     ULONG Flags;
-
-    /* Check for kernel stack size that's too big */
-    if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
-    {
-        /* Sanitize to default value */
-        MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
-    }
-    else
-    {
-        /* Take the registry setting, and convert it into bytes */
-        MmLargeStackSize *= _1KB;
-
-        /* Now align it to a page boundary */
-        MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
-
-        /* Sanity checks */
-        ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
-        ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
-
-        /* Make sure it's not too low */
-        if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
-    }
 
     /* Check for global bit */
 #if 0
@@ -212,122 +262,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     EndPde = MiAddressToPde(KSEG0_BASE);
     RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
 
-    //
-    // Loop the memory descriptors
-    //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // Get the memory block
-        //
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-
-        //
-        // Skip invisible memory
-        //
-        if ((MdBlock->MemoryType != LoaderFirmwarePermanent) &&
-            (MdBlock->MemoryType != LoaderSpecialMemory) &&
-            (MdBlock->MemoryType != LoaderHALCachedMemory) &&
-            (MdBlock->MemoryType != LoaderBBTMemory))
-        {
-            //
-            // Check if BURNMEM was used
-            //
-            if (MdBlock->MemoryType != LoaderBad)
-            {
-                //
-                // Count this in the total of pages
-                //
-                MmNumberOfPhysicalPages += MdBlock->PageCount;
-            }
-
-            //
-            // Check if this is the new lowest page
-            //
-            if (MdBlock->BasePage < MmLowestPhysicalPage)
-            {
-                //
-                // Update the lowest page
-                //
-                MmLowestPhysicalPage = MdBlock->BasePage;
-            }
-
-            //
-            // Check if this is the new highest page
-            //
-            PageFrameIndex = MdBlock->BasePage + MdBlock->PageCount;
-            if (PageFrameIndex > MmHighestPhysicalPage)
-            {
-                //
-                // Update the highest page
-                //
-                MmHighestPhysicalPage = PageFrameIndex - 1;
-            }
-
-            //
-            // Check if this is free memory
-            //
-            if ((MdBlock->MemoryType == LoaderFree) ||
-                (MdBlock->MemoryType == LoaderLoadedProgram) ||
-                (MdBlock->MemoryType == LoaderFirmwareTemporary) ||
-                (MdBlock->MemoryType == LoaderOsloaderStack))
-            {
-                //
-                // Check if this is the largest memory descriptor
-                //
-                if (MdBlock->PageCount > FreePages)
-                {
-                    //
-                    // For now, it is
-                    //
-                    MxFreeDescriptor = MdBlock;
-                }
-
-                //
-                // More free pages
-                //
-                FreePages += MdBlock->PageCount;
-            }
-        }
-
-        //
-        // Keep going
-        //
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-
-    //
-    // Save original values of the free descriptor, since it'll be
-    // altered by early allocations
-    //
-    MxOldFreeDescriptor = *MxFreeDescriptor;
-
     /* Compute non paged pool limits and size */
-    MiComputeNonPagedPoolVa(FreePages);
-
-    /* Compute color information (L2 cache-separated paging lists) */
-    MiComputeColorInformation();
-
-    //
-    // Calculate the number of bytes for the PFN database
-    // then add the color tables and convert to pages
-    //
-    MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
-    MxPfnAllocation >>= PAGE_SHIFT;
-
-    //
-    // We have to add one to the count here, because in the process of
-    // shifting down to the page size, we actually ended up getting the
-    // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
-    // Later on, we'll shift this number back into bytes, which would cause
-    // us to end up with only 0x5F000 bytes -- when we actually want to have
-    // 0x60000 bytes.
-    //
-    MxPfnAllocation++;
+    MiComputeNonPagedPoolVa(MiNumberOfFreePages);
 
     //
     // Now calculate the nonpaged pool expansion VA region
@@ -345,8 +281,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // nonpaged pool expansion (above) and the system PTEs. Note that it is
     // then aligned to a PDE boundary (4MB).
     //
+    MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
-                                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
+                                    MiNonPagedSystemSize);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 

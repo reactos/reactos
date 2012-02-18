@@ -24,27 +24,30 @@
 #define WS_EX_SETANSICREATOR           0x80000000 // For WNDS_ANSICREATOR
 
 /* Non SDK Window Message types. */
-#define WM_SETVISIBLE      0x00000009
-#define WM_ALTTABACTIVE    0x00000029
-#define WM_ISACTIVEICON    0x00000035
-#define WM_QUERYPARKICON   0x00000036
-#define WM_CLIENTSHUTDOWN  0x0000003B
-#define WM_COPYGLOBALDATA  0x00000049
-#define WM_LOGONNOTIFY     0x0000004c
-#define WM_KEYF1           0x0000004d
-#define WM_SYSTIMER        0x00000118
-#define WM_LBTRACKPOINT    0x00000131
-#define LB_CARETON         0x000001a3
-#define LB_CARETOFF        0x000001a4
-#define WM_DROPOBJECT	   0x0000022A
-#define WM_QUERYDROPOBJECT 0x0000022B
-#define WM_BEGINDRAG       0x0000022C
-#define WM_DRAGLOOP	       0x0000022D
-#define WM_DRAGSELECT	   0x0000022E
-#define WM_DRAGMOVE	       0x0000022F
-#define WM_POPUPSYSTEMMENU 0x00000313
-#define WM_CBT             0x000003FF // ReactOS only.
-#define WM_MAXIMUM         0x0001FFFF
+#define WM_SETVISIBLE       0x00000009
+#define WM_ALTTABACTIVE     0x00000029
+#define WM_ISACTIVEICON     0x00000035
+#define WM_QUERYPARKICON    0x00000036
+#define WM_CLIENTSHUTDOWN   0x0000003B
+#define WM_COPYGLOBALDATA   0x00000049
+#define WM_LOGONNOTIFY      0x0000004C
+#define WM_KEYF1            0x0000004D
+#define WM_NCUAHDRAWCAPTION 0x000000AE
+#define WM_NCUAHDRAWFRAME   0x000000AF
+#define WM_SYSTIMER         0x00000118
+#define WM_LBTRACKPOINT     0x00000131
+#define LB_CARETON          0x000001a3
+#define LB_CARETOFF         0x000001a4
+#define WM_DROPOBJECT       0x0000022A
+#define WM_QUERYDROPOBJECT  0x0000022B
+#define WM_BEGINDRAG        0x0000022C
+#define WM_DRAGLOOP	        0x0000022D
+#define WM_DRAGSELECT       0x0000022E
+#define WM_DRAGMOVE	        0x0000022F
+#define WM_POPUPSYSTEMMENU  0x00000313
+#define WM_UAHINIT          0x0000031b
+#define WM_CBT              0x000003FF // ReactOS only.
+#define WM_MAXIMUM          0x0001FFFF
 
 /* Non SDK DCE types.*/
 #define DCX_USESTYLE     0x00010000
@@ -52,8 +55,13 @@
 #define DCX_KEEPLAYOUT   0x40000000
 #define DCX_PROCESSOWNED 0x80000000
 
+/* NtUserCreateWindowEx dwFlags bits. */
+#define NUCWE_ANSI       0x00000001
+#define NUCWE_SIDEBYSIDE 0x40000000
+
 /* Caret timer ID */
 #define IDCARETTIMER (0xffff)
+#define ID_TME_TIMER (0xFFFA)
 
 /* SetWindowPos undocumented flags */
 #define SWP_NOCLIENTSIZE 0x0800
@@ -95,6 +103,7 @@
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
+BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
 BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
@@ -119,6 +128,55 @@ HWND WINAPI GetProgmanWindow(VOID);
 // User api hook
 //
 
+typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
+typedef int (WINAPI *SETWINDOWRGN)(HWND hWnd, HRGN hRgn, BOOL bRedraw);
+
+typedef struct _UAHOWP
+{
+  BYTE*  MsgBitArray;
+  DWORD  Size;
+} UAHOWP, *PUAHOWP;
+
+#define UAH_HOOK_MESSAGE(uahowp, msg) uahowp.MsgBitArray[msg/8] |= (1 << (msg % 8));
+#define UAH_IS_MESSAGE_HOOKED(uahowp, msg) (uahowp.MsgBitArray[msg/8] & (1 << (msg % 8)))
+#define UAHOWP_MAX_SIZE WM_USER/8
+
+typedef struct tagUSERAPIHOOK
+{
+  DWORD       size;
+  WNDPROC     DefWindowProcA;
+  WNDPROC     DefWindowProcW;
+  UAHOWP      DefWndProcArray;
+  FARPROC     GetScrollInfo;
+  FARPROC     SetScrollInfo;
+  FARPROC     EnableScrollBar;
+  FARPROC     AdjustWindowRectEx;
+  SETWINDOWRGN SetWindowRgn;
+  WNDPROC_OWP PreWndProc;
+  WNDPROC_OWP PostWndProc;
+  UAHOWP      WndProcArray;
+  WNDPROC_OWP PreDefDlgProc;
+  WNDPROC_OWP PostDefDlgProc;
+  UAHOWP      DlgProcArray;
+  FARPROC     GetSystemMetrics;
+  FARPROC     SystemParametersInfoA;
+  FARPROC     SystemParametersInfoW;
+  FARPROC     ForceResetUserApiHook;
+  FARPROC     DrawFrameControl;
+  FARPROC     DrawCaption;
+  FARPROC     MDIRedrawFrame;
+  FARPROC     GetRealWindowOwner;
+} USERAPIHOOK, *PUSERAPIHOOK;
+
+typedef enum _UAPIHK
+{
+  uahLoadInit,
+  uahStop,
+  uahShutdown
+} UAPIHK, *PUAPIHK;
+
+typedef BOOL(CALLBACK *USERAPIHOOKPROC)(UAPIHK State, PUSERAPIHOOK puah);
+
 typedef struct _USERAPIHOOKINFO
 {
   DWORD m_size;
@@ -128,51 +186,12 @@ typedef struct _USERAPIHOOKINFO
   LPCWSTR m_funname2;
 } USERAPIHOOKINFO,*PUSERAPIHOOKINFO;
 
-typedef enum _UAPIHK
-{
-  uahLoadInit,
-  uahStop,
-  uahShutdown
-} UAPIHK, *PUAPIHK;
-
-typedef DWORD (CALLBACK * USERAPIHOOKPROC)(UAPIHK State, ULONG_PTR Info);
-
-typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
-
-typedef struct _UAHOWP
-{
-  BYTE*  MsgBitArray;
-  DWORD  Size;
-} UAHOWP, *PUAHOWP;
-
-typedef struct tagUSERAPIHOOK
-{
-  DWORD   size;
-  WNDPROC DefWindowProcA;
-  WNDPROC DefWindowProcW;
-  UAHOWP  DefWndProcArray;
-  FARPROC GetScrollInfo;
-  FARPROC SetScrollInfo;
-  FARPROC EnableScrollBar;
-  FARPROC AdjustWindowRectEx;
-  FARPROC SetWindowRgn;
-  WNDPROC_OWP PreWndProc;
-  WNDPROC_OWP PostWndProc;
-  UAHOWP  WndProcArray;
-  WNDPROC_OWP PreDefDlgProc;
-  WNDPROC_OWP PostDefDlgProc;
-  UAHOWP  DlgProcArray;
-  FARPROC GetSystemMetrics;
-  FARPROC SystemParametersInfoA;
-  FARPROC SystemParametersInfoW;
-  FARPROC ForceResetUserApiHook;
-  FARPROC DrawFrameControl;
-  FARPROC DrawCaption;
-  FARPROC MDIRedrawFrame;
-  FARPROC GetRealWindowOwner;
-} USERAPIHOOK, *PUSERAPIHOOK;
-
+#if (WINVER == _WIN32_WINNT_WINXP)
+BOOL WINAPI RegisterUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC CallbackFunc);
+#elif (WINVER == _WIN32_WINNT_WS03)
 BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
+#endif
+
 BOOL WINAPI UnregisterUserApiHook(VOID);
 
 #endif

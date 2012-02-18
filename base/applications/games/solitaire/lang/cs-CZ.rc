@@ -11,15 +11,15 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Moûnosti"
+CAPTION "Mo≈ænosti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Karty", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Sejmout &jednu", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Sejmout &t¯i", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    AUTORADIOBUTTON "Sejmout &t≈ôi", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "Zobrazit Ë&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Stavov˝ ¯·d&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Zobrazit ƒç&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Stavov√Ω ≈ô√°d&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Storno", IDCANCEL, 101, 97, 50, 14
@@ -36,7 +36,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -54,8 +54,8 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib verze 1.0."
-    IDS_SOL_QUIT    "UkonËit rozehranou hru?"
-    IDS_SOL_WIN     "Gratulujeme, zvÌtÏzili jste!!"
+    IDS_SOL_QUIT    "Ukonƒçit rozehranou hru?"
+    IDS_SOL_WIN     "Gratulujeme, zv√≠tƒõzili jste!!"
     IDS_SOL_DEAL    "Rozdat znova?"
 END
 
@@ -69,14 +69,14 @@ BEGIN
         MENUITEM "&Rozdat\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "Rub& karet...",                    IDM_GAME_DECK
-        MENUITEM "&Moûnosti...",                 IDM_GAME_OPTIONS
+        MENUITEM "&Mo≈ænosti...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Konec",                       IDM_GAME_EXIT
     END
-    POPUP "N·po&vÏda"
+    POPUP "N√°po&vƒõda"
     BEGIN
         MENUITEM "&Obsah\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "O h¯e &Solitaire",                      IDM_HELP_ABOUT
+        MENUITEM "O h≈ôe &Solitaire",                      IDM_HELP_ABOUT
     END
 END
 

@@ -1,0 +1,233 @@
+/*
+ * FILE:             base/applications/dxdiag/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * LAST CHANGE:      2011-12-19  corrections, identations
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "Diagnostic ReactX"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL       "Tab1",         IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    PUSHBUTTON    "&Manual",      IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Următorul compartiment", IDC_BUTTON_NEXT, 187, 261, 120, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON    "&Păstrare informații…", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON    "Î&nchide",     IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT    "Acest instrument oferă informații detaliate despre componentele ReactX și modulele pilot instalate în sistem. De asemenea, vă permite testarea funcționalităților, diagnosticarea problemelor, precum și modificarea configurației de sistem pentru obținerea de rezultate optime.", -1, 10, 10, 443, 17
+    LTEXT    "Dacă aveți la cunoștință careva probleme la o anumită categorie, mergeți la compartimentul corespunzător de mai sus. Altfel, puteți utiliza butonul „Următorul compartiment” de mai jos pentru a trece secvențial prin fiecare compartiment.", -1, 10, 30, 443, 25
+    GROUPBOX "Informații despre sistem", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT    "Data/Ora curentă:",      -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT    "Numele calculatorului:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT    "Sistemul de operare:",   -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT    "Limba:",                 -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT    "Producătorul sistemului:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT    "Modelul sistemului:",    -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT    "BIOS:",                  -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT    "Procesor:",              -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT    "Memorie:",               -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT    "Fișierul de paginare:",  -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT    "Versiunea ReactX:",      -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT    "", IDC_STATIC_TIME, 155, 70, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_COMPUTER, 155, 80, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_OS, 155, 90, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_LANG, 155, 100, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_MANU, 155, 110, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_MODEL, 155, 120, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_BIOS, 155, 130, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_PROC, 155, 140, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_MEM, 155, 150, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_SWAP, 155, 160, 225, 10, SS_LEFT
+    LTEXT    "", IDC_STATIC_VERSION, 155, 170, 225, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX   "Dispozitiv",       -1, 10, 10, 250, 100
+    RTEXT      "Nume:",            -1, 20, 25, 70, 10
+    RTEXT      "Producător:",      -1, 20, 35, 70, 10
+    RTEXT      "Tipul cipului:",   -1, 20, 45, 70, 10
+    RTEXT      "Tipul CDA:",       -1, 20, 55, 70, 10
+	RTEXT      "Memorie aprox.:",  -1, 20, 65, 70, 10
+    RTEXT      "Afișare curentă:", -1, 20, 75, 70, 10
+    RTEXT      "Ecran:",           -1, 20, 85, 70, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_DAC, 95, 55, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
+
+    GROUPBOX   "Modulul pilot",    -1, 270, 10, 190, 100
+    RTEXT      "Modulul primar:",  -1, 275, 25, 55, 10
+    RTEXT      "Versiune:",        -1, 275, 35, 55, 10
+    RTEXT      "Dată:",            -1, 275, 45, 55, 10
+    RTEXT      "Semnăt. WHQL:",    -1, 275, 55, 55, 10
+    RTEXT      "Mini-VDD:",        -1, 275, 65, 55, 10
+    RTEXT      "VDD:",             -1, 275, 75, 55, 10
+    RTEXT      "Versiune DDI:",    -1, 275, 85, 55, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_DRIVER, 335, 25, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_VERSION, 335, 35, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_DATE, 335, 45, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_LOGO, 335, 55, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_VDD, 335, 75, 124, 10
+    LTEXT      "",                 IDC_STATIC_ADAPTER_DDI, 335, 85, 124, 10
+
+    GROUPBOX   "Funcționalități ReactX", -1, 10, 115, 450, 60
+    RTEXT      "Accelerare DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT      "Accelerare Direct3D:", -1, 15, 145, 110, 12
+    RTEXT      "Accelerare Textură AGP:", -1, 15, 160, 110, 12
+    LTEXT      "",                IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT      "",                IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT      "",                IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "Activează",       IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Activează",       IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Activează",       IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "Testează DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "Testează Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
+
+    GROUPBOX   "Note",            -1, 10, 180, 450, 40
+    EDITTEXT                      IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+
+IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX   "Dispozitiv",      -1, 10, 10, 250, 100
+    RTEXT      "Nume:",           -1, 20, 25, 70, 10
+    RTEXT      "ID dispozitiv:",  -1, 20, 35, 70, 10
+    RTEXT      "ID producător:",  -1, 20, 45, 70, 10
+    RTEXT      "ID produs:",      -1, 20, 55, 70, 10
+    RTEXT      "Tip:",            -1, 20, 65, 70, 10
+    RTEXT      "Dispozitiv implicit:", -1, 20, 75, 70, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX   "Modulul pilot",   -1, 270, 10, 190, 100
+    RTEXT      "Nume:",           -1, 275, 25, 55, 10
+    RTEXT      "Versiune:",       -1, 275, 35, 55, 10
+    RTEXT      "Dată:",           -1, 275, 45, 55, 10
+    RTEXT      "Semnătură WHQL:", -1, 275, 55, 55, 10
+    RTEXT      "Alte fișiere:",   -1, 275, 65, 55, 10
+    RTEXT      "Furnizor:",       -1, 275, 75, 55, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT      "",                IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT      "",                IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX   "Funcționalități ReactX", -1, 10, 115, 450, 60
+    CONTROL    "",                IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT      "Echipament de sunet\nNivel de accelerare:", -1, 20, 135, 90, 20
+    PUSHBUTTON "Testează DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    GROUPBOX   "Note",            -1, 10, 180, 450, 40
+    EDITTEXT                      IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX  "Dispozitive DirectInput", -1, 10, 10, 452, 80
+    CONTROL   "",                 IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+    GROUPBOX  "Dispozitive de intrare", -1, 10, 100, 452, 60
+    CONTROL   "",                 IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    GROUPBOX  "Informații",       -1, 10, 170, 452, 50
+    EDITTEXT                      IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX  "Furnizori înregistrați de servicii DirectPlay", -1, 10, 10, 452, 80
+    CONTROL   "",                 IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_MAIN_DIALOG               "Diagnostic ReactX"
+	IDS_SYSTEM_DIALOG             "Sistem"
+	IDS_DISPLAY_DIALOG            "Ecran"
+	IDS_SOUND_DIALOG              "Sunet"
+	IDS_MUSIC_DIALOG              "Muzică"
+	IDS_INPUT_DIALOG              "Intrări"
+	IDS_NETWORK_DIALOG            "Rețea"
+	IDS_HELP_DIALOG               "Asistență"
+	IDS_FORMAT_MB                 "%I64u Mo memorie"
+	IDS_FORMAT_SWAP               "%I64u Mo utilizată, %I64u Mo disponibilă"
+	IDS_FORMAT_UNIPROC            "%s (%u procesor)"
+	IDS_FORMAT_MPPROC             "%s (%u procesoare)"
+	IDS_VERSION_UNKNOWN           "Versiune neidentificată"
+	IDS_DEVICE_STATUS_ATTACHED    "Conectat"
+	IDS_DEVICE_STATUS_MISSING     "Deconectat"
+	IDS_DEVICE_STATUS_UNKNOWN     "Neidentificat"
+	IDS_DEVICE_NAME               "Nume dispozitiv"
+	IDS_DEVICE_STATUS             "Stare"
+	IDS_DEVICE_CONTROLLER         "ID controlor"
+	IDS_DEVICE_MANUFACTURER       "ID producător"
+	IDS_DEVICE_PRODUCT            "ID produs"
+	IDS_DEVICE_FORCEFEEDBACK      "Forțează reacția modulului-pilot"
+	IDS_NOT_APPLICABLE            "Neaplicabil"
+	IDS_OPTION_YES                "Da"
+	IDS_DIRECTPLAY_COL_NAME1      "Nume"
+	IDS_DIRECTPLAY_COL_NAME2      "Registru"
+	IDS_DIRECTPLAY_COL_NAME3      "Fișier"
+	IDS_DIRECTPLAY_COL_NAME4      "Versiune"
+	IDS_DIRECTPLAY8_MODEMSP       "Furnizor de serviciu Modem-DirectPlay8"
+	IDS_DIRECTPLAY8_SERIALSP      "Furnizor de serviciu Serial-DirectPlay8"
+	IDS_DIRECTPLAY8_IPXSP         "Furnizor de serviciu IPX-DirectPlay8"
+	IDS_DIRECTPLAY8_TCPSP         "Furnizor de serviciu TCP/IP-DirectPlay8"
+	IDS_DIRECTPLAY_TCPCONN        "Conexiune de Internet TCP/IP pentru DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN        "Conexiune IPX pentru DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN      "Conexiune Modem pentru DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN     "Conexiune Serială pentru DirectPlay"
+	IDS_REG_SUCCESS               "Î&nchide"
+	IDS_REG_FAIL                  "Eroare"
+	IDS_DDTEST_ERROR              "Testul a eșuat!"
+	IDS_DDTEST_DESCRIPTION        "Urmează testele de interfață DirectDraw. Continuați?"
+	IDS_DDPRIMARY_DESCRIPTION     "Testul următor va utiliza DirectDraw pentru a desena dreptunghiuri albe și negre pe suprafața primară. Continuați?"
+	IDS_DDPRIMARY_RESULT          "Dreptunghiurile albe și negre au fost vizibile?"
+	IDS_DDOFFSCREEN_DESCRIPTION   "Testul următor va utiliza DirectDraw pentru desenarea unui dreptunghi alb în mișcare utilizând o memorie tampon din afara ecranului. Continuați?"
+	IDS_DDOFFSCREEN_RESULT        "Dreptunghiul alb în mișcare a fost vizibil?"
+	IDS_DDFULLSCREEN_DESCRIPTION  "Testul următor va utiliza DirectDraw pentru desenarea unui dreptunghi alb în mișcare utilizând tot ecranul. Continuați?"
+	IDS_DDFULLSCREEN_RESULT       "Pe ecranul complet, dreptunghiul alb în mișcare a fost vizibil?"
+	IDS_FORMAT_ADAPTER_MEM        "%u Mo"
+	IDS_FORMAT_ADAPTER_MODE       "%04u x %04u (%u biți)(%uHz)"
+	IDS_OPTION_NO                 "Nu"
+	IDS_D3DTEST_DESCRIPTION       "Urmează testul de interfață Direct3D. Continuați?"
+	IDS_D3DTEST_D3Dx              "Testul următor va utiliza interfața Direct3D %u cu accelerare de echipament fizic."
+END

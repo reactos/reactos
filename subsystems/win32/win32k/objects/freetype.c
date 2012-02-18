@@ -1,52 +1,15 @@
 /*
- * FreeType font engine interface
- *
- * Copyright 2001 Huw D M Davies for CodeWeavers.
- * Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *
- * This file contains the WineEng* functions.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-/*
- *
- * Addaped for the use in ReactOS.
- *
- */
-/*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/freetype.c
- * PURPOSE:         Freetype library support
- * PROGRAMMER:
+ * PURPOSE:         FreeType font engine interface
+ * PROGRAMMER:      Copyright 2001 Huw D M Davies for CodeWeavers.
+ *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
  */
 
 /** Includes ******************************************************************/
 
 #include <win32k.h>
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_TYPE1_TABLES_H
-#include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-#include <freetype/ftbitmap.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -88,9 +51,9 @@ typedef struct _FONT_CACHE_ENTRY
 static LIST_ENTRY FontCacheListHead;
 static UINT FontCacheNumEntries;
 
-static PWCHAR ElfScripts[32] =   /* these are in the order of the fsCsb[0] bits */
+static PWCHAR ElfScripts[32] =   /* These are in the order of the fsCsb[0] bits */
 {
-    L"Western", /*00*/
+    L"Western", /* 00 */
     L"Central_European",
     L"Cyrillic",
     L"Greek",
@@ -98,17 +61,17 @@ static PWCHAR ElfScripts[32] =   /* these are in the order of the fsCsb[0] bits 
     L"Hebrew",
     L"Arabic",
     L"Baltic",
-    L"Vietnamese", /*08*/
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, /*15*/
+    L"Vietnamese", /* 08 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, /* 15 */
     L"Thai",
     L"Japanese",
     L"CHINESE_GB2312",
     L"Hangul",
     L"CHINESE_BIG5",
     L"Hangul(Johab)",
-    NULL, NULL, /*23*/
+    NULL, NULL, /* 23 */
     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    L"Symbol" /*31*/
+    L"Symbol" /* 31 */
 };
 
 /*
@@ -143,7 +106,7 @@ static const CHARSETINFO FontTci[MAXTCIINDEX] =
     { HANGEUL_CHARSET, 949, {{0,0,0,0},{FS_WANSUNG,0}} },
     { CHINESEBIG5_CHARSET, 950, {{0,0,0,0},{FS_CHINESETRAD,0}} },
     { JOHAB_CHARSET, 1361, {{0,0,0,0},{FS_JOHAB,0}} },
-    /* reserved for alternate ANSI and OEM */
+    /* Reserved for alternate ANSI and OEM */
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
@@ -152,7 +115,7 @@ static const CHARSETINFO FontTci[MAXTCIINDEX] =
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
-    /* reserved for system */
+    /* Reserved for system */
     { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
     { SYMBOL_CHARSET, CP_SYMBOL, {{0,0,0,0},{FS_SYMBOL,0}} }
 };
@@ -481,7 +444,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     RtlCopyMemory(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
     if (lf->lfEscapement != lf->lfOrientation)
     {
-        /* this should really depend on whether GM_ADVANCED is set */
+        /* This should really depend on whether GM_ADVANCED is set */
         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
     }
@@ -612,8 +575,8 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
     TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
 #else /* This (ros) code was previously affected by a FreeType bug, but it works now */
-    TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
-    TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
+    TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
+    TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* Units below baseline */
 #endif
     TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
 
@@ -696,9 +659,9 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     case PAN_ANY:
     case PAN_NO_FIT:
     case PAN_FAMILY_TEXT_DISPLAY:
-    case PAN_FAMILY_PICTORIAL: /* symbol fonts get treated as if they were text */
-                               /* which is clearly not what the panose spec says. */
-        if (TM->tmPitchAndFamily == 0) /* fixed */
+    case PAN_FAMILY_PICTORIAL: /* Symbol fonts get treated as if they were text */
+                               /* Which is clearly not what the panose spec says. */
+        if (TM->tmPitchAndFamily == 0) /* Fixed */
         {
             TM->tmPitchAndFamily = FF_MODERN;
         }
@@ -780,24 +743,24 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     /* These names should be read from the TT name table */
 
-    /* length of otmpFamilyName */
+    /* Length of otmpFamilyName */
     Needed += FamilyNameW.Length + sizeof(WCHAR);
 
     RtlInitUnicodeString(&Regular, L"regular");
-    /* length of otmpFaceName */
+    /* Length of otmpFaceName */
     if (0 == RtlCompareUnicodeString(&StyleNameW, &Regular, TRUE))
     {
-        Needed += FamilyNameW.Length + sizeof(WCHAR); /* just the family name */
+        Needed += FamilyNameW.Length + sizeof(WCHAR); /* Just the family name */
     }
     else
     {
         Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1); /* family + " " + style */
     }
 
-    /* length of otmpStyleName */
+    /* Length of otmpStyleName */
     Needed += StyleNameW.Length + sizeof(WCHAR);
 
-    /* length of otmpFullName */
+    /* Length of otmpFullName */
     Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1);
 
     if (Size < Needed)
@@ -831,7 +794,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return 0;
     }
 
-    pPost = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_post); /* we can live with this failing */
+    pPost = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_post); /* We can live with this failing */
 
     Error = FT_Get_WinFNT_Header(FontGDI->face , &Win);
 
@@ -1087,7 +1050,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
                 fs.fsCsb[0] |= FS_SYMBOL;
         }
         if (fs.fsCsb[0] == 0)
-        { /* let's see if we can find any interesting cmaps */
+        { /* Let's see if we can find any interesting cmaps */
             for (i = 0; i < FontGDI->face->num_charmaps; i++)
             {
                 switch (FontGDI->face->charmaps[i]->encoding)
@@ -1386,6 +1349,7 @@ ftGdiGlyphCacheSet(
     error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
     if (error)
     {
+        FT_Done_Glyph(GlyphCopy);
         DPRINT1("Failure rendering glyph.\n");
         return NULL;
     };
@@ -1403,6 +1367,7 @@ ftGdiGlyphCacheSet(
     if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
     {
         DPRINT1("Conversion failed\n");
+        ExFreePoolWithTag(NewEntry, TAG_FONT);
         FT_Done_Glyph((FT_Glyph)BitmapGlyph);
         return NULL;
     }
@@ -1539,7 +1504,7 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType;
 
-    /* During testing, I never saw this used. In here just incase.*/
+    /* During testing, I never saw this used. It is here just in case. */
     if (ft_face->charmap == NULL)
     {
         DPRINT("WARNING: No charmap selected!\n");
@@ -1548,7 +1513,7 @@ ftGdiGetGlyphOutline(
         for (n = 0; n < ft_face->num_charmaps; n++)
         {
             charmap = ft_face->charmaps[n];
-            DPRINT("found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -1568,7 +1533,7 @@ ftGdiGetGlyphOutline(
 
 //  FT_Set_Pixel_Sizes(ft_face,
 //                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-    /* FIXME should set character height if neg */
+    /* FIXME: Should set character height if neg */
 //                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
 //                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
@@ -1673,7 +1638,7 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
-    if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT); /* It looks like we are finished with potm ATM.*/
+    if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT); /* It looks like we are finished with potm ATM. */
 
     if (!needsTransform)
     {
@@ -1717,7 +1682,7 @@ ftGdiGetGlyphOutline(
         bottom = bottom & -64;
         top = (top + 63) & -64;
 
-        DPRINT("transformed box: (%d,%d - %d,%d)\n", left, top, right, bottom);
+        DPRINT("Transformed box: (%d,%d - %d,%d)\n", left, top, right, bottom);
         vec.x = ft_face->glyph->metrics.horiAdvance;
         vec.y = 0;
         FT_Vector_Transform(&vec, &transMat);
@@ -1746,7 +1711,7 @@ ftGdiGetGlyphOutline(
 
     if (ft_face->glyph->format != ft_glyph_format_outline && iFormat != GGO_BITMAP)
     {
-        DPRINT1("loaded a bitmap\n");
+        DPRINT1("Loaded a bitmap\n");
         return GDI_ERROR;
     }
 
@@ -1796,7 +1761,7 @@ ftGdiGetGlyphOutline(
             break;
 
         default:
-            DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
+            DPRINT1("Loaded glyph format %x\n", ft_face->glyph->format);
             return GDI_ERROR;
         }
         break;
@@ -1866,7 +1831,7 @@ ftGdiGetGlyphOutline(
             }
         }
         default:
-            DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
+            DPRINT1("Loaded glyph format %x\n", ft_face->glyph->format);
             return GDI_ERROR;
         }
         start = pvBuf;
@@ -1936,7 +1901,7 @@ ftGdiGetGlyphOutline(
                 else if (point <= outline->contours[contour] &&
                          outline->tags[point] & FT_Curve_Tag_On)
                 {
-                    /* add closing pt for bezier */
+                    /* Add closing pt for bezier */
                     if (pvBuf)
                         FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
                     cpfx++;
@@ -2066,8 +2031,7 @@ ftGdiGetGlyphOutline(
                         (outline->tags[point] & FT_Curve_Tag_On) ==
                         (outline->tags[point-1] & FT_Curve_Tag_On));
                 /* At the end of a contour Windows adds the start point,
-                   but only for Beziers and we've already done that.
-                */
+                   but only for Beziers and we've already done that. */
                 if (point <= outline->contours[contour] &&
                         outline->tags[point] & FT_Curve_Tag_On)
                 {
@@ -2136,7 +2100,7 @@ TextIntGetTextExtentPoint(PDC dc,
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -2164,7 +2128,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     error = FT_Set_Pixel_Sizes(face,
                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                               /* FIXME should set character height if neg */
+                               /* FIXME: Should set character height if neg */
                                (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
 							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
@@ -2202,7 +2166,7 @@ TextIntGetTextExtentPoint(PDC dc,
             }
         }
 
-        /* retrieve kerning distance */
+        /* Retrieve kerning distance */
         if (use_kerning && previous && glyph_index)
         {
             FT_Vector delta;
@@ -2291,7 +2255,7 @@ ftGdiGetTextCharsetInfo(
     }
     DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
     if (fs.fsCsb[0] == 0)
-    { /* let's see if we can find any interesting cmaps */
+    { /* Let's see if we can find any interesting cmaps */
         for (i = 0; i < Face->num_charmaps; i++)
         {
             switch (Face->charmaps[i]->encoding)
@@ -2331,7 +2295,7 @@ ftGdiGetTextCharsetInfo(
         {
             if (IntTranslateCharsetInfo(&fs0, &csi, TCI_SRCFONTSIG))
             {
-                //*cp = csi.ciACP;
+                // *cp = csi.ciACP;
                 DPRINT("Hit 2\n");
                 Ret = csi.ciCharset;
                 goto Exit;
@@ -2361,7 +2325,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
 
         char_code_prev = char_code = FT_Get_First_Char(face, &glyph_code);
 
-        DPRINT("face encoding FT_ENCODING_UNICODE, number of glyphs %ld, first glyph %u, first char %04lx\n",
+        DPRINT("Face encoding FT_ENCODING_UNICODE, number of glyphs %ld, first glyph %u, first char %04lx\n",
                face->num_glyphs, glyph_code, char_code);
 
         if (!glyph_code) return 0;
@@ -2378,7 +2342,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
         {
             if (char_code < char_code_prev)
             {
-                DPRINT1("expected increasing char code from FT_Get_Next_Char\n");
+                DPRINT1("Expected increasing char code from FT_Get_Next_Char\n");
                 return 0;
             }
             if (char_code - char_code_prev > 1)
@@ -2401,7 +2365,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
         }
     }
     else
-        DPRINT1("encoding %u not supported\n", face->charmap->encoding);
+        DPRINT1("Encoding %u not supported\n", face->charmap->encoding);
 
     size = sizeof(GLYPHSET) + sizeof(WCRANGE) * (num_ranges - 1);
     if (glyphset)
@@ -2451,7 +2415,7 @@ ftGdiGetTextMetricsW(
         IntLockFreeType;
         Error = FT_Set_Pixel_Sizes(Face,
                                    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                                   /* FIXME should set character height if neg */
+                                   /* FIXME: Should set character height if neg */
                                    (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                                    dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
         IntUnLockFreeType;
@@ -2711,7 +2675,7 @@ IntFontType(PFONTGDI Font)
     {
         Font->FontObj.flFontType |= FO_POSTSCRIPT;
     }
-    /* check for the presence of the 'CFF ' table to check if the font is Type1 */
+    /* Check for the presence of the 'CFF ' table to check if the font is Type1 */
     if (!FT_Load_Sfnt_Table(Font->face, FT_MAKE_TAG('C','F','F',' '), 0, NULL, &tmp_size))
     {
         Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
@@ -2819,7 +2783,7 @@ IntGetFullFileName(
 
     Status = ZwOpenFile(
                  &hFile,
-                 0, //FILE_READ_ATTRIBUTES,
+                 0, // FILE_READ_ATTRIBUTES,
                  &ObjectAttributes,
                  &IoStatusBlock,
                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -2897,7 +2861,7 @@ IntGdiGetFontResourceInfo(
             {
                 if (RtlEqualUnicodeString(&NameInfo1->Name, &NameInfo2->Name, FALSE))
                 {
-                    /* found */
+                    /* Found */
                     FontFamilyFillInfo(&Info, FontEntry->FaceName.Buffer, FontEntry->Font);
                     bFound = TRUE;
                     break;
@@ -2920,7 +2884,7 @@ IntGdiGetFontResourceInfo(
 
     switch (dwType)
     {
-    case 0: /* FIXME: returns 1 or 2, don't know what this is atm */
+    case 0: /* FIXME: Returns 1 or 2, don't know what this is atm */
         *(DWORD*)pBuffer = 1;
         *pdwBytes = sizeof(DWORD);
         break;
@@ -3022,11 +2986,11 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 }
 
 
-//////////////////
+///////////////////////////////////////////////////////////////////////////
 //
 // Functions needing sorting.
 //
-///////////////
+///////////////////////////////////////////////////////////////////////////
 int APIENTRY
 NtGdiGetFontFamilyInfo(HDC Dc,
                        LPLOGFONTW UnsafeLogFont,
@@ -3275,7 +3239,7 @@ GreExtTextOutW(
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -3302,7 +3266,7 @@ GreExtTextOutW(
     error = FT_Set_Pixel_Sizes(
                 face,
                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                /* FIXME should set character height if neg */
+                /* FIXME: Should set character height if neg */
                 (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                 dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
@@ -3378,7 +3342,7 @@ GreExtTextOutW(
                 }
 
             }
-            /* retrieve kerning distance */
+            /* Retrieve kerning distance */
             if (use_kerning && previous && glyph_index)
             {
                 FT_Vector delta;
@@ -3532,8 +3496,7 @@ GreExtTextOutW(
          * brush.
          */
 
-        if (lprc &&
-                (fuOptions & ETO_CLIPPED) &&
+        if (lprc && (fuOptions & ETO_CLIPPED) &&
                 DestRect.right >= lprc->right + dc->ptlDCOrig.x)
         {
             // We do the check '>=' instead of '>' to possibly save an iteration
@@ -3541,6 +3504,11 @@ GreExtTextOutW(
             // and x is always incremented.
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
+        }
+        if (lprc && (fuOptions & ETO_CLIPPED) &&
+                DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+        {
+            DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
         }
         MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
         IntEngMaskBlt(
@@ -3566,12 +3534,12 @@ GreExtTextOutW(
         if (NULL == Dx)
         {
             TextLeft += realglyph->root.advance.x >> 10;
-             DPRINT("new TextLeft: %d\n", TextLeft);
+             DPRINT("New TextLeft: %d\n", TextLeft);
         }
         else
         {
             TextLeft += Dx[i<<DxShift] << 6;
-             DPRINT("new TextLeft2: %d\n", TextLeft);
+             DPRINT("New TextLeft2: %d\n", TextLeft);
         }
 
         if (DxShift)
@@ -3840,7 +3808,7 @@ NtGdiGetCharABCWidthsW(
     IntLockFreeType;
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                       /* FIXME should set character height if neg */
+                       /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
@@ -3869,7 +3837,7 @@ NtGdiGetCharABCWidthsW(
         adv  = (face->glyph->advance.x + 32) >> 6;
 
 //      int test = (INT)(face->glyph->metrics.horiAdvance + 63) >> 6;
-//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same!*/
+//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same! */
 
         lsb = left >> 6;
         bbx = (right - left) >> 6;
@@ -4007,7 +3975,7 @@ NtGdiGetCharWidthW(
     IntLockFreeType;
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                       /* FIXME should set character height if neg */
+                       /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
@@ -4226,7 +4194,7 @@ NtGdiGetGlyphIndicesW(
 
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]); // FIXME: unsafe!
+        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]); // FIXME: Unsafe!
         if (Buffer[i] == 0)
         {
             Buffer[i] = DefChar;
@@ -4256,6 +4224,5 @@ ErrorRet:
     EngSetLastError(Status);
     return GDI_ERROR;
 }
-
 
 /* EOF */

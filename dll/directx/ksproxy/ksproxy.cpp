@@ -111,7 +111,6 @@ KsOpenDefaultDevice(
     PHANDLE      DeviceHandle)
 {
     HDEVINFO hList;
-    SP_DEVINFO_DATA DeviceInfoData;
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
     WCHAR Path[MAX_PATH+sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W)];
@@ -126,7 +125,6 @@ KsOpenDefaultDevice(
     }
 
     /* setup parameters */
-    DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
     DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
     if (SetupDiEnumDeviceInterfaces(hList, NULL, &Category, 0, &DeviceInterfaceData))

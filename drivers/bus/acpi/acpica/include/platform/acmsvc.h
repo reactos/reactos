@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -116,8 +116,43 @@
 #ifndef __ACMSVC_H__
 #define __ACMSVC_H__
 
-#define COMPILER_DEPENDENT_INT64   __int64
-#define COMPILER_DEPENDENT_UINT64  unsigned __int64
+
+/*
+ * Map low I/O functions for MS. This allows us to disable MS language
+ * extensions for maximum portability.
+ */
+#define open            _open
+#define read            _read
+#define write           _write
+#define close           _close
+#define stat            _stat
+#define fstat           _fstat
+#define mkdir           _mkdir
+#define strlwr          _strlwr
+#define O_RDONLY        _O_RDONLY
+#define O_BINARY        _O_BINARY
+#define O_CREAT         _O_CREAT
+#define O_WRONLY        _O_WRONLY
+#define O_TRUNC         _O_TRUNC
+#define S_IREAD         _S_IREAD
+#define S_IWRITE        _S_IWRITE
+#define S_IFDIR         _S_IFDIR
+
+/* Eliminate warnings for "old" (non-secure) versions of clib functions */
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+/* Eliminate warnings for POSIX clib function names (open, write, etc.) */
+
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif
+
+#define COMPILER_DEPENDENT_INT64    __int64
+#define COMPILER_DEPENDENT_UINT64   unsigned __int64
+#define ACPI_INLINE                 __inline
 
 /*
  * Calling conventions:
@@ -167,72 +202,11 @@
 }
 #endif
 
-/*! [Begin] no source code translation  */
-
 #ifdef ACPI_APPLICATION
 #define ACPI_FLUSH_CPU_CACHE()
 #else
 #define ACPI_FLUSH_CPU_CACHE()  __asm {WBINVD}
 #endif
-
-#ifdef _DEBUG
-#define ACPI_SIMPLE_RETURN_MACROS
-#endif
-
-/*! [End] no source code translation !*/
-
-/*
- * Global Lock acquire/release code
- *
- * Note: Handles case where the FACS pointer is null
- */
-#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq)  __asm \
-{                                                   \
-        __asm mov           eax, 0xFF               \
-        __asm mov           ecx, FacsPtr            \
-        __asm or            ecx, ecx                \
-        __asm jz            exit_acq                \
-        __asm lea           ecx, [ecx].GlobalLock   \
-                                                    \
-        __asm acq10:                                \
-        __asm mov           eax, [ecx]              \
-        __asm mov           edx, eax                \
-        __asm and           edx, 0xFFFFFFFE         \
-        __asm bts           edx, 1                  \
-        __asm adc           edx, 0                  \
-        __asm lock cmpxchg  dword ptr [ecx], edx    \
-        __asm jnz           acq10                   \
-                                                    \
-        __asm cmp           dl, 3                   \
-        __asm sbb           eax, eax                \
-                                                    \
-        __asm exit_acq:                             \
-        __asm mov           Acq, al                 \
-}
-
-#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) __asm \
-{                                                   \
-        __asm xor           eax, eax                \
-        __asm mov           ecx, FacsPtr            \
-        __asm or            ecx, ecx                \
-        __asm jz            exit_rel                \
-        __asm lea           ecx, [ecx].GlobalLock   \
-                                                    \
-        __asm Rel10:                                \
-        __asm mov           eax, [ecx]              \
-        __asm mov           edx, eax                \
-        __asm and           edx, 0xFFFFFFFC         \
-        __asm lock cmpxchg  dword ptr [ecx], edx    \
-        __asm jnz           Rel10                   \
-                                                    \
-        __asm cmp           dl, 3                   \
-        __asm and           eax, 1                  \
-                                                    \
-        __asm exit_rel:                             \
-        __asm mov           Pnd, al                 \
-}
-
-
 /* warn C4100: unreferenced formal parameter */
 #pragma warning(disable:4100)
 
@@ -245,5 +219,8 @@
 /* warn C4131: uses old-style declarator (iASL compiler only) */
 #pragma warning(disable:4131)
 
+#if _MSC_VER > 1200 /* Versions above VC++ 6 */
+#pragma warning( disable : 4295 ) /* needed for acpredef.h array */
+#endif
 
 #endif /* __ACMSVC_H__ */

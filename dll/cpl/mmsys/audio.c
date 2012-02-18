@@ -1,7 +1,7 @@
 /*
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            lib/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
@@ -212,7 +212,7 @@ AudioDlgProc(HWND hwndDlg,
 
                 case IDC_ADV2_BTN:
                 {
-                
+
                 }
                 break;
 
@@ -231,7 +231,7 @@ AudioDlgProc(HWND hwndDlg,
 
                 case IDC_ADV1_BTN:
                 {
-                
+
                 }
                 break;
 
@@ -250,7 +250,7 @@ AudioDlgProc(HWND hwndDlg,
 
                 case IDC_ADV3_BTN:
                 {
-                
+
                 }
                 break;
             }

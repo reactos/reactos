@@ -630,7 +630,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Return the Length and Status. ReturnedLength is NOT optional */
-    *ReturnedLength = IoStatusBlock.Information;
+    *ReturnedLength = (ULONG)IoStatusBlock.Information;
     return Status;
 }
 

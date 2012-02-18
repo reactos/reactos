@@ -111,8 +111,8 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
-                             IN PFN_NUMBER NumberOfPages)
+MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
+                      IN PFN_NUMBER NumberOfPages)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
@@ -152,7 +152,6 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
     /* Choose the correct PTE to use, and which template */
     PointerPte += (Offset + 1);
     TempPte = ValidKernelPte;
-    MI_MAKE_LOCAL_PAGE(&TempPte); // Hyperspace is local!
 
     /* Make sure the list isn't empty and loop it */
     ASSERT(Pfn1 != (PVOID)LIST_HEAD);

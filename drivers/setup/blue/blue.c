@@ -224,7 +224,7 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 static DRIVER_DISPATCH ScrCreate;
 static NTSTATUS NTAPI
 ScrCreate(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+      PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
     PHYSICAL_ADDRESS BaseAddress;
@@ -232,12 +232,22 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
-    ScrAcquireOwnership(DeviceExtension);
+    if (!InbvCheckDisplayOwnership())
+    {
+        ScrAcquireOwnership(DeviceExtension);
 
-    /* get pointer to video memory */
-    BaseAddress.QuadPart = VIDMEM_BASE;
-    DeviceExtension->VideoMemory =
-        (PUCHAR)MmMapIoSpace (BaseAddress, DeviceExtension->Rows * DeviceExtension->Columns * 2, MmNonCached);
+        /* get pointer to video memory */
+        BaseAddress.QuadPart = VIDMEM_BASE;
+        DeviceExtension->VideoMemory =
+            (PUCHAR)MmMapIoSpace (BaseAddress, DeviceExtension->Rows * DeviceExtension->Columns * 2, MmNonCached);
+    }
+    else
+    {
+        /* store dummy values here */
+        DeviceExtension->Columns = 1;
+        DeviceExtension->Rows = 1;
+        DeviceExtension->ScanLines = 1;
+    }
 
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
@@ -258,7 +268,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
 static DRIVER_DISPATCH ScrWrite;
 static NTSTATUS NTAPI
 ScrWrite(PDEVICE_OBJECT DeviceObject,
-	 PIRP Irp)
+     PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -271,16 +281,16 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     int rows, columns;
     int processed = DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT;
 
-    if (0 && InbvCheckDisplayOwnership())
-       {
-	  /* Display is in graphics mode, we're not allowed to touch it */
-	  Status = STATUS_SUCCESS;
+    if (InbvCheckDisplayOwnership())
+    {
+        /* Display is in graphics mode, we're not allowed to touch it */
+        Status = STATUS_SUCCESS;
 
-	  Irp->IoStatus.Status = Status;
-	  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
-	  return Status;
-       }
+        return Status;
+    }
 
     vidmem  = DeviceExtension->VideoMemory;
     rows = DeviceExtension->Rows;
@@ -297,86 +307,86 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     cursorx = offset % columns;
     if( processed == 0 )
        {
-	  /* raw output mode */
-	  memcpy( &vidmem[(cursorx * 2) + (cursory * columns * 2)], pch, stk->Parameters.Write.Length );
-	  offset += (stk->Parameters.Write.Length / 2);
+      /* raw output mode */
+      memcpy( &vidmem[(cursorx * 2) + (cursory * columns * 2)], pch, stk->Parameters.Write.Length );
+      offset += (stk->Parameters.Write.Length / 2);
        }
     else {
        for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
-	  {
-	     switch (*pch)
-		{
-		case '\b':
-		   if (cursorx > 0)
-		      {
-			 cursorx--;
-		      }
-		   else if (cursory > 0)
-		      {
-			 cursorx = columns - 1;
-			 cursory--;
-		      }
-		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
-		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
-		   break;
+      {
+         switch (*pch)
+        {
+        case '\b':
+           if (cursorx > 0)
+              {
+             cursorx--;
+              }
+           else if (cursory > 0)
+              {
+             cursorx = columns - 1;
+             cursory--;
+              }
+           vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
+           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+           break;
 
-		case '\n':
-		   cursory++;
-		   cursorx = 0;
-		   break;
+        case '\n':
+           cursory++;
+           cursorx = 0;
+           break;
 
-		case '\r':
-		   cursorx = 0;
-		   break;
+        case '\r':
+           cursorx = 0;
+           break;
 
-		case '\t':
-		   offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
-		   for (j = 0; j < offset; j++)
-		      {
-			 vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
-			 cursorx++;
+        case '\t':
+           offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
+           for (j = 0; j < offset; j++)
+              {
+             vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
+             cursorx++;
 
-			 if (cursorx >= columns)
-			    {
-			       cursory++;
-			       cursorx = 0;
-			    }
-		      }
-		   break;
+             if (cursorx >= columns)
+                {
+                   cursory++;
+                   cursorx = 0;
+                }
+              }
+           break;
 
-		default:
-		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
-		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
-		   cursorx++;
-		   if (cursorx >= columns)
-		      {
-			 cursory++;
-			 cursorx = 0;
-		      }
-		   break;
-		}
-	     if (cursory >= rows)
-		{
-		   unsigned short *LinePtr;
+        default:
+           vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
+           vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+           cursorx++;
+           if (cursorx >= columns)
+              {
+             cursory++;
+             cursorx = 0;
+              }
+           break;
+        }
+         if (cursory >= rows)
+        {
+           unsigned short *LinePtr;
 
-		   memcpy (vidmem,
-			   &vidmem[columns * 2],
-			   columns * (rows - 1) * 2);
+           memcpy (vidmem,
+               &vidmem[columns * 2],
+               columns * (rows - 1) * 2);
 
-		   LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
+           LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
 
-		   for (j = 0; j < columns; j++)
-		      {
-			 LinePtr[j] = DeviceExtension->CharAttribute << 8;
-		      }
-		   cursory = rows - 1;
-		   for (j = 0; j < columns; j++)
-		      {
-			 vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
-			 vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
-		      }
-		}
-	  }
+           for (j = 0; j < columns; j++)
+              {
+             LinePtr[j] = DeviceExtension->CharAttribute << 8;
+              }
+           cursory = rows - 1;
+           for (j = 0; j < columns; j++)
+              {
+             vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
+             vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
+              }
+        }
+      }
 
        /* Set the cursor position */
        offset = (cursory * columns) + cursorx;
@@ -400,7 +410,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 static DRIVER_DISPATCH ScrIoControl;
 static NTSTATUS NTAPI
 ScrIoControl(PDEVICE_OBJECT DeviceObject,
-	     PIRP Irp)
+         PIRP Irp)
 {
   PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
   PDEVICE_EXTENSION DeviceExtension;
@@ -416,13 +426,20 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int columns = DeviceExtension->Columns;
           unsigned int offset;
 
-          /* read cursor position from crtc */
-          _disable();
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-          offset = READ_PORT_UCHAR (CRTC_DATA);
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-          offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
-          _enable();
+          if (!InbvCheckDisplayOwnership())
+          {
+            /* read cursor position from crtc */
+            _disable();
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+            offset = READ_PORT_UCHAR (CRTC_DATA);
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+            offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
+            _enable();
+          }
+          else
+          {
+            offset = 0;
+          }
 
           pcsbi->dwSize.X = columns;
           pcsbi->dwSize.Y = rows;
@@ -454,12 +471,15 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           offset = (pcsbi->dwCursorPosition.Y * DeviceExtension->Columns) +
                     pcsbi->dwCursorPosition.X;
 
-          _disable();
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-          WRITE_PORT_UCHAR (CRTC_DATA, offset);
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-          WRITE_PORT_UCHAR (CRTC_DATA, offset>>8);
-          _enable();
+          if (!InbvCheckDisplayOwnership())
+          {
+            _disable();
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+            WRITE_PORT_UCHAR (CRTC_DATA, offset);
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+            WRITE_PORT_UCHAR (CRTC_DATA, offset>>8);
+            _enable();
+          }
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -486,25 +506,29 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
           DeviceExtension->CursorSize = pcci->dwSize;
           DeviceExtension->CursorVisible = pcci->bVisible;
-          height = DeviceExtension->ScanLines;
-          data = (pcci->bVisible) ? 0x00 : 0x20;
 
-          size = (pcci->dwSize * height) / 100;
-          if (size < 1)
+          if (!InbvCheckDisplayOwnership())
+          {
+            height = DeviceExtension->ScanLines;
+            data = (pcci->bVisible) ? 0x00 : 0x20;
+
+            size = (pcci->dwSize * height) / 100;
+            if (size < 1)
             {
               size = 1;
             }
 
-          data |= (UCHAR)(height - size);
+            data |= (UCHAR)(height - size);
 
-          _disable();
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
-          WRITE_PORT_UCHAR (CRTC_DATA, data);
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-          value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
-          WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
+            _disable();
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
+            WRITE_PORT_UCHAR (CRTC_DATA, data);
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
+            value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
+            WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
 
-          _enable();
+            _enable();
+          }
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -540,14 +564,17 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                    (Buf->dwCoord.X * 2) + 1;
+          if (!InbvCheckDisplayOwnership())
+          {
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
+                        (Buf->dwCoord.X * 2) + 1;
 
-          for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
+            for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
             {
               vidmem[offset + (dwCount * 2)] = (char) Buf->wAttribute;
             }
+          }
 
           Buf->dwTransfered = Buf->nLength;
 
@@ -564,16 +591,23 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                   (Buf->dwCoord.X * 2) + 1;
+          if (!InbvCheckDisplayOwnership())
+          {
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
+                     (Buf->dwCoord.X * 2) + 1;
 
-          for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
+            for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
             {
               *((char *) pAttr) = vidmem[offset + (dwCount * 2)];
             }
 
-          Buf->dwTransfered = dwCount;
+            Buf->dwTransfered = dwCount;
+          }
+          else
+          {
+            Buf->dwTransfered = 0;
+          }
 
           Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
           Status = STATUS_SUCCESS;
@@ -588,14 +622,18 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (pCoord->Y * DeviceExtension->Columns * 2) +
-                   (pCoord->X * 2) + 1;
+          if (!InbvCheckDisplayOwnership())
+          {
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (pCoord->Y * DeviceExtension->Columns * 2) +
+                    (pCoord->X * 2) + 1;
 
-          for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
+            for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
             {
               vidmem[offset + (dwCount * 2)] = *pAttr;
             }
+          }
+
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
         }
@@ -614,15 +652,18 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                   (Buf->dwCoord.X * 2);
+          if (!InbvCheckDisplayOwnership())
+          {
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
+                    (Buf->dwCoord.X * 2);
 
 
-          for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
+            for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
             {
               vidmem[offset + (dwCount * 2)] = (char) Buf->cCharacter;
             }
+          }
 
           Buf->dwTransfered = Buf->nLength;
 
@@ -639,16 +680,23 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                   (Buf->dwCoord.X * 2);
+          if (!InbvCheckDisplayOwnership())
+          {
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
+                    (Buf->dwCoord.X * 2);
 
-          for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pChar++)
+            for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pChar++)
             {
               *pChar = vidmem[offset + (dwCount * 2)];
             }
 
-          Buf->dwTransfered = dwCount;
+            Buf->dwTransfered = dwCount;
+          }
+          else
+          {
+            Buf->dwTransfered = 0;
+          }
 
           Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
           Status = STATUS_SUCCESS;
@@ -663,16 +711,19 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           int offset;
           ULONG dwCount;
 
-          pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
-          pChar = (CHAR *)(pCoord + 1);
-          vidmem = DeviceExtension->VideoMemory;
-          offset = (pCoord->Y * DeviceExtension->Columns * 2) +
-                   (pCoord->X * 2);
+          if (!InbvCheckDisplayOwnership())
+          {
+            pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
+            pChar = (CHAR *)(pCoord + 1);
+            vidmem = DeviceExtension->VideoMemory;
+            offset = (pCoord->Y * DeviceExtension->Columns * 2) +
+                    (pCoord->X * 2);
 
-          for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pChar++)
+            for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pChar++)
             {
               vidmem[offset + (dwCount * 2)] = *pChar;
             }
+          }
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -685,29 +736,32 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR Src, Dest;
           UINT32 SrcDelta, DestDelta, i, Offset;
 
-          ConsoleDraw = (PCONSOLE_DRAW) MmGetSystemAddressForMdl(Irp->MdlAddress);
-          Src = (PUCHAR) (ConsoleDraw + 1);
-          SrcDelta = ConsoleDraw->SizeX * 2;
-          Dest = DeviceExtension->VideoMemory +
-                 (ConsoleDraw->Y * DeviceExtension->Columns + ConsoleDraw->X) * 2;
-          DestDelta = DeviceExtension->Columns * 2;
+          if (!InbvCheckDisplayOwnership())
+          {
+            ConsoleDraw = (PCONSOLE_DRAW) MmGetSystemAddressForMdl(Irp->MdlAddress);
+            Src = (PUCHAR) (ConsoleDraw + 1);
+            SrcDelta = ConsoleDraw->SizeX * 2;
+            Dest = DeviceExtension->VideoMemory +
+                    (ConsoleDraw->Y * DeviceExtension->Columns + ConsoleDraw->X) * 2;
+            DestDelta = DeviceExtension->Columns * 2;
 
-          for (i = 0; i < ConsoleDraw->SizeY; i++)
+            for (i = 0; i < ConsoleDraw->SizeY; i++)
             {
               RtlCopyMemory(Dest, Src, SrcDelta);
               Src += SrcDelta;
               Dest += DestDelta;
             }
 
-          Offset = (ConsoleDraw->CursorY * DeviceExtension->Columns) +
-                   ConsoleDraw->CursorX;
+            Offset = (ConsoleDraw->CursorY * DeviceExtension->Columns) +
+                    ConsoleDraw->CursorX;
 
-          _disable();
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
-          WRITE_PORT_UCHAR (CRTC_DATA, Offset);
-          WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
-          WRITE_PORT_UCHAR (CRTC_DATA, Offset >> 8);
-          _enable();
+            _disable();
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+            WRITE_PORT_UCHAR (CRTC_DATA, Offset);
+            WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+            WRITE_PORT_UCHAR (CRTC_DATA, Offset >> 8);
+            _enable();
+          }
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -718,8 +772,11 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           {
               UINT32 CodePage = (UINT32)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
-              // Upload a font for the codepage if needed
-              ScrLoadFontTable(CodePage);
+              if (!InbvCheckDisplayOwnership())
+              {
+                // Upload a font for the codepage if needed
+                ScrLoadFontTable(CodePage);
+              }
 
               Irp->IoStatus.Information = 0;
               Status = STATUS_SUCCESS;
@@ -739,7 +796,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 static DRIVER_DISPATCH ScrDispatch;
 static NTSTATUS NTAPI
 ScrDispatch(PDEVICE_OBJECT DeviceObject,
-	    PIRP Irp)
+        PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;

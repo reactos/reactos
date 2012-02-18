@@ -19,29 +19,33 @@ FUNC ceilf
     sub rsp, 16
     .ENDPROLOG
 
-    /* Put parameter on the stack */
-    movss dword ptr [rsp], xmm0
-    fld dword ptr [rsp]
+    /* Duplicate the bits into eax (zero exteneded to rax) */
+    movd eax, xmm0
 
-    /* Change fpu control word to round up */
-    fstcw [rsp + 8]
-    mov eax, [rsp + 8]
-    or  eax, HEX(00800)
-    and eax, HEX(0fbff)
-    mov [rsp + 12], eax
-    fldcw [rsp + 12]
+    /* Invert the sign bit */
+    xor eax, HEX(80000000)
 
-    /* Round to integer */
-    frndint
+    /* Copy back to xmm0 */
+    movd xmm0, eax
 
-    /* Restore fpu control word */
-    fldcw [rsp + 8]
+    /* Truncate xmm0 to integer (single precision) */
+    cvttss2si rcx, xmm0
 
-    fstp dword ptr [rsp]
-    movss xmm0, dword ptr [rsp]
+    /* Shift all bits to the right, keeping the sign bit */
+    shr rax, 31
+
+    /* Add the sign bit from the truncated value, so that
+       we get the correct result for negative values. */
+    add rcx, rax
+
+    /* Now compensate for the previous negation */
+    neg ecx
+
+    /* Convert the result back to xmm0 (single precision) */
+    cvtsi2ss xmm0, rcx
 
     add rsp, 16
     ret
-ENDFUNC ceilf
+ENDFUNC
 
 END

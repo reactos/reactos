@@ -291,7 +291,7 @@ VOID
 FASTCALL
 KiReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-    /* Do the lined function */
+    /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
 }
 

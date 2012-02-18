@@ -15,7 +15,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_library(fmifs SHARED ${SOURCE})
-set_entrypoint(fmifs InitializeFmIfs 12)
+set_module_type(fmifs win32dll ENTRYPOINT InitializeFmIfs 12)
 add_importlibs(fmifs kernel32 ntdll)
 add_pch(fmifs precomp.h)
 add_dependencies(fmifs psdk)

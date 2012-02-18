@@ -22,7 +22,7 @@ RosSymFreeMemUM(PVOID Area)
 }
 
 static BOOLEAN
-RosSymGetMemUM(ULONG_PTR *Target, PVOID SourceMem, ULONG Size)
+RosSymGetMemUM(PVOID FileContext, ULONG_PTR *Target, PVOID SourceMem, ULONG Size)
 {
   return FALSE;
 }

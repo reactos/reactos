@@ -213,18 +213,14 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 {
-    int            idctrl;
     LPNMHDR        pnmh;
-    LPNMLISTVIEW   pnmv;
     NMLVDISPINFO*  pnmdi;
     LPNMHEADER     pnmhdr;
     ULONG          Index;
     ULONG          ColumnIndex;
     LPPROCESS_PAGE_LIST_ITEM  pData;
 
-    idctrl = (int) wParam;
     pnmh = (LPNMHDR) lParam;
-    pnmv = (LPNMLISTVIEW) lParam;
     pnmdi = (NMLVDISPINFO*) lParam;
     pnmhdr = (LPNMHEADER) lParam;
 

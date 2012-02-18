@@ -73,7 +73,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
 
     if (!bOnlyNew || (item->member.para.nFlags & MEPF_REPAINT))
     {
-      /* Draw the pargraph if any of the paragraph is in the update region. */
+      /* Draw the paragraph if any of the paragraph is in the update region. */
       if (ys < rcUpdate->bottom && ye > rcUpdate->top)
       {
         ME_DrawParagraph(&c, item);
@@ -129,12 +129,10 @@ void ME_Repaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
     FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
-  if (!editor->bEmulateVersion10 || (editor->nEventMask & ENM_UPDATE))
-    ME_SendOldNotify(editor, EN_UPDATE);
   ITextHost_TxViewChange(editor->texthost, TRUE);
 }
 
-void ME_UpdateRepaint(ME_TextEditor *editor)
+void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now)
 {
   /* Should be called whenever the contents of the control have changed */
   BOOL wrappedParagraphs;
@@ -146,6 +144,8 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   /* Ensure that the cursor is visible */
   ME_EnsureVisible(editor, &editor->pCursors[0]);
 
+  ITextHost_TxViewChange(editor->texthost, update_now);
+
   ME_SendSelChange(editor);
 
   /* send EN_CHANGE if the event mask asks for it */
@@ -155,7 +155,6 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
     ME_SendOldNotify(editor, EN_CHANGE);
     editor->nEventMask |= ENM_CHANGE;
   }
-  ME_Repaint(editor);
 }
 
 void
@@ -170,7 +169,7 @@ ME_RewrapRepaint(ME_TextEditor *editor)
   ME_Repaint(editor);
 }
 
-int ME_twips2pointsX(ME_Context *c, int x)
+int ME_twips2pointsX(const ME_Context *c, int x)
 {
   if (c->editor->nZoomNumerator == 0)
     return x * c->dpi.cx / 1440;
@@ -178,7 +177,7 @@ int ME_twips2pointsX(ME_Context *c, int x)
     return x * c->dpi.cx * c->editor->nZoomNumerator / 1440 / c->editor->nZoomDenominator;
 }
 
-int ME_twips2pointsY(ME_Context *c, int y)
+int ME_twips2pointsY(const ME_Context *c, int y)
 {
   if (c->editor->nZoomNumerator == 0)
     return y * c->dpi.cy / 1440;
@@ -490,7 +489,7 @@ static const COLORREF pen_colors[16] = {
   /* Dark gray */       RGB(0x80, 0x80, 0x80),  /* Light gray */      RGB(0xc0, 0xc0, 0xc0),
 };
 
-static int ME_GetBorderPenWidth(ME_Context* c, int idx)
+static int ME_GetBorderPenWidth(const ME_Context* c, int idx)
 {
   int width = border_details[idx].width;
 
@@ -503,7 +502,7 @@ static int ME_GetBorderPenWidth(ME_Context* c, int idx)
   return width;
 }
 
-int ME_GetParaBorderWidth(ME_Context* c, int flags)
+int ME_GetParaBorderWidth(const ME_Context* c, int flags)
 {
   int idx = (flags >> 8) & 0xF;
   int width;
@@ -958,12 +957,9 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
           rc.left = c->pt.x + run->pt.x;
           rc.right = rc.left + run->nWidth;
           rc.top = c->pt.y + para->pt.y + run->pt.y;
-          rc.bottom = rc.bottom + height;
+          rc.bottom = rc.top + height;
           TRACE("rc = (%d, %d, %d, %d)\n", rc.left, rc.top, rc.right, rc.bottom);
-          if (run->nFlags & MERF_SKIPPED)
-            DrawFocusRect(c->hDC, &rc);
-          else
-            FrameRect(c->hDC, &rc, GetSysColorBrush(COLOR_GRAYTEXT));
+          FrameRect(c->hDC, &rc, GetSysColorBrush(COLOR_GRAYTEXT));
         }
         if (visible)
           ME_DrawRun(c, c->pt.x + run->pt.x,
@@ -1096,7 +1092,7 @@ void ME_ScrollRight(ME_TextEditor *editor, int cx)
   ME_HScrollAbs(editor, editor->horz_si.nPos + cx);
 }
 
-/* Calculates the visiblity after a call to SetScrollRange or
+/* Calculates the visibility after a call to SetScrollRange or
  * SetScrollInfo with SIF_RANGE. */
 static BOOL ME_PostSetScrollRangeVisibility(SCROLLINFO *si)
 {

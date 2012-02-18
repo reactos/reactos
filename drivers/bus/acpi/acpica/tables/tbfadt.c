@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -124,7 +124,7 @@
 
 /* Local prototypes */
 
-static inline void
+static ACPI_INLINE void
 AcpiTbInitGenericAddress (
     ACPI_GENERIC_ADDRESS    *GenericAddress,
     UINT8                   SpaceId,
@@ -273,7 +273,7 @@ static ACPI_FADT_PM_INFO    FadtPmInfoTable[] =
  *
  ******************************************************************************/
 
-static inline void
+static ACPI_INLINE void
 AcpiTbInitGenericAddress (
     ACPI_GENERIC_ADDRESS    *GenericAddress,
     UINT8                   SpaceId,
@@ -388,7 +388,7 @@ AcpiTbCreateLocalFadt (
     {
         ACPI_WARNING ((AE_INFO,
             "FADT (revision %u) is longer than ACPI 2.0 version, "
-            "truncating length 0x%X to 0x%X",
+            "truncating length %u to %u",
             Table->Revision, Length, (UINT32) sizeof (ACPI_TABLE_FADT)));
     }
 
@@ -482,8 +482,11 @@ AcpiTbConvertFadt (
      *
      * The ACPI 1.0 reserved fields that will be zeroed are the bytes located
      * at offset 45, 55, 95, and the word located at offset 109, 110.
+     *
+     * Note: The FADT revision value is unreliable. Only the length can be
+     * trusted.
      */
-    if (AcpiGbl_FADT.Header.Revision < 3)
+    if (AcpiGbl_FADT.Header.Length <= ACPI_FADT_V2_SIZE)
     {
         AcpiGbl_FADT.PreferredProfile = 0;
         AcpiGbl_FADT.PstateControl = 0;
@@ -521,7 +524,7 @@ AcpiTbConvertFadt (
            (Address64->Address != (UINT64) Address32))
         {
             ACPI_ERROR ((AE_INFO,
-                "32/64X address mismatch in %s: %8.8X/%8.8X%8.8X, using 32",
+                "32/64X address mismatch in %s: 0x%8.8X/0x%8.8X%8.8X, using 32",
                 FadtInfoTable[i].Name, Address32,
                 ACPI_FORMAT_UINT64 (Address64->Address)));
         }
@@ -582,7 +585,7 @@ AcpiTbValidateFadt (
     {
         ACPI_WARNING ((AE_INFO,
             "32/64X FACS address mismatch in FADT - "
-            "%8.8X/%8.8X%8.8X, using 32",
+            "0x%8.8X/0x%8.8X%8.8X, using 32",
             AcpiGbl_FADT.Facs, ACPI_FORMAT_UINT64 (AcpiGbl_FADT.XFacs)));
 
         AcpiGbl_FADT.XFacs = (UINT64) AcpiGbl_FADT.Facs;
@@ -593,7 +596,7 @@ AcpiTbValidateFadt (
     {
         ACPI_WARNING ((AE_INFO,
             "32/64X DSDT address mismatch in FADT - "
-            "%8.8X/%8.8X%8.8X, using 32",
+            "0x%8.8X/0x%8.8X%8.8X, using 32",
             AcpiGbl_FADT.Dsdt, ACPI_FORMAT_UINT64 (AcpiGbl_FADT.XDsdt)));
 
         AcpiGbl_FADT.XDsdt = (UINT64) AcpiGbl_FADT.Dsdt;
@@ -621,7 +624,7 @@ AcpiTbValidateFadt (
            (Address64->BitWidth != ACPI_MUL_8 (Length)))
         {
             ACPI_WARNING ((AE_INFO,
-                "32/64X length mismatch in %s: %d/%d",
+                "32/64X length mismatch in %s: %u/%u",
                 Name, ACPI_MUL_8 (Length), Address64->BitWidth));
         }
 
@@ -635,7 +638,7 @@ AcpiTbValidateFadt (
             {
                 ACPI_ERROR ((AE_INFO,
                     "Required field %s has zero address and/or length:"
-                    " %8.8X%8.8X/%X",
+                    " 0x%8.8X%8.8X/0x%X",
                     Name, ACPI_FORMAT_UINT64 (Address64->Address), Length));
             }
         }
@@ -651,7 +654,7 @@ AcpiTbValidateFadt (
             {
                 ACPI_WARNING ((AE_INFO,
                     "Optional field %s has zero address or length: "
-                    "%8.8X%8.8X/%X",
+                    "0x%8.8X%8.8X/0x%X",
                     Name, ACPI_FORMAT_UINT64 (Address64->Address), Length));
             }
         }
@@ -702,7 +705,7 @@ AcpiTbSetupFadtRegisters (
                 (FadtInfoTable[i].DefaultLength != Target64->BitWidth))
             {
                 ACPI_WARNING ((AE_INFO,
-                    "Invalid length for %s: %d, using default %d",
+                    "Invalid length for %s: %u, using default %u",
                     FadtInfoTable[i].Name, Target64->BitWidth,
                     FadtInfoTable[i].DefaultLength));
 

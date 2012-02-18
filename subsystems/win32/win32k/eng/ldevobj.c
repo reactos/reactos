@@ -1,15 +1,12 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Support for logical devices
  * FILE:             subsystems/win32/win32k/eng/ldevobj.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #include <win32k.h>
-
-#include <intrin.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -67,7 +64,7 @@ InitLDEVImpl()
                                      TRUE,
                                      IMAGE_DIRECTORY_ENTRY_EXPORT,
                                      &cbSize);
-    gpldevWin32k->pGdiDriverInfo->ImageLength = 0; // FIXME;
+    gpldevWin32k->pGdiDriverInfo->ImageLength = 0; // FIXME
 
     return STATUS_SUCCESS;
 }
@@ -510,3 +507,4 @@ EngFindImageProcAddress(
     return LDEVOBJ_pvFindImageProcAddress(pldev, lpProcName);
 }
 
+/* EOF */

@@ -652,7 +652,7 @@ KsProbeStreamIrp(
     PKSSTREAM_HEADER StreamHeader;
     PIO_STACK_LOCATION IoStack;
     ULONG Length;
-    BOOLEAN AllocateMdl = FALSE;
+    //BOOLEAN AllocateMdl = FALSE;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1024,7 +1024,7 @@ ProbeMdl:
                             }
 
                             /* break out to probe for the irp */
-                            AllocateMdl = TRUE;
+                            //AllocateMdl = TRUE;
                             break;
                         }
                     }
@@ -1903,9 +1903,9 @@ KspDispatchIrp(
     IN  PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PDEVICE_EXTENSION DeviceExtension;
+    //PDEVICE_EXTENSION DeviceExtension;
     PKSIOBJECT_HEADER ObjectHeader;
-    PKSIDEVICE_HEADER DeviceHeader;
+    //PKSIDEVICE_HEADER DeviceHeader;
     PDRIVER_DISPATCH Dispatch;
     NTSTATUS Status;
 
@@ -1913,9 +1913,9 @@ KspDispatchIrp(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    //DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
+    //DeviceHeader = DeviceExtension->DeviceHeader;
 
     ASSERT(IoStack->FileObject);
 
@@ -1963,6 +1963,7 @@ KspDispatchIrp(
             break;
         case IRP_MJ_PNP:
             Dispatch = KsDefaultDispatchPnp;
+            break;
         default:
             Dispatch = NULL;
     }

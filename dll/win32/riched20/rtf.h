@@ -1186,31 +1186,31 @@ struct _RTF_Info {
  * Public RTF reader routines
  */
 
-void		RTFInit (RTF_Info *);
-void	        RTFDestroy(RTF_Info *info);
-void		RTFSetDestinationCallback (RTF_Info *, int, RTFFuncPtr);
-void		RTFRead (RTF_Info *);
-int		RTFGetToken (RTF_Info *);	/* writer should rarely need this */
-void		RTFSetReadHook (RTF_Info *, RTFFuncPtr);
-void		RTFRouteToken (RTF_Info *);
-void		RTFSkipGroup (RTF_Info *);
-void		RTFReadGroup (RTF_Info *);
-int		RTFCheckCM (const RTF_Info *, int, int);
-int		RTFCheckCMM (const RTF_Info *, int, int, int);
-int		RTFCheckMM (const RTF_Info *, int, int);
-RTFFont		*RTFGetFont (const RTF_Info *, int);
-RTFColor	*RTFGetColor (const RTF_Info *, int);
-int		RTFCharToHex ( char);
+void		RTFInit (RTF_Info *) DECLSPEC_HIDDEN;
+void	        RTFDestroy(RTF_Info *info) DECLSPEC_HIDDEN;
+void		RTFSetDestinationCallback (RTF_Info *, int, RTFFuncPtr) DECLSPEC_HIDDEN;
+void		RTFRead (RTF_Info *) DECLSPEC_HIDDEN;
+int		RTFGetToken (RTF_Info *) DECLSPEC_HIDDEN;	/* writer should rarely need this */
+void		RTFSetReadHook (RTF_Info *, RTFFuncPtr) DECLSPEC_HIDDEN;
+void		RTFRouteToken (RTF_Info *) DECLSPEC_HIDDEN;
+void		RTFSkipGroup (RTF_Info *) DECLSPEC_HIDDEN;
+void		RTFReadGroup (RTF_Info *) DECLSPEC_HIDDEN;
+int		RTFCheckCM (const RTF_Info *, int, int) DECLSPEC_HIDDEN;
+int		RTFCheckCMM (const RTF_Info *, int, int, int) DECLSPEC_HIDDEN;
+int		RTFCheckMM (const RTF_Info *, int, int) DECLSPEC_HIDDEN;
+RTFFont		*RTFGetFont (const RTF_Info *, int) DECLSPEC_HIDDEN;
+RTFColor	*RTFGetColor (const RTF_Info *, int) DECLSPEC_HIDDEN;
+int		RTFCharToHex ( char) DECLSPEC_HIDDEN;
 
-void	RTFFlushOutputBuffer( RTF_Info *info );
-void	RTFSetEditStream(RTF_Info *info, ME_InStream *stream);
+void	RTFFlushOutputBuffer( RTF_Info *info ) DECLSPEC_HIDDEN;
+void	RTFSetEditStream(RTF_Info *info, ME_InStream *stream) DECLSPEC_HIDDEN;
 
-void	WriterInit (RTF_Info *);
-int	BeginFile (RTF_Info *);
+void	WriterInit (RTF_Info *) DECLSPEC_HIDDEN;
+int	BeginFile (RTF_Info *) DECLSPEC_HIDDEN;
 
-int	RTFCharSetToCodePage(RTF_Info *info, int charset);
+int	RTFCharSetToCodePage(RTF_Info *info, int charset) DECLSPEC_HIDDEN;
 
-void	LookupInit (void);
-void	LookupCleanup (void);
+void	LookupInit (void) DECLSPEC_HIDDEN;
+void	LookupCleanup (void) DECLSPEC_HIDDEN;
 
 #endif

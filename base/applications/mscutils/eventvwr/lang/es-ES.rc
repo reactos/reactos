@@ -8,11 +8,11 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-IDC_EVENTVWR MENU 
+IDC_EVENTVWR MENU
 BEGIN
 	POPUP "&Log"
 	BEGIN
-		MENUITEM "&Aplicaci髇",               ID_LOG_APPLICATION
+		MENUITEM "&Aplicaci贸n",               ID_LOG_APPLICATION
 		MENUITEM "&Seguridad",                ID_LOG_SECURITY
 		MENUITEM "&Sistema",                  ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
@@ -31,7 +31,7 @@ BEGIN
 	END
 END
 
-IDC_EVENTVWR ACCELERATORS 
+IDC_EVENTVWR ACCELERATORS
 BEGIN
 	"?",            IDM_ABOUT,              ASCII,  ALT
 	"/",            IDM_ABOUT,              ASCII,  ALT
@@ -43,13 +43,13 @@ CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "ReactOS Visor de sucesos Versi髇 1.0",IDC_STATIC,49,10,124,8,SS_NOPREFIX
+	LTEXT           "ReactOS Visor de sucesos Versi贸n 1.0",IDC_STATIC,49,10,124,8,SS_NOPREFIX
 	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
 	DEFPUSHBUTTON   "Aceptar",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER 
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
 CAPTION "Espere.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -67,7 +67,7 @@ BEGIN
 	PUSHBUTTON      "&Siguiente",IDNEXT,144,258,50,14
 	PUSHBUTTON      "&Ayuda",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-	LTEXT           "&Descripci髇:",IDC_STATIC,15,70,39,8
+	LTEXT           "&Descripci贸n:",IDC_STATIC,15,70,39,8
 	LTEXT           "Fecha:",IDC_STATIC,14,14,36,8
 	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
 	LTEXT           "Hora:",IDC_STATIC,14,27,36,8
@@ -82,7 +82,7 @@ BEGIN
 	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
 	LTEXT           "Tipo:",IDC_STATIC,133,42,36,8
 	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
-	LTEXT           "Categor韆:",IDC_STATIC,133,55,36,8
+	LTEXT           "Categor铆a:",IDC_STATIC,133,55,36,8
 	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
 	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
 	LTEXT           "D&atos",IDC_STATIC,14,194,20,8
@@ -90,13 +90,13 @@ BEGIN
 	CONTROL         "&Word",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Visor de sucesos"
-	IDS_EVENTSTRINGIDNOTFOUND      "La descripci髇 para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la informaci髇 necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
+	IDS_EVENTSTRINGIDNOTFOUND      "La descripci贸n para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la informaci贸n necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
 	IDS_EVENTLOG_ERROR_TYPE        "Error"
 	IDS_EVENTLOG_WARNING_TYPE      "Advertencia"
-	IDS_EVENTLOG_INFORMATION_TYPE  "Informaci髇"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Informaci贸n"
 	IDS_EVENTLOG_AUDIT_SUCCESS     "Auditoria Satisfactoria"
 	IDS_EVENTLOG_AUDIT_FAILURE     "Auditoria Fallida"
 	IDS_EVENTLOG_SUCCESS           "Acierto"
@@ -109,7 +109,7 @@ BEGIN
     IDS_COLUMNDATE      "Fecha"
     IDS_COLUMNTIME      "Hora"
     IDS_COLUMNSOURCE    "Origen"
-    IDS_COLUMNCATEGORY  "Categor韆"
+    IDS_COLUMNCATEGORY  "Categor铆a"
     IDS_COLUMNEVENT     "Evento"
     IDS_COLUMNUSER      "Usuario"
     IDS_COLUMNCOMPUTER  "Computadora"

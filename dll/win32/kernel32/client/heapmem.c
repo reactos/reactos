@@ -43,8 +43,8 @@ BaseDllInitializeMemoryManager(VOID)
 HANDLE
 WINAPI
 HeapCreate(DWORD flOptions,
-           DWORD dwInitialSize,
-           DWORD dwMaximumSize)
+           SIZE_T dwInitialSize,
+           SIZE_T dwMaximumSize)
 {
     HANDLE hRet;
     ULONG Flags;
@@ -366,7 +366,7 @@ HeapSetInformation(HANDLE HeapHandle,
 HGLOBAL
 NTAPI
 GlobalAlloc(UINT uFlags,
-            DWORD dwBytes)
+            SIZE_T dwBytes)
 {
     ULONG Flags = 0;
     PVOID Ptr = NULL;
@@ -823,7 +823,7 @@ GlobalLock(HGLOBAL hMem)
 HGLOBAL
 NTAPI
 GlobalReAlloc(HGLOBAL hMem,
-              DWORD dwBytes,
+              SIZE_T dwBytes,
               UINT uFlags)
 {
     PBASE_HEAP_HANDLE_ENTRY HandleEntry;
@@ -881,7 +881,7 @@ GlobalReAlloc(HGLOBAL hMem,
             else
             {
                 /* Otherwise, remove the flag */
-                HandleEntry->Flags &= BASE_HEAP_ENTRY_FLAG_REUSABLE;
+                HandleEntry->Flags &= ~BASE_HEAP_ENTRY_FLAG_REUSABLE;
             }
         }
         else
@@ -1085,7 +1085,7 @@ GlobalReAlloc(HGLOBAL hMem,
 /*
  * @implemented
  */
-DWORD
+SIZE_T
 NTAPI
 GlobalSize(HGLOBAL hMem)
 {
@@ -1642,7 +1642,7 @@ LocalReAlloc(HLOCAL hMem,
             else
             {
                 /* Otherwise, remove the flag */
-                HandleEntry->Flags &= BASE_HEAP_ENTRY_FLAG_REUSABLE;
+                HandleEntry->Flags &= ~BASE_HEAP_ENTRY_FLAG_REUSABLE;
             }
         }
         else

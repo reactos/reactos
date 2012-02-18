@@ -179,7 +179,7 @@ CPortWaveCyclic::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 

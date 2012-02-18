@@ -1,7 +1,5 @@
 #pragma once
 
-#include <include/win32.h>
-
 LRESULT APIENTRY
 co_IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
@@ -56,3 +54,10 @@ IntCbFreeMemory(PVOID Data);
 HMENU APIENTRY co_IntCallLoadMenu(HINSTANCE,PUNICODE_STRING);
 
 NTSTATUS APIENTRY co_IntClientThreadSetup(VOID);
+
+HMODULE
+co_IntClientLoadLibrary(PUNICODE_STRING strLibName, 
+                        PUNICODE_STRING strInitFunc, 
+                        BOOL Unload,
+                        BOOL ApiHook);
+

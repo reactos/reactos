@@ -13,7 +13,7 @@ PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
-BOOL gfServerProcess = FALSE;
+BOOLEAN gfServerProcess = FALSE;
 
 WCHAR szAppInit[KEY_LENGTH];
 
@@ -159,7 +159,7 @@ UnloadAppInitDlls()
         LPWSTR ptr;
 		size_t i;
 
-        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH * sizeof(WCHAR));
 
 		for (i = 0; i < KEY_LENGTH; ++ i)
 		{
@@ -198,7 +198,7 @@ Init(VOID)
 {
    USERCONNECT UserCon;
    PVOID *KernelCallbackTable;
-
+ 
    /* Set up the kernel callbacks. */
    KernelCallbackTable = NtCurrentPeb()->KernelCallbackTable;
    KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
@@ -217,6 +217,8 @@ Init(VOID)
       (PVOID)User32CallLoadMenuFromKernel;
    KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
       (PVOID)User32CallClientThreadSetupFromKernel;
+   KernelCallbackTable[USER32_CALLBACK_CLIENTLOADLIBRARY] =
+      (PVOID)User32CallClientLoadLibraryFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -229,8 +231,9 @@ Init(VOID)
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
    RtlInitializeCriticalSection(&gcsUserApiHook);
-   gfServerProcess = TRUE; // FIXME HAX! Used in CsrClientConnectToServer(,,,,&gfServerProcess);
+   gfServerProcess = FALSE; // FIXME HAX! Used in CsrClientConnectToServer(,,,,&gfServerProcess);
 
+   //CsrClientConnectToServer(L"\\Windows", 0, NULL, 0, &gfServerProcess);
    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
    /* Allocate an index for user32 thread local data. */

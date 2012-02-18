@@ -49,11 +49,6 @@
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
-static inline unsigned short get_char_typeW( WCHAR ch )
-{
-    extern const unsigned short wine_wctype_table[];
-    return wine_wctype_table[wine_wctype_table[ch >> 8] + (ch & 0xff)];
-}
 
 #define HeapAlloc RtlAllocateHeap
 #define HeapReAlloc RtlReAllocateHeap

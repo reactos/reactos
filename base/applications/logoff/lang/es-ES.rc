@@ -1,19 +1,20 @@
 /*
- *Spanish Language resource file
+ * Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-21
  */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Terminar una sesi髇.\n\n\
-  /v\t\tMuestra informaci髇 acerca de las acci髇es realizadas.\n\
-  /?\t\tMuestra esta informaci髇.\n\n"
+IDS_USAGE, "Terminar una sesi贸n.\n\n\
+  /v\t\tMuestra informaci贸n acerca de las acci贸nes realizadas.\n\
+  /?\t\tMuestra esta informaci贸n.\n\n"
 
-IDS_LOGOFF_REMOTE, "Terminando sesi髇 en una m醧uina remota."
-IDS_LOGOFF_LOCAL, "Terminando la sesi髇 actual de esta m醧uina."
+IDS_LOGOFF_REMOTE, "Terminando sesi贸n en una m谩quina remota."
+IDS_LOGOFF_LOCAL, "Terminando la sesi贸n actual de esta m谩quina."
 
-IDS_ILLEGAL_PARAM, "Par醡etro(s) no v醠ido(s)\n"
+IDS_ILLEGAL_PARAM, "Par谩metro(s) no v谩lido(s)\n"
 END
 /* EOF */

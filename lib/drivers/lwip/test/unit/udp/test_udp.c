@@ -56,17 +56,6 @@ START_TEST(test_udp_new_remove)
 }
 END_TEST
 
-START_TEST(test_udp_remove)
-{
-  struct udp_pcb* pcb;
-  LWIP_UNUSED_ARG(_i);
-
-  pcb = NULL;
-  //pcb = udp_new();
-  //fail_unless(pcb != NULL);
-}
-END_TEST
-
 
 /** Create the suite including all tests for this module */
 Suite *
@@ -74,7 +63,6 @@ udp_suite(void)
 {
   TFun tests[] = {
     test_udp_new_remove,
-    test_udp_remove
   };
   return create_suite("UDP", tests, sizeof(tests)/sizeof(TFun), udp_setup, udp_teardown);
 }

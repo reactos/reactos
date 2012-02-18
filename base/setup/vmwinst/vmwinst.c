@@ -169,14 +169,16 @@ CenterWindow(HWND hWnd)
 static BOOL
 IsVMwareCDInDrive(WCHAR *Drv)
 {
+#if CHECKDRIVETYPE
     static WCHAR Drive[4] = L"X:\\";
+#endif
     WCHAR Current;
 
     *Drv = L'\0';
     for(Current = 'C'; Current <= 'Z'; Current++)
     {
-        Drive[0] = Current;
 #if CHECKDRIVETYPE
+        Drive[0] = Current;
         if(GetDriveType(Drive) == DRIVE_CDROM)
         {
 #endif

@@ -34,7 +34,7 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
                 ICON_SMALL,
                 (LPARAM)pLicInfo->hIcon);
 
-    /* load license from resource */
+    /* Load license from resource */
     if (!(hResInfo = FindResource(hApplet,
                                   MAKEINTRESOURCE(RC_LICENSE),
                                   MAKEINTRESOURCE(RTDATA))) ||
@@ -45,7 +45,7 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
         return FALSE;
     }
 
-    /* insert the license into the edit control (unicode!) */
+    /* Insert the license into the edit control (unicode!) */
     SetDlgItemText(hDlg,
                    IDC_LICENCEEDIT,
                    LicenseText);

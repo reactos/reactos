@@ -1,76 +1,73 @@
-#include "resource.h"
 /*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005
  * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Haszn·lat: %s kˆtet: [-FS:·llom·nyrendszer] [-V:cÌmke] [-Q] [-A:mÈret] [-C]\n\n\
-  [kˆtet:]         A meghajtÛbet˚jelet adja meg (kettısponttal a vÈgÈn).\n\
-  -FS:·llom·nyrendszer Az ·llom·nyrendszer tÌpus·t adja meg (%s).\n\
-  -V:cÌmke         A KˆtetcÌmke neve.\n\
-  -Q               Gyorsform·z·st hajt vÈgre.\n\
-  -A:mÈret         Fel¸lbÌr·lja az alapÈrtelmezett szektorcsoport-\n\
-                   mÈretet. ¡ltal·nos haszn·lathoz az alapÈrtelmezett\n\
-                   ÈrtÈkek aj·nlottak.\n\
-                   Az NTFS a kˆvetkezı ÈrtÈkeket t·mogatja: 512, 1024, 2048,\n\
+STRING_HELP,  "Haszn√°lat: %s k√∂tet: [-FS:√°llom√°nyrendszer] [-V:c√≠mke] [-Q] [-A:m√©ret] [-C]\n\n\
+  [k√∂tet:]         A meghajt√≥bet√ªjelet adja meg (kett√µsponttal a v√©g√©n).\n\
+  -FS:√°llom√°nyrendszer Az √°llom√°nyrendszer t√≠pus√°t adja meg (%s).\n\
+  -V:c√≠mke         A K√∂tetc√≠mke neve.\n\
+  -Q               Gyorsform√°z√°st hajt v√©gre.\n\
+  -A:m√©ret         Fel√ºlb√≠r√°lja az alap√©rtelmezett szektorcsoport-\n\
+                   m√©retet. √Åltal√°nos haszn√°lathoz az alap√©rtelmezett\n\
+                   √©rt√©kek aj√°nlottak.\n\
+                   Az NTFS a k√∂vetkez√µ √©rt√©keket t√°mogatja: 512, 1024, 2048,\n\
                    4096, 8192, 16K, 32K, 64K.\n\
-                   A FAT a kˆvetkezı ÈrtÈkeket t·mogatja: 8192, 16K, 32K, 64K,\n\
+                   A FAT a k√∂vetkez√µ √©rt√©keket t√°mogatja: 8192, 16K, 32K, 64K,\n\
                    128K, 256K.\n\
-                   NTFS-tˆmˆrÌtÈs nem lehetsÈges 4096 b·jtn·l nagyobb\n\
-                   szektorcsoportokn·l.\n\
-  -C               Az ˙j kˆteten lÈtrehozott ·llom·nyok alapbÛl tˆmˆrÌtve jˆnnek\n\
-                   lÈtre.\n\n"
+                   NTFS-t√∂m√∂r√≠t√©s nem lehets√©ges 4096 b√°jtn√°l nagyobb\n\
+                   szektorcsoportokn√°l.\n\
+  -C               Az √∫j k√∂teten l√©trehozott √°llom√°nyok alapb√≥l t√∂m√∂r√≠tve j√∂nnek\n\
+                   l√©tre.\n\n"
 
-STRING_COMPLETE   "%lu sz·zalÈk befejezve.\r"
+STRING_COMPLETE   "%lu sz√°zal√©k befejezve.\r"
 
-STRING_FORMAT_FAIL "A FormatEx vÈgrehajt·sa sikertelen¸l fejezıdˆtt be.\n\n"
+STRING_FORMAT_FAIL "A FormatEx v√©grehajt√°sa sikertelen√ºl fejez√µd√∂tt be.\n\n"
 
-STRING_NO_SUPPORT  "A M˚velet Nem T·mogatott"
+STRING_NO_SUPPORT  "A M√ªvelet Nem T√°mogatott"
 
-STRING_FMIFS_FAIL  "Nem tal·ltam meg az FMIFS kezdıpontj·t.\n\n"
+STRING_FMIFS_FAIL  "Nem tal√°ltam meg az FMIFS kezd√µpontj√°t.\n\n"
 
-STRING_UNKNOW_ARG  "…rvÈnytelen paramÈter: %s\n"
+STRING_UNKNOW_ARG  "√ârv√©nytelen param√©ter: %s\n"
 
-STRING_DRIVE_PARM  "Hi·nyzik a meghajtÛ meghat·roz·s.\n\n"
+STRING_DRIVE_PARM  "Hi√°nyzik a meghajt√≥ meghat√°roz√°s.\n\n"
 
-STRING_ERROR_DRIVE_TYPE  "Nem siker¸lt lekÈrdezni a meghajtÛ tÌpus·t"
+STRING_ERROR_DRIVE_TYPE  "Nem siker√ºlt lek√©rdezni a meghajt√≥ t√≠pus√°t"
 
-STRING_INSERT_DISK       "Helyezzen be ˙j lemezt a kˆvetkezı meghajtÛba: %C:\\ Ha kÈszen ·ll, nyomja meg az ENTER billenyt˚t..."
+STRING_INSERT_DISK       "Helyezzen be √∫j lemezt a k√∂vetkez√µ meghajt√≥ba: %C:\\ Ha k√©szen √°ll, nyomja meg az ENTER billenyt√ªt..."
 
-STRING_NO_VOLUME         "Nem siker¸lt meg·llapÌtani cÌmkÈt"
+STRING_NO_VOLUME         "Nem siker√ºlt meg√°llap√≠tani c√≠mk√©t"
 
-STRING_NO_VOLUME_SIZE    "Nem siker¸lt meg·llapÌtani a kˆtet mÈretÈt"
+STRING_NO_VOLUME_SIZE    "Nem siker√ºlt meg√°llap√≠tani a k√∂tet m√©ret√©t"
 
-STRING_FILESYSTEM        "A ·llom·nyrendszer tÌpusa %s.\n"
+STRING_FILESYSTEM        "A √°llom√°nyrendszer t√≠pusa %s.\n"
 
-STRING_LABEL_NAME_EDIT  "Adja meg a cÌmkÈt az al·bbi meghajtÛhoz: %C: "
+STRING_LABEL_NAME_EDIT  "Adja meg a c√≠mk√©t az al√°bbi meghajt√≥hoz: %C: "
 
-STRING_ERROR_LABEL     "…rvÈnytelen cÌmkÈt adott meg a meghajtÛhoz.\n"
+STRING_ERROR_LABEL     "√ârv√©nytelen c√≠mk√©t adott meg a meghajt√≥hoz.\n"
 
-STRING_YN_FORMAT       "\nFIGYELMEZTET…S: A NEM CSER…LHET’ LEMEZMEGHAJT”N (%C:) MINDEN ADAT EL FOG VESZNI.\n\
-                        \nFolytatja a form·z·st? (I/N)? "
+STRING_YN_FORMAT       "\nFIGYELMEZTET√âS: A NEM CSER√âLHET√ï LEMEZMEGHAJT√ìN (%C:) MINDEN ADAT EL FOG VESZNI.\n\
+                        \nFolytatja a form√°z√°st? (I/N)? "
 
 STRING_YES_NO_FAQ      "IN"
 
-STRING_VERIFYING       "EllenırzÈs"
+STRING_VERIFYING       "Ellen√µrz√©s"
 
-STRING_FAST_FMT        "Gyorsform·z·s"
+STRING_FAST_FMT        "Gyorsform√°z√°s"
 
-STRING_CREATE_FSYS     "¡llom·nyrendszer lÈtrehoz·sa.\n"
+STRING_CREATE_FSYS     "√Ållom√°nyrendszer l√©trehoz√°sa.\n"
 
-STRING_FMT_COMPLETE    "Form·z·s befejezve.\n"
+STRING_FMT_COMPLETE    "Form√°z√°s befejezve.\n"
 
-STRING_VOL_COMPRESS    "A Kˆtet nem t·mogatja a tˆmˆrÌtÈst.\n"
+STRING_VOL_COMPRESS    "A K√∂tet nem t√°mogatja a t√∂m√∂r√≠t√©st.\n"
 
-STRING_ENTER_LABEL     "KˆtetcÌmke (legfeljebb 11 karakter, ENTER ha nincs)? "
+STRING_ENTER_LABEL     "K√∂tetc√≠mke (legfeljebb 11 karakter, ENTER ha nincs)? "
 
-STRING_NO_LABEL        "A kˆtet nem kapott cÌmkÈt"
+STRING_NO_LABEL        "A k√∂tet nem kapott c√≠mk√©t"
 
-STRING_FREE_SPACE      "\n%I64d b·jt teljes lemezter¸let.\n%I64d b·jt elÈrhetı a kˆteten.\n"
+STRING_FREE_SPACE      "\n%I64d b√°jt teljes lemezter√ºlet.\n%I64d b√°jt el√©rhet√µ a k√∂teten.\n"
 
-STRING_SERIAL_NUMBER   "\nA Kˆtet sorozatsz·ma: %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nA K√∂tet sorozatsz√°ma: %04X-%04X\n"
 END

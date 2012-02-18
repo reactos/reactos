@@ -25,14 +25,14 @@ IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&Alternativ"
     BEGIN
-        MENUITEM "&Inst‰llningar", IDC_PROPERTIES
+        MENUITEM "&Inst√§llningar", IDC_PROPERTIES
         MENUITEM "A&vancerade kontroller", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta", IDC_EXIT
     END
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
-        MENUITEM "&Hj‰lpavsnitt", IDC_HELP_TOPICS
+        MENUITEM "&Hj√§lpavsnitt", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Om ...", IDC_ABOUT
     END
@@ -41,22 +41,22 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SNDVOL32       "Volymkontroll"
-    IDS_NOMIXERDEVICES "Det finns inga ljudmixningsenheter tillg‰ngliga! Programmet kommer nu att avslutas."
+    IDS_NOMIXERDEVICES "Det finns inga ljudmixningsenheter tillg√§ngliga! Programmet kommer nu att avslutas."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inst‰llningar"
+CAPTION "Inst√§llningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Mixerenhet:", -1, 7,8,48,9
   COMBOBOX IDC_MIXERDEVICE, 55,8,162,80, CBS_DROPDOWNLIST | WS_TABSTOP
-  GROUPBOX "Justera volymen fˆr:", -1, 7,25,211,77
+  GROUPBOX "Justera volymen f√∂r:", -1, 7,25,211,77
   PUSHBUTTON "&Uppspelning", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
   PUSHBUTTON "&Inspelning", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
   PUSHBUTTON "&Andra:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
   COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  LTEXT "Visa fˆljander volymekontroller:", IDC_LABELCONTROLS, 7, 109, 162, 8
+  LTEXT "Visa f√∂ljander volymekontroller:", IDC_LABELCONTROLS, 7, 109, 162, 8
   CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
 
   PUSHBUTTON "OK", IDOK, 114,226,50,14

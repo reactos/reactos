@@ -369,6 +369,9 @@ struct StartMenuRoot : public StartMenuHandler
 
 	static HWND Create(HWND hwndDesktopBar, int icon_size);
 	void	TrackStartmenu();
+	void	CloseStartMenu(int id=0);
+	bool    IsStartMenuVisible() const;
+	int	Command(int id, int code);
 
 	HWND	_hwndStartButton;
 
@@ -382,7 +385,7 @@ protected:
 	virtual void ProcessKey(int vk);
 
 	void	Paint(PaintCanvas& canvas);
-	void	CloseStartMenu(int id=0);
+	
 
 	void	ReadLogoSize();
 	UINT	GetLogoResId();

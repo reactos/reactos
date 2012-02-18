@@ -101,7 +101,7 @@ CKsDataTypeHandler::KsIsMediaTypeInRanges(
     PKSMULTIPLE_ITEM DataList;
     PKSDATARANGE DataRange;
     ULONG Index;
-    HRESULT hr = S_FALSE;
+    //HRESULT hr = S_FALSE;
 
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsDataTypeHandler::KsIsMediaTypeInRanges\n");
@@ -135,7 +135,7 @@ CKsDataTypeHandler::KsIsMediaTypeInRanges(
                     if (!IsEqualGUID(m_Type->formattype, FORMAT_WaveFormatEx) && !IsEqualGUID(DataRange->Specifier, FORMAT_WaveFormatEx))
                     {
                         //found match
-                        hr = S_OK;
+                        //hr = S_OK;
                         break;
                     }
 
@@ -151,7 +151,7 @@ CKsDataTypeHandler::KsIsMediaTypeInRanges(
                             Format->nChannels <= AudioRange->MaximumChannels)
                         {
                             // found match
-                            hr = S_OK;
+                            //hr = S_OK;
                             break;
                         }
                     }

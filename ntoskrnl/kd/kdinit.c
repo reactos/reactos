@@ -11,11 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, KdInitSystem)
-#endif
-
-
 /* Make bochs debug output in the very early boot phase available */
 //#define AUTO_ENABLE_BOCHS
 
@@ -40,6 +35,8 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpBochsInit,
                                          KdpKdbgInit};
 
+extern ANSI_STRING KdpLogFileName;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PCHAR
@@ -47,7 +44,7 @@ NTAPI
 INIT_FUNCTION
 KdpGetDebugMode(PCHAR Currentp2)
 {
-    PCHAR p2 = Currentp2;
+    PCHAR p1, p2 = Currentp2;
     ULONG Value;
 
     /* Check for Screen Debugging */
@@ -62,23 +59,46 @@ KdpGetDebugMode(PCHAR Currentp2)
     {
         /* Gheck for a valid Serial Port */
         p2 += 3;
-        Value = (ULONG)atol(p2);
-        if (Value > 0 && Value < 5)
+        if (*p2 != ':')
         {
-            /* Valid port found, enable Serial Debugging */
-            KdpDebugMode.Serial = TRUE;
+            Value = (ULONG)atol(p2);
+            if (Value > 0 && Value < 5)
+            {
+                /* Valid port found, enable Serial Debugging */
+                KdpDebugMode.Serial = TRUE;
 
-            /* Set the port to use */
-            SerialPortInfo.ComPort = Value;
-            KdpPort = Value;
+                /* Set the port to use */
+                SerialPortInfo.ComPort = Value;
+                KdpPort = Value;
+            }
+        }
+        else
+        {
+            Value = strtoul(p2 + 1, NULL, 0);
+            if (Value)
+            {
+                KdpDebugMode.Serial = TRUE;
+                SerialPortInfo.BaseAddress = Value;
+                SerialPortInfo.ComPort = 0;
+                KdpPort = 0;
+            }
         }
     }
+
     /* Check for Debug Log Debugging */
     else if (!_strnicmp(p2, "FILE", 4))
     {
         /* Enable It */
         p2 += 4;
         KdpDebugMode.File = TRUE;
+        if (*p2 == ':')
+        {
+            p2++;
+            p1 = p2;
+            while (*p2 != '\0' && *p2 != ' ') p2++;
+            KdpLogFileName.MaximumLength = KdpLogFileName.Length = p2 - p1;
+            KdpLogFileName.Buffer = p1;
+        }
     }
 
     /* Check for BOCHS Debugging */
@@ -147,7 +167,6 @@ KdpCallInitRoutine(ULONG BootPhase)
 }
 
 BOOLEAN
-INIT_FUNCTION
 NTAPI
 KdInitSystem(ULONG BootPhase,
              PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -171,11 +190,9 @@ KdInitSystem(ULONG BootPhase,
         else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
         else if (strstr(CommandLine, "DEBUG"))
         {
-            /* Enable on the serial port */
+            /* Enable the kernel debugger */
             KdDebuggerEnabled = TRUE;
             KdDebuggerNotPresent = FALSE;
-            KdpDebugMode.Serial = TRUE;
-
 #ifdef KDBG
             /* Get the KDBG Settings */
             KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
@@ -201,6 +218,10 @@ KdInitSystem(ULONG BootPhase,
             Port = KdpGetDebugMode(Port);
             Port = strstr(Port, "DEBUGPORT");
         }
+
+        /* Use serial port then */
+        if (KdDebuggerEnabled && KdpDebugMode.Value == 0)
+            KdpDebugMode.Serial = TRUE;
 
         /* Check if we got a baud rate */
         if (BaudRate)

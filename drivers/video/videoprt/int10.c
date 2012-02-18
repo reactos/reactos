@@ -82,13 +82,14 @@ IntInt10FreeBuffer(
    NTSTATUS Status;
    PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
+   SIZE_T Size = 0;
 
    TRACE_(VIDEOPRT, "IntInt10FreeBuffer\n");
    INFO_(VIDEOPRT, "- Segment: %x\n", Seg);
    INFO_(VIDEOPRT, "- Offset: %x\n", Off);
 
    IntAttachToCSRSS(&CallingProcess, &ApcState);
-   Status = ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
+   Status = ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, &Size,
       MEM_RELEASE);
    IntDetachFromCSRSS(&CallingProcess, &ApcState);
 

@@ -56,6 +56,8 @@
 
 #define AMD64_TSS 9
 
+#define APIC_EOI_REGISTER 0xFFFFFFFFFFFE00B0ULL
+
 #ifndef __ASM__
 
 #include "intrin_i.h"
@@ -67,6 +69,17 @@ typedef struct _KIDT_INIT
     UCHAR IstIndex;
     PVOID ServiceRoutine;
 } KIDT_INIT, *PKIDT_INIT;
+
+#include <pshpack1.h>
+typedef struct _KI_INTERRUPT_DISPATCH_ENTRY
+{
+    UCHAR _Op_nop;
+    UCHAR _Op_push;
+    UCHAR _Vector;
+    UCHAR _Op_jmp;
+    ULONG RelativeAddress;
+} KI_INTERRUPT_DISPATCH_ENTRY, *PKI_INTERRUPT_DISPATCH_ENTRY;
+#include <poppack.h>
 
 extern ULONG Ke386CacheAlignment;
 extern ULONG KeI386NpxPresent;
@@ -95,7 +108,7 @@ extern ULONG KeI386CpuStep;
     ((TrapFrame)->Rip)
 
 #define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->Rdx)
+    (PKTRAP_FRAME)((x)->TrapFrame)
 
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Rax)
@@ -235,20 +248,37 @@ KeQueryInterruptHandler(IN ULONG Vector)
 
 VOID
 FORCEINLINE
+KiSendEOI()
+{
+    /* Write 0 to the apic EOI register */
+    *((volatile ULONG*)APIC_EOI_REGISTER) = 0;
+}
+
+VOID
+FORCEINLINE
 KiEndInterrupt(IN KIRQL Irql,
                IN PKTRAP_FRAME TrapFrame)
 {
-    DbgPrint("KiEndInterrupt is unimplemented\n");
+    /* Make sure this is from the clock handler */
+    ASSERT(TrapFrame->ErrorCode == 0xc10c4);
+    //KeLowerIrql(Irql);
 }
 
-#define Ki386PerfEnd(x)
+BOOLEAN
+FORCEINLINE
+KiUserTrap(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Anything else but Ring 0 is Ring 3 */
+    return !!(TrapFrame->SegCs & MODE_MASK);
+}
+
+#define Ki386PerfEnd()
 
 struct _KPCR;
 
-VOID
-FASTCALL
-KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
+//VOID KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
 
+VOID KiSwitchToBootStack(IN ULONG_PTR InitialStack);
 VOID KiDivideErrorFault(VOID);
 VOID KiDebugTrapOrFault(VOID);
 VOID KiNmiInterrupt(VOID);
@@ -274,52 +304,21 @@ VOID KiDebugServiceTrap(VOID);
 VOID KiDpcInterrupt(VOID);
 VOID KiIpiInterrupt(VOID);
 
-VOID
-KiGdtPrepareForApplicationProcessorInit(ULONG Id);
-VOID
-Ki386InitializeLdt(VOID);
-VOID
-Ki386SetProcessorFeatures(VOID);
-
-VOID
-NTAPI
-KiGetCacheInformation(VOID);
-
-BOOLEAN
-NTAPI
-KiIsNpxPresent(
-    VOID
-);
-
-BOOLEAN
-NTAPI
-KiIsNpxErrataPresent(
-    VOID
-);
-
-VOID
-NTAPI
-KiSetProcessorType(VOID);
-
-ULONG
-NTAPI
-KiGetFeatureBits(VOID);
-
-VOID
-NTAPI
-KiInitializeCpuFeatures(VOID);
+VOID KiGdtPrepareForApplicationProcessorInit(ULONG Id);
+VOID Ki386InitializeLdt(VOID);
+VOID Ki386SetProcessorFeatures(VOID);
+VOID KiGetCacheInformation(VOID);
+VOID KiSetProcessorType(VOID);
+ULONG KiGetFeatureBits(VOID);
+VOID KiInitializeCpuFeatures(VOID);
 
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
-VOID
-NtEarlyInitVdm(VOID);
-VOID
-KeApplicationProcessorInitDispatcher(VOID);
-VOID
-KeCreateApplicationProcessorIdleThread(ULONG Id);
+VOID NtEarlyInitVdm(VOID);
+VOID KeApplicationProcessorInitDispatcher(VOID);
+VOID KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 VOID
-NTAPI
 Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
@@ -330,7 +329,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,
@@ -342,6 +340,16 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 
 // HACK
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
+
+// win64 uses DMA macros, this one is not defined
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 

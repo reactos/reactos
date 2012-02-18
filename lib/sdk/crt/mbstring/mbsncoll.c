@@ -9,7 +9,11 @@
  */
 #include <mbstring.h>
 
-int colldif(unsigned short c1, unsigned short c2);
+
+int colldif(unsigned short c1, unsigned short c2)
+{
+  return c1 - c2;
+}
 
 /*
  * @implemented
@@ -109,7 +113,3 @@ int _mbsnbcoll(const unsigned char *str1, const unsigned char *str2, size_t n)
 	return 0;
 }
 
-int colldif(unsigned short c1, unsigned short c2)
-{
-  return c1 - c2;
-}

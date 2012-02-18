@@ -1,9 +1,7 @@
 #pragma once
 
-#include "cursoricon.h"
-
-// create one struct
-// make usable for different users (multiple structs!)
+// Create one struct
+// Make usable for different users (multiple structs!)
 
 #define SPI_TABLE1_MIN 1
 #define SPI_TABLE1_MAX 119
@@ -177,3 +175,7 @@ typedef union _SPIBUFFER
 } SPIBUFFER;
 
 extern SPIVALUES gspv;
+extern BOOL g_PaintDesktopVersion;
+
+BOOL InitSysParams();
+

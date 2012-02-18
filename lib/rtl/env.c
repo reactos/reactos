@@ -163,11 +163,11 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
          if (Tail != 0)
          {
             Variable.MaximumLength =
-            Variable.Length = (VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
+            Variable.Length = (USHORT)(VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
             Variable.Buffer = SourceBuffer + 1;
 
             Value.Length = 0;
-            Value.MaximumLength = DestMax * sizeof(WCHAR);
+            Value.MaximumLength = (USHORT)DestMax * sizeof(WCHAR);
             Value.Buffer = DestBuffer;
 
             Status = RtlQueryEnvironmentVariable_U(Environment, &Variable,
@@ -227,7 +227,7 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
    else
       ReturnStatus = STATUS_BUFFER_TOO_SMALL;
 
-   Destination->Length = (DestBuffer - Destination->Buffer) * sizeof(WCHAR);
+   Destination->Length = (USHORT)(DestBuffer - Destination->Buffer) * sizeof(WCHAR);
    if (Length != NULL)
       *Length = TotalLength * sizeof(WCHAR);
 
@@ -271,7 +271,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
 {
    MEMORY_BASIC_INFORMATION mbi;
    UNICODE_STRING var;
-   int hole_len, new_len, env_len = 0;
+   size_t hole_len, new_len, env_len = 0;
    WCHAR *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
    PWSTR head = NULL;
    SIZE_T size = 0, new_size;
@@ -328,7 +328,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
          }
          if (*wcs)
          {
-            var.Length = (wcs - var.Buffer) * sizeof(WCHAR);
+            var.Length = (USHORT)(wcs - var.Buffer) * sizeof(WCHAR);
             var.MaximumLength = var.Length;
             val = ++wcs;
             wcs += wcslen(wcs);
@@ -532,14 +532,14 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
       }
       if (*wcs)
       {
-         var.Length = var.MaximumLength = (wcs - var.Buffer) * sizeof(WCHAR);
+         var.Length = var.MaximumLength = (USHORT)(wcs - var.Buffer) * sizeof(WCHAR);
          val = ++wcs;
          wcs += wcslen(wcs);
          DPRINT("Search at :%S\n", wcs);
 
          if (RtlEqualUnicodeString(&var, Name, TRUE))
          {
-            Value->Length = (wcs - val) * sizeof(WCHAR);
+            Value->Length = (USHORT)(wcs - val) * sizeof(WCHAR);
             if (Value->Length <= Value->MaximumLength)
             {
                memcpy(Value->Buffer, val,

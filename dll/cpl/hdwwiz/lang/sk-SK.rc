@@ -16,7 +16,7 @@ BEGIN
 	LTEXT "2) Vyrieši problémy, ktoré môete ma s Vaším hardvérom.", -1, 121, 78, 185, 16
 	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
 	LTEXT "Ak bolo spolu s Vaším hardvérom dodané aj inštalaèné CD, odporúèa sa, aby ste klikli na tlaèidlo Zruši pre zatvorenie tohto sprievodcu a pouili CD od vırobcu pre nainštalovanie tohto hardvéru.", 503, 150, 106, 155, 50
-	LTEXT "Pre pokraèovanie kliknite na tlaèidlo Ïalej.", -1, 114, 166, 193, 8 //Pokraèujte stlaèením tlaèidla Ïalej.
+	LTEXT "Pre pokraèovanie kliknite na tlaèidlo Ïalej.", -1, 114, 166, 193, 8 // Pokraèujte stlaèením tlaèidla Ïalej.
 END
 
 IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
@@ -33,7 +33,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Sprievodca pridaním hardvéru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Pripojili ste u tento hardvér k Vášmu poèítaèu?", -1, 20, 11, 275, 8 //tento = danı
+	LTEXT "Pripojili ste u tento hardvér k Vášmu poèítaèu?", -1, 20, 11, 275, 8 // tento = danı
 	AUTORADIOBUTTON "Án&o, u som pripojil hardvér", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
 	AUTORADIOBUTTON "&Nie, zatia¾ som nepridal hardvér", IDC_NOTCONNECTED, 29, 35, 266, 8
 END

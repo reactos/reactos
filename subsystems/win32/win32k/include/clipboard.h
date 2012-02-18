@@ -1,51 +1,29 @@
 #pragma once
 
-#include "window.h"
-#include <include/win32.h>
-
-VOID FASTCALL IntIncrementSequenceNumber(VOID);
-
-typedef struct _ClipboardChainElement
+typedef struct _CLIP
 {
-    PWND                 window;
-    struct _ClipboardChainElement *next;
-} CLIPBOARDCHAINELEMENT, *PCLIPBOARDCHAINELEMENT;
+    UINT   fmt;
+    HANDLE hData;
+    BOOL   fGlobalHandle;
+} CLIP, *PCLIP;
 
-typedef struct _ClipboardElement
-{
-    UINT                        format;
-    HANDLE                      hData;
-    DWORD                       size;   // data may be delayed o synth render
-    struct _ClipboardElement   *next;
-} CLIPBOARDELEMENT, *PCLIPBOARDELEMENT;
-
-typedef struct _CLIPBOARDSYSTEM
-{
-    PTHREADINFO     ClipboardThread;
-    PTHREADINFO     ClipboardOwnerThread;
-    PWND  ClipboardWindow;
-    PWND  ClipboardViewerWindow;
-    PWND  ClipboardOwnerWindow;
-    BOOL            sendDrawClipboardMsg;
-    BOOL            recentlySetClipboard;
-    BOOL            delayedRender;
-    UINT            lastEnumClipboardFormats;
-    DWORD           ClipboardSequenceNumber;
-
-    PCLIPBOARDCHAINELEMENT WindowsChain;
-    PCLIPBOARDELEMENT      ClipboardData;
-
-    PCHAR synthesizedData;
-    DWORD synthesizedDataSize;
-
-} CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
+UINT APIENTRY
+UserEnumClipboardFormats(UINT uFormat);
 
 VOID FASTCALL
-IntClipboardFreeWindow(PWND window);
+UserClipboardFreeWindow(PWND pWindow);
 
-UINT APIENTRY IntEnumClipboardFormats(UINT format);
+BOOL NTAPI
+UserOpenClipboard(HWND hWnd);
 
-/*
-UINT FASTCALL
-IntEnumClipboardFormats(UINT format);
-*/
+BOOL NTAPI
+UserCloseClipboard(VOID);
+
+BOOL NTAPI
+UserEmptyClipboard(VOID);
+
+VOID NTAPI
+UserEmptyClipboardData(struct _WINSTATION_OBJECT *pWinSta);
+
+HANDLE NTAPI
+UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd);

@@ -7,7 +7,6 @@
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserEvent);
 
 typedef struct _EVENTPACK
@@ -112,7 +111,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
    pEP->idObject = idObject;
    pEP->idChild = idChild;
 
-   /* FIXME should get timeout from
+   /* FIXME: Should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
    Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
                                hwnd,
@@ -247,8 +246,8 @@ IntNotifyWinEvent(
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
      {
-// if all process || all thread || other thread same process
-// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
+// If all process || all thread || other thread same process
+// If ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         if ( (!pEH->idProcess || pEH->idProcess == PtrToUint(pti->pEThread->Cid.UniqueProcess)) &&
              (!(pEH->Flags & WINEVENT_SKIPOWNPROCESS) || pEH->head.pti->ppi != pti->ppi) &&
              (!pEH->idThread  || pEH->idThread == PtrToUint(pti->pEThread->Cid.UniqueThread)) &&

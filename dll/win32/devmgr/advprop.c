@@ -957,7 +957,6 @@ static VOID
 DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
                          IN HWND hwndListView)
 {
-    HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
 
     DWORD dwType = 0;
@@ -966,12 +965,10 @@ DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
 
     if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
     {
-        DeviceInfoSet = dap->CurrentDeviceInfoSet;
         DeviceInfoData = &dap->CurrentDeviceInfoData;
     }
     else
     {
-        DeviceInfoSet = dap->DeviceInfoSet;
         DeviceInfoData = &dap->DeviceInfoData;
     }
 

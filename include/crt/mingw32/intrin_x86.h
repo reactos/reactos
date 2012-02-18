@@ -1204,10 +1204,14 @@ __INTRIN_INLINE uintptr_t __readeflags(void)
 }
 
 /*** Interrupts ***/
+#ifdef __clang__
+#define __debugbreak() __asm__("int $3")
+#else
 __INTRIN_INLINE void __debugbreak(void)
 {
 	__asm__("int $3");
 }
+#endif
 
 __INTRIN_INLINE void __int2c(void)
 {
@@ -1216,21 +1220,22 @@ __INTRIN_INLINE void __int2c(void)
 
 __INTRIN_INLINE void _disable(void)
 {
-	__asm__("cli");
+	__asm__("cli" : : : "memory");
 }
 
 __INTRIN_INLINE void _enable(void)
 {
-	__asm__("sti");
+	__asm__("sti" : : : "memory");
 }
 
 __INTRIN_INLINE void __halt(void)
 {
-	__asm__("hlt\n\t");
+	__asm__("hlt\n\t" : : : "memory");
 }
 
 /*** Protected memory management ***/
 
+#ifdef _M_AMD64
 __INTRIN_INLINE void __writecr0(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr0" : : [Data] "r" (Data) : "memory");
@@ -1246,7 +1251,6 @@ __INTRIN_INLINE void __writecr4(const unsigned __int64 Data)
 	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
 }
 
-#ifdef _M_AMD64
 __INTRIN_INLINE void __writecr8(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr8" : : [Data] "r" (Data) : "memory");
@@ -1287,6 +1291,21 @@ __INTRIN_INLINE unsigned __int64 __readcr8(void)
 	return value;
 }
 #else
+__INTRIN_INLINE void __writecr0(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr0" : : [Data] "r" (Data) : "memory");
+}
+
+__INTRIN_INLINE void __writecr3(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr3" : : [Data] "r" (Data) : "memory");
+}
+
+__INTRIN_INLINE void __writecr4(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
+}
+
 __INTRIN_INLINE unsigned long __readcr0(void)
 {
 	unsigned long value;
@@ -1505,9 +1524,16 @@ __INTRIN_INLINE void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+/*** Misc operations ***/
+
 __INTRIN_INLINE void _mm_pause(void)
 {
 	__asm__ __volatile__("pause" : : : "memory");
+}
+
+__INTRIN_INLINE void __nop(void)
+{
+	__asm__ __volatile__("nop");
 }
 
 #ifdef __cplusplus

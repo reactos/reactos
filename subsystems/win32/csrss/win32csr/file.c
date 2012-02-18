@@ -16,11 +16,57 @@
 
 /* GLOBALS *******************************************************************/
 
+typedef BOOL (WINAPI *PUSER_SOUND_SENTRY)(VOID);
+BOOL
+WINAPI
+FirstSoundSentry(VOID);
+
 UINT CsrGetTempFileUnique;
 LIST_ENTRY DosDeviceHistory;
 RTL_CRITICAL_SECTION Win32CsrDefineDosDeviceCritSec;
+PUSER_SOUND_SENTRY _UserSoundSentry = FirstSoundSentry;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL
+WINAPI
+FailSoundSentry(VOID)
+{
+    /* In case the function can't be found/is unimplemented */
+    return FALSE;
+}
+
+BOOL
+WINAPI
+FirstSoundSentry(VOID)
+{
+    UNICODE_STRING DllString = RTL_CONSTANT_STRING(L"winsrv");
+    STRING FuncString = RTL_CONSTANT_STRING("_UserSoundSentry");
+    HANDLE DllHandle;
+    NTSTATUS Status;
+    PUSER_SOUND_SENTRY NewSoundSentry = FailSoundSentry;
+
+    /* Load winsrv manually */
+    Status = LdrGetDllHandle(NULL, NULL, &DllString, &DllHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* If it was found, get SoundSentry export */
+        Status = LdrGetProcedureAddress(DllHandle,
+                                        &FuncString,
+                                        0,
+                                        (PVOID*)&NewSoundSentry);
+    }
+    
+    /* Set it as the callback for the future, and call it */
+    _UserSoundSentry = NewSoundSentry;
+    return _UserSoundSentry();
+}
+
+CSR_API(CsrSoundSentry)
+{
+    /* Call the API and see if it suceeds */
+    return _UserSoundSentry() ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+}
 
 CSR_API(CsrGetTempFile)
 {

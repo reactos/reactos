@@ -1,10 +1,10 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Jan,2008)
- *	  updated by niski - Maciej Bialas (Mar,2010)
+ *         Translated by Caemyr - Olaf Siejka (Jan,2008)
+ *         Updated by niski - Maciej Bialas (Mar,2010)
  *         Use ReactOS forum PM or IRC to contact me
  *         http://www.reactos.org
  *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011) 
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -404,6 +404,46 @@ STRING_REN_HELP2, "   zmieniono nazwę %lu pliku\n"
 
 STRING_REN_HELP3, "   zmieniono nazwy %lu plików\n"
 
+//FIXME
+STRING_REPLACE_HELP1, "Zamienia pliki.\n\n\
+REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
+REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
+  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być \n\
+                           zamienione.\n\
+  /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można \n\
+                           łączyć z opcjami /S lub /U.\n\
+  /P                       Żąda potwierdzenia przed zamianą istniejącego lub \n\
+                           dodaniem nowego pliku.\n\
+  /R                       Zamienia pliki tylko do odczytu na równi z niezabez-\n\
+                           pieczonymi.\n\
+  /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji \n\
+                           docelowej. Nie można łączyć z opcją /A.\n\
+  /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
+  /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od \n\
+                           źródłowych. Nie można łączyć z opcją /A.\n"
+
+STRING_REPLACE_HELP2, "Brak ścieżki do źródła\n"
+
+STRING_REPLACE_HELP3, "Nie zamieniono żadnego pliku\n"
+
+STRING_REPLACE_HELP4, "Zamieniono %lu plik(i/ów) \n"
+
+STRING_REPLACE_HELP5, "Zamiana %s\n"
+
+STRING_REPLACE_HELP6, "Zamieniony %s\n"
+
+STRING_REPLACE_HELP7, "Nie dodano nowych plików\n"
+
+STRING_REPLACE_HELP8, "Dodano %lu plik(i/ów)\n"
+
+STRING_REPLACE_HELP9, "Czy dodać %s (T/N) "
+
+STRING_REPLACE_HELP10, "Czy zamienić %s (T/N) "
+
+STRING_REPLACE_HELP11, "Dodawanie %s\n"
+
+
 STRING_SHIFT_HELP, "Zmienia pozycję parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
 
@@ -589,8 +629,6 @@ STRING_CHCP_ERROR4,          "Niewłaściwy numer strony kodowej\n"
 STRING_CHOICE_ERROR,         "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
 STRING_CHOICE_ERROR_TXT,     "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Zły parametr: %s"
-STRING_MD_ERROR,			 "Istnieje już plik lub podkatalog o tej nazwie.\n"
-STRING_MD_ERROR2,			 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
 STRING_CMD_ERROR1,           "Nie można przekierować danych z pliku %s\n"
 STRING_CMD_ERROR2,           "Błąd podczas tworzenia potokowego pliku tymczasowego\n"
 STRING_CMD_ERROR3,           "Nie można przekierować do pliku %s\n"
@@ -620,6 +658,8 @@ STRING_FREE_ERROR2,          "brak"
 STRING_GOTO_ERROR1,          "Brak etykiety dla GOTO"
 STRING_GOTO_ERROR2,          "Etykieta '%s' nie została znaleziona\n"
 
+STRING_MD_ERROR,             "Istnieje już plik lub podkatalog o tej nazwie.\n"
+STRING_MD_ERROR2,            "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Błąd]\n"
 
@@ -649,6 +689,14 @@ STRING_ERROR_D_PAUSEMSG,           "Naciśnij dowolny klawisz, aby kontynuować 
 STRING_ERROR_DRIVER_NOT_READY,     "Napęd nie jest gotowy"
 
 STRING_PATH_ERROR,                 "CMD: Poza środowiskiem '%s'\n"
+
+STRING_REPLACE_ERROR1, "Nieprawidłowy parametr - %s\n"//FIXME
+STRING_REPLACE_ERROR2, "Ścieżka nie została odnaleziona - %s\n"
+STRING_REPLACE_ERROR3, "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
+STRING_REPLACE_ERROR4, "Nieprawidłowa kombinacja parametrów\n"
+STRING_REPLACE_ERROR5, "Dostęp zabroniony - %s\n"
+STRING_REPLACE_ERROR6, "Nie znaleziono plików - %s\n"
+STRING_REPLACE_ERROR7, "Extended Error 32 -  Błąd współdzielenia\n"
 
 STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
 STRING_CMD_SHELLINFO,              "\nInterpreter linii poleceń ReactOS\nVersion %s %s"

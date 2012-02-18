@@ -174,11 +174,17 @@ list(APPEND IDL_SOURCES
     ctfutb.idl
     xmllite.idl)
 
-if(NOT MSVC)
-  list(APPEND IDL_SOURCES
-    wbemcli.idl
-    wincodec.idl
-    wuapi.idl)
+if(MSVC)
+    list(APPEND IDL_SOURCES
+        atliface.idl
+        cor.idl
+        cordebug.idl
+        metahost.idl)
+else()
+    list(APPEND IDL_SOURCES
+        wbemcli.idl
+        wincodec.idl
+        wuapi.idl)
 endif()
 
 foreach(IDL_FILE ${IDL_SOURCES})

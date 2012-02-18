@@ -406,13 +406,13 @@ WdmAudControlOpenMixer(
 {
     HANDLE hMixer;
     PWDMAUD_HANDLE Handles;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     PKEVENT EventObject = NULL;
 
     DPRINT("WdmAudControlOpenMixer\n");
 
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (DeviceInfo->u.hNotifyEvent)
     {

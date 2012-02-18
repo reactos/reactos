@@ -1,6 +1,4 @@
-#include "resource.h"
-/* Start move all hard code string to En.rc
- * By Magnus Olsen  2005
+/*
  * Translated by Kario 2008
  */
 
@@ -8,6 +6,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_USERINIT_FAIL, "Userinit zlyhal pri sp˙öùanÌ shellu!\n"
+STRING_USERINIT_FAIL, "Userinit zlyhal pri sp√∫≈°≈•an√≠ shellu!\n"
 
 END

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/eu-ES.rc
+ * FILE:        base/applications/mspaint/lang/eu-ES.rc
  * PURPOSE:     Basque Language resource file
  * TRANSLATORS: unknown
  */
@@ -32,8 +32,8 @@ BEGIN
         MENUITEM "Ebaki\tCtrl+X", IDM_EDITCUT
         MENUITEM "Kopiatu\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Itsasti\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Borrar selección\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertir selección", IDM_EDITINVERTSELECTION
+        MENUITEM "Borrar selecciÃ³n\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Invertir selecciÃ³n", IDM_EDITINVERTSELECTION
         MENUITEM "Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopiatu hona...", IDM_EDITCOPYTO
@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Ver en pantalla completa\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "I&rudia"
     BEGIN
         MENUITEM "Irauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Marraztu opako", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Koloreak"
     BEGIN
         MENUITEM "Editatu koloreak...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Laguntza"
     BEGIN
         MENUITEM "Laguntza-gaiak", IDM_HELPHELPTOPICS
@@ -122,9 +122,9 @@ BEGIN
     AUTORADIOBUTTON "Irauli horizontalki", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Irauli bertikalki", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Biratu angelu bidez", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "Ados", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Utzi", IDCANCEL, 125, 24, 48, 14
 END
@@ -180,7 +180,7 @@ BEGIN
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint para ReactOS"
     IDS_INFOTEXT, "Paint para ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (ver www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "¿Guardar cambios cambios a %s?"
+    IDS_SAVEPROMPTTEXT, "Â¿Guardar cambios cambios a %s?"
     IDS_DEFAULTFILENAME, "Izegabea.bmp"
     IDS_MINIATURETITLE, "Miniatura"
     IDS_TOOLTIP1, "Hautatu forma librea"

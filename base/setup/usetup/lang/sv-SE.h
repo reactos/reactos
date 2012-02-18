@@ -48,7 +48,7 @@ static MUI_ENTRY svSELanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt  F3 = Avsluta",
+        "   ENTER = FortsÑtt  F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -70,7 +70,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         6,
         8,
-        "V‰lkommen till ReactOS Setup!",
+        "VÑlkommen till ReactOS Setup!",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -82,37 +82,37 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         6,
         12,
-        "dator och fˆrbereder den andra delen av installationen.",
+        "dator och fîrbereder den andra delen av installationen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tryck pÂ ENTER fˆr att installera ReactOS.",
+        "\x07  Tryck pÜ ENTER fîr att installera ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck pÂ R fˆr att reparera ReactOS.",
+        "\x07  Tryck pÜ R fîr att reparera ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryck pÂ L fˆr att l‰sa licensavtalet till ReactOS.",
+        "\x07  Tryck pÜ L fîr att lÑsa licensavtalet till ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck pÂ F3 fˆr att avbryta installationen av ReactOS.",
+        "\x07  Tryck pÜ F3 fîr att avbryta installationen av ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Fˆr mer information om ReactOS, besˆk:",
+        "Fîr mer information om ReactOS, besîk:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -124,7 +124,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt  R = Reparera F3 = Avbryt",
+        "   ENTER = FortsÑtt  R = Reparera F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -146,79 +146,79 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup ‰r i en tidig utvecklingsfas och saknar d‰rfˆr ett antal",
+        "ReactOS Setup Ñr i en tidig utvecklingsfas och saknar dÑrfîr ett antal",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "funktioner som kan fˆrv‰ntas av ett fullt anv‰ndbart setup-program.",
+        "funktioner som kan fîrvÑntas av ett fullt anvÑndbart setup-program.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Fˆljande begr‰nsningar g‰ller:",
+        "Fîljande begrÑnsningar gÑller:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "- Setup kan ej hantera mer ‰n 1 prim‰r partition per hÂrddisk.",
+        "- Setup kan ej hantera mer Ñn 1 primÑr partition per hÜrddisk.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Setup kan ej radera en prim‰r partition frÂn en hÂrddisk",
+        "- Setup kan ej radera en primÑr partition frÜn en hÜrddisk",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  om utˆkade partitioner existerar pÂ hÂrddisken.",
+        "  om utîkade partitioner existerar pÜ hÜrddisken.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "- Setup kan ej radera den fˆrsta utˆkade partitionen frÂn en hÂrddisk",
+        "- Setup kan ej radera den fîrsta utîkade partitionen frÜn en hÜrddisk",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "  om andra utˆkade partitioner existerar pÂ hÂrddisken.",
+        "  om andra utîkade partitioner existerar pÜ hÜrddisken.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "- Setup stˆder endast filsystem av typen FAT.",
+        "- Setup stîder endast filsystem av typen FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "- Kontrollering av hÂrddiskens filsystem stˆds (‰nnu) ej.",
+        "- Kontrollering av hÜrddiskens filsystem stîds (Ñnnu) ej.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
-        "\x07  Tryck pÂ ENTER fˆr att installera ReactOS.",
+        "\x07  Tryck pÜ ENTER fîr att installera ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  Tryck pÂ F3 fˆr att avbryta installationen.",
+        "\x07  Tryck pÜ F3 fîr att avbryta installationen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avbryt",
+        "   ENTER = FortsÑtt   F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -246,67 +246,67 @@ static MUI_ENTRY svSELicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS ‰r licenserad under GNU GPL med delar",
+        "ReactOS Ñr licenserad under GNU GPL med delar",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "av den medfˆljande koden licenserad under GPL-fˆrenliga",
+        "av den medfîljande koden licenserad under GPL-fîrenliga",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "licenser sÂsom X11-, BSD- och GNU LGPL-licenserna.",
+        "licenser sÜsom X11-, BSD- och GNU LGPL-licenserna.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "All mjukvara som ‰r del av ReactOS ‰r publicerad",
+        "All mjukvara som Ñr del av ReactOS Ñr publicerad",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "under GNU GPL, men ‰ven den ursprungliga",
+        "under GNU GPL, men Ñven den ursprungliga",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "licensen ‰r uppr‰tthÂllen.",
+        "licensen Ñr upprÑtthÜllen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Denna mjukvara har INGEN GARANTI eller begr‰nsing pÂ anv‰ndning",
+        "Denna mjukvara har INGEN GARANTI eller begrÑnsing pÜ anvÑndning",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "bortsett frÂn till‰mplig lokal och internationell lag. Licenseringen av",
+        "bortsett frÜn tillÑmplig lokal och internationell lag. Licenseringen av",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "ReactOS t‰cker endast distrubering till tredje part.",
+        "ReactOS tÑcker endast distrubering till tredje part.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "Om Ni av nÂgon anledning ej fÂtt en kopia av",
+        "Om Ni av nÜgon anledning ej fÜtt en kopia av",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "GNU General Public License med ReactOS, besˆk",
+        "GNU General Public License med ReactOS, besîk",
         TEXT_STYLE_NORMAL
     },
     {
@@ -324,25 +324,25 @@ static MUI_ENTRY svSELicensePageEntries[] =
     {
         8,
         24,
-        "Detta ‰r gratis mjukvara; se k‰llkoden fˆr restriktioner angÂende kopiering.",
+        "Detta Ñr gratis mjukvara; se kÑllkoden fîr restriktioner angÜende kopiering.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "INGEN GARANTI ges; inte ens fˆr SƒLJBARHET eller PASSANDE F÷R ETT",
+        "INGEN GARANTI ges; inte ens fîr SéLJBARHET eller PASSANDE FôR ETT",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
-        "SPECIELLT SYFTE. ALL ANVƒNDNING SKER P≈ EGEN RISK!",
+        "SPECIELLT SYFTE. ALL ANVéNDNING SKER Pè EGEN RISK!",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = ≈terv‰nd",
+        "   ENTER = ètervÑnd",
         TEXT_TYPE_STATUS
     },
     {
@@ -364,7 +364,7 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     {
         6,
         8,
-        "Listan nedanfˆr visar inst‰llningarna fˆr maskinvaran.",
+        "Listan nedanfîr visar instÑllningarna fîr maskinvaran.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -376,7 +376,7 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     {
         8,
         12,
-        "        Bildsk‰rm:",
+        "        BildskÑrm:",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -399,43 +399,43 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     },
     {
         25,
-        16, "Acceptera dessa maskinvaruinst‰llningar",
+        16, "Acceptera dessa maskinvaruinstÑllningar",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "ƒndra inst‰llningarna genom att trycka pÂ UPP- och NED-piltangenterna",
+        "éndra instÑllningarna genom att trycka pÜ UPP- och NED-piltangenterna",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "fˆr att markera en inst‰llning, och tryck pÂ ENTER fˆr att v‰lja",
+        "fîr att markera en instÑllning, och tryck pÜ ENTER fîr att vÑlja",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "inst‰llningen.",
+        "instÑllningen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "N‰r alla inst‰llningar ‰r korrekta, v‰lj \"Acceptera dessa maskinvaruinst‰llningar\"",
+        "NÑr alla instÑllningar Ñr korrekta, vÑlj \"Acceptera dessa maskinvaruinstÑllningar\"",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "och tryck pÂ ENTER.",
+        "och tryck pÜ ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avbryt",
+        "   ENTER = FortsÑtt   F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -457,13 +457,13 @@ static MUI_ENTRY svSERepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup ‰r i en tidig utvecklingsfas och saknar d‰rfˆr ett antal",
+        "ReactOS Setup Ñr i en tidig utvecklingsfas och saknar dÑrfîr ett antal",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "funktioner som kan fˆrv‰ntas av ett fullt anv‰ndbart setup-program.",
+        "funktioner som kan fîrvÑntas av ett fullt anvÑndbart setup-program.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -475,31 +475,31 @@ static MUI_ENTRY svSERepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Tryck pÂ U fˆr att uppdatera ReactOS.",
+        "\x07  Tryck pÜ U fîr att uppdatera ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck pÂ R fˆr ≈terst‰llningskonsolen.",
+        "\x07  Tryck pÜ R fîr èterstÑllningskonsolen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryck pÂ ESC fˆr att Âterv‰nda till fˆregÂende sida.",
+        "\x07  Tryck pÜ ESC fîr att ÜtervÑnda till fîregÜende sida.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck pÂ ENTER fˆr att starta om datorn.",
+        "\x07  Tryck pÜ ENTER fîr att starta om datorn.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = GÂ till fˆregÂende sida  ENTER = Starta om datorn",
+        "   ESC = GÜ till fîregÜende sida  ENTER = Starta om datorn",
         TEXT_TYPE_STATUS
     },
     {
@@ -520,37 +520,37 @@ static MUI_ENTRY svSEComputerPageEntries[] =
     {
         6,
         8,
-        "ƒndra vilken typ av dator som ska installeras.",
+        "éndra vilken typ av dator som ska installeras.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Anv‰nd UPP- och NED-piltangenterna fˆr att v‰lja ˆnskad datortyp.",
+        "\x07  AnvÑnd UPP- och NED-piltangenterna fîr att vÑlja înskad datortyp.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryck sen pÂ ENTER.",
+        "   Tryck sen pÜ ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryck pÂ ESC fˆr att Âterv‰nda till den fˆregÂende sidan utan",
+        "\x07  Tryck pÜ ESC fîr att ÜtervÑnda till den fîregÜende sidan utan",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   att ‰ndra datortypen.",
+        "   att Ñndra datortypen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   ESC = ≈terv‰nd   F3 = Avbryt",
+        "   ENTER = FortsÑtt   ESC = ètervÑnd   F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -572,7 +572,7 @@ static MUI_ENTRY svSEFlushPageEntries[] =
     {
         10,
         6,
-        "Datorn fˆrs‰krar sig om att all data ‰r lagrad pÂ hÂrdisken.",
+        "Datorn fîrsÑkrar sig om att all data Ñr lagrad pÜ hÜrdisken.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -584,7 +584,7 @@ static MUI_ENTRY svSEFlushPageEntries[] =
     {
         10,
         9,
-        "N‰r detta ‰r f‰rdigt kommer datorn att startas om automatiskt.",
+        "NÑr detta Ñr fÑrdigt kommer datorn att startas om automatiskt.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -612,31 +612,31 @@ static MUI_ENTRY svSEQuitPageEntries[] =
     {
         10,
         6,
-        "Installationen av ReactOS har inte slutfˆrts.",
+        "Installationen av ReactOS har inte slutfîrts.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Se till att ingen floppy-disk finns i floppy-l‰sare A:",
+        "Se till att ingen floppy-disk finns i floppy-lÑsare A:",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "och tag ur alla skivor frÂn CD/DVD-l‰sarna.",
+        "och tag ur alla skivor frÜn CD/DVD-lÑsarna.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Tryck pÂ ENTER fˆr att starta om datorn.",
+        "Tryck pÜ ENTER fîr att starta om datorn.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Var god v‰nta ...",
+        "   Var god vÑnta ...",
         TEXT_TYPE_STATUS,
     },
     {
@@ -658,36 +658,36 @@ static MUI_ENTRY svSEDisplayPageEntries[] =
     {
         6,
         8,
-        "ƒndra vilken typ av bildsk‰rmsinst‰llning som ska installeras.",
+        "éndra vilken typ av bildskÑrmsinstÑllning som ska installeras.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Anv‰nd UPP- och NED-piltangenterna fˆr att v‰lja ˆnskad inst‰llning.",
+         "\x07  AnvÑnd UPP- och NED-piltangenterna fîr att vÑlja înskad instÑllning.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryck sedan pÂ ENTER.",
+        "   Tryck sedan pÜ ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryck pÂ ESC fˆr att Âterv‰nda till den fˆregÂende sidan utan",
+        "\x07  Tryck pÜ ESC fîr att ÜtervÑnda till den fîregÜende sidan utan",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   att ‰ndra bildsk‰rmsinst‰llningen.",
+        "   att Ñndra bildskÑrmsinstÑllningen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   ESC = ≈terv‰nd   F3 = Avbryt",
+        "   ENTER = FortsÑtt   ESC = ètervÑnd   F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -709,25 +709,25 @@ static MUI_ENTRY svSESuccessPageEntries[] =
     {
         10,
         6,
-        "ReactOS har nu installerats pÂ datorn.",
+        "ReactOS har nu installerats pÜ datorn.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Se till att ingen floppy-disk finns i floppy-l‰sare A:",
+        "Se till att ingen floppy-disk finns i floppy-lÑsare A:",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "och tag ur alla skivor frÂn CD/DVD-l‰sarna.",
+        "och tag ur alla skivor frÜn CD/DVD-lÑsarna.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Tryck pÂ ENTER fˆr att starta om datorn.",
+        "Tryck pÜ ENTER fîr att starta om datorn.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -755,31 +755,31 @@ static MUI_ENTRY svSEBootPageEntries[] =
     {
         6,
         8,
-        "Setup misslyckades med att installera bootloadern pÂ datorns",
+        "Setup misslyckades med att installera bootloadern pÜ datorns",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "hÂrddisk",
+        "hÜrddisk",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Var god s‰tt in en formatterad floppy-disk i l‰sare A: och",
+        "Var god sÑtt in en formatterad floppy-disk i lÑsare A: och",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "tryck pÂ ENTER.",
+        "tryck pÜ ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avbryt",
+        "   ENTER = FortsÑtt   F3 = Avbryt",
         TEXT_TYPE_STATUS
     },
     {
@@ -802,43 +802,43 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         6,
         8,
-        "Lista nedan visar befintliga partitioner och oanv‰ndt",
+        "Lista nedan visar befintliga partitioner och oanvÑndt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "diskutrymme fˆr nya partitioner.",
+        "diskutrymme fîr nya partitioner.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Tryck UPP eller NER tangenten fˆr att v‰lja i listan.",
+        "\x07  Tryck UPP eller NER tangenten fîr att vÑlja i listan.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryck ENTER fˆr att installerara ReactOS till vald partition.",
+        "\x07  Tryck ENTER fîr att installerara ReactOS till vald partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tryck C fˆr att skapa en ny partition.",
+        "\x07  Tryck C fîr att skapa en ny partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck D fˆr att ta bort en befintlig partititon.",
+        "\x07  Tryck D fîr att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Var V‰nlig V‰nta...",
+        "   Var VÑnlig VÑnta...",
         TEXT_TYPE_STATUS
     },
     {
@@ -866,13 +866,13 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     {
         6,
         10,
-        "Partitionen kommer nu att formaters Tryck ENTER fˆr att forts‰tta.",
+        "Partitionen kommer nu att formaters Tryck ENTER fîr att fortsÑtta.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -894,7 +894,7 @@ static MUI_ENTRY svSEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "ReactOS installeras till vald partition. V‰lj en",
+        "ReactOS installeras till vald partition. VÑlj en",
         TEXT_STYLE_NORMAL
     },
     {
@@ -906,13 +906,13 @@ static MUI_ENTRY svSEInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Fˆr att ‰ndra den fˆreslagna mappen, tryck BACKSTEG fˆr att radera",
+        "Fîr att Ñndra den fîreslagna mappen, tryck BACKSTEG fîr att radera",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "bokst‰ver och skriv sedan in mappen dit du vill att ReactOS ska bli",
+        "bokstÑver och skriv sedan in mappen dit du vill att ReactOS ska bli",
         TEXT_STYLE_NORMAL
     },
     {
@@ -924,7 +924,7 @@ static MUI_ENTRY svSEInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -946,7 +946,7 @@ static MUI_ENTRY svSEFileCopyEntries[] =
     {
         11,
         12,
-        "Var v‰nlig v‰nta medans ReactOS Setup kopieras till din ReactOS.",
+        "Var vÑnlig vÑnta medans ReactOS Setup kopieras till din ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -958,13 +958,13 @@ static MUI_ENTRY svSEFileCopyEntries[] =
     {
         20,
         14,
-        "Detta kan ta flera minuter att fullfˆlja.",
+        "Detta kan ta flera minuter att fullfîlja.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 Var V‰nlig V‰nta...    ",
+        "                                                           \xB3 Var VÑnlig VÑnta...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -998,7 +998,7 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
     {
         8,
         13,
-        "Installera bootloadern till hÂrddisken (VBR only).",
+        "Installera bootloadern till hÜrddisken (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1016,7 +1016,7 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1038,13 +1038,13 @@ static MUI_ENTRY svSEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Du vill ‰ndra tangentbordstyp som ska intealleras.",
+        "Du vill Ñndra tangentbordstyp som ska intealleras.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryck UP eller NER tangenten fˆr att v‰lja ˆnskat tangentbordstyp.",
+        "\x07  Tryck UP eller NER tangenten fîr att vÑlja înskat tangentbordstyp.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1056,7 +1056,7 @@ static MUI_ENTRY svSEKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Tryck ESC tangenten fˆr att ÂtergÂ till fˆrra sidan utan att ‰ndra nÂgot.",
+        "\x07  Tryck ESC tangenten fîr att ÜtergÜ till fîrra sidan utan att Ñndra nÜgot.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1068,7 +1068,7 @@ static MUI_ENTRY svSEKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt   ESC = Avbryt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1090,13 +1090,13 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Var v‰nlig och v‰lj layout du vill installera som standard.",
+        "Var vÑnlig och vÑlj layout du vill installera som standard.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryck UPP eller NER tangenten fˆr att v‰lja ˆnskad",
+        "\x07  Tryck UPP eller NER tangenten fîr att vÑlja înskad",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1108,7 +1108,7 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Tryck ESC tangenten fˆr att ÂtergÂ till fˆrra sidan utan att ‰ndra",
+        "\x07  Tryck ESC tangenten fîr att ÜtergÜ till fîrra sidan utan att Ñndra",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1120,7 +1120,7 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts‰tt   ESC = Avbryt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1143,13 +1143,13 @@ static MUI_ENTRY svSEPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup fˆrbereder din dator fˆr kopiering av ReactOS filer. ",
+        "Setup fîrbereder din dator fîr kopiering av ReactOS filer. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Sammanst‰ller filkopieringslistan...",
+        "   SammanstÑller filkopieringslistan...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1172,31 +1172,31 @@ static MUI_ENTRY svSESelectFSEntries[] =
     {
         6,
         17,
-        "V‰lj ett filsystem i listan nedan.",
+        "VÑlj ett filsystem i listan nedan.",
         0
     },
     {
         8,
         19,
-        "\x07  Tryck UPP or NER tangenten fˆr att v‰lja filsystem.",
+        "\x07  Tryck UPP or NER tangenten fîr att vÑlja filsystem.",
         0
     },
     {
         8,
         21,
-        "\x07  Tryck ENTER fˆr att formatera partitionen.",
+        "\x07  Tryck ENTER fîr att formatera partitionen.",
         0
     },
     {
         8,
         23,
-        "\x07  Tryck ESC fˆr att v‰lja en annan partition.",
+        "\x07  Tryck ESC fîr att vÑlja en annan partition.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Forts‰tt   ESC = Avbryt   F3 = Avsluta",
+        "   ENTER = FortsÑtt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
 
@@ -1225,19 +1225,19 @@ static MUI_ENTRY svSEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tryck D fˆr att ta bort partitionen.",
+        "\x07  Tryck D fîr att ta bort partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "VARNING: Alla data pÂ denna partition kommer att fˆrloras!",
+        "VARNING: Alla data pÜ denna partition kommer att fîrloras!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck ESC fˆr att avbryta.",
+        "\x07  Tryck ESC fîr att avbryta.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1287,27 +1287,27 @@ MUI_ERROR svSEErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS installerades inte fullst‰ndigt pÂ din\n"
-        "dator. Om du avslutar Setup nu, kommer du att behˆva\n"
-        "kˆra Setup igen fˆr att installera ReactOS.\n"
+        "ReactOS installerades inte fullstÑndigt pÜ din\n"
+        "dator. Om du avslutar Setup nu, kommer du att behîva\n"
+        "kîra Setup igen fîr att installera ReactOS.\n"
         "\n"
-        "  \x07  Tryck ENTER fˆr att forts‰tta Setup.\n"
-        "  \x07  Tryck F3 fˆr att avsluta Setup.",
-        "F3= Avsluta  ENTER = Forts‰tta"
+        "  \x07  Tryck ENTER fîr att fortsÑtta Setup.\n"
+        "  \x07  Tryck F3 fîr att avsluta Setup.",
+        "F3= Avsluta  ENTER = FortsÑtta"
     },
     {
         //ERROR_NO_HDD
-        "Setup kunde inte hitta nÂgon hÂrddisk.\n",
+        "Setup kunde inte hitta nÜgon hÜrddisk.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup kunde inte hitta sin k‰lldisk.\n",
+        "Setup kunde inte hitta sin kÑlldisk.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup misslyckades att l‰sa in filen TXTSETUP.SIF.\n",
+        "Setup misslyckades att lÑsa in filen TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
@@ -1322,78 +1322,78 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup kunde inte l‰sa in informationen om systemenheten.\n",
+        "Setup kunde inte lÑsa in informationen om systemenheten.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup misslyckades installera FAT bootkod pÂ systempartitionen.",
+        "Setup misslyckades installera FAT bootkod pÜ systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup misslyckades att l‰sa datortypslistan.\n",
+        "Setup misslyckades att lÑsa datortypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup misslyckades att l‰sa in sk‰rminst‰llningslistan.\n",
+        "Setup misslyckades att lÑsa in skÑrminstÑllningslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup misslyckades att l‰sa in tangentbordstypslistan.\n",
+        "Setup misslyckades att lÑsa in tangentbordstypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup misslyckades att l‰sa in tangentbordslayoutslistan.\n",
+        "Setup misslyckades att lÑsa in tangentbordslayoutslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup fann att minst en hÂrdisk innehÂller en partitionstabell\n"
-        "inte ‰r kompatibel och inte kan hanteras korrekt!\n"
+        "Setup fann att minst en hÜrdisk innehÜller en partitionstabell\n"
+        "inte Ñr kompatibel och inte kan hanteras korrekt!\n"
         "\n"
-        "Skapa eller ta bort partitioner kan fˆrstˆra partitionstabellen.\n"
+        "Skapa eller ta bort partitioner kan fîrstîra partitionstabellen.\n"
         "\n"
-        "  \x07  Tryck F3 fˆr att avsluta Setup."
-        "  \x07  Tryck ENTER fˆr att forts‰tta.",
-        "F3= Avsluta  ENTER = Forts‰tt"
+        "  \x07  Tryck F3 fîr att avsluta Setup."
+        "  \x07  Tryck ENTER fîr att fortsÑtta.",
+        "F3= Avsluta  ENTER = FortsÑtt"
     },
     {
         //ERROR_NEW_PARTITION,
         "Du kan inte skapa en partition inuti\n"
         "en redat befintlig partition!\n"
         "\n"
-        "  * Tryck valfri tangent fˆr att forts‰tta.",
+        "  * Tryck valfri tangent fîr att fortsÑtta.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
         "Du kan inte ta bort opartitionerrat diskutrymme!\n"
         "\n"
-        "  * Tryck valfri tangent fˆr att forts‰tta.",
+        "  * Tryck valfri tangent fîr att fortsÑtta.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup misslyckades att installera FAT bootkoden pÂ systempartitionen.",
+        "Setup misslyckades att installera FAT bootkoden pÜ systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_NO_FLOPPY,
         "Ingen disk i enhet A:.",
-        "ENTER = Forts‰tt"
+        "ENTER = FortsÑtt"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup misslyckades att updatera inst‰llninarna fˆr tangentbordslayout.",
+        "Setup misslyckades att updatera instÑllninarna fîr tangentbordslayout.",
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup misslyckades att uppdatera sk‰rmregisterinst‰llningen.",
+        "Setup misslyckades att uppdatera skÑrmregisterinstÑllningen.",
         "ENTER = Starta om datorn"
     },
     {
@@ -1433,7 +1433,7 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup misslyckades att ˆppna filkopierningskˆn.\n",
+        "Setup misslyckades att îppna filkopierningskîn.\n",
         "ENTER = Starta om datorn"
     },
     {
@@ -1471,17 +1471,17 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup misslyckades att l‰gga till vald codepage till registret.\n"
+        "Setup misslyckades att lÑgga till vald codepage till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup kunnde inte st‰lla in 'system locale'.\n"
+        "Setup kunnde inte stÑlla in 'system locale'.\n"
         "ENTER = Starta om datorn"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup misslyckades att l‰gga till tangentbordslayouten till registret.\n"
+        "Setup misslyckades att lÑgga till tangentbordslayouten till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
@@ -1491,8 +1491,8 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Inte tillr‰ckligt mycket fritt utrymme pÂ den valda partitionen.\n"
-        "  * Tryck valfri tangent fˆr att forts‰tta.",
+        "Inte tillrÑckligt mycket fritt utrymme pÜ den valda partitionen.\n"
+        "  * Tryck valfri tangent fîr att fortsÑtta.",
         NULL
     },
     {
@@ -1604,29 +1604,29 @@ MUI_PAGE svSEPages[] =
 MUI_STRING svSEStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Var v‰nlig v‰nta..."},
+     "   Var vÑnlig vÑnta..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installera   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_PARTITIONSIZE,
-     "Storlek pÂ den nya partitionen:"},
+     "Storlek pÜ den nya partitionen:"},
     {STRING_CHOOSENEWPARTITION,
-     "Du har valt att skapa en ny partiton pÂ"},
+     "Du har valt att skapa en ny partiton pÜ"},
     {STRING_HDDSIZE,
-    "V‰nligen skriv in storleken av den nya partitionen i megabytes."},
+    "VÑnligen skriv in storleken av den nya partitionen i megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Skapa Partition   ESC = Avbryt   F3 = Avsluta"},
     {STRING_PARTFORMAT,
-    "Denna Partition kommer att bli formaterad h‰rn‰st."},
+    "Denna Partition kommer att bli formaterad hÑrnÑst."},
     {STRING_NONFORMATTEDPART,
-    "Du valde att installera ReactOS pÂ en oformaterad partition."},
+    "Du valde att installera ReactOS pÜ en oformaterad partition."},
     {STRING_INSTALLONPART,
     "Setup installerar ReactOS till Partitionen"},
     {STRING_CHECKINGPART,
-    "Setup undersˆker nu den valda partitionen."},
+    "Setup undersîker nu den valda partitionen."},
     {STRING_QUITCONTINUE,
-    "F3= Avsluta  ENTER = Forts‰tt"},
+    "F3= Avsluta  ENTER = FortsÑtt"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Starta om datorn"},
     {STRING_TXTSETUPFAILED,
@@ -1640,57 +1640,57 @@ MUI_STRING svSEStrings[] =
     {STRING_IMPORTFILE,
     "   Importerar %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Uppdaterar sk‰rmregisterinst‰llningar..."},
+    "   Uppdaterar skÑrmregisterinstÑllningar..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Uppdaterar lokala inst‰llningar..."},
+    "   Uppdaterar lokala instÑllningar..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Uppdaterar tangentbordslayoutinst‰llningar..."},
+    "   Uppdaterar tangentbordslayoutinstÑllningar..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   L‰gger till information om codepage till registret..."},
+    "   LÑgger till information om codepage till registret..."},
     {STRING_DONE,
-    "   F‰rdigt..."},
+    "   FÑrdigt..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Starta om datorn"},
     {STRING_CONSOLEFAIL1,
-    "Det gÂr inte ˆppna Konsollen\n\n"},
+    "Det gÜr inte îppna Konsollen\n\n"},
     {STRING_CONSOLEFAIL2,
-    "Den vanligaste orsaken till detta ‰r att ett USB tangentbord anv‰nds\n"},
+    "Den vanligaste orsaken till detta Ñr att ett USB tangentbord anvÑnds\n"},
     {STRING_CONSOLEFAIL3,
-    "USB tangentbord ‰r itne helt stˆtt ‰n\n"},
+    "USB tangentbord Ñr itne helt stîtt Ñn\n"},
     {STRING_FORMATTINGDISK,
     "Setup formaterar din disk"},
     {STRING_CHECKINGDISK,
-    "Setup underˆker din disk"},
+    "Setup underîker din disk"},
     {STRING_FORMATDISK1,
     " Formaterar partition som %S filsystem (snabbformatering) "},
     {STRING_FORMATDISK2,
     " Formaterar partition som %S filsystem "},
     {STRING_KEEPFORMAT,
-    " BehÂll nuvarande filsystem (inga fˆr‰ndringar) "},
+    " BehÜll nuvarande filsystem (inga fîrÑndringar) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÂ %wZ."},
+    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÂ %wZ."},
+    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ."},
     {STRING_HDDINFOUNK3,
-    "on %I64u %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "HÂrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "pÂ HÂrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "pÜ HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  Typ %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÂ %S"},
+    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  HÂrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "Setup skapade en ny partition pÂ"},
+    "Setup skapade en ny partition pÜ"},
     {STRING_UNPSPACE,
     "    Opartitionerat utrymme              %6lu %s"},
     {STRING_MAXSIZE,
@@ -1698,9 +1698,9 @@ MUI_STRING svSEStrings[] =
     {STRING_UNFORMATTED,
     "Ny (Oformaterad)"},
     {STRING_FORMATUNUSED,
-    "Oanv‰nt"},
+    "OanvÑnt"},
     {STRING_FORMATUNKNOWN,
-    "Ok‰nd"},
+    "OkÑnd"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1708,6 +1708,6 @@ MUI_STRING svSEStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "L‰gger till tangentbordslayouter"},
+    "LÑgger till tangentbordslayouter"},
     {0, 0}
 };

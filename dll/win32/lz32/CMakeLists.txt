@@ -10,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(lz32 SHARED ${SOURCE})
 
-set_entrypoint(lz32 0)
+set_module_type(lz32 win32dll ENTRYPOINT 0 )
 target_link_libraries(lz32 wine)
 
 add_importlibs(lz32 kernel32 ntdll)

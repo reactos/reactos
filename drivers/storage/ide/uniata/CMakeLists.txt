@@ -19,6 +19,7 @@ add_library(uniata SHARED
     idedma.rc
     ros_glue/ros_glue.cpp)
 
+allow_warnings(uniata)
 add_pch(uniata stdafx.h)
 set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)

@@ -4,87 +4,86 @@
  * FILE:        base/applications/mscutils/servman/lang/th-TH.rc
  * PURPOSE:     Thai resources
  * TRANSLATOR:  Sumath Aowsakulsutthi
- *
  */
 
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "·&øÈ¡"
+  POPUP "‡πÅ&‡∏ü‡πâ‡∏°"
   BEGIN
-    MENUITEM " ËßÕÕ°...",         ID_EXPORT
+    MENUITEM "‡∏™‡πà‡∏á‡∏≠‡∏≠‡∏Å...",         ID_EXPORT
     MENUITEM SEPARATOR
-    MENUITEM "&ÕÕ°®“°‚ª√·°√¡",    ID_EXIT
+    MENUITEM "&‡∏≠‡∏≠‡∏Å‡∏à‡∏≤‡∏Å‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°",    ID_EXIT
   END
-  POPUP "‡√‘Ë¡∑”∑—π∑’"
+  POPUP "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ó‡∏≥‡∏ó‡∏±‡∏ô‡∏ó‡∏µ"
   BEGIN
-    MENUITEM "‡™◊ËÕ¡µËÕ‰ª¬—ß...", ID_CONNECT, GRAYED
+    MENUITEM "‡πÄ‡∏ä‡∏∑‡πà‡∏≠‡∏°‡∏ï‡πà‡∏≠‡πÑ‡∏õ‡∏¢‡∏±‡∏á...", ID_CONNECT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "‡√‘Ë¡µÈπ",          ID_START, GRAYED
-    MENUITEM "À¬ÿ¥",              ID_STOP, GRAYED
-    MENUITEM "æ—°",               ID_PAUSE, GRAYED
-    MENUITEM "‡√‘Ë¡∑”µËÕ",        ID_RESUME, GRAYED
-    MENUITEM "‡√‘Ë¡„À¡Ë",         ID_RESTART, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô",          ID_START, GRAYED
+    MENUITEM "‡∏´‡∏¢‡∏∏‡∏î",              ID_STOP, GRAYED
+    MENUITEM "‡∏û‡∏±‡∏Å",               ID_PAUSE, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ó‡∏≥‡∏ï‡πà‡∏≠",        ID_RESUME, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡πÉ‡∏´‡∏°‡πà",         ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "ø◊ÈπøŸ",            ID_REFRESH
+    MENUITEM "‡∏ü‡∏∑‡πâ‡∏ô‡∏ü‡∏π",            ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "·°È‰¢...",          ID_EDIT, GRAYED
-    MENUITEM " √È“ß...",          ID_CREATE, GRAYED
-    MENUITEM "≈∫...",             ID_DELETE, GRAYED
+    MENUITEM "‡πÅ‡∏Å‡πâ‡πÑ‡∏Ç...",          ID_EDIT, GRAYED
+    MENUITEM "‡∏™‡∏£‡πâ‡∏≤‡∏á...",          ID_CREATE, GRAYED
+    MENUITEM "‡∏•‡∏ö...",             ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "§ÿ≥ ¡∫—µ‘...",      ID_PROP, GRAYED
+    MENUITEM "‡∏Ñ‡∏∏‡∏ì‡∏™‡∏°‡∏ö‡∏±‡∏ï‡∏¥...",      ID_PROP, GRAYED
   END
-  POPUP "¡ÿ¡¡Õß"
+  POPUP "‡∏°‡∏∏‡∏°‡∏°‡∏≠‡∏á"
   BEGIN
-    MENUITEM " —≠√Ÿª¢π“¥„À≠Ë",    ID_VIEW_LARGE
-    MENUITEM " —≠√Ÿª¢π“¥‡≈Á°",    ID_VIEW_SMALL
-    MENUITEM "√“¬°“√",            ID_VIEW_LIST
-    MENUITEM "√“¬≈–‡Õ’¬¥",        ID_VIEW_DETAILS
+    MENUITEM "‡∏™‡∏±‡∏ç‡∏£‡∏π‡∏õ‡∏Ç‡∏ô‡∏≤‡∏î‡πÉ‡∏´‡∏ç‡πà",    ID_VIEW_LARGE
+    MENUITEM "‡∏™‡∏±‡∏ç‡∏£‡∏π‡∏õ‡∏Ç‡∏ô‡∏≤‡∏î‡πÄ‡∏•‡πá‡∏Å",    ID_VIEW_SMALL
+    MENUITEM "‡∏£‡∏≤‡∏¢‡∏Å‡∏≤‡∏£",            ID_VIEW_LIST
+    MENUITEM "‡∏£‡∏≤‡∏¢‡∏•‡∏∞‡πÄ‡∏≠‡∏µ‡∏¢‡∏î",        ID_VIEW_DETAILS
     MENUITEM SEPARATOR
-    MENUITEM "µ“¡ª°µ‘...",        ID_VIEW_CUST, GRAYED
+    MENUITEM "‡∏ï‡∏≤‡∏°‡∏õ‡∏Å‡∏ï‡∏¥...",        ID_VIEW_CUST, GRAYED
   END
-  POPUP "™Ë«¬‡À≈◊Õ"
+  POPUP "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠"
   BEGIN
-    MENUITEM "™Ë«¬‡À≈◊Õ",         ID_HELP
-    MENUITEM "‡°’Ë¬«°—∫",         ID_ABOUT
+    MENUITEM "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠",         ID_HELP
+    MENUITEM "‡πÄ‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö",         ID_ABOUT
   END
 END
 
 IDR_POPUP MENU
 BEGIN
-  POPUP "‡ª‘¥ÀπÈ“µË“ß∑”ß“π"
+  POPUP "‡πÄ‡∏õ‡∏¥‡∏î‡∏´‡∏ô‡πâ‡∏≤‡∏ï‡πà‡∏≤‡∏á‡∏ó‡∏≥‡∏á‡∏≤‡∏ô"
   BEGIN
-    MENUITEM "‡√‘Ë¡µÈπ",          ID_START, GRAYED
-    MENUITEM "À¬ÿ¥",              ID_STOP, GRAYED
-    MENUITEM "æ—°",               ID_PAUSE, GRAYED
-    MENUITEM "‡√‘Ë¡∑”µËÕ",        ID_RESUME, GRAYED
-    MENUITEM "‡√‘Ë¡„À¡Ë",         ID_RESTART, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô",          ID_START, GRAYED
+    MENUITEM "‡∏´‡∏¢‡∏∏‡∏î",              ID_STOP, GRAYED
+    MENUITEM "‡∏û‡∏±‡∏Å",               ID_PAUSE, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ó‡∏≥‡∏ï‡πà‡∏≠",        ID_RESUME, GRAYED
+    MENUITEM "‡πÄ‡∏£‡∏¥‡πà‡∏°‡πÉ‡∏´‡∏°‡πà",         ID_RESTART, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "ø◊ÈπøŸ",            ID_REFRESH
+    MENUITEM "‡∏ü‡∏∑‡πâ‡∏ô‡∏ü‡∏π",            ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "·°È‰¢...",          ID_EDIT, GRAYED
-    MENUITEM "≈∫...",             ID_DELETE, GRAYED
+    MENUITEM "‡πÅ‡∏Å‡πâ‡πÑ‡∏Ç...",          ID_EDIT, GRAYED
+    MENUITEM "‡∏•‡∏ö...",             ID_DELETE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "§ÿ≥ ¡∫—µ‘...",      ID_PROP, GRAYED
+    MENUITEM "‡∏Ñ‡∏∏‡∏ì‡∏™‡∏°‡∏ö‡∏±‡∏ï‡∏¥...",      ID_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "™Ë«¬‡À≈◊Õ...",      ID_HELP
+    MENUITEM "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠...",      ID_HELP
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "‡°’Ë¬«°—∫°“√∫√‘°“√®—¥°“√"
+CAPTION "‡πÄ‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö‡∏Å‡∏≤‡∏£‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏à‡∏±‡∏î‡∏Å‡∏≤‡∏£"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "‚ª√·°√¡°“√∫√‘°“√®—¥°“√ √ÿËπ 0.8\n≈‘¢ ‘∑∏‘Ï (C) 2005-2007\n‚¥¬ ‡°È¥ ‡¡Õ√Ïø’Ë (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 26
-  PUSHBUTTON "ª‘¥", IDOK, 75, 162, 44, 15
+  LTEXT "‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°‡∏Å‡∏≤‡∏£‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏à‡∏±‡∏î‡∏Å‡∏≤‡∏£ ‡∏£‡∏∏‡πà‡∏ô 0.8\n‡∏•‡∏¥‡∏Ç‡∏™‡∏¥‡∏ó‡∏ò‡∏¥‡πå (C) 2005-2007\n‡πÇ‡∏î‡∏¢ ‡πÄ‡∏Å‡πâ‡∏î ‡πÄ‡∏°‡∏≠‡∏£‡πå‡∏ü‡∏µ‡πà (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 26
+  PUSHBUTTON "‡∏õ‡∏¥‡∏î", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 IDD_DLG_GENERAL DIALOGEX 6,6,253,232
-CAPTION "∑—Ë«‰ª"
+CAPTION "‡∏ó‡∏±‡πà‡∏ß‡πÑ‡∏õ"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -93,37 +92,37 @@ BEGIN
   EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
   EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
   COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-  PUSHBUTTON "‡√‘Ë¡µÈπ", IDC_START, 6, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "À¬ÿ¥", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "æ—°", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
-  PUSHBUTTON "‡√‘Ë¡∑”µËÕ", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-  LTEXT "™◊ËÕ∫√‘°“√:", IDC_STATIC, 4, 11, 53, 11
-  LTEXT "· ¥ß™◊ËÕ:", IDC_STATIC, 4, 29, 53, 11
-  LTEXT "§”∫√√¬“¬:", IDC_STATIC, 4, 51, 53, 11
-  LTEXT "‡ Èπ∑“ß‰ª°“√ª√–¡«≈º≈:", IDC_STATIC, 6, 73, 82, 9
-  LTEXT "√Ÿª·∫∫°“√‡√‘Ë¡µÈπ:", IDC_STATIC, 6, 108, 53, 11
-  LTEXT " ∂“π–∫√‘°“√:", IDC_STATIC, 4, 138, 53, 11
+  PUSHBUTTON "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "‡∏´‡∏¢‡∏∏‡∏î", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "‡∏û‡∏±‡∏Å", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ó‡∏≥‡∏ï‡πà‡∏≠", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "‡∏ä‡∏∑‡πà‡∏≠‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "‡πÅ‡∏™‡∏î‡∏á‡∏ä‡∏∑‡πà‡∏≠:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "‡∏Ñ‡∏≥‡∏ö‡∏£‡∏£‡∏¢‡∏≤‡∏¢:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "‡πÄ‡∏™‡πâ‡∏ô‡∏ó‡∏≤‡∏á‡πÑ‡∏õ‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏∞‡∏°‡∏ß‡∏•‡∏ú‡∏•:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "‡∏£‡∏π‡∏õ‡πÅ‡∏ö‡∏ö‡∏Å‡∏≤‡∏£‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "‡∏™‡∏ñ‡∏≤‡∏ô‡∏∞‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-  LTEXT "§ÿ≥ “¡“√∂°”Àπ¥§Ë“µ—«·ª√µË“ßÊ„πµÕπ‡√‘Ë¡µÈπ°“√„™Èß“π ‡¡◊ËÕ§ÿ≥‡√‘Ë¡„ÀÈ∫√‘°“√∑’Ëµ√ßπ’È.",IDC_STATIC, 6,177,240,15
-  LTEXT "‡√‘Ë¡µÈπ§Ë“µ—«·ª√µË“ßÊ:", IDC_STATIC, 6, 200, 58, 11
+  LTEXT "‡∏Ñ‡∏∏‡∏ì‡∏™‡∏≤‡∏°‡∏≤‡∏£‡∏ñ‡∏Å‡∏≥‡∏´‡∏ô‡∏î‡∏Ñ‡πà‡∏≤‡∏ï‡∏±‡∏ß‡πÅ‡∏õ‡∏£‡∏ï‡πà‡∏≤‡∏á‡πÜ‡πÉ‡∏ô‡∏ï‡∏≠‡∏ô‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô‡∏Å‡∏≤‡∏£‡πÉ‡∏ä‡πâ‡∏á‡∏≤‡∏ô ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏Ñ‡∏∏‡∏ì‡πÄ‡∏£‡∏¥‡πà‡∏°‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏ó‡∏µ‡πà‡∏ï‡∏£‡∏á‡∏ô‡∏µ‡πâ.",IDC_STATIC, 6,177,240,15
+  LTEXT "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô‡∏Ñ‡πà‡∏≤‡∏ï‡∏±‡∏ß‡πÅ‡∏õ‡∏£‡∏ï‡πà‡∏≤‡∏á‡πÜ:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
-CAPTION "·∫∫‰¡Ë°”Àπ¥‡Õß"
+CAPTION "‡πÅ‡∏ö‡∏ö‡πÑ‡∏°‡πà‡∏Å‡∏≥‡∏´‡∏ô‡∏î‡πÄ‡∏≠‡∏á"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-  LTEXT "°“√„ÀÈ∫√‘°“√∫“ßÕ¬Ë“ß¢÷Èπ°—∫∫√‘°“√Õ◊ËπÊ¥È«¬, µ—«¢—∫‡§≈◊ËÕπ¢Õß√–∫∫ ·≈–°“√¥÷ß¢ÈÕ¡Ÿ≈µ“¡≈”¥—∫°≈ÿË¡ ∂È“ Ë«πª√–°Õ∫µË“ßÊ¢Õß√–∫∫À¬ÿ¥∑”ß“π≈ß À√◊Õ‰¡Ë∑”ß“πµ“¡ ¡§«√ °“√„ÀÈ∫√‘°“√·∫∫‰¡Ë°”Àπ¥‡Õß®–¡’º≈∑—π∑’", IDC_STATIC,8, 7, 238, 26
-  LTEXT "°“√„ÀÈ∫√‘°“√π’È¢÷ÈπÕ¬ŸË°—∫ Ë«πª√–°Õ∫Õ◊ËπÊ∑’Ëµ“¡¡“¥È«¬", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏ö‡∏≤‡∏á‡∏≠‡∏¢‡πà‡∏≤‡∏á‡∏Ç‡∏∂‡πâ‡∏ô‡∏Å‡∏±‡∏ö‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏≠‡∏∑‡πà‡∏ô‡πÜ‡∏î‡πâ‡∏ß‡∏¢, ‡∏ï‡∏±‡∏ß‡∏Ç‡∏±‡∏ö‡πÄ‡∏Ñ‡∏•‡∏∑‡πà‡∏≠‡∏ô‡∏Ç‡∏≠‡∏á‡∏£‡∏∞‡∏ö‡∏ö ‡πÅ‡∏•‡∏∞‡∏Å‡∏≤‡∏£‡∏î‡∏∂‡∏á‡∏Ç‡πâ‡∏≠‡∏°‡∏π‡∏•‡∏ï‡∏≤‡∏°‡∏•‡∏≥‡∏î‡∏±‡∏ö‡∏Å‡∏•‡∏∏‡πà‡∏° ‡∏ñ‡πâ‡∏≤‡∏™‡πà‡∏ß‡∏ô‡∏õ‡∏£‡∏∞‡∏Å‡∏≠‡∏ö‡∏ï‡πà‡∏≤‡∏á‡πÜ‡∏Ç‡∏≠‡∏á‡∏£‡∏∞‡∏ö‡∏ö‡∏´‡∏¢‡∏∏‡∏î‡∏ó‡∏≥‡∏á‡∏≤‡∏ô‡∏•‡∏á ‡∏´‡∏£‡∏∑‡∏≠‡πÑ‡∏°‡πà‡∏ó‡∏≥‡∏á‡∏≤‡∏ô‡∏ï‡∏≤‡∏°‡∏™‡∏°‡∏Ñ‡∏ß‡∏£ ‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡πÅ‡∏ö‡∏ö‡πÑ‡∏°‡πà‡∏Å‡∏≥‡∏´‡∏ô‡∏î‡πÄ‡∏≠‡∏á‡∏à‡∏∞‡∏°‡∏µ‡∏ú‡∏•‡∏ó‡∏±‡∏ô‡∏ó‡∏µ", IDC_STATIC,8, 7, 238, 26
+  LTEXT "‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏ô‡∏µ‡πâ‡∏Ç‡∏∂‡πâ‡∏ô‡∏≠‡∏¢‡∏π‡πà‡∏Å‡∏±‡∏ö‡∏™‡πà‡∏ß‡∏ô‡∏õ‡∏£‡∏∞‡∏Å‡∏≠‡∏ö‡∏≠‡∏∑‡πà‡∏ô‡πÜ‡∏ó‡∏µ‡πà‡∏ï‡∏≤‡∏°‡∏°‡∏≤‡∏î‡πâ‡∏ß‡∏¢", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
-CAPTION " √È“ß°“√„ÀÈ∫√‘°“√"
+CAPTION "‡∏™‡∏£‡πâ‡∏≤‡∏á‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -132,41 +131,54 @@ BEGIN
   EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
-  LTEXT "*™◊ËÕ∫√‘°“√ :", IDC_STATIC, 12, 12, 54, 9
-  LTEXT "*· ¥ß™◊ËÕ :", IDC_STATIC, 12, 33, 54, 9
-  LTEXT "*‡ Èπ∑“ß‰ª°“√ª√–¡«≈º≈ :", IDC_STATIC, 10, 51, 68, 9
-  LTEXT "§”∫√√¬“¬ :", IDC_STATIC, 12, 86, 44, 9
-  PUSHBUTTON "µ°≈ß", IDOK, 126, 192, 44, 13
-  PUSHBUTTON "¬°‡≈‘°", IDCANCEL, 176, 192, 46, 13
-  LTEXT "‡æ‘Ë¡‡µ‘¡∑“ß‡≈◊Õ°(°¥‡≈◊Õ°∑’Ë™Ë«¬‡À≈◊Õ‡æ◊ËÕµÈÕß°“√√“¬≈–‡Õ’¬¥‡æ‘Ë¡‡µ‘¡)", IDC_STATIC, 10, 151, 134, 9
-  PUSHBUTTON "™Ë«¬‡À≈◊Õ", ID_CREATE_HELP, 10, 192, 44, 13
+  LTEXT "*‡∏ä‡∏∑‡πà‡∏≠‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£ :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*‡πÅ‡∏™‡∏î‡∏á‡∏ä‡∏∑‡πà‡∏≠ :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*‡πÄ‡∏™‡πâ‡∏ô‡∏ó‡∏≤‡∏á‡πÑ‡∏õ‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏∞‡∏°‡∏ß‡∏•‡∏ú‡∏• :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "‡∏Ñ‡∏≥‡∏ö‡∏£‡∏£‡∏¢‡∏≤‡∏¢ :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "‡∏ï‡∏Å‡∏•‡∏á", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å", IDCANCEL, 176, 192, 46, 13
+  LTEXT "‡πÄ‡∏û‡∏¥‡πà‡∏°‡πÄ‡∏ï‡∏¥‡∏°‡∏ó‡∏≤‡∏á‡πÄ‡∏•‡∏∑‡∏≠‡∏Å(‡∏Å‡∏î‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡∏ó‡∏µ‡πà‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠‡πÄ‡∏û‡∏∑‡πà‡∏≠‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡∏£‡∏≤‡∏¢‡∏•‡∏∞‡πÄ‡∏≠‡∏µ‡∏¢‡∏î‡πÄ‡∏û‡∏¥‡πà‡∏°‡πÄ‡∏ï‡∏¥‡∏°)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
-CAPTION "≈∫°“√„ÀÈ∫√‘°“√"
+CAPTION "‡∏•‡∏ö‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-  LTEXT "§ÿ≥·πË„®«Ë“µÈÕß°“√≈∫°“√„ÀÈ∫√‘°“√µËÕ‰ªπ’È„™Ë‰À¡ ?  ‘Ëßπ’È‰¡Ë “¡“√∂¬°‡≈‘°ÕÕ°‰ª·§Ë§√—Èß‡¥’¬« !", IDC_STATIC, 50, 6, 125, 25
-  LTEXT "™◊ËÕ∫√‘°“√:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "‡∏Ñ‡∏∏‡∏ì‡πÅ‡∏ô‡πà‡πÉ‡∏à‡∏ß‡πà‡∏≤‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡∏•‡∏ö‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£‡∏ï‡πà‡∏≠‡πÑ‡∏õ‡∏ô‡∏µ‡πâ‡πÉ‡∏ä‡πà‡πÑ‡∏´‡∏° ? ‡∏™‡∏¥‡πà‡∏á‡∏ô‡∏µ‡πâ‡πÑ‡∏°‡πà‡∏™‡∏≤‡∏°‡∏≤‡∏£‡∏ñ‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å‡∏≠‡∏≠‡∏Å‡πÑ‡∏õ‡πÅ‡∏Ñ‡πà‡∏Ñ‡∏£‡∏±‡πâ‡∏á‡πÄ‡∏î‡∏µ‡∏¢‡∏ß !", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "‡∏ä‡∏∑‡πà‡∏≠‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
-  PUSHBUTTON "„™Ë", IDOK, 26, 129, 54, 13
-  DEFPUSHBUTTON "‰¡Ë„™Ë", IDCANCEL, 102, 129, 54, 13
+  PUSHBUTTON "‡πÉ‡∏ä‡πà", IDOK, 26, 129, 54, 13
+  DEFPUSHBUTTON "‡πÑ‡∏°‡πà‡πÉ‡∏ä‡πà", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stop Other Services"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Do you want to stop these services?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "‡πÉ‡∏ä‡πà", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "‡πÑ‡∏°‡πà‡πÉ‡∏ä‡πà", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
-CAPTION "µ—«‡≈◊Õ°"
+CAPTION "‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å"
 FONT 8, "MS Shell Dlg",0,0
 STYLE 0x10CF0000
 BEGIN
   LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
-  PUSHBUTTON "µ°≈ß", IDOK, 75, 130, 44, 13
+  PUSHBUTTON "‡∏ï‡∏Å‡∏•‡∏á", IDOK, 75, 130, 44, 13
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
-CAPTION "µ—«§«∫§ÿ¡∫√‘°“√"
+CAPTION "‡∏ï‡∏±‡∏ß‡∏Ñ‡∏ß‡∏ö‡∏Ñ‡∏∏‡∏°‡∏ö‡∏£‡∏¥‡∏Å‡∏≤‡∏£"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
@@ -174,27 +186,27 @@ BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-  PUSHBUTTON "&ª‘¥", IDOK, 100, 70, 54, 13
+  PUSHBUTTON "&‡∏õ‡∏¥‡∏î", IDOK, 100, 70, 54, 13
 END
 
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_FIRSTCOLUMN "™◊ËÕ"
-  IDS_SECONDCOLUMN "§”∫√√¬“¬"
-  IDS_THIRDCOLUMN " ∂“π–"
-  IDS_FOURTHCOLUMN "√Ÿª·∫∫‡√‘Ë¡µÈπ"
-  IDS_FITHCOLUMN "ªÈÕπ§Ë“‡¢È“√–∫∫‡ªÁπ"
+  IDS_FIRSTCOLUMN "‡∏ä‡∏∑‡πà‡∏≠"
+  IDS_SECONDCOLUMN "‡∏Ñ‡∏≥‡∏ö‡∏£‡∏£‡∏¢‡∏≤‡∏¢"
+  IDS_THIRDCOLUMN "‡∏™‡∏ñ‡∏≤‡∏ô‡∏∞"
+  IDS_FOURTHCOLUMN "‡∏£‡∏π‡∏õ‡πÅ‡∏ö‡∏ö‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô"
+  IDS_FITHCOLUMN "‡∏õ‡πâ‡∏≠‡∏ô‡∏Ñ‡πà‡∏≤‡πÄ‡∏Ç‡πâ‡∏≤‡∏£‡∏∞‡∏ö‡∏ö‡πÄ‡∏õ‡πá‡∏ô"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_STARTED "‡√‘Ë¡µÈπ"
-  IDS_SERVICES_STOPPED "À¬ÿ¥"
-  IDS_SERVICES_AUTO "·∫∫Õ—µ‚π¡—µ‘"
-  IDS_SERVICES_MAN "·∫∫°”Àπ¥‡Õß"
-  IDS_SERVICES_DIS "‰¡Ë¡’"
+  IDS_SERVICES_STARTED "‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô"
+  IDS_SERVICES_STOPPED "‡∏´‡∏¢‡∏∏‡∏î"
+  IDS_SERVICES_AUTO "‡πÅ‡∏ö‡∏ö‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥"
+  IDS_SERVICES_MAN "‡πÅ‡∏ö‡∏ö‡∏Å‡∏≥‡∏´‡∏ô‡∏î‡πÄ‡∏≠‡∏á"
+  IDS_SERVICES_DIS "‡πÑ‡∏°‡πà‡∏°‡∏µ"
 END
 
 STRINGTABLE DISCARDABLE

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/internettime.c
+ * FILE:        dll/cpl/timedate/internettime.c
  * PURPOSE:     Internet Time property page
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -47,7 +47,7 @@ CreateNTPServerList(HWND hwnd)
                              &dwNameSize);
         if (lRet == ERROR_SUCCESS)
         {
-            /* get date from default reg value */
+            /* Get date from default reg value */
             if (wcscmp(szValName, L"") == 0) // if (Index == 0)
             {
                 dwDefault = _wtoi(szData);
@@ -71,8 +71,8 @@ CreateNTPServerList(HWND hwnd)
     if (dwDefault < 1 || dwDefault > dwIndex)
         dwDefault = 1;
 
-    /* server reg entries count from 1,
-     * combo boxes count from 0 */
+    /* Server reg entries count from 1,
+     * Combo boxes count from 0 */
     dwDefault--;
 
     SendMessageW(hList,
@@ -99,11 +99,11 @@ SetNTPServer(HWND hwnd)
 
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
 
-    /* server reg entries count from 1,
-     * combo boxes count from 0 */
+    /* Server reg entries count from 1,
+     * Combo boxes count from 0 */
     uSel++;
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itow(uSel, szSel, 10);
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -130,7 +130,7 @@ SetNTPServer(HWND hwnd)
 }
 
 
-/* get the domain name from the registry */
+/* Get the domain name from the registry */
 static BOOL
 GetNTPServerAddress(LPWSTR *lpAddress)
 {
@@ -199,7 +199,7 @@ fail:
 }
 
 
-/* request the time from the current NTP server */
+/* Request the time from the current NTP server */
 static ULONG
 GetTimeFromServer(VOID)
 {
@@ -230,7 +230,7 @@ UpdateSystemTime(ULONG ulTime)
     LARGE_INTEGER li;
     SYSTEMTIME stNew;
 
-    /* time at 1st Jan 1900 */
+    /* Time at 1st Jan 1900 */
     stNew.wYear = 1900;
     stNew.wMonth = 1;
     stNew.wDay = 1;
@@ -239,19 +239,19 @@ UpdateSystemTime(ULONG ulTime)
     stNew.wSecond = 0;
     stNew.wMilliseconds = 0;
 
-    /* convert to a file time */
+    /* Convert to a file time */
     if (!SystemTimeToFileTime(&stNew, &ftNew))
     {
         DisplayWin32Error(GetLastError());
         return;
     }
 
-    /* add on the time passed since 1st Jan 1900 */
+    /* Add on the time passed since 1st Jan 1900 */
     li = *(LARGE_INTEGER *)&ftNew;
     li.QuadPart += (LONGLONG)10000000 * ulTime;
     ftNew = * (FILETIME *)&li;
 
-    /* convert back to a system time */
+    /* Convert back to a system time */
     if (!FileTimeToSystemTime(&ftNew, &stNew))
     {
         DisplayWin32Error(GetLastError());

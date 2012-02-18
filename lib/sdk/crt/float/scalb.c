@@ -1,30 +1,17 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
+ * FILE:        lib/sdk/crt/float/scalb.c
+ * PURPOSE:     Floating-point number scaling
+ * PROGRAMER:   Pierre Schweitzer (pierre@reactos.org)
  */
 
 #include <precomp.h>
-#include <internal/ieee.h>
 
 /*
  * @implemented
  */
-double _scalb( double __x, long e )
+double _scalb(double x, long exp)
 {
-	union
-	{
-		double*   __x;
-                double_s*   x;
-	} x;
-
-	x.__x = &__x;
-
-	x.x->exponent += e;
-
-	return __x;
+	return ldexp(x, exp);
 }

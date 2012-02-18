@@ -10,13 +10,12 @@
  *                  Created 01/11/98
  */
 
+/* INCLUDES *******************************************************************/
+
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
-
-LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
-DWORD g_dwLastErrorToBreakOn;
 
 /*
  * Private helper function to lookup the module name from a given address.
@@ -69,63 +68,6 @@ _dump_context(PCONTEXT pc)
 #endif
 }
 
-static LONG
-BasepCheckForReadOnlyResource(IN PVOID Ptr)
-{
-    PVOID Data;
-    ULONG Size, OldProtect;
-    MEMORY_BASIC_INFORMATION mbi;
-    NTSTATUS Status;
-    LONG Ret = EXCEPTION_CONTINUE_SEARCH;
-
-    /* Check if it was an attempt to write to a read-only image section! */
-    Status = NtQueryVirtualMemory(NtCurrentProcess(),
-                                  Ptr,
-                                  MemoryBasicInformation,
-                                  &mbi,
-                                  sizeof(mbi),
-                                  NULL);
-    if (NT_SUCCESS(Status) &&
-        mbi.Protect == PAGE_READONLY && mbi.Type == MEM_IMAGE)
-    {
-        /* Attempt to treat it as a resource section. We need to
-           use SEH here because we don't know if it's actually a
-           resource mapping */
-
-        _SEH2_TRY
-        {
-            Data = RtlImageDirectoryEntryToData(mbi.AllocationBase,
-                                                TRUE,
-                                                IMAGE_DIRECTORY_ENTRY_RESOURCE,
-                                                &Size);
-
-            if (Data != NULL &&
-                (ULONG_PTR)Ptr >= (ULONG_PTR)Data &&
-                (ULONG_PTR)Ptr < (ULONG_PTR)Data + Size)
-            {
-                /* The user tried to write into the resources. Make the page
-                   writable... */
-                Size = 1;
-                Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                &Ptr,
-                                                &Size,
-                                                PAGE_READWRITE,
-                                                &OldProtect);
-                if (NT_SUCCESS(Status))
-                {
-                    Ret = EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-        }
-        _SEH2_END;
-    }
-
-    return Ret;
-}
-
 static VOID
 PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
@@ -146,7 +88,7 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
     _dump_context (ContextRecord);
     _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
-    DbgPrint("Address:\n   %8x+%-8x   %s\n", 
+    DbgPrint("Address:\n   %8x+%-8x   %s\n",
              (PVOID)StartAddr,
              (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
              szMod);
@@ -186,6 +128,70 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
     }
     _SEH2_END;
 #endif
+}
+
+/* GLOBALS ********************************************************************/
+
+LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
+DWORD g_dwLastErrorToBreakOn;
+
+/* FUNCTIONS ******************************************************************/
+
+LONG
+WINAPI
+BasepCheckForReadOnlyResource(IN PVOID Ptr)
+{
+    PVOID Data;
+    ULONG Size, OldProtect;
+    MEMORY_BASIC_INFORMATION mbi;
+    NTSTATUS Status;
+    LONG Ret = EXCEPTION_CONTINUE_SEARCH;
+
+    /* Check if it was an attempt to write to a read-only image section! */
+    Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                  Ptr,
+                                  MemoryBasicInformation,
+                                  &mbi,
+                                  sizeof(mbi),
+                                  NULL);
+    if (NT_SUCCESS(Status) &&
+        mbi.Protect == PAGE_READONLY && mbi.Type == MEM_IMAGE)
+    {
+        /* Attempt to treat it as a resource section. We need to
+           use SEH here because we don't know if it's actually a
+           resource mapping */
+        _SEH2_TRY
+        {
+            Data = RtlImageDirectoryEntryToData(mbi.AllocationBase,
+                                                TRUE,
+                                                IMAGE_DIRECTORY_ENTRY_RESOURCE,
+                                                &Size);
+
+            if (Data != NULL &&
+                (ULONG_PTR)Ptr >= (ULONG_PTR)Data &&
+                (ULONG_PTR)Ptr < (ULONG_PTR)Data + Size)
+            {
+                /* The user tried to write into the resources. Make the page
+                   writable... */
+                Size = 1;
+                Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                                &Ptr,
+                                                &Size,
+                                                PAGE_READWRITE,
+                                                &OldProtect);
+                if (NT_SUCCESS(Status))
+                {
+                    Ret = EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+        _SEH2_END;
+    }
+
+    return Ret;
 }
 
 UINT
@@ -236,6 +242,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ULONG_PTR ErrorParameters[4];
    ULONG ErrorResponse;
    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
 
    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionRecord->NumberParameters >= 2)
@@ -272,9 +279,10 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
-   if (GlobalTopLevelExceptionFilter)
+   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+   if (RealFilter)
    {
-      LONG ret = GlobalTopLevelExceptionFilter(ExceptionInfo);
+      LONG ret = RealFilter(ExceptionInfo);
       if (ret != EXCEPTION_CONTINUE_SEARCH)
          return ret;
    }
@@ -300,7 +308,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
    /* Raise the harderror */
-   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | 0x10000000,
+   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
        4, 0, ErrorParameters, OptionOkCancel, &ErrorResponse);
 
    if (NT_SUCCESS(ErrCode) && (ErrorResponse == ResponseCancel))
@@ -351,20 +359,14 @@ RaiseException(IN DWORD dwExceptionCode,
             nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
         }
 
-        /* Set the count of parameters */
+        /* Set the count of parameters and copy them */
         ExceptionRecord.NumberParameters = nNumberOfArguments;
-
-        /* Loop each parameter */
-        for (nNumberOfArguments = 0;
-            (nNumberOfArguments < ExceptionRecord.NumberParameters);
-            nNumberOfArguments ++)
-        {
-            /* Copy the exception information */
-            ExceptionRecord.ExceptionInformation[nNumberOfArguments] =
-                *lpArguments++;
-        }
+        RtlCopyMemory(ExceptionRecord.ExceptionInformation,
+                      lpArguments,
+                      nNumberOfArguments * sizeof(ULONG));
     }
 
+    /* Better handling of Delphi Exceptions... a ReactOS Hack */
     if (dwExceptionCode == 0xeedface || dwExceptionCode == 0xeedfade)
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
@@ -413,12 +415,14 @@ SetErrorMode(IN UINT uMode)
         NewMode |= SEM_FAILCRITICALERRORS;
     }
 
+    /* Always keep no alignment faults if they were set */
+    NewMode |= (PrevErrMode & SEM_NOALIGNMENTFAULTEXCEPT);
+
     /* Set the new mode */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessDefaultHardErrorMode,
                                      (PVOID)&NewMode,
                                      sizeof(NewMode));
-    if(!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     /* Return the previous mode */
     return PrevErrMode;
@@ -429,11 +433,14 @@ SetErrorMode(IN UINT uMode)
  */
 LPTOP_LEVEL_EXCEPTION_FILTER
 WINAPI
-SetUnhandledExceptionFilter(
-    IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
+SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
-    return InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
-                                      lpTopLevelExceptionFilter);
+    PVOID EncodedPointer, NewPointer;
+
+    EncodedPointer = RtlEncodePointer(lpTopLevelExceptionFilter);
+    NewPointer = InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
+                                            EncodedPointer);
+    return RtlDecodePointer(EncodedPointer);
 }
 
 /*
@@ -456,23 +463,29 @@ IsBadReadPtr(IN LPCVOID lp,
     /* Get the page size */
     PageSize = BaseStaticServerData->SysInfo.PageSize;
 
-    /* Calculate the last page */
+    /* Calculate start and end */
+    Current = (volatile CHAR*)lp;
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
 
     /* Another quick failure case */
-    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
+    if (Last < Current) return TRUE;
 
     /* Enter SEH */
     _SEH2_TRY
     {
+        /* Do an initial probe */
+        *Current;
+
+        /* Align the addresses */
+        Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
+        Last = (PCHAR)ROUND_DOWN(Last, PageSize);
+
         /* Probe the entire range */
-        Current = (volatile CHAR*)lp;
-        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
-        do
+        while (Current != Last)
         {
+            Current += PageSize;
             *Current;
-            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
-        } while (Current <= Last);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -513,8 +526,8 @@ IsBadCodePtr(FARPROC lpfn)
  */
 BOOL
 NTAPI
-IsBadWritePtr(LPVOID lp,
-              UINT_PTR ucb)
+IsBadWritePtr(IN LPVOID lp,
+              IN UINT_PTR ucb)
 {
     ULONG PageSize;
     BOOLEAN Result = FALSE;
@@ -528,23 +541,29 @@ IsBadWritePtr(LPVOID lp,
     /* Get the page size */
     PageSize = BaseStaticServerData->SysInfo.PageSize;
 
-    /* Calculate the last page */
+    /* Calculate start and end */
+    Current = (volatile CHAR*)lp;
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
 
     /* Another quick failure case */
-    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
+    if (Last < Current) return TRUE;
 
     /* Enter SEH */
     _SEH2_TRY
     {
+        /* Do an initial probe */
+        *Current = *Current;
+
+        /* Align the addresses */
+        Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
+        Last = (PCHAR)ROUND_DOWN(Last, PageSize);
+
         /* Probe the entire range */
-        Current = (volatile CHAR*)lp;
-        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
-        do
+        while (Current != Last)
         {
+            Current += PageSize;
             *Current = *Current;
-            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
-        } while (Current <= Last);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -562,8 +581,8 @@ IsBadWritePtr(LPVOID lp,
  */
 BOOL
 NTAPI
-IsBadHugeWritePtr(LPVOID lp,
-                  UINT_PTR ucb)
+IsBadHugeWritePtr(IN LPVOID lp,
+                  IN UINT_PTR ucb)
 {
     /* Implementation is the same on 32-bit */
     return IsBadWritePtr(lp, ucb);
@@ -575,7 +594,7 @@ IsBadHugeWritePtr(LPVOID lp,
 BOOL
 NTAPI
 IsBadStringPtrW(IN LPCWSTR lpsz,
-                UINT_PTR ucchMax)
+                IN UINT_PTR ucchMax)
 {
     BOOLEAN Result = FALSE;
     volatile WCHAR *Current;
@@ -586,20 +605,16 @@ IsBadStringPtrW(IN LPCWSTR lpsz,
     if (!ucchMax) return FALSE;
     if (!lpsz) return TRUE;
 
-    /* Calculate the last page */
+    /* Calculate start and end */
+    Current = (volatile WCHAR*)lpsz;
     Last = (PWCHAR)((ULONG_PTR)lpsz + (ucchMax * 2) - 2);
 
     /* Enter SEH */
     _SEH2_TRY
     {
         /* Probe the entire range */
-        Current = (volatile WCHAR*)lpsz;
-        Last = (PWCHAR)(PAGE_ROUND_DOWN(Last));
-        do
-        {
-            Char = *Current;
-            Current++;
-        } while (Char && (Current != Last + 1));
+        Char = *Current++;
+        while ((Char) && (Current != Last)) Char = *Current++;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -618,7 +633,7 @@ IsBadStringPtrW(IN LPCWSTR lpsz,
 BOOL
 NTAPI
 IsBadStringPtrA(IN LPCSTR lpsz,
-                UINT_PTR ucchMax)
+                IN UINT_PTR ucchMax)
 {
     BOOLEAN Result = FALSE;
     volatile CHAR *Current;
@@ -629,20 +644,16 @@ IsBadStringPtrA(IN LPCSTR lpsz,
     if (!ucchMax) return FALSE;
     if (!lpsz) return TRUE;
 
-    /* Calculate the last page */
+    /* Calculate start and end */
+    Current = (volatile CHAR*)lpsz;
     Last = (PCHAR)((ULONG_PTR)lpsz + ucchMax - 1);
 
     /* Enter SEH */
     _SEH2_TRY
     {
         /* Probe the entire range */
-        Current = (volatile CHAR*)lpsz;
-        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
-        do
-        {
-            Char = *Current;
-            Current++;
-        } while (Char && (Current != Last + 1));
+        Char = *Current++;
+        while ((Char) && (Current != Last)) Char = *Current++;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

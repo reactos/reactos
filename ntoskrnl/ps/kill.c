@@ -202,7 +202,7 @@ PspReapRoutine(IN PVOID Context)
         /* Remove magic value, keep looping if it got changed */
     } while (InterlockedCompareExchangePointer(&PspReaperListHead.Flink,
                                                0,
-                                               1) != (PVOID)1);
+                                               (PVOID)1) != (PVOID)1);
 }
 
 VOID
@@ -405,7 +405,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PEPROCESS CurrentProcess;
     PETHREAD Thread, OtherThread, PreviousThread = NULL;
     PVOID DeallocationStack;
-    ULONG Dummy;
+    SIZE_T Dummy;
     BOOLEAN Last = FALSE;
     PTERMINATION_PORT TerminationPort, NextPort;
     PLIST_ENTRY FirstEntry, CurrentEntry;

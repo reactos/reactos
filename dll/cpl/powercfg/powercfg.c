@@ -172,5 +172,3 @@ DllMain(HINSTANCE hinstDLL,
   }
   return TRUE;
 }
-
-

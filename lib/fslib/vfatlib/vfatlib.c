@@ -294,7 +294,10 @@ UpdateProgress(PFORMAT_CONTEXT Context,
     if (NewPercent > Context->Percent)
     {
         Context->Percent = NewPercent;
-        Context->Callback (PROGRESS, 0, &Context->Percent);
+        if (Context->Callback != NULL)
+        {
+            Context->Callback (PROGRESS, 0, &Context->Percent);
+        }
     }
 }
 
@@ -329,7 +332,10 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN ScanDrive,
            IN PFMIFSCALLBACK Callback)
 {
-    BOOLEAN verify, salvage_files;
+#if 0
+    BOOLEAN verify;
+    BOOLEAN salvage_files;
+#endif
     //ULONG free_clusters;
     //DOS_FS fs;
 
@@ -344,9 +350,10 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     FsCheckTotalFiles = 0;
 
+#if 0
     verify = TRUE;
     salvage_files = TRUE;
-#if 0
+
     /* Open filesystem */
     fs_open(DriveRoot,FixErrors);
 

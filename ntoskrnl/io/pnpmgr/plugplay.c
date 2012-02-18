@@ -549,26 +549,42 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
+    /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
-#if 0
-    /* Remove the device */
-    if (DeviceNode->Flags & DNF_ENUMERATED)
+    /* Check if an FDO has been added to the stack */
+    if (DeviceNode->Flags & DNF_ADDED)
     {
+        /* Remove the device node */
         Status = IopRemoveDevice(DeviceNode);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("WARNING: Ignoring failed IopRemoveDevice() for %wZ (likely a driver bug)\n", &DeviceNode->InstancePath);
         }
+
+        /* Invalidate device relations for the parent to reenumerate the device */
+        Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+
+        DPRINT1("Reset PDO with FDO present: 0x%x\n", Status);
     }
-#endif
+    else
+    {
+        /* FIXME: We might clear some important flags */
+        ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+        ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+        DeviceNode->Flags = DNF_ENUMERATED | DNF_PROCESSED;
 
-    /* Reenumerate the device and its children */
-    DeviceNode->Flags &= ~DNF_DISABLED;
-    Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+        /* Load service data from the registry */
+        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
-    if (NT_SUCCESS(Status))
-        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        if (NT_SUCCESS(Status))
+        {
+            /* Start the service and begin PnP initialization of the device again */
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        }
+
+        DPRINT1("Reset PDO with no FDO present: 0x%x\n", Status);
+    }
 
     ObDereferenceObject(DeviceObject);
 

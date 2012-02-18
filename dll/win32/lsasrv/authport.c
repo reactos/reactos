@@ -27,8 +27,6 @@ AuthPortThreadRoutine(PVOID Param)
     PPORT_MESSAGE Reply = NULL;
     NTSTATUS Status;
 
-    NTSTATUS Status2;
-
     HANDLE ConnectionHandle = NULL;
     PVOID Context = NULL;
     BOOLEAN Accept;
@@ -56,15 +54,15 @@ AuthPortThreadRoutine(PVOID Param)
             TRACE("Port connection request\n");
 
             Accept = TRUE;
-            Status2 = NtAcceptConnectPort(&ConnectionHandle,
-                                         &Context,
-                                         &Request.Header,
-                                         Accept,
-                                         NULL,
-                                         NULL);
+            NtAcceptConnectPort(&ConnectionHandle,
+                                &Context,
+                                &Request.Header,
+                                Accept,
+                                NULL,
+                                NULL);
 
 
-            Status2 = NtCompleteConnectPort(ConnectionHandle);
+            NtCompleteConnectPort(ConnectionHandle);
 
         }
         else if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED ||

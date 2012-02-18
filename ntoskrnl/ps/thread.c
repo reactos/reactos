@@ -100,9 +100,9 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
         /* Generate a new cookie */
         KeQuerySystemTime(&SystemTime);
         Prcb = KeGetCurrentPrcb();
-        NewCookie = Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
+        NewCookie = (Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
                     SystemTime.u.LowPart ^ SystemTime.u.HighPart ^
-                    (ULONG_PTR)&SystemTime;
+                    (ULONG)(ULONG_PTR)&SystemTime);
 
         /* Set the new cookie*/
         InterlockedCompareExchange((LONG*)&SharedUserData->Cookie,
@@ -647,7 +647,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
         FoundThread = CidEntry->Object;
 
         /* Make sure it's really a process */
-        if (FoundThread->Tcb.DispatcherHeader.Type == ThreadObject)
+        if (FoundThread->Tcb.Header.Type == ThreadObject)
         {
             /* Safe Reference and return it */
             if (ObReferenceObjectSafe(FoundThread))

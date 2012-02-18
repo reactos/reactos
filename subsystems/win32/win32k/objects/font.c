@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
-
 /** Internal ******************************************************************/
 
 DWORD
@@ -386,7 +384,7 @@ IntGetFontLanguageInfo(PDC Dc)
 
   pdcattr = Dc->pdcattr;
 
-  /* this might need a test for a HEBREW- or ARABIC_CHARSET as well */
+  /* This might need a test for a HEBREW- or ARABIC_CHARSET as well */
   if ( pdcattr->lTextAlign & TA_RTLREADING )
      if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
                     result|=GCP_REORDER;
@@ -475,7 +473,7 @@ NtGdiAddFontResourceW(
   NTSTATUS Status;
   int Ret;
 
-  /* FIXME - Protect with SEH? */
+  /* FIXME: Protect with SEH? */
   RtlInitUnicodeString(&SafeFileName, pwszFiles);
 
   /* Reserve for prepending '\??\' */
@@ -918,7 +916,7 @@ NtGdiGetFontResourceInfoInternalW(
         WCHAR FullName[LF_FULLFACESIZE];
     } Buffer;
 
-    /* FIXME: handle cFiles > 0 */
+    /* FIXME: Handle cFiles > 0 */
 
     /* Check for valid dwType values
        dwType == 4 seems to be handled by gdi32 only */
@@ -1118,7 +1116,7 @@ NtGdiHfontCreate(
   if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
       SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
   {
-    /* this should really depend on whether GM_ADVANCED is set */
+    /* This should really depend on whether GM_ADVANCED is set */
     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
   }
@@ -1126,7 +1124,7 @@ NtGdiHfontCreate(
 
   if (pvCliData && hNewFont)
   {
-    // FIXME: use GDIOBJ_InsertUserData
+    // FIXME: Use GDIOBJ_InsertUserData
     KeEnterCriticalRegion();
     {
        INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);

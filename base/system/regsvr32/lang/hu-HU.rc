@@ -1,7 +1,4 @@
-#include "resource.h"
 /*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
  */
 
@@ -9,25 +6,25 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_UsageMessage, "%s\n\nHasználat: regsvr32 [/u] [/s] [/c] [/n] [/i[:parancssor]] dll_neve\n\
-/u -	Kiszolgáló regisztrációjának megszüntetése\n\
-/s -	Néma üzemmód, üzenetek megjelenítése nélkül\n\
+IDS_UsageMessage, "%s\n\nHasznÃ¡lat: regsvr32 [/u] [/s] [/c] [/n] [/i[:parancssor]] dll_neve\n\
+/u -	KiszolgÃ¡lÃ³ regisztrÃ¡ciÃ³jÃ¡nak megszÃ¼ntetÃ©se\n\
+/s -	NÃ©ma Ã¼zemmÃ³d, Ã¼zenetek megjelenÃ­tÃ©se nÃ©lkÃ¼l\n\
 /c -	Parancssori kimenet\n\
-/i -	DllInstall meghívása a következõ [parancssor] átadásával; /u hívással használva a dll eltávolítása\n\
-/n -	Ne hívja meg a DllRegisterServer függvényt; ezt a beállítást a /i kapcsolóval együtt kell használni"
+/i -	DllInstall meghÃ­vÃ¡sa a kÃ¶vetkezÃµ [parancssor] Ã¡tadÃ¡sÃ¡val; /u hÃ­vÃ¡ssal hasznÃ¡lva a dll eltÃ¡volÃ­tÃ¡sa\n\
+/n -	Ne hÃ­vja meg a DllRegisterServer fÃ¼ggvÃ©nyt; ezt a beÃ¡llÃ­tÃ¡st a /i kapcsolÃ³val egyÃ¼tt kell hasznÃ¡lni"
 
-IDS_NoDllSpecified,  "Nincs megadva DLL név."
+IDS_NoDllSpecified,  "Nincs megadva DLL nÃ©v."
 
-IDS_InvalidFlag,     "Meghatároztlan belépési pont: %s"
+IDS_InvalidFlag,     "MeghatÃ¡roztlan belÃ©pÃ©si pont: %s"
 
-IDS_SwitchN_NoI,     "Meghatározatlan belépési pont: /n csak az /i kapcsolóval használható."
+IDS_SwitchN_NoI,     "MeghatÃ¡rozatlan belÃ©pÃ©si pont: /n csak az /i kapcsolÃ³val hasznÃ¡lhatÃ³."
 
-IDS_DllNotLoaded,    "Hiba a LoadLibrary('%s') függvényben.\nA visszaadott kód: 0x%08x."
+IDS_DllNotLoaded,    "Hiba a LoadLibrary('%s') fÃ¼ggvÃ©nyben.\nA visszaadott kÃ³d: 0x%08x."
 
-IDS_MissingEntry,    "A(z) %s betöltõdése megtörtént, de nem található a következõ belépési pont: %s.\n\n\
-A(z) %s -t nem lehet hozzáadni, vagy a(z) %s egy érvénytelen változata van a memóriában. Használja a PView-et hogy megkeresse és eltávolítsa azt."
+IDS_MissingEntry,    "A(z) %s betÃ¶ltÃµdÃ©se megtÃ¶rtÃ©nt, de nem talÃ¡lhatÃ³ a kÃ¶vetkezÃµ belÃ©pÃ©si pont: %s.\n\n\
+A(z) %s -t nem lehet hozzÃ¡adni, vagy a(z) %s egy Ã©rvÃ©nytelen vÃ¡ltozata van a memÃ³riÃ¡ban. HasznÃ¡lja a PView-et hogy megkeresse Ã©s eltÃ¡volÃ­tsa azt."
 
-IDS_FailureMessage,  "A(z) %s sikertelen a következõben: %s.\nA visszaadott kód: 0x%08x"
+IDS_FailureMessage,  "A(z) %s sikertelen a kÃ¶vetkezÃµben: %s.\nA visszaadott kÃ³d: 0x%08x"
 
-IDS_SuccessMessage   "A(z) %s sikerült a következõben: %s."
+IDS_SuccessMessage,  "A(z) %s sikerÃ¼lt a kÃ¶vetkezÃµben: %s."
 END

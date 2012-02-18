@@ -22,7 +22,6 @@ WSPAsyncSelect(IN  SOCKET Handle,
 {
     PSOCKET_INFORMATION Socket = NULL;
     PASYNC_DATA                 AsyncData;
-    NTSTATUS                    Status;
     BOOLEAN                     BlockMode;
 
     /* Get the Socket Structure associated to this Socket */
@@ -56,7 +55,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
         }
     }
 
-    /* Create the Asynch Thread if Needed */  
+    /* Create the Asynch Thread if Needed */
     SockCreateOrReferenceAsyncThread();
 
     /* Open a Handle to AFD's Async Helper */
@@ -81,18 +80,18 @@ WSPAsyncSelect(IN  SOCKET Handle,
     AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
 
     /* Begin Async Select by using I/O Completion */
-    Status = NtSetIoCompletion(SockAsyncCompletionPort,
-                               (PVOID)&SockProcessQueuedAsyncSelect,
-                                AsyncData,
-                                0,
-                                0);
+    NtSetIoCompletion(SockAsyncCompletionPort,
+                      (PVOID)&SockProcessQueuedAsyncSelect,
+                      AsyncData,
+                      0,
+                      0);
 
     /* Return */
     return ERROR_SUCCESS;
 }
 
 
-int 
+int
 WSPAPI
 WSPRecv(SOCKET Handle,
         LPWSABUF lpBuffers,
@@ -168,7 +167,7 @@ WSPRecv(SOCKET Handle,
         APCFunction = NULL;
         Event = SockEvent;
         IOSB = &DummyIOSB;
-    } 
+    }
     else
     {
         if (lpCompletionRoutine == NULL)
@@ -226,7 +225,7 @@ WSPRecv(SOCKET Handle,
         case STATUS_RECEIVE_EXPEDITED:
             *ReceiveFlags = MSG_OOB;
             break;
-        case STATUS_RECEIVE_PARTIAL_EXPEDITED: 
+        case STATUS_RECEIVE_PARTIAL_EXPEDITED:
             *ReceiveFlags = MSG_PARTIAL | MSG_OOB;
             break;
         case STATUS_RECEIVE_PARTIAL:
@@ -247,18 +246,18 @@ WSPRecv(SOCKET Handle,
     return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
 
-int 
-WSPAPI 
-WSPRecvFrom(SOCKET Handle, 
-            LPWSABUF lpBuffers, 
-            DWORD dwBufferCount, 
-            LPDWORD lpNumberOfBytesRead, 
-            LPDWORD ReceiveFlags, 
-            struct sockaddr *SocketAddress, 
-            int *SocketAddressLength, 
-            LPWSAOVERLAPPED lpOverlapped, 
-            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine, 
-            LPWSATHREADID lpThreadId, 
+int
+WSPAPI
+WSPRecvFrom(SOCKET Handle,
+            LPWSABUF lpBuffers,
+            DWORD dwBufferCount,
+            LPDWORD lpNumberOfBytesRead,
+            LPDWORD ReceiveFlags,
+            struct sockaddr *SocketAddress,
+            int *SocketAddressLength,
+            LPWSAOVERLAPPED lpOverlapped,
+            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+            LPWSATHREADID lpThreadId,
             LPINT lpErrno )
 {
     PIO_STATUS_BLOCK            IOSB;
@@ -278,7 +277,7 @@ WSPRecvFrom(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
-    
+
     if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Call WSPRecv for a non-datagram socket */
@@ -314,7 +313,7 @@ WSPRecvFrom(SOCKET Handle,
     }
     else
     {
-        if (*ReceiveFlags & MSG_OOB) 
+        if (*ReceiveFlags & MSG_OOB)
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
@@ -332,7 +331,7 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Verifiy if we should use APC */
 
-    if (lpOverlapped == NULL) 
+    if (lpOverlapped == NULL)
     {
         /* Not using Overlapped structure, so use normal blocking on event */
         APCContext = NULL;
@@ -391,7 +390,7 @@ WSPRecvFrom(SOCKET Handle,
     {
         case STATUS_RECEIVE_EXPEDITED: *ReceiveFlags = MSG_OOB;
             break;
-        case STATUS_RECEIVE_PARTIAL_EXPEDITED: 
+        case STATUS_RECEIVE_PARTIAL_EXPEDITED:
             *ReceiveFlags = MSG_PARTIAL | MSG_OOB;
             break;
         case STATUS_RECEIVE_PARTIAL:
@@ -414,7 +413,7 @@ WSPRecvFrom(SOCKET Handle,
 
 
 int
-WSPAPI 
+WSPAPI
 WSPSend(SOCKET Handle,
         LPWSABUF lpBuffers,
         DWORD dwBufferCount,
@@ -537,7 +536,7 @@ WSPSend(SOCKET Handle,
     return MsafdReturnWithErrno( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
 }
 
-int 
+int
 WSPAPI
 WSPSendTo(SOCKET Handle,
           LPWSABUF lpBuffers,
@@ -571,7 +570,7 @@ WSPSendTo(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
-    
+
     if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Use WSPSend for connection-oriented sockets */

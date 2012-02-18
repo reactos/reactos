@@ -1,7 +1,7 @@
 /* $Id: main.c 12852 2005-01-06 13:58:04Z mf $
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            lib/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
@@ -19,7 +19,7 @@ typedef struct __LABEL_MAP__
     TCHAR * szIcon;
     struct __APP_MAP__ * AppMap;
     struct __LABEL_MAP__ * Next;
-}LABEL_MAP, *PLABEL_MAP;
+} LABEL_MAP, *PLABEL_MAP;
 
 typedef struct __APP_MAP__
 {
@@ -29,7 +29,7 @@ typedef struct __APP_MAP__
 
     struct __APP_MAP__ *Next;
     PLABEL_MAP LabelMap;
-}APP_MAP, *PAPP_MAP;
+} APP_MAP, *PAPP_MAP;
 
 typedef struct __LABEL_CONTEXT__
 {
@@ -37,14 +37,14 @@ typedef struct __LABEL_CONTEXT__
     PAPP_MAP AppMap;
     TCHAR szValue[MAX_PATH];
     struct __LABEL_CONTEXT__ *Next;
-}LABEL_CONTEXT, *PLABEL_CONTEXT;
+} LABEL_CONTEXT, *PLABEL_CONTEXT;
 
 typedef struct __SOUND_SCHEME_CONTEXT__
 {
     TCHAR szName[MAX_PATH];
     TCHAR szDesc[MAX_PATH];
     PLABEL_CONTEXT LabelContext;
-}SOUND_SCHEME_CONTEXT, *PSOUND_SCHEME_CONTEXT;
+} SOUND_SCHEME_CONTEXT, *PSOUND_SCHEME_CONTEXT;
 
 static PLABEL_MAP s_Map = NULL;
 static PAPP_MAP s_App = NULL;
@@ -56,7 +56,7 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
 {
     PLABEL_MAP pMap = s_Map;
 
-    while(pMap)
+    while (pMap)
     {
         ASSERT(pMap);
         ASSERT(pMap->szName);
@@ -64,12 +64,11 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
             return pMap;
 
         pMap = pMap->Next;
-
     }
 
     pMap = pAppMap->LabelMap;
 
-    while(pMap)
+    while (pMap)
     {
         ASSERT(pMap);
         ASSERT(pMap->szName);
@@ -77,7 +76,6 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
             return pMap;
 
         pMap = pMap->Next;
-
     }
 
     pMap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LABEL_MAP));
@@ -90,12 +88,14 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
         HeapFree(GetProcessHeap(), 0, pMap);
         return NULL;
     }
+
     pMap->AppMap = pAppMap;
     pMap->Next = s_Map;
     s_Map = pMap;
 
     return pMap;
 }
+
 
 VOID RemoveLabel(PLABEL_MAP pMap)
 {
@@ -107,8 +107,7 @@ VOID RemoveLabel(PLABEL_MAP pMap)
         return;
     }
 
-
-    while(pCurMap)
+    while (pCurMap)
     {
         if (pCurMap->Next == pMap)
         {
@@ -120,15 +119,11 @@ VOID RemoveLabel(PLABEL_MAP pMap)
 }
 
 
-
-
-
-
 PAPP_MAP FindApp(TCHAR * szName)
 {
     PAPP_MAP pMap = s_App;
 
-    while(pMap)
+    while (pMap)
     {
         if (!_tcscmp(pMap->szName, szName))
             return pMap;
@@ -139,18 +134,19 @@ PAPP_MAP FindApp(TCHAR * szName)
     return NULL;
 }
 
+
 PLABEL_CONTEXT FindLabelContext(PSOUND_SCHEME_CONTEXT pSoundScheme, TCHAR * AppName, TCHAR * LabelName)
 {
     PLABEL_CONTEXT pLabelContext;
 
     pLabelContext = pSoundScheme->LabelContext;
 
-    while(pLabelContext)
+    while (pLabelContext)
     {
         ASSERT(pLabelContext->AppMap);
         ASSERT(pLabelContext->LabelMap);
 
-        if(!_tcsicmp(pLabelContext->AppMap->szName, AppName) && !_tcsicmp(pLabelContext->LabelMap->szName, LabelName))
+        if (!_tcsicmp(pLabelContext->AppMap->szName, AppName) && !_tcsicmp(pLabelContext->LabelMap->szName, LabelName))
         {
             return pLabelContext;
         }
@@ -171,6 +167,7 @@ PLABEL_CONTEXT FindLabelContext(PSOUND_SCHEME_CONTEXT pSoundScheme, TCHAR * AppN
 
     return pLabelContext;
 }
+
 
 BOOL
 LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
@@ -237,6 +234,7 @@ LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
     return TRUE;
 }
 
+
 BOOL
 LoadEventLabels()
 {
@@ -278,11 +276,12 @@ LoadEventLabels()
         }
         dwCurKey++;
 
-    }while(dwResult == ERROR_SUCCESS);
+    } while (dwResult == ERROR_SUCCESS);
 
     RegCloseKey(hSubKey);
     return (dwCount != 0);
 }
+
 
 BOOL
 AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
@@ -330,6 +329,7 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
     }
     return FALSE;
 }
+
 
 DWORD
 EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
@@ -383,11 +383,12 @@ EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
         }
 
         dwCurKey++;
-    }while(dwResult == ERROR_SUCCESS);
+    } while (dwResult == ERROR_SUCCESS);
 
     RegCloseKey(hSubKey);
     return dwNumSchemes;
 }
+
 
 PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, TCHAR * szName)
 {
@@ -416,6 +417,8 @@ PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, TCHAR * szName)
     }
     return NULL;
 }
+
+
 BOOL
 ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName, TCHAR * szAppName, PAPP_MAP AppMap, PLABEL_MAP LabelMap)
 {
@@ -427,12 +430,10 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
     PLABEL_CONTEXT pLabelContext;
     BOOL bCurrentProfile, bActiveProfile;
 
-
     //MessageBox(hwndDlg, szProfile, szLabelName, MB_OK);
 
     bCurrentProfile = !_tcsicmp(szProfile, _T(".Current"));
     bActiveProfile = !_tcsicmp(szProfile, szDefault);
-
 
     if (RegOpenKeyEx(hKey,
                      szProfile,
@@ -533,13 +534,12 @@ ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName
         }
 
         dwCurKey++;
-    }while(dwResult == ERROR_SUCCESS);
+    } while (dwResult == ERROR_SUCCESS);
 
     RegCloseKey(hSubKey);
 
     return dwNumProfiles;
 }
-
 
 
 DWORD
@@ -626,10 +626,12 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
             }
         }
         dwCurKey++;
-    }while(dwResult == ERROR_SUCCESS);
+    } while (dwResult == ERROR_SUCCESS);
+
     RegCloseKey(hSubKey);
     return dwNumEntry;
 }
+
 
 BOOL
 ImportSoundProfiles(HWND hwndDlg, HKEY hKey)
@@ -666,12 +668,12 @@ ImportSoundProfiles(HWND hwndDlg, HKEY hKey)
             }
         }
         dwCurKey++;
-    }while(dwResult == ERROR_SUCCESS);
+    } while (dwResult == ERROR_SUCCESS);
+
     RegCloseKey(hSubKey);
 
     return (dwNumApps != 0);
 }
-
 
 
 BOOL
@@ -697,9 +699,12 @@ LoadSoundProfiles(HWND hwndDlg)
         //MessageBox(hwndDlg, _T("importing sound profiles..."), NULL, MB_OK);
         ImportSoundProfiles(hwndDlg, hSubKey);
     }
+
     RegCloseKey(hSubKey);
     return FALSE;
 }
+
+
 BOOL
 LoadSoundFiles(HWND hwndDlg)
 {
@@ -757,12 +762,11 @@ LoadSoundFiles(HWND hwndDlg)
             wcscpy(&szPath[length-1], FileData.cFileName);
             SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(szPath));
         }
-    }while(FindNextFileW(hFile, &FileData) != 0);
+    } while (FindNextFileW(hFile, &FileData) != 0);
 
     FindClose(hFile);
     return TRUE;
 }
-
 
 
 BOOL
@@ -804,10 +808,10 @@ ShowSoundScheme(HWND hwndDlg)
     ItemIndex = 0;
 
     pAppMap = s_App;
-    while(pAppMap)
+    while (pAppMap)
     {
         PLABEL_MAP pLabelMap = pAppMap->LabelMap;
-        while(pLabelMap)
+        while (pLabelMap)
         {
             ZeroMemory(&listItem, sizeof(LV_ITEM));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
@@ -824,6 +828,7 @@ ShowSoundScheme(HWND hwndDlg)
     }
     return TRUE;
 }
+
 
 BOOL
 ApplyChanges(HWND hwndDlg)
@@ -873,7 +878,7 @@ ApplyChanges(HWND hwndDlg)
 
     pLabelContext = pScheme->LabelContext;
 
-    while(pLabelContext)
+    while (pLabelContext)
     {
         _stprintf(Buffer, _T("%s\\%s\\.Current"), pLabelContext->AppMap->szName, pLabelContext->LabelMap->szName);
 
@@ -900,7 +905,7 @@ SoundsDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
         {
@@ -930,7 +935,7 @@ SoundsDlgProc(HWND hwndDlg,
         }
         case WM_COMMAND:
         {
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_PLAY_SOUND:
                 {
@@ -1002,7 +1007,7 @@ SoundsDlgProc(HWND hwndDlg,
                             {
                                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                                ///
-                               /// should store in current member
+                               /// Should store in current member
                                ///
                                _tcscpy(pLabelContext->szValue, (TCHAR*)lResult);
                             }
@@ -1025,11 +1030,9 @@ SoundsDlgProc(HWND hwndDlg,
         {
             LVITEM item;
             PLABEL_CONTEXT pLabelContext;
-            LPPSHNOTIFY lppsn;
             TCHAR * ptr;
 
             LPNMHDR lpnm = (LPNMHDR)lParam;
-            lppsn = (LPPSHNOTIFY) lParam;
 
             switch(lpnm->code)
             {

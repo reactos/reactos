@@ -23,11 +23,14 @@ extern HINSTANCE User32Instance;
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
 extern PSERVERINFO gpsi;
-extern BOOL gfServerProcess;
+extern BOOLEAN gfServerProcess;
 extern PUSER_HANDLE_TABLE gHandleTable;
 extern PUSER_HANDLE_ENTRY gHandleEntries;
 extern CRITICAL_SECTION U32AccelCacheLock;
 extern HINSTANCE hImmInstance;
+extern RTL_CRITICAL_SECTION gcsUserApiHook;
+extern USERAPIHOOK guah;
+extern HINSTANCE ghmodUserApiHook;
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -51,13 +54,13 @@ extern void SPY_ExitMessage(INT iFlag, HWND hwnd, UINT msg, LRESULT lReturn, WPA
 extern int SPY_Init(void);
 
 /* definitions for usrapihk.c */
-extern RTL_CRITICAL_SECTION gcsUserApiHook;
-extern USERAPIHOOK guah;
 BOOL FASTCALL BeginIfHookedUserApiHook(VOID);
 BOOL FASTCALL EndUserApiHook(VOID);
 BOOL FASTCALL IsInsideUserApiHook(VOID);
 VOID FASTCALL ResetUserApiHook(PUSERAPIHOOK);
 BOOL FASTCALL IsMsgOverride(UINT,PUAHOWP);
+BOOL WINAPI InitUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC pfn);
+BOOL WINAPI ClearUserApiHook(HINSTANCE hInstance);
 
 /* definitions for message.c */
 BOOL FASTCALL MessageInit(VOID);
@@ -96,5 +99,6 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 HWND* WIN_ListChildren (HWND hWndparent);
 VOID DeleteFrameBrushes(VOID);
+BOOL WINAPI GdiValidateHandle(HGDIOBJ);
 
 /* EOF */

@@ -288,7 +288,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         {
             /* Then register it for internal usage */
             HalpIDTUsageFlags[i].Flags = IDT_INTERNAL;
-            HalpIDTUsage[i].BusReleativeVector = i;
+            HalpIDTUsage[i].BusReleativeVector = (UCHAR)i;
         }
     }
     
@@ -499,7 +499,7 @@ HalpRegisterVector(IN UCHAR Flags,
 
     /* Save the vector data */
     HalpIDTUsage[SystemVector].Irql  = Irql;
-    HalpIDTUsage[SystemVector].BusReleativeVector = BusVector;
+    HalpIDTUsage[SystemVector].BusReleativeVector = (UCHAR)BusVector;
 }
 
 #ifndef _MINIHAL_

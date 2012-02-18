@@ -61,6 +61,12 @@
 #define vsnprintfW _vsnwprintf
 #define isprintW iswprint
 
+static __inline unsigned short get_char_typeW( WCHAR ch )
+{
+    extern const unsigned short wine_wctype_table[];
+    return wine_wctype_table[wine_wctype_table[ch >> 8] + (ch & 0xff)];
+}
+
 static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end;

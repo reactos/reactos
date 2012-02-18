@@ -22,6 +22,7 @@
 #include <string.h>
 #include <pseh/pseh2.h>
 #include <time.h>
+#include <ntsecapi.h>
 
 #include "globals.h"
 #include "resource.h"

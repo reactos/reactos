@@ -6,17 +6,10 @@
  * PROGRAMER:        Gunnar
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Michael Martin (michael.martin@reactos.org)
- * REVISION HISTORY: 10/04/2003 Implemented System Timers
- *
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserTimer);
-
-WORD FASTCALL get_key_state(void);
 
 /* GLOBALS *******************************************************************/
 
@@ -192,7 +185,7 @@ IntSetTimer( PWND Window,
   PTIMER pTmr;
   UINT Ret = IDEvent;
   LARGE_INTEGER DueTime;
-  DueTime.QuadPart = (LONGLONG)(-5000000);
+  DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
 #if 0
   /* Windows NT/2k/XP behaviour */
@@ -214,7 +207,7 @@ IntSetTimer( PWND Window,
   if (Elapse < 10)
   {
      TRACE("Adjusting uElapse\n");
-     Elapse = 10;
+     Elapse = 10; // 1024hz .9765625 ms, set to 10.0 ms (+/-)1 ms
   }
 
   /* Passing an IDEvent of 0 and the SetTimer returns 1.
@@ -324,12 +317,12 @@ SystemTimerProc(HWND hwnd,
           if ( pDesk->dwDTFlags & DF_TME_HOVER &&
                pWnd == pDesk->spwndTrack )
           {
-             Point = gpsi->ptCursor;
-             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             Point = pWnd->head.pti->MessageQueue->MouseMoveMsg.pt;
+             if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {
-                   wParam = get_key_state();
+                   wParam = UserGetMouseButtonsState();
                    Msg = WM_MOUSEHOVER;
 
                    if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
@@ -345,6 +338,7 @@ SystemTimerProc(HWND hwnd,
                    wParam = pDesk->htEx; // Need to support all HTXYZ hits.
                    Msg = WM_NCMOUSEHOVER;
                 }
+                TRACE("Generating WM_NCMOUSEHOVER\n");
                 UserPostMessage(hwnd, Msg, wParam, MAKELPARAM(Point.x, Point.y));
                 pDesk->dwDTFlags &= ~DF_TME_HOVER;
                 break; // Kill this timer.
@@ -452,7 +446,7 @@ ProcessTimers(VOID)
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
-  DueTime.QuadPart = (LONGLONG)(-500000);
+  DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
   while(pLE != &TimersListHead)
   {
@@ -604,7 +598,7 @@ InitTimerImpl(VOID)
                        WindowLessTimersBitMapBuffer,
                        BitmapBytes * 8);
 
-   /* yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
+   /* Yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
 
    ExInitializeResourceLite(&TimerLock);
@@ -700,6 +694,5 @@ NtUserValidateTimerCallback(
   UserLeave();
   return Ret;
 }
-
 
 /* EOF */

@@ -1,8 +1,8 @@
 /*
  * WineMine
- * Norwegian Bokmål language support
+ * Norwegian BokmÃ¥l language support
  *
- * Copyright 2005 Alexander N. Sørnes
+ * Copyright 2005 Alexander N. SÃ¸rnes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 STRINGTABLE BEGIN
      IDS_APPNAME, "Minesveiper"
      IDS_NOBODY,  "Ingen"
-     IDS_ABOUT,   "Kopirett 2000 tilhører Joshua Thielen"
+     IDS_ABOUT,   "Kopirett 2000 tilhÃ¸rer Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
@@ -32,7 +32,7 @@ BEGIN
     POPUP "&Innstillinger" BEGIN
         MENUITEM "&Ny\tF2",       IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Merk spørsmål", IDM_MARKQ
+        MENUITEM "&Merk spÃ¸rsmÃ¥l", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "Ny&begynner",      IDM_BEGINNER
         MENUITEM "&Avansert",      IDM_ADVANCED

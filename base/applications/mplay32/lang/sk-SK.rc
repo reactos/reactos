@@ -1,4 +1,4 @@
-/*  TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/*  TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  *  DATE OF TR.:  12-03-2009
  *  LAST CHANGE:  12-03-2009
  */
@@ -7,29 +7,29 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&S˙bor"
+	POPUP "&S√∫bor"
 	BEGIN
-		MENUITEM "&Otvoriù...", IDM_OPEN_FILE
-		MENUITEM "&Zavrieù",    IDM_CLOSE_FILE
+		MENUITEM "&Otvori≈•...", IDM_OPEN_FILE
+		MENUITEM "&Zavrie≈•",    IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "S&konËiù",    IDM_EXIT
+		MENUITEM "S&konƒçi≈•",    IDM_EXIT
 	END
-	POPUP "&PomocnÌk"
+	POPUP "&Pomocn√≠k"
 	BEGIN
-		MENUITEM "»&o je...",   IDM_ABOUT
+		MENUITEM "ƒå&o je...",   IDM_ABOUT
 	END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Vöetky podporovanÈ (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Prehraù"
-	IDS_TOOLTIP_STOP "Zastaviù"
-	IDS_TOOLTIP_EJECT "Vysun˙ù"
-	IDS_TOOLTIP_BACKWARD "PreskoËiù dozadu"
-	IDS_TOOLTIP_SEEKBACK "Vyhæadaù dozadu"
-	IDS_TOOLTIP_SEEKFORW "Vyhæadaù dopredu"
-	IDS_TOOLTIP_FORWARD "PreskoËiù dopredu"
-    IDS_APPTITLE "Multimedi·lny prehr·vaË systÈmu ReactOS"
-	IDS_PLAY "Prehraù"
+	IDS_ALL_TYPES_FILTER "V≈°etky podporovan√© (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Prehra≈•"
+	IDS_TOOLTIP_STOP "Zastavi≈•"
+	IDS_TOOLTIP_EJECT "Vysun√∫≈•"
+	IDS_TOOLTIP_BACKWARD "Preskoƒçi≈• dozadu"
+	IDS_TOOLTIP_SEEKBACK "Vyhƒæada≈• dozadu"
+	IDS_TOOLTIP_SEEKFORW "Vyhƒæada≈• dopredu"
+	IDS_TOOLTIP_FORWARD "Preskoƒçi≈• dopredu"
+    IDS_APPTITLE "Multimedi√°lny prehr√°vaƒç syst√©mu ReactOS"
+	IDS_PLAY "Prehra≈•"
 END

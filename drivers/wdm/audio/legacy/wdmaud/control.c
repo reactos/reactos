@@ -45,9 +45,9 @@ WdmAudControlDeviceType(
 {
     ULONG Result = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
@@ -227,13 +227,13 @@ WdmAudGetDeviceInterface(
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo)
 {
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     LPWSTR Device;
     ULONG Size, Length;
 
     /* get device extension */
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* get device interface string input length */
     Size = DeviceInfo->u.Interface.DeviceInterfaceStringSize;
@@ -334,7 +334,7 @@ WdmAudDeviceControl(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
-    if (!IoStack->FileObject)
+    if (!IoStack->FileObject || !IoStack->FileObject->FsContext)
     {
         /* file object parameter */
         DPRINT1("Error: file object is not attached\n");

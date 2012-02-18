@@ -87,9 +87,9 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
 extern ULONGLONG KeBootTimeBias;
 extern BOOLEAN ExCmosClockIsSane;
-extern ULONG KeProcessorArchitecture;
-extern ULONG KeProcessorLevel;
-extern ULONG KeProcessorRevision;
+extern USHORT KeProcessorArchitecture;
+extern USHORT KeProcessorLevel;
+extern USHORT KeProcessorRevision;
 extern ULONG KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
@@ -125,13 +125,14 @@ extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
-extern ULONG KiIdleSummary;
+extern ULONG_PTR KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
+extern BOOLEAN KiTimeAdjustmentEnabled;
 extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
@@ -145,17 +146,6 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 
 #define AFFINITY_MASK(Id) KiMask32Array[Id]
 #define PRIORITY_MASK(Id) KiMask32Array[Id]
-
-/* The following macro initializes a dispatcher object's header */
-#define KeInitializeDispatcherHeader(Header, t, s, State)                   \
-{                                                                           \
-    (Header)->Type = t;                                                     \
-    (Header)->Absolute = 0;                                                 \
-    (Header)->Size = s;                                                     \
-    (Header)->Inserted = 0;                                                 \
-    (Header)->SignalState = State;                                          \
-    InitializeListHead(&((Header)->WaitListHead));                          \
-}
 
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
@@ -277,6 +267,34 @@ NTAPI
 KeSetDisableBoostThread(
     IN OUT PKTHREAD Thread,
     IN BOOLEAN Disable
+);
+
+BOOLEAN
+NTAPI
+KeSetDisableBoostProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Disable
+);
+
+BOOLEAN
+NTAPI
+KeSetAutoAlignmentProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Enable
+);
+
+KAFFINITY
+NTAPI
+KeSetAffinityProcess(
+    IN PKPROCESS Process,
+    IN KAFFINITY Affinity
+);
+
+VOID
+NTAPI
+KeBoostPriorityThread(
+    IN PKTHREAD Thread,
+    IN KPRIORITY Increment
 );
 
 VOID
@@ -450,7 +468,7 @@ KeInitializeProfile(
     struct _KPROFILE* Profile,
     struct _KPROCESS* Process,
     PVOID ImageBase,
-    ULONG ImageSize,
+    SIZE_T ImageSize,
     ULONG BucketSize,
     KPROFILE_SOURCE ProfileSource,
     KAFFINITY Affinity
@@ -628,7 +646,7 @@ VOID
 FASTCALL
 KiUnlinkThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus
+    IN LONG_PTR WaitStatus
 );
 
 VOID
@@ -653,7 +671,7 @@ KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
     KAFFINITY Affinity,
-    PULONG DirectoryTableBase,
+    PULONG_PTR DirectoryTableBase,
     IN BOOLEAN Enable
 );
 

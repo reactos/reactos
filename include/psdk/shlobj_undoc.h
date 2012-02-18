@@ -777,6 +777,7 @@ typedef struct tagCREATEMRULISTW
     PROC lpfnCompare;
 } CREATEMRULISTW, *LPCREATEMRULISTW;
 
+#define MRU_STRING  0x0
 #define MRU_BINARY  0x1
 #define MRU_CACHEWRITE  0x2
 
@@ -785,6 +786,20 @@ HANDLE WINAPI CreateMRUListA(LPCREATEMRULISTA);
 INT WINAPI AddMRUData(HANDLE,LPCVOID,DWORD);
 INT WINAPI FindMRUData(HANDLE,LPCVOID,DWORD,LPINT);
 VOID WINAPI FreeMRUList(HANDLE);
+
+INT WINAPI AddMRUStringW(HANDLE hList, LPCWSTR lpszString);
+INT WINAPI AddMRUStringA(HANDLE hList, LPCSTR lpszString);
+BOOL WINAPI DelMRUString(HANDLE hList, INT nItemPos);
+INT WINAPI FindMRUStringW(HANDLE hList, LPCWSTR lpszString, LPINT lpRegNum);
+INT WINAPI FindMRUStringA(HANDLE hList, LPCSTR lpszString, LPINT lpRegNum);
+HANDLE WINAPI CreateMRUListLazyW(const CREATEMRULISTW *lpcml, DWORD dwParam2,
+                                  DWORD dwParam3, DWORD dwParam4);
+HANDLE WINAPI CreateMRUListLazyA(const CREATEMRULISTA *lpcml, DWORD dwParam2,
+                                  DWORD dwParam3, DWORD dwParam4);
+INT WINAPI EnumMRUListW(HANDLE hList, INT nItemPos, LPVOID lpBuffer,
+                         DWORD nBufferSize);
+INT WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer,
+                         DWORD nBufferSize);
 
 #define DC_NOSENDMSG 0x2000
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);

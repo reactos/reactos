@@ -1,41 +1,42 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\network\ping\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:      ReactOS PING
+ * FILE:         base\applications\network\ping\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nSYNTAX: ping [-t] [-n antal] [-l storlek] [-w timeout] v‰rddator\n\n\
+    IDS_USAGE "\nSYNTAX: ping [-t] [-n antal] [-l storlek] [-w timeout] v√§rddator\n\n\
 Alternativ:\n\
     -t             Pinga den angivna datorn tills kommandor stoppas.\n\
-                   Fˆr att stoppa - tryck Ctrl-C.\n\
-    -n antal       Antal ekobeg‰randen som ska skickas.\n\
-    -l storlek     S‰ndniningsbuffertens storlek.\n\
-    -w timeout     Timeout i millisekunder att v‰nta pÂ varje svar.\n\n\0"
+                   F√∂r att stoppa - tryck Ctrl-C.\n\
+    -n antal       Antal ekobeg√§randen som ska skickas.\n\
+    -l storlek     S√§ndniningsbuffertens storlek.\n\
+    -w timeout     Timeout i millisekunder att v√§nta p√• varje svar.\n\n\0"
 
     IDS_PING_WITH_BYTES             "\nPingar %1 [%2] med %3!d! bytes data:\n\n\0"
-    IDS_PING_STATISTICS             "\nPing statistk fˆr %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST  "    Packet: S‰nda = %1!d!, Mottagna = %2!d!, Fˆrlorade = %3!d! (%4!d!%% fˆrlust),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP      "Ungef‰rliga slingtider i millisekunder:\n\0"
+    IDS_PING_STATISTICS             "\nPing statistk f√∂r %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Packet: S√§nda = %1!d!, Mottagna = %2!d!, F√∂rlorade = %3!d! (%4!d!%% f√∂rlust),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Ungef√§rliga slingtider i millisekunder:\n\0"
     IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Genomsnittlig = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES        "Inte tillr‰ckliga resurser tillg‰nliga.\n\0"
-    IDS_UNKNOWN_HOST                "Ok‰nd V‰rd %1.\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Inte tillr√§ckliga resurser tillg√§nliga.\n\0"
+    IDS_UNKNOWN_HOST                "Ok√§nd V√§rd %1.\n\0"
     IDS_SETSOCKOPT_FAILED           "setsockopt misslyckades (%1!d!).\n\0"
     IDS_COULD_NOT_CREATE_SOCKET     "Kunde inte skapa socket (#%1!d!).\n\0"
     IDS_COULD_NOT_INIT_WINSOCK      "Kunde inte initialisera winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "Namn eller IP adress till v‰rd mÂste anges.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Namn eller IP adress till v√§rd m√•ste anges.\n\0"
     IDS_BAD_PARAMETER               "Ogiltig parameter %1.\n\0"
-    IDS_BAD_OPTION_FORMAT           "Ogiltigt format pÂ alternativ %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Ogiltigt format p√• alternativ %1.\n\0"
     IDS_BAD_OPTION                  "Ogiltigt alternativ %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L          "Ogiltigt v‰rde fˆr alternativ -l, giltig intervall ‰r frÂn 0 till %1!d!.\n\0"
-    IDS_REPLY_FROM                  "Svar frÂn %1: bytes=%2!d! tid%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE            "V‰rddatorn gÂr inte att nÂ.\n\0"
-    IDS_COULD_NOT_TRANSMIT          "Kunde inte s‰nda data (%1!d!).\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Ogiltigt v√§rde f√∂r alternativ -l, giltig intervall √§r fr√•n 0 till %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Svar fr√•n %1: bytes=%2!d! tid%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "V√§rddatorn g√•r inte att n√•.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Kunde inte s√§nda data (%1!d!).\n\0"
     IDS_COULD_NOT_RECV              "Kunde inte ta emot data (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT             "FˆrfrÂgan gjorde timeout.\n\0"
+    IDS_REQUEST_TIMEOUT             "F√∂rfr√•gan gjorde timeout.\n\0"
     IDS_MS                          "ms\0"
     IDS_1MS                         "1ms\0"
 END

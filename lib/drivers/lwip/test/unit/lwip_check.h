@@ -23,7 +23,7 @@ static Suite* create_suite(const char* name, TFun *tests, size_t num_tests, SFun
   Suite *s = suite_create(name);
 
   for(i = 0; i < num_tests; i++) {
-    // Core test case
+    /* Core test case */
     TCase *tc_core = tcase_create("Core");
     if ((setup != NULL) || (teardown != NULL)) {
       tcase_add_checked_fixture(tc_core, setup, teardown);

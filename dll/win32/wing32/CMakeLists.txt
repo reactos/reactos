@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(wing32.dll wing32.spec)
 
@@ -9,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(wing32 SHARED ${SOURCE})
 
-set_entrypoint(wing32 0)
+set_module_type(wing32 win32dll UNICODE ENTRYPOINT 0)
 
 add_importlibs(wing32 user32 gdi32 msvcrt)
 add_dependencies(wing32 psdk)

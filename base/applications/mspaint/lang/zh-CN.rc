@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/zh-CN.rc
+ * LICENSE:     LGPL
+ * FILE:        base/applications/mspaint/lang/zh-CN.rc
  * PURPOSE:     Chinese Language resource file
  * TRANSLATORS: Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
  */

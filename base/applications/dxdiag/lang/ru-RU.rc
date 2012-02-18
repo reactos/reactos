@@ -92,7 +92,7 @@ BEGIN
     PUSHBUTTON "Включить", IDC_BUTTON_D3D, 170, 142, 60, 14, WS_DISABLED
     PUSHBUTTON "Включить", IDC_BUTTON_AGP, 170, 158, 60, 14, WS_DISABLED
     PUSHBUTTON "Проверка DirectDraw", IDC_BUTTON_TESTDD, 250, 126, 80, 14
-    PUSHBUTTON "Проверка Direct3D", IDC_BUTTON_TEST3D, 250, 142, 80, 14, WS_DISABLED
+    PUSHBUTTON "Проверка Direct3D", IDC_BUTTON_TEST3D, 250, 142, 80, 14
 
     GROUPBOX "Примечания", -1, 10, 185, 450, 34
     EDITTEXT  IDC_TEXT_INFO, 20, 195, 432, 18, WS_DISABLED | WS_TABSTOP
@@ -221,4 +221,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u Мб"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u бит)(%uГц)"
 	IDS_OPTION_NO "Нет"
+	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

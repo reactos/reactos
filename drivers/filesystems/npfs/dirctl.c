@@ -286,7 +286,7 @@ NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PNPFS_CCB Ccb;
-    PNPFS_FCB Fcb;
+    //PNPFS_FCB Fcb;
     NTSTATUS Status;
     ULONG Size = 0;
 
@@ -308,7 +308,7 @@ NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    Fcb = Ccb->Fcb;
+    //Fcb = Ccb->Fcb;
 
     switch (IoStack->MinorFunction)
     {

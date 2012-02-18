@@ -186,4 +186,10 @@ CONSOLE_SetStyledText(
 	IN INT Flags,
 	IN LPCSTR Text);
 
+VOID
+CONSOLE_ClearStyledText(IN SHORT x,
+                        IN SHORT y,
+                        IN INT Flags,
+                        IN SHORT Length);
+
 /* EOF */

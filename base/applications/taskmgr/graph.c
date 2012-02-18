@@ -410,7 +410,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
 {
     RECT        rcClient;
-    ULONGLONG   CommitChargeLimit;
+    //ULONGLONG   CommitChargeLimit;
     int         i;
     static int  offset = 0;
 
@@ -430,7 +430,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
     /*
      * Get the memory usage
      */
-    CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
+    //CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
     /*
      * Draw the graph background

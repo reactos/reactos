@@ -66,13 +66,12 @@ AddUserProfile(HWND hwndListView,
                LPTSTR lpProfileSid)
 {
     LV_ITEM lvi;
-    INT iItem;
 
     memset(&lvi, 0x00, sizeof(lvi));
     lvi.mask = LVIF_TEXT | LVIF_STATE;
     lvi.pszText = lpProfileSid;
     lvi.state = 0;
-    iItem = ListView_InsertItem(hwndListView, &lvi);
+    ListView_InsertItem(hwndListView, &lvi);
 }
 
 

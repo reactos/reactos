@@ -69,9 +69,9 @@ WSPGetOverlappedResult(
 BOOL
 WSPAPI
 WSPGetQOSByName(
-    IN      SOCKET s, 
-    IN OUT  LPWSABUF lpQOSName, 
-    OUT     LPQOS lpQOS, 
+    IN      SOCKET s,
+    IN OUT  LPWSABUF lpQOSName,
+    OUT     LPQOS lpQOS,
     OUT     LPINT lpErrno)
 {
     UNIMPLEMENTED

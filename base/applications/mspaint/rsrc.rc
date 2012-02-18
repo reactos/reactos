@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/rsrc.rc
+ * FILE:        base/applications/mspaint/rsrc.rc
  * PURPOSE:     Managing the resources
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -11,32 +11,36 @@
 #include <windows.h>
 #include "definitions.h"
 
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Paint\0"
+#define REACTOS_STR_INTERNAL_NAME     "mspaint\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "mspaint.exe\0"
+
+#include <reactos/version.rc>
+
 #include "icons.rc"
 
-// cp 1252 languages
+// UTF-8
+#pragma code_page(65001)
+#include "lang/bg-BG.rc"
+#include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-GB.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
 #include "lang/eu-ES.rc"
 #include "lang/fr-FR.rc"
+#include "lang/hu-HU.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
+#include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
 #include "lang/pt-PT.rc"
-// cp 1250 languages
-#include "lang/cs-CZ.rc"
-#include "lang/hu-HU.rc"
-#include "lang/sk-SK.rc"
-// cp 1251 languages
-#include "lang/bg-BG.rc"
-
-// UTF-8
-#pragma code_page(65001)
-#include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
+#include "lang/sv-SE.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
+#include "lang/zh-TW.rc"

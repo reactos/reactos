@@ -576,6 +576,8 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
     DWORD dwSeed;
     PBYTE pBuffer;
     ULONG uPseudoRandom;
+    LARGE_INTEGER time;
+    static ULONG uCounter = 17;
 
     if(!pbBuffer || !dwLen)
     {
@@ -583,8 +585,9 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
         return TRUE;
     }
 
-    /* Get the first seed from the tick count */
-    dwSeed = GetTickCount();
+    /* Get the first seed from the performance counter */
+    QueryPerformanceCounter(&time);
+    dwSeed = time.LowPart ^ time.HighPart ^ RtlUlongByteSwap(uCounter++);
 
     /* We will access the buffer bytewise */
     pBuffer = (PBYTE)pbBuffer;

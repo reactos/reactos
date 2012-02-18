@@ -12,7 +12,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -346,7 +346,7 @@ AcpiOsWaitEventsComplete (
 
 void
 AcpiOsSleep (
-    ACPI_INTEGER            Milliseconds);
+    UINT64                  Milliseconds);
 
 void
 AcpiOsStall (
@@ -394,34 +394,20 @@ ACPI_STATUS
 AcpiOsReadPciConfiguration (
     ACPI_PCI_ID             *PciId,
     UINT32                  Reg,
-    void                    *Value,
+    UINT64                  *Value,
     UINT32                  Width);
 
 ACPI_STATUS
 AcpiOsWritePciConfiguration (
     ACPI_PCI_ID             *PciId,
     UINT32                  Reg,
-    ACPI_INTEGER            Value,
+    UINT64                  Value,
     UINT32                  Width);
-
-
-/*
- * Interim function needed for PCI IRQ routing
- */
-void
-AcpiOsDerivePciId(
-    ACPI_HANDLE             Rhandle,
-    ACPI_HANDLE             Chandle,
-    ACPI_PCI_ID             **PciId);
 
 
 /*
  * Miscellaneous
  */
-ACPI_STATUS
-AcpiOsValidateInterface (
-    char                    *Interface);
-
 BOOLEAN
 AcpiOsReadable (
     void                    *Pointer,
@@ -463,9 +449,11 @@ AcpiOsRedirectOutput (
 /*
  * Debug input
  */
-UINT32
+ACPI_STATUS
 AcpiOsGetLine (
-    char                    *Buffer);
+    char                    *Buffer,
+    UINT32                  BufferLength,
+    UINT32                  *BytesRead);
 
 
 /*

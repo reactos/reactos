@@ -10,7 +10,7 @@ BEGIN
 
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "Ü&ber ReactOS Management Console...", ID_HELP_ABOUT
+        MENUITEM "Ãœ&ber ReactOS Management Console...", ID_HELP_ABOUT
     END
 END
 

@@ -120,7 +120,7 @@
 @ cdecl -i386 -norelay __CxxFrameHandler(ptr ptr ptr ptr)
 @ cdecl -i386 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
-@ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr) ntdll.__C_specific_handler
+@ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ stdcall -i386 __CxxLongjmpUnwind(ptr)
 @ cdecl __CxxQueryExceptionSize()
 # stub __CxxRegisterExceptionObject
@@ -145,13 +145,14 @@
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
+@ cdecl __daylight() __p__daylight
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno()
 @ cdecl __fpecode()
 @ cdecl __get_app_type()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
 @ extern __initenv
-@ cdecl __iob_func() __p__iob
+@ cdecl __iob_func()
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
@@ -196,7 +197,7 @@
 @ cdecl -arch=i386 __p__environ()
 @ cdecl -arch=i386 __p__fileinfo()
 @ cdecl -arch=i386 __p__fmode()
-@ cdecl -arch=i386 __p__iob()
+@ cdecl -arch=i386 __p__iob() __iob_func
 @ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
@@ -227,15 +228,15 @@
 @ cdecl __unDNameEx(ptr str long ptr ptr ptr long)
 @ extern __unguarded_readlc_active
 @ extern __wargv __wargv
-# stub __wcserror
-# stub __wcserror_s
+@ cdecl __wcserror(wstr)
+@ cdecl __wcserror_s(ptr long wstr)
 # stub __wcsncnt
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
 @ extern __winitenv
 @ cdecl _abnormal_termination()
 # stub _abs64
 @ cdecl _access(str long)
-# stub _access_s
+@ cdecl _access_s(str long)
 @ extern _acmdln
 @ stdcall -arch=i386 _adj_fdiv_m16i(long)
 @ stdcall -arch=i386 _adj_fdiv_m32(long)
@@ -320,12 +321,12 @@
 # @ varargs _cscanf_s(str)
 # @ varargs _cscanf_s_l(str ptr)
 @ cdecl _ctime32(ptr)
-# stub _ctime32_s
+@ cdecl _ctime32_s(str long ptr)
 @ cdecl _ctime64(ptr)
-# stub _ctime64_s
+@ cdecl _ctime64_s(str long ptr)
 @ extern _ctype
 @ cdecl _cwait(ptr long long)
-# stub _cwprintf
+@ varargs _cwprintf(wstr)
 # stub _cwprintf_l
 # stub _cwprintf_p
 # stub _cwprintf_p_l
@@ -399,11 +400,12 @@
 # stub _fscanf_l
 # @ varargs _fscanf_l(ptr str ptr)
 # @ varargs _fscanf_s_l(ptr str ptr)
-# stub _fseeki64
+@ cdecl _fseeki64(ptr long long long)
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat(long ptr)
 @ cdecl _fstat64(long ptr)
 @ cdecl _fstati64(long ptr)
+@ cdecl -ret64 _ftelli64(ptr)
 @ cdecl _ftime(ptr)
 @ cdecl _ftime32(ptr)
 # stub _ftime32_s
@@ -426,25 +428,26 @@
 # @ varargs _fwscanf_s_l(ptr wstr ptr)
 @ cdecl _gcvt(double long str)
 # stub _gcvt_s
-# stub _get_doserrno
+@ cdecl _get_doserrno(ptr)
 # stub _get_environ
-# stub _get_errno
+@ cdecl _get_errno(ptr)
 # stub _get_fileinfo
 # stub _get_fmode
 # @ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
-# stub _get_osplatform
+@ cdecl _get_osplatform(ptr) 
 # stub _get_osver
-# stub _get_output_format
-# stub _get_pgmptr
+@ cdecl _get_output_format()
+@ cdecl _get_pgmptr(ptr)
 @ cdecl _get_sbh_threshold()
 # stub _get_wenviron
 # stub _get_winmajor
 # stub _get_winminor
 # stub _get_winver
-# stub _get_wpgmptr
-# @ stub _get_terminate # not in XP / 7
-# @ stub _get_unexpected # not in XP / 7
+@ cdecl _get_wpgmptr(ptr)
+@ cdecl _get_terminate()
+@ cdecl _get_tzname(ptr str long long)
+@ cdecl _get_unexpected()
 @ cdecl _getch()
 @ cdecl _getche()
 @ cdecl _getcwd(str long)
@@ -463,9 +466,9 @@
 @ cdecl _getws(ptr)
 @ cdecl -i386 _global_unwind2(ptr)
 @ cdecl _gmtime32(ptr)
-# stub _gmtime32_s
+@ cdecl _gmtime32_s(ptr ptr)
 @ cdecl _gmtime64(ptr)
-# stub _gmtime64_s
+@ cdecl _gmtime64_s(ptr ptr)
 @ cdecl _heapadd(ptr long)
 @ cdecl _heapchk()
 @ cdecl _heapmin()
@@ -474,11 +477,11 @@
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
-# stub _i64toa_s
+@ cdecl _i64toa_s(long long ptr long long) 
 @ cdecl _i64tow(long long ptr long)
-# stub _i64tow_s
+@ cdecl _i64tow_s(long long ptr long long) 
 @ cdecl _initterm(ptr ptr)
-# stub _initterm_e
+@ cdecl _initterm_e(ptr ptr)
 @ cdecl -arch=i386 _inp(long) MSVCRT__inp
 @ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
 @ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
@@ -570,9 +573,9 @@
 # stub _iswxdigit_l
 # stub _isxdigit_l
 @ cdecl _itoa(long ptr long)
-# stub _itoa_s
+@ cdecl _itoa_s(long ptr long long)
 @ cdecl _itow(long ptr long)
-# stub _itow_s
+@ cdecl _itow_s(long ptr long long)
 @ cdecl _j0(double)
 @ cdecl _j1(double)
 @ cdecl _jn(long double)
@@ -581,11 +584,11 @@
 # stub _lfind_s
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
-@ cdecl -i386 _local_unwind4(ptr ptr long) msvcrt_local_unwind4
+@ cdecl -i386 _local_unwind4(ptr ptr long)
 @ cdecl _localtime32(ptr)
-# stub _localtime32_s
+@ cdecl _localtime32_s(ptr ptr)
 @ cdecl _localtime64(ptr)
-# stub _localtime64_s
+@ cdecl _localtime64_s(ptr ptr)
 @ cdecl _lock(long)
 @ cdecl _locking(long long long)
 @ cdecl _logb(double)
@@ -597,9 +600,9 @@
 @ cdecl _lseek(long long long)
 @ cdecl -ret64 _lseeki64(long double long)
 @ cdecl _ltoa(long ptr long)
-# stub _ltoa_s
+@ cdecl _ltoa_s(long ptr long long)
 @ cdecl _ltow(long ptr long)
-# stub _ltow_s
+@ cdecl _ltow_s(long ptr long long)
 @ cdecl _makepath(ptr str str str str)
 @ cdecl _makepath_s(ptr long str str str str)
 # stub _malloc_dbg
@@ -778,12 +781,12 @@
 @ cdecl _putenv(str)
 # stub _putenv_s
 @ cdecl _putw(long ptr)
-# stub _putwch
+@ cdecl _putwch(long)
 @ cdecl _putws(wstr)
 # extern _pwctype
 @ cdecl _read(long ptr long)
 # stub _realloc_dbg
-# stub _resetstkoflw
+@ cdecl _resetstkoflw()
 @ cdecl _rmdir(str)
 @ cdecl _rmtmp()
 @ cdecl _rotl(long long)
@@ -804,13 +807,13 @@
 # stub _scwprintf_l
 # stub _scwprintf_p_l
 @ cdecl _searchenv(str str ptr)
-# stub _searchenv_s
-# stub _seh_longjmp_unwind4
+@ cdecl _searchenv_s(str str ptr long)
+@ stdcall -i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable
 # stub _set_controlfp
-# stub _set_doserrno
-# stub _set_errno
+@ cdecl _set_doserrno(long)
+@ cdecl _set_errno(long)
 @ cdecl _set_error_mode(long)
 # stub _set_fileinfo
 # stub _set_fmode
@@ -844,7 +847,7 @@
 # stub _snwscanf_s
 # stub _snwscanf_s_l
 @ varargs _sopen(str long long)
-# stub _sopen_s
+@ cdecl _sopen_s(ptr str long long long)
 @ varargs _spawnl(long str str)
 @ varargs _spawnle(long str str)
 @ varargs _spawnlp(long str str)
@@ -931,9 +934,9 @@
 @ extern _tzname
 @ cdecl _tzset()
 @ cdecl _ui64toa(long long ptr long)
-# stub _ui64toa_s
+@ cdecl _ui64toa_s(long long ptr long long)
 @ cdecl _ui64tow(long long ptr long)
-# stub _ui64tow_s
+@ cdecl _ui64tow_s(long long ptr long long)
 @ cdecl _ultoa(long ptr long)
 # stub _ultoa_s
 @ cdecl _ultow(long ptr long)
@@ -953,7 +956,7 @@
 # stub _vcprintf_p_l
 # stub _vcprintf_s
 # stub _vcprintf_s_l
-# stub _vcwprintf
+@ cdecl _vcwprintf(wstr ptr)
 # stub _vcwprintf_l
 # stub _vcwprintf_p
 # stub _vcwprintf_p_l
@@ -989,13 +992,13 @@
 # @ cdecl _vsnwprintf_s(ptr long long wstr ptr)
 # @ cdecl _vsnwprintf_s_l(ptr long long wstr ptr ptr)
 # stub _vsprintf_l
-# stub _vsprintf_p
+@ cdecl _vsprintf_p(ptr long str ptr)
 # stub _vsprintf_p_l
 # stub _vsprintf_s_l
-@ cdecl _vswprintf(ptr long wstr ptr) _vsnwprintf
+# @ cdecl _vswprintf(ptr wstr ptr)
 @ cdecl _vswprintf_c(ptr long wstr ptr) _vsnwprintf
 # @ cdecl _vswprintf_c_l(ptr long wstr ptr ptr) _vsnwprintf_l
-# @ cdecl _vswprintf_l(ptr long wstr ptr ptr) _vsnwprintf_l
+# @ cdecl _vswprintf_l(ptr wstr ptr ptr)
 # @ cdecl _vswprintf_p_l(ptr long wstr ptr ptr) _vsnwprintf_l
 # @ cdecl _vswprintf_s_l(ptr long wstr ptr ptr)
 # stub _vwprintf_l
@@ -1003,7 +1006,7 @@
 # stub _vwprintf_p_l
 # stub _vwprintf_s_l
 @ cdecl _waccess(wstr long)
-# stub _waccess_s
+@ cdecl _waccess_s(wstr long)
 @ cdecl _wasctime(ptr)
 # stub _wasctime_s
 # stub _wassert
@@ -1014,8 +1017,8 @@
 # stub _wcscoll_l
 @ cdecl _wcsdup(wstr)
 # stub _wcsdup_dbg
-# stub _wcserror
-# stub _wcserror_s
+@ cdecl _wcserror(long)
+@ cdecl _wcserror_s(ptr long long)
 # stub _wcsftime_l
 @ cdecl _wcsicmp(wstr wstr)
 # stub _wcsicmp_l
@@ -1074,7 +1077,7 @@
 # stub _wfindnext64
 @ cdecl _wfindnexti64(long ptr)
 @ cdecl _wfopen(wstr wstr)
-# @ cdecl _wfopen_s(ptr wstr wstr)
+@ cdecl _wfopen_s(ptr wstr wstr)
 @ cdecl _wfreopen(wstr wstr ptr)
 # stub _wfreopen_s
 @ cdecl _wfsopen(wstr wstr long)
@@ -1114,7 +1117,7 @@
 # stub _wsearchenv_s
 @ cdecl _wsetlocale(long wstr)
 @ varargs _wsopen(wstr long long)
-# stub _wsopen_s
+@ cdecl _wsopen_s(ptr wstr long long long)
 @ varargs _wspawnl(long wstr wstr)
 @ varargs _wspawnle(long wstr wstr)
 @ varargs _wspawnlp(long wstr wstr)
@@ -1196,9 +1199,9 @@
 @ cdecl fmod(double double)
 @ cdecl -arch=x86_64 fmodf(long)
 @ cdecl fopen(str str)
-# @ cdecl fopen_s(ptr str str)
+@ cdecl fopen_s(ptr str str)
 @ varargs fprintf(ptr str)
-# stub fprintf_s
+@ varargs fprintf_s(ptr str)
 @ cdecl fputc(long ptr)
 @ cdecl fputs(str ptr)
 @ cdecl fputwc(long ptr)
@@ -1214,7 +1217,7 @@
 @ cdecl fsetpos(ptr ptr)
 @ cdecl ftell(ptr)
 @ varargs fwprintf(ptr wstr)
-# stub fwprintf_s
+@ varargs fwprintf_s(ptr wstr)
 @ cdecl fwrite(ptr long long ptr)
 @ varargs fwscanf(ptr wstr)
 # @ varargs fwscanf_s(ptr wstr)
@@ -1284,7 +1287,7 @@
 @ cdecl pow(double double)
 @ cdecl -arch=x86_64 powf(long)
 @ varargs printf(str)
-# stub printf_s
+@ varargs printf_s(str)
 @ cdecl putc(long ptr)
 @ cdecl putchar(long)
 @ cdecl puts(str)
@@ -1325,14 +1328,14 @@
 @ cdecl strcpy_s(ptr long str)
 @ cdecl strcspn(str str)
 @ cdecl strerror(long)
-# stub strerror_s
+@ cdecl strerror_s(ptr long long)
 @ cdecl strftime(str long str ptr)
 @ cdecl strlen(str)
 @ cdecl strncat(str str long)
 # stub strncat_s
 @ cdecl strncmp(str str long)
 @ cdecl strncpy(ptr str long)
-# @ cdecl strncpy_s(ptr long str long)
+@ cdecl strncpy_s(ptr long str long)
 @ cdecl strnlen(str long)
 @ cdecl strpbrk(str str)
 @ cdecl strrchr(str long)
@@ -1340,7 +1343,7 @@
 @ cdecl strstr(str str)
 @ cdecl strtod(str ptr)
 @ cdecl strtok(str str)
-# @ cdecl strtok_s(ptr str ptr)
+@ cdecl strtok_s(ptr str ptr)
 @ cdecl strtol(str ptr long)
 @ cdecl strtoul(str ptr long)
 @ cdecl strxfrm(ptr str long)
@@ -1364,22 +1367,22 @@
 @ cdecl ungetwc(long ptr)
 # stub utime
 @ cdecl vfprintf(ptr str ptr)
-# stub vfprintf_s
+@ cdecl vfprintf_s(ptr str ptr)
 @ cdecl vfwprintf(ptr wstr ptr)
-# stub vfwprintf_s
+@ cdecl vfwprintf_s(ptr wstr ptr)
 @ cdecl vprintf(str ptr)
-# stub vprintf_s
+@ cdecl vprintf_s(str ptr)
 # stub vsnprintf
 @ cdecl vsprintf(ptr str ptr)
 # @ cdecl vsprintf_s(ptr long str ptr)
 @ cdecl vswprintf(ptr wstr ptr)
 # @ cdecl vswprintf_s(ptr long wstr ptr)
 @ cdecl vwprintf(wstr ptr)
-# stub vwprintf_s
+@ cdecl vwprintf_s(wstr ptr)
 # stub wcrtomb
 # stub wcrtomb_s
 @ cdecl wcscat(wstr wstr)
-# @ cdecl wcscat_s(wstr long wstr)
+@ cdecl wcscat_s(wstr long wstr)
 @ cdecl wcschr(wstr long)
 @ cdecl wcscmp(wstr wstr)
 @ cdecl wcscoll(wstr wstr)
@@ -1389,7 +1392,7 @@
 @ cdecl wcsftime(ptr long wstr ptr)
 @ cdecl wcslen(wstr)
 @ cdecl wcsncat(wstr wstr long)
-# stub wcsncat_s
+@ cdecl wcsncat_s(wstr long wstr long)
 @ cdecl wcsncmp(wstr wstr long)
 @ cdecl wcsncpy(ptr wstr long)
 @ cdecl wcsncpy_s(ptr long wstr long)
@@ -1402,7 +1405,7 @@
 @ cdecl wcsstr(wstr wstr)
 @ cdecl wcstod(wstr ptr)
 @ cdecl wcstok(wstr wstr)
-# stub wcstok_s
+@ cdecl wcstok_s(ptr wstr ptr)
 @ cdecl wcstol(wstr ptr long)
 @ cdecl wcstombs(ptr ptr long)
 # @ cdecl wcstombs_s(ptr ptr long wstr long)
@@ -1412,7 +1415,7 @@
 @ cdecl wctomb(ptr long)
 # stub wctomb_s
 @ varargs wprintf(wstr)
-# stub wprintf_s
+@ varargs wprintf_s(wstr)
 @ varargs wscanf(wstr)
 # @ varargs wscanf_s(wstr)
 

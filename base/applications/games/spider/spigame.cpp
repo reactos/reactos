@@ -127,10 +127,10 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
 {
     CardStack temp, fakeDeck = pDeck->GetCardStack();
     fGameStarted = true;
-    int i, j, facedown, faceup;
 
     if (fakeDeck.NumCards() != 0 && deck.NumCards() != 0)
     {
+        int i, facedown, faceup;
         /* Add one card to every stack */
         for (i = 0; i < NUM_STACKS; i++)
         {
@@ -145,6 +145,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
                 /* Check stack finished, remove cards if so */
                 if (stackLookingGood(temp, NUM_ONECOLOR_CARDS - 1))
                 {
+                    int j;
                     for (j = 0; j < NUM_ONECOLOR_CARDS; j++)
                     {
                         temp.RemoveCard(0);

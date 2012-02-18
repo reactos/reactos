@@ -1,6 +1,5 @@
 
-add_typelib(shdocvw_v1 shdocvw_v1.idl)
-add_dependencies(shdocvw_v1 stdole2)
+add_typelib(shdocvw_v1.idl)
 
 add_definitions(-D_SHDOCVW_)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -32,28 +31,32 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
+set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
+
 add_library(shdocvw SHARED ${SOURCE})
-
 set_module_type(shdocvw win32dll)
-
 target_link_libraries(shdocvw uuid wine)
+add_delay_importlibs(shdocvw version ole32 oleaut32)
 
 add_importlibs(shdocvw
     comctl32
-    ole32
-    oleaut32
     shlwapi
     shell32
     user32
     advapi32
     gdi32
-    version
     urlmon
     msvcrt
     kernel32
     ntdll)
 
-add_dependencies(shdocvw shdocvw_v1)
+# shdocvw_v1.tlb needs stdole2.tlb
+add_dependencies(shdocvw stdole2)
+
 add_pch(shdocvw shdocvw.h)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
 add_importlib_target(shdocvw.spec)
+
+if(NOT MSVC)
+    allow_warnings(shdocvw)
+endif()

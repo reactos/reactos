@@ -259,6 +259,7 @@ static HRESULT activate_window(HTMLDocumentObj *This)
         return FAILED(hres) ? hres : E_FAIL;
     }
 
+    frameinfo.cb = sizeof(OLEINPLACEFRAMEINFO);
     hres = IOleInPlaceSite_GetWindowContext(This->ipsite, &pIPFrame, &This->ip_window,
             &posrect, &cliprect, &frameinfo);
     if(FAILED(hres)) {

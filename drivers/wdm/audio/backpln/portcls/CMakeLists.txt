@@ -53,20 +53,15 @@ add_library(portcls SHARED
 
 target_link_libraries(portcls
     libcntpr
-    stlport
     ${PSEH_LIB})
 
 if(MSVC)
-    set_target_properties(portcls PROPERTIES COMPILE_FLAGS "/GR-")
+    add_target_compile_flags(portcls "/GR-")
 else()
-    target_link_libraries(portcls -lgcc)
-    set_target_properties(portcls PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
-endif(MSVC)
+    add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
+endif()
 
+set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )
 add_pch(portcls private.hpp)
-set_entrypoint(portcls 0)
-set_image_base(portcls 0x00010000)
-set_subsystem(portcls native)
-set_target_properties(portcls PROPERTIES SUFFIX ".sys")
 add_importlibs(portcls ntoskrnl ks drmk hal)
 add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers FOR all)

@@ -1,18 +1,12 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window painting function
  *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
- *  REVISION HISTORY:
- *       06/06/2001   Created (?)
- *       18/11/2003   Complete rewrite
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserPainting);
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -703,7 +697,7 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 
    WndCaret = UserGetWindowObject(hWndCaret);
 
-   //fix: check for WndCaret can be null
+   // FIXME: Check for WndCaret can be NULL
    if (WndCaret == Window ||
          ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window, WndCaret)))
    {
@@ -780,6 +774,31 @@ IntPrintWindow(
     // TODO: Release Redirection from Print.
 
     return TRUE;
+}
+
+BOOL
+FASTCALL 
+IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
+{
+   PPROPERTY pprop;
+   DWORD FlashState;
+   BOOL Ret = FALSE;
+
+   pprop = IntGetProp(pWnd, AtomFlashWndState);
+   if (!pprop)
+   {
+      FlashState = pfwi->dwFlags;
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
+      return TRUE;
+   }
+
+   FlashState = (DWORD)pprop->Data;
+   if ( pfwi->dwFlags == FLASHW_STOP )
+   {
+      IntRemoveProp(pWnd, AtomFlashWndState);
+      Ret = TRUE;
+   }
+   return Ret;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -977,7 +996,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 
    if (!Ret) goto Exit;
 
-   if (!(pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
         finfo.cbSize != sizeof(FLASHWINFO) ||
         finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
    {
@@ -986,7 +1005,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
       goto Exit;
    }
 
-   //Ret = IntFlashWindowEx(pWnd, &finfo);
+   Ret = IntFlashWindowEx(pWnd, &finfo);
 
 Exit:
    UserLeave();
@@ -1675,7 +1694,7 @@ UserDrawCaptionText(
       OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
          ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
-   //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
+   // FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
    GreGetTextExtentW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), &Size, 0);
    GreExtTextOutW(hDc,
                   lpRc->left, (lpRc->top + lpRc->bottom)/2 - Size.cy/2,

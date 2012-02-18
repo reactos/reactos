@@ -200,7 +200,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         DPRINT1("Signaling Failed for: %p, %p, 0x%08lx\n",
                 CriticalSection,
                 CriticalSection->LockSemaphore,
-		Status);
+                Status);
         RtlRaiseStatus(Status);
     }
 }
@@ -299,7 +299,7 @@ VOID
 NTAPI
 RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 {
-    ULONG EntryId;
+    SIZE_T EntryId;
 
     /* Is it part of our cached entries? */
     if ((DebugInfo >= RtlpStaticDebugInfo) &&
@@ -310,19 +310,26 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 
         /* Mark as free */
         EntryId = (DebugInfo - RtlpStaticDebugInfo);
-        DPRINT("Freeing from Buffer: %p. Entry: %lu inside Process: %p\n",
+        DPRINT("Freeing from Buffer: %p. Entry: %Iu inside Process: %p\n",
                DebugInfo,
                EntryId,
                NtCurrentTeb()->ClientId.UniqueProcess);
         RtlpDebugInfoFreeList[EntryId] = FALSE;
 
-    } else {
+    } else if (!DebugInfo->Flags) {
 
         /* It's a dynamic one, so free from the heap */
         DPRINT("Freeing from Heap: %p inside Process: %p\n",
                DebugInfo,
                NtCurrentTeb()->ClientId.UniqueProcess);
         RtlFreeHeap(NtCurrentPeb()->ProcessHeap, 0, DebugInfo);
+
+    } else {
+
+        /* Wine stores a section name pointer in the Flags member */
+        DPRINT("Assuming static: %p inside Process: %p\n",
+               DebugInfo,
+               NtCurrentTeb()->ClientId.UniqueProcess);
 
     }
 }
@@ -365,7 +372,9 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     {
         /* Remove it from the list */
         RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
+#if 0 /* We need to preserve Flags for RtlpFreeDebugInfo */
         RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+#endif
     }
 
     /* Unprotect */
@@ -407,7 +416,7 @@ NTAPI
 RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                ULONG SpinCount)
 {
-    ULONG OldCount = CriticalSection->SpinCount;
+    ULONG OldCount = (ULONG)CriticalSection->SpinCount;
 
     /* Set to parameter if MP, or to 0 if this is Uniprocessor */
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
@@ -546,6 +555,7 @@ RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
     CritcalSectionDebugData->ContentionCount = 0;
     CritcalSectionDebugData->EntryCount = 0;
     CritcalSectionDebugData->CriticalSection = CriticalSection;
+    CritcalSectionDebugData->Flags = 0;
     CriticalSection->DebugInfo = CritcalSectionDebugData;
 
     /*

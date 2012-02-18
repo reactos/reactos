@@ -253,7 +253,7 @@ HvGetCellSize(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   SIZE_T Size,
+   ULONG Size,
    HSTORAGE_TYPE Storage,
    IN HCELL_INDEX Vicinity);
 

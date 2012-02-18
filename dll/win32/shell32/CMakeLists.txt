@@ -1,3 +1,4 @@
+set_cpp()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -10,76 +11,81 @@ add_definitions(
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/lib/recyclebin
+    ${REACTOS_SOURCE_DIR}/lib/atl
     ${REACTOS_SOURCE_DIR})
 
 spec2def(shell32.dll shell32.spec)
 
 list(APPEND SOURCE
-    authors.c
-    autocomplete.c
-    brsfolder.c
-    changenotify.c
-    classes.c
-    clipboard.c
-    control.c
-    dataobject.c
-    dde.c
-    debughlp.c
-    desktop.c
-    dialogs.c
-    dragdrophelper.c
-    enumidlist.c
-    extracticon.c
-    folders.c
-    iconcache.c
-    pidl.c
-    regsvr.c
-    shell32_main.c
-    shellitem.c
-    shelllink.c
-    shellole.c
-    shellord.c
-    shellpath.c
-    shellreg.c
-    shellstring.c
-    shfldr_desktop.c
-    shfldr_fs.c
-    shfldr_mycomp.c
-    shfldr_mydocuments.c
-    shfldr_printers.c
-    shfldr_admintools.c
-    shfldr_netplaces.c
-    shfldr_fonts.c
-    shfldr_cpanel.c
-    shfldr_recyclebin.c
-    shlexec.c
-    shlfileop.c
-    shlfolder.c
-    shlfsbind.c
-    shlmenu.c
-    shlview.c
-    shpolicy.c
-    shv_def_cmenu.c
-    startmenu.c
-    stubs.c
-    ros-systray.c
-    fprop.c
-    drive.c
-    she_ocmenu.c
-    shv_item_new.c
-    folder_options.c
+    authors.cpp
+    autocomplete.cpp
+    brsfolder.cpp
+    changenotify.cpp
+    classes.cpp
+    clipboard.cpp
+    control.cpp
+    dataobject.cpp
+    dde.cpp
+    debughlp.cpp
+    desktop.cpp
+    dialogs.cpp
+    dragdrophelper.cpp
+    enumidlist.cpp
+    extracticon.cpp
+    folders.cpp
+    iconcache.cpp
+    pidl.cpp
+    shell32_main.cpp
+    shellitem.cpp
+    shelllink.cpp
+    shellole.cpp
+    shellord.cpp
+    shellpath.cpp
+    shellreg.cpp
+    shellstring.cpp
+    folders/desktop.cpp
+    folders/fs.cpp
+    folders/mycomp.cpp
+    folders/mydocuments.cpp
+    folders/printers.cpp
+    folders/admintools.cpp
+    folders/netplaces.cpp
+    folders/fonts.cpp
+    folders/cpanel.cpp
+    folders/recyclebin.cpp
+    shlexec.cpp
+    shlfileop.cpp
+    shlfolder.cpp
+    shlfsbind.cpp
+    shlmenu.cpp
+    shlview.cpp
+    shpolicy.cpp
+    stubs.cpp
+    systray.cpp
+    fprop.cpp
+    drive.cpp
+    defcontextmenu.cpp
+    openwithmenu.cpp
+    newmenu.cpp
+    startmenu.cpp
+    folder_options.cpp
+    filedefext.cpp
+    drvdefext.cpp
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 add_library(shell32 SHARED ${SOURCE})
-
-set_module_type(shell32 win32dll)
+allow_warnings(shell32)
+set_module_type(shell32 win32dll UNICODE)
 
 target_link_libraries(shell32
+    atlnew
     wine
     uuid
     recyclebin)
+
+add_delay_importlibs(shell32 ole32 version fmifs)
 
 add_importlibs(shell32
     advapi32
@@ -87,15 +93,16 @@ add_importlibs(shell32
     user32
     comctl32
     comdlg32
+    shdocvw
     shlwapi
-    ole32
-    version
     devmgr
     winspool
     winmm
     msvcrt
     kernel32
     ntdll)
+
+add_dependencies(shdocvw shdocvw_v1)
 
 add_pch(shell32 precomp.h)
 

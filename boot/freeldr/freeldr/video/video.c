@@ -33,7 +33,7 @@ PVOID VideoAllocateOffScreenBuffer(VOID)
 
 	BufferSize = MachVideoGetBufferSize();
 
-	VideoOffScreenBuffer = MmAllocateMemory(BufferSize);
+	VideoOffScreenBuffer = MmAllocateMemoryWithType(BufferSize, LoaderFirmwareTemporary);
 
 	return VideoOffScreenBuffer;
 }

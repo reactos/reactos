@@ -10,17 +10,17 @@ BEGIN
     POPUP "&Soubor"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Uk&onËit\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Uk&onƒçit\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&N·povÏda"
+    POPUP "&N√°povƒõda"
     BEGIN
-        MENUITEM "&O konzoli ¯ÌzenÌ systÈmu ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&O konzoli ≈ô√≠zen√≠ syst√©mu ReactOS...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "Konzole ¯ÌzenÌ systÈmu ReactOS"
+    IDS_APPTITLE "Konzole ≈ô√≠zen√≠ syst√©mu ReactOS"
     IDS_CONSOLETITLE "Konzole%1!u!"
 END

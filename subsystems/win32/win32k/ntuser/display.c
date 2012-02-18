@@ -7,16 +7,10 @@
  */
 
 #include <win32k.h>
-
-#include <intrin.h>
-
 DBG_DEFAULT_CHANNEL(UserDisplay);
-
-BOOL InitSysParams();
 
 BOOL gbBaseVideo = 0;
 
-static const PWCHAR KEY_ROOT = L"";
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
 VOID
@@ -79,6 +73,7 @@ InitDisplayDriver(
     ULONG cbSize;
     HKEY hkey;
     DEVMODEW dmDefault;
+    DWORD dwVga;
 
     ERR("InitDisplayDriver(%S, %S);\n",
             pwszDeviceName, pwszRegKey);
@@ -133,6 +128,11 @@ InitDisplayDriver(
     /* Query the default settings */
     RegReadDisplaySettings(hkey, &dmDefault);
 
+    /* Query if this is a VGA compatible driver */
+    cbSize = sizeof(DWORD);
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_DWORD, &dwVga, &cbSize);
+    if (!NT_SUCCESS(Status)) dwVga = 0;
+
     /* Close the registry key */
     ZwClose(hkey);
 
@@ -142,6 +142,10 @@ InitDisplayDriver(
                                                  &ustrDisplayDrivers,
                                                  &ustrDescription,
                                                  &dmDefault);
+    if (pGraphicsDevice && dwVga)
+    {
+        pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_VGA_COMPATIBLE;
+    }
 
     return pGraphicsDevice;
 }
@@ -202,7 +206,7 @@ InitVideo()
         ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
     }
 
-    TRACE("Found %ld devices\n", ulMaxObjectNumber);
+    TRACE("Found %ld devices\n", ulMaxObjectNumber + 1);
 
     /* Loop through all adapters */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
@@ -223,31 +227,30 @@ InitVideo()
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
         if (!pGraphicsDevice) continue;
 
-        /* Check if this is the VGA adapter */
-        if (iDevNum == iVGACompatible)
+        /* Check if this is a VGA compatible adapter */
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
         {
-            /* Set the VGA device as primary */
-            gpVgaGraphicsDevice = pGraphicsDevice;
-            ERR("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+            /* Save this as the VGA adapter */
+            if (!gpVgaGraphicsDevice)
+                gpVgaGraphicsDevice = pGraphicsDevice;
+            TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
         }
-
-        /* Set the first one as primary device */
-        if (!gpPrimaryGraphicsDevice)
-            gpPrimaryGraphicsDevice = pGraphicsDevice;
+        else
+        {
+            /* Set the first one as primary device */
+            if (!gpPrimaryGraphicsDevice)
+                gpPrimaryGraphicsDevice = pGraphicsDevice;
+            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
+        }
     }
 
     /* Close the device map registry key */
     ZwClose(hkey);
 
-    /* Check if we had any success */
-    if (!gpPrimaryGraphicsDevice)
-    {
-        ERR("No usable display driver was found.\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
+    /* Was VGA mode requested? */
     if (gbBaseVideo)
     {
+        /* Check if we found a VGA compatible device */
         if (gpVgaGraphicsDevice)
         {
             /* Set the VgaAdapter as primary */
@@ -257,6 +260,22 @@ InitVideo()
         else
         {
             ERR("Could not find VGA compatible driver. Trying normal.\n");
+        }
+    }
+
+    /* Check if we had any success */
+    if (!gpPrimaryGraphicsDevice)
+    {
+        /* Check if there is a VGA device we skipped */
+        if (gpVgaGraphicsDevice)
+        {
+            /* There is, use the VGA device */
+            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
+        }
+        else
+        {
+            ERR("No usable display driver was found.\n");
+            return STATUS_UNSUCCESSFUL;
         }
     }
 
@@ -287,7 +306,7 @@ UserEnumDisplayDevices(
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Open thhe device map registry key */
+    /* Open the device map registry key */
     Status = RegOpenKey(KEY_VIDEO, &hkey);
     if (!NT_SUCCESS(Status))
     {
@@ -334,10 +353,6 @@ NtUserEnumDisplayDevices(
     TRACE("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
            pustrDevice, iDevNum);
 
-    // FIXME: HACK, desk.cpl passes broken crap
-    if (pustrDevice && iDevNum != 0)
-        return FALSE;
-
     dispdev.cb = sizeof(dispdev);
 
     if (pustrDevice)
@@ -367,8 +382,12 @@ NtUserEnumDisplayDevices(
             pustrDevice = NULL;
    }
 
+    /* If name is given only iDevNum==0 gives results */
+    if (pustrDevice && iDevNum != 0)
+        return FALSE;
+
     /* Acquire global USER lock */
-    UserEnterExclusive();
+    UserEnterShared();
 
     /* Call the internal function */
     Status = UserEnumDisplayDevices(pustrDevice, iDevNum, &dispdev, dwFlags);
@@ -403,7 +422,7 @@ NtUserEnumDisplayDevices(
         _SEH2_END
     }
 
-    ERR("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
+    TRACE("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
     /* Return the result */
 //    return Status;
     return NT_SUCCESS(Status); // FIXME
@@ -444,10 +463,10 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    TRACE("Enter UserEnumDisplaySettings('%ls', %ld)\n",
-            pustrDevice ? pustrDevice->Buffer : NULL, iModeNum);
+    TRACE("Enter UserEnumDisplaySettings('%wZ', %ld)\n",
+            pustrDevice, iModeNum);
 
-    /* Ask gdi for the GRAPHICS_DEVICE */
+    /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
 
     if (!pGraphicsDevice)
@@ -465,7 +484,7 @@ UserEnumDisplaySettings(
     {
         pdmentry = &pGraphicsDevice->pDevModeList[i];
 
-        /* FIXME: consider EDS_RAWMODE */
+        /* FIXME: Consider EDS_RAWMODE */
 #if 0
         if ((!(dwFlags & EDS_RAWMODE) && (pdmentry->dwFlags & 1)) ||!
             (dwFlags & EDS_RAWMODE))
@@ -505,7 +524,7 @@ UserOpenDisplaySettingsKey(
 
     if (bGlobal)
     {
-        // FIXME: need to fix the registry key somehow
+        // FIXME: Need to fix the registry key somehow
     }
 
     /* Open the registry key */
@@ -535,7 +554,6 @@ UserEnumRegistryDisplaySettings(
     return Status ;
 }
 
-
 NTSTATUS
 APIENTRY
 NtUserEnumDisplaySettings(
@@ -550,8 +568,8 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    TRACE("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
-            pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
+    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %ld, %p, 0x%lx)\n",
+            pustrDevice, iModeNum, lpDevMode, dwFlags);
 
     if (pustrDevice)
     {
@@ -577,7 +595,7 @@ NtUserEnumDisplaySettings(
    }
 
     /* Acquire global USER lock */
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (iModeNum == ENUM_REGISTRY_SETTINGS)
     {
@@ -613,7 +631,7 @@ NtUserEnumDisplaySettings(
             /* Output what we got */
             RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
-            /* output private/extra driver data */
+            /* Output private/extra driver data */
             if (cbExtra > 0 && pdm->dmDriverExtra > 0)
             {
                 RtlCopyMemory((PCHAR)lpDevMode + cbSize,
@@ -631,9 +649,6 @@ NtUserEnumDisplaySettings(
     return Status;
 }
 
-BOOL APIENTRY UserClipCursor(RECTL *prcl);
-VOID APIENTRY UserRedrawDesktop();
-
 LONG
 APIENTRY
 UserChangeDisplaySettings(
@@ -648,7 +663,7 @@ UserChangeDisplaySettings(
     HKEY hkey;
     NTSTATUS Status;
     PPDEVOBJ ppdev;
-    PDESKTOP pdesk;
+    //PDESKTOP pdesk;
 
     /* If no DEVMODE is given, use registry settings */
     if (!pdm)
@@ -669,7 +684,7 @@ UserChangeDisplaySettings(
     /* Check params */
     if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
     {
-        ERR("devmode doesn't specify the resolution.\n");
+        ERR("Devmode doesn't specify the resolution.\n");
         return DISP_CHANGE_BADMODE;
     }
 
@@ -677,7 +692,7 @@ UserChangeDisplaySettings(
     ppdev = EngpGetPDEV(pustrDevice);
     if (!ppdev)
     {
-        ERR("failed to get PDEV\n");
+        ERR("Failed to get PDEV\n");
         return DISP_CHANGE_BADPARAM;
     }
 
@@ -751,7 +766,7 @@ UserChangeDisplaySettings(
         /* Check for failure */
         if (!ulResult)
         {
-            ERR("failed to set mode\n");
+            ERR("Failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
 
@@ -769,7 +784,7 @@ UserChangeDisplaySettings(
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
 
-        pdesk = IntGetActiveDesktop();
+        //pdesk = IntGetActiveDesktop();
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */

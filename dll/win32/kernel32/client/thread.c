@@ -29,12 +29,14 @@ static
 LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 {
    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-
-   if (GlobalTopLevelExceptionFilter != NULL)
+   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+   
+   if (RealFilter != NULL)
    {
       _SEH2_TRY
       {
-         ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
+         ExceptionDisposition = RealFilter(ExceptionInfo);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
@@ -137,7 +139,7 @@ CreateRemoteThread(HANDLE hProcess,
     ClientId.UniqueProcess = hProcess;
 
     /* Create the Stack */
-    Status = BasepCreateStack(hProcess,
+    Status = BaseCreateStack(hProcess,
                               dwStackSize,
                               dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
                               dwStackSize : 0,
@@ -149,14 +151,14 @@ CreateRemoteThread(HANDLE hProcess,
     }
 
     /* Create Initial Context */
-    BasepInitializeContext(&Context,
+    BaseInitializeContext(&Context,
                            lpParameter,
                            lpStartAddress,
                            InitialTeb.StackBase,
                            1);
 
     /* initialize the attributes for the thread object */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
                                                     lpThreadAttributes,
                                                     NULL);
 
@@ -171,7 +173,7 @@ CreateRemoteThread(HANDLE hProcess,
                             TRUE);
     if(!NT_SUCCESS(Status))
     {
-        BasepFreeStack(hProcess, &InitialTeb);
+        BaseFreeThreadStack(hProcess, &InitialTeb);
         BaseSetLastNTError(Status);
         return NULL;
     }
@@ -180,7 +182,7 @@ CreateRemoteThread(HANDLE hProcess,
     if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
-        PVOID ActivationContextStack;
+        PVOID ActivationContextStack = NULL;
         THREAD_BASIC_INFORMATION ThreadBasicInfo;
 #ifndef SXS_SUPPORT_FIXME
         ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -184,7 +184,7 @@ AcpiTbTablesLoaded (
     void)
 {
 
-    if (AcpiGbl_RootTableList.Count >= 3)
+    if (AcpiGbl_RootTableList.CurrentTableCount >= 3)
     {
         return (TRUE);
     }
@@ -349,7 +349,7 @@ AcpiTbVerifyChecksum (
     if (Checksum)
     {
         ACPI_WARNING ((AE_INFO,
-            "Incorrect checksum in table [%4.4s] - %2.2X, should be %2.2X",
+            "Incorrect checksum in table [%4.4s] - 0x%2.2X, should be 0x%2.2X",
             Table->Signature, Table->Checksum,
             (UINT8) (Table->Checksum - Checksum)));
 
@@ -390,6 +390,88 @@ AcpiTbChecksum (
     }
 
     return Sum;
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbCheckDsdtHeader
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Quick compare to check validity of the DSDT. This will detect
+ *              if the DSDT has been replaced from outside the OS and/or if
+ *              the DSDT header has been corrupted.
+ *
+ ******************************************************************************/
+
+void
+AcpiTbCheckDsdtHeader (
+    void)
+{
+
+    /* Compare original length and checksum to current values */
+
+    if (AcpiGbl_OriginalDsdtHeader.Length != AcpiGbl_DSDT->Length ||
+        AcpiGbl_OriginalDsdtHeader.Checksum != AcpiGbl_DSDT->Checksum)
+    {
+        ACPI_ERROR ((AE_INFO,
+            "The DSDT has been corrupted or replaced - old, new headers below"));
+        AcpiTbPrintTableHeader (0, &AcpiGbl_OriginalDsdtHeader);
+        AcpiTbPrintTableHeader (0, AcpiGbl_DSDT);
+
+        /* Disable further error messages */
+
+        AcpiGbl_OriginalDsdtHeader.Length = AcpiGbl_DSDT->Length;
+        AcpiGbl_OriginalDsdtHeader.Checksum = AcpiGbl_DSDT->Checksum;
+    }
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbCopyDsdt
+ *
+ * PARAMETERS:  TableDesc           - Installed table to copy
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Implements a subsystem option to copy the DSDT to local memory.
+ *              Some very bad BIOSs are known to either corrupt the DSDT or
+ *              install a new, bad DSDT. This copy works around the problem.
+ *
+ ******************************************************************************/
+
+ACPI_TABLE_HEADER *
+AcpiTbCopyDsdt (
+    UINT32                  TableIndex)
+{
+    ACPI_TABLE_HEADER       *NewTable;
+    ACPI_TABLE_DESC         *TableDesc;
+
+
+    TableDesc = &AcpiGbl_RootTableList.Tables[TableIndex];
+
+    NewTable = ACPI_ALLOCATE (TableDesc->Length);
+    if (!NewTable)
+    {
+        ACPI_ERROR ((AE_INFO, "Could not copy DSDT of length 0x%X",
+            TableDesc->Length));
+        return (NULL);
+    }
+
+    ACPI_MEMCPY (NewTable, TableDesc->Pointer, TableDesc->Length);
+    AcpiTbDeleteTable (TableDesc);
+    TableDesc->Pointer = NewTable;
+    TableDesc->Flags = ACPI_TABLE_ORIGIN_ALLOCATED;
+
+    ACPI_INFO ((AE_INFO,
+        "Forced DSDT copy: length 0x%05X copied locally, original unmapped",
+        NewTable->Length));
+
+    return (NewTable);
 }
 
 
@@ -552,7 +634,7 @@ AcpiTbGetRootTableEntry (
             /* Will truncate 64-bit address to 32 bits, issue warning */
 
             ACPI_WARNING ((AE_INFO,
-                "64-bit Physical Address in XSDT is too large (%8.8X%8.8X),"
+                "64-bit Physical Address in XSDT is too large (0x%8.8X%8.8X),"
                 " truncating",
                 ACPI_FORMAT_UINT64 (Address64)));
         }
@@ -683,14 +765,15 @@ AcpiTbParseRootTable (
      * come from the FADT
      */
     TableEntry = ACPI_CAST_PTR (UINT8, Table) + sizeof (ACPI_TABLE_HEADER);
-    AcpiGbl_RootTableList.Count = 2;
+    AcpiGbl_RootTableList.CurrentTableCount = 2;
 
     /*
      * Initialize the root table array from the RSDT/XSDT
      */
     for (i = 0; i < TableCount; i++)
     {
-        if (AcpiGbl_RootTableList.Count >= AcpiGbl_RootTableList.Size)
+        if (AcpiGbl_RootTableList.CurrentTableCount >=
+            AcpiGbl_RootTableList.MaxTableCount)
         {
             /* There is no more room in the root table array, attempt resize */
 
@@ -699,18 +782,18 @@ AcpiTbParseRootTable (
             {
                 ACPI_WARNING ((AE_INFO, "Truncating %u table entries!",
                     (unsigned) (TableCount -
-                    (AcpiGbl_RootTableList.Count - 2))));
+                    (AcpiGbl_RootTableList.CurrentTableCount - 2))));
                 break;
             }
         }
 
         /* Get the table physical address (32-bit for RSDT, 64-bit for XSDT) */
 
-        AcpiGbl_RootTableList.Tables[AcpiGbl_RootTableList.Count].Address =
+        AcpiGbl_RootTableList.Tables[AcpiGbl_RootTableList.CurrentTableCount].Address =
             AcpiTbGetRootTableEntry (TableEntry, TableEntrySize);
 
         TableEntry += TableEntrySize;
-        AcpiGbl_RootTableList.Count++;
+        AcpiGbl_RootTableList.CurrentTableCount++;
     }
 
     /*
@@ -723,7 +806,7 @@ AcpiTbParseRootTable (
      * Complete the initialization of the root table array by examining
      * the header of each table
      */
-    for (i = 2; i < AcpiGbl_RootTableList.Count; i++)
+    for (i = 2; i < AcpiGbl_RootTableList.CurrentTableCount; i++)
     {
         AcpiTbInstallTable (AcpiGbl_RootTableList.Tables[i].Address,
             NULL, i);

@@ -20,7 +20,6 @@ list(APPEND SOURCE
     langbarmgr.c
     msctf.c
     range.c
-    regsvr.c
     threadmgr.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c

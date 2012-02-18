@@ -1,5 +1,5 @@
 /*
- * PROJECT:         Win32 subsystem
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/dib/stretchblt.c
  * PURPOSE:         StretchBlt implementation suitable for all bit depths
@@ -71,7 +71,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   SrcHeight = SourceRect->bottom - SourceRect->top;
   SrcWidth = SourceRect->right - SourceRect->left;
 
-  /* FIXME :  MaskOrigin? */
+  /* FIXME: MaskOrigin? */
 
   switch(DestSurf->iBitmapFormat)
   {

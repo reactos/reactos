@@ -325,7 +325,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             DPRINT("PathName '%S'  ObjectName '%S'\n", Fcb->PathName, Fcb->ObjectName);
 
             memcpy(&Fcb->Entry, Record, sizeof(DIR_RECORD));
-            wcsncpy(Fcb->ObjectName, name, MAX_PATH);
+            wcsncpy(Fcb->ObjectName, name, min(wcslen(name) + 1,
+                MAX_PATH - wcslen(Fcb->PathName) + wcslen(Fcb->ObjectName)));
 
             /* Copy short name */
             Fcb->ShortNameU.Length = ShortName.Length;

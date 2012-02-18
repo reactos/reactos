@@ -280,16 +280,17 @@ static void drop_file(DOS_FS *fs,DOS_FILE *file)
 static void truncate_file(DOS_FS *fs,DOS_FILE *file,unsigned long clusters)
 {
     int deleting;
-    unsigned long walk,next,prev;
+    unsigned long walk,next;
+    //unsigned long prev;
 
     walk = FSTART(file,fs);
-    prev = 0;
+    //prev = 0;
     if ((deleting = !clusters)) MODIFY_START(file,0,fs);
     while (walk > 0 && walk != -1) {
 	next = next_cluster(fs,walk);
 	if (deleting) set_fat(fs,walk,0);
 	else if ((deleting = !--clusters)) set_fat(fs,walk,-1);
-	prev = walk;
+	//prev = walk;
 	walk = next;
     }
 }

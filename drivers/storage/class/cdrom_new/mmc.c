@@ -837,6 +837,7 @@ CdRompPrintAllFeaturePages(
 }
 
 NTSTATUS
+NTAPI
 CdRomUpdateMmcDriveCapabilitiesCompletion(
     IN PDEVICE_OBJECT Unused,
     IN PIRP Irp,
@@ -851,6 +852,9 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     PIRP delayedIrp;
+    ULONG retryCount;
+    LARGE_INTEGER delay;
+
     
     // completion routine should retry as neccessary.
     // when success, clear the flag to allow startio to proceed.
@@ -910,9 +914,19 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
             retry = TRUE;
         }
 
-        if (retry && irpStack->Parameters.Others.Argument4--) {
+        //
+        // get current retry count
+        //
+        retryCount = PtrToUlong(irpStack->Parameters.Others.Argument1);
 
-            LARGE_INTEGER delay;
+        if (retry && retryCount) {
+
+            //
+            // update retry count
+            //
+            irpStack->Parameters.Others.Argument1 = UlongToPtr(retryCount-1);
+
+
             delay.QuadPart = retryInterval;
             delay.QuadPart *= (LONGLONG)1000 * 1000 * 10;
             
@@ -1038,7 +1052,7 @@ CdRomPrepareUpdateCapabilitiesIrp(
     nextStack->Parameters.Scsi.Srb = srb;
     irp->MdlAddress = mmcData->CapabilitiesMdl;
     irp->AssociatedIrp.SystemBuffer = mmcData->CapabilitiesBuffer;
-    IoSetCompletionRoutine(irp, CdRomUpdateMmcDriveCapabilitiesCompletion, Fdo,
+    IoSetCompletionRoutine(irp, (PIO_COMPLETION_ROUTINE)CdRomUpdateMmcDriveCapabilitiesCompletion, Fdo,
                            TRUE, TRUE, TRUE);
 
     return;

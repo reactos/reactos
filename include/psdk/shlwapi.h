@@ -319,11 +319,7 @@ BOOL WINAPI AssocIsDangerous(LPCWSTR);
 
 #endif /* NO_SHLWAPI_REG */
 
-void WINAPI IUnknown_Set(IUnknown **ppunk, IUnknown *punk);
-void WINAPI IUnknown_AtomicRelease(IUnknown **punk);
-HRESULT WINAPI IUnknown_GetWindow(IUnknown *punk, HWND *phwnd);
 HRESULT WINAPI IUnknown_SetSite(IUnknown *punk, IUnknown *punkSite);
-HRESULT WINAPI IUnknown_GetSite(IUnknown *punk, REFIID riid, void **ppv);
 HRESULT WINAPI IUnknown_QueryService(IUnknown *punk, REFGUID guidService, REFIID riid, void **ppvOut);
 
 /* Path functions */
@@ -881,9 +877,6 @@ LPSTR  WINAPI StrStrIA(LPCSTR,LPCSTR);
 LPWSTR WINAPI StrStrIW(LPCWSTR,LPCWSTR);
 #define StrStrI WINELIB_NAME_AW(StrStrI)
 
-LPWSTR WINAPI StrStrNW(LPCWSTR,LPCWSTR,UINT);
-LPWSTR WINAPI StrStrNIW(LPCWSTR,LPCWSTR,UINT);
-
 int WINAPI StrToIntA(LPCSTR);
 int WINAPI StrToIntW(LPCWSTR);
 #define StrToInt WINELIB_NAME_AW(StrToInt)
@@ -988,7 +981,6 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 HRESULT WINAPI SHAutoComplete(HWND,DWORD);
 
 /* Threads */
-HRESULT WINAPI SHCreateThreadRef(LONG*, IUnknown**);
 HRESULT WINAPI SHGetThreadRef(IUnknown**);
 HRESULT WINAPI SHSetThreadRef(IUnknown*);
 HRESULT WINAPI SHReleaseThreadRef(void);
@@ -1041,6 +1033,24 @@ typedef struct _DLLVERSIONINFO2 {
   ((ULONGLONG)(mnr)<< 32) | ((ULONGLONG)(bld)<< 16) | (ULONGLONG)(qfe))
 
 HRESULT WINAPI DllInstall(BOOL,LPCWSTR) DECLSPEC_HIDDEN;
+
+
+#if (_WIN32_IE >= 0x0600)
+#define SHGVSPB_PERUSER        0x00000001
+#define SHGVSPB_ALLUSERS       0x00000002
+#define SHGVSPB_PERFOLDER      0x00000004
+#define SHGVSPB_ALLFOLDERS     0x00000008
+#define SHGVSPB_INHERIT        0x00000010
+#define SHGVSPB_ROAM           0x00000020
+#define SHGVSPB_NOAUTODEFAULTS 0x80000000
+
+#define SHGVSPB_FOLDER           (SHGVSPB_PERUSER | SHGVSPB_PERFOLDER)
+#define SHGVSPB_FOLDERNODEFAULTS (SHGVSPB_PERUSER | SHGVSPB_PERFOLDER | SHGVSPB_NOAUTODEFAULTS)
+#define SHGVSPB_USERDEFAULTS     (SHGVSPB_PERUSER | SHGVSPB_ALLFOLDERS)
+#define SHGVSPB_GLOBALDEAFAULTS  (SHGVSPB_ALLUSERS | SHGVSPB_ALLFOLDERS)
+
+HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name, DWORD flags, REFIID riid, void **ppv);
+#endif  /* (_WIN32_IE >= 0x0600) */
 
 
 /* IsOS definitions */
@@ -1108,6 +1118,11 @@ typedef struct
 } QITAB, *LPQITAB;
 
 HRESULT WINAPI QISearch(void* base, const QITAB *pqit, REFIID riid, void **ppv);
+
+HANDLE WINAPI SHAllocShared(LPVOID pv, ULONG cb, DWORD pid);
+BOOL WINAPI SHFreeShared(HANDLE hMem, DWORD pid);
+LPVOID WINAPI SHLockShared(HANDLE hMem, DWORD pid);
+BOOL WINAPI SHUnlockShared(LPVOID pv);
 
 #include <poppack.h> 
 

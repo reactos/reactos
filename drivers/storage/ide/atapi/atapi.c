@@ -1383,7 +1383,6 @@ Return Value:
             } else if (!(deviceExtension->DeviceFlags[i] & DFLAGS_CHANGER_INITED)){
 
                 ULONG j;
-                BOOLEAN isSanyo = FALSE;
                 UCHAR vendorId[26];
 
                 //
@@ -1415,7 +1414,6 @@ Return Value:
 
                         deviceExtension->DeviceFlags[i] |= (DFLAGS_CHANGER_INITED | DFLAGS_SANYO_ATAPI_CHANGER);
                         deviceExtension->DiscsPresent[i] = 3;
-                        isSanyo = TRUE;
                     }
                 }
             }

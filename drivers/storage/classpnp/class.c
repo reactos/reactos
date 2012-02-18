@@ -6564,7 +6564,7 @@ ClassPnpQueryFdoRelations(
     Irp->IoStatus.Status = ClassRetrieveDeviceRelations(
                                 Fdo,
                                 BusRelations,
-                                (PDEVICE_RELATIONS)&Irp->IoStatus.Information);
+                                (PDEVICE_RELATIONS*)&Irp->IoStatus.Information);
     InterlockedDecrement(&(fdoExtension->EnumerationInterlock));
 
     return Irp->IoStatus.Status;

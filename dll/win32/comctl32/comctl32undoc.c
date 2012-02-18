@@ -168,23 +168,23 @@ DWORD WINAPI GetSize (LPVOID lpMem)
  *|typedef INT (CALLBACK *MRUStringCmpFn)(LPCTSTR lhs, LPCTSTR rhs);
  *|typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
  *|
- *|typedef struct tagCREATEMRULIST
+ *|typedef struct tagMRUINFO
  *|{
  *|    DWORD   cbSize;
- *|    DWORD   nMaxItems;
- *|    DWORD   dwFlags;
+ *|    UINT    uMax;
+ *|    UINT    fFlags;
  *|    HKEY    hKey;
  *|    LPTSTR  lpszSubKey;
  *|    PROC    lpfnCompare;
- *|} CREATEMRULIST, *LPCREATEMRULIST;
+ *|} MRUINFO, *LPMRUINFO;
  *
  * MEMBERS
- *  cbSize      [I] The size of the CREATEMRULIST structure. This must be set
- *                  to sizeof(CREATEMRULIST) by the caller.
- *  nMaxItems   [I] The maximum number of items allowed in the list. Because
+ *  cbSize      [I] The size of the MRUINFO structure. This must be set
+ *                  to sizeof(MRUINFO) by the caller.
+ *  uMax        [I] The maximum number of items allowed in the list. Because
  *                  of the limited number of identifiers, this should be set to
  *                  a value from 1 to 30 by the caller.
- *  dwFlags     [I] If bit 0 is set, the list will be used to store binary
+ *  fFlags      [I] If bit 0 is set, the list will be used to store binary
  *                  data, otherwise it is assumed to store strings. If bit 1
  *                  is set, every change made to the list will be reflected in
  *                  the registry immediately, otherwise changes will only be
@@ -210,11 +210,11 @@ typedef INT (CALLBACK *MRUStringCmpFnA)(LPCSTR lhs, LPCSTR rhs);
 typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
 typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
 
-typedef struct tagCREATEMRULISTA
+typedef struct tagMRUINFOA
 {
     DWORD  cbSize;
-    DWORD  nMaxItems;
-    DWORD  dwFlags;
+    UINT   uMax;
+    UINT   fFlags;
     HKEY   hKey;
     LPSTR  lpszSubKey;
     union
@@ -222,13 +222,13 @@ typedef struct tagCREATEMRULISTA
         MRUStringCmpFnA string_cmpfn;
         MRUBinaryCmpFn  binary_cmpfn;
     } u;
-} CREATEMRULISTA, *LPCREATEMRULISTA;
+} MRUINFOA, *LPMRUINFOA;
 
-typedef struct tagCREATEMRULISTW
+typedef struct tagMRUINFOW
 {
     DWORD   cbSize;
-    DWORD   nMaxItems;
-    DWORD   dwFlags;
+    UINT    uMax;
+    UINT    fFlags;
     HKEY    hKey;
     LPWSTR  lpszSubKey;
     union
@@ -236,12 +236,12 @@ typedef struct tagCREATEMRULISTW
         MRUStringCmpFnW string_cmpfn;
         MRUBinaryCmpFn  binary_cmpfn;
     } u;
-} CREATEMRULISTW, *LPCREATEMRULISTW;
+} MRUINFOW, *LPMRUINFOW;
 
-/* dwFlags */
-#define MRUF_STRING_LIST  0 /* list will contain strings */
-#define MRUF_BINARY_LIST  1 /* list will contain binary data */
-#define MRUF_DELAYED_SAVE 2 /* only save list order to reg. is FreeMRUList */
+/* MRUINFO.fFlags */
+#define MRU_STRING     0 /* list will contain strings */
+#define MRU_BINARY     1 /* list will contain binary data */
+#define MRU_CACHEWRITE 2 /* only save list order to reg. is FreeMRUList */
 
 /* If list is a string list lpfnCompare has the following prototype
  * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
@@ -263,7 +263,7 @@ typedef struct tagWINEMRUITEM
 
 typedef struct tagWINEMRULIST
 {
-    CREATEMRULISTW extview;     /* original create information       */
+    MRUINFOW       extview;     /* original create information       */
     BOOL           isUnicode;   /* is compare fn Unicode */
     DWORD          wineFlags;   /* internal flags                    */
     DWORD          cursize;     /* current size of realMRU           */
@@ -325,7 +325,7 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
 	    witem->itemFlag &= ~WMRUIF_CHANGED;
 	    realname[0] = 'a' + i;
 	    err = RegSetValueExW(newkey, realname, 0,
-				 (mp->extview.dwFlags & MRUF_BINARY_LIST) ?
+				 (mp->extview.fFlags & MRU_BINARY) ?
 				 REG_BINARY : REG_SZ,
 				 &witem->datastart, witem->size);
 	    if (err) {
@@ -363,7 +363,7 @@ void WINAPI FreeMRUList (HANDLE hMRUList)
 	MRU_SaveChanged( mp );
     }
 
-    for(i=0; i<mp->extview.nMaxItems; i++)
+    for(i=0; i<mp->extview.uMax; i++)
         Free(mp->array[i]);
 
     Free(mp->realMRU);
@@ -400,7 +400,7 @@ INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
     if (!mp || !mp->extview.u.string_cmpfn)
 	return -1;
 
-    if(!(mp->extview.dwFlags & MRUF_BINARY_LIST) && !mp->isUnicode) {
+    if(!(mp->extview.fFlags & MRU_BINARY) && !mp->isUnicode) {
         DWORD len = WideCharToMultiByte(CP_ACP, 0, lpData, -1,
 					NULL, 0, NULL, NULL);
 	dataA = Alloc(len);
@@ -408,7 +408,7 @@ INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
     }
 
     for(i=0; i<mp->cursize; i++) {
-	if (mp->extview.dwFlags & MRUF_BINARY_LIST) {
+	if (mp->extview.fFlags & MRU_BINARY) {
 	    if (!mp->extview.u.binary_cmpfn(lpData, &mp->array[i]->datastart, cbData))
 		break;
 	}
@@ -480,7 +480,7 @@ INT WINAPI AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
     }
     else {
 	/* either add a new entry or replace oldest */
-	if (mp->cursize < mp->extview.nMaxItems) {
+	if (mp->cursize < mp->extview.uMax) {
 	    /* Add in a new item */
 	    replace = mp->cursize;
 	    mp->cursize++;
@@ -509,7 +509,7 @@ INT WINAPI AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
     TRACE("(%p, %p, %d) adding data, /%c/ now most current\n",
           hList, lpData, cbData, replace+'a');
 
-    if (!(mp->extview.dwFlags & MRUF_DELAYED_SAVE)) {
+    if (!(mp->extview.fFlags & MRU_CACHEWRITE)) {
 	/* save changed stuff right now */
 	MRU_SaveChanged( mp );
     }
@@ -649,9 +649,9 @@ INT WINAPI FindMRUStringA (HANDLE hList, LPCSTR lpszString, LPINT lpRegNum)
 }
 
 /*************************************************************************
- *                 CreateMRUListLazy_common (internal)
+ *                 create_mru_list (internal)
  */
-static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
+static HANDLE create_mru_list(LPWINEMRULIST mp)
 {
     UINT i, err;
     HKEY newkey;
@@ -663,12 +663,12 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     /* get space to save indices that will turn into names
      * but in order of most to least recently used
      */
-    mp->realMRU = Alloc((mp->extview.nMaxItems + 2) * sizeof(WCHAR));
+    mp->realMRU = Alloc((mp->extview.uMax + 2) * sizeof(WCHAR));
 
     /* get space to save pointers to actual data in order of
      * 'a' to 'z' (0 to n).
      */
-    mp->array = Alloc(mp->extview.nMaxItems * sizeof(LPVOID));
+    mp->array = Alloc(mp->extview.uMax * sizeof(LPVOID));
 
     /* open the sub key */
     if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
@@ -681,7 +681,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 				&dwdisp))) {
 	/* error - what to do ??? */
 	ERR("(%u %u %x %p %s %p): Could not open key, error=%d\n",
-	    mp->extview.cbSize, mp->extview.nMaxItems, mp->extview.dwFlags,
+	    mp->extview.cbSize, mp->extview.uMax, mp->extview.fFlags,
 	    mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
             mp->extview.u.string_cmpfn, err);
 	return 0;
@@ -689,7 +689,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 
     /* get values from key 'MRUList' */
     if (newkey) {
-	datasize = (mp->extview.nMaxItems + 1) * sizeof(WCHAR);
+	datasize = (mp->extview.uMax + 1) * sizeof(WCHAR);
 	if((err=RegQueryValueExW( newkey, strMRUList, 0, &type,
 				  (LPBYTE)mp->realMRU, &datasize))) {
 	    /* not present - set size to 1 (will become 0 later) */
@@ -726,7 +726,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 	mp->cursize = 0;
 
     TRACE("(%u %u %x %p %s %p): Current Size = %d\n",
-	  mp->extview.cbSize, mp->extview.nMaxItems, mp->extview.dwFlags,
+	  mp->extview.cbSize, mp->extview.uMax, mp->extview.fFlags,
 	  mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
 	  mp->extview.u.string_cmpfn, mp->cursize);
     return mp;
@@ -737,24 +737,22 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
  *
  * See CreateMRUListLazyA.
  */
-HANDLE WINAPI CreateMRUListLazyW (const CREATEMRULISTW *lpcml, DWORD dwParam2,
+HANDLE WINAPI CreateMRUListLazyW (const MRUINFOW *infoW, DWORD dwParam2,
                                   DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
 
     /* Native does not check for a NULL lpcml */
-
-    if (lpcml->cbSize != sizeof(CREATEMRULISTW) || !lpcml->hKey ||
-        IsBadStringPtrW(lpcml->lpszSubKey, -1))
+    if (!infoW->hKey || IsBadStringPtrW(infoW->lpszSubKey, -1))
 	return NULL;
 
     mp = Alloc(sizeof(WINEMRULIST));
-    memcpy(&mp->extview, lpcml, sizeof(CREATEMRULISTW));
-    mp->extview.lpszSubKey = Alloc((strlenW(lpcml->lpszSubKey) + 1) * sizeof(WCHAR));
-    strcpyW(mp->extview.lpszSubKey, lpcml->lpszSubKey);
+    memcpy(&mp->extview, infoW, sizeof(MRUINFOW));
+    mp->extview.lpszSubKey = Alloc((strlenW(infoW->lpszSubKey) + 1) * sizeof(WCHAR));
+    strcpyW(mp->extview.lpszSubKey, infoW->lpszSubKey);
     mp->isUnicode = TRUE;
 
-    return CreateMRUListLazy_common(mp);
+    return create_mru_list(mp);
 }
 
 /**************************************************************************
@@ -771,7 +769,7 @@ HANDLE WINAPI CreateMRUListLazyW (const CREATEMRULISTW *lpcml, DWORD dwParam2,
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI CreateMRUListLazyA (const CREATEMRULISTA *lpcml, DWORD dwParam2,
+HANDLE WINAPI CreateMRUListLazyA (const MRUINFOA *lpcml, DWORD dwParam2,
                                   DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
@@ -779,18 +777,17 @@ HANDLE WINAPI CreateMRUListLazyA (const CREATEMRULISTA *lpcml, DWORD dwParam2,
 
     /* Native does not check for a NULL lpcml */
 
-    if (lpcml->cbSize != sizeof(CREATEMRULISTA) || !lpcml->hKey ||
-        IsBadStringPtrA(lpcml->lpszSubKey, -1))
+    if (!lpcml->hKey || IsBadStringPtrA(lpcml->lpszSubKey, -1))
 	return 0;
 
     mp = Alloc(sizeof(WINEMRULIST));
-    memcpy(&mp->extview, lpcml, sizeof(CREATEMRULISTW));
+    memcpy(&mp->extview, lpcml, sizeof(MRUINFOA));
     len = MultiByteToWideChar(CP_ACP, 0, lpcml->lpszSubKey, -1, NULL, 0);
     mp->extview.lpszSubKey = Alloc(len * sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, lpcml->lpszSubKey, -1,
 			mp->extview.lpszSubKey, len);
     mp->isUnicode = FALSE;
-    return CreateMRUListLazy_common(mp);
+    return create_mru_list(mp);
 }
 
 /**************************************************************************
@@ -798,9 +795,9 @@ HANDLE WINAPI CreateMRUListLazyA (const CREATEMRULISTA *lpcml, DWORD dwParam2,
  *
  * See CreateMRUListA.
  */
-HANDLE WINAPI CreateMRUListW (const CREATEMRULISTW *lpcml)
+HANDLE WINAPI CreateMRUListW (const MRUINFOW *infoW)
 {
-    return CreateMRUListLazyW(lpcml, 0, 0, 0);
+    return CreateMRUListLazyW(infoW, 0, 0, 0);
 }
 
 /**************************************************************************
@@ -814,7 +811,7 @@ HANDLE WINAPI CreateMRUListW (const CREATEMRULISTW *lpcml)
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI CreateMRUListA (const CREATEMRULISTA *lpcml)
+HANDLE WINAPI CreateMRUListA (const MRUINFOA *lpcml)
 {
      return CreateMRUListLazyA (lpcml, 0, 0, 0);
 }
@@ -879,7 +876,7 @@ INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     desired -= 'a';
     TRACE("nItemPos=%d, desired=%d\n", nItemPos, desired);
     witem = mp->array[desired];
-    if(mp->extview.dwFlags & MRUF_BINARY_LIST) {
+    if(mp->extview.fFlags & MRU_BINARY) {
         datasize = min( witem->size, nBufferSize );
 	memcpy( lpBuffer, &witem->datastart, datasize);
     } else {

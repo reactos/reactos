@@ -78,11 +78,12 @@ typedef struct _IP_PACKET {
     OBJECT_FREE_ROUTINE Free;           /* Routine used to free resources for the object */
     UCHAR Type;                         /* Type of IP packet (see IP_ADDRESS_xx above) */
     UCHAR Flags;                        /* Flags for packet (see IP_PACKET_FLAG_xx below)*/
+    BOOLEAN MappedHeader;               /* States whether Header is from an MDL or allocated from pool */
+    BOOLEAN ReturnPacket;               /* States whether NdisPacket should be passed to NdisReturnPackets */
     PVOID Header;                       /* Pointer to IP header for this packet */
     UINT HeaderSize;                    /* Size of IP header */
     PVOID Data;                         /* Current pointer into packet data */
     UINT TotalSize;                     /* Total amount of data in packet (IP header and data) */
-    UINT ContigSize;                    /* Number of contiguous bytes left in current buffer */
     UINT Position;                      /* Current logical offset into packet */
     PNDIS_PACKET NdisPacket;            /* Pointer to NDIS packet */
     IP_ADDRESS SrcAddr;                 /* Source address */
@@ -126,7 +127,6 @@ typedef struct _LLIP_BIND_INFO {
     PVOID Context;                /* Pointer to link layer context information */
     UINT  HeaderSize;             /* Size of link level header */
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
-    UINT  MTU;                    /* Maximum transmission unit */
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
     LL_TRANSMIT_ROUTINE Transmit; /* Transmit function for this interface */
@@ -197,8 +197,7 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 #define IPPROTO_UDP     17  /* User Datagram Protocol */
 
 /* Timeout timer constants */
-#define IP_TICKS_SECOND 2                   /* Two ticks per second */
-#define IP_TIMEOUT (1000 / IP_TICKS_SECOND) /* Timeout in milliseconds */
+#define IP_TIMEOUT 1000 /* Timeout in milliseconds */
 #define IP_DEFAULT_LINK_SPEED  10000
 
 extern LIST_ENTRY InterfaceListHead;

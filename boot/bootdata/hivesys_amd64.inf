@@ -788,7 +788,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0438",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0439",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","043e",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","083e",0x00000000,"l_intl.nls"
-;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","043f",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","043f",0x00000000,"l_intl.nls"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0440",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0441",0x00000000,"l_intl.nls"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0443",0x00000000,"l_intl.nls"
@@ -900,7 +900,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000438",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000439",0x00000000,"f"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000043e",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000083e",0x00000000,"1"
-;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000043f",0x00000000,"5"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000043f",0x00000000,"5"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000440",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000441",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000443",0x00000000,"6"
@@ -981,10 +981,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x000006
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
  "System Bus Extender", \
- "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
- "SCSI Class Helper", \
  "SCSI Class", \
  "Boot File System", \
  "Base", \
@@ -1076,12 +1074,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2","Vms"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\OS2 SharedSection=128 Windows=Off SubSystemType=Text ServerDll=os2srv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\POSIX SharedSection=128 Windows=Off SubSystemType=Text ServerDll=psxsrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Vms",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\VMS SharedSection=128 Windows=Off SubSystemType=Text ServerDll=vmssrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,12288,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=win32csr:Win32CsrInitialization,2 ProfileControl=Off MaxRequestThreads=16"
 
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
@@ -1148,13 +1144,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Group",0x00000000,"SCSI Class"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
-
-; Class2 driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Group",0x00000000,"SCSI Class Helper"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ImagePath",0x00020000,"system32\drivers\class2.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Type",0x00010001,0x00000001
 
 ; Debug output driver
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ErrorControl",0x00010001,0x00000000
@@ -1310,13 +1299,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRo
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
-; Scsiport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
-
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"Printer Spooler"
@@ -1413,20 +1395,6 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.BitsPerPel",0x00010001,8
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
-
-; USB uhci/ehci driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
-
-; USB storage driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Group",0x00000000,"Extended Base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ImagePath",0x00020000,"system32\drivers\usbstor.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Start",0x00010001,0x00000003
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Type",0x00010001,0x00000001
 
 ; Windows Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"

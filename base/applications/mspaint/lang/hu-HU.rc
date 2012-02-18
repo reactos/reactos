@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/hu-HU.rc
+ * FILE:        base/applications/mspaint/lang/hu-HU.rc
  * PURPOSE:     Hungarian Language resource file
  * TRANSLATORS: Xxxx00
  */
@@ -10,46 +10,46 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 ID_MENU MENU
 BEGIN
-    POPUP "&F·jl"
+    POPUP "&F√°jl"
     BEGIN
-        MENUITEM "⁄j\tCtrl+N", IDM_FILENEW
-        MENUITEM "Meg&nyit·s...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&MentÈs\tCtrl+S", IDM_FILESAVE
-        MENUITEM "MentÈs m·&skÈnt...", IDM_FILESAVEAS
+        MENUITEM "√öj\tCtrl+N", IDM_FILENEW
+        MENUITEM "Meg&nyit√°s...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Ment√©s\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Ment√©s m√°&sk√©nt...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Be·llÌt·s tapÈtakÈnt (mozaik)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Be·llÌt·s tapÈtakÈnt (kˆzÈpre)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Be·llÌt·s tapÈtakÈnt (ny˙jt·s)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Be√°ll√≠t√°s tap√©tak√©nt (mozaik)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Be√°ll√≠t√°s tap√©tak√©nt (k√∂z√©pre)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Be√°ll√≠t√°s tap√©tak√©nt (ny√∫jt√°s)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&KilÈpÈs\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Kil√©p√©s\tAlt+F4", IDM_FILEEXIT
     END
 
-    POPUP "S&zerkesztÈs"
+    POPUP "S&zerkeszt√©s"
     BEGIN
-        MENUITEM "Visszavon·s\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "IsmÈt\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "Visszavon√°s\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Ism√©t\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Kiv·g·s\tCtrl+X", IDM_EDITCUT
-        MENUITEM "M·sol·s\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "BeillesztÈs\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "KijelˆlÈs tˆrlÈse\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "KijelˆlÈs megfordÌt·sa", IDM_EDITINVERTSELECTION
-        MENUITEM "Mindent kijelˆl\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Kiv√°g√°s\tCtrl+X", IDM_EDITCUT
+        MENUITEM "M√°sol√°s\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Beilleszt√©s\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Kijel√∂l√©s t√∂rl√©se\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Kijel√∂l√©s megford√≠t√°sa", IDM_EDITINVERTSELECTION
+        MENUITEM "Mindent kijel√∂l\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "M·sol·s f·jlba...", IDM_EDITCOPYTO
-        MENUITEM "F·jl beillesztÈse...", IDM_EDITPASTEFROM
+        MENUITEM "M√°sol√°s f√°jlba...", IDM_EDITCOPYTO
+        MENUITEM "F√°jl beilleszt√©se...", IDM_EDITPASTEFROM
     END
 
-    POPUP "&NÈzet"
+    POPUP "&N√©zet"
     BEGIN
-        MENUITEM "EszkˆzkÈszlet\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "SzÌnpaletta\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "¡llapotsor", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Szˆveg eszkˆzt·r", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "Eszk√∂zk√©szlet\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Sz√≠npaletta\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "√Ållapotsor", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Sz√∂veg eszk√∂zt√°r", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "NagyÌt·s"
+        POPUP "Nagy√≠t√°s"
         BEGIN
-            POPUP "EgyÈni"
+            POPUP "Egy√©ni"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,33 +60,33 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "R·cs megjelenÌtÈse\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "Miniat˙ra megjelenÌtÈse", IDM_VIEWSHOWMINIATURE
+            MENUITEM "R√°cs megjelen√≠t√©se\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Miniat√∫ra megjelen√≠t√©se", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Teljes kÈpernyı\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Teljes k√©perny√µ\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
-    POPUP "&KÈp"
+
+    POPUP "&K√©p"
     BEGIN
-        MENUITEM "Forgat·s/T¸krˆzÈs...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "¡tmÈretezÈs...\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "V·g·s", IDM_IMAGECROP
-        MENUITEM "SzÌnek megfordÌt·sa\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attrib˙tumok...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "KÈp tˆrlÈse\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Nem ·tl·tszÛ", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Forgat√°s/T√ºkr√∂z√©s...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "√Åtm√©retez√©s...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "V√°g√°s", IDM_IMAGECROP
+        MENUITEM "Sz√≠nek megford√≠t√°sa\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Attrib√∫tumok...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "K√©p t√∂rl√©se\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Nem √°tl√°tsz√≥", IDM_IMAGEDRAWOPAQUE
     END
-    
-    POPUP "SzÌn&ek"
+
+    POPUP "Sz√≠n&ek"
     BEGIN
-        MENUITEM "Paletta szerkesztÈse...", IDM_COLORSEDITPALETTE
+        MENUITEM "Paletta szerkeszt√©se...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
-        MENUITEM "TÈmakˆrˆk", IDM_HELPHELPTOPICS
+        MENUITEM "T√©mak√∂r√∂k", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "NÈvjegy", IDM_HELPINFO
+        MENUITEM "N√©vjegy", IDM_HELPINFO
     END
 END
 
@@ -116,62 +116,62 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "KÈp forgat·sa Ès t¸krˆzÈse"
+CAPTION "K√©p forgat√°sa √©s t√ºkr√∂z√©se"
 BEGIN
-    GROUPBOX "Forgat·s vagy t¸krˆzÈs", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "VÌzszintes t¸krˆzÈs", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "F¸ggıleges t¸krˆzÈs", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "Elforgat·s ekkora szˆggel:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90∞", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180∞", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270∞", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    GROUPBOX "Forgat√°s vagy t√ºkr√∂z√©s", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "V√≠zszintes t√ºkr√∂z√©s", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "F√ºgg√µleges t√ºkr√∂z√©s", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Elforgat√°s ekkora sz√∂ggel:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90¬∞", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180¬∞", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270¬∞", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
-    PUSHBUTTON "MÈgsem", IDCANCEL, 125, 24, 48, 14
+    PUSHBUTTON "M√©gsem", IDCANCEL, 125, 24, 48, 14
 END
 
 IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Attrib˙tumok"
+CAPTION "Attrib√∫tumok"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "SzÈlessÈg:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "MagassÈg:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "F·jl d·tuma:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "F·jlmÈter:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Felbont·s:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Nem elÈrhetı", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Nem elÈrhetı", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Nem elÈrhetı", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
-    GROUPBOX "EgysÈg", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "H¸velyk", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    LTEXT "Sz√©less√©g:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "Magass√©g:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "F√°jl d√°tuma:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "F√°jlm√©ter:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Felbont√°s:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Nem el√©rhet√µ", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Nem el√©rhet√µ", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Nem el√©rhet√µ", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    GROUPBOX "Egys√©g", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
+    AUTORADIOBUTTON "H√ºvelyk", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
     AUTORADIOBUTTON "Pixel", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
-    GROUPBOX "SzÌnek", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "Fekete-fehÈr", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "SzÌnes", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    GROUPBOX "Sz√≠nek", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
+    AUTORADIOBUTTON "Fekete-feh√©r", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "Sz√≠nes", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "MÈgsem", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "AlapÈrtelmezett", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "M√©gsem", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "Alap√©rtelmezett", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "¡tmÈretezÈs"
+CAPTION "√Åtm√©retez√©s"
 BEGIN
-    GROUPBOX "¡tmÈretezÈs", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
+    GROUPBOX "√Åtm√©retez√©s", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "VÌzszintesen:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    LTEXT "V√≠zszintesen:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
     ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "F¸ggılegesen:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    LTEXT "F√ºgg√µlegesen:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "MÈgsem", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "M√©gsem", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
@@ -179,28 +179,28 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "ReactOS Paint"
-    IDS_INFOTEXT, "A ReactOS Paint a GNU Lesser General Public License (LGPL) 3-as verziÛja alatt Èrhetı el (l·sd www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "KÌv·nja menteni %s v·ltoz·sait?"
-    IDS_DEFAULTFILENAME, "NÈvtelen.bmp"
-    IDS_MINIATURETITLE, "Miniat˙ra"
-    IDS_TOOLTIP1, "SzabadkÈzi kijelˆlÈs"
-    IDS_TOOLTIP2, "KijelˆlÈs"
-    IDS_TOOLTIP3, "RadÌr"
-    IDS_TOOLTIP4, "KitˆltÈs szÌnnel"
-    IDS_TOOLTIP5, "SzÌn kiv·laszt·sa"
-    IDS_TOOLTIP6, "NagyÌt·s"
+    IDS_INFOTEXT, "A ReactOS Paint a GNU Lesser General Public License (LGPL) 3-as verzi√≥ja alatt √©rhet√µ el (l√°sd www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "K√≠v√°nja menteni %s v√°ltoz√°sait?"
+    IDS_DEFAULTFILENAME, "N√©vtelen.bmp"
+    IDS_MINIATURETITLE, "Miniat√∫ra"
+    IDS_TOOLTIP1, "Szabadk√©zi kijel√∂l√©s"
+    IDS_TOOLTIP2, "Kijel√∂l√©s"
+    IDS_TOOLTIP3, "Rad√≠r"
+    IDS_TOOLTIP4, "Kit√∂lt√©s sz√≠nnel"
+    IDS_TOOLTIP5, "Sz√≠n kiv√°laszt√°sa"
+    IDS_TOOLTIP6, "Nagy√≠t√°s"
     IDS_TOOLTIP7, "Ceruza"
     IDS_TOOLTIP8, "Ecset"
-    IDS_TOOLTIP9, "FestÈkszÛrÛ"
-    IDS_TOOLTIP10, "Szˆveg"
+    IDS_TOOLTIP9, "Fest√©ksz√≥r√≥"
+    IDS_TOOLTIP10, "Sz√∂veg"
     IDS_TOOLTIP11, "Vonal"
-    IDS_TOOLTIP12, "Bezier-gˆrbe"
-    IDS_TOOLTIP13, "TÈglalap"
-    IDS_TOOLTIP14, "Sokszˆg"
+    IDS_TOOLTIP12, "Bezier-g√∂rbe"
+    IDS_TOOLTIP13, "T√©glalap"
+    IDS_TOOLTIP14, "Soksz√∂g"
     IDS_TOOLTIP15, "Ellipszis"
-    IDS_TOOLTIP16, "LekerekÌtett tÈglalap"
-    IDS_OPENFILTER, "BitkÈp f·jlok (*.bmp;*.dib)\1*.bmp;*.dib\1Minden f·jl (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 bites bitkÈp (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d b·jt"
-    IDS_PRINTRES, "%d x %d pixel per mÈter"
+    IDS_TOOLTIP16, "Lekerek√≠tett t√©glalap"
+    IDS_OPENFILTER, "Bitk√©p f√°jlok (*.bmp;*.dib)\1*.bmp;*.dib\1Minden f√°jl (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24 bites bitk√©p (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d b√°jt"
+    IDS_PRINTRES, "%d x %d pixel per m√©ter"
 END

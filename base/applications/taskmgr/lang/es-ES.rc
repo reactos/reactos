@@ -1,17 +1,7 @@
-/////////////////////////////////////////////////////////////////////////////
 // Spanish (Spain) resources by Carlos Garcia Gomez
-//Sync to latest version of En.rc Samuel SerapiÛn
+// Sync to latest version of En.rc Samuel Serapi√≥n
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -35,7 +25,7 @@ BEGIN
     POPUP "&Ver"
     BEGIN
         MENUITEM "&Actualizar Ahora",                ID_VIEW_REFRESH
-        POPUP "Velocidad de A&ctualizaciÛn"
+        POPUP "Velocidad de A&ctualizaci√≥n"
         BEGIN
             MENUITEM "A&lta",		ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normal",		ID_VIEW_UPDATESPEED_NORMAL
@@ -46,16 +36,17 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Iconos &Grandes",                  ID_VIEW_LARGE
-        MENUITEM "Iconos &PequeÒos",                 ID_VIEW_SMALL
+        MENUITEM "Iconos &Peque√±os",                 ID_VIEW_SMALL
         MENUITEM "&Detalles",                        ID_VIEW_DETAILS, CHECKED
         MENUITEM "&Seleccionar Columnas...",         ID_VIEW_SELECTCOLUMNS
         POPUP "Historial de la &CPU"
         BEGIN
-            MENUITEM "&Una Gr·fica, Todas las CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&Una Gr√°fica, Todas las CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Una Gr·fica, &Por CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "Una Gr√°fica, &Por CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
         END
-        MENUITEM "&Mostrar tiempos del N˙cleo",      ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Mostrar tiempos del N√∫cleo",      ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Ventanas"
     BEGIN
@@ -91,7 +82,7 @@ BEGIN
         MENUITEM "&Nueva Tarea (Ejecutar...)",  ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Iconos &Grandes",             ID_VIEW_LARGE
-        MENUITEM "Iconos &PequeÒos",            ID_VIEW_SMALL
+        MENUITEM "Iconos &Peque√±os",            ID_VIEW_SMALL
         MENUITEM "&Detalles",                   ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -131,7 +122,7 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Finalizar Proceso",              ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Finalizar &¡rbol de Procesos",    ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Finalizar &√Årbol de Procesos",    ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Depurador",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
@@ -151,7 +142,7 @@ BEGIN
 
         END
         MENUITEM "Establecer &Afinidad...",         ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Editar &Canales de DepuraciÛn...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+	MENUITEM "Editar &Canales de Depuraci√≥n...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -205,8 +196,8 @@ BEGIN
     GROUPBOX        "Uso de MEM",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totales",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Carga de transacciones (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Memoria fÌsica (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Memoria del n˙cleo (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Memoria f√≠sica (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Memoria del n√∫cleo (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "Identificadores",IDS_TOTALS_HANDLE_COUNT,12,131,40,8
     LTEXT           "Subprocesos",IDS_TOTALS_THREAD_COUNT,12,140,40,8
     LTEXT           "Procesos",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
@@ -217,8 +208,8 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Total",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "LÌmite",IDS_COMMIT_CHARGE_LIMIT,12,184,30,8,NOT WS_BORDER
-    LTEXT           "M·ximo",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "L√≠mite",IDS_COMMIT_CHARGE_LIMIT,12,184,30,8,NOT WS_BORDER
+    LTEXT           "M√°ximo",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
@@ -227,7 +218,7 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Total",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Disponible",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,35,8
-    LTEXT           "CachÈ sistema",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,85,8
+    LTEXT           "Cach√© sistema",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,85,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
@@ -255,7 +246,7 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Canales de DepuraciÛn"
+CAPTION "Canales de Depuraci√≥n"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
@@ -271,7 +262,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,120,133,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,174,133,50,14
-    LTEXT           "La Afinidad de Procesador que pone mandos sobre los cuales permitir·n a las CPUs el proceso para ejecutar.",
+    LTEXT           "La Afinidad de Procesador que pone mandos sobre los cuales permitir√°n a las CPUs el proceso para ejecutar.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -346,7 +337,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,126,178,50,14 //84
     PUSHBUTTON      "Cancelar",IDCANCEL,180,178,50,14 //138
-    LTEXT           "Selecciona las columnas que aparecer·n en la p·gina de Procesos del Administrador de Tareas.",
+    LTEXT           "Selecciona las columnas que aparecer√°n en la p√°gina de Procesos del Administrador de Tareas.",
                     IDC_STATIC,7,7,221,17 //181
     CONTROL         "Nombre de la &Imagen",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,88,10 //56
@@ -360,9 +351,9 @@ BEGIN
                     WS_TABSTOP,7,72,63,10
     CONTROL         "Di&ferencia de uso de memoria",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,120,10 //82
-    CONTROL         "Uso m·&ximo de la Memoria",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "Uso m√°&ximo de la Memoria",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,120,10 //82
-    CONTROL         "Err&ores de P·gina",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Err&ores de P√°gina",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,80,10 //53
     CONTROL         "O&bjetos de USUARIO",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,80,10 //62
@@ -374,9 +365,9 @@ BEGIN
                     WS_TABSTOP,7,149,65,10 //50
     CONTROL         "&Nombre de Usuario",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,75,10 //51
-    CONTROL         "Diferencia de erro&res de p·gina",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "Diferencia de erro&res de p√°gina",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,28,120,10 //107,60
-    CONTROL         "TamaÒo de la Memoria &Virtual",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "Tama√±o de la Memoria &Virtual",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,39,120,10 //107,60
     CONTROL         "B&loque paginado",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,50,67,10 //107,53
@@ -386,7 +377,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,127,72,80,10 //107
     CONTROL         "&Recuento de identificadores",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,83,59,10 //107
-    CONTROL         "N˙&mero de subprocesos",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "N√∫&mero de subprocesos",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,94,59,10 //107
     CONTROL         "Objetos &GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,127,105,55,10 //107
@@ -530,11 +521,11 @@ BEGIN
     ID_FILE_NEW             "Ejecutar un nuevo Programa"
     ID_OPTIONS_ALWAYSONTOP  "El Administrador de Tareas permanece siempre visible excepto cuando este minimizado"
     ID_OPTIONS_MINIMIZEONUSE
-                            "El Administrador de Tareas sera minimizado cuando una operaciÛn 'Cambiar A' se realice"
+                            "El Administrador de Tareas sera minimizado cuando una operaci√≥n 'Cambiar A' se realice"
     ID_OPTIONS_HIDEWHENMINIMIZED "Ocultar el Administrador de Tareas al minimizar"
-    ID_VIEW_REFRESH         "Forzar el Administrador de Tareas a actualizar ahora, sin tener en cuenta ajuste de Velocidad de ActualizaciÛn"
+    ID_VIEW_REFRESH         "Forzar el Administrador de Tareas a actualizar ahora, sin tener en cuenta ajuste de Velocidad de Actualizaci√≥n"
     ID_VIEW_LARGE           "Mostrar tareas usando iconos grandes"
-    ID_VIEW_SMALL           "Mostrar tareas usando iconos pequeÒos"
+    ID_VIEW_SMALL           "Mostrar tareas usando iconos peque√±os"
     ID_VIEW_DETAILS         "Mostrar informacion acerca de cada tarea"
     ID_VIEW_UPDATESPEED_HIGH "Actualizar la vista dos veces por segundo"
     ID_VIEW_UPDATESPEED_NORMAL "Actualizar la vista cada dos segundos"
@@ -552,12 +543,12 @@ BEGIN
     ID_WINDOWS_CASCADE      "Mostrar las ventanas en diagonal sobre el escritorio en forma de cascada"
     ID_WINDOWS_BRINGTOFRONT "Trae el frente de ventana, pero no cambiar a ella"
     ID_HELP_TOPICS          "Mostrar Temas de ayuda del Administrador de Tareas"
-    ID_HELP_ABOUT           "Mostrar informaciÛn del programa, n˙mero de versiÛn y copyright"
+    ID_HELP_ABOUT           "Mostrar informaci√≥n del programa, n√∫mero de versi√≥n y copyright"
     ID_FILE_EXIT            "Cerrar el Administrador de Tareas"
     ID_OPTIONS_SHOW16BITTASKS
                             "Mostrar tareas de 16-bit bajo el ntvdm.exe asociado"
     ID_VIEW_SELECTCOLUMNS   "Seleccionar que columnas seran visibles en la pagina de Procesos"
-    ID_VIEW_SHOWKERNELTIMES "Mostrar tiempos del n˙cleo en los graficos de rendimiento"
+    ID_VIEW_SHOWKERNELTIMES "Mostrar tiempos del n√∫cleo en los graficos de rendimiento"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
                             "Un simple histograma muestra el uso total de la CPU"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU tiene su histograma propio"
@@ -573,7 +564,7 @@ BEGIN
     ID_PROCESS_PAGE_ENDPROCESS "Eliminar el proceso del sistema"
     ID_PROCESS_PAGE_ENDPROCESSTREE
                             "Eliminar este proceso y todos sus subprocesos del sistema"
-    ID_PROCESS_PAGE_DEBUG   "Ata a la depuraciÛn a este proceso"
+    ID_PROCESS_PAGE_DEBUG   "Ata a la depuraci√≥n a este proceso"
     ID_PROCESS_PAGE_SETAFFINITY
                             "Controlar en que procesadores puede ejecutarse cada proceso"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
@@ -599,7 +590,7 @@ BEGIN
     IDS_TAB_IMAGENAME             "Nombre de Imagen"
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Nombre Usuario"
-    IDS_TAB_SESSIONID             "ID de secciÛn"
+    IDS_TAB_SESSIONID             "ID de secci√≥n"
     IDS_TAB_CPU                   "CPU"
     IDS_TAB_CPUTIME               "Tiempo CPU"
     IDS_TAB_MEMUSAGE              "Uso de Memoria"
@@ -607,7 +598,7 @@ BEGIN
     IDS_TAB_MEMDELTA              "Diferencia de Memoria"
     IDS_TAB_PAGEFAULT             "Faltas de Pagina"
     IDS_TAB_PFDELTA               "Diferencia de FP"
-    IDS_TAB_VMSIZE                "TamaÒo MV(Maquina Virtual)"
+    IDS_TAB_VMSIZE                "Tama√±o MV(Maquina Virtual)"
     IDS_TAB_PAGEDPOOL             "Grupo Paginado"
     IDS_TAB_NPPOOL                "Grupo NP"
     IDS_TAB_BASEPRI               "Base Pri"
@@ -625,24 +616,24 @@ BEGIN
     IDS_MENU_16BITTASK            "Mos&trar tareas 16-bit"
     IDS_MENU_WINDOWS              "&Ventanas"
     IDS_MENU_LARGEICONS           "Iconos G&randes"
-    IDS_MENU_SMALLICONS           "Iconos &PequeÒos"
+    IDS_MENU_SMALLICONS           "Iconos &Peque√±os"
     IDS_MENU_DETAILS              "&Detalles"
     IDS_MENU_ONEGRAPHALLCPUS      "&Una Grafica, Todos CPUs"
     IDS_MENU_ONEGRAPHPERCPU       "Una Grafica &Por CPU"
     IDS_MENU_CPUHISTORY           "Historial &CPU"
-    IDS_MENU_SHOWKERNELTIMES      "Mues&tra tiempos N˙cleo"
+    IDS_MENU_SHOWKERNELTIMES      "Mues&tra tiempos N√∫cleo"
     IDS_CREATENEWTASK             "Crear Tarea Nueva"
     IDS_CREATENEWTASK_DESC        "Escriba el nombre del programa, carpeta, documento o recurso de Internet que desea que ReactOS abra."
     IDS_MSG_ACCESSPROCESSAFF      "Incapaz de acceder o configurar la Afinidad del Proceso"
     IDS_MSG_PROCESSONEPRO         "El proceso debe tener afinidad con por lo menos un procesador."
-    IDS_MSG_INVALIDOPTION         "OpciÛn Invalida"
+    IDS_MSG_INVALIDOPTION         "Opci√≥n Invalida"
     IDS_MSG_UNABLEDEBUGPROCESS    "Incapaz de depurar proceso"
-    IDS_MSG_WARNINGDEBUG          "ADVERTENCIA: La depuraciÛn de este proceso puede resultar en perdidad de data.\nøEsta seguro que quiere usar el depurador?"
+    IDS_MSG_WARNINGDEBUG          "ADVERTENCIA: La depuraci√≥n de este proceso puede resultar en perdidad de data.\n¬øEsta seguro que quiere usar el depurador?"
     IDS_MSG_TASKMGRWARNING        "Advertencia de Manejador de Tareas"
-    IDS_MSG_WARNINGTERMINATING    "ADVERTENCIA: Si temina un proceso puede obtener resultados no\ndeseados como la pÈrdida de datos y la inestabilidad del sistema. El\nproceso no tendr· tiempo para guardar su estado o datos\nantes de ser terminado. øEst· seguro que quiere terminar\nel proceso?"
+    IDS_MSG_WARNINGTERMINATING    "ADVERTENCIA: Si temina un proceso puede obtener resultados no\ndeseados como la p√©rdida de datos y la inestabilidad del sistema. El\nproceso no tendr√° tiempo para guardar su estado o datos\nantes de ser terminado. ¬øEst√° seguro que quiere terminar\nel proceso?"
     IDS_MSG_UNABLETERMINATEPRO    "Incapaz de cerrar el Proceso"
     IDS_MSG_UNABLECHANGEPRIORITY  "Incapaz de cambiar la prioridad"
-    IDS_MSG_WARNINGCHANGEPRIORITY "Advertencia: Si cambia la clase de prioridad de este proceso, puede\nobtener resultados no deseados, incluso la inestabilidad del sistema. øEst· seguro que\ndesea cambiar la Clase de Prioridad?"
+    IDS_MSG_WARNINGCHANGEPRIORITY "Advertencia: Si cambia la clase de prioridad de este proceso, puede\nobtener resultados no deseados, incluso la inestabilidad del sistema. ¬øEst√° seguro que\ndesea cambiar la Clase de Prioridad?"
     IDS_MSG_TRAYICONCPUUSAGE      "Promedio CPU: %d%%"
     IDS_STATUS_MEMUSAGE           "Uso Memoria: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Uso CPU: %3d%%"
@@ -650,19 +641,3 @@ BEGIN
     IDS_Not_Responding            "No Responde"
     IDS_Running                   "Funcionando"
 END
-
-
-#endif    // Spanish (SPAIN) resources by Samuel SerapiÛn
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED

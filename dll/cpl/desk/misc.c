@@ -24,7 +24,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
         UINT x;
 
         /* Find the string we're looking for */
-        uID &= 0xF; /* position in the block, same as % 16 */
+        uID &= 0xF; /* Position in the block, same as % 16 */
         for (x = 0; x < uID; x++)
         {
             lpStr += (*lpStr) + 1;

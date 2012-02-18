@@ -1,4 +1,3 @@
-$if (_WDMDDK_)
 #ifndef _NTTMAPI_
 #define _NTTMAPI_
 
@@ -155,7 +154,7 @@ typedef struct _TRANSACTIONMANAGER_LOG_INFORMATION {
 
 typedef struct _TRANSACTIONMANAGER_LOGPATH_INFORMATION {
   ULONG LogPathLength;
-  WCHAR LogPath[1];
+  _Field_size_(LogPathLength) WCHAR LogPath[1];
 } TRANSACTIONMANAGER_LOGPATH_INFORMATION, *PTRANSACTIONMANAGER_LOGPATH_INFORMATION;
 
 typedef struct _TRANSACTIONMANAGER_RECOVERY_INFORMATION {
@@ -266,387 +265,489 @@ typedef struct _TRANSACTION_LIST_INFORMATION {
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_CREATE_TRANSACTION)(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN LPGUID Uow OPTIONAL,
-  IN HANDLE TmHandle OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN ULONG IsolationLevel OPTIONAL,
-  IN ULONG IsolationFlags OPTIONAL,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  IN PUNICODE_STRING Description OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ ULONG IsolationLevel,
+  _In_opt_ ULONG IsolationFlags,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _In_opt_ PUNICODE_STRING Description);
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_OPEN_TRANSACTION)(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN LPGUID Uow OPTIONAL,
-  IN HANDLE TmHandle OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle);
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_QUERY_INFORMATION_TRANSACTION)(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  OUT PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _Out_writes_bytes_(TransactionInformationLength) PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_SET_INFORMATION_TRANSACTION)(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  IN PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _In_ PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength);
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_COMMIT_TRANSACTION)(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
 typedef NTSTATUS
 (NTAPI *PFN_NT_ROLLBACK_TRANSACTION)(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateTransactionManager(
-  OUT PHANDLE TmHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PUNICODE_STRING LogFileName OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN ULONG CommitStrength OPTIONAL);
+  _Out_ PHANDLE TmHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PUNICODE_STRING LogFileName,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ ULONG CommitStrength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenTransactionManager(
-  OUT PHANDLE TmHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PUNICODE_STRING LogFileName OPTIONAL,
-  IN LPGUID TmIdentity OPTIONAL,
-  IN ULONG OpenOptions OPTIONAL);
+  _Out_ PHANDLE TmHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PUNICODE_STRING LogFileName,
+  _In_opt_ LPGUID TmIdentity,
+  _In_opt_ ULONG OpenOptions);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRenameTransactionManager(
-  IN PUNICODE_STRING LogFileName,
-  IN LPGUID ExistingTransactionManagerGuid);
+  _In_ PUNICODE_STRING LogFileName,
+  _In_ LPGUID ExistingTransactionManagerGuid);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRollforwardTransactionManager(
-  IN HANDLE TransactionManagerHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE TransactionManagerHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRecoverTransactionManager(
-  IN HANDLE TransactionManagerHandle);
+  _In_ HANDLE TransactionManagerHandle);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationTransactionManager(
-  IN HANDLE TransactionManagerHandle,
-  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
-  OUT PVOID TransactionManagerInformation,
-  IN ULONG TransactionManagerInformationLength,
-  OUT PULONG ReturnLength);
+  _In_ HANDLE TransactionManagerHandle,
+  _In_ TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  _Out_writes_bytes_(TransactionManagerInformationLength) PVOID TransactionManagerInformation,
+  _In_ ULONG TransactionManagerInformationLength,
+  _Out_ PULONG ReturnLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationTransactionManager(
-  IN HANDLE TmHandle OPTIONAL,
-  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
-  IN PVOID TransactionManagerInformation,
-  IN ULONG TransactionManagerInformationLength);
+  _In_opt_ HANDLE TmHandle,
+  _In_ TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  _In_reads_bytes_(TransactionManagerInformationLength) PVOID TransactionManagerInformation,
+  _In_ ULONG TransactionManagerInformationLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateTransactionObject(
-  IN HANDLE RootObjectHandle OPTIONAL,
-  IN KTMOBJECT_TYPE QueryType,
-  IN OUT PKTMOBJECT_CURSOR ObjectCursor,
-  IN ULONG ObjectCursorLength,
-  OUT PULONG ReturnLength);
+  _In_opt_ HANDLE RootObjectHandle,
+  _In_ KTMOBJECT_TYPE QueryType,
+  _Inout_updates_bytes_(ObjectCursorLength) PKTMOBJECT_CURSOR ObjectCursor,
+  _In_ ULONG ObjectCursorLength,
+  _Out_ PULONG ReturnLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateTransaction(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN LPGUID Uow OPTIONAL,
-  IN HANDLE TmHandle OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN ULONG IsolationLevel OPTIONAL,
-  IN ULONG IsolationFlags OPTIONAL,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  IN PUNICODE_STRING Description OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ ULONG IsolationLevel,
+  _In_opt_ ULONG IsolationFlags,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _In_opt_ PUNICODE_STRING Description);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenTransaction(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN LPGUID Uow,
-  IN HANDLE TmHandle OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationTransaction(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  OUT PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _Out_writes_bytes_(TransactionInformationLength) PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationTransaction(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  IN PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _In_reads_bytes_(TransactionInformationLength) PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCommitTransaction(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRollbackTransaction(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEnlistment(
-  OUT PHANDLE EnlistmentHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE ResourceManagerHandle,
-  IN HANDLE TransactionHandle,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN NOTIFICATION_MASK NotificationMask,
-  IN PVOID EnlistmentKey OPTIONAL);
+  _Out_ PHANDLE EnlistmentHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ HANDLE TransactionHandle,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ ULONG CreateOptions,
+  _In_ NOTIFICATION_MASK NotificationMask,
+  _In_opt_ PVOID EnlistmentKey);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenEnlistment(
-  OUT PHANDLE EnlistmentHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE ResourceManagerHandle,
-  IN LPGUID EnlistmentGuid,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+  _Out_ PHANDLE EnlistmentHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ LPGUID EnlistmentGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
-  OUT PVOID EnlistmentInformation,
-  IN ULONG EnlistmentInformationLength,
-  OUT PULONG ReturnLength);
+  _In_ HANDLE EnlistmentHandle,
+  _In_ ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  _Out_writes_bytes_(EnlistmentInformationLength) PVOID EnlistmentInformation,
+  _In_ ULONG EnlistmentInformationLength,
+  _Out_ PULONG ReturnLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationEnlistment(
-  IN HANDLE EnlistmentHandle OPTIONAL,
-  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
-  IN PVOID EnlistmentInformation,
-  IN ULONG EnlistmentInformationLength);
+  _In_opt_ HANDLE EnlistmentHandle,
+  _In_ ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  _In_reads_bytes_(EnlistmentInformationLength) PVOID EnlistmentInformation,
+  _In_ ULONG EnlistmentInformationLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRecoverEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PVOID EnlistmentKey OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PVOID EnlistmentKey);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrePrepareEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrepareEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCommitEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRollbackEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrePrepareComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrepareComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCommitComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadOnlyEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRollbackComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSinglePhaseReject(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateResourceManager(
-  OUT PHANDLE ResourceManagerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE TmHandle,
-  IN LPGUID RmGuid,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN PUNICODE_STRING Description OPTIONAL);
+  _Out_ PHANDLE ResourceManagerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE TmHandle,
+  _In_ LPGUID RmGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ PUNICODE_STRING Description);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenResourceManager(
-  OUT PHANDLE ResourceManagerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE TmHandle,
-  IN LPGUID ResourceManagerGuid OPTIONAL,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+  _Out_ PHANDLE ResourceManagerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE TmHandle,
+  _In_opt_ LPGUID ResourceManagerGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRecoverResourceManager(
-  IN HANDLE ResourceManagerHandle);
+  _In_ HANDLE ResourceManagerHandle);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetNotificationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  OUT PTRANSACTION_NOTIFICATION TransactionNotification,
-  IN ULONG NotificationLength,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  OUT PULONG ReturnLength OPTIONAL,
-  IN ULONG Asynchronous,
-  IN ULONG_PTR AsynchronousContext OPTIONAL);
+  _In_ HANDLE ResourceManagerHandle,
+  _Out_ PTRANSACTION_NOTIFICATION TransactionNotification,
+  _In_ ULONG NotificationLength,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _Out_opt_ PULONG ReturnLength,
+  _In_ ULONG Asynchronous,
+  _In_opt_ ULONG_PTR AsynchronousContext);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
-  OUT PVOID ResourceManagerInformation,
-  IN ULONG ResourceManagerInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  _Out_writes_bytes_(ResourceManagerInformationLength) PVOID ResourceManagerInformation,
+  _In_ ULONG ResourceManagerInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
-  IN PVOID ResourceManagerInformation,
-  IN ULONG ResourceManagerInformationLength);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  _In_reads_bytes_(ResourceManagerInformationLength) PVOID ResourceManagerInformation,
+  _In_ ULONG ResourceManagerInformationLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRegisterProtocolAddressInformation(
-  IN HANDLE ResourceManager,
-  IN PCRM_PROTOCOL_ID ProtocolId,
-  IN ULONG ProtocolInformationSize,
-  IN PVOID ProtocolInformation,
-  IN ULONG CreateOptions OPTIONAL);
+  _In_ HANDLE ResourceManager,
+  _In_ PCRM_PROTOCOL_ID ProtocolId,
+  _In_ ULONG ProtocolInformationSize,
+  _In_ PVOID ProtocolInformation,
+  _In_opt_ ULONG CreateOptions);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPropagationComplete(
-  IN HANDLE ResourceManagerHandle,
-  IN ULONG RequestCookie,
-  IN ULONG BufferLength,
-  IN PVOID Buffer);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ ULONG RequestCookie,
+  _In_ ULONG BufferLength,
+  _In_ PVOID Buffer);
 
+_IRQL_requires_max_ (APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPropagationFailed(
-  IN HANDLE ResourceManagerHandle,
-  IN ULONG RequestCookie,
-  IN NTSTATUS PropStatus);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ ULONG RequestCookie,
+  _In_ NTSTATUS PropStatus);
 
 #endif /* NTDDI_VERSION >= NTDDI_VISTA */
 
 #endif /* !_NTTMAPI_ */
-$endif

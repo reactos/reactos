@@ -1,7 +1,7 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.5.1 [February 3, 2011]
+ * Last changed in libpng 1.5.5 [September 22, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -459,6 +459,65 @@ png_get_bKGD(png_const_structp png_ptr, png_infop info_ptr,
 #endif
 
 #ifdef PNG_cHRM_SUPPORTED
+/* The XYZ APIs were added in 1.5.5 to take advantage of the code added at the
+ * same time to correct the rgb grayscale coefficient defaults obtained from the
+ * cHRM chunk in 1.5.4
+ */
+png_uint_32 PNGFAPI
+png_get_cHRM_XYZ_fixed(png_structp png_ptr, png_const_infop info_ptr,
+    png_fixed_point *int_red_X, png_fixed_point *int_red_Y,
+    png_fixed_point *int_red_Z, png_fixed_point *int_green_X,
+    png_fixed_point *int_green_Y, png_fixed_point *int_green_Z,
+    png_fixed_point *int_blue_X, png_fixed_point *int_blue_Y,
+    png_fixed_point *int_blue_Z)
+{
+   if (png_ptr != NULL && info_ptr != NULL && (info_ptr->valid & PNG_INFO_cHRM))
+   {
+      png_xy xy;
+      png_XYZ XYZ;
+
+      png_debug1(1, "in %s retrieval function", "cHRM_XYZ");
+
+      xy.whitex = info_ptr->x_white;
+      xy.whitey = info_ptr->y_white;
+      xy.redx = info_ptr->x_red;
+      xy.redy = info_ptr->y_red;
+      xy.greenx = info_ptr->x_green;
+      xy.greeny = info_ptr->y_green;
+      xy.bluex = info_ptr->x_blue;
+      xy.bluey = info_ptr->y_blue;
+
+      /* The *_checked function handles error reporting, so just return 0 if
+       * there is a failure here.
+       */
+      if (png_XYZ_from_xy_checked(png_ptr, &XYZ, xy))
+      {
+         if (int_red_X != NULL)
+            *int_red_X = XYZ.redX;
+         if (int_red_Y != NULL)
+            *int_red_Y = XYZ.redY;
+         if (int_red_Z != NULL)
+            *int_red_Z = XYZ.redZ;
+         if (int_green_X != NULL)
+            *int_green_X = XYZ.greenX;
+         if (int_green_Y != NULL)
+            *int_green_Y = XYZ.greenY;
+         if (int_green_Z != NULL)
+            *int_green_Z = XYZ.greenZ;
+         if (int_blue_X != NULL)
+            *int_blue_X = XYZ.blueX;
+         if (int_blue_Y != NULL)
+            *int_blue_Y = XYZ.blueY;
+         if (int_blue_Z != NULL)
+            *int_blue_Z = XYZ.blueZ;
+
+         return (PNG_INFO_cHRM);
+      }
+   }
+
+   return (0);
+}
+
 #  ifdef PNG_FLOATING_POINT_SUPPORTED
 png_uint_32 PNGAPI
 png_get_cHRM(png_const_structp png_ptr, png_const_infop info_ptr,
@@ -485,6 +544,42 @@ png_get_cHRM(png_const_structp png_ptr, png_const_infop info_ptr,
          *blue_x = png_float(png_ptr, info_ptr->x_blue, "cHRM blue X");
       if (blue_y != NULL)
          *blue_y = png_float(png_ptr, info_ptr->y_blue, "cHRM blue Y");
+      return (PNG_INFO_cHRM);
+   }
+
+   return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_cHRM_XYZ(png_structp png_ptr, png_const_infop info_ptr,
+   double *red_X, double *red_Y, double *red_Z, double *green_X,
+   double *green_Y, double *green_Z, double *blue_X, double *blue_Y,
+   double *blue_Z)
+{
+   png_XYZ XYZ;
+
+   if (png_get_cHRM_XYZ_fixed(png_ptr, info_ptr,
+      &XYZ.redX, &XYZ.redY, &XYZ.redZ, &XYZ.greenX, &XYZ.greenY, &XYZ.greenZ,
+      &XYZ.blueX, &XYZ.blueY, &XYZ.blueZ) & PNG_INFO_cHRM)
+   {
+      if (red_X != NULL)
+         *red_X = png_float(png_ptr, XYZ.redX, "cHRM red X");
+      if (red_Y != NULL)
+         *red_Y = png_float(png_ptr, XYZ.redY, "cHRM red Y");
+      if (red_Z != NULL)
+         *red_Z = png_float(png_ptr, XYZ.redZ, "cHRM red Z");
+      if (green_X != NULL)
+         *green_X = png_float(png_ptr, XYZ.greenX, "cHRM green X");
+      if (green_Y != NULL)
+         *green_Y = png_float(png_ptr, XYZ.greenY, "cHRM green Y");
+      if (green_Z != NULL)
+         *green_Z = png_float(png_ptr, XYZ.greenZ, "cHRM green Z");
+      if (blue_X != NULL)
+         *blue_X = png_float(png_ptr, XYZ.blueX, "cHRM blue X");
+      if (blue_Y != NULL)
+         *blue_Y = png_float(png_ptr, XYZ.blueY, "cHRM blue Y");
+      if (blue_Z != NULL)
+         *blue_Z = png_float(png_ptr, XYZ.blueZ, "cHRM blue Z");
       return (PNG_INFO_cHRM);
    }
 
@@ -971,7 +1066,7 @@ png_get_user_chunk_ptr(png_const_structp png_ptr)
 png_size_t PNGAPI
 png_get_compression_buffer_size(png_const_structp png_ptr)
 {
-   return (png_ptr ? png_ptr->zbuf_size : 0L);
+   return (png_ptr ? png_ptr->zbuf_size : 0);
 }
 
 

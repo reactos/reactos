@@ -73,6 +73,8 @@ typedef struct
     BOOL bCalDepressed; /* TRUE = cal button is depressed */
     int  bDropdownEnabled;
     int  select;
+    WCHAR charsEntered[4];
+    int nCharsEntered;
     HFONT hFont;
     int nrFieldsAllocated;
     int nrFields;
@@ -133,7 +135,6 @@ extern int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
 
 static BOOL DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
-extern void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to);
 static const WCHAR allowedformatchars[] = {'d', 'h', 'H', 'm', 'M', 's', 't', 'y', 'X', 0};
 static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
 
@@ -165,7 +166,8 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *sy
     if (flag == GDT_VALID) {
       if (systime->wYear < 1601 || systime->wYear > 30827 ||
           systime->wMonth < 1 || systime->wMonth > 12 ||
-          systime->wDay < 1 || systime->wDay > 31 ||
+          systime->wDay < 1 ||
+          systime->wDay > MONTHCAL_MonthLength(systime->wMonth, systime->wYear) ||
           systime->wHour > 23 ||
           systime->wMinute > 59 ||
           systime->wSecond > 59 ||
@@ -277,10 +279,11 @@ DATETIME_UseFormat (DATETIME_INFO *infoPtr, LPCWSTR formattxt)
 
 
 static BOOL
-DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR lpszFormat)
+DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR format)
 {
-    if (!lpszFormat) {
-	WCHAR format_buf[80];
+    WCHAR format_buf[80];
+
+    if (!format) {
 	DWORD format_item;
 
 	if (infoPtr->dwStyle & DTS_LONGDATEFORMAT)
@@ -290,13 +293,13 @@ DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR lpszFormat)
         else /* DTS_SHORTDATEFORMAT */
 	    format_item = LOCALE_SSHORTDATE;
 	GetLocaleInfoW(LOCALE_USER_DEFAULT, format_item, format_buf, sizeof(format_buf)/sizeof(format_buf[0]));
-	lpszFormat = format_buf;
+	format = format_buf;
     }
 
-    DATETIME_UseFormat (infoPtr, lpszFormat);
+    DATETIME_UseFormat (infoPtr, format);
     InvalidateRect (infoPtr->hwndSelf, NULL, TRUE);
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -470,6 +473,9 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 	case TWODIGITYEAR:
 	case FULLYEAR:
 	    date->wYear = wrap(date->wYear, delta, 1752, 9999);
+	    if (date->wDay > MONTHCAL_MonthLength(date->wMonth, date->wYear))
+	        /* This can happen when moving away from a leap year. */
+	        date->wDay = MONTHCAL_MonthLength(date->wMonth, date->wYear);
 	    MONTHCAL_CalculateDayOfWeek(date, TRUE);
 	    break;
 	case ONEDIGITMONTH:
@@ -696,6 +702,13 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
                 /* fill if focused */
                 HBRUSH hbr = CreateSolidBrush (comctl32_color.clrActiveCaption);
 
+                if (infoPtr->nCharsEntered)
+                {
+                    memcpy(txt, infoPtr->charsEntered, infoPtr->nCharsEntered * sizeof(WCHAR));
+                    txt[infoPtr->nCharsEntered] = 0;
+                    GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
+                }
+
                 selection.left   = 0;
                 selection.top    = 0;
                 selection.right  = size.cx;
@@ -755,6 +768,74 @@ static int DATETIME_GetPrevDateField(const DATETIME_INFO *infoPtr, int i)
     return -1;
 }
 
+static void
+DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
+{
+    int fieldNum = infoPtr->select & DTHT_DATEFIELD;
+    int i, val=0, clamp_day=0;
+    SYSTEMTIME date = infoPtr->date;
+
+    if (infoPtr->select == -1 || infoPtr->nCharsEntered == 0)
+        return;
+
+    for (i=0; i<infoPtr->nCharsEntered; i++)
+        val = val * 10 + infoPtr->charsEntered[i] - '0';
+
+    infoPtr->nCharsEntered = 0;
+
+    switch (infoPtr->fieldspec[fieldNum]) {
+        case ONEDIGITYEAR:
+        case TWODIGITYEAR:
+            date.wYear = date.wYear - (date.wYear%100) + val;
+            clamp_day = 1;
+            break;
+        case INVALIDFULLYEAR:
+        case FULLYEAR:
+            date.wYear = val;
+            clamp_day = 1;
+            break;
+        case ONEDIGITMONTH:
+        case TWODIGITMONTH:
+            date.wMonth = val;
+            clamp_day = 1;
+            break;
+        case ONEDIGITDAY:
+        case TWODIGITDAY:
+            date.wDay = val;
+            break;
+        case ONEDIGIT12HOUR:
+        case TWODIGIT12HOUR:
+        case ONEDIGIT24HOUR:
+        case TWODIGIT24HOUR:
+            /* FIXME: Preserve AM/PM for 12HOUR? */
+            date.wHour = val;
+            break;
+        case ONEDIGITMINUTE:
+        case TWODIGITMINUTE:
+            date.wMinute = val;
+            break;
+        case ONEDIGITSECOND:
+        case TWODIGITSECOND:
+            date.wSecond = val;
+            break;
+    }
+
+    if (clamp_day && date.wDay > MONTHCAL_MonthLength(date.wMonth, date.wYear))
+        date.wDay = MONTHCAL_MonthLength(date.wMonth, date.wYear);
+
+    if (DATETIME_SetSystemTime(infoPtr, GDT_VALID, &date))
+        DATETIME_SendDateTimeChangeNotify (infoPtr);
+}
+
+static void
+DATETIME_SetSelectedField (DATETIME_INFO *infoPtr, int select)
+{
+    DATETIME_ApplySelectedField(infoPtr);
+
+    infoPtr->select = select;
+    infoPtr->nCharsEntered = 0;
+}
+
 static LRESULT
 DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
 {
@@ -783,7 +864,8 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
             if (infoPtr->fieldspec[new] == FULLDAY) return 0;
         }
     }
-    infoPtr->select = new;
+
+    DATETIME_SetSelectedField(infoPtr, new);
 
     if (infoPtr->select == DTHT_MCPOPUP) {
         RECT rcMonthCal;
@@ -961,6 +1043,7 @@ DATETIME_KeyDown (DATETIME_INFO *infoPtr, DWORD vkCode)
 {
     int fieldNum = infoPtr->select & DTHT_DATEFIELD;
     int wrap = 0;
+    int new;
 
     if (!(infoPtr->haveFocus)) return 0;
     if ((fieldNum==0) && (infoPtr->select)) return 0;
@@ -972,40 +1055,50 @@ DATETIME_KeyDown (DATETIME_INFO *infoPtr, DWORD vkCode)
     switch (vkCode) {
 	case VK_ADD:
     	case VK_UP:
+	    infoPtr->nCharsEntered = 0;
 	    DATETIME_IncreaseField (infoPtr, fieldNum, 1);
 	    DATETIME_SendDateTimeChangeNotify (infoPtr);
 	    break;
 	case VK_SUBTRACT:
 	case VK_DOWN:
+	    infoPtr->nCharsEntered = 0;
 	    DATETIME_IncreaseField (infoPtr, fieldNum, -1);
 	    DATETIME_SendDateTimeChangeNotify (infoPtr);
 	    break;
 	case VK_HOME:
+	    infoPtr->nCharsEntered = 0;
 	    DATETIME_IncreaseField (infoPtr, fieldNum, INT_MIN);
 	    DATETIME_SendDateTimeChangeNotify (infoPtr);
 	    break;
 	case VK_END:
+	    infoPtr->nCharsEntered = 0;
 	    DATETIME_IncreaseField (infoPtr, fieldNum, INT_MAX);
 	    DATETIME_SendDateTimeChangeNotify (infoPtr);
 	    break;
 	case VK_LEFT:
+	    new = infoPtr->select;
 	    do {
-		if (infoPtr->select == 0) {
-		    infoPtr->select = infoPtr->nrFields - 1;
+		if (new == 0) {
+		    new = new - 1;
 		    wrap++;
 		} else {
-		    infoPtr->select--;
+		    new--;
 		}
-	    } while ((infoPtr->fieldspec[infoPtr->select] & DT_STRING) && (wrap<2));
+	    } while ((infoPtr->fieldspec[new] & DT_STRING) && (wrap<2));
+	    if (new != infoPtr->select)
+	        DATETIME_SetSelectedField(infoPtr, new);
 	    break;
 	case VK_RIGHT:
+	    new = infoPtr->select;
 	    do {
-		infoPtr->select++;
-		if (infoPtr->select==infoPtr->nrFields) {
-		    infoPtr->select = 0;
+		new++;
+		if (new==infoPtr->nrFields) {
+		    new = 0;
 		    wrap++;
 		}
-	    } while ((infoPtr->fieldspec[infoPtr->select] & DT_STRING) && (wrap<2));
+	    } while ((infoPtr->fieldspec[new] & DT_STRING) && (wrap<2));
+	    if (new != infoPtr->select)
+	        DATETIME_SetSelectedField(infoPtr, new);
 	    break;
     }
 
@@ -1021,80 +1114,20 @@ DATETIME_Char (DATETIME_INFO *infoPtr, WPARAM vkCode)
     int fieldNum = infoPtr->select & DTHT_DATEFIELD;
 
     if (vkCode >= '0' && vkCode <= '9') {
-        int num = vkCode-'0';
-        int newDays;
+        int maxChars;
+        int fieldSpec;
 
-        /* this is a somewhat simplified version of what Windows does */
-        SYSTEMTIME *date = &infoPtr->date;
-        switch (infoPtr->fieldspec[fieldNum]) {
-            case ONEDIGITYEAR:
-            case TWODIGITYEAR:
-                date->wYear = date->wYear - (date->wYear%100) +
-                        (date->wYear%10)*10 + num;
-                MONTHCAL_CalculateDayOfWeek(date, TRUE);
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case INVALIDFULLYEAR:
-            case FULLYEAR:
-                /* reset current year initialy */
-                date->wYear = ((date->wYear/1000) ? 0 : 1)*(date->wYear%1000)*10 + num;
-                MONTHCAL_CalculateDayOfWeek(date, TRUE);
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGITMONTH:
-            case TWODIGITMONTH:
-                if ((date->wMonth%10) > 1 || num > 2)
-                    date->wMonth = num;
-                else
-                    date->wMonth = (date->wMonth%10)*10+num;
-                MONTHCAL_CalculateDayOfWeek(date, TRUE);
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGITDAY:
-            case TWODIGITDAY:
-                newDays = (date->wDay%10)*10+num;
-                if (newDays > MONTHCAL_MonthLength(date->wMonth, date->wYear))
-                    date->wDay = num;
-                else
-                    date->wDay = newDays;
-                MONTHCAL_CalculateDayOfWeek(date, TRUE);
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGIT12HOUR:
-            case TWODIGIT12HOUR:
-                if ((date->wHour%10) > 1 || num > 2)
-                    date->wHour = num;
-                else
-                    date->wHour = (date->wHour%10)*10+num;
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGIT24HOUR:
-            case TWODIGIT24HOUR:
-                if ((date->wHour%10) > 2)
-                    date->wHour = num;
-                else if ((date->wHour%10) == 2 && num > 3)
-                    date->wHour = num;
-                else
-                    date->wHour = (date->wHour%10)*10+num;
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGITMINUTE:
-            case TWODIGITMINUTE:
-                if ((date->wMinute%10) > 5)
-                    date->wMinute = num;
-                else
-                    date->wMinute = (date->wMinute%10)*10+num;
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-            case ONEDIGITSECOND:
-            case TWODIGITSECOND:
-                if ((date->wSecond%10) > 5)
-                    date->wSecond = num;
-                else
-                    date->wSecond = (date->wSecond%10)*10+num;
-                DATETIME_SendDateTimeChangeNotify (infoPtr);
-                break;
-        }
+        infoPtr->charsEntered[infoPtr->nCharsEntered++] = vkCode;
+
+        fieldSpec = infoPtr->fieldspec[fieldNum];
+
+        if (fieldSpec == INVALIDFULLYEAR || fieldSpec == FULLYEAR)
+            maxChars = 4;
+        else
+            maxChars = 2;
+
+        if (maxChars == infoPtr->nCharsEntered)
+            DATETIME_ApplySelectedField(infoPtr);
     }
     return 0;
 }
@@ -1132,6 +1165,7 @@ DATETIME_KillFocus (DATETIME_INFO *infoPtr, HWND lostFocus)
     if (infoPtr->haveFocus) {
 	DATETIME_SendSimpleNotify (infoPtr, NM_KILLFOCUS);
 	infoPtr->haveFocus = 0;
+        DATETIME_SetSelectedField (infoPtr, -1);
     }
 
     InvalidateRect (infoPtr->hwndSelf, NULL, TRUE);

@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 #include "../mm/ARM3/miarm.h"
+#undef MmSystemRangeStart
 
 VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
@@ -101,7 +102,7 @@ ULONG KdpNumInternalBreakpoints;
 //
 // Symbol Data
 //
-ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
+ULONG_PTR KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 
 //
 // Tracepoint Data

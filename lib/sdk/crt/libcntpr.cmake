@@ -9,6 +9,7 @@ list(APPEND LIBCNTPR_SOURCE
     mem/memccpy.c
     mem/memcmp.c
     mem/memicmp.c
+    misc/fltused.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
@@ -104,13 +105,13 @@ elseif(ARCH MATCHES amd64)
         setjmp/amd64/setjmp.s
         math/cos.c
         math/sin.c
-        math/amd64/alldiv.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S
         math/amd64/exp.S
         math/amd64/fabs.S
         math/amd64/floor.S
+        math/amd64/floorf.S
         math/amd64/fmod.S
         math/amd64/ldexp.S
         math/amd64/log.S
@@ -174,5 +175,11 @@ else()
 endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
-set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
+add_target_compile_definitions(libcntpr 
+    NO_RTL_INLINES
+    _NTSYSTEM_
+    _NTDLLBUILD_
+    _LIBCNT_
+    __CRT__NO_INLINE
+    CRTDLL)
 add_dependencies(libcntpr psdk asm)

@@ -208,12 +208,12 @@ RtlConvertUlongToLuid(ULONG Ulong)
 
 #define ASSERT( exp ) \
     ((void)((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
+        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \
         TRUE))
 
 #define ASSERTMSG( msg, exp ) \
     ((void)((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, msg ),FALSE) : \
+        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ),FALSE) : \
         TRUE))
 
 #else
@@ -604,10 +604,10 @@ RtlAssert(
 );
 
 NTSYSAPI
-PVOID
+VOID
 NTAPI
 RtlSetUnhandledExceptionFilter(
-    IN PVOID TopLevelExceptionFilter
+    IN PRTLP_UNHANDLED_EXCEPTION_FILTER TopLevelExceptionFilter
 );
 
 NTSYSAPI
@@ -1118,7 +1118,7 @@ RtlAddMandatoryAce(
     IN ULONG Revision,
     IN ULONG Flags,
     IN ULONG MandatoryFlags,
-    IN ULONG AceType,
+    IN UCHAR AceType,
     IN PSID LabelSid);
 
 NTSYSAPI
@@ -1818,7 +1818,7 @@ RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1993,9 +1993,19 @@ VOID
 NTAPI
 RtlFillMemoryUlong(
     IN PVOID Destination,
-    IN ULONG Length,
+    IN SIZE_T Length,
     IN ULONG Fill
 );
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    OUT PVOID Destination,
+    IN SIZE_T Length,
+    IN ULONGLONG Pattern
+);
+
 
 NTSYSAPI
 SIZE_T
@@ -2026,7 +2036,7 @@ NTSTATUS
 NTAPI
 RtlFindCharInUnicodeString(
     IN ULONG Flags,
-    IN PUNICODE_STRING SearchString,
+    IN PCUNICODE_STRING SearchString,
     IN PCUNICODE_STRING MatchString,
     OUT PUSHORT Position
 );
@@ -2321,6 +2331,27 @@ RtlInitializeContext(
     IN PINITIAL_TEB InitialTeb
 );
 
+#ifdef _M_AMD64
+typedef struct _WOW64_CONTEXT *PWOW64_CONTEXT;
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64GetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN OUT PWOW64_CONTEXT ThreadContext
+);
+
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64SetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN PWOW64_CONTEXT ThreadContext
+);
+#endif
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2353,6 +2384,15 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetProcessIsCritical(
+    IN BOOLEAN NewValue,
+    OUT PBOOLEAN OldValue OPTIONAL,
+    IN BOOLEAN NeedBreaks
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetThreadIsCritical(
     IN BOOLEAN NewValue,
     OUT PBOOLEAN OldValue OPTIONAL,
     IN BOOLEAN NeedBreaks
@@ -2483,6 +2523,20 @@ RtlDosSearchPath_U(
     OUT PWSTR *PartName
 );
 
+ULONG
+NTAPI
+RtlDosSearchPath_Ustr(
+    IN ULONG Flags,
+    IN PUNICODE_STRING PathString,
+    IN PUNICODE_STRING FileNameString,
+    IN PUNICODE_STRING ExtensionString,
+    IN PUNICODE_STRING CallerBuffer,
+    IN OUT PUNICODE_STRING DynamicString OPTIONAL,
+    OUT PUNICODE_STRING* FullNameOut OPTIONAL,
+    OUT PSIZE_T FilePartSize OPTIONAL,
+    OUT PSIZE_T LengthNeeded OPTIONAL
+);
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2491,6 +2545,16 @@ RtlDosPathNameToNtPathName_U(
     OUT PUNICODE_STRING NtPathName,
     OUT PCWSTR *NtFileNamePart,
     OUT PRTL_RELATIVE_NAME_U DirectoryInfo
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDosPathNameToRelativeNtPathName_U(
+    IN PCWSTR DosName,
+    OUT PUNICODE_STRING NtName,
+    OUT PCWSTR *PartName,
+    OUT PRTL_RELATIVE_NAME_U RelativeName
 );
 
 NTSYSAPI
@@ -2521,18 +2585,44 @@ RtlGetFullPathName_U(
     OUT PWSTR *ShortName
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetFullPathName_UEx(
+    IN PWSTR FileName,
+    IN ULONG BufferLength,
+    OUT PWSTR Buffer,
+    OUT OPTIONAL PWSTR *FilePart,
+    OUT OPTIONAL RTL_PATH_TYPE *InputPathType
+    );
+#endif
+
+ULONG
+NTAPI
+RtlGetFullPathName_UstrEx(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING StaticString,
+    IN PUNICODE_STRING DynamicString,
+    IN PUNICODE_STRING *StringUsed,
+    IN PSIZE_T FilePartSize,
+    OUT PBOOLEAN NameInvalid,
+    OUT RTL_PATH_TYPE* PathType,
+    OUT PSIZE_T LengthNeeded
+);
+
 NTSYSAPI
 ULONG
 NTAPI
 RtlIsDosDeviceName_U(
-    IN PWSTR Name
+    IN PCWSTR Name
 );
 
 NTSYSAPI
 ULONG
 NTAPI
 RtlIsDosDeviceName_Ustr(
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 
@@ -2549,9 +2639,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
-    PWSTR Environment,
-    PUNICODE_STRING Name,
-    PUNICODE_STRING Value
+    IN OPTIONAL PWSTR Environment,
+    IN PUNICODE_STRING Name,
+    OUT PUNICODE_STRING Value
 );
 
 VOID
@@ -3275,15 +3365,15 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlDosApplyFileIsolationRedirection_Ustr(
-    IN BOOLEAN Unknown,
+    IN ULONG Flags,
     IN PUNICODE_STRING OriginalName,
     IN PUNICODE_STRING Extension,
-    IN OUT PUNICODE_STRING RedirectedName,
-    IN OUT PUNICODE_STRING RedirectedName2,
-    IN OUT PUNICODE_STRING *OriginalName2,
-    IN PVOID Unknown1,
-    IN PVOID Unknown2,
-    IN PVOID Unknown3
+    IN OUT PUNICODE_STRING StaticString,
+    IN OUT PUNICODE_STRING DynamicString,
+    IN OUT PUNICODE_STRING *NewName,
+    IN PULONG NewFlags,
+    IN PSIZE_T FileNameSize,
+    IN PSIZE_T RequiredLength
 );
 
 NTSYSAPI
@@ -3317,6 +3407,23 @@ RtlZombifyActivationContext(
     PVOID Context
 );
 
+//
+// WOW64 Functions
+//
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirection(
+    IN BOOLEAN Wow64FsEnableRedirection
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirectionEx(
+    IN PVOID Wow64FsEnableRedirection,
+    OUT PVOID *OldFsRedirectionLevel
+);
 
 #endif
 
@@ -3349,16 +3456,6 @@ RtlFormatCurrentUserKeyPath(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlpNtOpenKey(
-    OUT HANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG Unused
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 RtlOpenCurrentUser(
     IN ACCESS_MASK DesiredAccess,
     OUT PHANDLE KeyHandle
@@ -3386,6 +3483,68 @@ RtlWriteRegistryValue(
     PVOID ValueData,
     ULONG ValueLength
 );
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtCreateKey(
+    OUT HANDLE KeyHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG TitleIndex,
+    IN PUNICODE_STRING Class,
+    OUT PULONG Disposition
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtEnumerateSubKey(
+    IN HANDLE KeyHandle,
+    OUT PUNICODE_STRING SubKeyName,
+    IN ULONG Index,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtMakeTemporaryKey(
+    IN HANDLE KeyHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtOpenKey(
+    OUT HANDLE KeyHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtQueryValueKey(
+    IN HANDLE KeyHandle,
+    OUT PULONG Type OPTIONAL,
+    OUT PVOID Data OPTIONAL,
+    IN OUT PULONG DataLength OPTIONAL,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtSetValueKey(
+    IN HANDLE KeyHandle,
+    IN ULONG Type,
+    IN PVOID Data,
+    IN ULONG DataLength
+);
+#endif
 
 //
 // NLS Functions
@@ -3485,7 +3644,37 @@ RtlEnlargedUnsignedMultiply(
     Product.QuadPart = (ULONGLONG)Multiplicand * (ULONGLONG)Multiplier;
     return Product;
 }
+
+#if defined(_AMD64_) || defined(_IA64_)
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlExtendedLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN ULONG Divisor,
+  OUT PULONG Remainder OPTIONAL)
+{
+  LARGE_INTEGER ret;
+  ret.QuadPart = (ULONG64)Dividend.QuadPart / Divisor;
+  if (Remainder)
+    *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+  return ret;
+}
+
+#else
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlExtendedLargeIntegerDivide(
+    IN LARGE_INTEGER Dividend,
+    IN ULONG Divisor,
+    OUT PULONG Remainder OPTIONAL
+);
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
 #endif
+
 
 NTSYSAPI
 ULONG
@@ -3671,12 +3860,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSetBootStatusData(
-    HANDLE FileHandle,
-    BOOLEAN WriteMode,
-    DWORD DataClass,
-    PVOID Buffer,
-    ULONG BufferSize,
-    DWORD DataClass2
+    IN HANDLE FileHandle,
+    IN BOOLEAN WriteMode,
+    IN RTL_BSD_ITEM_TYPE DataClass,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
@@ -3691,6 +3880,24 @@ NTSTATUS
 NTAPI
 RtlUnlockBootStatusData(
     IN HANDLE FileHandle
+);
+#endif
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGUIDFromString(
+  IN PUNICODE_STRING GuidString,
+  OUT GUID *Guid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlComputeImportTableHash(
+    IN HANDLE hFile,
+    OUT PCHAR Hash,
+    IN ULONG ImportTableHashRevision
 );
 #endif
 

@@ -23,7 +23,7 @@
 @ stdcall BaseDumpAppcompatCache()
 @ stdcall BaseFlushAppcompatCache()
 @ stdcall BaseInitAppcompatCacheSupport()
-@ stdcall BaseIsAppcompatInfrastructureDisabled()
+@ stdcall BaseIsAppcompatInfrastructureDisabled() IsShimInfrastructureDisabled
 @ stdcall BaseProcessInitPostImport() ; missing in Win 7
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
 @ stdcall BaseUpdateAppcompatCache(long long long)

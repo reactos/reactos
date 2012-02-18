@@ -12,9 +12,14 @@
 int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
 int
-__cdecl
+_cdecl
 vfwprintf(FILE* file, const wchar_t *format, va_list argptr)
 {
-    return wstreamout(file, format, argptr);
-}
+     int ret;
 
+    _lock_file(file);
+    ret = wstreamout(file, format, argptr);
+    _unlock_file(file);
+
+    return ret;
+}

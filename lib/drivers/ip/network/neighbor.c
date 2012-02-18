@@ -99,16 +99,33 @@ VOID NBTimeout(VOID)
     UINT i;
     PNEIGHBOR_CACHE_ENTRY *PrevNCE;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    NDIS_STATUS Status;
 
     for (i = 0; i <= NB_HASHMASK; i++) {
         TcpipAcquireSpinLockAtDpcLevel(&NeighborCache[i].Lock);
 
         for (PrevNCE = &NeighborCache[i].Cache;
              (NCE = *PrevNCE) != NULL;) {
+            if (NCE->State & NUD_INCOMPLETE)
+            {
+                /* Solicit for an address */
+                NBSendSolicit(NCE);
+                if (NCE->EventTimer == 0)
+                {
+                    NCE->EventCount++;
+                    if (NCE->EventCount == ARP_INCOMPLETE_TIMEOUT)
+                    {
+                        NBFlushPacketQueue(NCE, NDIS_STATUS_NETWORK_UNREACHABLE);
+                        NCE->EventCount = 0;
+                    }
+                }
+            }
+
             /* Check if event timer is running */
             if (NCE->EventTimer > 0)  {
                 ASSERT(!(NCE->State & NUD_PERMANENT));
                 NCE->EventCount++;
+
                 if ((NCE->EventCount > ARP_RATE &&
                      NCE->EventCount % ARP_TIMEOUT_RETRANSMISSION == 0) ||
                     (NCE->EventCount == ARP_RATE))
@@ -120,13 +137,23 @@ VOID NBTimeout(VOID)
                     NBSendSolicit(NCE);
                 }
                 if (NCE->EventTimer - NCE->EventCount == 0) {
-                    /* Solicit one last time */
-                    NBSendSolicit(NCE);
-
                     /* Unlink and destroy the NCE */
                     *PrevNCE = NCE->Next;
+                    
+                    /* Choose the proper failure status */
+                    if (NCE->State & NUD_INCOMPLETE)
+                    {
+                        /* We couldn't get an address to this IP at all */
+                        Status = NDIS_STATUS_NETWORK_UNREACHABLE;
+                    }
+                    else
+                    {
+                        /* This guy was stale for way too long */
+                        Status = NDIS_STATUS_REQUEST_ABORTED;
+                    }
+                    
+                    NBFlushPacketQueue(NCE, Status);
 
-                    NBFlushPacketQueue(NCE, NDIS_STATUS_REQUEST_ABORTED);
                     ExFreePoolWithTag(NCE, NCE_TAG);
 
                     continue;
@@ -205,6 +232,42 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
     ARPTransmit(&NCE->Address,
                 (NCE->State & NUD_INCOMPLETE) ? NULL : NCE->LinkAddress,
                 NCE->Interface);
+}
+
+VOID NBDestroyNeighborsForInterface(PIP_INTERFACE Interface)
+{
+    KIRQL OldIrql;
+    PNEIGHBOR_CACHE_ENTRY *PrevNCE;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    ULONG i;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    for (i = 0; i <= NB_HASHMASK; i++)
+    {
+        TcpipAcquireSpinLockAtDpcLevel(&NeighborCache[i].Lock);
+        
+        for (PrevNCE = &NeighborCache[i].Cache;
+             (NCE = *PrevNCE) != NULL;)
+        {
+            if (NCE->Interface == Interface)
+            {
+                /* Unlink and destroy the NCE */
+                *PrevNCE = NCE->Next;
+
+                NBFlushPacketQueue(NCE, NDIS_STATUS_REQUEST_ABORTED);
+                ExFreePoolWithTag(NCE, NCE_TAG);
+
+                continue;
+            }
+            else
+            {
+                PrevNCE = &NCE->Next;
+            }
+        }
+        
+        TcpipReleaseSpinLockFromDpcLevel(&NeighborCache[i].Lock);
+    }
+    KeLowerIrql(OldIrql);
 }
 
 PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
@@ -314,7 +377,10 @@ VOID NBUpdateNeighbor(
     TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
     if( !(NCE->State & NUD_INCOMPLETE) )
-	NBSendPackets( NCE );
+    {
+        if (NCE->EventTimer) NCE->EventTimer = ARP_COMPLETE_TIMEOUT;
+        NBSendPackets( NCE );
+    }
 }
 
 VOID
@@ -391,7 +457,8 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
 
 PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
   PIP_INTERFACE Interface,
-  PIP_ADDRESS Address)
+  PIP_ADDRESS Address,
+  BOOLEAN NoTimeout)
 /*
  * FUNCTION: Tries to find a neighbor and if unsuccesful, creates a new NCE
  * ARGUMENTS:
@@ -419,7 +486,7 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
                                 Interface->AddressLength, NUD_PERMANENT, 0);
         } else {
             NCE = NBAddNeighbor(Interface, Address, NULL,
-                                Interface->AddressLength, NUD_INCOMPLETE, ARP_TIMEOUT);
+                                Interface->AddressLength, NUD_INCOMPLETE, NoTimeout ? 0 : ARP_INCOMPLETE_TIMEOUT);
             if (!NCE) return NULL;
             NBSendSolicit(NCE);
         }

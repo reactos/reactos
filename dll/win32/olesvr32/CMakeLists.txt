@@ -11,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(olesvr32 SHARED ${SOURCE})
 
-set_entrypoint(olesvr32 0)
+set_module_type(olesvr32 win32dll ENTRYPOINT 0 )
 
 target_link_libraries(olesvr32 wine)
 

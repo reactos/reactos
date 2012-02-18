@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsys/win32k/ntddraw/dd.c
+ * FILE:             subsystems/win32/win32k/ntddraw/ddsurf.c
  * PROGRAMER:        Magnus Olsen (greatlord@reactos.org)
  * REVISION HISTORY:
  *       19/7-2006  Magnus Olsen
@@ -22,7 +22,7 @@ NtGdiDdDestroySurface(HANDLE hSurface, BOOL bRealDestroy)
     
     if (pfnDdDestroySurface == NULL)
     {
-        DPRINT1("Warring no pfnDdDestroySurface");
+        DPRINT1("Warning: no pfnDdDestroySurface");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -45,7 +45,7 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
    
     if (pfnDdDdFlip == NULL)
     {
-        DPRINT1("Warring no pfnDdDdFlip");
+        DPRINT1("Warning: no pfnDdDdFlip");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -66,7 +66,7 @@ NtGdiDdLock(HANDLE hSurface,
     
     if (pfnDdLock == NULL)
     {
-        DPRINT1("Warring no pfnDdLock");
+        DPRINT1("Warning: no pfnDdLock");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -86,7 +86,7 @@ NtGdiDdUnlock(HANDLE hSurface,
    
     if (pfnDdUnlock == NULL)
     {
-        DPRINT1("Warring no pfnDdUnlock");
+        DPRINT1("Warning: no pfnDdUnlock");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -107,7 +107,7 @@ NtGdiDdBlt(HANDLE hSurfaceDest,
     
     if (pfnDdBlt == NULL)
     {
-        DPRINT1("Warring no pfnDdBlt");
+        DPRINT1("Warning: no pfnDdBlt");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -127,7 +127,7 @@ NtGdiDdSetColorKey(HANDLE hSurface,
     
     if (pfnDdSetColorKey == NULL)
     {
-        DPRINT1("Warring no pfnDdSetColorKey");
+        DPRINT1("Warning: no pfnDdSetColorKey");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -150,7 +150,7 @@ NtGdiDdAddAttachedSurface(HANDLE hSurface,
     
     if (pfnDdAddAttachedSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdAddAttachedSurface");
+        DPRINT1("Warning: no pfnDdAddAttachedSurface");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -170,7 +170,7 @@ NtGdiDdGetBltStatus(HANDLE hSurface,
     
     if (pfnDdGetBltStatus == NULL)
     {
-        DPRINT1("Warring no pfnDdGetBltStatus");
+        DPRINT1("Warning: no pfnDdGetBltStatus");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -190,7 +190,7 @@ NtGdiDdGetFlipStatus(HANDLE hSurface,
     
     if (pfnDdGetFlipStatus == NULL)
     {
-        DPRINT1("Warring no pfnDdGetFlipStatus");
+        DPRINT1("Warning: no pfnDdGetFlipStatus");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -211,7 +211,7 @@ NtGdiDdUpdateOverlay(HANDLE hSurfaceDestination,
    
     if (pfnDdUpdateOverlay == NULL)
     {
-        DPRINT1("Warring no pfnDdUpdateOverlay");
+        DPRINT1("Warning: no pfnDdUpdateOverlay");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -233,7 +233,7 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
   
     if (pfnDdSetOverlayPosition == NULL)
     {
-        DPRINT1("Warring no pfnDdSetOverlayPosition");
+        DPRINT1("Warning: no pfnDdSetOverlayPosition");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -242,8 +242,8 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
 }
 
 /************************************************************************/
-/* This is not part of the ddsurface interface but it have              */
-/* deal with the surface                                                */
+/* This is not part of the ddsurface interface but it                   */
+/* deals with the surface                                               */
 /************************************************************************/
 
 
@@ -260,7 +260,7 @@ NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
    
     if (pfnDdAlphaBlt == NULL)
     {
-        DPRINT1("Warring no pfnDdAlphaBlt");
+        DPRINT1("Warning: no pfnDdAlphaBlt");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -281,7 +281,7 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
   
     if (pfnDdAttachSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdAttachSurface");
+        DPRINT1("Warning: no pfnDdAttachSurface");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -292,9 +292,9 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
 /************************************************************************/
 /* NtGdiDdUnattachSurface                                               */
 /************************************************************************/
-/* Note : msdn protypes is VOID APIENTRY NtGdiDdUnattachSurface(HANDLE hSurface, HANDLE hSurfaceAttached)
+/* Note:  MSDN protypes is VOID APIENTRY NtGdiDdUnattachSurface(HANDLE hSurface, HANDLE hSurfaceAttached)
           But it say it return either DDHAL_DRIVER_NOTHANDLED or DDHAL_DRIVER_HANDLED
-          so I guess it is a typo in MSDN for this protypes for the info talk against it self
+          so I guess it is a typo in MSDN for this prototype for the info contradicts itself.
 */
 DWORD
 APIENTRY
@@ -304,12 +304,10 @@ NtGdiDdUnattachSurface(HANDLE hSurface,
     PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = (PGD_DXDDUNATTACHSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnattachSurface].pfn;  
     if (pfnDdUnattachSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdUnattachSurface");
+        DPRINT1("Warning: no pfnDdUnattachSurface");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
     DPRINT1("Calling on dxg.sys pfnDdUnattachSurface");
     return pfnDdUnattachSurface(hSurface,hSurfaceAttached);
 }
-
-

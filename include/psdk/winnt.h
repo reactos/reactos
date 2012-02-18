@@ -66,6 +66,10 @@
 #endif
 #endif /* __ANONYMOUS_DEFINED */
 
+#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_PARAMETER(P)
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
 #ifndef DECLSPEC_ALIGN
 # if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
@@ -912,6 +916,7 @@ typedef enum {
 #define LANG_ORIYA   0x48
 #define LANG_PASHTO   0x63
 #define LANG_FARSI   0x29
+#define LANG_PERSIAN 0x29
 #define LANG_POLISH   0x15
 #define LANG_PORTUGUESE   0x16
 #define LANG_PUNJABI   0x46
@@ -1381,6 +1386,7 @@ typedef enum {
 #define SEC_NOCACHE	0x10000000
 #define SEC_WRITECOMBINE 0x40000000
 #define SEC_LARGE_PAGES  0x80000000
+#define SECTION_MAP_EXECUTE_EXPLICIT 0x0020
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
 #define SECTION_MAP_WRITE 2
@@ -3218,6 +3224,12 @@ typedef enum tagTOKEN_TYPE {
 	TokenPrimary = 1,
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
+
+typedef enum _TOKEN_ELEVATION_TYPE {
+    TokenElevationTypeDefault = 1,
+    TokenElevationTypeFull,
+    TokenElevationTypeLimited,
+} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
 
 #include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
@@ -5251,7 +5263,8 @@ FORCEINLINE
 VOID
 MemoryBarrier(VOID)
 {
-    LONG Barrier;
+    LONG Barrier, *Dummy = &Barrier;
+    UNREFERENCED_LOCAL_VARIABLE(Dummy);
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #endif

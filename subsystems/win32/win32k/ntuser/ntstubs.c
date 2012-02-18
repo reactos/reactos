@@ -1,14 +1,12 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Native User stubs
- * FILE:             subsys/win32k/ntuser/stubs.c
+ * FILE:             subsystems/win32/win32k/ntuser/ntstubs.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *       04-06-2001  CSH  Created
  */
-#include <win32k.h>
 
+#include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 DWORD
@@ -106,30 +104,6 @@ NtUserBuildHimcList(
 {
     STUB;
     return 0;
-}
-
-DWORD
-APIENTRY
-NtUserConvertMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   STUB
-
-   return 0;
-}
-
-DWORD
-APIENTRY
-NtUserCreateLocalMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   STUB
-
-   return 0;
 }
 
 BOOL
@@ -234,35 +208,6 @@ NtUserGetAltTabInfo(
    return 0;
 }
 
-HBRUSH
-APIENTRY
-NtUserGetControlBrush(
-   HWND hwnd,
-   HDC  hdc,
-   UINT ctlType)
-{
-   STUB
-
-   return 0;
-}
-
-
-/*
- * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
- */
-HBRUSH
-APIENTRY
-NtUserGetControlColor(
-   HWND hwndParent,
-   HWND hwnd,
-   HDC hdc,
-   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
-{
-   STUB
-
-   return 0;
-}
-
 DWORD
 APIENTRY
 NtUserGetImeHotKey(
@@ -311,7 +256,7 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
-      //// FIXME! HAX! Temporary until server side is finished.
+      //// FIXME: HAX! Temporary until server side is finished.
       //// Copy the client side procs for now.
       RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
 
@@ -656,16 +601,6 @@ NtUserGetAppImeLevel(
 
 DWORD
 APIENTRY
-NtUserGetAtomName(
-    ATOM nAtom,
-    LPWSTR lpBuffer)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetImeInfoEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
@@ -842,20 +777,6 @@ NtUserRealWaitMessageEx(
 
 BOOL
 APIENTRY
-NtUserRegisterUserApiHook(
-    PUNICODE_STRING m_dllname1,
-    PUNICODE_STRING m_funname1,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
-{
-    UserEnterExclusive();
-    STUB;
-    UserLeave();
-    return 0;
-}
-
-BOOL
-APIENTRY
 NtUserRegisterRawInputDevices(
     IN PCRAWINPUTDEVICE pRawInputDevices,
     IN UINT uiNumDevices,
@@ -989,14 +910,6 @@ NtUserPaintMenuBar(
 
 BOOL
 APIENTRY
-NtUserUnregisterUserApiHook(VOID)
-{
-    STUB;
-    return 0;
-}
-
-BOOL
-APIENTRY
 NtUserGetLayeredWindowAttributes(
     HWND hwnd,
     COLORREF *pcrKey,
@@ -1069,7 +982,7 @@ NtUserDrawMenuBarTemp(
    HMENU hMenu,
    HFONT hFont)
 {
-   /* we'll use this function just for caching the menu bar */
+   /* We'll use this function just for caching the menu bar */
    STUB
    return 0;
 }
@@ -1121,21 +1034,6 @@ NtUserRealChildWindowFromPoint(HWND Parent,
 DWORD APIENTRY
 NtUserSetImeOwnerWindow(DWORD Unknown0,
                         DWORD Unknown1)
-{
-   STUB
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetInternalWindowPos(
-   HWND    hwnd,
-   UINT    showCmd,
-   LPRECT  rect,
-   LPPOINT pt)
 {
    STUB
 
@@ -1300,13 +1198,13 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
 /*
  * @unimplemented
  */
-DWORD
-APIENTRY
+HCURSOR
+NTAPI
 NtUserGetCursorFrameInfo(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3)
+    HCURSOR hCursor,
+    DWORD istep,
+    PDWORD rate_jiffies,
+    INT *num_steps)
 {
     STUB
 

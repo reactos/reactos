@@ -111,11 +111,16 @@ with newer versions.
   * Added const char* name to mem- and memp-stats for easier debugging.
 
   * Calculate the TCP/UDP checksum while copying to only fetch data once:
-    Define LWIP_CHKSUM_COPY to a memcpy-like function that returns the checksum    
+    Define LWIP_CHKSUM_COPY to a memcpy-like function that returns the checksum
 
   * Added SO_REUSE_RXTOALL to pass received UDP broadcast/multicast packets to
     more than one pcb.
 
+  * Changed the semantics of ARP_QUEUEING==0: ARP_QUEUEING now cannot be turned
+    off any more, if this is set to 0, only one packet (the most recent one) is
+    queued (like demanded by RFC 1122).
+
+  
   ++ Major bugfixes/improvements
 
   * Implemented tcp_shutdown() to only shut down one end of a connection

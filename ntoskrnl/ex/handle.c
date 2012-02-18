@@ -36,8 +36,8 @@ NTAPI
 ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                           IN EXHANDLE LookupHandle)
 {
-    ULONG i, j, k, TableLevel, NextHandle;
-    ULONG_PTR TableBase;
+    ULONG TableLevel, NextHandle;
+    ULONG_PTR i, j, k, TableBase;
     PHANDLE_TABLE_ENTRY Entry = NULL;
     EXHANDLE Handle = LookupHandle;
     PUCHAR Level1, Level2, Level3;
@@ -1147,7 +1147,7 @@ ExDupHandleTable(IN PEPROCESS Process,
                 /* Free this entry */
                 NewEntry->Object = NULL;
                 NewEntry->NextFreeTableEntry = NewTable->FirstFree;
-                NewTable->FirstFree = Handle.Value;
+                NewTable->FirstFree = (ULONG)Handle.Value;
             }
 
             /* Increase the handle value and move to the next entry */

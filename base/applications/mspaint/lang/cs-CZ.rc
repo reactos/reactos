@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/cs-CZ.rc
+ * FILE:        base/applications/mspaint/lang/cs-CZ.rc
  * PURPOSE:     Czech Language resource file
  * TRANSLATORS: Radek Liska aka Black_Fox (radekliska at gmail dot com)
  */
@@ -12,44 +12,44 @@ ID_MENU MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "&Nov˝\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Otev¯Ìt...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "Uloûit\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Uloûit jako...", IDM_FILESAVEAS
+        MENUITEM "&Nov√Ω\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Otev≈ô√≠t...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "Ulo≈æit\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Ulo≈æit jako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Nastavit jako pozadÌ (vedle sebe)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Nastavit jako pozadÌ (na st¯ed)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Nastavit jako pozadÌ (rozt·hnout)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Nastavit jako pozad√≠ (vedle sebe)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Nastavit jako pozad√≠ (na st≈ôed)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Nastavit jako pozad√≠ (rozt√°hnout)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "UkonËit\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Ukonƒçit\tAlt+F4", IDM_FILEEXIT
     END
 
-    POPUP "⁄pr&avy"
+    POPUP "√öpr&avy"
     BEGIN
-        MENUITEM "ZpÏt\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Zpƒõt\tCtrl+Z", IDM_EDITUNDO
         MENUITEM "Znovu\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "Vyjmout\tCtrl+X", IDM_EDITCUT
-        MENUITEM "KopÌrovat\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Vloûit\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Vymazat v˝bÏr\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertovat v˝bÏr", IDM_EDITINVERTSELECTION
-        MENUITEM "Vybrat vöe\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Kop√≠rovat\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Vlo≈æit\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Vymazat v√Ωbƒõr\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Invertovat v√Ωbƒõr", IDM_EDITINVERTSELECTION
+        MENUITEM "Vybrat v≈°e\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "KopÌrovat do...", IDM_EDITCOPYTO
-        MENUITEM "Vloûit z...", IDM_EDITPASTEFROM
+        MENUITEM "Kop√≠rovat do...", IDM_EDITCOPYTO
+        MENUITEM "Vlo≈æit z...", IDM_EDITPASTEFROM
     END
 
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "Panel n·stroj˘\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Barevn· paleta\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Stavov˝ ¯·dek", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Panel n√°stroj≈Ø\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Barevn√° paleta\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Stavov√Ω ≈ô√°dek", IDM_VIEWSTATUSBAR, CHECKED
         MENUITEM "Format icon bar", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "Lupa"
         BEGIN
-            POPUP "VlastnÌ nastavenÌ"
+            POPUP "Vlastn√≠ nastaven√≠"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,31 +60,31 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Zobrazit m¯Ìûku\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Zobrazit m≈ô√≠≈æku\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Zobrazit miniaturu", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Cel· obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Cel√° obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
-    POPUP "&Obr·zek"
+
+    POPUP "&Obr√°zek"
     BEGIN
-        MENUITEM "P¯eklopit nebo otoËit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "ZmÏnit velikost...\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "O¯Ìznout", IDM_IMAGECROP
+        MENUITEM "P≈ôeklopit nebo otoƒçit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Zmƒõnit velikost...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "O≈ô√≠znout", IDM_IMAGECROP
         MENUITEM "Inverovat barvy\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atributy...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Vymazat obr·zek", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Kreslit nepr˘hlednÏ", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Vymazat obr√°zek", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Kreslit nepr≈Øhlednƒõ", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Barvy"
     BEGIN
         MENUITEM "Upravit paletu...", IDM_COLORSEDITPALETTE
     END
-    
-    POPUP "&N·povÏda"
+
+    POPUP "&N√°povƒõda"
     BEGIN
-        MENUITEM "TÈmata n·povÏdy", IDM_HELPHELPTOPICS
+        MENUITEM "T√©mata n√°povƒõdy", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&O programu...", IDM_HELPINFO
     END
@@ -116,15 +116,15 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "P¯eklopit nebo otoËit"
+CAPTION "P≈ôeklopit nebo otoƒçit"
 BEGIN
-    GROUPBOX "P¯eklopit nebo otoËit", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "P¯eklopit vodorovnÏ", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "P¯eklopit svisle", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "OtoËit o ˙hel", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90∞", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180∞", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270∞", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    GROUPBOX "P≈ôeklopit nebo otoƒçit", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "P≈ôeklopit vodorovnƒõ", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "P≈ôeklopit svisle", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Otoƒçit o √∫hel", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90¬∞", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180¬∞", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270¬∞", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Storno", IDCANCEL, 125, 24, 48, 14
 END
@@ -136,34 +136,34 @@ CAPTION "Atributy"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "äÌ¯ka:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "V˝öka:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Datum zmÏny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "≈†√≠≈ôka:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "V√Ω≈°ka:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
+    LTEXT "Datum zmƒõny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Velikost souboru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "RozliöenÌ:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "NedostupnÈ", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "NedostupnÈ", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "NedostupnÈ", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "Rozli≈°en√≠:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Nedostupn√©", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Nedostupn√©", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Nedostupn√©", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Jednotka", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Palce", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "Centimetry", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
     AUTORADIOBUTTON "Pixely", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Barvy", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "»ernobÌlÈ", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "ƒåernob√≠l√©", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Barvy", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Storno", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "V˝chozÌ", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "V√Ωchoz√≠", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "ZmÏnit velikost"
+CAPTION "Zmƒõnit velikost"
 BEGIN
-    GROUPBOX "ZmÏnit velikost", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
+    GROUPBOX "Zmƒõnit velikost", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "VodorovnÏ:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    LTEXT "Vodorovnƒõ:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
     ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
@@ -176,31 +176,31 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Malov·nÌ"
-    IDS_WINDOWTITLE, "%s - Malov·nÌ"
-    IDS_INFOTITLE, "ReactOS Malov·nÌ"
-    IDS_INFOTEXT, "ReactOS Malov·nÌ je dostupnÈ pod licencÌ GNU Lesser General Public License (LGPL) verze 3 (viz. www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Chcete uloûit provedenÈ zmÏny v %s?"
-    IDS_DEFAULTFILENAME, "Bez n·zvu.bmp"
+    IDS_PROGRAMNAME, "Malov√°n√≠"
+    IDS_WINDOWTITLE, "%s - Malov√°n√≠"
+    IDS_INFOTITLE, "ReactOS Malov√°n√≠"
+    IDS_INFOTEXT, "ReactOS Malov√°n√≠ je dostupn√© pod licenc√≠ GNU Lesser General Public License (LGPL) verze 3 (viz. www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Chcete ulo≈æit proveden√© zmƒõny v %s?"
+    IDS_DEFAULTFILENAME, "Bez n√°zvu.bmp"
     IDS_MINIATURETITLE, "Miniatura"
-    IDS_TOOLTIP1, "Voln˝ v˝bÏr"
-    IDS_TOOLTIP2, "V˝bÏr"
+    IDS_TOOLTIP1, "Voln√Ω v√Ωbƒõr"
+    IDS_TOOLTIP2, "V√Ωbƒõr"
     IDS_TOOLTIP3, "Guma"
     IDS_TOOLTIP4, "Vyplnit barvou"
     IDS_TOOLTIP5, "Zvolit barvu"
     IDS_TOOLTIP6, "Lupa"
-    IDS_TOOLTIP7, "Tuûka"
-    IDS_TOOLTIP8, "ätÏtec"
+    IDS_TOOLTIP7, "Tu≈æka"
+    IDS_TOOLTIP8, "≈†tƒõtec"
     IDS_TOOLTIP9, "Sprej"
     IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "»·ra"
-    IDS_TOOLTIP12, "BeziÈrova k¯ivka"
-    IDS_TOOLTIP13, "ObdÈlnÌk"
+    IDS_TOOLTIP11, "ƒå√°ra"
+    IDS_TOOLTIP12, "Bezi√©rova k≈ôivka"
+    IDS_TOOLTIP13, "Obd√©ln√≠k"
     IDS_TOOLTIP14, "Polygon"
     IDS_TOOLTIP15, "Elipsa"
-    IDS_TOOLTIP16, "Zaoblen˝ obdÈlnÌk"
-    IDS_OPENFILTER, "Soubory bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Vöechny soubory (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24bitov· bitmapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bajt˘"
-    IDS_PRINTRES, "%d x %d pixel˘ na metr"
+    IDS_TOOLTIP16, "Zaoblen√Ω obd√©ln√≠k"
+    IDS_OPENFILTER, "Soubory bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1V≈°echny soubory (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24bitov√° bitmapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bajt≈Ø"
+    IDS_PRINTRES, "%d x %d pixel≈Ø na metr"
 END

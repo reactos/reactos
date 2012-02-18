@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -18,7 +17,7 @@ add_library(usrmgr SHARED
     usrmgr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)
 
-set_module_type(usrmgr cpl)
+set_module_type(usrmgr cpl UNICODE)
 
 add_importlibs(usrmgr
     advapi32

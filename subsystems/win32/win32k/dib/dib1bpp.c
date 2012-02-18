@@ -59,28 +59,28 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  PRECTL DestRect,
                                  POINTL *SourcePoint )
 {
-  // the 'window' in this sense is the x-position that corresponds
+  // The 'window' in this sense is the x-position that corresponds
   // to the left-edge of the 8-pixel byte we are currently working with.
-  // dwx is current x-window, dwx2 is the 'last' window we need to process
-  int dwx, dwx2; // destination window x-position
-  int swx; // source window y-position
+  // dwx is current x-window, dwx2 is the 'last' window we need to process.
+  int dwx, dwx2;  // Destination window x-position
+  int swx;        // Source window y-position
 
-  // left and right edges of source and dest rectangles
+  // Left and right edges of source and dest rectangles
   int dl = DestRect->left; // dest left
   int dr = DestRect->right-1; // dest right (inclusive)
   int sl = SourcePoint->x; // source left
   int sr = sl + dr - dl; // source right (inclusive)
 
-  // which direction are we going?
+  // Which direction are we going?
   int xinc;
   int yinc;
   int ySrcDelta, yDstDelta;
 
-  // following 4 variables are used for the y-sweep
-  int dy; // dest y
+  // The following 4 variables are used for the y-sweep
+  int dy;  // dest y
   int dy1; // dest y start
   int dy2; // dest y end
-  int sy1; // src y start
+  int sy1; // src  y start
 
   int shift;
   BYTE srcmask, dstmask, xormask;
@@ -96,7 +96,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 
   if ( DestRect->top <= SourcePoint->y )
   {
-    // moving up ( scan top -> bottom )
+    // Moving up (scan top -> bottom)
     dy1 = DestRect->top;
     dy2 = DestRect->bottom - 1;
     sy1 = SourcePoint->y;
@@ -106,7 +106,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   }
   else
   {
-    // moving down ( scan bottom -> top )
+    // Moving down (scan bottom -> top)
     dy1 = DestRect->bottom - 1;
     dy2 = DestRect->top;
     sy1 = SourcePoint->y + dy1 - dy2;
@@ -116,7 +116,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   }
   if ( DestRect->left <= SourcePoint->x )
   {
-    // moving left ( scan left->right )
+    // Moving left (scan left->right)
     dwx = dl&~7;
     swx = (sl-(dl&7))&~7;
     dwx2 = dr&~7;
@@ -124,10 +124,10 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   }
   else
   {
-    // moving right ( scan right->left )
-    dwx = dr&~7;
-    swx = (sr-(dr&7))&~7; //(sr-7)&~7; // we need the left edge of this block... thus the -7
-    dwx2 = dl&~7;
+    // Moving right (scan right->left)
+    dwx = dr & ~7;
+    swx = (sr - (dr & 7)) & ~7; // (sr - 7) & ~7; // We need the left edge of this block. Thus the -7
+    dwx2 = dl & ~7;
     xinc = -1;
   }
   d = &(((PBYTE)DestSurf->pvScan0)[dy1*DestSurf->lDelta + (dwx>>3)]);
@@ -150,16 +150,16 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     dstmask = ~srcmask;
 
-    // we unfortunately *must* have 5 different versions of the inner
+    // We unfortunately *must* have 5 different versions of the inner
     // loop to be certain we don't try to read from memory that is not
-    // needed and may in fact be invalid
+    // needed and may in fact be invalid.
     if ( !shift )
     {
       for ( ;; )
       {
         *pd = (BYTE)((*pd & dstmask) | ((ps[0]^xormask) & srcmask));
 
-        // this *must* be here, because we could be going up *or* down...
+        // This *must* be here, because we could be going up *or* down...
         if ( dy == dy2 )
           break;
         dy += yinc;
@@ -167,14 +167,14 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
         ps += ySrcDelta;
       }
     }
-    else if ( !(0xFF00 & (srcmask<<shift) ) ) // check if ps[0] not needed...
+    else if ( !(0xFF00 & (srcmask<<shift) ) ) // Check if ps[0] not needed...
     {
       for ( ;; )
       {
         *pd = (BYTE)((*pd & dstmask)
           | ( ( (ps[1]^xormask) >> shift ) & srcmask ));
 
-        // this *must* be here, because we could be going up *or* down...
+        // This *must* be here, because we could be going up *or* down...
         if ( dy == dy2 )
           break;
         dy += yinc;
@@ -182,14 +182,14 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
         ps += ySrcDelta;
       }
     }
-    else if ( !(0xFF & (srcmask<<shift) ) ) // check if ps[1] not needed...
+    else if ( !(0xFF & (srcmask<<shift) ) ) // Check if ps[1] not needed...
     {
       for ( ;; )
       {
         *pd = (*pd & dstmask)
           | ( ( (ps[0]^xormask) << ( 8 - shift ) ) & srcmask );
 
-        // this *must* be here, because we could be going up *or* down...
+        // This *must* be here, because we could be going up *or* down...
         if ( dy == dy2 )
           break;
         dy += yinc;
@@ -197,14 +197,14 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
         ps += ySrcDelta;
       }
     }
-    else // both ps[0] and ps[1] are needed
+    else // Both ps[0] and ps[1] are needed
     {
       for ( ;; )
       {
         *pd = (*pd & dstmask)
           | ( ( ( ((ps[1]^xormask))|((ps[0]^xormask)<<8) ) >> shift ) & srcmask );
 
-        // this *must* be here, because we could be going up *or* down...
+        // This *must* be here, because we could be going up *or* down...
         if ( dy == dy2 )
           break;
         dy += yinc;
@@ -213,7 +213,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
       }
     }
 
-    // this *must* be here, because we could be going right *or* left...
+    // This *must* be here, because we could be going right *or* left...
     if ( dwx == dwx2 )
       break;
     d += xinc;

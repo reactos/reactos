@@ -60,6 +60,8 @@ CPortClsVersion::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    UNICODE_STRING GuidString;
+
     if (IsEqualGUIDAligned(refiid, IID_IPortClsVersion) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
@@ -67,6 +69,13 @@ CPortClsVersion::QueryInterface(
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
+
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("CPortClsVersion::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 

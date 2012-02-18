@@ -41,12 +41,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#define DPRINTM2(fmt, ...) DPRINTM(DPRINT_SCSIPORT, "(%s:%d) SCSIPORT: " fmt, __FILE__, __LINE__, __VA_ARGS__)
-
-#undef UNIMPLEMENTED
-#define UNIMPLEMENTED DPRINTM2("%s UNIMPLEMENTED\n", __FUNCTION__)
-
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008
+
+DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 typedef struct
 {
@@ -442,7 +439,7 @@ ScsiDebugPrint(
     }
 
     /* Print the message */
-    DPRINTM(DPRINT_SCSIPORT, "%s", Buffer);
+    TRACE("%s", Buffer);
 
     /* Cleanup */
     va_end(ap);
@@ -570,7 +567,7 @@ ScsiPortGetPhysicalAddress(
     ULONG BufferLength = 0;
     ULONG Offset;
 
-    DPRINTM2("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
+    TRACE("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
         HwDeviceExtension, Srb, VirtualAddress, Length);
 
     DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
@@ -683,7 +680,7 @@ ScsiPortGetUncachedExtension(
     ULONG MapRegistersCount;
     NTSTATUS Status;
 
-    DPRINTM2("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+    TRACE("ScsiPortGetUncachedExtension(%p %p %lu)\n",
         HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
     DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
@@ -749,7 +746,7 @@ ScsiPortGetUncachedExtension(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINTM2("SpiAllocateCommonBuffer() failed with Status = 0x%08X!\n", Status);
+        TRACE("SpiAllocateCommonBuffer() failed with Status = 0x%08X!\n", Status);
         return NULL;
     }
 
@@ -833,7 +830,7 @@ SpiScanAdapter(
         Lun = 0;
         do
         {
-            DPRINTM2("Scanning SCSI device %d.%d.%d\n",
+            TRACE("Scanning SCSI device %d.%d.%d\n",
                 ScsiBus, TargetId, Lun);
 
             Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
@@ -905,7 +902,7 @@ SpiResourceToConfig(
             /* Copy access ranges */
             if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
-                DPRINTM2("Got port at 0x%I64x, len 0x%x\n",
+                TRACE("Got port at 0x%I64x, len 0x%x\n",
                     PartialData->u.Port.Start.QuadPart, PartialData->u.Port.Length);
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -921,7 +918,7 @@ SpiResourceToConfig(
             /* Copy access ranges */
             if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
-                DPRINTM2("Got memory at 0x%I64x, len 0x%x\n",
+                TRACE("Got memory at 0x%I64x, len 0x%x\n",
                     PartialData->u.Memory.Start.QuadPart, PartialData->u.Memory.Length);
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -935,7 +932,7 @@ SpiResourceToConfig(
 
         case CmResourceTypeInterrupt:
             /* Copy interrupt data */
-            DPRINTM2("Got interrupt level %d, vector %d\n",
+            TRACE("Got interrupt level %d, vector %d\n",
                 PartialData->u.Interrupt.Level, PartialData->u.Interrupt.Vector);
             PortConfig->BusInterruptLevel = PartialData->u.Interrupt.Level;
             PortConfig->BusInterruptVector = PartialData->u.Interrupt.Vector;
@@ -952,7 +949,7 @@ SpiResourceToConfig(
             break;
 
         case CmResourceTypeDma:
-            DPRINTM2("Got DMA channel %d, port %d\n",
+            TRACE("Got DMA channel %d, port %d\n",
                 PartialData->u.Dma.Channel, PartialData->u.Dma.Port);
             PortConfig->DmaChannel = PartialData->u.Dma.Channel;
             PortConfig->DmaPort = PartialData->u.Dma.Port;
@@ -1018,7 +1015,7 @@ SpiGetPciConfigData(
                 continue;
             }
 
-            DPRINTM2( "Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
+            TRACE( "Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
                 PciConfig.VendorID, PciConfig.DeviceID,
                 BusNumber,
                 SlotNumber.u.bits.DeviceNumber, SlotNumber.u.bits.FunctionNumber);
@@ -1142,7 +1139,7 @@ ScsiPortInitialize(
             PortConfig.BusInterruptLevel = 0;
 
             /* Get PCI device data */
-            DPRINTM2("VendorId '%.*s'  DeviceId '%.*s'\n",
+            TRACE("VendorId '%.*s'  DeviceId '%.*s'\n",
                 HwInitializationData->VendorIdLength,
                 HwInitializationData->VendorId,
                 HwInitializationData->DeviceIdLength,
@@ -1186,7 +1183,7 @@ ScsiPortInitialize(
 
         DeviceExtension->BusNum = PortConfig.SystemIoBusNumber;
 
-        DPRINTM2("Adapter found: buses = %d, targets = %d\n",
+        TRACE("Adapter found: buses = %d, targets = %d\n",
                  PortConfig.NumberOfBuses, DeviceExtension->MaxTargedIds);
 
         /* Initialize adapter */
@@ -1321,8 +1318,7 @@ NTAPI
 ScsiPortReadPortUchar(
     IN PUCHAR Port)
 {
-    DPRINTM2("ScsiPortReadPortUchar(%p)\n",
-        Port);
+    TRACE("ScsiPortReadPortUchar(%p)\n", Port);
 
     return READ_PORT_UCHAR(Port);
 }
@@ -1561,113 +1557,23 @@ ScsiPortWriteRegisterUshort(
     WRITE_REGISTER_USHORT(Register, Value);
 }
 
+extern char __ImageBase;
+
 ULONG
 LoadBootDeviceDriver(VOID)
 {
-    struct
-    {
-        CHAR* Name;
-        PVOID Function;
-    } ExportTable[] =
-    {
-        { "ScsiDebugPrint", ScsiDebugPrint },
-        { "ScsiPortCompleteRequest", ScsiPortCompleteRequest },
-        { "ScsiPortConvertPhysicalAddressToUlong", ScsiPortConvertPhysicalAddressToUlong },
-        { "ScsiPortConvertUlongToPhysicalAddress", ScsiPortConvertUlongToPhysicalAddress },
-        { "ScsiPortFlushDma", ScsiPortFlushDma },
-        { "ScsiPortFreeDeviceBase", ScsiPortFreeDeviceBase },
-        { "ScsiPortGetBusData", ScsiPortGetBusData },
-        { "ScsiPortGetDeviceBase", ScsiPortGetDeviceBase },
-        { "ScsiPortGetLogicalUnit", ScsiPortGetLogicalUnit },
-        { "ScsiPortGetPhysicalAddress", ScsiPortGetPhysicalAddress },
-        { "ScsiPortGetSrb", ScsiPortGetSrb },
-        { "ScsiPortGetUncachedExtension", ScsiPortGetUncachedExtension },
-        { "ScsiPortGetVirtualAddress", ScsiPortGetVirtualAddress },
-        { "ScsiPortInitialize", ScsiPortInitialize },
-        { "ScsiPortIoMapTransfer", ScsiPortIoMapTransfer },
-        { "ScsiPortLogError", ScsiPortLogError },
-        { "ScsiPortMoveMemory", ScsiPortMoveMemory },
-        { "ScsiPortNotification", ScsiPortNotification },
-        { "ScsiPortReadPortBufferUchar", ScsiPortReadPortBufferUchar },
-        { "ScsiPortReadPortBufferUlong", ScsiPortReadPortBufferUlong },
-        { "ScsiPortReadPortBufferUshort", ScsiPortReadPortBufferUshort },
-        { "ScsiPortReadPortUchar", ScsiPortReadPortUchar },
-        { "ScsiPortReadPortUlong", ScsiPortReadPortUlong },
-        { "ScsiPortReadPortUshort", ScsiPortReadPortUshort },
-        { "ScsiPortReadRegisterBufferUchar", ScsiPortReadRegisterBufferUchar },
-        { "ScsiPortReadRegisterBufferUlong", ScsiPortReadRegisterBufferUlong },
-        { "ScsiPortReadRegisterBufferUshort", ScsiPortReadRegisterBufferUshort },
-        { "ScsiPortReadRegisterUchar", ScsiPortReadRegisterUchar },
-        { "ScsiPortReadRegisterUlong", ScsiPortReadRegisterUlong },
-        { "ScsiPortReadRegisterUshort", ScsiPortReadRegisterUshort },
-        { "ScsiPortSetBusDataByOffset", ScsiPortSetBusDataByOffset },
-        { "ScsiPortStallExecution", ScsiPortStallExecution },
-        { "ScsiPortValidateRange", ScsiPortValidateRange },
-        { "ScsiPortWritePortBufferUchar", ScsiPortWritePortBufferUchar },
-        { "ScsiPortWritePortBufferUlong", ScsiPortWritePortBufferUlong },
-        { "ScsiPortWritePortBufferUshort", ScsiPortWritePortBufferUshort },
-        { "ScsiPortWritePortUchar", ScsiPortWritePortUchar },
-        { "ScsiPortWritePortUlong", ScsiPortWritePortUlong },
-        { "ScsiPortWritePortUshort", ScsiPortWritePortUshort },
-        { "ScsiPortWriteRegisterBufferUchar", ScsiPortWriteRegisterBufferUchar },
-        { "ScsiPortWriteRegisterBufferUlong", ScsiPortWriteRegisterBufferUlong },
-        { "ScsiPortWriteRegisterBufferUshort", ScsiPortWriteRegisterBufferUshort },
-        { "ScsiPortWriteRegisterUchar", ScsiPortWriteRegisterUchar },
-        { "ScsiPortWriteRegisterUlong", ScsiPortWriteRegisterUlong },
-        { "ScsiPortWriteRegisterUshort", ScsiPortWriteRegisterUshort },
-    };
-    IMAGE_DOS_HEADER ImageDosHeader;
-    IMAGE_NT_HEADERS ImageNtHeaders;
-    IMAGE_EXPORT_DIRECTORY ImageExportDirectory;
-    CHAR* TableName[sizeof(ExportTable) / sizeof(ExportTable[0])];
-    USHORT OrdinalTable[sizeof(ExportTable) / sizeof(ExportTable[0])];
-    ULONG FunctionTable[sizeof(ExportTable) / sizeof(ExportTable[0])];
-
     PIMAGE_NT_HEADERS NtHeaders;
-    LOADER_PARAMETER_BLOCK LoaderBlock;
+    LIST_ENTRY ModuleListHead;
     PIMAGE_IMPORT_DESCRIPTOR ImportTable;
     ULONG ImportTableSize;
     PLDR_DATA_TABLE_ENTRY BootDdDTE, FreeldrDTE;
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
-    USHORT i;
     BOOLEAN Status;
 
-    /* Some initialization of our temporary loader block */
-    RtlZeroMemory(&LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-    InitializeListHead(&LoaderBlock.LoadOrderListHead);
-
-    /* Create our fake executable header for freeldr.sys */
-    RtlZeroMemory(&ImageDosHeader, sizeof(IMAGE_DOS_HEADER));
-    RtlZeroMemory(&ImageNtHeaders, sizeof(IMAGE_NT_HEADERS));
-    RtlZeroMemory(&ImageExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY));
-    ImageDosHeader.e_magic = SWAPW(IMAGE_DOS_SIGNATURE);
-    ImageDosHeader.e_lfanew = SWAPD((ULONG_PTR)&ImageNtHeaders - (ULONG_PTR)&ImageDosHeader);
-    ImageNtHeaders.Signature = IMAGE_NT_SIGNATURE;
-    ImageNtHeaders.OptionalHeader.NumberOfRvaAndSizes = SWAPD(IMAGE_DIRECTORY_ENTRY_EXPORT + 1);
-    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress =
-        SWAPW((ULONG_PTR)&ImageExportDirectory - (ULONG_PTR)&ImageDosHeader);
-    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size = 1;
-    ImageExportDirectory.NumberOfNames = sizeof(ExportTable) / sizeof(ExportTable[0]);
-    ImageExportDirectory.AddressOfNames = (ULONG_PTR)TableName - (ULONG_PTR)&ImageDosHeader;
-    ImageExportDirectory.AddressOfNameOrdinals = (ULONG_PTR)OrdinalTable - (ULONG_PTR)&ImageDosHeader;
-    ImageExportDirectory.NumberOfFunctions = sizeof(ExportTable) / sizeof(ExportTable[0]);
-    ImageExportDirectory.AddressOfFunctions = (ULONG_PTR)FunctionTable - (ULONG_PTR)&ImageDosHeader;
-
-    /* Fill freeldr.sys export table */
-    for (i = 0; i < sizeof(ExportTable) / sizeof(ExportTable[0]); i++)
-    {
-        TableName[i] = PaToVa((PVOID)((ULONG_PTR)ExportTable[i].Name - (ULONG_PTR)&ImageDosHeader));
-        OrdinalTable[i] = i;
-        FunctionTable[i] = (ULONG)((ULONG_PTR)ExportTable[i].Function - (ULONG_PTR)&ImageDosHeader);
-    }
-
-    /* Add freeldr.sys to list of loaded executables */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
-        "FREELDR.SYS", &ImageDosHeader, &FreeldrDTE);
-    if (!Status)
-        return EIO;
+    /* Initialize the loaded module list */
+    InitializeListHead(&ModuleListHead);
 
     /* Create full ntbootdd.sys path */
     MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
@@ -1681,12 +1587,29 @@ LoadBootDeviceDriver(VOID)
         return ESUCCESS;
     }
 
-    /* Fix imports */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "ntbootdd.sys",
+    /* Allocate a DTE for ntbootdd */
+    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
         "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Status)
         return EIO;
-    Status = WinLdrScanImportDescriptorTable(&LoaderBlock, "", BootDdDTE);
+
+    /* Add the PE part of freeldr.sys to the list of loaded executables, it
+       contains Scsiport* exports, imported by ntbootdd.sys */
+    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
+        "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
+    if (!Status)
+    {
+        RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
+        return EIO;
+    }
+
+    /* Fix imports */
+    Status = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
+
+    /* Now unlinkt the DTEs, they won't be valid later */
+    RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
+    RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
+
     if (!Status)
         return EIO;
 

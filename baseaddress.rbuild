@@ -83,6 +83,7 @@
 	<property name="BASEADDRESS_CRYPT32"		value="0x67ab0000" />
 	<property name="BASEADDRESS_HTTPAPI"		value="0x67ae0000" />
 	<property name="BASEADDRESS_HID"		value="0x688f0000" />
+	<property name="BASEADDRESS_GDI32"		value="0x68a00000" />
 	<property name="BASEADDRESS_PSXDLL"		value="0x68eb0000" />
 	<property name="BASEADDRESS_PSAPI"		value="0x68f70000" />
 	<property name="BASEADDRESS_KSPROXY"		value="0x68f90000" />
@@ -182,6 +183,7 @@
 	<property name="BASEADDRESS_RESUTILS"		value="0x75070000" />
 	<property name="BASEADDRESS_SAMLIB"		value="0x750c0000" />
 	<property name="BASEADDRESS_CABINET"		value="0x75120000" />
+	<property name="BASEADDRESS_RICHED20"		value="0x75260000" />
 	<property name="BASEADDRESS_NETCFGX"		value="0x755f0000" />
 	<property name="BASEADDRESS_IPHLPAPI"		value="0x75700000" />
 	<property name="BASEADDRESS_NDDEAPI"		value="0x75940000" />
@@ -195,7 +197,6 @@
 	<property name="BASEADDRESS_WINSTA"		value="0x762f0000" />
 	<property name="BASEADDRESS_D3D8THK"		value="0x76340000" />
 	<property name="BASEADDRESS_RICHED32"		value="0x76340000" />
-	<property name="BASEADDRESS_RICHED20"		value="0x76360000" />
 	<property name="BASEADDRESS_ODBCCP32"		value="0x76380000" />
 	<property name="BASEADDRESS_TWAIN_32"		value="0x76380000" />
 	<property name="BASEADDRESS_NETSHELL"		value="0x76390000" />
@@ -249,7 +250,6 @@
 	<property name="BASEADDRESS_ACTIVEDS"		value="0x77cb0000" />
 	<property name="BASEADDRESS_ADVAPI32"		value="0x77db0000" />
 	<property name="BASEADDRESS_USER32"		value="0x77e70000" />
-	<property name="BASEADDRESS_GDI32"		value="0x77fd0000" />
 	<property name="BASEADDRESS_DNSAPI"		value="0x78020000" />
 	<property name="BASEADDRESS_MSVCRT"		value="0x78050000" />
 	<property name="BASEADDRESS_MSVCRT20"		value="0x781E0000" />

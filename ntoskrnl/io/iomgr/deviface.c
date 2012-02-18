@@ -332,7 +332,7 @@ IopOpenInterfaceKey(IN CONST GUID *InterfaceClassGuid,
     }
 
     KeyName.Length = 0;
-    KeyName.MaximumLength = LocalMachine.Length + (wcslen(REGSTR_PATH_DEVICE_CLASSES) + 1) * sizeof(WCHAR) + GuidString.Length;
+    KeyName.MaximumLength = LocalMachine.Length + ((USHORT)wcslen(REGSTR_PATH_DEVICE_CLASSES) + 1) * sizeof(WCHAR) + GuidString.Length;
     KeyName.Buffer = ExAllocatePool(PagedPool, KeyName.MaximumLength);
     if (!KeyName.Buffer)
     {
@@ -736,7 +736,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             if (ReturnBuffer.Length + KeyName.Length + sizeof(WCHAR) > ReturnBuffer.MaximumLength)
             {
                 PWSTR NewBuffer;
-                ReturnBuffer.MaximumLength = max(ReturnBuffer.MaximumLength * 2, ReturnBuffer.Length + KeyName.Length + 2 * sizeof(WCHAR));
+                ReturnBuffer.MaximumLength = (USHORT)max(ReturnBuffer.MaximumLength * 2,
+                                                 ReturnBuffer.Length + KeyName.Length + 2 * sizeof(WCHAR));
                 NewBuffer = ExAllocatePool(PagedPool, ReturnBuffer.MaximumLength);
                 if (!NewBuffer)
                 {
@@ -756,11 +757,11 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 DPRINT("RtlAppendUnicodeStringToString() failed with status 0x%08lx\n", Status);
                 goto cleanup;
             }
-            /* RtlAppendUnicodeStringToString added a NULL at the end of the 	 
-	     * destination string, but didn't increase the Length field. 	 
-	     * Do it for it. 	 
-	     */ 	 
-	    ReturnBuffer.Length += sizeof(WCHAR);
+            /* RtlAppendUnicodeStringToString added a NULL at the end of the
+             * destination string, but didn't increase the Length field.
+             * Do it for it.
+             */
+            ReturnBuffer.Length += sizeof(WCHAR);
 
 NextReferenceString:
             ExFreePool(ReferenceBi);
@@ -886,7 +887,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ULONG StartIndex;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG i;
-    NTSTATUS Status;
+    NTSTATUS Status, SymLinkStatus;
     PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
@@ -946,7 +947,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\Control\DeviceClasses\{GUID} */
     ASSERT(((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode);
     InstancePath = &((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->InstancePath;
-    BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
+    BaseKeyName.Length = (USHORT)wcslen(BaseKeyString) * sizeof(WCHAR);
     BaseKeyName.MaximumLength = BaseKeyName.Length
         + GuidString.Length;
     BaseKeyName.Buffer = ExAllocatePool(
@@ -1136,6 +1137,33 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     }
     RtlAppendUnicodeToString(SymbolicLinkName, L"#");
     RtlAppendUnicodeStringToString(SymbolicLinkName, &GuidString);
+    SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
+
+    /* Create symbolic link */
+    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
+    SymLinkStatus = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
+
+    /* If the symbolic link already exists, return an informational success status */
+    if (SymLinkStatus == STATUS_OBJECT_NAME_COLLISION)
+    {
+        /* HACK: Delete the existing symbolic link and update it to the new PDO name */
+        IoDeleteSymbolicLink(SymbolicLinkName);
+        IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
+        SymLinkStatus = STATUS_OBJECT_NAME_EXISTS;
+    }
+
+    if (!NT_SUCCESS(SymLinkStatus))
+    {
+        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", SymLinkStatus);
+        ZwClose(SubKey);
+        ZwClose(InterfaceKey);
+        ZwClose(ClassKey);
+        ExFreePool(SubKeyName.Buffer);
+        ExFreePool(InterfaceKeyName.Buffer);
+        ExFreePool(BaseKeyName.Buffer);
+        ExFreePool(SymbolicLinkName->Buffer);
+        return SymLinkStatus;
+    }
 
     if (ReferenceString && ReferenceString->Length)
     {
@@ -1146,42 +1174,21 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
 
     /* Write symbolic link name in registry */
     SymbolicLinkName->Buffer[1] = '\\';
-    Status = ZwSetValueKey(SubKey,
-                           &SymbolicLink,
-                           0, /* TileIndex */
-                           REG_SZ,
-                           SymbolicLinkName->Buffer,
-                           SymbolicLinkName->Length);
+    Status = ZwSetValueKey(
+        SubKey,
+        &SymbolicLink,
+        0, /* TileIndex */
+        REG_SZ,
+        SymbolicLinkName->Buffer,
+        SymbolicLinkName->Length);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwSetValueKey() failed with status 0x%08lx\n", Status);
-        ZwClose(SubKey);
-        ZwClose(InterfaceKey);
-        ZwClose(ClassKey);
-        ExFreePool(SubKeyName.Buffer);
-        ExFreePool(InterfaceKeyName.Buffer);
-        ExFreePool(BaseKeyName.Buffer);
         ExFreePool(SymbolicLinkName->Buffer);
-        return Status;
     }
     else
     {
         SymbolicLinkName->Buffer[1] = '?';
-    }
-
-    /* Create symbolic link */
-    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
-    Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
-
-    /* If the symbolic link already exists, return an informational success status */
-    if (Status == STATUS_OBJECT_NAME_COLLISION)
-        Status = STATUS_OBJECT_NAME_EXISTS;
-
-    /* Check if it really failed */
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
-        ExFreePool(SymbolicLinkName->Buffer);
     }
 
     ZwClose(SubKey);
@@ -1191,7 +1198,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ExFreePool(InterfaceKeyName.Buffer);
     ExFreePool(BaseKeyName.Buffer);
 
-    return Status;
+    return NT_SUCCESS(Status) ? SymLinkStatus : Status;
 }
 
 /*++
@@ -1309,7 +1316,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         DPRINT1("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
         return Status;
     }
-    
+
     Status = RtlGUIDFromString(&GuidString, &DeviceGuid);
     if (!NT_SUCCESS(Status))
     {

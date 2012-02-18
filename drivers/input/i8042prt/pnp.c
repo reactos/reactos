@@ -381,16 +381,6 @@ EnableInterrupts(
     if (!i8042ChangeMode(DeviceExtension, FlagsToDisable, FlagsToEnable))
         return STATUS_UNSUCCESSFUL;
 
-    /* Reset the mouse (if any) to start the detection */
-    if (DeviceExtension->Flags & MOUSE_PRESENT)
-    {
-        KIRQL Irql;
-
-        Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
-        KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
-    }
-
     return STATUS_SUCCESS;
 }
 
@@ -401,6 +391,7 @@ StartProcedure(
     NTSTATUS Status;
     UCHAR FlagsToDisable = 0;
     UCHAR FlagsToEnable = 0;
+    KIRQL Irql;
 
     if (DeviceExtension->DataPort == 0)
     {
@@ -434,6 +425,25 @@ StartProcedure(
 
         INFO_(I8042PRT, "Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
         INFO_(I8042PRT, "Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
+
+        TRACE_(I8042PRT, "Enabling i8042 interrupts\n");
+        if (DeviceExtension->Flags & KEYBOARD_PRESENT)
+        {
+            FlagsToDisable |= CCB_KBD_DISAB;
+            FlagsToEnable |= CCB_KBD_INT_ENAB;
+        }
+        if (DeviceExtension->Flags & MOUSE_PRESENT)
+        {
+            FlagsToDisable |= CCB_MOUSE_DISAB;
+            FlagsToEnable |= CCB_MOUSE_INT_ENAB;
+        }
+
+        Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
+        if (!NT_SUCCESS(Status))
+        {
+            DeviceExtension->Flags &= ~(KEYBOARD_PRESENT | MOUSE_PRESENT);
+            return Status;
+        }
     }
 
     /* Connect interrupts */
@@ -447,8 +457,6 @@ StartProcedure(
         if (NT_SUCCESS(Status))
         {
             DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
-            FlagsToDisable |= CCB_KBD_DISAB;
-            FlagsToEnable |= CCB_KBD_INT_ENAB;
         }
     }
 
@@ -462,15 +470,13 @@ StartProcedure(
         if (NT_SUCCESS(Status))
         {
             DeviceExtension->Flags |= MOUSE_INITIALIZED;
-            FlagsToDisable |= CCB_MOUSE_DISAB;
-            FlagsToEnable |= CCB_MOUSE_INT_ENAB;
         }
-    }
 
-    if (FlagsToEnable)
-        Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
-    else
-        Status = STATUS_SUCCESS;
+        /* Start the mouse */
+        Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
+        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+        KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
+    }
 
     return Status;
 }

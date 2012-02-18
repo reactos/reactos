@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         Activation Context Support
  * FILE:            lib/rtl/actctx.c
- * PROGRAMERS:      
+ * PROGRAMERS:
  *                  Jon Griffiths
  *                  Eric Pouech
  *                  Jacek Caban for CodeWeavers
@@ -23,8 +23,6 @@
 #include <wine/unicode.h>
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
-
-#define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
 
 #define ACTCTX_FLAGS_ALL (\
     ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
@@ -241,7 +239,7 @@ static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
     UNICODE_STRING res;
 
     res.Buffer = (PWSTR)xmlstr->ptr;
-    res.Length = res.MaximumLength = xmlstr->len * sizeof(WCHAR);
+    res.Length = res.MaximumLength = (USHORT)xmlstr->len * sizeof(WCHAR);
 
     return res;
 }
@@ -647,7 +645,7 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
     if (ptr == xmlbuf->end || *ptr != '=') return FALSE;
 
     name->ptr = xmlbuf->ptr;
-    name->len = ptr-xmlbuf->ptr;
+    name->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
 
     ptr++;
@@ -663,7 +661,7 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
         return FALSE;
     }
 
-    value->len = ptr - value->ptr;
+    value->len = (ULONG)(ptr - value->ptr);
     xmlbuf->ptr = ptr + 1;
 
     if (xmlbuf->ptr == xmlbuf->end) return FALSE;
@@ -705,7 +703,7 @@ static BOOL next_xml_elem(xmlbuf_t* xmlbuf, xmlstr_t* elem)
         ptr++;
 
     elem->ptr = xmlbuf->ptr;
-    elem->len = ptr - xmlbuf->ptr;
+    elem->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
     return xmlbuf->ptr != xmlbuf->end;
 }
@@ -733,7 +731,7 @@ static BOOL parse_text_content(xmlbuf_t* xmlbuf, xmlstr_t* content)
     if (!ptr) return FALSE;
 
     content->ptr = xmlbuf->ptr;
-    content->len = ptr - xmlbuf->ptr;
+    content->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
 
     return TRUE;
@@ -1555,7 +1553,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
                                                       : ACTIVATION_CONTEXT_PATH_TYPE_NONE;
 
     unicode_tests = IS_TEXT_UNICODE_SIGNATURE | IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    if (RtlIsTextUnicode( (PVOID) buffer, size, &unicode_tests ))
+    if (RtlIsTextUnicode((PVOID)buffer, (ULONG)size, &unicode_tests ))
     {
         xmlbuf.ptr = buffer;
         xmlbuf.end = xmlbuf.ptr + size / sizeof(WCHAR);
@@ -1579,12 +1577,12 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     else
     {
         /* let's assume utf-8 for now */
-        int len;
+        size_t len;
         WCHAR *new_buff;
 
         _SEH2_TRY
         {
-            len = mbstowcs( NULL, buffer, size);
+            len = mbstowcs(NULL, buffer, size);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1628,7 +1626,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
     return NtOpenFile( handle, GENERIC_READ, &attr, &io, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
-static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
+static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
 {
     NTSTATUS status;
     ULONG magic;
@@ -1660,6 +1658,9 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     LDR_RESOURCE_INFO info;
     IMAGE_RESOURCE_DATA_ENTRY* entry = NULL;
     void *ptr;
+
+    //DPRINT( "looking for res %s in module %p %s\n", resname,
+    //                hModule, filename );
 
 #if 0
     if (TRACE_ON(actctx))
@@ -1794,7 +1795,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileStandardInformation);
 
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, base, info.EndOfFile.QuadPart);
+        status = parse_manifest(acl, ai, filename, directory, shared, base, (SIZE_T)info.EndOfFile.QuadPart);
 
     NtUnmapViewOfSection( NtCurrentProcess(), base );
     NtClose( mapping );
@@ -1881,7 +1882,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
         WCHAR *tmp;
         ULONG build, revision;
 
-        data_len = io.Information;
+        data_len = (ULONG)io.Information;
 
         for (;;)
         {
@@ -1890,7 +1891,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                 NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
                                       FileBothDirectoryInformation, FALSE, &lookup_us, FALSE );
                 if (io.Status != STATUS_SUCCESS) break;
-                data_len = io.Information;
+                data_len = (ULONG)io.Information;
                 data_pos = 0;
             }
             dir_info = (FILE_BOTH_DIR_INFORMATION*)(buffer + data_pos);
@@ -1905,8 +1906,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             revision = atoiW(tmp);
             if (build == ai->version.build && revision < ai->version.revision)
                 continue;
-            ai->version.build = build;
-            ai->version.revision = revision;
+            ai->version.build = (USHORT)build;
+            ai->version.revision = (USHORT)revision;
 
             if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength * sizeof(WCHAR) )))
             {
@@ -1935,7 +1936,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     if (!ai->arch || !ai->name || !ai->public_key) return STATUS_NO_SUCH_FILE;
 
-    if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+    if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0,
                                   ((strlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
         return STATUS_NO_MEMORY;
 
@@ -2005,7 +2006,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     UNICODE_STRING nameW;
     HANDLE file;
 
-    DPRINT1( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
+    DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
@@ -2373,17 +2374,17 @@ NTSTATUS
 NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-    
+
     if (!(frame = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
-    
+
     frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
-    
+
     tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
-    
+
     *cookie = (ULONG_PTR)frame;
     DPRINT( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
@@ -2430,19 +2431,41 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 }
 
 VOID
+NTAPI
+RtlFreeActivationContextStack(PACTIVATION_CONTEXT_STACK Stack)
+{
+    PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame, PrevFrame;
+
+    /* Nothing to do if there is no stack */
+    if (!Stack) return;
+
+    /* Get the current active frame */
+    ActiveFrame = Stack->ActiveFrame;
+
+    /* Go through them in backwards order and release */
+    while (ActiveFrame)
+    {
+        PrevFrame = ActiveFrame->Previous;
+        RtlReleaseActivationContext(ActiveFrame->ActivationContext);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ActiveFrame);
+        ActiveFrame = PrevFrame;
+    }
+
+    /* Zero out the active frame */
+    Stack->ActiveFrame = NULL;
+
+    /* TODO: Empty the Frame List Cache */
+    ASSERT(IsListEmpty(&Stack->FrameListCache));
+
+    /* Free activation stack memory */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Stack);
+}
+
+VOID
 NTAPI RtlFreeThreadActivationContextStack(void)
 {
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-
-    frame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
-    while (frame)
-    {
-        RTL_ACTIVATION_CONTEXT_STACK_FRAME *prev = frame->Previous;
-        RtlReleaseActivationContext( frame->ActivationContext );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, frame );
-        frame = prev;
-    }
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
+    RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
+    NtCurrentTeb()->ActivationContextStackPointer = NULL;
 }
 
 
@@ -2525,11 +2548,11 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             acdi->ulFormatVersion = assembly ? 1 : 0; /* FIXME */
             acdi->ulAssemblyCount = actctx->num_assemblies;
             acdi->ulRootManifestPathType = assembly ? assembly->manifest.type : 0 /* FIXME */;
-            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? manifest_len - 1 : 0;
+            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? (DWORD)manifest_len - 1 : 0;
             acdi->ulRootConfigurationPathType = actctx->config.type;
-            acdi->ulRootConfigurationPathChars = actctx->config.info ? config_len - 1 : 0;
+            acdi->ulRootConfigurationPathChars = actctx->config.info ? (DWORD)config_len - 1 : 0;
             acdi->ulAppDirPathType = actctx->appdir.type;
-            acdi->ulAppDirPathChars = actctx->appdir.info ? appdir_len - 1 : 0;
+            acdi->ulAppDirPathChars = actctx->appdir.info ? (DWORD)appdir_len - 1 : 0;
             ptr = (LPWSTR)(acdi + 1);
             if (manifest_len)
             {
@@ -2589,9 +2612,9 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             }
 
             afdi->ulFlags = 0;  /* FIXME */
-            afdi->ulEncodedAssemblyIdentityLength = (id_len - 1) * sizeof(WCHAR);
+            afdi->ulEncodedAssemblyIdentityLength = (DWORD)(id_len - 1) * sizeof(WCHAR);
             afdi->ulManifestPathType = assembly->manifest.type;
-            afdi->ulManifestPathLength = assembly->manifest.info ? (path_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulManifestPathLength = assembly->manifest.info ? (DWORD)(path_len - 1) * sizeof(WCHAR) : 0;
             /* FIXME afdi->liManifestLastWriteTime = 0; */
             afdi->ulPolicyPathType = ACTIVATION_CONTEXT_PATH_TYPE_NONE; /* FIXME */
             afdi->ulPolicyPathLength = 0;
@@ -2601,7 +2624,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             afdi->ulManifestVersionMinor = 0;
             afdi->ulPolicyVersionMajor = 0; /* FIXME */
             afdi->ulPolicyVersionMinor = 0; /* FIXME */
-            afdi->ulAssemblyDirectoryNameLength = ad_len ? (ad_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulAssemblyDirectoryNameLength = ad_len ? (DWORD)(ad_len - 1) * sizeof(WCHAR) : 0;
             ptr = (LPWSTR)(afdi + 1);
             afdi->lpAssemblyEncodedAssemblyIdentity = ptr;
             memcpy( ptr, assembly_id, id_len * sizeof(WCHAR) );
@@ -2654,7 +2677,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             }
             if (retlen) *retlen = 0; /* yes that's what native does !! */
             afdi->ulFlags = ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION;
-            afdi->ulFilenameLength = dll_len ? (dll_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulFilenameLength = dll_len ? (DWORD)(dll_len - 1) * sizeof(WCHAR) : 0;
             afdi->ulPathLength = 0; /* FIXME */
             ptr = (LPWSTR)(afdi + 1);
             if (dll_len)
@@ -2671,6 +2694,22 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
         return STATUS_NOT_IMPLEMENTED;
     }
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RtlQueryInformationActiveActivationContext(ULONG ulInfoClass,
+                                           PVOID pvBuffer,
+                                           SIZE_T cbBuffer OPTIONAL,
+                                           SIZE_T *pcbWrittenOrRequired OPTIONAL)
+{
+    return RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                                                NULL,
+                                                NULL,
+                                                ulInfoClass,
+                                                pvBuffer,
+                                                cbBuffer,
+                                                pcbWrittenOrRequired);
 }
 
 #define FIND_ACTCTX_RETURN_FLAGS 0x00000002
@@ -2743,23 +2782,24 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
 
-    /* FIXME: Check if it's already allocated */
-    //if (*Context) return STATUS_SUCCESS;
+    /* Check if it's already allocated */
+    if (*Context) return STATUS_SUCCESS;
 
+    /* Allocate space for the context stack */
     ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
     if (!ContextStack)
     {
         return STATUS_NO_MEMORY;
     }
 
-    ContextStack->ActiveFrame = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
-    if (!ContextStack->ActiveFrame) return STATUS_NO_MEMORY;
+    /* Initialize the context stack */
+    ContextStack->Flags = 0;
+    ContextStack->ActiveFrame = NULL;
+    InitializeListHead(&ContextStack->FrameListCache);
+    ContextStack->NextCookieSequenceNumber = 1;
+    ContextStack->StackId = 1; //TODO: Timer-based
 
     *Context = ContextStack;
-
-    /* FIXME: Documentation on MSDN reads that activation contexts are only created
-              for modules that have a valid manifest file or resource */
-    actctx_init();
 
     return STATUS_SUCCESS;
 }
@@ -2825,10 +2865,11 @@ PRTL_ACTIVATION_CONTEXT_STACK_FRAME
 FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
+    //RTL_ACTIVATION_CONTEXT_STACK_FRAME *top;
 
     /* find the right frame */
-    top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    //top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
     frame = &Frame->Frame;
 
     if (!frame)

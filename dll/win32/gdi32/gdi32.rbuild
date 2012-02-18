@@ -1,4 +1,4 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll">
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="msvcrt">
 	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
 	<define name="LANGPACK" />

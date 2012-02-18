@@ -1,11 +1,11 @@
 #pragma once
 
-/* metrics */
+/* Metrics */
 #define PROPSHEETWIDTH  	380
 #define PROPSHEETHEIGHT 	228
 #define PROPSHEETPADDING 	6
 
-/* icons */
+/* Icons */
 #define IDI_CPLSYSTEM	1500
 #define IDI_APPICO		1501
 #define IDI_INSTICO		1502
@@ -13,20 +13,20 @@
 #define IDI_DOWNLOADICO	1504
 #define IDI_APPINETICO	1505
 
-/* dialogs */
+/* Dialogs */
 #define IDD_SHORTCUT_LOCATION	203
 #define IDD_SHORTCUT_FINISH		204
 
-/* bitmaps */
+/* Bitmaps */
 #define IDB_WATERMARK	5001
 
-/* strings */
+/* Strings */
 #define IDS_CPLSYSTEMNAME			1001
 #define IDS_CPLSYSTEMDESCRIPTION	2001
 #define IDS_CREATE_SHORTCUT         2021
 #define IDS_ERROR_NOT_FOUND         2022
 
-/* controls */
+/* Controls */
 #define IDC_SHORTCUT_LOCATION	107
 #define IDC_SHORTCUT_BROWSE		108
 #define IDC_SHORTCUT_NAME		109

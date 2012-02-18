@@ -20,6 +20,7 @@
 
 [
   uuid(00020430-0000-0000-C000-000000000046),
+  restricted,
   version(1.0),
   helpstring("OLE Automation")
 ]

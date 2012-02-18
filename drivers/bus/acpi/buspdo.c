@@ -372,8 +372,9 @@ Bus_PDO_QueryDeviceCaps(
 
     if (device)
     {
+       deviceCapabilities->LockSupported = device->flags.lockable;
        deviceCapabilities->EjectSupported = device->flags.ejectable;
-       deviceCapabilities->HardwareDisabled = !device->status.enabled;
+       deviceCapabilities->HardwareDisabled = !device->status.enabled && !device->status.functional;
        deviceCapabilities->Removable = device->flags.removable;
        deviceCapabilities->SurpriseRemovalOK = device->flags.suprise_removal_ok;
        deviceCapabilities->UniqueID = device->flags.unique_id;
@@ -692,7 +693,7 @@ Bus_PDO_QueryResources(
         DPRINT1("Found PCI root hub: %d\n", BusNumber);
 
         ResourceListSize = sizeof(CM_RESOURCE_LIST);
-        ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
+        ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
         if (!ResourceList)
             return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -722,7 +723,7 @@ Bus_PDO_QueryResources(
       return Irp->IoStatus.Status;
     }
 
-    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    Buffer.Pointer = ExAllocatePoolWithTag(PagedPool, Buffer.Length, 'IPCA');
     if (!Buffer.Pointer)
       return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -781,11 +782,11 @@ Bus_PDO_QueryResources(
 
 	/* Allocate memory */
 	ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
+	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
 
 	if (!ResourceList)
 	{
-		ExFreePool(Buffer.Pointer);
+		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	ResourceList->Count = 1;
@@ -1109,7 +1110,7 @@ Bus_PDO_QueryResources(
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
 
-    ExFreePool(Buffer.Pointer);
+    ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 	Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
 	return STATUS_SUCCESS;
 }
@@ -1135,6 +1136,12 @@ Bus_PDO_QueryResourceRequirements(
         return Irp->IoStatus.Status;
     }
 
+    /* Handle the PCI root manually */
+    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
+    {
+        return Irp->IoStatus.Status;
+    }
+
     /* Get current resources */
     while (TRUE)
     {
@@ -1155,7 +1162,7 @@ Bus_PDO_QueryResourceRequirements(
             break;
     }
 
-    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    Buffer.Pointer = ExAllocatePoolWithTag(PagedPool, Buffer.Length, 'IPCA');
     if (!Buffer.Pointer)
       return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1215,11 +1222,11 @@ Bus_PDO_QueryResourceRequirements(
 	}
 
 	RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(PagedPool, RequirementsListSize);
+	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePoolWithTag(PagedPool, RequirementsListSize, 'IPCA');
 
 	if (!RequirementsList)
 	{
-		ExFreePool(Buffer.Pointer);
+		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RequirementsList->ListSize = RequirementsListSize;
@@ -1314,7 +1321,7 @@ Bus_PDO_QueryResourceRequirements(
 				RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
 				RequirementDescriptor->u.Port.Alignment = io_data->Alignment;
 				RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Minimum;
-				RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum;
+				RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum + io_data->AddressLength - 1;
 
 				RequirementDescriptor++;
 				break;
@@ -1329,7 +1336,7 @@ Bus_PDO_QueryResourceRequirements(
 					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
 					RequirementDescriptor->Flags = 0;
 					RequirementDescriptor->u.BusNumber.MinBusNumber = addr16_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr16_data->Maximum;
+					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr16_data->Maximum + addr16_data->AddressLength - 1;
 					RequirementDescriptor->u.BusNumber.Length = addr16_data->AddressLength;
 				}
 				else if (addr16_data->ResourceType == ACPI_IO_RANGE)
@@ -1340,7 +1347,7 @@ Bus_PDO_QueryResourceRequirements(
 					if (addr16_data->Decode == ACPI_POS_DECODE)
 						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
 					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr16_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr16_data->Maximum;
+					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr16_data->Maximum + addr16_data->AddressLength - 1;
 					RequirementDescriptor->u.Port.Length = addr16_data->AddressLength;
 				}
 				else
@@ -1359,7 +1366,7 @@ Bus_PDO_QueryResourceRequirements(
 						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
 					}
 					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr16_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr16_data->Maximum;
+					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr16_data->Maximum + addr16_data->AddressLength - 1;
 					RequirementDescriptor->u.Memory.Length = addr16_data->AddressLength;
 				}
 				RequirementDescriptor++;
@@ -1375,7 +1382,7 @@ Bus_PDO_QueryResourceRequirements(
 					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
 					RequirementDescriptor->Flags = 0;
 					RequirementDescriptor->u.BusNumber.MinBusNumber = addr32_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr32_data->Maximum;
+					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr32_data->Maximum + addr32_data->AddressLength - 1;
 					RequirementDescriptor->u.BusNumber.Length = addr32_data->AddressLength;
 				}
 				else if (addr32_data->ResourceType == ACPI_IO_RANGE)
@@ -1386,7 +1393,7 @@ Bus_PDO_QueryResourceRequirements(
 					if (addr32_data->Decode == ACPI_POS_DECODE)
 						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
 					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr32_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr32_data->Maximum;
+					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr32_data->Maximum + addr32_data->AddressLength - 1;
 					RequirementDescriptor->u.Port.Length = addr32_data->AddressLength;
 				}
 				else
@@ -1405,7 +1412,7 @@ Bus_PDO_QueryResourceRequirements(
 						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
 					}
 					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr32_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr32_data->Maximum;
+					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr32_data->Maximum + addr32_data->AddressLength - 1;
 					RequirementDescriptor->u.Memory.Length = addr32_data->AddressLength;
 				}
 				RequirementDescriptor++;
@@ -1422,7 +1429,7 @@ Bus_PDO_QueryResourceRequirements(
 					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
 					RequirementDescriptor->Flags = 0;
 					RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum;
+					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
 				}
 				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
@@ -1433,7 +1440,7 @@ Bus_PDO_QueryResourceRequirements(
 					if (addr64_data->Decode == ACPI_POS_DECODE)
 						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
 					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum;
+					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
 				}
 				else
@@ -1452,7 +1459,7 @@ Bus_PDO_QueryResourceRequirements(
 						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
 					}	
 					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum;
+					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
 				}
 				RequirementDescriptor++;
@@ -1469,7 +1476,7 @@ Bus_PDO_QueryResourceRequirements(
 					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
 					RequirementDescriptor->Flags = 0;
 					RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum;
+					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
 				}
 				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
@@ -1480,7 +1487,7 @@ Bus_PDO_QueryResourceRequirements(
 					if (addr64_data->Decode == ACPI_POS_DECODE)
 						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
 					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum;
+					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
 				}
 				else
@@ -1499,7 +1506,7 @@ Bus_PDO_QueryResourceRequirements(
 						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
 					}	
 					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum;
+					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
 					RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
 				}
 				RequirementDescriptor++;
@@ -1517,7 +1524,7 @@ Bus_PDO_QueryResourceRequirements(
 				else
 					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
 				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem24_data->Minimum;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem24_data->Maximum;
+				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem24_data->Maximum + mem24_data->AddressLength - 1;
 				RequirementDescriptor->u.Memory.Length = mem24_data->AddressLength;
 
 				RequirementDescriptor++;
@@ -1535,7 +1542,7 @@ Bus_PDO_QueryResourceRequirements(
 				else
 					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
 				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem32_data->Minimum;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem32_data->Maximum;
+				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem32_data->Maximum + mem32_data->AddressLength - 1;
 				RequirementDescriptor->u.Memory.Length = mem32_data->AddressLength;
 
 				RequirementDescriptor++;
@@ -1553,7 +1560,7 @@ Bus_PDO_QueryResourceRequirements(
 				else
 					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
 				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = fixedmem32_data->Address;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = fixedmem32_data->Address;
+				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = fixedmem32_data->Address + fixedmem32_data->AddressLength - 1;
 				RequirementDescriptor->u.Memory.Length = fixedmem32_data->AddressLength;
                 
 				RequirementDescriptor++;
@@ -1566,7 +1573,7 @@ Bus_PDO_QueryResourceRequirements(
 		}
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
-	ExFreePool(Buffer.Pointer);
+	ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 
     Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
 

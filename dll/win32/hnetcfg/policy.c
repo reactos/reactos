@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_policy
 {
-    const INetFwPolicyVtbl *vtbl;
+    INetFwPolicy INetFwPolicy_iface;
     LONG refs;
 } fw_policy;
 
 static inline fw_policy *impl_from_INetFwPolicy( INetFwPolicy *iface )
 {
-    return (fw_policy *)((char *)iface - FIELD_OFFSET( fw_policy, vtbl ));
+    return CONTAINING_RECORD(iface, fw_policy, INetFwPolicy_iface);
 }
 
 static ULONG WINAPI fw_policy_AddRef(
@@ -186,10 +186,10 @@ HRESULT NetFwPolicy_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_policy_vtbl;
+    fp->INetFwPolicy_iface.lpVtbl = &fw_policy_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwPolicy_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

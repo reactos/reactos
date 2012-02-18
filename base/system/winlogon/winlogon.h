@@ -29,6 +29,7 @@
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
+#include <stdio.h>
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>
@@ -36,9 +37,11 @@
 #include <rtlfuncs.h>
 #include <exfuncs.h>
 #include <setypes.h>
+#include <sefuncs.h>
 #include <ntsecapi.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <strsafe.h>
 
 #include <reactos/undocuser.h>
 #include <reactos/winlogon.h>
@@ -175,11 +178,6 @@ extern PWLSESSION WLSession;
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
   )
-
-/* user32 */
-BOOL WINAPI
-UpdatePerUserSystemParameters(DWORD dwUnknown,
-                              DWORD dwReserved);
 
 /* environment.c */
 BOOL

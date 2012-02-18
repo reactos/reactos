@@ -119,11 +119,6 @@ IntEngCreateClipRegion(ULONG count,
 VOID FASTCALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj);
 
-BOOLEAN FASTCALL
-ClipobjToSpans(PSPAN *Spans,
-               UINT *Count,
-               CLIPOBJ *ClipRegion,
-               PRECTL Boundary);
 
 BOOL FASTCALL
 IntEngTransparentBlt(SURFOBJ *Dest,
@@ -141,12 +136,6 @@ IntEngPaint(IN SURFOBJ *Surface,
             IN BRUSHOBJ *Brush,
             IN POINTL *BrushOrigin,
             IN MIX Mix);
-
-VOID APIENTRY
-IntEngMovePointer(IN SURFOBJ *pso,
-                  IN LONG x,
-                  IN LONG y,
-                  IN RECTL *prcl);
 
 ULONG APIENTRY
 IntEngSetPointerShape(

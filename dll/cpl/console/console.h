@@ -53,7 +53,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
 #define PM_APPLY_CONSOLE_INFO (WM_APP + 100)
 
 
-//globals
+// Globals
 extern HINSTANCE hApplet;
 
 #endif /* CONSOLE_H__ */

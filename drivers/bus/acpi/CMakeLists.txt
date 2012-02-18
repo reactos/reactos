@@ -8,6 +8,8 @@ if(ARCH MATCHES amd64)
 endif()
 
 add_library(acpica
+    acpica/dispatcher/dsargs.c
+    acpica/dispatcher/dscontrol.c
     acpica/dispatcher/dsfield.c
     acpica/dispatcher/dsinit.c
     acpica/dispatcher/dsmethod.c
@@ -17,21 +19,27 @@ add_library(acpica
     acpica/dispatcher/dsutils.c
     acpica/dispatcher/dswexec.c
     acpica/dispatcher/dswload.c
+    acpica/dispatcher/dswload2.c
     acpica/dispatcher/dswscope.c
     acpica/dispatcher/dswstate.c
     acpica/events/evevent.c
+    acpica/events/evglock.c
     acpica/events/evgpe.c
     acpica/events/evgpeblk.c
+    acpica/events/evgpeinit.c
+    acpica/events/evgpeutil.c
     acpica/events/evmisc.c
     acpica/events/evregion.c
     acpica/events/evrgnini.c
     acpica/events/evsci.c
     acpica/events/evxface.c
     acpica/events/evxfevnt.c
+    acpica/events/evxfgpe.c
     acpica/events/evxfregn.c
     acpica/executer/exconfig.c
     acpica/executer/exconvrt.c
     acpica/executer/excreate.c
+    acpica/executer/exdebug.c
     acpica/executer/exdump.c
     acpica/executer/exfield.c
     acpica/executer/exfldio.c
@@ -54,6 +62,7 @@ add_library(acpica
     acpica/executer/exutils.c
     acpica/hardware/hwacpi.c
     acpica/hardware/hwgpe.c
+    acpica/hardware/hwpci.c
     acpica/hardware/hwregs.c
     acpica/hardware/hwsleep.c
     acpica/hardware/hwtimer.c
@@ -110,6 +119,7 @@ add_library(acpica
     acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
     acpica/utilities/utdebug.c
+    acpica/utilities/utdecode.c
     acpica/utilities/utdelete.c
     acpica/utilities/uteval.c
     acpica/utilities/utglobal.c
@@ -120,11 +130,14 @@ add_library(acpica
     acpica/utilities/utmisc.c
     acpica/utilities/utmutex.c
     acpica/utilities/utobject.c
+    acpica/utilities/utosi.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/uttrack.c
-    acpica/utilities/utxface.c)
+    acpica/utilities/utxface.c
+    acpica/utilities/utxferror.c)
 
+set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 add_dependencies(acpica bugcodes)
 
 add_library(acpi SHARED
@@ -143,13 +156,8 @@ add_library(acpi SHARED
     main.c)
 
 set_module_type(acpi kernelmodedriver)
-
-target_link_libraries(acpi
-    wdmguid
-    acpica)
-
+target_link_libraries(acpi wdmguid acpica ${PSEH_LIB})
 add_importlibs(acpi ntoskrnl hal)
-
 add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
 
 add_subdirectory(cmbatt)

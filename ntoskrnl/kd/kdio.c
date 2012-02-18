@@ -23,6 +23,7 @@ volatile ULONG KdpFreeBytes = 0;
 KSPIN_LOCK KdpDebugLogSpinLock;
 KEVENT KdpLoggerThreadEvent;
 HANDLE KdpLogFileHandle;
+ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
 
 KSPIN_LOCK KdpSerialSpinLock;
 KD_PORT_INFORMATION SerialPortInfo = { DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0 };
@@ -201,7 +202,9 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
     else if (BootPhase == 3)
     {
         /* Setup the log name */
-        RtlInitUnicodeString(&FileName, L"\\SystemRoot\\debug.log");
+        Status = RtlAnsiStringToUnicodeString(&FileName, &KdpLogFileName, TRUE);
+        if (!NT_SUCCESS(Status)) return;
+
         InitializeObjectAttributes(&ObjectAttributes,
                                    &FileName,
                                    0,
@@ -220,6 +223,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                               FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_NONALERT,
                               NULL,
                               0);
+
+        RtlFreeUnicodeString(&FileName);
 
         if (!NT_SUCCESS(Status)) return;
 
@@ -479,6 +484,15 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
       RtlZeroMemory(KdpDmesgBuffer, KdpDmesgBufferSize + 1);
       KdpDmesgFreeBytes = KdpDmesgBufferSize;
       KdbDmesgTotalWritten = 0;
+
+      /* Take control of the display */
+      InbvAcquireDisplayOwnership();
+      InbvResetDisplay();
+      InbvSolidColorFill(0, 0, 639, 479, 0);
+      InbvSetTextColor(15);
+      InbvSetScrollRegion(0, 0, 639, 479);
+      InbvInstallDisplayStringFilter(NULL);
+      InbvEnableDisplayString(TRUE);
 
       /* Initialize spinlock */
       KeInitializeSpinLock(&KdpDmesgLogSpinLock);

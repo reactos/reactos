@@ -160,7 +160,9 @@ NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
+    SHORT StarFound = -1;
+    PUSHORT BackTracking = NULL;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
     PAGED_CODE();
 
     ASSERT(Name->Length);
@@ -169,74 +171,44 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
 
     while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
     {
+        /* Basic check to test if chars are equal */
         if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[NamePosition]))
         {
             NamePosition++;
             ExpressionPosition++;
         }
-        else if (StarFound != MAXUSHORT && (Expression->Buffer[StarFound + 1] == '*' ||
-                 Expression->Buffer[StarFound + 1] == '?' || Expression->Buffer[StarFound + 1] == ANSI_DOS_DOT))
-        {
-            ExpressionPosition = StarFound + 1;
-            switch (Expression->Buffer[ExpressionPosition])
-            {
-                case '*':
-                    StarFound = MAXUSHORT;
-                    break;
-
-                case '?':
-                    if (++ExpressionPosition == Expression->Length)
-                    {
-                        NamePosition = Name->Length;
-                        break;
-                    }
-
-                    MatchingChars = NamePosition;
-                    while (NamePosition < Name->Length &&
-                           Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
-                    {
-                        NamePosition++;
-                    }
-
-                    if (NamePosition - MatchingChars > 0)
-                    {
-                        StarFound = MAXUSHORT;
-                    }
-                    break;
-
-                case ANSI_DOS_DOT:
-                    while (NamePosition < Name->Length && Name->Buffer[NamePosition] != '.')
-                    {
-                        NamePosition++;
-                    }
-                    ExpressionPosition++;
-                    StarFound = MAXUSHORT;
-                    break;
-
-                default:
-                    /* Should never happen */
-                    ASSERT(FALSE);                   
-            }
-        }
+        /* Check cases that eat one char */
         else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
                  (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
         {
             NamePosition++;
             ExpressionPosition++;
-            StarFound = MAXUSHORT;
         }
+        /* Test star */
         else if (Expression->Buffer[ExpressionPosition] == '*')
         {
-            StarFound = ExpressionPosition++;
+            /* Save star position */
+            if (!BackTracking)
+            {
+                BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                     Expression->Length * sizeof(USHORT), 'nrSF');
+            }
+            BackTracking[++StarFound] = ExpressionPosition++;
+
+            /* If star is at the end, then eat all rest and leave */
             if (ExpressionPosition == Expression->Length)
             {
                 NamePosition = Name->Length;
                 break;
             }
+            else if (Expression->Buffer[ExpressionPosition] != '?')
+            {
+                NamePosition++;
+            }
         }
+        /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
-            StarFound = MAXUSHORT;
             MatchingChars = NamePosition;
             while (MatchingChars < Name->Length)
             {
@@ -248,18 +220,23 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             }
             ExpressionPosition++;
         }
-        else if (StarFound != MAXUSHORT)
+        /* If nothing match, try to backtrack */
+        else if (StarFound >= 0)
         {
-            ExpressionPosition = StarFound + 1;
-            while (NamePosition < Name->Length &&
-                   Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
-            {
-                NamePosition++;
-            }
+            ExpressionPosition = BackTracking[StarFound--];
         }
+        /* Otherwise, fail */
         else
         {
             break;
+        }
+
+        /* Under certain circumstances, expression is over, but name isn't
+         * and we can backtrack, then, backtrack */
+        if (ExpressionPosition == Expression->Length &&
+            NamePosition != Name->Length && StarFound >= 0)
+        {
+            ExpressionPosition = BackTracking[StarFound--];
         }
     }
     if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&

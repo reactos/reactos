@@ -22,15 +22,14 @@
 #define _WINE_DLL_CDLG_H
 
 #include "dlgs.h"
-#include "wownt32.h"
 
 /* Common dialogs implementation globals */
 #define COMDLG32_Atom	((ATOM)0xa000)	/* MS uses this one to identify props */
 
-extern HINSTANCE	COMDLG32_hInstance;
+extern HINSTANCE	COMDLG32_hInstance DECLSPEC_HIDDEN;
 
-void	COMDLG32_SetCommDlgExtendedError(DWORD err);
-LPVOID	COMDLG32_AllocMem(int size) __WINE_ALLOC_SIZE(1);
+void	COMDLG32_SetCommDlgExtendedError(DWORD err) DECLSPEC_HIDDEN;
+LPVOID	COMDLG32_AllocMem(int size) __WINE_ALLOC_SIZE(1) DECLSPEC_HIDDEN;
 
 /* handle<-handle16 conversion */
 #define HINSTANCE_32(h16)           ((HINSTANCE)(ULONG_PTR)(h16))
@@ -170,6 +169,17 @@ typedef struct {
 #include "shlobj.h"
 #include "shellapi.h"
 
+/* Constructors */
+HRESULT FileOpenDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT FileSaveDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+
+/* Shared helper functions */
+void COMDLG32_GetCanonicalPath(PCIDLIST_ABSOLUTE pidlAbsCurrent, LPWSTR lpstrFile, LPWSTR lpstrPathAndFile) DECLSPEC_HIDDEN;
+int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
+                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction) DECLSPEC_HIDDEN;
+int COMDLG32_SplitFileNames(LPWSTR lpstrEdit, UINT nStrLen, LPWSTR *lpstrFileList, UINT *sizeUsed) DECLSPEC_HIDDEN;
+void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText) DECLSPEC_HIDDEN;
+
 /* ITEMIDLIST */
 
 extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST);
@@ -183,5 +193,10 @@ extern UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST);
 extern LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD);
 extern DWORD (WINAPI *COMDLG32_SHFree)(LPVOID);
 extern BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR);
+extern LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID);
+
+#define ONOPEN_BROWSE 1
+#define ONOPEN_OPEN   2
+#define ONOPEN_SEARCH 3
 
 #endif /* _WINE_DLL_CDLG_H */

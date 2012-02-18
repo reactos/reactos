@@ -418,9 +418,9 @@
 681 stdcall -noname SHGetAppCompatFlags(long) shlwapi.SHGetAppCompatFlags
 683 stub -noname SHStgOpenStorageW
 684 stub -noname SHStgOpenStorageA
-685 stub SHPropStgCreate
-688 stub SHPropStgReadMultiple
-689 stub SHPropStgWriteMultiple
+685 stdcall SHPropStgCreate(ptr ptr ptr long long long ptr ptr)
+688 stdcall SHPropStgReadMultiple(ptr long long ptr ptr)
+689 stdcall SHPropStgWriteMultiple(ptr ptr long ptr ptr long)
 690 stub -noname SHIsLegacyAnsiProperty
 691 stub -noname SHFileSysBindToStorage
 700 stdcall CDefFolderMenu_Create(ptr ptr long ptr ptr ptr ptr ptr ptr)

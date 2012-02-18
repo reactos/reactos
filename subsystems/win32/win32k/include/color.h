@@ -3,11 +3,11 @@
 #ifndef CLR_INVALID
 #define CLR_INVALID         0xffffffff
 #endif
-#define PC_SYS_USED     0x80		/* palentry is used (both system and logical) */
-#define PC_SYS_RESERVED 0x40		/* system palentry is not to be mapped to */
-#define PC_SYS_MAPPED   0x10		/* logical palentry is a direct alias for system palentry */
+#define PC_SYS_USED     0x80		/* Palentry is used (both system and logical) */
+#define PC_SYS_RESERVED 0x40		/* System palentry is not to be mapped to */
+#define PC_SYS_MAPPED   0x10		/* Logical palentry is a direct alias for system palentry */
 
-#define NB_RESERVED_COLORS              20 /* number of fixed colors in system palette */
+#define NB_RESERVED_COLORS              20 /* Number of fixed colors in system palette */
 
 typedef struct _COLORSPACE
 {
@@ -32,10 +32,4 @@ typedef struct _COLORTRANSFORMOBJ
 
 extern HCOLORSPACE hStockColorSpace;
 
-const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate (VOID);
-COLORREF APIENTRY COLOR_LookupNearestColor (PALETTEENTRY* palPalEntry, INT size, COLORREF color);
-INT APIENTRY COLOR_PaletteLookupExactIndex (PALETTEENTRY* palPalEntry, INT size, COLORREF col);
-INT APIENTRY COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size, XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved);
 UINT FASTCALL IntGdiRealizePalette (HDC);
-HCOLORSPACE FASTCALL IntGdiCreateColorSpace(PLOGCOLORSPACEEXW);
-BOOL FASTCALL IntGdiDeleteColorSpace(HCOLORSPACE);

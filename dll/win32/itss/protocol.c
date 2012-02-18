@@ -36,8 +36,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(itss);
 
 typedef struct {
-    const IInternetProtocolVtbl     *lpInternetProtocolVtbl;
-    const IInternetProtocolInfoVtbl *lpInternetProtocolInfoVtbl;
+    IInternetProtocol     IInternetProtocol_iface;
+    IInternetProtocolInfo IInternetProtocolInfo_iface;
 
     LONG ref;
 
@@ -46,8 +46,15 @@ typedef struct {
     struct chmUnitInfo chm_object;
 } ITSProtocol;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
-#define PROTINFO(x)  (&(x)->lpInternetProtocolInfoVtbl)
+static inline ITSProtocol *impl_from_IInternetProtocol(IInternetProtocol *iface)
+{
+    return CONTAINING_RECORD(iface, ITSProtocol, IInternetProtocol_iface);
+}
+
+static inline ITSProtocol *impl_from_IInternetProtocolInfo(IInternetProtocolInfo *iface)
+{
+    return CONTAINING_RECORD(iface, ITSProtocol, IInternetProtocolInfo_iface);
+}
 
 static void release_chm(ITSProtocol *This)
 {
@@ -58,25 +65,23 @@ static void release_chm(ITSProtocol *This)
     This->offset = 0;
 }
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(ITSProtocol, InternetProtocol, iface)
-
 static HRESULT WINAPI ITSProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolInfo, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolInfo %p)\n", This, ppv);
-        *ppv = PROTINFO(This);
+        *ppv = &This->IInternetProtocolInfo_iface;
     }
 
     if(*ppv) {
@@ -90,7 +95,7 @@ static HRESULT WINAPI ITSProtocol_QueryInterface(IInternetProtocol *iface, REFII
 
 static ULONG WINAPI ITSProtocol_AddRef(IInternetProtocol *iface)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -98,7 +103,7 @@ static ULONG WINAPI ITSProtocol_AddRef(IInternetProtocol *iface)
 
 static ULONG WINAPI ITSProtocol_Release(IInternetProtocol *iface)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -139,7 +144,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     BINDINFO bindinfo;
     DWORD bindf = 0, len;
     LPWSTR file_name, mime, object_name, p;
@@ -252,7 +257,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
 static HRESULT WINAPI ITSProtocol_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%p)\n", This, pProtocolData);
     return E_NOTIMPL;
 }
@@ -260,14 +265,14 @@ static HRESULT WINAPI ITSProtocol_Continue(IInternetProtocol *iface, PROTOCOLDAT
 static HRESULT WINAPI ITSProtocol_Abort(IInternetProtocol *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ITSProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -276,14 +281,14 @@ static HRESULT WINAPI ITSProtocol_Terminate(IInternetProtocol *iface, DWORD dwOp
 
 static HRESULT WINAPI ITSProtocol_Suspend(IInternetProtocol *iface)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ITSProtocol_Resume(IInternetProtocol *iface)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -291,7 +296,7 @@ static HRESULT WINAPI ITSProtocol_Resume(IInternetProtocol *iface)
 static HRESULT WINAPI ITSProtocol_Read(IInternetProtocol *iface, void *pv,
         ULONG cb, ULONG *pcbRead)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
@@ -307,14 +312,14 @@ static HRESULT WINAPI ITSProtocol_Read(IInternetProtocol *iface, void *pv,
 static HRESULT WINAPI ITSProtocol_Seek(IInternetProtocol *iface, LARGE_INTEGER dlibMove,
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ITSProtocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -323,14 +328,12 @@ static HRESULT WINAPI ITSProtocol_LockRequest(IInternetProtocol *iface, DWORD dw
 
 static HRESULT WINAPI ITSProtocol_UnlockRequest(IInternetProtocol *iface)
 {
-    ITSProtocol *This = PROTOCOL_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)\n", This);
 
     return S_OK;
 }
-
-#undef PROTOCOL_THIS
 
 static const IInternetProtocolVtbl ITSProtocolVtbl = {
     ITSProtocol_QueryInterface,
@@ -348,32 +351,30 @@ static const IInternetProtocolVtbl ITSProtocolVtbl = {
     ITSProtocol_UnlockRequest
 };
 
-#define PROTINFO_THIS(iface) DEFINE_THIS(ITSProtocol, InternetProtocolInfo, iface)
-
 static HRESULT WINAPI ITSProtocolInfo_QueryInterface(IInternetProtocolInfo *iface,
                                               REFIID riid, void **ppv)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
-    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
+    return IInternetProtocol_QueryInterface(&This->IInternetProtocol_iface, riid, ppv);
 }
 
 static ULONG WINAPI ITSProtocolInfo_AddRef(IInternetProtocolInfo *iface)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
-    return IInternetProtocol_AddRef(PROTOCOL(This));
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
+    return IInternetProtocol_AddRef(&This->IInternetProtocol_iface);
 }
 
 static ULONG WINAPI ITSProtocolInfo_Release(IInternetProtocolInfo *iface)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
-    return IInternetProtocol_Release(PROTOCOL(This));
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
+    return IInternetProtocol_Release(&This->IInternetProtocol_iface);
 }
 
 static HRESULT WINAPI ITSProtocolInfo_ParseUrl(IInternetProtocolInfo *iface, LPCWSTR pwzUrl,
         PARSEACTION ParseAction, DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult,
         DWORD *pcchResult, DWORD dwReserved)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
 
     TRACE("(%p)->(%s %x %08x %p %d %p %d)\n", This, debugstr_w(pwzUrl), ParseAction,
           dwParseFlags, pwzResult, cchResult, pcchResult, dwReserved);
@@ -396,7 +397,7 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
         LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl, DWORD dwCombineFlags, LPWSTR pwzResult,
         DWORD cchResult, DWORD* pcchResult, DWORD dwReserved)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
     LPCWSTR base_end, ptr;
     DWORD rel_len;
 
@@ -441,7 +442,7 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
 static HRESULT WINAPI ITSProtocolInfo_CompareUrl(IInternetProtocolInfo *iface, LPCWSTR pwzUrl1,
         LPCWSTR pwzUrl2, DWORD dwCompareFlags)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
     FIXME("%p)->(%s %s %08x)\n", This, debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
     return E_NOTIMPL;
 }
@@ -450,13 +451,11 @@ static HRESULT WINAPI ITSProtocolInfo_QueryInfo(IInternetProtocolInfo *iface, LP
         QUERYOPTION QueryOption, DWORD dwQueryFlags, LPVOID pBuffer, DWORD cbBuffer, DWORD* pcbBuf,
         DWORD dwReserved)
 {
-    ITSProtocol *This = PROTINFO_THIS(iface);
+    ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
     FIXME("(%p)->(%s %08x %08x %p %d %p %d)\n", This, debugstr_w(pwzUrl), QueryOption,
           dwQueryFlags, pBuffer, cbBuffer, pcbBuf, dwReserved);
     return E_NOTIMPL;
 }
-
-#undef PROTINFO_THIS
 
 static const IInternetProtocolInfoVtbl ITSProtocolInfoVtbl = {
     ITSProtocolInfo_QueryInterface,
@@ -478,11 +477,11 @@ HRESULT ITSProtocol_create(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ITSProtocol));
 
-    ret->lpInternetProtocolVtbl = &ITSProtocolVtbl;
-    ret->lpInternetProtocolInfoVtbl = &ITSProtocolInfoVtbl;
+    ret->IInternetProtocol_iface.lpVtbl = &ITSProtocolVtbl;
+    ret->IInternetProtocolInfo_iface.lpVtbl = &ITSProtocolInfoVtbl;
     ret->ref = 1;
 
-    *ppobj = PROTOCOL(ret);
+    *ppobj = &ret->IInternetProtocol_iface;
 
     return S_OK;
 }

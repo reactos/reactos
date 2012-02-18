@@ -35,7 +35,7 @@
         ULONG Id;
     } DBG_CHANNEL;
 
-    /* note: the following values don't need to be sorted */
+    /* Note: The following values don't need to be sorted */
     enum _DEBUGCHANNELS
     {
         DbgChEngBlt,
@@ -97,7 +97,6 @@
         DbgChUserMisc,
         DbgChUserMonitor,
         DbgChUserMsg,
-        DbgChUserMsgCall,
         DbgChUserMsgQ,
         DbgChUserObj,
         DbgChUserPainting,
@@ -177,5 +176,7 @@
 
     #define UNIMPLEMENTED
 #endif
+
+#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 
 BOOL DbgInitDebugChannels();

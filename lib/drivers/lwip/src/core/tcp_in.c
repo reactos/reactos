@@ -79,20 +79,6 @@ static void tcp_parseopt(struct tcp_pcb *pcb);
 static err_t tcp_listen_input(struct tcp_pcb_listen *pcb);
 static err_t tcp_timewait_input(struct tcp_pcb *pcb);
 
-static const char * const tcp_state_str[] = {
-  "CLOSED",      
-  "LISTEN",      
-  "SYN_SENT",    
-  "SYN_RCVD",    
-  "ESTABLISHED", 
-  "FIN_WAIT_1",  
-  "FIN_WAIT_2",  
-  "CLOSE_WAIT",  
-  "CLOSING",     
-  "LAST_ACK",    
-  "TIME_WAIT"   
-};
-
 /**
  * The initial input processing of TCP. It verifies the TCP header, demultiplexes
  * the segment between the PCBs and passes it on to tcp_process(), which implements

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -224,7 +224,28 @@ typedef struct acpi_table_rsdp
 
 } ACPI_TABLE_RSDP;
 
-#define ACPI_RSDP_REV0_SIZE     20                  /* Size of original ACPI 1.0 RSDP */
+/* Standalone struct for the ACPI 1.0 RSDP */
+
+typedef struct acpi_rsdp_common
+{
+    char                    Signature[8];
+    UINT8                   Checksum;
+    char                    OemId[ACPI_OEM_ID_SIZE];
+    UINT8                   Revision;
+    UINT32                  RsdtPhysicalAddress;
+
+} ACPI_RSDP_COMMON;
+
+/* Standalone struct for the extended part of the RSDP (ACPI 2.0+) */
+
+typedef struct acpi_rsdp_extension
+{
+    UINT32                  Length;
+    UINT64                  XsdtPhysicalAddress;
+    UINT8                   ExtendedChecksum;
+    UINT8                   Reserved[3];
+
+} ACPI_RSDP_EXTENSION;
 
 
 /*******************************************************************************
@@ -447,5 +468,21 @@ typedef struct acpi_table_desc
 /* Macros used to generate offsets to specific table fields */
 
 #define ACPI_FADT_OFFSET(f)             (UINT8) ACPI_OFFSET (ACPI_TABLE_FADT, f)
+
+/*
+ * Sizes of the various flavors of FADT. We need to look closely
+ * at the FADT length because the version number essentially tells
+ * us nothing because of many BIOS bugs where the version does not
+ * match the expected length. In other words, the length of the
+ * FADT is the bottom line as to what the version really is.
+ *
+ * For reference, the values below are as follows:
+ *     FADT V1  size: 0x74
+ *     FADT V2  size: 0x84
+ *     FADT V3+ size: 0xF4
+ */
+#define ACPI_FADT_V1_SIZE       (UINT32) (ACPI_FADT_OFFSET (Flags) + 4)
+#define ACPI_FADT_V2_SIZE       (UINT32) (ACPI_FADT_OFFSET (Reserved4[0]) + 3)
+#define ACPI_FADT_V3_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
 
 #endif /* __ACTBL_H__ */

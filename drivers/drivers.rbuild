@@ -19,6 +19,12 @@
 <directory name="filesystems">
 	<xi:include href="filesystems/directory.rbuild" />
 </directory>
+<directory name="hid">
+	<xi:include href="hid/directory.rbuild" />
+</directory>
+<directory name="filters>
+	<xi:include href="filters/directory.rbuild" />
+</directory>
 <directory name="input">
 	<xi:include href="input/directory.rbuild" />
 </directory>

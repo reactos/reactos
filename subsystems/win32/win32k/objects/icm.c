@@ -1,20 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:         ReactOS Win32k Subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            win32k/objects/icm.c
+ * PURPOSE:         Icm functions
+ * PROGRAMMERS:     ...
  */
 
 #include <win32k.h>
@@ -161,12 +150,8 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
 
   _SEH2_TRY
   {
-     ProbeForWrite( Ramp,
-                    sizeof(PVOID),
-                    1);
-     RtlCopyMemory( Ramp,
-                    SafeRamp,
-                    sizeof(GAMMARAMP));
+     ProbeForWrite(Ramp, sizeof(GAMMARAMP), 1);
+     RtlCopyMemory(Ramp, SafeRamp, sizeof(GAMMARAMP));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
@@ -283,7 +268,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
 //
 // ICM registry subkey sets internal brightness range, gamma range is 128 or
 // 256 when icm is init.
-INT IcmGammaRangeSet = 128; // <- make it global
+INT IcmGammaRangeSet = 128; // <- Make it global
 
 BOOL
 FASTCALL
@@ -387,12 +372,8 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   }
   _SEH2_TRY
   {
-     ProbeForRead( Ramp,
-                   sizeof(PVOID),
-                   1);
-     RtlCopyMemory( SafeRamp,
-                    Ramp,
-                    sizeof(GAMMARAMP));
+     ProbeForRead(Ramp, sizeof(GAMMARAMP), 1);
+     RtlCopyMemory(SafeRamp, Ramp, sizeof(GAMMARAMP));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
@@ -420,7 +401,7 @@ NtGdiSetIcmMode(HDC  hDC,
                 ULONG nCommand,
                 ULONG EnableICM) // ulMode
 {
-  /* FIXME: this should be coded someday  */
+  /* FIXME: This should be coded someday  */
   if (EnableICM == ICM_OFF)
     {
       return  ICM_OFF;

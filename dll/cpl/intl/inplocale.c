@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/inplocale.c
+ * FILE:            dll/cpl/intl/inplocale.c
  * PURPOSE:         Input Locale property page
  * PROGRAMMER:      Eric Kohl
  */

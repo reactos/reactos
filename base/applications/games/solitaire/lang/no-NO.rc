@@ -36,7 +36,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -54,7 +54,7 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Kabal"
     IDS_SOL_ABOUT   "Kabal av J Brown\n\nCardLib versjon 1.0."
-    IDS_SOL_QUIT    "Slutt nåværende spill?"
+    IDS_SOL_QUIT    "Slutt nÃ¥vÃ¦rende spill?"
     IDS_SOL_WIN     "Gratulerer, du vant!!"
     IDS_SOL_DEAL    "Del ut igjen?"
 END

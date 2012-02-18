@@ -123,18 +123,6 @@ The following functions must be implemented by the sys_arch:
       sys_arch_mbox_fetch(mbox,msg,1)
   although this would introduce unnecessary delays.
   
-- struct sys_timeouts *sys_arch_timeouts(void)
-
-  Returns a pointer to the per-thread sys_timeouts structure. In lwIP,
-  each thread has a list of timeouts which is repressented as a linked
-  list of sys_timeout structures. The sys_timeouts structure holds a
-  pointer to a linked list of timeouts. This function is called by
-  the lwIP timeout scheduler and must not return a NULL value. 
-
-  In a single thread sys_arch implementation, this function will
-  simply return a pointer to a global sys_timeouts variable stored in
-  the sys_arch module.
-  
 If threads are supported by the underlying operating system and if
 such functionality is needed in lwIP, the following function will have
 to be implemented as well:

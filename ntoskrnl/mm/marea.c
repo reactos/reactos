@@ -457,78 +457,68 @@ MmFindGapBottomUp(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-   PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                            MmHighestUserAddress : (PVOID)MAXULONG_PTR;
-   PVOID AlignedAddress;
-   PMEMORY_AREA Node;
-   PMEMORY_AREA FirstNode;
-   PMEMORY_AREA PreviousNode;
+    ULONG_PTR LowestAddress, HighestAddress, Candidate;
+    PMEMORY_AREA Root, Node;
 
-   DPRINT("LowestAddress: %p HighestAddress: %p\n",
-          LowestAddress, HighestAddress);
+    /* Get the margins of the address space */
+    if (MmGetAddressSpaceOwner(AddressSpace) != NULL)
+    {
+        LowestAddress = (ULONG_PTR)MM_LOWEST_USER_ADDRESS;
+        HighestAddress = (ULONG_PTR)MmHighestUserAddress;
+    }
+    else
+    {
+        LowestAddress = (ULONG_PTR)MmSystemRangeStart;
+        HighestAddress = MAXULONG_PTR;
+    }
 
-   AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
+    /* Start with the lowest address */
+    Candidate = LowestAddress;
 
-   /* Special case for empty tree. */
-   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-   {
-      if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
-      {
-         DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-         return AlignedAddress;
-      }
-      DPRINT("MmFindGapBottomUp: 0\n");
-      return 0;
-   }
+    /* Check for overflow */
+    if ((Candidate + Length) < Candidate) return NULL;
 
-   /* Go to the node with lowest address in the tree. */
-   FirstNode = Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
+    /* Get the root of the address space tree */
+    Root = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
 
-   /* Traverse the tree from left to right. */
-   PreviousNode = Node;
-   for (;;)
-   {
-      Node = MmIterateNextNode(Node);
-      if (Node == NULL)
-         break;
+    /* Go to the node with lowest address in the tree. */
+    Node = Root ? MmIterateFirstNode(Root) : NULL;
+    while (Node && ((ULONG_PTR)Node->EndingAddress < LowestAddress))
+    {
+        Node = MmIterateNextNode(Node);
+    }
 
-      AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
-      if (AlignedAddress >= LowestAddress)
-      {
-          if (Node->StartingAddress > AlignedAddress &&
-              (ULONG_PTR)Node->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
-          {
-             DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-             ASSERT(AlignedAddress >= LowestAddress);
-             return AlignedAddress;
-          }
-      }
-      PreviousNode = Node;
-   }
+    /* Traverse the tree from low to high addresses */
+    while (Node && ((ULONG_PTR)Node->EndingAddress < HighestAddress))
+    {
+        /* Check if the memory area fits before the current node */
+        if ((ULONG_PTR)Node->StartingAddress >= (Candidate + Length))
+        {
+            DPRINT("MmFindGapBottomUp: %p\n", Candidate);
+            ASSERT(Candidate >= LowestAddress);
+            return (PVOID)Candidate;
+        }
 
-   /* Check if there is enough space after the last memory area. */
-   AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
-   if ((ULONG_PTR)HighestAddress > (ULONG_PTR)AlignedAddress &&
-       (ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
-   {
-      DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-      ASSERT(AlignedAddress >= LowestAddress);
-      return AlignedAddress;
-   }
+        /* Calculate next possible adress above this node */
+        Candidate = ALIGN_UP_BY((ULONG_PTR)Node->EndingAddress, Granularity);
 
-   /* Check if there is enough space before the first memory area. */
-   AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
-   if (FirstNode->StartingAddress > AlignedAddress &&
-       (ULONG_PTR)FirstNode->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
-   {
-      DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-      ASSERT(AlignedAddress >= LowestAddress);
-      return AlignedAddress;
-   }
+        /* Check for overflow */
+        if ((Candidate + Length) < (ULONG_PTR)Node->EndingAddress) return NULL;
 
-   DPRINT("MmFindGapBottomUp: 0\n");
-   return 0;
+        /* Go to the next higher node */
+        Node = MmIterateNextNode(Node);
+    }
+
+    /* Check if there is enough space after the last memory area. */
+    if ((Candidate + Length) <= HighestAddress)
+    {
+        DPRINT("MmFindGapBottomUp: %p\n", Candidate);
+        ASSERT(Candidate >= LowestAddress);
+        return (PVOID)Candidate;
+    }
+
+    DPRINT("MmFindGapBottomUp: 0\n");
+    return NULL;
 }
 
 
@@ -538,81 +528,68 @@ MmFindGapTopDown(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-   PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
-   PVOID AlignedAddress;
-   PMEMORY_AREA Node;
-   PMEMORY_AREA PreviousNode;
+    ULONG_PTR LowestAddress, HighestAddress, Candidate;
+    PMEMORY_AREA Root, Node;
 
-   DPRINT("LowestAddress: %p HighestAddress: %p\n",
-          LowestAddress, HighestAddress);
+    /* Get the margins of the address space */
+    if (MmGetAddressSpaceOwner(AddressSpace) != NULL)
+    {
+        LowestAddress = (ULONG_PTR)MM_LOWEST_USER_ADDRESS;
+        HighestAddress = (ULONG_PTR)MmHighestUserAddress;
+    }
+    else
+    {
+        LowestAddress = (ULONG_PTR)MmSystemRangeStart;
+        HighestAddress = MAXULONG_PTR;
+    }
 
-   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)HighestAddress - Length + 1, Granularity);
+    /* Calculate the highest candidate */
+    Candidate = ALIGN_DOWN_BY(HighestAddress + 1 - Length, Granularity);
 
-   /* Check for overflow. */
-   if (AlignedAddress > HighestAddress)
-      return NULL;
+    /* Check for overflow. */
+    if (Candidate > HighestAddress) return NULL;
 
-   /* Special case for empty tree. */
-   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-   {
-      if (AlignedAddress >= LowestAddress)
-      {
-         DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-         return AlignedAddress;
-      }
-      DPRINT("MmFindGapTopDown: 0\n");
-      return 0;
-   }
+    /* Get the root of the address space tree */
+    Root = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
 
-   /* Go to the node with highest address in the tree. */
-   Node = MmIterateLastNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
+    /* Go to the node with highest address in the tree. */
+    Node = Root ? MmIterateLastNode(Root) : NULL;
+    while (Node && ((ULONG_PTR)Node->StartingAddress > HighestAddress))
+    {
+        Node = MmIteratePrevNode(Node);
+    }
 
-   /* Check if there is enough space after the last memory area. */
-   if (Node->EndingAddress <= AlignedAddress)
-   {
-      DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-      return AlignedAddress;
-   }
+    /* Traverse the tree from high to low addresses */
+    while (Node && ((ULONG_PTR)Node->StartingAddress > LowestAddress))
+    {
+        /* Check if the memory area fits after the current node */
+        if ((ULONG_PTR)Node->EndingAddress <= Candidate)
+        {
+            DPRINT("MmFindGapTopDown: %p\n", Candidate);
+            return (PVOID)Candidate;
+        }
 
-   /* Traverse the tree from left to right. */
-   PreviousNode = Node;
-   for (;;)
-   {
-      Node = MmIteratePrevNode(Node);
-      if (Node == NULL)
-         break;
+        /* Calculate next possible adress below this node */
+        Candidate = ALIGN_DOWN_BY((ULONG_PTR)Node->StartingAddress - Length,
+                                  Granularity);
 
-      AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
+        /* Check for overflow. */
+        if (Candidate > (ULONG_PTR)Node->StartingAddress)
+            return NULL;
 
-      /* Check for overflow. */
-      if (AlignedAddress > PreviousNode->StartingAddress)
-         return NULL;
+        /* Go to the next lower node */
+        Node = MmIteratePrevNode(Node);
+    }
 
-      if (Node->EndingAddress <= AlignedAddress)
-      {
-         DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-         return AlignedAddress;
-      }
+    /* Check if the last candidate is inside the given range */
+    if (Candidate >= LowestAddress)
+    {
+        DPRINT("MmFindGapTopDown: %p\n", Candidate);
+        return (PVOID)Candidate;
+    }
 
-      PreviousNode = Node;
-   }
-
-   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
-
-   /* Check for overflow. */
-   if (AlignedAddress > PreviousNode->StartingAddress)
-      return NULL;
-
-   if (AlignedAddress >= LowestAddress)
-   {
-      DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-      return AlignedAddress;
-   }
-
-   DPRINT("MmFindGapTopDown: 0\n");
-   return 0;
+    DPRINT("MmFindGapTopDown: 0\n");
+    return NULL;
 }
 
 
@@ -723,12 +700,12 @@ MmFreeMemoryArea(
    PMEMORY_AREA *ParentReplace;
    ULONG_PTR Address;
    PVOID EndAddress;
-   
+
    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
    {
        PEPROCESS CurrentProcess = PsGetCurrentProcess();
        PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-        
+
        if (Process != NULL &&
            Process != CurrentProcess)
        {
@@ -769,18 +746,21 @@ MmFreeMemoryArea(
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
            ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
-           
+
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
            if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
            {
                MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
            }
-           
+
            ExFreePoolWithTag(MemoryArea->Vad, TAG_MVAD);
            MemoryArea->Vad = NULL;
        }
     }
+
+    /* There must be no page ops in progress */
+    ASSERT(MemoryArea->PageOpCount == 0);
 
    /* Remove the tree item. */
    {
@@ -882,10 +862,10 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 {
    PVOID EndAddress;
    ULONG Granularity;
-   ULONG tmpLength;
+   ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
+   DPRINT("MmCreateMemoryArea(Type 0x%lx, BaseAddress %p, "
           "*BaseAddress %p, Length %p, AllocationFlags %x, "
           "FixedAddress %x, Result %p)\n",
           Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
@@ -894,7 +874,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
-      tmpLength = PAGE_ROUND_UP(Length);
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
@@ -909,6 +889,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    {
       tmpLength = Length + ((ULONG_PTR) *BaseAddress
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(tmpLength, Granularity);
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
@@ -919,6 +900,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
       if (MmGetAddressSpaceOwner(AddressSpace) &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
+         DPRINT("Memory area for user mode address space exceeds MmSystemRangeStart\n");
          return STATUS_ACCESS_VIOLATION;
       }
 
@@ -936,7 +918,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
          return STATUS_CONFLICTING_ADDRESSES;
       }
    }
-    
+
     //
     // Is this a static memory area?
     //
@@ -981,12 +963,14 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
 VOID NTAPI
 MmMapMemoryArea(PVOID BaseAddress,
-                ULONG Length,
+                SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection)
 {
    ULONG i;
    NTSTATUS Status;
+
+   ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
 
    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
    {
@@ -1011,6 +995,10 @@ MmMapMemoryArea(PVOID BaseAddress,
    }
 }
 
+VOID
+NTAPI
+MmDeleteProcessAddressSpace2(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
@@ -1021,8 +1009,9 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
+#ifndef _M_AMD64
    RemoveEntryList(&Process->MmProcessLinks);
-
+#endif
    MmLockAddressSpace(&Process->Vm);
 
    while ((MemoryArea = (PMEMORY_AREA)Process->Vm.WorkingSetExpansionLinks.Flink) != NULL)
@@ -1062,6 +1051,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    MmUnlockAddressSpace(&Process->Vm);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
+   MmDeleteProcessAddressSpace2(Process);
    return(STATUS_SUCCESS);
 }
 

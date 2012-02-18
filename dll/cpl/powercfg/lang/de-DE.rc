@@ -9,9 +9,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
   LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.",
-	-1,45,13,194,36
+        -1,45,13,194,36
   GROUPBOX "&Energieschemata", -1, 7,57,240,46
-  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 100,85,75,15,WS_DISABLED
   PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 180,85,55,15,WS_DISABLED
   GROUPBOX "Unbekannt", IDC_GRPDETAIL, 7,108,240,105
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ruhezustand"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT           "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurück.",
                     -1,35,5,195,35
     GROUPBOX        "Ruhezustand",-1,5,45,240,25

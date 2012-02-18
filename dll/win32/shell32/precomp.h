@@ -12,12 +12,8 @@
 #include <malloc.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
-#define UNICODE
-#define _UNICODE
 
 #include <windows.h>
 
@@ -44,10 +40,16 @@
 #include <ntquery.h>
 #include <recyclebin.h>
 #include <shtypes.h>
-#include <ndk/umtypes.h>
+#include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <largeint.h>
 #include <sddl.h>
+
+#include <tchar.h>
+#include <strsafe.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
 
 #include "base/shell/explorer-new/todo.h"
 #include "dlgs.h"
@@ -59,10 +61,29 @@
 #include "cpanel.h"
 #include "enumidlist.h"
 #include "shfldr.h"
-#include "version.h"
 #include "shellfolder.h"
 #include "xdg.h"
 #include "shellapi.h"
+
+#include "shellitem.h"
+#include "shelllink.h"
+#include "dragdrophelper.h"
+#include "autocomplete.h"
+#include "folders/fs.h"
+#include "folders/mycomp.h"
+#include "folders/desktop.h"
+#include "folders/cpanel.h"
+#include "folders/mydocuments.h"
+#include "folders/netplaces.h"
+#include "folders/fonts.h"
+#include "folders/printers.h"
+#include "folders/admintools.h"
+#include "folders/recyclebin.h"
+#include "openwithmenu.h"
+#include "newmenu.h"
+#include "startmenu.h"
+#include "filedefext.h"
+#include "drvdefext.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -76,6 +97,5 @@ extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
-
 
 #endif

@@ -20,11 +20,13 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(INIFILE);
+
 BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
 	PINI_SECTION	Section;
 
-	DPRINTM(DPRINT_INIFILE, "IniOpenSection() SectionName = %s\n", SectionName);
+	TRACE("IniOpenSection() SectionName = %s\n", SectionName);
 
 	// Loop through each section and find the one they want
 	Section = CONTAINING_RECORD(IniFileSectionListHead.Flink, INI_SECTION, ListEntry);
@@ -36,7 +38,7 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 			// We found it
 			if (SectionId)
 				*SectionId = (ULONG_PTR)Section;
-			DPRINTM(DPRINT_INIFILE, "IniOpenSection() Found it! SectionId = 0x%x\n", SectionId);
+			TRACE("IniOpenSection() Found it! SectionId = 0x%x\n", SectionId);
 			return TRUE;
 		}
 
@@ -44,7 +46,7 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 		Section = CONTAINING_RECORD(Section->ListEntry.Flink, INI_SECTION, ListEntry);
 	}
 
-	DPRINTM(DPRINT_INIFILE, "IniOpenSection() Section not found.\n");
+	TRACE("IniOpenSection() Section not found.\n");
 
 	return FALSE;
 }
@@ -53,8 +55,8 @@ ULONG IniGetNumSectionItems(ULONG_PTR SectionId)
 {
 	PINI_SECTION	Section = (PINI_SECTION)SectionId;
 
-	DPRINTM(DPRINT_INIFILE, "IniGetNumSectionItems() SectionId = 0x%x\n", SectionId);
-	DPRINTM(DPRINT_INIFILE, "IniGetNumSectionItems() Item count = %d\n", Section->SectionItemCount);
+	TRACE("IniGetNumSectionItems() SectionId = 0x%x\n", SectionId);
+	TRACE("IniGetNumSectionItems() Item count = %d\n", Section->SectionItemCount);
 
 	return Section->SectionItemCount;
 }
@@ -93,7 +95,7 @@ ULONG IniGetSectionSettingNameSize(ULONG_PTR SectionId, ULONG SettingIndex)
 		return 0;
 
 	// Return the size of the string plus 1 for the null-terminator
-	return (strlen(SectionItem->ItemName) + 1);
+	return (ULONG)(strlen(SectionItem->ItemName) + 1);
 }
 
 ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
@@ -106,36 +108,36 @@ ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
 		return 0;
 
 	// Return the size of the string plus 1 for the null-terminator
-	return (strlen(SectionItem->ItemValue) + 1);
+	return (ULONG)(strlen(SectionItem->ItemValue) + 1);
 }
 
 BOOLEAN IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize)
 {
 	PINI_SECTION_ITEM	SectionItem;
-	DPRINTM(DPRINT_INIFILE, ".001 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
+	TRACE(".001 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
 
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByNumber() SectionId = 0x%x\n", SectionId);
+	TRACE("IniReadSettingByNumber() SectionId = 0x%x\n", SectionId);
 
 	// Retrieve requested setting
 	SectionItem = IniGetSettingByNumber(SectionId, SettingNumber);
 	if (!SectionItem)
 	{
-		DPRINTM(DPRINT_INIFILE, "IniReadSettingByNumber() Setting number %d not found.\n", SettingNumber);
+		TRACE("IniReadSettingByNumber() Setting number %d not found.\n", SettingNumber);
 		return FALSE;
 	}
 
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByNumber() Setting number %d found.\n", SettingNumber);
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByNumber() Setting name = %s\n", SectionItem->ItemName);
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByNumber() Setting value = %s\n", SectionItem->ItemValue);
+	TRACE("IniReadSettingByNumber() Setting number %d found.\n", SettingNumber);
+	TRACE("IniReadSettingByNumber() Setting name = %s\n", SectionItem->ItemName);
+	TRACE("IniReadSettingByNumber() Setting value = %s\n", SectionItem->ItemValue);
 
-	DPRINTM(DPRINT_INIFILE, "1 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
-	DPRINTM(DPRINT_INIFILE, "2 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
+	TRACE("1 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
+	TRACE("2 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
 	strncpy(SettingName, SectionItem->ItemName, NameSize - 1);
 	SettingName[NameSize - 1] = '\0';
-	DPRINTM(DPRINT_INIFILE, "3 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
+	TRACE("3 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
 	strncpy(SettingValue, SectionItem->ItemValue, ValueSize - 1);
 	SettingValue[ValueSize - 1] = '\0';
-	DPRINTM(DPRINT_INIFILE, "4 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
+	TRACE("4 NameSize = %d ValueSize = %d\n", NameSize, ValueSize);
 	DbgDumpBuffer(DPRINT_INIFILE, SettingName, NameSize);
 	DbgDumpBuffer(DPRINT_INIFILE, SettingValue, ValueSize);
 
@@ -147,7 +149,7 @@ BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffe
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
 
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByName() SectionId = 0x%x\n", SectionId);
+	TRACE("IniReadSettingByName() SectionId = 0x%x\n", SectionId);
 
 	// Loop through each section item and find the one they want
 	SectionItem = CONTAINING_RECORD(Section->SectionItemList.Flink, INI_SECTION_ITEM, ListEntry);
@@ -156,8 +158,8 @@ BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffe
 		// Check to see if this is the setting they want
 		if (_stricmp(SettingName, SectionItem->ItemName) == 0)
 		{
-			DPRINTM(DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' found.\n", SettingName);
-			DPRINTM(DPRINT_INIFILE, "IniReadSettingByName() Setting value = %s\n", SectionItem->ItemValue);
+			TRACE("IniReadSettingByName() Setting \'%s\' found.\n", SettingName);
+			TRACE("IniReadSettingByName() Setting value = %s\n", SectionItem->ItemValue);
 
 			strncpy(Buffer, SectionItem->ItemValue, BufferSize - 1);
 			Buffer[BufferSize - 1] = '\0';
@@ -169,7 +171,7 @@ BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffe
 		SectionItem = CONTAINING_RECORD(SectionItem->ListEntry.Flink, INI_SECTION_ITEM, ListEntry);
 	}
 
-	DPRINTM(DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' not found.\n", SettingName);
+	WARN("IniReadSettingByName() Setting \'%s\' not found.\n", SettingName);
 
 	return FALSE;
 }

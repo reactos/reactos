@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/dibitmap.c
+ * FILE:            dll/cpl/desk/dibitmap.c
  * PURPOSE:         DIB loading
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
@@ -38,11 +38,15 @@ DibLoadImage(LPTSTR lpFilename)
 
     lpBitmap = HeapAlloc(GetProcessHeap(), 0, sizeof(DIBITMAP));
     if (lpBitmap == NULL)
+    {
+        CloseHandle(hFile);
         return NULL;
+    }
 
     lpBitmap->header = HeapAlloc(GetProcessHeap(), 0, dwFileSize);
     if (lpBitmap->header == NULL)
     {
+        HeapFree(GetProcessHeap(), 0, lpBitmap);
         CloseHandle(hFile);
         return NULL;
     }
@@ -56,6 +60,7 @@ DibLoadImage(LPTSTR lpFilename)
         (lpBitmap->header->bfSize != dwFileSize))
     {
         HeapFree(GetProcessHeap(), 0, lpBitmap->header);
+        HeapFree(GetProcessHeap(), 0, lpBitmap);
         return NULL;
     }
 

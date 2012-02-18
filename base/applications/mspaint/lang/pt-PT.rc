@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/pt-PT.rc
+ * FILE:        base/applications/mspaint/lang/pt-PT.rc
  * PURPOSE:     Portuguese Language resource file
  * TRANSLATORS: Manuel D V Silva
  */
@@ -32,8 +32,8 @@ BEGIN
         MENUITEM "Cor&tar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Co&lar\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Limpar &seleção\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
+        MENUITEM "Limpar &seleÃ§Ã£o\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Inverter seleÃ§Ã£o", IDM_EDITINVERTSELECTION
         MENUITEM "Selecion&ar tudo\tCtrl+T", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiar para...", IDM_EDITCOPYTO
@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
+            MENUITEM "Show grid\tCtrl+M", IDM_VIEWSHOWGRID
             MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "&Ver mapa de bits\tCtrl+B", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Imagem"
     BEGIN
         MENUITEM "I&nverter/rodar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -81,10 +81,10 @@ BEGIN
     BEGIN
         MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Tópicos da Ajuda", IDM_HELPHELPTOPICS
+        MENUITEM "&TÃ³picos da Ajuda", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Acerca do Paint", IDM_HELPINFO
     END
@@ -104,6 +104,7 @@ BEGIN
     "^T", IDM_EDITSELECTALL
     "^F", IDM_VIEWTOOLBOX
     "^D", IDM_VIEWCOLORPALETTE
+    "^M", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -120,10 +121,10 @@ BEGIN
     GROUPBOX "Inverter ou rodar", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "Inverter na &horizontal", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Inverter na &vertical", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "&Rodar por ângulo", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&Rodar por Ã¢ngulo", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 125, 24, 48, 14
 END
@@ -139,10 +140,10 @@ BEGIN
     LTEXT "Altura:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Data do arquivo:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Tamanho do arquivo:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Resolução:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ResoluÃ§Ã£o:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "nÃ£o disponÃ­vel", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "nÃ£o disponÃ­vel", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "nÃ£o disponÃ­vel", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Unidades", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "P&olegadas", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
@@ -152,7 +153,7 @@ BEGIN
     AUTORADIOBUTTON "Co&res", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "&Predefinição", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "&PredefiniÃ§Ã£o", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
@@ -178,8 +179,8 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint para ReactOS"
-    IDS_INFOTEXT, "Paint para ReactOS está disponível sob a licença GNU Lesser General Public License (LGPL) versão 3 (visite www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Pretende guardar as alterações a %s?"
+    IDS_INFOTEXT, "Paint para ReactOS estÃ¡ disponÃ­vel sob a licenÃ§a GNU Lesser General Public License (LGPL) versÃ£o 3 (visite www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Pretende guardar as alteraÃ§Ãµes a %s?"
     IDS_DEFAULTFILENAME, "Imagem.bmp"
     IDS_MINIATURETITLE, "Miniature"
     IDS_TOOLTIP1, "Selecionar forma livre"
@@ -188,16 +189,16 @@ BEGIN
     IDS_TOOLTIP4, "Preencher com cor"
     IDS_TOOLTIP5, "Escolher cor"
     IDS_TOOLTIP6, "Lupa"
-    IDS_TOOLTIP7, "Lápis"
+    IDS_TOOLTIP7, "LÃ¡pis"
     IDS_TOOLTIP8, "Pincel"
-    IDS_TOOLTIP9, "Aerógrafo"
+    IDS_TOOLTIP9, "AerÃ³grafo"
     IDS_TOOLTIP10, "Texto"
     IDS_TOOLTIP11, "Linnha"
     IDS_TOOLTIP12, "Curva"
-    IDS_TOOLTIP13, "Retângulo"
-    IDS_TOOLTIP14, "Polígono"
+    IDS_TOOLTIP13, "RetÃ¢ngulo"
+    IDS_TOOLTIP14, "PolÃ­gono"
     IDS_TOOLTIP15, "Elipse"
-    IDS_TOOLTIP16, "Retângulo arredondado"
+    IDS_TOOLTIP16, "RetÃ¢ngulo arredondado"
     IDS_OPENFILTER, "Ficheiros de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos os arquivos (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE, "%d bytes"

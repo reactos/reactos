@@ -1,34 +1,22 @@
-/////////////////////////////////////////////////////////////////////////////
-// Czech resource files
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-#pragma code_page(1250)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "&Nov· ˙loha (Spustit...)",          ID_FILE_NEW
+        MENUITEM "&Nov√° √∫loha (Spustit...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "U&zav¯Ìt spr·vce ˙loh",          ID_FILE_EXIT
+        MENUITEM "U&zav≈ô√≠t spr√°vce √∫loh",          ID_FILE_EXIT
     END
     POPUP "&Volby"
     BEGIN
-        MENUITEM "&Vûdy navrchu",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&V≈ædy navrchu",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "&Minimalizovat p¯i pouûitÌ",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "&Minimalizovat p≈ôi pou≈æit√≠",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Skr˝t p¯i minimalizaci",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Skr√Ωt p≈ôi minimalizaci",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "&Zobrazit 16-bitovÈ ˙lohy",          ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "&Zobrazit 16-bitov√© √∫lohy",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
     POPUP "&Zobrazit"
@@ -36,62 +24,62 @@ BEGIN
         MENUITEM "&Aktualizovat",                ID_VIEW_REFRESH
         POPUP "&Rychlost aktualizace"
         BEGIN
-            MENUITEM "&Vysok·",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "&Norm·lnÌ",                     ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "&Vysok√°",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&Norm√°ln√≠",                     ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "&NÌzk·",                        ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&N√≠zk√°",                        ID_VIEW_UPDATESPEED_LOW
             MENUITEM "&Zastavit",                     ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "&VelkÈ ikony",                ID_VIEW_LARGE
-        MENUITEM "&MalÈ ikony",                ID_VIEW_SMALL
+        MENUITEM "&Velk√© ikony",                ID_VIEW_LARGE
+        MENUITEM "&Mal√© ikony",                ID_VIEW_SMALL
         MENUITEM "&Detaily",                    ID_VIEW_DETAILS, CHECKED
         MENUITEM "&Vybrat sloupce...",          ID_VIEW_SELECTCOLUMNS
         POPUP "&Historie CPU"
         BEGIN
-            MENUITEM "&Jeden graf, vöechny procesory",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&Jeden graf, v≈°echny procesory",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
             MENUITEM "&Jeden graf, jeden procesor",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "&Zobrazit Ëasy j·dra",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Zobrazit ƒçasy j√°dra",          ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Okna"
     BEGIN
-        MENUITEM "Vyrovnat &horizont·lnÏ",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Vyrovnat &vertik·lnÏ",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Vyrovnat &horizont√°lnƒõ",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Vyrovnat &vertik√°lnƒõ",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimalizovat",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximalizovat",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Kask·da",                    ID_WINDOWS_CASCADE
-        MENUITEM "&P¯enÈst do pop¯edÌ",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Kask√°da",                    ID_WINDOWS_CASCADE
+        MENUITEM "&P≈ôen√©st do pop≈ôed√≠",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "&N·povÏda"
+    POPUP "&N√°povƒõda"
     BEGIN
-        MENUITEM "&N·povÏda pro spr·vce ˙loh",   ID_HELP_TOPICS
+        MENUITEM "&N√°povƒõda pro spr√°vce √∫loh",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&O spr·vci ˙loh",         ID_HELP_ABOUT
+        MENUITEM "&O spr√°vci √∫loh",         ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Vyrovnat &horizont·lnÏ",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Vyrovnat &vertik·lnÏ",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "Vyrovnat &horizont√°lnƒõ",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Vyrovnat &vertik√°lnƒõ",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimalizovat",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximalizovat",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Kask·da",                    ID_WINDOWS_CASCADE
-    MENUITEM "&P¯enÈst do pop¯edÌ",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "&Kask√°da",                    ID_WINDOWS_CASCADE
+    MENUITEM "&P≈ôen√©st do pop≈ôed√≠",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Nov· ˙loha (Spustit...)",          ID_FILE_NEW
+        MENUITEM "&Nov√° √∫loha (Spustit...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&VelkÈ ikony",                ID_VIEW_LARGE
-        MENUITEM "&MalÈ ikony",                ID_VIEW_SMALL
+        MENUITEM "&Velk√© ikony",                ID_VIEW_LARGE
+        MENUITEM "&Mal√© ikony",                ID_VIEW_SMALL
         MENUITEM "&Detaily",                    ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -100,17 +88,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&P¯epnout do",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&P¯enÈst do pop¯edÌ",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&P≈ôepnout do",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&P≈ôen√©st do pop≈ôed√≠",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Vyrovnat &horizont·lnÏ",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Vyrovnat &Vertik·lnÏ",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Vyrovnat &horizont√°lnƒõ",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Vyrovnat &Vertik√°lnƒõ",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimalizovat",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximalizovat",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Kask·da",                    ID_WINDOWS_CASCADE
+        MENUITEM "&Kask√°da",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&UkonËit ˙lohu",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&P¯ejÌt k procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&Ukonƒçit √∫lohu",                   ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "&P≈ôej√≠t k procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -120,9 +108,9 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Obnovit",                    ID_RESTORE
-        MENUITEM "&Uzav¯Ìt",                      ID_FILE_EXIT
+        MENUITEM "&Uzav≈ô√≠t",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Vûdy navrchu",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&V≈ædy navrchu",              ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,8 +118,8 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&UkonËit proces",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "UkonËit &strom procesu",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Ukonƒçit proces",                ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Ukonƒçit &strom procesu",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Ladit",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
@@ -139,19 +127,19 @@ BEGIN
         BEGIN
             MENUITEM "&Realtime",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "&Vysok·",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&Vysok√°",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "&Nadpr˘mÏrn·",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Nadpr≈Ømƒõrn√°",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
-            MENUITEM "Nor&m·lnÌ",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "Nor&m√°ln√≠",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "&Podpr˘mÏrn·",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&Podpr≈Ømƒõrn√°",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "NÌ&zk·",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "N√≠&zk√°",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
         MENUITEM "Nastavit &afinitu...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Upravit &kan·ly ladÏnÌ...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+	MENUITEM "Upravit &kan√°ly ladƒõn√≠...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -166,7 +154,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Spr·vce ˙loh"
+CAPTION "Spr√°vce √∫loh"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -179,9 +167,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Nov· ˙loha...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "&P¯epnout",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "&UkonËit ˙lohu",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Nov√° √∫loha...",IDC_NEWTASK,187,189,53,14
+    PUSHBUTTON      "&P≈ôepnout",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Ukonƒçit √∫lohu",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -191,9 +179,9 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&UkonËit proces",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "&Zobrazit procesy vöech uûivatel˘",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+    PUSHBUTTON      "&Ukonƒçit proces",IDC_ENDPROCESS,171,189,69,14
+    CONTROL         "&Zobrazit procesy v≈°ech u≈æivatel≈Ø",IDC_SHOWALLPROCESSES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,120,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -201,14 +189,14 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "VyuûitÌ CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "VyuûitÌ RAM",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Vyu≈æit√≠ CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Vyu≈æit√≠ RAM",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Celkem",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Commit Charge (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Fyzick· pamÏù (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "PamÏù j·dra (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "PopisovaËe",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "Vl·kna",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    GROUPBOX        "Vyu≈æit√≠ pamƒõti (kB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Fyzick√° pamƒõ≈• (kB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Pamƒõ≈• j√°dra (kB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    LTEXT           "Popisovaƒçe",IDS_TOTALS_HANDLE_COUNT,12,131,49,8
+    LTEXT           "Vl√°kna",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Procesy",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -218,7 +206,7 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Celkem",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
     LTEXT           "Limit",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
-    LTEXT           "Vrchol",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "≈†piƒçka",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
@@ -226,8 +214,8 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Celkem",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Dostupn·",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "MezipamÏù systÈmu",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
+    LTEXT           "Dostupn√°",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "Mezipamƒõ≈•",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
@@ -235,35 +223,33 @@ BEGIN
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Celkem",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Str·nkov·no",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Nestr·nkov·no",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    LTEXT           "Str√°nkov√°no",IDS_KERNEL_MEMORY_PAGED,137,184,42,8
+    LTEXT           "Nestr√°nkov√°no",IDS_KERNEL_MEMORY_NONPAGED,137,193,50,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "Historie vyuûitÌ CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Historie vyuûitÌ pamÏti",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "ZobrazenÌ vyuûitÌ CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "ZobrazenÌ vyuûitÌ pamÏti",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Historie vyuûitÌ CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    GROUPBOX        "Historie vyu≈æit√≠ CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Historie vyu≈æit√≠ pamƒõti",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Zobrazen√≠ vyu≈æit√≠ CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Zobrazen√≠ vyu≈æit√≠ pamƒõti",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Historie vyu≈æit√≠ CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Historie vyuûitÌ pamÏti",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "Historie vyu≈æit√≠ pamƒõti",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kan·ly ladÏnÌ"
+CAPTION "Kan√°ly ladƒõn√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Zav¯Ìt",IDOK,171,189,69,14
+    PUSHBUTTON      "Zav≈ô√≠t",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
@@ -273,7 +259,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
     PUSHBUTTON      "Storno",IDCANCEL,174,133,50,14
-    LTEXT           "NastavenÌ afinity procesoru kontroluje, kter˝ proces bude zpracucov·n jak˝m procesorem.",
+    LTEXT           "Nastaven√≠ afinity procesoru kontroluje, kter√Ω proces bude zpracov√°n kter√Ωm procesorem.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -348,57 +334,57 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "Storno",IDCANCEL,138,178,50,14
-    LTEXT           "Vyberte sloupce, kterÈ se zobrazÌ na kartÏ Procesy Spr·vce ˙loh.",
+    LTEXT           "Vyberte sloupce, kter√© se zobraz√≠ na kartƒõ Procesy Spr√°vce √∫loh.",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "N·zev &obrazu",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,7,28,56,10
-    CONTROL         "&PID (Identifik·tor procesu)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
-    CONTROL         "VyuûitÌ &CPU",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "N√°zev &procesu",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,7,28,60,10
+    CONTROL         "&PID",IDC_PID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,28,10
+    CONTROL         "Vyu≈æit√≠ &CPU",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
-    CONTROL         "&»as CPU",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&ƒåas CPU",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
-    CONTROL         "VyuûitÌ &pamÏti",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Vyu≈æit√≠ &pamƒõti",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,63,10
-    CONTROL         "&Delta vyuûitÌ pamÏti",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "&Zmƒõna vyu≈æit√≠ pamƒõti",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
-    CONTROL         "&Vrchol vyuûitÌ pamÏti",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "&≈†piƒçka vyu≈æit√≠ pamƒõti",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
-    CONTROL         "&Chyby str·nek",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
-    CONTROL         "&UûivatelskÈ objekty",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,116,62,10
-    CONTROL         "I/O ËtenÌ",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Chyby str√°nek",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,105,58,10
+    CONTROL         "&U≈æivatelsk√© objekty",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,116,74,10
+    CONTROL         "I/O ƒçten√≠",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "I/O p¯eËtenÈ bajty",IDC_IOREADBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
-    CONTROL         "&ID sezenÌ",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O p≈ôeƒçten√© bajty",IDC_IOREADBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,72,10
+    CONTROL         "&ID sezen√≠",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
-    CONTROL         "&JmÈno uûivatele",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,51,10
-    CONTROL         "&Delta chyby str·nek",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "&Velikost virtu·lnÌ pamÏti",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
-    CONTROL         "&Str·nkov·no",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "U≈æivatelsk√© &jm√©no",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,160,72,10
+    CONTROL         "&Zmƒõna chyb str√°nek",IDC_PAGEFAULTSDELTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,78,10
+    CONTROL         "&Virtu√°ln√≠ pamƒõ≈•",IDC_VIRTUALMEMORYSIZE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,64,10
+    CONTROL         "&Str√°nkov√°no",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
-    CONTROL         "&Nestr·nkov·no",IDC_NONPAGEDPOOL,"Button",
+    CONTROL         "&Nestr√°nkov√°no",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
-    CONTROL         "Z·kladnÌ p&riorita",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
-    CONTROL         "&popis popisovaË˘",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,83,59,10
-    CONTROL         "&PoËet vl·ken",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Z√°kladn√≠ p&riorita",IDC_BASEPRIORITY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,62,10
+    CONTROL         "P&oƒçet popisovaƒç≈Ø",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,83,68,10
+    CONTROL         "&Poƒçet vl√°ken",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,59,10
     CONTROL         "GDI Objekty",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
-    CONTROL         "I/O z·pisy",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O z√°pisy",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "I/O zapsanÈ bajty",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
-    CONTROL         "I/O ostatnÌ",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,138,46,10
-    CONTROL         "I/O ostatnÌ bajty",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "I/O zapsan√© bajty",IDC_IOWRITEBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,72,10
+    CONTROL         "I/O ostatn√≠",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,107,138,48,10
+    CONTROL         "I/O ostatn√≠ bajty",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -523,72 +509,72 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Spr·vce ˙loh"
-    IDC_TASKMGR             "Spr·vce ˙loh"
-    IDS_IDLE_PROCESS        "NeËinnÈ procesy"
+    IDS_APP_TITLE           "Spr√°vce √∫loh"
+    IDC_TASKMGR             "Spr√°vce √∫loh"
+    IDS_IDLE_PROCESS        "Neƒçinn√© procesy"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "SpustÌ novou aplikaci"
-    ID_OPTIONS_ALWAYSONTOP  "Spr·vce ˙loh z˘stane zobrazen˝ nad ostatnÌmi okny, dokud jej neminimalizujete"
+    ID_FILE_NEW             "Spust√≠ novou aplikaci"
+    ID_OPTIONS_ALWAYSONTOP  "Spr√°vce √∫loh z≈Østane zobrazen√Ω nad ostatn√≠mi okny, dokud jej neminimalizujete"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Spr·vce ˙loh se zminimalizuje po p¯epnutÌ na jinou ˙lohu"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Schovat spr·vce ˙loh po minimalizaci"
-    ID_VIEW_REFRESH         "P¯inutÌ spr·vce ˙loh k aktualizaci nez·visle na nastavenÌ rychlosti aktualizace"
-    ID_VIEW_LARGE           "ZobrazÌ ˙lohy velk˝mi ikonami"
-    ID_VIEW_SMALL           "ZobrazÌ ˙lohy mal˝mi ikonami"
-    ID_VIEW_DETAILS         "ZobrazÌ informace o kaûdÈ ˙loze"
-    ID_VIEW_UPDATESPEED_HIGH "Aktualizuje ukazatel dvakr·t za vte¯inu"
-    ID_VIEW_UPDATESPEED_NORMAL "Aktualizuje ukazatel jednou za dvÏ vte¯inu"
-    ID_VIEW_UPDATESPEED_LOW "Aktualizuje ukazatel jednou za Ëty¯i vte¯inu"
+                            "Spr√°vce √∫loh se zminimalizuje po p≈ôepnut√≠ na jinou √∫lohu"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Schovat spr√°vce √∫loh po minimalizaci"
+    ID_VIEW_REFRESH         "P≈ôinut√≠ spr√°vce √∫loh k aktualizaci nez√°visle na nastaven√≠ rychlosti aktualizace"
+    ID_VIEW_LARGE           "Zobraz√≠ √∫lohy velk√Ωmi ikonami"
+    ID_VIEW_SMALL           "Zobraz√≠ √∫lohy mal√Ωmi ikonami"
+    ID_VIEW_DETAILS         "Zobraz√≠ informace o ka≈æd√© √∫loze"
+    ID_VIEW_UPDATESPEED_HIGH "Aktualizuje ukazatel dvakr√°t za vte≈ôinu"
+    ID_VIEW_UPDATESPEED_NORMAL "Aktualizuje ukazatel jednou za dvƒõ vte≈ôinu"
+    ID_VIEW_UPDATESPEED_LOW "Aktualizuje ukazatel jednou za ƒçty≈ôi vte≈ôinu"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Automaticky neaktualizuje"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Vyrovn· okna horizont·lnÏ na ploöe"
-    ID_WINDOWS_TILEVERTICALLY "Vyrovn· okna vertik·lnÏ na ploöe"
+                            "Vyrovn√° okna horizont√°lnƒõ na plo≈°e"
+    ID_WINDOWS_TILEVERTICALLY "Vyrovn√° okna vertik√°lnƒõ na plo≈°e"
     ID_WINDOWS_MINIMIZE     "Minimalizuje okna"
     ID_WINDOWS_MAXIMIZE     "Maximalizuje okna"
-    ID_WINDOWS_CASCADE      "Poskl·d· okna do diagon·lnÌ kask·dy"
-    ID_WINDOWS_BRINGTOFRONT "P¯esune ˙lohu do pop¯edÌ, ale nep¯epne do nÌ"
-    ID_HELP_TOPICS          "ZobrazÌ tÈmata n·povÏdy pro spr·vce ˙loh"
-    ID_HELP_ABOUT           "ZobrazÌ informace o aplikaci, jejÌ verzi a copyright"
-    ID_FILE_EXIT            "UkonËÌ spr·vce ˙loh"
+    ID_WINDOWS_CASCADE      "Poskl√°d√° okna do diagon√°ln√≠ kask√°dy"
+    ID_WINDOWS_BRINGTOFRONT "P≈ôesune √∫lohu do pop≈ôed√≠, ale nep≈ôepne do n√≠"
+    ID_HELP_TOPICS          "Zobraz√≠ t√©mata n√°povƒõdy pro spr√°vce √∫loh"
+    ID_HELP_ABOUT           "Zobraz√≠ informace o aplikaci, jej√≠ verzi a copyright"
+    ID_FILE_EXIT            "Ukonƒç√≠ spr√°vce √∫loh"
     ID_OPTIONS_SHOW16BITTASKS
-                            "ZobrazÌ 16-bitovÈ ˙lohy pod NTVDM"
-    ID_VIEW_SELECTCOLUMNS   "Vyberte, kterÈ sloupce budou viditelnÈ na kartÏ Procesy"
-    ID_VIEW_SHOWKERNELTIMES "ZobrazÌ Ëas j·dra v grafu v˝konu"
+                            "Zobraz√≠ 16-bitov√© √∫lohy pod NTVDM"
+    ID_VIEW_SELECTCOLUMNS   "Vyberte, kter√© sloupce budou viditeln√© na kartƒõ Procesy"
+    ID_VIEW_SHOWKERNELTIMES "Zobraz√≠ ƒças j√°dra v grafu v√Ωkonu"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Jedin˝ graf historie zobrazÌ celkovou vyuûitelnost CPU"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Kaûd˝ procesor m· sv˘j vlastnÌ graf historie"
+                            "Jedin√Ω graf historie zobraz√≠ celkovou vyu≈æitelnost CPU"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Ka≈æd√Ω procesor m√° sv≈Øj vlastn√≠ graf historie"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "P¯epne ˙lohu do pop¯edÌ"
+                            "P≈ôepne √∫lohu do pop≈ôed√≠"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "PokusÌ se ukonËit zvolenou aplikaci"
-    ID_GOTOPROCESS          "P¯epne na proces zvolenÈ ˙lohy"
-    ID_RESTORE              "ObnovÌ spr·vce ˙loh z neviditelnÈho stavu"
-    ID_PROCESS_PAGE_ENDPROCESS "OdstranÌ proces ze systÈmu"
+    ID_ENDTASK              "Pokus√≠ se ukonƒçit zvolenou aplikaci"
+    ID_GOTOPROCESS          "P≈ôepne na proces zvolen√© √∫lohy"
+    ID_RESTORE              "Obnov√≠ spr√°vce √∫loh z neviditeln√©ho stavu"
+    ID_PROCESS_PAGE_ENDPROCESS "Odstran√≠ proces ze syst√©mu"
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "OdstranÌ proces a vöechny jeho dce¯innÈ podprocesy ze systÈmu"
-    ID_PROCESS_PAGE_DEBUG   "P¯ipojÌ ladicÌ aplikaci k tomuto procesu"
+                            "Odstran√≠ proces a v≈°echny jeho dce≈ôinn√© podprocesy ze syst√©mu"
+    ID_PROCESS_PAGE_DEBUG   "P≈ôipoj√≠ ladic√≠ aplikaci k tomuto procesu"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Spravuje, kter˝ procesor obslouûÌ dan˝ proces"
+                            "Spravuje, kter√Ω procesor obslou≈æ√≠ dan√Ω proces"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "P¯i¯adÌ procesu Realtime prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "P¯i¯adÌ procesu vysokou prioritu"
+                            "P≈ôi≈ôad√≠ procesu Realtime prioritu"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "P≈ôi≈ôad√≠ procesu vysokou prioritu"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "P¯i¯adÌ procesu nadpr˘mÏrnou prioritu"
+                            "P≈ôi≈ôad√≠ procesu nadpr≈Ømƒõrnou prioritu"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "P¯i¯adÌ procesu norm·lnÌ prioritu"
+                            "P≈ôi≈ôad√≠ procesu norm√°ln√≠ prioritu"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "P¯i¯adÌ procesu podpr˘mÏrnou prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "P¯i¯adÌ procesu nÌzkou prioritu"
+                            "P≈ôi≈ôad√≠ procesu podpr≈Ømƒõrnou prioritu"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "P≈ôi≈ôad√≠ procesu n√≠zkou prioritu"
 END
 
 
@@ -596,75 +582,60 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TAB_APPS                  "Aplikace"
     IDS_TAB_PROCESSES             "Procesy"
-    IDS_TAB_PERFORMANCE           "V˝kon"
-    IDS_TAB_TASK                  "⁄loha"
+    IDS_TAB_PERFORMANCE           "V√Ωkon"
+    IDS_TAB_TASK                  "√öloha"
     IDS_TAB_STATUS                "Status"
-    IDS_TAB_IMAGENAME             "N·zev obrazu"
+    IDS_TAB_IMAGENAME             "N√°zev procesu"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Uûiv. jmÈno"
-    IDS_TAB_SESSIONID             "ID sezenÌ"
+    IDS_TAB_USERNAME              "U≈æiv. jm√©no"
+    IDS_TAB_SESSIONID             "ID sezen√≠"
     IDS_TAB_CPU                   "CPU"
-    IDS_TAB_CPUTIME               "»as CPU"
-    IDS_TAB_MEMUSAGE              "VyuûitÌ pamÏti"
-    IDS_TAB_PEAKMEMUSAGE          "Vrchol vyuûitÌ pamÏti"
-    IDS_TAB_MEMDELTA              "PamÏù Delta"
-    IDS_TAB_PAGEFAULT             "Chyby str·nek"
-    IDS_TAB_PFDELTA               "PF Delta"
-    IDS_TAB_VMSIZE                "Velikost virtu·lnÌ pamÏti"
-    IDS_TAB_PAGEDPOOL             "Str·nkov·no"
-    IDS_TAB_NPPOOL                "Nestr·nkov·no"
-    IDS_TAB_BASEPRI               "Z·kl. priorita"
+    IDS_TAB_CPUTIME               "ƒåas CPU"
+    IDS_TAB_MEMUSAGE              "Vyu≈æit√≠ pamƒõti"
+    IDS_TAB_PEAKMEMUSAGE          "Vrchol vyu≈æit√≠ pamƒõti"
+    IDS_TAB_MEMDELTA              "Pamƒõ≈• Zmƒõna"
+    IDS_TAB_PAGEFAULT             "Chyby str√°nek"
+    IDS_TAB_PFDELTA               "Chyby str√°nek Zmƒõna"
+    IDS_TAB_VMSIZE                "Velikost virtu√°ln√≠ pamƒõti"
+    IDS_TAB_PAGEDPOOL             "Str√°nkov√°no"
+    IDS_TAB_NPPOOL                "Nestr√°nkov√°no"
+    IDS_TAB_BASEPRI               "Z√°kl. priorita"
     IDS_TAB_HANDLES               "Ukazatele"
-    IDS_TAB_THREADS               "Vl·kna"
+    IDS_TAB_THREADS               "Vl√°kna"
     IDS_TAB_USERPBJECTS           "USER Objeky"
     IDS_TAB_GDIOBJECTS            "GDI Objekty"
-    IDS_TAB_IOREADS               "I/O ËtenÌ"
-    IDS_TAB_IOWRITES              "I/O z·pisy"
-    IDS_TAB_IOOTHER               "I/O ostatnÌ"
-    IDS_TAB_IOREADBYTES           "I/O p¯eËtenÈ bajty"
-    IDS_TAB_IOWRITESBYTES         "I/O zapsanÈ bajty"
-    IDS_TAB_IOOTHERBYTES          "I/O ostatnÌ bajty"
+    IDS_TAB_IOREADS               "I/O ƒçten√≠"
+    IDS_TAB_IOWRITES              "I/O z√°pisy"
+    IDS_TAB_IOOTHER               "I/O ostatn√≠"
+    IDS_TAB_IOREADBYTES           "I/O p≈ôeƒçten√© bajty"
+    IDS_TAB_IOWRITESBYTES         "I/O zapsan√© bajty"
+    IDS_TAB_IOOTHERBYTES          "I/O ostatn√≠ bajty"
     IDS_MENU_SELECTCOLUMNS        "&Vybrat sloupce..."
-    IDS_MENU_16BITTASK            "&Zobrazit 16-bitovÈ ˙lohy"
+    IDS_MENU_16BITTASK            "&Zobrazit 16-bitov√© √∫lohy"
     IDS_MENU_WINDOWS              "&Okna"
-    IDS_MENU_LARGEICONS           "&VelkÈ ikony"
-    IDS_MENU_SMALLICONS           "&MalÈ ikony"
+    IDS_MENU_LARGEICONS           "&Velk√© ikony"
+    IDS_MENU_SMALLICONS           "&Mal√© ikony"
     IDS_MENU_DETAILS              "&Detaily"
-    IDS_MENU_ONEGRAPHALLCPUS      "&Jeden graf, vöechny CPU"
-    IDS_MENU_ONEGRAPHPERCPU       "Jeden graf &pro kaûd˝ CPU"
+    IDS_MENU_ONEGRAPHALLCPUS      "&Jeden graf, v≈°echny CPU"
+    IDS_MENU_ONEGRAPHPERCPU       "Jeden graf &pro ka≈æd√Ω CPU"
     IDS_MENU_CPUHISTORY           "Historie &CPU"
-    IDS_MENU_SHOWKERNELTIMES      "&Zobrazit Ëasy j·dra"
-    IDS_CREATENEWTASK             "Vytvo¯it novou ˙lohu"
-    IDS_CREATENEWTASK_DESC        "Napiöte n·zev aplikace, adres·¯, dokument nebo zdroj na Internetu, a spr·vce ˙loh jej otev¯e."
-    IDS_MSG_ACCESSPROCESSAFF      "NenÌ moûnÈ zp¯Ìstupnit afinitu procesu"
-    IDS_MSG_PROCESSONEPRO         "Proces musÌ mÌt nastavenou afinitu alespoÚ s jednÌm procesorem."
-    IDS_MSG_INVALIDOPTION         "Neplatn· volba"
-    IDS_MSG_UNABLEDEBUGPROCESS    "NenÌ moûnÈ ladit proces"
-    IDS_MSG_WARNINGDEBUG          "UpozornÏnÌ: ladÏnÌ tohoto procesu m˘ûe zp˘sobit ztr·tu dat.\nJste si jisti s p¯ipojenÌm ladicÌho n·stroje k tomuto procesu?"
-    IDS_MSG_TASKMGRWARNING        "UpozornÏnÌ spr·vce ˙loh"
-    IDS_MSG_WARNINGTERMINATING    "UpozornÏnÌ: ukonËenÌ procesu m˘ûe zp˘sobit nevratnÈ ökody,\nnap¯.: ztr·tu dat nebo nestability systÈmu. \nProcesu nebude poskytnuta öance k uloûenÌ jeho stavu nebo\ndat p¯edtÌm, neû bude ukonËen. Jste si jisti\ns ukonËenÌm procesu?"
-    IDS_MSG_UNABLETERMINATEPRO    "NenÌ moûnÈ ukonËit proces"
-    IDS_MSG_UNABLECHANGEPRIORITY  "NenÌ moûnÈ zmÏnit prioritu"
-    IDS_MSG_WARNINGCHANGEPRIORITY "UpozornÏnÌ: ZmÏna priority procesu m˘ûe\nzp˘sobit nestabilitu systÈmu a jinÈ nep¯edvÌdatelnÈ problÈmy. Jste si jisti\nse zmÏnou priority procesu?"
-    IDS_MSG_TRAYICONCPUUSAGE      "VyuûitÌ CPU: %d%%"
-    IDS_STATUS_MEMUSAGE           "VyuûitÌ pamÏti: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "VyuûitÌ CPU: %3d%%"
+    IDS_MENU_SHOWKERNELTIMES      "&Zobrazit ƒçasy j√°dra"
+    IDS_CREATENEWTASK             "Vytvo≈ôit novou √∫lohu"
+    IDS_CREATENEWTASK_DESC        "Napi≈°te n√°zev aplikace, adres√°≈ô, dokument nebo zdroj na Internetu, a spr√°vce √∫loh jej otev≈ôe."
+    IDS_MSG_ACCESSPROCESSAFF      "Nen√≠ mo≈æn√© zp≈ô√≠stupnit afinitu procesu"
+    IDS_MSG_PROCESSONEPRO         "Proces mus√≠ m√≠t nastavenou afinitu alespo≈à s jedn√≠m procesorem."
+    IDS_MSG_INVALIDOPTION         "Neplatn√° volba"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Nen√≠ mo≈æn√© ladit proces"
+    IDS_MSG_WARNINGDEBUG          "Upozornƒõn√≠: ladƒõn√≠ tohoto procesu m≈Ø≈æe zp≈Øsobit ztr√°tu dat.\nJste si jisti s p≈ôipojen√≠m ladic√≠ho n√°stroje k tomuto procesu?"
+    IDS_MSG_TASKMGRWARNING        "Upozornƒõn√≠ spr√°vce √∫loh"
+    IDS_MSG_WARNINGTERMINATING    "Upozornƒõn√≠: ukonƒçen√≠ procesu m≈Ø≈æe zp≈Øsobit nevratn√© ≈°kody,\nnap≈ô.: ztr√°tu dat nebo nestability syst√©mu. \nProcesu nebude poskytnuta ≈°ance k ulo≈æen√≠ jeho stavu nebo\ndat p≈ôedt√≠m, ne≈æ bude ukonƒçen. Jste si jisti\ns ukonƒçen√≠m procesu?"
+    IDS_MSG_UNABLETERMINATEPRO    "Nen√≠ mo≈æn√© ukonƒçit proces"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Nen√≠ mo≈æn√© zmƒõnit prioritu"
+    IDS_MSG_WARNINGCHANGEPRIORITY "Upozornƒõn√≠: Zmƒõna priority procesu m≈Ø≈æe\nzp≈Øsobit nestabilitu syst√©mu a jin√© nep≈ôedv√≠dateln√© probl√©my. Jste si jisti\nse zmƒõnou priority procesu?"
+    IDS_MSG_TRAYICONCPUUSAGE      "Vyu≈æit√≠ CPU: %d%%"
+    IDS_STATUS_MEMUSAGE           "Vyu≈æit√≠ pamƒõti: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "Vyu≈æit√≠ CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Procesy: %d"
+    IDS_Not_Responding            "Neodpov√≠d√°"
+    IDS_Running                   "Bƒõ≈æ√≠"
 END
-
-
-#endif    // Czech resource file
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

@@ -1,32 +1,26 @@
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
- */
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUso: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
-/u -	Servidor n„o registrado\n\
-/s -	Silencioso; n„o exibe caixa de mensagens\n\
-/c -	SaÌda no console\n\
-/i -	Chamar DllInstall passando [cmdline] opcional; quando usado com /u chama a desinstalaÁ„o da dll\n\
-/n -	N„o chame o DllRegisterServer; essa opÁ„o deve ser usada com /i"
+/u -	Servidor n√£o registrado\n\
+/s -	Silencioso; n√£o exibe caixa de mensagens\n\
+/c -	Sa√≠da no console\n\
+/i -	Chamar DllInstall passando [cmdline] opcional; quando usado com /u chama a desinstala√ß√£o da dll\n\
+/n -	N√£o chame o DllRegisterServer; essa op√ß√£o deve ser usada com /i"
 
 IDS_NoDllSpecified,  "Nenhum nome de DLL especificado."
 
-IDS_InvalidFlag,     "Sinalizador n„o reconhecido: %s"
+IDS_InvalidFlag,     "Sinalizador n√£o reconhecido: %s"
 
-IDS_SwitchN_NoI,     "Sinalizador n„o reconhecido: /n deve ser usado com o Sinalizador /i"
+IDS_SwitchN_NoI,     "Sinalizador n√£o reconhecido: /n deve ser usado com o Sinalizador /i"
 
 IDS_DllNotLoaded,    "Falha em LoadLibrary('%s').\nGetLastError retornou 0x%08x."
 
-IDS_MissingEntry,    "%s foi carregado, mas o ponto de entrada %s n„o foi localizado.\n\n\
-%s n„o pode ser exportado, ou uma vers„o corrompida de %s pode estar na memÛria. Tente usar o PView para detectar e remover isso."
+IDS_MissingEntry,    "%s foi carregado, mas o ponto de entrada %s n√£o foi localizado.\n\n\
+%s n√£o pode ser exportado, ou uma vers√£o corrompida de %s pode estar na mem√≥ria. Tente usar o PView para detectar e remover isso."
 
-IDS_FailureMessage,  "%s em %s falhou.\nCÛdigo de retorno: 0x%08x"
+IDS_FailureMessage,  "%s em %s falhou.\nC√≥digo de retorno: 0x%08x"
 
-IDS_SuccessMessage   "%s em %s teve Íxito."
+IDS_SuccessMessage,  "%s em %s teve √™xito."
 END

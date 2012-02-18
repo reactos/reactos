@@ -10,6 +10,9 @@
 <directory name="ndis">
 	<xi:include href="ndis/ndis.rbuild" />
 </directory>
+<directory name="ndisuio">
+	<xi:include href="ndisuio/ndisuio.rbuild" />
+</directory>
 <directory name="tcpip">
 	<xi:include href="tcpip/tcpip.rbuild" />
 </directory>

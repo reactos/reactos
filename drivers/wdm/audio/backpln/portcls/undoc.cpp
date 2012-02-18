@@ -92,6 +92,7 @@ PcHandlePropertyWithTable(
     // store device descriptor
     KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
 
+
     // then try KsPropertyHandler 
     return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
@@ -154,7 +155,7 @@ PropertyItemDispatch(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     // get input property request
-    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    Property = (PKSPROPERTY)Request;
 
     // get property set
     PropertySet = (PKSPROPERTY_SET)KSPROPERTY_SET_IRP_STORAGE(Irp);
@@ -209,7 +210,7 @@ PropertyItemDispatch(
 
     // store value size
     PropertyRequest->ValueSize = ValueSize;
-    PropertyRequest->Value = (ValueSize != 0 ? Irp->UserBuffer : NULL);
+    PropertyRequest->Value = Data;
 
     // now scan the property set for the attached property set item stored in Relations member
     if (PropertySet)
@@ -257,7 +258,7 @@ PropertyItemDispatch(
                         {
                             // found match
                             PropertyRequest->PropertyItem = PropertyItem;
-
+                            DPRINT1("Using property item %p\n", PropertyItem);
                             // done
                             break;
                         }
@@ -273,14 +274,14 @@ PropertyItemDispatch(
     if (PropertyRequest->PropertyItem && PropertyRequest->PropertyItem->Handler)
     {
         // now call the handler
-        //UNICODE_STRING GuidBuffer;
-        //RtlStringFromGUID(Property->Set, &GuidBuffer);
-        //DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
-        //        PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
-        //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
-
+        UNICODE_STRING GuidBuffer;
+        RtlStringFromGUID(Property->Set, &GuidBuffer);
+        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+                PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
+                PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+        RtlFreeUnicodeString(&GuidBuffer);
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-        //DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        DPRINT1("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
@@ -508,86 +509,195 @@ PcCaptureFormat(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
+
+
+VOID
+DumpAutomationTable(
+    IN PPCAUTOMATION_TABLE AutomationTable,
+    IN LPCWSTR DebugPrefix,
+    IN LPCWSTR DebugIdentation)
+{
+    PPCPROPERTY_ITEM PropertyItem;
+    PPCEVENT_ITEM EventItem;
+    PPCMETHOD_ITEM MethodItem;
+    ULONG Index;
+    UNICODE_STRING GuidString;
+
+    if (!AutomationTable)
+    {
+        // no table
+        return;
+    }
+
+    DPRINT("=====================================================================\n");
+    DPRINT("%S%S AutomationTable %p\n", DebugIdentation, DebugPrefix, AutomationTable);
+    DPRINT("%S%S PropertyCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->PropertyCount);
+    DPRINT("%S%S EventCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->EventCount);
+    DPRINT("%S%S MethodCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->MethodCount);
+
+    // print properties
+    if (AutomationTable->PropertyCount)
+    {
+        if (AutomationTable->PropertyItemSize >= sizeof(PCPROPERTY_ITEM))
+        {
+            // get property item 
+            PropertyItem = (PPCPROPERTY_ITEM)AutomationTable->Properties;
+
+            // sanity check
+            ASSERT(PropertyItem);
+
+            // display all properties associated
+            for(Index = 0; Index < AutomationTable->PropertyCount; Index++)
+            {
+                // convert to printable string
+                RtlStringFromGUID(*PropertyItem->Set, &GuidString);
+                DPRINT("%SPropertyItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, PropertyItem, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+                RtlFreeUnicodeString(&GuidString);
+                // move to next item
+                PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + AutomationTable->PropertyItemSize);
+            }
+
+        }
+        else
+        {
+            DPRINT1("DRIVER BUG: property item must be at least %lu but got %lu\n", sizeof(PCPROPERTY_ITEM), AutomationTable->PropertyItemSize);
+        }
+    }
+
+    // print events
+    if (AutomationTable->EventCount)
+    {
+        if (AutomationTable->EventItemSize >= sizeof(PCEVENT_ITEM))
+        {
+            // get first event item
+            EventItem = (PPCEVENT_ITEM)AutomationTable->Events;
+
+            // sanity check
+            ASSERT(EventItem);
+
+            for(Index = 0; Index < AutomationTable->EventCount; Index++)
+            {
+                // convert to printable string
+                RtlStringFromGUID(*EventItem->Set, &GuidString);
+                DPRINT("%SEventItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, EventItem, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+                RtlFreeUnicodeString(&GuidString);
+
+                // move to next item
+                EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + AutomationTable->EventItemSize);
+            }
+        }
+        else
+        {
+            DPRINT1("DRIVER BUG: event item must be at least %lu but got %lu\n", sizeof(PCEVENT_ITEM), AutomationTable->EventItemSize);
+        }
+    }
+
+    // print methods
+    if (AutomationTable->MethodCount)
+    {
+       if (AutomationTable->MethodItemSize >= sizeof(PCMETHOD_ITEM))
+       {
+            // get first event item
+            MethodItem = (PPCMETHOD_ITEM)AutomationTable->Methods;
+
+            // sanity check
+            ASSERT(MethodItem);
+
+            for(Index = 0; Index < AutomationTable->MethodCount; Index++)
+            {
+                // convert to printable string
+                RtlStringFromGUID(*MethodItem->Set, &GuidString);
+                DPRINT("%SMethodItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, MethodItem, GuidString.Buffer, MethodItem->Id, MethodItem->Flags);
+                RtlFreeUnicodeString(&GuidString);
+
+                // move to next item
+                MethodItem = (PPCMETHOD_ITEM)((ULONG_PTR)MethodItem + AutomationTable->MethodItemSize);
+            }
+
+       }
+       else
+       {
+           DPRINT1("DRIVER BUG: method item must be at least %lu but got %lu\n", sizeof(PCEVENT_ITEM), AutomationTable->MethodItemSize);
+       }
+    }
+    DPRINT("=====================================================================\n");
+}
+
+
 VOID
 DumpFilterDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
-    ULONG Index, SubIndex;
-    PPCPROPERTY_ITEM PropertyItem;
-    PPCEVENT_ITEM EventItem;
+    ULONG Index;
+    WCHAR Buffer[30];
+    PPCPIN_DESCRIPTOR PinDescriptor;
     PPCNODE_DESCRIPTOR NodeDescriptor;
-    UNICODE_STRING GuidString;
-
-
 
     DPRINT("======================\n");
     DPRINT("Descriptor Automation Table %p\n",FilterDescription->AutomationTable);
+    DPRINT("PinCount %lu PinSize %lu StandardSize %lu\n", FilterDescription->PinCount, FilterDescription->PinSize, sizeof(PCPIN_DESCRIPTOR));
+    DPRINT("NodeCount %lu NodeSize %lu StandardSize %lu\n", FilterDescription->NodeCount, FilterDescription->NodeSize, sizeof(PCNODE_DESCRIPTOR));
 
-    if (FilterDescription->AutomationTable)
+    // dump filter description table
+    DumpAutomationTable((PPCAUTOMATION_TABLE)FilterDescription->AutomationTable, L"Filter", L"");
+
+
+    if (FilterDescription->PinCount)
     {
-        DPRINT("FilterPropertiesCount %u FilterPropertySize %u Expected %u Events %u EventItemSize %u expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM),
-                FilterDescription->AutomationTable->EventCount, FilterDescription->AutomationTable->EventItemSize, sizeof(PCEVENT_ITEM));
-        if (FilterDescription->AutomationTable->PropertyCount)
+        if (FilterDescription->PinSize >= sizeof(PCPIN_DESCRIPTOR))
         {
-            PropertyItem = (PPCPROPERTY_ITEM)FilterDescription->AutomationTable->Properties;
+            // get first pin
+            PinDescriptor = (PPCPIN_DESCRIPTOR)FilterDescription->Pins;
 
-            for(Index = 0; Index < FilterDescription->AutomationTable->PropertyCount; Index++)
+            // sanity check
+            ASSERT(PinDescriptor);
+
+            for(Index = 0; Index < FilterDescription->PinCount; Index++)
             {
-                RtlStringFromGUID(*PropertyItem->Set, &GuidString);
-                DPRINT("Property Index %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+               // print prefix
+               swprintf(Buffer, L"PinIndex %lu", Index);
 
-                PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + FilterDescription->AutomationTable->PropertyItemSize);
+               // dump automation table
+               DumpAutomationTable((PPCAUTOMATION_TABLE)PinDescriptor->AutomationTable, Buffer, L"    ");
+
+               // move to next pin descriptor
+               PinDescriptor = (PPCPIN_DESCRIPTOR)((ULONG_PTR)PinDescriptor + FilterDescription->PinSize);
             }
-
-            EventItem = (PPCEVENT_ITEM)FilterDescription->AutomationTable->Events;
-            for(Index = 0; Index < FilterDescription->AutomationTable->EventCount; Index++)
-            {
-                RtlStringFromGUID(*EventItem->Set, &GuidString);
-                DPRINT("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
-
-                EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
-            }
-
+        }
+        else
+        {
+            DPRINT1("DRIVER BUG: pin size smaller than minimum size\n");
         }
     }
 
+
     if (FilterDescription->Nodes)
     {
-        DPRINT("NodeCount %u NodeSize %u expected %u\n", FilterDescription->NodeCount, FilterDescription->NodeSize, sizeof(PCNODE_DESCRIPTOR));
-        NodeDescriptor = (PPCNODE_DESCRIPTOR)FilterDescription->Nodes;
-        for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+        if (FilterDescription->NodeSize >= sizeof(PCNODE_DESCRIPTOR))
         {
-            DPRINT("Index %u AutomationTable %p\n", Index, NodeDescriptor->AutomationTable);
+            // get first descriptor
+            NodeDescriptor = (PPCNODE_DESCRIPTOR)FilterDescription->Nodes;
 
-            if (NodeDescriptor->AutomationTable)
+            // sanity check
+            ASSERT(NodeDescriptor);
+
+            for(Index = 0; Index < FilterDescription->NodeCount; Index++)
             {
-                DPRINT(" Index %u EventCount %u\n", Index, NodeDescriptor->AutomationTable->EventCount);
-                EventItem = (PPCEVENT_ITEM)NodeDescriptor->AutomationTable->Events;
-                for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->EventCount; SubIndex++)
-                {
-                    RtlStringFromGUID(*EventItem->Set, &GuidString);
-                    DPRINT("  EventIndex %u GUID %S Id %u Flags %x\n", SubIndex, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+                // print prefix
+                swprintf(Buffer, L"NodeIndex %lu", Index);
 
-                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + NodeDescriptor->AutomationTable->EventItemSize);
-                }
+                // dump automation table
+                DumpAutomationTable((PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable, Buffer, L"    ");
 
-                DPRINT1(" Index %u PropertyCount %u\n", Index, NodeDescriptor->AutomationTable->PropertyCount);
-                PropertyItem = (PPCPROPERTY_ITEM)NodeDescriptor->AutomationTable->Properties;
-                for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->PropertyCount; SubIndex++)
-                {
-                    RtlStringFromGUID(*PropertyItem->Set, &GuidString);
-                    DPRINT1("  PropertyIndex %u GUID %S Id %u Flags %x\n", SubIndex, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
-
-                    PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + NodeDescriptor->AutomationTable->PropertyItemSize);
-                }
+                // move to next node descriptor
+                NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescription->NodeSize);
             }
-
-
-            NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescription->NodeSize);
         }
-
-
-
+        else
+        {
+            DPRINT1("DRIVER BUG: node size smaller than standard descriptor size\n");
+        }
     }
 
     DPRINT("ConnectionCount: %lu\n", FilterDescription->ConnectionCount);
@@ -605,7 +715,6 @@ DumpFilterDescriptor(
         }
         DPRINT("------ End of Nodes Connections----------------\n");
     }
-
     DPRINT1("======================\n");
 }
 

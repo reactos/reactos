@@ -2,6 +2,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Προφύλαξη οθόνης Logon"
-    IDS_TEXT        "Αυτή η προφύλαξη οθόνης δε διαθέτει επιλογές τις οποίες μπορείτε να ορίσετε."
+    IDS_DESCRIPTION "Ξ ΟΞΏΟ†ΟΞ»Ξ±ΞΎΞ· ΞΏΞΈΟΞ½Ξ·Ο‚ Logon"
+    IDS_TEXT        "Ξ‘Ο…Ο„Ξ® Ξ· Ο€ΟΞΏΟ†ΟΞ»Ξ±ΞΎΞ· ΞΏΞΈΟΞ½Ξ·Ο‚ Ξ΄Ξµ Ξ΄ΞΉΞ±ΞΈΞ­Ο„ΞµΞΉ ΞµΟ€ΞΉΞ»ΞΏΞ³Ξ­Ο‚ Ο„ΞΉΟ‚ ΞΏΟ€ΞΏΞ―ΞµΟ‚ ΞΌΟ€ΞΏΟΞµΞ―Ο„Ξµ Ξ½Ξ± ΞΏΟΞ―ΟƒΞµΟ„Ξµ."
 END

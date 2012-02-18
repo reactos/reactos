@@ -43,16 +43,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(rpcrt4.dll rpcrt4.spec)
 
 add_library(rpcrt4 SHARED ${SOURCE})
-
 set_module_type(rpcrt4 win32dll)
+target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 
-target_link_libraries(rpcrt4
-    wine
-    uuid
-    ${PSEH_LIB})
-
-add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
-add_delay_importlibs(rpcrt4 wininet)
-
+add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
+add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
 add_importlib_target(rpcrt4.spec)
+
+if(NOT MSVC)
+    allow_warnings(rpcrt4)
+endif()

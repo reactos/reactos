@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsys/win32k/ntddraw/d3d.c
+ * FILE:             subsystems/win32/win32k/ntddraw/d3d.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
@@ -271,7 +271,7 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
 
     if (pfnDdCreateD3DBuffer == NULL)
     {
-        DPRINT1("Warning no pfnDdCreateD3DBuffer");
+        DPRINT1("Warning: no pfnDdCreateD3DBuffer");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -293,7 +293,7 @@ NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
     
     if (pfnDdDestroyD3DBuffer == NULL)
     {
-        DPRINT1("Warning no pfnDdDestroyD3DBuffer");
+        DPRINT1("Warning: no pfnDdDestroyD3DBuffer");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 

@@ -14,9 +14,9 @@ add_library(framebuf_new SHARED ${SOURCE})
 
 if(ARCH MATCHES i386)
     if(MSVC)
-        set_target_properties(framebuf_new PROPERTIES COMPILE_FLAGS "/Gz")
+        add_target_compile_flags(framebuf_new "/Gz")
     else()
-        set_target_properties(framebuf_new PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
+        add_target_compile_flags(framebuf_new "-mrtd -fno-builtin")
     endif()
 endif()
 

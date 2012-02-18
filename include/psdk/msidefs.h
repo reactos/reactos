@@ -38,7 +38,11 @@ enum msidbFileAttributes {
     msidbFileAttributesNoncompressed = 0x00002000,
     msidbFileAttributesCompressed = 0x00004000
 };
-        
+
+enum msidbPatchAttributes {
+    msidbPatchAttributesNonVital = 0x00000001
+};
+
 enum msidbDialogAttributes {
     msidbDialogAttributesVisible = 0x00000001,
     msidbDialogAttributesModal = 0x00000002,

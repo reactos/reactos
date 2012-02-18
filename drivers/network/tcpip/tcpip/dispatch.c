@@ -731,7 +731,7 @@ NTSTATUS DispTdiQueryInformation(
     case TDI_QUERY_CONNECTION_INFO:
       {
         PTDI_CONNECTION_INFO ConnectionInfo;
-        PCONNECTION_ENDPOINT Endpoint;
+        //PCONNECTION_ENDPOINT Endpoint;
 
         if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*ConnectionInfo)) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
@@ -743,8 +743,7 @@ NTSTATUS DispTdiQueryInformation(
 
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
           case TDI_CONNECTION_FILE:
-            Endpoint =
-              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            //Endpoint = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
             RtlZeroMemory(ConnectionInfo, sizeof(*ConnectionInfo));
             return STATUS_SUCCESS;
 
@@ -1517,14 +1516,11 @@ NTSTATUS DispTdiSetInformationEx(
         return Irp->IoStatus.Status;
     }
 
-    Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
-    if (NT_SUCCESS(Status)) {
-        Request.RequestNotifyObject = DispDataRequestComplete;
-        Request.RequestContext      = Irp;
+    Request.RequestNotifyObject = NULL;
+    Request.RequestContext      = NULL;
 
-        Status = InfoTdiSetInformationEx(&Request, &Info->ID,
+    Status = InfoTdiSetInformationEx(&Request, &Info->ID,
             &Info->Buffer, Info->BufferSize);
-    }
 
     return Status;
 }
@@ -1556,8 +1552,10 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
+
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+            
             IF->Broadcast.Type = IP_ADDRESS_V4;
 	    IF->Broadcast.Address.IPv4Address =
 		IF->Unicast.Address.IPv4Address |
@@ -1591,10 +1589,13 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IPRemoveInterfaceRoute( IF );
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = 0;
+
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = 0;
+
             IF->Broadcast.Type = IP_ADDRESS_V4;
             IF->Broadcast.Address.IPv4Address = 0;
+
             Status = STATUS_SUCCESS;
         }
     } EndFor(IF);

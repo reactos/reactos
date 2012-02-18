@@ -37,13 +37,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_manager
 {
-    const INetFwMgrVtbl *vtbl;
+    INetFwMgr INetFwMgr_iface;
     LONG refs;
 } fw_manager;
 
 static inline fw_manager *impl_from_INetFwMgr( INetFwMgr *iface )
 {
-    return (fw_manager *)((char *)iface - FIELD_OFFSET( fw_manager, vtbl ));
+    return CONTAINING_RECORD(iface, fw_manager, INetFwMgr_iface);
 }
 
 static ULONG WINAPI fw_manager_AddRef(
@@ -230,10 +230,10 @@ HRESULT NetFwMgr_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fm = HeapAlloc( GetProcessHeap(), 0, sizeof(*fm) );
     if (!fm) return E_OUTOFMEMORY;
 
-    fm->vtbl = &fw_manager_vtbl;
+    fm->INetFwMgr_iface.lpVtbl = &fw_manager_vtbl;
     fm->refs = 1;
 
-    *ppObj = &fm->vtbl;
+    *ppObj = &fm->INetFwMgr_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

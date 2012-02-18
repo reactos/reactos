@@ -895,7 +895,7 @@ NdisGetFirstBufferFromPacket(
         *_FirstBufferVA = MmGetSystemAddressForMdl(Buffer);
         Buffer = Buffer->Next;
     } else {
-        NDIS_DbgPrint(MIN_TRACE, ("No buffers linked to this packet\n"));
+        NDIS_DbgPrint(MID_TRACE, ("No buffers linked to this packet\n"));
         *_FirstBufferLength = 0;
         *_FirstBufferVA = NULL;
     }
@@ -932,7 +932,7 @@ NdisGetFirstBufferFromPacketSafe(
         *_FirstBufferVA = MmGetSystemAddressForMdlSafe(Buffer, Priority);
         Buffer = Buffer->Next;
     } else {
-        NDIS_DbgPrint(MIN_TRACE, ("No buffers linked to this packet\n"));
+        NDIS_DbgPrint(MID_TRACE, ("No buffers linked to this packet\n"));
         *_FirstBufferLength = 0;
         *_FirstBufferVA = NULL;
     }
@@ -1035,7 +1035,7 @@ NdisUnchainBufferAtBack(
                     &NdisBuffer,
                     NULL);
     if (!NdisBuffer) {
-        NDIS_DbgPrint(MIN_TRACE, ("No buffer to unchain\n"));
+        NDIS_DbgPrint(MID_TRACE, ("No buffer to unchain\n"));
         *Buffer = NULL;
         return;
     }
@@ -1084,7 +1084,7 @@ NdisUnchainBufferAtFront(
                     &NdisBuffer,
                     NULL);
     if (!NdisBuffer) {
-        NDIS_DbgPrint(MIN_TRACE, ("No buffer to unchain\n"));
+        NDIS_DbgPrint(MID_TRACE, ("No buffer to unchain\n"));
         *Buffer = NULL;
         return;
     }

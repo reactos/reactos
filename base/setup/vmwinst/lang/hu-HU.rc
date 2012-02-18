@@ -1,27 +1,28 @@
 // Hungarian resources by Robert Horvath - talley at cubeclub.hu
+
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepÌtı felismerte, hogy VMware(r) alÛl futtatod a ReactOS-t.", -1, 117, 8, 140, 34
-  LTEXT "Ha szeretnÈd feltelepÌteni a VMware(r) SVGA meghajtÛt, kattints a 'Tov·bb' gombra, ha nem akkor a  'MÈgse' gombra.", -1, 117, 120, 140, 32
+  LTEXT "A ReactOS telep√≠t√µ felismerte, hogy VMware(r) al√≥l futtatod a ReactOS-t.", -1, 117, 8, 140, 34
+  LTEXT "Ha szeretn√©d feltelep√≠teni a VMware(r) SVGA meghajt√≥t, kattints a 'Tov√°bb' gombra, ha nem akkor a  'M√©gse' gombra.", -1, 117, 120, 140, 32
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepÌtı nem rendelkezik a VMware(r) SVGA meghajtÛval.\n\
-A VMware(r) VM men¸jÈben v·laszd ki a  'Install VMware tools...' men¸pontot\n\n\nKattints a  'Tov·bb' gombra a folytat·shoz, vagy a 'MÈgse' gombra, hogy kilÈpj az SVGA meghajtÛ telepÌtÈsÈbıl.",-1,25,25,225,85
+  LTEXT "A ReactOS telep√≠t√µ nem rendelkezik a VMware(r) SVGA meghajt√≥val.\n\
+A VMware(r) VM men√ºj√©ben v√°laszd ki a  'Install VMware tools...' men√ºpontot\n\n\nKattints a  'Tov√°bb' gombra a folytat√°shoz, vagy a 'M√©gse' gombra, hogy kil√©pj az SVGA meghajt√≥ telep√≠t√©s√©b√µl.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -30,10 +31,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A VMware(r) SVGA meghajtÛ sikeresen telepÌtve lett. KÈrlek ·llÌtsd be milyen felbont·sban szeretnÈd haszn·lni:",-1,25,5,225,20
+  LTEXT "A VMware(r) SVGA meghajt√≥ sikeresen telep√≠tve lett. K√©rlek √°ll√≠tsd be milyen felbont√°sban szeretn√©d haszn√°lni:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -45,89 +46,89 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "KÈrlek ·llÌtsd be a szÌnmÈlysÈget is:", -1, 25, 93, 225, 12
+  LTEXT "K√©rlek √°ll√≠tsd be a sz√≠nm√©lys√©get is:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepÌtı nem tudta telepÌteni a  VMware(r) SVGA meghajtÛt.\n\n\nKattints a 'BefejezÈs' gombra, hogy folytasd a telepÌtÈst.",-1,25,25,225,85
+  LTEXT "A ReactOS telep√≠t√µ nem tudta telep√≠teni a  VMware(r) SVGA meghajt√≥t.\n\n\nKattints a 'Befejez√©s' gombra, hogy folytasd a telep√≠t√©st.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A VMware(r) SVGA meghajtÛ m·r telepÌtve van.\n\nA kˆvetkezık kˆz¸l v·laszthatsz:",-1,25,5,225,30
-  PUSHBUTTON "KÈpernyı be·llÌt·sok megv·ltoztat·sa", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "M·s meghajtÛ program telepÌtÈse", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "VMware(r) SVGA meghajtÛ elt·volÌt·sa", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Kattints a 'Tov·bb' gombra a folytat·shoz vagy a 'MÈgse' gombra, hogy kilÈpj a telepÌtıbıl.", -1, 25, 93, 225, 12
+  LTEXT "A VMware(r) SVGA meghajt√≥ m√°r telep√≠tve van.\n\nA k√∂vetkez√µk k√∂z√ºl v√°laszthatsz:",-1,25,5,225,30
+  PUSHBUTTON "K√©perny√µ be√°ll√≠t√°sok megv√°ltoztat√°sa", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "M√°s meghajt√≥ program telep√≠t√©se", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "VMware(r) SVGA meghajt√≥ elt√°vol√≠t√°sa", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Kattints a 'Tov√°bb' gombra a folytat√°shoz vagy a 'M√©gse' gombra, hogy kil√©pj a telep√≠t√µb√µl.", -1, 25, 93, 225, 12
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "V·laszd ki mely meghajtÛt szeretnÈd hasz·lni:",-1,25,25,225,15
-  PUSHBUTTON "ReactOS VGA meghajtÛ", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "ReactOS VBE meghajtÛ (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Kattints a 'BefejezÈs' gombra a vÈglegesÌtÈshez, vagy a 'MÈgse' gombra, hogy kilÈpj.", -1, 25, 93, 225, 20
+  LTEXT "V√°laszd ki mely meghajt√≥t szeretn√©d hasz√°lni:",-1,25,25,225,15
+  PUSHBUTTON "ReactOS VGA meghajt√≥", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "ReactOS VBE meghajt√≥ (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "Kattints a 'Befejez√©s' gombra a v√©gleges√≠t√©shez, vagy a 'M√©gse' gombra, hogy kil√©pj.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video meghajtÛ telepÌtÈse"
+CAPTION "Video meghajt√≥ telep√≠t√©se"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepÌtı elt·volÌtja a VMware(r) SVGA meghajtÛt!!!\n\n\nKattints a 'BefejezÈs' gombra ennek folytat·s·hoz vagy a  'MÈgse' gombra, hogy meghagyd.",-1,25,25,225,85
+  LTEXT "A ReactOS telep√≠t√µ elt√°vol√≠tja a VMware(r) SVGA meghajt√≥t!!!\n\n\nKattints a 'Befejez√©s' gombra ennek folytat√°s√°hoz vagy a  'M√©gse' gombra, hogy meghagyd.",-1,25,25,225,85
 END
 
 STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "VMware(r) felismerve"
-  IDS_FAILEDTOLOCATEDRIVERS "A ReactOS telepÌtı nemtudta megtal·lni a sz¸ksÈges ·llom·nyokat.\nKÈrlek vizsg·ld meg, hogy bevan-e helyezve a VMware(r) tools CD."
-  IDS_FAILEDTOCOPYFILES "A ReactOS telepÌtı nem tudta ·tm·solni a sz¸ksÈges ·llom·nyokat.\nKÈrlek vizsg·ld meg, hogy bevan-e helyezve a VMware(r) tools CD."
-  IDS_FAILEDTOACTIVATEDRIVER "Nem siker¸lt aktiv·lni a VMware(r) SVGA meghajtÛt!"
-  IDS_FAILEDTOSELVGADRIVER "Nem siker¸lt aktiv·lni a ReactOS VGA meghajtÛt!"
-  IDS_FAILEDTOSELVBEDRIVER "Nem siker¸lt aktiv·lni a ReactOS VBE meghajtÛt!"
-  IDS_UNINSTNOTICE "A VMware(r) SVGA meghajtÛ ·llom·nyai nem lettek tˆrˆlve.\nKÈrlek tˆrˆld ıket ˙jraindÌt·s ut·n."
-  IDS_FAILEDTOADDREGENTRIES "Nem siker¸lt a regisztr·ciÛs bejegyzÈsek elvÈgzÈse a  VMware(r) SVGA meghajtÛ telepÌtÈse kˆzben!"
+  IDS_FAILEDTOLOCATEDRIVERS "A ReactOS telep√≠t√µ nemtudta megtal√°lni a sz√ºks√©ges √°llom√°nyokat.\nK√©rlek vizsg√°ld meg, hogy bevan-e helyezve a VMware(r) tools CD."
+  IDS_FAILEDTOCOPYFILES "A ReactOS telep√≠t√µ nem tudta √°tm√°solni a sz√ºks√©ges √°llom√°nyokat.\nK√©rlek vizsg√°ld meg, hogy bevan-e helyezve a VMware(r) tools CD."
+  IDS_FAILEDTOACTIVATEDRIVER "Nem siker√ºlt aktiv√°lni a VMware(r) SVGA meghajt√≥t!"
+  IDS_FAILEDTOSELVGADRIVER "Nem siker√ºlt aktiv√°lni a ReactOS VGA meghajt√≥t!"
+  IDS_FAILEDTOSELVBEDRIVER "Nem siker√ºlt aktiv√°lni a ReactOS VBE meghajt√≥t!"
+  IDS_UNINSTNOTICE "A VMware(r) SVGA meghajt√≥ √°llom√°nyai nem lettek t√∂r√∂lve.\nK√©rlek t√∂r√∂ld √µket √∫jraind√≠t√°s ut√°n."
+  IDS_FAILEDTOADDREGENTRIES "Nem siker√ºlt a regisztr√°ci√≥s bejegyz√©sek elv√©gz√©se a  VMware(r) SVGA meghajt√≥ telep√≠t√©se k√∂zben!"
 END
 
 STRINGTABLE
 BEGIN
   10001 "Gyenge (8BPP)"
-  10002 "Kˆzepes (16BPP)"
-  10003 "Kiv·lÛ (32BPP)"
+  10002 "K√∂zepes (16BPP)"
+  10003 "Kiv√°l√≥ (32BPP)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_SEARCHINGFORCDROM "VMware(r) Tools CD keresÈse..."
-  IDS_COPYINGFILES      "¡llom·nyok m·sol·sa..."
-  IDS_ENABLINGDRIVER    "VMware(r) SVGA meghajtÛ akvit·l·sa..."
+  IDS_SEARCHINGFORCDROM "VMware(r) Tools CD keres√©se..."
+  IDS_COPYINGFILES      "√Ållom√°nyok m√°sol√°sa..."
+  IDS_ENABLINGDRIVER    "VMware(r) SVGA meghajt√≥ akvit√°l√°sa..."
 END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE     	"VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "KÈrlek tedd be a VMware tools CD-t."
-  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "VMware (r) SVGA meghajtÛ keresÈse Ès telepÌtÈse."
-  IDD_CONFIGTITLE     			"VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_CONFIGSUBTITLE     		"V·laszd ki a kÈpernyı felbont·s·t."
-  IDD_INSTALLATION_FAILEDTITLE     	"VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "A VMware (r) SVGA meghajtÛ telepÌtÈse nem siker¸lt."
-  IDD_CHOOSEACTIONTITLE    	        "VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_CHOOSEACTIONSUBTITLE              "V·laszd ki mit szeretnÈl csin·lni."
-  IDD_SELECTDRIVERTITLE                 "VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_SELECTDRIVERSUBTITLE              "V·lassz ki egy meghajtÛt."
-  IDD_DOUNINSTALLTITLE                  "VMware (r) SVGA meghajtÛ telepÌtÈse"
-  IDD_DOUNINSTALLSUBTITLE               "A meghajtÛ elt·volÌt·sa."
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "K√©rlek tedd be a VMware tools CD-t."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "VMware (r) SVGA meghajt√≥ keres√©se √©s telep√≠t√©se."
+  IDD_CONFIGTITLE     			"VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_CONFIGSUBTITLE     		"V√°laszd ki a k√©perny√µ felbont√°s√°t."
+  IDD_INSTALLATION_FAILEDTITLE     	"VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "A VMware (r) SVGA meghajt√≥ telep√≠t√©se nem siker√ºlt."
+  IDD_CHOOSEACTIONTITLE    	        "VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_CHOOSEACTIONSUBTITLE              "V√°laszd ki mit szeretn√©l csin√°lni."
+  IDD_SELECTDRIVERTITLE                 "VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_SELECTDRIVERSUBTITLE              "V√°lassz ki egy meghajt√≥t."
+  IDD_DOUNINSTALLTITLE                  "VMware (r) SVGA meghajt√≥ telep√≠t√©se"
+  IDD_DOUNINSTALLSUBTITLE               "A meghajt√≥ elt√°vol√≠t√°sa."
 END

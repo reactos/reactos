@@ -39,8 +39,7 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
-#include "imagelist.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "uxtheme.h"
 #include "wine/debug.h"
 
@@ -384,6 +383,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	  /* cnt,txt,img,bmp */
 	UINT cx, tx, ix, bx,
 	     cw, tw, iw, bw;
+        INT img_cx, img_cy;
 	BITMAP bmp;
 
         HEADER_PrepareCallbackItems(infoPtr, iItem, HDI_TEXT|HDI_IMAGE);
@@ -400,8 +400,8 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
 	}
 
-	if ((phdi->fmt & HDF_IMAGE) && (infoPtr->himl)) {
-	    iw = infoPtr->himl->cx + 2 * infoPtr->iMargin;
+	if ((phdi->fmt & HDF_IMAGE) && ImageList_GetIconSize( infoPtr->himl, &img_cx, &img_cy )) {
+	    iw = img_cx + 2 * infoPtr->iMargin;
 	    x = &ix;
 	    w = &iw;
 	}
@@ -474,8 +474,8 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 
 	    if (iw) {
 	        ImageList_DrawEx (infoPtr->himl, phdi->iImage, hClipDC, 
-	                          ix, r.top + ((INT)rh - infoPtr->himl->cy) / 2,
-	                          infoPtr->himl->cx, infoPtr->himl->cy, CLR_DEFAULT, CLR_DEFAULT, 0);
+	                          ix, r.top + ((INT)rh - img_cy) / 2,
+	                          img_cx, img_cy, CLR_DEFAULT, CLR_DEFAULT, 0);
 	    }
 
 	    DeleteObject(hClipRgn);
@@ -1538,9 +1538,6 @@ HEADER_NCDestroy (HEADER_INFO *infoPtr)
     }
 
     Free(infoPtr->order);
-
-    if (infoPtr->himl)
-      ImageList_Destroy (infoPtr->himl);
 
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
     Free (infoPtr);

@@ -127,6 +127,10 @@
 		<file>memicmp.c</file>
 	</directory>
 
+	<directory name="misc">
+		<file>fltused.c</file>
+	</directory>
+
 	<directory name="search">
 		<file>bsearch.c</file>
 		<file>lfind.c</file>

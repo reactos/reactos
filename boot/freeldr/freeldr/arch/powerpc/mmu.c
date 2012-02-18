@@ -318,14 +318,15 @@ inline int BatTranslate( int bath, int batl, int virt ) {
 int PpcVirt2phys( int virt, int inst ) {
     int msr = GetMSR();
     int txmask = inst ? 0x20 : 0x10;
-    int i, bath, batl, sr, sdr1, physbase, vahi, valo;
-    int npteg, hash, hashmask, ptehi, ptelo, ptegaddr;
+    int i, bath, batl, sr, sdr1, physbase, valo;
+    int hash, hashmask, ptehi, ptelo, ptegaddr;
+    //int vahi, npteg;
     int vsid, pteh, ptevsid, pteapi;
 
     if( msr & txmask ) {
 	sr = GetSR( virt >> 28 );
 	vsid = sr & 0xfffffff;
-	vahi = vsid >> 4;
+	//vahi = vsid >> 4;
 	valo = (vsid << 28) | (virt & 0xfffffff);
 	if( sr & 0x80000000 ) {
 	    return valo;
@@ -343,7 +344,7 @@ int PpcVirt2phys( int virt, int inst ) {
 	physbase = sdr1 & ~0xffff;
 	hashmask = ((sdr1 & 0x1ff) << 10) | 0x3ff;
 	hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
-	npteg = hashmask + 1;
+	//npteg = hashmask + 1;
 
 	for( pteh = 0; pteh < 0x80; pteh += 64, hash ^= 0x7ffff ) {
 	    ptegaddr = ((hashmask & hash) * 64) + physbase;

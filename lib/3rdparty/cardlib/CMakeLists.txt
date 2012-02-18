@@ -15,4 +15,5 @@ list(APPEND SOURCE
     dropzone.cpp)
 
 add_library(cardlib ${SOURCE})
+allow_warnings(cardlib)
 add_dependencies(cardlib psdk)

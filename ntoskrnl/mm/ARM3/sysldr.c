@@ -95,7 +95,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     KAPC_STATE ApcState;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     BOOLEAN LoadSymbols = FALSE;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPTE PointerPte, LastPte;
     PVOID DriverBase;
     MMPTE TempPte;
@@ -150,6 +150,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     if (!NT_SUCCESS(Status))
     {
         /* Detach and return */
+        DPRINT1("MmMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         return Status;
     }
@@ -157,7 +158,12 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     /* Reserve system PTEs needed */
     PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
-    if (!PointerPte) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!PointerPte)
+    {
+        DPRINT1("MiReserveSystemPtes failed\n");
+        KeUnstackDetachProcess(&ApcState);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* New driver base */
     LastPte = PointerPte + PteCount;
@@ -324,7 +330,7 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     if (wcschr(ImportName.Buffer, L'.'))
     {
         /* Remove the extension */
-        ImportName.Length = (wcschr(ImportName.Buffer, L'.') -
+        ImportName.Length = (USHORT)(wcschr(ImportName.Buffer, L'.') -
             ImportName.Buffer) * sizeof(WCHAR);
     }
 
@@ -690,7 +696,7 @@ MiSnapThunk(IN PVOID DllBase,
     ULONG ForwardExportSize;
     PIMAGE_EXPORT_DIRECTORY ForwardExportDirectory;
     PIMAGE_IMPORT_BY_NAME ForwardName;
-    ULONG ForwardLength;
+    SIZE_T ForwardLength;
     IMAGE_THUNK_DATA ForwardThunk;
     PAGED_CODE();
 
@@ -712,7 +718,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Copy the procedure name */
         RtlStringCbCopyA(*MissingApi,
                          MAXIMUM_FILENAME_LENGTH,
-						 (PCHAR)&NameImport->Name[0]);
+                         (PCHAR)&NameImport->Name[0]);
 
         /* Setup name tables */
         DPRINT("Import name: %s\n", NameImport->Name);
@@ -797,9 +803,9 @@ MiSnapThunk(IN PVOID DllBase,
 
             /* Build the forwarder name */
             DllName.Buffer = (PCHAR)Address->u1.Function;
-            DllName.Length = strchr(DllName.Buffer, '.') -
-                             DllName.Buffer +
-                             sizeof(ANSI_NULL);
+            DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') -
+                                      DllName.Buffer) +
+                                      sizeof(ANSI_NULL);
             DllName.MaximumLength = DllName.Length;
 
             /* Convert it */
@@ -1185,6 +1191,8 @@ CheckDllState:
                     *MissingDriver = DllName.Buffer;
                     *(PULONG)MissingDriver |= 1;
                     *MissingApi = NULL;
+
+                    DPRINT1("Failed to load dependency: %wZ\n", &DllName);
                 }
             }
             else
@@ -1200,7 +1208,7 @@ CheckDllState:
                 Loaded = TRUE;
 
                 /* Sanity check */
-                ASSERT(DllBase = DllEntry->DllBase);
+                ASSERT(DllBase == DllEntry->DllBase);
 
                 /* Call the initialization routines */
                 Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
@@ -1208,6 +1216,7 @@ CheckDllState:
                 {
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
+                    DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
                     while (TRUE);
                     Loaded = FALSE;
                 }
@@ -1364,6 +1373,243 @@ CheckDllState:
 
 VOID
 NTAPI
+MiFreeInitializationCode(IN PVOID InitStart,
+                         IN PVOID InitEnd)
+{
+    PMMPTE PointerPte;
+    PFN_NUMBER PagesFreed;
+
+    /* Get the start PTE */
+    PointerPte = MiAddressToPte(InitStart);
+    ASSERT(MI_IS_PHYSICAL_ADDRESS(InitStart) == FALSE);
+
+    /*  Compute the number of pages we expect to free */
+    PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte + 1);
+    
+    /* Try to actually free them */
+    PagesFreed = MiDeleteSystemPageableVm(PointerPte,
+                                          PagesFreed,
+                                          0,
+                                          NULL);
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiFindInitializationCode(OUT PVOID *StartVa,
+                         OUT PVOID *EndVa)
+{
+    ULONG Size, SectionCount, Alignment;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG_PTR DllBase, InitStart, InitEnd, ImageEnd, InitCode;
+    PLIST_ENTRY NextEntry;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_SECTION_HEADER Section, LastSection;
+    BOOLEAN InitFound;
+    
+    /* So we don't free our own code yet */
+    InitCode = (ULONG_PTR)&MiFindInitializationCode;
+
+    /* Assume failure */
+    *StartVa = NULL;
+
+    /* Enter a critical region while we loop the list */
+    KeEnterCriticalRegion();
+
+    /* Loop all loaded modules */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the loader entry and its DLL base */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        DllBase = (ULONG_PTR)LdrEntry->DllBase;
+        
+        /* Get the NT header */
+        NtHeader = RtlImageNtHeader((PVOID)DllBase);
+        if (!NtHeader)
+        {
+            /* Keep going */
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+
+        /* Get the first section, the section count, and scan them all */
+        Section = IMAGE_FIRST_SECTION(NtHeader);
+        SectionCount = NtHeader->FileHeader.NumberOfSections;
+        InitStart = 0;
+        while (SectionCount > 0)
+        {
+            /* Assume failure */
+            InitFound = FALSE;
+
+            /* Is this the INIT section or a discardable section? */
+            if ((*(PULONG)Section->Name == 'TINI') ||
+                ((Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)))
+            {
+                /* Remember this */
+                InitFound = TRUE;
+            }
+
+            if (InitFound)
+            {
+                /* Pick the biggest size -- either raw or virtual */
+                Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+                
+                /* Read the section alignment */
+                Alignment = NtHeader->OptionalHeader.SectionAlignment;
+
+                /* Align the start and end addresses appropriately */
+                InitStart = DllBase + Section->VirtualAddress;
+                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;                        
+                InitStart = (InitStart + (PAGE_SIZE - 1)) & 0xFFFFF000;
+
+                /* Have we reached the last section? */
+                if (SectionCount == 1)
+                {
+                    /* Remember this */
+                    LastSection = Section;
+                }
+                else
+                {
+                    /* We have not, loop all the sections */
+                    LastSection = NULL;
+                    do
+                    {
+                        /* Keep going until we find a non-discardable section range */
+                        SectionCount--;
+                        Section++;
+                        if (Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
+                        {
+                            /* Discardable, so record it, then keep going */
+                            LastSection = Section;
+                        }
+                        else
+                        {
+                            /* Non-contigous discard flag, or no flag, break out */
+                            break;
+                        }
+                    }
+                    while (SectionCount > 1);
+                }
+
+                /* Have we found a discardable or init section? */
+                if (LastSection)
+                {
+                    /* Pick the biggest size -- either raw or virtual */
+                    Size = max(LastSection->SizeOfRawData, LastSection->Misc.VirtualSize);
+
+                    /* Use this as the end of the section address */
+                    InitEnd = DllBase + LastSection->VirtualAddress + Size - 1;
+
+                    /* Have we reached the last section yet? */
+                    if (SectionCount != 1)
+                    {
+                        /* Then align this accross the session boundary */
+                        InitEnd = ((Alignment + InitEnd - 1) & 0XFFFFF000) - 1;
+                    }
+                }
+
+                /* Make sure we don't let the init section go past the image */
+                ImageEnd = DllBase + LdrEntry->SizeOfImage;
+                if (InitEnd > ImageEnd) InitEnd = (ImageEnd - 1) | (PAGE_SIZE - 1);
+
+                /* Make sure we have a valid, non-zero init section */
+                if (InitStart <= InitEnd)
+                {
+                    /* Make sure we are not within this code itself */
+                    if ((InitCode >= InitStart) && (InitCode <= InitEnd))
+                    {
+                        /* Return it, we can't free ourselves now */
+                        ASSERT(*StartVa == 0);
+                        *StartVa = (PVOID)InitStart;
+                        *EndVa = (PVOID)InitEnd;
+                    }
+                    else
+                    {
+                        /* This isn't us -- go ahead and free it */
+                        ASSERT(MI_IS_PHYSICAL_ADDRESS((PVOID)InitStart) == FALSE);
+                        MiFreeInitializationCode((PVOID)InitStart, (PVOID)InitEnd);
+                    }
+                }
+            }
+            
+            /* Move to the next section */
+            SectionCount--;
+            Section++;
+        }
+        
+        /* Move to the next module */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Leave the critical region and return */
+    KeLeaveCriticalRegion();
+}
+
+/* 
+ * Note: This function assumes that all discardable sections are at the end of
+ * the PE file. It searches backwards until it finds the non-discardable section
+ */
+VOID
+NTAPI
+MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PMMPTE StartPte, EndPte;
+    PFN_NUMBER PageCount;
+    PVOID DllBase;
+    ULONG i;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_SECTION_HEADER Section, DiscardSection;
+    ULONG PagesDeleted;
+
+    /* Get the base address and the page count */
+    DllBase = LdrEntry->DllBase;
+    PageCount = LdrEntry->SizeOfImage >> PAGE_SHIFT;
+
+    /* Get the last PTE in this image */
+    EndPte = MiAddressToPte(DllBase) + PageCount;
+
+    /* Get the NT header */
+    NtHeader = RtlImageNtHeader(DllBase);
+    if (!NtHeader) return;
+
+    /* Get the last section and loop each section backwards */
+    Section = IMAGE_FIRST_SECTION(NtHeader) + NtHeader->FileHeader.NumberOfSections;
+    DiscardSection = NULL;
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Go back a section and check if it's discardable */
+        Section--;
+        if (Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
+        {
+            /* It is, select it for freeing */
+            DiscardSection = Section;
+        }
+        else
+        {
+            /* No more discardable sections exist, bail out */
+            break;
+        }
+    }
+
+    /* Bail out if there's nothing to free */
+    if (!DiscardSection) return;
+
+    /* Push the DLL base to the first disacrable section, and get its PTE */
+    DllBase = (PVOID)ROUND_TO_PAGES((ULONG_PTR)DllBase + DiscardSection->VirtualAddress);
+    ASSERT(MI_IS_PHYSICAL_ADDRESS(DllBase) == FALSE);
+    StartPte = MiAddressToPte(DllBase);
+
+    /* Check how many pages to free total */
+    PageCount = (PFN_NUMBER)(EndPte - StartPte);
+    if (!PageCount) return;
+
+    /* Delete this many PTEs */
+    PagesDeleted = MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
+}
+
+VOID
+NTAPI
 INIT_FUNCTION
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -1377,7 +1623,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
     PMMPTE PointerPte, StartPte, LastPte;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPFN Pfn1;
     MMPTE TempPte, OldPte;
 
@@ -1666,7 +1912,7 @@ MiBuildImportsForBootDrivers(VOID)
         /* Scan the thunks */
         for (i = 0, DllBase = 0, DllEnd = 0; i < ImportSize; i++, ImageThunk++)
 #else
-        i = DllBase = DllEnd = 0;
+        DllBase = DllEnd = i = 0;
         while ((ImportDescriptor->Name) &&
                (ImportDescriptor->OriginalFirstThunk))
         {
@@ -2277,7 +2523,8 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
 {
     PVOID ImageBase;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PFN_NUMBER PageCount = 0, PageFrameIndex;
+    PFN_COUNT PageCount = 0;
+    PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
 
@@ -2442,7 +2689,11 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
                              PAGE_EXECUTE,
                              SEC_IMAGE,
                              ImageHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+        return Status;
+    }
 
     /* Make sure we're in the system process */
     KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
@@ -2461,6 +2712,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     if (!NT_SUCCESS(Status))
     {
         /* We failed, close the handle and return */
+        DPRINT1("ZwMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         ZwClose(SectionHandle);
         return Status;
@@ -2702,7 +2954,11 @@ LoaderScan:
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_DELETE,
                             0);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwOpenFile failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Validate it */
         Status = MmCheckSystemImage(FileHandle, FALSE);
@@ -2741,7 +2997,11 @@ LoaderScan:
                                  PAGE_EXECUTE,
                                  SEC_IMAGE,
                                  FileHandle);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Now get the section pointer */
         Status = ObReferenceObjectByHandle(SectionHandle,
@@ -2800,7 +3060,11 @@ LoaderScan:
     }
 
     /* Check for failure of the load earlier */
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiLoadImageSection failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Relocate the driver */
     Status = LdrRelocateImageWithBias(ModuleLoadBase,
@@ -2809,8 +3073,11 @@ LoaderScan:
                                       STATUS_SUCCESS,
                                       STATUS_CONFLICTING_ADDRESSES,
                                       STATUS_INVALID_IMAGE_FORMAT);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrRelocateImageWithBias failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
@@ -2899,6 +3166,8 @@ LoaderScan:
                                       &LoadedImports);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
+
         /* Fail */
         MiProcessLoaderEntry(LdrEntry, FALSE);
 

@@ -146,6 +146,12 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
+   Address = (PVOID)PAGE_ROUND_DOWN(Address);
+   Offset = PAGE_ROUND_DOWN(Offset);
+
+   /* Making a page op during marea destruction is illegal */
+   ASSERT(!MArea->DeleteInProgress);
+
    /*
     * Calcuate the hash value for pageop structure
     */
@@ -227,7 +233,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    }
    PageOp->ReferenceCount = 1;
    PageOp->Next = MmPageOpHashTable[Hash];
-   PageOp->Hash = Hash;
+   PageOp->Hash = (ULONG)Hash;
    PageOp->Thread = PsGetCurrentThread();
    PageOp->Abandoned = FALSE;
    PageOp->Status = STATUS_PENDING;

@@ -1,6 +1,10 @@
 #ifndef __NETCON_H__
 #define __NETCON_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
     NCME_DEFAULT                = 0
@@ -249,5 +253,9 @@ EXTERN_C const IID IID_INetConnectionPropertyUi2;
 
 
 VOID WINAPI NcFreeNetconProperties (NETCON_PROPERTIES* pProps);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

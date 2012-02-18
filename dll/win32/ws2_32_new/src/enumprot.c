@@ -103,7 +103,6 @@ PTCATALOG
 WSAAPI
 OpenInitializedCatalog(VOID)
 {
-    INT ErrorCode;
     PTCATALOG Catalog;
     HKEY WsKey;
 
@@ -115,7 +114,7 @@ OpenInitializedCatalog(VOID)
         WsKey = WsOpenRegistryRoot();
 
         /* Initialize the catalog */
-        ErrorCode = WsTcInitializeFromRegistry(Catalog, WsKey, NULL);
+        WsTcInitializeFromRegistry(Catalog, WsKey, NULL);
 
         /* Close the key */
         RegCloseKey(WsKey);

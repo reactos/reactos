@@ -63,6 +63,7 @@ InstallDriver(
     if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
+	 && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
         return FALSE;
     if (!INF_GetDataField(&Context, 1, &ImagePath))

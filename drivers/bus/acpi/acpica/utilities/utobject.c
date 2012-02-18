@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -354,7 +354,7 @@ AcpiUtCreateBufferObject (
         Buffer = ACPI_ALLOCATE_ZEROED (BufferSize);
         if (!Buffer)
         {
-            ACPI_ERROR ((AE_INFO, "Could not allocate size %X",
+            ACPI_ERROR ((AE_INFO, "Could not allocate size %u",
                 (UINT32) BufferSize));
             AcpiUtRemoveReference (BufferDesc);
             return_PTR (NULL);
@@ -413,7 +413,7 @@ AcpiUtCreateStringObject (
     String = ACPI_ALLOCATE_ZEROED (StringSize + 1);
     if (!String)
     {
-        ACPI_ERROR ((AE_INFO, "Could not allocate size %X",
+        ACPI_ERROR ((AE_INFO, "Could not allocate size %u",
             (UINT32) StringSize));
         AcpiUtRemoveReference (StringDesc);
         return_PTR (NULL);
@@ -671,7 +671,7 @@ AcpiUtGetSimpleObjectSize (
              * required eventually.
              */
             ACPI_ERROR ((AE_INFO, "Cannot convert to external object - "
-                "unsupported Reference Class [%s] %X in object %p",
+                "unsupported Reference Class [%s] 0x%X in object %p",
                 AcpiUtGetReferenceName (InternalObject),
                 InternalObject->Reference.Class, InternalObject));
             Status = AE_TYPE;
@@ -683,7 +683,7 @@ AcpiUtGetSimpleObjectSize (
     default:
 
         ACPI_ERROR ((AE_INFO, "Cannot convert to external object - "
-            "unsupported type [%s] %X in object %p",
+            "unsupported type [%s] 0x%X in object %p",
             AcpiUtGetObjectTypeName (InternalObject),
             InternalObject->Common.Type, InternalObject));
         Status = AE_TYPE;

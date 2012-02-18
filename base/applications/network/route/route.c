@@ -36,7 +36,7 @@ static int Usage()
 static int PrintRoutes()
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
-    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
     ULONG Size = 0;
     DWORD Error = 0;
     ULONG adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
@@ -66,7 +66,6 @@ static int PrintRoutes()
     {
         if (!(IpForwardTable = malloc( Size )))
         {
-            free(pAdapterInfo);
             Error = ERROR_NOT_ENOUGH_MEMORY;
             goto Error;
         }
@@ -148,6 +147,8 @@ static int PrintRoutes()
     else
     {
 Error:
+        if (pAdapterInfo) free(pAdapterInfo);
+        if (IpForwardTable) free(IpForwardTable);
         _ftprintf( stderr, _T("Route enumerate failed\n") );
         return Error;
     }

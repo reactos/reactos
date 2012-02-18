@@ -145,7 +145,7 @@ VOID RunLoader(VOID)
 	}
 	TimeOut = GetTimeOut();
 
-	if (!UiInitialize(TimeOut != 0))
+	if (!UiInitialize(TRUE))
 	{
 		UiMessageBoxCritical("Unable to initialize UI.");
 		return;
@@ -238,7 +238,7 @@ VOID RunLoader(VOID)
 
 #ifdef FREELDR_REACTOS_SETUP
         // WinLdr-style boot
-        LoadReactOSSetup2();
+        LoadReactOSSetup();
 #elif defined(_M_IX86)
 		if (_stricmp(BootType, "Windows") == 0)
 		{

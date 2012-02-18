@@ -29,8 +29,8 @@
 31 stub -noname InitUserTheme
 32 stub -noname InitUserRegistry
 33 stub -noname ReestablishServerConnection
-34 stub -noname ThemeHooksInstall
-35 stub -noname ThemeHooksRemove
+34 stdcall -noname ThemeHooksInstall()
+35 stdcall -noname ThemeHooksRemove()
 36 stub -noname RefreshThemeForTS
 43 stub -noname ClassicGetSystemMetrics
 44 stub -noname ClassicSystemParametersInfoA
@@ -95,3 +95,4 @@
 @ stdcall OpenThemeData(ptr wstr)
 @ stdcall SetThemeAppProperties(long)
 @ stdcall SetWindowTheme(ptr wstr wstr)
+@ stdcall ThemeInitApiHook(long ptr)

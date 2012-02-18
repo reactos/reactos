@@ -60,7 +60,7 @@ NTAPI
 ObDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     EX_FAST_REF FastRef;
-    ULONG_PTR Count;
+    ULONG Count;
     PSECURITY_DESCRIPTOR OldSecurityDescriptor;
     
     /* Get the fast reference and capture it */
@@ -126,7 +126,7 @@ ObSetSecurityDescriptorInfo(IN PVOID Object,
     PSECURITY_DESCRIPTOR OldDescriptor, NewDescriptor, CachedDescriptor;
     PEX_FAST_REF FastRef;
     EX_FAST_REF OldValue;
-    ULONG_PTR Count;
+    ULONG Count;
     PAGED_CODE();
 
     /* Get the object header */

@@ -93,13 +93,11 @@ KbdSendCommandToMouse(UCHAR Command)
 VOID KbdEnableMouse()
 {
     KbdSendCommandToMouse(MOU_ENAB);
-    // kbd_write_command(KBD_ENABLE_MOUSE);
 }
 
 VOID KbdDisableMouse()
 {
     KbdSendCommandToMouse(MOU_DISAB);
-    // kbd_write_command(KBD_DISABLE_MOUSE);
 }
 
 CHAR

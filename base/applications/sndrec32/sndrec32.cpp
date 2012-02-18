@@ -542,7 +542,7 @@ WndProc_wave( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 LRESULT CALLBACK 
 WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    int wmId, wmEvent;
+    int wmId;
     TCHAR str_tmp[MAX_LOADSTRING];
     PAINTSTRUCT ps;
     HDC hdc;
@@ -724,8 +724,7 @@ WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
     case WM_COMMAND:
 
         wmId    = LOWORD( wParam );
-        wmEvent = HIWORD( wParam );
-        
+
         if (( wmId >= 0 ) && ( wmId < 5 ) && ( butdisabled[wmId] == TRUE ))
             break;
 
@@ -766,7 +765,7 @@ WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
                 isnew = TRUE;
                 display_dur = TRUE;
 
-                ZeroMemory( file_path, MAX_PATH );
+                ZeroMemory( file_path, MAX_PATH * sizeof(TCHAR) );
 
                 EnableWindow( slider, FALSE );
 

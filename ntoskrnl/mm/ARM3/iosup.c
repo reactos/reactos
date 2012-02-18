@@ -49,7 +49,8 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
              IN MEMORY_CACHING_TYPE CacheType)
 {
 
-    PFN_NUMBER Pfn, PageCount;
+    PFN_NUMBER Pfn;
+    PFN_COUNT PageCount;
     PMMPTE PointerPte;
     PVOID BaseAddress;
     MMPTE TempPte;
@@ -191,7 +192,8 @@ NTAPI
 MmUnmapIoSpace(IN PVOID BaseAddress,
                IN SIZE_T NumberOfBytes)
 {
-    PFN_NUMBER PageCount, Pfn;
+    PFN_NUMBER Pfn;
+    PFN_COUNT PageCount;
     PMMPTE PointerPte;
 
     //

@@ -211,16 +211,11 @@ DWORD	MCIAVI_mciInfo(UINT wDevID, DWORD dwFlags, LPMCI_DGV_INFO_PARMSW lpParms)
 	WARN("Don't know this info command (%u)\n", dwFlags);
 	ret = MCIERR_UNRECOGNIZED_COMMAND;
     }
-    if (str) {
-	if (strlenW(str) + 1 > lpParms->dwRetSize) {
-	    ret = MCIERR_PARAM_OVERFLOW;
-	} else {
-	    lstrcpynW(lpParms->lpstrReturn, str, lpParms->dwRetSize);
-	}
-    } else {
-	lpParms->lpstrReturn[0] = 0;
+    if (!ret) {
+	WCHAR zero = 0;
+	/* Only mciwave, mciseq and mcicda set dwRetSize (since NT). */
+	lstrcpynW(lpParms->lpstrReturn, str ? str : &zero, lpParms->dwRetSize);
     }
-
     LeaveCriticalSection(&wma->cs);
     return ret;
 }

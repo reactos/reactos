@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -143,8 +143,9 @@
 #define ACPI_TOOLS                  0x00002000
 #define ACPI_EXAMPLE                0x00004000
 #define ACPI_DRIVER                 0x00008000
+#define DT_COMPILER                 0x00010000
 
-#define ACPI_ALL_COMPONENTS         0x0000FFFF
+#define ACPI_ALL_COMPONENTS         0x0001FFFF
 #define ACPI_COMPONENT_DEFAULT      (ACPI_ALL_COMPONENTS)
 
 /* Component IDs reserved for ACPI drivers */
@@ -257,13 +258,19 @@
 
 #if defined (ACPI_DEBUG_OUTPUT) || !defined (ACPI_NO_ERROR_MESSAGES)
 /*
- * Module name is included in both debug and non-debug versions primarily for
- * error messages. The __FILE__ macro is not very useful for this, because it
- * often includes the entire pathname to the module
+ * The module name is used primarily for error and debug messages.
+ * The __FILE__ macro is not very useful for this, because it
+ * usually includes the entire pathname to the module making the
+ * debug output difficult to read.
  */
 #define ACPI_MODULE_NAME(Name)          static const char ACPI_UNUSED_VAR _AcpiModuleName[] = Name;
 #else
+/*
+ * For the no-debug and no-error-msg cases, we must at least define
+ * a null module name.
+ */
 #define ACPI_MODULE_NAME(Name)
+#define _AcpiModuleName ""
 #endif
 
 /*
@@ -281,6 +288,7 @@
 #define ACPI_WARNING(plist)             AcpiWarning plist
 #define ACPI_EXCEPTION(plist)           AcpiException plist
 #define ACPI_ERROR(plist)               AcpiError plist
+#define ACPI_DEBUG_OBJECT(obj,l,i)      AcpiExDoDebugObject(obj,l,i)
 
 #else
 
@@ -290,6 +298,7 @@
 #define ACPI_WARNING(plist)
 #define ACPI_EXCEPTION(plist)
 #define ACPI_ERROR(plist)
+#define ACPI_DEBUG_OBJECT(obj,l,i)
 
 #endif /* ACPI_NO_ERROR_MESSAGES */
 

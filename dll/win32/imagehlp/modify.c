@@ -45,7 +45,7 @@ BOOL IMAGEAPI BindImage(
  *		BindImageEx (IMAGEHLP.@)
  */
 BOOL IMAGEAPI BindImageEx(
-  DWORD Flags, LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath,
+  DWORD Flags, LPCSTR ImageName, LPCSTR DllPath, LPCSTR SymbolPath,
   PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
 {
   FIXME("(%d, %s, %s, %s, %p): stub\n",

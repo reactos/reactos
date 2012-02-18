@@ -28,6 +28,7 @@
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>

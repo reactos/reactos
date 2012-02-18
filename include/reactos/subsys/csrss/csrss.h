@@ -31,11 +31,48 @@ typedef struct
     ULONG Dummy;
 } CSRSS_CONNECT_PROCESS, *PCSRSS_CONNECT_PROCESS;
 
+typedef struct _BASE_SXS_CREATEPROCESS_MSG
+{
+    ULONG Flags;
+    ULONG ProcessParameterFlags;
+    HANDLE FileHandle;    
+    UNICODE_STRING SxsWin32ExePath;
+    UNICODE_STRING SxsNtExePath;
+    SIZE_T OverrideManifestOffset;
+    ULONG OverrideManifestSize;
+    SIZE_T OverridePolicyOffset;
+    ULONG OverridePolicySize;
+    PVOID PEManifestAddress;
+    ULONG PEManifestSize;
+    UNICODE_STRING CultureFallbacks;
+    ULONG Unknown[7];
+    UNICODE_STRING AssemblyName;
+} BASE_SXS_CREATEPROCESS_MSG, *PBASE_SXS_CREATEPROCESS_MSG;
+
 typedef struct
 {
-   HANDLE NewProcessId;
-   ULONG Flags;
-   BOOL bInheritHandles;
+#if 0
+    //
+    // NT-type structure (BASE_CREATEPROCESS_MSG)
+    //
+    HANDLE ProcessHandle;
+    HANDLE ThreadHandle;
+    CLIENT_ID ClientId;
+    ULONG CreationFlags;
+    ULONG VdmBinaryType;
+    ULONG VdmTask;
+    HANDLE hVDM;
+    BASE_SXS_CREATEPROCESS_MSG Sxs;
+    PVOID PebAddressNative;
+    ULONG PebAddressWow64;
+    USHORT ProcessorArchitecture;
+#endif
+    //
+    // ReactOS Data
+    //
+    HANDLE NewProcessId;
+    ULONG Flags;
+    BOOL bInheritHandles;
 } CSRSS_CREATE_PROCESS, *PCSRSS_CREATE_PROCESS;
 
 typedef struct
@@ -83,7 +120,7 @@ typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
    BOOLEAN ConsoleNeeded;
-   BOOLEAN Visible;
+   INT ShowCmd;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
@@ -525,6 +562,61 @@ typedef struct
     DWORD dwFlags;
 } CSRSS_DEFINE_DOS_DEVICE, *PCSRSS_DEFINE_DOS_DEVICE;
 
+typedef struct
+{
+    ULONG VideoMode;
+} CSRSS_SOUND_SENTRY, *PCSRSS_SOUND_SENTRY;
+
+typedef struct
+{
+    ULONG iTask;
+    ULONG BinaryType;
+    HANDLE ConsoleHandle;
+    HANDLE VDMProcessHandle;
+    HANDLE WaitObjectForParent;
+    USHORT EntryIndex;
+    USHORT VDMCreationState;
+} CSRSS_UPDATE_VDM_ENTRY, *PCSRSS_UPDATE_VDM_ENTRY;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE hParent;
+    ULONG ExitCode;
+} CSRSS_GET_VDM_EXIT_CODE, *PCSRSS_GET_VDM_EXIT_CODE;
+
+typedef struct
+{
+    ULONG iTask;
+    HANDLE ConsoleHandle;
+    ULONG BinaryType;
+    HANDLE WaitObjectForParent;
+    HANDLE StdIn;
+    HANDLE StdOut;
+    HANDLE StdErr;
+    ULONG CodePage;
+    ULONG dwCreationFlags;
+    PCHAR CmdLine;
+    PCHAR appName;
+    PCHAR PifFile;
+    PCHAR CurDirectory;
+    PCHAR Env;
+    ULONG EnvLen;
+    PVOID StartupInfo;
+    PCHAR Desktop;
+    ULONG DesktopLen;
+    PCHAR Title;
+    ULONG TitleLen;
+    PCHAR Reserved;
+    ULONG ReservedLen;
+    USHORT CmdLen;
+    USHORT AppLen;
+    USHORT PifLen;
+    USHORT CurDirectoryLen;
+    USHORT CurDrive;
+    USHORT VDMState;
+} CSRSS_CHECK_VDM, *PCSRSS_CHECK_VDM;
+
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
@@ -606,6 +698,10 @@ typedef struct
 #define SET_HISTORY_INFO              (0x47)
 #define GET_TEMP_FILE                 (0x48)
 #define DEFINE_DOS_DEVICE			  (0X49)
+#define SOUND_SENTRY                  (0x50)
+#define UPDATE_VDM_ENTRY              (0x51)
+#define GET_VDM_EXIT_CODE             (0x52)
+#define CHECK_VDM                     (0x53)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -689,6 +785,10 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_HISTORY_INFO SetHistoryInfo;
         CSRSS_GET_TEMP_FILE GetTempFile;
         CSRSS_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
+        CSRSS_SOUND_SENTRY SoundSentryRequest;
+        CSRSS_UPDATE_VDM_ENTRY UpdateVdmEntry;
+        CSRSS_GET_VDM_EXIT_CODE GetVdmExitCode;
+        CSRSS_CHECK_VDM CheckVdm;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
@@ -764,9 +864,15 @@ typedef struct _BASE_STATIC_SERVER_DATA
 /* Types used in the new CSR. Temporarly here for proper compile of NTDLL */
 #define CSR_SRV_SERVER 0
 
-#define CsrSrvClientConnect             0
-#define CsrSrvIdentifyAlertableThread   3
-#define CsrSrvSetPriorityClass          4
+typedef enum _CSR_SRV_API_NUMBER
+{
+    CsrpClientConnect,
+    CsrpThreadConnect,
+    CsrpProfileControl,
+    CsrpIdentifyAlertable,
+    CsrpSetPriorityClass,
+    CsrpMaxApiNumber
+} CSR_SRV_API_NUMBER, *PCSR_SRV_API_NUMBER;
 
 #define CSR_MAKE_OPCODE(s,m) ((s) << 16) | (m)
 

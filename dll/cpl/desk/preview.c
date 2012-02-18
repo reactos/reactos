@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Desktop Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/desk/preview.c
+ * FILE:        dll/cpl/desk/preview.c
  * PURPOSE:     Draws the preview control
  * COPYRIGHT:   Copyright 2006, 2007 Eric Kohl
  */
@@ -14,7 +14,7 @@ typedef struct _PREVIEW_DATA
 {
     HWND hwndParent;
 
-    THEME Theme;
+    COLOR_SCHEME Scheme;
 
     HBRUSH hbrScrollbar;
     HBRUSH hbrDesktop;
@@ -67,49 +67,49 @@ typedef struct _PREVIEW_DATA
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 
-static VOID UpdatePreviewTheme(HWND hwnd, PPREVIEW_DATA pPreviewData, THEME *theme)
+static VOID UpdatePreviewTheme(HWND hwnd, PPREVIEW_DATA pPreviewData, COLOR_SCHEME *scheme)
 {
     if (pPreviewData->hbrScrollbar != NULL)
         DeleteObject(pPreviewData->hbrScrollbar);
-    pPreviewData->hbrScrollbar = CreateSolidBrush(theme->crColor[COLOR_SCROLLBAR]);
+    pPreviewData->hbrScrollbar = CreateSolidBrush(scheme->crColor[COLOR_SCROLLBAR]);
     if (pPreviewData->hbrDesktop != NULL)
         DeleteObject(pPreviewData->hbrDesktop);
 
-    pPreviewData->hbrDesktop = CreateSolidBrush(theme->crColor[COLOR_DESKTOP]);
+    pPreviewData->hbrDesktop = CreateSolidBrush(scheme->crColor[COLOR_DESKTOP]);
     if (pPreviewData->hbrWindow != NULL)
         DeleteObject(pPreviewData->hbrWindow);
-    pPreviewData->hbrWindow = CreateSolidBrush(theme->crColor[COLOR_WINDOW]);
+    pPreviewData->hbrWindow = CreateSolidBrush(scheme->crColor[COLOR_WINDOW]);
 
-    pPreviewData->cxEdge = theme->Size[SIZE_EDGE_X] - 2;        /* SM_CXEDGE */
-    pPreviewData->cyEdge = theme->Size[SIZE_EDGE_Y] - 2;        /* SM_CYEDGE */
+    pPreviewData->cxEdge = scheme->Size[SIZE_EDGE_X] - 2;        /* SM_CXEDGE */
+    pPreviewData->cyEdge = scheme->Size[SIZE_EDGE_Y] - 2;        /* SM_CYEDGE */
 
-    pPreviewData->cySizeFrame = theme->Size[SIZE_FRAME_Y] - 1;  /* SM_CYSIZEFRAME */
+    pPreviewData->cySizeFrame = scheme->Size[SIZE_FRAME_Y] - 1;  /* SM_CYSIZEFRAME */
 
-    pPreviewData->cyCaption = theme->Size[SIZE_CAPTION_Y];      /* SM_CYCAPTION */
-    pPreviewData->cyMenu = theme->Size[SIZE_MENU_Y];            /* SM_CYMENU */
-    pPreviewData->cxScrollbar = theme->Size[SIZE_SCROLL_X];     /* SM_CXVSCROLL */
-    pPreviewData->cyBorder = theme->Size[SIZE_BORDER_Y];        /* SM_CYBORDER */
+    pPreviewData->cyCaption = scheme->Size[SIZE_CAPTION_Y];      /* SM_CYCAPTION */
+    pPreviewData->cyMenu = scheme->Size[SIZE_MENU_Y];            /* SM_CYMENU */
+    pPreviewData->cxScrollbar = scheme->Size[SIZE_SCROLL_X];     /* SM_CXVSCROLL */
+    pPreviewData->cyBorder = scheme->Size[SIZE_BORDER_Y];        /* SM_CYBORDER */
 
     if (pPreviewData->hCaptionFont != NULL)
         DeleteObject(pPreviewData->hCaptionFont);
-    pPreviewData->hCaptionFont = CreateFontIndirect(&theme->lfFont[FONT_CAPTION]);
+    pPreviewData->hCaptionFont = CreateFontIndirect(&scheme->lfFont[FONT_CAPTION]);
 
     if (pPreviewData->hMenuFont != NULL)
         DeleteObject(pPreviewData->hMenuFont);
-    pPreviewData->hMenuFont = CreateFontIndirect(&theme->lfFont[FONT_MENU]);
+    pPreviewData->hMenuFont = CreateFontIndirect(&scheme->lfFont[FONT_MENU]);
 
     if (pPreviewData->hMessageFont != NULL)
         DeleteObject(pPreviewData->hMessageFont);
-    pPreviewData->hMessageFont = CreateFontIndirect(&theme->lfFont[FONT_DIALOG]);
+    pPreviewData->hMessageFont = CreateFontIndirect(&scheme->lfFont[FONT_DIALOG]);
 
-    pPreviewData->Theme = *theme;
+    pPreviewData->Scheme = *scheme;
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
 static VOID
 OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
 {
-    THEME *theme;
+    COLOR_SCHEME *scheme;
 
     pPreviewData->hClientFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
@@ -130,10 +130,10 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
     AllocAndLoadString(&pPreviewData->lpMessText, hApplet, IDS_MESSTEXT);
     AllocAndLoadString(&pPreviewData->lpButText, hApplet, IDS_BUTTEXT);
 
-    theme = &pPreviewData->Theme;
-    LoadCurrentTheme(theme);
+    scheme = &pPreviewData->Scheme;
+    LoadCurrentScheme(scheme);
 
-    UpdatePreviewTheme(hwnd, pPreviewData, theme);
+    UpdatePreviewTheme(hwnd, pPreviewData, scheme);
 }
 
 
@@ -252,9 +252,9 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     HFONT hOldFont;
     HDC hdc;
     RECT rc;
-    THEME *theme;
+    COLOR_SCHEME *scheme;
 
-    theme = &pPreviewData->Theme;
+    scheme = &pPreviewData->Scheme;
 
     hdc = BeginPaint(hwnd, &ps);
 
@@ -262,61 +262,61 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     FillRect(hdc, &pPreviewData->rcDesktop, pPreviewData->hbrDesktop);
 
     /* Inactive Window */
-    MyDrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, theme);
-    SetTextColor(hdc, theme->crColor[COLOR_INACTIVECAPTIONTEXT]);
+    MyDrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, scheme);
+    SetTextColor(hdc, scheme->crColor[COLOR_INACTIVECAPTIONTEXT]);
     MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
-                      NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT, theme);
-    MyDrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2, theme);
+                      NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT, scheme);
+    MyDrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2, scheme);
 
     /* Active Window */
-    MyDrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, theme);
-    SetTextColor(hdc, theme->crColor[COLOR_CAPTIONTEXT]);
+    MyDrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, scheme);
+    SetTextColor(hdc, scheme->crColor[COLOR_CAPTIONTEXT]);
     MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcActiveCaption, pPreviewData->hCaptionFont,
-                      NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT, theme);
-    MyDrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE, pPreviewData->cyCaption - 2, theme);
+                      NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT, scheme);
+    MyDrawCaptionButtons(hdc, &pPreviewData->rcActiveCaption, TRUE, pPreviewData->cyCaption - 2, scheme);
 
     /* Draw the menu bar */
     MyDrawMenuBarTemp(hwnd, hdc, &pPreviewData->rcActiveMenuBar,
                       pPreviewData->hMenu,
-                      pPreviewData->hMenuFont, theme);
+                      pPreviewData->hMenuFont, scheme);
 
     /* Draw the client area */
     CopyRect(&rc, &pPreviewData->rcActiveClient);
-    MyDrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST, theme);
+    MyDrawEdge(hdc, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST, scheme);
     FillRect(hdc, &rc, pPreviewData->hbrWindow);
 
     /* Draw the client text */
     CopyRect(&rc, &pPreviewData->rcActiveClient);
     rc.left += 4;
     rc.top += 2;
-    SetTextColor(hdc, theme->crColor[COLOR_WINDOWTEXT]);
+    SetTextColor(hdc, scheme->crColor[COLOR_WINDOWTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hClientFont);
     DrawText(hdc, pPreviewData->lpWinTxt, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 
     /* Draw the scroll bar */
-    MyDrawScrollbar(hdc, &pPreviewData->rcActiveScroll, pPreviewData->hbrScrollbar, theme);
+    MyDrawScrollbar(hdc, &pPreviewData->rcActiveScroll, pPreviewData->hbrScrollbar, scheme);
 
     /* Dialog Window */
-    MyDrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, theme);
-    SetTextColor(hdc, theme->crColor[COLOR_WINDOW]);
+    MyDrawEdge(hdc, &pPreviewData->rcDialogFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, scheme);
+    SetTextColor(hdc, scheme->crColor[COLOR_WINDOW]);
     MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcDialogCaption, pPreviewData->hCaptionFont,
-                      NULL, pPreviewData->lpMessBox, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT, theme);
-    MyDrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE, pPreviewData->cyCaption - 2, theme);
+                      NULL, pPreviewData->lpMessBox, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT, scheme);
+    MyDrawCaptionButtons(hdc, &pPreviewData->rcDialogCaption, FALSE, pPreviewData->cyCaption - 2, scheme);
 
     /* Draw the dialog text */
     CopyRect(&rc, &pPreviewData->rcDialogClient);
     rc.left += 4;
     rc.top += 2;
-    SetTextColor(hdc, theme->crColor[COLOR_BTNTEXT]);
+    SetTextColor(hdc, scheme->crColor[COLOR_BTNTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
     DrawText(hdc, pPreviewData->lpMessText, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 
     /* Draw Button */
-    MyDrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH, theme);
+    MyDrawFrameControl(hdc, &pPreviewData->rcDialogButton, DFC_BUTTON, DFCS_BUTTONPUSH, scheme);
     CopyRect(&rc, &pPreviewData->rcDialogButton);
-    SetTextColor(hdc, theme->crColor[COLOR_BTNTEXT]);
+    SetTextColor(hdc, scheme->crColor[COLOR_BTNTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
     DrawText(hdc, pPreviewData->lpButText, -1, &rc, DT_VCENTER | DT_CENTER | DT_SINGLELINE);
     SelectObject(hdc, hOldFont);
@@ -494,7 +494,7 @@ PreviewWndProc(HWND hwnd,
             break;
 
         case PVM_UPDATETHEME:
-            UpdatePreviewTheme(hwnd, pPreviewData, (THEME *)lParam);
+            UpdatePreviewTheme(hwnd, pPreviewData, (COLOR_SCHEME *)lParam);
             break;
 
         default:

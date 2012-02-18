@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -797,6 +797,7 @@ AcpiUtCopySimpleObject (
     UINT16                  ReferenceCount;
     ACPI_OPERAND_OBJECT     *NextObject;
     ACPI_STATUS             Status;
+    ACPI_SIZE               CopySize;
 
 
     /* Save fields from destination that we don't want to overwrite */
@@ -804,10 +805,18 @@ AcpiUtCopySimpleObject (
     ReferenceCount = DestDesc->Common.ReferenceCount;
     NextObject = DestDesc->Common.NextObject;
 
-    /* Copy the entire source object over the destination object*/
+    /*
+     * Copy the entire source object over the destination object.
+     * Note: Source can be either an operand object or namespace node.
+     */
+    CopySize = sizeof (ACPI_OPERAND_OBJECT);
+    if (ACPI_GET_DESCRIPTOR_TYPE (SourceDesc) == ACPI_DESC_TYPE_NAMED)
+    {
+        CopySize = sizeof (ACPI_NAMESPACE_NODE);
+    }
 
-    ACPI_MEMCPY ((char *) DestDesc, (char *) SourceDesc,
-                    sizeof (ACPI_OPERAND_OBJECT));
+    ACPI_MEMCPY (ACPI_CAST_PTR (char, DestDesc),
+        ACPI_CAST_PTR (char, SourceDesc), CopySize);
 
     /* Restore the saved fields */
 
@@ -841,8 +850,7 @@ AcpiUtCopySimpleObject (
             /* Copy the actual buffer data */
 
             ACPI_MEMCPY (DestDesc->Buffer.Pointer,
-                    SourceDesc->Buffer.Pointer,
-                    SourceDesc->Buffer.Length);
+                SourceDesc->Buffer.Pointer, SourceDesc->Buffer.Length);
         }
         break;
 
@@ -864,7 +872,7 @@ AcpiUtCopySimpleObject (
             /* Copy the actual string data */
 
             ACPI_MEMCPY (DestDesc->String.Pointer, SourceDesc->String.Pointer,
-                         (ACPI_SIZE) SourceDesc->String.Length + 1);
+                (ACPI_SIZE) SourceDesc->String.Length + 1);
         }
         break;
 

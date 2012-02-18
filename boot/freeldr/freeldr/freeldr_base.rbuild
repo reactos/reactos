@@ -9,7 +9,6 @@
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<directory name="arcemul">
-		<file>mm.c</file>
 		<file>time.c</file>
 	</directory>
 	<directory name="cache">
@@ -41,6 +40,7 @@
 		<file>parse.c</file>
 	</directory>
 	<directory name="mm">
+		<file>heap_new.c</file>
 		<file>meminit.c</file>
 		<file>mm.c</file>
 	</directory>
@@ -51,7 +51,6 @@
 		<file>binhive.c</file>
 	</directory>
 	<directory name="rtl">
-		<file>bget.c</file>
 		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">

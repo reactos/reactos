@@ -19,7 +19,6 @@
 
 #include <precomp.h>
 
-
 /*
  * @implemented
  */
@@ -34,27 +33,10 @@ int _isnan(double __x)
 	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
 }
 
-int _isnanl(long double __x)
-{
-	/* Intel's extended format has the normally implicit 1 explicit
-	   present.  Sigh!  */
-	union
-	{
-		long double*   __x;
-		long_double_s*   x;
-	} x;
-	x.__x = &__x;
-
-
-	 /* IEEE 854 NaN's have the maximum possible
-     exponent and a nonzero mantissa.  */
-
-	return (( x.x->exponent == 0x7fff)
-	  && ( (x.x->mantissah & 0x80000000) != 0)
-	  && ( (x.x->mantissah & (unsigned int)0x7fffffff) != 0  || x.x->mantissal != 0 ));
-}
-
-int _isinf(double __x)
+/*
+ * @implemented
+ */
+int _finite(double __x)
 {
 	union
 	{
@@ -63,35 +45,6 @@ int _isinf(double __x)
 	} x;
 
 	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
-}
 
-/*
- * @implemented
- */
-int _finite( double x )
-{
-	return !_isinf(x);
-}
-
-int _isinfl(long double __x)
-{
-	/* Intel's extended format has the normally implicit 1 explicit
-	   present.  Sigh!  */
-	union
-	{
-		long double*   __x;
-                long_double_s*   x;
-	} x;
-
-	x.__x = &__x;
-
-
-	 /* An IEEE 854 infinity has an exponent with the
-     maximum possible value and a zero mantissa.  */
-
-
-	if ( x.x->exponent == 0x7fff  && ( (x.x->mantissah == 0x80000000 )   && x.x->mantissal == 0 ))
-		return x.x->sign ? -1 : 1;
-	return 0;
+    return ((x.x->exponent & 0x7ff) != 0x7ff);
 }

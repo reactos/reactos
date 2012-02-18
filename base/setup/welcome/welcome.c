@@ -30,7 +30,7 @@
  *   utility but change the resources!
  */
 
-#include "../../../include/reactos/version.h"
+#include <reactos/version.h>
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>

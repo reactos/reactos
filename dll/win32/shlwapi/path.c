@@ -2186,7 +2186,7 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_a(lpszPath));
 
-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
     return TRUE;
   return FALSE;
 }
@@ -2200,7 +2200,7 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
     return TRUE;
   return FALSE;
 }

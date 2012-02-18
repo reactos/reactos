@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -217,7 +217,7 @@ AcpiExReadDataFromField (
         /* Call the region handler for the read */
 
         Status = AcpiExAccessRegion (ObjDesc, 0,
-                    ACPI_CAST_PTR (ACPI_INTEGER, BufferDesc->Buffer.Pointer),
+                    ACPI_CAST_PTR (UINT64, BufferDesc->Buffer.Pointer),
                     Function);
         AcpiExReleaseGlobalLock (ObjDesc->CommonField.FieldFlags);
         goto Exit;
@@ -226,7 +226,7 @@ AcpiExReadDataFromField (
     /*
      * Allocate a buffer for the contents of the field.
      *
-     * If the field is larger than the size of an ACPI_INTEGER, create
+     * If the field is larger than the current integer width, create
      * a BUFFER to hold it.  Otherwise, use an INTEGER.  This allows
      * the use of arithmetic operators on the returned value if the
      * field size is equal or smaller than an Integer.
@@ -382,7 +382,7 @@ AcpiExWriteDataToField (
         if (SourceDesc->Buffer.Length < Length)
         {
             ACPI_ERROR ((AE_INFO,
-                "SMBus or IPMI write requires Buffer of length %X, found length %X",
+                "SMBus or IPMI write requires Buffer of length %u, found length %u",
                 Length, SourceDesc->Buffer.Length));
 
             return_ACPI_STATUS (AE_AML_BUFFER_LIMIT);
@@ -408,7 +408,7 @@ AcpiExWriteDataToField (
          * same buffer)
          */
         Status = AcpiExAccessRegion (ObjDesc, 0,
-                    (ACPI_INTEGER *) Buffer, Function);
+                    (UINT64 *) Buffer, Function);
         AcpiExReleaseGlobalLock (ObjDesc->CommonField.FieldFlags);
 
         *ResultDesc = BufferDesc;

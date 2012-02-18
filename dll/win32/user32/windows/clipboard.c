@@ -46,40 +46,6 @@ EnumClipboardFormats(UINT format)
 /*
  * @implemented
  */
-HANDLE
-WINAPI
-GetClipboardData(UINT uFormat)
-{
-    HGLOBAL hGlobal = NULL;
-    PVOID pGlobal = NULL;
-    DWORD_PTR size = 0;
-
-    /* dealing with bitmap object */
-    if (uFormat != CF_BITMAP)
-    {
-        size = (DWORD_PTR)NtUserGetClipboardData(uFormat, NULL);
-
-        if (size)
-        {
-            hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, size);
-            pGlobal = GlobalLock(hGlobal);
-
-            size = (DWORD_PTR)NtUserGetClipboardData(uFormat, pGlobal);
-
-            GlobalUnlock(hGlobal);
-        }
-    }
-    else
-    {
-        hGlobal = NtUserGetClipboardData(CF_BITMAP, NULL);
-    }
-
-    return hGlobal;
-}
-
-/*
- * @implemented
- */
 INT
 WINAPI
 GetClipboardFormatNameA(UINT format,
@@ -87,7 +53,6 @@ GetClipboardFormatNameA(UINT format,
                         int cchMaxCount)
 {
     LPWSTR lpBuffer;
-    UNICODE_STRING FormatName;
     INT Length;
 
     lpBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, cchMaxCount * sizeof(WCHAR));
@@ -97,12 +62,8 @@ GetClipboardFormatNameA(UINT format,
         return 0;
     }
 
-    FormatName.Length = 0;
-    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
-    FormatName.Buffer = lpBuffer;
-
     /* we need a UNICODE string */
-    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+    Length = NtUserGetClipboardFormatName(format, lpBuffer, cchMaxCount);
 
     if (Length != 0)
     {
@@ -123,25 +84,16 @@ GetClipboardFormatNameA(UINT format,
  */
 INT
 WINAPI
-GetClipboardFormatNameW(UINT format,
+GetClipboardFormatNameW(UINT uFormat,
                         LPWSTR lpszFormatName,
                         INT cchMaxCount)
 {
-    UNICODE_STRING FormatName;
-    ULONG Ret;
-
-    FormatName.Length = 0;
-    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
-    FormatName.Buffer = (PWSTR)lpszFormatName;
-    Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
-    return Ret;
-
+    return NtUserGetClipboardFormatName(uFormat, lpszFormatName, cchMaxCount);
 }
 
 /*
  * @implemented
  */
-
 UINT
 WINAPI
 RegisterClipboardFormatA(LPCSTR lpszFormat)
@@ -201,26 +153,135 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
     return ret;
 }
 
-HGLOBAL
-renderLocale(DWORD Locale)
+PVOID static WINAPI
+IntSynthesizeMultiByte(PVOID pwStr, DWORD cbStr, BOOL bOem)
 {
-    DWORD* pLocale;
-    HGLOBAL hGlobal;
+    HANDLE hGlobal;
+    PVOID pGlobal;
+    INT cbGlobal;
 
-    hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DWORD));
+    cbGlobal = WideCharToMultiByte(bOem ? CP_OEMCP : CP_ACP,
+                                0, pwStr, cbStr / sizeof(WCHAR),
+                                NULL, 0, NULL, NULL);
+    hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, cbGlobal);
+    if (!hGlobal)
+        return NULL;
 
-    if(!hGlobal)
+    pGlobal = GlobalLock(hGlobal);
+    WideCharToMultiByte(bOem ? CP_OEMCP : CP_ACP,
+                        0, pwStr, cbStr / sizeof(WCHAR),
+                        pGlobal, cbGlobal, NULL, NULL);
+    return pGlobal;
+}
+
+PVOID static WINAPI
+IntSynthesizeWideChar(PVOID pwStr, DWORD cbStr, BOOL bOem)
+{
+    HANDLE hGlobal;
+    PVOID pGlobal;
+    INT cbGlobal;
+
+    cbGlobal = MultiByteToWideChar(bOem ? CP_OEMCP : CP_ACP,
+                                   0, pwStr, cbStr, NULL, 0) * sizeof(WCHAR);
+    hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, cbGlobal);
+    if (!hGlobal)
+        return NULL;
+
+    pGlobal = GlobalLock(hGlobal);
+    MultiByteToWideChar(bOem ? CP_OEMCP : CP_ACP,
+                        0, pwStr, cbStr, pGlobal, cbGlobal);
+    return pGlobal;
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+GetClipboardData(UINT uFormat)
+{
+    HANDLE hData = NULL;
+    PVOID pData = NULL;
+    DWORD cbData = 0;
+    GETCLIPBDATA gcd;
+
+    hData = NtUserGetClipboardData(uFormat, &gcd);
+    if (!hData)
+        return NULL;
+
+    if (gcd.fGlobalHandle)
     {
-        return hGlobal;
+        HANDLE hGlobal;
+
+        NtUserCreateLocalMemHandle(hData, NULL, 0, &cbData);
+        hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, cbData);
+        pData = GlobalLock(hGlobal);
+        NtUserCreateLocalMemHandle(hData, pData, cbData, NULL);
+        hData = hGlobal;
     }
 
-    pLocale = (DWORD*)GlobalLock(hGlobal);
+    if (gcd.uFmtRet != uFormat)
+    {
+        SETCLIPBDATA scd = {FALSE, FALSE};
+        HANDLE hNewData = NULL;
+        PVOID pNewData = NULL;
 
-    *pLocale = Locale;
+        /* Synthesize requested format */
+        switch (uFormat)
+        {
+            case CF_TEXT:
+                if (gcd.uFmtRet == CF_UNICODETEXT)
+                    pNewData = IntSynthesizeMultiByte(pData, cbData, uFormat == CF_OEMTEXT);
+                else // CF_OEMTEXT
+                    OemToCharBuffA(pData, pData, cbData);
+                break;
+            case CF_OEMTEXT:
+                if (gcd.uFmtRet == CF_UNICODETEXT)
+                    pNewData = IntSynthesizeMultiByte(pData, cbData, uFormat == CF_OEMTEXT);
+                else
+                    CharToOemBuffA(pData, pData, cbData);
+                break;
+            case CF_UNICODETEXT:
+                pNewData = IntSynthesizeWideChar(pData, cbData, gcd.uFmtRet == CF_OEMTEXT);
+                break;
+            default:
+                FIXME("Format: %u != %u\n", uFormat, gcd.uFmtRet);
+        }
 
-    GlobalUnlock(hGlobal);
+        /* Is it a global handle? */
+        if (pNewData)
+            hNewData = GlobalHandle(pNewData);
 
-    return hGlobal;
+        if (hNewData)
+        {
+            /* Free old data */
+            if (pData)
+            {
+                GlobalUnlock(hData);
+                GlobalFree(hData);
+            }
+            hData = hNewData;
+            pData = pNewData;
+        }
+
+        /* Save synthesized format in clibboard */
+        if (pData)
+        {
+            HANDLE hMem;
+
+            scd.fGlobalHandle = TRUE;
+            hMem = NtUserConvertMemHandle(pData, GlobalSize(hData));
+            NtUserSetClipboardData(uFormat, hMem, &scd);
+        }
+        else if (hData)
+            NtUserSetClipboardData(uFormat, hData, &scd);
+    }
+
+    /* Unlock global handle */
+    if (pData)
+        GlobalUnlock(hData);
+
+    return hData;
 }
 
 /*
@@ -230,60 +291,71 @@ HANDLE
 WINAPI
 SetClipboardData(UINT uFormat, HANDLE hMem)
 {
-    DWORD size;
+    DWORD dwSize;
+    HANDLE hGlobal;
     LPVOID pMem;
-    HANDLE ret = NULL;
+    HANDLE hRet = NULL;
+    SETCLIPBDATA scd = {FALSE, FALSE};
 
+    /* Check if this is delayed render */
     if (hMem == NULL)
-    {
-        return NtUserSetClipboardData(uFormat, 0, 0);
-    }
+        return NtUserSetClipboardData(uFormat, NULL, &scd);
 
-    if (uFormat == CF_BITMAP)
+    if (hMem <= (HANDLE)4)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    /* Bitmaps and palette does not use global handles */
+    else if (uFormat == CF_BITMAP || uFormat == CF_DSPBITMAP || uFormat == CF_PALETTE)
+        hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
+    /* Meta files are probably checked for validity */
+    else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT ||
+             uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+        hRet = NULL; // not supported yet
+    else
     {
-        /* GlobalLock should return 0 for GDI handles
+        /* Some formats accept only global handles, other accept global handles or integer values */
         pMem = GlobalLock(hMem);
-        if (pMem)
+        dwSize = GlobalSize(hMem);
+
+        if (pMem || uFormat == CF_DIB || uFormat == CF_DIBV5 ||
+            uFormat == CF_DSPTEXT || uFormat == CF_LOCALE ||
+            uFormat == CF_OEMTEXT || uFormat == CF_TEXT ||
+            uFormat == CF_UNICODETEXT)
         {
-            // not a  GDI handle
-            GlobalUnlock(hMem);
-            return ret;
+            if (pMem)
+            {
+                /* This is a local memory. Make global memory object */
+                hGlobal = NtUserConvertMemHandle(pMem, dwSize);
+
+                /* Unlock memory */
+                GlobalUnlock(hMem);
+                /* FIXME: free hMem when CloseClipboard is called */
+
+                if (hGlobal)
+                {
+                    /* Save data */
+                    scd.fGlobalHandle = TRUE;
+                    hRet = NtUserSetClipboardData(uFormat, hGlobal, &scd);
+                }
+
+                /* On success NtUserSetClipboardData returns pMem
+                   however caller expects us to return hMem */
+                if (hRet == hGlobal)
+                    hRet = hMem;
+            }
+            else
+                SetLastError(ERROR_INVALID_HANDLE);
         }
         else
         {
-            */
-            /* check if this GDI handle is a HBITMAP */
-            /* GetObject for HBITMAP not implemented in ReactOS */
-            //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
-            //{
-                return NtUserSetClipboardData(CF_BITMAP, hMem, 0);
-            //}
-        /*}*/
+            /* Save a number */
+            hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
+        }
     }
 
-    size = GlobalSize(hMem);
-    pMem = GlobalLock(hMem);
+    if (!hRet)
+        ERR("SetClipboardData(%u, %p) failed\n", uFormat, hMem);
 
-    if ((pMem) && (size))
-    {
-        size = GlobalSize(hMem);
-        ret = NtUserSetClipboardData(uFormat, pMem, size);
-
-        //On success NtUserSetClipboardData returns pMem
-        //however caller expects us to return hMem
-        if (ret == pMem)
-            ret = hMem;
-
-        //should i unlock hMem?
-        GlobalUnlock(hMem);
-    }
-    else
-    {
-        ERR("SetClipboardData failed\n");
-    }
-
-    return ret;
-
+    return hRet;
 }
 
 /*

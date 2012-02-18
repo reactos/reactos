@@ -71,7 +71,7 @@ AllocConsoleInfo()
 void
 InitConsoleDefaults(PConsoleInfo pConInfo)
 {
-	/* initialize struct */
+	/* Initialize struct */
 	pConInfo->InsertMode = TRUE;
 	pConInfo->HistoryBufferSize = 50;
 	pConInfo->NumberOfHistoryBuffers = 5;
@@ -142,7 +142,7 @@ ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 
 	if (res == IDCANCEL)
 	{
-		/* dont destroy when user presses cancel */
+		/* Don't destroy when user presses cancel */
 		SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
 	}
 	else if ( res == IDC_RADIO_APPLY_ALL )
@@ -175,8 +175,8 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 	/*
 	 * console.dll shares information with win32csr with wParam, lParam
 	 *
-	 * wParam is a pointer to an ConsoleInfo struct
-	 * lParam is a boolean parameter which specifies wheter defaults should be shown
+	 * wParam is a pointer to a ConsoleInfo struct
+	 * lParam is a boolean parameter which specifies whether defaults should be shown
 	 */
 
 	pConInfo = AllocConsoleInfo();
@@ -187,14 +187,14 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
 	if (lParam)
 	{
-		/* use defaults */
+		/* Use defaults */
 		InitConsoleDefaults(pConInfo);
 	}
 	else
 	{
 		if (IsBadReadPtr((const void *)pSharedInfo, sizeof(ConsoleInfo)))
 		{
-			/* use defaults */
+			/* Use defaults */
 			InitConsoleDefaults(pConInfo);
 		}
 		else
@@ -306,4 +306,3 @@ DllMain(
   }
   return TRUE;
 }
-

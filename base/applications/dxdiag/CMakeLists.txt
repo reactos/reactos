@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -20,7 +19,7 @@ list(APPEND SOURCE
 
 add_executable(dxdiag ${SOURCE})
 
-set_module_type(dxdiag win32gui)
+set_module_type(dxdiag win32gui UNICODE)
 
 target_link_libraries(dxdiag dxguid)
 

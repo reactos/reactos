@@ -1,0 +1,71 @@
+/* 
+ * FILE:             base/applications/mstsc/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * LAST CHANGE:      2011-12-18  minor changes
+ */
+ 
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_GENERAL DIALOGEX 0, 0, 242, 175
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Preferințe de conectare",IDC_STATIC,7,7,228,89
+    GROUPBOX        "Gestiune conexiuni",  IDC_STATIC,7,103,228,65
+    ICON            "",                    IDC_LOGONICON, 15,19,20,20
+    LTEXT           "Introduceți adresa unui server",IDC_STATIC,47,24,111,8
+    LTEXT           "Server:",             IDC_STATIC,47,41,25,8
+    LTEXT           "Nume utilizator:",    IDC_STATIC,47,58,58,8
+    COMBOBOX                               IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON      "Pă&strează",          IDC_SAVE,57,139,50,14
+    PUSHBUTTON      "&Păstrare în…",       IDC_SAVEAS,112,139,60,14
+    PUSHBUTTON      "&Deschidere…",        IDC_OPEN,177,139,50,14
+    ICON            "",                    IDC_CONNICON, 16,114,20,20
+    LTEXT           "Puteți păstra preferințele curente de conectare sau puteți deschide preferințe existente.",IDC_STATIC,50,115,172,20
+END
+
+IDD_DISPLAY DIALOGEX 0, 0, 242, 175
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Dimensiune",IDC_STATIC,7,7,228,68
+    GROUPBOX        "Culori",    IDC_STATIC,7,83,228,85
+    ICON            "",          IDC_REMICON, 15,19,20,20
+    ICON            "",          IDC_COLORSICON, 15,98,20,20
+	LTEXT           "Stabiliți dimensiunea ecranului de control. Trageți glisorul spre extrema dreaptă pentru tot ecranul.",IDC_STATIC,53,22,175,21
+    CONTROL         "",          IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX                     IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",          IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
+    LTEXT           "Notă: Această preferință poate fi sau nu compatibilă cu configurația calculatorului gazdă. Preferințele incompatibile vor fi ignorate.",IDC_STATIC,56,138,155,27
+    LTEXT           "Mic",       IDC_STATIC,35,42,15,8
+    LTEXT           "Mare",      IDC_STATIC,189,42,17,8
+    LTEXT           "",          IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+END
+
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Conectare pentru control la distanță"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Conectează", IDOK,147,245,50,14
+    PUSHBUTTON      "A&nulează",   IDCANCEL,203,245,50,14
+    CONTROL         "",            IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+END
+
+
+STRINGTABLE 
+BEGIN
+    IDS_TAB_GENERAL         "Generale"
+    IDS_TAB_DISPLAY         "Ecran"
+    IDS_256COLORS           "256 culori"
+    IDS_HIGHCOLOR15         "32,768 culori (15 biți)"
+    IDS_HIGHCOLOR16         "65,536 culori (16 biți)"
+    IDS_HIGHCOLOR24         "16,777,216 culori (24 biți)"
+    IDS_PIXEL               "%lux%lu pixeli"
+    IDS_FULLSCREEN          "Pe tot ecranul"
+    IDS_BROWSESERVER        "<Căutare mai multe…>"
+	IDS_HEADERTEXT1         ""
+    IDS_HEADERTEXT2         ""
+END

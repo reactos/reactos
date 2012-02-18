@@ -49,6 +49,3 @@ BEGIN
   IDS_24BPP "Color verdadero (24 bit)"
   IDS_32BPP "Color verdadero (32 bit)"
 END
-
-
-

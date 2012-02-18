@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -20,8 +19,7 @@ list(APPEND SOURCE
 
 add_library(msacm32 SHARED ${SOURCE})
 
-set_entrypoint(msacm32 DllMain 12)
-set_image_base(msacm32 ${baseaddress_msacm32})
+set_module_type(msacm32 win32dll ENTRYPOINT DllMain 12 UNICODE)
 
 target_link_libraries(msacm32 wine)
 add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)

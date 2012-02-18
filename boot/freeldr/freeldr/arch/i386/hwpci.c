@@ -23,6 +23,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(HWDETECT);
+
 static PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
 {
@@ -36,8 +38,7 @@ GetPciIrqRoutingTable(VOID)
     {
       if (Table->Signature == 'RIP$')
 	{
-	  DPRINTM(DPRINT_HWDETECT,
-		    "Found signature\n");
+	  TRACE("Found signature\n");
 
 	  Ptr = (PUCHAR)Table;
 	  Sum = 0;
@@ -48,13 +49,11 @@ GetPciIrqRoutingTable(VOID)
 
 	  if ((Sum & 0xFF) != 0)
 	    {
-	      DPRINTM(DPRINT_HWDETECT,
-			"Invalid routing table\n");
+	      ERR("Invalid routing table\n");
 	      return NULL;
 	    }
 
-	  DPRINTM(DPRINT_HWDETECT,
-		   "Valid checksum\n");
+	  TRACE("Valid checksum\n");
 
 	  return Table;
 	}
@@ -79,12 +78,12 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
 
   if (INT386_SUCCESS(RegsOut) && RegsOut.d.edx == 0x20494350 && RegsOut.b.ah == 0)
     {
-      DPRINTM(DPRINT_HWDETECT, "Found PCI bios\n");
+      TRACE("Found PCI bios\n");
 
-      DPRINTM(DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al);
-      DPRINTM(DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh);
-      DPRINTM(DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl);
-      DPRINTM(DPRINT_HWDETECT, "CL: %x\n", RegsOut.b.cl);
+      TRACE("AL: %x\n", RegsOut.b.al);
+      TRACE("BH: %x\n", RegsOut.b.bh);
+      TRACE("BL: %x\n", RegsOut.b.bl);
+      TRACE("CL: %x\n", RegsOut.b.cl);
 
       BusData->NoBuses = RegsOut.b.cl + 1;
       BusData->MajorRevision = RegsOut.b.bh;
@@ -95,7 +94,7 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
     }
 
 
-  DPRINTM(DPRINT_HWDETECT, "No PCI bios found\n");
+  TRACE("No PCI bios found\n");
 
   return FALSE;
 }
@@ -113,7 +112,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
   Table = GetPciIrqRoutingTable();
   if (Table != NULL)
     {
-      DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->TableSize);
+      TRACE("Table size: %u\n", Table->TableSize);
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
@@ -121,8 +120,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
-          DPRINTM(DPRINT_HWDETECT,
-              "Failed to allocate resource descriptor\n");
+          ERR("Failed to allocate resource descriptor\n");
           return;
       }
 
@@ -182,8 +180,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
-          DPRINTM(DPRINT_HWDETECT,
-              "Failed to allocate resource descriptor\n");
+          ERR("Failed to allocate resource descriptor\n");
           return;
       }
 
@@ -223,8 +220,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
               PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
-                  DPRINTM(DPRINT_HWDETECT,
-                            "Failed to allocate resource descriptor\n");
+                  ERR("Failed to allocate resource descriptor\n");
                   return;
               }
 
@@ -249,8 +245,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
               PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
-                  DPRINTM(DPRINT_HWDETECT,
-                            "Failed to allocate resource descriptor\n");
+                  ERR("Failed to allocate resource descriptor\n");
                   return;
               }
 

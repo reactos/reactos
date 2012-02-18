@@ -112,7 +112,9 @@ Author:
 //
 // Number of dispatch codes supported by KINTERRUPT
 //
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#ifdef _M_AMD64
+#define DISPATCH_LENGTH                 4
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define DISPATCH_LENGTH                 135
 #else
 #define DISPATCH_LENGTH                 106
@@ -128,7 +130,7 @@ typedef CCHAR KPROCESSOR_MODE;
 //
 // Dereferencable pointer to KUSER_SHARED_DATA in User-Mode
 //
-#define SharedUserData                  ((KUSER_SHARED_DATA *CONST)USER_SHARED_DATA)
+#define SharedUserData                  ((KUSER_SHARED_DATA *)USER_SHARED_DATA)
 
 //
 // Maximum WOW64 Entries in KUSER_SHARED_DATA
@@ -554,7 +556,11 @@ typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
     ULONG_PTR DpcLock;
+#ifdef _M_AMD64
+    volatile LONG DpcQueueDepth;
+#else
     volatile ULONG DpcQueueDepth;
+#endif
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
@@ -644,6 +650,10 @@ typedef struct _KINTERRUPT
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG Rsvd1;
 #endif
+#ifdef _M_AMD64
+    PKTRAP_FRAME TrapFrame;
+    PVOID Reserved;
+#endif
     ULONG DispatchCode[DISPATCH_LENGTH];
 } KINTERRUPT;
 
@@ -677,7 +687,7 @@ typedef struct _KEXECUTE_OPTIONS
 //
 typedef struct _KTHREAD
 {
-    DISPATCHER_HEADER DispatcherHeader;
+    DISPATCHER_HEADER Header;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG CycleTime;
     ULONG HighCycleTime;
@@ -686,7 +696,7 @@ typedef struct _KTHREAD
     LIST_ENTRY MutantListHead;
 #endif
     PVOID InitialStack;
-    ULONG_PTR StackLimit;
+    ULONG_PTR StackLimit; // FIXME: PVOID
     PVOID KernelStack;
     KSPIN_LOCK ThreadLock;
     union
@@ -694,7 +704,11 @@ typedef struct _KTHREAD
         KAPC_STATE ApcState;
         struct
         {
+#ifdef _M_AMD64
+            UCHAR ApcStateFill[43]; // 23 / 43
+#else
             UCHAR ApcStateFill[23];
+#endif
             UCHAR ApcQueueable;
             volatile UCHAR NextProcessor;
             volatile UCHAR DeferredProcessor;
@@ -703,11 +717,13 @@ typedef struct _KTHREAD
         };
     };
     KSPIN_LOCK ApcQueueLock;
+#ifndef _M_AMD64
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
     KIRQL WaitIrql;
     KPROCESSOR_MODE WaitMode;
+#endif
     LONG_PTR WaitStatus;
     union
     {
@@ -745,6 +761,7 @@ typedef struct _KTHREAD
         SINGLE_LIST_ENTRY SwapListEntry;
     };
     PKQUEUE Queue;
+#ifndef _M_AMD64
     ULONG WaitTime;
     union
     {
@@ -755,13 +772,14 @@ typedef struct _KTHREAD
         };
         ULONG CombinedApcDisable;
     };
+#endif
     struct _TEB *Teb;
     union
     {
         KTIMER Timer;
         struct
         {
-            UCHAR TimerFill[40];
+            UCHAR TimerFill[FIELD_OFFSET(KTIMER, Period) + sizeof(LONG)]; // 40 / 60
             union
             {
                 struct
@@ -786,7 +804,7 @@ typedef struct _KTHREAD
         KWAIT_BLOCK WaitBlock[THREAD_WAIT_OBJECTS + 1];
         struct
         {
-            UCHAR WaitBlockFill0[23];
+            UCHAR WaitBlockFill0[FIELD_OFFSET(KWAIT_BLOCK, SpareByte)]; // 32bit = 23, 64bit = 43
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
             UCHAR IdealProcessor;
 #else
@@ -795,19 +813,52 @@ typedef struct _KTHREAD
         };
         struct
         {
-            UCHAR WaitBlockFill1[47];
+            UCHAR WaitBlockFill1[1 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareByte)]; // 47 / 91
             CCHAR PreviousMode;
         };
         struct
         {
-            UCHAR WaitBlockFill2[71];
+            UCHAR WaitBlockFill2[2 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareByte)]; // 71 / 139
             UCHAR ResourceIndex;
         };
         struct
         {
-            UCHAR WaitBlockFill3[95];
+            UCHAR WaitBlockFill3[3 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareByte)]; // 95 / 187
             UCHAR LargeStack;
         };
+#ifdef _M_AMD64
+        struct
+        {
+            UCHAR WaitBlockFill4[FIELD_OFFSET(KWAIT_BLOCK, SpareLong)];
+            ULONG ContextSwitches;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill5[1 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareLong)];
+            UCHAR State;
+            UCHAR NpxState;
+            UCHAR WaitIrql;
+            CHAR WaitMode;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill6[2 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareLong)];
+            ULONG WaitTime;
+        };
+        struct
+        {
+            UCHAR WaitBlockFill7[3 * sizeof(KWAIT_BLOCK) + FIELD_OFFSET(KWAIT_BLOCK, SpareLong)];
+            union
+            {
+                struct
+                {
+                    SHORT KernelApcDisable;
+                    SHORT SpecialApcDisable;
+                };
+                ULONG CombinedApcDisable;
+            };
+        };
+#endif
     };
     LIST_ENTRY QueueListEntry;
     PKTRAP_FRAME TrapFrame;
@@ -816,6 +867,9 @@ typedef struct _KTHREAD
 #endif
     PVOID CallbackStack;
     PVOID ServiceTable;
+#ifdef _M_AMD64
+    ULONG KernelLimit;
+#endif
     UCHAR ApcStateIndex;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     UCHAR IdealProcessor;
@@ -825,6 +879,10 @@ typedef struct _KTHREAD
     BOOLEAN CalloutActive;
 #else
     BOOLEAN ProcessReadyQueue;
+#ifdef _M_AMD64
+    PVOID Win32kTable;
+    ULONG Win32kLimit;
+#endif
     BOOLEAN KernelStackResident;
 #endif
     SCHAR BasePriority;
@@ -843,7 +901,7 @@ typedef struct _KTHREAD
         KAPC_STATE SavedApcState;
         struct
         {
-            UCHAR SavedApcStateFill[23];
+            UCHAR SavedApcStateFill[FIELD_OFFSET(KAPC_STATE, UserApcPending) + 1]; // 23 / 43
             CCHAR FreezeCount;
             CCHAR SuspendCount;
             UCHAR UserIdealProcessor;
@@ -886,7 +944,7 @@ typedef struct _KTHREAD
         };
         struct
         {
-            UCHAR SuspendApcFill3[36];
+            UCHAR SuspendApcFill3[FIELD_OFFSET(KAPC, SystemArgument1)];
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
             PKPRCB WaitPrcb;
 #else
@@ -895,12 +953,12 @@ typedef struct _KTHREAD
         };
         struct
         {
-            UCHAR SuspendApcFill4[40];
+            UCHAR SuspendApcFill4[FIELD_OFFSET(KAPC, SystemArgument2)]; // 40 / 72
             PVOID LegoData;
         };
         struct
         {
-            UCHAR SuspendApcFill5[47];
+            UCHAR SuspendApcFill5[FIELD_OFFSET(KAPC, Inserted) + 1]; // 47 / 83
             UCHAR PowerState;
             ULONG UserTime;
         };
@@ -910,7 +968,7 @@ typedef struct _KTHREAD
         KSEMAPHORE SuspendSemaphore;
         struct
         {
-            UCHAR SuspendSemaphorefill[20];
+            UCHAR SuspendSemaphorefill[FIELD_OFFSET(KSEMAPHORE, Limit) + 4]; // 20 / 28
             ULONG SListFaultCount;
         };
     };
@@ -922,10 +980,18 @@ typedef struct _KTHREAD
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PVOID MdlForLockedteb;
 #endif
+#ifdef _M_AMD64
+    LONG64 ReadOperationCount;
+    LONG64 WriteOperationCount;
+    LONG64 OtherOperationCount;
+    LONG64 ReadTransferCount;
+    LONG64 WriteTransferCount;
+    LONG64 OtherTransferCount;
+#endif
 } KTHREAD;
 
 #define ASSERT_THREAD(object) \
-    ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ThreadObject))
 
 //
 // Kernel Process (KPROCESS)
@@ -935,15 +1001,17 @@ typedef struct _KPROCESS
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG DirectoryTableBase;
+    ULONG_PTR DirectoryTableBase;
     ULONG Unused0;
 #else
-    ULONG DirectoryTableBase[2];
+    ULONG_PTR DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;
     KIDTENTRY Int21Descriptor;
+#endif
     USHORT IopmOffset;
+#if defined(_M_IX86)
     UCHAR Iopl;
     UCHAR Unused;
 #endif

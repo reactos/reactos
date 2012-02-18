@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DNDEBUG=1)
 
@@ -21,7 +20,7 @@ list(APPEND SOURCE
 
 add_library(wdmaud.drv SHARED ${SOURCE})
 
-set_module_type(wdmaud.drv win32dll)
+set_module_type(wdmaud.drv win32dll UNICODE)
 
 set_target_properties(wdmaud.drv PROPERTIES SUFFIX "")
 

@@ -48,7 +48,6 @@ INT cmd_start (LPTSTR Rest)
 	TCHAR szFullCmdLine [CMDLINE_LENGTH];
 	PROCESS_INFORMATION prci;
 	STARTUPINFO stui;
-	INT i = 0;
 #ifdef UNICODE
 	DWORD dwCreationFlags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT;
 #else
@@ -213,7 +212,7 @@ INT cmd_start (LPTSTR Rest)
 	/* Parsing the command that gets called by start, and it's parameters */
 	{
 		BOOL bInside = FALSE;
-
+		INT i;
 		/* find the end of the command and put the arguments in param */
 		for (i = 0; Rest[i]; i++)
 		{

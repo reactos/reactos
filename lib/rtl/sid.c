@@ -332,7 +332,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 {
    WCHAR Buffer[256];
    PWSTR wcs;
-   ULONG Length;
+   SIZE_T Length;
    ULONG i;
    PISID Sid =  Sid_;
 
@@ -387,7 +387,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
       if (Length > String->MaximumLength)
          return STATUS_BUFFER_TOO_SMALL;
 
-      String->Length = Length;
+      String->Length = (USHORT)Length;
       RtlCopyMemory (String->Buffer,
                      Buffer,
                      Length);

@@ -11,7 +11,7 @@
 #define IDD_PROPPAGECOLORS		103
 #define IDD_APPLYOPTIONS		104
 
-//options dialog
+// Options dialog
 #define IDC_CHECK_QUICK_EDIT			200
 #define IDC_CHECK_INSERT_MODE			201
 #define IDC_CHECK_DISCARD_DUPLICATES	202
@@ -25,11 +25,11 @@
 #define	IDC_RADIO_DISPLAY_WINDOW		210
 #define IDC_RADIO_DISPLAY_FULL			211
 
-// apply dialog
+// Apply dialog
 #define IDC_RADIO_APPLY_ALL				300
 #define IDC_RADIO_APPLY_CURRENT			301
 
-//font dialog
+// Font dialog
 #define IDC_CHECK_BOLD_FONTS			400
 #define IDC_STATIC_SELECT_FONT_PREVIEW  401
 #define IDC_FONT_SIZE_X                 402
@@ -39,8 +39,7 @@
 #define IDC_LBOX_TYPE                   406
 #define IDC_GROUPBOX_FONT_NAME          407
 
-//layout dialog
-
+// Layout dialog
 #define IDC_UPDOWN_SCREEN_BUFFER_WIDTH   500
 #define IDC_EDIT_SCREEN_BUFFER_WIDTH     501
 #define IDC_EDIT_SCREEN_BUFFER_HEIGHT    502
@@ -56,8 +55,7 @@
 #define IDC_CHECK_SYSTEM_POS_WINDOW      512
 #define IDC_STATIC_LAYOUT_WINDOW_PREVIEW 513
 
-//color dialog
-
+// Color dialog
 #define IDC_RADIO_SCREEN_TEXT           600
 #define IDC_RADIO_SCREEN_BACKGROUND     601
 #define IDC_RADIO_POPUP_TEXT            602
@@ -87,7 +85,6 @@
 #define IDC_STATIC_COLOR15              626
 #define IDC_STATIC_COLOR16              627
 
-
-//string ids
+// String IDs
 #define IDS_SCREEN_TEXT					700
 #define IDS_RASTERFONTS					701

@@ -20,6 +20,9 @@ Description = Reproductor multimedia.
 [Section.040c]
 Description = Un lecteur media.
 
+[Section.0410]
+Description = Un lettore multimediale.
+
 [Section.0415]
 Description = Odtwarzacz multimediów.
 

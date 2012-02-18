@@ -93,7 +93,6 @@ UpdateGroupProperties(HWND hwndDlg)
     TCHAR szGroupName[UNLEN];
     INT iItem;
     HWND hwndLV;
-    NET_API_STATUS status;
     PLOCALGROUP_INFO_1 pGroupInfo = NULL;
 
     hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
@@ -107,7 +106,7 @@ UpdateGroupProperties(HWND hwndDlg)
                          szGroupName,
                          UNLEN);
 
-    status = NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
+    NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
 
     ListView_SetItemText(hwndLV, iItem, 1,
                          pGroupInfo->lgrpi1_comment);
@@ -276,7 +275,7 @@ GroupDelete(HWND hwndDlg)
                          szGroupName,
                          UNLEN);
 
-    /* Display a warning message because the delete operation cannot be reverted */
+    /* Display a warning message, because the delete operation cannot be reverted */
     wsprintf(szText, TEXT("Dou you really want to delete the user group \"%s\"?"), szGroupName);
     if (MessageBox(NULL, szText, TEXT("User Groups"), MB_ICONWARNING | MB_YESNO) == IDNO)
         return FALSE;
@@ -347,7 +346,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldGroupName[UNLEN];
     TCHAR szNewGroupName[UNLEN];
-    LOCALGROUP_INFO_0 lgrpi0;
+    //LOCALGROUP_INFO_0 lgrpi0;
     NET_API_STATUS status;
 
     /* Leave, if there is no valid listview item */
@@ -376,7 +375,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Change the user name */
-    lgrpi0.lgrpi0_name = szNewGroupName;
+    //lgrpi0.lgrpi0_name = szNewGroupName;
 
 #if 0
     status = NetLocalGroupSetInfo(NULL, szOldGroupName, 0, (LPBYTE)&lgrpi0, NULL);

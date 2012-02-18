@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -164,7 +164,7 @@ AcpiTbFindTable (
 
     /* Search for the table */
 
-    for (i = 0; i < AcpiGbl_RootTableList.Count; ++i)
+    for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
     {
         if (ACPI_MEMCMP (&(AcpiGbl_RootTableList.Tables[i].Signature),
                             Header.Signature, ACPI_NAME_SIZE))

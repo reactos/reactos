@@ -30,14 +30,50 @@ TCPRegisterInterface(PIP_INTERFACE IF);
 VOID
 TCPUnregisterInterface(PIP_INTERFACE IF);
 
-VOID DontFreePacket(
+VOID DeinitializePacket(
     PVOID Object)
 /*
- * FUNCTION: Do nothing for when the IPPacket struct is part of another
+ * FUNCTION: Frees buffers attached to the packet
  * ARGUMENTS:
  *     Object = Pointer to an IP packet structure
  */
 {
+    PIP_PACKET IPPacket = Object;
+
+    TI_DbgPrint(MAX_TRACE, ("Freeing object: 0x%p\n", Object));
+
+    /* Detect double free */
+    ASSERT(IPPacket->Type != 0xFF);
+    IPPacket->Type = 0xFF;
+
+    /* Check if there's a packet to free */
+    if (IPPacket->NdisPacket != NULL)
+    {
+        if (IPPacket->ReturnPacket)
+        {
+            /* Return the packet to the miniport driver */
+            TI_DbgPrint(MAX_TRACE, ("Returning packet 0x%p\n",
+                                    IPPacket->NdisPacket));
+            NdisReturnPackets(&IPPacket->NdisPacket, 1);
+        }
+        else
+        {
+            /* Free it the conventional way */
+            TI_DbgPrint(MAX_TRACE, ("Freeing packet 0x%p\n",
+                                    IPPacket->NdisPacket));
+            FreeNdisPacket(IPPacket->NdisPacket);
+        }
+    }
+
+    /* Check if we have a pool-allocated header */
+    if (!IPPacket->MappedHeader && IPPacket->Header)
+    {
+        /* Free it */
+        TI_DbgPrint(MAX_TRACE, ("Freeing header: 0x%p\n",
+                                IPPacket->Header));
+        ExFreePoolWithTag(IPPacket->Header,
+                          PACKET_BUFFER_TAG);
+    }
 }
 
 VOID FreeIF(
@@ -62,10 +98,9 @@ PIP_PACKET IPInitializePacket(
  *     Pointer to the created IP packet. NULL if there was not enough free resources.
  */
 {
-    /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    IPPacket->Free     = DontFreePacket;
+    IPPacket->Free     = DeinitializePacket;
     IPPacket->Type     = Type;
 
     return IPPacket;
@@ -171,7 +206,6 @@ PIP_INTERFACE IPCreateInterface(
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
     IF->MinFrameSize = BindInfo->MinFrameSize;
-    IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
     IF->Transmit      = BindInfo->Transmit;
@@ -278,11 +312,6 @@ BOOLEAN IPRegisterInterface(
     } while( !IndexHasBeenChosen );
 
     IF->Index = ChosenIndex;
-
-    if (!AddrIsUnspecified(&IF->Unicast))
-    {
-        IPAddInterfaceRoute(IF);
-    }
 
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,

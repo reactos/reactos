@@ -39,7 +39,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
 
     if (W32Process != NULL)
     {
-        /* search for the mapping */
+        /* Search for the mapping */
         Mapping = &W32Process->HeapMappings;
         while (Mapping != NULL)
         {
@@ -63,7 +63,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
         /* HACK: This needs to be handled during startup only... */
         ASSERT(Base == (PVOID)GlobalUserHeap);
 
-        /* temporarily map it into user space */
+        /* Temporarily map it into user space */
         Offset.QuadPart = 0;
         Status = MmMapViewOfSection(GlobalUserHeapSection,
                                     PsGetCurrentProcess(),
@@ -74,7 +74,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
                                     &ViewSize,
                                     ViewUnmap,
                                     SEC_NO_CHANGE,
-                                    PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                    PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
 
         if (!NT_SUCCESS(Status))
             return Status;
@@ -132,7 +132,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
     if (!NT_SUCCESS(Status))
         return NULL;
 
@@ -141,7 +141,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
                                      0,
                                      &ViewSize,
                                      MEM_COMMIT,
-                                     PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                     PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
 
     MmUnmapViewOfSection(PsGetCurrentProcess(),
                          MappedView);
@@ -177,12 +177,12 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
 
     SizeHeap.QuadPart = HeapSize;
 
-    /* create the section and map it into session space */
+    /* Create the section and map it into session space */
     Status = MmCreateSection((PVOID*)SectionObject,
                              SECTION_ALL_ACCESS,
                              NULL,
                              &SizeHeap,
-                             PAGE_EXECUTE_READWRITE, /* would prefer PAGE_READWRITE, but thanks to RTL heaps... */
+                             PAGE_EXECUTE_READWRITE, /* Would prefer PAGE_READWRITE, but thanks to RTL heaps... */
                              SEC_RESERVE,
                              NULL,
                              NULL);
@@ -205,7 +205,7 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
         return FALSE;
     }
 
-    /* create the heap */
+    /* Create the heap */
     pHeap = IntUserHeapCreate(*SectionObject,
                               SystemBase,
                               HeapSize);

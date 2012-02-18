@@ -22,6 +22,7 @@ KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
 
 extern ULONG ExpInitializationPhase;
+extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
 /* DATA **********************************************************************/
@@ -47,13 +48,374 @@ VOID
 IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
-IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
+IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject, BOOLEAN Force);
 
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
 {
    return ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+}
+
+VOID
+IopFixupDeviceId(PWCHAR String)
+{
+    ULONG Length = wcslen(String), i;
+
+    for (i = 0; i < Length; i++)
+    {
+        if (String[i] == L'\\')
+            String[i] = L'#';
+    }
+}
+
+VOID
+NTAPI
+IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
+{
+    NTSTATUS Status;
+    HANDLE CriticalDeviceKey, InstanceKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING CriticalDeviceKeyU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\CriticalDeviceDatabase");
+    UNICODE_STRING CompatibleIdU = RTL_CONSTANT_STRING(L"CompatibleIDs");
+    UNICODE_STRING HardwareIdU = RTL_CONSTANT_STRING(L"HardwareID");
+    UNICODE_STRING ServiceU = RTL_CONSTANT_STRING(L"Service");
+    UNICODE_STRING ClassGuidU = RTL_CONSTANT_STRING(L"ClassGUID");
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    ULONG HidLength = 0, CidLength = 0, BufferLength;
+    PWCHAR IdBuffer, OriginalIdBuffer;
+    
+    /* Open the device instance key */
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    if (Status != STATUS_SUCCESS)
+        return;
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &HardwareIdU,
+                             KeyValuePartialInformation,
+                             NULL,
+                             0,
+                             &HidLength);
+    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &CompatibleIdU,
+                             KeyValuePartialInformation,
+                             NULL,
+                             0,
+                             &CidLength);
+    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        CidLength = 0;
+    }
+
+    BufferLength = HidLength + CidLength;
+    BufferLength -= (((CidLength != 0) ? 2 : 1) * FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data));
+
+    /* Allocate a buffer to hold data from both */
+    OriginalIdBuffer = IdBuffer = ExAllocatePool(PagedPool, BufferLength);
+    if (!IdBuffer)
+    {
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    /* Compute the buffer size */
+    if (HidLength > CidLength)
+        BufferLength = HidLength;
+    else
+        BufferLength = CidLength;
+
+    PartialInfo = ExAllocatePool(PagedPool, BufferLength);
+    if (!PartialInfo)
+    {
+        ZwClose(InstanceKey);
+        ExFreePool(OriginalIdBuffer);
+        return;
+    }
+
+    Status = ZwQueryValueKey(InstanceKey,
+                             &HardwareIdU,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             HidLength,
+                             &HidLength);
+    if (Status != STATUS_SUCCESS)
+    {
+        ExFreePool(PartialInfo);
+        ExFreePool(OriginalIdBuffer);
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    /* Copy in HID info first (without 2nd terminating NULL if CID is present) */
+    HidLength = PartialInfo->DataLength - ((CidLength != 0) ? sizeof(WCHAR) : 0);
+    RtlCopyMemory(IdBuffer, PartialInfo->Data, HidLength);
+
+    if (CidLength != 0)
+    {
+        Status = ZwQueryValueKey(InstanceKey,
+                                 &CompatibleIdU,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 CidLength,
+                                 &CidLength);
+        if (Status != STATUS_SUCCESS)
+        {
+            ExFreePool(PartialInfo);
+            ExFreePool(OriginalIdBuffer);
+            ZwClose(InstanceKey);
+            return;
+        }
+        
+        /* Copy CID next */
+        CidLength = PartialInfo->DataLength;
+        RtlCopyMemory(((PUCHAR)IdBuffer) + HidLength, PartialInfo->Data, CidLength);
+    }
+
+    /* Free our temp buffer */
+    ExFreePool(PartialInfo);
+    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &CriticalDeviceKeyU,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&CriticalDeviceKey,
+                       KEY_ENUMERATE_SUB_KEYS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* The critical device database doesn't exist because
+         * we're probably in 1st stage setup, but it's ok */
+        ExFreePool(OriginalIdBuffer);
+        ZwClose(InstanceKey);
+        return;
+    }
+
+    while (*IdBuffer)
+    {
+        ULONG StringLength = (ULONG)wcslen(IdBuffer) + 1, Index;
+        
+        IopFixupDeviceId(IdBuffer);
+        
+        /* Look through all subkeys for a match */
+        for (Index = 0; TRUE; Index++)
+        {
+            ULONG NeededLength;
+            PKEY_BASIC_INFORMATION BasicInfo;
+            
+            Status = ZwEnumerateKey(CriticalDeviceKey,
+                                    Index,
+                                    KeyBasicInformation,
+                                    NULL,
+                                    0,
+                                    &NeededLength);
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                break;
+            else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                UNICODE_STRING ChildIdNameU, RegKeyNameU;
+
+                BasicInfo = ExAllocatePool(PagedPool, NeededLength);
+                if (!BasicInfo)
+                {
+                    /* No memory */
+                    ExFreePool(OriginalIdBuffer);
+                    ZwClose(CriticalDeviceKey);
+                    ZwClose(InstanceKey);
+                    return;
+                }
+
+                Status = ZwEnumerateKey(CriticalDeviceKey,
+                                        Index,
+                                        KeyBasicInformation,
+                                        BasicInfo,
+                                        NeededLength,
+                                        &NeededLength);
+                if (Status != STATUS_SUCCESS)
+                {
+                    /* This shouldn't happen */
+                    ExFreePool(BasicInfo);
+                    continue;
+                }
+
+                ChildIdNameU.Buffer = IdBuffer;
+                ChildIdNameU.MaximumLength = ChildIdNameU.Length = (StringLength - 1) * sizeof(WCHAR);
+                RegKeyNameU.Buffer = BasicInfo->Name;
+                RegKeyNameU.MaximumLength = RegKeyNameU.Length = BasicInfo->NameLength;
+
+                if (RtlEqualUnicodeString(&ChildIdNameU, &RegKeyNameU, TRUE))
+                {
+                    HANDLE ChildKeyHandle;
+
+                    InitializeObjectAttributes(&ObjectAttributes,
+                                               &ChildIdNameU,
+                                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                               CriticalDeviceKey,
+                                               NULL);
+
+                    Status = ZwOpenKey(&ChildKeyHandle,
+                                       KEY_QUERY_VALUE,
+                                       &ObjectAttributes);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    /* Check if there's already a driver installed */
+                    Status = ZwQueryValueKey(InstanceKey,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    PartialInfo = ExAllocatePool(PagedPool, NeededLength);
+                    if (!PartialInfo)
+                    {
+                        ExFreePool(OriginalIdBuffer);
+                        ExFreePool(BasicInfo);
+                        ZwClose(InstanceKey);
+                        ZwClose(ChildKeyHandle);
+                        ZwClose(CriticalDeviceKey);
+                        return;
+                    }
+
+                    /* Read ClassGUID entry in the CDDB */
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ClassGuidU,
+                                             KeyValuePartialInformation,
+                                             PartialInfo,
+                                             NeededLength,
+                                             &NeededLength);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        continue;
+                    }
+
+                    /* Write it to the ENUM key */
+                    Status = ZwSetValueKey(InstanceKey,
+                                           &ClassGuidU,
+                                           0,
+                                           REG_SZ,
+                                           PartialInfo->Data,
+                                           PartialInfo->DataLength);
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        ExFreePool(BasicInfo);
+                        ExFreePool(PartialInfo);
+                        ZwClose(ChildKeyHandle);
+                        continue;
+                    }
+
+                    Status = ZwQueryValueKey(ChildKeyHandle,
+                                             &ServiceU,
+                                             KeyValuePartialInformation,
+                                             NULL,
+                                             0,
+                                             &NeededLength);
+                    if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+                    {
+                        ExFreePool(PartialInfo);
+                        PartialInfo = ExAllocatePool(PagedPool, NeededLength);
+                        if (!PartialInfo)
+                        {
+                            ExFreePool(OriginalIdBuffer);
+                            ExFreePool(BasicInfo);
+                            ZwClose(InstanceKey);
+                            ZwClose(ChildKeyHandle);
+                            ZwClose(CriticalDeviceKey);
+                            return;
+                        }
+
+                        /* Read the service entry from the CDDB */
+                        Status = ZwQueryValueKey(ChildKeyHandle,
+                                                 &ServiceU,
+                                                 KeyValuePartialInformation,
+                                                 PartialInfo,
+                                                 NeededLength,
+                                                 &NeededLength);
+                        if (Status != STATUS_SUCCESS)
+                        {
+                            ExFreePool(BasicInfo);
+                            ExFreePool(PartialInfo);
+                            ZwClose(ChildKeyHandle);
+                            continue;
+                        }
+
+                        /* Write it to the ENUM key */
+                        Status = ZwSetValueKey(InstanceKey,
+                                               &ServiceU,
+                                               0,
+                                               REG_SZ,
+                                               PartialInfo->Data,
+                                               PartialInfo->DataLength);
+                        if (Status != STATUS_SUCCESS)
+                        {
+                            ExFreePool(BasicInfo);
+                            ExFreePool(PartialInfo);
+                            ZwClose(ChildKeyHandle);
+                            continue;
+                        }
+
+                        DPRINT1("Installed service '%S' for critical device '%wZ'\n", PartialInfo->Data, &ChildIdNameU);
+                    }
+                    else
+                    {
+                        DPRINT1("Installed NULL service for critical device '%wZ'\n", &ChildIdNameU);
+                    }
+
+                    ExFreePool(OriginalIdBuffer);
+                    ExFreePool(PartialInfo);
+                    ExFreePool(BasicInfo);
+                    ZwClose(InstanceKey);
+                    ZwClose(ChildKeyHandle);
+                    ZwClose(CriticalDeviceKey);
+
+                    /* That's it */
+                    return;
+                }
+
+                ExFreePool(BasicInfo);
+            }
+            else
+            {
+                /* Umm, not sure what happened here */
+                continue;
+            }
+        }
+
+        /* Advance to the next ID */
+        IdBuffer += StringLength;
+    }
+    
+    ExFreePool(OriginalIdBuffer);
+    ZwClose(InstanceKey);
+    ZwClose(CriticalDeviceKey);
 }
 
 NTSTATUS
@@ -93,7 +455,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DriverObject, DeviceNode->PhysicalDeviceObject);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n", 
+      DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n",
               &DriverObject->DriverName,
               &DeviceNode->InstancePath,
               Status);
@@ -101,16 +463,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       return Status;
    }
 
-   /* Check if driver added a FDO above the PDO */
    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-   if (Fdo == DeviceNode->PhysicalDeviceObject)
-   {
-      /* FIXME: What do we do? Unload the driver or just disable the device? */
-      DPRINT1("An FDO was not attached\n");
-      ObDereferenceObject(Fdo);
-      IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-      return STATUS_UNSUCCESSFUL;
-   }
 
    /* Check if we have a ACPI device (needed for power management) */
    if (Fdo->DeviceType == FILE_DEVICE_ACPI)
@@ -121,7 +474,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       if (!SystemPowerDeviceNodeCreated)
       {
          PopSystemPowerDeviceNode = DeviceNode;
-         ObReferenceObject(PopSystemPowerDeviceNode);
+         ObReferenceObject(PopSystemPowerDeviceNode->PhysicalDeviceObject);
          SystemPowerDeviceNodeCreated = TRUE;
       }
    }
@@ -145,7 +498,7 @@ IopSendEject(IN PDEVICE_OBJECT DeviceObject)
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_EJECT;
     
-    return IopSynchronousCall(DeviceObject, &Stack, &Dummy); 
+    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
 static
@@ -596,9 +949,9 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
        NewList = ExAllocatePool(PagedPool, NewSize);
 
        if (!NewList) {
-	   /* Fail */
-	   ExFreePool(PnpBusTypeGuidList);
-	   goto Quickie;
+       /* Fail */
+       ExFreePool(PnpBusTypeGuidList);
+       goto Quickie;
        }
 
        /* Now copy them, decrease the size too */
@@ -628,7 +981,7 @@ Quickie:
 
 /*
  * DESCRIPTION
- * 	Creates a device node
+ *     Creates a device node
  *
  * ARGUMENTS
  *   ParentNode           = Pointer to parent device node
@@ -638,7 +991,7 @@ Quickie:
  *   DeviceNode           = Pointer to storage for created device node
  *
  * RETURN VALUE
- * 	Status
+ *     Status
  */
 NTSTATUS
 IopCreateDeviceNode(PDEVICE_NODE ParentNode,
@@ -931,7 +1284,7 @@ NTSTATUS
 NTAPI
 IopInitiatePnpIrp(IN PDEVICE_OBJECT DeviceObject,
                   IN OUT PIO_STATUS_BLOCK IoStatusBlock,
-                  IN ULONG MinorFunction,
+                  IN UCHAR MinorFunction,
                   IN PIO_STACK_LOCATION Stack OPTIONAL)
 {
     IO_STACK_LOCATION IoStackLocation;
@@ -1043,11 +1396,15 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     LPCWSTR Current, Last;
-    ULONG dwLength;
+    USHORT Length;
     NTSTATUS Status;
 
     /* Assume failure */
     *Handle = NULL;
+
+    /* Create a volatile device tree in 1st stage so we have a clean slate
+     * for enumeration using the correct HAL (chosen in 1st stage setup) */
+    if (ExpInTextModeSetup) CreateOptions |= REG_OPTION_VOLATILE;
 
     /* Open root key for device instances */
     Status = IopOpenRegistryKeyEx(&hParent, NULL, &EnumU, KEY_CREATE_SUB_KEY);
@@ -1071,8 +1428,8 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
         }
 
         /* Prepare relative key name */
-        dwLength = (ULONG_PTR)Current - (ULONG_PTR)KeyName.Buffer;
-        KeyName.MaximumLength = KeyName.Length = dwLength;
+        Length = (USHORT)((ULONG_PTR)Current - (ULONG_PTR)KeyName.Buffer);
+        KeyName.MaximumLength = KeyName.Length = Length;
         DPRINT("Create '%wZ'\n", &KeyName);
 
         /* Open key */
@@ -1143,7 +1500,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                         &ObjectAttributes,
                         0,
                         NULL,
-                        0,
+                        REG_OPTION_VOLATILE,
                         NULL);
    if (NT_SUCCESS(Status))
    {
@@ -1240,7 +1597,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
 {
    ULONG KeyNameBufferLength;
    PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
-   UNICODE_STRING KeyName;
+   UNICODE_STRING KeyName = {0, 0, NULL};
    UNICODE_STRING KeyValue;
    UNICODE_STRING ValueName;
    HANDLE hKey = NULL;
@@ -1262,10 +1619,8 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
    ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
    if (!ParentIdPrefixInformation)
    {
-       Status = STATUS_INSUFFICIENT_RESOURCES;
-       goto cleanup;
+       return STATUS_INSUFFICIENT_RESOURCES;
    }
-
 
    KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
    if (!KeyName.Buffer)
@@ -1319,7 +1674,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                           0,
                           REG_SZ,
                           (PVOID)KeyValue.Buffer,
-                          (wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
+                          ((ULONG)wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
 
 cleanup:
    if (NT_SUCCESS(Status))
@@ -1365,7 +1720,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
       while (*Ptr)
       {
          DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
+         Length = (ULONG)wcslen(Ptr) + 1;
 
          Ptr += Length;
          TotalLength += Length;
@@ -1375,11 +1730,11 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
 
       RtlInitUnicodeString(&ValueName, L"HardwareID");
       Status = ZwSetValueKey(InstanceKey,
-			     &ValueName,
-			     0,
-			     REG_MULTI_SZ,
-			     (PVOID)IoStatusBlock.Information,
-			     (TotalLength + 1) * sizeof(WCHAR));
+                 &ValueName,
+                 0,
+                 REG_MULTI_SZ,
+                 (PVOID)IoStatusBlock.Information,
+                 (TotalLength + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
@@ -1425,7 +1780,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       while (*Ptr)
       {
          DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
+         Length = (ULONG)wcslen(Ptr) + 1;
 
          Ptr += Length;
          TotalLength += Length;
@@ -1673,7 +2028,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 0,
                                 REG_SZ,
                                 (PVOID)IoStatusBlock.Information,
-                                (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+                                ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       }
       else
       {
@@ -1713,7 +2068,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
          0,
          REG_SZ,
          (PVOID)IoStatusBlock.Information,
-         (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+         ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
@@ -1816,6 +2171,9 @@ IopHandleDeviceRemoval(
     ULONG i;
     BOOLEAN Found;
 
+    if (DeviceNode == IopRootDeviceNode)
+        return;
+
     while (Child != NULL)
     {
         NextChild = Child->Sibling;
@@ -1830,14 +2188,19 @@ IopHandleDeviceRemoval(
             }
         }
 
-        if (!Found)
+        if (!Found && !(Child->Flags & DNF_WILL_BE_REMOVED))
         {
+            /* Send removal IRPs to all of its children */
+            IopPrepareDeviceForRemoval(Child->PhysicalDeviceObject, TRUE);
+
+            /* Send the surprise removal IRP */
             IopSendSurpriseRemoval(Child->PhysicalDeviceObject);
 
             /* Tell the user-mode PnP manager that a device was removed */
             IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL,
                                       &Child->InstancePath);
 
+            /* Send the remove device IRP */
             IopSendRemoveDevice(Child->PhysicalDeviceObject);
         }
 
@@ -1869,6 +2232,8 @@ IopEnumerateDevice(
         IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
                                   &DeviceNode->InstancePath);
     }
+
+    DeviceNode->Flags &= ~DNF_NEED_TO_ENUM;
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
@@ -1932,7 +2297,7 @@ IopEnumerateDevice(
             {
                 /* Ignore this DO */
                 DPRINT1("IopCreateDeviceNode() failed with status 0x%08x. Skipping PDO %u\n", Status, i);
-                ObDereferenceObject(ChildDeviceNode);
+                ObDereferenceObject(ChildDeviceObject);
             }
         }
         else
@@ -2054,6 +2419,9 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
 
+      /* Install the service for this if it's in the CDDB */
+      IopInstallCriticalDevice(DeviceNode);
+
       RegKey.Length = 0;
       RegKey.MaximumLength = sizeof(RegKeyBuffer);
       RegKey.Buffer = RegKeyBuffer;
@@ -2110,7 +2478,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
             /* Device has a ClassGUID value, but no Service value.
              * Suppose it is using the NULL driver, so state the
              * device is started */
-            DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
+            DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
          }
          else
@@ -2166,15 +2534,11 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    }
 
    /*
-    * Make sure this device node is a direct child of the parent device node
-    * that is given as an argument
+    * We don't want to check for a direct child because
+    * this function is called during boot to reinitialize
+    * devices with drivers that couldn't load yet due to
+    * stage 0 limitations (ie can't load from disk yet).
     */
-
-   if (DeviceNode->Parent != ParentDeviceNode)
-   {
-      DPRINT("Skipping 2+ level child\n");
-      return STATUS_SUCCESS;
-   }
 
    if (!(DeviceNode->Flags & DNF_PROCESSED))
    {
@@ -2327,9 +2691,6 @@ IopEnumerateDetectedDevices(
    ULONG BootResourcesLength;
    NTSTATUS Status;
 
-   const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI");
-   UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
-   static ULONG DeviceIndexPci = 0;
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2345,9 +2706,6 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FloppyDiskPeripheral");
    UNICODE_STRING HardwareIdFloppy = RTL_CONSTANT_STRING(L"*PNP0700\0");
    static ULONG DeviceIndexFloppy = 0;
-   const UNICODE_STRING IdentifierIsa = RTL_CONSTANT_STRING(L"ISA");
-   UNICODE_STRING HardwareIdIsa = RTL_CONSTANT_STRING(L"*PNP0A00\0");
-   static ULONG DeviceIndexIsa = 0;
    UNICODE_STRING HardwareIdKey;
    PUNICODE_STRING pHardwareId;
    ULONG DeviceIndex = 0;
@@ -2600,25 +2958,6 @@ IopEnumerateDetectedDevices(
          pHardwareId = &HardwareIdFloppy;
          DeviceIndex = DeviceIndexFloppy++;
       }
-      else if (NT_SUCCESS(Status))
-      {
-         /* Try to also match the device identifier */
-         if (RtlCompareUnicodeString(&ValueName, &IdentifierPci, FALSE) == 0)
-         {
-            pHardwareId = &HardwareIdPci;
-            DeviceIndex = DeviceIndexPci++;
-         }
-         else if (RtlCompareUnicodeString(&ValueName, &IdentifierIsa, FALSE) == 0)
-         {
-            pHardwareId = &HardwareIdIsa;
-            DeviceIndex = DeviceIndexIsa++;
-         }
-         else
-         {
-            DPRINT("Unknown device '%wZ'\n", &ValueName);
-            goto nextdevice;
-         }
-      }
       else
       {
          /* Unknown key path */
@@ -2638,7 +2977,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_NON_VOLATILE,
+         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
          NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -2654,7 +2993,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_NON_VOLATILE,
+         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
          NULL);
       ZwClose(hLevel1Key);
       if (!NT_SUCCESS(Status))
@@ -2759,7 +3098,8 @@ IopIsFirmwareMapperDisabled(VOID)
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hPnpKey;
    PKEY_VALUE_PARTIAL_INFORMATION KeyInformation;
-   ULONG DesiredLength, Length, KeyValue;
+   ULONG DesiredLength, Length;
+   ULONG KeyValue = 0;
    NTSTATUS Status;
 
    InitializeObjectAttributes(&ObjectAttributes, &KeyPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -2792,7 +3132,6 @@ IopIsFirmwareMapperDisabled(VOID)
                else
                {
                    DPRINT1("ZwQueryValueKey(%wZ%wZ) failed\n", &KeyPathU, &KeyNameU);
-                   KeyValue = 0;
                }
 
                ExFreePool(KeyInformation);
@@ -2800,13 +3139,11 @@ IopIsFirmwareMapperDisabled(VOID)
            else
            {
                DPRINT1("Failed to allocate memory for registry query\n");
-               KeyValue = 0;
            }
        }
        else
        {
            DPRINT1("ZwQueryValueKey(%wZ%wZ) failed with status 0x%08lx\n", &KeyPathU, &KeyNameU, Status);
-           KeyValue = 0;
        }
 
        ZwClose(hPnpKey);
@@ -2915,7 +3252,8 @@ IopCreateRegistryKeyEx(OUT PHANDLE Handle,
                        OUT PULONG Disposition OPTIONAL)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG KeyDisposition, RootHandleIndex = 0, i = 1, NestedCloseLevel = 0, Length;
+    ULONG KeyDisposition, RootHandleIndex = 0, i = 1, NestedCloseLevel = 0;
+    USHORT Length;
     HANDLE HandleArray[2];
     BOOLEAN Recursing = TRUE;
     PWCHAR pp, p, p1;
@@ -2963,7 +3301,7 @@ IopCreateRegistryKeyEx(OUT PHANDLE Handle,
             
             /* Process the parent key name */
             for (p = p1; ((p < pp) && (*p != OBJ_NAME_PATH_SEPARATOR)); p++);
-            Length = (p - p1) * sizeof(WCHAR);
+            Length = (USHORT)(p - p1) * sizeof(WCHAR);
             
             /* Is there a parent name? */
             if (Length)
@@ -3450,7 +3788,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     {
         case DevicePropertyBusTypeGuid:
 
-            /* Get the GUID from the internal cache */        
+            /* Get the GUID from the internal cache */
             Status = PnpBusTypeGuidGet(DeviceNode->ChildBusTypeIndex, &BusTypeGuid);
             if (!NT_SUCCESS(Status)) return Status;
 
@@ -3492,7 +3830,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             NullTerminate = TRUE;
 
             /* This is the format of the returned data */
-            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
+            PIP_RETURN_DATA((ULONG)(EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
                             DeviceInstanceName);
             
         case DevicePropertyAddress:
@@ -3581,18 +3919,18 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         case DevicePropertyRemovalPolicy:
             PIP_UNIMPLEMENTED();
         case DevicePropertyInstallState:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         case DevicePropertyResourceRequirements:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         case DevicePropertyAllocatedResources:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         default:
             return STATUS_INVALID_PARAMETER_2;
     }
     
     /* Having a registry value name implies registry data */
     if (ValueName)
-    {   
+    {
         /* We know up-front how much data to expect */
         *ResultLength = BufferLength;
         
@@ -3898,7 +4236,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    InitializeObjectAttributes(&ObjectAttributes, &KeyName,
                               OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
    Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
-                        0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+                        0, NULL, ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0, NULL);
    ZwClose(ObjectAttributes.RootDirectory);
 
    return Status;
@@ -3906,7 +4244,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
 
 static
 NTSTATUS
-IopQueryRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
+IopQueryRemoveChildDevices(PDEVICE_NODE ParentDeviceNode, BOOLEAN Force)
 {
     PDEVICE_NODE ChildDeviceNode, NextDeviceNode, FailedRemoveDevice;
     NTSTATUS Status;
@@ -3919,7 +4257,7 @@ IopQueryRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
         NextDeviceNode = ChildDeviceNode->Sibling;
         KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
         
-        Status = IopPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject);
+        Status = IopPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject, Force);
         if (!NT_SUCCESS(Status))
         {
             FailedRemoveDevice = ChildDeviceNode;
@@ -4005,7 +4343,7 @@ IopCancelRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
 
 static
 NTSTATUS
-IopQueryRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
+IopQueryRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations, BOOLEAN Force)
 {
     /* This function DOES NOT dereference the device objects on SUCCESS
      * but it DOES dereference device objects on FAILURE */
@@ -4015,7 +4353,7 @@ IopQueryRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
     
     for (i = 0; i < DeviceRelations->Count; i++)
     {
-        Status = IopPrepareDeviceForRemoval(DeviceRelations->Objects[i]);
+        Status = IopPrepareDeviceForRemoval(DeviceRelations->Objects[i], Force);
         if (!NT_SUCCESS(Status))
         {
             j = i;
@@ -4111,7 +4449,7 @@ IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject)
 }
 
 NTSTATUS
-IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
+IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
     IO_STACK_LOCATION Stack;
@@ -4119,13 +4457,13 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_RELATIONS DeviceRelations;
     NTSTATUS Status;
 
-    if (DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE)
+    if ((DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE) && !Force)
     {
         DPRINT1("Removal not allowed for %wZ\n", &DeviceNode->InstancePath);
         return STATUS_UNSUCCESSFUL;
     }
     
-    if (IopQueryRemoveDevice(DeviceObject) != STATUS_SUCCESS)
+    if (!Force && IopQueryRemoveDevice(DeviceObject) != STATUS_SUCCESS)
     {
         DPRINT1("Removal vetoed by failing the query remove request\n");
         
@@ -4152,19 +4490,20 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     
     if (DeviceRelations)
     {
-        Status = IopQueryRemoveDeviceRelations(DeviceRelations);
+        Status = IopQueryRemoveDeviceRelations(DeviceRelations, Force);
         if (!NT_SUCCESS(Status))
             return Status;
     }
-    
-    Status = IopQueryRemoveChildDevices(DeviceNode);
+
+    Status = IopQueryRemoveChildDevices(DeviceNode, Force);
     if (!NT_SUCCESS(Status))
     {
         if (DeviceRelations)
             IopCancelRemoveDeviceRelations(DeviceRelations);
         return Status;
     }
-    
+
+    DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
     if (DeviceRelations)
         IopSendRemoveDeviceRelations(DeviceRelations);
     IopSendRemoveChildDevices(DeviceNode);
@@ -4179,13 +4518,12 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
 
     DPRINT("Removing device: %wZ\n", &DeviceNode->InstancePath);
 
-    Status = IopPrepareDeviceForRemoval(DeviceNode->PhysicalDeviceObject);
+    Status = IopPrepareDeviceForRemoval(DeviceNode->PhysicalDeviceObject, FALSE);
     if (NT_SUCCESS(Status))
     {
         IopSendRemoveDevice(DeviceNode->PhysicalDeviceObject);
         IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
                                   &DeviceNode->InstancePath);
-        DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
         return STATUS_SUCCESS;
     }
 
@@ -4232,12 +4570,12 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
     
     if (DeviceRelations)
     {
-        Status = IopQueryRemoveDeviceRelations(DeviceRelations);
+        Status = IopQueryRemoveDeviceRelations(DeviceRelations, FALSE);
         if (!NT_SUCCESS(Status))
             goto cleanup;
     }
     
-    Status = IopQueryRemoveChildDevices(DeviceNode);
+    Status = IopQueryRemoveChildDevices(DeviceNode, FALSE);
     if (!NT_SUCCESS(Status))
     {
         if (DeviceRelations)
@@ -4245,7 +4583,7 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
         goto cleanup;
     }
     
-    if (IopPrepareDeviceForRemoval(PhysicalDeviceObject) != STATUS_SUCCESS)
+    if (IopPrepareDeviceForRemoval(PhysicalDeviceObject, FALSE) != STATUS_SUCCESS)
     {
         if (DeviceRelations)
             IopCancelRemoveDeviceRelations(DeviceRelations);

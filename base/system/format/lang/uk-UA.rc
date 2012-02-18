@@ -1,12 +1,10 @@
-#include "resource.h"
 /*
  * PROJECT:     ReactOS CMD Format.
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        reactos/base/system/format/lang/uk-UA.rc
+ * FILE:        base/system/format/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Format command
  * PROGRAMMERS: Rostislav Zabolotny
  */
-
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE

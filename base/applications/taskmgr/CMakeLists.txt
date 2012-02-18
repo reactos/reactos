@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -25,7 +24,7 @@ list(APPEND SOURCE
 
 add_executable(taskmgr ${SOURCE})
 
-set_module_type(taskmgr win32gui)
+set_module_type(taskmgr win32gui UNICODE)
 add_importlibs(taskmgr advapi32 user32 gdi32 shell32 comctl32 msvcrt kernel32 ntdll)
 add_pch(taskmgr precomp.h)
 add_cd_file(TARGET taskmgr DESTINATION reactos/system32 FOR all)

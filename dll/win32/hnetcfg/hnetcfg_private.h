@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-HRESULT NetFwMgr_create(IUnknown *, LPVOID *);
-HRESULT NetFwPolicy_create(IUnknown *, LPVOID *);
-HRESULT NetFwProfile_create(IUnknown *, LPVOID *);
-HRESULT NetFwAuthorizedApplication_create(IUnknown *, LPVOID *);
-HRESULT NetFwAuthorizedApplications_create(IUnknown *, LPVOID *);
-HRESULT NetFwOpenPorts_create(IUnknown *, LPVOID *);
-HRESULT NetFwServices_create(IUnknown *, LPVOID *);
+HRESULT NetFwMgr_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwPolicy_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwProfile_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwAuthorizedApplication_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwAuthorizedApplications_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwOpenPorts_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT NetFwServices_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;

@@ -1,21 +1,21 @@
 #pragma once
 
-#define TAG_STRING      ' RTS' /* string */
-#define TAG_HOOK        'ohsU' /* hook */
-#define TAG_MENUITEM    'emsU' /* menu item */
-#define TAG_MSG         'GSEM' /* message */
-#define TAG_USRMSG      'GSMU' /* user message */
-#define TAG_SBARINFO    'NIBS' /* scrollbar info */
-#define TAG_TIMERBMP    'BMIT' /* timers bitmap */
-#define TAG_WINSTA      'ATSW' /* window station */
-#define TAG_FONT        'ETNF' /* font entry */
-#define TAG_BEZIER      'RZEB' /* bezier */
-#define TAG_SHAPE       'phSG' /* shape */
-#define TAG_COLORMAP    'MLOC' /* color map */
-#define TAG_GDIHNDTBLE  'bthG' /* gdi handle table */
-#define TAG_DIB         ' BID' /* dib */
+#define TAG_STRING      ' RTS' /* String */
+#define TAG_HOOK        'ohsU' /* Hook */
+#define TAG_MENUITEM    'emsU' /* Menu item */
+#define TAG_MSG         'GSEM' /* Message */
+#define TAG_USRMSG      'GSMU' /* User message */
+#define TAG_SBARINFO    'NIBS' /* Scrollbar info */
+#define TAG_TIMERBMP    'BMIT' /* Timers bitmap */
+#define TAG_WINSTA      'ATSW' /* Window station */
+#define TAG_FONT        'ETNF' /* Font entry */
+#define TAG_BEZIER      'RZEB' /* Bezier */
+#define TAG_SHAPE       'phSG' /* Shape */
+#define TAG_COLORMAP    'MLOC' /* Color map */
+#define TAG_GDIHNDTBLE  'bthG' /* GDI handle table */
+#define TAG_DIB         ' BID' /* Dib */
 
-/* gdi objects from the handle table */
+/* GDI objects from the handle table */
 #define TAG_DC          GDITAG_HMGR_LOOKASIDE_DC_TYPE
 #define TAG_REGION      GDITAG_HMGR_LOOKASIDE_RGN_TYPE
 #define TAG_SURFACE     GDITAG_HMGR_LOOKASIDE_SURF_TYPE
@@ -24,24 +24,24 @@
 #define TAG_PALETTE     GDITAG_HMGR_LOOKASIDE_PAL_TYPE
 #define TAG_ICMLCS      '90hG'
 #define TAG_LFONT       GDITAG_HMGR_LOOKASIDE_LFONT_TYPE
-#define TAG_RFONT       ';0gG' /* correct? */
+#define TAG_RFONT       ';0gG' /* Correct? */
 #define TAG_PFE         '<0hG'
-#define TAG_PFT         '=0hG' /* correct? */
-#define TAG_ICMCXF      '>0hG' /* correct? */
-#define TAG_SPRITE      '?0hG' /* correct? */
+#define TAG_PFT         '=0hG' /* Correct? */
+#define TAG_ICMCXF      '>0hG' /* Correct? */
+#define TAG_SPRITE      '?0hG' /* Correct? */
 #define TAG_BRUSH       GDITAG_HMGR_LOOKASIDE_BRUSH_TYPE
-#define TAG_UMPD        'A0hG' /* correct? */
-#define TAG_SPACE       'c0hG' /* correct? */
-#define TAG_META        'E0hG' /* correct? */
-#define TAG_EFSTATE     'F0hG' /* correct? */
-#define TAG_BMFD        'G0hG' /* correct? */
-#define TAG_VTFD        'H0hG' /* correct? */
-#define TAG_TTFD        'I0hG' /* correct? */
-#define TAG_RC          'J0hG' /* correct? */
-#define TAG_TEMP        'K0hG' /* correct? */
-#define TAG_DRVOBJ      'L0hG' /* correct? */
-#define TAG_DCIOBJ      'M0hG' /* correct? */
-#define TAG_SPOOL       'N0hG' /* correct? */
+#define TAG_UMPD        'A0hG' /* Correct? */
+#define TAG_SPACE       'c0hG' /* Correct? */
+#define TAG_META        'E0hG' /* Correct? */
+#define TAG_EFSTATE     'F0hG' /* Correct? */
+#define TAG_BMFD        'G0hG' /* Correct? */
+#define TAG_VTFD        'H0hG' /* Correct? */
+#define TAG_TTFD        'I0hG' /* Correct? */
+#define TAG_RC          'J0hG' /* Correct? */
+#define TAG_TEMP        'K0hG' /* Correct? */
+#define TAG_DRVOBJ      'L0hG' /* Correct? */
+#define TAG_DCIOBJ      'M0hG' /* Correct? */
+#define TAG_SPOOL       'N0hG' /* Correct? */
 
 /* Dx internal tags rember I do not known if it right namees */
 #define TAG_DXPVMLIST   'LPXD' /* pmvlist for the driver */

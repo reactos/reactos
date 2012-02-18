@@ -73,7 +73,7 @@ Win32CsrCloseHandleEntry(
 NTSTATUS
 FASTCALL
 Win32CsrReleaseObject(
-    PCSRSS_PROCESS_DATA ProcessData,
+    PCSR_PROCESS ProcessData,
     HANDLE Handle)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
@@ -93,7 +93,7 @@ Win32CsrReleaseObject(
 
 NTSTATUS
 FASTCALL
-Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
+Win32CsrLockObject(PCSR_PROCESS ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
                    DWORD Access,
@@ -132,10 +132,10 @@ Win32CsrUnlockObject(Object_t *Object)
         ConioDeleteConsole(&Console->Header);
 }
 
-NTSTATUS
+ULONG
 WINAPI
 Win32CsrReleaseConsole(
-    PCSRSS_PROCESS_DATA ProcessData)
+    PCSR_PROCESS ProcessData, ULONG Flags, BOOLEAN First)
 {
     PCSRSS_CONSOLE Console;
     ULONG i;
@@ -154,21 +154,23 @@ Win32CsrReleaseConsole(
     {
         ProcessData->Console = NULL;
         EnterCriticalSection(&Console->Lock);
-        RemoveEntryList(&ProcessData->ProcessEntry);
+        RemoveEntryList(&ProcessData->ConsoleLink);
         LeaveCriticalSection(&Console->Lock);
         if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
             ConioDeleteConsole(&Console->Header);
+        //CloseHandle(ProcessData->ConsoleEvent);
+        //ProcessData->ConsoleEvent = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_SUCCESS;
+        return 0;
     }
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return STATUS_INVALID_PARAMETER;
+    return -1;
 }
 
 NTSTATUS
 FASTCALL
 Win32CsrInsertObject(
-    PCSRSS_PROCESS_DATA ProcessData,
+    PCSR_PROCESS ProcessData,
     PHANDLE Handle,
     Object_t *Object,
     DWORD Access,
@@ -217,10 +219,13 @@ Win32CsrInsertObject(
 NTSTATUS
 WINAPI
 Win32CsrDuplicateHandleTable(
-    PCSRSS_PROCESS_DATA SourceProcessData,
-    PCSRSS_PROCESS_DATA TargetProcessData)
+    PCSR_PROCESS SourceProcessData,
+    PCSR_PROCESS TargetProcessData)
 {
     ULONG i;
+    
+    /* Only inherit if the flag was set */
+    if (!TargetProcessData->bInheritHandles) return STATUS_SUCCESS;
 
     if (TargetProcessData->HandleTableSize)
     {

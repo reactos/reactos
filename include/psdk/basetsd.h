@@ -105,6 +105,8 @@ typedef unsigned long HANDLE_PTR;
 #define ULongToPtr( ul )  ((VOID*)(ULONG_PTR)((unsigned long)ul))
 #endif /* !_WIN64 */
 
+#define HandleToULong(h) HandleToUlong(h)
+
 #define UlongToHandle(ul) ULongToHandle(ul)
 #define UlongToPtr(ul) ULongToPtr(ul)
 #define UintToPtr(ui) UIntToPtr(ui)

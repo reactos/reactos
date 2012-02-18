@@ -47,7 +47,7 @@ _sxprintf(
     stream._ptr = stream._base;
     stream._charbuf = 0;
 #if USE_COUNT
-    stream._cnt = count * sizeof(TCHAR);
+    stream._cnt = (int)(count * sizeof(TCHAR));
 #else
     stream._cnt = INT_MAX;
 #endif

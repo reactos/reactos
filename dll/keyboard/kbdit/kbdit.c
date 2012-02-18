@@ -6,7 +6,7 @@
  */
 
 #include <windows.h>
-#include <internal/kbd.h>
+#include <ndk/kbd.h>
 
 #ifdef _M_IA64
 #define ROSDATA static __declspec(allocate(".data"))
@@ -19,18 +19,10 @@
 #endif
 #endif
 
-#define VK_EMPTY 0xff   /* The non-existent VK */
-#define KSHIFT   0x001  /* Shift modifier */
-#define KCTRL    0x002  /* Ctrl modifier */
-#define KALT     0x004  /* Alt modifier */
-#define KEXT     0x100  /* Extended key code */
-#define KMULTI   0x200  /* Multi-key */
-#define KSPEC    0x400  /* Special key */
-#define KNUMP    0x800  /* Number-pad */
-#define KNUMS    0xc00  /* Special + number pad */
-#define KMEXT    0x300  /* Multi + ext */
+#define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define SHFT_INVALID 0x0F
+#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
+#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
 /* 00 */  VK_EMPTY,
@@ -103,7 +95,7 @@ ROSDATA USHORT scancode_to_vk[] = {
 /* 43 */  VK_F9,
 /* 44 */  VK_F10,
 /* 45 */  VK_NUMLOCK | KMEXT,
-/* 46 */  VK_SCROLL | KMULTI,
+/* 46 */  VK_SCROLL | KBDMULTIVK,
 /* 47 */  VK_HOME | KNUMS,
 /* 48 */  VK_UP | KNUMS,
 /* 49 */  VK_PRIOR | KNUMS,
@@ -166,17 +158,56 @@ ROSDATA USHORT scancode_to_vk[] = {
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
+  { 0x10, VK_MEDIA_PREV_TRACK | KBDEXT },
+  { 0x19, VK_MEDIA_NEXT_TRACK | KBDEXT },
+  { 0x1D, VK_RCONTROL | KBDEXT },
+  { 0x20, VK_VOLUME_MUTE | KBDEXT },
+  { 0x21, VK_LAUNCH_APP2 | KBDEXT },
+  { 0x22, VK_MEDIA_PLAY_PAUSE | KBDEXT },
+  { 0x24, VK_MEDIA_STOP | KBDEXT },
+  { 0x2E, VK_VOLUME_DOWN | KBDEXT },
+  { 0x30, VK_VOLUME_UP | KBDEXT },
+  { 0x32, VK_BROWSER_HOME | KBDEXT },
+  { 0x35, VK_DIVIDE | KBDEXT },
+  { 0x37, VK_SNAPSHOT | KBDEXT },
+  { 0x38, VK_RMENU | KBDEXT },
+  { 0x47, VK_HOME | KBDEXT },
+  { 0x48, VK_UP | KBDEXT },
+  { 0x49, VK_PRIOR | KBDEXT },
+  { 0x4B, VK_LEFT | KBDEXT },
+  { 0x4D, VK_RIGHT | KBDEXT },
+  { 0x4F, VK_END | KBDEXT },
+  { 0x50, VK_DOWN | KBDEXT },
+  { 0x51, VK_NEXT | KBDEXT },
+  { 0x52, VK_INSERT | KBDEXT },
+  { 0x53, VK_DELETE | KBDEXT },
+  { 0x5B, VK_LWIN | KBDEXT },
+  { 0x5C, VK_RWIN | KBDEXT },
+  { 0x5D, VK_APPS | KBDEXT },
+  { 0x5F, VK_SLEEP | KBDEXT },
+  { 0x65, VK_BROWSER_SEARCH | KBDEXT },
+  { 0x66, VK_BROWSER_FAVORITES | KBDEXT },
+  { 0x67, VK_BROWSER_REFRESH | KBDEXT },
+  { 0x68, VK_BROWSER_STOP | KBDEXT },
+  { 0x69, VK_BROWSER_FORWARD | KBDEXT },
+  { 0x6A, VK_BROWSER_BACK | KBDEXT },
+  { 0x6B, VK_LAUNCH_APP1 | KBDEXT },
+  { 0x6C, VK_LAUNCH_MAIL | KBDEXT },
+  { 0x6D, VK_LAUNCH_MEDIA_SELECT | KBDEXT },
+  { 0x1C, VK_RETURN | KBDEXT },
+  { 0x46, VK_CANCEL | KBDEXT },
   { 0, 0 },
 };
 
 ROSDATA VSC_VK extcode1_to_vk[] = {
+  { 0x1d, VK_PAUSE },
   { 0, 0 },
 };
 
 ROSDATA VK_TO_BIT modifier_keys[] = {
-  { VK_SHIFT,   KSHIFT },
-  { VK_CONTROL, KCTRL },
-  { VK_MENU,    KALT },
+  { VK_SHIFT,   KBDSHIFT },
+  { VK_CONTROL, KBDCTRL },
+  { VK_MENU,    KBDALT },
   { 0,          0 }
 };
 
@@ -186,40 +217,64 @@ ROSDATA MODIFIERS modifier_bits = {
   { 0, 1, 2, 4, SHFT_INVALID, SHFT_INVALID, 3 }
 };
 
-#define NOCAPS 0
-#define CAPS   KSHIFT /* Caps -> shift */
-
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
+  /* The alphabet */
+  { 'A',         CAPLOK,   {'a', 'A'} },
+  { 'B',         CAPLOK,   {'b', 'B'} },
+  { 'C',         CAPLOK,   {'c', 'C'} },
+  { 'D',         CAPLOK,   {'d', 'D'} },
+  { 'F',         CAPLOK,   {'f', 'F'} },
+  { 'G',         CAPLOK,   {'g', 'G'} },
+  { 'H',         CAPLOK,   {'h', 'H'} },
+  { 'I',         CAPLOK,   {'i', 'I'} },
+  { 'J',         CAPLOK,   {'j', 'J'} },
+  { 'K',         CAPLOK,   {'k', 'K'} },
+  { 'L',         CAPLOK,   {'l', 'L'} },
+  { 'M',         CAPLOK,   {'m', 'M'} },
+  { 'N',         CAPLOK,   {'n', 'N'} },
+  { 'O',         CAPLOK,   {'o', 'O'} },
+  { 'P',         CAPLOK,   {'p', 'P'} },
+  { 'Q',         CAPLOK,   {'q', 'Q'} },
+  { 'R',         CAPLOK,   {'r', 'R'} },
+  { 'S',         CAPLOK,   {'s', 'S'} },
+  { 'T',         CAPLOK,   {'t', 'T'} },
+  { 'U',         CAPLOK,   {'u', 'U'} },
+  { 'V',         CAPLOK,   {'v', 'V'} },
+  { 'W',         CAPLOK,   {'w', 'W'} },
+  { 'X',         CAPLOK,   {'x', 'X'} },
+  { 'Y',         CAPLOK,   {'y', 'Y'} },
+  { 'Z',         CAPLOK,   {'z', 'Z'} },
+
   /* The numbers */
-  { '1',         NOCAPS, {'1', '!'} },
-  { '2',         NOCAPS, {'2', '"'} },
-  { '3',         NOCAPS, {'3', 0x00a3} },
-  { '4',         NOCAPS, {'4', '$'} },
-  { '5',         NOCAPS, {'5', '%'} },
-  { '6',         NOCAPS, {'6', '&'} },
-  { '7',         NOCAPS, {'7', '/'} },
-  { '8',         NOCAPS, {'8', '('} },
-  { '9',         NOCAPS, {'9', ')'} },
-  { '0',         NOCAPS, {'0', '='} },
+  { '1',         0, {'1', '!'} },
+  { '2',         0, {'2', '"'} },
+  { '3',         0, {'3', 0x00a3} },
+  { '4',         0, {'4', '$'} },
+  { '5',         0, {'5', '%'} },
+  { '6',         0, {'6', '&'} },
+  { '7',         0, {'7', '/'} },
+  { '8',         0, {'8', '('} },
+  { '9',         0, {'9', ')'} },
+  { '0',         0, {'0', '='} },
 
   /* Specials */
   /* Ctrl-_ generates US */
-  { VK_OEM_2       ,NOCAPS, {'\\', '|'} },
-  { VK_OEM_4       ,NOCAPS, {'\'', '?'} },
-  { VK_OEM_102     ,NOCAPS, {'<', '>'} },
-  { VK_OEM_COMMA   ,NOCAPS, {',', ';'} },
-  { VK_OEM_PERIOD  ,NOCAPS, {'.', ':'} },
-  { VK_OEM_MINUS   ,NOCAPS, {'-', '_'} },
+  { VK_OEM_2       ,0, {'\\', '|'} },
+  { VK_OEM_4       ,0, {'\'', '?'} },
+  { VK_OEM_102     ,0, {'<', '>'} },
+  { VK_OEM_COMMA   ,0, {',', ';'} },
+  { VK_OEM_PERIOD  ,0, {'.', ':'} },
+  { VK_OEM_MINUS   ,0, {'-', '_'} },
   /* Keys that do not have shift states */
-  { VK_TAB     ,NOCAPS, {'\t','\t'} },
-  { VK_ADD     ,NOCAPS, {'+', '+'} },
-  { VK_SUBTRACT,NOCAPS, {'-', '-'} },
-  { VK_MULTIPLY,NOCAPS, {'*', '*'} },
-  { VK_DIVIDE  ,NOCAPS, {'/', '/'} },
-  { VK_ESCAPE  ,NOCAPS, {'\x1b','\x1b'} },
-  { VK_SPACE   ,NOCAPS, {' ', ' '} },
-  { VK_OEM_5   ,NOCAPS, {0x00f9, 0x00a7} },//ù§
+  { VK_TAB     ,0, {'\t','\t'} },
+  { VK_ADD     ,0, {'+', '+'} },
+  { VK_SUBTRACT,0, {'-', '-'} },
+  { VK_MULTIPLY,0, {'*', '*'} },
+  { VK_DIVIDE  ,0, {'/', '/'} },
+  { VK_ESCAPE  ,0, {0x1b,0x1b} },
+  { VK_SPACE   ,0, {' ', ' '} },
+  { VK_OEM_5   ,0, {0x00f9, 0x00a7} },//ù§
   { 0, 0 }
 };
 
@@ -232,43 +287,18 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
-  { VK_OEM_6,  NOCAPS, {0x00ec, '^', WCH_NONE, '~' } },
-  { VK_OEM_3,  NOCAPS, {0x00f2, 0x00e7, WCH_NONE, '@' } },//òç
-  { VK_OEM_7,  NOCAPS, {0x00e0, 0x00b0, WCH_NONE, '#'} },//à°
+  { VK_OEM_6,  0, {0x00ec, '^', WCH_NONE, '~' } },
+  { VK_OEM_3,  0, {0x00f2, 0x00e7, WCH_NONE, '@' } },//òç
+  { VK_OEM_7,  0, {0x00e0, 0x00b0, WCH_NONE, '#'} },//à°
 
-  { VK_OEM_1,  NOCAPS,   {0x00e8, 0x00e9, '{', '['} },// èé
-  { VK_OEM_PLUS,NOCAPS,   {'+', '*', '}', ']'} },
+  { VK_OEM_1,  0,   {0x00e8, 0x00e9, '{', '['} },// èé
+  { VK_OEM_PLUS,0,   {'+', '*', '}', ']'} },
 
   /* The alphabet */
-  { 'A',         CAPS,   {'a', 'A', 0x01, 0x01} },
-  { 'B',         CAPS,   {'b', 'B', 0x02, 0x02} },
-  { 'C',         CAPS,   {'c', 'C', 0x03, 0x03} },
-  { 'D',         CAPS,   {'d', 'D', 0x04, 0x04} },
-  { 'E',	 CAPS,   {'e', 'E', 0x05, 0x20AC}  }, // eE€
-  { 'F',         CAPS,   {'f', 'F', 0x06, 0x06} },
-  { 'G',         CAPS,   {'g', 'G', 0x07, 0x07} },
-  { 'H',         CAPS,   {'h', 'H', 0x08, 0x08} },
-  { 'I',         CAPS,   {'i', 'I', 0x09, 0x09} },
-  { 'J',         CAPS,   {'j', 'J', 0x0a, 0x0a} },
-  { 'K',         CAPS,   {'k', 'K', 0x0b, 0x0b} },
-  { 'L',         CAPS,   {'l', 'L', 0x0c, 0x0c} },
-  { 'M',         CAPS,   {'m', 'M', 0x0d, 0x0d} },
-  { 'N',         CAPS,   {'n', 'N', 0x0e, 0x0e} },
-  { 'O',         CAPS,   {'o', 'O', 0x0f, 0x0f} },
-  { 'P',         CAPS,   {'p', 'P', 0x10, 0x10} },
-  { 'Q',         CAPS,   {'q', 'Q', 0x11, 0x11} },
-  { 'R',         CAPS,   {'r', 'R', 0x12, 0x12} },
-  { 'S',         CAPS,   {'s', 'S', 0x13, 0x13} },
-  { 'T',         CAPS,   {'t', 'T', 0x14, 0x14} },
-  { 'U',         CAPS,   {'u', 'U', 0x15, 0x15} },
-  { 'V',         CAPS,   {'v', 'V', 0x16, 0x16} },
-  { 'W',         CAPS,   {'w', 'W', 0x17, 0x17} },
-  { 'X',         CAPS,   {'x', 'X', 0x18, 0x18} },
-  { 'Y',         CAPS,   {'y', 'Y', 0x19, 0x19} },
-  { 'Z',         CAPS,   {'z', 'Z', 0x1a, 0x1a} },
+  { 'E',         CAPLOK,   {'e', 'E', 0x05, 0x20AC}  }, // eE€
 
   /* Legacy Ascii generators */
-//zz  { VK_OEM_MINUS, NOCAPS, {'\'', '?', WCH_NONE, 0x1f /* US */} },
+//zz  { VK_OEM_MINUS, 0, {'\'', '?', WCH_NONE, 0x1f /* US */} },
   { 0, 0 }
 };
 
@@ -310,7 +340,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x37, L"Num *" },
   { 0x38, L"Alt" },
   { 0x39, L"Space" },
-  { 0x3a, L"Caps Lock" },
+  { 0x3a, L"CAPLOK Lock" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -403,7 +433,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(1,1), /* Version 1.0 */
+  MAKELONG(KLLF_ALTGR, 1), /* Version 1.0 */
 
   /* Ligatures */
   0,

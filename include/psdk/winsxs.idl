@@ -17,6 +17,7 @@
  */
 
 import "objidl.idl";
+import "oleidl.idl";
 
 interface IAssemblyCache;
 interface IAssemblyCacheItem;
