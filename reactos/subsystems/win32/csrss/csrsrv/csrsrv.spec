@@ -1,5 +1,5 @@
 @ stdcall CsrAddStaticServerThread(ptr ptr long)
-;@ stdcall CsrCallServerFromServer(ptr ptr)
+@ stdcall CsrCallServerFromServer(ptr ptr)
 ;@ stdcall CsrConnectToUser()
 ;@ stdcall CsrCreateProcess(ptr ptr ptr ptr long ptr)
 ;@ stdcall CsrCreateRemoteThread(ptr ptr)

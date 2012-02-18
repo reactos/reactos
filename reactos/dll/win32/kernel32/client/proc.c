@@ -513,7 +513,7 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        DPRINT1("Failed to tell csrss about new process\n");
+        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
         return CsrRequest.Status;
     }
 

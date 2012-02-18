@@ -1074,7 +1074,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
 {
     PLIST_ENTRY NextEntry;
     PCSR_PROCESS CurrentProcess = NULL;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
 
     /* Acquire the lock */
     CsrAcquireProcessLock();
@@ -1084,31 +1084,37 @@ CsrLockProcessByClientId(IN HANDLE Pid,
     *CsrProcess = NULL;
 
     /* Setup the List Pointers */
-    NextEntry = CsrRootProcess->ListLink.Flink;
-    while (NextEntry != &CsrRootProcess->ListLink)
+    NextEntry = &CsrRootProcess->ListLink;
+    do
     {
         /* Get the Process */
         CurrentProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
 
         /* Check for PID Match */
-        if (CurrentProcess->ClientId.UniqueProcess == Pid) break;
+        if (CurrentProcess->ClientId.UniqueProcess == Pid)
+        {
+            Status = STATUS_SUCCESS;
+            break;
+        }
 
         /* Next entry */
         NextEntry = NextEntry->Flink;
-    }
+    } while (NextEntry != &CsrRootProcess->ListLink);
 
     /* Check if we didn't find it in the list */
-    if (NextEntry == &CsrRootProcess->ListLink)
+    if (!NT_SUCCESS(Status))
     {
         /* Nothing found, release the lock */
         CsrReleaseProcessLock();
-        return Status;
     }
-
-    /* Lock the found process and return it */
-    Status = STATUS_SUCCESS;
-    CurrentProcess->ReferenceCount++;
-    *CsrProcess = CurrentProcess;
+    else
+    {
+        /* Lock the found process and return it */
+        CsrLockedReferenceProcess(CurrentProcess);
+        *CsrProcess = CurrentProcess;
+    }
+    
+    /* Return the result */
     return Status;
 }
 

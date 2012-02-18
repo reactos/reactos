@@ -114,6 +114,128 @@ CsrHandleHardError(IN PCSR_THREAD ThreadData,
 }
 
 /*++
+ * @name CsrCallServerFromServer
+ * @implemented NT4
+ *
+ * The CsrCallServerFromServer routine calls a CSR API from within a server.
+ * It avoids using LPC messages since the request isn't coming from a client.
+ *
+ * @param ReceiveMsg
+ *        Pointer to the CSR API Message to send to the server.
+ *
+ * @param ReplyMsg
+ *        Pointer to the CSR API Message to receive from the server.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_ILLEGAL_FUNCTION
+ *         if the opcode is invalid, or STATUS_ACCESS_VIOLATION if there
+ *         was a problem executing the API.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
+                        PCSR_API_MESSAGE ReplyMsg)
+{
+#if 0 // real code
+    ULONG ServerId;
+    PCSR_SERVER_DLL ServerDll;
+    ULONG ApiId;
+    ULONG Reply;
+    NTSTATUS Status;
+
+    /* Get the Server ID */
+    ServerId = CSR_SERVER_ID_FROM_OPCODE(ReceiveMsg->Opcode);
+
+    /* Make sure that the ID is within limits, and the Server DLL loaded */
+    if ((ServerId >= CSR_SERVER_DLL_MAX) ||
+        (!(ServerDll = CsrLoadedServerDll[ServerId])))
+    {
+        /* We are beyond the Maximum Server ID */
+        DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n", ServerId, ServerDll);
+        ReplyMsg->Status = (ULONG)STATUS_ILLEGAL_FUNCTION;
+        return STATUS_ILLEGAL_FUNCTION;
+    }
+    else
+    {
+        /* Get the API ID */
+        ApiId = CSR_API_ID_FROM_OPCODE(ReceiveMsg->Opcode);
+
+        /* Normalize it with our Base ID */
+        ApiId -= ServerDll->ApiBase;
+
+        /* Make sure that the ID is within limits, and the entry exists */
+        if ((ApiId >= ServerDll->HighestApiSupported) ||
+            ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
+        {
+            /* We are beyond the Maximum API ID, or it doesn't exist */
+            DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
+                    "invalid API to call from the server.\n",
+                    ServerDll->ValidTable[ApiId],
+                    ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
+                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***", &ServerDll->Name);
+            DbgBreakPoint();
+            ReplyMsg->Status = (ULONG)STATUS_ILLEGAL_FUNCTION;
+            return STATUS_ILLEGAL_FUNCTION;
+        }
+    }
+
+    if (CsrDebug & 2)
+    {
+        DPRINT1("CSRSS: %s Api Request received from server process\n",
+                ServerDll->NameTable[ApiId]);
+    }
+        
+    /* Validation complete, start SEH */
+    _SEH2_TRY
+    {
+        /* Call the API and get the result */
+        Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
+
+        /* Return the result, no matter what it is */
+        ReplyMsg->Status = Status;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* If we got an exception, return access violation */
+        ReplyMsg->Status = STATUS_ACCESS_VIOLATION;
+    }
+    _SEH2_END;
+
+    /* Return success */
+    return STATUS_SUCCESS;
+#else // Hacky reactos code
+    PCSR_PROCESS ProcessData;
+    
+    /* Get the Process Data */
+    ProcessData = CsrGetProcessData(ReceiveMsg->Header.ClientId.UniqueProcess);
+    if (!ProcessData)
+    {
+        DPRINT1("Message: Unable to find data for process 0x%x\n",
+                ReceiveMsg->Header.ClientId.UniqueProcess);
+        return STATUS_NOT_SUPPORTED;
+    }
+        
+    /* Validation complete, start SEH */
+    _SEH2_TRY
+    {
+        /* Call the API and get the result */
+        CsrApiCallHandler(ProcessData, ReplyMsg);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* If we got an exception, return access violation */
+        ReplyMsg->Status = STATUS_ACCESS_VIOLATION;
+    }
+    _SEH2_END;
+
+    /* Return success */
+    return STATUS_SUCCESS;
+#endif
+}
+
+/*++
  * @name CsrApiPortInitialize
  *
  * The CsrApiPortInitialize routine initializes the LPC Port used for
