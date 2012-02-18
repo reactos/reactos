@@ -68,7 +68,10 @@ BasepInitConsole(VOID)
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
     STARTUPINFO si;
-
+    WCHAR SessionDir[256];
+    ULONG SessionId = NtCurrentPeb()->SessionId;
+    BOOLEAN InServer;
+    
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
@@ -136,6 +139,38 @@ BasepInitConsole(VOID)
 
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
+    
+    /* Setup the right Object Directory path */
+    if (!SessionId)
+    {
+        /* Use the raw path */
+        wcscpy(SessionDir, WIN_OBJ_DIR);
+    }
+    else
+    {
+        /* Use the session path */
+        swprintf(SessionDir,
+                 L"%ws\\%ld%ws",
+                 SESSION_DIR,
+                 SessionId,
+                 WIN_OBJ_DIR);
+    }
+
+    /* Connect to the base server */
+    DPRINT("Connecting to CSR...\n");
+    Status = CsrClientConnectToServer(SessionDir,
+                                      2,
+                                      NULL,
+                                      NULL,
+                                      &InServer);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Nothing to do for server-to-server */
+    if (InServer) return TRUE;
 
     /*
      * Normally, we should be connecting to the Console CSR Server...
@@ -156,6 +191,7 @@ BasepInitConsole(VOID)
         return TRUE;
     }
 
+    /* Nothing to do if not a console app */
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
