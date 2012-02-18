@@ -226,6 +226,15 @@ SepPrivilegeCheck(
     KPROCESSOR_MODE PreviousMode
 );
 
+BOOLEAN
+NTAPI
+SeCheckPrivilegedObject(
+    IN LUID PrivilegeValue,
+    IN HANDLE ObjectHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN KPROCESSOR_MODE PreviousMode
+);
+
 NTSTATUS
 NTAPI
 SepDuplicateToken(

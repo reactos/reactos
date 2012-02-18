@@ -1503,6 +1503,10 @@ NTSTATUS
 NTAPI
 MmReleaseMmInfo(struct _EPROCESS *Process);
 
+NTSTATUS
+NTAPI
+MmSetExecuteOptions(IN ULONG ExecuteOptions);
+
 VOID
 NTAPI
 MmDeleteProcessPageDirectory(struct _EPROCESS *Process);

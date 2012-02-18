@@ -1094,4 +1094,73 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+MmSetExecuteOptions(IN ULONG ExecuteOptions)
+{
+
+    PKPROCESS CurrentProcess = &PsGetCurrentProcess()->Pcb;
+    KLOCK_QUEUE_HANDLE ProcessLock;
+    NTSTATUS Status = STATUS_ACCESS_DENIED;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    /* Only accept valid flags */
+    if (ExecuteOptions & ~MEM_EXECUTE_OPTION_VALID_FLAGS)
+    {
+        /* Fail */
+        DPRINT1("Invalid no-execute options\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Change the NX state in the process lock */
+    KiAcquireProcessLock(CurrentProcess, &ProcessLock);
+
+    /* Don't change anything if the permanent flag was set */
+    if (!CurrentProcess->Flags.Permanent)
+    {
+        /* Start by assuming it's not disabled */
+        CurrentProcess->Flags.ExecuteDisable = FALSE;
+
+        /* Now process each flag and turn the equivalent bit on */
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_DISABLE)
+        {
+            CurrentProcess->Flags.ExecuteDisable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_ENABLE)
+        {
+            CurrentProcess->Flags.ExecuteEnable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION)
+        {
+            CurrentProcess->Flags.DisableThunkEmulation = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_PERMANENT)
+        {
+            CurrentProcess->Flags.Permanent = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE)
+        {
+            CurrentProcess->Flags.ExecuteDispatchEnable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE)
+        {
+            CurrentProcess->Flags.ImageDispatchEnable = TRUE;
+        }
+
+        /* These are turned on by default if no-execution is also eanbled */
+        if (CurrentProcess->Flags.ExecuteEnable)
+        {
+            CurrentProcess->Flags.ExecuteDispatchEnable = TRUE;
+            CurrentProcess->Flags.ImageDispatchEnable = TRUE;
+        }
+
+        /* All good */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Release the lock and return status */
+    KiReleaseProcessLock(&ProcessLock);
+    return Status;
+}
+
 /* EOF */

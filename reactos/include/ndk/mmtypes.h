@@ -63,8 +63,18 @@ Author:
 #define MAP_PROCESS                                         1
 #define MAP_SYSTEM                                          2
 
-#ifndef NTOS_MODE_USER
+//
+// Flags for ProcessExecutionOptions
+//
+#define MEM_EXECUTE_OPTION_DISABLE                          0x1 
+#define MEM_EXECUTE_OPTION_ENABLE                           0x2
+#define MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION          0x4
+#define MEM_EXECUTE_OPTION_PERMANENT                        0x8
+#define MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE          0x10
+#define MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE            0x20 
+#define MEM_EXECUTE_OPTION_VALID_FLAGS                      0x3F
 
+#ifndef NTOS_MODE_USER
 //
 // Virtual Memory Flags
 //

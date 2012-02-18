@@ -563,6 +563,34 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     /* Exit to V86 mode */
     KiEoiHelper(TrapFrame);
 }
+
+VOID
+NTAPI
+Ke386SetIOPL(VOID)
+{
+
+    PKTHREAD Thread = KeGetCurrentThread();
+    PKPROCESS Process = Thread->ApcState.Process;
+    PKTRAP_FRAME TrapFrame;
+    CONTEXT Context;
+
+    /* IOPL was enabled for this process/thread */
+    Process->Iopl = TRUE;
+    Thread->Iopl = TRUE;
+
+    /* Get the trap frame on exit */
+    TrapFrame = KeGetTrapFrame(Thread);
+
+    /* Convert to a context */
+    Context.ContextFlags = CONTEXT_CONTROL;
+    KeTrapFrameToContext(TrapFrame, NULL, &Context);
+    
+    /* Set the IOPL flag */
+    Context.EFlags |= EFLAGS_IOPL;
+    
+    /* Convert back to a trap frame */
+    KeContextToTrapFrame(&Context, NULL, TrapFrame, CONTEXT_CONTROL, UserMode);
+}
  
 /* PUBLIC FUNCTIONS ***********************************************************/
 

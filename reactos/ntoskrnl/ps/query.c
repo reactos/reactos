@@ -928,6 +928,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     KAFFINITY ValidAffinity, Affinity = 0;
     ULONG DefaultHardErrorMode = 0, BasePriority = 0, MemoryPriority = 0;
     ULONG DisableBoost = 0, DebugFlags = 0, EnableFixup = 0, Boost = 0;
+    ULONG NoExecute = 0;
+    BOOLEAN HasPrivilege;
     PLIST_ENTRY Next;
     PETHREAD Thread;
     PAGED_CODE();
@@ -1189,8 +1191,17 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if ((PriorityClass.PriorityClass != Process->PriorityClass) &&
                 (PriorityClass.PriorityClass == PROCESS_PRIORITY_CLASS_REALTIME))
             {
-                /* TODO: Check privileges */
-                DPRINT1("Should check privilege\n");
+                /* Check the privilege */
+                HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                                       ProcessHandle,
+                                                       PROCESS_SET_INFORMATION,
+                                                       PreviousMode);
+                if (!HasPrivilege)
+                {
+                    ObDereferenceObject(Process);
+                    DPRINT1("Privilege to change priority to realtime lacking\n");
+                    return STATUS_PRIVILEGE_NOT_HELD;
+                }
             }
 
             /* Check if we have a job */
@@ -1284,7 +1295,16 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Check if the new base is higher */
             if (BasePriority > Process->Pcb.BasePriority)
             {
-                DPRINT1("Should check privilege\n");
+                HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                                       ProcessHandle,
+                                                       PROCESS_SET_INFORMATION,
+                                                       PreviousMode);
+                if (!HasPrivilege)
+                {
+                    ObDereferenceObject(Process);
+                    DPRINT1("Privilege to change priority from %lx to %lx lacking\n", BasePriority, Process->Pcb.BasePriority);
+                    return STATUS_PRIVILEGE_NOT_HELD;
+                }
             }
 
             /* Call Ke */
@@ -1595,12 +1615,61 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             KeSetAutoAlignmentProcess(&Process->Pcb, FALSE);
             Status = STATUS_SUCCESS;
             break;
+            
+        case ProcessUserModeIOPL:
 
+            /* Only TCB can do this */
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode)) 
+            {
+                /* Fail */
+                DPRINT1("Need TCB to set IOPL\n");
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+
+            /* Only supported on x86 */
+#if defined (_X86_)
+            Ke386SetIOPL();
+#endif
+            /* Done */
+            break;
+
+        case ProcessExecuteFlags:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            if (ProcessHandle != NtCurrentProcess())
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                NoExecute = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Call Mm for the update */
+            Status = MmSetExecuteOptions(NoExecute);
+            break;
+                
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
         case ProcessIoPortHandlers:
-        case ProcessUserModeIOPL:
         case ProcessWx86Information:
              DPRINT1("VDM/16-bit Request not implemented: %lx\n", ProcessInformationClass);
              Status = STATUS_NOT_IMPLEMENTED;
@@ -1623,11 +1692,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessHandleTracing:
             DPRINT1("Handle tracing not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case ProcessExecuteFlags:
-            DPRINT1("No execute support not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
