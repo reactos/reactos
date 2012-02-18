@@ -89,7 +89,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
             // passed in.
             if (!FromMdl)
                MmUnlockAddressSpace(AddressSpace);
-            Status = MmAccessFaultCacheSection(Mode, Address, Locked);
+            Status = MmAccessFaultCacheSection(Mode, Address, FromMdl);
             if (!FromMdl)
                MmLockAddressSpace(AddressSpace);
             break;
@@ -172,7 +172,8 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
-                                                  (PVOID)Address);
+                                                  (PVOID)Address,
+                                                  FromMdl);
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -186,7 +187,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             // passed in.
             if (!FromMdl)
                MmUnlockAddressSpace(AddressSpace);
-            Status = MmNotPresentFaultCacheSection(Mode, Address, Locked);
+            Status = MmNotPresentFaultCacheSection(Mode, Address, FromMdl);
             if (!FromMdl)
                MmLockAddressSpace(AddressSpace);
             break;

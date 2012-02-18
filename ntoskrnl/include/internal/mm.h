@@ -74,6 +74,7 @@ typedef ULONG_PTR SWAPENTRY;
 #endif
 
 #define MEMORY_AREA_SECTION_VIEW            (1)
+#define MEMORY_AREA_CACHE   (2)
 #define MEMORY_AREA_VIRTUAL_MEMORY          (8)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
@@ -193,29 +194,28 @@ typedef ULONG_PTR SWAPENTRY;
 #define InterlockedExchangePte(PointerPte, Value) \
     InterlockedExchange((PLONG)(PointerPte), Value)
 
-typedef struct
-{
-    ULONG Entry[NR_SECTION_PAGE_ENTRIES];
-} SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
-
-typedef struct
-{
-    PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
-} SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
-
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONG FileOffset;		/* start offset into the file for image sections */
-    ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
-    ULONG RawLength;		/* length of the segment which is part of the mapped file */
-    SIZE_T Length;			/* absolute length of the segment */
-    ULONG Protection;
     FAST_MUTEX Lock;		/* lock which protects the page directory */
+	PFILE_OBJECT FileObject;
+    LARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
+    LARGE_INTEGER Length;			/* absolute length of the segment */
     ULONG ReferenceCount;
-    SECTION_PAGE_DIRECTORY PageDirectory;
+	ULONG CacheCount;
+    ULONG Protection;
     ULONG Flags;
-    ULONG Characteristics;
     BOOLEAN WriteCopy;
+	BOOLEAN Locked;
+
+	struct 
+	{
+		LONG FileOffset;		/* start offset into the file for image sections */
+		ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
+		ULONG Characteristics;
+	} Image;
+
+	LIST_ENTRY ListOfSegments;
+	RTL_GENERIC_TABLE PageTable;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
@@ -250,8 +250,6 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
-struct _MM_CACHE_SECTION_SEGMENT;
-
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -270,15 +268,10 @@ typedef struct _MEMORY_AREA
         struct
         {
             ROS_SECTION_OBJECT* Section;
-            ULONG ViewOffset;
+            LARGE_INTEGER ViewOffset;
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
         } SectionData;
-		struct
-		{
-            LARGE_INTEGER ViewOffset;
-            struct _MM_CACHE_SECTION_SEGMENT *Segment;
-		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
@@ -1647,7 +1640,8 @@ NTAPI
 MmNotPresentFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address
+    PVOID Address,
+    BOOLEAN Locked
 );
 
 NTSTATUS

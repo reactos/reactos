@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 #include "ppcmmu/mmu.h"
 

@@ -77,12 +77,15 @@ _MmLockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
 {
 	//DPRINT("MmLockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 	ExAcquireFastMutex(&Segment->Lock);
+	Segment->Locked = TRUE;
 }
 
 VOID
 NTAPI
 _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
 {
+	ASSERT(Segment->Locked);
+	Segment->Locked = FALSE;
 	ExReleaseFastMutex(&Segment->Lock);
 	//DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
@@ -278,7 +281,7 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 {
 	KIRQL OldIrql = 0;
 
-	DPRINT("Finalize segment %x\n", Segment);
+	DPRINT("Finalize segment %p\n", Segment);
 
 	MmLockSectionSegment(Segment);
 	RemoveEntryList(&Segment->ListOfSegments);
@@ -288,13 +291,10 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 			KeReleaseSpinLock(&Segment->FileObject->IrpListLock, OldIrql);
 			MmUnlockSectionSegment(Segment);
 			return;
-		} else {
-			Segment->Flags |= MM_SEGMENT_FINALIZE;
 		}
-	}
-	DPRINTC("Finalizing segment %x\n", Segment);
-	if (Segment->Flags & MM_DATAFILE_SEGMENT)
-	{
+		Segment->Flags |= MM_SEGMENT_FINALIZE;
+		DPRINTC("Finalizing data file segment %p\n", Segment);
+
 		Segment->FileObject->SectionObjectPointer->DataSectionObject = NULL;
 		KeReleaseSpinLock(&Segment->FileObject->IrpListLock, OldIrql);
 		MmFreePageTablesSectionSegment(Segment, MiFreeSegmentPage);
@@ -304,10 +304,11 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 		DPRINT("Done with %wZ\n", &Segment->FileObject->FileName);
 		Segment->FileObject = NULL;
 	} else {
+		DPRINTC("Finalizing segment %p\n", Segment);
 		MmFreePageTablesSectionSegment(Segment, MiFreeSegmentPage);
 		MmUnlockSectionSegment(Segment);		
 	}
-	DPRINTC("Segment %x destroy\n", Segment);
+	DPRINTC("Segment %p destroy\n", Segment);
 	ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
 }
 
@@ -437,6 +438,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
    ExInitializeFastMutex(&Segment->Lock);
 
    Segment->ReferenceCount = 1;
+   Segment->Locked = TRUE;
    RtlZeroMemory(&Segment->Image, sizeof(Segment->Image));
    Section->Segment = Segment;
    

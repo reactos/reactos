@@ -315,6 +315,7 @@ CcpMapData
     PROS_SECTION_OBJECT SectionObject = NULL;
     NTSTATUS Status;
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	ViewSize = CACHE_STRIPE;
 
 	if (!Map)
 	{
@@ -592,7 +593,7 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
 		DPRINT1("Not cached\n");
 		return FALSE;
 	}
-
+	
 	if (CcpMapData(FileObject, FileOffset, Length, Flags, Bcb, &Buffer))
 	{
 		return CcpPinMappedData(Map, FileOffset, Length, Flags, Bcb);

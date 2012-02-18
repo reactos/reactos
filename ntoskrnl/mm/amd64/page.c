@@ -188,6 +188,29 @@ MmDeletePageTablePfn(PFN_NUMBER PageFrameNumber, ULONG Level)
     }
 }
 
+VOID
+NTAPI
+MmDeleteProcessPageDirectory(PEPROCESS Process)
+{
+    PFN_NUMBER TableBasePfn;
+    PMMPTE PageDir;
+
+    /* Get the page directory PFN */
+    TableBasePfn = Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT;
+
+    /* Map the page directory in hyperspace */
+    PageDir = (PMMPTE)MmCreateHyperspaceMapping(TableBasePfn);
+
+    /* Free the hyperspace mapping page (ARM3) */
+    //MmDeletePageTablePfn(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)].u.Hard.PageFrameNumber, 3);
+
+    /* Delete the hyperspace mapping */
+    MmDeleteHyperspaceMapping(PageDir);
+
+    /* Recursively free the page directories */
+    MmDeletePageTablePfn(TableBasePfn, 4);
+}
+
 static
 PMMPTE
 MiGetPteForProcess(
@@ -617,6 +640,8 @@ MmCreateVirtualMappingUnsafe(
     ULONG i;
     MMPTE TmplPte, *Pte;
 
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
+
     /* Check if the range is valid */
     if ((Process == NULL && Address < MmSystemRangeStart) ||
         (Process != NULL && Address > MmHighestUserAddress))
@@ -666,6 +691,8 @@ MmCreateVirtualMapping(PEPROCESS Process,
                        ULONG PageCount)
 {
     ULONG i;
+
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
 
     for (i = 0; i < PageCount; i++)
     {

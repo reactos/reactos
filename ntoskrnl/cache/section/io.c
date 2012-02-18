@@ -64,6 +64,38 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
     return IoGetRelatedDeviceObject(FileObject);
 }
 
+// Note:
+// This completion function is really required.  Paging io completion does almost
+// nothing, including freeing the mdls.
+NTSTATUS
+NTAPI
+MiSimpleReadComplete
+(PDEVICE_OBJECT DeviceObject,
+ PIRP Irp,
+ PVOID Context)
+{
+    PMDL Mdl = Irp->MdlAddress;
+
+   /* Unlock MDL Pages, page 167. */
+    DPRINT("MiSimpleReadComplete %p\n", Irp);
+    while (Mdl)
+    {
+        DPRINT("MDL Unlock %p\n", Mdl);
+        MmUnlockPages(Mdl);
+        Mdl = Mdl->Next;
+    }
+
+    /* Check if there's an MDL */
+    while ((Mdl = Irp->MdlAddress))
+    {
+        /* Clear all of them */
+        Irp->MdlAddress = Mdl->Next;
+        IoFreeMdl(Mdl);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 MiSimpleRead
@@ -85,9 +117,6 @@ MiSimpleRead
     ASSERT(Buffer);
     ASSERT(ReadStatus);
 
-	// This reference is consumed when the IRP is completed below
-	// It will be consumed by line 231 of irp.c
-    ObReferenceObject(FileObject);
     DeviceObject = MmGetDeviceObjectForFile(FileObject);
 	ReadStatus->Status = STATUS_INTERNAL_ERROR;
 	ReadStatus->Information = 0;
@@ -95,8 +124,8 @@ MiSimpleRead
     ASSERT(DeviceObject);
 
     DPRINT
-		("PAGING READ: FileObject %x <%wZ> Offset %08x%08x Length %d\n",
-		 &FileObject,
+		("PAGING READ: FileObject %p <%wZ> Offset %08x%08x Length %d\n",
+		 FileObject,
 		 &FileObject->FileName,
 		 FileOffset->HighPart,
 		 FileOffset->LowPart,
@@ -114,7 +143,6 @@ MiSimpleRead
 
     if (!Irp)
     {
-        ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
 
@@ -124,7 +152,13 @@ MiSimpleRead
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
+	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
+    IrpSp->CompletionRoutine = MiSimpleReadComplete;
+
+    // Non paging case, the FileObject will be dereferenced at completion
+    if (!Paging)
+        ObReferenceObject(FileObject);
 
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
@@ -139,15 +173,14 @@ MiSimpleRead
 			  NULL)))
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-            ObDereferenceObject(FileObject);
 			ASSERT(FALSE);
 			return Status;
 		}
     }
 
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-	Status = 
-		ReadStatus->Status == STATUS_END_OF_FILE ? 
+	Status =
+		ReadStatus->Status == STATUS_END_OF_FILE ?
 		STATUS_SUCCESS : ReadStatus->Status;
     return Status;
 }
@@ -174,9 +207,6 @@ _MiSimpleWrite
     ASSERT(Buffer);
     ASSERT(ReadStatus);
 
-	// This reference is consumed when the IRP is completed below
-	// It will be consumed by line 231 of irp.c
-    ObReferenceObject(FileObject);
 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
     ASSERT(DeviceObject);
 
@@ -201,7 +231,6 @@ _MiSimpleWrite
 
     if (!Irp)
     {
-		ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
 
@@ -211,34 +240,31 @@ _MiSimpleWrite
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
+	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
+    IrpSp->CompletionRoutine = MiSimpleReadComplete;
 
 	DPRINT("Call Driver\n");
     Status = IoCallDriver(DeviceObject, Irp);
 	DPRINT("Status %x\n", Status);
-
-	// XXX hack: I need to find the reference that matches this one.
-	// The one above should be consumed by irp.c
-	ObDereferenceObject(FileObject);
 
     if (Status == STATUS_PENDING)
     {
 		DPRINT("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
-			 (&ReadWait, 
-			  Suspended, 
-			  KernelMode, 
-			  FALSE, 
+			 (&ReadWait,
+			  Suspended,
+			  KernelMode,
+			  FALSE,
 			  NULL)))
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-            ObDereferenceObject(FileObject);
 			ASSERT(FALSE);
 			return Status;
 		}
     }
-    
+
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     return ReadStatus->Status;
 }

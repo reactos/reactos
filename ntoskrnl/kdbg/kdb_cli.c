@@ -3161,8 +3161,8 @@ KdbpReadCommand(
             if (Buffer != Orig)
             {
                 KdbRepeatLastCommand = TRUE;
-                *Buffer = '\0';
                 RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
+                *Buffer = '\0';
             }
             else if (KdbRepeatLastCommand)
                 RtlStringCbCopyA(Buffer, Size, LastCommand);

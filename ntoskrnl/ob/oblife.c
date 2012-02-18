@@ -1605,7 +1605,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     _SEH2_END;
 
     /* Dereference the object if we had referenced it */
-    if (Object) ObDereferenceObject(Object);
+    if (Object) ObDereferenceObject (Object);
 
     /* Return status */
     return Status;
@@ -1645,128 +1645,91 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
     OBP_SET_HANDLE_ATTRIBUTES_CONTEXT Context;
     PVOID ObjectTable;
     KAPC_STATE ApcState;
-    POBJECT_DIRECTORY Directory;
-    KPROCESSOR_MODE PreviousMode;
     BOOLEAN AttachedToProcess = FALSE;
     PAGED_CODE();
 
     /* Validate the information class */
-    switch (ObjectInformationClass)
+    if (ObjectInformationClass != ObjectHandleFlagInformation)
     {
-        case ObjectHandleFlagInformation:
-        
-            /* Validate the length */
-            if (Length != sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
-            {
-                /* Invalid length */
-                return STATUS_INFO_LENGTH_MISMATCH;
-            }
-            
-            /* Save the previous mode */
-            Context.PreviousMode = ExGetPreviousMode();
-
-            /* Check if we were called from user mode */
-            if (Context.PreviousMode != KernelMode)
-            {
-                /* Enter SEH */
-                _SEH2_TRY
-                {
-                    /* Probe and capture the attribute buffer */
-                    ProbeForRead(ObjectInformation,
-                                 sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
-                                 sizeof(BOOLEAN));
-                    Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                                            ObjectInformation;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    /* Return the exception code */
-                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
-                }
-                _SEH2_END;
-            }
-            else
-            {
-                /* Just copy the buffer directly */
-                Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                                        ObjectInformation;
-            }
-
-            /* Check if this is a kernel handle */
-            if (ObIsKernelHandle(ObjectHandle, Context.PreviousMode))
-            {
-                /* Get the actual handle */
-                ObjectHandle = ObKernelHandleToHandle(ObjectHandle);
-                ObjectTable = ObpKernelHandleTable;
-
-                /* Check if we're not in the system process */
-                if (PsGetCurrentProcess() != PsInitialSystemProcess)
-                {
-                    /* Attach to it */
-                    KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
-                    AttachedToProcess = TRUE;
-                }
-            }
-            else
-            {
-                /* Use the current table */
-                ObjectTable = PsGetCurrentProcess()->ObjectTable;
-            }
-
-            /* Change the handle attributes */
-            if (!ExChangeHandle(ObjectTable,
-                                ObjectHandle,
-                                ObpSetHandleAttributes,
-                                (ULONG_PTR)&Context))
-            {
-                /* Some failure */
-                Status = STATUS_ACCESS_DENIED;
-            }
-            else
-            {
-                /* We are done */
-                Status = STATUS_SUCCESS;
-            }
-
-            /* De-attach if we were attached, and return status */
-            if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
-            break;
-        
-        case ObjectSessionInformation:
-        
-            /* Only a system process can do this */
-            PreviousMode = ExGetPreviousMode();
-            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
-            {
-                /* Fail */
-                DPRINT1("Privilege not held\n");
-                Status = STATUS_PRIVILEGE_NOT_HELD;
-            }
-            else
-            {
-                /* Get the object directory */
-                Status = ObReferenceObjectByHandle(ObjectHandle, 
-                                                   0, 
-                                                   ObDirectoryType,
-                                                   PreviousMode,
-                                                   (PVOID*)&Directory,
-                                                   NULL);
-                if (NT_SUCCESS(Status))
-                {
-                    /* FIXME: Missng locks */
-                    /* Set its session ID */
-                    Directory->SessionId = PsGetCurrentProcessSessionId();
-                    ObDereferenceObject(Directory);
-                }
-            }
-            break;
-        
-        default:
-            /* Unsupported class */
-            Status = STATUS_INVALID_INFO_CLASS;
-            break;
+        /* Invalid class */
+        return STATUS_INVALID_INFO_CLASS;
     }
 
+    /* Validate the length */
+    if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+    {
+        /* Invalid length */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Save the previous mode */
+    Context.PreviousMode = ExGetPreviousMode();
+
+    /* Check if we were called from user mode */
+    if (Context.PreviousMode != KernelMode)
+    {
+        /* Enter SEH */
+        _SEH2_TRY
+        {
+            /* Probe and capture the attribute buffer */
+            ProbeForRead(ObjectInformation,
+                         sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+                         sizeof(BOOLEAN));
+            Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                                    ObjectInformation;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Just copy the buffer directly */
+        Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                                ObjectInformation;
+    }
+
+    /* Check if this is a kernel handle */
+    if (ObIsKernelHandle(ObjectHandle, Context.PreviousMode))
+    {
+        /* Get the actual handle */
+        ObjectHandle = ObKernelHandleToHandle(ObjectHandle);
+        ObjectTable = ObpKernelHandleTable;
+
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            /* Attach to it */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+            AttachedToProcess = TRUE;
+        }
+    }
+    else
+    {
+        /* Use the current table */
+        ObjectTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Change the handle attributes */
+    if (!ExChangeHandle(ObjectTable,
+                        ObjectHandle,
+                        ObpSetHandleAttributes,
+                        (ULONG_PTR)&Context))
+    {
+        /* Some failure */
+        Status = STATUS_ACCESS_DENIED;
+    }
+    else
+    {
+        /* We are done */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* De-attach if we were attached, and return status */
+    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
     return Status;
 }
 

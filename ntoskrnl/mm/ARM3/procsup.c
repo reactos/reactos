@@ -199,9 +199,6 @@ MmDeleteTeb(IN PEPROCESS Process,
         ASSERT(VadTree->NumberGenericTableElements >= 1);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
 
-        /* Delete the pages */
-        MiDeleteVirtualAddresses((ULONG_PTR)Teb, TebEnd, NULL);
-    
         /* Release the working set */
         MiUnlockProcessWorkingSet(Process, Thread);
 
@@ -222,7 +219,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
     PMMPTE PointerPte;
-    PFN_NUMBER PageFrameNumber, PageTableFrameNumber;
+    PFN_NUMBER PageFrameNumber;//, PageTableFrameNumber;
     PFN_COUNT StackPages;
     PMMPFN Pfn1;//, Pfn2;
     ULONG i;
@@ -256,14 +253,13 @@ MmDeleteKernelStack(IN PVOID StackBase,
             /* Get the PTE's page */
             PageFrameNumber = PFN_FROM_PTE(PointerPte);
             Pfn1 = MiGetPfnEntry(PageFrameNumber);
-#if 1 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
+#if 0 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
             /* Now get the page of the page table mapping it */
             PageTableFrameNumber = Pfn1->u4.PteFrame;
-            //Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
+            Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
 
             /* Remove a shared reference, since the page is going away */
-            DPRINT("SystemPTE PDE: %lx\n", PageTableFrameNumber);
-            //MiDecrementShareCount(Pfn2, PageTableFrameNumber);
+            MiDecrementShareCount(Pfn2, PageTableFrameNumber);
 #endif
             /* Set the special pending delete marker */
             MI_SET_PFN_DELETED(Pfn1);
@@ -1342,79 +1338,6 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
     /* Release the address space */
     MmUnlockAddressSpace(&Process->Vm);
-}
-
-VOID
-NTAPI
-MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
-{
-    PMMPFN Pfn1, Pfn2;
-    KIRQL OldIrql;
-    PFN_NUMBER PageFrameIndex;
-
-    //ASSERT(Process->CommitCharge == 0);
-
-    /* Delete the shared user data section (Should be done in clean, not delete) */
-    ASSERT(MmHighestUserAddress > (PVOID)USER_SHARED_DATA);
-    KeAttachProcess(&Process->Pcb);
-    //DPRINT1("Killing shared user data page no longer works -- has someone changed ARM3 in a way to make this fail now?\n");
-    //MiDeleteVirtualAddresses(USER_SHARED_DATA, USER_SHARED_DATA, NULL);
-    //DPRINT1("Done\n");
-    KeDetachProcess();
-    
-    /* Acquire the PFN lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-    /* Check for fully initialized process */
-    if (Process->AddressSpaceInitialized == 2)
-    {
-        /* Map the working set page and its page table */
-        Pfn1 = MiGetPfnEntry(Process->WorkingSetPage);
-        Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);
-
-        /* Nuke it */
-        MI_SET_PFN_DELETED(Pfn1);
-        MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
-        MiDecrementShareCount(Pfn1, Process->WorkingSetPage);
-        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-            
-        /* Now map hyperspace and its page table */
-        PageFrameIndex = Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT;
-        Pfn1 = MiGetPfnEntry(PageFrameIndex);
-        Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);
-
-        /* Nuke it */
-        MI_SET_PFN_DELETED(Pfn1);
-        MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
-        MiDecrementShareCount(Pfn1, PageFrameIndex);
-        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-
-        /* Finally, nuke the PDE itself */
-        PageFrameIndex = Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT;
-        Pfn1 = MiGetPfnEntry(PageFrameIndex);
-        MI_SET_PFN_DELETED(Pfn1);
-        MiDecrementShareCount(Pfn1, PageFrameIndex);
-        MiDecrementShareCount(Pfn1, PageFrameIndex);
-        
-        /* HACK: In Richard's original patch this ASSERT did work */
-        //DPRINT1("Ref count: %lx %lx\n", Pfn1->u3.e2.ReferenceCount, Pfn1->u2.ShareCount);
-        //ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-    }
-    else
-    {
-        /* A partly-initialized process should never exit through here */
-        ASSERT(FALSE);
-    }
-
-    /* Release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-    /* No support for sessions yet */
-    ASSERT(Process->Session == 0);
-    
-    /* Clear out the PDE pages */
-    Process->Pcb.DirectoryTableBase[0] = 0;
-    Process->Pcb.DirectoryTableBase[1] = 0;
 }
 
 /* SESSION CODE TO MOVE TO SESSION.C ******************************************/

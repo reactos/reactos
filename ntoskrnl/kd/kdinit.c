@@ -11,6 +11,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, KdInitSystem)
+#endif
+
+
 /* Make bochs debug output in the very early boot phase available */
 //#define AUTO_ENABLE_BOCHS
 
@@ -167,6 +172,7 @@ KdpCallInitRoutine(ULONG BootPhase)
 }
 
 BOOLEAN
+INIT_FUNCTION
 NTAPI
 KdInitSystem(ULONG BootPhase,
              PLOADER_PARAMETER_BLOCK LoaderBlock)

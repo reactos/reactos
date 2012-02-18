@@ -247,7 +247,6 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
    PEPROCESS Process = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    MM_REQUIRED_RESOURCES Resources = { 0 };
-   ULONG RefCount;
 
    DPRINTC("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPage(Page));
 
@@ -423,6 +422,8 @@ bail:
 
    if (Segment)
    {
+	   ULONG RefCount;
+
 	   DPRINTC("About to finalize section page %x (%x:%x) Status %x %s\n", Page, Segment, FileOffset.LowPart, Status, Dirty ? "dirty" : "clean");
 
 	   if (!NT_SUCCESS(Status) ||
@@ -458,26 +459,29 @@ ULONG
 NTAPI
 MiCacheEvictPages(PMM_SECTION_SEGMENT Segment, ULONG Target)
 {
-	ULONG Entry, Result = 0;
+	ULONG Entry, Result = 0, i, j;
 	NTSTATUS Status;
 	PFN_NUMBER Page;
 	LARGE_INTEGER Offset;
 
 	MmLockSectionSegment(Segment);
 
-	for (Offset.QuadPart = 0; 
-		 Offset.QuadPart < Segment->Length.QuadPart && Result < Target;
-		 Offset.QuadPart += PAGE_SIZE) {
-		Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-		if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
-			Page = PFN_FROM_SSE(Entry);
-			MmReferencePage(Page);
-			MmUnlockSectionSegment(Segment);
-			Status = MmpPageOutPhysicalAddress(Page);
-			if (NT_SUCCESS(Status))
-				Result++;
-			MmLockSectionSegment(Segment);
-			MmReleasePageMemoryConsumer(MC_CACHE, Page);
+	for (i = 0; i < RtlNumberGenericTableElements(&Segment->PageTable); i++) {
+		PCACHE_SECTION_PAGE_TABLE Element = RtlGetElementGenericTable(&Segment->PageTable, i);
+		ASSERT(Element);
+		Offset = Element->FileOffset;
+		for (j = 0; j < ENTRIES_PER_ELEMENT; j++, Offset.QuadPart += PAGE_SIZE) {
+			Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+			if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
+				Page = PFN_FROM_SSE(Entry);
+				MmReferencePage(Page);
+				MmUnlockSectionSegment(Segment);
+				Status = MmpPageOutPhysicalAddress(Page);
+				if (NT_SUCCESS(Status))
+					Result++;
+				MmLockSectionSegment(Segment);
+				MmReleasePageMemoryConsumer(MC_CACHE, Page);
+			}
 		}
 	}
 
@@ -494,17 +498,23 @@ extern LIST_ENTRY MiSegmentList;
 NTSTATUS
 MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 {
-	ULONG Freed;
-	PLIST_ENTRY Entry;
-	PMM_SECTION_SEGMENT Segment;
-	for (Entry = MiSegmentList.Flink; Entry != &MiSegmentList; Entry = Entry->Flink) {
-		Segment = CONTAINING_RECORD(Entry, MM_SECTION_SEGMENT, ListOfSegments);
-		// Defer to MM to try recovering pages from it
-		Freed = MiCacheEvictPages(Segment, Target);
+    ULONG Freed;
+    PLIST_ENTRY Entry;
+    PMM_SECTION_SEGMENT Segment;
+    *NrFreed = 0;
 
-		Target -= Freed;
-		*NrFreed += Freed;
-	}
+    for (Entry = MiSegmentList.Flink; *NrFreed < Target && Entry != &MiSegmentList; Entry = Entry->Flink) {
+        Segment = CONTAINING_RECORD(Entry, MM_SECTION_SEGMENT, ListOfSegments);
+        // Defer to MM to try recovering pages from it
+        Freed = MiCacheEvictPages(Segment, Target);
+        *NrFreed += Freed;
+    }
 
-	return STATUS_SUCCESS;
+    if (!IsListEmpty(&MiSegmentList)) {
+        Entry = MiSegmentList.Flink;
+        RemoveEntryList(Entry);
+        InsertTailList(&MiSegmentList, Entry);
+    }
+
+    return STATUS_SUCCESS;
 }

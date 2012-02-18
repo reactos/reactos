@@ -151,6 +151,7 @@ _MmSetPageEntrySectionSegment
 {
     ULONG PageIndex, OldEntry;
     PCACHE_SECTION_PAGE_TABLE PageTable;
+	ASSERT(Segment->Locked);
 	if (Entry && !IS_SWAP_FROM_SSE(Entry))
 		MmGetRmapListHeadPage(PFN_FROM_SSE(Entry));
     PageTable = 
@@ -163,11 +164,25 @@ _MmSetPageEntrySectionSegment
 	OldEntry = PageTable->PageEntries[PageIndex];
 	DPRINT("MiSetPageEntrySectionSegment(%p,%08x%08x,%x=>%x)\n", 
 			Segment, Offset->u.HighPart, Offset->u.LowPart, OldEntry, Entry);
-	if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry)) {
-		MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
-	}
-	if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
+	if (PFN_FROM_SSE(Entry) == PFN_FROM_SSE(OldEntry)) {
+		// Nothing
+	} else if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
+		ASSERT(!OldEntry || IS_SWAP_FROM_SSE(OldEntry));
 		MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+	} else if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry)) {
+		ASSERT(!Entry || IS_SWAP_FROM_SSE(Entry));
+		MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+	} else if (IS_SWAP_FROM_SSE(Entry)) {
+		ASSERT(!IS_SWAP_FROM_SSE(OldEntry));
+		if (OldEntry)
+			MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+	} else if (IS_SWAP_FROM_SSE(OldEntry)) {
+		ASSERT(!IS_SWAP_FROM_SSE(Entry));
+		if (Entry)
+			MmSetSectionAssociation(PFN_FROM_SSE(OldEntry), Segment, Offset);
+	} else {
+		// We should not be replacing a page like this
+		ASSERT(FALSE);
 	}
     PageTable->PageEntries[PageIndex] = Entry;
     return STATUS_SUCCESS;
@@ -185,6 +200,7 @@ _MmGetPageEntrySectionSegment
     ULONG PageIndex, Result;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
+    ASSERT(Segment->Locked);
     FileOffset.QuadPart = 
         ROUND_DOWN(Offset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
     PageTable = MiSectionPageTableGet(&Segment->PageTable, &FileOffset);

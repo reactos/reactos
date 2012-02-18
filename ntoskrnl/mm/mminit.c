@@ -400,12 +400,12 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
 
-	InitializeListHead(&MiSegmentList);
-	ExInitializeFastMutex(&MiGlobalPageOperation);
-	KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
-	// Until we're fully demand paged, we can do things the old way through
-	// the balance manager
-	MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+    InitializeListHead(&MiSegmentList);
+    ExInitializeFastMutex(&MiGlobalPageOperation);
+    KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+    // Until we're fully demand paged, we can do things the old way through
+    // the balance manager
+    MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
 
     KeInitializeGuardedMutex(&PsIdleProcess->AddressCreationLock);
     MmKernelAddressSpace = &PsIdleProcess->Vm;

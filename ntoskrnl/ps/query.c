@@ -835,29 +835,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             break;
 
         case ProcessLUIDDeviceMapsEnabled:
-            /* Set the return length */
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-            
-            /* Indicate success */
-            Status = STATUS_SUCCESS;
-            
-            /* Protect write in SEH */
-            _SEH2_TRY
-            {
-                /* Return the count of handles */
-                *(PULONG)ProcessInformation = FALSE;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            DPRINT1("LUID Device Maps Not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         case ProcessExecuteFlags:

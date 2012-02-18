@@ -11,14 +11,14 @@
 	(IS_SWAP_FROM_SSE(E) && SWAPENTRY_FROM_SSE(E) == MM_WAIT_ENTRY)
 #define MAKE_PFN_SSE(P)          ((P) << PAGE_SHIFT)
 #define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
-#define MAKE_SWAP_SSE(S)         (((S) << 1) | 0x1)
+#define MAKE_SWAP_SSE(S)         (((ULONG)(S) << 1) | 0x1)
 #define DIRTY_SSE(E)             ((E) | 2)
 #define CLEAN_SSE(E)             ((E) & ~2)
 #define IS_DIRTY_SSE(E)          ((E) & 2)
 
 #define MM_SEGMENT_FINALIZE (0x40000000)
 
-#define RMAP_SEGMENT_MASK ~0xff
+#define RMAP_SEGMENT_MASK ~((ULONG_PTR)0xff)
 #define RMAP_IS_SEGMENT(x) (((ULONG_PTR)(x) & RMAP_SEGMENT_MASK) == RMAP_SEGMENT_MASK)
 
 #define MIN(x,y) (((x)<(y))?(x):(y))

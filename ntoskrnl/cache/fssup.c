@@ -222,9 +222,9 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 		RemoveEntryList(&PrivateCacheMap->ListEntry);
 		if (IsListEmpty(&PrivateCacheMap->Map->PrivateCacheMaps))
 		{
-			while (!IsListEmpty(&Map->AssociatedBcb))
+			while (!IsListEmpty(&PrivateCacheMap->Map->AssociatedBcb))
 			{
-				PNOCC_BCB Bcb = CONTAINING_RECORD(Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
+				PNOCC_BCB Bcb = CONTAINING_RECORD(PrivateCacheMap->Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
 				DPRINT("Evicting cache stripe #%x\n", Bcb - CcCacheSections);
 				Bcb->RefCount = 1;
 				CcpDereferenceCache(Bcb - CcCacheSections, TRUE);
@@ -250,12 +250,12 @@ NTAPI
 CcSetFileSizes(IN PFILE_OBJECT FileObject,
                IN PCC_FILE_SIZES FileSizes)
 {
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
     PNOCC_BCB Bcb;
-	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
 
     if (!Map) return;
     Map->FileSizes = *FileSizes;
-    Bcb = Map->AssociatedBcb.Flink == &Map->AssociatedBcb ? 
+	Bcb = Map->AssociatedBcb.Flink == &Map->AssociatedBcb ?
 		NULL : CONTAINING_RECORD(Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
 	if (!Bcb) return;
 	MmExtendCacheSection(Bcb->SectionObject, &FileSizes->FileSize, FALSE);

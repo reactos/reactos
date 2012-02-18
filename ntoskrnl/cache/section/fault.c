@@ -238,8 +238,7 @@ MiCowCacheSectionPage
    PVOID PAddress;
    LARGE_INTEGER Offset;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   ULONG Entry;
-    
+
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -257,14 +256,15 @@ MiCowCacheSectionPage
 	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    if (!Segment->WriteCopy /*&&
-							  !MemoryArea->Data.SectionData.WriteCopyView*/ ||
-		Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
+       !MemoryArea->Data.SectionData.WriteCopyView*/ ||
+       Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
    {
 #if 0
        if (Region->Protect == PAGE_READWRITE ||
            Region->Protect == PAGE_EXECUTE_READWRITE)
 #endif
        {
+           ULONG Entry;
            DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n", Segment, Process, PAddress, Offset.u.LowPart, MmGetPfnForProcess(Process, Address));
            if (Segment->FileObject)
            {
