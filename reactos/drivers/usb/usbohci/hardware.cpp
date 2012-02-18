@@ -1356,6 +1356,13 @@ CUSBHardwareDevice::SetPortFeature(
            KeStallExecutionProcessor(100);
         }while(TRUE);
 
+        if (m_SCECallBack != NULL)
+        {
+            //
+            // issue callback
+            //
+            m_SCECallBack(m_SCEContext);
+        }
         return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
