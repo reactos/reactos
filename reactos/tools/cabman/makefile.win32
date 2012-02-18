@@ -1,5 +1,3 @@
-# $Id$
-
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = program
