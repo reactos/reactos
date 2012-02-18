@@ -732,21 +732,19 @@ VOID
 CUSBHardwareDevice::HeadEndpointDescriptorModified(
     ULONG Type)
 {
-    ULONG Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
-
     if (Type == USB_ENDPOINT_TYPE_CONTROL)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_CONTROL_LIST_FILLED);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_CONTROL_LIST_FILLED);
     }
     else if (Type == USB_ENDPOINT_TYPE_BULK)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_BULK_LIST_FILLED);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_BULK_LIST_FILLED);
     }
 }
 
@@ -1579,7 +1577,7 @@ OhciDefferedRoutine(
     CStatus = (ULONG) SystemArgument1;
     DoneHead = (ULONG)SystemArgument2;
 
-    DPRINT("OhciDefferedRoutine Status %x\n", CStatus);
+    DPRINT("OhciDefferedRoutine Status %x DoneHead %x\n", CStatus, DoneHead);
 
     if (CStatus & OHCI_WRITEBACK_DONE_HEAD)
     {

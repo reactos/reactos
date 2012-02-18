@@ -53,6 +53,8 @@ public:
     POHCI_ENDPOINT_DESCRIPTOR FindInterruptEndpointDescriptor(UCHAR InterruptInterval);
     VOID PrintEndpointList(POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor);
     VOID LinkEndpoint(POHCI_ENDPOINT_DESCRIPTOR HeadEndpointDescriptor, POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+    VOID AddEndpointDescriptor(IN POHCI_ENDPOINT_DESCRIPTOR Descriptor);
+
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -66,6 +68,7 @@ protected:
     POHCI_ENDPOINT_DESCRIPTOR m_ControlHeadEndpointDescriptor;                          // control head descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_IsoHeadEndpointDescriptor;                              // isochronous head descriptor
     POHCI_ENDPOINT_DESCRIPTOR * m_InterruptEndpoints;
+    LIST_ENTRY m_PendingRequestList;                                                    // pending request list
 };
 
 //=================================================================================================
@@ -120,6 +123,12 @@ CUSBQueue::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
+    // init list
+    //
+    InitializeListHead(&m_PendingRequestList);
+
+
+    //
     // store hardware
     //
     m_Hardware = Hardware;
@@ -164,52 +173,28 @@ CUSBQueue::LinkEndpoint(
 
 }
 
-NTSTATUS
-CUSBQueue::AddUSBRequest(
-    IUSBRequest * Request)
+VOID
+CUSBQueue::AddEndpointDescriptor(
+    IN POHCI_ENDPOINT_DESCRIPTOR Descriptor)
 {
-    NTSTATUS Status;
+    IUSBRequest *Request;
     ULONG Type;
     POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
-    POHCI_ENDPOINT_DESCRIPTOR Descriptor;
     POHCI_ISO_TD CurrentDescriptor;
     ULONG FrameNumber;
     USHORT Frame;
 
-    DPRINT("CUSBQueue::AddUSBRequest\n");
 
     //
     // sanity check
     //
-    ASSERT(Request != NULL);
+    ASSERT(Descriptor->Request);
+    Request = (IUSBRequest*)Descriptor->Request;
 
     //
     // get request type
     //
     Type = Request->GetTransferType();
-
-    //
-    // add extra reference which is released when the request is completed
-    //
-    Request->AddRef();
-
-    //
-    // get transfer descriptors
-    //
-    Status = Request->GetEndpointDescriptor(&Descriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        //
-        // failed to get transfer descriptor
-        //
-        DPRINT1("CUSBQueue::AddUSBRequest GetEndpointDescriptor failed with %x\n", Status);
-
-        //
-        // release reference
-        //
-        Request->Release();
-        return Status;
-    }
 
     //
     // check type
@@ -294,8 +279,8 @@ CUSBQueue::AddUSBRequest(
         //
         // bad request type
         //
-        Request->Release();
-        return STATUS_INVALID_PARAMETER;
+        ASSERT(FALSE);
+        return;
     }
 
     //
@@ -315,7 +300,50 @@ CUSBQueue::AddUSBRequest(
         //
         m_Hardware->HeadEndpointDescriptorModified(Type);
     }
+}
 
+
+NTSTATUS
+CUSBQueue::AddUSBRequest(
+    IUSBRequest * Request)
+{
+    NTSTATUS Status;
+    IN POHCI_ENDPOINT_DESCRIPTOR Descriptor;
+
+    DPRINT("CUSBQueue::AddUSBRequest\n");
+
+    //
+    // sanity check
+    //
+    ASSERT(Request != NULL);
+
+    //
+    // add extra reference which is released when the request is completed
+    //
+    Request->AddRef();
+
+    //
+    // get transfer descriptors
+    //
+    Status = Request->GetEndpointDescriptor(&Descriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get transfer descriptor
+        //
+        DPRINT1("CUSBQueue::AddUSBRequest GetEndpointDescriptor failed with %x\n", Status);
+
+        //
+        // release reference
+        //
+        Request->Release();
+        return Status;
+    }
+
+    //
+    // add the request
+    //
+    AddEndpointDescriptor(Descriptor);
     return STATUS_SUCCESS;
 }
 
@@ -562,6 +590,9 @@ CUSBQueue::CleanupEndpointDescriptor(
     POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor)
 {
     PUSBREQUEST Request;
+    POHCI_ENDPOINT_DESCRIPTOR NewEndpointDescriptor;
+    USBD_STATUS UrbStatus;
+    KIRQL OldLevel;
 
     //
     // FIXME: verify unlinking process
@@ -576,9 +607,72 @@ CUSBQueue::CleanupEndpointDescriptor(
     ASSERT(Request);
 
     //
-    // notify of completion
+    // check for errors
     //
-    Request->CompletionCallback(EndpointDescriptor);
+    if (EndpointDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_HALTED)
+    {
+        //
+        // the real error will processed by IUSBRequest
+        //
+        UrbStatus = USBD_STATUS_STALL_PID;
+    }
+    else
+    {
+        //
+        // well done ;)
+        //
+        UrbStatus = USBD_STATUS_SUCCESS;
+    }
+
+    //
+    // Check if the transfer was completed and if UrbStatus is ok
+    //
+    if ((Request->IsRequestComplete() == FALSE) && (UrbStatus == USBD_STATUS_SUCCESS))
+    {
+        //
+        // request is incomplete, get new queue head
+        //
+        if (Request->GetEndpointDescriptor(&NewEndpointDescriptor) == STATUS_SUCCESS)
+        {
+            //
+            // notify of completion
+            //
+            Request->FreeEndpointDescriptor(EndpointDescriptor);
+
+            //
+            // first acquire request lock
+            //
+            KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+            //
+            // add to pending list
+            //
+            InsertTailList(&m_PendingRequestList, &NewEndpointDescriptor->DescriptorListEntry);
+
+            //
+            // release queue head
+            //
+            KeReleaseSpinLock(&m_Lock, OldLevel);
+
+            //
+            // Done for now
+            //
+            return;
+        }
+        DPRINT1("Unable to create a new QueueHead\n");
+        //ASSERT(FALSE);
+
+        //
+        // Else there was a problem
+        // FIXME: Find better return
+        UrbStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (UrbStatus != USBD_STATUS_SUCCESS)
+    {
+        DPRINT1("URB failed with status 0x%x\n", UrbStatus);
+        //PC_ASSERT(FALSE);
+    }
 
     //
     // free endpoint descriptor
@@ -586,11 +680,17 @@ CUSBQueue::CleanupEndpointDescriptor(
     Request->FreeEndpointDescriptor(EndpointDescriptor);
 
     //
+    // notify of completion
+    //
+    Request->CompletionCallback();
+
+
+    //
     // release request
     //
     Request->Release();
-
 }
+
 VOID
 CUSBQueue::PrintEndpointList(
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor)
@@ -618,6 +718,7 @@ CUSBQueue::TransferDescriptorCompletionCallback(
     ULONG TransferDescriptorLogicalAddress)
 {
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, PreviousEndpointDescriptor;
+    PLIST_ENTRY Entry;
     NTSTATUS Status;
 
     DPRINT("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
@@ -697,15 +798,41 @@ CUSBQueue::TransferDescriptorCompletionCallback(
         //
         // no more completed descriptors found
         //
-        return;
+        break;
 
     }while(TRUE);
 
+
     //
-    // hardware reported dead endpoint completed
+    // acquire spin lock
     //
-    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
-    ASSERT(FALSE);
+    KeAcquireSpinLockAtDpcLevel(&m_Lock);
+
+    //
+    // is there a pending list item
+    //
+    if (!IsListEmpty(&m_PendingRequestList))
+    {
+        //
+        // get list entry
+        //
+        Entry = RemoveHeadList(&m_PendingRequestList);
+
+        //
+        // get entry
+        //
+        EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)CONTAINING_RECORD(Entry, OHCI_ENDPOINT_DESCRIPTOR, DescriptorListEntry);
+
+        //
+        // add entry
+        //
+        AddEndpointDescriptor(EndpointDescriptor);
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLockFromDpcLevel(&m_Lock);
 }
 
 POHCI_ENDPOINT_DESCRIPTOR
@@ -789,8 +916,12 @@ CUSBQueue::AbortDevicePipe(
         HeadDescriptor = FindInterruptEndpointDescriptor(EndpointDescriptor->bInterval);
         ASSERT(HeadDescriptor);
     }
-    else if (Type == USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    else
     {
+        //
+        // IMPLEMENT me
+        //
+        ASSERT(Type == USB_ENDPOINT_TYPE_ISOCHRONOUS);
         UNIMPLEMENTED
         return STATUS_NOT_IMPLEMENTED;
     }

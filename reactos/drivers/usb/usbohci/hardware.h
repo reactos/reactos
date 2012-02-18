@@ -224,6 +224,7 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
     PVOID HeadLogicalDescriptor;
     PVOID NextDescriptor;
     PVOID Request;
+    LIST_ENTRY DescriptorListEntry;
 }OHCI_ENDPOINT_DESCRIPTOR, *POHCI_ENDPOINT_DESCRIPTOR;
 
 
@@ -242,7 +243,9 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 #define OHCI_ENDPOINT_ISOCHRONOUS_FORMAT        0x00008000
 #define	OHCI_ENDPOINT_HEAD_MASK                 0xfffffffc
 #define	OHCI_ENDPOINT_HALTED                    0x00000001
+#define	OHCI_ENDPOINT_TOGGLE_CARRY              0x00000002
 #define	OHCI_ENDPOINT_DIRECTION_DESCRIPTOR      0x00000000
+
 //
 // Maximum port count set by OHCI
 //
