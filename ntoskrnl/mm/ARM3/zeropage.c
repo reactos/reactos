@@ -24,19 +24,29 @@ KEVENT MmZeroingPageEvent;
 
 VOID
 NTAPI
+MiFindInitializationCode(OUT PVOID *StartVa,
+OUT PVOID *EndVa);
+
+VOID
+NTAPI
+MiFreeInitializationCode(IN PVOID StartVa,
+IN PVOID EndVa);
+
+VOID
+NTAPI
 MmZeroPageThread(VOID)
 {
     PKTHREAD Thread = KeGetCurrentThread();
-    //PVOID StartAddress, EndAddress;
+    PVOID StartAddress, EndAddress;
     PVOID WaitObjects[2];
     KIRQL OldIrql;
     PVOID ZeroAddress;
     PFN_NUMBER PageIndex, FreePage;
     PMMPFN Pfn1;
 
-    /* FIXME: Get the discardable sections to free them */
-//    MiFindInitializationCode(&StartAddress, &EndAddress);
-//    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
+    /* Get the discardable sections to free them */
+    MiFindInitializationCode(&StartAddress, &EndAddress);
+    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
     DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 
     /* Set our priority to 0 */

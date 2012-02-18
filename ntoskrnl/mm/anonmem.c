@@ -528,6 +528,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     return Status;
 }
 
+#ifndef __USE_ARM3__
 /*
 * @implemented
 */
@@ -900,6 +901,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
     return(STATUS_SUCCESS);
 }
+#endif // __USE_ARM3__
 
 static VOID
 MmFreeVirtualMemoryPage(PVOID Context,

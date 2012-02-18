@@ -488,7 +488,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
       /* Take control of the display */
       InbvAcquireDisplayOwnership();
       InbvResetDisplay();
-      InbvSolidColorFill(0, 0, 639, 479, 6);
+      InbvSolidColorFill(0, 0, 639, 479, 0);
       InbvSetTextColor(15);
       InbvSetScrollRegion(0, 0, 639, 479);
       InbvInstallDisplayStringFilter(NULL);

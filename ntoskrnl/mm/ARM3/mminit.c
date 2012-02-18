@@ -1067,6 +1067,116 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 VOID
 NTAPI
 INIT_FUNCTION
+MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY NextMd;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    ULONG i;
+    PFN_NUMBER BasePage, LoaderPages;
+    PMMPFN Pfn1;
+    KIRQL OldIrql;
+    PPHYSICAL_MEMORY_RUN Buffer, Entry;
+
+    /* Loop the descriptors in order to count them */
+    i = 0;
+    NextMd = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextMd != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        MdBlock = CONTAINING_RECORD(NextMd,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        i++;
+        NextMd = MdBlock->ListEntry.Flink;
+    }
+
+    /* Allocate a structure to hold the physical runs */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   i * sizeof(PHYSICAL_MEMORY_RUN),
+                                   'lMmM');
+    ASSERT(Buffer != NULL);
+    Entry = Buffer;
+
+    /* Loop the descriptors again */
+    NextMd = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextMd != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        /* Check what kind this was */
+        MdBlock = CONTAINING_RECORD(NextMd,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        switch (MdBlock->MemoryType)
+        {
+            /* Registry, NLS, and heap data */
+            case LoaderRegistryData:
+            case LoaderOsloaderHeap:
+            case LoaderNlsData:
+                /* Are all a candidate for deletion */
+                Entry->BasePage = MdBlock->BasePage;
+                Entry->PageCount = MdBlock->PageCount;
+                Entry++;
+
+            /* We keep the rest */
+            default:
+                break;
+        }
+
+        /* Move to the next descriptor */
+        NextMd = MdBlock->ListEntry.Flink;
+    }
+
+    /* Acquire the PFN lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Loop the runs */
+    LoaderPages = 0;
+    while (--Entry >= Buffer)
+    {
+        /* See how many pages are in this run */
+        i = Entry->PageCount;
+        BasePage = Entry->BasePage;
+        
+        /* Loop each page */
+        Pfn1 = MiGetPfnEntry(BasePage);
+        while (i--)
+        {
+            /* Check if it has references or is in any kind of list */
+            if (!(Pfn1->u3.e2.ReferenceCount) && (!Pfn1->u1.Flink))
+            {
+                /* Set the new PTE address and put this page into the free list */
+                Pfn1->PteAddress = (PMMPTE)(BasePage << PAGE_SHIFT);
+                MiInsertPageInFreeList(BasePage);
+                LoaderPages++;
+            }
+            else if (BasePage)
+            {
+                /* It has a reference, so simply drop it */
+                ASSERT(MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(Pfn1->PteAddress)) == FALSE);
+
+                /* Drop a dereference on this page, which should delete it */
+                Pfn1->PteAddress->u.Long = 0;
+                MI_SET_PFN_DELETED(Pfn1);
+                MiDecrementShareCount(Pfn1, BasePage);
+                LoaderPages++;
+            }
+
+            /* Move to the next page */
+            Pfn1++;
+            BasePage++;
+        }
+    }
+
+    /* Release the PFN lock and flush the TLB */
+    DPRINT1("Loader pages freed: %lx\n", LoaderPages);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    KeFlushCurrentTb();
+
+    /* Free our run structure */
+    ExFreePool(Buffer);
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
 MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
 {
     /* This function needs to do more work, for now, we tune page minimums */

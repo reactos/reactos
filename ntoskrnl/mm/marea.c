@@ -746,7 +746,7 @@ MmFreeMemoryArea(
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
            ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
-           
+
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
            if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
@@ -995,6 +995,10 @@ MmMapMemoryArea(PVOID BaseAddress,
    }
 }
 
+VOID
+NTAPI
+MmDeleteProcessAddressSpace2(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
@@ -1044,11 +1048,10 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
       }
    }
 
-   MmDeleteProcessPageDirectory(Process);
-
    MmUnlockAddressSpace(&Process->Vm);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
+   MmDeleteProcessAddressSpace2(Process);
    return(STATUS_SUCCESS);
 }
 

@@ -66,7 +66,7 @@ BOOLEAN InitIsWinPEMode, InitWinPEModeType;
 UNICODE_STRING NtSystemRoot;
 
 /* NT Initial User Application */
-WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss2.exe";
+WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss.exe";
 ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
                                          sizeof(WCHAR);
 ULONG NtInitialUserProcessBufferType = REG_SZ;
@@ -400,7 +400,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                      (PVOID*)&ProcessParams,
                                      0,
                                      &Size,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -429,7 +429,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                      &EnvironmentPtr,
                                      0,
                                      &Size,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -1288,6 +1288,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
 VOID
 NTAPI
+MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+VOID
+NTAPI
 INIT_FUNCTION
 Phase1InitializationDiscard(IN PVOID Context)
 {
@@ -1906,6 +1910,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Make sure nobody touches the loader block again */
     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+    MmFreeLoaderBlock(LoaderBlock);
     LoaderBlock = Context = NULL;
 
     /* Update progress bar */

@@ -2691,9 +2691,6 @@ IopEnumerateDetectedDevices(
    ULONG BootResourcesLength;
    NTSTATUS Status;
 
-   const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI");
-   UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
-   static ULONG DeviceIndexPci = 0;
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2709,9 +2706,6 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FloppyDiskPeripheral");
    UNICODE_STRING HardwareIdFloppy = RTL_CONSTANT_STRING(L"*PNP0700\0");
    static ULONG DeviceIndexFloppy = 0;
-   const UNICODE_STRING IdentifierIsa = RTL_CONSTANT_STRING(L"ISA");
-   UNICODE_STRING HardwareIdIsa = RTL_CONSTANT_STRING(L"*PNP0A00\0");
-   static ULONG DeviceIndexIsa = 0;
    UNICODE_STRING HardwareIdKey;
    PUNICODE_STRING pHardwareId;
    ULONG DeviceIndex = 0;
@@ -2963,25 +2957,6 @@ IopEnumerateDetectedDevices(
       {
          pHardwareId = &HardwareIdFloppy;
          DeviceIndex = DeviceIndexFloppy++;
-      }
-      else if (NT_SUCCESS(Status))
-      {
-         /* Try to also match the device identifier */
-         if (RtlCompareUnicodeString(&ValueName, &IdentifierPci, FALSE) == 0)
-         {
-            pHardwareId = &HardwareIdPci;
-            DeviceIndex = DeviceIndexPci++;
-         }
-         else if (RtlCompareUnicodeString(&ValueName, &IdentifierIsa, FALSE) == 0)
-         {
-            pHardwareId = &HardwareIdIsa;
-            DeviceIndex = DeviceIndexIsa++;
-         }
-         else
-         {
-            DPRINT("Unknown device '%wZ'\n", &ValueName);
-            goto nextdevice;
-         }
       }
       else
       {
