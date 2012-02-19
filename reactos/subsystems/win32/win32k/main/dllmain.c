@@ -187,10 +187,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         }
 
         /* Close the startup desktop */
-        ASSERT(ppiCurrent->rpdeskStartup);
-        ASSERT(ppiCurrent->hdeskStartup);
-        ObDereferenceObject(ppiCurrent->rpdeskStartup);
-        ZwClose(ppiCurrent->hdeskStartup);
+        if(ppiCurrent->rpdeskStartup)
+            ObDereferenceObject(ppiCurrent->rpdeskStartup);
+        if(ppiCurrent->hdeskStartup)
+            ZwClose(ppiCurrent->hdeskStartup);
 
         /* Close the current window station */
         UserSetProcessWindowStation(NULL);
