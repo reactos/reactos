@@ -58,11 +58,15 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
+   while (RMAP_IS_SEGMENT(entry->Address))
+       entry = entry->Next;
+
    if (entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
    }
+
    Process = entry->Process;
 
    Address = entry->Address;
@@ -140,6 +144,10 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
        */
       Status = MmPageOutSectionView(AddressSpace, MemoryArea,
                                     Address, PageOp);
+   }
+   else if (Type == MEMORY_AREA_CACHE)
+   {
+      Status = MmpPageOutPhysicalAddress(Page);
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {

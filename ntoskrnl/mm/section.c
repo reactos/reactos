@@ -2242,8 +2242,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             MmInsertRmap(Page,
                          Process,
                          Address);
+	    // If we got here, the previous entry should have been a wait
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
+	    MmLockSectionSegment(Context.Segment);
+	    LONG OldEntry = MmGetPageEntrySectionSegment(Context.Segment, &Context.Offset);
+	    ASSERT(OldEntry == 0 || OldEntry == MAKE_SWAP_SSE(MM_WAIT_ENTRY));
             MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
+	    MmUnlockSectionSegment(Context.Segment);
          }
          MmUnlockAddressSpace(AddressSpace);
          PageOp->Status = STATUS_UNSUCCESSFUL;
