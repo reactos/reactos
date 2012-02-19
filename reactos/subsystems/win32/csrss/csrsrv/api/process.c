@@ -173,6 +173,7 @@ CSR_API(CsrSrvCreateThread)
     PCSR_PROCESS CsrProcess;
     
     CurrentThread = NtCurrentTeb()->CsrClientThread;
+    if (!CurrentThread) return STATUS_SUCCESS; // server-to-server
     CsrProcess = CurrentThread->Process;
 
     if (CsrProcess->ClientId.UniqueProcess != Request->Data.CreateThreadRequest.ClientId.UniqueProcess)

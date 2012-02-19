@@ -1227,7 +1227,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     _SEH2_TRY
     {
         /* Call the API and get the result */
-        Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
+        Status = ServerDll->DispatchTable[ApiId](ReceiveMsg, &Reply);
 
         /* Return the result, no matter what it is */
         ReplyMsg->Status = Status;
