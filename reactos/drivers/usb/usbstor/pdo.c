@@ -1115,7 +1115,7 @@ USBSTOR_SendIrp(
     //
     // let's allocate an irp
     //
-    Status = USBSTOR_AllocateIrp(PDODeviceObject, sizeof(UFI_INQUIRY_RESPONSE), SCSIOP_INQUIRY, &Event, &Request, &Irp);
+    Status = USBSTOR_AllocateIrp(PDODeviceObject, DataTransferLength, OpCode, &Event, &Request, &Irp);
     if (!NT_SUCCESS(Status))
     {
         //
