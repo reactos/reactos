@@ -22,7 +22,7 @@ HANDLE CsrSbApiPort = 0;
 PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort;
 HANDLE hSbApiPort = (HANDLE) 0;
-HANDLE hApiPort = (HANDLE) 0;
+HANDLE CsrApiPort = (HANDLE) 0;
 ULONG CsrDebug = 0xFFFFFFFF;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
@@ -1098,7 +1098,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     NtClose(CsrInitializationEvent);
 
     /* Have us handle Hard Errors */
-    Status = NtSetDefaultHardErrorPort(hApiPort);
+    Status = NtSetDefaultHardErrorPort(CsrApiPort);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=%08lx)\n",

@@ -299,7 +299,7 @@ VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
 
-extern HANDLE hApiPort;
+extern HANDLE CsrApiPort;
 extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
@@ -313,6 +313,7 @@ extern PVOID CsrSrvSharedSectionHeap;
 extern PVOID *CsrSrvSharedStaticServerData;
 extern HANDLE CsrInitializationEvent;
 extern PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
+extern ULONG CsrMaxApiRequestThreads;
 
 NTSTATUS
 NTAPI
@@ -385,6 +386,10 @@ CsrSrvSetPriorityClass(
     IN OUT PCSR_API_MESSAGE ApiMessage,
     IN OUT PULONG Reply
 );
+
+LONG
+NTAPI
+CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo);
 
 VOID
 NTAPI

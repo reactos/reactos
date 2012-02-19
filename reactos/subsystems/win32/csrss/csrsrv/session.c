@@ -231,7 +231,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     /* Set the exception port */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessExceptionPort,
-                                     &hApiPort,//&CsrApiPort,
+                                     &CsrApiPort,
                                      sizeof(HANDLE));
 
     /* Check for success */
