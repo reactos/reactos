@@ -720,7 +720,7 @@ CsrApiRequestThread(IN PVOID Parameter)
         }
 
         /* We got an API Request */
-        CsrDereferenceThread(CsrThread);
+        CsrLockedReferenceThread(CsrThread);
         CsrReleaseProcessLock();
 
         /* This is an API call, get the Server ID */
