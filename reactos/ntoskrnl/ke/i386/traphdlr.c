@@ -82,7 +82,7 @@ KiIsFrameEdited(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-KiCommonExit(IN PKTRAP_FRAME TrapFrame, const ULONG Flags)
+KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
 {
     /* Disable interrupts until we return */
     _disable();
@@ -91,7 +91,7 @@ KiCommonExit(IN PKTRAP_FRAME TrapFrame, const ULONG Flags)
     KiCheckForApcDelivery(TrapFrame);
     
     /* Debugging checks */
-    KiExitTrapDebugChecks(TrapFrame, Flags);
+    KiExitTrapDebugChecks(TrapFrame, SkipPreviousMode);
 
     /* Restore the SEH handler chain */
     KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
@@ -112,7 +112,7 @@ FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, TRUE);
 
     /* Check if this was a V8086 trap */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturnNoSegments(TrapFrame);
@@ -140,7 +140,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
     TrapFrame->Eax = Status;
     
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, FALSE);
     
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
@@ -171,7 +171,7 @@ FASTCALL
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, FALSE);
     
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;

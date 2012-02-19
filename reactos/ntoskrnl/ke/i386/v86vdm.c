@@ -526,8 +526,10 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     TrapFrame->HardwareEsp = 0x11FFE;
     TrapFrame->ExceptionList = EXCEPTION_CHAIN_END;
     TrapFrame->Dr7 = 0;
-    //TrapFrame->DbgArgMark = 0xBADB0D00;
+#ifdef TRAP_DEBUG
+    TrapFrame->DbgArgMark = 0xBADB0D00;
     TrapFrame->PreviousPreviousMode = -1;
+#endif
     
     /* Disable interrupts */
     _disable();
