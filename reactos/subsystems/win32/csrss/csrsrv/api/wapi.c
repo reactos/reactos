@@ -771,25 +771,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
         }
     }
 
-    if (ProcessData->ProcessHandle == NULL)
-    {
-        OBJECT_ATTRIBUTES ObjectAttributes;
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   NULL);
-        DPRINT1("WARNING: CSR PROCESS WITH NO CSR PROCESS HANDLE???\n");
-        ClientId.UniqueThread = 0;
-        Status = NtOpenProcess(&ProcessData->ProcessHandle,
-                               PROCESS_ALL_ACCESS,
-                               &ObjectAttributes,
-                               &Request->ClientId);
-        DPRINT1("Status: %lx. Handle: %lx\n", Status, ProcessData->ProcessHandle);
-    }
-
-    if (ProcessData)
+    if ((ProcessData) && (ProcessData != CsrRootProcess))
     {
         /* Attach the Shared Section */
         Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
@@ -802,6 +784,10 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
         {
             DPRINT1("Shared section map failed: %lx\n", Status);
         }
+    }
+    else if (ProcessData == CsrRootProcess)
+    {
+        AllowConnection = TRUE;
     }
 
     Status = NtAcceptConnectPort(&ServerPort,
