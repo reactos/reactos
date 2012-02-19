@@ -11,6 +11,7 @@
 	<file>user32_apitest.rc</file>
 
 	<file>helper.c</file>
+	<file>desktop.c</file>
 	<file>GetKeyState.c</file>
 	<file>InitializeLpkHooks.c</file>
 	<file>RealGetWindowClass.c</file>

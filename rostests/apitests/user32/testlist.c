@@ -5,6 +5,7 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_desktop(void);
 extern void func_InitializeLpkHooks(void);
 extern void func_RealGetWindowClass(void);
 extern void func_ScrollDC(void);
@@ -30,6 +31,7 @@ const struct test winetest_testlist[] =
     { "GetIconInfo", func_GetIconInfo },
     { "GetPeekMessage", func_GetPeekMessage },
     { "DeferWindowPos", func_DeferWindowPos },
+    { "desktop", func_desktop } ,
     { "GetKeyState", func_GetKeyState },
     { "SetCursorPos", func_SetCursorPos },
     { "SetActiveWindow", func_SetActiveWindow },

@@ -6,6 +6,7 @@ set_rc_compiler()
 list(APPEND SOURCE
     helper.c
     DeferWindowPos.c
+    desktop.c
     GetIconInfo.c
     GetKeyState.c
     GetPeekMessage.c
