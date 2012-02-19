@@ -1138,7 +1138,13 @@ CUSBHardwareDevice::GetPortStatus(
 
     // connected
     if (Value & OHCI_RH_PORTSTATUS_CCS)
+    {
         *PortStatus |= USB_PORT_STATUS_CONNECT;
+
+        // low speed device
+        if (Value & OHCI_RH_PORTSTATUS_LSDA)
+            *PortStatus |= USB_PORT_STATUS_LOW_SPEED;
+    }
 
     // did a device connect?
     if (Value & OHCI_RH_PORTSTATUS_CSC)
@@ -1170,10 +1176,6 @@ CUSBHardwareDevice::GetPortStatus(
     // port reset ended (change bit only set at completion)
     if (Value & OHCI_RH_PORTSTATUS_PRSC)
         *PortChange |= USB_PORT_STATUS_RESET;
-
-    // low speed device
-    if (Value & OHCI_RH_PORTSTATUS_LSDA)
-        *PortStatus |= USB_PORT_STATUS_LOW_SPEED;
 
     return STATUS_SUCCESS;
 }
@@ -1352,7 +1354,7 @@ CUSBHardwareDevice::SetPortFeature(
            // wait a bit
            //
            KeStallExecutionProcessor(100);
-        }while(TRUE);
+        } while(TRUE);
 
         if (m_SCECallBack != NULL)
         {
