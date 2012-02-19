@@ -1556,17 +1556,18 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
 
         /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
         Result = KiConvertToGuiThread();
+
+        /* Reload trap frame and descriptor table pointer from new stack */
+        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
+        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
+
         if (!NT_SUCCESS(Result))
         {
             /* Set the last error and fail */
             //SetLastWin32Error(RtlNtStatusToDosError(Result));
             goto ExitCall;
         }
-        
-        /* Reload trap frame and descriptor table pointer from new stack */
-        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
-        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
-        
+
         /* Validate the system call number again */
         if (Id >= DescriptorTable->Limit)
         {
