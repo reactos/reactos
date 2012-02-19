@@ -743,11 +743,10 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
     NTSTATUS Status;
     HANDLE ServerPort = NULL, ServerThread = NULL;
     PCSR_PROCESS ProcessData = NULL;
-    REMOTE_PORT_VIEW LpcRead;
+    REMOTE_PORT_VIEW RemotePortView;
     CLIENT_ID ClientId;
     BOOLEAN AllowConnection = FALSE;
     PCSR_CONNECTION_INFO ConnectInfo;
-    LpcRead.Length = sizeof(LpcRead);
     ServerPort = NULL;
 
     DPRINT("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
@@ -756,19 +755,17 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
 
     /* Save the process ID */
     RtlZeroMemory(ConnectInfo, sizeof(CSR_CONNECTION_INFO));
-    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     ProcessData = CsrGetProcessData(Request->ClientId.UniqueProcess);
-    if (ProcessData == NULL)
+    if (!ProcessData)
     {
-        ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
-        if (ProcessData == NULL)
-        {
-            DPRINT1("Unable to allocate or find data for process 0x%x\n",
-                    Request->ClientId.UniqueProcess);
-        }
+        DPRINT1("CSRSRV: Unknown process: %lx. Will be rejecting connection\n",
+                Request->ClientId.UniqueProcess);
     }
 
+    /* Acquire the Process Lock */
+    CsrAcquireProcessLock();
+    
     if ((ProcessData) && (ProcessData != CsrRootProcess))
     {
         /* Attach the Shared Section */
@@ -788,28 +785,59 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
         AllowConnection = TRUE;
     }
 
+    /* Release the lock */
+    CsrReleaseProcessLock();
+
+    /* Setup the Port View Structure */
+    RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
+    RemotePortView.ViewSize = 0;
+    RemotePortView.ViewBase = NULL;
+
+    /* Save the Process ID */
+    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
+
     Status = NtAcceptConnectPort(&ServerPort,
-                                 NULL,
+                                 AllowConnection ? UlongToPtr(ProcessData->SequenceNumber) : 0,
                                  Request,
                                  AllowConnection,
-                                 0,
-                                 & LpcRead);
+                                 NULL,
+                                 &RemotePortView);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSR: NtAcceptConnectPort() failed\n");
-        return Status;
+         DPRINT1("CSRSS: NtAcceptConnectPort - failed.  Status == %X\n", Status);
     }
-
-    ProcessData->ClientViewBase = (ULONG_PTR)LpcRead.ViewBase;
-    ProcessData->ClientViewBounds = LpcRead.ViewSize;
-    ProcessData->ClientPort = ServerPort;
-
-    if (AllowConnection) Status = NtCompleteConnectPort(ServerPort);
-    if (!NT_SUCCESS(Status))
+    else if (AllowConnection)
     {
-        DPRINT1("CSR: NtCompleteConnectPort() failed\n");
-        return Status;
+        if (CsrDebug & 2)
+        {
+            DPRINT1("CSRSS: ClientId: %lx.%lx has ClientView: Base=%p, Size=%lx\n",
+                    Request->ClientId.UniqueProcess,
+                    Request->ClientId.UniqueThread,
+                    RemotePortView.ViewBase,
+                    RemotePortView.ViewSize);
+        }
+
+        /* Set some Port Data in the Process */
+        ProcessData->ClientPort = ServerPort;
+        ProcessData->ClientViewBase = (ULONG_PTR)RemotePortView.ViewBase;
+        ProcessData->ClientViewBounds = (ULONG_PTR)((ULONG_PTR)RemotePortView.ViewBase +
+                                                    (ULONG_PTR)RemotePortView.ViewSize);
+
+        /* Complete the connection */
+        Status = NtCompleteConnectPort(ServerPort);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CSRSS: NtCompleteConnectPort - failed.  Status == %X\n", Status);
+        }
     }
+    else
+    {
+        DPRINT1("CSRSS: Rejecting Connection Request from ClientId: %lx.%lx\n",
+                Request->ClientId.UniqueProcess,
+                Request->ClientId.UniqueThread);
+    }
+    
+    if (!NT_SUCCESS(Status)) return Status;
 
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
