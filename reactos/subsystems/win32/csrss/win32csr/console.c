@@ -313,7 +313,8 @@ CSR_API(CsrAllocConsole)
 
 CSR_API(CsrFreeConsole)
 {
-    return Win32CsrReleaseConsole(ProcessData, 0, 0);
+    Win32CsrReleaseConsole(ProcessData);
+    return STATUS_SUCCESS;
 }
 
 VOID WINAPI

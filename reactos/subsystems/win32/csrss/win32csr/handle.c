@@ -132,10 +132,10 @@ Win32CsrUnlockObject(Object_t *Object)
         ConioDeleteConsole(&Console->Header);
 }
 
-ULONG
+VOID
 WINAPI
 Win32CsrReleaseConsole(
-    PCSR_PROCESS ProcessData, ULONG Flags, BOOLEAN First)
+    PCSR_PROCESS ProcessData)
 {
     PCSRSS_CONSOLE Console;
     ULONG i;
@@ -161,10 +161,8 @@ Win32CsrReleaseConsole(
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return 0;
     }
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return -1;
 }
 
 NTSTATUS

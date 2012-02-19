@@ -345,10 +345,10 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
         ServerDll = CsrLoadedServerDll[i];
 
         /* Check if it's valid and if it has a Disconnect Callback */
-        if (ServerDll && ServerDll->DisconnectCallback)
+        if ((ServerDll) && (ServerDll->DisconnectCallback))
         {
             /* Call it */
-            (ServerDll->DisconnectCallback)(CsrProcess);
+            ServerDll->DisconnectCallback(CsrProcess);
         }
     }
 }

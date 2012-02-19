@@ -353,7 +353,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     
     ServerDll->HardErrorCallback = Win32CsrHardError;
     ServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
-    ServerDll->ShutdownProcessCallback = Win32CsrReleaseConsole;
+    ServerDll->DisconnectCallback = Win32CsrReleaseConsole;
 #else
     *ApiDefinitions = Win32CsrApiDefinitions;
     ServerProcs->HardErrorProc = Win32CsrHardError;

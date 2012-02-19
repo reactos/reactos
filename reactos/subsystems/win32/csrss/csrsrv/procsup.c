@@ -701,10 +701,8 @@ VOID
 NTAPI
 CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
 {
-#if 0
     PCSR_SERVER_DLL ServerDll;
     ULONG i;
-#endif
     ASSERT(ProcessStructureListLocked());
 
     /* Remove us from the Process List */
@@ -712,7 +710,7 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
 
     /* Release the lock */
     CsrReleaseProcessLock();
-#if 0
+
     /* Loop every Server DLL */
     for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
@@ -720,13 +718,12 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
         ServerDll = CsrLoadedServerDll[i];
 
         /* Check if it's valid and if it has a Disconnect Callback */
-        if (ServerDll && ServerDll->DisconnectCallback)
+        if ((ServerDll) && (ServerDll->DisconnectCallback))
         {
             /* Call it */
-            (ServerDll->DisconnectCallback)(CsrProcess);
+            ServerDll->DisconnectCallback(CsrProcess);
         }
     }
-#endif
 }
 
 /*++

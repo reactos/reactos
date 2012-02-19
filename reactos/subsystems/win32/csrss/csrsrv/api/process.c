@@ -14,7 +14,6 @@
 #include <debug.h>
     
 extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS);
-extern NTSTATUS CallProcessDeleted(PCSR_PROCESS);
 
 /* GLOBALS *******************************************************************/
 
@@ -97,7 +96,6 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
     LOCK;
 
     Process = pProcessData->ProcessHandle;
-    CallProcessDeleted(pProcessData);
 
     /* Dereference all process threads */
     NextEntry = pProcessData->ThreadList.Flink;
