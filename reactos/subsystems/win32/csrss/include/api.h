@@ -360,9 +360,7 @@ CsrLockedReferenceThread(IN PCSR_THREAD CsrThread);
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
                                                     PVOID Context);
 NTSTATUS WINAPI CsrInitializeProcessStructure(VOID);
-PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId);
-PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId);
-NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );
+
 NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
 PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
 PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
@@ -444,6 +442,11 @@ CsrReferenceNtSession(IN PCSR_NT_SESSION Session);
 LONG
 NTAPI
 CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo);
+
+VOID
+NTAPI
+CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
+IN NTSTATUS ExitStatus);
 
 VOID
 NTAPI

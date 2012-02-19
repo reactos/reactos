@@ -413,7 +413,7 @@ CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
     if (CsrProcess->NtSession)
     {
         /* Dereference the Session */
-        //CsrDereferenceNtSession(CsrProcess->NtSession, 0);
+        CsrDereferenceNtSession(CsrProcess->NtSession, 0);
     }
 
     /* Close the Client Port if there is one */
@@ -453,7 +453,7 @@ CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
     {
         /* Call the generic cleanup code */
         DPRINT1("Should kill process: %p\n", CsrProcess);
-        //CsrProcessRefcountZero(CsrProcess);
+        CsrProcessRefcountZero(CsrProcess);
         CsrAcquireProcessLock();
     }
 }

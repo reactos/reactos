@@ -446,7 +446,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             continue;
         }
 
-        /* It's some other kind of request. Get the lock for the lookup*/
+        /* It's some other kind of request. Get the lock for the lookup */
         CsrAcquireProcessLock();
 
         /* Now do the lookup to get the CSR_THREAD */

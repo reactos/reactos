@@ -19,66 +19,6 @@ extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS);
 
 /* FUNCTIONS *****************************************************************/
 
-PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId)
-{
-    PCSR_PROCESS CsrProcess;
-    NTSTATUS Status;
-    
-    Status = CsrLockProcessByClientId(ProcessId, &CsrProcess);
-    if (!NT_SUCCESS(Status)) return NULL;
-    
-    UNLOCK;
-    return CsrProcess;
-}
-
-NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
-{
-    PCSR_PROCESS pProcessData;
-    HANDLE Process;
-    PLIST_ENTRY NextEntry;
-    PCSR_THREAD Thread;
-
-    pProcessData = CsrGetProcessData(Pid);
-    if (!pProcessData) return STATUS_INVALID_PARAMETER;
-
-    LOCK;
-
-    Process = pProcessData->ProcessHandle;
-
-    /* Dereference all process threads */
-    NextEntry = pProcessData->ThreadList.Flink;
-    while (NextEntry != &pProcessData->ThreadList)
-    {
-        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
-        NextEntry = NextEntry->Flink;
-
-        ASSERT(ProcessStructureListLocked());
-        CsrThreadRefcountZero(Thread);
-        LOCK;
-    }
-
-    if (pProcessData->ClientViewBase)
-    {
-        NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)pProcessData->ClientViewBase);
-    }
-
-    if (pProcessData->ClientPort)
-    {
-        NtClose(pProcessData->ClientPort);
-    }
-
-    CsrRemoveProcess(pProcessData);
-
-    CsrDeallocateProcess(pProcessData);
-    
-    if (Process)
-    {
-      NtClose(Process);
-    }
-    
-    return STATUS_SUCCESS;
-}
-
 /**********************************************************************
  *	CSRSS API
  *********************************************************************/
@@ -202,8 +142,14 @@ CSR_API(CsrSrvCreateThread)
     
     /* Get the current CSR thread */
     CurrentThread = NtCurrentTeb()->CsrClientThread;
-    if (!CurrentThread) return STATUS_SUCCESS; // server-to-server
-    
+    if (!CurrentThread)
+    {
+        DPRINT1("Server Thread TID: [%lx.%lx]\n",
+                Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
+                Request->Data.CreateThreadRequest.ClientId.UniqueThread);
+        return STATUS_SUCCESS; // server-to-server
+    }
+
     /* Get the CSR Process for this request */
     CsrProcess = CurrentThread->Process;
     if (CsrProcess->ClientId.UniqueProcess !=
@@ -215,7 +161,7 @@ CSR_API(CsrSrvCreateThread)
             /* Accept this without any further work */
             return STATUS_SUCCESS;
         }
-        
+
         /* Get the real CSR Process for the remote thread's process */
         Status = CsrLockProcessByClientId(Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
                                           &CsrProcess);
@@ -247,7 +193,10 @@ CSR_API(CsrTerminateProcess)
 {
     PCSR_THREAD CsrThread = NtCurrentTeb()->CsrClientThread;
     ASSERT(CsrThread != NULL);
-    
+
+    /* Set magic flag so we don't reply this message back */
+    Request->Type = 0xBABE;
+
     /* Remove the CSR_THREADs and CSR_PROCESS */
     return CsrDestroyProcess(&CsrThread->ClientId,
                              (NTSTATUS)Request->Data.TerminateProcessRequest.uExitCode);
