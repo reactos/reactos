@@ -1189,6 +1189,7 @@ ClientConnectionThread(IN PVOID Parameter)
                             Request->Header.ClientId.UniqueThread);
                 }
                 //DPRINT1("Thread found: %p %p\n", Thread, Process);
+                if (Thread) CsrLockedReferenceThread(Thread);
 
                 if (Thread) NtCurrentTeb()->CsrClientThread = Thread;
             
