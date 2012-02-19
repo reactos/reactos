@@ -310,6 +310,37 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
     CsrDereferenceProcess(CsrProcess);
 }
 
+/*++
+ * @name CsrLockedDereferenceThread
+ *
+ * The CsrLockedDereferenceThread derefences a CSR Thread while the
+ * Process Lock is already being held.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to be dereferenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
+{
+    LONG LockCount;
+
+    /* Decrease reference count */
+    LockCount = --CsrThread->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        CsrThreadRefcountZero(CsrThread);
+        CsrAcquireProcessLock();
+    }
+}
+
 NTSTATUS
 NTAPI
 CsrCreateThread(IN PCSR_PROCESS CsrProcess,

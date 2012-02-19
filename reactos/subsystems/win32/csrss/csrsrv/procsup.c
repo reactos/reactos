@@ -498,6 +498,98 @@ CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess)
 }
 
 /*++
+ * @name CsrDestroyProcess
+ * @implemented NT4
+ *
+ * The CsrDestroyProcess routine destroys the CSR Process corresponding to
+ * a given Client ID.
+ *
+ * @param Cid
+ *        Pointer to the Client ID Structure corresponding to the CSR
+ *        Process which is about to be destroyed.
+ *
+ * @param ExitStatus
+ *        Unused.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
+ *         if the CSR Process is already terminating.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDestroyProcess(IN PCLIENT_ID Cid,
+                  IN NTSTATUS ExitStatus)
+{
+    PCSR_THREAD CsrThread;
+    PCSR_PROCESS CsrProcess;
+    CLIENT_ID ClientId = *Cid;
+    PLIST_ENTRY NextEntry;
+
+    /* Acquire lock */
+    CsrAcquireProcessLock();
+
+    /* Find the thread */
+    CsrThread = CsrLocateThreadByClientId(&CsrProcess, &ClientId);
+
+    /* Make sure we got one back, and that it's not already gone */
+    if (!(CsrThread) || (CsrProcess->Flags & CsrProcessTerminating))
+    {
+        /* Release the lock and return failure */
+        CsrReleaseProcessLock();
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+
+    /* Set the terminated flag */
+    CsrProcess->Flags |= CsrProcessTerminating;
+
+    /* Get the List Pointers */
+    NextEntry = CsrProcess->ThreadList.Flink;
+    while (NextEntry != &CsrProcess->ThreadList)
+    {
+        /* Get the current thread entry */
+        CsrThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+
+        /* Make sure the thread isn't already dead */
+        if (CsrThread->Flags & CsrThreadTerminated)
+        {
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+
+        /* Set the Terminated flag */
+        CsrThread->Flags |= CsrThreadTerminated;
+
+        /* Acquire the Wait Lock */
+        CsrAcquireWaitLock();
+
+        /* Do we have an active wait block? */
+        if (CsrThread->WaitBlock)
+        {
+            /* Notify waiters of termination */
+            CsrNotifyWaitBlock(CsrThread->WaitBlock,
+                               NULL,
+                               NULL,
+                               NULL,
+                               CsrProcessTerminating,
+                               TRUE);
+        }
+
+        /* Release the Wait Lock */
+        CsrReleaseWaitLock();
+
+        /* Dereference the thread */
+        CsrLockedDereferenceThread(CsrThread);
+        NextEntry = CsrProcess->ThreadList.Flink;
+    }
+
+    /* Release the Process Lock and return success */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
+}
+
+/*++
  * @name CsrCreateProcess
  * @implemented NT4
  *

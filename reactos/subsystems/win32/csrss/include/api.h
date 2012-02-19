@@ -415,6 +415,24 @@ CsrSrvSetPriorityClass(
     IN OUT PULONG Reply
 );
 
+NTSTATUS
+NTAPI
+CsrDestroyProcess(IN PCLIENT_ID Cid,
+IN NTSTATUS ExitStatus);
+
+VOID
+NTAPI
+CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread);
+
+BOOLEAN
+NTAPI
+CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
+                   IN PLIST_ENTRY WaitList,
+                   IN PVOID WaitArgument1,
+                   IN PVOID WaitArgument2,
+                   IN ULONG WaitFlags,
+                   IN BOOLEAN DereferenceThread);
+                   
 VOID
 NTAPI
 CsrReferenceNtSession(IN PCSR_NT_SESSION Session);

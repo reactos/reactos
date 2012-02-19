@@ -1008,6 +1008,7 @@ ClientConnectionThread(IN PVOID Parameter)
     PCSR_THREAD ServerThread;
     ULONG MessageType;
     HANDLE ReplyPort;
+    PDBGKM_MSG DebugMessage;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -1155,6 +1156,23 @@ ClientConnectionThread(IN PVOID Parameter)
             DPRINT1("Message %d: process %d already terminated\n",
                     Request->Type, Request->Header.ClientId.UniqueProcess);
             Reply = NULL;
+            ReplyPort = CsrApiPort;
+            continue;
+        }
+
+        /* If this was an exception, handle it */
+        if (MessageType == LPC_EXCEPTION)
+        {
+            /* Kill the process */
+            NtTerminateProcess(ProcessData->ProcessHandle, STATUS_ABANDONED);
+
+            /* Destroy it from CSR */
+            CsrDestroyProcess(&Request->Header.ClientId, STATUS_ABANDONED);
+
+            /* Return a Debug Message */
+            DebugMessage = (PDBGKM_MSG)&Request;
+            DebugMessage->ReturnedStatus = DBG_CONTINUE;
+            Reply = Request;
             ReplyPort = CsrApiPort;
             continue;
         }
