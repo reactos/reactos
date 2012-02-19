@@ -58,7 +58,15 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
-   while (RMAP_IS_SEGMENT(entry->Address))
+
+#ifdef NEWCC
+   // Special case for NEWCC: we can have a page that's only in a segment
+   // page table
+   if (entry && RMAP_IS_SEGMENT(entry->Address) && entry->Next == NULL)
+       return MmpPageOutPhysicalAddress(Page);
+#endif
+
+   while (entry && RMAP_IS_SEGMENT(entry->Address))
        entry = entry->Next;
 
    if (entry == NULL)
