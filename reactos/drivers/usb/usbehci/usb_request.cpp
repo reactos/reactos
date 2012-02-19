@@ -732,7 +732,6 @@ CUSBRequest::InitDescriptor(
     *OutDescriptorLength = Length;
 }
 
-
 NTSTATUS
 CUSBRequest::BuildTransferDescriptorChain(
     IN PQUEUE_HEAD QueueHead,
@@ -1191,11 +1190,6 @@ CUSBRequest::BuildBulkTransferQueueHead(
                                           &LastDescriptor,
                                           &m_EndpointDescriptor->DataToggle,
                                           &ChainDescriptorLength);
-
-    //
-    // FIXME: handle errors
-    //
-    //ASSERT(ChainDescriptorLength == m_TransferBufferLength);
 
     //
     // move to next offset
