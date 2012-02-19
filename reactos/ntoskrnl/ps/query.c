@@ -2279,12 +2279,19 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             _SEH2_TRY
             {
                 /* Copy time information from ETHREAD/KTHREAD */
-                ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime *
-                                                   100000LL;
-                ThreadTime->UserTime.QuadPart = Thread->Tcb.UserTime *
-                                                 100000LL;
+                ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime * KeMaximumIncrement;
+                ThreadTime->UserTime.QuadPart = Thread->Tcb.UserTime * KeMaximumIncrement;
                 ThreadTime->CreateTime = Thread->CreateTime;
-                ThreadTime->ExitTime = Thread->ExitTime;
+
+                /* Exit time is in a union and only valid on actual exit! */
+                if (KeReadStateThread(&Thread->Tcb))
+                {
+                    ThreadTime->ExitTime = Thread->ExitTime;
+                }
+                else
+                {
+                    ThreadTime->ExitTime.QuadPart = 0;
+                }
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
