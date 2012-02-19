@@ -20,8 +20,6 @@ UNICODE_STRING CsrDirectoryName;
 UNICODE_STRING CsrSbApiPortName;
 HANDLE CsrSbApiPort = 0;
 PCSR_THREAD CsrSbApiRequestThreadPtr;
-static unsigned ServerProcCount;
-static CSRPLUGIN_SERVER_PROCS *ServerProcs = NULL;
 HANDLE CsrSmApiPort;
 HANDLE hSbApiPort = (HANDLE) 0;
 HANDLE hApiPort = (HANDLE) 0;
@@ -37,44 +35,26 @@ SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static NTSTATUS FASTCALL
-CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
-{
-  CSRPLUGIN_SERVER_PROCS *NewProcs;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  NewProcs = RtlAllocateHeap(CsrHeap, 0,
-                             (ServerProcCount + 1)
-                             * sizeof(CSRPLUGIN_SERVER_PROCS));
-  if (NULL == NewProcs)
-    {
-      return STATUS_NO_MEMORY;
-    }
-  if (0 != ServerProcCount)
-    {
-      RtlCopyMemory(NewProcs, ServerProcs,
-                    ServerProcCount * sizeof(CSRPLUGIN_SERVER_PROCS));
-      RtlFreeHeap(CsrHeap, 0, ServerProcs);
-    }
-  NewProcs[ServerProcCount] = *Procs;
-  ServerProcs = NewProcs;
-  ServerProcCount++;
-
-  return STATUS_SUCCESS;
-}
-
 VOID
 CallHardError(IN PCSR_THREAD ThreadData,
               IN PHARDERROR_MSG HardErrorMessage)
 {
     unsigned i;
+    PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount; i++)
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
-        ServerProcs[i].HardErrorProc(ThreadData, HardErrorMessage);
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->HardErrorCallback))
+        {
+            ServerDll->HardErrorCallback(ThreadData, HardErrorMessage);
+        }
     }
 }
 
@@ -84,13 +64,21 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     unsigned i;
+    PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount; i++)
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
-        Status = ServerProcs[i].ProcessInheritProc(SourceProcessData, TargetProcessData);
-        if (!NT_SUCCESS(Status)) break;
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
+        {
+            Status = ServerDll->NewProcessCallback(SourceProcessData, TargetProcessData);
+        }
     }
 
     return Status;
@@ -101,65 +89,24 @@ CallProcessDeleted(IN PCSR_PROCESS ProcessData)
 {
     ULONG Result = 0;
     unsigned i;
+    PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount; i++)
-        Result = ServerProcs[i].ProcessDeletedProc(ProcessData, 0, FALSE);
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->ShutdownProcessCallback))
+        {
+            Result = ServerDll->ShutdownProcessCallback(ProcessData, 0, FALSE);
+        }
+    }
 
     return Result;
-}
-
-/**********************************************************************
- * CsrpInitWin32Csr/3
- *
- * TODO: this function should be turned more general to load an
- * TODO: hosted server DLL as received from the command line;
- * TODO: for instance: ServerDll=winsrv:ConServerDllInitialization,2
- * TODO:               ^method   ^dll   ^api                       ^sid
- * TODO:
- * TODO: CsrpHostServerDll (LPWSTR DllName,
- * TODO:                    LPWSTR ApiName,
- * TODO:                    DWORD  ServerId)
- */
-static NTSTATUS
-CsrpInitWin32Csr (VOID)
-{
-  NTSTATUS Status;
-  UNICODE_STRING DllName;
-  HINSTANCE hInst;
-  ANSI_STRING ProcName;
-  CSRPLUGIN_INITIALIZE_PROC InitProc;
-  PCSRSS_API_DEFINITION ApiDefinitions;
-  CSRPLUGIN_SERVER_PROCS ServerProcs;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  RtlInitUnicodeString(&DllName, L"win32csr.dll");
-  Status = LdrLoadDll(NULL, 0, &DllName, (PVOID *) &hInst);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  RtlInitAnsiString(&ProcName, "Win32CsrInitialization");
-  Status = LdrGetProcedureAddress(hInst, &ProcName, 0, (PVOID *) &InitProc);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-    
-  if (! (*InitProc)(&ApiDefinitions, &ServerProcs))
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  Status = CsrApiRegisterDefinitions(ApiDefinitions);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  Status = CsrpAddServerProcs(&ServerProcs);
-  return Status;
 }
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
@@ -819,12 +766,19 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             if (NT_SUCCESS(Status)) ServerString[-1] = ANSI_NULL;
 
             /* Load it */
-            if (CsrDebug & 1) DPRINT1("CSRSS: Should be loading ServerDll=%s:%s\n", ParameterValue, EntryPoint);
+            if (CsrDebug & 1) DPRINT1("CSRSS: Loading ServerDll=%s:%s\n", ParameterValue, EntryPoint);
 
             /* Hackito ergo sum */
-            BasepFakeStaticServerData();
-
             Status = STATUS_SUCCESS;
+            if (strstr(ParameterValue, "basesrv"))
+            {
+                DPRINT1("Fake basesrv init\n");
+                BasepFakeStaticServerData();
+            }
+//            else
+//            {
+//                Status = CsrLoadServerDll(ParameterValue, EntryPoint, 2);
+//            }
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CSRSS: *** Failed loading ServerDll=%s (Status == 0x%x)\n",
@@ -1103,10 +1057,11 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
-    Status = CsrpInitWin32Csr();
+    /* Initialize Win32csr */
+    Status = CsrLoadServerDll("win32csr", "Win32CsrInitialization", 2);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrpInitWin32Csr", Status);
+        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrLoadServerDll", Status);
     }
 
     /* Initialize the API Port for SM communication */

@@ -326,7 +326,7 @@ CreateSystemThreads(PVOID pParam)
 
 NTSTATUS
 WINAPI
-#if 0
+#if 1
 Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
 #else
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
@@ -347,7 +347,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     CsrInitConsoleSupport();
 
     /* HACK */
-#if 0
+#if 1
     ServerDll->DispatchTable = (PVOID)Win32CsrApiDefinitions;
     ServerDll->HighestApiSupported = 0xDEADBABE;
     
@@ -374,7 +374,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     else
         DPRINT1("Cannot start Raw Input Thread!\n");
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

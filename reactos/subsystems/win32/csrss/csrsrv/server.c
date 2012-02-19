@@ -230,10 +230,7 @@ CsrLoadServerDll(IN PCHAR DllString,
             /* ReactOS Specific hax */
             if (ServerDll->HighestApiSupported == 0xDEADBABE)
             {
-                DPRINT1("Registering: %p\n", (PVOID)ServerDll->DispatchTable);
                 Status = CsrApiRegisterDefinitions((PVOID)ServerDll->DispatchTable);
-                DPRINT1("Status: %lx\n", Status);
-                goto LoadFailed;
             }
         }
         else
