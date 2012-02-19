@@ -839,34 +839,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
                 Request->ClientId.UniqueProcess,
                 Request->ClientId.UniqueThread);
     }
-#if 0
-    if (!NT_SUCCESS(Status)) return Status;
 
-    Status = RtlCreateUserThread(NtCurrentProcess(),
-                                 NULL,
-                                 TRUE,
-                                 0,
-                                 0,
-                                 0,
-                                 (PTHREAD_START_ROUTINE)ClientConnectionThread,
-                                 NULL,
-                                 & ServerThread,
-                                 &ClientId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR: Unable to create server thread\n");
-        return Status;
-    }
-
-    CsrAddStaticServerThread(ServerThread, &ClientId, 0);
-
-    NtResumeThread(ServerThread, NULL);
-
-    NtClose(ServerThread);
-
-    Status = STATUS_SUCCESS;
-    DPRINT("CSR: %s done\n", __FUNCTION__);
-#endif
     return Status;
 }
 
@@ -1055,7 +1028,7 @@ ClientConnectionThread(IN PVOID Parameter)
             DPRINT1("CSRSRV: FATAL ERROR. CsrThread is Idle while holding %lu critical sections\n",
                     Teb->CountOfOwnedCriticalSections);
             DPRINT1("CSRSRV: Last Receive Message %lx ReplyMessage %lx\n",
-                    &Request, Reply);
+                    Request, Reply);
             DbgBreakPoint();
         }
 

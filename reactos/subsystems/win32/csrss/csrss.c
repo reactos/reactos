@@ -60,14 +60,12 @@ _main(int argc,
     {
         /* Raise a hard error */
         DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
-        #if 0
         Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
                                   0,
                                   0,
                                   NULL,
                                   OptionOk,
                                   &Response);
-                                  #endif
     }
 
     /* Initialize CSR through CSRSRV */
