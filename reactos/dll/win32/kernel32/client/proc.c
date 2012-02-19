@@ -459,8 +459,6 @@ VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 {
-    UINT uExitCode = 0;
-
     DPRINT("BaseProcessStartup(..) - setting up exception frame.\n");
 
     _SEH2_TRY
@@ -472,17 +470,23 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
                                sizeof(PPROCESS_START_ROUTINE));
 
         /* Call the Start Routine */
-        uExitCode = (lpStartAddress)();
+        ExitThread(lpStartAddress());
     }
     _SEH2_EXCEPT(BaseExceptionFilter(_SEH2_GetExceptionInformation()))
     {
-        /* Get the SEH Error */
-        uExitCode = _SEH2_GetExceptionCode();
+        /* Get the Exit code from the SEH Handler */
+        if (!BaseRunningInServerProcess)
+        {
+            /* Kill the whole process, usually */
+            ExitProcess(_SEH2_GetExceptionCode());
+        }
+        else
+        {
+            /* If running inside CSRSS, kill just this thread */
+            ExitThread(_SEH2_GetExceptionCode());
+        }
     }
     _SEH2_END;
-
-    /* Exit the Process with our error */
-    ExitProcess(uExitCode);
 }
 
 NTSTATUS

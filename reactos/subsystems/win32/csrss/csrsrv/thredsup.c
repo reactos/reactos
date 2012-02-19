@@ -281,6 +281,107 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
     CsrThread->Flags |= CsrThreadInTermination;
 }
 
+/*++
+ * @name CsrCreateRemoteThread
+ * @implemented NT4
+ *
+ * The CsrCreateRemoteThread routine creates a CSR Thread object for
+ * an NT Thread which is not part of the current NT Process.
+ *
+ * @param hThread
+ *        Handle to an existing NT Thread to which to associate this
+ *        CSR Thread.
+ *
+ * @param ClientId
+ *        Pointer to the Client ID structure of the NT Thread to associate
+ *        with this CSR Thread.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrCreateRemoteThread(IN HANDLE hThread,
+                      IN PCLIENT_ID ClientId)
+{
+    NTSTATUS Status;
+    HANDLE ThreadHandle;
+    PCSR_THREAD CsrThread;
+    PCSR_PROCESS CsrProcess;
+    KERNEL_USER_TIMES KernelTimes;
+    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
+
+    /* Get the Thread Create Time */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      &KernelTimes,
+                                      sizeof(KernelTimes),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to query thread times: %lx\n", Status);
+        return Status;
+    }
+
+    /* Lock the Owner Process */
+    Status = CsrLockProcessByClientId(&ClientId->UniqueProcess, &CsrProcess);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("No known process for %lx\n", ClientId->UniqueProcess);
+        return Status;
+    }
+    
+    /* Make sure the thread didn't terminate */
+    if (KernelTimes.ExitTime.QuadPart)
+    {
+        /* Unlock the process and return */
+        CsrUnlockProcess(CsrProcess);
+        DPRINT1("Dead thread: %I64x\n", KernelTimes.ExitTime.QuadPart);
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+
+    /* Allocate a CSR Thread Structure */
+    CsrThread = CsrAllocateThread(CsrProcess);
+    if (!CsrThread)
+    {
+        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
+        CsrUnlockProcess(CsrProcess);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Duplicate the Thread Handle */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               hThread,
+                               NtCurrentProcess(),
+                               &ThreadHandle,
+                               0,
+                               0,
+                               DUPLICATE_SAME_ACCESS);
+    /* Allow failure */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Thread duplication failed: %lx\n", Status);
+        ThreadHandle = hThread;
+    }
+
+    /* Save the data we have */
+    CsrThread->CreateTime = KernelTimes.CreateTime;
+    CsrThread->ClientId = *ClientId;
+    CsrThread->ThreadHandle = ThreadHandle;
+    ProtectHandle(ThreadHandle);
+    CsrThread->Flags = 0;
+
+    /* Insert the Thread into the Process */
+    CsrInsertThread(CsrProcess, CsrThread);
+
+    /* Release the lock and return */
+    CsrUnlockProcess(CsrProcess);
+    return STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
