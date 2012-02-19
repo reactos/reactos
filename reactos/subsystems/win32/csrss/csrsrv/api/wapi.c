@@ -1251,11 +1251,11 @@ HandleHardError:
                 CsrDestroyProcess(&Request->Header.ClientId, STATUS_ABANDONED);
 
                 /* Return a Debug Message */
-                DebugMessage = (PDBGKM_MSG)&Request;
+                DebugMessage = (PDBGKM_MSG)Request;
                 DebugMessage->ReturnedStatus = DBG_CONTINUE;
                 Reply = Request;
                 ReplyPort = CsrApiPort;
-                
+
                 /* Remove our extra reference */
                 CsrDereferenceThread(CsrThread);
             }
