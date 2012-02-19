@@ -1753,6 +1753,7 @@ ExitProcess(IN UINT uExitCode)
         LdrShutdownProcess();
 
         /* Notify Base Server of process termination */
+        CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
         CsrClientCallServer(&CsrRequest,
                             NULL,
                             MAKE_CSR_API(TERMINATE_PROCESS, CSR_NATIVE),

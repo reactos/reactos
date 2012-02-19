@@ -80,7 +80,7 @@ typedef struct
 
 typedef struct
 {
-    ULONG Dummy;
+    UINT uExitCode;
 } CSRSS_TERMINATE_PROCESS, *PCSRSS_TERMINATE_PROCESS;
 
 typedef struct
@@ -713,6 +713,7 @@ typedef struct _CSR_API_MESSAGE
     {
         CSRSS_CREATE_PROCESS CreateProcessRequest;
         CSRSS_CREATE_THREAD CreateThreadRequest;
+        CSRSS_TERMINATE_PROCESS TerminateProcessRequest;
         CSRSS_CONNECT_PROCESS ConnectRequest;
         CSRSS_WRITE_CONSOLE WriteConsoleRequest;
         CSRSS_READ_CONSOLE ReadConsoleRequest;

@@ -420,6 +420,10 @@ NTAPI
 CsrDestroyProcess(IN PCLIENT_ID Cid,
 IN NTSTATUS ExitStatus);
 
+NTSTATUS
+NTAPI
+CsrDestroyThread(IN PCLIENT_ID Cid);
+
 VOID
 NTAPI
 CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread);

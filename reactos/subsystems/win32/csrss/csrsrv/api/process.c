@@ -245,26 +245,12 @@ CSR_API(CsrSrvCreateThread)
 
 CSR_API(CsrTerminateProcess)
 {
-   PLIST_ENTRY NextEntry;
-   PCSR_THREAD Thread;
-   
-   LOCK;
-   
-   NextEntry = ProcessData->ThreadList.Flink;
-   while (NextEntry != &ProcessData->ThreadList)
-   {
-        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
-        NextEntry = NextEntry->Flink;
-        
-        ASSERT(ProcessStructureListLocked());
-        CsrThreadRefcountZero(Thread);
-        LOCK;
-        
-   }
-   
-   UNLOCK;
-   ProcessData->Flags |= CsrProcessTerminated;
-   return STATUS_SUCCESS;
+    PCSR_THREAD CsrThread = NtCurrentTeb()->CsrClientThread;
+    ASSERT(CsrThread != NULL);
+    
+    /* Remove the CSR_THREADs and CSR_PROCESS */
+    return CsrDestroyProcess(&CsrThread->ClientId,
+                             (NTSTATUS)Request->Data.TerminateProcessRequest.uExitCode);
 }
 
 CSR_API(CsrConnectProcess)

@@ -311,6 +311,75 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
 }
 
 /*++
+ * @name CsrDestroyThread
+ * @implemented NT4
+ *
+ * The CsrDestroyThread routine destroys the CSR Thread corresponding to
+ * a given Thread ID.
+ *
+ * @param Cid
+ *        Pointer to the Client ID Structure corresponding to the CSR
+ *        Thread which is about to be destroyed.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
+ *         if the CSR Thread is already terminating.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDestroyThread(IN PCLIENT_ID Cid)
+{
+    CLIENT_ID ClientId = *Cid;
+    PCSR_THREAD CsrThread;
+    PCSR_PROCESS CsrProcess;
+
+    /* Acquire lock */
+    CsrAcquireProcessLock();
+
+    /* Find the thread */
+    CsrThread = CsrLocateThreadByClientId(&CsrProcess,
+                                          &ClientId);
+
+    /* Make sure we got one back, and that it's not already gone */
+    if (!CsrThread || CsrThread->Flags & CsrThreadTerminated)
+    {
+        /* Release the lock and return failure */
+        CsrReleaseProcessLock();
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+
+    /* Set the terminated flag */
+    CsrThread->Flags |= CsrThreadTerminated;
+
+    /* Acquire the Wait Lock */
+    CsrAcquireWaitLock();
+
+    /* Do we have an active wait block? */
+    if (CsrThread->WaitBlock)
+    {
+        /* Notify waiters of termination */
+        CsrNotifyWaitBlock(CsrThread->WaitBlock,
+                           NULL,
+                           NULL,
+                           NULL,
+                           CsrProcessTerminating,
+                           TRUE);
+    }
+
+    /* Release the Wait Lock */
+    CsrReleaseWaitLock();
+
+    /* Dereference the thread */
+    CsrLockedDereferenceThread(CsrThread);
+
+    /* Release the Process Lock and return success */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
+}
+
+/*++
  * @name CsrLockedDereferenceThread
  *
  * The CsrLockedDereferenceThread derefences a CSR Thread while the
