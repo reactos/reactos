@@ -1551,7 +1551,6 @@ MmSessionCreate(OUT PULONG SessionId)
     /* Set and assert the flags, and return */
     PspSetProcessFlag(Process, PSF_PROCESS_IN_SESSION_BIT);
     ASSERT(MiSessionLeaderExists == 1);
-    if (NT_SUCCESS(Status)) DPRINT1("New session created: %lx\n", *SessionId);
     return Status;
 }
 

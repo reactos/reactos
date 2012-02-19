@@ -2467,7 +2467,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
          if (NT_SUCCESS(IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps)) &&
              DeviceCaps.RawDeviceOK)
          {
-            DPRINT1("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
+            DPRINT("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
 
             DeviceNode->ServiceName.Length = 0;
             DeviceNode->ServiceName.MaximumLength = 0;

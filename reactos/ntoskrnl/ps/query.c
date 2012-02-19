@@ -1727,6 +1727,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     PEPROCESS Process;
     ULONG_PTR DisableBoost = 0;
     ULONG_PTR IdealProcessor = 0;
+    ULONG_PTR Break = 0;
     PTEB Teb;
     ULONG_PTR TlsIndex = 0;
     PVOID *ExpansionSlots;
@@ -2121,10 +2122,51 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
             /* All done */
             break;
+            
+        case ThreadBreakOnTermination:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                Break = *(PULONG)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Setting 'break on termination' requires the SeDebugPrivilege */
+            if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+            {
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+
+            /* Set or clear the flag */
+            if (Break)
+            {
+                PspSetCrossThreadFlag(Thread, CT_BREAK_ON_TERMINATION_BIT);
+            }
+            else
+            {
+                PspClearCrossThreadFlag(Thread, CT_BREAK_ON_TERMINATION_BIT);
+            }
+            break;
 
         default:
             /* We don't implement it yet */
-            DPRINT1("Not implemented: %lx\n", ThreadInformationClass);
+            DPRINT1("Not implemented: %d\n", ThreadInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
     }
 

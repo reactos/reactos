@@ -148,7 +148,7 @@ IntHideMousePointer(
 
     if (!pgp->psurfSave)
     {
-        DPRINT1("No SaveSurface!\n");
+        DPRINT("No SaveSurface!\n");
         return;
     }
 

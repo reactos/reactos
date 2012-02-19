@@ -190,7 +190,6 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             }
             
             /* Validate the signature */
-            DPRINT1("ACPI DSDT at 0x%p\n", Header);
             if (Header->Signature != DSDT_SIGNATURE)
             {
                 /* Fail and unmap */
@@ -231,7 +230,6 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (!Xsdt) return NULL;
 
             /* Won't be using the RSDT */
-            DPRINT1("ACPI XSDT at 0x%p\n", Xsdt);
             Rsdt = NULL;
         }
     
@@ -333,12 +331,6 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 MmUnmapIoSpace(Header, 2 * PAGE_SIZE);
             }
 
-            DPRINT1("Failed to find ACPI table %c%c%c%c\n",
-                    (Signature & 0xFF),
-                    (Signature & 0xFF00) >> 8,
-                    (Signature & 0xFF0000) >> 16,
-                    (Signature & 0xFF000000) >> 24);
-     
             /* Didn't find anything */
             return NULL;
         }
@@ -532,8 +524,7 @@ HalpInitBootTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get the boot table */
     BootTable = HalAcpiGetTable(LoaderBlock, BOOT_SIGNATURE);
     HalpSimpleBootFlagTable = BootTable;
-    DPRINT1("ACPI BOOT at 0x%p\n", HalpSimpleBootFlagTable);
-    
+
     /* Validate it */
     if ((BootTable) &&
         (BootTable->Header.Length >= sizeof(BOOT_TABLE)) &&
@@ -693,7 +684,6 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
    
     /* Validate it */
-    DPRINT1("ACPI RSDT at 0x%p\n", Rsdt);
     if ((Rsdt->Header.Signature != RSDT_SIGNATURE) &&
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
     {
@@ -772,8 +762,6 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
     }
 
-    DPRINT1("ACPI %d.0 detected\n", (Rsdt->Header.Revision + 1));
-
     /* Done */
     return Status;
 }
@@ -786,15 +774,15 @@ HaliAcpiTimerInit(IN ULONG TimerPort,
     PAGED_CODE();
     
     /* Is this in the init phase? */
-    if (!TimerPort )
+    if (!TimerPort)
     {
         /* Get the data from the FADT */
         TimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
         TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
+        DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
     }
     
     /* FIXME: Now proceed to the timer initialization */
-    DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
     //HalaAcpiTimerInit(TimerPort, TimerValExt);
 }
 
@@ -808,7 +796,6 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PHYSICAL_ADDRESS PhysicalAddress;
 
     /* Only do this once */
-    DPRINT("You are booting the ACPI HAL!\n");
     if (HalpProcessedACPIPhase0) return STATUS_SUCCESS;
 
     /* Setup the ACPI table cache */
@@ -825,7 +812,6 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
     
     /* Assume typical size, otherwise whatever the descriptor table says */
-    DPRINT1("ACPI FACP at 0x%p\n", Fadt);
     TableLength = sizeof(FADT);
     if (Fadt->Header.Length < sizeof(FADT)) TableLength = Fadt->Header.Length;
 
@@ -837,14 +823,12 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Get the debug table for KD */
     HalpDebugPortTable = HalAcpiGetTable(LoaderBlock, DBGP_SIGNATURE);
-    DPRINT1("ACPI DBGP at 0x%p\n", HalpDebugPortTable);
     
     /* Initialize NUMA through the SRAT */
     HalpNumaInitializeStaticConfiguration(LoaderBlock);
     
     /* Initialize hotplug through the SRAT */
     HalpDynamicSystemResourceConfiguration(LoaderBlock);
-    DPRINT1("ACPI SRAT at 0x%p\n", HalpAcpiSrat);
     if (HalpAcpiSrat)
     {
         DPRINT1("Your machine has a SRAT, but NUMA/HotPlug are not supported!\n");
@@ -885,6 +869,38 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Setup the boot table */
     HalpInitBootTable(LoaderBlock);
+
+    /* Debugging code */
+    {
+        PLIST_ENTRY ListHead, NextEntry;
+        PACPI_CACHED_TABLE CachedTable;
+
+        /* Loop cached tables */
+        ListHead = &HalpAcpiTableCacheList;
+        NextEntry = ListHead->Flink;
+        while (NextEntry != ListHead)
+        {
+            /* Get the table */
+            CachedTable = CONTAINING_RECORD(NextEntry, ACPI_CACHED_TABLE, Links);
+
+            /* Compare signatures */
+            if ((CachedTable->Header.Signature == RSDT_SIGNATURE) ||
+                (CachedTable->Header.Signature == XSDT_SIGNATURE))
+            {
+                DPRINT1("ACPI %d.0 Detected. Tables: ", (CachedTable->Header.Revision + 1));
+            }
+
+            DbgPrint("[%c%c%c%c] ",
+                    (CachedTable->Header.Signature & 0xFF),
+                    (CachedTable->Header.Signature & 0xFF00) >> 8,
+                    (CachedTable->Header.Signature & 0xFF0000) >> 16,
+                    (CachedTable->Header.Signature & 0xFF000000) >> 24);
+
+            /* Keep going */
+            NextEntry = NextEntry->Flink;
+        }
+        DbgPrint("\n");
+    }
 
     /* Return success */
     return STATUS_SUCCESS;
