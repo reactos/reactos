@@ -47,7 +47,6 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
     NTSTATUS Status;
     RTL_USER_PROCESS_INFORMATION LocalProcessInfo;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-    DPRINT1("Executing image: %wZ\n", FileName);
 
     /* Use the input process information if we have it, otherwise use local */
     ProcessInfo = ProcessInformation;

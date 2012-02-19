@@ -96,7 +96,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     }
 
     /* Parse the specified and get the name and arguments out of it */
-    DPRINT1("SMSS:PFILE: Paging file specifier `%wZ' \n", PageFileToken);
+    DPRINT("SMSS:PFILE: Paging file specifier `%wZ' \n", PageFileToken);
     Status = SmpParseCommandLine(PageFileToken,
                                  NULL,
                                  &PageFileName,
@@ -212,7 +212,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
             /* This means no duplicates exist, so insert our descriptor! */
             InsertTailList(&SmpPagingFileDescriptorList, &Descriptor->Entry);
             SmpNumberOfPagingFiles++;
-            DPRINT1("SMSS:PFILE: Created descriptor for `%wZ' (`%wZ') \n",
+            DPRINT("SMSS:PFILE: Created descriptor for `%wZ' (`%wZ') \n",
                     PageFileToken, &Descriptor->Name);
             return STATUS_SUCCESS;
         }
@@ -241,7 +241,7 @@ SmpGetPagingFileSize(IN PUNICODE_STRING FileName,
     HANDLE FileHandle;
     FILE_STANDARD_INFORMATION StandardInfo;
 
-    DPRINT1("SMSS:PFILE: Trying to get size for `%wZ'\n", FileName);
+    DPRINT("SMSS:PFILE: Trying to get size for `%wZ'\n", FileName);
     Size->QuadPart = 0;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -350,7 +350,7 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
     VolumeName.Length = wcslen(PathString) * sizeof(WCHAR);
     VolumeName.MaximumLength = VolumeName.Length + sizeof(UNICODE_NULL);
     VolumeName.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = Volume->DriveLetter;
-    DPRINT1("SMSS:PFILE: Querying volume `%wZ' for free space \n", &VolumeName);
+    DPRINT("SMSS:PFILE: Querying volume `%wZ' for free space \n", &VolumeName);
 
     /* Open the volume */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -395,10 +395,6 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
                          SizeInfo.SectorsPerAllocationUnit;
     FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
     Volume->FreeSpace = FinalFreeSpace;
-    DPRINT1("AUs: %I64x Sectors: %lx Bytes Per Sector: %lx\n",
-            SizeInfo.AvailableAllocationUnits.QuadPart,
-            SizeInfo.SectorsPerAllocationUnit,
-            SizeInfo.BytesPerSector);
 
     /* Check if there's less than 32MB free so we don't starve the disk */
     if (FinalFreeSpace.QuadPart <= 0x2000000)
@@ -460,7 +456,7 @@ SmpCreatePagingFile(IN PUNICODE_STRING Name,
     Status = NtCreatePagingFile(Name, MinSize, MaxSize, Priority);
     if (NT_SUCCESS(Status))
     {
-        DPRINT1("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",
+        DPRINT("SMSS:PFILE: NtCreatePagingFile (%wZ, %I64X, %I64X) succeeded. \n",
                 Name,
                 MinSize->QuadPart,
                 MaxSize->QuadPart);
@@ -508,7 +504,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
         if (!(Descriptor->Flags & SMP_PAGEFILE_DUMP_PROCESSED))
         {
             /* Try to find a crash dump and extract it */
-            DPRINT1("SMSS:PFILE: Checking for crash dump in `%wZ' on boot volume \n",
+            DPRINT("SMSS:PFILE: Checking for crash dump in `%wZ' on boot volume \n",
                     &Descriptor->Name);
             SmpCheckForCrashDump(&Descriptor->Name);
 
@@ -521,7 +517,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
             }
             else
             {
-                DPRINT1("Queried free space for boot volume `%wC: %I64x'\n",
+                DPRINT("Queried free space for boot volume `%wC: %I64x'\n",
                         Volume->DriveLetter, Volume->FreeSpace.QuadPart);
             }
 
@@ -532,7 +528,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     else
     {
         /* Crashdumps can only be on the boot volume */
-        DPRINT1("SMSS:PFILE: Skipping crash dump checking for `%wZ' on non boot"
+        DPRINT("SMSS:PFILE: Skipping crash dump checking for `%wZ' on non boot"
                 "volume `%wC' \n",
                 &Descriptor->Name,
                 Volume->DriveLetter);
@@ -545,10 +541,10 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     /* Check how big we can make the pagefile */
     Status = SmpGetPagingFileSize(&Descriptor->Name, &PageFileSize);
     if (PageFileSize.QuadPart > 0) ShouldDelete = TRUE;
-    DPRINT1("SMSS:PFILE: Detected size %I64X for future paging file `%wZ'\n",
+    DPRINT("SMSS:PFILE: Detected size %I64X for future paging file `%wZ'\n",
             PageFileSize,
             &Descriptor->Name);
-    DPRINT1("SMSS:PFILE: Free space on volume `%wC' is %I64X \n",
+    DPRINT("SMSS:PFILE: Free space on volume `%wC' is %I64X \n",
             Volume->DriveLetter,
             Volume->FreeSpace.QuadPart);
 
@@ -562,7 +558,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     {
         Descriptor->ActualMaxSize = PageFileSize;
     }
-    DPRINT1("SMSS:PFILE: min %I64X, max %I64X, real min %I64X \n",
+    DPRINT("SMSS:PFILE: min %I64X, max %I64X, real min %I64X \n",
             Descriptor->ActualMinSize.QuadPart,
             Descriptor->ActualMaxSize.QuadPart,
             MinimumSize->QuadPart);
@@ -697,7 +693,7 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     /* Capture the min and max */
     MinSize = Descriptor->MinSize.QuadPart;
     MaxSize = Descriptor->MaxSize.QuadPart;
-    DPRINT1("SMSS:PFILE: Validating sizes for `%wZ' %I64X %I64X\n",
+    DPRINT("SMSS:PFILE: Validating sizes for `%wZ' %I64X %I64X\n",
              &Descriptor->Name, MinSize, MaxSize);
 
     /* Don't let minimum be bigger than maximum */
@@ -732,7 +728,7 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     if (WasTooBig)
     {
         /* Notify debugger output and write a flag in the descriptor */
-        DPRINT1("SMSS:PFILE: Trimmed size of `%wZ' to maximum allowed \n",
+        DPRINT("SMSS:PFILE: Trimmed size of `%wZ' to maximum allowed \n",
                 &Descriptor->Name);
         Descriptor->Flags |= SMP_PAGEFILE_WAS_TOO_BIG;
     }
@@ -972,10 +968,6 @@ SmpCreateVolumeDescriptors(VOID)
                              SizeInfo.SectorsPerAllocationUnit;
         FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
         Volume->FreeSpace = FinalFreeSpace;
-        DPRINT1("AUs: %I64x Sectors: %lx Bytes Per Sector: %lx\n",
-                SizeInfo.AvailableAllocationUnits.QuadPart,
-                SizeInfo.SectorsPerAllocationUnit,
-                SizeInfo.BytesPerSector);
 
         /* Check if there's less than 32MB free so we don't starve the disk */
         if (FinalFreeSpace.QuadPart <= 0x2000000)
@@ -992,7 +984,7 @@ SmpCreateVolumeDescriptors(VOID)
         /* All done, add this volume to our descriptor list */
         InsertTailList(&SmpVolumeDescriptorList, &Volume->Entry);
         Volume->Flags |= SMP_VOLUME_INSERTED;
-        DPRINT1("SMSS:PFILE: Created volume descriptor for`%wZ' \n", &VolumePath);
+        DPRINT("SMSS:PFILE: Created volume descriptor for`%wZ' \n", &VolumePath);
     }
 
     /* We must've found at least the boot volume */
@@ -1045,7 +1037,7 @@ SmpCreatePagingFiles(VOID)
         if (Descriptor->Flags & SMP_PAGEFILE_SYSTEM_MANAGED)
         {
             /* This is a system-managed descriptor. Create the correct file */
-            DPRINT1("SMSS:PFILE: Creating a system managed paging file (`%wZ')\n",
+            DPRINT("SMSS:PFILE: Creating a system managed paging file (`%wZ')\n",
                     &Descriptor->Name);
             Status = SmpCreateSystemManagedPagingFile(Descriptor, FALSE);
             if (!NT_SUCCESS(Status))
@@ -1062,7 +1054,7 @@ SmpCreatePagingFiles(VOID)
             SmpValidatePagingFileSizes(Descriptor);
 
             /* Check if this is an ANY pagefile or a FIXED pagefile */
-            DPRINT1("SMSS:PFILE: Creating a normal paging file (`%wZ') \n",
+            DPRINT("SMSS:PFILE: Creating a normal paging file (`%wZ') \n",
                     &Descriptor->Name);
             if (Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] == L'?')
             {
