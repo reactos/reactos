@@ -328,6 +328,10 @@ NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
 IN PCSR_THREAD Thread);
 
+VOID
+NTAPI
+CsrLockedReferenceThread(IN PCSR_THREAD CsrThread);
+
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
                                                     PVOID Context);

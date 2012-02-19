@@ -122,6 +122,28 @@ CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
     return CsrThread;
 }
 
+/*++
+ * @name CsrLockedReferenceThread
+ *
+ * The CsrLockedReferenceThread refences a CSR Thread while the
+ * Process Lock is already being held.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to be referenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedReferenceThread(IN PCSR_THREAD CsrThread)
+{
+    /* Increment the reference count */
+    ++CsrThread->ReferenceCount;
+}
+
 PCSR_THREAD
 NTAPI
 CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
