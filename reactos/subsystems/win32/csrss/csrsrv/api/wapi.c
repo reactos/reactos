@@ -1127,15 +1127,6 @@ ClientConnectionThread(IN PVOID Parameter)
             continue;
         }
 
-        if ((MessageType != LPC_ERROR_EVENT) &&
-            (MessageType != LPC_REQUEST))
-        {
-            DPRINT1("CSR: received message %d\n", Request->Header.u2.s2.Type);
-            Reply = NULL;
-            ReplyPort = CsrApiPort;
-            continue;
-        }
-
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n",
                 Request->Type,
                 Request->Header.ClientId.UniqueThread);
@@ -1164,6 +1155,9 @@ ClientConnectionThread(IN PVOID Parameter)
         if (MessageType == LPC_EXCEPTION)
         {
             /* Kill the process */
+            DPRINT1("Exception in %lx.%lx. Killing...\n",
+                    Request->Header.ClientId.UniqueProcess,
+                    Request->Header.ClientId.UniqueThread);
             NtTerminateProcess(ProcessData->ProcessHandle, STATUS_ABANDONED);
 
             /* Destroy it from CSR */
