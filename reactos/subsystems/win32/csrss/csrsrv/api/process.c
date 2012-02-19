@@ -172,50 +172,46 @@ CSR_API(CsrSrvCreateThread)
     NTSTATUS Status;
     PCSR_PROCESS CsrProcess;
     
+    /* Get the current CSR thread */
     CurrentThread = NtCurrentTeb()->CsrClientThread;
     if (!CurrentThread) return STATUS_SUCCESS; // server-to-server
+    
+    /* Get the CSR Process for this request */
     CsrProcess = CurrentThread->Process;
-
-    if (CsrProcess->ClientId.UniqueProcess != Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
+    if (CsrProcess->ClientId.UniqueProcess !=
+        Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
     {
+        /* This is a remote thread request -- is it within the server itself? */
         if (Request->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
         {
+            /* Accept this without any further work */
             return STATUS_SUCCESS;
         }
         
+        /* Get the real CSR Process for the remote thread's process */
         Status = CsrLockProcessByClientId(Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
                                           &CsrProcess);
         if (!NT_SUCCESS(Status)) return Status;
     }
-    
-    Status = NtDuplicateObject(CsrProcess->ProcessHandle,
+
+    /* Duplicate the thread handle so we can own it */
+    Status = NtDuplicateObject(CurrentThread->Process->ProcessHandle,
                                Request->Data.CreateThreadRequest.ThreadHandle,
                                NtCurrentProcess(),
                                &ThreadHandle,
                                0,
                                0,
                                DUPLICATE_SAME_ACCESS);
-    if (!NT_SUCCESS(Status))
-    {
-        Status = NtDuplicateObject(CurrentThread->Process->ProcessHandle,
-                                   Request->Data.CreateThreadRequest.ThreadHandle,
-                                   NtCurrentProcess(),
-                                   &ThreadHandle,
-                                   0,
-                                   0,
-                                   DUPLICATE_SAME_ACCESS);
-    }
-
-    Status = STATUS_SUCCESS; // hack
     if (NT_SUCCESS(Status))
     {
+        /* Call CSRSRV to tell it about the new thread */
         Status = CsrCreateThread(CsrProcess,
-                                     ThreadHandle,
-                                     &Request->Data.CreateThreadRequest.ClientId);
+                                 ThreadHandle,
+                                 &Request->Data.CreateThreadRequest.ClientId);
     }
 
-    if (CsrProcess != CurrentThread->Process) CsrReleaseProcessLock();
-    
+    /* Unlock the process and return */
+    if (CsrProcess != CurrentThread->Process) CsrUnlockProcess(CsrProcess);
     return Status;
 }
 

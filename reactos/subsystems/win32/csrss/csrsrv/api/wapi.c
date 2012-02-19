@@ -1183,7 +1183,7 @@ ClientConnectionThread(IN PVOID Parameter)
                 Thread = CsrLocateThreadByClientId(&Process, &Request->Header.ClientId);
                 if (!Thread)
                 {
-                    DPRINT("No thread found for request %lx and clientID %lx.%lx\n",
+                    DPRINT1("No thread found for request %lx and clientID %lx.%lx\n",
                             Request->Type & 0xFFFF,
                             Request->Header.ClientId.UniqueProcess,
                             Request->Header.ClientId.UniqueThread);
