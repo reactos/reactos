@@ -171,7 +171,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
         }
 
         /* Make sure we're not attached and that APCs are not disabled */
-        if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
+        if ((KeGetCurrentThread()->ApcStateIndex != OriginalApcEnvironment) ||
             (KeGetCurrentThread()->CombinedApcDisable != 0))
         {
             /* Fail */
