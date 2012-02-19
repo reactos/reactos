@@ -69,8 +69,6 @@ typedef struct
     //
     // ReactOS Data
     //
-    HANDLE NewProcessId;
-    ULONG Flags;
     BOOL bInheritHandles;
 } CSRSS_CREATE_PROCESS, *PCSRSS_CREATE_PROCESS;
 

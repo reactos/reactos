@@ -86,7 +86,7 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
-    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
+    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrSrvCreateProcess),
     CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),

@@ -31,58 +31,6 @@ PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId)
     return CsrProcess;
 }
 
-PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId)
-{
-    PCSR_PROCESS pProcessData;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    CLIENT_ID ClientId;
-    NTSTATUS Status;
-
-    LOCK;
-   
-    pProcessData = CsrAllocateProcess();
-    ASSERT(pProcessData != NULL);
-
-    pProcessData->ClientId.UniqueProcess = ProcessId;
-
-    ClientId.UniqueThread = NULL;
-    ClientId.UniqueProcess = pProcessData->ClientId.UniqueProcess;
-    InitializeObjectAttributes(&ObjectAttributes,
-                               NULL,
-                               0,
-                               NULL,
-                               NULL); 
-
-    /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
-    Status = NtOpenProcess(&pProcessData->ProcessHandle,
-                           PROCESS_ALL_ACCESS,
-                           &ObjectAttributes,
-                           &ClientId);
-    DPRINT("CSR Process: %p Handle: %p\n", pProcessData, pProcessData->ProcessHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed\n");
-        CsrDeallocateProcess(pProcessData);
-        CsrReleaseProcessLock();
-        return NULL;
-    }
-    else
-    {
-        RtlInitializeCriticalSection(&pProcessData->HandleTableLock);
-    }
-
-    /* Set default shutdown parameters */
-    pProcessData->ShutdownLevel = 0x280;
-    pProcessData->ShutdownFlags = 0;
-    
-    /* Insert the Process */
-    CsrInsertProcess(NULL, NULL, pProcessData);
-
-    /* Release lock and return */
-    CsrReleaseProcessLock();
-    return pProcessData;
-}
-
 NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 {
     PCSR_PROCESS pProcessData;
@@ -135,34 +83,114 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
  *	CSRSS API
  *********************************************************************/
 
-CSR_API(CsrCreateProcess)
+CSR_API(CsrSrvCreateProcess)
 {
-   PCSR_PROCESS NewProcessData;
+     NTSTATUS Status;
+     HANDLE ProcessHandle, ThreadHandle;
+     PCSR_THREAD CsrThread;
+     PCSR_PROCESS NewProcessData;
+     ULONG Flags, VdmPower = 0, DebugFlags = 0;
 
-   NewProcessData = CsrCreateProcessData(Request->Data.CreateProcessRequest.NewProcessId);
-   if (NewProcessData == NULL)
+     /* Get the current client thread */
+     CsrThread = NtCurrentTeb()->CsrClientThread;
+     ASSERT(CsrThread != NULL);
+
+     /* Extract the flags out of the process handle */
+     Flags = (ULONG_PTR)Request->Data.CreateProcessRequest.ProcessHandle & 3;
+     Request->Data.CreateProcessRequest.ProcessHandle = (HANDLE)((ULONG_PTR)Request->Data.CreateProcessRequest.ProcessHandle & ~3);
+
+     /* Duplicate the process handle */
+     Status = NtDuplicateObject(CsrThread->Process->ProcessHandle,
+                                Request->Data.CreateProcessRequest.ProcessHandle,
+                                NtCurrentProcess(),
+                                &ProcessHandle,
+                                0,
+                                0,
+                                DUPLICATE_SAME_ACCESS);
+     if (!NT_SUCCESS(Status))
      {
-	return(STATUS_NO_MEMORY);
+         DPRINT1("Failed to duplicate process handle\n");
+         return Status;
      }
 
-   if (!(Request->Data.CreateProcessRequest.Flags & (CREATE_NEW_CONSOLE|DETACHED_PROCESS)))
-     {
-       NewProcessData->ParentConsole = ProcessData->Console;
-       NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
-     }
-     
-     CallProcessCreated(ProcessData, NewProcessData);
+     /* Duplicate the thread handle */
+     Status = NtDuplicateObject(CsrThread->Process->ProcessHandle,
+                                Request->Data.CreateProcessRequest.ThreadHandle,
+                                NtCurrentProcess(),
+                                &ThreadHandle,
+                                0,
+                                0,
+                                DUPLICATE_SAME_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to duplicate process handle\n");
+        NtClose(ProcessHandle);
+        return Status;
+    }
 
-   if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_PROCESS_GROUP)
-     {
-       NewProcessData->ProcessGroupId = (DWORD)(ULONG_PTR)NewProcessData->ClientId.UniqueProcess;
-     }
-   else
-     {
-       NewProcessData->ProcessGroupId = ProcessData->ProcessGroupId;
-     }
+    /* See if this is a VDM process */
+    if (VdmPower)
+    {
+        /* Request VDM powers */
+        Status = NtSetInformationProcess(ProcessHandle,
+                                         ProcessWx86Information,
+                                         &VdmPower,
+                                         sizeof(VdmPower));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to get VDM powers\n");
+            NtClose(ProcessHandle);
+            NtClose(ThreadHandle);
+            return Status;
+        }
+    }
+    
+    /* Convert some flags. FIXME: More need conversion */
+    if (Request->Data.CreateProcessRequest.CreationFlags & CREATE_NEW_PROCESS_GROUP)
+    {
+        DebugFlags |= CsrProcessCreateNewGroup;
+    }
 
-   return(STATUS_SUCCESS);
+    /* FIXME: SxS Stuff */
+
+    /* Call CSRSRV to create the CSR_PROCESS structure and the first CSR_THREAD */
+    Status = CsrCreateProcess(ProcessHandle,
+                              ThreadHandle,
+                              &Request->Data.CreateProcessRequest.ClientId,
+                              CsrThread->Process->NtSession,
+                              DebugFlags,
+                              NULL);
+    if (Status == STATUS_THREAD_IS_TERMINATING)
+    {
+        DPRINT1("Thread already dead\n");
+        return Status;
+    }
+
+    /* Check for other failures */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create process/thread structures: %lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Should notify user32 */
+
+    /* FIXME: VDM vodoo */
+    
+    /* ReactOS Compatibility */
+    Status = CsrLockProcessByClientId(Request->Data.CreateProcessRequest.ClientId.UniqueProcess, &NewProcessData);
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!(Request->Data.CreateProcessRequest.CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
+    {
+        NewProcessData->ParentConsole = ProcessData->Console;
+        NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
+    }
+    RtlInitializeCriticalSection(&NewProcessData->HandleTableLock);
+    CallProcessCreated(ProcessData, NewProcessData);
+    CsrUnlockProcess(NewProcessData);
+
+    /* Return the result of this operation */
+    return Status;
 }
 
 CSR_API(CsrSrvCreateThread)

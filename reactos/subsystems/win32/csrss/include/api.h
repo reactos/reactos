@@ -56,15 +56,30 @@ typedef enum _CSR_SHUTDOWN_FLAGS
     CsrShutdownOther = 8
 } CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
 
+typedef enum _CSR_DEBUG_FLAGS
+{
+    CsrDebugOnlyThisProcess = 1,
+    CsrDebugProcessChildren = 2
+} CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
+
 typedef enum _CSR_PROCESS_FLAGS
 {
     CsrProcessTerminating = 0x1,
     CsrProcessSkipShutdown = 0x2,
+    CsrProcessNormalPriority = 0x10,
+    CsrProcessIdlePriority = 0x20,
+    CsrProcessHighPriority = 0x40,
+    CsrProcessRealtimePriority = 0x80,
     CsrProcessCreateNewGroup = 0x100,
     CsrProcessTerminated = 0x200,
     CsrProcessLastThreadTerminated = 0x400,
     CsrProcessIsConsoleApp = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
+
+#define CsrProcessPriorityFlags (CsrProcessNormalPriority | \
+                                 CsrProcessIdlePriority | \
+                                 CsrProcessHighPriority | \
+                                 CsrProcessRealtimePriority)
 
 typedef struct _CSRSS_CON_PROCESS_DATA
 {
@@ -251,7 +266,7 @@ NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 
 /* api/process.c */
 CSR_API(CsrConnectProcess);
-CSR_API(CsrCreateProcess);
+CSR_API(CsrSrvCreateProcess);
 CSR_API(CsrTerminateProcess);
 CSR_API(CsrSrvCreateThread);
 CSR_API(CsrGetShutdownParameters);
@@ -318,6 +333,15 @@ extern ULONG CsrMaxApiRequestThreads;
 NTSTATUS
 NTAPI
 CsrApiPortInitialize(VOID);
+
+NTSTATUS
+NTAPI
+CsrCreateProcess(IN HANDLE hProcess,
+                 IN HANDLE hThread,
+                 IN PCLIENT_ID ClientId,
+                 IN PCSR_NT_SESSION NtSession,
+                 IN ULONG Flags,
+                 IN PCLIENT_ID DebugCid);
 
 BOOLEAN
 NTAPI
@@ -390,6 +414,10 @@ CsrSrvSetPriorityClass(
     IN OUT PCSR_API_MESSAGE ApiMessage,
     IN OUT PULONG Reply
 );
+
+VOID
+NTAPI
+CsrReferenceNtSession(IN PCSR_NT_SESSION Session);
 
 LONG
 NTAPI
