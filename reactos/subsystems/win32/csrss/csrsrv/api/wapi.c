@@ -92,8 +92,6 @@ CsrApiCallHandler(PCSR_PROCESS ProcessData,
         }
     }
   DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
 }
 

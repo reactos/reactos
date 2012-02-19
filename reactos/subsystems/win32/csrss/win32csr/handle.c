@@ -263,9 +263,6 @@ CSR_API(CsrGetHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     Request->Data.GetInputHandleRequest.Handle = INVALID_HANDLE_VALUE;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -309,9 +306,6 @@ CSR_API(CsrGetHandle)
 
 CSR_API(CsrCloseHandle)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     return Win32CsrReleaseObject(ProcessData, Request->Data.CloseHandleRequest.Handle);
 }
 
@@ -319,9 +313,6 @@ CSR_API(CsrVerifyHandle)
 {
     ULONG_PTR Index;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Index = (ULONG_PTR)Request->Data.VerifyHandleRequest.Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -341,9 +332,6 @@ CSR_API(CsrDuplicateHandle)
     ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Index = (ULONG_PTR)Request->Data.DuplicateHandleRequest.Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -390,9 +378,6 @@ CSR_API(CsrDuplicateHandle)
 
 CSR_API(CsrGetInputWaitHandle)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     Request->Data.GetConsoleInputWaitHandle.InputWaitHandle = ProcessData->ConsoleEvent;
     return STATUS_SUCCESS;
 }

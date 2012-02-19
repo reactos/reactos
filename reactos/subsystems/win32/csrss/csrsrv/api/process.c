@@ -141,9 +141,6 @@ CSR_API(CsrCreateProcess)
 {
    PCSR_PROCESS NewProcessData;
 
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-
    NewProcessData = CsrCreateProcessData(Request->Data.CreateProcessRequest.NewProcessId);
    if (NewProcessData == NULL)
      {
@@ -177,9 +174,6 @@ CSR_API(CsrSrvCreateThread)
     NTSTATUS Status;
     PCSR_PROCESS CsrProcess;
     
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     CurrentThread = NtCurrentTeb()->CsrClientThread;
     CsrProcess = CurrentThread->Process;
 
@@ -230,8 +224,6 @@ CSR_API(CsrTerminateProcess)
 {
    PLIST_ENTRY NextEntry;
    PCSR_THREAD Thread;
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    
    LOCK;
    
@@ -254,16 +246,12 @@ CSR_API(CsrTerminateProcess)
 
 CSR_API(CsrConnectProcess)
 {
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
    return(STATUS_SUCCESS);
 }
 
 CSR_API(CsrGetShutdownParameters)
 {
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   Request->Data.GetShutdownParametersRequest.Level = ProcessData->ShutdownLevel;
   Request->Data.GetShutdownParametersRequest.Flags = ProcessData->ShutdownFlags;
@@ -273,8 +261,6 @@ CSR_API(CsrGetShutdownParameters)
 
 CSR_API(CsrSetShutdownParameters)
 {
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   ProcessData->ShutdownLevel = Request->Data.SetShutdownParametersRequest.Level;
   ProcessData->ShutdownFlags = Request->Data.SetShutdownParametersRequest.Flags;

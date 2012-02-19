@@ -18,9 +18,6 @@ static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     if (Request->Data.RegisterLogonProcessRequest.Register)
     {
         if (0 != LogonProcess)
@@ -46,10 +43,6 @@ CSR_API(CsrRegisterLogonProcess)
 CSR_API(CsrSetLogonNotifyWindow)
 {
     DWORD WindowCreator;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) -
-                                       sizeof(PORT_MESSAGE);
 
     if (0 == GetWindowThreadProcessId(Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
                                       &WindowCreator))
@@ -922,10 +915,6 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 
 CSR_API(CsrExitReactos)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) -
-                                       sizeof(PORT_MESSAGE);
-
     if (0 == (Request->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
     {
         return UserExitReactos((DWORD_PTR) Request->Header.ClientId.UniqueProcess,
