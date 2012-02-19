@@ -317,20 +317,17 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
                 IN PCLIENT_ID ClientId)
 {
     PCSR_THREAD CsrThread;
-    //PCSR_PROCESS CurrentProcess;
-    //PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
-    //CLIENT_ID CurrentCid;
+    PCSR_PROCESS CurrentProcess;
+    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;
 
-//    DPRINT1("CSRSRV: %s called\n", __FUNCTION__);
-
     /* Get the current thread and CID */
-    //CurrentCid = CurrentThread->ClientId;
-//    DPRINT1("CALLER PID/TID: %lx/%lx\n", CurrentCid.UniqueProcess, CurrentCid.UniqueThread);
+    CurrentCid = CurrentThread->ClientId;
 
     /* Acquire the Process Lock */
     CsrAcquireProcessLock();
-#if 0
+
     /* Get the current Process and make sure the Thread is valid with this CID */
     CurrentThread = CsrLocateThreadByClientId(&CurrentProcess,
                                               &CurrentCid);
@@ -342,7 +339,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
         CsrReleaseProcessLock();
         return STATUS_THREAD_IS_TERMINATING;
     }
-#endif
+
     /* Get the Thread Create Time */
     NtQueryInformationThread(hThread,
                              ThreadTimes,
