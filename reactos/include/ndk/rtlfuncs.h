@@ -2410,6 +2410,14 @@ RtlGetCurrentProcessorNumber(
 //
 // Thread Pool Functions
 //
+//
+NTSTATUS
+NTAPI
+RtlSetThreadPoolStartFunc(
+    IN PRTL_START_POOL_THREAD StartPoolThread,
+    IN PRTL_EXIT_POOL_THREAD ExitPoolThread
+);
+
 NTSYSAPI
 NTSTATUS
 NTAPI

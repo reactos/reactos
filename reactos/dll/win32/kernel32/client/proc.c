@@ -544,7 +544,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        DPRINT1("Failed to tell csrss about new thread\n");
+        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, CsrRequest.Status);
         return CsrRequest.Status;
     }
 

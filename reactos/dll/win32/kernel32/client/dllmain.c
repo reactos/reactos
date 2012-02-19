@@ -220,6 +220,46 @@ BasepInitConsole(VOID)
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+BaseCreateThreadPoolThread(IN PTHREAD_START_ROUTINE Function,
+                           IN PVOID Parameter,
+                           OUT PHANDLE ThreadHandle)
+{
+    NTSTATUS Status;
+
+    /* Create a Win32 thread */
+    *ThreadHandle = CreateRemoteThread(NtCurrentProcess(),
+                                       NULL,
+                                       0,
+                                       Function,
+                                       Parameter,
+                                       CREATE_SUSPENDED,
+                                       NULL);
+    if (!(*ThreadHandle))
+    {
+        /* Get the status value if we couldn't get a handle */
+        Status = NtCurrentTeb()->LastStatusValue;
+        if (NT_SUCCESS(Status)) Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Set success code */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+BaseExitThreadPoolThread(IN NTSTATUS ExitStatus)
+{
+    /* Exit the thread */
+    ExitThread(ExitStatus);
+}
+
 BOOL
 WINAPI
 DllMain(HANDLE hDll,
@@ -246,6 +286,9 @@ DllMain(HANDLE hDll,
         
         /* Set no filter intially */
         GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
+        
+        /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
+        RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);

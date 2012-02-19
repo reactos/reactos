@@ -523,6 +523,21 @@ typedef VOID
 );
 
 //
+// Worker Start/Exit Function
+//
+typedef NTSTATUS
+(NTAPI *PRTL_START_POOL_THREAD)(
+    IN PTHREAD_START_ROUTINE Function,
+    IN PVOID Parameter,
+    OUT PHANDLE ThreadHandle
+);
+
+typedef NTSTATUS
+(NTAPI *PRTL_EXIT_POOL_THREAD)(
+    IN NTSTATUS ExitStatus
+);
+
+//
 // Declare empty structure definitions so that they may be referenced by
 // routines before they are defined
 //
