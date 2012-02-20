@@ -81,13 +81,3 @@ DuplicateUnicodeString(
 	IN ULONG Flags,
 	IN PCUNICODE_STRING SourceString,
 	OUT PUNICODE_STRING DestinationString);
-
-/* setup.c */
-BOOLEAN
-IsFirstStageSetup(
-	VOID);
-
-VOID NTAPI
-Send8042StartDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo);

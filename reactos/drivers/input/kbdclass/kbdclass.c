@@ -1009,10 +1009,6 @@ SearchForLegacyDrivers(
 			/* FIXME: Log the error */
 			WARN_(CLASS_NAME, "ClassAddDevice() failed with status 0x%08lx\n", Status);
 		}
-
-		/* A special hack for 1st stage setup: manually send start device to i8042prt */
-		if (IsFirstStageSetup())
-			Send8042StartDevice(DriverObject, PortDeviceObject);
 	}
 
 cleanup:
