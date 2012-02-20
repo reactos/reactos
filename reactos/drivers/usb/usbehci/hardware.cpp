@@ -963,7 +963,7 @@ CUSBHardwareDevice::ResetPort(
     if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
         DPRINT1("Non HighSpeed device. Releasing Ownership\n");
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus | EHCI_PRT_RELEASEOWNERSHIP);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
@@ -1132,7 +1132,7 @@ CUSBHardwareDevice::ClearPortStatus(
         if (Value & EHCI_PRT_SLOWSPEEDLINE)
         {
             DPRINT1("Non HighSpeed device. Releasing Ownership\n");
-            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), EHCI_PRT_RELEASEOWNERSHIP);
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value | EHCI_PRT_RELEASEOWNERSHIP);
             return STATUS_DEVICE_NOT_CONNECTED;
         }
 
@@ -1478,9 +1478,6 @@ EhciDefferedRoutine(
                 {
                     DPRINT1("Device connected on port %d\n", i);
 
-                    //
-                    //FIXME: Determine device speed
-                    //
                     if (This->m_Capabilities.HCSParams.CHCCount)
                     {
                         if (PortStatus & EHCI_PRT_ENABLED)
@@ -1491,7 +1488,7 @@ EhciDefferedRoutine(
                         if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
                         {
                             DPRINT1("Non HighSpeed device connected. Release ownership\n");
-                            This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), EHCI_PRT_RELEASEOWNERSHIP);
+                            This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_RELEASEOWNERSHIP);
                             continue;
                         }
                     }
