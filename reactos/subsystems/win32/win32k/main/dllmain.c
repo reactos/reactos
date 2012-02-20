@@ -238,7 +238,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         HWINSTA hWinSta = NULL;
         PCLIENTINFO pci;
         HDESK hDesk = NULL;
-        PUNICODE_STRING DesktopPath;
+        UNICODE_STRING DesktopPath;
         PDESKTOP pdesk;
         PRTL_USER_PROCESS_PARAMETERS ProcessParams = Process->Peb->ProcessParameters;
 
@@ -297,11 +297,24 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
              * inherit the thread desktop and process window station (if not yet inherited) from the process startup
              * info structure. See documentation of CreateProcess()
              */
-            DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
+            Status = STATUS_UNSUCCESSFUL;
+            if(ProcessParams && ProcessParams->DesktopInfo.Length > 0)
+            {
+                Status = IntSafeCopyUnicodeStringTerminateNULL(&DesktopPath, &ProcessParams->DesktopInfo);
+            }
+            if(!NT_SUCCESS(Status))
+            {
+                RtlInitUnicodeString(&DesktopPath, NULL);
+            }
+
             Status = IntParseDesktopPath(Process,
-                                         DesktopPath,
+                                         &DesktopPath,
                                          &hWinSta,
                                          &hDesk);
+
+            if (DesktopPath.Buffer)
+                ExFreePoolWithTag(DesktopPath.Buffer, TAG_STRING);
+
             if(!NT_SUCCESS(Status))
             {
                 ERR_CH(UserThread, "Failed to assign default dekstop and winsta to process\n");
@@ -545,6 +558,7 @@ DriverEntry(
     NT_ROF(InitKeyboardImpl());
     NT_ROF(MsqInitializeImpl());
     NT_ROF(InitTimerImpl());
+    NT_ROF(InitDCEImpl());
 
     /* Initialize FreeType library */
     if (!InitFontSupport())
