@@ -711,7 +711,9 @@ QSI_DEF(SystemProcessInformation)
 
         /* Check for overflow */
         if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
+        {
             Overflow = TRUE;
+        }
 
         /* Zero user's buffer */
         if (!Overflow) RtlZeroMemory(Spi, Size);
@@ -719,14 +721,25 @@ QSI_DEF(SystemProcessInformation)
         SystemProcess = PsIdleProcess;
         Process = SystemProcess;
         Current = (PUCHAR) Spi;
+        CurrentSize = 0;
+        ImageNameMaximumLength = 0;
 
         do
         {
             SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
+            
+            if ((Process->ProcessExiting) &&
+                (Process->Pcb.Header.SignalState) &&
+                !(Process->ActiveThreads) &&
+                (IsListEmpty(&Process->Pcb.ThreadListHead)))
+            {
+                DPRINT1("Skipping zombie\n");
+                goto Skip;
+            }
 
             ThreadsCount = 0;
-            CurrentEntry = Process->ThreadListHead.Flink;
-            while (CurrentEntry != &Process->ThreadListHead)
+            CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+            while (CurrentEntry != &Process->Pcb.ThreadListHead)
             {
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
@@ -770,7 +783,9 @@ QSI_DEF(SystemProcessInformation)
 
             /* Check for overflow */
             if (TotalSize > Size)
+            {
                 Overflow = TRUE;
+            }
 
             /* Fill system information */
             if (!Overflow)
@@ -821,10 +836,10 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 
-                CurrentEntry = Process->ThreadListHead.Flink;
-                while (CurrentEntry != &Process->ThreadListHead)
+                CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+                while (CurrentEntry != &Process->Pcb.ThreadListHead)
                 {
-                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
+                    CurrentThread = (PETHREAD)CONTAINING_RECORD(CurrentEntry, KTHREAD,
                         ThreadListEntry);
 
                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
@@ -850,6 +865,7 @@ QSI_DEF(SystemProcessInformation)
             }
 
             /* Handle idle process entry */
+Skip:
             if (Process == PsIdleProcess) Process = NULL;
 
             Process = PsGetNextProcess(Process);
