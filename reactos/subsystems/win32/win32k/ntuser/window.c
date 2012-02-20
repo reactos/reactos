@@ -1463,7 +1463,7 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
       PMONITOR pMonitor;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
-      pMonitor = IntGetPrimaryMonitor();
+      pMonitor = UserGetPrimaryMonitor();
 
       /* Check if we don't have a monitor attached yet */
       if(pMonitor == NULL)

@@ -323,7 +323,7 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
          else
          {
             RECTL WorkArea;
-            PMONITOR pmonitor = IntMonitorFromRect(&Rect, MONITOR_DEFAULTTOPRIMARY );
+            PMONITOR pmonitor = UserMonitorFromRect(&Rect, MONITOR_DEFAULTTOPRIMARY );
 
             // FIXME: support DPI aware, rcWorkDPI/Real etc..
             if (!(Wnd->style & WS_MAXIMIZEBOX) || (Wnd->state & WNDS_HASCAPTION) || pmonitor->cFullScreen)
@@ -389,7 +389,7 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
    if ( Wnd->spwndParent == Wnd->head.rpdesk->pDeskInfo->spwnd &&
        !(Wnd->ExStyle & WS_EX_TOOLWINDOW))
    {
-      PMONITOR pmonitor = IntMonitorFromRect(&lpwndpl->rcNormalPosition, MONITOR_DEFAULTTOPRIMARY );
+      PMONITOR pmonitor = UserMonitorFromRect(&lpwndpl->rcNormalPosition, MONITOR_DEFAULTTOPRIMARY );
 
       // FIXME: support DPI aware, rcWorkDPI/Real etc..
       if (Wnd->InternalPos.flags & WPF_MININIT)
@@ -414,7 +414,7 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
 /* make sure the specified rect is visible on screen */
 static void make_rect_onscreen( RECT *rect )
 {
-    PMONITOR pmonitor = IntMonitorFromRect( rect, MONITOR_DEFAULTTONEAREST ); // Wine uses this.
+    PMONITOR pmonitor = UserMonitorFromRect( rect, MONITOR_DEFAULTTONEAREST ); // Wine uses this.
 
     //  FIXME: support DPI aware, rcWorkDPI/Real etc..
     if (!pmonitor) return;
@@ -744,7 +744,7 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
     co_IntSendMessage(Window->head.h, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
     /* if the app didn't change the values, adapt them for the current monitor */
-    if ((monitor = IntGetPrimaryMonitor()))
+    if ((monitor = UserGetPrimaryMonitor()))
     {
         RECT rc_work;
 

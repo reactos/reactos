@@ -49,9 +49,6 @@ static
 void
 IntDestroyMonitorObject(IN PMONITOR pMonitor)
 {
-    /* Free monitor name */
-    RtlFreeUnicodeString(&pMonitor->DeviceName);
-
     /* Remove monitor region */
     if (pMonitor->hrgnMonitor)
     {
@@ -73,7 +70,7 @@ IntDestroyMonitorObject(IN PMONITOR pMonitor)
  *   hMonitor
  *      Handle of MONITOR object
  */
-PMONITOR FASTCALL
+PMONITOR NTAPI
 UserGetMonitorObject(IN HMONITOR hMonitor)
 {
     PMONITOR pMonitor;
@@ -94,16 +91,15 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
     return pMonitor;
 }
 
-/* IntGetPrimaryMonitor
+/* UserGetPrimaryMonitor
  *
  * Returns a PMONITOR for the primary monitor
  *
  * Return value
  *   PMONITOR
  */
-PMONITOR
-FASTCALL
-IntGetPrimaryMonitor()
+PMONITOR NTAPI
+UserGetPrimaryMonitor()
 {
     PMONITOR pMonitor;
 
@@ -117,7 +113,7 @@ IntGetPrimaryMonitor()
     return pMonitor;
 }
 
-/* IntAttachMonitor
+/* UserAttachMonitor
  *
  * Creates a new MONITOR and appends it to the list of monitors.
  *
@@ -129,12 +125,10 @@ IntGetPrimaryMonitor()
  * Return value
  *   Returns a NTSTATUS
  */
-NTSTATUS
-IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
-                 IN ULONG DisplayNumber)
+NTSTATUS NTAPI
+UserAttachMonitor(IN HDEV hDev)
 {
     PMONITOR pMonitor;
-    WCHAR Buffer[CCHDEVICENAME];
 
     TRACE("Attaching monitor...\n");
 
@@ -145,17 +139,8 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
         TRACE("Couldnt create monitor object\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    _snwprintf(Buffer, CCHDEVICENAME, L"\\\\.\\DISPLAY%d", DisplayNumber + 1);
-    if (!RtlCreateUnicodeString(&pMonitor->DeviceName, Buffer))
-    {
-        TRACE("Couldn't duplicate monitor name!\n");
-        UserDereferenceObject(pMonitor);
-        UserDeleteObject(UserHMGetHandle(pMonitor), otMonitor);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    pMonitor->GdiDevice = pGdiDevice;
+    
+    pMonitor->hDev = hDev;
     pMonitor->cWndStack = 0;
 
     if (gMonitorList == NULL)
@@ -174,12 +159,12 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
         pmonLast->pMonitorNext = pMonitor;
     }
 
-    IntUpdateMonitorSize(pGdiDevice);
+    UserUpdateMonitorSize(hDev);
 
     return STATUS_SUCCESS;
 }
 
-/* IntDetachMonitor
+/* UserDetachMonitor
  *
  * Deletes a MONITOR and removes it from the list of monitors.
  *
@@ -190,15 +175,15 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
  * Return value
  *   Returns a NTSTATUS
  */
-NTSTATUS
-IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
+NTSTATUS NTAPI
+UserDetachMonitor(IN HDEV hDev)
 {
     PMONITOR pMonitor = gMonitorList, *pLink = &gMonitorList;
 
     /* Find monitor attached to given device */
     while (pMonitor != NULL)
     {
-        if (pMonitor->GdiDevice == pGdiDevice)
+        if (pMonitor->hDev == hDev)
             break;
     
         pLink = &pMonitor->pMonitorNext;
@@ -224,7 +209,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     return STATUS_SUCCESS;
 }
 
-/* IntUpdateMonitorSize
+/* UserUpdateMonitorSize
  *
  * Reset size of the monitor using atached device
  *
@@ -236,15 +221,16 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
  * Return value
  *   Returns a NTSTATUS
  */
-NTSTATUS
-IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
+NTSTATUS NTAPI
+UserUpdateMonitorSize(IN HDEV hDev)
 {
 	PMONITOR pMonitor;
+    SIZEL DeviceSize;
 
     /* Find monitor attached to given device */
     for (pMonitor = gMonitorList; pMonitor != NULL; pMonitor = pMonitor->pMonitorNext)
     {
-        if (pMonitor->GdiDevice == pGdiDevice)
+        if (pMonitor->hDev == hDev)
             break;
     }
 
@@ -254,11 +240,14 @@ IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the size of the hdev */
+    PDEVOBJ_sizl((PPDEVOBJ)hDev, &DeviceSize);
+
     /* Update monitor size */
     pMonitor->rcMonitor.left  = 0;
     pMonitor->rcMonitor.top   = 0;
-    pMonitor->rcMonitor.right  = pMonitor->rcMonitor.left + pMonitor->GdiDevice->gdiinfo.ulHorzRes;
-    pMonitor->rcMonitor.bottom = pMonitor->rcMonitor.top + pMonitor->GdiDevice->gdiinfo.ulVertRes;
+    pMonitor->rcMonitor.right  = pMonitor->rcMonitor.left + DeviceSize.cx;
+    pMonitor->rcMonitor.bottom = pMonitor->rcMonitor.top + DeviceSize.cy;
     pMonitor->rcWork = pMonitor->rcMonitor;
 
     /* Destroy monitor region... */
@@ -403,9 +392,8 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
     return cMonitors;
 }
 
-PMONITOR
-FASTCALL
-IntMonitorFromRect(
+PMONITOR NTAPI
+UserMonitorFromRect(
     PRECTL pRect,
     DWORD dwFlags)
 {
@@ -703,6 +691,7 @@ NtUserGetMonitorInfo(
     MONITORINFOEXW MonitorInfo;
     NTSTATUS Status;
     BOOL bRet = FALSE;
+    PWCHAR pwstrDeviceName;
 
     TRACE("Enter NtUserGetMonitorInfo\n");
     UserEnterShared();
@@ -721,6 +710,8 @@ NtUserGetMonitorInfo(
         SetLastNtError(STATUS_INVALID_PARAMETER);
         goto cleanup;
     }
+
+    pwstrDeviceName = ((PPDEVOBJ)(pMonitor->hDev))->pGraphicsDevice->szWinDeviceName;
 
     /* Get size of pMonitorInfoUnsafe */
     Status = MmCopyFromCaller(&MonitorInfo.cbSize, &pMonitorInfoUnsafe->cbSize, sizeof(MonitorInfo.cbSize));
@@ -750,8 +741,8 @@ NtUserGetMonitorInfo(
     {
         RtlStringCbCopyNExW(MonitorInfo.szDevice,
                           sizeof(MonitorInfo.szDevice),
-                          pMonitor->DeviceName.Buffer,
-                          pMonitor->DeviceName.Length,
+                          pwstrDeviceName,
+                          (wcslen(pwstrDeviceName)+1) * sizeof(WCHAR),
                           NULL, NULL, STRSAFE_FILL_BEHIND_NULL);
     }
 

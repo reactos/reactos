@@ -21,18 +21,13 @@ typedef struct _MONITOR
     SHORT   cFullScreen;
     SHORT   cWndStack;
     HDEV    hDev;
-
-    // ReactOS specific fields:
-    UNICODE_STRING DeviceName;  /* Name of the monitor */
-    PDEVOBJ        *GdiDevice;  /* Pointer to the GDI device to
-                                   which this monitor is attached */
 } MONITOR, *PMONITOR;
 
-NTSTATUS IntAttachMonitor(PDEVOBJ *pGdiDevice, ULONG DisplayNumber);
-NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
-NTSTATUS IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice);
-PMONITOR FASTCALL UserGetMonitorObject(IN HMONITOR);
-PMONITOR FASTCALL IntGetPrimaryMonitor(VOID);
-PMONITOR FASTCALL IntMonitorFromRect(PRECTL,DWORD);
+NTSTATUS NTAPI UserAttachMonitor(IN HDEV hDev);
+NTSTATUS NTAPI UserDetachMonitor(HDEV hDev);
+NTSTATUS NTAPI UserUpdateMonitorSize(IN HDEV hDev);
+PMONITOR NTAPI UserGetMonitorObject(IN HMONITOR);
+PMONITOR NTAPI UserGetPrimaryMonitor(VOID);
+PMONITOR NTAPI UserMonitorFromRect(PRECTL,DWORD);
 
 /* EOF */

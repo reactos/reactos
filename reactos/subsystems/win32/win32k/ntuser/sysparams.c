@@ -947,7 +947,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETWORKAREA:
         {
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
 
             if(!pmonitor)
                 return 0;
@@ -959,7 +959,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         {
             /* FIXME: We should set the work area of the monitor
                       that contains the specified rectangle */
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
             RECT rcWorkArea;
 
             if(!pmonitor)
