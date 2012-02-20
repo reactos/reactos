@@ -9,4 +9,4 @@ add_library(w32kdll_2k3sp2 SHARED
 set_entrypoint(w32kdll_2k3sp2 0)
 
 add_dependencies(w32kdll_2k3sp2 psdk )
-add_importlib_target(w32kdll_2k3sp2.spec)
+add_importlib_target(w32kdll_2k3sp2.spec w32kdll_2k3sp2.dll)

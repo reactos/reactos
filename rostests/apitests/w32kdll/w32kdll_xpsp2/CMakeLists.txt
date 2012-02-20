@@ -7,4 +7,4 @@ add_library(w32kdll_xpsp2 SHARED
 set_entrypoint(w32kdll_xpsp2 0)
 
 add_dependencies(w32kdll_xpsp2 psdk )
-add_importlib_target(w32kdll_xpsp2.spec)
+add_importlib_target(w32kdll_xpsp2.spec w32kdll_xpsp2.dll)

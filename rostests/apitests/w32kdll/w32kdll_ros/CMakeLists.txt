@@ -10,4 +10,4 @@ set_entrypoint(w32kdll_ros 0)
 target_link_libraries(w32kdll_ros win32ksys)
 
 add_dependencies(w32kdll_ros psdk)
-add_importlib_target(w32kdll_ros.spec)
+add_importlib_target(w32kdll_ros.spec w32kdll_ros.dll)
