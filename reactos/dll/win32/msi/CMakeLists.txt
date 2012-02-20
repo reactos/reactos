@@ -98,4 +98,4 @@ add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)
 
-add_importlib_target(msi.spec)
+add_importlib_target(msi.spec msi.dll)

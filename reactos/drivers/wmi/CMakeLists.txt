@@ -11,5 +11,5 @@ add_library(wmilib SHARED ${SOURCE})
 set_module_type(wmilib kernelmodedriver ENTRYPOINT 0)
 
 add_importlibs(wmilib ntoskrnl)
-add_importlib_target(wmilib.spec)
+add_importlib_target(wmilib.spec wmilib.sys)
 add_cd_file(TARGET wmilib DESTINATION reactos/system32/drivers FOR all)

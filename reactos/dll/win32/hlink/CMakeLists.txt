@@ -28,5 +28,5 @@ add_importlibs(hlink
     ntdll)
 
 add_pch(hlink hlink_private.h)
-add_importlib_target(hlink.spec)
+add_importlib_target(hlink.spec hlink.dll)
 add_cd_file(TARGET hlink DESTINATION reactos/system32 FOR all)

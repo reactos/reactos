@@ -52,4 +52,4 @@ add_pch(ntdll include/ntdll.h)
 add_dependencies(ntdll ntstatus asm)
 
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(def/ntdll.spec)
+add_importlib_target(def/ntdll.spec ntdll.dll)

@@ -28,4 +28,4 @@ add_pch(csrsrv srv.h)
 
 add_dependencies(csrsrv psdk bugcodes)
 add_cd_file(TARGET csrsrv DESTINATION reactos/system32 FOR all)
-add_importlib_target(csrsrv.spec)
+add_importlib_target(csrsrv.spec csrsrv.dll)

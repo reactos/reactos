@@ -55,4 +55,4 @@ add_importlibs(setupapi
 
 add_pch(setupapi setupapi_private.h)
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)
-add_importlib_target(setupapi.spec)
+add_importlib_target(setupapi.spec setupapi.dll)

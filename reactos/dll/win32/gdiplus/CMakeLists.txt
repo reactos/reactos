@@ -47,7 +47,7 @@ add_importlibs(gdiplus
     kernel32
     ntdll)
 
-add_importlib_target(gdiplus.spec)
+add_importlib_target(gdiplus.spec gdiplus.dll)
 
 if(ARCH MATCHES amd64)
     target_link_libraries(gdiplus crt)

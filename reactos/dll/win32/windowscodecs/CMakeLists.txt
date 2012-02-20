@@ -54,6 +54,6 @@ set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid)
 
 add_importlibs(windowscodecs ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-add_importlib_target(windowscodecs.spec)
+add_importlib_target(windowscodecs.spec windowscodecs.dll)
 
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

@@ -69,7 +69,7 @@ add_importlibs(wined3d
 add_dependencies(wined3d wineheaders)
 add_pch(wined3d wined3d_private.h)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)
-add_importlib_target(wined3d.spec)
+add_importlib_target(wined3d.spec wined3d.dll)
 
 if(NOT MSVC)
     allow_warnings(wined3d)

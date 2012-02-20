@@ -42,16 +42,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
 add_library(crypt32 SHARED ${SOURCE})
-
 allow_warnings(crypt32)
-
 set_module_type(crypt32 win32dll)
-
-target_link_libraries(crypt32
-    wine
-    ${PSEH_LIB}
-    oldnames)
-
+target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(crypt32.spec)
+add_importlib_target(crypt32.spec crypt32.dll)

@@ -16,6 +16,6 @@ set_target_properties(hidclass PROPERTIES SUFFIX ".sys")
 
 
 add_importlibs(hidclass ntoskrnl hidparse hal)
-add_importlib_target(hidclass.spec)
+add_importlib_target(hidclass.spec hidclass.sys)
 
 add_cd_file(TARGET hidclass DESTINATION reactos/system32/drivers NO_CAB FOR all)

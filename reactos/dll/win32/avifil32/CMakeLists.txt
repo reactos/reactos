@@ -40,5 +40,5 @@ add_importlibs(avifil32
     kernel32
     ntdll)
 
-add_importlib_target(avifil32.spec)
+add_importlib_target(avifil32.spec avifil32.dll)
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

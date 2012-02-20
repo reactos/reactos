@@ -47,4 +47,4 @@ add_importlibs(d3d9
 add_dependencies(d3d9 wineheaders)
 add_pch(d3d9 d3d9_private.h)
 add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
-add_importlib_target(d3d9.spec)
+add_importlib_target(d3d9.spec d3d9.dll)

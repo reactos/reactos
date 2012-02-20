@@ -453,6 +453,6 @@ add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(ntoskrnl.spec)
+add_importlib_target(ntoskrnl.spec ntoskrnl.exe)
 
 add_library(ntdllsys ntdll.S)

@@ -132,22 +132,14 @@ function(set_rc_compiler)
 endfunction()
 
 # Thanks MS for creating a stupid linker
-function(add_importlib_target _exports_file)
+function(add_importlib_target _exports_file _implib_name)
+
     get_filename_component(_name ${_exports_file} NAME_WE)
-    get_target_property(_suffix ${_name} SUFFIX)
-    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
-        get_target_property(_type ${_name} TYPE)
-        if(${_type} MATCHES EXECUTABLE)
-            set(_suffix ".exe")
-        else()
-            set(_suffix ".dll")
-        endif()
-    endif()
 
     # Generate the asm stub file and the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_name}${_suffix} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_implib_name} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 
     # Assemble the stub file

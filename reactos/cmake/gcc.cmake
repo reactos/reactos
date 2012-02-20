@@ -192,33 +192,24 @@ if(NOT ARCH MATCHES i386)
     set(DECO_OPTION "-@")
 endif()
 
-function(add_importlib_target _exports_file)
+function(add_importlib_target _exports_file _implib_name)
 
     get_filename_component(_name ${_exports_file} NAME_WE)
     get_filename_component(_extension ${_exports_file} EXT)
-    get_target_property(_suffix ${_name} SUFFIX)
-    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
-        get_target_property(_type ${_name} TYPE)
-        if(${_type} MATCHES EXECUTABLE)
-            set(_suffix ".exe")
-        else()
-            set(_suffix ".dll")
-        endif()
-    endif()
 
     if(${_extension} STREQUAL ".spec")
 
         # Normal importlib creation
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND native-spec2def -n=${_implib_name} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 
         # Delayed importlib creation
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND native-spec2def -n=${_implib_name} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 

@@ -16,6 +16,6 @@ set_module_type(rasapi32 win32dll ENTRYPOINT 0 )
 target_link_libraries(rasapi32 wine)
 
 add_importlibs(rasapi32 kernel32 ntdll)
-add_importlib_target(rasapi32.spec)
+add_importlib_target(rasapi32.spec rasapi32.dll)
 add_dependencies(rasapi32 psdk)
 add_cd_file(TARGET rasapi32 DESTINATION reactos/system32 FOR all)

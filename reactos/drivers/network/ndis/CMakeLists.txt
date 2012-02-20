@@ -43,4 +43,4 @@ add_importlibs(ndis ntoskrnl hal)
 add_pch(ndis include/ndissys.h)
 
 add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(ndis.spec)
+add_importlib_target(ndis.spec ndis.sys)

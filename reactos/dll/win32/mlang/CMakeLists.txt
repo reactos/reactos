@@ -30,6 +30,6 @@ add_importlibs(mlang
     kernel32
     ntdll)
 
-add_importlib_target(mlang.spec)
+add_importlib_target(mlang.spec mlang.dll)
 add_dependencies(mlang psdk)
 add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)

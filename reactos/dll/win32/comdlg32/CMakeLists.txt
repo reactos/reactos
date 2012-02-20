@@ -41,4 +41,4 @@ add_importlibs(comdlg32
     ntdll)
 
 add_cd_file(TARGET comdlg32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(comdlg32.spec)
+add_importlib_target(comdlg32.spec comdlg32.dll)

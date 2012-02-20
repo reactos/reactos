@@ -19,6 +19,6 @@ set_module_type(pdh win32dll ENTRYPOINT 0 )
 target_link_libraries(pdh wine)
 
 add_importlibs(pdh kernel32 ntdll msvcrt)
-add_importlib_target(pdh.spec)
+add_importlib_target(pdh.spec pdh.dll)
 
 add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

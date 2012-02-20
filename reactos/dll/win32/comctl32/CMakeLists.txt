@@ -69,4 +69,4 @@ add_importlibs(comctl32
 
 add_pch(comctl32 comctl32.h)
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(comctl32.spec)
+add_importlib_target(comctl32.spec comctl32.dll)

@@ -55,7 +55,7 @@ add_dependencies(shdocvw stdole2)
 
 add_pch(shdocvw shdocvw.h)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
-add_importlib_target(shdocvw.spec)
+add_importlib_target(shdocvw.spec shdocvw.dll)
 
 if(NOT MSVC)
     allow_warnings(shdocvw)

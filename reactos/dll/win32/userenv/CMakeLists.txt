@@ -27,4 +27,4 @@ add_importlibs(userenv advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(userenv precomp.h)
 
 add_cd_file(TARGET userenv DESTINATION reactos/system32 FOR all)
-add_importlib_target(userenv.spec)
+add_importlib_target(userenv.spec userenv.dll)
