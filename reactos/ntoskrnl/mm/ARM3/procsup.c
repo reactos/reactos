@@ -904,6 +904,8 @@ NTAPI
 MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
 {
     PMMPFN Pfn1;
+    PMMPTE sysPte;
+    MMPTE tempPte;
 
     /* Setup some bogus list data */
     MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
@@ -923,6 +925,12 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
     Pfn1->u1.Event = (PKEVENT)CurrentProcess;
+    
+    /* Map the process working set in kernel space */
+    sysPte = MiReserveSystemPtes(1, SystemPteSpace);
+    MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
+    MI_WRITE_VALID_PTE(sysPte, tempPte);
+    CurrentProcess->Vm.VmWorkingSetList = MiPteToAddress(sysPte);
 }
 
 NTSTATUS
@@ -1220,6 +1228,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Now write the PTE/PDE entry for the working set list index itself */
     TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = WsListIndex;
+    /* Hyperspace is local */
+    MI_MAKE_LOCAL_PAGE(&TempPte);
     PdeOffset = MiAddressToPteOffset(MmWorkingSetList);
     HyperTable[PdeOffset] = TempPte;
 
@@ -1377,6 +1387,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
         MiDecrementShareCount(Pfn1, Process->WorkingSetPage);
         ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+        MiReleaseSystemPtes(MiAddressToPte(Process->Vm.VmWorkingSetList), 1, SystemPteSpace);
             
         /* Now map hyperspace and its page table */
         PageFrameIndex = Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT;
@@ -1388,7 +1399,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
         ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-
+        
         /* Finally, nuke the PDE itself */
         PageFrameIndex = Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT;
         Pfn1 = MiGetPfnEntry(PageFrameIndex);
@@ -1399,6 +1410,8 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         /* HACK: In Richard's original patch this ASSERT did work */
         //DPRINT1("Ref count: %lx %lx\n", Pfn1->u3.e2.ReferenceCount, Pfn1->u2.ShareCount);
         //ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+        if(!((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress)))
+            DPRINT1("Ref count: %lx %lx\n", Pfn1->u3.e2.ReferenceCount, Pfn1->u2.ShareCount);
     }
     else
     {
