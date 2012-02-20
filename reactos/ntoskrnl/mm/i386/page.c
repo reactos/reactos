@@ -258,9 +258,22 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 /* Nobody but page fault should ask for creating the PDE,
                  * Which imples that Process is the current one */
-                ASSERT(Create == FALSE);
                 MmDeleteHyperspaceMapping(PdeBase);
-                return NULL;
+                if(Create == FALSE)
+                    return NULL;
+                else
+                {
+                    KAPC_STATE ApcState;
+                    PULONG ret;
+                    /* Attach to process */
+                    KeStackAttachProcess(&Process->Pcb, &ApcState);
+                    
+                    /* Retry */
+                    ret = MmGetPageTableForProcess(Process, Address, TRUE);
+                    
+                    /* Get Back to original process */
+                    KeUnstackDetachProcess(&ApcState);
+                }
             }
             else
             {
@@ -293,6 +306,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     }
 
     /* This is for kernel land address */
+    ASSERT(Process == NULL);
     PointerPde = MiAddressToPde(Address);
     Pt = (PULONG)MiAddressToPte(Address);
     if (PointerPde->u.Hard.Valid == 0)

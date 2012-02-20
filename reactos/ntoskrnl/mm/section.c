@@ -57,6 +57,8 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
+#include "ARM3/miarm.h"
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -1448,6 +1450,15 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          Page = PFN_FROM_SSE(Entry);
 
          MmSharePageEntrySectionSegment(Segment, Offset);
+         
+ #if (_MI_PAGING_LEVELS == 2)
+        /* Reference Page Directory Entry */
+        if(Address < MmSystemRangeStart)
+        {
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+        }
+#endif
 
          /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
           * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
@@ -1537,6 +1548,15 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       DPRINT("Address 0x%.8X\n", Address);
       return(STATUS_SUCCESS);
    }
+
+#if (_MI_PAGING_LEVELS == 2)
+    /* Reference Page Directory Entry */
+    if(Address < MmSystemRangeStart)
+    {
+        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+    }
+#endif
 
    /*
     * Satisfying a page fault on a map of /Device/PhysicalMemory is easy
@@ -1658,6 +1678,12 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          /*
           * Cleanup and release locks
           */
+#if (_MI_PAGING_LEVELS == 2)
+        if(Address < MmSystemRangeStart)
+        {
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+        }
+#endif
          MmLockAddressSpace(AddressSpace);
          PageOp->Status = Status;
          MmspCompleteAndReleasePageOp(PageOp);
@@ -1876,7 +1902,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
       MmSetPageProtect(Process, Address, Region->Protect);
       return(STATUS_SUCCESS);
    }
-
+   
+   if(OldPage == 0)
+      DPRINT("OldPage == 0!\n");
+   
    /*
     * Get or create a pageop
     */
@@ -1986,7 +2015,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
    BOOLEAN WasDirty;
    PFN_NUMBER Page;
-
+   
    PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
    if (Process)
    {
@@ -2021,6 +2050,14 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    {
       MmReleasePageMemoryConsumer(MC_USER, Page);
    }
+
+#if (_MI_PAGING_LEVELS == 2)
+    if(Address < MmSystemRangeStart)
+    {
+        if(Process->VmDeleted) DPRINT1("deleted!!!");
+        Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+    }
+#endif
 
    DPRINT("PhysicalAddress %x, Address %x\n", Page << PAGE_SHIFT, Address);
 }
@@ -2254,6 +2291,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       MmSetSavedSwapEntryPage(Page, 0);
       MmLockAddressSpace(AddressSpace);
+ #if (_MI_PAGING_LEVELS == 2)
+      /* Page table was dereferenced while deleting the RMAP */
+      if(Address < MmSystemRangeStart)
+      {
+         AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+      }
+#endif
       Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);
@@ -2281,6 +2325,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          /*
           * For private pages restore the old mappings.
           */
+ #if (_MI_PAGING_LEVELS == 2)
+        /* Page table was dereferenced while deleting the RMAP */
+        if(Address < MmSystemRangeStart)
+        {
+            AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        }
+#endif
          if (Context.Private)
          {
             Status = MmCreateVirtualMapping(Process,
@@ -2331,6 +2382,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
        * As above: undo our actions.
        * FIXME: Also free the swap page.
        */
+#if (_MI_PAGING_LEVELS == 2)
+        /* Page table was dereferenced while deleting the RMAP */
+        if(Address < MmSystemRangeStart)
+        {
+            AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        }
+#endif
       MmLockAddressSpace(AddressSpace);
       if (Context.Private)
       {
@@ -2382,6 +2440,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    if (Context.Private)
    {
       MmLockAddressSpace(AddressSpace);
+ #if (_MI_PAGING_LEVELS == 2)
+      /* Page table was dereferenced while deleting the RMAP */
+      if(Address < MmSystemRangeStart)
+      {
+          AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+      }
+#endif
       Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);

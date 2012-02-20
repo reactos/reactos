@@ -45,6 +45,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "ARM3/miarm.h"
+
 MEMORY_AREA MiStaticMemoryAreas[MI_STATIC_MEMORY_AREAS];
 ULONG MiStaticMemoryAreaCount;
 
@@ -688,6 +690,12 @@ IN PMM_AVL_TABLE Table);
  *
  * @remarks Lock the address space before calling this function.
  */
+VOID
+NTAPI
+MiDeletePte(IN PMMPTE PointerPte,
+            IN PVOID VirtualAddress,
+            IN PEPROCESS CurrentProcess,
+            IN PMMPTE PrototypePte);
 
 NTSTATUS NTAPI
 MmFreeMemoryArea(
@@ -716,10 +724,10 @@ MmFreeMemoryArea(
             Address < (ULONG_PTR)EndAddress;
             Address += PAGE_SIZE)
        {
-             BOOLEAN Dirty = FALSE;
-             SWAPENTRY SwapEntry = 0;
-             PFN_NUMBER Page = 0;
-
+            BOOLEAN Dirty = FALSE;
+            SWAPENTRY SwapEntry = 0;
+            PFN_NUMBER Page = 0;
+             
              if (MmIsPageSwapEntry(Process, (PVOID)Address))
              {
                 MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
@@ -733,6 +741,25 @@ MmFreeMemoryArea(
                 FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                          Page, SwapEntry, (BOOLEAN)Dirty);
              }
+#if (_MI_PAGING_LEVELS == 2)
+            /* Remove page table reference */
+            if((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
+            {
+                ASSERT(AddressSpace != MmGetKernelAddressSpace());
+                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+                if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                {
+                    /* No PTE relies on this PDE. Release it */
+                    KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                    PMMPDE PointerPde = MiAddressToPde(Address);
+                    ASSERT(PointerPde->u.Hard.Valid == 1);
+                    MiDeletePte(PointerPde, MiPdeToPte(PointerPde), Process, NULL);
+                    ASSERT(PointerPde->u.Hard.Valid == 0);
+                    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                }
+            }
+#endif
        }
 
        if (Process != NULL &&

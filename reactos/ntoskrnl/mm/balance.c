@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "ARM3/miarm.h"
+
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeBalancer)
 #pragma alloc_text(INIT, MmInitializeMemoryConsumer)
@@ -234,8 +236,38 @@ MiIsBalancerThread(VOID)
 
 VOID
 NTAPI
+MiDeletePte(IN PMMPTE PointerPte,
+            IN PVOID VirtualAddress,
+            IN PEPROCESS CurrentProcess,
+            IN PMMPTE PrototypePte);
+
+VOID
+NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
+#if (_MI_PAGING_LEVELS == 2)
+    if(!MiIsBalancerThread())
+    {
+        /* Clean up the unused PDEs */
+        ULONG_PTR Address;
+        KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        PMMPDE pointerPde;
+        for(Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
+            Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+            Address += (PAGE_SIZE * PTE_COUNT))
+        {
+            if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+            {
+                pointerPde = MiAddressToPde(Address);
+                if(pointerPde->u.Hard.Valid)
+                    MiDeletePte(pointerPde, MiPdeToPte(pointerPde), PsGetCurrentProcess(), NULL);
+                ASSERT(pointerPde->u.Hard.Valid == 0);
+            }
+        }
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
+#endif
+
     if (MiBalancerThreadHandle != NULL &&
         !MiIsBalancerThread())
     {
