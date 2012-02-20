@@ -749,8 +749,7 @@ ClassCancelRoutine(
 	}
 	else
 	{
-		/* Hm, this shouldn't happen */
-		ASSERT(FALSE);
+		DPRINT1("Cancelled IRP is not pending. Race condition?\n");
 	}
 }
 
