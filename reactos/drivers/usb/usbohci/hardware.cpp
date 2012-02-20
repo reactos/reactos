@@ -1217,7 +1217,7 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // clear change bits
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), Value & (OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC));
 
         //
         // wait for port to stabilize
