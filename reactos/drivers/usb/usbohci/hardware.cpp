@@ -1634,6 +1634,18 @@ OhciDefferedRoutine(
                 //
                 QueueSCEWorkItem = TRUE;
             }
+            else if (PortStatus & OHCI_RH_PORTSTATUS_PESC)
+            {
+                //
+                // device disconnected or some error condition
+                //
+                ASSERT(!(PortStatus & OHCI_RH_PORTSTATUS_PES));
+
+                //
+                // work to do
+                //
+                QueueSCEWorkItem = TRUE;
+            }
             else if (PortStatus & OHCI_RH_PORTSTATUS_PRSC)
             {
                 //
