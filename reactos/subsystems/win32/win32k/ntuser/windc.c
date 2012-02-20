@@ -24,34 +24,26 @@ static INT DCECount = 0; // Count of DCE in system.
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitDCEImpl(VOID)
+{
+    InitializeListHead(&LEDce);
+    return STATUS_SUCCESS;
+}
+
 //
 // This should be moved to dc.c or dcutil.c.
 //
 HDC FASTCALL
 DceCreateDisplayDC(VOID)
 {
-  HDC hDC;
-  UNICODE_STRING DriverName;
-  RtlInitUnicodeString(&DriverName, L"DISPLAY");
-  hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+  UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
 
   co_IntGraphicsCheck(TRUE);
 
-//
-// If NULL, first time through! Build the default window dc!
-//
-  if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
-  { // This is a cheesy way to do this.
-      PDC dc = DC_LockDc ( hDC );
-      ASSERT(dc);
-      defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
-      RtlZeroMemory(defaultDCstate, sizeof(DC));
-      defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-      DC_vCopyState(dc, defaultDCstate, TRUE);
-      DC_UnlockDc( dc );
-      InitializeListHead(&LEDce);
-  }
-  return hDC;
+  return IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
 }
 
 static

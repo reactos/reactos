@@ -347,6 +347,13 @@ DC_vInitDc(
 	pdc->dcattr.iCS_CP = 0;
     pdc->pSurfInfo = NULL;
 
+    if (defaultDCstate == NULL)
+    {
+        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+        RtlZeroMemory(defaultDCstate, sizeof(DC));
+        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+        DC_vCopyState(pdc, defaultDCstate, TRUE);
+    }
 }
 
 BOOL
