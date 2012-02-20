@@ -32,6 +32,8 @@ RtlIpv4AddressToStringA(IN struct in_addr *Addr,
                         OUT PCHAR S)
 {
     INT Length;
+    
+    if (!S) return (LPSTR)~0;
 
     Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
                                             Addr->S_un.S_un_b.s_b2,
@@ -85,6 +87,8 @@ RtlIpv4AddressToStringW(IN struct in_addr *Addr,
 {
     INT Length;
 
+    if (!S) return (LPWSTR)~0;
+    
     Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
                                          Addr->S_un.S_un_b.s_b2,
                                          Addr->S_un.S_un_b.s_b3,
