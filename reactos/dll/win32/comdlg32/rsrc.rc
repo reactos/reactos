@@ -46,7 +46,6 @@
 
 #include "cdlg_Bg.rc"
 #include "cdlg_Ca.rc"
-#include "cdlg_Cn.rc"
 #include "cdlg_Cs.rc"
 #include "cdlg_Da.rc"
 #include "cdlg_De.rc"
@@ -74,5 +73,6 @@
 #include "cdlg_Sv.rc"
 #include "cdlg_Th.rc"
 #include "cdlg_Tr.rc"
+#include "cdlg_Tw.rc"
 #include "cdlg_Uk.rc"
 #include "cdlg_Zh.rc"
