@@ -3016,7 +3016,8 @@ GetAppName:
         /* Check if only this process will be debugged */
         if (dwCreationFlags & DEBUG_ONLY_THIS_PROCESS)
         {
-            /* FIXME: Set process flag */
+            /* Set process flag */
+            hDebug = (HANDLE)((ULONG_PTR)hDebug | 0x1);
         }
     }
 
