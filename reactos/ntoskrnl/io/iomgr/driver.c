@@ -1917,7 +1917,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
            if (!NT_SUCCESS(Status))
            {
-               DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+               DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
                MmUnloadSystemImage(ModuleObject);
                LoadParams->Status = Status;
                (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
@@ -1936,7 +1936,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
            if (!NT_SUCCESS(Status))
            {
-               DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
+               DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
                MmUnloadSystemImage(ModuleObject);
                IopFreeDeviceNode(DeviceNode);
                LoadParams->Status = Status;

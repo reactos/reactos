@@ -2601,7 +2601,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          }
          else
          {
-            DPRINT1("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
+            DPRINT("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
                     &DeviceNode->ServiceName, Status);
          }
       }
