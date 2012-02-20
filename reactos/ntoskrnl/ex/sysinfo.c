@@ -721,8 +721,6 @@ QSI_DEF(SystemProcessInformation)
         SystemProcess = PsIdleProcess;
         Process = SystemProcess;
         Current = (PUCHAR) Spi;
-        CurrentSize = 0;
-        ImageNameMaximumLength = 0;
 
         do
         {
@@ -733,7 +731,10 @@ QSI_DEF(SystemProcessInformation)
                 !(Process->ActiveThreads) &&
                 (IsListEmpty(&Process->Pcb.ThreadListHead)))
             {
-                DPRINT1("Skipping zombie\n");
+                DPRINT1("Process %p (%s:%lx) is a zombie\n",
+                        Process, Process->ImageFileName, Process->UniqueProcessId);
+                CurrentSize = 0;
+                ImageNameMaximumLength = 0;
                 goto Skip;
             }
 
