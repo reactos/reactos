@@ -1173,10 +1173,13 @@ static void test_RtlIpv4AddressToString(void)
     len = strlen(buffer);
     ok(res == (buffer + len), "got %p with '%s' (expected %p)\n", res, buffer, buffer + len);
 
-    res = pRtlIpv4AddressToStringA(&ip, NULL);
-    ok( (res == (char *)~0) ||
-        broken(res == (char *)0 + len),        /* XP and w2003 */
-        "got %p (expected ~0)\n", res);
+    if (0) {
+        /* this crashes in windows */
+        res = pRtlIpv4AddressToStringA(&ip, NULL);
+        ok( (res == (char *)~0) ||
+            broken(res == (char *)0 + len),        /* XP and w2003 */
+            "got %p (expected ~0)\n", res);
+    }
 
     if (0) {
         /* this crashes in windows */
