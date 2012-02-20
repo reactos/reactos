@@ -560,35 +560,25 @@ IopAttachFilterDriversCallback(
       ServiceName.MaximumLength =
       ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
 
-      /* Load and initialize the filter driver */
-      Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
-      if (Status != STATUS_IMAGE_ALREADY_LOADED)
-      {
-         if (!NT_SUCCESS(Status))
-            continue;
+       Status = IopGetDriverObject(&DriverObject,
+                                   &ServiceName,
+                                   FALSE);
+       if (!NT_SUCCESS(Status))
+       {
+           /* Load and initialize the filter driver */
+           Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
+           if (!NT_SUCCESS(Status))
+               continue;
 
-         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
-                                            FALSE, &DriverObject);
-         if (!NT_SUCCESS(Status))
-            continue;
-      }
-      else
-      {
-         /* get existing DriverObject pointer */
-         Status = IopGetDriverObject(
-            &DriverObject,
-            &ServiceName,
-            FALSE);
-         if (!NT_SUCCESS(Status))
-         {
-            DPRINT1("IopGetDriverObject() returned status 0x%08x!\n", Status);
-            continue;
-         }
-      }
+           Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
+                                              FALSE, &DriverObject);
+           if (!NT_SUCCESS(Status))
+               continue;
+       }
 
-      Status = IopInitializeDevice(DeviceNode, DriverObject);
-      if (!NT_SUCCESS(Status))
-         continue;
+       Status = IopInitializeDevice(DeviceNode, DriverObject);
+       if (!NT_SUCCESS(Status))
+           continue;
    }
 
    return STATUS_SUCCESS;
