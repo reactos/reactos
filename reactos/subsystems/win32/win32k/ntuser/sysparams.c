@@ -16,7 +16,6 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
-PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 BOOL g_PaintDesktopVersion = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
@@ -26,7 +25,7 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
-    if (gpwinstaCurrent != InputWindowStation) \
+    if ( GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
         ERR("NtUserSystemParametersInfo requires interactive window station\n"); \
         EngSetLastError(err); \
@@ -592,6 +591,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     HBITMAP hbmp, hOldBitmap;
     SURFACE *psurfBmp;
     ULONG ulTile, ulStyle;
+    PWINSTATION_OBJECT gpwinstaCurrent = GetW32ProcessInfo()->prpwinsta;
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -1541,6 +1541,9 @@ UserSystemParametersInfo(
     UINT fWinIni)
 {
     ULONG_PTR ulResult;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+
+    ASSERT(ppi);
 
     if (!gbSpiInitialized)
     {
@@ -1550,9 +1553,7 @@ UserSystemParametersInfo(
     }
 
     /* Get a pointer to the current Windowstation */
-    gpwinstaCurrent = IntGetWinStaObj();
-
-    if (!gpwinstaCurrent)
+    if (!ppi->prpwinsta)
     {
         ERR("UserSystemParametersInfo called without active windowstation.\n");
         //ASSERT(FALSE);
@@ -1584,14 +1585,7 @@ UserSystemParametersInfo(
         }
         ulResult = 1;
     }
-
-    /* Dereference the windowstation */
-    if (gpwinstaCurrent)
-    {
-        ObDereferenceObject(gpwinstaCurrent);
-        gpwinstaCurrent = NULL;
-    }
-
+    
     return ulResult;
 }
 
