@@ -1096,9 +1096,50 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
+MmGetExecuteOptions(IN PULONG ExecuteOptions)
+{
+    PKPROCESS CurrentProcess = &PsGetCurrentProcess()->Pcb;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    *ExecuteOptions = 0;
+    
+    if (CurrentProcess->Flags.ExecuteDisable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE;
+    }
+    
+    if (CurrentProcess->Flags.ExecuteEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_ENABLE;
+    }
+    
+    if (CurrentProcess->Flags.DisableThunkEmulation)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION;
+    }
+    
+    if (CurrentProcess->Flags.Permanent)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_PERMANENT;
+    }
+    
+    if (CurrentProcess->Flags.ExecuteDispatchEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE;
+    }
+    
+    if (CurrentProcess->Flags.ImageDispatchEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE;
+    }
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MmSetExecuteOptions(IN ULONG ExecuteOptions)
 {
-
     PKPROCESS CurrentProcess = &PsGetCurrentProcess()->Pcb;
     KLOCK_QUEUE_HANDLE ProcessLock;
     NTSTATUS Status = STATUS_ACCESS_DENIED;
