@@ -1353,35 +1353,9 @@ CUSBHardwareDevice::SetPortFeature(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRS);
 
-        do
-        {
-           //
-           // read port status
-           //
-           Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
-
-           if ((Value & OHCI_RH_PORTSTATUS_PRS) == 0 &&
-               (Value & OHCI_RH_PORTSTATUS_PRSC) != 0)
-           {
-               //
-               // reset is complete
-               //
-               break;
-           }
-
-           //
-           // wait a bit
-           //
-           KeStallExecutionProcessor(100);
-        } while(TRUE);
-
-        if (m_SCECallBack != NULL)
-        {
-            //
-            // issue callback
-            //
-            m_SCECallBack(m_SCEContext);
-        }
+        //
+        // an interrupt signals the reset completion
+        //
         return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
