@@ -123,6 +123,33 @@ FowardUrbToRootHub(
     return STATUS_PENDING;
 }
 
+BOOLEAN
+IsValidPDO(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    ULONG Index;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
+
+
+    ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
+
+    for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+    {
+        if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
+        {
+            /* PDO exists */
+            return TRUE;
+        }
+    }
+
+    /* invalid pdo */
+    return FALSE;
+}
+
+
 NTSTATUS
 USBHUB_PdoHandleInternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
@@ -153,6 +180,15 @@ USBHUB_PdoHandleInternalDeviceControl(
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
+
+    if(!IsValidPDO(DeviceObject))
+    {
+        DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
+        Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
