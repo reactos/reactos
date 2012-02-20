@@ -45,7 +45,7 @@ static const WCHAR* VAL_SWAP = L"SwapMouseButtons";
 static const WCHAR* VAL_HOVERTIME = L"MouseHoverTime";
 static const WCHAR* VAL_HOVERWIDTH = L"MouseHoverWidth";
 static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
-//static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
+static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
@@ -220,7 +220,8 @@ SpiUpdatePerUserSystemParameters()
     /* Load mouse settings */
     gspv.caiMouse.FirstThreshold = SpiLoadMouse(VAL_MOUSE1, 6);
     gspv.caiMouse.SecondThreshold = SpiLoadMouse(VAL_MOUSE2, 10);
-    gspv.caiMouse.Acceleration = gspv.iMouseSpeed = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.caiMouse.Acceleration = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.iMouseSpeed = SpiLoadMouse(VAL_SENSITIVITY, 10);
     gspv.bMouseBtnSwap = SpiLoadMouse(VAL_SWAP, 0);
     gspv.bSnapToDefBtn = SpiLoadMouse(VAL_SNAPDEFBTN, 0);
     gspv.iMouseTrails = SpiLoadMouse(VAL_MOUSETRAILS, 0);
@@ -1262,8 +1263,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseSpeed, fl);
 
         case SPI_SETMOUSESPEED:
-            // vgl SETMOUSE
-            return SpiSetInt(&gspv.iMouseSpeed, uiParam, KEY_MOUSE, VAL_MOUSE3, fl);
+        {
+            /* Allowed range is [1:20] */
+            if ((INT_PTR)pvParam < 1 || (INT_PTR)pvParam > 20)
+                return 0;
+            else
+                return SpiSetInt(&gspv.iMouseSpeed, (INT_PTR)pvParam, KEY_MOUSE, VAL_SENSITIVITY, fl);
+        }
 
         case SPI_GETSCREENSAVERRUNNING:
             return SpiGetInt(pvParam, &gspv.bScrSaverRunning, fl);
