@@ -1317,6 +1317,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (Length < sizeof(OBJECT_NAME_INFORMATION))
     {
         /* Wrong length, fail */
+        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
