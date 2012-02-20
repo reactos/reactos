@@ -467,25 +467,6 @@ IopInitializePlugPlayServices(VOID)
         if (NT_SUCCESS(Status)) NtClose(TreeHandle);
     }
 
-    /* Open the root key now */
-    RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET\\ENUM");
-    Status = IopOpenRegistryKeyEx(&EnumHandle,
-                                  NULL,
-                                  &KeyName,
-                                  KEY_ALL_ACCESS);
-    if (NT_SUCCESS(Status))
-    {
-        /* Create the root dev node */
-        RtlInitUnicodeString(&KeyName, REGSTR_VAL_ROOT_DEVNODE);
-        Status = IopCreateRegistryKeyEx(&TreeHandle,
-                                        EnumHandle,
-                                        &KeyName,
-                                        KEY_ALL_ACCESS,
-                                        REG_OPTION_NON_VOLATILE,
-                                        NULL);
-        NtClose(EnumHandle);
-        if (NT_SUCCESS(Status)) NtClose(TreeHandle);
-    }
     /* Create the root driver */
     Status = IoCreateDriver(NULL, PnpRootDriverEntry);
     if (!NT_SUCCESS(Status))
