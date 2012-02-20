@@ -595,7 +595,26 @@ CUSBHardwareDevice::StartController(void)
     //
     // no over current protection
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor | OHCI_RH_NO_OVER_CURRENT_PROTECTION);
+    Descriptor |= OHCI_RH_NO_OVER_CURRENT_PROTECTION;
+
+    //
+    // power switching on
+    //
+    Descriptor &= ~OHCI_RH_NO_POWER_SWITCHING;
+
+    //
+    // control each port power independently (disabled until it's supported correctly)
+    //
+#if 0
+    Descriptor |= OHCI_RH_POWER_SWITCHING_MODE;
+#else
+    Descriptor &= ~OHCI_RH_POWER_SWITCHING_MODE;
+#endif
+
+    //
+    // write the configuration back
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
 
     //
     // enable power on all ports
