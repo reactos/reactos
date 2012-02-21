@@ -26,32 +26,8 @@ CreateMailslotA(IN LPCSTR lpName,
                 IN DWORD lReadTimeout,
                 IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-    PUNICODE_STRING NameU;
-    ANSI_STRING NameA;
-    NTSTATUS Status;
-
-    NameU = &NtCurrentTeb()->StaticUnicodeString;
-
-    RtlInitAnsiString(&NameA, (LPSTR)lpName);
-    Status = RtlAnsiStringToUnicodeString(NameU, &NameA, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        if (Status == STATUS_BUFFER_OVERFLOW)
-        {
-            SetLastError(ERROR_FILENAME_EXCED_RANGE);
-        }
-        else
-        {
-            BaseSetLastNTError(Status);
-        }
-
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return CreateMailslotW(NameU->Buffer,
-                           nMaxMessageSize,
-                           lReadTimeout,
-                           lpSecurityAttributes);
+    /* Call the W(ide) function */
+    ConvertWin32AnsiObjectApiToUnicodeApi2(Mailslot, lpName, nMaxMessageSize, lReadTimeout, lpSecurityAttributes);
 }
 
 /*
