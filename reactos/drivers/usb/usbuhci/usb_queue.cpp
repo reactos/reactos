@@ -40,6 +40,9 @@ public:
     virtual NTSTATUS CancelRequests();
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
 
+    // local
+    VOID LinkQueueHead(PUHCI_QUEUE_HEAD QueueHead, PUHCI_QUEUE_HEAD NextQueueHead);
+
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
     virtual ~CUSBQueue(){}
@@ -104,9 +107,93 @@ NTSTATUS
 CUSBQueue::AddUSBRequest(
     IUSBRequest * Request)
 {
+    PUHCI_QUEUE_HEAD NewQueueHead, QueueHead = NULL;
+    NTSTATUS Status;
+
     DPRINT("CUSBQueue::AddUSBRequest\n");
-    ASSERT(FALSE);
+
+    //
+    // get queue head
+    //
+    Status = Request->GetEndpointDescriptor(&NewQueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create queue head
+        //
+        DPRINT1("[USBUHCI] Failed to create queue head %x\n", Status);
+        return Status;
+    }
+
+    if (Request->GetTransferType() == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // get device speed
+        //
+        if (Request->GetDeviceSpeed() == UsbLowSpeed)
+        {
+            //
+            // use low speed queue
+            //
+            m_Hardware->GetQueueHead(UHCI_LOW_SPEED_CONTROL_QUEUE, &QueueHead);
+        }
+        else
+        {
+            //
+            // use full speed queue
+            //
+            m_Hardware->GetQueueHead(UHCI_FULL_SPEED_CONTROL_QUEUE, &QueueHead);
+        }
+    }
+    else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_BULK)
+    {
+         //
+         // use full speed queue
+         //
+         m_Hardware->GetQueueHead(UHCI_BULK_QUEUE, &QueueHead);
+    }
+    else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_INTERRUPT)
+    {
+         //
+         // use full speed queue
+         //
+         m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
+    }
+    else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_INTERRUPT)
+    {
+         //
+         // use full speed queue
+         //
+         m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
+    }
+
+    //
+    // FIXME support isochronous
+    //
+    ASSERT(QueueHead);
+
+    //
+    // add reference
+    //
+    Request->AddRef();
+
+    //
+    // now link the new queue head
+    //
+    LinkQueueHead(QueueHead, NewQueueHead);
     return STATUS_SUCCESS;
+}
+
+VOID
+CUSBQueue::LinkQueueHead(
+    IN PUHCI_QUEUE_HEAD QueueHead,
+    IN PUHCI_QUEUE_HEAD NextQueueHead)
+{
+    NextQueueHead->LinkPhysical = QueueHead->LinkPhysical;
+    NextQueueHead->NextLogicalDescriptor = QueueHead->NextLogicalDescriptor;
+
+    QueueHead->LinkPhysical = NextQueueHead->PhysicalAddress | QH_NEXT_IS_QH;
+    QueueHead->NextLogicalDescriptor = (PVOID)NextQueueHead;
 }
 
 NTSTATUS

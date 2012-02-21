@@ -73,8 +73,9 @@ public:
     NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
     NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
     NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
-
     VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
+    VOID GetQueueHead(ULONG QueueHeadIndex, PUHCI_QUEUE_HEAD *OutQueueHead);
+
 
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
@@ -616,7 +617,7 @@ CUSBHardwareDevice::InitializeController()
             //
             // link queue heads
             //
-            m_QueueHead[Index-1]->LinkPhysical = m_QueueHead[Index]->LinkPhysical | QH_NEXT_IS_QH;
+            m_QueueHead[Index-1]->LinkPhysical = m_QueueHead[Index]->PhysicalAddress | QH_NEXT_IS_QH;
             m_QueueHead[Index-1]->NextLogicalDescriptor = m_QueueHead[Index];
         }
     }
@@ -1218,6 +1219,21 @@ CUSBHardwareDevice::ReadRegister32(
     return  READ_PORT_ULONG((PULONG)((ULONG)m_Base + Register));
 }
 
+VOID
+CUSBHardwareDevice::GetQueueHead(
+    IN ULONG QueueHeadIndex, 
+    OUT PUHCI_QUEUE_HEAD *OutQueueHead)
+{
+    //
+    // sanity check
+    //
+    ASSERT(QueueHeadIndex < 5);
+
+    //
+    // store queue head
+    //
+    *OutQueueHead = m_QueueHead[QueueHeadIndex];
+}
 
 VOID
 NTAPI

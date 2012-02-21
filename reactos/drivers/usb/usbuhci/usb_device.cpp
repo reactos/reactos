@@ -462,7 +462,7 @@ CUSBDevice::CommitIrp(
     //
     // initialize request
     //
-    Status = Request->InitializeWithIrp(m_DmaManager, Irp);
+    Status = Request->InitializeWithIrp(m_DmaManager, Irp, GetSpeed());
 
     //
     // mark irp as pending
@@ -550,7 +550,7 @@ CUSBDevice::CommitSetupPacket(
     //
     // initialize request
     //
-    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, m_DeviceAddress, EndpointDescriptor, BufferLength, Mdl);
+    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, m_DeviceAddress, GetSpeed(), EndpointDescriptor, BufferLength, Mdl);
     if (!NT_SUCCESS(Status))
     {
         //

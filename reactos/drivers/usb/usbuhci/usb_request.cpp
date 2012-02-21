@@ -36,15 +36,16 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN USB_DEVICE_SPEED DeviceSpeed, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
-    virtual NTSTATUS GetEndpointDescriptor(struct _UHCI_TRANSFER_DESCRIPTOR ** OutEndpointDescriptor);
+    virtual NTSTATUS GetEndpointDescriptor(struct _UHCI_QUEUE_HEAD ** OutQueueHead);
     virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
     virtual UCHAR GetInterval();
+    virtual USB_DEVICE_SPEED GetDeviceSpeed();
 
 
     // local functions
@@ -55,6 +56,13 @@ public:
     NTSTATUS BuildSetupPacketFromURB();
     UCHAR GetEndpointAddress();
     USHORT GetMaxPacketSize();
+    NTSTATUS CreateDescriptor(PUHCI_TRANSFER_DESCRIPTOR *OutDescriptor, IN UCHAR PidCode, ULONG BufferLength);
+    NTSTATUS BuildControlTransferDescriptor(IN PUHCI_QUEUE_HEAD * OutQueueHead);
+    NTSTATUS BuildQueueHead(OUT PUHCI_QUEUE_HEAD *OutQueueHead);
+    VOID FreeDescriptor(IN PUHCI_TRANSFER_DESCRIPTOR Descriptor);
+    NTSTATUS BuildTransferDescriptorChain(IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PUHCI_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PUHCI_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PULONG OutTransferBufferOffset, OUT PUCHAR OutDataToggle);
+
+
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -125,6 +133,11 @@ protected:
     NTSTATUS m_NtStatusCode;
     ULONG m_UrbStatusCode;
 
+    //
+    // store device speed
+    //
+    USB_DEVICE_SPEED m_DeviceSpeed;
+
 };
 
 //----------------------------------------------------------------------------------------
@@ -143,6 +156,7 @@ CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
     IN UCHAR DeviceAddress,
+    IN USB_DEVICE_SPEED DeviceSpeed,
     IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
@@ -163,6 +177,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_DeviceAddress = DeviceAddress;
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
+    m_DeviceSpeed = DeviceSpeed;
 
     //
     // Set Length Completed to 0
@@ -195,7 +210,8 @@ CUSBRequest::InitializeWithSetupPacket(
 NTSTATUS
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
-    IN OUT PIRP Irp)
+    IN OUT PIRP Irp,
+    IN USB_DEVICE_SPEED DeviceSpeed)
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
@@ -208,6 +224,7 @@ CUSBRequest::InitializeWithIrp(
 
     m_DmaManager = DmaManager;
     m_TotalBytesTransferred = 0;
+    m_DeviceSpeed = DeviceSpeed;
 
     //
     // get current irp stack location
@@ -514,13 +531,21 @@ CUSBRequest::InternalGetTransferType()
 UCHAR
 CUSBRequest::InternalGetPidDirection()
 {
-    ASSERT(m_Irp);
-    ASSERT(m_EndpointDescriptor);
-
-    //
-    // end point is defined in the low byte of bEndpointAddress
-    //
-    return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+    if (m_EndpointDescriptor)
+    {
+        //
+        // end point direction is highest bit in bEndpointAddress
+        //
+        return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+    }
+    else
+    {
+        //
+        // request arrives on the control pipe, extract direction from setup packet
+        //
+        ASSERT(m_SetupPacket);
+        return (m_SetupPacket->bmRequestType.B >> 7);
+    }
 }
 
 
@@ -578,13 +603,35 @@ CUSBRequest::GetDeviceAddress()
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBRequest::GetEndpointDescriptor(
-    struct _UHCI_TRANSFER_DESCRIPTOR ** OutDescriptor)
+    struct _UHCI_QUEUE_HEAD ** OutQueueHead)
 {
-    ASSERT(FALSE);
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    if (InternalGetTransferType() == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // build queue head
+        //
+        Status = BuildControlTransferDescriptor(OutQueueHead);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed
+        //
+        return Status;
+    }
+
+    //
+    // store result
+    //
+    (*OutQueueHead)->Request = PVOID(this);
+
     //
     // done
     //
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------------------
@@ -647,8 +694,442 @@ CUSBRequest::IsQueueHeadComplete(
     UNIMPLEMENTED
     return TRUE;
 }
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::CreateDescriptor(
+    OUT PUHCI_TRANSFER_DESCRIPTOR *OutDescriptor,
+    IN UCHAR PidCode,
+    ULONG BufferLength)
+{
+    PUHCI_TRANSFER_DESCRIPTOR Descriptor;
+    PHYSICAL_ADDRESS Address;
+    NTSTATUS Status;
 
+    //
+    // allocate descriptor
+    //
+    Status = m_DmaManager->Allocate(sizeof(UHCI_TRANSFER_DESCRIPTOR), (PVOID*)&Descriptor, &Address);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[USBUHCI] Failed to allocate descriptor\n");
+        return Status;
+    }
 
+    //
+    // init descriptor
+    //
+    Descriptor->PhysicalAddress = Address;
+    Descriptor->Status = TD_STATUS_ACTIVE;
+
+    if (InternalGetTransferType() == USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    {
+        //
+        // isochronous transfer descriptor
+        //
+        Descriptor->Status |= TD_CONTROL_ISOCHRONOUS;
+    }
+    else
+    {
+        //
+        // error count
+        //
+        Descriptor->Status |= TD_CONTROL_3_ERRORS;
+
+        if (PidCode == TD_TOKEN_IN && (InternalGetTransferType() != USB_ENDPOINT_TYPE_CONTROL))
+        {
+            //
+            // enable short packet detect for bulk & interrupt
+            //
+            Descriptor->Status |= TD_CONTROL_SPD;
+        }
+    }
+
+    //
+    // is it low speed device
+    //
+    if (m_DeviceSpeed == UsbLowSpeed)
+    {
+        //
+        // low speed device
+        //
+        Descriptor->Status |= TD_CONTROL_LOWSPEED;
+    }
+
+    //
+    // store buffer size
+    //
+    Descriptor->BufferSize = BufferLength;
+
+    //
+    // is there a buffer
+    //
+    if(BufferLength)
+    {
+        //
+        // store buffer length
+        //
+        Descriptor->Token = (BufferLength - 1) << TD_TOKEN_MAXLEN_SHIFT;
+    }
+    else
+    {
+        //
+        // no buffer magic constant
+        //
+        Descriptor->Token = TD_TOKEN_NULL_DATA;
+    }
+
+    //
+    // store address & endpoint number
+    //
+    Descriptor->Token |= GetEndpointAddress() << TD_TOKEN_ENDPTADDR_SHIFT;
+    Descriptor->Token |= GetDeviceAddress() << 8 | PidCode;
+
+    if (BufferLength)
+    {
+        //
+        // allocate buffer for descriptor
+        //
+        Status = m_DmaManager->Allocate(BufferLength, (PVOID*)&Descriptor->BufferLogical, &Address);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("[USBUHCI] Failed to allocate descriptor buffer length %lu\n", BufferLength);
+            m_DmaManager->Release(Descriptor, sizeof(UHCI_TRANSFER_DESCRIPTOR));
+            return Status;
+        }
+
+        //
+        // store address
+        //
+        Descriptor->BufferPhysical = Address.LowPart;
+    }
+
+    //
+    // done
+    //
+    *OutDescriptor = Descriptor;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBRequest::BuildTransferDescriptorChain(
+    IN PVOID TransferBuffer, 
+    IN ULONG TransferBufferLength, 
+    IN UCHAR PidCode,
+    IN UCHAR InitialDataToggle,
+    OUT PUHCI_TRANSFER_DESCRIPTOR * OutFirstDescriptor, 
+    OUT PUHCI_TRANSFER_DESCRIPTOR * OutLastDescriptor, 
+    OUT PULONG OutTransferBufferOffset,
+    OUT PUCHAR OutDataToggle)
+{
+    PUHCI_TRANSFER_DESCRIPTOR FirstDescriptor = NULL, CurrentDescriptor, LastDescriptor = NULL;
+    UCHAR TransferBufferOffset = 0;
+    NTSTATUS Status;
+    ULONG MaxPacketSize, CurrentBufferSize;
+
+    //
+    // FIXME FIXME FIXME FIXME FIXME 
+    //
+    MaxPacketSize = 64;
+
+    do
+    {
+        //
+        // determine current packet size
+        //
+        CurrentBufferSize = min(MaxPacketSize, TransferBufferLength - TransferBufferOffset);
+
+        //
+        // allocate descriptor
+        //
+        Status = CreateDescriptor(&CurrentDescriptor, PidCode, CurrentBufferSize);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to allocate queue head
+            //
+            DPRINT1("[UHCI] Failed to create descriptor\n");
+            ASSERT(FALSE);
+            return Status;
+        }
+
+        if (PidCode == TD_TOKEN_OUT)
+        {
+             //
+             // copy buffer
+             //
+             RtlCopyMemory(CurrentDescriptor->BufferLogical, TransferBuffer, CurrentBufferSize);
+        }
+
+        if (!FirstDescriptor)
+        {
+            //
+            // first descriptor
+            //
+            FirstDescriptor = CurrentDescriptor;
+        }
+        else
+        {
+            //
+            // link descriptor
+            //
+            LastDescriptor->LinkPhysical = CurrentDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+            LastDescriptor->NextLogicalDescriptor = (PVOID)CurrentDescriptor;
+        }
+
+        if (InitialDataToggle)
+        {
+            //
+            // apply data toggle
+            //
+            CurrentDescriptor->Token |= TD_TOKEN_DATA1;
+        }
+
+        //
+        // re-run
+        //
+        LastDescriptor = CurrentDescriptor;
+        TransferBufferOffset += CurrentBufferSize;
+        InitialDataToggle = !InitialDataToggle;
+
+    }while(TransferBufferOffset < TransferBufferLength);
+
+    if (OutTransferBufferOffset)
+    {
+        //
+        // store transfer buffer length
+        //
+        *OutTransferBufferOffset = TransferBufferOffset;
+    }
+
+    if (OutFirstDescriptor)
+    {
+        //
+        // store first descriptor
+        //
+        *OutFirstDescriptor = FirstDescriptor;
+    }
+
+    if (OutLastDescriptor)
+    {
+        //
+        // store last descriptor
+        //
+        *OutLastDescriptor = CurrentDescriptor;
+    }
+
+    if (OutDataToggle)
+    {
+        //
+        // store data toggle
+        //
+        *OutDataToggle = InitialDataToggle;
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBRequest::BuildQueueHead(
+    OUT PUHCI_QUEUE_HEAD *OutQueueHead)
+{
+    PUHCI_QUEUE_HEAD QueueHead;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS Address;
+
+    //
+    // allocate queue head
+    //
+    Status = m_DmaManager->Allocate(sizeof(UHCI_QUEUE_HEAD), (PVOID*)&QueueHead, &Address);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate queue head
+        //
+        DPRINT1("[UHCI] Failed to create queue head\n");
+        return Status;
+    }
+
+    //
+    // store address
+    //
+    QueueHead->PhysicalAddress = Address.LowPart;
+    QueueHead->ElementPhysical = Address.LowPart;
+
+    //
+    // store result
+    //
+    *OutQueueHead = QueueHead;
+    return STATUS_SUCCESS;
+}
+
+VOID
+CUSBRequest::FreeDescriptor(
+    IN PUHCI_TRANSFER_DESCRIPTOR Descriptor)
+{
+    if (Descriptor->BufferLogical)
+    {
+        //
+        // free buffer
+        //
+        m_DmaManager->Release(Descriptor->BufferLogical, Descriptor->BufferSize);
+    }
+
+    //
+    // free descriptors
+    //
+    m_DmaManager->Release(Descriptor, sizeof(UHCI_TRANSFER_DESCRIPTOR));
+}
+
+NTSTATUS
+CUSBRequest::BuildControlTransferDescriptor(
+    IN PUHCI_QUEUE_HEAD * OutQueueHead)
+{
+    PUHCI_TRANSFER_DESCRIPTOR SetupDescriptor, StatusDescriptor, FirstDescriptor, LastDescriptor;
+    PUHCI_QUEUE_HEAD QueueHead;
+    BOOLEAN Direction;
+    NTSTATUS Status;
+    ULONG ChainDescriptorLength;
+
+    //
+    // create queue head
+    //
+    Status = BuildQueueHead(&QueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate descriptor
+        //
+        DPRINT1("[UHCI] Failed to create queue head\n");
+        return Status;
+    }
+
+    //
+    // get direction
+    //
+    Direction = InternalGetPidDirection();
+
+    //
+    // build setup descriptor
+    //
+    Status = CreateDescriptor(&SetupDescriptor,
+                              TD_TOKEN_SETUP,
+                              sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate descriptor
+        //
+        DPRINT1("[UHCI] Failed to create setup descriptor\n");
+        m_DmaManager->Release(QueueHead, sizeof(UHCI_QUEUE_HEAD));
+        return Status;
+    }
+
+    //
+    // build status descriptor
+    //
+    Status = CreateDescriptor(&StatusDescriptor,
+                              Direction ? TD_TOKEN_OUT : TD_TOKEN_IN,
+                              0);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate descriptor
+        //
+        DPRINT1("[UHCI] Failed to create setup descriptor\n");
+        FreeDescriptor(SetupDescriptor);
+        m_DmaManager->Release(QueueHead, sizeof(UHCI_QUEUE_HEAD));
+        return Status;
+    }
+
+    if (m_SetupPacket)
+    {
+        //
+        // copy setup packet
+        //
+        RtlCopyMemory(SetupDescriptor->BufferLogical, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    }
+    else
+    {
+        //
+        // generate setup packet from urb
+        //
+        ASSERT(FALSE);
+    }
+
+    //
+    // init status descriptor
+    //
+    StatusDescriptor->Status |= TD_CONTROL_IOC;
+    StatusDescriptor->Token |= TD_TOKEN_DATA1;
+    StatusDescriptor->LinkPhysical = TD_TERMINATE;
+    StatusDescriptor->NextLogicalDescriptor = NULL;
+
+    if (m_TransferBufferLength)
+    {
+        //
+        // create descriptor chain
+        //
+        Status = BuildTransferDescriptorChain(MmGetMdlVirtualAddress(m_TransferBufferMDL),
+                                              m_TransferBufferLength,
+                                              Direction ? TD_TOKEN_IN : TD_TOKEN_OUT,
+                                              FALSE,
+                                              &FirstDescriptor,
+                                              &LastDescriptor,
+                                              &ChainDescriptorLength,
+                                              NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to allocate descriptor
+            //
+            DPRINT1("[UHCI] Failed to create descriptor chain\n");
+            FreeDescriptor(SetupDescriptor);
+            FreeDescriptor(StatusDescriptor);
+            m_DmaManager->Release(QueueHead, sizeof(UHCI_QUEUE_HEAD));
+            return Status;
+        }
+
+        //
+        // link setup descriptor to first data descriptor
+        //
+        SetupDescriptor->LinkPhysical = FirstDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        SetupDescriptor->NextLogicalDescriptor = (PVOID)FirstDescriptor;
+
+        //
+        // link last data descriptor to status descriptor
+        //
+        LastDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        LastDescriptor->NextLogicalDescriptor = (PVOID)StatusDescriptor;
+    }
+    else
+    {
+        //
+        // directly link setup to status descriptor
+        //
+        SetupDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        SetupDescriptor->NextLogicalDescriptor = (PVOID)StatusDescriptor;
+    }
+
+    //
+    // link queue head with setup descriptor
+    //
+    QueueHead->NextElementDescriptor = (PVOID)SetupDescriptor;
+    QueueHead->ElementPhysical = SetupDescriptor->PhysicalAddress.LowPart;
+
+    //
+    // store result
+    //
+    *OutQueueHead = QueueHead;
+    return STATUS_SUCCESS;
+}
+USB_DEVICE_SPEED
+CUSBRequest::GetDeviceSpeed()
+{
+    return m_DeviceSpeed;
+}
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS

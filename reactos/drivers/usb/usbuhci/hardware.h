@@ -163,7 +163,7 @@ UHCI_TRANSFER_DESCRIPTOR_LENGTH(PUHCI_TRANSFER_DESCRIPTOR Descriptor)
 }
 
 // Represents a Queue Head (QH)
-typedef struct
+typedef struct _UHCI_QUEUE_HEAD
 {
     // hardware part
     ULONG LinkPhysical; // address
@@ -172,6 +172,8 @@ typedef struct
     // Software part
     ULONG PhysicalAddress;
     PVOID NextLogicalDescriptor;
+    PVOID Request;
+    PVOID NextElementDescriptor;
 }UHCI_QUEUE_HEAD, *PUHCI_QUEUE_HEAD;
 
 #define QH_TERMINATE			0x01

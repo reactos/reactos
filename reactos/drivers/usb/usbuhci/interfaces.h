@@ -107,7 +107,7 @@ DECLARE_INTERFACE_(IHCDController, IUnknown)
 
 typedef IHCDController *PHCDCONTROLLER;
 
-struct _UHCI_TRANSFER_DESCRIPTOR;
+struct _UHCI_QUEUE_HEAD;
 //=========================================================================================
 //
 // class IUSBHardwareDevice
@@ -253,6 +253,15 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
+// GetQueueHead
+//
+// Description: gets a queue head with the specified queue head index
+//
+    virtual VOID GetQueueHead(ULONG QueueHeadIndex, struct _UHCI_QUEUE_HEAD **OutQueueHead) = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
 // AcquireDeviceLock
 //
 // Description: acquires the device lock
@@ -350,6 +359,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
+                                               IN USB_DEVICE_SPEED DeviceSpeed,
                                                IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
@@ -362,7 +372,8 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // The irp contains an URB block which contains all necessary information
 
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, 
-                                       IN OUT PIRP Irp) = 0;
+                                       IN OUT PIRP Irp,
+                                       IN USB_DEVICE_SPEED DeviceSpeed) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -390,7 +401,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 //
 // Description: returns the general transfer descriptor
 
-    virtual NTSTATUS GetEndpointDescriptor(struct _UHCI_TRANSFER_DESCRIPTOR ** OutDescriptor) = 0;
+    virtual NTSTATUS GetEndpointDescriptor(struct _UHCI_QUEUE_HEAD ** OutDescriptor) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -417,6 +428,14 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: returns interval of the iso / interrupt
 
     virtual UCHAR GetInterval() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetDeviceSpeed
+//
+// Description: returns device speed
+
+    virtual USB_DEVICE_SPEED GetDeviceSpeed() = 0;
 
 };
 
