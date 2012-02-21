@@ -112,8 +112,8 @@ typedef struct {
     CRITICAL_SECTION crit;
 } file_crit;
 
-FILE _iob[3] = { { 0 } };
-static file_crit* fstream[MAX_FILES/FD_BLOCK_SIZE];
+FILE _iob[_IOB_ENTRIES] = { { 0 } };
+static file_crit* fstream[MAX_FILES/FD_BLOCK_SIZE] = { NULL };
 static int max_streams = 512, stream_idx;
 
 /* INTERNAL: process umask */
