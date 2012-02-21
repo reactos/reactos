@@ -222,7 +222,5 @@ else()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
-
     add_dependency_footer()
 endif()

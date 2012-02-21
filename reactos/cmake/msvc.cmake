@@ -44,8 +44,6 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 
-link_directories(${REACTOS_SOURCE_DIR}/importlibs ${REACTOS_BINARY_DIR}/importlibs ${REACTOS_BINARY_DIR}/lib/sdk/crt)
-
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 
 if(MSVC_IDE)
@@ -149,7 +147,7 @@ function(add_importlib_target _exports_file _implib_name)
 
     # add our library
     # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-    add_library(lib${_name} STATIC 
+    add_library(lib${_name} STATIC EXCLUDE_FROM_ALL
         ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm)
     
     # Add necessary importlibs for redirections. Still necessary ?
@@ -187,8 +185,6 @@ endfunction()
 macro(macro_mc FLAG FILE)
     set(COMMAND_MC mc ${FLAG} -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
 endmacro()
-
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
 set(PSEH_LIB "pseh")

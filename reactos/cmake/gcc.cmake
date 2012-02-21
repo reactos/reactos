@@ -83,13 +83,6 @@ else()
     set(ARCH2 ${ARCH})
 endif()
 
-# Linking
-if(ARCH MATCHES i386)
-    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
-endif()
-
-link_directories(${REACTOS_BINARY_DIR}/lib/sdk/crt)
-
 get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
 
 set(CMAKE_C_LINK_EXECUTABLE
