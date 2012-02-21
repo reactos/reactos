@@ -248,6 +248,10 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             PMMPDE PdeBase;
             ULONG PdeOffset = MiGetPdeOffset(Address);
             
+            /* Nobody but page fault should ask for creating the PDE,
+             * Which imples that Process is the current one */
+            ASSERT(Create == FALSE);
+            
             PdeBase = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
             if (PdeBase == NULL)
             {
@@ -256,24 +260,8 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             PointerPde = PdeBase + PdeOffset;
             if (PointerPde->u.Hard.Valid == 0)
             {
-                /* Nobody but page fault should ask for creating the PDE,
-                 * Which imples that Process is the current one */
                 MmDeleteHyperspaceMapping(PdeBase);
-                if(Create == FALSE)
-                    return NULL;
-                else
-                {
-                    KAPC_STATE ApcState;
-                    PULONG ret;
-                    /* Attach to process */
-                    KeStackAttachProcess(&Process->Pcb, &ApcState);
-                    
-                    /* Retry */
-                    ret = MmGetPageTableForProcess(Process, Address, TRUE);
-                    
-                    /* Get Back to original process */
-                    KeUnstackDetachProcess(&ApcState);
-                }
+                return NULL;
             }
             else
             {
@@ -717,9 +705,10 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    Pt = MmGetPageTableForProcess(Process, Address, TRUE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
+        /* Nobody should page out an address that hasn't even been mapped */
         KeBugCheck(MEMORY_MANAGEMENT);
     }
     Pte = InterlockedExchangePte(Pt, SwapEntry << 1);

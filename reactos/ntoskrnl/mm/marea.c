@@ -1066,6 +1066,37 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
+   
+#if (_MI_PAGING_LEVELS == 2)
+    {
+        KIRQL OldIrql;
+        PMMPDE pointerPde;
+        /* Attach to Process */
+        KeAttachProcess(&Process->Pcb);
+        
+        /* Acquire PFN lock */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        
+        for(Address = MI_LOWEST_VAD_ADDRESS;
+            Address < MM_HIGHEST_VAD_ADDRESS;
+            Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
+        {
+            /* At this point all references should be dead */
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0);
+            pointerPde = MiAddressToPde(Address);
+            /* Unlike in ARM3, we don't necesarrily free the PDE page as soon as reference reaches 0,
+             * so we must clean up a bit when process closes */
+            if(pointerPde->u.Hard.Valid)
+                MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
+            ASSERT(pointerPde->u.Hard.Valid == 0);
+        }
+        /* Release lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        
+        /* Detach */
+        KeDetachProcess();
+    }
+#endif
 
    MmUnlockAddressSpace(&Process->Vm);
 

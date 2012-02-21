@@ -250,6 +250,9 @@ MmRebalanceMemoryConsumers(VOID)
     {
         /* Clean up the unused PDEs */
         ULONG_PTR Address;
+        PEPROCESS Process = PsGetCurrentProcess();
+
+        /* Acquire PFN lock */
         KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         PMMPDE pointerPde;
         for(Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
@@ -260,10 +263,11 @@ MmRebalanceMemoryConsumers(VOID)
             {
                 pointerPde = MiAddressToPde(Address);
                 if(pointerPde->u.Hard.Valid)
-                    MiDeletePte(pointerPde, MiPdeToPte(pointerPde), PsGetCurrentProcess(), NULL);
+                    MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
                 ASSERT(pointerPde->u.Hard.Valid == 0);
             }
         }
+        /* Release lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     }
 #endif

@@ -1349,6 +1349,8 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Free the VAD memory */
         ExFreePool(Vad);
     }
+    /* Delete the shared user data section */
+    MiDeleteVirtualAddresses(USER_SHARED_DATA, USER_SHARED_DATA, NULL);
 
     /* Release the address space */
     MmUnlockAddressSpace(&Process->Vm);
@@ -1363,14 +1365,6 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     PFN_NUMBER PageFrameIndex;
 
     //ASSERT(Process->CommitCharge == 0);
-
-    /* Delete the shared user data section (Should be done in clean, not delete) */
-    ASSERT(MmHighestUserAddress > (PVOID)USER_SHARED_DATA);
-    KeAttachProcess(&Process->Pcb);
-    //DPRINT1("Killing shared user data page no longer works -- has someone changed ARM3 in a way to make this fail now?\n");
-    //MiDeleteVirtualAddresses(USER_SHARED_DATA, USER_SHARED_DATA, NULL);
-    //DPRINT1("Done\n");
-    KeDetachProcess();
     
     /* Acquire the PFN lock */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -1407,11 +1401,8 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn1, PageFrameIndex);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
         
-        /* HACK: In Richard's original patch this ASSERT did work */
-        //DPRINT1("Ref count: %lx %lx\n", Pfn1->u3.e2.ReferenceCount, Pfn1->u2.ShareCount);
-        //ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-        if(!((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress)))
-            DPRINT1("Ref count: %lx %lx\n", Pfn1->u3.e2.ReferenceCount, Pfn1->u2.ShareCount);
+        /* Page table is now dead. Bye bye... */
+        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
     }
     else
     {

@@ -119,6 +119,7 @@ typedef struct
    ULONG Offset;
    BOOLEAN WasDirty;
    BOOLEAN Private;
+   PEPROCESS CallingProcess;
 }
 MM_SECTION_PAGEOUT_CONTEXT;
 
@@ -2052,10 +2053,11 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    }
 
 #if (_MI_PAGING_LEVELS == 2)
-    if(Address < MmSystemRangeStart)
+    /* If this is for the calling process, we take care of te reference in the main function */
+    if((Address < MmSystemRangeStart) && (Process != PageOutContext->CallingProcess))
     {
-        if(Process->VmDeleted) DPRINT1("deleted!!!");
         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+        ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
     }
 #endif
 
@@ -2091,6 +2093,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
+   Context.CallingProcess = Process;
 
    Context.Offset = (ULONG)((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                     + MemoryArea->Data.SectionData.ViewOffset);
@@ -2223,6 +2226,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       }
       if (!Context.WasDirty && SwapEntry != 0)
       {
+#if (_MI_PAGING_LEVELS == 2)
+        /* We keep the pagefile index global to the segment, not in the PTE */
+        if(Address < MmSystemRangeStart)
+        {
+            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+        }
+#endif
          MmSetSavedSwapEntryPage(Page, 0);
          MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
          MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -2241,6 +2252,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       }
       if (!Context.WasDirty || SwapEntry != 0)
       {
+#if (_MI_PAGING_LEVELS == 2)
+        /* We keep the pagefile index global to the segment, not in the PTE */
+         if(Address < MmSystemRangeStart)
+         {
+            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         }
+#endif
          MmSetSavedSwapEntryPage(Page, 0);
          if (SwapEntry != 0)
          {
@@ -2254,6 +2273,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    }
    else if (!Context.Private && DirectMapped)
    {
+#if (_MI_PAGING_LEVELS == 2)
+      /* Read only page, no need for a pagefile entry -> PDE-- */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       if (SwapEntry != 0)
       {
          DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
@@ -2282,6 +2309,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  Address);
          KeBugCheck(MEMORY_MANAGEMENT);
       }
+#if (_MI_PAGING_LEVELS == 2)
+      /* Non dirty, non private, non direct-mapped -> PDE-- */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       MmReleasePageMemoryConsumer(MC_USER, Page);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -2291,13 +2326,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       MmSetSavedSwapEntryPage(Page, 0);
       MmLockAddressSpace(AddressSpace);
- #if (_MI_PAGING_LEVELS == 2)
-      /* Page table was dereferenced while deleting the RMAP */
-      if(Address < MmSystemRangeStart)
-      {
-         AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-      }
-#endif
       Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);
@@ -2325,13 +2353,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          /*
           * For private pages restore the old mappings.
           */
- #if (_MI_PAGING_LEVELS == 2)
-        /* Page table was dereferenced while deleting the RMAP */
-        if(Address < MmSystemRangeStart)
-        {
-            AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-        }
-#endif
          if (Context.Private)
          {
             Status = MmCreateVirtualMapping(Process,
@@ -2382,13 +2403,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
        * As above: undo our actions.
        * FIXME: Also free the swap page.
        */
-#if (_MI_PAGING_LEVELS == 2)
-        /* Page table was dereferenced while deleting the RMAP */
-        if(Address < MmSystemRangeStart)
-        {
-            AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-        }
-#endif
       MmLockAddressSpace(AddressSpace);
       if (Context.Private)
       {
@@ -2440,13 +2454,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    if (Context.Private)
    {
       MmLockAddressSpace(AddressSpace);
- #if (_MI_PAGING_LEVELS == 2)
-      /* Page table was dereferenced while deleting the RMAP */
-      if(Address < MmSystemRangeStart)
-      {
-          AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-      }
-#endif
       Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);
@@ -2458,6 +2465,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    }
    else
    {
+#if (_MI_PAGING_LEVELS == 2)
+      /* We keep the pagefile index global to the segment, not in the PTE */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       Entry = MAKE_SWAP_SSE(SwapEntry);
       MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
    }
