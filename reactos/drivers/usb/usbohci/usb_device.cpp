@@ -65,7 +65,7 @@ public:
 
     // constructor / destructor
     CUSBDevice(IUnknown *OuterUnknown){}
-    virtual ~CUSBDevice(){}
+    virtual ~CUSBDevice();
 
 protected:
     LONG m_Ref;
@@ -84,6 +84,73 @@ protected:
 
     PUSB_CONFIGURATION m_ConfigurationDescriptors;
 };
+
+CUSBDevice::~CUSBDevice()
+{
+    ULONG Index, InterfaceIndex, EndpointIndex;
+    //NTSTATUS Status;
+
+   if (!m_ConfigurationDescriptors)
+   {
+       //
+       // nothing to do
+       //
+       return;
+   }
+
+
+    //
+    // clean up resources
+    //
+    for(Index = 0; Index < m_DeviceDescriptor.bNumConfigurations; Index++)
+    {
+        for(InterfaceIndex = 0; InterfaceIndex < m_ConfigurationDescriptors[Index].ConfigurationDescriptor->bNumInterfaces; InterfaceIndex++)
+        {
+            //
+            // are there any endpoint descriptors
+            //
+            for(EndpointIndex = 0; EndpointIndex < m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints; EndpointIndex++)
+            {
+                //
+                // abort pipe
+                //
+                //Status = AbortPipe((PUSB_ENDPOINT_DESCRIPTOR)&m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints[EndpointIndex]);
+                //DPRINT1("[USBOHCI] Deleting Device Abort Pipe Status %x\n", Status);
+            }
+
+            if (m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints)
+            {
+                //
+                // free endpoints
+                //
+                ExFreePool(m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints);
+            }
+        }
+
+        if (m_ConfigurationDescriptors[Index].ConfigurationDescriptor->bNumInterfaces)
+        {
+            //
+            // free interface descriptors
+            //
+            ExFreePool(m_ConfigurationDescriptors[Index].Interfaces);
+        }
+
+        if (m_ConfigurationDescriptors[Index].ConfigurationDescriptor)
+        {
+            //
+            // free configuration descriptor
+            //
+            ExFreePool(m_ConfigurationDescriptors[Index].ConfigurationDescriptor);
+        }
+    }
+
+    //
+    // free configuration descriptor
+    //
+    ExFreePool(m_ConfigurationDescriptors);
+}
+
+
 
 //----------------------------------------------------------------------------------------
 NTSTATUS

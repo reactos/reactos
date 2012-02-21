@@ -1012,7 +1012,6 @@ CHubController::HandleClassOther(
                     // reset port feature
                     //
                     Status = m_Hardware->SetPortFeature(PortId, PORT_RESET);
-                    PC_ASSERT(Status == STATUS_SUCCESS);
                     break;
                 }
                 default:
