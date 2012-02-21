@@ -963,10 +963,10 @@ void msvcrt_free_io(void)
     fclose(&_iob[2]);
 
     for(i=0; i<sizeof(__pioinfo)/sizeof(__pioinfo[0]); i++)
-            free(__pioinfo[i]);
+        if(__pioinfo[i]) free(__pioinfo[i]);
 
     for(i=0; i<sizeof(fstream)/sizeof(fstream[0]); i++)
-            free(fstream[i]);
+        if(fstream[i]) free(fstream[i]);
 
     file_cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&file_cs);
