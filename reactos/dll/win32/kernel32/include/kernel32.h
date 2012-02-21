@@ -143,6 +143,14 @@ typedef enum _BASE_CURRENT_DIR_PLACEMENT
     BaseCurrentDirPlacementMax
 } BASE_CURRENT_DIR_PLACEMENT;
 
+typedef struct _BASEP_ACTCTX_BLOCK
+{
+    ULONG Flags;
+    PVOID ActivationContext;
+    PVOID CompletionContext;
+    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
+} BASEP_ACTCTX_BLOCK, *PBASEP_ACTCTX_BLOCK;
+
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
@@ -246,6 +254,21 @@ BaseThreadStartupThunk(VOID);
 VOID
 WINAPI
 BaseProcessStartThunk(VOID);
+
+VOID
+NTAPI
+BasepFreeActivationContextActivationBlock(
+    IN PBASEP_ACTCTX_BLOCK ActivationBlock
+);
+
+NTSTATUS
+NTAPI
+BasepAllocateActivationContextActivationBlock(
+    IN DWORD Flags,
+    IN PVOID CompletionRoutine,
+    IN PVOID CompletionContext,
+    OUT PBASEP_ACTCTX_BLOCK *ActivationBlock
+);
 
 __declspec(noreturn)
 VOID
