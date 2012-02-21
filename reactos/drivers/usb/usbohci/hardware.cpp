@@ -1185,14 +1185,11 @@ CUSBHardwareDevice::GetPortStatus(
     if (Value & OHCI_RH_PORTSTATUS_PSSC)
         *PortChange |= USB_PORT_STATUS_ENABLE;
 
-    // port reset started (change bit only set at completion)
+    // port reset started
     if (Value & OHCI_RH_PORTSTATUS_PRS)
-    {
         *PortStatus |= USB_PORT_STATUS_RESET;
-        *PortChange |= USB_PORT_STATUS_RESET;
-    }
 
-    // port reset ended (change bit only set at completion)
+    // port reset ended
     if (Value & OHCI_RH_PORTSTATUS_PRSC)
         *PortChange |= USB_PORT_STATUS_RESET;
 
