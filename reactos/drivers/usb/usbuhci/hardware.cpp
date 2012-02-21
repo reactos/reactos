@@ -370,24 +370,12 @@ CUSBHardwareDevice::PnpStart(
         return Status;
     }
 
-
-    //
-    // Stop the controller before modifying schedules
-    //
-    Status = StopController();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to stop the controller \n");
-        ASSERT(FALSE);
-        return Status;
-    }
-
-
     //
     // Start the controller
     //
     DPRINT1("Starting Controller\n");
     Status = StartController();
+
 
     //
     // done
@@ -475,9 +463,60 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Index;
+    USHORT Status;
+
+
+    //
+    // debug info
+    //
+    DPRINT1("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
+
+    //
+    // Set the run bit in the command register
+    //
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) | UHCI_USBCMD_RS);
+
+    for(Index = 0; Index < 10; Index++)
+    {
+        //
+        // wait a bit
+        //
+        KeStallExecutionProcessor(100);
+
+        //
+        // get controller status
+        //
+        Status = ReadRegister16(UHCI_USBSTS);
+        DPRINT1("[USBUHCI] Status %x\n", Status);
+
+        if (!(Status & UHCI_USBSTS_HCHALT))
+        {
+            //
+            // controller started
+            //
+            break;
+        }
+    }
+
+    if ((Status & UHCI_USBSTS_HCHALT))
+    {
+        //
+        // failed to start controller
+        //
+        DPRINT1("[USBUHCI] Failed to start controller Status %x\n", Status);
+        ASSERT(FALSE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    DPRINT1("[USBUHCI] Controller Started\n");
+    DPRINT1("[USBUHCI] Controller Status %x\n", ReadRegister16(UHCI_USBSTS));
+    DPRINT1("[USBUHCI] Controller Frame %x\n", ReadRegister16(UHCI_FRNUM));
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 VOID
