@@ -1103,29 +1103,48 @@ CUSBDevice::SelectConfiguration(
     ULONG InterfaceIndex, PipeIndex;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
+    UCHAR bConfigurationValue = 0;
 
-    //
-    // sanity checks
-    //
-    ASSERT(ConfigurationDescriptor->iConfiguration < m_DeviceDescriptor.bNumConfigurations);
-    ASSERT(ConfigurationDescriptor->iConfiguration == m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor->iConfiguration);
+    if (ConfigurationDescriptor)
+    {
+        //
+        // sanity checks
+        //
+        ASSERT(ConfigurationDescriptor->iConfiguration < m_DeviceDescriptor.bNumConfigurations);
+        ASSERT(ConfigurationDescriptor->iConfiguration == m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor->iConfiguration);
 
-    //
-    // sanity check
-    //
-    ASSERT(ConfigurationDescriptor->bNumInterfaces <= m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor->bNumInterfaces);
+        //
+        // sanity check
+        //
+        ASSERT(ConfigurationDescriptor->bNumInterfaces <= m_ConfigurationDescriptors[ConfigurationDescriptor->iConfiguration].ConfigurationDescriptor->bNumInterfaces);
+
+        //
+        // get configuration value
+        //
+        bConfigurationValue = ConfigurationDescriptor->bConfigurationValue;
+    }
 
     //
     // now build setup packet
     //
     RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
     CtrlSetup.bRequest = USB_REQUEST_SET_CONFIGURATION;
-    CtrlSetup.wValue.W = ConfigurationDescriptor->bConfigurationValue;
+    CtrlSetup.wValue.W = bConfigurationValue;
 
     //
     // select configuration
     //
     Status = CommitSetupPacket(&CtrlSetup, 0, 0, 0);
+
+    if (!ConfigurationDescriptor)
+    {
+        //
+        // unconfigure request
+        //
+        DPRINT1("CUsbDevice::SelectConfiguration Unconfigure Request Status %x\n", Status);
+        m_ConfigurationIndex = 0;
+        return Status;
+    }
 
     //
     // informal debug print
