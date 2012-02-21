@@ -38,6 +38,7 @@
 // a list of registered controllers and provides support functions for the host controllers
 
 struct IHCDController;
+struct _USB_ENDPOINT;
 
 DECLARE_INTERFACE_(IRootHCDController, IUnknown)
 {
@@ -359,8 +360,8 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
+                                               IN OPTIONAL struct _USB_ENDPOINT *EndpointDescriptor,
                                                IN USB_DEVICE_SPEED DeviceSpeed,
-                                               IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 
@@ -436,7 +437,6 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: returns device speed
 
     virtual USB_DEVICE_SPEED GetDeviceSpeed() = 0;
-
 };
 
 
@@ -496,6 +496,15 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: creates an usb request
 
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest) = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
+// AbortDevicePipe
+//
+// Description: aborts all pending requsts of an device
+
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN struct _USB_ENDPOINT * EndpointDescriptor) = 0;
 
 };
 
@@ -750,6 +759,16 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
                                      IN OUT PUSBD_INTERFACE_INFORMATION Interface) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// AbortPipe
+//
+// Description: aborts all pending requsts of an device
+
+    virtual NTSTATUS AbortPipe(IN struct _USB_ENDPOINT * EndpointDescriptor) = 0;
+
+
 };
 
 typedef IUSBDevice *PUSBDEVICE;

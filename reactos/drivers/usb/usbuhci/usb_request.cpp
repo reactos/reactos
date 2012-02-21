@@ -36,7 +36,7 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN USB_DEVICE_SPEED DeviceSpeed, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL struct _USB_ENDPOINT * EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
@@ -119,7 +119,7 @@ protected:
     //
     // store end point address
     //
-    PUSB_ENDPOINT_DESCRIPTOR m_EndpointDescriptor;
+    PUSB_ENDPOINT m_EndpointDescriptor;
 
     //
     // allocated setup packet from the DMA pool
@@ -156,8 +156,8 @@ CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
     IN UCHAR DeviceAddress,
+    IN OPTIONAL struct _USB_ENDPOINT * EndpointDescriptor,
     IN USB_DEVICE_SPEED DeviceSpeed,
-    IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -321,7 +321,7 @@ CUSBRequest::InitializeWithIrp(
             //
             // get endpoint descriptor
             //
-            m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbIsochronousTransfer.PipeHandle;
+            m_EndpointDescriptor = (PUSB_ENDPOINT)Urb->UrbIsochronousTransfer.PipeHandle;
 
             //
             // completed initialization
@@ -396,7 +396,7 @@ CUSBRequest::InitializeWithIrp(
                 //
                 // get endpoint descriptor
                 //
-                m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+                m_EndpointDescriptor = (PUSB_ENDPOINT)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
             }
             break;
@@ -461,19 +461,19 @@ CUSBRequest::GetMaxPacketSize()
     //
     // return max packet size
     //
-    return m_EndpointDescriptor->wMaxPacketSize;
+    return m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
 }
 
 UCHAR
 CUSBRequest::GetInterval()
 {
     ASSERT(m_EndpointDescriptor);
-    ASSERT((m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
+    ASSERT((m_EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
 
     //
     // return interrupt interval
     //
-    return m_EndpointDescriptor->bInterval;
+    return m_EndpointDescriptor->EndPointDescriptor.bInterval;
 }
 
 UCHAR
@@ -493,7 +493,7 @@ CUSBRequest::GetEndpointAddress()
     //
     // endpoint number is between 1-15
     //
-    return (m_EndpointDescriptor->bEndpointAddress & 0xF);
+    return (m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress & 0xF);
 }
 
 //----------------------------------------------------------------------------------------
@@ -512,7 +512,7 @@ CUSBRequest::InternalGetTransferType()
         //
         // end point is defined in the low byte of bmAttributes
         //
-        TransferType = (m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
+        TransferType = (m_EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK);
     }
     else
     {
@@ -536,7 +536,7 @@ CUSBRequest::InternalGetPidDirection()
         //
         // end point direction is highest bit in bEndpointAddress
         //
-        return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+        return (m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
     }
     else
     {

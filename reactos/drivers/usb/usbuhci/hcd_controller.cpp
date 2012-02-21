@@ -234,7 +234,7 @@ CHCDController::HandleDeviceControl(
     //
     PC_ASSERT(DeviceExtension->IsFDO);
 
-    DPRINT1("HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
+    DPRINT("HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
         IoStack->Parameters.DeviceIoControl.IoControlCode,
         IoStack->Parameters.DeviceIoControl.InputBufferLength,
         IoStack->Parameters.DeviceIoControl.OutputBufferLength);
@@ -394,7 +394,7 @@ CHCDController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO\n");
 
             //
             // first start lower device object
@@ -423,12 +423,12 @@ CHCDController::HandlePnp(
                 Status = SetSymbolicLink(TRUE);
             }
 
-            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
+            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (m_HubController == NULL)
             {
@@ -502,14 +502,13 @@ CHCDController::HandlePnp(
                 //
                 // not supported
                 //
-                PC_ASSERT(0);
                 Status = STATUS_NOT_SUPPORTED;
             }
             break;
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
 
             if (m_Hardware)
             {
@@ -535,9 +534,34 @@ CHCDController::HandlePnp(
             }
             break;
         }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // sure
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(m_NextDeviceObject, Irp);
+        }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT1("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
+            DPRINT("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
+
+            //
+            // delete the symbolic link
+            //
+            SetSymbolicLink(FALSE);
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            IoCallDriver(m_NextDeviceObject, Irp);
 
             //
             // detach device from device stack
@@ -549,8 +573,7 @@ CHCDController::HandlePnp(
             //
             IoDeleteDevice(m_FunctionalDeviceObject);
 
-            Status = STATUS_SUCCESS;
-            break;
+            return STATUS_SUCCESS;
         }
         default:
         {
@@ -650,7 +673,7 @@ CHCDController::CreateFDO(
     //
     m_FDODeviceNumber = UsbDeviceNumber;
 
-    DPRINT1("CreateFDO: DeviceName %wZ\n", &DeviceName);
+    DPRINT("CreateFDO: DeviceName %wZ\n", &DeviceName);
 
     /* done */
     return Status;

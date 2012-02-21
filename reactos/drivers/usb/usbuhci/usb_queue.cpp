@@ -39,6 +39,8 @@ public:
     virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
     virtual NTSTATUS CancelRequests();
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
+    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN struct _USB_ENDPOINT * EndpointDescriptor);
+
 
     // local
     VOID LinkQueueHead(PUHCI_QUEUE_HEAD QueueHead, PUHCI_QUEUE_HEAD NextQueueHead);
@@ -200,6 +202,16 @@ NTSTATUS
 CUSBQueue::CancelRequests()
 {
     UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+CUSBQueue::AbortDevicePipe(
+    IN UCHAR DeviceAddress,
+    IN struct _USB_ENDPOINT *EndpointDescriptor)
+{
+    UNIMPLEMENTED
+    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
