@@ -131,7 +131,7 @@ endfunction()
 
 #define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
-set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /Fo<OBJECT> /c /Ta <SOURCE>")
+set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
 # Thanks MS for creating a stupid linker
 function(add_importlib_target _exports_file _implib_name)
 
