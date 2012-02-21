@@ -1,19 +1,20 @@
 #pragma once
 
-#define TAG_STRING      ' RTS' /* String */
-#define TAG_HOOK        'ohsU' /* Hook */
-#define TAG_MENUITEM    'emsU' /* Menu item */
-#define TAG_MSG         'GSEM' /* Message */
-#define TAG_USRMSG      'GSMU' /* User message */
-#define TAG_SBARINFO    'NIBS' /* Scrollbar info */
-#define TAG_TIMERBMP    'BMIT' /* Timers bitmap */
-#define TAG_WINSTA      'ATSW' /* Window station */
-#define TAG_FONT        'ETNF' /* Font entry */
-#define TAG_BEZIER      'RZEB' /* Bezier */
-#define TAG_SHAPE       'phSG' /* Shape */
-#define TAG_COLORMAP    'MLOC' /* Color map */
-#define TAG_GDIHNDTBLE  'bthG' /* GDI handle table */
-#define TAG_DIB         ' BID' /* Dib */
+#define TAG_STRING         ' RTS' /* String */
+#define TAG_HOOK           'ohsU' /* Hook */
+#define TAG_MENUITEM       'emsU' /* Menu item */
+#define TAG_MSG            'GSEM' /* Message */
+#define TAG_USRMSG         'GSMU' /* User message */
+#define TAG_SBARINFO       'NIBS' /* Scrollbar info */
+#define TAG_TIMERBMP       'BMIT' /* Timers bitmap */
+#define TAG_WINSTA         'ATSW' /* Window station */
+#define TAG_FONT           'ETNF' /* Font entry */
+#define TAG_BEZIER         'RZEB' /* Bezier */
+#define TAG_SHAPE          'phSG' /* Shape */
+#define TAG_COLORMAP       'MLOC' /* Color map */
+#define TAG_GDIHNDTBLE     'bthG' /* GDI handle table */
+#define TAG_DIB            ' BID' /* Dib */
+#define TAG_INTERNAL_SYNC  'sync' /* Internal synchronization object. Waiting for a better suggestion than 'sync' */
 
 /* GDI objects from the handle table */
 #define TAG_DC          GDITAG_HMGR_LOOKASIDE_DC_TYPE

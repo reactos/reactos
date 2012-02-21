@@ -32,11 +32,23 @@ typedef struct _FONT_ENTRY
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
-static FAST_MUTEX FreeTypeLock;
+static PFAST_MUTEX FreeTypeLock;
 
 static LIST_ENTRY FontListHead;
-static FAST_MUTEX FontListLock;
+static PFAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
+
+#define IntLockGlobalFonts \
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FontListLock)
+
+#define IntUnLockGlobalFonts \
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FontListLock)
+
+#define IntLockFreeType \
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FreeTypeLock)
+
+#define IntUnLockFreeType \
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FreeTypeLock)
 
 #define MAX_FONT_CACHE 256
 
@@ -128,8 +140,11 @@ InitFontSupport(VOID)
     InitializeListHead(&FontListHead);
     InitializeListHead(&FontCacheListHead);
     FontCacheNumEntries = 0;
-    ExInitializeFastMutex(&FontListLock);
-    ExInitializeFastMutex(&FreeTypeLock);
+    /* Fast Mutexes must be allocated from non paged pool */
+    FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    ExInitializeFastMutex(FontListLock);
+    FreeTypeLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    ExInitializeFastMutex(FreeTypeLock);
 
     ulError = FT_Init_FreeType(&library);
     if (ulError)

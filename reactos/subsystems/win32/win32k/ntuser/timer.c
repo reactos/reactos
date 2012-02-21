@@ -21,7 +21,7 @@ static LONG TimeLast = 0;
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   32768
 
-static FAST_MUTEX     Mutex;
+static PFAST_MUTEX    Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
 static ULONG          HintIndex = 1;
@@ -29,10 +29,10 @@ static ULONG          HintIndex = 1;
 ERESOURCE TimerLock;
 
 #define IntLockWindowlessTimerBitmap() \
-  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Mutex)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(Mutex)
 
 #define IntUnlockWindowlessTimerBitmap() \
-  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(Mutex)
 
 #define TimerEnterExclusive() \
 { \
@@ -584,8 +584,10 @@ NTAPI
 InitTimerImpl(VOID)
 {
    ULONG BitmapBytes;
-
-   ExInitializeFastMutex(&Mutex);
+   
+   /* Allocate FAST_MUTEX from non paged pool */
+   Mutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+   ExInitializeFastMutex(Mutex);
 
    BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
