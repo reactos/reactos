@@ -58,6 +58,8 @@ IopDeleteDriver(IN PVOID ObjectBody)
     PIO_CLIENT_EXTENSION DriverExtension, NextDriverExtension;
     PAGED_CODE();
 
+    DPRINT1("Deleting driver object '%wZ'\n", &DriverObject->DriverName);
+
     /* Get the extension and loop them */
     DriverExtension = IoGetDrvObjExtension(DriverObject)->
                       ClientDriverExtension;
@@ -1284,6 +1286,8 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
          return STATUS_SUCCESS;
       }
 
+      DPRINT1("Unloading driver '%wZ' (manual)\n", &DriverObject->DriverName);
+
       /* Set the unload invoked flag */
       DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
 
@@ -1323,6 +1327,8 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    }
    else
    {
+      DPRINT1("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+
       /* Dereference one time (refd inside this function) */
       ObDereferenceObject(DriverObject);
 
