@@ -56,6 +56,8 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
+#include "ARM3/miarm.h"
+
 #undef MmSetPageEntrySectionSegment
 #define MmSetPageEntrySectionSegment(S,O,E) do { \
 	DPRINT("SetPageEntrySectionSegment(old,%x,%x,%x)\n", S,(O)->LowPart,E); \
@@ -122,6 +124,7 @@ typedef struct
    LARGE_INTEGER Offset;
    BOOLEAN WasDirty;
    BOOLEAN Private;
+   PEPROCESS CallingProcess;
 }
 MM_SECTION_PAGEOUT_CONTEXT;
 
@@ -1365,6 +1368,15 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          Page = PFN_FROM_SSE(Entry);
 
          MmSharePageEntrySectionSegment(Segment, &Offset);
+         
+ #if (_MI_PAGING_LEVELS == 2)
+        /* Reference Page Directory Entry */
+        if(Address < MmSystemRangeStart)
+        {
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+        }
+#endif
 
          /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
           * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
@@ -1454,6 +1466,15 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       DPRINT("Address 0x%.8X\n", Address);
       return(STATUS_SUCCESS);
    }
+
+#if (_MI_PAGING_LEVELS == 2)
+    /* Reference Page Directory Entry */
+    if(Address < MmSystemRangeStart)
+    {
+        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+    }
+#endif
 
    /*
     * Satisfying a page fault on a map of /Device/PhysicalMemory is easy
@@ -1575,6 +1596,12 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          /*
           * Cleanup and release locks
           */
+#if (_MI_PAGING_LEVELS == 2)
+        if(Address < MmSystemRangeStart)
+        {
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+        }
+#endif
          MmLockAddressSpace(AddressSpace);
          PageOp->Status = Status;
          MmspCompleteAndReleasePageOp(PageOp);
@@ -1795,7 +1822,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
       MmSetPageProtect(Process, Address, Region->Protect);
       return(STATUS_SUCCESS);
    }
-
+   
+   if(OldPage == 0)
+      DPRINT("OldPage == 0!\n");
+   
    /*
     * Get or create a pageop
     */
@@ -1941,6 +1971,15 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
       MmReleasePageMemoryConsumer(MC_USER, Page);
    }
 
+#if (_MI_PAGING_LEVELS == 2)
+    /* If this is for the calling process, we take care of te reference in the main function */
+    if((Address < MmSystemRangeStart) && (Process != PageOutContext->CallingProcess))
+    {
+        Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+        ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+    }
+#endif
+
    DPRINT("PhysicalAddress %x, Address %x\n", Page << PAGE_SHIFT, Address);
 }
 
@@ -1954,6 +1993,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    PFN_NUMBER Page;
    MM_SECTION_PAGEOUT_CONTEXT Context;
    SWAPENTRY SwapEntry;
+   ULONG Entry;
    ULONG FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -1964,7 +2004,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
    KIRQL OldIrql;
-   ULONG Entry;
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -1973,6 +2012,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
+   Context.CallingProcess = Process;
 
    Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                     + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
@@ -2111,6 +2151,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       }
       if (!Context.WasDirty && SwapEntry != 0)
       {
+#if (_MI_PAGING_LEVELS == 2)
+        /* We keep the pagefile index global to the segment, not in the PTE */
+        if(Address < MmSystemRangeStart)
+        {
+            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+        }
+#endif
          MmSetSavedSwapEntryPage(Page, 0);
          MmLockSectionSegment(Context.Segment);
          MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, MAKE_SWAP_SSE(SwapEntry));
@@ -2131,6 +2179,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       }
       if (!Context.WasDirty || SwapEntry != 0)
       {
+#if (_MI_PAGING_LEVELS == 2)
+        /* We keep the pagefile index global to the segment, not in the PTE */
+         if(Address < MmSystemRangeStart)
+         {
+            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         }
+#endif
          MmSetSavedSwapEntryPage(Page, 0);
          if (SwapEntry != 0)
          {
@@ -2146,6 +2202,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    }
    else if (!Context.Private && DirectMapped)
    {
+#if (_MI_PAGING_LEVELS == 2)
+      /* Read only page, no need for a pagefile entry -> PDE-- */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       if (SwapEntry != 0)
       {
          DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
@@ -2176,6 +2240,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, Page, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
+#if (_MI_PAGING_LEVELS == 2)
+      /* Non dirty, non private, non direct-mapped -> PDE-- */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       MmReleasePageMemoryConsumer(MC_USER, Page);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -2228,6 +2300,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          }
          else
          {
+            LONG OldEntry;
             /*
              * For non-private pages if the page wasn't direct mapped then
              * set it back into the section segment entry so we don't loose
@@ -2245,7 +2318,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 	    // If we got here, the previous entry should have been a wait
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
 	    MmLockSectionSegment(Context.Segment);
-	    LONG OldEntry = MmGetPageEntrySectionSegment(Context.Segment, &Context.Offset);
+	    OldEntry = MmGetPageEntrySectionSegment(Context.Segment, &Context.Offset);
 	    ASSERT(OldEntry == 0 || OldEntry == MAKE_SWAP_SSE(MM_WAIT_ENTRY));
             MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
 	    MmUnlockSectionSegment(Context.Segment);
@@ -2333,6 +2406,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    }
    else
    {
+#if (_MI_PAGING_LEVELS == 2)
+      /* We keep the pagefile index global to the segment, not in the PTE */
+      if(Address < MmSystemRangeStart)
+      {
+         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+      }
+#endif
       Entry = MAKE_SWAP_SSE(SwapEntry);
       MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
    }

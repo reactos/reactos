@@ -993,7 +993,6 @@ PDO_Dispatch(
             return PDO_HandleInternalDeviceControl(DeviceObject, Irp);
         default:
             DPRINT1("PDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
-            ASSERT(FALSE);
             Status = Irp->IoStatus.Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;

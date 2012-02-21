@@ -31,4 +31,4 @@ add_importlibs(devmgr
 add_pch(devmgr precomp.h)
 
 add_cd_file(TARGET devmgr DESTINATION reactos/system32 FOR all)
-add_importlib_target(devmgr.spec)
+add_importlib_target(devmgr.spec devmgr.dll)

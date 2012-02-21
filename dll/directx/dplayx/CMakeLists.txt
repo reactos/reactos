@@ -37,4 +37,4 @@ add_importlibs(dplayx
     ntdll)
 
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
-add_importlib_target(dplayx.spec)
+add_importlib_target(dplayx.spec dplayx.dll)

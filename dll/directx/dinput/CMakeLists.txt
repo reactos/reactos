@@ -37,4 +37,4 @@ add_importlibs(dinput
     ntdll)
 
 add_cd_file(TARGET dinput DESTINATION reactos/system32 FOR all)
-add_importlib_target(dinput.spec)
+add_importlib_target(dinput.spec dinput.dll)

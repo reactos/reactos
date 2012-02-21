@@ -124,7 +124,6 @@ protected:
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
-    BOOLEAN m_ResetInProgress[16];                                                     // set when a reset is in progress
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
 
     // read register
@@ -957,13 +956,14 @@ CUSBHardwareDevice::ResetPort(
         return STATUS_UNSUCCESSFUL;
 
     PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+
     //
     // check slow speed line before reset
     //
     if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
         DPRINT1("Non HighSpeed device. Releasing Ownership\n");
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus | EHCI_PRT_RELEASEOWNERSHIP);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
@@ -977,37 +977,10 @@ CUSBHardwareDevice::ResetPort(
     EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
 
     //
-    // Wait for reset to start
+    // delay is 20 ms for port reset as per USB 2.0 spec
     //
-    KeStallExecutionProcessor(100);
-
-    //
-    // Clear reset
-    //
-    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
-    PortStatus &= ~EHCI_PRT_RESET;
-    EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
-
-    do
-    {
-        //
-        // wait
-        //
-        KeStallExecutionProcessor(100);
-
-        //
-        // Check that the port reset
-        //
-        PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
-        if (!(PortStatus & EHCI_PRT_RESET))
-            break;
-    } while (TRUE);
-
-    //
-    // delay is 10 ms
-    //
-    Timeout.QuadPart = 10;
-    DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
+    Timeout.QuadPart = 20;
+    DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
 
     //
     // convert to 100 ns units (absolute)
@@ -1018,37 +991,6 @@ CUSBHardwareDevice::ResetPort(
     // perform the wait
     //
     KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-
-    //
-    // check slow speed line after reset
-    //
-    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
-    if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
-    {
-        DPRINT1("Non HighSpeed device. Releasing Ownership\n");
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
-        return STATUS_DEVICE_NOT_CONNECTED;
-    }
-
-    //
-    // this will be enabled now since we're high-speed
-    //
-    do
-    {
-        //
-        // wait
-        //
-        KeStallExecutionProcessor(100);
-
-        //
-        // Check that the port is enabled
-        //
-        PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
-        if (PortStatus & EHCI_PRT_ENABLED)
-            break;
-    } while (TRUE);
-
-    DPRINT1("Port is back up after reset\n");
 
     return STATUS_SUCCESS;
 }
@@ -1110,18 +1052,17 @@ CUSBHardwareDevice::GetPortStatus(
         Status |= USB_PORT_STATUS_OVER_CURRENT;
 
     // In a reset state?
-    if ((Value & EHCI_PRT_RESET) || m_ResetInProgress[PortId])
+    if (Value & EHCI_PRT_RESET)
     {
         Status |= USB_PORT_STATUS_RESET;
         Change |= USB_PORT_STATUS_RESET;
     }
 
-    //
-    // FIXME: Is the Change here correct?
-    //
+    // This indicates a connect or disconnect
     if (Value & EHCI_PRT_CONNECTSTATUSCHANGE)
         Change |= USB_PORT_STATUS_CONNECT;
 
+    // This is set to indicate a critical port error
     if (Value & EHCI_PRT_ENABLEDSTATUSCHANGE)
         Change |= USB_PORT_STATUS_ENABLE;
 
@@ -1137,36 +1078,42 @@ CUSBHardwareDevice::ClearPortStatus(
     ULONG Status)
 {
     ULONG Value;
+    LARGE_INTEGER Timeout;
 
     DPRINT("CUSBHardwareDevice::ClearPortStatus PortId %x Feature %x\n", PortId, Status);
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
 
-    //
-    // reset status change bits
-    //
-    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-    Value |= EHCI_PRT_CONNECTSTATUSCHANGE | EHCI_PRT_ENABLEDSTATUSCHANGE;
-    EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
-
     if (Status == C_PORT_RESET)
     {
         //
-        // update port status
+        // Clear reset
         //
-        m_ResetInProgress[PortId] = FALSE;
-    }
+        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+        Value &= ~EHCI_PRT_RESET;
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
 
-    if (Status == C_PORT_CONNECTION && (Value & EHCI_PRT_CONNECTED))
-    {
-        LARGE_INTEGER Timeout;
+        do
+        {
+            //
+            // wait
+            //
+            KeStallExecutionProcessor(100);
+            
+            //
+            // Check that the port reset
+            //
+            Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+            if (!(Value & EHCI_PRT_RESET))
+                break;
+        } while (TRUE);
 
         //
-        // delay is 100 ms
+        // delay is 10 ms
         //
-        Timeout.QuadPart = 100;
-        DPRINT1("Waiting %d milliseconds for port to stabilize after connection\n", Timeout.LowPart);
+        Timeout.QuadPart = 10;
+        DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
 
         //
         // convert to 100 ns units (absolute)
@@ -1177,6 +1124,64 @@ CUSBHardwareDevice::ClearPortStatus(
         // perform the wait
         //
         KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+
+        //
+        // check slow speed line after reset
+        //
+        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+        if (Value & EHCI_PRT_SLOWSPEEDLINE)
+        {
+            DPRINT1("Non HighSpeed device. Releasing Ownership\n");
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value | EHCI_PRT_RELEASEOWNERSHIP);
+            return STATUS_DEVICE_NOT_CONNECTED;
+        }
+
+        //
+        // this will be enabled now since we're high-speed
+        //
+        do
+        {
+            //
+            // wait
+            //
+            KeStallExecutionProcessor(100);
+
+            //
+            // Check that the port is enabled
+            //
+            Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+            if (Value & EHCI_PRT_ENABLED)
+                break;
+        } while (TRUE);
+
+        DPRINT1("Port is back up after reset\n");
+    }
+    else if (Status == C_PORT_CONNECTION)
+    {
+        //
+        // reset status change bits
+        //
+        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
+        if (Value & EHCI_PRT_CONNECTED)
+        {
+            //
+            // delay is 100 ms
+            //
+            Timeout.QuadPart = 100;
+            DPRINT1("Waiting %d milliseconds for port to stabilize after connection\n", Timeout.LowPart);
+
+            //
+            // convert to 100 ns units (absolute)
+            //
+            Timeout.QuadPart *= -10000;
+
+            //
+            // perform the wait
+            //
+            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+        }
     }
 
     return STATUS_SUCCESS;
@@ -1207,12 +1212,10 @@ CUSBHardwareDevice::SetPortFeature(
 
     if (Feature == PORT_RESET)
     {
+        //
+        // call the helper
+        //
         ResetPort(PortId);
-
-        //
-        // update cached settings
-        //
-        m_ResetInProgress[PortId] = TRUE;
 
         //
         // is there a status change callback
@@ -1475,9 +1478,6 @@ EhciDefferedRoutine(
                 {
                     DPRINT1("Device connected on port %d\n", i);
 
-                    //
-                    //FIXME: Determine device speed
-                    //
                     if (This->m_Capabilities.HCSParams.CHCCount)
                     {
                         if (PortStatus & EHCI_PRT_ENABLED)
@@ -1488,7 +1488,7 @@ EhciDefferedRoutine(
                         if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
                         {
                             DPRINT1("Non HighSpeed device connected. Release ownership\n");
-                            This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), EHCI_PRT_RELEASEOWNERSHIP);
+                            This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_RELEASEOWNERSHIP);
                             continue;
                         }
                     }

@@ -770,15 +770,15 @@ CUSBQueue::QueueHeadCleanup(
     if ((Request->IsRequestComplete() == FALSE) && (UrbStatus == USBD_STATUS_SUCCESS))
     {
         //
-        // let IUSBRequest free the queue head
-        //
-        Request->FreeQueueHead(CurrentQH);
-
-        //
         // request is incomplete, get new queue head
         //
         if (Request->GetQueueHead(&NewQueueHead) == STATUS_SUCCESS)
         {
+            //
+            // let IUSBRequest free the queue head
+            //
+            Request->FreeQueueHead(CurrentQH);
+
             //
             // first acquire request lock
             //

@@ -16,7 +16,6 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
-PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 BOOL g_PaintDesktopVersion = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
@@ -26,7 +25,7 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
-    if (gpwinstaCurrent != InputWindowStation) \
+    if ( GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
         ERR("NtUserSystemParametersInfo requires interactive window station\n"); \
         EngSetLastError(err); \
@@ -46,7 +45,7 @@ static const WCHAR* VAL_SWAP = L"SwapMouseButtons";
 static const WCHAR* VAL_HOVERTIME = L"MouseHoverTime";
 static const WCHAR* VAL_HOVERWIDTH = L"MouseHoverWidth";
 static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
-//static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
+static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
@@ -221,7 +220,8 @@ SpiUpdatePerUserSystemParameters()
     /* Load mouse settings */
     gspv.caiMouse.FirstThreshold = SpiLoadMouse(VAL_MOUSE1, 6);
     gspv.caiMouse.SecondThreshold = SpiLoadMouse(VAL_MOUSE2, 10);
-    gspv.caiMouse.Acceleration = gspv.iMouseSpeed = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.caiMouse.Acceleration = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.iMouseSpeed = SpiLoadMouse(VAL_SENSITIVITY, 10);
     gspv.bMouseBtnSwap = SpiLoadMouse(VAL_SWAP, 0);
     gspv.bSnapToDefBtn = SpiLoadMouse(VAL_SNAPDEFBTN, 0);
     gspv.iMouseTrails = SpiLoadMouse(VAL_MOUSETRAILS, 0);
@@ -592,6 +592,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     HBITMAP hbmp, hOldBitmap;
     SURFACE *psurfBmp;
     ULONG ulTile, ulStyle;
+    PWINSTATION_OBJECT gpwinstaCurrent = GetW32ProcessInfo()->prpwinsta;
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -947,7 +948,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETWORKAREA:
         {
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
 
             if(!pmonitor)
                 return 0;
@@ -959,7 +960,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         {
             /* FIXME: We should set the work area of the monitor
                       that contains the specified rectangle */
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
             RECT rcWorkArea;
 
             if(!pmonitor)
@@ -1262,8 +1263,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseSpeed, fl);
 
         case SPI_SETMOUSESPEED:
-            // vgl SETMOUSE
-            return SpiSetInt(&gspv.iMouseSpeed, uiParam, KEY_MOUSE, VAL_MOUSE3, fl);
+        {
+            /* Allowed range is [1:20] */
+            if ((INT_PTR)pvParam < 1 || (INT_PTR)pvParam > 20)
+                return 0;
+            else
+                return SpiSetInt(&gspv.iMouseSpeed, (INT_PTR)pvParam, KEY_MOUSE, VAL_SENSITIVITY, fl);
+        }
 
         case SPI_GETSCREENSAVERRUNNING:
             return SpiGetInt(pvParam, &gspv.bScrSaverRunning, fl);
@@ -1541,6 +1547,9 @@ UserSystemParametersInfo(
     UINT fWinIni)
 {
     ULONG_PTR ulResult;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+
+    ASSERT(ppi);
 
     if (!gbSpiInitialized)
     {
@@ -1550,9 +1559,7 @@ UserSystemParametersInfo(
     }
 
     /* Get a pointer to the current Windowstation */
-    gpwinstaCurrent = IntGetWinStaObj();
-
-    if (!gpwinstaCurrent)
+    if (!ppi->prpwinsta)
     {
         ERR("UserSystemParametersInfo called without active windowstation.\n");
         //ASSERT(FALSE);
@@ -1584,14 +1591,7 @@ UserSystemParametersInfo(
         }
         ulResult = 1;
     }
-
-    /* Dereference the windowstation */
-    if (gpwinstaCurrent)
-    {
-        ObDereferenceObject(gpwinstaCurrent);
-        gpwinstaCurrent = NULL;
-    }
-
+    
     return ulResult;
 }
 

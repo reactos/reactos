@@ -98,7 +98,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
 VOID
 FORCEINLINE
 KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
-                      IN KTRAP_EXIT_SKIP_BITS SkipBits)
+                      IN BOOLEAN SkipPreviousMode)
 {
     /* Make sure interrupts are disabled */
     if (__readeflags() & EFLAGS_INTERRUPT_MASK)
@@ -137,7 +137,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
     
     /* If we're ignoring previous mode, make sure caller doesn't actually want it */
-    if ((SkipBits.SkipPreviousMode) && (TrapFrame->PreviousPreviousMode != -1))
+    if (SkipPreviousMode && (TrapFrame->PreviousPreviousMode != -1))
     {
         DbgPrint("Exiting a trap witout restoring previous mode, yet previous mode seems valid: %lx\n", TrapFrame->PreviousPreviousMode);
         __debugbreak();
@@ -171,7 +171,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
         }
 
         /* Make sure we're not attached and that APCs are not disabled */
-        if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
+        if ((KeGetCurrentThread()->ApcStateIndex != OriginalApcEnvironment) ||
             (KeGetCurrentThread()->CombinedApcDisable != 0))
         {
             /* Fail */

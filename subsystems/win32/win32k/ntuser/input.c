@@ -332,17 +332,6 @@ InitInputImpl(VOID)
     return STATUS_SUCCESS;
 }
 
-/*
- * CleanupInputImp
- *
- * Cleans input implementation
- */
-NTSTATUS FASTCALL
-CleanupInputImp(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
 BOOL FASTCALL
 IntBlockInput(PTHREADINFO pti, BOOL BlockIt)
 {

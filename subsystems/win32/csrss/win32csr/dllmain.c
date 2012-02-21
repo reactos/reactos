@@ -326,12 +326,7 @@ CreateSystemThreads(PVOID pParam)
 
 NTSTATUS
 WINAPI
-#if 0
 Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
-#else
-Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
-                       PCSRPLUGIN_SERVER_PROCS ServerProcs)
-#endif
 {
     HANDLE ServerThread;
     CLIENT_ID ClientId;
@@ -347,19 +342,12 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     CsrInitConsoleSupport();
 
     /* HACK */
-#if 0
     ServerDll->DispatchTable = (PVOID)Win32CsrApiDefinitions;
     ServerDll->HighestApiSupported = 0xDEADBABE;
     
     ServerDll->HardErrorCallback = Win32CsrHardError;
     ServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
-    ServerDll->ShutdownProcessCallback = Win32CsrReleaseConsole;
-#else
-    *ApiDefinitions = Win32CsrApiDefinitions;
-    ServerProcs->HardErrorProc = Win32CsrHardError;
-    ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
-    ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
-#endif
+    ServerDll->DisconnectCallback = Win32CsrReleaseConsole;
 
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
@@ -374,7 +362,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     else
         DPRINT1("Cannot start Raw Input Thread!\n");
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

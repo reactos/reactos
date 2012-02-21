@@ -30,4 +30,4 @@ add_importlibs(videoprt ntoskrnl hal)
 
 add_pch(videoprt videoprt.h)
 add_cd_file(TARGET videoprt DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(videoprt.spec)
+add_importlib_target(videoprt.spec videoprt.sys)

@@ -31,18 +31,15 @@ NTAPI
 RtlIpv4AddressToStringA(IN struct in_addr *Addr,
                         OUT PCHAR S)
 {
-    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN];
     INT Length;
+    
+    if (!S) return (LPSTR)~0;
 
-    if(!S)
-        return NULL;
-
-    Length = sprintf(Buffer, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
+    Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
                                             Addr->S_un.S_un_b.s_b2,
                                             Addr->S_un.S_un_b.s_b3,
                                             Addr->S_un.S_un_b.s_b4);
 
-    strcpy(S, Buffer);
     return S + Length;
 }
 
@@ -88,19 +85,14 @@ NTAPI
 RtlIpv4AddressToStringW(IN struct in_addr *Addr,
                         OUT PWCHAR S)
 {
-    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN];
     INT Length;
 
-    if (!S)
-        return NULL;
-
-    Length = swprintf(Buffer, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                              Addr->S_un.S_un_b.s_b2,
-                                              Addr->S_un.S_un_b.s_b3,
-                                              Addr->S_un.S_un_b.s_b4);
-
-    wcscpy(S, Buffer);
-
+    if (!S) return (LPWSTR)~0;
+    
+    Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
+                                         Addr->S_un.S_un_b.s_b2,
+                                         Addr->S_un.S_un_b.s_b3,
+                                         Addr->S_un.S_un_b.s_b4);
     return S + Length;
 }
 

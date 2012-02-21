@@ -1576,10 +1576,10 @@ HidPnp(
             //
             // free resources
             //
-            if (HidDeviceExtension->HidDescriptor)
+            if (HidDeviceExtension->ConfigurationDescriptor)
             {
-                ExFreePool(HidDeviceExtension->HidDescriptor);
-                HidDeviceExtension->HidDescriptor = NULL;
+                ExFreePool(HidDeviceExtension->ConfigurationDescriptor);
+                HidDeviceExtension->ConfigurationDescriptor = NULL;
             }
 
             //

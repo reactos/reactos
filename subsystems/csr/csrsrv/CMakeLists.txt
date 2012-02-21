@@ -27,4 +27,4 @@ add_pch(csrsrv2 srv.h)
 
 add_dependencies(csrsrv2 psdk bugcodes)
 add_cd_file(TARGET csrsrv2 DESTINATION reactos/system32 FOR all)
-add_importlib_target(csrsrv2.spec)
+add_importlib_target(csrsrv2.spec csrsrv2.dll)

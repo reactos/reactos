@@ -681,7 +681,7 @@
 @ stdcall RtlGetSaclSecurityDescriptor(ptr ptr ptr ptr)
 @ stdcall RtlGetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlGetSetBootStatusData(ptr long long ptr long long)
-;@ stdcall RtlGetThreadErrorMode
+@ stdcall RtlGetThreadErrorMode()
 ;@ stdcall RtlGetUnloadEventTrace
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
@@ -894,9 +894,9 @@
 @ stdcall RtlSetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 ;@ stdcall RtlSetSecurityObjectEx
-;@ stdcall RtlSetThreadErrorMode
+@ stdcall RtlSetThreadErrorMode(long ptr)
 @ stdcall RtlSetThreadIsCritical(long ptr long)
-;@ stdcall RtlSetThreadPoolStartFunc
+@ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
 @ stdcall RtlSetTimeZoneInformation(ptr)
 ;@ stdcall RtlSetTimer
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)

@@ -113,6 +113,12 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
             MmCreatePageFileMapping(Process, Address, SwapEntry);
             MmSetSavedSwapEntryPage(Page, 0);
         }
+#if (_MI_PAGING_LEVELS == 2)
+        else if(Address < MmSystemRangeStart)
+        {
+            AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+        }
+#endif
         MmUnlockAddressSpace(AddressSpace);
         MmReleasePageMemoryConsumer(MC_USER, Page);
         PageOp->Status = STATUS_SUCCESS;
@@ -191,6 +197,9 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     PMM_REGION Region;
     PMM_PAGEOP PageOp;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+#if (_MI_PAGING_LEVELS == 2)
+    BOOLEAN refPde = TRUE;
+#endif
 
     /*
     * There is a window between taking the page fault and locking the
@@ -326,7 +335,17 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         MmSetSavedSwapEntryPage(Page, SwapEntry);
+        
+#if (_MI_PAGING_LEVELS == 2)
+        /* PTE was already "created", no need to reference PDE */
+        refPde = FALSE;
+#endif
     }
+#if (_MI_PAGING_LEVELS == 2)
+    /* Add an additional page table reference */
+    if(refPde) MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+    ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+#endif
 
     /*
     * Set the page. If we fail because we are out of memory then
@@ -337,16 +356,6 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
         Region->Protect,
         &Page,
         1);
-    while (Status == STATUS_NO_MEMORY)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        Status = MmCreateVirtualMapping(Process,
-            (PVOID)PAGE_ROUND_DOWN(Address),
-            Region->Protect,
-            &Page,
-            1);
-        MmLockAddressSpace(AddressSpace);
-    }
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
@@ -393,9 +402,9 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
         for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
         {
             PFN_NUMBER Page;
+            PVOID Address = (char*)BaseAddress + (i*PAGE_SIZE);
 
-            if (MmIsPageSwapEntry(Process,
-                        (char*)BaseAddress + (i * PAGE_SIZE)))
+            if (MmIsPageSwapEntry(Process, Address))
             {
                 SWAPENTRY SwapEntry;
 
@@ -403,11 +412,17 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                     (char*)BaseAddress + (i * PAGE_SIZE),
                     &SwapEntry);
                 MmFreeSwapPage(SwapEntry);
+#if (_MI_PAGING_LEVELS == 2)
+                if(Address < MmSystemRangeStart)
+                {
+                    AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+                }
+#endif
             }
             else
             {
                 MmDeleteVirtualMapping(Process,
-                    (char*)BaseAddress + (i*PAGE_SIZE),
+                    Address,
                     FALSE, NULL, &Page);
                 if (Page != 0)
                 {
@@ -417,10 +432,16 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                     {
                         MmFreeSwapPage(SavedSwapEntry);
                         MmSetSavedSwapEntryPage(Page, 0);
-                    }
+                    }                            
                     MmDeleteRmap(Page, Process,
                         (char*)BaseAddress + (i * PAGE_SIZE));
                     MmReleasePageMemoryConsumer(MC_USER, Page);
+#if (_MI_PAGING_LEVELS == 2)
+                    if(Address < MmSystemRangeStart)
+                    {
+                        AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+                    }
+#endif
                 }
             }
         }

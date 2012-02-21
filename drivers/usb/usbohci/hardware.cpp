@@ -595,7 +595,26 @@ CUSBHardwareDevice::StartController(void)
     //
     // no over current protection
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor | OHCI_RH_NO_OVER_CURRENT_PROTECTION);
+    Descriptor |= OHCI_RH_NO_OVER_CURRENT_PROTECTION;
+
+    //
+    // power switching on
+    //
+    Descriptor &= ~OHCI_RH_NO_POWER_SWITCHING;
+
+    //
+    // control each port power independently (disabled until it's supported correctly)
+    //
+#if 0
+    Descriptor |= OHCI_RH_POWER_SWITCHING_MODE;
+#else
+    Descriptor &= ~OHCI_RH_POWER_SWITCHING_MODE;
+#endif
+
+    //
+    // write the configuration back
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
 
     //
     // enable power on all ports
@@ -732,21 +751,19 @@ VOID
 CUSBHardwareDevice::HeadEndpointDescriptorModified(
     ULONG Type)
 {
-    ULONG Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
-
     if (Type == USB_ENDPOINT_TYPE_CONTROL)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_CONTROL_LIST_FILLED);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_CONTROL_LIST_FILLED);
     }
     else if (Type == USB_ENDPOINT_TYPE_BULK)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_BULK_LIST_FILLED);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_BULK_LIST_FILLED);
     }
 }
 
@@ -1140,7 +1157,13 @@ CUSBHardwareDevice::GetPortStatus(
 
     // connected
     if (Value & OHCI_RH_PORTSTATUS_CCS)
+    {
         *PortStatus |= USB_PORT_STATUS_CONNECT;
+
+        // low speed device
+        if (Value & OHCI_RH_PORTSTATUS_LSDA)
+            *PortStatus |= USB_PORT_STATUS_LOW_SPEED;
+    }
 
     // did a device connect?
     if (Value & OHCI_RH_PORTSTATUS_CSC)
@@ -1162,20 +1185,13 @@ CUSBHardwareDevice::GetPortStatus(
     if (Value & OHCI_RH_PORTSTATUS_PSSC)
         *PortChange |= USB_PORT_STATUS_ENABLE;
 
-    // port reset started (change bit only set at completion)
+    // port reset started
     if (Value & OHCI_RH_PORTSTATUS_PRS)
-    {
         *PortStatus |= USB_PORT_STATUS_RESET;
-        *PortChange |= USB_PORT_STATUS_RESET;
-    }
 
-    // port reset ended (change bit only set at completion)
+    // port reset ended
     if (Value & OHCI_RH_PORTSTATUS_PRSC)
         *PortChange |= USB_PORT_STATUS_RESET;
-
-    // low speed device
-    if (Value & OHCI_RH_PORTSTATUS_LSDA)
-        *PortStatus |= USB_PORT_STATUS_LOW_SPEED;
 
     return STATUS_SUCCESS;
 }
@@ -1217,7 +1233,7 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // clear change bits
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), Value & (OHCI_RH_PORTSTATUS_CSC | OHCI_RH_PORTSTATUS_PESC));
 
         //
         // wait for port to stabilize
@@ -1334,35 +1350,9 @@ CUSBHardwareDevice::SetPortFeature(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRS);
 
-        do
-        {
-           //
-           // read port status
-           //
-           Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
-
-           if ((Value & OHCI_RH_PORTSTATUS_PRS) == 0 &&
-               (Value & OHCI_RH_PORTSTATUS_PRSC) != 0)
-           {
-               //
-               // reset is complete
-               //
-               break;
-           }
-
-           //
-           // wait a bit
-           //
-           KeStallExecutionProcessor(100);
-        }while(TRUE);
-
-        if (m_SCECallBack != NULL)
-        {
-            //
-            // issue callback
-            //
-            m_SCECallBack(m_SCEContext);
-        }
+        //
+        // an interrupt signals the reset completion
+        //
         return STATUS_SUCCESS;
     }
     return STATUS_SUCCESS;
@@ -1579,7 +1569,7 @@ OhciDefferedRoutine(
     CStatus = (ULONG) SystemArgument1;
     DoneHead = (ULONG)SystemArgument2;
 
-    DPRINT("OhciDefferedRoutine Status %x\n", CStatus);
+    DPRINT("OhciDefferedRoutine Status %x DoneHead %x\n", CStatus, DoneHead);
 
     if (CStatus & OHCI_WRITEBACK_DONE_HEAD)
     {
@@ -1628,6 +1618,18 @@ OhciDefferedRoutine(
                     //
                     DPRINT1("Device disconnected at Port %x\n", Index);
                 }
+
+                //
+                // work to do
+                //
+                QueueSCEWorkItem = TRUE;
+            }
+            else if (PortStatus & OHCI_RH_PORTSTATUS_PESC)
+            {
+                //
+                // device disconnected or some error condition
+                //
+                ASSERT(!(PortStatus & OHCI_RH_PORTSTATUS_PES));
 
                 //
                 // work to do

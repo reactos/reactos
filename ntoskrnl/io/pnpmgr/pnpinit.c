@@ -362,7 +362,7 @@ IopInitializePlugPlayServices(VOID)
 {
     NTSTATUS Status;
     ULONG Disposition;
-    HANDLE KeyHandle, EnumHandle, ParentHandle, TreeHandle;
+    HANDLE KeyHandle, EnumHandle, ParentHandle, TreeHandle, ControlHandle;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
     PDEVICE_OBJECT Pdo;
     
@@ -386,7 +386,37 @@ IopInitializePlugPlayServices(VOID)
                                   &KeyName,
                                   KEY_ALL_ACCESS);
     if (!NT_SUCCESS(Status)) return Status;
-    
+
+    /* Create the control key */
+    RtlInitUnicodeString(&KeyName, L"Control");
+    Status = IopCreateRegistryKeyEx(&ControlHandle,
+                                    KeyHandle,
+                                    &KeyName,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    &Disposition);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if it's a new key */
+    if (Disposition == REG_CREATED_NEW_KEY)
+    {
+        HANDLE DeviceClassesHandle;
+
+        /* Create the device classes key */
+        RtlInitUnicodeString(&KeyName, L"DeviceClasses");
+        Status = IopCreateRegistryKeyEx(&DeviceClassesHandle,
+                                        ControlHandle,
+                                        &KeyName,
+                                        KEY_ALL_ACCESS,
+                                        REG_OPTION_NON_VOLATILE,
+                                        &Disposition);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        ZwClose(DeviceClassesHandle);
+    }
+
+    ZwClose(ControlHandle);
+
     /* Create the enum key */
     RtlInitUnicodeString(&KeyName, REGSTR_KEY_ENUM);
     Status = IopCreateRegistryKeyEx(&EnumHandle,
@@ -436,7 +466,7 @@ IopInitializePlugPlayServices(VOID)
         NtClose(EnumHandle);
         if (NT_SUCCESS(Status)) NtClose(TreeHandle);
     }
-   
+
     /* Create the root driver */
     Status = IoCreateDriver(NULL, PnpRootDriverEntry);
     if (!NT_SUCCESS(Status))

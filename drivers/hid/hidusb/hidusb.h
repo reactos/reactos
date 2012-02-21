@@ -45,6 +45,7 @@ typedef struct
     // hid descriptor
     //
     PHID_DESCRIPTOR HidDescriptor;
+
 }HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
 
 typedef struct

@@ -41,7 +41,7 @@ _main(int argc,
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
-    //ULONG Response;
+    ULONG Response;
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
@@ -60,14 +60,12 @@ _main(int argc,
     {
         /* Raise a hard error */
         DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
-        #if 0
         Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
                                   0,
                                   0,
                                   NULL,
                                   OptionOk,
                                   &Response);
-                                  #endif
     }
 
     /* Initialize CSR through CSRSRV */

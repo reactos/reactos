@@ -116,6 +116,14 @@ USBSTOR_HandleTransferError(
     PCDB pCDB;
 
     //
+    // sanity checks
+    //
+    ASSERT(Context);
+    ASSERT(Context->PDODeviceExtension);
+    ASSERT(Context->PDODeviceExtension->Self);
+    ASSERT(Context->Irp);
+
+    //
     // first perform a mass storage reset step 1 in 5.3.4 USB Mass Storage Bulk Only Specification
     //
     Status = USBSTOR_ResetDevice(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension);
@@ -134,91 +142,51 @@ USBSTOR_HandleTransferError(
         }
     }
 
-    if (Context->Irp)
+    //
+    // get next stack location
+    //
+    Stack = IoGetCurrentIrpStackLocation(Context->Irp);
+
+    //
+    // get request block
+    //
+    Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
+    ASSERT(Request);
+
+    //
+    // obtain request type
+    //
+    pCDB = (PCDB)Request->Cdb;
+    ASSERT(pCDB);
+
+    if (Status != STATUS_SUCCESS)
     {
         //
-        // get next stack location
+        // Complete the master IRP
         //
-        Stack = IoGetCurrentIrpStackLocation(Context->Irp);
-
-        //
-        // get request block
-        //
-        Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
-        ASSERT(Request);
+        Context->Irp->IoStatus.Status = Status;
+        Context->Irp->IoStatus.Information = 0;
+        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
+        IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
 
         //
-        // obtain request type
+        // Start the next request
         //
-        pCDB = (PCDB)Request->Cdb;
-        ASSERT(pCDB);
+        USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
 
         //
-        // Cleanup the IRP context
-        if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
-        {
-            FreeItem(Context->TransferData);
-        }
+        // srb handling finished
+        //
+        Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
 
-        if (Status != STATUS_SUCCESS)
-        {
-            //
-            // Complete the master IRP
-            //
-            Context->Irp->IoStatus.Status = Status;
-            Context->Irp->IoStatus.Information = 0;
-            USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
-            IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
-
-            //
-            // Start the next request
-            //
-            USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
-
-            //
-            // srb handling finished
-            //
-            Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
-
-            //
-            // clear timer srb
-            //
-            Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
-        }
+        //
+        // clear timer srb
+        //
+        Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
     }
     else
     {
-        if (Status != STATUS_SUCCESS)
-        {
-            //
-            // Signal the context event
-            //
-            ASSERT(Context->Event);
-            KeSetEvent(Context->Event, 0, FALSE);
-
-            //
-            // srb handling finished
-            //
-            Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
-
-            //
-            // clear timer srb
-            //
-            Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
-        }
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // FIXME: inquiry cmd / read format capacity are send w/o irp
-        //
-        ASSERT(Context);
-        ASSERT(Context->PDODeviceExtension);
-        ASSERT(Context->PDODeviceExtension->Self);
-        ASSERT(Context->Irp);
-
-        DPRINT1("Retrying Count %x %p\n", Context->RetryCount, Context->PDODeviceExtension->Self);
+        DPRINT1("Retrying Count %lu %p\n", Context->RetryCount, Context->PDODeviceExtension->Self);
 
         //
         // re-schedule request

@@ -44,8 +44,6 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 
-link_directories(${REACTOS_SOURCE_DIR}/importlibs ${REACTOS_BINARY_DIR}/importlibs ${REACTOS_BINARY_DIR}/lib/sdk/crt)
-
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 
 if(MSVC_IDE)
@@ -131,58 +129,41 @@ function(set_rc_compiler)
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} /I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} /fo <OBJECT> <SOURCE>" PARENT_SCOPE)
 endfunction()
 
+#define those for having real libraries
+set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
+set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
 # Thanks MS for creating a stupid linker
-function(add_importlib_target _exports_file)
+function(add_importlib_target _exports_file _implib_name)
+
     get_filename_component(_name ${_exports_file} NAME_WE)
-    get_target_property(_suffix ${_name} SUFFIX)
-    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
-        get_target_property(_type ${_name} TYPE)
-        if(${_type} MATCHES EXECUTABLE)
-            set(_suffix ".exe")
-        else()
-            set(_suffix ".dll")
-        endif()
-    endif()
 
     # Generate the asm stub file and the export def file
     add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_name}${_suffix} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_exp.def
+        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_implib_name} -d=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
+    # be clear about the language
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
 
-    # Assemble the stub file
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
-        COMMAND ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
-        DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm")
-
-    # Add neccessary importlibs for redirections
-    set(_libraries "")
-    set(_dependencies "")
-    foreach(_lib ${ARGN})
-        list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
-        list(APPEND _dependencies ${_lib})
-    endforeach()
-
-    # Build the importlib
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        COMMAND LINK /LIB /NOLOGO /DEF:${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${_libraries}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def)
-
-    # Add the importlib target
-    add_custom_target(
-        lib${_name}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib)
-
-    add_dependencies(lib${_name} asm ${_dependencies})
+    # add our library
+    # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
+    add_library(lib${_name} STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm)
+    
+    # Add necessary importlibs for redirections. Still necessary ?
+    if(ARGN)
+        target_link_libraries(lib${_name} ${ARGN})
+    endif()
+    
+    # set correct link rule
+    set_target_properties(lib${_name} PROPERTIES LINKER_LANGUAGE "IMPLIB"
+        STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\lib${_name}_exp.def")
 endfunction()
 
 macro(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
         add_target_link_flags(${MODULE} "/DELAYLOAD:${LIB}.dll")
-        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.LIB)
-        add_dependencies(${MODULE} lib${LIB})
+        target_link_libraries(${MODULE} lib${LIB})
     endforeach()
     target_link_libraries(${MODULE} delayimp)
 endmacro()
@@ -204,8 +185,6 @@ endfunction()
 macro(macro_mc FLAG FILE)
     set(COMMAND_MC mc ${FLAG} -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
 endmacro()
-
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
 set(PSEH_LIB "pseh")

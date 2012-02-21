@@ -19,5 +19,5 @@ target_link_libraries(oleacc wine)
 
 add_importlibs(oleacc user32 msvcrt kernel32 ntdll)
 
-add_importlib_target(oleacc.spec)
+add_importlib_target(oleacc.spec oleacc.dll)
 add_cd_file(TARGET oleacc DESTINATION reactos/system32 FOR all)

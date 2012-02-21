@@ -30,16 +30,9 @@ IntCreatePrimarySurface()
 {
     SIZEL SurfSize;
     SURFOBJ *pso;
-    BOOL calledFromUser;
-
-    calledFromUser = UserIsEntered(); // FIXME: Possibly upgrade a shared lock
-    if (!calledFromUser)
-    {
-        UserEnterExclusive();
-    }
 
     /* Attach monitor */
-    IntAttachMonitor(gppdevPrimary, 0);
+    UserAttachMonitor((HDEV)gppdevPrimary);
 
     DPRINT("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
         pPrimarySurface, pPrimarySurface->pSurface);
@@ -56,11 +49,6 @@ IntCreatePrimarySurface()
 
     // Init Primary Displays Device Capabilities.
     PDEVOBJ_vGetDeviceCaps(pPrimarySurface, &GdiHandleTable->DevCaps);
-
-    if (!calledFromUser)
-    {
-        UserLeave();
-    }
 
     return TRUE;
 }

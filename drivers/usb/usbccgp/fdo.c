@@ -409,6 +409,52 @@ FDO_StartDevice(
 }
 
 NTSTATUS
+FDO_CloseConfiguration(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    NTSTATUS Status;
+    PURB Urb;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    // get device extension
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // now allocate the urb
+    //
+    Urb = USBD_CreateConfigurationRequestEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->InterfaceList);
+    if (!Urb)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // clear configuration descriptor to make it an unconfigure request
+    //
+    Urb->UrbSelectConfiguration.ConfigurationDescriptor = NULL;
+
+    //
+    // submit urb
+    //
+    Status = USBCCGP_SyncUrbRequest(FDODeviceExtension->NextDeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to set configuration
+        //
+        DPRINT1("USBCCGP_SyncUrbRequest failed to unconfigure device\n", Status);
+    }
+
+    ExFreePool(Urb);
+    return Status;
+}
+
+
+NTSTATUS
 FDO_HandlePnp(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -429,6 +475,12 @@ FDO_HandlePnp(
     {
         case IRP_MN_REMOVE_DEVICE:
         {
+            //
+            // unconfigure device
+            //
+            DPRINT1("[USBCCGP] FDO IRP_MN_REMOVE\n");
+            FDO_CloseConfiguration(DeviceObject);
+
             /* Send the IRP down the stack */
             Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
             if (NT_SUCCESS(Status))

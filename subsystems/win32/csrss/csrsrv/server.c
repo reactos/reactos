@@ -230,10 +230,7 @@ CsrLoadServerDll(IN PCHAR DllString,
             /* ReactOS Specific hax */
             if (ServerDll->HighestApiSupported == 0xDEADBABE)
             {
-                DPRINT1("Registering: %p\n", (PVOID)ServerDll->DispatchTable);
                 Status = CsrApiRegisterDefinitions((PVOID)ServerDll->DispatchTable);
-                DPRINT1("Status: %lx\n", Status);
-                goto LoadFailed;
             }
         }
         else
@@ -494,12 +491,6 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
                                     ViewUnmap,
                                     SEC_NO_CHANGE,
                                     PAGE_EXECUTE_READ);
-        if (Status == STATUS_CONFLICTING_ADDRESSES)
-        {
-            /* I Think our csrss tries to connect to itself... */
-            DPRINT1("Multiple mapping hack\n");
-            Status = STATUS_SUCCESS;
-        }
         if (!NT_SUCCESS(Status)) return Status;
     }
 

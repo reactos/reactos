@@ -364,6 +364,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_NODE DeviceNode;
     BOOLEAN SafeToUnload = TRUE;
 
+    /* We can't unload unless there's an unload handler */
+    if (!DriverObject->DriverUnload)
+    {
+        DPRINT1("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
+    }
+
     /* Check if removal is pending */
     ThisExtension = IoGetDevObjExtension(DeviceObject);
     if (ThisExtension->ExtensionFlags & DOE_REMOVE_PENDING)
@@ -463,11 +470,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         DeviceObject = DeviceObject->NextDevice;
     }
 
+    DPRINT1("Unloading driver '%wZ' (automatic)\n", &DriverObject->DriverName);
+
     /* Set the unload invoked flag */
     DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
 
     /* Unload it */
-    if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+    DriverObject->DriverUnload(DriverObject);
 
     /* Make object temporary so it can be deleted */
     ObMakeTemporaryObject(DriverObject);

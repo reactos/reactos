@@ -2467,7 +2467,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
          if (NT_SUCCESS(IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps)) &&
              DeviceCaps.RawDeviceOK)
          {
-            DPRINT1("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
+            DPRINT("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
 
             DeviceNode->ServiceName.Length = 0;
             DeviceNode->ServiceName.MaximumLength = 0;
@@ -2601,7 +2601,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          }
          else
          {
-            DPRINT1("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
+            DPRINT("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
                     &DeviceNode->ServiceName, Status);
          }
       }

@@ -446,7 +446,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             continue;
         }
 
-        /* It's some other kind of request. Get the lock for the lookup*/
+        /* It's some other kind of request. Get the lock for the lookup */
         CsrAcquireProcessLock();
 
         /* Now do the lookup to get the CSR_THREAD */
@@ -720,7 +720,7 @@ CsrApiRequestThread(IN PVOID Parameter)
         }
 
         /* We got an API Request */
-        CsrDereferenceThread(CsrThread);
+        CsrLockedReferenceThread(CsrThread);
         CsrReleaseProcessLock();
 
         /* This is an API call, get the Server ID */
@@ -1227,7 +1227,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     _SEH2_TRY
     {
         /* Call the API and get the result */
-        Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
+        Status = ServerDll->DispatchTable[ApiId](ReceiveMsg, &Reply);
 
         /* Return the result, no matter what it is */
         ReplyMsg->Status = Status;

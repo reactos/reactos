@@ -20,5 +20,5 @@ add_importlibs(odbccp32
     kernel32
     ntdll)
 
-add_importlib_target(odbccp32.spec)
+add_importlib_target(odbccp32.spec odbccp32.dll)
 add_cd_file(TARGET odbccp32 DESTINATION reactos/system32 FOR all)

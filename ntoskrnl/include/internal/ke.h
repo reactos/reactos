@@ -729,6 +729,10 @@ KeContextToTrapFrame(
 
 VOID
 NTAPI
+Ke386SetIOPL(VOID);
+
+VOID
+NTAPI
 KiCheckForKernelApcDelivery(VOID);
 
 LONG

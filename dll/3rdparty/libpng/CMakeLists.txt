@@ -20,7 +20,6 @@ add_library(libpng SHARED
     pngrtran.c
     pngrutil.c
     pngset.c
-    pngtest.c
     pngtrans.c
     pngwio.c
     pngwrite.c

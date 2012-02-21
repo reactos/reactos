@@ -150,7 +150,6 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     PVOID State;
     PSB_CREATE_PROCESS_MSG CreateProcess = &SbApiMsg.CreateProcess;
     PSB_CREATE_SESSION_MSG CreateSession = &SbApiMsg.CreateSession;
-    DPRINT1("Loading subsystem: %wZ\n", FileName);
 
     /* Make sure this is a found subsystem */
     if (Flags & SMP_INVALID_PATH)
@@ -202,7 +201,6 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
 
     /* Allocate a new subsystem! */
     NewSubsystem = RtlAllocateHeap(SmpHeap, SmBaseTag, sizeof(SMP_SUBSYSTEM));
-    DPRINT1("new subsystem created: %p\n", NewSubsystem);
     if (!NewSubsystem)
     {
         RtlLeaveCriticalSection(&SmpKnownSubSysLock);
@@ -279,7 +277,6 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     else
     {
         /* This must be CSRSS itself, so just launch it and that's it */
-        DPRINT1("Executing CSRSS\n");
         Status = SmpExecuteImage(FileName,
                                  Directory,
                                  CommandLine,
@@ -314,7 +311,6 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
             SmpWindowsSubSysProcess = ProcessInformation.ProcessHandle;
         }
         ASSERT(NT_SUCCESS(Status));
-        DPRINT1("CSRSS is up and running: %lx %lx\n", SmpWindowsSubSysProcessId, SmpWindowsSubSysProcess);
     }
     else
     {
@@ -399,7 +395,6 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     }
 
     /* Okay, everything looks good to go, initialize this subsystem now! */
-    DPRINT1("Resuming the subsystem!\n");
     Status = NtResumeThread(ProcessInformation.ThreadHandle, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -436,15 +431,12 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     else
     {
         /* This a session 0 subsystem, just wait for it to initialize */
-        DPRINT1("Waiting on the subsystem to initialize...\n");
         NtWaitForSingleObject(NewSubsystem->Event, FALSE, NULL);
-        DPRINT1("Subsystem is ready!!!\n");
     }
 
     /* Subsystem is created, resumed, and initialized. Close handles and exit */
     NtClose(ProcessInformation.ThreadHandle);
     Status = STATUS_SUCCESS;
-    DPRINT1("Returning success\n");
     goto Quickie2;
 
 Quickie:
@@ -537,7 +529,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Execute each one and move on */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("SetupExecute entry: %wZ\n", &RegEntry->Name);
         SmpExecuteCommand(&RegEntry->Name, 0, NULL, 0);
         NextEntry = NextEntry->Flink;
     }
@@ -548,7 +539,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get the entry and check if this is the special Win32k entry */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Subsystem: %wZ\n", &RegEntry->Name);
         if (!_wcsicmp(RegEntry->Name.Buffer, L"Kmode"))
         {
             /* Translate it */
@@ -581,7 +571,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                     AttachedSessionId = *MuSessionId;
 
                     /* Start Win32k.sys on this session */
-                    DPRINT1("Starting win32k.sys...\n");
                     RtlInitUnicodeString(&DestinationString,
                                          L"\\SystemRoot\\System32\\win32k.sys");
                     Status = NtSetSystemInformation(SystemExtendServiceTableInformation,
@@ -608,7 +597,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get each entry and check if it's the internal debug or not */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Subsystem (required): %wZ\n", &RegEntry->Name);
         if (_wcsicmp(RegEntry->Name.Buffer, L"debug"))
         {
             /* Load the required subsystem */
@@ -641,7 +629,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get the custom initial command */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Initial command found: %wZ\n", &RegEntry->Name);
 
         /* Write the initial command and wait for 5 seconds (why??!) */
         *InitialCommand = RegEntry->Name;
@@ -653,7 +640,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
         /* Use the default Winlogon initial command */
         RtlInitUnicodeString(InitialCommand, L"winlogon.exe");
         InitialCommandBuffer[0] = UNICODE_NULL;
-        DPRINT1("Initial command found: %wZ\n", InitialCommand);
 
         /* Check if there's a debugger for Winlogon */
         Status2 = LdrQueryImageFileExecutionOptions(InitialCommand,
@@ -678,7 +664,6 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Execute each one */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Initial command (custom): %wZ\n", &RegEntry->Name);
         SmpExecuteCommand(&RegEntry->Name, *MuSessionId, NULL, 0);
         NextEntry = NextEntry->Flink;
     }

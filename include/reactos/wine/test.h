@@ -314,7 +314,8 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
         }
         else
         {
-            if (winetest_debug > 0)
+            /* show todos even if traces are disabled*/
+            /*if (winetest_debug > 0)*/
             {
                 fprintf( stdout, "%s:%d: Test marked todo: ",
                          data->current_file, data->current_line );
@@ -555,7 +556,8 @@ static int run_test( const char *name )
     current_test = test;
     test->func();
 
-    if (winetest_debug)
+    /* show test results even if traces are disabled */
+    /*if (winetest_debug)*/
     {
         fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
                  test->name, successes + failures + todo_successes + todo_failures,

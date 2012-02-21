@@ -10,6 +10,6 @@ add_library(sfc_os SHARED ${SOURCE})
 
 set_module_type(sfc_os win32dll)
 add_importlibs(sfc_os msvcrt kernel32 ntdll)
-add_importlib_target(sfc_os.spec)
+add_importlib_target(sfc_os.spec sfc_os.dll)
 add_pch(sfc_os precomp.h)
 add_cd_file(TARGET sfc_os DESTINATION reactos/system32 FOR all)

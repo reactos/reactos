@@ -843,7 +843,9 @@ typedef struct _SYSTEM_THREAD_INFORMATION
     ULONG ContextSwitches;
     ULONG ThreadState;
     ULONG WaitReason;
+    ULONG PadPadAlignment;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+C_ASSERT(sizeof(SYSTEM_THREAD_INFORMATION) == 0x40); // Must be 8-byte aligned
 
 typedef struct _SYSTEM_PROCESS_INFORMATION
 {
@@ -890,10 +892,11 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-
-    SYSTEM_THREAD_INFORMATION TH[1];
+//    SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+C_ASSERT(sizeof(SYSTEM_PROCESS_INFORMATION) == 0xB8); // Must be 8-byte aligned
 
+// 
 // Class 6
 typedef struct _SYSTEM_CALL_COUNT_INFORMATION
 {

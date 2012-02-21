@@ -37,5 +37,5 @@ add_importlibs(inetcomm
     kernel32
     ntdll)
 
-add_importlib_target(inetcomm.spec)
+add_importlib_target(inetcomm.spec inetcomm.dll)
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)

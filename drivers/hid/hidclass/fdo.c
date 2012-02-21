@@ -384,17 +384,21 @@ HidClassFDO_RemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PHIDCLASS_FDO_EXTENSION FDODeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
 
-    /* Pass the IRP down */
+    /* FIXME cleanup */
+
+    //
+    // dispatch to minidriver
+    //
     IoSkipCurrentIrpStackLocation(Irp);
-    Status = IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
 
-    /* Now teardown our portion of the device stack */
-    IoDetachDevice(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject);
-    IoDeleteDevice(DeviceObject);
-
+    //
+    // complete request
+    //
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
@@ -533,6 +537,7 @@ HidClassFDO_PnP(
 {
     PIO_STACK_LOCATION IoStack;
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    NTSTATUS Status;
 
     //
     // get device extension
@@ -554,45 +559,34 @@ HidClassFDO_PnP(
         {
              return HidClassFDO_RemoveDevice(DeviceObject, Irp);
         }
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-        case IRP_MN_QUERY_STOP_DEVICE:
-        {
-            //
-            // set status to succes
-            //
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-
-            //
-            // forward to lower device
-            //
-            IoSkipCurrentIrpStackLocation(Irp);
-            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
-        }
-        case IRP_MN_CANCEL_REMOVE_DEVICE:
-        case IRP_MN_CANCEL_STOP_DEVICE:
-        {
-            //
-            // set status to succes
-            //
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-
-            //
-            // forward to lower device
-            //
-            IoSkipCurrentIrpStackLocation(Irp);
-            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
-        }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
              return HidClassFDO_DeviceRelations(DeviceObject, Irp);
         }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        {
+            //
+            // set status to success and fall through
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+         }
         default:
         {
             //
-            // dispatch to lower device
+            // dispatch to mini driver
             //
-            IoSkipCurrentIrpStackLocation(Irp);
-            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+           IoSkipCurrentIrpStackLocation(Irp);
+           Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
+
+           //
+           // complete request
+           //
+           Irp->IoStatus.Status = Status;
+           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+           return Status;
         }
     }
 }

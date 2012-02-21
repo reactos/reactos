@@ -258,9 +258,6 @@ MiDeletePte(IN PMMPTE PointerPte,
 #if (_MI_PAGING_LEVELS == 2)
         }
 #endif
-        /* Drop the reference on the page table. */
-        MiDecrementShareCount(MiGetPfnEntry(PFN_FROM_PTE(PointerPde)), PFN_FROM_PTE(PointerPde));
-
         /* Drop the share count */
         MiDecrementShareCount(Pfn1, PageFrameIndex);
 

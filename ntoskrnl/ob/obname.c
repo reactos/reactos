@@ -1120,7 +1120,7 @@ ObQueryNameString(IN PVOID Object,
             ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
                                                           sizeof(UNICODE_NULL));
             ObjectNameInfo->Name.Buffer = ObjectName;
-            _SEH2_YIELD(return STATUS_SUCCESS);
+            Status = STATUS_SUCCESS;
         }
         else
         {

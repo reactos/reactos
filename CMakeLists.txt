@@ -78,6 +78,9 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
     
+    # this is needed as well
+    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
+    
     if(ENABLE_CCACHE)
         set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
         set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
@@ -221,8 +224,6 @@ else()
     add_subdirectory(subsystems)
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
-
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
     add_dependency_footer()
 endif()

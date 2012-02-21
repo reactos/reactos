@@ -56,4 +56,4 @@ target_link_libraries(gdi32
 add_importlibs(gdi32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(gdi32 include/precomp.h)
 add_cd_file(TARGET gdi32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(gdi32.spec)
+add_importlib_target(gdi32.spec gdi32.dll)

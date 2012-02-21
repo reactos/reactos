@@ -10,9 +10,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
 
 ; Critical Device Database
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\acpipic_up","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\e_isa_up","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A03","Service",0x00000000,"pci"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A03","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
 
@@ -1287,7 +1284,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Type",0x00010001,0x00000002
 
 ; Cdrom class driver
@@ -1803,7 +1800,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
@@ -1817,7 +1814,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
 
 ; VBE SVGA driver

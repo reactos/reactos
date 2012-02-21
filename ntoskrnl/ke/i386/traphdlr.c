@@ -82,7 +82,7 @@ KiIsFrameEdited(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-KiCommonExit(IN PKTRAP_FRAME TrapFrame, const ULONG Flags)
+KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
 {
     /* Disable interrupts until we return */
     _disable();
@@ -91,7 +91,7 @@ KiCommonExit(IN PKTRAP_FRAME TrapFrame, const ULONG Flags)
     KiCheckForApcDelivery(TrapFrame);
     
     /* Debugging checks */
-    KiExitTrapDebugChecks(TrapFrame, Flags);
+    KiExitTrapDebugChecks(TrapFrame, SkipPreviousMode);
 
     /* Restore the SEH handler chain */
     KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
@@ -112,7 +112,7 @@ FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, TRUE);
 
     /* Check if this was a V8086 trap */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturnNoSegments(TrapFrame);
@@ -140,7 +140,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
     TrapFrame->Eax = Status;
     
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, FALSE);
     
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
@@ -171,7 +171,7 @@ FASTCALL
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
     /* Common trap exit code */
-    KiCommonExit(TrapFrame, 0);
+    KiCommonExit(TrapFrame, FALSE);
     
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
@@ -970,6 +970,12 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
             }
             
             /* Check for privileged instructions */
+            DPRINT("Instruction (%d) at fault: %lx %lx %lx %lx\n",
+                    i,
+                    Instructions[i],
+                    Instructions[i + 1],
+                    Instructions[i + 2],
+                    Instructions[i + 3]);
             if (Instruction == 0xF4)                            // HLT
             {
                 /* HLT is privileged */
@@ -988,10 +994,11 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
                     (Instructions[i + 1] == 0x08) ||               // INVD
                     (Instructions[i + 1] == 0x09) ||               // WBINVD
                     (Instructions[i + 1] == 0x35) ||               // SYSEXIT
-                    (Instructions[i + 1] == 0x26) ||               // MOV DR, XXX
+                    (Instructions[i + 1] == 0x21) ||               // MOV DR, XXX
                     (Instructions[i + 1] == 0x06) ||               // CLTS
                     (Instructions[i + 1] == 0x20) ||               // MOV CR, XXX
-                    (Instructions[i + 1] == 0x24) ||               // MOV YYY, DR
+                    (Instructions[i + 1] == 0x22) ||               // MOV XXX, CR
+                    (Instructions[i + 1] == 0x23) ||               // MOV YYY, DR
                     (Instructions[i + 1] == 0x30) ||               // WRMSR
                     (Instructions[i + 1] == 0x33))                 // RDPMC
                     // INVLPG, INVLPGA, SYSRET
@@ -1192,7 +1199,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
                              Cr2,
                              -1,
-                             TrapFrame->ErrCode & 1,
+                             TrapFrame->ErrCode & 2 ? TRUE : FALSE,
                              TrapFrame->Eip,
                              TrapFrame);
         }
@@ -1254,7 +1261,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* This status code is repurposed so we can recognize it later */
         KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                  TrapFrame->Eip,
-                                 TrapFrame->ErrCode & 1,
+                                 TrapFrame->ErrCode & 2 ? TRUE : FALSE,
                                  Cr2,
                                  TrapFrame);
     }
@@ -1264,7 +1271,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* These faults only have two parameters */
         KiDispatchException2Args(Status,
                                  TrapFrame->Eip,
-                                 TrapFrame->ErrCode & 1,
+                                 TrapFrame->ErrCode & 2 ? TRUE : FALSE,
                                  Cr2,
                                  TrapFrame);
     }
@@ -1273,7 +1280,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     KiDispatchExceptionFromTrapFrame(STATUS_IN_PAGE_ERROR,
                                      TrapFrame->Eip,
                                      3,
-                                     TrapFrame->ErrCode & 1,
+                                     TrapFrame->ErrCode & 2 ? TRUE : FALSE,
                                      Cr2,
                                      Status,
                                      TrapFrame);
@@ -1556,17 +1563,18 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
 
         /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
         Result = KiConvertToGuiThread();
+
+        /* Reload trap frame and descriptor table pointer from new stack */
+        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
+        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
+
         if (!NT_SUCCESS(Result))
         {
             /* Set the last error and fail */
             //SetLastWin32Error(RtlNtStatusToDosError(Result));
             goto ExitCall;
         }
-        
-        /* Reload trap frame and descriptor table pointer from new stack */
-        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
-        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
-        
+
         /* Validate the system call number again */
         if (Id >= DescriptorTable->Limit)
         {

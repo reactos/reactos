@@ -204,14 +204,12 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
     if (SbApiMsg->h.ClientId.UniqueProcess == SmUniqueProcessId)
     {
         /* No need to get any handle -- assume session 0 */
-        DPRINT1("SM connecting to SM\n");
         ProcessHandle = NULL;
         SessionId = 0;
     }
     else
     {
         /* Reference the foreign process */
-        DPRINT1("Incoming request from %lx\n", SbApiMsg->h.ClientId.UniqueProcess);
         InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
         Status = NtOpenProcess(&ProcessHandle,
                                PROCESS_QUERY_INFORMATION,
@@ -274,7 +272,6 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
 
     /* Now send the actual accept reply (which could be a rejection) */
     PortView.Length = sizeof(PortView);
-    DPRINT1("Accepting: %d connection with context: %p\n", Accept, ClientContext);
     Status = NtAcceptConnectPort(&PortHandle,
                                  ClientContext,
                                  &SbApiMsg->h,
@@ -303,7 +300,6 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
         SbApiMsg->ConnectionInfo.SbApiPortName[119] = UNICODE_NULL;
         RtlCreateUnicodeString(&SubsystemPort,
                                SbApiMsg->ConnectionInfo.SbApiPortName);
-        DPRINT1("Connecting back to %wZ\n", &SubsystemPort);
         Status = NtConnectPort(&CidSubsystem->SbApiPort,
                                &SubsystemPort,
                                &SecurityQos,
@@ -363,7 +359,6 @@ SmpApiLoop(IN PVOID Parameter)
     while (TRUE)
     {
         /* Begin waiting on a request */
-        DPRINT1("API Loop: %p\n", SmApiPort);
         Status = NtReplyWaitReceivePort(SmApiPort,
                                         (PVOID*)&ClientContext,
                                         &ReplyMsg->h,
@@ -383,7 +378,6 @@ SmpApiLoop(IN PVOID Parameter)
             /* A new connection */
             case LPC_CONNECTION_REQUEST:
                 /* Create the right structures for it */
-                DPRINT1("New connection request\n");
                 SmpHandleConnectionRequest(SmApiPort, (PSB_API_MSG)&RequestMsg);
                 ReplyMsg =  NULL;
                 break;
@@ -423,7 +417,6 @@ SmpApiLoop(IN PVOID Parameter)
                 else
                 {
                     /* It's totally okay, so call the dispatcher for it */
-                    DPRINT1("Calling dispatcher for ID: %lx\n", RequestMsg.ApiNumber);
                     Status = SmpApiDispatch[RequestMsg.ApiNumber](&RequestMsg,
                                                                   ClientContext,
                                                                   SmApiPort);

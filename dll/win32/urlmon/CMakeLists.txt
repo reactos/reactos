@@ -73,4 +73,4 @@ add_definitions(
 add_pch(urlmon urlmon_main.h)
 add_definitions(-DPROXY_CLSID_IS="{0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}")
 add_cd_file(TARGET urlmon DESTINATION reactos/system32 FOR all)
-add_importlib_target(urlmon.spec)
+add_importlib_target(urlmon.spec urlmon.dll)

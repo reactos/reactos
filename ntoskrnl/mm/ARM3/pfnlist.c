@@ -932,7 +932,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
             /* In ReactOS, this path should always be hit with a deleted PFN */
-            ASSERT(MI_IS_PFN_DELETED(Pfn1) == TRUE);
+            ASSERT((MI_IS_PFN_DELETED(Pfn1) == TRUE) || (Pfn1->u3.e1.PrototypePte == 1));
 
             /* Clear the last reference */
             Pfn1->u3.e2.ReferenceCount = 0;

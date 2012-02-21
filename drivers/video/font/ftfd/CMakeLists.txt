@@ -13,7 +13,7 @@ add_library(ftfd SHARED
 
 set_entrypoint(ftfd FtfdEnableDriver 12)
 set_subsystem(ftfd native)
-set_image_base(ftfd ${baseaddress_ftfd})
+set_image_base(ftfd 0x00010000)
 
 target_link_libraries(ftfd
     freetype
@@ -23,4 +23,4 @@ add_pch(ftfd ftfd.h)
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cd_file(TARGET ftfd DESTINATION reactos/system32 FOR all)
-add_importlib_target(ftfd.spec)
+add_importlib_target(ftfd.spec ftfd.dll)

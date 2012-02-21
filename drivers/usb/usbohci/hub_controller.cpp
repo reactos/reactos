@@ -1012,7 +1012,6 @@ CHubController::HandleClassOther(
                     // reset port feature
                     //
                     Status = m_Hardware->SetPortFeature(PortId, PORT_RESET);
-                    PC_ASSERT(Status == STATUS_SUCCESS);
                     break;
                 }
                 default:
@@ -1710,7 +1709,7 @@ CHubController::HandleSyncResetAndClearStall(
     IN OUT PURB Urb)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    PUSB_ENDPOINT EndpointDescriptor;
     ULONG Type;
 
     //
@@ -1736,12 +1735,24 @@ CHubController::HandleSyncResetAndClearStall(
     //
     // get endpoint descriptor
     //
-    EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbPipeRequest.PipeHandle;
+    EndpointDescriptor = (PUSB_ENDPOINT)Urb->UrbPipeRequest.PipeHandle;
+
+    //
+    // abort pipe
+    //
+    Status = HandleAbortPipe(Irp, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // abort pipe failed
+        //
+        DPRINT1("[USBOHCI] AbortPipe failed with %x\n", Status);
+    }
 
     //
     // get type
     //
-    Type = (EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
+    Type = (EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK);
     if (Type != USB_ENDPOINT_TYPE_ISOCHRONOUS)
     {
         //
@@ -1752,8 +1763,9 @@ CHubController::HandleSyncResetAndClearStall(
     DPRINT1("URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL Status %x\n", Status);
 
     //
-    // FIXME reset data toggle
+    // reset data toggle
     //
+    EndpointDescriptor->DataToggle = 0;
 
     //
     // done

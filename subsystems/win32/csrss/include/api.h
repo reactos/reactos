@@ -56,15 +56,30 @@ typedef enum _CSR_SHUTDOWN_FLAGS
     CsrShutdownOther = 8
 } CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
 
+typedef enum _CSR_DEBUG_FLAGS
+{
+    CsrDebugOnlyThisProcess = 1,
+    CsrDebugProcessChildren = 2
+} CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
+
 typedef enum _CSR_PROCESS_FLAGS
 {
     CsrProcessTerminating = 0x1,
     CsrProcessSkipShutdown = 0x2,
+    CsrProcessNormalPriority = 0x10,
+    CsrProcessIdlePriority = 0x20,
+    CsrProcessHighPriority = 0x40,
+    CsrProcessRealtimePriority = 0x80,
     CsrProcessCreateNewGroup = 0x100,
     CsrProcessTerminated = 0x200,
     CsrProcessLastThreadTerminated = 0x400,
     CsrProcessIsConsoleApp = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
+
+#define CsrProcessPriorityFlags (CsrProcessNormalPriority | \
+                                 CsrProcessIdlePriority | \
+                                 CsrProcessHighPriority | \
+                                 CsrProcessRealtimePriority)
 
 typedef struct _CSRSS_CON_PROCESS_DATA
 {
@@ -251,7 +266,7 @@ NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 
 /* api/process.c */
 CSR_API(CsrConnectProcess);
-CSR_API(CsrCreateProcess);
+CSR_API(CsrSrvCreateProcess);
 CSR_API(CsrTerminateProcess);
 CSR_API(CsrSrvCreateThread);
 CSR_API(CsrGetShutdownParameters);
@@ -299,7 +314,7 @@ VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
 
-extern HANDLE hApiPort;
+extern HANDLE CsrApiPort;
 extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
@@ -313,10 +328,20 @@ extern PVOID CsrSrvSharedSectionHeap;
 extern PVOID *CsrSrvSharedStaticServerData;
 extern HANDLE CsrInitializationEvent;
 extern PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
+extern ULONG CsrMaxApiRequestThreads;
 
 NTSTATUS
 NTAPI
 CsrApiPortInitialize(VOID);
+
+NTSTATUS
+NTAPI
+CsrCreateProcess(IN HANDLE hProcess,
+                 IN HANDLE hThread,
+                 IN PCLIENT_ID ClientId,
+                 IN PCSR_NT_SESSION NtSession,
+                 IN ULONG Flags,
+                 IN PCLIENT_ID DebugCid);
 
 BOOLEAN
 NTAPI
@@ -327,13 +352,15 @@ NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
 IN PCSR_THREAD Thread);
 
+VOID
+NTAPI
+CsrLockedReferenceThread(IN PCSR_THREAD CsrThread);
+
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
                                                     PVOID Context);
 NTSTATUS WINAPI CsrInitializeProcessStructure(VOID);
-PCSR_PROCESS WINAPI CsrGetProcessData(HANDLE ProcessId);
-PCSR_PROCESS WINAPI CsrCreateProcessData(HANDLE ProcessId);
-NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );
+
 NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
 PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
 PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
@@ -385,6 +412,41 @@ CsrSrvSetPriorityClass(
     IN OUT PCSR_API_MESSAGE ApiMessage,
     IN OUT PULONG Reply
 );
+
+NTSTATUS
+NTAPI
+CsrDestroyProcess(IN PCLIENT_ID Cid,
+IN NTSTATUS ExitStatus);
+
+NTSTATUS
+NTAPI
+CsrDestroyThread(IN PCLIENT_ID Cid);
+
+VOID
+NTAPI
+CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread);
+
+BOOLEAN
+NTAPI
+CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
+                   IN PLIST_ENTRY WaitList,
+                   IN PVOID WaitArgument1,
+                   IN PVOID WaitArgument2,
+                   IN ULONG WaitFlags,
+                   IN BOOLEAN DereferenceThread);
+                   
+VOID
+NTAPI
+CsrReferenceNtSession(IN PCSR_NT_SESSION Session);
+
+LONG
+NTAPI
+CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo);
+
+VOID
+NTAPI
+CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
+IN NTSTATUS ExitStatus);
 
 VOID
 NTAPI

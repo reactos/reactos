@@ -181,4 +181,4 @@ elseif(ARCH MATCHES amd64)
 
 endif()
 
-add_importlib_target(../hal.spec)
+add_importlib_target(../hal.spec hal.dll)

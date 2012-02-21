@@ -122,4 +122,4 @@ add_importlibs(glu32
     ntdll)
 
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(glu32.spec)
+add_importlib_target(glu32.spec glu32.dll)

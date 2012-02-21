@@ -19,6 +19,8 @@
 #define HIGH_PRIORITY 31
 #define SXS_SUPPORT_FIXME
 
+typedef NTSTATUS (NTAPI *PCSR_CREATE_REMOTE_THREAD)(IN HANDLE ThreadHandle, IN PCLIENT_ID ClientId);
+
 NTSTATUS
 WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
@@ -239,7 +241,29 @@ CreateRemoteThread(HANDLE hProcess,
     }
 
     /* Notify CSR */
-    Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+    if (!BaseRunningInServerProcess)
+    {
+        Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+    }
+    else
+    {
+        DPRINT("Server thread in Server. Handle: %lx\n", hProcess);
+        if (hProcess != NtCurrentProcess())
+        {
+            PCSR_CREATE_REMOTE_THREAD CsrCreateRemoteThread;
+            
+            /* Get the direct CSRSRV export */
+            CsrCreateRemoteThread = (PCSR_CREATE_REMOTE_THREAD)
+                                    GetProcAddress(GetModuleHandleA("csrsrv"),
+                                                   "CsrCreateRemoteThread");
+            if (CsrCreateRemoteThread)
+            {
+                /* Call it instead of going through LPC */
+                Status = CsrCreateRemoteThread(hThread, &ClientId);
+            }
+        }
+    }
+    
     if (!NT_SUCCESS(Status))
     {
         ASSERT(FALSE);

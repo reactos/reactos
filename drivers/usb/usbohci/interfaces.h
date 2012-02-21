@@ -372,6 +372,8 @@ DECLARE_INTERFACE_(IDMAMemoryManager, IUnknown)
 
 typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 
+struct _USB_ENDPOINT;
+
 
 //=========================================================================================
 //
@@ -401,7 +403,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
-                                               IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+                                               IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor,
                                                IN USB_DEVICE_SPEED DeviceSpeed,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
@@ -470,7 +472,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 //
 // Description: notifies request that the endpoint descriptor is complete
 
-    virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor) = 0;
+    virtual VOID CompletionCallback() = 0;
 
 //-----------------------------------------------------------------------------------------
 //

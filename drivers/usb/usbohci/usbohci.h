@@ -108,4 +108,26 @@ NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 //
 NTSTATUS InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
 
+
+typedef struct _USB_ENDPOINT
+{
+    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+    UCHAR HubAddress;
+    UCHAR HubPort;
+    UCHAR DataToggle;
+} USB_ENDPOINT, *PUSB_ENDPOINT;
+
+typedef struct _USB_INTERFACE
+{
+    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT *EndPoints;
+} USB_INTERFACE, *PUSB_INTERFACE;
+
+typedef struct _USB_CONFIGURATION
+{
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_INTERFACE *Interfaces;
+} USB_CONFIGURATION, *PUSB_CONFIGURATION;
+
+
 #endif

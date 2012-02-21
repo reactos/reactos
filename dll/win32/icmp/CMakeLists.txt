@@ -17,5 +17,5 @@ set_module_type(icmp win32dll)
 
 target_link_libraries(icmp wine)
 add_importlibs(icmp ws2_32 msvcrt kernel32 ntdll)
-add_importlib_target(icmp.spec)
+add_importlib_target(icmp.spec icmp.dll)
 add_cd_file(TARGET icmp DESTINATION reactos/system32 FOR all)

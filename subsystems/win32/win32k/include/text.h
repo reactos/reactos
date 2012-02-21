@@ -115,15 +115,3 @@ DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
 
 #define IntUnLockProcessPrivateFonts(W32Process) \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&W32Process->PrivateFontListLock)
-
-#define IntLockGlobalFonts \
-  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&FontListLock)
-
-#define IntUnLockGlobalFonts \
-  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&FontListLock)
-
-#define IntLockFreeType \
-  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&FreeTypeLock)
-
-#define IntUnLockFreeType \
-  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&FreeTypeLock)

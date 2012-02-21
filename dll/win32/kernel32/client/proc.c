@@ -459,8 +459,6 @@ VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 {
-    UINT uExitCode = 0;
-
     DPRINT("BaseProcessStartup(..) - setting up exception frame.\n");
 
     _SEH2_TRY
@@ -472,53 +470,23 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
                                sizeof(PPROCESS_START_ROUTINE));
 
         /* Call the Start Routine */
-        uExitCode = (lpStartAddress)();
+        ExitThread(lpStartAddress());
     }
     _SEH2_EXCEPT(BaseExceptionFilter(_SEH2_GetExceptionInformation()))
     {
-        /* Get the SEH Error */
-        uExitCode = _SEH2_GetExceptionCode();
+        /* Get the Exit code from the SEH Handler */
+        if (!BaseRunningInServerProcess)
+        {
+            /* Kill the whole process, usually */
+            ExitProcess(_SEH2_GetExceptionCode());
+        }
+        else
+        {
+            /* If running inside CSRSS, kill just this thread */
+            ExitThread(_SEH2_GetExceptionCode());
+        }
     }
     _SEH2_END;
-
-    /* Exit the Process with our error */
-    ExitProcess(uExitCode);
-}
-
-/*
- * Tells CSR that a new process was created
- */
-NTSTATUS
-WINAPI
-BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
-                         IN HANDLE ProcessId,
-                         IN BOOL InheritHandles)
-{
-    ULONG Request = CREATE_PROCESS;
-    CSR_API_MESSAGE CsrRequest;
-    NTSTATUS Status;
-
-    DPRINT("BasepNotifyCsrOfCreation: Process: %lx, Flags %lx\n",
-            ProcessId, dwCreationFlags);
-
-    /* Fill out the request */
-    CsrRequest.Data.CreateProcessRequest.NewProcessId = ProcessId;
-    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
-    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
-
-    /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
-                                 NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
-    {
-        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
-        return CsrRequest.Status;
-    }
-
-    /* Return Success */
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -544,7 +512,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        DPRINT1("Failed to tell csrss about new thread\n");
+        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, CsrRequest.Status);
         return CsrRequest.Status;
     }
 
@@ -560,7 +528,9 @@ WINAPI
 BasepCreateFirstThread(HANDLE ProcessHandle,
                        LPSECURITY_ATTRIBUTES lpThreadAttributes,
                        PSECTION_IMAGE_INFORMATION SectionImageInfo,
-                       PCLIENT_ID ClientId)
+                       PCLIENT_ID ClientId,
+                       BOOLEAN InheritHandles,
+                       DWORD dwCreationFlags)
 {
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
@@ -568,7 +538,8 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     INITIAL_TEB InitialTeb;
     NTSTATUS Status;
     HANDLE hThread;
-
+    ULONG Request = CREATE_PROCESS;
+    CSR_API_MESSAGE CsrRequest;
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
     /* Create the Thread's Stack */
@@ -603,10 +574,22 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
         return NULL;
     }
 
-    Status = BasepNotifyCsrOfThread(hThread, ClientId);
-    if (!NT_SUCCESS(Status))
+    /* Fill out the request to notify CSRSS */
+    CsrRequest.Data.CreateProcessRequest.ClientId = *ClientId;
+    CsrRequest.Data.CreateProcessRequest.ProcessHandle = ProcessHandle;
+    CsrRequest.Data.CreateProcessRequest.ThreadHandle = hThread;
+    CsrRequest.Data.CreateProcessRequest.CreationFlags = dwCreationFlags;
+    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
+
+    /* Call CSR */
+    Status = CsrClientCallServer(&CsrRequest,
+                                 NULL,
+                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        ASSERT(FALSE);
+        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
+        return NULL;
     }
 
     /* Success */
@@ -1774,6 +1757,7 @@ ExitProcess(IN UINT uExitCode)
         LdrShutdownProcess();
 
         /* Notify Base Server of process termination */
+        CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
         CsrClientCallServer(&CsrRequest,
                             NULL,
                             MAKE_CSR_API(TERMINATE_PROCESS, CSR_NATIVE),
@@ -3032,7 +3016,8 @@ GetAppName:
         /* Check if only this process will be debugged */
         if (dwCreationFlags & DEBUG_ONLY_THIS_PROCESS)
         {
-            /* FIXME: Set process flag */
+            /* Set process flag */
+            hDebug = (HANDLE)((ULONG_PTR)hDebug | 0x1);
         }
     }
 
@@ -3240,25 +3225,15 @@ GetAppName:
                                      &RemoteParameters->StandardError);
     }
 
-    /* Notify CSRSS */
-    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
-                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
-                                      bInheritHandles);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR Notification Failed\n");
-        BaseSetLastNTError(Status);
-        goto Cleanup;
-    }
-
     /* Create the first thread */
     DPRINT("Creating thread for process (EntryPoint = 0x%p)\n",
             SectionImageInfo.TransferAddress);
     hThread = BasepCreateFirstThread(hProcess,
                                      lpThreadAttributes,
                                      &SectionImageInfo,
-                                     &ClientId);
+                                     &ClientId,
+                                     bInheritHandles,
+                                     dwCreationFlags);
 
     if (hThread == NULL)
     {

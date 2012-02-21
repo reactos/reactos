@@ -19,7 +19,6 @@
 	<file>pngrtran.c</file>
 	<file>pngrutil.c</file>
 	<file>pngset.c</file>
-	<file>pngtest.c</file>
 	<file>pngtrans.c</file>
 	<file>pngwio.c</file>
 	<file>pngwrite.c</file>

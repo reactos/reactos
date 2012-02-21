@@ -32,4 +32,4 @@ add_importlibs(dinput8
 add_dependencies(dinput8 psdk)
 
 add_cd_file(TARGET dinput8 DESTINATION reactos/system32 FOR all)
-add_importlib_target(dinput8.spec)
+add_importlib_target(dinput8.spec dinput8.dll)

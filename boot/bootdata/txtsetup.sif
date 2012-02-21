@@ -31,7 +31,7 @@ isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
-i8042prt.sys=,,,,,,x,,,,,,4
+i8042prt.sys=,,,,,,,,,,,,4
 hidclass.sys=,,,,,,,,,,,,4
 hidparse.sys=,,,,,,,,,,,,4
 hidusb.sys=,,,,,,,,,,,,4
@@ -83,6 +83,7 @@ USB\COMPOSITE = usbccgp
 GenDisk = disk
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
+*PNP0303 = i8042prt
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
@@ -97,7 +98,10 @@ usbhub = usbhub.sys
 usbccgp = usbccgp.sys
 hidusb = hidusb.sys
 usbstor = usbstor.sys
+
+[Keyboard.Load]
 kbdhid = kbdhid.sys
+i8042prt = i8042prt.sys
 
 [BusExtenders.Load]
 pciide = pciide.sys

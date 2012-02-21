@@ -20,6 +20,9 @@
 static unsigned ApiDefinitionsCount = 0;
 static PCSRSS_API_DEFINITION ApiDefinitions = NULL;
 UNICODE_STRING CsrApiPortName;
+volatile LONG CsrpStaticThreadCount;
+volatile LONG CsrpDynamicThreadTotal;
+ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -92,8 +95,6 @@ CsrApiCallHandler(PCSR_PROCESS ProcessData,
         }
     }
   DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
 }
 
@@ -207,16 +208,16 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     return STATUS_SUCCESS;
 #else // Hacky reactos code
     PCSR_PROCESS ProcessData;
-    
+
     /* Get the Process Data */
-    ProcessData = CsrGetProcessData(ReceiveMsg->Header.ClientId.UniqueProcess);
+    CsrLockProcessByClientId(&ReceiveMsg->Header.ClientId.UniqueProcess, &ProcessData);
     if (!ProcessData)
     {
         DPRINT1("Message: Unable to find data for process 0x%x\n",
                 ReceiveMsg->Header.ClientId.UniqueProcess);
         return STATUS_NOT_SUPPORTED;
     }
-        
+
     /* Validation complete, start SEH */
     _SEH2_TRY
     {
@@ -229,6 +230,9 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
         ReplyMsg->Status = STATUS_ACCESS_VIOLATION;
     }
     _SEH2_END;
+
+    /* Release the process reference */
+    CsrUnlockProcess(ProcessData);
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -292,7 +296,7 @@ CsrApiPortInitialize(VOID)
                                NULL /* FIXME*/);
 
     /* Create the Port Object */
-    Status = NtCreatePort(&hApiPort, //&CsrApiPort,
+    Status = NtCreatePort(&CsrApiPort,
                           &ObjectAttributes,
                           LPC_MAX_DATA_LENGTH, // hack
                           LPC_MAX_MESSAGE_LENGTH, // hack
@@ -743,13 +747,12 @@ NTSTATUS WINAPI
 CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
 {
     NTSTATUS Status;
-    HANDLE ServerPort = NULL, ServerThread = NULL;
+    HANDLE ServerPort = NULL;//, ServerThread = NULL;
     PCSR_PROCESS ProcessData = NULL;
-    REMOTE_PORT_VIEW LpcRead;
-    CLIENT_ID ClientId;
+    REMOTE_PORT_VIEW RemotePortView;
+//    CLIENT_ID ClientId;
     BOOLEAN AllowConnection = FALSE;
     PCSR_CONNECTION_INFO ConnectInfo;
-    LpcRead.Length = sizeof(LpcRead);
     ServerPort = NULL;
 
     DPRINT("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
@@ -758,38 +761,15 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
 
     /* Save the process ID */
     RtlZeroMemory(ConnectInfo, sizeof(CSR_CONNECTION_INFO));
-    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
-    ProcessData = CsrGetProcessData(Request->ClientId.UniqueProcess);
-    if (ProcessData == NULL)
+    CsrLockProcessByClientId(Request->ClientId.UniqueProcess, &ProcessData);
+    if (!ProcessData)
     {
-        ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
-        if (ProcessData == NULL)
-        {
-            DPRINT1("Unable to allocate or find data for process 0x%x\n",
-                    Request->ClientId.UniqueProcess);
-        }
+        DPRINT1("CSRSRV: Unknown process: %lx. Will be rejecting connection\n",
+                Request->ClientId.UniqueProcess);
     }
-
-    if (ProcessData->ProcessHandle == NULL)
-    {
-        OBJECT_ATTRIBUTES ObjectAttributes;
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   NULL);
-        DPRINT1("WARNING: CSR PROCESS WITH NO CSR PROCESS HANDLE???\n");
-        ClientId.UniqueThread = 0;
-        Status = NtOpenProcess(&ProcessData->ProcessHandle,
-                               PROCESS_ALL_ACCESS,
-                               &ObjectAttributes,
-                               &Request->ClientId);
-        DPRINT1("Status: %lx. Handle: %lx\n", Status, ProcessData->ProcessHandle);
-    }
-
-    if (ProcessData)
+    
+    if ((ProcessData) && (ProcessData != CsrRootProcess))
     {
         /* Attach the Shared Section */
         Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
@@ -803,54 +783,63 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
             DPRINT1("Shared section map failed: %lx\n", Status);
         }
     }
+    else if (ProcessData == CsrRootProcess)
+    {
+        AllowConnection = TRUE;
+    }
+
+    /* Release the process */
+    if (ProcessData) CsrUnlockProcess(ProcessData);
+
+    /* Setup the Port View Structure */
+    RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
+    RemotePortView.ViewSize = 0;
+    RemotePortView.ViewBase = NULL;
+
+    /* Save the Process ID */
+    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     Status = NtAcceptConnectPort(&ServerPort,
-                                 NULL,
+                                 AllowConnection ? UlongToPtr(ProcessData->SequenceNumber) : 0,
                                  Request,
                                  AllowConnection,
-                                 0,
-                                 & LpcRead);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR: NtAcceptConnectPort() failed\n");
-        return Status;
-    }
-
-    ProcessData->ClientViewBase = (ULONG_PTR)LpcRead.ViewBase;
-    ProcessData->ClientViewBounds = LpcRead.ViewSize;
-    ProcessData->ClientPort = ServerPort;
-
-    if (AllowConnection) Status = NtCompleteConnectPort(ServerPort);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR: NtCompleteConnectPort() failed\n");
-        return Status;
-    }
-
-    Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
-                                 TRUE,
-                                 0,
-                                 0,
-                                 0,
-                                 (PTHREAD_START_ROUTINE)ClientConnectionThread,
-                                 NULL,
-                                 & ServerThread,
-                                 &ClientId);
+                                 &RemotePortView);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSR: Unable to create server thread\n");
-        return Status;
+         DPRINT1("CSRSS: NtAcceptConnectPort - failed.  Status == %X\n", Status);
+    }
+    else if (AllowConnection)
+    {
+        if (CsrDebug & 2)
+        {
+            DPRINT1("CSRSS: ClientId: %lx.%lx has ClientView: Base=%p, Size=%lx\n",
+                    Request->ClientId.UniqueProcess,
+                    Request->ClientId.UniqueThread,
+                    RemotePortView.ViewBase,
+                    RemotePortView.ViewSize);
+        }
+
+        /* Set some Port Data in the Process */
+        ProcessData->ClientPort = ServerPort;
+        ProcessData->ClientViewBase = (ULONG_PTR)RemotePortView.ViewBase;
+        ProcessData->ClientViewBounds = (ULONG_PTR)((ULONG_PTR)RemotePortView.ViewBase +
+                                                    (ULONG_PTR)RemotePortView.ViewSize);
+
+        /* Complete the connection */
+        Status = NtCompleteConnectPort(ServerPort);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CSRSS: NtCompleteConnectPort - failed.  Status == %X\n", Status);
+        }
+    }
+    else
+    {
+        DPRINT1("CSRSS: Rejecting Connection Request from ClientId: %lx.%lx\n",
+                Request->ClientId.UniqueProcess,
+                Request->ClientId.UniqueThread);
     }
 
-    CsrAddStaticServerThread(ServerThread, &ClientId, 0);
-
-    NtResumeThread(ServerThread, NULL);
-
-    NtClose(ServerThread);
-
-    Status = STATUS_SUCCESS;
-    DPRINT("CSR: %s done\n", __FUNCTION__);
     return Status;
 }
 
@@ -901,6 +890,83 @@ CsrConnectToUser(VOID)
     return CsrThread;
 }
 
+/*++
+ * @name CsrpCheckRequestThreads
+ *
+ * The CsrpCheckRequestThreads routine checks if there are no more threads
+ * to handle CSR API Requests, and creates a new thread if possible, to
+ * avoid starvation.
+ *
+ * @param None.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         if a new thread couldn't be created.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrpCheckRequestThreads(VOID)
+{
+    HANDLE hThread;
+    CLIENT_ID ClientId;
+    NTSTATUS Status;
+
+    /* Decrease the count, and see if we're out */
+    if (!(_InterlockedDecrement(&CsrpStaticThreadCount)))
+    {
+        /* Check if we've still got space for a Dynamic Thread */
+        if (CsrpDynamicThreadTotal < CsrMaxApiRequestThreads)
+        {
+            /* Create a new dynamic thread */
+            Status = RtlCreateUserThread(NtCurrentProcess(),
+                                         NULL,
+                                         TRUE,
+                                         0,
+                                         0,
+                                         0,
+                                         (PVOID)ClientConnectionThread,//CsrApiRequestThread,
+                                         NULL,
+                                         &hThread,
+                                         &ClientId);
+            /* Check success */
+            if (NT_SUCCESS(Status))
+            {
+                /* Increase the thread counts */
+                _InterlockedIncrement(&CsrpStaticThreadCount);
+                _InterlockedIncrement(&CsrpDynamicThreadTotal);
+
+                /* Add a new server thread */
+                if (CsrAddStaticServerThread(hThread,
+                                             &ClientId,
+                                             CsrThreadIsServerThread))
+                {
+                    /* Activate it */
+                    NtResumeThread(hThread, NULL);
+                }
+                else
+                {
+                    /* Failed to create a new static thread */
+                    _InterlockedDecrement(&CsrpStaticThreadCount);
+                    _InterlockedDecrement(&CsrpDynamicThreadTotal);
+
+                    /* Terminate it */
+                    DPRINT1("Failing\n");
+                    NtTerminateThread(hThread, 0);
+                    NtClose(hThread);
+
+                    /* Return */
+                    return STATUS_UNSUCCESSFUL;
+                }
+            }
+        }
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
+}
+
 VOID
 WINAPI
 ClientConnectionThread(IN PVOID Parameter)
@@ -911,15 +977,18 @@ ClientConnectionThread(IN PVOID Parameter)
     BYTE RawRequest[LPC_MAX_DATA_LENGTH];
     PCSR_API_MESSAGE Request = (PCSR_API_MESSAGE)RawRequest;
     PCSR_API_MESSAGE Reply;
-    PCSR_PROCESS ProcessData;
-    PCSR_THREAD ServerThread;
+    PCSR_PROCESS CsrProcess;
+    PCSR_THREAD ServerThread, CsrThread;
     ULONG MessageType;
-
+    HANDLE ReplyPort;
+    PDBGKM_MSG DebugMessage;
+    PHARDERROR_MSG HardErrorMsg;
+    PCLIENT_DIED_MSG ClientDiedMsg;
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
     /* Setup LPC loop port and message */
     Reply = NULL;
-//    ReplyPort = CsrApiPort;
+    ReplyPort = CsrApiPort;
 
     /* Connect to user32 */
     while (!CsrConnectToUser())
@@ -943,8 +1012,8 @@ ClientConnectionThread(IN PVOID Parameter)
         ASSERT(NT_SUCCESS(Status));
 
         /* Increase the Thread Counts */
-        //_InterlockedIncrement(&CsrpStaticThreadCount);
-        //_InterlockedIncrement(&CsrpDynamicThreadTotal);
+        _InterlockedIncrement(&CsrpStaticThreadCount);
+        _InterlockedIncrement(&CsrpDynamicThreadTotal);
     }
 
     /* Now start the loop */
@@ -959,12 +1028,13 @@ ClientConnectionThread(IN PVOID Parameter)
             DPRINT1("CSRSRV: FATAL ERROR. CsrThread is Idle while holding %lu critical sections\n",
                     Teb->CountOfOwnedCriticalSections);
             DPRINT1("CSRSRV: Last Receive Message %lx ReplyMessage %lx\n",
-                    &Request, Reply);
+                    Request, Reply);
             DbgBreakPoint();
         }
 
         /* Send the reply and wait for a new request */
-        Status = NtReplyWaitReceivePort(hApiPort,
+        DPRINT("Replying to: %lx (%lx)\n", ReplyPort, CsrApiPort);
+        Status = NtReplyWaitReceivePort(ReplyPort,
                                         0,
                                         &Reply->Header,
                                         &Request->Header);
@@ -976,17 +1046,18 @@ ClientConnectionThread(IN PVOID Parameter)
             {
                 /* Check for specific status cases */
                 if ((Status != STATUS_INVALID_CID) &&
-                    (Status != STATUS_UNSUCCESSFUL))// &&
-//                    ((Status == STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
+                    (Status != STATUS_UNSUCCESSFUL) &&
+                    ((Status == STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
                 {
                     /* Notify the debugger */
                     DPRINT1("CSRSS: ReceivePort failed - Status == %X\n", Status);
-                    //DPRINT1("CSRSS: ReplyPortHandle %lx CsrApiPort %lx\n", ReplyPort, CsrApiPort);
+                    DPRINT1("CSRSS: ReplyPortHandle %lx CsrApiPort %lx\n", ReplyPort, CsrApiPort);
                 }
 
                 /* We failed big time, so start out fresh */
                 Reply = NULL;
-                //ReplyPort = CsrApiPort;
+                ReplyPort = CsrApiPort;
+                DPRINT1("failed: %lx\n", Status);
                 continue;
             }
             else
@@ -1002,88 +1073,246 @@ ClientConnectionThread(IN PVOID Parameter)
 
         /* Get the Message Type */
         MessageType = Request->Header.u2.s2.Type;
-
-        /* If the connection was closed, handle that */
-        if (MessageType == LPC_PORT_CLOSED)
-        {
-            DPRINT("Port died, oh well\n");
-            CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
-            break;
-        }
-
+        
+        /* Handle connection requests */
         if (MessageType == LPC_CONNECTION_REQUEST)
         {
+            /* Handle the Connection Request */
+            DPRINT("Accepting new connection\n");
             CsrpHandleConnectionRequest((PPORT_MESSAGE)Request);
             Reply = NULL;
+            ReplyPort = CsrApiPort;
             continue;
         }
+        
+        /* It's some other kind of request. Get the lock for the lookup */
+        CsrAcquireProcessLock();
 
-        if (MessageType == LPC_CLIENT_DIED)
+        /* Now do the lookup to get the CSR_THREAD */
+        CsrThread = CsrLocateThreadByClientId(&CsrProcess,
+                                              &Request->Header.ClientId);
+
+        /* Did we find a thread? */
+        if (!CsrThread)
         {
-            DPRINT("Client died, oh well\n");
-            Reply = NULL;
+            /* This wasn't a CSR Thread, release lock */
+            CsrReleaseProcessLock();
+            
+            /* If this was an exception, handle it */
+            if (MessageType == LPC_EXCEPTION)
+            {
+                DPRINT1("Exception from unknown thread, just continue\n");
+                Reply = Request;
+                ReplyPort = CsrApiPort;
+                Reply->Status = DBG_CONTINUE;
+            }
+            else if (MessageType == LPC_PORT_CLOSED ||
+                     MessageType == LPC_CLIENT_DIED)
+            {
+                /* The Client or Port are gone, loop again */
+                DPRINT1("Death from unknown thread, just continue\n");
+                Reply = NULL;
+                ReplyPort = CsrApiPort;
+            }
+            else if (MessageType == LPC_ERROR_EVENT)
+            {
+                /* If it's a hard error, handle this too */
+                DPRINT1("Hard error from unknown thread, call handlers\n");
+HandleHardError:
+                HardErrorMsg = (PHARDERROR_MSG)Request;
+
+                /* Default it to unhandled */
+                HardErrorMsg->Response = ResponseNotHandled;
+
+                /* Check if there are free api threads */
+                CsrpCheckRequestThreads();
+                if (CsrpStaticThreadCount)
+                {
+                    CsrHandleHardError(CsrThread, (PHARDERROR_MSG)Request);
+                }
+                
+                /* If the response was 0xFFFFFFFF, we'll ignore it */
+                if (HardErrorMsg->Response == 0xFFFFFFFF)
+                {
+                    Reply = NULL;
+                    ReplyPort = CsrApiPort;
+                }
+                else
+                {
+                    if (CsrThread) CsrDereferenceThread(CsrThread);
+                    Reply = Request;
+                    ReplyPort = CsrApiPort;
+                }
+            }
+            else if (MessageType == LPC_REQUEST)
+            {
+                /* This is an API Message coming from a non-CSR Thread */
+                DPRINT1("No thread found for request %lx and clientID %lx.%lx\n",
+                        Request->Type & 0xFFFF,
+                        Request->Header.ClientId.UniqueProcess,
+                        Request->Header.ClientId.UniqueThread);
+                Reply = Request;
+                ReplyPort = CsrApiPort;
+                Reply->Status = STATUS_ILLEGAL_FUNCTION;
+            }
+            else if (MessageType == LPC_DATAGRAM)
+            {
+                DPRINT1("Kernel datagram: not yet supported\n");
+                Reply = NULL;
+                ReplyPort = CsrApiPort;
+            }
+            else
+            {
+                /* Some other ignored message type */
+                Reply = NULL;
+                ReplyPort = CsrApiPort;
+            }
+
+            /* Keep going */
             continue;
         }
-
-        if ((MessageType != LPC_ERROR_EVENT) &&
-            (MessageType != LPC_REQUEST))
+        
+        /* We have a valid thread, was this an LPC Request? */
+        if (MessageType != LPC_REQUEST)
         {
-            DPRINT1("CSR: received message %d\n", Request->Header.u2.s2.Type);
-            Reply = NULL;
+            /* It's not an API, check if the client died */
+            if (MessageType == LPC_CLIENT_DIED)
+            {
+                /* Get the information and check if it matches our thread */
+                ClientDiedMsg = (PCLIENT_DIED_MSG)Request;
+                if (ClientDiedMsg->CreateTime.QuadPart == CsrThread->CreateTime.QuadPart)
+                {
+                    /* Reference the thread */
+                    CsrLockedReferenceThread(CsrThread);
+
+                    /* Destroy the thread in the API Message */
+                    CsrDestroyThread(&Request->Header.ClientId);
+
+                    /* Check if the thread was actually ourselves */
+                    if (CsrProcess->ThreadCount == 1)
+                    {
+                        /* Kill the process manually here */
+                        DPRINT1("Last thread\n");
+                        CsrDestroyProcess(&CsrThread->ClientId, 0);
+                    }
+
+                    /* Remove our extra reference */
+                    CsrLockedDereferenceThread(CsrThread);
+                }
+
+                /* Release the lock and keep looping */
+                CsrReleaseProcessLock();
+                Reply = NULL;
+                ReplyPort = CsrApiPort;
+                continue;
+            }
+            
+            /* Reference the thread and release the lock */
+            CsrLockedReferenceThread(CsrThread);
+            CsrReleaseProcessLock();
+
+            /* If this was an exception, handle it */
+            if (MessageType == LPC_EXCEPTION)
+            {
+                /* Kill the process */
+                DPRINT1("Exception in %lx.%lx. Killing...\n",
+                        Request->Header.ClientId.UniqueProcess,
+                        Request->Header.ClientId.UniqueThread);
+                NtTerminateProcess(CsrProcess->ProcessHandle, STATUS_ABANDONED);
+
+                /* Destroy it from CSR */
+                CsrDestroyProcess(&Request->Header.ClientId, STATUS_ABANDONED);
+
+                /* Return a Debug Message */
+                DebugMessage = (PDBGKM_MSG)Request;
+                DebugMessage->ReturnedStatus = DBG_CONTINUE;
+                Reply = Request;
+                ReplyPort = CsrApiPort;
+
+                /* Remove our extra reference */
+                CsrDereferenceThread(CsrThread);
+            }
+            else if (MessageType == LPC_ERROR_EVENT)
+            {
+                DPRINT1("Hard error from known CSR thread... handling\n");
+                goto HandleHardError;
+            }
+            else
+            {
+                /* Something else */
+                DPRINT1("Unhandled message type: %lx\n", MessageType);
+                CsrDereferenceThread(CsrThread);
+                Reply = NULL;
+            }
+
+            /* Keep looping */
             continue;
         }
 
+        /* We got an API Request */
+        CsrLockedReferenceThread(CsrThread);
+        CsrReleaseProcessLock();
+        
+        /* Assume success */
+        Reply = Request;
+        Request->Status = STATUS_SUCCESS;
+
+        /* Now we reply to a particular client */
+        ReplyPort = CsrThread->Process->ClientPort;
+        
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n",
                 Request->Type,
                 Request->Header.ClientId.UniqueThread);
 
-        /* Get the Process Data */
-        ProcessData = CsrGetProcessData(Request->Header.ClientId.UniqueProcess);
-        if (ProcessData == NULL)
+        /* Validation complete, start SEH */
+        _SEH2_TRY
         {
-            DPRINT1("Message %d: Unable to find data for process 0x%x\n",
-                    MessageType,
-                    Request->Header.ClientId.UniqueProcess);
-            break;
-        }
-        if (ProcessData->Flags & CsrProcessTerminated)
-        {
-            DPRINT1("Message %d: process %d already terminated\n",
-                    Request->Type, Request->Header.ClientId.UniqueProcess);
-            continue;
-        }
-
-        /* Check if we got a hard error */
-        if (MessageType == LPC_ERROR_EVENT)
-        {
-            /* Call the Handler */
-            PCSR_THREAD Thread;
-            Thread = CsrLocateThreadByClientId(NULL, &Request->Header.ClientId);
-            CsrHandleHardError(Thread, (PHARDERROR_MSG)Request);
-        }
-        else
-        {
-            PCSR_THREAD Thread;
-            PCSR_PROCESS Process = NULL;
-
-            //DPRINT1("locate thread %lx/%lx\n", Request->Header.ClientId.UniqueProcess, Request->Header.ClientId.UniqueThread);
-            Thread = CsrLocateThreadByClientId(&Process, &Request->Header.ClientId);
-            //DPRINT1("Thread found: %p %p\n", Thread, Process);
+            /* Make sure we have enough threads */
+            CsrpCheckRequestThreads();
+            
+            /* Set the client thread pointer */
+            NtCurrentTeb()->CsrClientThread = CsrThread;
 
             /* Call the Handler */
-            if (Thread) NtCurrentTeb()->CsrClientThread = Thread;
-            CsrApiCallHandler(ProcessData, Request);
-            if (Thread) NtCurrentTeb()->CsrClientThread = ServerThread;
-        }
+            CsrApiCallHandler(CsrThread->Process, Request);
+            
+            /* Increase the static thread count */
+            _InterlockedIncrement(&CsrpStaticThreadCount);
 
-        /* Send back the reply */
-        Reply = Request;
+            /* Restore the server thread */
+            NtCurrentTeb()->CsrClientThread = ServerThread;
+            
+            /* Check if this is a dead client now */
+            if (Request->Type == 0xBABE)
+            {
+                /* Reply to the death message */
+                NtReplyPort(ReplyPort, &Reply->Header);
+
+                /* Reply back to the API port now */
+                ReplyPort = CsrApiPort;
+                Reply = NULL;
+
+                /* Drop the reference */
+                CsrDereferenceThread(CsrThread);
+            }
+            else
+            {
+                /* Drop the reference */
+                CsrDereferenceThread(CsrThread);
+            }
+        }
+        _SEH2_EXCEPT(CsrUnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
+        {
+            Reply = NULL;
+            ReplyPort = CsrApiPort;
+        }
+        _SEH2_END;
     }
 
     /* Close the port and exit the thread */
     // NtClose(ServerPort);
 
-    DPRINT("CSR: %s done\n", __FUNCTION__);
+    DPRINT1("CSR: %s done\n", __FUNCTION__);
     /* We're out of the loop for some reason, terminate! */
     NtTerminateThread(NtCurrentThread(), Status);
     //return Status;

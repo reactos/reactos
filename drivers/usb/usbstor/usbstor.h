@@ -330,16 +330,15 @@ typedef struct
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PMDL TransferBufferMDL;
-    PKEVENT Event;
     ULONG ErrorIndex;
     ULONG RetryCount;
 }IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
 {
-	PDEVICE_OBJECT DeviceObject;
-	PIRP_CONTEXT Context;
-	WORK_QUEUE_ITEM WorkQueueItem;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP_CONTEXT Context;
+    WORK_QUEUE_ITEM WorkQueueItem;
     PIRP Irp;
 } ERRORHANDLER_WORKITEM_DATA, *PERRORHANDLER_WORKITEM_DATA;
 
@@ -447,18 +446,6 @@ USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN ULONG RetryCount);
-
-NTSTATUS
-USBSTOR_SendInquiryCmd(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG RetryCount);
-
-NTSTATUS
-USBSTOR_SendFormatCapacity(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG RetryCount);
-
-
 
 NTSTATUS
 NTAPI

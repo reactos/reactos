@@ -36,7 +36,7 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
@@ -44,7 +44,7 @@ public:
     virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-    virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
+    virtual VOID CompletionCallback();
     virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
     virtual UCHAR GetInterval();
 
@@ -65,6 +65,8 @@ public:
     USHORT GetMaxPacketSize();
     VOID CheckError(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
     VOID DumpEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR *Descriptor);
+    NTSTATUS BuildTransferDescriptorChain(IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, OUT POHCI_GENERAL_TD * OutFirstDescriptor, OUT POHCI_GENERAL_TD * OutLastDescriptor, OUT PULONG OutTransferBufferOffset);
+    VOID InitDescriptor(IN POHCI_GENERAL_TD CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode);
 
 
     // constructor / destructor
@@ -120,9 +122,9 @@ protected:
     UCHAR m_DeviceAddress;
 
     //
-    // store end point address
+    // store endpoint descriptor
     //
-    PUSB_ENDPOINT_DESCRIPTOR m_EndpointDescriptor;
+    PUSB_ENDPOINT m_EndpointDescriptor;
 
     //
     // allocated setup packet from the DMA pool
@@ -145,6 +147,11 @@ protected:
     // store urb
     //
     PURB m_Urb;
+
+    //
+    // base buffer
+    //
+    PVOID m_Base;
 };
 
 //----------------------------------------------------------------------------------------
@@ -163,7 +170,7 @@ CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
     IN UCHAR DeviceAddress,
-    IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor,
     IN USB_DEVICE_SPEED DeviceSpeed,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
@@ -331,7 +338,7 @@ CUSBRequest::InitializeWithIrp(
             //
             // get endpoint descriptor
             //
-            m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)m_Urb->UrbIsochronousTransfer.PipeHandle;
+            m_EndpointDescriptor = (PUSB_ENDPOINT)m_Urb->UrbIsochronousTransfer.PipeHandle;
 
             //
             // completed initialization
@@ -406,7 +413,7 @@ CUSBRequest::InitializeWithIrp(
                 //
                 // get endpoint descriptor
                 //
-                m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)m_Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+                m_EndpointDescriptor = (PUSB_ENDPOINT)m_Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
             }
             break;
@@ -459,11 +466,21 @@ CUSBRequest::GetMaxPacketSize()
 {
     if (!m_EndpointDescriptor)
     {
-        //
-        // FIXME: use DeviceDescriptor.bMaxPacketSize0
-        // control pipe request
-        //
-        return 8;
+        if (m_DeviceSpeed == UsbLowSpeed)
+        {
+            //
+            // control pipes use 8 bytes packets
+            //
+            return 8;
+        }
+        else
+        {
+            //
+            // must be full speed
+            //
+            ASSERT(m_DeviceSpeed == UsbFullSpeed);
+            return 64;
+        }
     }
 
     ASSERT(m_Irp);
@@ -472,19 +489,19 @@ CUSBRequest::GetMaxPacketSize()
     //
     // return max packet size
     //
-    return m_EndpointDescriptor->wMaxPacketSize;
+    return m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
 }
 
 UCHAR
 CUSBRequest::GetInterval()
 {
     ASSERT(m_EndpointDescriptor);
-    ASSERT((m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
+    ASSERT((m_EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
 
     //
     // return interrupt interval
     //
-    return m_EndpointDescriptor->bInterval;
+    return m_EndpointDescriptor->EndPointDescriptor.bInterval;
 }
 
 UCHAR
@@ -504,7 +521,7 @@ CUSBRequest::GetEndpointAddress()
     //
     // endpoint number is between 1-15
     //
-    return (m_EndpointDescriptor->bEndpointAddress & 0xF);
+    return (m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress & 0xF);
 }
 
 //----------------------------------------------------------------------------------------
@@ -523,7 +540,7 @@ CUSBRequest::InternalGetTransferType()
         //
         // end point is defined in the low byte of bmAttributes
         //
-        TransferType = (m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
+        TransferType = (m_EndpointDescriptor->EndPointDescriptor.bmAttributes & USB_ENDPOINT_TYPE_MASK);
     }
     else
     {
@@ -547,7 +564,7 @@ CUSBRequest::InternalGetPidDirection()
         //
         // end point direction is highest bit in bEndpointAddress
         //
-        return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+        return (m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
     }
     else
     {
@@ -967,7 +984,7 @@ CUSBRequest::AllocateEndpointDescriptor(
     Descriptor->Flags |= OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(GetEndpointAddress());
     Descriptor->Flags |= OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(GetMaxPacketSize());
 
-    DPRINT("Flags %x DeviceAddress %x EndpointAddress %x PacketSize %x\n", Descriptor->Flags, GetDeviceAddress(), GetEndpointAddress(), GetMaxPacketSize());
+    DPRINT("Flags %x DeviceAddress %x EndpointAddress %x PacketSize %lu\n", Descriptor->Flags, GetDeviceAddress(), GetEndpointAddress(), GetMaxPacketSize());
 
     //
     // is there an endpoint descriptor
@@ -977,7 +994,7 @@ CUSBRequest::AllocateEndpointDescriptor(
         //
         // check direction
         //
-        if (USB_ENDPOINT_DIRECTION_OUT(m_EndpointDescriptor->bEndpointAddress))
+        if (USB_ENDPOINT_DIRECTION_OUT(m_EndpointDescriptor->EndPointDescriptor.bEndpointAddress))
         {
             //
             // direction out
@@ -1041,55 +1058,16 @@ CUSBRequest::AllocateEndpointDescriptor(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-CUSBRequest::BuildBulkInterruptEndpoint(
-    POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
+VOID
+CUSBRequest::InitDescriptor(
+    IN POHCI_GENERAL_TD CurrentDescriptor,
+    IN PVOID TransferBuffer,
+    IN ULONG TransferBufferLength,
+    IN UCHAR PidDirection)
 {
-    POHCI_GENERAL_TD FirstDescriptor, PreviousDescriptor = NULL, CurrentDescriptor, LastDescriptor;
-    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-    ULONG BufferSize, CurrentSize, Direction, MaxLengthInPage;
-    NTSTATUS Status;
-    PVOID Buffer;
+    ULONG Direction;
 
-    //
-    // allocate endpoint descriptor
-    //
-    Status = AllocateEndpointDescriptor(&EndpointDescriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        //
-        // failed to create setup descriptor
-        //
-        return Status;
-    }
-
-    //
-    // allocate transfer descriptor for last descriptor
-    //
-    Status = CreateGeneralTransferDescriptor(&LastDescriptor, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        //
-        // failed to create transfer descriptor
-        //
-        m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
-        return Status;
-    }
-
-    //
-    // get buffer size
-    //
-    BufferSize = m_TransferBufferLength;
-    ASSERT(BufferSize);
-    ASSERT(m_TransferBufferMDL);
-
-    //
-    // get buffer
-    //
-    Buffer = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
-    ASSERT(Buffer);
-
-    if (InternalGetPidDirection())
+    if (PidDirection)
     {
         //
         // input direction
@@ -1104,24 +1082,42 @@ CUSBRequest::BuildBulkInterruptEndpoint(
         Direction = OHCI_TD_DIRECTION_PID_OUT;
     }
 
+
+    //
+    // initialize descriptor
+    //
+    CurrentDescriptor->Flags = Direction | OHCI_TD_BUFFER_ROUNDING | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY;
+
+    //
+    // store physical address of buffer
+    //
+    CurrentDescriptor->BufferPhysical = MmGetPhysicalAddress(TransferBuffer).LowPart;
+    CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + TransferBufferLength - 1; 
+
+    DPRINT("CurrentDescriptor %p Addr %x  TransferBufferLength %lu\n", CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, TransferBufferLength);
+}
+
+NTSTATUS
+CUSBRequest::BuildTransferDescriptorChain(
+    IN PVOID TransferBuffer,
+    IN ULONG TransferBufferLength,
+    IN UCHAR PidDirection,
+    OUT POHCI_GENERAL_TD * OutFirstDescriptor,
+    OUT POHCI_GENERAL_TD * OutLastDescriptor,
+    OUT PULONG OutTransferBufferOffset)
+{
+    POHCI_GENERAL_TD FirstDescriptor = NULL, CurrentDescriptor, LastDescriptor = NULL;
+    NTSTATUS Status;
+    ULONG MaxLengthInPage, TransferBufferOffset  = 0;
+    ULONG MaxPacketSize = 0, TransferSize, CurrentSize;
+
+    //
+    // for now use one page as maximum size
+    //
+    MaxPacketSize = PAGE_SIZE;
+
     do
     {
-        //
-        // get current buffersize
-        //
-        CurrentSize = min(8192, BufferSize);
-
-        //
-        // get page offset
-        //
-        MaxLengthInPage = PAGE_SIZE - BYTE_OFFSET(Buffer);
-
-        //
-        // get minimum from current page size
-        //
-        CurrentSize = min(CurrentSize, MaxLengthInPage);
-        ASSERT(CurrentSize);
-
         //
         // allocate transfer descriptor
         //
@@ -1129,49 +1125,60 @@ CUSBRequest::BuildBulkInterruptEndpoint(
         if (!NT_SUCCESS(Status))
         {
             //
-            // failed to create transfer descriptor
-            // TODO: cleanup
+            // failed to allocate transfer descriptor
             //
-            ASSERT(FALSE);
-            m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
-            FreeDescriptor(LastDescriptor);
-            return Status;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        //
-        // initialize descriptor
-        //
-        CurrentDescriptor->Flags = Direction | OHCI_TD_BUFFER_ROUNDING | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY;
-
-        //
-        // store physical address of buffer
-        //
-        CurrentDescriptor->BufferPhysical = MmGetPhysicalAddress(Buffer).LowPart;
-        CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + CurrentSize - 1; 
-
-#if 0
-        if (m_Urb != NULL)
+        if (MaxPacketSize)
         {
-            if (m_Urb->UrbBulkOrInterruptTransfer.TransferFlags & USBD_SHORT_TRANSFER_OK)
-            {
-                //
-                // indicate short packet support
-                //
-                CurrentDescriptor->Flags |= OHCI_TD_BUFFER_ROUNDING;
-            }
+            //
+            // transfer size is minimum available buffer or endpoint size
+            //
+            TransferSize = min(TransferBufferLength - TransferBufferOffset, MaxPacketSize);
         }
-#endif
+        else
+        {
+            //
+            // use available buffer
+            //
+            TransferSize = TransferBufferLength - TransferBufferOffset;
+        }
+
+        //
+        // get page offset
+        //
+        MaxLengthInPage = PAGE_SIZE - BYTE_OFFSET(TransferBuffer);
+
+        //
+        // get minimum from current page size
+        //
+        CurrentSize = min(TransferSize, MaxLengthInPage);
+        ASSERT(CurrentSize);
+
+        //
+        // now init the descriptor
+        //
+        InitDescriptor(CurrentDescriptor, 
+                       (PVOID)((ULONG_PTR)TransferBuffer + TransferBufferOffset),
+                       CurrentSize,
+                       PidDirection);
+
+        //
+        // adjust offset
+        //
+        TransferBufferOffset += CurrentSize;
 
         //
         // is there a previous descriptor
         //
-        if (PreviousDescriptor)
+        if (LastDescriptor)
         {
             //
             // link descriptors
             //
-            PreviousDescriptor->NextLogicalDescriptor = (PVOID)CurrentDescriptor;
-            PreviousDescriptor->NextPhysicalDescriptor = CurrentDescriptor->PhysicalAddress.LowPart;
+            LastDescriptor->NextLogicalDescriptor = (PVOID)CurrentDescriptor;
+            LastDescriptor->NextPhysicalDescriptor = CurrentDescriptor->PhysicalAddress.LowPart;
         }
         else
         {
@@ -1181,24 +1188,115 @@ CUSBRequest::BuildBulkInterruptEndpoint(
             FirstDescriptor = CurrentDescriptor;
         }
 
-        DPRINT("PreviousDescriptor %p CurrentDescriptor %p Logical %x  Buffer Logical %p Physical %x Last Physical %x CurrentSize %lu\n", PreviousDescriptor, CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, CurrentDescriptor->BufferLogical, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress, CurrentSize);
+        if(TransferBufferLength == TransferBufferOffset)
+        {
+            //
+            // end reached
+            //
+            break;
+        }
 
-        //
-        //  set previous descriptor
-        //
-        PreviousDescriptor = CurrentDescriptor;
+    }while(TRUE);
 
+    if (OutFirstDescriptor)
+    {
         //
-        // subtract buffer size
+        // store first descriptor
         //
-        BufferSize -= CurrentSize;
+        *OutFirstDescriptor = FirstDescriptor;
+    }
 
+    if (OutLastDescriptor)
+    {
         //
-        // increment buffer offset
+        // store last descriptor
         //
-        Buffer = (PVOID)((ULONG_PTR)Buffer + CurrentSize);
+        *OutLastDescriptor = CurrentDescriptor;
+    }
 
-    }while(BufferSize);
+    if (OutTransferBufferOffset)
+    {
+        //
+        // store offset
+        //
+        *OutTransferBufferOffset = TransferBufferOffset;
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+CUSBRequest::BuildBulkInterruptEndpoint(
+    POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
+{
+    POHCI_GENERAL_TD FirstDescriptor, LastDescriptor;
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    NTSTATUS Status;
+    PVOID Base;
+    ULONG ChainDescriptorLength;
+
+    //
+    // sanity check
+    //
+    ASSERT(m_EndpointDescriptor);
+
+    //
+    // allocate endpoint descriptor
+    //
+    Status = AllocateEndpointDescriptor(&EndpointDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create setup descriptor
+        //
+        return Status;
+    }
+
+    ASSERT(m_TransferBufferMDL);
+
+    if (m_Base == NULL)
+    {
+        //
+        // get buffer
+        //
+        m_Base = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
+    }
+
+    //
+    // Increase the size of last transfer, 0 in case this is the first
+    //
+    Base = (PVOID)((ULONG_PTR)m_Base + m_TransferBufferLengthCompleted);
+
+    //
+    // sanity checks
+    //
+    ASSERT(m_EndpointDescriptor);
+    ASSERT(Base);
+
+    //
+    // use 2 * PAGE_SIZE at max for each new request
+    //
+    ULONG MaxTransferLength = min(1 * PAGE_SIZE, m_TransferBufferLength - m_TransferBufferLengthCompleted);
+    DPRINT("m_TransferBufferLength %lu m_TransferBufferLengthCompleted %lu DataToggle %x\n", m_TransferBufferLength, m_TransferBufferLengthCompleted, m_EndpointDescriptor->DataToggle);
+
+    //
+    // build bulk transfer descriptor chain
+    //
+    Status = BuildTransferDescriptorChain(Base,
+                                          MaxTransferLength,
+                                          InternalGetPidDirection(),
+                                          &FirstDescriptor,
+                                          &LastDescriptor,
+                                          &ChainDescriptorLength);
+
+    //
+    // move to next offset
+    //
+    m_TransferBufferLengthCompleted += ChainDescriptorLength;
 
     //
     // first descriptor has no carry bit
@@ -1206,32 +1304,32 @@ CUSBRequest::BuildBulkInterruptEndpoint(
     FirstDescriptor->Flags &= ~OHCI_TD_TOGGLE_CARRY;
 
     //
-    // fixme: toggle
+    // apply data toggle
     //
-    FirstDescriptor->Flags |= OHCI_TD_TOGGLE_0;
+    FirstDescriptor->Flags |= (m_EndpointDescriptor->DataToggle ? OHCI_TD_TOGGLE_1 : OHCI_TD_TOGGLE_0);
 
     //
     // clear interrupt mask for last transfer descriptor
     //
-    CurrentDescriptor->Flags &= ~OHCI_TD_INTERRUPT_MASK;
+    LastDescriptor->Flags &= ~OHCI_TD_INTERRUPT_MASK;
+
 
     //
     // fire interrupt as soon transfer is finished
     //
-    CurrentDescriptor->Flags |= OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
-
-    //
-    // link last data descriptor to last descriptor
-    //
-    CurrentDescriptor->NextLogicalDescriptor = LastDescriptor;
-    CurrentDescriptor->NextPhysicalDescriptor = LastDescriptor->PhysicalAddress.LowPart;
+    LastDescriptor->Flags |= OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
 
     //
     // now link descriptor to endpoint
     //
     EndpointDescriptor->HeadPhysicalDescriptor = FirstDescriptor->PhysicalAddress.LowPart;
-    EndpointDescriptor->TailPhysicalDescriptor = LastDescriptor->PhysicalAddress.LowPart;
+    EndpointDescriptor->TailPhysicalDescriptor = (FirstDescriptor == LastDescriptor ? 0 : LastDescriptor->PhysicalAddress.LowPart);
     EndpointDescriptor->HeadLogicalDescriptor = FirstDescriptor;
+
+    //
+    // dump descriptor list
+    //
+    //DumpEndpointDescriptor(EndpointDescriptor);
 
     //
     // store result
@@ -1567,6 +1665,12 @@ CUSBRequest::FreeEndpointDescriptor(
 
     DPRINT("CUSBRequest::FreeEndpointDescriptor EndpointDescriptor %p Logical %x\n", OutDescriptor, OutDescriptor->PhysicalAddress.LowPart);
 
+    //
+    // check for errors
+    //
+    CheckError(OutDescriptor);
+
+
     if (OutDescriptor->Flags & OHCI_ENDPOINT_ISOCHRONOUS_FORMAT)
     {
         //
@@ -1686,6 +1790,14 @@ CUSBRequest::CheckError(
         //
         TransferDescriptor = (POHCI_GENERAL_TD)OutDescriptor->HeadLogicalDescriptor;
 
+        if (m_EndpointDescriptor != NULL)
+        {
+            //
+            // update data toggle
+            //
+            m_EndpointDescriptor->DataToggle = (OutDescriptor->HeadPhysicalDescriptor & OHCI_ENDPOINT_TOGGLE_CARRY);
+        }
+
         while(TransferDescriptor)
         {
             //
@@ -1776,21 +1888,18 @@ CUSBRequest::CheckError(
             TransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
         }
     }
+
+
+
 }
 
 VOID
-CUSBRequest::CompletionCallback(
-    struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
+CUSBRequest::CompletionCallback()
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
 
-    DPRINT("CUSBRequest::CompletionCallback Descriptor %p PhysicalAddress %x\n", OutDescriptor, OutDescriptor->PhysicalAddress.LowPart);
-
-    //
-    // check for errors
-    //
-    CheckError(OutDescriptor);
+    DPRINT("CUSBRequest::CompletionCallback\n");
 
     if (m_Irp)
     {
@@ -1826,12 +1935,11 @@ CUSBRequest::CompletionCallback(
         }
 
         //
-        // FIXME: support status and calculate length
+        // FIXME calculate length
         //
 
         //
-        // FIXME: check if the transfer was split
-        // if yes dont complete irp yet
+        // complete request
         //
         IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
     }

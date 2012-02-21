@@ -203,6 +203,7 @@ HidClass_Create(
     KeInitializeSpinLock(&Context->Lock);
     InitializeListHead(&Context->ReadPendingIrpListHead);
     InitializeListHead(&Context->IrpCompletedListHead);
+    KeInitializeEvent(&Context->IrpReadComplete, NotificationEvent, FALSE);
 
     //
     // store context
@@ -226,7 +227,11 @@ HidClass_Close(
 {
     PIO_STACK_LOCATION IoStack;
     PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
-    PHIDCLASS_IRP_CONTEXT IrpContext;
+    PHIDCLASS_FILEOP_CONTEXT IrpContext;
+    BOOLEAN IsRequestPending = FALSE;
+    KIRQL OldLevel;
+    PLIST_ENTRY Entry;
+    PIRP ListIrp;
 
     //
     // get device extension
@@ -260,12 +265,79 @@ HidClass_Close(
     //
     // get irp context
     //
-    IrpContext = (PHIDCLASS_IRP_CONTEXT)IoStack->FileObject->FsContext;
+    IrpContext = (PHIDCLASS_FILEOP_CONTEXT)IoStack->FileObject->FsContext;
+    ASSERT(IrpContext);
 
     //
-    // cancel pending irps
+    // acquire lock
     //
-    UNIMPLEMENTED
+    KeAcquireSpinLock(&IrpContext->Lock, &OldLevel);
+
+    if (!IsListEmpty(&IrpContext->ReadPendingIrpListHead))
+    {
+        //
+        // FIXME cancel irp
+        //
+        IsRequestPending = TRUE;
+    }
+
+    //
+    // signal stop
+    //
+    IrpContext->StopInProgress = TRUE;
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&IrpContext->Lock, OldLevel);
+
+    if (IsRequestPending)
+    {
+        //
+        // wait for request to complete
+        //
+        DPRINT1("[HIDCLASS] Waiting for read irp completion...\n");
+        KeWaitForSingleObject(&IrpContext->IrpReadComplete, Executive, KernelMode, FALSE, NULL);
+    }
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&IrpContext->Lock, &OldLevel);
+
+    //
+    // sanity check
+    //
+    ASSERT(IsListEmpty(&IrpContext->ReadPendingIrpListHead));
+
+    //
+    // now free all irps
+    //
+    while(!IsListEmpty(&IrpContext->IrpCompletedListHead))
+    {
+        //
+        // remove head irp
+        //
+        Entry = RemoveHeadList(&IrpContext->IrpCompletedListHead);
+
+        //
+        // get irp
+        //
+        ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+        //
+        // free the irp
+        //
+        IoFreeIrp(ListIrp);
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&IrpContext->Lock, OldLevel);
+
+
+
 
     //
     // remove context
@@ -323,19 +395,20 @@ HidClass_ReadCompleteIrp(
     ULONG Offset;
     PHIDP_COLLECTION_DESC CollectionDescription;
     PHIDP_REPORT_IDS ReportDescription;
+    BOOLEAN IsEmpty;
 
     //
     // get irp context
     //
     IrpContext = (PHIDCLASS_IRP_CONTEXT)Ctx;
 
-    DPRINT("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
-    DPRINT("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
-    DPRINT("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
-    DPRINT("HidClass_ReadCompleteIrp Irp %p\n", Irp);
-    DPRINT("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
-    DPRINT("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
-    DPRINT("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
+    DPRINT1("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
+    DPRINT1("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
+    DPRINT1("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
+    DPRINT1("HidClass_ReadCompleteIrp Irp %p\n", Irp);
+    DPRINT1("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
+    DPRINT1("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
+    DPRINT1("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
 
     //
     // copy result
@@ -403,6 +476,11 @@ HidClass_ReadCompleteIrp(
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     //
+    // is list empty
+    //
+    IsEmpty = IsListEmpty(&IrpContext->FileOp->ReadPendingIrpListHead);
+
+    //
     // insert into completed list
     //
     InsertTailList(&IrpContext->FileOp->IrpCompletedListHead, &Irp->Tail.Overlay.ListEntry);
@@ -416,6 +494,17 @@ HidClass_ReadCompleteIrp(
     // complete original request
     //
     IoCompleteRequest(IrpContext->OriginalIrp, IO_NO_INCREMENT);
+
+
+    DPRINT1("StopInProgress %x IsEmpty %x\n", IrpContext->FileOp->StopInProgress, IsEmpty);
+    if (IrpContext->FileOp->StopInProgress && IsEmpty)
+    {
+        //
+        // last pending irp
+        //
+        DPRINT1("[HIDCLASS] LastPendingTransfer Signalling\n");
+        KeSetEvent(&IrpContext->FileOp->IrpReadComplete, 0, FALSE);
+    }
 
     //
     // free irp context
@@ -643,6 +732,19 @@ HidClass_Read(
     // FIXME support polled devices
     //
     ASSERT(Context->DeviceExtension->Common.DriverExtension->DevicesArePolled == FALSE);
+
+    if (Context->StopInProgress)
+    {
+         //
+         // stop in progress
+         //
+         DPRINT1("[HIDCLASS] Stop In Progress\n");
+         Irp->IoStatus.Status = STATUS_CANCELLED;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_CANCELLED;
+
+    }
+
 
     //
     // build irp request

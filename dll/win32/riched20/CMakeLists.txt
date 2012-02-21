@@ -51,5 +51,5 @@ add_importlibs(riched20
     ntdll)
 
 add_pch(riched20 editor.h)
-add_importlib_target(riched20.spec)
+add_importlib_target(riched20.spec riched20.dll)
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)

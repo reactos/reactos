@@ -136,6 +136,16 @@ typedef struct __HIDCLASS_FILEOP_CONTEXT__
     //
     LIST_ENTRY IrpCompletedListHead;
 
+    //
+    // stop in progress indicator
+    //
+    BOOLEAN StopInProgress;
+
+    //
+    // read complete event
+    //
+    KEVENT IrpReadComplete;
+
 }HIDCLASS_FILEOP_CONTEXT, *PHIDCLASS_FILEOP_CONTEXT;
 
 typedef struct

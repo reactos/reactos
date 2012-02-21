@@ -565,9 +565,8 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     }
     else
     {
-        HDEV hDev;
-        hDev = (HDEV)pPrimarySurface;
-        DesktopHDC = IntGdiCreateDisplayDC(hDev, DcType, EmptyDC);
+        PMONITOR pMonitor = UserGetPrimaryMonitor();
+        DesktopHDC = IntGdiCreateDisplayDC(pMonitor->hDev, DcType, EmptyDC);
     }
 
     return DesktopHDC;
@@ -860,7 +859,7 @@ NtUserCreateDesktop(
    /*
     * Try to open already existing desktop
     */
-
+   
    TRACE("Trying to open desktop (%wZ)\n", &DesktopName);
 
    Status = ObOpenObjectByName(
