@@ -133,7 +133,7 @@ endfunction()
 
 #define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
-
+set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /Fo<OBJECT> /c /Ta <SOURCE>")
 # Thanks MS for creating a stupid linker
 function(add_importlib_target _exports_file _implib_name)
 
@@ -145,7 +145,7 @@ function(add_importlib_target _exports_file _implib_name)
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_implib_name} -d=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
     # be clear about the language
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm PROPERTIES LANGUAGE "ASM")
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
 
     # add our library
     # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
