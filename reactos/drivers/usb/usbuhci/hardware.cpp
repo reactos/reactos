@@ -558,6 +558,11 @@ CUSBHardwareDevice::InitializeController()
     DPRINT1("[USBUHCI] InitializeController\n");
 
     //
+    // UHCI has two ports
+    //
+    m_NumberOfPorts = 2;
+
+    //
     // get bus interface
     //
     Status = GetBusInterface(m_PhysicalDeviceObject, &BusInterface);
