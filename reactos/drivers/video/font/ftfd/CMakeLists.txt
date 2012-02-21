@@ -13,7 +13,7 @@ add_library(ftfd SHARED
 
 set_entrypoint(ftfd FtfdEnableDriver 12)
 set_subsystem(ftfd native)
-set_image_base(ftfd ${baseaddress_ftfd})
+set_image_base(ftfd 0x00010000)
 
 target_link_libraries(ftfd
     freetype
