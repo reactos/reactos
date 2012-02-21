@@ -206,7 +206,7 @@ function(add_importlib_target _exports_file _implib_name)
         
         #create delayed importlib
         add_library(lib${_name}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def)
-        set_target_properties(lib${_name}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+        set_target_properties(lib${_name}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
     else()
         message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
     endif()
