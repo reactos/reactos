@@ -1409,8 +1409,8 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
     }
 
     /* Set output string */
-    DosName->Length = VolumePathPtr->MultiSzLength;
-    DosName->MaximumLength = VolumePathPtr->MultiSzLength + sizeof(UNICODE_NULL);
+    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength;
+    DosName->MaximumLength = (USHORT)VolumePathPtr->MultiSzLength + sizeof(UNICODE_NULL);
     /* Our MOUNTMGR_VOLUME_PATHS will be used as output buffer */
     DosName->Buffer = (PWSTR)VolumePathPtr;
     /* Move name at the begin, RtlMoveMemory is OK with overlapping */

@@ -2075,7 +2075,7 @@ EngQueryDeviceAttribute(
     _In_reads_bytes_(cjInSize) PVOID pvIn,
     _In_ ULONG cjInSize,
     _Out_writes_bytes_(cjOutSize) PVOID pvOut,
-    _Out_ ULONG cjOutSize);
+    _In_ ULONG cjOutSize);
 
 WIN32KAPI
 LARGE_INTEGER

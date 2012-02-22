@@ -3577,20 +3577,20 @@ NdisQueryPacket(
       UINT Offset;
       UINT PacketLength;
       PNDIS_BUFFER NdisBuffer;
-      UINT PhysicalBufferCount = 0;
-      UINT TotalPacketLength = 0;
+      UINT _PhysicalBufferCount = 0;
+      UINT _TotalPacketLength = 0;
       UINT Count = 0;
 
       for (NdisBuffer = Packet->Private.Head;
            NdisBuffer != (PNDIS_BUFFER)NULL;
            NdisBuffer = NdisBuffer->Next) {
-        PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
+        _PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
         NdisQueryBufferOffset(NdisBuffer, &Offset, &PacketLength);
-        TotalPacketLength += PacketLength;
+        _TotalPacketLength += PacketLength;
         Count++;
       }
-      Packet->Private.PhysicalCount = PhysicalBufferCount;
-      Packet->Private.TotalLength = TotalPacketLength;
+      Packet->Private.PhysicalCount = _PhysicalBufferCount;
+      Packet->Private.TotalLength = _TotalPacketLength;
       Packet->Private.Count = Count;
       Packet->Private.ValidCounts = TRUE;
     }

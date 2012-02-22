@@ -437,6 +437,22 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: returns device speed
 
     virtual USB_DEVICE_SPEED GetDeviceSpeed() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// CompletionCallback
+//
+// Description: notifies request that the endpoint descriptor is complete
+
+    virtual VOID CompletionCallback() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// FreeEndpointDescriptor
+//
+// Description: frees the associated endpoint descriptor and its general descriptors
+
+    virtual VOID FreeEndpointDescriptor(struct _UHCI_QUEUE_HEAD * OutDescriptor) = 0;
 };
 
 
@@ -505,6 +521,14 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: aborts all pending requsts of an device
 
     virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN struct _USB_ENDPOINT * EndpointDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// TransferInterrupt
+//
+// Description: informs the queue that a interrupt completed
+
+    virtual VOID TransferInterrupt(UCHAR ErrorInterrupt) = 0;
 
 };
 

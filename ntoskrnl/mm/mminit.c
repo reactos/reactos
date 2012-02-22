@@ -267,7 +267,7 @@ MiDbgDumpAddressSpace(VOID)
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
             (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
-            "ARM³ Non Paged Pool");
+            "ARM3 Non Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MiSystemViewStart,
             (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
@@ -288,7 +288,7 @@ MiDbgDumpAddressSpace(VOID)
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolStart,
             (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
-            "ARM³ Paged Pool");
+            "ARM3 Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
             "System PTE Space");

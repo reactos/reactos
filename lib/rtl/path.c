@@ -1009,9 +1009,12 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
     OBJECT_ATTRIBUTES ObjectAttributes;
     FILE_FS_DEVICE_INFORMATION FileFsDeviceInfo;
     ULONG SavedLength, CharLength, FullPathLength;
-    HANDLE OldHandle = 0, CurDirHandle, OldCurDirHandle = 0;
+    HANDLE OldHandle = NULL, CurDirHandle = NULL, OldCurDirHandle = NULL;
 
     DPRINT("RtlSetCurrentDirectory_U %wZ\n", Path);
+
+    /* Initialize for failure case */
+    RtlInitEmptyUnicodeString(&NtName, NULL, 0);
 
     /* Can't set current directory on DOS device */
     if (RtlIsDosDeviceName_Ustr(Path))
@@ -1075,7 +1078,7 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
     {
         /* Get back normal handle */
         CurDirHandle = (HANDLE)((ULONG_PTR)(CurDir->Handle) & ~RTL_CURDIR_ALL_FLAGS);
-        CurDir->Handle = 0;
+        CurDir->Handle = NULL;
 
         /* Get device information */
         Status = NtQueryVolumeInformationFile(CurDirHandle,
@@ -1157,7 +1160,7 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
     /* Save new data */
     CurDir->Handle = CurDirHandle;
     RtlpCurDirRef->Handle = CurDirHandle;
-    CurDirHandle = 0;
+    CurDirHandle = NULL;
 
     /* Copy full path */
     RtlCopyMemory(CurDir->DosPath.Buffer, FullPath.Buffer, FullPath.Length + sizeof(WCHAR));

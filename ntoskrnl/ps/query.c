@@ -855,7 +855,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Protect write in SEH */
             _SEH2_TRY
             {
-                /* Return the count of handles */
+                /* Return debug port's handle */
                 *(PHANDLE)ProcessInformation = DebugPort;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -887,7 +887,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Protect write in SEH */
             _SEH2_TRY
             {
-                /* Return the count of handles */
+                /* Return FALSE -- we don't support this */
                 *(PULONG)ProcessInformation = FALSE;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -908,8 +908,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 break;
             }
 
-            /* Indicate success */
-            Status = STATUS_SUCCESS;
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
 
             /* Protect write in SEH */
             _SEH2_TRY
@@ -923,6 +929,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             break;
 
         case ProcessWow64Information:
@@ -1067,8 +1076,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     PVOID ExceptionPort;
     ULONG Break;
     KAFFINITY ValidAffinity, Affinity = 0;
-    ULONG DefaultHardErrorMode = 0, BasePriority = 0, MemoryPriority = 0;
-    ULONG DisableBoost = 0, DebugFlags = 0, EnableFixup = 0, Boost = 0;
+    KPRIORITY BasePriority = 0;
+    UCHAR MemoryPriority = 0;
+    BOOLEAN DisableBoost = 0;
+    ULONG DefaultHardErrorMode = 0;
+    ULONG DebugFlags = 0, EnableFixup = 0, Boost = 0;
     ULONG NoExecute = 0, VdmPower = 0;
     BOOLEAN HasPrivilege;
     PLIST_ENTRY Next;
@@ -1448,7 +1460,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Enter SEH for direct buffer read */
             _SEH2_TRY
             {
-                BasePriority = *(PULONG)ProcessInformation;
+                BasePriority = *(KPRIORITY*)ProcessInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1674,7 +1686,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Enter SEH for direct buffer read */
             _SEH2_TRY
             {
-                DisableBoost = *(PULONG)ProcessInformation;
+                DisableBoost = *(PBOOLEAN)ProcessInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1814,6 +1826,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only supported on x86 */
 #if defined (_X86_)
             Ke386SetIOPL();
+#else
+            Status = STATUS_NOT_IMPLEMENTED;
 #endif
             /* Done */
             break;

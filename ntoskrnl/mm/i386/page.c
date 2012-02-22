@@ -217,7 +217,7 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
     KeMemoryBarrierWithoutFence();
 
     /* Return, if we had success */
-    return (BOOLEAN)SystemPde.u.Hard.Valid;
+    return SystemPde.u.Hard.Valid != 0;
 }
 
 NTSTATUS
@@ -549,7 +549,7 @@ Mmi386MakeKernelPageTableGlobal(PVOID Address)
     {
         if(!MiSynchronizeSystemPde(PointerPde))
             return FALSE;
-        return PointerPte->u.Hard.Valid;
+        return PointerPte->u.Hard.Valid != 0;
     }
     return FALSE;
 }

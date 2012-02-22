@@ -15,10 +15,15 @@
 /* GLOBALS ********************************************************************/
 
 //
-// Taken from ASSERTs
+// Constants
 //
 #define STANDARD_PAGING_FILE_NAME       L"\\??\\?:\\pagefile.sys"
 #define STANDARD_DRIVE_LETTER_OFFSET    4
+#define MEGABYTE                        0x100000UL
+#define MAXIMUM_PAGEFILE_SIZE           (4095 * MEGABYTE)
+/* This should be 32 MB, but we need more than that for 2nd stage setup */
+#define MINIMUM_TO_KEEP_FREE            (64 * MEGABYTE)
+#define FUZZ_FACTOR                     (16 * MEGABYTE)
 
 //
 // Structure and flags describing each pagefile
@@ -83,9 +88,8 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     PSMP_PAGEFILE_DESCRIPTOR Descriptor, ListDescriptor;
     ULONG i;
     WCHAR c;
-    PWCHAR p, ArgBuffer;
     PLIST_ENTRY NextEntry;
-    UNICODE_STRING PageFileName, Arguments;
+    UNICODE_STRING PageFileName, Arguments, SecondArgument;
 
     /* Make sure we don't have too many */
     if (SmpNumberOfPagingFiles >= 16)
@@ -131,7 +135,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     }
 
     /* Was a pagefile not specified, or was it specified with no size? */
-    if ((Arguments.Buffer) || (ZeroSize))
+    if (!(Arguments.Buffer) || (ZeroSize))
     {
         /* In this case, the system will manage its size */
         SystemManaged = TRUE;
@@ -149,17 +153,18 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
         }
 
         /* Now advance to the next argument */
-        ArgBuffer = Arguments.Buffer;
-        p = ArgBuffer;
-        while (*p++)
+        for (i = 0; i < Arguments.Length / sizeof(WCHAR); i++)
         {
-            /* Which should be a space... */
-            if (*p == L' ')
+            /* Found a space -- second argument must start here */
+            if (Arguments.Buffer[i] == L' ')
             {
-                /* And use the rest of the arguments as a maximum size */
-                Arguments.Length -= ((PCHAR)p - (PCHAR)ArgBuffer);
-                Arguments.Buffer = ArgBuffer;
-                Status = RtlUnicodeStringToInteger(&Arguments, 0, &MaxSize);
+                /* Use the rest of the arguments as a maximum size */
+                SecondArgument.Buffer = &Arguments.Buffer[i];
+                SecondArgument.Length = Arguments.Length -
+                                        i * sizeof(WCHAR);
+                SecondArgument.MaximumLength = Arguments.MaximumLength -
+                                               i * sizeof(WCHAR);
+                Status = RtlUnicodeStringToInteger(&SecondArgument, 0, &MaxSize);
                 if (!NT_SUCCESS(Status))
                 {
                     /* Fail */
@@ -168,8 +173,6 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
                     return Status;
                 }
 
-                /* We have both min and max, restore argument buffer */
-                Arguments.Buffer = ArgBuffer; // Actual Windows Bug in faillure case above.
                 break;
             }
         }
@@ -192,8 +195,8 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     /* Capture all our data into the descriptor */
     Descriptor->Token = *PageFileToken;
     Descriptor->Name = PageFileName;
-    Descriptor->MinSize.QuadPart = MinSize * 0x100000;
-    Descriptor->MaxSize.QuadPart = MaxSize * 0x100000;
+    Descriptor->MinSize.QuadPart = MinSize * MEGABYTE;
+    Descriptor->MaxSize.QuadPart = MaxSize * MEGABYTE;
     if (SystemManaged) Descriptor->Flags |= SMP_PAGEFILE_SYSTEM_MANAGED;
     Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] =
     RtlUpcaseUnicodeChar(Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET]);
@@ -271,8 +274,7 @@ SmpGetPagingFileSize(IN PUNICODE_STRING FileName,
     }
 
     NtClose(FileHandle);
-    Size->LowPart = StandardInfo.AllocationSize.LowPart;
-    Size->HighPart = StandardInfo.AllocationSize.HighPart;
+    Size->QuadPart = StandardInfo.AllocationSize.QuadPart;
     return STATUS_SUCCESS;
 }
 
@@ -346,9 +348,7 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
 
     /* Build the standard path */
     wcscpy(PathString, L"\\??\\A:\\");
-    VolumeName.Buffer = PathString;
-    VolumeName.Length = wcslen(PathString) * sizeof(WCHAR);
-    VolumeName.MaximumLength = VolumeName.Length + sizeof(UNICODE_NULL);
+    RtlInitUnicodeString(&VolumeName, PathString);
     VolumeName.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = Volume->DriveLetter;
     DPRINT("SMSS:PFILE: Querying volume `%wZ' for free space \n", &VolumeName);
 
@@ -378,13 +378,12 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
                                           FileFsSizeInformation);
     if (!NT_SUCCESS(Status))
     {
-        /* We failed -- keep going */
+        /* We failed */
         DPRINT1("SMSS:PFILE: Query volume `%wZ' (handle %p) for size failed"
                 " with status %X \n",
                 &VolumeName,
                 VolumeHandle,
                 Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Volume);
         NtClose(VolumeHandle);
         return Status;
     }
@@ -394,10 +393,9 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
     FreeSpace.QuadPart = SizeInfo.AvailableAllocationUnits.QuadPart *
                          SizeInfo.SectorsPerAllocationUnit;
     FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
-    Volume->FreeSpace = FinalFreeSpace;
 
     /* Check if there's less than 32MB free so we don't starve the disk */
-    if (FinalFreeSpace.QuadPart <= 0x2000000)
+    if (FinalFreeSpace.QuadPart <= MINIMUM_TO_KEEP_FREE)
     {
         /* In this case, act as if there's no free space  */
         Volume->FreeSpace.QuadPart = 0;
@@ -405,7 +403,8 @@ SmpGetVolumeFreeSpace(IN PSMP_VOLUME_DESCRIPTOR Volume)
     else
     {
         /* Trim off 32MB to give the disk a bit of breathing room */
-        Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart - 0x2000000;
+        Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart -
+                                     MINIMUM_TO_KEEP_FREE;
     }
 
     return STATUS_SUCCESS;
@@ -540,7 +539,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
 
     /* Check how big we can make the pagefile */
     Status = SmpGetPagingFileSize(&Descriptor->Name, &PageFileSize);
-    if (PageFileSize.QuadPart > 0) ShouldDelete = TRUE;
+    if (NT_SUCCESS(Status) && PageFileSize.QuadPart > 0) ShouldDelete = TRUE;
     DPRINT("SMSS:PFILE: Detected size %I64X for future paging file `%wZ'\n",
             PageFileSize,
             &Descriptor->Name);
@@ -588,7 +587,13 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     if (Descriptor->ActualMinSize.QuadPart < MinimumSize->QuadPart)
     {
         /* Delete the current page file and fail */
-        if (ShouldDelete) SmpDeletePagingFile(&Descriptor->Name);
+        if (ShouldDelete)
+        {
+            SmpDeletePagingFile(&Descriptor->Name);
+
+            /* FIXFIX: Windows Vista does this, and it seems like we should too, so try to see if this fixes KVM */
+            Volume->FreeSpace.QuadPart = PageFileSize.QuadPart;
+        }
         DPRINT1("SMSS:PFILE: Failing for min %I64X, max %I64X, real min %I64X \n",
                 Descriptor->ActualMinSize.QuadPart,
                 Descriptor->ActualMaxSize.QuadPart,
@@ -644,8 +649,8 @@ SmpMakeDefaultPagingFileDescriptor(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
 {
     /* The default descriptor uses 128MB as a pagefile size */
     Descriptor->Flags |= SMP_PAGEFILE_DEFAULT;
-    Descriptor->MinSize.QuadPart = 0x8000000;
-    Descriptor->MaxSize.QuadPart = 0x8000000;
+    Descriptor->MinSize.QuadPart = 128 * MEGABYTE;
+    Descriptor->MaxSize.QuadPart = 128 * MEGABYTE;
 }
 
 VOID
@@ -674,7 +679,7 @@ SmpMakeSystemManagedPagingFileDescriptor(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     MaximumSize = 3 * Ram;
 
     /* If we have more than 1GB, use that as minimum, otherwise, use 1.5X RAM */
-    MinimumSize = (Ram >= 0x40000000) ? Ram : MaximumSize / 2;
+    MinimumSize = (Ram >= 1024 * MEGABYTE) ? Ram : MaximumSize / 2;
 
     /* Write the new sizes in the descriptor and mark it as system managed */
     Descriptor->MinSize.QuadPart = MinimumSize;
@@ -708,19 +713,19 @@ SmpValidatePagingFileSizes(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor)
     else
     {
         /* Check if the minimum is more then 4095 MB */
-        if (MinSize > 0xFFF00000)
+        if (MinSize > MAXIMUM_PAGEFILE_SIZE)
         {
             /* Trim it, this isn't allowed */
             WasTooBig = TRUE;
-            MinSize = 0xFFF00000;
+            MinSize = MAXIMUM_PAGEFILE_SIZE;
         }
 
         /* Check if the maximum is more then 4095 MB */
-        if (MaxSize > 0xFFF00000)
+        if (MaxSize > MAXIMUM_PAGEFILE_SIZE)
         {
             /* Trim it, this isn't allowed */
             WasTooBig = TRUE;
-            MaxSize = 0xFFF00000;
+            MaxSize = MAXIMUM_PAGEFILE_SIZE;
         }
     }
 
@@ -752,14 +757,14 @@ SmpCreateSystemManagedPagingFile(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
     ASSERT(Descriptor->Flags & SMP_PAGEFILE_SYSTEM_MANAGED); // Descriptor->SystemManaged == 1 in ASSERT.
 
     /* Keep decreasing the pagefile by this amount if we run out of space */
-    FuzzFactor.QuadPart = 0x1000000;
+    FuzzFactor.QuadPart = FUZZ_FACTOR;
 
     /* Create the descriptor for it (mainly the right sizes) and validate */
     SmpMakeSystemManagedPagingFileDescriptor(Descriptor);
     SmpValidatePagingFileSizes(Descriptor);
 
     /* Use either the minimum size in the descriptor, or 16MB in minimal mode */
-    Size.QuadPart = DecreaseSize ? 0x1000000 : Descriptor->MinSize.QuadPart;
+    Size.QuadPart = DecreaseSize ? 16 * MEGABYTE : Descriptor->MinSize.QuadPart;
 
     /* Check if this should be a fixed pagefile or an any pagefile*/
     if (Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] == '?')
@@ -777,7 +782,6 @@ NTAPI
 SmpCreateEmergencyPagingFile(VOID)
 {
     PSMP_PAGEFILE_DESCRIPTOR Descriptor;
-    ULONG Length;
     WCHAR Buffer[32];
 
     /* Allocate a descriptor */
@@ -787,18 +791,14 @@ SmpCreateEmergencyPagingFile(VOID)
     if (!Descriptor) return STATUS_NO_MEMORY;
 
     /* Initialize it */
-    RtlInitUnicodeString(&Descriptor->Name, NULL);
     RtlInitUnicodeString(&Descriptor->Token, NULL);
 
     /* Copy the default pagefile name */
+    ASSERT(sizeof(Buffer) >= sizeof(STANDARD_PAGING_FILE_NAME));
     wcscpy(Buffer, STANDARD_PAGING_FILE_NAME);
-    Length = wcslen(Buffer) * sizeof(WCHAR);
-    ASSERT(sizeof(Buffer) > Length);
 
     /* Fill the rest of the descriptor out */
-    Descriptor->Name.Buffer = Buffer;
-    Descriptor->Name.Length = Length;
-    Descriptor->Name.MaximumLength = Length + sizeof(UNICODE_NULL);
+    RtlInitUnicodeString(&Descriptor->Name, Buffer);
     Descriptor->Name.Buffer[STANDARD_DRIVE_LETTER_OFFSET] = '?';
     Descriptor->Flags |= SMP_PAGEFILE_SYSTEM_MANAGED |
                          SMP_PAGEFILE_EMERGENCY |
@@ -818,7 +818,6 @@ SmpCreateVolumeDescriptors(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING VolumePath;
-    ULONG Length;
     BOOLEAN BootVolumeFound = FALSE;
     WCHAR StartChar, Drive, DriveDiff;
     HANDLE VolumeHandle;
@@ -849,14 +848,11 @@ SmpCreateVolumeDescriptors(VOID)
 
     /* Build the volume string, starting with A: (we'll edit this in place) */
     wcscpy(Buffer, L"\\??\\A:\\");
-    Length = wcslen(Buffer);
-    VolumePath.Buffer = Buffer;
-    VolumePath.Length = Length * sizeof(WCHAR);
-    VolumePath.MaximumLength = Length * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    RtlInitUnicodeString(&VolumePath, Buffer);
 
     /* Start with the C drive except on weird Japanese NECs... */
     StartChar = SharedUserData->AlternativeArchitecture ? L'A' : L'C';
-    for (Drive = StartChar, DriveDiff = StartChar - 'A'; Drive <= L'Z'; Drive++, DriveDiff++)
+    for (Drive = StartChar, DriveDiff = StartChar - L'A'; Drive <= L'Z'; Drive++, DriveDiff++)
     {
         /* Skip the disk if it's not in the drive map */
         if (!((1 << DriveDiff) & ProcessInformation.Query.DriveMap)) continue;
@@ -967,10 +963,9 @@ SmpCreateVolumeDescriptors(VOID)
         FreeSpace.QuadPart = SizeInfo.AvailableAllocationUnits.QuadPart *
                              SizeInfo.SectorsPerAllocationUnit;
         FinalFreeSpace.QuadPart = FreeSpace.QuadPart * SizeInfo.BytesPerSector;
-        Volume->FreeSpace = FinalFreeSpace;
 
         /* Check if there's less than 32MB free so we don't starve the disk */
-        if (FinalFreeSpace.QuadPart <= 0x2000000)
+        if (FinalFreeSpace.QuadPart <= MINIMUM_TO_KEEP_FREE)
         {
             /* In this case, act as if there's no free space  */
             Volume->FreeSpace.QuadPart = 0;
@@ -978,7 +973,8 @@ SmpCreateVolumeDescriptors(VOID)
         else
         {
             /* Trim off 32MB to give the disk a bit of breathing room */
-            Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart - 0x2000000;
+            Volume->FreeSpace.QuadPart = FinalFreeSpace.QuadPart -
+                                         MINIMUM_TO_KEEP_FREE;
         }
 
         /* All done, add this volume to our descriptor list */
@@ -1026,7 +1022,7 @@ SmpCreatePagingFiles(VOID)
     }
 
     /* If we fail creating pagefiles, try to reduce by this much each time */
-    FuzzFactor.QuadPart = 0x1000000;
+    FuzzFactor.QuadPart = FUZZ_FACTOR;
 
     /* Loop the descriptor list */
     NextEntry = SmpPagingFileDescriptorList.Flink;
@@ -1068,7 +1064,7 @@ SmpCreatePagingFiles(VOID)
                     /* We failed to create it. Try again with a smaller size */
                     DPRINT1("SMSS:PFILE: Trying lower sizes for (`%wZ') \n",
                             &Descriptor->Name);
-                    Size.QuadPart = 0x1000000;
+                    Size.QuadPart = 16 * MEGABYTE;
                     Status = SmpCreatePagingFileOnAnyDrive(Descriptor,
                                                            &FuzzFactor,
                                                            &Size);
@@ -1077,7 +1073,7 @@ SmpCreatePagingFiles(VOID)
             else
             {
                 /* It's a fixed pagefile: override the minimum and use ours */
-                Size.QuadPart = 0x1000000;
+                Size.QuadPart = 16 * MEGABYTE;
                 Status = SmpCreatePagingFileOnFixedDrive(Descriptor,
                                                          &FuzzFactor,
                                                          &Size);

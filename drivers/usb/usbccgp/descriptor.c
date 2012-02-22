@@ -94,6 +94,64 @@ USBCCGP_GetDescriptor(
     return Status;
 }
 
+NTSTATUS
+NTAPI
+USBCCGP_GetStringDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DescriptorLength,
+    IN UCHAR DescriptorIndex,
+    IN LANGID LanguageId,
+    OUT PVOID *OutDescriptor)
+{
+    NTSTATUS Status;
+    PUSB_STRING_DESCRIPTOR StringDescriptor;
+    ULONG Size;
+    PVOID Buffer;
+
+    // retrieve descriptor
+    Status = USBCCGP_GetDescriptor(DeviceObject, USB_STRING_DESCRIPTOR_TYPE, DescriptorLength, DescriptorIndex, LanguageId, OutDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed
+        return Status;
+    }
+
+    // get descriptor structure
+    StringDescriptor = (PUSB_STRING_DESCRIPTOR)*OutDescriptor;
+
+    // sanity check
+    ASSERT(StringDescriptor->bLength < DescriptorLength - 2);
+
+    if (StringDescriptor->bLength == 2)
+    {
+        // invalid descriptor
+        FreeItem(StringDescriptor);
+        return STATUS_DEVICE_DATA_ERROR;
+    }
+
+    // calculate size
+    Size = StringDescriptor->bLength + sizeof(WCHAR);
+
+    // allocate buffer
+    Buffer = AllocateItem(NonPagedPool, Size);
+    if (!Buffer)
+    {
+        // no memory
+        FreeItem(StringDescriptor);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // copy result
+    RtlCopyMemory(Buffer, StringDescriptor->bString, Size - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bString));
+
+    // free buffer
+    FreeItem(StringDescriptor);
+
+    // store result
+    *OutDescriptor = (PVOID)Buffer;
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 USBCCGP_GetDescriptors(

@@ -40,10 +40,16 @@ public:
     virtual NTSTATUS CancelRequests();
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
     virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN struct _USB_ENDPOINT * EndpointDescriptor);
+    virtual VOID TransferInterrupt(UCHAR ErrorInterrupt);
 
 
     // local
     VOID LinkQueueHead(PUHCI_QUEUE_HEAD QueueHead, PUHCI_QUEUE_HEAD NextQueueHead);
+    VOID UnLinkQueueHead(PUHCI_QUEUE_HEAD PreviousQueueHead, PUHCI_QUEUE_HEAD NextQueueHead);
+    BOOLEAN IsQueueHeadComplete(PUHCI_QUEUE_HEAD QueueHead);
+    NTSTATUS AddQueueHead(PUHCI_QUEUE_HEAD NewQueueHead);
+    VOID QueueHeadCleanup(IN PUHCI_QUEUE_HEAD QueueHead, IN PUHCI_QUEUE_HEAD PreviousQueueHead, OUT PUHCI_QUEUE_HEAD *NextQueueHead);
+
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -53,6 +59,7 @@ protected:
     LONG m_Ref;                                                                         // reference count
     KSPIN_LOCK m_Lock;                                                                  // list lock
     PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
+    
 };
 
 //=================================================================================================
@@ -106,25 +113,23 @@ CUSBQueue::GetPendingRequestCount()
 }
 
 NTSTATUS
-CUSBQueue::AddUSBRequest(
-    IUSBRequest * Request)
+CUSBQueue::AddQueueHead(
+    PUHCI_QUEUE_HEAD NewQueueHead)
 {
-    PUHCI_QUEUE_HEAD NewQueueHead, QueueHead = NULL;
-    NTSTATUS Status;
+    PUSBREQUEST Request;
+    PUHCI_QUEUE_HEAD QueueHead = NULL;
 
-    DPRINT("CUSBQueue::AddUSBRequest\n");
 
     //
-    // get queue head
+    // get request
     //
-    Status = Request->GetEndpointDescriptor(&NewQueueHead);
-    if (!NT_SUCCESS(Status))
+    Request = (PUSBREQUEST)NewQueueHead->Request;
+    if (!Request)
     {
         //
-        // failed to create queue head
+        // no request
         //
-        DPRINT1("[USBUHCI] Failed to create queue head %x\n", Status);
-        return Status;
+        return STATUS_INVALID_PARAMETER;
     }
 
     if (Request->GetTransferType() == USB_ENDPOINT_TYPE_CONTROL)
@@ -184,6 +189,40 @@ CUSBQueue::AddUSBRequest(
     //
     LinkQueueHead(QueueHead, NewQueueHead);
     return STATUS_SUCCESS;
+
+}
+
+NTSTATUS
+CUSBQueue::AddUSBRequest(
+    IUSBRequest * Request)
+{
+    PUHCI_QUEUE_HEAD NewQueueHead;
+    NTSTATUS Status;
+
+    //
+    // get queue head
+    //
+    Status = Request->GetEndpointDescriptor(&NewQueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create queue head
+        //
+        DPRINT1("[USBUHCI] Failed to create queue head %x\n", Status);
+        return Status;
+    }
+
+    //
+    // sanity check
+    //
+    ASSERT(PVOID(Request) == NewQueueHead->Request);
+
+    //
+    // add queue head
+    //
+    DPRINT("AddUSBRequest Request %p\n", Request);
+    DPRINT("NewQueueHead %p\n", NewQueueHead);
+    return AddQueueHead(NewQueueHead);
 }
 
 VOID
@@ -198,6 +237,17 @@ CUSBQueue::LinkQueueHead(
     QueueHead->NextLogicalDescriptor = (PVOID)NextQueueHead;
 }
 
+
+VOID
+CUSBQueue::UnLinkQueueHead(
+    PUHCI_QUEUE_HEAD QueueHeadToRemove,
+    PUHCI_QUEUE_HEAD PreviousQueueHead)
+{
+    PreviousQueueHead->LinkPhysical = QueueHeadToRemove->LinkPhysical;
+    PreviousQueueHead->NextLogicalDescriptor = QueueHeadToRemove->NextLogicalDescriptor;
+}
+
+
 NTSTATUS
 CUSBQueue::CancelRequests()
 {
@@ -210,9 +260,49 @@ CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN struct _USB_ENDPOINT *EndpointDescriptor)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    KIRQL OldLevel;
+    PUHCI_TRANSFER_DESCRIPTOR Descriptor;
+    PUHCI_QUEUE_HEAD QueueHead, PreviousQueueHead = NULL;
+    UCHAR EndpointAddress, EndpointDeviceAddress;
+
+
+    // acquire lock
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    // get queue head
+    m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
+
+    while(QueueHead)
+    {
+        // get descriptor
+        Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)QueueHead->NextElementDescriptor;
+
+        if (Descriptor)
+        {
+            // extract endpoint address
+            EndpointAddress = (Descriptor->Token >> TD_TOKEN_ENDPTADDR_SHIFT) & 0x0F;
+
+            // extract device address
+            EndpointDeviceAddress = (Descriptor->Token >> TD_TOKEN_DEVADDR_SHIFT) & 0x7F;
+
+            // check if they match
+            if (EndpointAddress == (EndpointDescriptor->EndPointDescriptor.bEndpointAddress & 0x0F) &&
+                DeviceAddress == EndpointDeviceAddress)
+            {
+                // cleanup queue head
+                QueueHeadCleanup(QueueHead, PreviousQueueHead, &QueueHead);
+                continue;
+            }
+        }
+
+        // move to next queue head
+        PreviousQueueHead = QueueHead;
+        QueueHead = (PUHCI_QUEUE_HEAD)QueueHead->NextLogicalDescriptor;
+    }
+
+    // release lock
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -231,6 +321,218 @@ CUSBQueue::CreateUSBRequest(
     }
 
     return Status;
+}
+
+BOOLEAN
+CUSBQueue::IsQueueHeadComplete(
+    IN PUHCI_QUEUE_HEAD QueueHead)
+{
+    PUHCI_TRANSFER_DESCRIPTOR Descriptor;
+    ULONG ErrorCount;
+
+    if (QueueHead->NextElementDescriptor == NULL)
+    {
+        //
+        // empty queue head
+        //
+        DPRINT("QueueHead %p empty element physical\n", QueueHead);
+        return FALSE;
+    }
+
+    //
+    // check all descriptors
+    //
+    Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)QueueHead->NextElementDescriptor;
+    while(Descriptor)
+    {
+        if (Descriptor->Status & TD_STATUS_ACTIVE)
+        {
+            //
+            // descriptor is still active
+            //
+            DPRINT1("Descriptor %p is active Status %x BufferSize %lu\n", Descriptor, Descriptor->Status, Descriptor->BufferSize);
+            return FALSE;
+        }
+
+        if (Descriptor->Status & TD_ERROR_MASK)
+        {
+            //
+            // error happened
+            //
+            DPRINT1("[USBUHCI] Error detected at descriptor %p Physical %x\n", Descriptor, Descriptor->PhysicalAddress);
+
+            //
+            // get error count
+            //
+            ErrorCount = (Descriptor->Status >> TD_ERROR_COUNT_SHIFT) & TD_ERROR_COUNT_MASK;
+            if (ErrorCount == 0)
+            {
+                 //
+                 // error retry count elapsed
+                 //
+                 DPRINT1("[USBUHCI] ErrorBuffer %x TimeOut %x Nak %x BitStuff %x\n",
+                         Descriptor->Status & TD_STATUS_ERROR_BUFFER,
+                         Descriptor->Status & TD_STATUS_ERROR_TIMEOUT,
+                         Descriptor->Status & TD_STATUS_ERROR_NAK,
+                         Descriptor->Status & TD_STATUS_ERROR_BITSTUFF);
+                 return TRUE;
+            }
+            else if (Descriptor->Status & TD_STATUS_ERROR_BABBLE)
+            {
+                 //
+                 // babble error
+                 //
+                 DPRINT1("[USBUHCI] Babble detected\n");
+                 return TRUE;
+            }
+            else
+            {
+                //
+                // stall detected
+                //
+                DPRINT1("[USBUHCI] Stall detected\n");
+            }
+        }
+
+        //
+        // move to next descriptor
+        //
+        Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)Descriptor->NextLogicalDescriptor;
+    }
+
+    //
+    // request is complete
+    //
+    return TRUE;
+}
+
+VOID
+CUSBQueue::QueueHeadCleanup(
+    IN PUHCI_QUEUE_HEAD QueueHead,
+    IN PUHCI_QUEUE_HEAD PreviousQueueHead,
+    OUT PUHCI_QUEUE_HEAD *NextQueueHead)
+{
+    PUSBREQUEST Request;
+    PUHCI_QUEUE_HEAD NewQueueHead;
+    NTSTATUS Status;
+
+    //
+    // unlink queue head
+    //
+    UnLinkQueueHead(QueueHead, PreviousQueueHead);
+
+    //
+    // get next queue head
+    //
+    *NextQueueHead = (PUHCI_QUEUE_HEAD)PreviousQueueHead->NextLogicalDescriptor;
+    ASSERT(*NextQueueHead != QueueHead);
+
+    //
+    // the queue head is complete, is the transfer now completed?
+    //
+    Request = (PUSBREQUEST)QueueHead->Request;
+    ASSERT(Request);
+
+    //
+    // free queue head
+    //
+    DPRINT("Request %p\n", Request);
+    Request->FreeEndpointDescriptor(QueueHead);
+
+    //
+    // check if transfer is complete
+    //
+    if (Request->IsRequestComplete())
+    {
+        //
+        // the transfer is complete
+        //
+        Request->CompletionCallback();
+        Request->Release();
+        return;
+    }
+
+    //
+    // grab new queue head
+    //
+    Status = Request->GetEndpointDescriptor(&NewQueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get new queue head
+        //
+        DPRINT1("[USBUHCI] Failed to get new queue head with %x\n", Status);
+        Request->CompletionCallback();
+        Request->Release();
+        return;
+    }
+
+    //
+    // Link queue head
+    //
+    Status = AddQueueHead(NewQueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get new queue head
+        //
+        DPRINT1("[USBUHCI] Failed to add queue head with %x\n", Status);
+        Request->CompletionCallback();
+        Request->Release();
+        return;
+    }
+
+}
+
+VOID
+CUSBQueue::TransferInterrupt(
+    UCHAR ErrorInterrupt)
+{
+    KIRQL OldLevel;
+    PUHCI_QUEUE_HEAD QueueHead, PreviousQueueHead = NULL;
+    BOOLEAN IsComplete;
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // get queue head
+    //
+    m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
+
+    while(QueueHead)
+    {
+        //
+        // is queue head complete
+        //
+        DPRINT("QueueHead %p\n", QueueHead);
+        IsComplete = IsQueueHeadComplete(QueueHead);
+        if (IsComplete)
+        {
+            //
+            // cleanup queue head
+            //
+            QueueHeadCleanup(QueueHead, PreviousQueueHead, &QueueHead);
+            continue;
+        }
+
+        //
+        // backup previous queue head
+        //
+        PreviousQueueHead = QueueHead;
+
+        //
+        // get next queue head
+        //
+        QueueHead = (PUHCI_QUEUE_HEAD)QueueHead->NextLogicalDescriptor;
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 
 NTSTATUS

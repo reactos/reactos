@@ -92,10 +92,11 @@ typedef struct _UHCI_TRANSFER_DESCRIPTOR
     ULONG BufferPhysical;   // pointer to the buffer
 
     // Software part
-    PHYSICAL_ADDRESS  PhysicalAddress;           // Physical address of this descriptor
+    ULONG PhysicalAddress;           // Physical address of this descriptor
     PVOID NextLogicalDescriptor;
-    ULONG  BufferSize;                // Size of the buffer
-    PVOID    BufferLogical;            // Logical pointer to the buffer
+    ULONG BufferSize;                // Size of the buffer
+    PVOID BufferLogical;            // Logical pointer to the buffer
+    PVOID UserBuffer;
 }UHCI_TRANSFER_DESCRIPTOR, *PUHCI_TRANSFER_DESCRIPTOR;
 
 #define	TD_NEXT_IS_QH				0x02

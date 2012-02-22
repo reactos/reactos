@@ -365,8 +365,7 @@ USBCCGP_InitFunctionDescriptor(
         //
         // get interface description
         //
-         Status = USBCCGP_GetDescriptor(FDODeviceExtension->NextDeviceObject, 
-                                        USB_STRING_DESCRIPTOR_TYPE, 
+         Status = USBCCGP_GetStringDescriptor(FDODeviceExtension->NextDeviceObject,
                                         100 * sizeof(WCHAR), 
                                         Descriptor->iFunction, 
                                         0x0409, //FIXME
@@ -530,10 +529,9 @@ USBCCG_InitIdsWithInterfaceDescriptor(
         //
         // get interface description
         //
-         Status = USBCCGP_GetDescriptor(FDODeviceExtension->NextDeviceObject, 
-                                        USB_STRING_DESCRIPTOR_TYPE, 
-                                        100 * sizeof(WCHAR), 
-                                        Descriptor->iInterface, 
+         Status = USBCCGP_GetStringDescriptor(FDODeviceExtension->NextDeviceObject,
+                                        100 * sizeof(WCHAR),
+                                        Descriptor->iInterface,
                                         0x0409, //FIXME
                                         (PVOID*)&DescriptionBuffer);
         if (!NT_SUCCESS(Status))

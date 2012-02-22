@@ -199,7 +199,7 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
 
     while (*IdBuffer)
     {
-        ULONG StringLength = (ULONG)wcslen(IdBuffer) + 1, Index;
+        USHORT StringLength = (USHORT)wcslen(IdBuffer) + 1, Index;
         
         IopFixupDeviceId(IdBuffer);
         
@@ -247,7 +247,7 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
                 ChildIdNameU.Buffer = IdBuffer;
                 ChildIdNameU.MaximumLength = ChildIdNameU.Length = (StringLength - 1) * sizeof(WCHAR);
                 RegKeyNameU.Buffer = BasicInfo->Name;
-                RegKeyNameU.MaximumLength = RegKeyNameU.Length = BasicInfo->NameLength;
+                RegKeyNameU.MaximumLength = RegKeyNameU.Length = (USHORT)BasicInfo->NameLength;
 
                 if (RtlEqualUnicodeString(&ChildIdNameU, &RegKeyNameU, TRUE))
                 {
