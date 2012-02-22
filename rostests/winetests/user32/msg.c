@@ -11497,6 +11497,7 @@ static void test_dbcs_wm_char(void)
     CPINFOEXA cpinfo;
     UINT i, j, k;
     struct message wmCharSeq[2];
+    BOOL ret;
 
     if (!pGetCPInfoExA)
     {
@@ -11557,21 +11558,27 @@ static void test_dbcs_wm_char(void)
 
     /* posted message */
     PostMessageA( hwnd, WM_CHAR, dbch[0], 0 );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
     PostMessageA( hwnd, WM_CHAR, dbch[1], 0 );
-    ok( PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == wch, "bad wparam %lx/%x\n", msg.wParam, wch );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* posted thread message */
     PostThreadMessageA( GetCurrentThreadId(), WM_CHAR, dbch[0], 0 );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
     PostMessageA( hwnd, WM_CHAR, dbch[1], 0 );
-    ok( PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == wch, "bad wparam %lx/%x\n", msg.wParam, wch );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* sent message */
     flush_sequence();
@@ -11579,7 +11586,8 @@ static void test_dbcs_wm_char(void)
     ok_sequence( WmEmptySeq, "no messages", FALSE );
     SendMessageA( hwnd, WM_CHAR, dbch[1], 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* sent message with timeout */
     flush_sequence();
@@ -11587,7 +11595,8 @@ static void test_dbcs_wm_char(void)
     ok_sequence( WmEmptySeq, "no messages", FALSE );
     SendMessageTimeoutA( hwnd, WM_CHAR, dbch[1], 0, SMTO_NORMAL, 0, &res );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* sent message with timeout and callback */
     flush_sequence();
@@ -11595,7 +11604,8 @@ static void test_dbcs_wm_char(void)
     ok_sequence( WmEmptySeq, "no messages", FALSE );
     SendMessageCallbackA( hwnd, WM_CHAR, dbch[1], 0, NULL, 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* sent message with callback */
     flush_sequence();
@@ -11603,7 +11613,8 @@ static void test_dbcs_wm_char(void)
     ok_sequence( WmEmptySeq, "no messages", FALSE );
     SendMessageCallbackA( hwnd, WM_CHAR, dbch[1], 0, NULL, 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* direct window proc call */
     flush_sequence();
@@ -11629,23 +11640,28 @@ static void test_dbcs_wm_char(void)
     ok_sequence( WmEmptySeq, "no messages", FALSE );
     SendMessageA( hwnd, WM_CHAR, dbch[1], 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* interleaved post and send */
     flush_sequence();
     PostMessageA( hwnd2, WM_CHAR, dbch[0], 0 );
     SendMessageA( hwnd2, WM_CHAR, dbch[0], 0 );
     ok_sequence( WmEmptySeq, "no messages", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
     PostMessageA( hwnd, WM_CHAR, dbch[1], 0 );
     ok_sequence( WmEmptySeq, "no messages", FALSE );
-    ok( PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == wch, "bad wparam %lx/%x\n", msg.wParam, wch );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
     SendMessageA( hwnd, WM_CHAR, dbch[1], 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* interleaved sent message and winproc */
     flush_sequence();
@@ -11685,46 +11701,58 @@ static void test_dbcs_wm_char(void)
     flush_sequence();
     SendMessageA( hwnd2, WM_CHAR, (dbch[1] << 8) | dbch[0], 0 );
     ok_sequence( wmCharSeq, "Unicode WM_CHAR", FALSE );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* other char messages are not magic */
     PostMessageA( hwnd, WM_SYSCHAR, dbch[0], 0 );
-    ok( PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.message == WM_SYSCHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == bad_wch, "bad wparam %lx/%x\n", msg.wParam, bad_wch );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
     PostMessageA( hwnd, WM_DEADCHAR, dbch[0], 0 );
-    ok( PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.message == WM_DEADCHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == bad_wch, "bad wparam %lx/%x\n", msg.wParam, bad_wch );
-    ok( !PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* test retrieving messages */
 
     PostMessageW( hwnd, WM_CHAR, wch, 0 );
-    ok( PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[0], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[1], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( !PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* message filters */
     PostMessageW( hwnd, WM_CHAR, wch, 0 );
-    ok( PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[0], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
     /* message id is filtered, hwnd is not */
-    ok( !PeekMessageA( &msg, hwnd, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE ), "no message\n" );
-    ok( PeekMessageA( &msg, hwnd2, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, hwnd, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE );
+    ok( !ret, "no message\n" );
+    ret = PeekMessageA( &msg, hwnd2, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[1], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( !PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* mixing GetMessage and PostMessage */
     PostMessageW( hwnd, WM_CHAR, wch, 0xbeef );
@@ -11736,34 +11764,41 @@ static void test_dbcs_wm_char(void)
     time = msg.time;
     pt = msg.pt;
     ok( time - GetTickCount() <= 100, "bad time %x\n", msg.time );
-    ok( PeekMessageA( &msg, 0, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, 0, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[1], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
     ok( msg.lParam == 0xbeef, "bad lparam %lx\n", msg.lParam );
     ok( msg.time == time, "bad time %x/%x\n", msg.time, time );
     ok( msg.pt.x == pt.x && msg.pt.y == pt.y, "bad point %u,%u/%u,%u\n", msg.pt.x, msg.pt.y, pt.x, pt.y );
-    ok( !PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     /* without PM_REMOVE */
     PostMessageW( hwnd, WM_CHAR, wch, 0 );
-    ok( PeekMessageA( &msg, 0, 0, 0, PM_NOREMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, 0, 0, 0, PM_NOREMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[0], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( PeekMessageA( &msg, 0, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, 0, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[0], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( PeekMessageA( &msg, 0, 0, 0, PM_NOREMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, 0, 0, 0, PM_NOREMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[1], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( PeekMessageA( &msg, 0, 0, 0, PM_REMOVE ), "no message\n" );
+    ret = PeekMessageA( &msg, 0, 0, 0, PM_REMOVE );
+    ok( ret, "no message\n" );
     ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
     ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
     ok( msg.wParam == dbch[1], "bad wparam %lx/%x\n", msg.wParam, dbch[0] );
-    ok( !PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE ), "got message %x\n", msg.message );
+    ret = PeekMessageA( &msg, hwnd, 0, 0, PM_REMOVE );
+    ok( !ret, "got message %x\n", msg.message );
 
     DestroyWindow(hwnd);
     DestroyWindow(hwnd2);
