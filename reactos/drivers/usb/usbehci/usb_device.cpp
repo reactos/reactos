@@ -1056,7 +1056,7 @@ CUSBDevice::SelectConfiguration(
         //
         for(Index = 0; Index < m_DeviceDescriptor.bNumConfigurations; Index++)
         {
-            if (m_ConfigurationDescriptors[Index].ConfigurationDescriptor->iConfiguration == ConfigurationDescriptor->iConfiguration)
+            if (m_ConfigurationDescriptors[Index].ConfigurationDescriptor->bConfigurationValue == ConfigurationDescriptor->bConfigurationValue)
             {
                 //
                 // found configuration index
@@ -1068,7 +1068,7 @@ CUSBDevice::SelectConfiguration(
 
         if (!Found)
         {
-            DPRINT1("[USBUHCI] invalid configuration index %lu\n", ConfigurationDescriptor->iConfiguration);
+            DPRINT1("[USBUHCI] invalid configuration value %lu\n", ConfigurationDescriptor->bConfigurationValue);
             return STATUS_INVALID_PARAMETER;
         }
 
