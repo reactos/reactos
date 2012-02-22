@@ -34,7 +34,7 @@ interface IAccessor : IUnknown
 
     [call_as(AddRefAccessor)]
     HRESULT RemoteAddRefAccessor([in] HACCESSOR hAccessor,
-                                 [in, out, unique, annotation("__out_opt")] DBREFCOUNT *pcRefCount,
+                                 [in, out, unique] DBREFCOUNT *pcRefCount,
                                  [out] IErrorInfo **ppErrorInfoRem);
 
     [local]

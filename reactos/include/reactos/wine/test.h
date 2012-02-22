@@ -539,6 +539,11 @@ static void list_tests(void)
     for (test = winetest_testlist; test->name; test++) fprintf( stdout, "    %s\n", test->name );
 }
 
+/* Disable false-positive claiming "test" would be NULL-dereferenced */
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:28182)
+#endif
 
 /* Run a named test, and return exit status */
 static int run_test( const char *name )
@@ -569,6 +574,9 @@ static int run_test( const char *name )
     return status;
 }
 
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 /* Display usage and exit */
 static void usage( const char *argv0 )
