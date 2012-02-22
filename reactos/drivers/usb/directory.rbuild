@@ -19,4 +19,7 @@
 	<directory name="usbstor">
 		<xi:include href="usbstor/usbstor.rbuild" />
 	</directory>
+	<directory name="usbuhci">
+		<xi:include href="usbuhci/usbuhci.rbuild" />
+	</directory>
 </group>
