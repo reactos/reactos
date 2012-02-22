@@ -220,8 +220,8 @@ CUSBQueue::AddUSBRequest(
     //
     // add queue head
     //
-    DPRINT1("AddUSBRequest Request %p\n", Request);
-    DPRINT1("NewQueueHead %p\n", NewQueueHead);
+    DPRINT("AddUSBRequest Request %p\n", Request);
+    DPRINT("NewQueueHead %p\n", NewQueueHead);
     return AddQueueHead(NewQueueHead);
 }
 
@@ -260,9 +260,49 @@ CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN struct _USB_ENDPOINT *EndpointDescriptor)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    KIRQL OldLevel;
+    PUHCI_TRANSFER_DESCRIPTOR Descriptor;
+    PUHCI_QUEUE_HEAD QueueHead, PreviousQueueHead = NULL;
+    UCHAR EndpointAddress, EndpointDeviceAddress;
+
+
+    // acquire lock
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    // get queue head
+    m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
+
+    while(QueueHead)
+    {
+        // get descriptor
+        Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)QueueHead->NextElementDescriptor;
+
+        if (Descriptor)
+        {
+            // extract endpoint address
+            EndpointAddress = (Descriptor->Token >> TD_TOKEN_ENDPTADDR_SHIFT) & 0x0F;
+
+            // extract device address
+            EndpointDeviceAddress = (Descriptor->Token >> TD_TOKEN_DEVADDR_SHIFT) & 0x7F;
+
+            // check if they match
+            if (EndpointAddress == (EndpointDescriptor->EndPointDescriptor.bEndpointAddress & 0x0F) &&
+                DeviceAddress == EndpointDeviceAddress)
+            {
+                // cleanup queue head
+                QueueHeadCleanup(QueueHead, PreviousQueueHead, &QueueHead);
+                continue;
+            }
+        }
+
+        // move to next queue head
+        PreviousQueueHead = QueueHead;
+        QueueHead = (PUHCI_QUEUE_HEAD)QueueHead->NextLogicalDescriptor;
+    }
+
+    // release lock
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -295,7 +335,7 @@ CUSBQueue::IsQueueHeadComplete(
         //
         // empty queue head
         //
-        DPRINT1("QueueHead %p empty element physical\n", QueueHead);
+        DPRINT("QueueHead %p empty element physical\n", QueueHead);
         return FALSE;
     }
 
@@ -396,7 +436,7 @@ CUSBQueue::QueueHeadCleanup(
     //
     // free queue head
     //
-    DPRINT1("Request %p\n", Request);
+    DPRINT("Request %p\n", Request);
     Request->FreeEndpointDescriptor(QueueHead);
 
     //
@@ -467,7 +507,7 @@ CUSBQueue::TransferInterrupt(
         //
         // is queue head complete
         //
-        DPRINT1("QueueHead %p\n", QueueHead);
+        DPRINT("QueueHead %p\n", QueueHead);
         IsComplete = IsQueueHeadComplete(QueueHead);
         if (IsComplete)
         {

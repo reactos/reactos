@@ -59,6 +59,7 @@ public:
     USHORT GetMaxPacketSize();
     NTSTATUS CreateDescriptor(PUHCI_TRANSFER_DESCRIPTOR *OutDescriptor, IN UCHAR PidCode, ULONG BufferLength);
     NTSTATUS BuildControlTransferDescriptor(IN PUHCI_QUEUE_HEAD * OutQueueHead);
+    NTSTATUS BuildBulkInterruptTransferDescriptor(IN PUHCI_QUEUE_HEAD * OutQueueHead);
     NTSTATUS BuildQueueHead(OUT PUHCI_QUEUE_HEAD *OutQueueHead);
     VOID FreeDescriptor(IN PUHCI_TRANSFER_DESCRIPTOR Descriptor);
     NTSTATUS BuildTransferDescriptorChain(IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PUHCI_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PUHCI_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PULONG OutTransferBufferOffset, OUT PUCHAR OutDataToggle);
@@ -138,6 +139,9 @@ protected:
     // store device speed
     //
     USB_DEVICE_SPEED m_DeviceSpeed;
+
+    // base
+    PVOID m_Base;
 
 };
 
@@ -607,13 +611,24 @@ CUSBRequest::GetEndpointDescriptor(
     struct _UHCI_QUEUE_HEAD ** OutQueueHead)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    ULONG TransferType;
 
-    if (InternalGetTransferType() == USB_ENDPOINT_TYPE_CONTROL)
+    // get transfer type
+    TransferType = InternalGetTransferType();
+
+    if (TransferType == USB_ENDPOINT_TYPE_CONTROL)
     {
         //
         // build queue head
         //
         Status = BuildControlTransferDescriptor(OutQueueHead);
+    }
+    else if (TransferType == USB_ENDPOINT_TYPE_INTERRUPT || TransferType == USB_ENDPOINT_TYPE_BULK)
+    {
+        //
+        // build queue head
+        //
+        Status = BuildBulkInterruptTransferDescriptor(OutQueueHead);
     }
 
     if (!NT_SUCCESS(Status))
@@ -783,7 +798,7 @@ CUSBRequest::CreateDescriptor(
     // store address & endpoint number
     //
     Descriptor->Token |= GetEndpointAddress() << TD_TOKEN_ENDPTADDR_SHIFT;
-    Descriptor->Token |= GetDeviceAddress() << 8 | PidCode;
+    Descriptor->Token |= GetDeviceAddress() << TD_TOKEN_DEVADDR_SHIFT | PidCode;
 
     if (BufferLength)
     {
@@ -990,6 +1005,70 @@ CUSBRequest::FreeDescriptor(
     //
     m_DmaManager->Release(Descriptor, sizeof(UHCI_TRANSFER_DESCRIPTOR));
 }
+
+NTSTATUS
+CUSBRequest::BuildBulkInterruptTransferDescriptor(
+    IN PUHCI_QUEUE_HEAD * OutQueueHead)
+{
+    NTSTATUS Status;
+    PUHCI_QUEUE_HEAD QueueHead;
+    PUHCI_TRANSFER_DESCRIPTOR FirstDescriptor, LastDescriptor;
+    ULONG ChainDescriptorLength;
+    BOOLEAN Direction;
+    PVOID Buffer;
+    ULONG BufferSize;
+
+    // create queue head
+    Status = BuildQueueHead(&QueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to allocate descriptor
+        DPRINT1("[UHCI] Failed to create queue head\n");
+        return Status;
+    }
+
+    // get direction
+    Direction = InternalGetPidDirection();
+
+    if (!m_Base)
+    {
+        // get buffer base
+        m_Base = MmGetMdlVirtualAddress(m_TransferBufferMDL);
+    }
+
+    // get new buffer offset
+    Buffer = (PVOID)((ULONG_PTR)m_Base + m_TransferBufferLengthCompleted);
+
+    // FIXME determine buffer limit
+    BufferSize = min(m_TransferBufferLength - m_TransferBufferLengthCompleted, PAGE_SIZE);
+
+    // create descriptor chain
+    Status = BuildTransferDescriptorChain(Buffer,
+                                          BufferSize,
+                                          Direction ? TD_TOKEN_IN : TD_TOKEN_OUT,
+                                          m_EndpointDescriptor->DataToggle,
+                                          &FirstDescriptor,
+                                          &LastDescriptor,
+                                          &ChainDescriptorLength,
+                                           NULL);
+
+    // adjust buffer offset
+    m_TransferBufferLengthCompleted += ChainDescriptorLength;
+
+    // fire interrupt when the last descriptor is complete
+    LastDescriptor->Status |= TD_CONTROL_IOC;
+    LastDescriptor->LinkPhysical = TD_TERMINATE;
+    LastDescriptor->NextLogicalDescriptor = NULL;
+
+    // link queue head with first data descriptor descriptor
+    QueueHead->NextElementDescriptor = (PVOID)FirstDescriptor;
+    QueueHead->ElementPhysical = FirstDescriptor->PhysicalAddress;
+
+    // store result
+    *OutQueueHead = QueueHead;
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 CUSBRequest::BuildControlTransferDescriptor(
