@@ -552,38 +552,40 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
-    /* Check if an FDO has been added to the stack */
-    if (DeviceNode->Flags & DNF_ADDED)
+#if 0
+    /* Remove the device node */
+    Status = IopRemoveDevice(DeviceNode);
+    if (NT_SUCCESS(Status))
     {
-        /* Remove the device node */
-        Status = IopRemoveDevice(DeviceNode);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("WARNING: Ignoring failed IopRemoveDevice() for %wZ (likely a driver bug)\n", &DeviceNode->InstancePath);
-        }
-
         /* Invalidate device relations for the parent to reenumerate the device */
         Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+        DPRINT1("A new driver has been loaded for '%wZ'\n", &DeviceInstance);
+    }
+#else
+    /* FIXME: We might clear some important flags */
+    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+    DeviceNode->Flags = DNF_ENUMERATED | DNF_PROCESSED;
 
-        DPRINT1("Reset PDO with FDO present: 0x%x\n", Status);
+    /* Load service data from the registry */
+    Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Start the service and begin PnP initialization of the device again */
+        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        DPRINT1("HACK: A new driver has been loaded for '%wZ' WITHOUT removing the old one\n", &DeviceInstance);
+    }
+#endif
+    else if (DeviceNode->Flags & DNF_ADDED)
+    {
+        /* A driver has already been loaded for this device */
+        DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceInstance);
     }
     else
     {
-        /* FIXME: We might clear some important flags */
-        ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
-        ASSERT(DeviceNode->Flags & DNF_PROCESSED);
-        DeviceNode->Flags = DNF_ENUMERATED | DNF_PROCESSED;
-
-        /* Load service data from the registry */
-        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
-
-        if (NT_SUCCESS(Status))
-        {
-            /* Start the service and begin PnP initialization of the device again */
-            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
-        }
-
-        DPRINT1("Reset PDO with no FDO present: 0x%x\n", Status);
+        /* This device needs a driver */
+        DPRINT1("A reboot is required for the new driver for '%wZ' to load\n", &DeviceInstance);
     }
 
     ObDereferenceObject(DeviceObject);
