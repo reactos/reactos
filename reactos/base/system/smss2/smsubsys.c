@@ -317,7 +317,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         /* This is the POSIX or OS/2 subsystem process, copy its information */
         RtlCopyMemory(&CreateSession->ProcessInfo,
                       &ProcessInformation,
-                      sizeof(&CreateSession->ProcessInfo));
+                      sizeof(CreateSession->ProcessInfo));
 
         /* Not sure these field mean what I think they do -- but clear them */
         *(PULONGLONG)&CreateSession->ClientId = 0;

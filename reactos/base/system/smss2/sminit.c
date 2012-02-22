@@ -1977,7 +1977,7 @@ NTSTATUS
 NTAPI
 SmpProcessFileRenames(VOID)
 {
-    BOOLEAN OldState, HavePrivilege;
+    BOOLEAN OldState, HavePrivilege = FALSE;
     NTSTATUS Status;
     HANDLE FileHandle, OtherFileHandle;
     FILE_INFORMATION_CLASS InformationClass;
