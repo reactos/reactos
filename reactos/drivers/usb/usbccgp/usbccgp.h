@@ -84,6 +84,15 @@ USBCCGP_GetDescriptor(
     IN LANGID LanguageId,
     OUT PVOID *OutDescriptor);
 
+NTSTATUS
+NTAPI
+USBCCGP_GetStringDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DescriptorLength,
+    IN UCHAR DescriptorIndex,
+    IN LANGID LanguageId,
+    OUT PVOID *OutDescriptor);
+
 ULONG
 CountInterfaceDescriptors(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
