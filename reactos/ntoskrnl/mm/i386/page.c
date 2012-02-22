@@ -549,7 +549,7 @@ Mmi386MakeKernelPageTableGlobal(PVOID Address)
     {
         if(!MiSynchronizeSystemPde(PointerPde))
             return FALSE;
-        return (BOOLEAN)PointerPte->u.Hard.Valid;
+        return PointerPte->u.Hard.Valid != 0;
     }
     return FALSE;
 }
