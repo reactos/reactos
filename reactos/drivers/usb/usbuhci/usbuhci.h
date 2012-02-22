@@ -2,7 +2,7 @@
 #define USBOHCI_H__
 
 #include <ntddk.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <hubbusif.h>
 #include <usbbusif.h>

@@ -718,7 +718,7 @@ CUSBRequest::CreateDescriptor(
     //
     // init descriptor
     //
-    Descriptor->PhysicalAddress = Address;
+    Descriptor->PhysicalAddress = Address.LowPart;
     Descriptor->Status = TD_STATUS_ACTIVE;
 
     if (InternalGetTransferType() == USB_ENDPOINT_TYPE_ISOCHRONOUS)
@@ -829,7 +829,7 @@ CUSBRequest::BuildTransferDescriptorChain(
     //
     // FIXME FIXME FIXME FIXME FIXME 
     //
-    MaxPacketSize = 64;
+    MaxPacketSize = 1280;
 
     do
     {
@@ -872,7 +872,7 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             // link descriptor
             //
-            LastDescriptor->LinkPhysical = CurrentDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+            LastDescriptor->LinkPhysical = CurrentDescriptor->PhysicalAddress | TD_DEPTH_FIRST;
             LastDescriptor->NextLogicalDescriptor = (PVOID)CurrentDescriptor;
         }
 
@@ -1095,13 +1095,13 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // link setup descriptor to first data descriptor
         //
-        SetupDescriptor->LinkPhysical = FirstDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        SetupDescriptor->LinkPhysical = FirstDescriptor->PhysicalAddress | TD_DEPTH_FIRST;
         SetupDescriptor->NextLogicalDescriptor = (PVOID)FirstDescriptor;
 
         //
         // link last data descriptor to status descriptor
         //
-        LastDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        LastDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress | TD_DEPTH_FIRST;
         LastDescriptor->NextLogicalDescriptor = (PVOID)StatusDescriptor;
     }
     else
@@ -1109,7 +1109,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // directly link setup to status descriptor
         //
-        SetupDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress.LowPart | TD_DEPTH_FIRST;
+        SetupDescriptor->LinkPhysical = StatusDescriptor->PhysicalAddress | TD_DEPTH_FIRST;
         SetupDescriptor->NextLogicalDescriptor = (PVOID)StatusDescriptor;
     }
 
@@ -1117,7 +1117,7 @@ CUSBRequest::BuildControlTransferDescriptor(
     // link queue head with setup descriptor
     //
     QueueHead->NextElementDescriptor = (PVOID)SetupDescriptor;
-    QueueHead->ElementPhysical = SetupDescriptor->PhysicalAddress.LowPart;
+    QueueHead->ElementPhysical = SetupDescriptor->PhysicalAddress;
 
     //
     // store result

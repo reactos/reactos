@@ -289,7 +289,7 @@ CUSBHardwareDevice::PnpStart(
                 // Store Resource base
                 //
                 m_Base = (PULONG)ResourceDescriptor->u.Port.Start.LowPart; //FIXME
-                DPRINT1("UHCI Base %p\n", m_Base);
+                DPRINT1("UHCI Base %p Length %x\n", m_Base, ResourceDescriptor->u.Port.Length);
                 break;
             }
         }
@@ -499,6 +499,9 @@ CUSBHardwareDevice::StartController(void)
         }
     }
 
+    DPRINT1("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
+
+
     if ((Status & UHCI_USBSTS_HCHALT))
     {
         //
@@ -509,9 +512,31 @@ CUSBHardwareDevice::StartController(void)
         return STATUS_UNSUCCESSFUL;
     }
 
+    //
+    // Set the configure bit
+    //
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) | UHCI_USBCMD_CF);
+
+    for(Index = 0; Index < 2; Index++)
+    {
+        //
+        // get port status
+        //
+        Status = ReadRegister16(UHCI_PORTSC1 + Index * 2);
+
+        //
+        // clear connection change and port suspend
+        //
+        WriteRegister16(UHCI_PORTSC1 + Index * 2, Status & ~(UHCI_PORTSC_STATCHA | UHCI_PORTSC_SUSPEND));
+    }
+
     DPRINT1("[USBUHCI] Controller Started\n");
     DPRINT1("[USBUHCI] Controller Status %x\n", ReadRegister16(UHCI_USBSTS));
+    DPRINT1("[USBUHCI] Controller Cmd Status %x\n", ReadRegister16(UHCI_USBCMD));
+    DPRINT1("[USBUHCI] Controller Interrupt Status %x\n", ReadRegister16(UHCI_USBINTR));
     DPRINT1("[USBUHCI] Controller Frame %x\n", ReadRegister16(UHCI_FRNUM));
+    DPRINT1("[USBUHCI] Controller Port Status 0 %x\n", ReadRegister16(UHCI_PORTSC1));
+    DPRINT1("[USBUHCI] Controller Port Status 1 %x\n", ReadRegister16(UHCI_PORTSC1 + 2));
 
     //
     // done
@@ -533,12 +558,15 @@ CUSBHardwareDevice::GlobalReset()
     //
     WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + UHCI_USBCMD), UHCI_USBCMD_GRESET);
 
+    KeStallExecutionProcessor(100);
+
     //
     // clear command register
     //
     WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + UHCI_USBCMD), 0);
 
-    KeStallExecutionProcessor(1000);
+    KeStallExecutionProcessor(10);
+
 
     //
     // restore start of modify register
@@ -556,6 +584,12 @@ CUSBHardwareDevice::InitializeController()
     PHYSICAL_ADDRESS Address;
 
     DPRINT1("[USBUHCI] InitializeController\n");
+
+    //
+    // now disable all interrupts
+    //
+    WriteRegister16(UHCI_USBINTR, 0);
+
 
     //
     // UHCI has two ports
@@ -580,10 +614,6 @@ CUSBHardwareDevice::InitializeController()
 
     DPRINT1("[USBUHCI] Acquired ownership\n");
 
-    //
-    // now disable all interrupts
-    //
-    WriteRegister16(UHCI_USBINTR, 0);
 
     //
     // perform global reset
@@ -682,14 +712,15 @@ CUSBHardwareDevice::InitializeController()
     //
     // init stray descriptor
     //
-    m_StrayDescriptor->PhysicalAddress = m_StrayDescriptorPhysicalAddress;
+    m_StrayDescriptor->PhysicalAddress = m_StrayDescriptorPhysicalAddress.LowPart;
     m_StrayDescriptor->LinkPhysical = TD_TERMINATE;
     m_StrayDescriptor->Token = TD_TOKEN_NULL_DATA | (0x7f << TD_TOKEN_DEVADDR_SHIFT) | TD_TOKEN_IN;
+
 
     //
     // link to last queue head
     //
-    m_QueueHead[4]->LinkPhysical = m_StrayDescriptor->PhysicalAddress.LowPart;
+    m_QueueHead[4]->LinkPhysical = m_StrayDescriptor->PhysicalAddress;
     m_QueueHead[4]->NextLogicalDescriptor = m_StrayDescriptor;
 
 
@@ -805,6 +836,17 @@ CUSBHardwareDevice::ResetPort(
     Status = ReadRegister16(Port);
 
     //
+    // Before port reset, disable the port
+    //
+    WriteRegister16(Port, ReadRegister16(Port) & ~UHCI_PORTSC_ENABLED);
+    while(ReadRegister16(Port) & UHCI_PORTSC_ENABLED)
+    {
+        DPRINT1("Port %x Status %x\n", PortIndex, ReadRegister16(Port));
+        KeStallExecutionProcessor(5);
+    }
+
+
+    //
     // remove unwanted bits
     //
     Status &= UHCI_PORTSC_DATAMASK;
@@ -817,7 +859,7 @@ CUSBHardwareDevice::ResetPort(
     //
     // now wait a bit
     //
-    KeStallExecutionProcessor(25);
+    KeStallExecutionProcessor(50);
 
     //
     // re-read status
@@ -832,12 +874,17 @@ CUSBHardwareDevice::ResetPort(
     //
     // clear reset port 
     //
-    WriteRegister16(Port, Status & ~UHCI_PORTSC_RESET);
+    WriteRegister16(Port, (Status & ~UHCI_PORTSC_RESET));
+
+    //
+    // set enabled bit
+    //
+    WriteRegister16(Port, ReadRegister16(Port) | UHCI_PORTSC_ENABLED);
 
     //
     // now wait a bit
     //
-    KeStallExecutionProcessor(25);
+    KeStallExecutionProcessor(10);
 
     for (Index = 0; Index < 10; Index++) 
     {
@@ -854,7 +901,7 @@ CUSBHardwareDevice::ResetPort(
         //
         // enable port
         //
-        WriteRegister16(Port, Status | UHCI_PORTSC_ENABLED);
+        WriteRegister16(Port, Status);
 
         //
         // wait a bit
@@ -891,6 +938,16 @@ CUSBHardwareDevice::ResetPort(
 
     m_PortResetChange |= (1 << PortIndex);
     DPRINT1("[USBOHCI] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
+
+    if (Status & UHCI_PORTSC_CURSTAT)
+    {
+        //
+        // queue work item
+        //
+        DPRINT1("Queueing work item\n");
+        ExQueueWorkItem(&m_StatusChangeWorkItem, DelayedWorkQueue);
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -1003,7 +1060,7 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // UHCI is not supporting port reset register bit
         //
-        m_PortResetChange &= (1 << PortId);
+        m_PortResetChange &= ~(1 << PortId);
     }
     else if (Feature == C_PORT_CONNECTION)
     {
@@ -1029,6 +1086,8 @@ CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
 {
+    ULONG PortRegister;
+
     DPRINT1("[UHCI] SetPortFeature PortId %x Feature %x\n", PortId, Feature);
 
     //
@@ -1043,12 +1102,21 @@ CUSBHardwareDevice::SetPortFeature(
         return STATUS_INVALID_PARAMETER;
     }
 
+    PortRegister = UHCI_PORTSC1 + PortId * 2;
+
     if (Feature == PORT_RESET)
     {
         //
         // reset port
         //
         return ResetPort(PortId); 
+    }
+    else if (Feature == PORT_ENABLE)
+    {
+        //
+        // reset port
+        //
+        WriteRegister16(PortRegister, ReadRegister16(PortRegister) | UHCI_PORTSC_ENABLED);
     }
     else if (Feature == PORT_POWER)
     {
@@ -1107,12 +1175,12 @@ InterruptServiceRoutine(
     // get context
     //
     This = (CUSBHardwareDevice*) ServiceContext;
-    DPRINT("InterruptServiceRoutine\n");
 
     //
     // read register
     //
     Status = This->ReadRegister16(UHCI_USBSTS);
+    DPRINT("InterruptServiceRoutine %x\n", Status);
 
     //
     // check if the interrupt signaled are from us

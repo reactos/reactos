@@ -92,7 +92,7 @@ typedef struct _UHCI_TRANSFER_DESCRIPTOR
     ULONG BufferPhysical;   // pointer to the buffer
 
     // Software part
-    PHYSICAL_ADDRESS  PhysicalAddress;           // Physical address of this descriptor
+    ULONG  PhysicalAddress;           // Physical address of this descriptor
     PVOID NextLogicalDescriptor;
     ULONG  BufferSize;                // Size of the buffer
     PVOID    BufferLogical;            // Logical pointer to the buffer
