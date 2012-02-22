@@ -737,7 +737,9 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             {
                 PWSTR NewBuffer;
                 ReturnBuffer.MaximumLength = (USHORT)max(ReturnBuffer.MaximumLength * 2,
-                                                 ReturnBuffer.Length + KeyName.Length + 2 * sizeof(WCHAR));
+                                                         (USHORT)(ReturnBuffer.Length +
+                                                         KeyName.Length +
+                                                         2 * sizeof(WCHAR)));
                 NewBuffer = ExAllocatePool(PagedPool, ReturnBuffer.MaximumLength);
                 if (!NewBuffer)
                 {

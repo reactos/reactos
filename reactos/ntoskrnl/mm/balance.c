@@ -138,7 +138,7 @@ ULONG
 NTAPI
 MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
 {
-    LONG Target = InitialTarget;
+    ULONG Target = InitialTarget;
     ULONG NrFreedPages = 0;
     NTSTATUS Status;
 
