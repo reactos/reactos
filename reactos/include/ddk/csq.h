@@ -275,7 +275,7 @@ typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
  * there are no IRQL restrictions.
  */
 NTKERNELAPI
-NTSTATUS NTAPI IoCsqInitialize(_In_ PIO_CSQ Csq,
+NTSTATUS NTAPI IoCsqInitialize(_Out_ PIO_CSQ Csq,
                                _In_ PIO_CSQ_INSERT_IRP CsqInsertIrp,
                                _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
                                _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
@@ -289,7 +289,7 @@ NTSTATUS NTAPI IoCsqInitialize(_In_ PIO_CSQ Csq,
  * information for use with the queue.
  */
 NTKERNELAPI
-NTSTATUS NTAPI IoCsqInitializeEx(_In_ PIO_CSQ Csq,
+NTSTATUS NTAPI IoCsqInitializeEx(_Out_ PIO_CSQ Csq,
                                  _In_ PIO_CSQ_INSERT_IRP_EX CsqInsertIrpEx,
                                  _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
                                  _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
@@ -301,32 +301,32 @@ NTSTATUS NTAPI IoCsqInitializeEx(_In_ PIO_CSQ Csq,
  * Insert an IRP into the queue
  */
 NTKERNELAPI
-VOID NTAPI IoCsqInsertIrp(_In_ PIO_CSQ Csq,
-                          _In_ PIRP Irp,
-                          _In_opt_ PIO_CSQ_IRP_CONTEXT Context);
+VOID NTAPI IoCsqInsertIrp(_Inout_ PIO_CSQ Csq,
+                          _Inout_ PIRP Irp,
+                          _Out_opt_ PIO_CSQ_IRP_CONTEXT Context);
 
 /*
  * Insert an IRP into the queue, with special context maintained that
  * makes it easy to find IRPs in the queue
  */
 NTKERNELAPI
-NTSTATUS NTAPI IoCsqInsertIrpEx(_In_ PIO_CSQ Csq,
-                                _In_ PIRP Irp,
-                                _In_opt_ PIO_CSQ_IRP_CONTEXT Context,
+NTSTATUS NTAPI IoCsqInsertIrpEx(_Inout_ PIO_CSQ Csq,
+                                _Inout_ PIRP Irp,
+                                _Out_opt_ PIO_CSQ_IRP_CONTEXT Context,
                                 _In_opt_ PVOID InsertContext);
 
 /*
  * Remove a particular IRP from the queue
  */
 NTKERNELAPI
-PIRP NTAPI IoCsqRemoveIrp(_In_ PIO_CSQ Csq,
-                          _In_ PIO_CSQ_IRP_CONTEXT Context);
+PIRP NTAPI IoCsqRemoveIrp(_Inout_ PIO_CSQ Csq,
+                          _Inout_ PIO_CSQ_IRP_CONTEXT Context);
 
 /*
  * Remove the next IRP from the queue
  */
 NTKERNELAPI
-PIRP NTAPI IoCsqRemoveNextIrp(_In_ PIO_CSQ Csq,
+PIRP NTAPI IoCsqRemoveNextIrp(_Inout_ PIO_CSQ Csq,
                               _In_opt_ PVOID PeekContext);
 
 #ifdef __cplusplus
