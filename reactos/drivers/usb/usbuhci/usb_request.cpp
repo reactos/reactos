@@ -46,7 +46,8 @@ public:
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
     virtual UCHAR GetInterval();
     virtual USB_DEVICE_SPEED GetDeviceSpeed();
-
+    virtual VOID CompletionCallback();
+    virtual VOID FreeEndpointDescriptor(struct _UHCI_QUEUE_HEAD * OutDescriptor);
 
     // local functions
     ULONG InternalGetTransferType();
@@ -829,7 +830,7 @@ CUSBRequest::BuildTransferDescriptorChain(
     //
     // FIXME FIXME FIXME FIXME FIXME 
     //
-    MaxPacketSize = 1280;
+    MaxPacketSize = 64; //1280;
 
     do
     {
@@ -857,7 +858,14 @@ CUSBRequest::BuildTransferDescriptorChain(
              //
              // copy buffer
              //
-             RtlCopyMemory(CurrentDescriptor->BufferLogical, TransferBuffer, CurrentBufferSize);
+             RtlCopyMemory(CurrentDescriptor->BufferLogical, (PVOID)((ULONG_PTR)TransferBuffer + TransferBufferOffset), CurrentBufferSize);
+        }
+        else
+        {
+            //
+            // store user buffer
+            //
+            CurrentDescriptor->UserBuffer = (PVOID)((ULONG_PTR)TransferBuffer + TransferBufferOffset);
         }
 
         if (!FirstDescriptor)
@@ -1075,7 +1083,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         Status = BuildTransferDescriptorChain(MmGetMdlVirtualAddress(m_TransferBufferMDL),
                                               m_TransferBufferLength,
                                               Direction ? TD_TOKEN_IN : TD_TOKEN_OUT,
-                                              FALSE,
+                                              TRUE,
                                               &FirstDescriptor,
                                               &LastDescriptor,
                                               &ChainDescriptorLength,
@@ -1130,6 +1138,173 @@ CUSBRequest::GetDeviceSpeed()
 {
     return m_DeviceSpeed;
 }
+
+VOID
+CUSBRequest::FreeEndpointDescriptor(
+     struct _UHCI_QUEUE_HEAD * OutDescriptor)
+{
+    PUHCI_TRANSFER_DESCRIPTOR Descriptor, NextDescriptor;
+    ULONG ErrorCount;
+
+    //
+    // grab first transfer descriptor
+    //
+    Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)OutDescriptor->NextElementDescriptor;
+    while(Descriptor)
+    {
+        if (Descriptor->Status & TD_ERROR_MASK)
+        {
+            //
+            // error happened
+            //
+            DPRINT1("[USBUHCI] Error detected at descriptor %p Physical %x\n", Descriptor, Descriptor->PhysicalAddress);
+
+            //
+            // get error count
+            //
+            ErrorCount = (Descriptor->Status >> TD_ERROR_COUNT_SHIFT) & TD_ERROR_COUNT_MASK;
+            if (ErrorCount == 0)
+            {
+                 //
+                 // error retry count elapsed
+                 //
+                 m_NtStatusCode = STATUS_UNSUCCESSFUL;
+
+                 if (Descriptor->Status & TD_STATUS_ERROR_BUFFER)
+                 {
+                     DPRINT1("[USBUHCI] Buffer Error detected in descriptor %p\n", Descriptor);
+                     m_UrbStatusCode = USBD_STATUS_DATA_BUFFER_ERROR;
+                 }
+                 else if (Descriptor->Status & TD_STATUS_ERROR_TIMEOUT)
+                 {
+                     DPRINT1("[USBUHCI] Timeout detected in descriptor %p\n", Descriptor);
+                     m_UrbStatusCode = USBD_STATUS_TIMEOUT;
+                 }
+                 else if (Descriptor->Status & TD_STATUS_ERROR_NAK)
+                 {
+                     DPRINT1("[USBUHCI] Unexpected pid detected in descriptor %p\n", Descriptor);
+                     m_UrbStatusCode = USBD_STATUS_UNEXPECTED_PID;
+                 }
+                 else if (Descriptor->Status & TD_STATUS_ERROR_BITSTUFF)
+                 {
+                     DPRINT1("[USBUHCI] BitStuff detected in descriptor %p\n", Descriptor);
+                     m_UrbStatusCode = USBD_STATUS_BTSTUFF;
+                 }
+            }
+            else if (Descriptor->Status & TD_STATUS_ERROR_BABBLE)
+            {
+                 //
+                 // babble error
+                 //
+                 DPRINT1("[USBUHCI] Babble detected in descriptor %p\n", Descriptor);
+                 m_UrbStatusCode = USBD_STATUS_BABBLE_DETECTED;
+            }
+            else
+            {
+                //
+                // stall detected
+                //
+                DPRINT1("[USBUHCI] Stall detected\n");
+                m_UrbStatusCode = USBD_STATUS_STALL_PID;
+            }
+        }
+        else
+        {
+            //
+            // FIXME detect actual length
+            //
+            if (Descriptor->UserBuffer)
+            {
+                //
+                // copy contents back
+                //
+                RtlCopyMemory(Descriptor->UserBuffer, Descriptor->BufferLogical, Descriptor->BufferSize);
+            }
+        }
+        //
+        // move to next descriptor
+        //
+        NextDescriptor = (PUHCI_TRANSFER_DESCRIPTOR)Descriptor->NextLogicalDescriptor;
+
+        //
+        // free endpoint descriptor
+        //
+        FreeDescriptor(Descriptor);
+
+        //
+        // move to next
+        //
+        Descriptor = NextDescriptor;
+    }
+
+    //
+    // now free queue head
+    //
+    m_DmaManager->Release(OutDescriptor, sizeof(UHCI_QUEUE_HEAD));
+
+}
+
+VOID
+CUSBRequest::CompletionCallback()
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+
+    DPRINT("CUSBRequest::CompletionCallback\n");
+
+    if (m_Irp)
+    {
+        //
+        // set irp completion status
+        //
+        m_Irp->IoStatus.Status = m_NtStatusCode;
+
+        //
+        // get current irp stack location
+        //
+        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+        //
+        // get urb
+        //
+        Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+        //
+        // store urb status
+        //
+        Urb->UrbHeader.Status = m_UrbStatusCode;
+
+        //
+        // Check if the MDL was created
+        //
+        if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+        {
+            //
+            // Free Mdl
+            //
+            IoFreeMdl(m_TransferBufferMDL);
+        }
+
+        //
+        // FIXME calculate length
+        //
+
+        //
+        // complete request
+        //
+        IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
+    }
+    else
+    {
+        //
+        // signal completion event
+        //
+        PC_ASSERT(m_CompletionEvent);
+        KeSetEvent(m_CompletionEvent, 0, FALSE);
+    }
+
+}
+
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS

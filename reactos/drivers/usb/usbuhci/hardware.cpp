@@ -686,7 +686,7 @@ CUSBHardwareDevice::InitializeController()
         m_QueueHead[Index]->PhysicalAddress = Address.LowPart;
         m_QueueHead[Index]->ElementPhysical = QH_TERMINATE;
 
-        if (Index > 1)
+        if (Index > 0)
         {
             //
             // link queue heads
@@ -695,6 +695,48 @@ CUSBHardwareDevice::InitializeController()
             m_QueueHead[Index-1]->NextLogicalDescriptor = m_QueueHead[Index];
         }
     }
+
+            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+                0,
+                m_QueueHead[0], 
+                m_QueueHead[0]->LinkPhysical,
+                m_QueueHead[0]->ElementPhysical,
+                m_QueueHead[0]->PhysicalAddress, 
+                m_QueueHead[0]->Request, 
+                m_QueueHead[0]->NextElementDescriptor);
+            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+                1,
+                m_QueueHead[1], 
+                m_QueueHead[1]->LinkPhysical,
+                m_QueueHead[1]->ElementPhysical,
+                m_QueueHead[1]->PhysicalAddress, 
+                m_QueueHead[1]->Request, 
+                m_QueueHead[1]->NextElementDescriptor);
+
+            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+                2,
+                m_QueueHead[2], 
+                m_QueueHead[2]->LinkPhysical,
+                m_QueueHead[2]->ElementPhysical,
+                m_QueueHead[2]->PhysicalAddress, 
+                m_QueueHead[2]->Request, 
+                m_QueueHead[2]->NextElementDescriptor);
+            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+                3,
+                m_QueueHead[3], 
+                m_QueueHead[3]->LinkPhysical,
+                m_QueueHead[3]->ElementPhysical,
+                m_QueueHead[3]->PhysicalAddress, 
+                m_QueueHead[3]->Request, 
+                m_QueueHead[3]->NextElementDescriptor);
+            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+                4,
+                m_QueueHead[4], 
+                m_QueueHead[4]->LinkPhysical,
+                m_QueueHead[4]->ElementPhysical,
+                m_QueueHead[4]->PhysicalAddress, 
+                m_QueueHead[4]->Request, 
+                m_QueueHead[4]->NextElementDescriptor);
 
     //
     // terminate last queue head with stray descriptor
@@ -708,7 +750,7 @@ CUSBHardwareDevice::InitializeController()
         DPRINT1("[USBUHCI] Failed to allocate queue head %x Index %x\n", Status, Index);
         return Status;
     }
-
+#if 0
     //
     // init stray descriptor
     //
@@ -722,7 +764,7 @@ CUSBHardwareDevice::InitializeController()
     //
     m_QueueHead[4]->LinkPhysical = m_StrayDescriptor->PhysicalAddress;
     m_QueueHead[4]->NextLogicalDescriptor = m_StrayDescriptor;
-
+#endif
 
     //
     // allocate frame bandwidth array
@@ -1271,7 +1313,14 @@ InterruptServiceRoutine(
     if (Acknowledge)
     {
         //
+        // acknowledge interrupt
+        //
         This->WriteRegister16(UHCI_USBSTS, Acknowledge);
+
+        //
+        // queue dpc
+        //
+        KeInsertQueueDpc(&This->m_IntDpcObject, UlongToPtr(Status), NULL);
     }
 
     //
@@ -1356,6 +1405,7 @@ OhciDefferedRoutine(
     IN PVOID SystemArgument2)
 {
     CUSBHardwareDevice *This;
+    ULONG Status;
 
     //
     // get parameters
@@ -1363,8 +1413,24 @@ OhciDefferedRoutine(
     This = (CUSBHardwareDevice*)DeferredContext;
 
     DPRINT("OhciDefferedRoutine\n");
-    ASSERT(FALSE);
 
+    //
+    // get status
+    //
+    Status = PtrToUlong(SystemArgument1);
+    if (Status & (UHCI_USBSTS_USBINT | UHCI_USBSTS_ERRINT))
+    {
+        //
+        // a transfer finished, inform the queue
+        //
+        This->m_UsbQueue->TransferInterrupt(Status & UHCI_USBSTS_USBINT);
+        return;
+    }
+
+    //
+    // other event
+    //
+    DPRINT1("[USBUHCI] Status %x not handled\n", Status);
 }
 
 VOID
