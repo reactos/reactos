@@ -787,7 +787,7 @@ CUSBDevice::CreateConfigurationDescriptor(
     CtrlSetup.wValue.LowByte = Index;
     CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;
     CtrlSetup.wIndex.W = 0;
-    CtrlSetup.wLength = PAGE_SIZE;
+    CtrlSetup.wLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
 
     //
     // now build MDL describing the buffer
@@ -810,7 +810,53 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     // commit packet
     //
-    Status = CommitSetupPacket(&CtrlSetup, 0, PAGE_SIZE, Mdl);
+    Status = CommitSetupPacket(&CtrlSetup, 0, sizeof(USB_CONFIGURATION_DESCRIPTOR), Mdl);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to issue request, cleanup
+        //
+        IoFreeMdl(Mdl);
+        ExFreePool(Buffer);
+        return Status;
+    }
+
+    //
+    // get configuration descriptor
+    //
+    ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Buffer;
+
+    //
+    // sanity checks
+    //
+    ASSERT(ConfigurationDescriptor->bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    ASSERT(ConfigurationDescriptor->wTotalLength <= PAGE_SIZE);
+    ASSERT(ConfigurationDescriptor->bNumInterfaces);
+    ASSERT(ConfigurationDescriptor->wTotalLength);
+    ASSERT(ConfigurationDescriptor->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE);
+
+    //
+    // informal debug print
+    //
+    DumpConfigurationDescriptor(ConfigurationDescriptor);
+
+    //
+    // build setup packet
+    //
+    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+    CtrlSetup.bmRequestType._BM.Reserved = 0;
+    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+    CtrlSetup.wValue.LowByte = Index;
+    CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;
+    CtrlSetup.wIndex.W = 0;
+    CtrlSetup.wLength = ConfigurationDescriptor->wTotalLength;
+
+    //
+    // commit packet
+    //
+    Status = CommitSetupPacket(&CtrlSetup, 0, ConfigurationDescriptor->wTotalLength, Mdl);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -826,22 +872,16 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     IoFreeMdl(Mdl);
 
-    //
-    // get configuration descriptor
-    //
-    ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Buffer;
-
-    //
-    // informal debug print
-    //
-    DumpConfigurationDescriptor(ConfigurationDescriptor);
 
     //
     // sanity check
     //
-    PC_ASSERT(ConfigurationDescriptor->bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
-    PC_ASSERT(ConfigurationDescriptor->wTotalLength <= PAGE_SIZE);
-    PC_ASSERT(ConfigurationDescriptor->bNumInterfaces);
+    ASSERT(ConfigurationDescriptor->bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    ASSERT(ConfigurationDescriptor->wTotalLength <= PAGE_SIZE);
+    ASSERT(ConfigurationDescriptor->bNumInterfaces);
+    ASSERT(ConfigurationDescriptor->wTotalLength);
+    ASSERT(ConfigurationDescriptor->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE);
+
 
     //
     // request is complete, initialize configuration descriptor

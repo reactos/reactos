@@ -823,14 +823,14 @@ CUSBRequest::BuildTransferDescriptorChain(
     OUT PUCHAR OutDataToggle)
 {
     PUHCI_TRANSFER_DESCRIPTOR FirstDescriptor = NULL, CurrentDescriptor, LastDescriptor = NULL;
-    UCHAR TransferBufferOffset = 0;
+    ULONG TransferBufferOffset = 0;
     NTSTATUS Status;
     ULONG MaxPacketSize, CurrentBufferSize;
 
     //
     // FIXME FIXME FIXME FIXME FIXME 
     //
-    MaxPacketSize = 64; //1280;
+    MaxPacketSize = 1280;
 
     do
     {
