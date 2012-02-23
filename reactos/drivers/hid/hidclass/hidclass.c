@@ -402,13 +402,13 @@ HidClass_ReadCompleteIrp(
     //
     IrpContext = (PHIDCLASS_IRP_CONTEXT)Ctx;
 
-    DPRINT1("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
-    DPRINT1("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
-    DPRINT1("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
-    DPRINT1("HidClass_ReadCompleteIrp Irp %p\n", Irp);
-    DPRINT1("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
-    DPRINT1("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
-    DPRINT1("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
+    DPRINT("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
+    DPRINT("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
+    DPRINT("HidClass_ReadCompleteIrp Length %lu\n", Irp->IoStatus.Information);
+    DPRINT("HidClass_ReadCompleteIrp Irp %p\n", Irp);
+    DPRINT("HidClass_ReadCompleteIrp InputReportBuffer %p\n", IrpContext->InputReportBuffer);
+    DPRINT("HidClass_ReadCompleteIrp InputReportBufferLength %li\n", IrpContext->InputReportBufferLength);
+    DPRINT("HidClass_ReadCompleteIrp OriginalIrp %p\n", IrpContext->OriginalIrp);
 
     //
     // copy result
@@ -497,6 +497,15 @@ HidClass_ReadCompleteIrp(
 
 
     DPRINT1("StopInProgress %x IsEmpty %x\n", IrpContext->FileOp->StopInProgress, IsEmpty);
+    if (IrpContext->FileOp->StopInProgress && IsEmpty)
+    {
+        //
+        // last pending irp
+        //
+        DPRINT1("[HIDCLASS] LastPendingTransfer Signalling\n");
+        KeSetEvent(&IrpContext->FileOp->IrpReadComplete, 0, FALSE);
+    }
+
     if (IrpContext->FileOp->StopInProgress && IsEmpty)
     {
         //
@@ -642,6 +651,19 @@ HidClass_BuildIrp(
     // sanity check
     //
     ASSERT(CollectionDescription->InputLength >= ReportDescription->InputLength);
+
+    if (Context->StopInProgress)
+    {
+         //
+         // stop in progress
+         //
+         DPRINT1("[HIDCLASS] Stop In Progress\n");
+         Irp->IoStatus.Status = STATUS_CANCELLED;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_CANCELLED;
+
+    }
+
 
     //
     // store report length
