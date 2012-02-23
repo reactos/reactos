@@ -496,7 +496,7 @@ HidClass_ReadCompleteIrp(
     IoCompleteRequest(IrpContext->OriginalIrp, IO_NO_INCREMENT);
 
 
-    DPRINT1("StopInProgress %x IsEmpty %x\n", IrpContext->FileOp->StopInProgress, IsEmpty);
+    DPRINT("StopInProgress %x IsEmpty %x\n", IrpContext->FileOp->StopInProgress, IsEmpty);
     if (IrpContext->FileOp->StopInProgress && IsEmpty)
     {
         //

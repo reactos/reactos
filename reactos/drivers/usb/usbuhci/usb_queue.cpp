@@ -350,7 +350,7 @@ CUSBQueue::IsQueueHeadComplete(
             //
             // descriptor is still active
             //
-            DPRINT1("Descriptor %p is active Status %x BufferSize %lu\n", Descriptor, Descriptor->Status, Descriptor->BufferSize);
+            DPRINT("Descriptor %p is active Status %x BufferSize %lu\n", Descriptor, Descriptor->Status, Descriptor->BufferSize);
             return FALSE;
         }
 
