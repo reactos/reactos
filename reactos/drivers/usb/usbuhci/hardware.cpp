@@ -499,7 +499,7 @@ CUSBHardwareDevice::StartController(void)
     //
     WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) | UHCI_USBCMD_RS);
 
-    for(Index = 0; Index < 10; Index++)
+    for(Index = 0; Index < 100; Index++)
     {
         //
         // wait a bit
@@ -576,6 +576,8 @@ CUSBHardwareDevice::StartController(void)
 VOID
 CUSBHardwareDevice::GlobalReset()
 {
+    LARGE_INTEGER Timeout;
+
     //
     // back up start of modify register
     //
@@ -586,10 +588,25 @@ CUSBHardwareDevice::GlobalReset()
     // perform global reset
     //
     WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) | UHCI_USBCMD_GRESET);
-    KeStallExecutionProcessor(20);
 
     //
-    // clear global reset bit
+    // delay is 10 ms
+    //
+    Timeout.QuadPart = 10;
+    DPRINT1("Waiting %d milliseconds for global reset\n", Timeout.LowPart);
+
+    //
+    // convert to 100 ns units (absolute)
+    //
+    Timeout.QuadPart *= -10000;
+
+    //
+    // perform the wait
+    //
+    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+
+    //
+    // clear command register
     //
     WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) & ~UHCI_USBCMD_GRESET);
     KeStallExecutionProcessor(10);
@@ -880,7 +897,7 @@ CUSBHardwareDevice::ResetController(void)
         //
         // wait a bit
         //
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
 
         //
         // get status
@@ -893,7 +910,7 @@ CUSBHardwareDevice::ResetController(void)
             //
             return STATUS_SUCCESS;
         }
-    }while(Count++ < 5);
+    }while(Count++ < 100);
 
     DPRINT1("[USBUHCI] Failed to reset controller Status %x\n", Status);
     return STATUS_UNSUCCESSFUL;
@@ -906,6 +923,7 @@ CUSBHardwareDevice::ResetPort(
     ULONG Port;
     USHORT Status;
     ULONG Index;
+    LARGE_INTEGER Timeout;
 
     DPRINT1("[UHCI] ResetPort Id %lu\n", PortIndex);
 
@@ -937,9 +955,20 @@ CUSBHardwareDevice::ResetPort(
     WriteRegister16(Port, Status | UHCI_PORTSC_RESET);
 
     //
-    // now wait a bit
+    // delay is 20 ms for port reset
     //
-    KeStallExecutionProcessor(250);
+    Timeout.QuadPart = 20;
+    DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
+
+    //
+    // convert to 100 ns units (absolute)
+    //
+    Timeout.QuadPart *= -10000;
+
+    //
+    // perform the wait
+    //
+    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
 
     //
     // re-read status
@@ -962,7 +991,7 @@ CUSBHardwareDevice::ResetPort(
     //
     KeStallExecutionProcessor(10);
 
-    for (Index = 0; Index < 10; Index++) 
+    for (Index = 0; Index < 100; Index++) 
     {
         // read port status
         Status = ReadRegister16(Port);
@@ -994,8 +1023,7 @@ CUSBHardwareDevice::ResetPort(
         {
             // port enabled changed or connection status were set.
             // acknowledge either / both and wait again.
-            Status &= UHCI_PORTSC_DATAMASK;
-            WriteRegister16(Port, Status | UHCI_PORTSC_STATCHA | UHCI_PORTSC_ENABCHA);
+            WriteRegister16(Port, Status);
             continue;
         }
 
@@ -1009,6 +1037,16 @@ CUSBHardwareDevice::ResetPort(
     m_PortResetChange |= (1 << PortIndex);
     DPRINT1("[USBUhci] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
 
+    //
+    // is there a callback
+    //
+    if (m_SCECallBack)
+    {
+        //
+        // issue callback
+        //
+        m_SCECallBack(m_SCEContext);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -1114,7 +1152,7 @@ CUSBHardwareDevice::ClearPortStatus(
     // read current status
     //
     PortRegister = UHCI_PORTSC1 + PortId * 2;
-    PortStatus = ReadRegister16(PortRegister) & UHCI_PORTSC_DATAMASK;
+    PortStatus = ReadRegister16(PortRegister);
     DPRINT("[UHCI] PortStatus %x\n", PortStatus);
 
     if (Feature == C_PORT_RESET)
@@ -1124,19 +1162,12 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         m_PortResetChange &= ~(1 << PortId);
     }
-    else if (Feature == C_PORT_CONNECTION)
+    else if (Feature == C_PORT_CONNECTION || Feature == C_PORT_ENABLE)
     {
         //
-        // clear connection status
+        // clear port status changes
         //
-        WriteRegister16(PortRegister, PortStatus | UHCI_PORTSC_STATCHA);
-    }
-    else if (Feature == C_PORT_ENABLE)
-    {
-        //
-        // enable port
-        //
-        WriteRegister16(PortRegister, PortStatus | UHCI_PORTSC_ENABCHA);
+        WriteRegister16(PortRegister, PortStatus);
     }
 
     return STATUS_SUCCESS;
