@@ -647,7 +647,6 @@ CUSBHardwareDevice::InitializeController()
     Value = 0;
     BusInterface.GetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, 0x60, sizeof(UCHAR));
     DPRINT1("[USBUHCI] SBRN %x\n", Value);
-    ASSERT(FALSE);
 
     //
     // perform global reset
@@ -925,15 +924,6 @@ CUSBHardwareDevice::ResetPort(
     //
     Status = ReadRegister16(Port);
 
-    //
-    // Before port reset, disable the port
-    //
-    WriteRegister16(Port, ReadRegister16(Port) & ~UHCI_PORTSC_ENABLED);
-    while(ReadRegister16(Port) & UHCI_PORTSC_ENABLED)
-    {
-        DPRINT1("Port %x Status %x\n", PortIndex, ReadRegister16(Port));
-        KeStallExecutionProcessor(5);
-    }
 
 
     //
@@ -949,7 +939,7 @@ CUSBHardwareDevice::ResetPort(
     //
     // now wait a bit
     //
-    KeStallExecutionProcessor(50);
+    KeStallExecutionProcessor(250);
 
     //
     // re-read status
@@ -966,10 +956,6 @@ CUSBHardwareDevice::ResetPort(
     //
     WriteRegister16(Port, (Status & ~UHCI_PORTSC_RESET));
 
-    //
-    // set enabled bit
-    //
-    WriteRegister16(Port, ReadRegister16(Port) | UHCI_PORTSC_ENABLED);
 
     //
     // now wait a bit
@@ -978,20 +964,14 @@ CUSBHardwareDevice::ResetPort(
 
     for (Index = 0; Index < 10; Index++) 
     {
-        //
         // read port status
-        //
         Status = ReadRegister16(Port);
 
-        //
         // remove unwanted bits
-        //
         Status &= UHCI_PORTSC_DATAMASK;
 
-        //
         // enable port
-        //
-        WriteRegister16(Port, Status);
+        WriteRegister16(Port, Status | UHCI_PORTSC_ENABLED);
 
         //
         // wait a bit
@@ -1029,16 +1009,6 @@ CUSBHardwareDevice::ResetPort(
     m_PortResetChange |= (1 << PortIndex);
     DPRINT1("[USBUhci] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
 
-#if 0
-    if (Status & UHCI_PORTSC_CURSTAT)
-    {
-        //
-        // queue work item
-        //
-        DPRINT1("Queueing work item\n");
-        ExQueueWorkItem(&m_StatusChangeWorkItem, DelayedWorkQueue);
-    }
-#endif
 
     return STATUS_SUCCESS;
 }

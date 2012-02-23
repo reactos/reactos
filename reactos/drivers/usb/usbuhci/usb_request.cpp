@@ -845,7 +845,30 @@ CUSBRequest::BuildTransferDescriptorChain(
     //
     // FIXME FIXME FIXME FIXME FIXME 
     //
-    MaxPacketSize = 1280;
+    if (GetDeviceSpeed() == UsbLowSpeed)
+    {
+        //
+        // low speed use max 8 bytes
+        //
+        MaxPacketSize = 8;
+    }
+    else
+    {
+        if (m_EndpointDescriptor)
+        {
+            //
+            // use endpoint size
+            //
+            MaxPacketSize = m_EndpointDescriptor->EndPointDescriptor.wMaxPacketSize;
+        }
+        else
+        {
+            //
+            // use max 64 bytes
+            //
+            MaxPacketSize = 64;
+        }
+    }
 
     do
     {
