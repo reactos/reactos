@@ -163,7 +163,7 @@ USBCCGP_PdoAppendInterfaceNumber(
 
     while(*DeviceId)
     {
-        StringLength = swprintf(String, L"%s&MI_%02x", DeviceId) + 1;
+        StringLength = swprintf(String, L"%s&MI_%02x", DeviceId, InterfaceNumber) + 1;
         Length = wcslen(DeviceId) + 1;
         DPRINT("String %p\n", String);
 
