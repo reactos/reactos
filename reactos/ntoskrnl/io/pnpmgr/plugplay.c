@@ -552,6 +552,9 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
+    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+
 #if 0
     /* Remove the device node */
     Status = IopRemoveDevice(DeviceNode);
@@ -563,9 +566,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     }
 #else
     /* FIXME: We might clear some important flags */
-    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
-    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
-    DeviceNode->Flags = DNF_ENUMERATED | DNF_PROCESSED;
+    DeviceNode->Flags &= ~DNF_DISABLED;
 
     /* Load service data from the registry */
     Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
