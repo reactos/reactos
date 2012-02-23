@@ -23,6 +23,15 @@ SECTIONS
     __bss_end__ = . ;
   }
 
+  .stab BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.stab)
+  }
+  .stabstr BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    *(.stabstr)
+  }
+
   /* DWARF debug sections.
      Symbols in the DWARF debugging sections are relative to the beginning
      of the section.  Unlike other targets that fake this by putting the
@@ -43,7 +52,7 @@ SECTIONS
   /* DWARF 2.  */
   .debug_info BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.debug_info) *(.gnu.linkonce.wi.*)
+    *(.debug_info .gnu.linkonce.wi.*)
   }
   .debug_abbrev BLOCK(__section_alignment__) (NOLOAD) :
   {
@@ -98,7 +107,7 @@ SECTIONS
   /* DWARF 4.  */
   .debug_types BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.debug_types) *(.gnu.linkonce.wt.*)
+    *(.debug_types .gnu.linkonce.wt.*)
   }
 
   /DISCARD/ :
