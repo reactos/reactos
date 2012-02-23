@@ -3101,19 +3101,19 @@ NdisGetFirstBufferFromPacket(
 #define NdisChainBufferAtBack(Packet,           \
                               Buffer)           \
 {                                               \
-  PNDIS_BUFFER NdisBuffer = (Buffer);           \
+  PNDIS_BUFFER _NdisBuffer = (Buffer);           \
                                                 \
-  while (NdisBuffer->Next != NULL)              \
-    NdisBuffer = NdisBuffer->Next;              \
+  while (_NdisBuffer->Next != NULL)              \
+    _NdisBuffer = _NdisBuffer->Next;              \
                                                 \
-  NdisBuffer->Next = NULL;                      \
+  _NdisBuffer->Next = NULL;                      \
                                                 \
   if ((Packet)->Private.Head != NULL)           \
     (Packet)->Private.Tail->Next = (Buffer);    \
   else                                          \
     (Packet)->Private.Head = (Buffer);          \
                                                 \
-  (Packet)->Private.Tail = NdisBuffer;          \
+  (Packet)->Private.Tail = _NdisBuffer;          \
   (Packet)->Private.ValidCounts = FALSE;        \
 }
 

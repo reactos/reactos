@@ -409,6 +409,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
             WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
 
             /* Remove the band from the ReBar control */
+            BuildRebarBandInfo(NewBand, &rbi);
             uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
             if (uBand != (UINT)-1)
             {

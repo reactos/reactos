@@ -134,7 +134,7 @@ WinPosShowIconTitle( PWND pWnd, BOOL bShow )
 {
    HICON hIcon;
    if (!pWnd->pcls || pWnd->fnid == FNID_DESKTOP) return FALSE;
-   if (!hIcon) hIcon = pWnd->pcls->hIconSm;
+   hIcon = pWnd->pcls->hIconSm;
    if (!hIcon) hIcon = pWnd->pcls->hIcon;
    if (!hIcon) return FALSE;
 

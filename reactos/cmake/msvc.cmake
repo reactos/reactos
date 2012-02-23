@@ -21,6 +21,9 @@ add_definitions(/Dinline=__inline /D__STDC__=1)
 
 add_compile_flags("/X /GR- /GS- /Zl /W3")
 
+# C4700 is almost always likely to result in broken code, so mark it as an error
+add_compile_flags("/we4700")
+
 # Debugging
 if(${CMAKE_BUILD_TYPE} MATCHES Debug)
     if(NOT _PREFAST_)

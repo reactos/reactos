@@ -1860,7 +1860,9 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
 
             /* Sanity check */
             TestName.Length = (USHORT)ALIGN_DOWN((BufEnd - Buffer), WCHAR);
+#if 0
             ASSERT(TestName.Length < TestName.MaximumLength);
+#endif
 
             /* Check if the file exists */
             #if 0
