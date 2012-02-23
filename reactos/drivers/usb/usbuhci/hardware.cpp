@@ -585,15 +585,13 @@ CUSBHardwareDevice::GlobalReset()
     //
     // perform global reset
     //
-    WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + UHCI_USBCMD), UHCI_USBCMD_GRESET);
-
-    KeStallExecutionProcessor(100);
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) | UHCI_USBCMD_GRESET);
+    KeStallExecutionProcessor(20);
 
     //
-    // clear command register
+    // clear global reset bit
     //
-    WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + UHCI_USBCMD), 0);
-
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) & ~UHCI_USBCMD_GRESET);
     KeStallExecutionProcessor(10);
 
 
@@ -638,11 +636,18 @@ CUSBHardwareDevice::InitializeController()
     //
     // reclaim ownership from BIOS
     //
-    Value = PCI_LEGSUP_USBPIRQDEN | PCI_LEGSUP_CLEAR_SMI;
+    Value = 0;
+    BusInterface.GetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, PCI_LEGSUP, sizeof(USHORT));
+    DPRINT1("[USBUHCI] LEGSUP %x\n", Value);
+
+    Value = PCI_LEGSUP_USBPIRQDEN;
     BusInterface.SetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, PCI_LEGSUP, sizeof(USHORT));
 
     DPRINT1("[USBUHCI] Acquired ownership\n");
-
+    Value = 0;
+    BusInterface.GetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, 0x60, sizeof(UCHAR));
+    DPRINT1("[USBUHCI] SBRN %x\n", Value);
+    ASSERT(FALSE);
 
     //
     // perform global reset
@@ -714,6 +719,7 @@ CUSBHardwareDevice::InitializeController()
         //
         m_QueueHead[Index]->PhysicalAddress = Address.LowPart;
         m_QueueHead[Index]->ElementPhysical = QH_TERMINATE;
+        m_QueueHead[Index]->LinkPhysical = QH_TERMINATE;
 
         if (Index > 0)
         {
@@ -851,6 +857,19 @@ CUSBHardwareDevice::ResetController(void)
 {
     ULONG Count = 0;
     USHORT Status;
+
+    // clear run bit
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) & ~UHCI_USBCMD_RS);
+
+    // wait for the controller to stop
+    while((ReadRegister16(UHCI_USBSTS) & UHCI_USBSTS_HCHALT) == 0)
+    {
+        DPRINT1("[UHCI] Waiting for the controller to halt\n");
+        KeStallExecutionProcessor(10);
+    }
+
+    // clear configure bit
+    WriteRegister16(UHCI_USBCMD, ReadRegister16(UHCI_USBCMD) & ~UHCI_USBCMD_CF);
 
     //
     // reset controller
