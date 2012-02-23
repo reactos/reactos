@@ -140,8 +140,8 @@
 		<file>view.c</file>
 	  </directory>
 	</if>
-	<if property="NEWCC" value="1">
-	  <directory name="cache">
+	<directory name="cache">
+	  <if property="NEWCC" value="1">
 		<file>cachesub.c</file>
 		<file>copysup.c</file>
 		<file>fssup.c</file>
@@ -149,16 +149,16 @@
 		<file>logsup.c</file>
 		<file>mdlsup.c</file>
 		<file>pinsup.c</file>
-		<directory name="section">
-		  <file>data.c</file>
-		  <file>fault.c</file>
-		  <file>io.c</file>
-		  <file>reqtools.c</file>
-		  <file>sptab.c</file>
-		  <file>swapout.c</file>
-		</directory>
+	  </if>
+	  <directory name="section">
+		<file>data.c</file>
+		<file>fault.c</file>
+		<file>io.c</file>
+		<file>reqtools.c</file>
+		<file>sptab.c</file>
+		<file>swapout.c</file>
 	  </directory>
-	</if>
+	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

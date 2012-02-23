@@ -59,7 +59,7 @@ NTSTATUS CcpAllocateSection
 (PFILE_OBJECT FileObject, 
  ULONG Length,
  ULONG Protect, 
- PMM_CACHE_SECTION_SEGMENT *Result)
+ PROS_SECTION_OBJECT *Result)
 {
     NTSTATUS Status;
     LARGE_INTEGER MaxSize;
@@ -68,13 +68,14 @@ NTSTATUS CcpAllocateSection
 
 	DPRINT("Making Section for File %x\n", FileObject);
 	DPRINT("File name %wZ\n", &FileObject->FileName);
-    Status = MmCreateCacheSection
-	(Result,
+    Status = MmCreateSection
+	 ((PVOID*)Result,
 	 STANDARD_RIGHTS_REQUIRED,
 	 NULL,
 	 &MaxSize,
 	 Protect,
 	 SEC_RESERVE | SEC_CACHE,
+	 NULL,
 	 FileObject);
 		
     return Status;
@@ -86,7 +87,7 @@ typedef struct _WORK_QUEUE_WITH_CONTEXT
 	PVOID ToUnmap; 
 	LARGE_INTEGER FileOffset;
 	LARGE_INTEGER MapSize;
-	PMM_CACHE_SECTION_SEGMENT ToDeref;
+	PROS_SECTION_OBJECT ToDeref;
 	PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
 	PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
 	PVOID LazyContext;
@@ -98,11 +99,8 @@ CcpUnmapCache(PVOID Context)
 {
 	PWORK_QUEUE_WITH_CONTEXT WorkItem = (PWORK_QUEUE_WITH_CONTEXT)Context;
 	DPRINT("Unmapping (finally) %x\n", WorkItem->ToUnmap);
-	WorkItem->AcquireForLazyWrite(WorkItem->LazyContext, TRUE);
-	MiFlushMappedSection(WorkItem->ToUnmap, &WorkItem->FileOffset, &WorkItem->MapSize, WorkItem->Dirty);
-	WorkItem->ReleaseFromLazyWrite(WorkItem->LazyContext);
 	MmUnmapCacheViewInSystemSpace(WorkItem->ToUnmap);
-	MmFinalizeSegment(WorkItem->ToDeref);
+	ObDereferenceObject(WorkItem->ToDeref);
 	ExFreePool(WorkItem);
 	DPRINT("Done\n");
 }
@@ -134,9 +132,7 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 
 	if (Immediate)
 	{
-		PMM_CACHE_SECTION_SEGMENT ToDeref = Bcb->SectionObject;
-		BOOLEAN Dirty = Bcb->Dirty;
-
+		PROS_SECTION_OBJECT ToDeref = Bcb->SectionObject;
 		Bcb->Map = NULL;
 		Bcb->SectionObject = NULL;
 		Bcb->BaseAddress = NULL;
@@ -147,9 +143,10 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 		RemoveEntryList(&Bcb->ThisFileList);
 
 		CcpUnlock();
-		MiFlushMappedSection(ToUnmap, &BaseOffset, &MappedSize, Dirty);
+		if (Dirty)
+			MiFlushMappedSection(ToUnmap, &BaseOffset, &MappedSize, Dirty);
 		MmUnmapCacheViewInSystemSpace(ToUnmap);
-		MmFinalizeSegment(ToDeref);
+		ObDereferenceObject(ToDeref);
 		CcpLock();
 	}
 	else
@@ -186,7 +183,7 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 /* Needs mutex */
 ULONG CcpAllocateCacheSections
 (PFILE_OBJECT FileObject, 
- PMM_CACHE_SECTION_SEGMENT SectionObject)
+ PROS_SECTION_OBJECT SectionObject)
 {
     ULONG i = INVALID_CACHE;
     PNOCC_CACHE_MAP Map;
@@ -313,13 +310,12 @@ CcpMapData
     /* Note: windows 2000 drivers treat this as a bool */
     //BOOLEAN Wait = (Flags & MAP_WAIT) || (Flags == TRUE);
     LARGE_INTEGER Target, EndInterval;
-	ULONG BcbHead;
+	ULONG BcbHead, SectionSize, ViewSize;
     PNOCC_BCB Bcb = NULL;
-    PMM_CACHE_SECTION_SEGMENT SectionObject = NULL;
+    PROS_SECTION_OBJECT SectionObject = NULL;
     NTSTATUS Status;
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
-	ULONG SectionSize;
-	ULONG ViewSize = CACHE_STRIPE;
+	ViewSize = CACHE_STRIPE;
 
 	if (!Map)
 	{
@@ -424,10 +420,11 @@ retry:
     }
 	
     DPRINT("Selected BCB #%x\n", BcbHead);
+	ViewSize = CACHE_STRIPE;
 
     Bcb = &CcCacheSections[BcbHead];
 	Status = MmMapCacheViewInSystemSpaceAtOffset
-		(SectionObject,
+		(SectionObject->Segment,
 		 &Bcb->BaseAddress,
 		 &Target,
 		 &ViewSize);
@@ -436,7 +433,7 @@ retry:
     {
 		*BcbResult = NULL;
 		*Buffer = NULL;
-		MmFinalizeSegment(SectionObject);
+		ObDereferenceObject(SectionObject);
 		RemoveEntryList(&Bcb->ThisFileList);
 		RtlZeroMemory(Bcb, sizeof(*Bcb));
 		RtlClearBit(CcCacheBitmap, BcbHead);
@@ -481,17 +478,16 @@ cleanup:
 		{
 			// Fault in the pages.  This forces reads to happen now.
 			ULONG i;
-			CHAR Dummy;
 			PCHAR FaultIn = Bcb->BaseAddress;
-			DPRINT1
+			DPRINT
 				("Faulting in pages at this point: file %wZ %08x%08x:%x\n",
 				 &FileObject->FileName,
 				 Bcb->FileOffset.HighPart,
 				 Bcb->FileOffset.LowPart,
 				 Bcb->Length);
-			for (i = 0; i < Bcb->Length; i++) 
+			for (i = 0; i < Bcb->Length; i += PAGE_SIZE) 
 			{
-				Dummy = FaultIn[i];
+				FaultIn[i] ^= 0;
 			}
 		}
 		ASSERT(Bcb >= CcCacheSections && Bcb < (CcCacheSections + CACHE_NUM_SECTIONS));
@@ -657,7 +653,7 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
 	ULONG OldProtect;
 #endif
 
-	DPRINT1("CcPreparePinWrite(%x:%x)\n", Buffer, Length);
+	DPRINT("CcPreparePinWrite(%x:%x)\n", Buffer, Length);
 
     Result = CcPinRead
 		(FileObject,

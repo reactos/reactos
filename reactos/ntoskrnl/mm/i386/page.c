@@ -844,6 +844,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
 {
     ULONG i;
 
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
     for (i = 0; i < PageCount; i++)
     {
         if (!MmIsPageInUse(Pages[i]))

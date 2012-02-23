@@ -43,6 +43,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
+#include "../cache/section/newmm.h"
 #include <debug.h>
 
 #include "ARM3/miarm.h"
@@ -378,7 +379,7 @@ MmInsertMemoryArea(
    {
        PMMVAD Vad;
 
-       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW);
+       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), TAG_MVAD);
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));
@@ -771,7 +772,7 @@ MmFreeMemoryArea(
        if (MemoryArea->Vad)
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
-           ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+           ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
@@ -1048,6 +1049,13 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
              Address = (PVOID)MemoryArea->StartingAddress;
              MmUnlockAddressSpace(&Process->Vm);
              MmUnmapViewOfSection(Process, Address);
+             MmLockAddressSpace(&Process->Vm);
+             break;
+
+         case MEMORY_AREA_CACHE:
+             Address = (PVOID)MemoryArea->StartingAddress;
+             MmUnlockAddressSpace(&Process->Vm);
+             MmUnmapViewOfCacheSegment(&Process->Vm, Address);
              MmLockAddressSpace(&Process->Vm);
              break;
 

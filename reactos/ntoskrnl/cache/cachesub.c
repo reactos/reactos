@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* STRUCTURES *****************************************************************/
@@ -143,9 +143,11 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
     PNOCC_BCB Bcb = NULL;
 	LARGE_INTEGER LowerBound, UpperBound;
 	PLIST_ENTRY ListEntry;
-    IO_STATUS_BLOCK IOSB = {0};
+	IO_STATUS_BLOCK IOSB;
 
-	DPRINT1("CcFlushCache (while file) (%s:%d)\n", File, Line);
+	RtlZeroMemory(&IOSB, sizeof(IO_STATUS_BLOCK));
+
+	DPRINT("CcFlushCache (while file) (%s:%d)\n", File, Line);
 
 	if (FileOffset && Length)
 	{
@@ -288,7 +290,8 @@ VOID
 NTAPI
 CcShutdownSystem()
 {
-	ULONG i;
+	ULONG i, Result;
+	NTSTATUS Status;
 
 	DPRINT1("CC: Shutdown\n");
 
@@ -308,7 +311,10 @@ CcShutdownSystem()
 		}
 	}
 
-	DPRINT1("Done\n");
+	// Evict all section pages
+	Status = MiRosTrimCache(~0, 0, &Result);
+
+	DPRINT1("Done (Evicted %d, Status %x)\n", Result, Status);
 }
 
 

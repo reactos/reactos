@@ -91,9 +91,11 @@ MiReadFilePage
 	PLARGE_INTEGER FileOffset = &RequiredResources->FileOffset;
 	NTSTATUS Status;
 	PVOID PageBuf = NULL;
-	PMEMORY_AREA TmpArea;
 	IO_STATUS_BLOCK IOSB;
 	PHYSICAL_ADDRESS BoundaryAddressMultiple;
+	PPFN_NUMBER Pages;
+	PMDL Mdl;
+	PVOID HyperMap;
 
 	BoundaryAddressMultiple.QuadPart = 0;
 
@@ -110,44 +112,27 @@ MiReadFilePage
 		return Status;
 	}
 
-	MmLockAddressSpace(MmGetKernelAddressSpace());
-	Status = MmCreateMemoryArea
-		(MmGetKernelAddressSpace(),
-		 MEMORY_AREA_VIRTUAL_MEMORY, 
-		 &PageBuf,
-		 PAGE_SIZE,
-		 PAGE_READWRITE,
-		 &TmpArea,
-		 FALSE,
-		 MEM_TOP_DOWN,
-		 BoundaryAddressMultiple);
-	
-	DPRINT("Status %x, PageBuf %x\n", Status, PageBuf);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("STATUS_NO_MEMORY: %x\n", Status);
-		MmUnlockAddressSpace(MmGetKernelAddressSpace());
+	HyperMap = MmCreateHyperspaceMapping(*Page);
+
+	Mdl = IoAllocateMdl(HyperMap, PAGE_SIZE, FALSE, FALSE, NULL);
+	if (!Mdl) {
 		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
 		return STATUS_NO_MEMORY;
 	}
-	
-	Status = MmCreateVirtualMapping(NULL, PageBuf, PAGE_READWRITE, Page, 1);
-	if (!NT_SUCCESS(Status))
-	{
-		MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
-		MmUnlockAddressSpace(MmGetKernelAddressSpace());
-		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
-		DPRINT1("Status: %x\n", Status);
-		return Status;
-	}
-	
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
+	MmInitializeMdl(Mdl, HyperMap, PAGE_SIZE);
+	Pages = (PPFN_NUMBER)(Mdl + 1);
+	Pages[0] = *Page;
+	MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+	PageBuf = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+	MmDeleteHyperspaceMapping(HyperMap);
+		 
 	Status = MiSimpleRead
 		(FileObject, 
 		 FileOffset,
 		 PageBuf,
 		 RequiredResources->Amount,
+		 TRUE,
 		 &IOSB);
 	RtlZeroMemory
 		((PCHAR)PageBuf+RequiredResources->Amount,
@@ -155,9 +140,8 @@ MiReadFilePage
 	
 	DPRINT("Read Status %x (Page %x)\n", Status, *Page);
 
-	MmLockAddressSpace(MmGetKernelAddressSpace());
-	MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
+	MmUnlockPages(Mdl);
+	IoFreeMdl(Mdl);
 
 	if (!NT_SUCCESS(Status))
 	{

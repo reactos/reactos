@@ -1,14 +1,12 @@
 #pragma once
 
-struct _MM_CACHE_SECTION_SEGMENT;
-
 typedef struct _NOCC_BCB
 {
     /* Public part */
     PUBLIC_BCB Bcb;
 
 	struct _NOCC_CACHE_MAP *Map;
-    struct _MM_CACHE_SECTION_SEGMENT *SectionObject;
+    PROS_SECTION_OBJECT SectionObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;

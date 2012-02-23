@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -38,44 +38,6 @@ LIST_ENTRY CcpAllSharedCacheMaps;
 
 /* FUNCTIONS ******************************************************************/
 
-// Interact with legacy balance manager for now
-// This can fall away when our section implementation supports
-// demand paging properly
-NTSTATUS
-CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
-{
-	ULONG i, Freed, BcbHead;
-
-	*NrFreed = 0;
-
-	for (i = 0; i < CACHE_NUM_SECTIONS; i++) {
-		BcbHead = (i+CcCacheClockHand) % CACHE_NUM_SECTIONS;
-
-		// Reference a cache stripe so it won't go away
-		CcpLock();
-		if (CcCacheSections[BcbHead].BaseAddress) {
-			CcpReferenceCache(BcbHead);
-			CcpUnlock();
-		} else {
-			CcpUnlock();
-			continue;
-		}
-		
-		// Defer to MM to try recovering pages from it
-		Freed = MiCacheEvictPages
-			(CcCacheSections[BcbHead].BaseAddress, Target);
-
-		Target -= Freed;
-		*NrFreed += Freed;
-
-		CcpLock();
-		CcpUnpinData(&CcCacheSections[BcbHead], TRUE);
-		CcpUnlock();
-	}
-
-	return STATUS_SUCCESS;
-}
-
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID)
@@ -99,14 +61,6 @@ CcInitializeCacheManager(VOID)
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
-	ExInitializeFastMutex(&GlobalPageOperation);
-
-	// MM stub
-	KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
-
-	// Until we're fully demand paged, we can do things the old way through
-	// the balance manager
-	MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
 
     return TRUE;
 }
@@ -268,9 +222,9 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 		RemoveEntryList(&PrivateCacheMap->ListEntry);
 		if (IsListEmpty(&PrivateCacheMap->Map->PrivateCacheMaps))
 		{
-			while (!IsListEmpty(&Map->AssociatedBcb))
+			while (!IsListEmpty(&PrivateCacheMap->Map->AssociatedBcb))
 			{
-				PNOCC_BCB Bcb = CONTAINING_RECORD(Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
+				PNOCC_BCB Bcb = CONTAINING_RECORD(PrivateCacheMap->Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
 				DPRINT("Evicting cache stripe #%x\n", Bcb - CcCacheSections);
 				Bcb->RefCount = 1;
 				CcpDereferenceCache(Bcb - CcCacheSections, TRUE);
@@ -383,7 +337,7 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 		{
 			ToWrite = MIN(UpperBound.QuadPart - LowerBound.QuadPart, (PAGE_SIZE - LowerBound.QuadPart) & (PAGE_SIZE - 1));
 			DPRINT("Zero last half %08x%08x %x\n", Target.u.HighPart, Target.u.LowPart, ToWrite);
-			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, &IOSB);
+			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, TRUE, &IOSB);
 			if (!NT_SUCCESS(Status)) 
 			{
 				ExFreePool(ZeroBuf);
@@ -419,7 +373,7 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 		{
 			ToWrite = UpperBound.QuadPart - Target.QuadPart;
 			DPRINT("Zero first half %08x%08x %x\n", Target.u.HighPart, Target.u.LowPart, ToWrite);
-			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, &IOSB);
+			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, TRUE, &IOSB);
 			if (!NT_SUCCESS(Status)) 
 			{
 				ExFreePool(ZeroBuf);

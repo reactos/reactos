@@ -55,19 +55,19 @@
 extern KEVENT MmWaitPageEvent;
 extern FAST_MUTEX RmapListLock;
 
-FAST_MUTEX GlobalPageOperation;
+FAST_MUTEX MiGlobalPageOperation;
 
 PFN_NUMBER
 NTAPI
 MmWithdrawSectionPage
-(PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, BOOLEAN *Dirty)
+(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, BOOLEAN *Dirty)
 {
 	ULONG Entry;
 
 	DPRINT("MmWithdrawSectionPage(%x,%08x%08x,%x)\n", Segment, FileOffset->HighPart, FileOffset->LowPart, Dirty);
 
-	MmLockCacheSectionSegment(Segment);
-	Entry = MiGetPageEntryCacheSectionSegment(Segment, FileOffset);
+	MmLockSectionSegment(Segment);
+	Entry = MmGetPageEntrySectionSegment(Segment, FileOffset);
 
 	*Dirty = !!IS_DIRTY_SSE(Entry);
 
@@ -76,28 +76,28 @@ MmWithdrawSectionPage
 	if (!Entry) 
 	{
 		DPRINT("Stoeled!\n");
-		MmUnlockCacheSectionSegment(Segment);
+		MmUnlockSectionSegment(Segment);
 		return 0;
 	}
 	else if (MM_IS_WAIT_PTE(Entry)) 
 	{
 		DPRINT("WAIT\n");
-		MmUnlockCacheSectionSegment(Segment);
+		MmUnlockSectionSegment(Segment);
 		return MM_WAIT_ENTRY;
 	}
 	else if (Entry && !IS_SWAP_FROM_SSE(Entry))
 	{
 		DPRINT("Page %x\n", PFN_FROM_SSE(Entry));
 		*Dirty |= (Entry & 2);
-		MiSetPageEntryCacheSectionSegment(Segment, FileOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
-		MmUnlockCacheSectionSegment(Segment);
+		MmSetPageEntrySectionSegment(Segment, FileOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+		MmUnlockSectionSegment(Segment);
 		return PFN_FROM_SSE(Entry);
 	}
 	else
 	{
 		DPRINT1("SWAP ENTRY?! (%x:%08x%08x)\n", Segment, FileOffset->HighPart, FileOffset->LowPart);
 		ASSERT(FALSE);
-		MmUnlockCacheSectionSegment(Segment);
+		MmUnlockSectionSegment(Segment);
 		return 0;
 	}
 }
@@ -105,14 +105,14 @@ MmWithdrawSectionPage
 NTSTATUS
 NTAPI
 MmFinalizeSectionPageOut
-(PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, PFN_NUMBER Page,
+(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, PFN_NUMBER Page,
  BOOLEAN Dirty)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	BOOLEAN WriteZero = FALSE, WritePage = FALSE;
 	SWAPENTRY Swap = MmGetSavedSwapEntryPage(Page);
 
-	MmLockCacheSectionSegment(Segment);
+	MmLockSectionSegment(Segment);
 	(void)InterlockedIncrementUL(&Segment->ReferenceCount);
 
 	if (Dirty)
@@ -131,7 +131,7 @@ MmFinalizeSectionPageOut
 
 	DPRINT("Status %x\n", Status);
 
-	MmUnlockCacheSectionSegment(Segment);
+	MmUnlockSectionSegment(Segment);
 
 	if (WritePage)
 	{
@@ -139,17 +139,17 @@ MmFinalizeSectionPageOut
 		Status = MiWriteBackPage(Segment->FileObject, FileOffset, PAGE_SIZE, Page);
 	}
 
-	MmLockCacheSectionSegment(Segment);
+	MmLockSectionSegment(Segment);
 
 	if (WriteZero && NT_SUCCESS(Status))
 	{
 		DPRINT("Setting page entry in segment %x:%x to swap %x\n", Segment, FileOffset->LowPart, Swap);
-		MiSetPageEntryCacheSectionSegment(Segment, FileOffset, Swap ? MAKE_SWAP_SSE(Swap) : 0);
+		MmSetPageEntrySectionSegment(Segment, FileOffset, Swap ? MAKE_SWAP_SSE(Swap) : 0);
 	}
 	else
 	{
 		DPRINT("Setting page entry in segment %x:%x to page %x\n", Segment, FileOffset->LowPart, Page);
-		MiSetPageEntryCacheSectionSegment
+		MmSetPageEntrySectionSegment
 			(Segment, FileOffset, Page ? (Dirty ? DIRTY_SSE(MAKE_PFN_SSE(Page)) : MAKE_PFN_SSE(Page)) : 0);
 	}
 
@@ -164,7 +164,7 @@ MmFinalizeSectionPageOut
 		MmDereferencePage(Page);
 	}
 
-	MmUnlockCacheSectionSegment(Segment);
+	MmUnlockSectionSegment(Segment);
 
 	if (InterlockedDecrementUL(&Segment->ReferenceCount) == 0)
 	{
@@ -191,24 +191,24 @@ MmPageOutCacheSection
 	BOOLEAN Dirty = FALSE;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 	LARGE_INTEGER TotalOffset;
-	PMM_CACHE_SECTION_SEGMENT Segment;
+	PMM_SECTION_SEGMENT Segment;
 	PVOID PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
 	TotalOffset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress + 
-		MemoryArea->Data.CacheData.ViewOffset.QuadPart;
+		MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
-	Segment = MemoryArea->Data.CacheData.Segment;
+	Segment = MemoryArea->Data.SectionData.Segment;
 
-	MmLockCacheSectionSegment(Segment);
+	MmLockSectionSegment(Segment);
 	ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
 	Dirty = MmIsDirtyPageRmap(Required->Page[0]);
-	Entry = MiGetPageEntryCacheSectionSegment(Segment, &TotalOffset);
+	Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
 
 	if (Dirty)
 	{
 		PFN_NUMBER OurPage;
-		MiSetPageEntryCacheSectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
+		MmSetPageEntrySectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
 		MmDeleteRmap(Required->Page[0], Process, Address);
 		MmDeleteVirtualMapping(Process, Address, FALSE, &Dirty, &OurPage);
 		ASSERT(OurPage == Required->Page[0]);
@@ -226,7 +226,7 @@ MmPageOutCacheSection
 		MmDereferencePage(Required->Page[0]);
 	} 
 
-	MmUnlockCacheSectionSegment(Segment);
+	MmUnlockSectionSegment(Segment);
 	MiSetPageEvent(Process, Address);
 	return Status;
 }
@@ -238,7 +238,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
    BOOLEAN ProcRef = FALSE;
    PFN_NUMBER SectionPage = 0;
    PMM_RMAP_ENTRY entry;
-   PMM_CACHE_SECTION_SEGMENT Segment = NULL;
+   PMM_SECTION_SEGMENT Segment = NULL;
    LARGE_INTEGER FileOffset;
    PMEMORY_AREA MemoryArea;
    PMMSUPPORT AddressSpace = MmGetKernelAddressSpace();
@@ -250,17 +250,17 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
    DPRINTC("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPage(Page));
 
-   ExAcquireFastMutex(&GlobalPageOperation);
+   ExAcquireFastMutex(&MiGlobalPageOperation);
    if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))
    {
-	   DPRINT1("Withdrawing page (%x) %x:%x\n", Page, Segment, FileOffset.LowPart);
+	   DPRINTC("Withdrawing page (%x) %x:%x\n", Page, Segment, FileOffset.LowPart);
 	   SectionPage = MmWithdrawSectionPage(Segment, &FileOffset, &Dirty);
 	   DPRINTC("SectionPage %x\n", SectionPage);
 
 	   if (SectionPage == MM_WAIT_ENTRY || SectionPage == 0)
 	   {
 		   DPRINT1("In progress page out %x\n", SectionPage);
-		   ExReleaseFastMutex(&GlobalPageOperation);
+		   ExReleaseFastMutex(&MiGlobalPageOperation);
 		   return STATUS_UNSUCCESSFUL;
 	   }
 	   else
@@ -434,9 +434,9 @@ bail:
 		   DPRINTC
 			   ("Failed to page out %x, replacing %x at %x in segment %x\n",
 				SectionPage, FileOffset.LowPart, Segment);
-		   MmLockCacheSectionSegment(Segment);
-		   MiSetPageEntryCacheSectionSegment(Segment, &FileOffset, Dirty ? MAKE_PFN_SSE(Page) : DIRTY_SSE(MAKE_PFN_SSE(Page)));
-		   MmUnlockCacheSectionSegment(Segment);
+		   MmLockSectionSegment(Segment);
+		   MmSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? MAKE_PFN_SSE(Page) : DIRTY_SSE(MAKE_PFN_SSE(Page)));
+		   MmUnlockSectionSegment(Segment);
 	   }
 
 	   // Alas, we had the last reference
@@ -450,60 +450,71 @@ bail:
 	   ObDereferenceObject(Process);
    }
 
-   ExReleaseFastMutex(&GlobalPageOperation);
+   ExReleaseFastMutex(&MiGlobalPageOperation);
    DPRINTC("%s %x %x\n", NT_SUCCESS(Status) ? "Evicted" : "Spared", Page, Status);
    return NT_SUCCESS(Status) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 ULONG
 NTAPI
-MiCacheEvictPages(PVOID BaseAddress, ULONG Target)
+MiCacheEvictPages(PMM_SECTION_SEGMENT Segment, ULONG Target)
 {
-	ULONG i, Entry, Result = 0;
+	ULONG Entry, Result = 0, i, j;
 	NTSTATUS Status;
 	PFN_NUMBER Page;
-	PMEMORY_AREA MemoryArea;
 	LARGE_INTEGER Offset;
-	PMM_CACHE_SECTION_SEGMENT Segment;
 
-	MmLockAddressSpace(MmGetKernelAddressSpace());
-	MemoryArea = MmLocateMemoryAreaByAddress
-		(MmGetKernelAddressSpace(), 
-		 BaseAddress);
+	MmLockSectionSegment(Segment);
 
-	ASSERT(MemoryArea);
-	ASSERT(MemoryArea->Type == MEMORY_AREA_CACHE);
-
-	Segment = MemoryArea->Data.CacheData.Segment;
-
-	ASSERT(Segment);
-
-	MmLockCacheSectionSegment(Segment);
-
-	for (i = 0; 
-		 i < ((ULONG_PTR)MemoryArea->EndingAddress) - 
-			 ((ULONG_PTR)MemoryArea->StartingAddress) && 
-			 Result < Target; 
-		 i += PAGE_SIZE) {
-		Offset.QuadPart = MemoryArea->Data.CacheData.ViewOffset.QuadPart + i;
-		Entry = MiGetPageEntryCacheSectionSegment(Segment, &Offset);
-		if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
-			Page = PFN_FROM_SSE(Entry);
-			MmReferencePage(Page);
-			MmUnlockCacheSectionSegment(Segment);
-			MmUnlockAddressSpace(MmGetKernelAddressSpace());
-			Status = MmpPageOutPhysicalAddress(Page);
-			if (NT_SUCCESS(Status))
-				Result++;
-			MmLockCacheSectionSegment(Segment);
-			MmLockAddressSpace(MmGetKernelAddressSpace());
-			MmReleasePageMemoryConsumer(MC_CACHE, Page);
+	for (i = 0; i < RtlNumberGenericTableElements(&Segment->PageTable); i++) {
+		PCACHE_SECTION_PAGE_TABLE Element = RtlGetElementGenericTable(&Segment->PageTable, i);
+		ASSERT(Element);
+		Offset = Element->FileOffset;
+		for (j = 0; j < ENTRIES_PER_ELEMENT; j++, Offset.QuadPart += PAGE_SIZE) {
+			Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+			if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
+				Page = PFN_FROM_SSE(Entry);
+				MmReferencePage(Page);
+				MmUnlockSectionSegment(Segment);
+				Status = MmpPageOutPhysicalAddress(Page);
+				if (NT_SUCCESS(Status))
+					Result++;
+				MmLockSectionSegment(Segment);
+				MmReleasePageMemoryConsumer(MC_CACHE, Page);
+			}
 		}
 	}
 
-	MmUnlockCacheSectionSegment(Segment);
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
+	MmUnlockSectionSegment(Segment);
 
 	return Result;
 }
 
+extern LIST_ENTRY MiSegmentList;
+
+// Interact with legacy balance manager for now
+// This can fall away when our section implementation supports
+// demand paging properly
+NTSTATUS
+MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
+{
+    ULONG Freed;
+    PLIST_ENTRY Entry;
+    PMM_SECTION_SEGMENT Segment;
+    *NrFreed = 0;
+
+    for (Entry = MiSegmentList.Flink; *NrFreed < Target && Entry != &MiSegmentList; Entry = Entry->Flink) {
+        Segment = CONTAINING_RECORD(Entry, MM_SECTION_SEGMENT, ListOfSegments);
+        // Defer to MM to try recovering pages from it
+        Freed = MiCacheEvictPages(Segment, Target);
+        *NrFreed += Freed;
+    }
+
+    if (!IsListEmpty(&MiSegmentList)) {
+        Entry = MiSegmentList.Flink;
+        RemoveEntryList(Entry);
+        InsertTailList(&MiSegmentList, Entry);
+    }
+
+    return STATUS_SUCCESS;
+}

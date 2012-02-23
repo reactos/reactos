@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -80,7 +80,7 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
 			return FALSE;
 		}
 		
-		DPRINT1("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+		DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
 		RtlCopyMemory
 			(BufferTarget,
 			 ReadBuffer,
@@ -159,7 +159,7 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
 			DPRINT1("CcPreparePinWrite Failed?\n");
 			if (Wait) RtlRaiseStatus(STATUS_NOT_MAPPED_DATA); else return FALSE;
 		}
-		DPRINT1("Copying actual memory to BCB#%x (@%x) (from buffer at %x)\n", Bcb - CcCacheSections, WriteBuf, Bcb->BaseAddress);
+		DPRINT("Copying actual memory to BCB#%x (@%x) (from buffer at %x)\n", Bcb - CcCacheSections, WriteBuf, Bcb->BaseAddress);
 		
 		//MiZeroFillSection(WriteBuf, &CurrentOffset, WriteLen);
 		RtlCopyMemory(WriteBuf, ((PCHAR)Buffer) + Count, WriteLen);

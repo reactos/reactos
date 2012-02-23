@@ -11,12 +11,11 @@
 	(IS_SWAP_FROM_SSE(E) && SWAPENTRY_FROM_SSE(E) == MM_WAIT_ENTRY)
 #define MAKE_PFN_SSE(P)          ((P) << PAGE_SHIFT)
 #define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
-#define MAKE_SWAP_SSE(S)         (((S) << 1) | 0x1)
+#define MAKE_SWAP_SSE(S)         (((ULONG)(S) << 1) | 0x1)
 #define DIRTY_SSE(E)             ((E) | 2)
 #define CLEAN_SSE(E)             ((E) & ~2)
 #define IS_DIRTY_SSE(E)          ((E) & 2)
 
-#define MEMORY_AREA_CACHE   (2)
 #define MM_SEGMENT_FINALIZE (0x40000000)
 
 #define RMAP_SEGMENT_MASK ~((ULONG_PTR)0xff)
@@ -31,7 +30,7 @@
 	(((Consumer) == MC_USER) || \
 	 ((Consumer) == MC_CACHE)) 
 
-#define SEC_CACHE                           (0x40000000)
+#define SEC_CACHE                           (0x20000000)
 
 #define MiWaitForPageEvent(Process,Address) do {						\
 	DPRINT("MiWaitForPageEvent %x:%x #\n", Process, Address); \
@@ -47,32 +46,11 @@
 #define ENTRIES_PER_ELEMENT 256
 
 extern KEVENT MmWaitPageEvent;
-								   
-typedef struct _MM_CACHE_SECTION_SEGMENT
-{
-    FAST_MUTEX Lock;		/* lock which protects the page directory */
-	PFILE_OBJECT FileObject;
-    ULARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
-    ULARGE_INTEGER Length;			/* absolute length of the segment */
-    ULONG ReferenceCount;
-    ULONG Protection;
-    ULONG Flags;
-    BOOLEAN WriteCopy;
-
-	struct 
-	{
-		LONG FileOffset;		/* start offset into the file for image sections */
-		ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
-		ULONG Characteristics;
-	} Image;
-
-	RTL_GENERIC_TABLE PageTable;
-} MM_CACHE_SECTION_SEGMENT, *PMM_CACHE_SECTION_SEGMENT;
 
 typedef struct _CACHE_SECTION_PAGE_TABLE 
 {
     LARGE_INTEGER FileOffset;
-	PMM_CACHE_SECTION_SEGMENT Segment;
+	PMM_SECTION_SEGMENT Segment;
     ULONG Refcount;
     ULONG PageEntries[ENTRIES_PER_ELEMENT];
 } CACHE_SECTION_PAGE_TABLE, *PCACHE_SECTION_PAGE_TABLE;
@@ -111,55 +89,66 @@ typedef struct _MM_REQUIRED_RESOURCES
 	int Line;
 } MM_REQUIRED_RESOURCES, *PMM_REQUIRED_RESOURCES;
 
+NTSTATUS
+NTAPI
+MmCreateCacheSection
+(PROS_SECTION_OBJECT *SectionObject,
+ ACCESS_MASK DesiredAccess,
+ POBJECT_ATTRIBUTES ObjectAttributes,
+ PLARGE_INTEGER UMaximumSize,
+ ULONG SectionPageProtection,
+ ULONG AllocationAttributes,
+ PFILE_OBJECT FileObject);
+
 PFN_NUMBER
 NTAPI
 MmWithdrawSectionPage
-(PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, BOOLEAN *Dirty);
+(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, BOOLEAN *Dirty);
 
 NTSTATUS
 NTAPI
 MmFinalizeSectionPageOut
-(PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, PFN_NUMBER Page,
+(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER FileOffset, PFN_NUMBER Page,
  BOOLEAN Dirty);
 
 /* sptab.c *******************************************************************/
 
 VOID
 NTAPI
-MiInitializeSectionPageTable(PMM_CACHE_SECTION_SEGMENT Segment);
+MiInitializeSectionPageTable(PMM_SECTION_SEGMENT Segment);
 
 NTSTATUS
 NTAPI
-_MiSetPageEntryCacheSectionSegment
-(PMM_CACHE_SECTION_SEGMENT Segment,
+_MmSetPageEntrySectionSegment
+(PMM_SECTION_SEGMENT Segment,
  PLARGE_INTEGER Offset,
  ULONG Entry, const char *file, int line);
 
 ULONG
 NTAPI
-_MiGetPageEntryCacheSectionSegment
-(PMM_CACHE_SECTION_SEGMENT Segment,
+_MmGetPageEntrySectionSegment
+(PMM_SECTION_SEGMENT Segment,
  PLARGE_INTEGER Offset, const char *file, int line);
 
-#define MiSetPageEntryCacheSectionSegment(S,O,E) _MiSetPageEntryCacheSectionSegment(S,O,E,__FILE__,__LINE__)
-#define MiGetPageEntryCacheSectionSegment(S,O) _MiGetPageEntryCacheSectionSegment(S,O,__FILE__,__LINE__)
+#define MmSetPageEntrySectionSegment(S,O,E) _MmSetPageEntrySectionSegment(S,O,E,__FILE__,__LINE__)
+#define MmGetPageEntrySectionSegment(S,O) _MmGetPageEntrySectionSegment(S,O,__FILE__,__LINE__)
 
 typedef VOID (NTAPI *FREE_SECTION_PAGE_FUN)
-	(PMM_CACHE_SECTION_SEGMENT Segment,
+	(PMM_SECTION_SEGMENT Segment,
 	 PLARGE_INTEGER Offset);
 
 VOID
 NTAPI
-MiFreePageTablesSectionSegment(PMM_CACHE_SECTION_SEGMENT Segment, FREE_SECTION_PAGE_FUN FreePage);
+MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment, FREE_SECTION_PAGE_FUN FreePage);
 
 /* Yields a lock */
-PMM_CACHE_SECTION_SEGMENT
+PMM_SECTION_SEGMENT
 NTAPI
 MmGetSectionAssociation(PFN_NUMBER Page, PLARGE_INTEGER Offset);
 
 NTSTATUS
 NTAPI
-MmSetSectionAssociation(PFN_NUMBER Page, PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset);
+MmSetSectionAssociation(PFN_NUMBER Page, PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset);
 
 VOID
 NTAPI
@@ -181,9 +170,7 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer, 
  ULONG Length,
-#ifdef __ROS_DWARF__
  BOOLEAN Paging,
-#endif
  PIO_STATUS_BLOCK ReadStatus);
 
 NTSTATUS
@@ -262,7 +249,7 @@ MiWriteFilePage
 VOID
 NTAPI
 MiFreeSegmentPage
-(PMM_CACHE_SECTION_SEGMENT Segment,
+(PMM_SECTION_SEGMENT Segment,
  PLARGE_INTEGER FileOffset);
 
 NTSTATUS
@@ -283,15 +270,15 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address);
 
 VOID
 NTAPI
-_MmLockCacheSectionSegment(PMM_CACHE_SECTION_SEGMENT Segment, const char *file, int line);
+_MmLockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line);
 
-#define MmLockCacheSectionSegment(x) _MmLockCacheSectionSegment(x,__FILE__,__LINE__)
+#define MmLockSectionSegment(x) _MmLockSectionSegment(x,__FILE__,__LINE__)
 
 VOID
 NTAPI
-_MmUnlockCacheSectionSegment(PMM_CACHE_SECTION_SEGMENT Segment, const char *file, int line);
+_MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line);
 
-#define MmUnlockCacheSectionSegment(x) _MmUnlockCacheSectionSegment(x,__FILE__,__LINE__)
+#define MmUnlockSectionSegment(x) _MmUnlockSectionSegment(x,__FILE__,__LINE__)
 
 VOID
 MmFreeCacheSectionPage
@@ -306,7 +293,7 @@ _MiFlushMappedSection(PVOID BaseAddress, PLARGE_INTEGER BaseOffset, PLARGE_INTEG
 
 VOID
 NTAPI
-MmFinalizeSegment(PMM_CACHE_SECTION_SEGMENT Segment);
+MmFinalizeSegment(PMM_SECTION_SEGMENT Segment);
 
 VOID
 NTAPI
@@ -314,7 +301,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
 NTSTATUS NTAPI
 MmMapCacheViewInSystemSpaceAtOffset
-(IN PMM_CACHE_SECTION_SEGMENT Segment,
+(IN PMM_SECTION_SEGMENT Segment,
  OUT PVOID * MappedBase,
  IN PLARGE_INTEGER ViewOffset,
  IN OUT PULONG ViewSize);
@@ -323,7 +310,7 @@ NTSTATUS
 NTAPI
 _MiMapViewOfSegment
 (PMMSUPPORT AddressSpace,
- PMM_CACHE_SECTION_SEGMENT Segment,
+ PMM_SECTION_SEGMENT Segment,
  PVOID* BaseAddress,
  SIZE_T ViewSize,
  ULONG Protect,
@@ -388,24 +375,13 @@ MiSwapInSectionPage
 
 NTSTATUS
 NTAPI
-MmExtendCacheSection(PMM_CACHE_SECTION_SEGMENT Section, PLARGE_INTEGER NewSize, BOOLEAN ExtendFile);
+MmExtendCacheSection(PROS_SECTION_OBJECT Section, PLARGE_INTEGER NewSize, BOOLEAN ExtendFile);
 
 NTSTATUS
 NTAPI
 _MiFlushMappedSection(PVOID BaseAddress, PLARGE_INTEGER BaseOffset, PLARGE_INTEGER FileSize, BOOLEAN Dirty, const char *File, int Line);
 
 #define MiFlushMappedSection(A,O,S,D) _MiFlushMappedSection(A,O,S,D,__FILE__,__LINE__)
-
-NTSTATUS
-NTAPI
-MmCreateCacheSection
-(PMM_CACHE_SECTION_SEGMENT *SegmentObject,
- ACCESS_MASK DesiredAccess,
- POBJECT_ATTRIBUTES ObjectAttributes,
- PLARGE_INTEGER UMaximumSize,
- ULONG SectionPageProtection,
- ULONG AllocationAttributes,
- PFILE_OBJECT FileObject);
 
 PVOID
 NTAPI
@@ -420,4 +396,7 @@ MmNotPresentFaultCacheSection
 
 ULONG
 NTAPI
-MiCacheEvictPages(PVOID BaseAddress, ULONG Target);
+MiCacheEvictPages(PMM_SECTION_SEGMENT Segment, ULONG Target);
+
+NTSTATUS
+MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);

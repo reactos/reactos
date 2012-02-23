@@ -617,6 +617,8 @@ MmCreateVirtualMappingUnsafe(
     ULONG i;
     MMPTE TmplPte, *Pte;
 
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
+
     /* Check if the range is valid */
     if ((Process == NULL && Address < MmSystemRangeStart) ||
         (Process != NULL && Address > MmHighestUserAddress))
@@ -666,6 +668,8 @@ MmCreateVirtualMapping(PEPROCESS Process,
                        ULONG PageCount)
 {
     ULONG i;
+
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
 
     for (i = 0; i < PageCount; i++)
     {
