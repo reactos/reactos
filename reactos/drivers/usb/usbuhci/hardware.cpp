@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/hcd_controller.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/hcd_controller.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
@@ -22,7 +22,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-OhciDefferedRoutine(
+UhciDefferedRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -30,7 +30,18 @@ OhciDefferedRoutine(
 
 VOID
 NTAPI
+TimerDpcRoutine(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2);
+
+
+VOID
+NTAPI
 StatusChangeWorkItemRoutine(PVOID Context);
+
+
 
 class CUSBHardwareDevice : public IUSBHardwareDevice
 {
@@ -86,7 +97,8 @@ public:
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
-    friend VOID NTAPI OhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI UhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI TimerDpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     VOID WriteRegister8(IN ULONG Register, IN UCHAR value);
     VOID WriteRegister16(ULONG Register, USHORT Value);
@@ -120,7 +132,7 @@ protected:
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
-    WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
+    //WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
     ULONG m_InterruptMask;                                                             // interrupt enabled mask
     ULONG m_PortResetChange;                                                           // port reset status
     PULONG m_FrameList;                                                                // frame list
@@ -129,6 +141,8 @@ protected:
     PUHCI_QUEUE_HEAD m_QueueHead[5];                                                   // queue heads
     PHYSICAL_ADDRESS m_StrayDescriptorPhysicalAddress;                                 // physical address stray descriptor
     PUHCI_TRANSFER_DESCRIPTOR m_StrayDescriptor;                                       // stray descriptor
+    KTIMER m_SCETimer;                                                                 // SCE timer
+    KDPC m_SCETimerDpc;                                                                // timer dpc
 };
 
 //=================================================================================================
@@ -200,7 +214,15 @@ CUSBHardwareDevice::Initialize(
     //
     // intialize status change work item
     //
-    ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
+    //ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
+
+
+    // initialize timer
+    KeInitializeTimer(&m_SCETimer);
+
+    // initialize timer dpc
+    KeInitializeDpc(&m_SCETimerDpc, TimerDpcRoutine, PVOID(this));
+
 
     m_VendorID = 0;
     m_DeviceID = 0;
@@ -258,7 +280,7 @@ CUSBHardwareDevice::PnpStart(
             case CmResourceTypeInterrupt:
             {
                 KeInitializeDpc(&m_IntDpcObject,
-                                OhciDefferedRoutine,
+                                UhciDefferedRoutine,
                                 this);
 
                 Status = IoConnectInterrupt(&m_Interrupt,
@@ -537,6 +559,13 @@ CUSBHardwareDevice::StartController(void)
     DPRINT1("[USBUHCI] Controller Frame %x\n", ReadRegister16(UHCI_FRNUM));
     DPRINT1("[USBUHCI] Controller Port Status 0 %x\n", ReadRegister16(UHCI_PORTSC1));
     DPRINT1("[USBUHCI] Controller Port Status 1 %x\n", ReadRegister16(UHCI_PORTSC1 + 2));
+
+
+    // queue timer
+    LARGE_INTEGER Expires;
+    Expires.QuadPart = -10 * 10000;
+
+    KeSetTimerEx(&m_SCETimer, Expires, 1000, &m_SCETimerDpc);
 
     //
     // done
@@ -979,8 +1008,9 @@ CUSBHardwareDevice::ResetPort(
     }
 
     m_PortResetChange |= (1 << PortIndex);
-    DPRINT1("[USBOHCI] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
+    DPRINT1("[USBUhci] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
 
+#if 0
     if (Status & UHCI_PORTSC_CURSTAT)
     {
         //
@@ -989,6 +1019,7 @@ CUSBHardwareDevice::ResetPort(
         DPRINT1("Queueing work item\n");
         ExQueueWorkItem(&m_StatusChangeWorkItem, DelayedWorkQueue);
     }
+#endif
 
     return STATUS_SUCCESS;
 }
@@ -1023,7 +1054,7 @@ CUSBHardwareDevice::GetPortStatus(
     // read port status
     //
     Status = ReadRegister16(UHCI_PORTSC1 + PortId * 2);
-    DPRINT1("[USBUHCI] PortId %x Status %x\n", PortId, Status);
+    DPRINT("[USBUHCI] PortId %x Status %x\n", PortId, Status);
 
     // build the status
     if (Status & UHCI_PORTSC_CURSTAT)
@@ -1398,7 +1429,7 @@ CUSBHardwareDevice::GetQueueHead(
 
 VOID
 NTAPI
-OhciDefferedRoutine(
+UhciDefferedRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -1412,7 +1443,7 @@ OhciDefferedRoutine(
     //
     This = (CUSBHardwareDevice*)DeferredContext;
 
-    DPRINT("OhciDefferedRoutine\n");
+    DPRINT("UhciDefferedRoutine\n");
 
     //
     // get status
@@ -1432,6 +1463,40 @@ OhciDefferedRoutine(
     //
     DPRINT1("[USBUHCI] Status %x not handled\n", Status);
 }
+
+VOID
+NTAPI
+TimerDpcRoutine(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2)
+{
+    CUSBHardwareDevice *This;
+    USHORT PortStatus = 0;
+    USHORT PortChange = 0;
+
+    // get parameters
+    This = (CUSBHardwareDevice*)DeferredContext;
+
+    // check port 0
+    This->GetPortStatus(0, &PortStatus, &PortChange);
+    if (PortChange)
+    {
+        // invoke status change work item routine
+        StatusChangeWorkItemRoutine(DeferredContext);
+        return;
+    }
+
+    // check port 1
+    This->GetPortStatus(1, &PortStatus, &PortChange);
+    if (PortChange)
+    {
+        // invoke status change work item routine
+        StatusChangeWorkItemRoutine(DeferredContext);
+    }
+}
+
 
 VOID
 NTAPI
@@ -1462,7 +1527,7 @@ CreateUSBHardware(
 {
     PUSBHARDWAREDEVICE This;
 
-    This = new(NonPagedPool, TAG_USBOHCI) CUSBHardwareDevice(0);
+    This = new(NonPagedPool, TAG_USBUHCI) CUSBHardwareDevice(0);
 
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;

@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/hub_controller.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/hub_controller.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
@@ -209,7 +209,7 @@ CHubController::Initialize(
     //
     // allocate device address bitmap buffer
     //
-    m_DeviceAddressBitmapBuffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, 16, TAG_USBOHCI);
+    m_DeviceAddressBitmapBuffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, 16, TAG_USBUHCI);
     if (!m_DeviceAddressBitmapBuffer)
     {
         //
@@ -484,7 +484,7 @@ CHubController::HandlePnp(
                     //
                     // allocate buffer
                     //
-                    DeviceName = (LPWSTR)ExAllocatePoolWithTag(PagedPool, Length * sizeof(WCHAR), TAG_USBOHCI);
+                    DeviceName = (LPWSTR)ExAllocatePoolWithTag(PagedPool, Length * sizeof(WCHAR), TAG_USBUHCI);
 
                     if (!DeviceName)
                     {
@@ -556,7 +556,7 @@ CHubController::HandlePnp(
                     //
                     // allocate buffer
                     //
-                    DeviceName = (LPWSTR)ExAllocatePoolWithTag(PagedPool, Index * sizeof(WCHAR), TAG_USBOHCI);
+                    DeviceName = (LPWSTR)ExAllocatePoolWithTag(PagedPool, Index * sizeof(WCHAR), TAG_USBUHCI);
 
                     if (!DeviceName)
                     {
@@ -664,7 +664,7 @@ CHubController::HandlePnp(
                 //
                 // allocate device relations
                 //
-                DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), TAG_USBOHCI);
+                DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), TAG_USBUHCI);
                 if (!DeviceRelations)
                 {
                     //
@@ -1746,7 +1746,7 @@ CHubController::HandleSyncResetAndClearStall(
         //
         // abort pipe failed
         //
-        DPRINT1("[USBOHCI] AbortPipe failed with %x\n", Status);
+        DPRINT1("[USBUHCI] AbortPipe failed with %x\n", Status);
     }
 
     //
@@ -2288,7 +2288,7 @@ CHubController::RemoveUsbDevice(
             //
             // free entry
             //
-            ExFreePoolWithTag(DeviceEntry, TAG_USBOHCI);
+            ExFreePoolWithTag(DeviceEntry, TAG_USBUHCI);
 
             //
             // done
@@ -2383,7 +2383,7 @@ CHubController::AddUsbDevice(
     //
     // allocate device entry
     //
-    DeviceEntry = (PUSBDEVICE_ENTRY)ExAllocatePoolWithTag(NonPagedPool, sizeof(USBDEVICE_ENTRY), TAG_USBOHCI);
+    DeviceEntry = (PUSBDEVICE_ENTRY)ExAllocatePoolWithTag(NonPagedPool, sizeof(USBDEVICE_ENTRY), TAG_USBUHCI);
     if (!DeviceEntry)
     {
         //
@@ -3693,7 +3693,7 @@ CreateHubController(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBOHCI) CHubController(0);
+    This = new(NonPagedPool, TAG_USBUHCI) CHubController(0);
     if (!This)
     {
         //

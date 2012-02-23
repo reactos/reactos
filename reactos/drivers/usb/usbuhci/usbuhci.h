@@ -1,5 +1,5 @@
-#ifndef USBOHCI_H__
-#define USBOHCI_H__
+#ifndef USBUHCI_H__
+#define USBUHCI_H__
 
 #include <ntddk.h>
 #define NDEBUG
@@ -56,7 +56,7 @@ typedef struct
 //
 // tag for allocations
 //
-#define TAG_USBOHCI 'ICHO'
+#define TAG_USBUHCI 'ICHO'
 
 //
 // assert for c++ - taken from portcls

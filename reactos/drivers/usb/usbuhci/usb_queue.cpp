@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/usb_queue.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/usb_queue.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
@@ -544,7 +544,7 @@ CreateUSBQueue(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBOHCI) CUSBQueue(0);
+    This = new(NonPagedPool, TAG_USBUHCI) CUSBQueue(0);
     if (!This)
     {
         //

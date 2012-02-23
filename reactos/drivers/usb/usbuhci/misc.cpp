@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/misc.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/misc.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)

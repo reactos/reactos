@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/usb_device.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/usb_device.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
@@ -115,7 +115,7 @@ CUSBDevice::~CUSBDevice()
                 // abort pipe
                 //
                 //Status = AbortPipe((PUSB_ENDPOINT_DESCRIPTOR)&m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints[EndpointIndex]);
-                //DPRINT1("[USBOHCI] Deleting Device Abort Pipe Status %x\n", Status);
+                //DPRINT1("[USBUHCI] Deleting Device Abort Pipe Status %x\n", Status);
             }
 
             if (m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints)
@@ -373,7 +373,7 @@ CUSBDevice::SetDeviceAddress(
 
     DPRINT1("CUSBDevice::SetDeviceAddress Address %d\n", DeviceAddress);
 
-    CtrlSetup = (PUSB_DEFAULT_PIPE_SETUP_PACKET)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), TAG_USBOHCI);
+    CtrlSetup = (PUSB_DEFAULT_PIPE_SETUP_PACKET)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), TAG_USBUHCI);
     if (!CtrlSetup)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -396,7 +396,7 @@ CUSBDevice::SetDeviceAddress(
     //
     // free setup packet
     //
-    ExFreePoolWithTag(CtrlSetup, TAG_USBOHCI);
+    ExFreePoolWithTag(CtrlSetup, TAG_USBUHCI);
 
     //
     // check for success
@@ -451,7 +451,7 @@ CUSBDevice::SetDeviceAddress(
     //
     // allocate configuration descriptor
     //
-    m_ConfigurationDescriptors = (PUSB_CONFIGURATION) ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_CONFIGURATION) * m_DeviceDescriptor.bNumConfigurations, TAG_USBOHCI);
+    m_ConfigurationDescriptors = (PUSB_CONFIGURATION) ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_CONFIGURATION) * m_DeviceDescriptor.bNumConfigurations, TAG_USBUHCI);
 
     //
     // zero configuration descriptor
@@ -767,7 +767,7 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     // first allocate a buffer which should be enough to store all different interfaces and endpoints
     //
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_USBOHCI);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_USBUHCI);
     if (!Buffer)
     {
         //
@@ -798,7 +798,7 @@ CUSBDevice::CreateConfigurationDescriptor(
         //
         // failed to allocate mdl
         //
-        ExFreePoolWithTag(Buffer, TAG_USBOHCI);
+        ExFreePoolWithTag(Buffer, TAG_USBUHCI);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -891,7 +891,7 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     // now allocate interface descriptors
     //
-    m_ConfigurationDescriptors[Index].Interfaces = (PUSB_INTERFACE)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_INTERFACE) * ConfigurationDescriptor->bNumInterfaces, TAG_USBOHCI);
+    m_ConfigurationDescriptors[Index].Interfaces = (PUSB_INTERFACE)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_INTERFACE) * ConfigurationDescriptor->bNumInterfaces, TAG_USBUHCI);
     if (!m_ConfigurationDescriptors[Index].Interfaces)
     {
         //
@@ -940,7 +940,7 @@ CUSBDevice::CreateConfigurationDescriptor(
         //
         // allocate end point descriptors
         //
-        m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints = (PUSB_ENDPOINT)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_ENDPOINT) * InterfaceDescriptor->bNumEndpoints, TAG_USBOHCI);
+        m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints = (PUSB_ENDPOINT)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_ENDPOINT) * InterfaceDescriptor->bNumEndpoints, TAG_USBUHCI);
         if (!m_ConfigurationDescriptors[Index].Interfaces[InterfaceIndex].EndPoints)
         {
             //
@@ -1408,7 +1408,7 @@ CreateUSBDevice(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBOHCI) CUSBDevice(0);
+    This = new(NonPagedPool, TAG_USBUHCI) CUSBDevice(0);
     if (!This)
     {
         //

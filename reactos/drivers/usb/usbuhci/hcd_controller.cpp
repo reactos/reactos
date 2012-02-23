@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/hcd_controller.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        drivers/usb/usbuhci/hcd_controller.cpp
+ * PURPOSE:     USB UHCI device driver.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
@@ -755,7 +755,7 @@ CreateHCDController(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBOHCI) CHCDController(0);
+    This = new(NonPagedPool, TAG_USBUHCI) CHCDController(0);
     if (!This)
     {
         //
