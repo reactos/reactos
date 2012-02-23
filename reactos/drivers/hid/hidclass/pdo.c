@@ -580,7 +580,12 @@ HidClassPDO_PnP(
             //
             // no/op
             //
+#if 0
             Status = STATUS_SUCCESS;
+#else
+            DPRINT1("Denying removal of HID device due to IRP cancellation bugs\n");
+            Status = STATUS_UNSUCCESSFUL;
+#endif
             break;
         }
         default:

@@ -537,6 +537,7 @@ CHCDController::HandlePnp(
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
+#if 0
             //
             // sure
             //
@@ -547,6 +548,12 @@ CHCDController::HandlePnp(
             //
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(m_NextDeviceObject, Irp);
+#else
+            DPRINT1("Denying controller removal due to reinitialization bugs\n");
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_UNSUCCESSFUL;
+#endif
         }
         case IRP_MN_REMOVE_DEVICE:
         {

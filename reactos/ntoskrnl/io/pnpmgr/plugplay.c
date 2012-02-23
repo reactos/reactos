@@ -555,38 +555,37 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
     ASSERT(DeviceNode->Flags & DNF_PROCESSED);
 
-#if 0
-    /* Remove the device node */
-    Status = IopRemoveDevice(DeviceNode);
-    if (NT_SUCCESS(Status))
+    /* Check if there's already a driver loaded for this device */
+    if (DeviceNode->Flags & DNF_ADDED)
     {
-        /* Invalidate device relations for the parent to reenumerate the device */
-        Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
-        DPRINT1("A new driver has been loaded for '%wZ'\n", &DeviceInstance);
-    }
-#else
-    /* FIXME: We might clear some important flags */
-    DeviceNode->Flags &= ~DNF_DISABLED;
-
-    /* Load service data from the registry */
-    Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
-
-    if (NT_SUCCESS(Status))
-    {
-        /* Start the service and begin PnP initialization of the device again */
-        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
-        DPRINT1("HACK: A new driver has been loaded for '%wZ' WITHOUT removing the old one\n", &DeviceInstance);
-    }
-#endif
-    else if (DeviceNode->Flags & DNF_ADDED)
-    {
-        /* A driver has already been loaded for this device */
-        DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceInstance);
+        /* Remove the device node */
+        Status = IopRemoveDevice(DeviceNode);
+        if (NT_SUCCESS(Status))
+        {
+            /* Invalidate device relations for the parent to reenumerate the device */
+            Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+            DPRINT1("A new driver has been loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
+        }
+        else
+        {
+            /* A driver has already been loaded for this device */
+            DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
+        }
     }
     else
     {
-        /* This device needs a driver */
-        DPRINT1("A reboot is required for the new driver for '%wZ' to load\n", &DeviceInstance);
+        /* FIXME: What if the device really is disabled? */
+        DeviceNode->Flags &= ~DNF_DISABLED;
+
+        /* Load service data from the registry */
+        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Start the service and begin PnP initialization of the device again */
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+            DPRINT1("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+        }
     }
 
     ObDereferenceObject(DeviceObject);
