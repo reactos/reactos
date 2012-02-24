@@ -361,6 +361,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     return STATUS_SUCCESS;
 
 error:
+    ERR_CH(UserThread,"UserCreateThreadInfo failed! Freeing pti 0x%x for TID %d\n", ptiCurrent, Thread->Cid.UniqueThread);
     UserDestroyThreadInfo(Thread);
     return Status;
 }

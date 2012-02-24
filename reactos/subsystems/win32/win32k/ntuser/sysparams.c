@@ -27,7 +27,7 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define REQ_INTERACTIVE_WINSTA(err) \
     if ( GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
-        ERR("NtUserSystemParametersInfo requires interactive window station\n"); \
+        ERR("NtUserSystemParametersInfo requires interactive window station (current is %wZ)\n", &GetW32ProcessInfo()->prpwinsta->Name); \
         EngSetLastError(err); \
         return 0; \
     }

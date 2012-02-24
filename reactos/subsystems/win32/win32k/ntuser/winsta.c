@@ -20,6 +20,9 @@ PWINSTATION_OBJECT InputWindowStation = NULL;
 /* Winlogon SAS window */
 HWND hwndSAS = NULL;
 
+/* Full path to WindowStations directory */
+UNICODE_STRING gustrWindowStationsDir;
+
 /* INITALIZATION FUNCTIONS ****************************************************/
 
 INIT_FUNCTION
@@ -27,29 +30,10 @@ NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE WindowStationsDirectory;
-   UNICODE_STRING UnicodeString;
-   NTSTATUS Status;
    GENERIC_MAPPING IntWindowStationMapping = { WINSTA_READ,
                                                WINSTA_WRITE,
                                                WINSTA_EXECUTE,
                                                WINSTA_ACCESS_ALL};
-
-   /*
-    * Create the '\Windows\WindowStations' directory
-    */
-
-   RtlInitUnicodeString(&UnicodeString, WINSTA_ROOT_NAME);
-   InitializeObjectAttributes(&ObjectAttributes, &UnicodeString, 0, NULL, NULL);
-   Status = ZwCreateDirectoryObject(&WindowStationsDirectory, 0,
-                                    &ObjectAttributes);
-   if (!NT_SUCCESS(Status))
-   {
-      TRACE("Could not create \\Windows\\WindowStations directory "
-             "(Status 0x%X)\n", Status);
-      return Status;
-   }
 
    /* Set Winsta Object Attributes */
    ExWindowStationObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
@@ -57,6 +41,50 @@ InitWindowStationImpl(VOID)
    ExWindowStationObjectType->TypeInfo.ValidAccessMask = WINSTA_ACCESS_ALL;
 
    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+UserCreateWinstaDirectoy()
+{
+    PPEB Peb;
+    NTSTATUS Status;
+    WCHAR wstrWindowStationsDir[MAX_PATH];
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hWinstaDir;
+
+    /* Create the WindowStations directory and cache its path for later use */
+    Peb = NtCurrentPeb();
+    if(Peb->SessionId == 0)
+    {
+        RtlCreateUnicodeString(&gustrWindowStationsDir, WINSTA_OBJ_DIR);
+    }
+    else
+    {
+        swprintf(wstrWindowStationsDir, 
+                 L"%ws\\%ld%ws", 
+                 SESSION_DIR, 
+                 Peb->SessionId, 
+                 WINSTA_OBJ_DIR);
+
+        RtlCreateUnicodeString( &gustrWindowStationsDir, wstrWindowStationsDir);
+    }
+
+   InitializeObjectAttributes(&ObjectAttributes, 
+                              &gustrWindowStationsDir, 
+                              0, 
+                              NULL, 
+                              NULL);
+   Status = ZwCreateDirectoryObject(&hWinstaDir, 0, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+       ERR("Could not create %wZ directory (Status 0x%X)\n", &gustrWindowStationsDir,  Status);
+      return Status;
+   }
+
+   TRACE("Created directory %wZ for session %d\n", &gustrWindowStationsDir, Peb->SessionId);
+
+   return Status;
 }
 
 /* OBJECT CALLBACKS  **********************************************************/
@@ -157,58 +185,6 @@ IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*
- * IntGetFullWindowStationName
- *
- * Get a full window station object name from a name specified in
- * NtUserCreateWindowStation, NtUserOpenWindowStation, NtUserCreateDesktop
- * or NtUserOpenDesktop.
- *
- * Return Value
- *    TRUE on success, FALSE on failure.
- */
-
-BOOL FASTCALL
-IntGetFullWindowStationName(
-   OUT PUNICODE_STRING FullName,
-   IN PUNICODE_STRING WinStaName,
-   IN OPTIONAL PUNICODE_STRING DesktopName)
-{
-   PWCHAR Buffer;
-
-   FullName->Length = WINSTA_ROOT_NAME_LENGTH * sizeof(WCHAR);
-   if (WinStaName != NULL)
-      FullName->Length += WinStaName->Length + sizeof(WCHAR);
-   if (DesktopName != NULL)
-      FullName->Length += DesktopName->Length + sizeof(WCHAR);
-   FullName->MaximumLength = FullName->Length;
-   FullName->Buffer = ExAllocatePoolWithTag(PagedPool, FullName->Length, TAG_STRING);
-   if (FullName->Buffer == NULL)
-   {
-      return FALSE;
-   }
-
-   Buffer = FullName->Buffer;
-   memcpy(Buffer, WINSTA_ROOT_NAME, WINSTA_ROOT_NAME_LENGTH * sizeof(WCHAR));
-   Buffer += WINSTA_ROOT_NAME_LENGTH;
-   if (WinStaName != NULL)
-   {
-      *Buffer = L'\\';
-      Buffer ++;
-      memcpy(Buffer, WinStaName->Buffer, WinStaName->Length);
-
-      if (DesktopName != NULL)
-      {
-         Buffer += WinStaName->Length / sizeof(WCHAR);
-         *Buffer = L'\\';
-         Buffer ++;
-         memcpy(Buffer, DesktopName->Buffer, DesktopName->Length);
-      }
-   }
-
-   return TRUE;
-}
-
-/*
  * IntValidateWindowStationHandle
  *
  * Validates the window station handle.
@@ -229,7 +205,7 @@ IntValidateWindowStationHandle(
 
    if (WindowStation == NULL)
    {
-      WARN("Invalid window station handle\n");
+      ERR("Invalid window station handle\n");
       EngSetLastError(ERROR_INVALID_HANDLE);
       return STATUS_INVALID_HANDLE;
    }
@@ -247,21 +223,6 @@ IntValidateWindowStationHandle(
 
    return Status;
 }
-
-BOOL FASTCALL
-IntGetWindowStationObject(PWINSTATION_OBJECT Object)
-{
-   NTSTATUS Status;
-
-   Status = ObReferenceObjectByPointer(
-               Object,
-               KernelMode,
-               ExWindowStationObjectType,
-               0);
-
-   return NT_SUCCESS(Status);
-}
-
 
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
@@ -378,6 +339,8 @@ NtUserCreateWindowStation(
    HWINSTA WindowStation;
    NTSTATUS Status;
 
+   TRACE("NtUserCreateWindowStation called\n");
+
    Status = ObOpenObjectByName(
                ObjectAttributes,
                ExWindowStationObjectType,
@@ -389,9 +352,9 @@ NtUserCreateWindowStation(
 
    if (NT_SUCCESS(Status))
    {
-      return (HWINSTA)WindowStation;
+       TRACE("NtUserCreateWindowStation opened window station %wZ\n", ObjectAttributes->ObjectName);
+       return (HWINSTA)WindowStation;
    }
-
 
    /*
     * No existing window station found, try to create new one
@@ -430,6 +393,7 @@ NtUserCreateWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("ObCreateObject failed for window station %wZ\n", &WindowStationName);
       ExFreePoolWithTag(WindowStationName.Buffer, TAG_STRING);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
@@ -438,13 +402,14 @@ NtUserCreateWindowStation(
    Status = ObInsertObject(
                (PVOID)WindowStationObject,
                NULL,
-               STANDARD_RIGHTS_REQUIRED,
+               dwDesiredAccess,
                0,
                NULL,
                (PVOID*)&WindowStation);
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("ObInsertObject failed for window station %wZ\n", &WindowStationName);
       ExFreePoolWithTag(WindowStationName.Buffer, TAG_STRING);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WindowStationObject);
@@ -464,11 +429,14 @@ NtUserCreateWindowStation(
 
    if (InputWindowStation == NULL)
    {
+       TRACE("Initializeing input window station\n");
       InputWindowStation = WindowStationObject;
 
       InitCursorImpl();
    }
 
+   TRACE("NtUserCreateWindowStation created object 0x%x with name %wZ handle 0x%x\n", 
+          WindowStation, &WindowStationObject->Name, WindowStation);
    return WindowStation;
 }
 
@@ -501,7 +469,7 @@ NtUserOpenWindowStation(
    POBJECT_ATTRIBUTES ObjectAttributes,
    ACCESS_MASK dwDesiredAccess)
 {
-   HWINSTA WindowStation;
+   HWINSTA hwinsta;
    NTSTATUS Status;
 
    Status = ObOpenObjectByName(
@@ -511,15 +479,18 @@ NtUserOpenWindowStation(
                NULL,
                dwDesiredAccess,
                NULL,
-               (PVOID*)&WindowStation);
+               (PVOID*)&hwinsta);
 
    if (!NT_SUCCESS(Status))
    {
+       ERR("NtUserOpenWindowStation failed\n");
       SetLastNtError(Status);
       return 0;
    }
 
-   return WindowStation;
+   TRACE("Opened window station %wZ with handle 0x%x\n", ObjectAttributes->ObjectName, hwinsta);
+
+   return hwinsta;
 }
 
 /*
@@ -551,10 +522,11 @@ NtUserCloseWindowStation(
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   TRACE("About to close window station handle (0x%X)\n", hWinSta);
+   TRACE("NtUserCloseWindowStation called (0x%x)\n", hWinSta);
 
 	if (hWinSta == UserGetProcessWindowStation())
 	{
+        ERR("Attempted to close process window station");
 		return FALSE;
 	}
 
@@ -566,13 +538,13 @@ NtUserCloseWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      TRACE("Validation of window station handle (0x%X) failed\n", hWinSta);
+      ERR("Validation of window station handle (0x%x) failed\n", hWinSta);
       return FALSE;
    }
 
    ObDereferenceObject(Object);
 
-   TRACE("Closing window station handle (0x%X)\n", hWinSta);
+   TRACE("Closing window station handle (0x%x)\n", hWinSta);
 
    Status = ObCloseHandle(hWinSta, UserMode);
    if (!NT_SUCCESS(Status))
@@ -797,8 +769,6 @@ UserGetProcessWindowStation(VOID)
 {
     PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-    //ASSERT(ppi->hwinsta);
-
     return ppi->hwinsta;
 }
 
@@ -821,26 +791,6 @@ HWINSTA APIENTRY
 NtUserGetProcessWindowStation(VOID)
 {
    return UserGetProcessWindowStation();
-}
-
-PWINSTATION_OBJECT FASTCALL
-IntGetWinStaObj(VOID)
-{
-    PWINSTATION_OBJECT WinStaObj;
-    NTSTATUS Status;
-   
-    Status = IntValidateWindowStationHandle(
-                        UserGetProcessWindowStation(),
-                        KernelMode,
-                        0,
-                        &WinStaObj);
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return NULL;
-    }
-
-   return WinStaObj;
 }
 
 BOOL FASTCALL
@@ -1025,7 +975,6 @@ BuildWindowStationNameList(
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    HANDLE DirectoryHandle;
-   UNICODE_STRING DirectoryName = RTL_CONSTANT_STRING(WINSTA_ROOT_NAME);
    char InitialBuffer[256], *Buffer;
    ULONG Context, ReturnLength, BufferSize;
    DWORD EntryCount;
@@ -1037,7 +986,7 @@ BuildWindowStationNameList(
     */
    InitializeObjectAttributes(
       &ObjectAttributes,
-      &DirectoryName,
+      &gustrWindowStationsDir,
       OBJ_CASE_INSENSITIVE,
       NULL,
       NULL);

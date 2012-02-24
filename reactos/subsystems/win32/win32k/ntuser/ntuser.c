@@ -101,8 +101,10 @@ UserInitialize(
     NTSTATUS Status;
 
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
-// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
 // Create Event for Diconnect Desktop.
+
+    Status = UserCreateWinstaDirectoy();
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize Video. */
     Status = InitVideo();

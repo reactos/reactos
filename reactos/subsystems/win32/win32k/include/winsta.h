@@ -1,7 +1,7 @@
 #pragma once
 
-#define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
-#define WINSTA_ROOT_NAME_LENGTH	23
+#define WINSTA_OBJ_DIR L"\\Windows\\WindowStations"
+#define SESSION_DIR L"\\Sessions"
 
 /* Window Station Status Flags */
 #define WSS_LOCKED	(1)
@@ -68,6 +68,7 @@ typedef struct _WINSTATION_OBJECT
 extern WINSTATION_OBJECT *InputWindowStation;
 extern PPROCESSINFO LogonProcess;
 extern HWND hwndSAS;
+extern UNICODE_STRING gustrWindowStationsDir;
 
 #define WINSTA_READ       STANDARD_RIGHTS_READ     | \
                           WINSTA_ENUMDESKTOPS      | \
@@ -99,16 +100,11 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);
+NTSTATUS NTAPI UserCreateWinstaDirectoy();
 
-VOID APIENTRY
-IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
-
-NTSTATUS
-APIENTRY
-IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
-
-NTSTATUS NTAPI 
-IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+VOID APIENTRY IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
+NTSTATUS APIENTRY IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
+NTSTATUS NTAPI IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
@@ -116,25 +112,8 @@ IntValidateWindowStationHandle(
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
    PWINSTATION_OBJECT *Object);
+BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
-BOOL FASTCALL
-IntGetWindowStationObject(PWINSTATION_OBJECT Object);
-
-BOOL FASTCALL
-co_IntInitializeDesktopGraphics(VOID);
-
-VOID FASTCALL
-IntEndDesktopGraphics(VOID);
-
-BOOL FASTCALL
-IntGetFullWindowStationName(
-   OUT PUNICODE_STRING FullName,
-   IN PUNICODE_STRING WinStaName,
-   IN OPTIONAL PUNICODE_STRING DesktopName);
-
-PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
-
-BOOL FASTCALL
-UserSetProcessWindowStation(HWINSTA hWindowStation);
-
+BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
+VOID FASTCALL IntEndDesktopGraphics(VOID);
 /* EOF */
