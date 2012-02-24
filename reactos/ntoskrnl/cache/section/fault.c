@@ -296,6 +296,7 @@ MiCowCacheSectionPage
                MmSetPageEntrySectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
            }
            MmSetPageProtect(Process, PAddress, PAGE_READWRITE);
+           MmSetDirtyPage(Process, PAddress);
            MmUnlockSectionSegment(Segment);
            DPRINT("Done\n");
            return STATUS_SUCCESS;

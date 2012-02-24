@@ -259,6 +259,7 @@ _MiFlushMappedSection
 			if (NT_SUCCESS(Status)) {
 				MmLockAddressSpace(AddressSpace);
 				MmSetCleanAllRmaps(Page);
+                		MmSetPageProtect(MmGetAddressSpaceOwner(AddressSpace), (PVOID)PageAddress, PAGE_READONLY);
 				MmLockSectionSegment(Segment);
 				Entry = MmGetPageEntrySectionSegment(Segment, &FileOffset);
 				if (Entry && !IS_SWAP_FROM_SSE(Entry) && PFN_FROM_SSE(Entry) == Page)
@@ -663,6 +664,11 @@ MmFreeCacheSectionPage
 
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
 
+   if (Page != 0 && PFN_FROM_SSE(Entry) == Page && Dirty)
+   {
+	   DPRINT("Freeing section page %x:%x -> %x\n", Segment, Offset.LowPart, Entry);
+	   MmSetPageEntrySectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
+   }
    if (Page)
    {
 	   DPRINT("Removing page %x:%x -> %x\n", Segment, Offset.LowPart, Entry);
@@ -671,12 +677,7 @@ MmFreeCacheSectionPage
 	   MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
 	   MmReleasePageMemoryConsumer(MC_CACHE, Page);
    }
-   if (Page != 0 && PFN_FROM_SSE(Entry) == Page && Dirty)
-   {
-	   DPRINT("Freeing section page %x:%x -> %x\n", Segment, Offset.LowPart, Entry);
-	   MmSetPageEntrySectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
-   }
-   else if (SwapEntry != 0)
+   if (SwapEntry != 0)
    {
       MmFreeSwapPage(SwapEntry);
    }

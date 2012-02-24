@@ -130,6 +130,14 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 	
 	DPRINT("Firing work item for %x\n", Bcb->BaseAddress);
 
+    if (Dirty) {
+        CcpUnlock();
+        Bcb->RefCount++;
+        MiFlushMappedSection(ToUnmap, &BaseOffset, &MappedSize, Dirty);
+        Bcb->RefCount--;
+        CcpLock();
+    }
+
 	if (Immediate)
 	{
 		PROS_SECTION_OBJECT ToDeref = Bcb->SectionObject;
@@ -143,8 +151,6 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 		RemoveEntryList(&Bcb->ThisFileList);
 
 		CcpUnlock();
-		if (Dirty)
-			MiFlushMappedSection(ToUnmap, &BaseOffset, &MappedSize, Dirty);
 		MmUnmapCacheViewInSystemSpace(ToUnmap);
 		ObDereferenceObject(ToDeref);
 		CcpLock();
@@ -763,7 +769,6 @@ CcUnpinData(IN PVOID Bcb)
     CcpUnlock();
 
 	if (!Released) {
-		MiFlushMappedSection(RealBcb->BaseAddress, &RealBcb->FileOffset, &RealBcb->Map->FileSizes.FileSize, RealBcb->Dirty);
 		CcpLock();
 		CcpUnpinData(RealBcb, TRUE);
 		CcpUnlock();

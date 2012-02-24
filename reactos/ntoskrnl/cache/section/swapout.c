@@ -184,11 +184,12 @@ MmPageOutCacheSection
 (PMMSUPPORT AddressSpace,
  MEMORY_AREA* MemoryArea,
  PVOID Address,
+ BOOLEAN Dirty,
  PMM_REQUIRED_RESOURCES Required)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG Entry;
-	BOOLEAN Dirty = FALSE;
+    PFN_NUMBER OurPage;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 	LARGE_INTEGER TotalOffset;
 	PMM_SECTION_SEGMENT Segment;
@@ -202,24 +203,16 @@ MmPageOutCacheSection
 	MmLockSectionSegment(Segment);
 	ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
-	Dirty = MmIsDirtyPageRmap(Required->Page[0]);
 	Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
 
-	if (Dirty)
-	{
-		PFN_NUMBER OurPage;
+	if (Dirty) {
+        DPRINT("Dirty page: %p:%p segment %p offset %08x%08x\n", Process, Address, Segment, TotalOffset.HighPart, TotalOffset.LowPart);
 		MmSetPageEntrySectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
-		MmDeleteRmap(Required->Page[0], Process, Address);
-		MmDeleteVirtualMapping(Process, Address, FALSE, &Dirty, &OurPage);
-		ASSERT(OurPage == Required->Page[0]);
-	} else {
-		/* Just unmap if the page wasn't dirty */
-		PFN_NUMBER OurPage;
-		MmDeleteRmap(Required->Page[0], Process, Address);
-		MmDeleteVirtualMapping(Process, Address, FALSE, &Dirty, &OurPage);
-		DPRINT("OurPage %x ThePage %x\n", OurPage, Required->Page[0]);
-		ASSERT(OurPage == Required->Page[0]);
-	}
+    }
+
+    MmDeleteRmap(Required->Page[0], Process, Address);
+    MmDeleteVirtualMapping(Process, Address, FALSE, NULL, &OurPage);
+    ASSERT(OurPage == Required->Page[0]);
 
 	if (NT_SUCCESS(Status)) 
 	{
@@ -368,7 +361,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
 		   DPRINT("%x:%x, page %x %x\n", Process, Address, Page, Resources.Page[0]);
 		   Status = MmPageOutCacheSection
-			   (AddressSpace, MemoryArea, Address, &Resources);
+			   (AddressSpace, MemoryArea, Address, Dirty, &Resources);
 		   DPRINT("%x\n", Status);
 		   
 		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -398,7 +391,6 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 		   MmLockAddressSpace(AddressSpace);
 	   } 
 	   while (Status == STATUS_MM_RESTART_OPERATION);
-	   Dirty |= Resources.State & 1; // Accumulate dirty
 
 	   MmUnlockAddressSpace(AddressSpace);
 
