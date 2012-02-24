@@ -1247,6 +1247,7 @@ CUSBRequest::FreeEndpointDescriptor(
 {
     PUHCI_TRANSFER_DESCRIPTOR Descriptor, NextDescriptor;
     ULONG ErrorCount;
+    UCHAR DataToggle = 0;
 
     //
     // grab first transfer descriptor
@@ -1254,6 +1255,9 @@ CUSBRequest::FreeEndpointDescriptor(
     Descriptor = (PUHCI_TRANSFER_DESCRIPTOR)OutDescriptor->NextElementDescriptor;
     while(Descriptor)
     {
+        // get data toggle
+        DataToggle = (Descriptor->Token >> TD_TOKEN_DATA_TOGGLE_SHIFT) & 0x01;
+
         if (Descriptor->Status & TD_ERROR_MASK)
         {
             //
@@ -1344,6 +1348,12 @@ CUSBRequest::FreeEndpointDescriptor(
     //
     m_DmaManager->Release(OutDescriptor, sizeof(UHCI_QUEUE_HEAD));
 
+    // is there an endpoint descriptor
+    if (m_EndpointDescriptor)
+    {
+        // invert last data toggle
+        m_EndpointDescriptor->DataToggle = (DataToggle == 0);
+    }
 }
 
 VOID
