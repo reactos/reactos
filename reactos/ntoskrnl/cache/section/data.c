@@ -49,6 +49,7 @@
 #include "../newcc.h"
 #define NDEBUG
 #include <debug.h>
+#include "../mm/ARM3/miarm.h"
 
 #define DPRINTC DPRINT
 
@@ -56,6 +57,7 @@ LIST_ENTRY MiSegmentList;
 
 extern KEVENT MpwThreadEvent;
 extern KSPIN_LOCK MiSectionPageTableLock;
+extern PMMWSL MmWorkingSetList;
 
 /* GLOBALS *******************************************************************/
 
@@ -137,9 +139,18 @@ MiZeroFillSection
 		{
 			MmSetPageEntrySectionSegment(Segment, &FileOffset, MAKE_PFN_SSE(Page));
 			Address = ((PCHAR)MemoryArea->StartingAddress) + FileOffset.QuadPart - FirstMapped.QuadPart;
+
 			MmReferencePage(Page);
 			MmCreateVirtualMapping(NULL, Address, PAGE_READWRITE, &Page, 1);
 			MmInsertRmap(Page, NULL, Address);
+#if (_MI_PAGING_LEVELS == 2)
+            /* Reference Page Directory Entry */
+            if(Address < MmSystemRangeStart)
+            {   
+                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+            }
+#endif
 		}
 		else
 			MmReleasePageMemoryConsumer(MC_CACHE, Page);

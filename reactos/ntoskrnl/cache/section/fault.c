@@ -49,10 +49,12 @@
 #include "newmm.h"
 #define NDEBUG
 #include <debug.h>
+#include "../mm/ARM3/miarm.h"
 
 #define DPRINTC DPRINT
 
 extern KEVENT MmWaitPageEvent;
+extern PMMWSL MmWorkingSetList;
 
 NTSTATUS
 NTAPI
@@ -140,6 +142,14 @@ MmNotPresentFaultCachePage
 		{
 			DPRINT("Set %x in address space @ %x\n", Required->Page[0], Address);
 			Status = MmCreateVirtualMapping(Process, Address, Attributes, Required->Page, 1);
+#if (_MI_PAGING_LEVELS == 2)
+            /* Reference Page Directory Entry */
+            if(Address < MmSystemRangeStart)
+            {   
+                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+            }
+#endif   
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
@@ -164,6 +174,14 @@ MmNotPresentFaultCachePage
 		MmReferencePage(Page);
 
 		Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
+#if (_MI_PAGING_LEVELS == 2)
+        /* Reference Page Directory Entry */
+        if(Address < MmSystemRangeStart)
+        {   
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+        }
+#endif   
 		if (NT_SUCCESS(Status))
 		{
 			MmInsertRmap(Page, Process, Address);
