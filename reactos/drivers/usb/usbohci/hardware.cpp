@@ -517,7 +517,7 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    ULONG Control, NumberOfPorts, Index, Descriptor, FrameInterval, Periodic;
+    ULONG Control, Descriptor, FrameInterval, Periodic;
 
     //
     // lets write physical address of dummy control endpoint descriptor
@@ -528,6 +528,42 @@ CUSBHardwareDevice::StartController(void)
     // lets write physical address of dummy bulk endpoint descriptor
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_BULK_HEAD_ED_OFFSET), m_BulkEndpointDescriptor->PhysicalAddress.LowPart);
+
+    //
+    // read descriptor
+    //
+    Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
+
+    //
+    // get port count
+    //
+    m_NumberOfPorts = OHCI_RH_GET_PORT_COUNT(Descriptor);
+    DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
+    ASSERT(m_NumberOfPorts < OHCI_MAX_PORT_COUNT);
+
+    //
+    // no over current protection
+    //
+    Descriptor |= OHCI_RH_NO_OVER_CURRENT_PROTECTION;
+
+    //
+    // power switching on
+    //
+    Descriptor &= ~OHCI_RH_NO_POWER_SWITCHING;
+
+    //
+    // control each port power independently (disabled until it's supported correctly)
+    //
+#if 0
+    Descriptor |= OHCI_RH_POWER_SWITCHING_MODE;
+#else
+    Descriptor &= ~OHCI_RH_POWER_SWITCHING_MODE;
+#endif
+
+    //
+    // write the configuration back
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
 
     //
     // get frame interval
@@ -545,6 +581,14 @@ CUSBHardwareDevice::StartController(void)
     // write frame interval
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
+
+    //
+    // HCCA alignment check
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), 0xFFFFFFFF);
+    KeStallExecutionProcessor(10);
+    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
+    ASSERT((m_HCCAPhysicalAddress.LowPart & Control) == Control);
 
     //
     // write address of HCCA
@@ -591,95 +635,14 @@ CUSBHardwareDevice::StartController(void)
     DPRINT1("Control %x\n", Control);
 
     //
-    // read descriptor
-    //
-    Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
-
-    //
-    // no over current protection
-    //
-    Descriptor |= OHCI_RH_NO_OVER_CURRENT_PROTECTION;
-
-    //
-    // power switching on
-    //
-    Descriptor &= ~OHCI_RH_NO_POWER_SWITCHING;
-
-    //
-    // control each port power independently (disabled until it's supported correctly)
-    //
-#if 0
-    Descriptor |= OHCI_RH_POWER_SWITCHING_MODE;
-#else
-    Descriptor &= ~OHCI_RH_POWER_SWITCHING_MODE;
-#endif
-
-    //
-    // write the configuration back
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
-
-    //
     // enable power on all ports
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_STATUS_OFFSET), OHCI_RH_LOCAL_POWER_STATUS_CHANGE);
 
     //
-    // wait a bit
-    //
-    KeStallExecutionProcessor(10);
-
-    //
-    // write descriptor
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
-
-    //
-    // retrieve number of ports
-    //
-    for(Index = 0; Index < 10; Index++)
-    {
-        //
-        // wait a bit
-        //
-        KeStallExecutionProcessor(10);
-
-        //
-        // read descriptor
-        //
-        Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
-
-        //
-        // get number of ports
-        //
-        NumberOfPorts = OHCI_RH_GET_PORT_COUNT(Descriptor);
-
-        //
-        // check if we have received the ports
-        //
-        if (NumberOfPorts)
-            break;
-    }
-
-    //
-    // sanity check
-    //
-    ASSERT(NumberOfPorts < OHCI_MAX_PORT_COUNT);
-
-    //
-    // store number of ports
-    //
-    m_NumberOfPorts = NumberOfPorts;
-
-    //
-    // print out number ports
-    //
-    DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
-
-
-    //
     // done
     //
+    DPRINT1("OHCI controller is operational\n");
     return STATUS_SUCCESS;
 }
 
@@ -912,16 +875,8 @@ CUSBHardwareDevice::InitializeController()
 NTSTATUS
 CUSBHardwareDevice::StopController(void)
 {
-    ULONG Control, Reset, Status;
+    ULONG Control, Reset;
     ULONG Index, FrameInterval;
-
-    //
-    // alignment check
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), 0xFFFFFFFF);
-    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
-    //ASSERT((m_HCCAPhysicalAddress.QuadPart & Control) == Control);
-
 
     //
     // check context
@@ -931,14 +886,9 @@ CUSBHardwareDevice::StopController(void)
     if ((Control & OHCI_INTERRUPT_ROUTING))
     {
         //
-        // read command status
-        //
-        Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
-
-        //
         // change ownership
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Status | OHCI_OWNERSHIP_CHANGE_REQUEST);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_OWNERSHIP_CHANGE_REQUEST);
         for(Index = 0; Index < 100; Index++)
         {
             //
@@ -1002,7 +952,7 @@ CUSBHardwareDevice::StopController(void)
                     // check control register
                     //
                     Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-                    if (Control & OHCI_HC_FUNCTIONAL_STATE_RESUME)
+                    if (Control == OHCI_HC_FUNCTIONAL_STATE_RESUME)
                     {
                         //
                         // it has resumed
@@ -1086,7 +1036,7 @@ CUSBHardwareDevice::StopController(void)
     //
     // reset time is 10ms
     //
-    for(Index = 0; Index < 10; Index++)
+    for(Index = 0; Index < 100; Index++)
     {
         //
         // wait a bit
