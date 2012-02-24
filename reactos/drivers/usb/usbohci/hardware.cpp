@@ -588,7 +588,8 @@ CUSBHardwareDevice::StartController(void)
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), 0xFFFFFFFF);
     KeStallExecutionProcessor(10);
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
-    ASSERT((m_HCCAPhysicalAddress.LowPart & Control) == Control);
+    ASSERT((m_HCCAPhysicalAddress.LowPart & Control) == m_HCCAPhysicalAddress.LowPart);
+    DPRINT1("HCCA: %x Alignment mask: %x\n", m_HCCAPhysicalAddress.LowPart, Control);
 
     //
     // write address of HCCA
