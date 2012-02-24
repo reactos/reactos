@@ -533,7 +533,10 @@ CUSBHardwareDevice::StartController(void)
     // get frame interval
     //
     FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
+
     FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
+
     DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
     FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
     DPRINT1("FrameInterval %x\n", FrameInterval);
@@ -1100,11 +1103,6 @@ CUSBHardwareDevice::StopController(void)
         //
         if ((Reset & OHCI_HOST_CONTROLLER_RESET) == 0)
         {
-            //
-            // restore the frame interval register
-            //
-            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
-
             //
             // controller completed reset
             //
