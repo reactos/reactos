@@ -25,23 +25,8 @@ typedef struct _WINSTATION_OBJECT
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
     HANDLE SystemMenuTemplate;
-    UINT CaretBlinkRate;
     HANDLE ShellWindow;
     HANDLE ShellListView;
-
-    /* Effects */
-    BOOL FontSmoothing; /* Enable */
-    UINT FontSmoothingType; /* 1:Standard,2:ClearType */
-    /* FIXME: Big Icons (SPI_GETICONMETRICS?) */
-    BOOL DropShadow;
-    BOOL DragFullWindows;
-    BOOL FlatMenu;
-
-    /* ScreenSaver */
-    BOOL ScreenSaverRunning;
-    UINT ScreenSaverTimeOut;
-   /* Should this be on each desktop ? */
-    BOOL ScreenSaverActive;
 
     /* Wallpaper */
     HANDLE hbmWallpaper;

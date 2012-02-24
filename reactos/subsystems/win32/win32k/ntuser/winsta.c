@@ -424,8 +424,6 @@ NtUserCreateWindowStation(
    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
    WindowStationObject->SystemMenuTemplate = (HANDLE)0;
    WindowStationObject->Name = WindowStationName;
-   WindowStationObject->ScreenSaverRunning = FALSE;
-   WindowStationObject->FlatMenu = FALSE;
 
    if (InputWindowStation == NULL)
    {
