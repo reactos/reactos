@@ -11,9 +11,7 @@
 
 #include "usbccgp.h"
 
-//
-// driver verifier
-//
+/* Driver verifier */
 IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
 
 NTSTATUS
@@ -39,46 +37,34 @@ USBCCGP_SyncForwardIrp(
     KEVENT Event;
     NTSTATUS Status;
 
-    //
-    // initialize event
-    //
+    /* Initialize event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    //
-    // copy irp stack location
-    //
+    /* Copy irp stack location */
     IoCopyCurrentIrpStackLocationToNext(Irp);
 
-    //
-    // set completion routine
-    //
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
+    /* Set completion routine */
+    IoSetCompletionRoutine(Irp,
+                           USBSTOR_SyncForwardIrpCompletionRoutine,
+                           &Event,
+                           TRUE,
+                           TRUE,
+                           TRUE);
 
-
-    //
-    // call driver
-    //
+    /* Call driver */
     Status = IoCallDriver(DeviceObject, Irp);
 
-    //
-    // check if pending
-    //
+    /* Check if pending */
     if (Status == STATUS_PENDING)
     {
-        //
-        // wait for the request to finish
-        //
+        /* Wait for the request to finish */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-        //
-        // copy status code
-        //
+        /* Copy status code */
         Status = Irp->IoStatus.Status;
     }
 
-    //
-    // done
-    //
+    /* Done */
     return Status;
 }
 
@@ -92,72 +78,52 @@ USBCCGP_SyncUrbRequest(
     KEVENT Event;
     NTSTATUS Status;
 
-    //
-    // allocate irp
-    //
+    /* Allocate irp */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp)
     {
-        //
-        // no memory
-        //
+        /* No memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // initialize event
-    //
+    /* Initialize event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-
-    //
-    // get next stack location
-    //
+    /* Get next stack location */
     IoStack = IoGetNextIrpStackLocation(Irp);
 
-    //
-    // initialize stack location
-    //
+    /* Initialize stack location */
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
     IoStack->Parameters.Others.Argument1 = (PVOID)UrbRequest;
     IoStack->Parameters.DeviceIoControl.InputBufferLength = UrbRequest->UrbHeader.Length;
     Irp->IoStatus.Status = STATUS_SUCCESS;
 
-    //
-    // setup completion routine
-    //
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
+    /* Setup completion routine */
+    IoSetCompletionRoutine(Irp,
+                           USBSTOR_SyncForwardIrpCompletionRoutine,
+                           &Event,
+                           TRUE,
+                           TRUE,
+                           TRUE);
 
-    //
-    // call driver
-    //
+    /* Call driver */
     Status = IoCallDriver(DeviceObject, Irp);
 
-    //
-    // check if request is pending
-    //
+    /* Check if request is pending */
     if (Status == STATUS_PENDING)
     {
-        //
-        // wait for completion
-        //
+        /* Wait for completion */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-        //
-        // update status
-        //
+        /* Update status */
         Status = Irp->IoStatus.Status;
     }
 
-    //
-    // free irp
-    //
+    /* Free irp */
     IoFreeIrp(Irp);
 
-    //
-    // done
-    //
+    /* Done */
     return Status;
 }
 
@@ -166,22 +132,16 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN ULONG ItemSize)
 {
-    //
-    // allocate item
-    //
+    /* Allocate item */
     PVOID Item = ExAllocatePoolWithTag(PoolType, ItemSize, USBCCPG_TAG);
 
     if (Item)
     {
-        //
-        // zero item
-        //
+        /* Zero item */
         RtlZeroMemory(Item, ItemSize);
     }
 
-    //
-    // return element
-    //
+    /* Return element */
     return Item;
 }
 
@@ -189,9 +149,7 @@ VOID
 FreeItem(
     IN PVOID Item)
 {
-    //
-    // free item
-    //
+    /* Free item */
     ExFreePoolWithTag(Item, USBCCPG_TAG);
 }
 

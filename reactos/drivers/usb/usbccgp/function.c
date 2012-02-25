@@ -22,26 +22,18 @@ USBCCGP_QueryInterface(
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION Stack;
 
-    //
-    // sanity checks
-    //
+    /* Sanity checks */
     ASSERT(DeviceObject);
 
-    //
-    // initialize event
-    //
+    /* Initialize event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    //
-    // init interface
-    //
+    /* Init interface */
     RtlZeroMemory(BusInterface, sizeof(USBC_DEVICE_CONFIGURATION_INTERFACE_V1));
     BusInterface->Version = USBC_DEVICE_CONFIGURATION_INTERFACE_VERSION_1;
     BusInterface->Size = sizeof(USBC_DEVICE_CONFIGURATION_INTERFACE_V1);
 
-    //
-    // create irp
-    //
+    /* Create irp */
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
                                        DeviceObject,
                                        NULL,
@@ -366,10 +358,10 @@ USBCCGP_InitFunctionDescriptor(
         // get interface description
         //
          Status = USBCCGP_GetStringDescriptor(FDODeviceExtension->NextDeviceObject,
-                                        100 * sizeof(WCHAR), 
-                                        Descriptor->iFunction, 
-                                        0x0409, //FIXME
-                                        (PVOID*)&DescriptionBuffer);
+                                              100 * sizeof(WCHAR), 
+                                              Descriptor->iFunction, 
+                                              0x0409, //FIXME
+                                              (PVOID*)&DescriptionBuffer);
         if (!NT_SUCCESS(Status))
         {
             //
@@ -530,10 +522,10 @@ USBCCG_InitIdsWithInterfaceDescriptor(
         // get interface description
         //
          Status = USBCCGP_GetStringDescriptor(FDODeviceExtension->NextDeviceObject,
-                                        100 * sizeof(WCHAR),
-                                        Descriptor->iInterface,
-                                        0x0409, //FIXME
-                                        (PVOID*)&DescriptionBuffer);
+                                              100 * sizeof(WCHAR),
+                                              Descriptor->iInterface,
+                                              0x0409, //FIXME
+                                              (PVOID*)&DescriptionBuffer);
         if (!NT_SUCCESS(Status))
         {
             //

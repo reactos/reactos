@@ -18,14 +18,10 @@ FDO_QueryCapabilitiesCompletionRoutine(
     IN PIRP Irp,
     IN PVOID Context)
 {
-    //
-    // set event
-    //
+    /* Set event */
     KeSetEvent((PRKEVENT)Context, 0, FALSE);
 
-    //
-    // completion is done in the HidClassFDO_QueryCapabilities routine
-    //
+    /* Completion is done in the HidClassFDO_QueryCapabilities routine */
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -40,85 +36,62 @@ FDO_QueryCapabilities(
     PIO_STACK_LOCATION IoStack;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    //
-    // init event
-    //
+    /* Init event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    //
-    // now allocte the irp
-    //
+    /* Now allocte the irp */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp)
     {
-        //
-        // no memory
-        //
+        /* No memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // get next stack location
-    //
+    /* Get next stack location */
     IoStack = IoGetNextIrpStackLocation(Irp);
 
-    //
-    // init stack location
-    //
+    /* Init stack location */
     IoStack->MajorFunction = IRP_MJ_PNP;
     IoStack->MinorFunction = IRP_MN_QUERY_CAPABILITIES;
     IoStack->Parameters.DeviceCapabilities.Capabilities = Capabilities;
 
-    //
-    // set completion routine
-    //
-    IoSetCompletionRoutine(Irp, FDO_QueryCapabilitiesCompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
+    /* Set completion routine */
+    IoSetCompletionRoutine(Irp,
+                           FDO_QueryCapabilitiesCompletionRoutine,
+                           (PVOID)&Event,
+                           TRUE,
+                           TRUE,
+                           TRUE);
 
-    //
-    // init capabilities
-    //
+    /* Init capabilities */
     RtlZeroMemory(Capabilities, sizeof(DEVICE_CAPABILITIES));
     Capabilities->Size = sizeof(DEVICE_CAPABILITIES);
     Capabilities->Version = 1; // FIXME hardcoded constant
     Capabilities->Address = MAXULONG;
     Capabilities->UINumber = MAXULONG;
 
-    //
-    // pnp irps have default completion code
-    //
+    /* Pnp irps have default completion code */
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 
-    //
-    // call lower  device
-    //
+    /* Call lower device */
     Status = IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
-        //
-        // wait for completion
-        //
+        /* Wait for completion */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
     }
 
-    //
-    // get status
-    //
+    /* Get status */
     Status = Irp->IoStatus.Status;
 
-    //
-    // complete request
-    //
+    /* Complete request */
     IoFreeIrp(Irp);
 
-    //
-    // done
-    //
+    /* Done */
     return Status;
 }
 
@@ -133,85 +106,58 @@ FDO_DeviceRelations(
     PIO_STACK_LOCATION IoStack;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    //
-    // get current irp stack location
-    //
+    /* Get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //
-    // check if relation type is BusRelations
-    //
+    /* Check if relation type is BusRelations */
     if (IoStack->Parameters.QueryDeviceRelations.Type != BusRelations)
     {
-        //
-        // FDO always only handles bus relations
-        //
+        /* FDO always only handles bus relations */
         return USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
     }
 
-    //
-    // go through array and count device objects
-    //
+    /* Go through array and count device objects */
     for(Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
     {
         if (FDODeviceExtension->ChildPDO[Index])
         {
-            //
-            // child pdo
-            //
+            /* Child pdo */
             DeviceCount++;
         }
     }
 
-    //
-    // allocate device relations
-    //
-    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? (DeviceCount-1) * sizeof(PDEVICE_OBJECT) : 0));
+    /* Allocate device relations */
+    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(PagedPool,
+                                                      sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? (DeviceCount-1) * sizeof(PDEVICE_OBJECT) : 0));
     if (!DeviceRelations)
     {
-        //
-        // no memory
-        //
+        /* No memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // add device objects
-    //
+    /* Add device objects */
     for(Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
     {
         if (FDODeviceExtension->ChildPDO[Index])
         {
-            //
-            // store child pdo
-            //
+            /* Store child pdo */
             DeviceRelations->Objects[DeviceRelations->Count] = FDODeviceExtension->ChildPDO[Index];
 
-            //
-            // add reference
-            //
+            /* Add reference */
             ObReferenceObject(FDODeviceExtension->ChildPDO[Index]);
 
-            //
-            // increment count
-            //
+            /* Increment count */
             DeviceRelations->Count++;
         }
     }
 
-    //
-    // store result
-    //
+    /* Store result */
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
-    //
-    // request completed successfully
-    //
+    /* Request completed successfully */
     return STATUS_SUCCESS;
 }
 
@@ -225,56 +171,45 @@ FDO_CreateChildPdo(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     ULONG Index;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    //
-    // lets create array for the child PDO
-    //
-    FDODeviceExtension->ChildPDO = AllocateItem(NonPagedPool, sizeof(PDEVICE_OBJECT) * FDODeviceExtension->FunctionDescriptorCount);
+    /* Lets create array for the child PDO */
+    FDODeviceExtension->ChildPDO = AllocateItem(NonPagedPool,
+                                                sizeof(PDEVICE_OBJECT) * FDODeviceExtension->FunctionDescriptorCount);
     if (!FDODeviceExtension->ChildPDO)
     {
-        //
-        // no memory
-        //
+        /* No memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // create pdo for each function
-    //
+    /* Create pdo for each function */
     for(Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
     {
-        //
-        // create the PDO
-        //
-        Status = IoCreateDevice(FDODeviceExtension->DriverObject, sizeof(PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_USB, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &PDODeviceObject);
+        /* Create the PDO */
+        Status = IoCreateDevice(FDODeviceExtension->DriverObject,
+                                sizeof(PDO_DEVICE_EXTENSION),
+                                NULL,
+                                FILE_DEVICE_USB,
+                                FILE_AUTOGENERATED_DEVICE_NAME,
+                                FALSE,
+                                &PDODeviceObject);
         if (!NT_SUCCESS(Status))
         {
-            //
-            // failed to create device object
-            //
+            /* Failed to create device object */
             DPRINT1("IoCreateDevice failed with %x\n", Status);
             return Status;
         }
 
-        //
-        // store in array
-        //
+        /* Store in array */
         FDODeviceExtension->ChildPDO[Index] = PDODeviceObject;
 
-        //
-        // get device extension
-        //
+        /* Get device extension */
         PDODeviceExtension = (PPDO_DEVICE_EXTENSION)PDODeviceObject->DeviceExtension;
         RtlZeroMemory(PDODeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
 
-        //
-        // init device extension
-        //
+        /* Init device extension */
         PDODeviceExtension->Common.IsFDO = FALSE;
         PDODeviceExtension->FunctionDescriptor = &FDODeviceExtension->FunctionDescriptor[Index];
         PDODeviceExtension->NextDeviceObject = DeviceObject;
@@ -287,25 +222,17 @@ FDO_CreateChildPdo(
         RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
         RtlCopyMemory(&PDODeviceExtension->DeviceDescriptor, &FDODeviceExtension->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
 
-        //
-        // patch the stack size
-        //
+        /* Patch the stack size */
         PDODeviceObject->StackSize = DeviceObject->StackSize + 1;
 
-        //
-        // set device flags
-        //
+        /* Set device flags */
         PDODeviceObject->Flags |= DO_DIRECT_IO | DO_MAP_IO_BUFFER;
 
-        //
-        // device is initialized
-        //
+        /* Device is initialized */
         PDODeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     }
 
-    //
-    // done
-    //
+    /* Done */
     return STATUS_SUCCESS;
 }
 
@@ -317,93 +244,81 @@ FDO_StartDevice(
     NTSTATUS Status;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    //
-    // first start lower device
-    //
+    /* First start lower device */
     Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
 
     if (!NT_SUCCESS(Status))
     {
-        //
-        // failed to start lower device
-        //
+        /* Failed to start lower device */
         DPRINT1("FDO_StartDevice lower device failed to start with %x\n", Status);
         return Status;
     }
 
-    // get descriptors
+    /* Get descriptors */
     Status = USBCCGP_GetDescriptors(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        // failed to start lower device
+        /* Failed to start lower device */
         DPRINT1("FDO_StartDevice failed to get descriptors with %x\n", Status);
         return Status;
     }
 
-    // get capabilities
-    Status = FDO_QueryCapabilities(DeviceObject, &FDODeviceExtension->Capabilities);
+    /* Get capabilities */
+    Status = FDO_QueryCapabilities(DeviceObject,
+                                   &FDODeviceExtension->Capabilities);
     if (!NT_SUCCESS(Status))
     {
-        // failed to start lower device
+        /* Failed to start lower device */
         DPRINT1("FDO_StartDevice failed to get capabilities with %x\n", Status);
         return Status;
     }
 
-    // now select the configuration
+    /* Now select the configuration */
     Status = USBCCGP_SelectConfiguration(DeviceObject, FDODeviceExtension);
     if (!NT_SUCCESS(Status))
     {
-        // failed to select interface
+        /* Failed to select interface */
         DPRINT1("FDO_StartDevice failed to get capabilities with %x\n", Status);
         return Status;
     }
 
-    // query bus interface
-    USBCCGP_QueryInterface(FDODeviceExtension->NextDeviceObject, &FDODeviceExtension->BusInterface);
+    /* Query bus interface */
+    USBCCGP_QueryInterface(FDODeviceExtension->NextDeviceObject,
+                           &FDODeviceExtension->BusInterface);
 
-    // now enumerate the functions
+    /* Now enumerate the functions */
     Status = USBCCGP_EnumerateFunctions(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        // failed to enumerate functions
+        /* Failed to enumerate functions */
         DPRINT1("Failed to enumerate functions with %x\n", Status);
         return Status;
     }
 
-    //
-    // sanity checks
-    //
+    /* Sanity checks */
     ASSERT(FDODeviceExtension->FunctionDescriptorCount);
     ASSERT(FDODeviceExtension->FunctionDescriptor);
-    DumpFunctionDescriptor(FDODeviceExtension->FunctionDescriptor, FDODeviceExtension->FunctionDescriptorCount);
+    DumpFunctionDescriptor(FDODeviceExtension->FunctionDescriptor,
+                           FDODeviceExtension->FunctionDescriptorCount);
 
-    //
-    // now create the pdo
-    //
+    /* Now create the pdo */
     Status = FDO_CreateChildPdo(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        //
-        // failed
-        //
+        /* Failed */
         DPRINT1("FDO_CreateChildPdo failed with %x\n", Status);
         return Status;
     }
 
-    //
-    // inform pnp manager of new device objects
-    //
-    IoInvalidateDeviceRelations(FDODeviceExtension->PhysicalDeviceObject, BusRelations);
+    /* Inform pnp manager of new device objects */
+    IoInvalidateDeviceRelations(FDODeviceExtension->PhysicalDeviceObject,
+                                BusRelations);
 
-    //
-    // done
-    //
+    /* Done */
     DPRINT("[USBCCGP] FDO initialized successfully\n");
     return Status;
 }
@@ -416,36 +331,27 @@ FDO_CloseConfiguration(
     PURB Urb;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    // get device extension
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    //
-    // now allocate the urb
-    //
-    Urb = USBD_CreateConfigurationRequestEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->InterfaceList);
+    /* Now allocate the urb */
+    Urb = USBD_CreateConfigurationRequestEx(FDODeviceExtension->ConfigurationDescriptor,
+                                            FDODeviceExtension->InterfaceList);
     if (!Urb)
     {
-        //
-        // no memory
-        //
+        /* No memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // clear configuration descriptor to make it an unconfigure request
-    //
+    /* Clear configuration descriptor to make it an unconfigure request */
     Urb->UrbSelectConfiguration.ConfigurationDescriptor = NULL;
 
-    //
-    // submit urb
-    //
+    /* Submit urb */
     Status = USBCCGP_SyncUrbRequest(FDODeviceExtension->NextDeviceObject, Urb);
     if (!NT_SUCCESS(Status))
     {
-        //
-        // failed to set configuration
-        //
+        /* Failed to set configuration */
         DPRINT1("USBCCGP_SyncUrbRequest failed to unconfigure device\n", Status);
     }
 
@@ -463,72 +369,59 @@ FDO_HandlePnp(
     NTSTATUS Status;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    // get device extension
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
 
-    // get stack location
+    /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT("[USBCCGP] PnP Minor %x\n", IoStack->MinorFunction);
     switch(IoStack->MinorFunction)
     {
         case IRP_MN_REMOVE_DEVICE:
         {
-            //
-            // unconfigure device
-            //
+            // Unconfigure device */
             DPRINT1("[USBCCGP] FDO IRP_MN_REMOVE\n");
             FDO_CloseConfiguration(DeviceObject);
 
             /* Send the IRP down the stack */
-            Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+            Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject,
+                                            Irp);
             if (NT_SUCCESS(Status))
             {
-                //
-                // Detach from the device stack
-                //
+                /* Detach from the device stack */
                 IoDetachDevice(FDODeviceExtension->NextDeviceObject);
 
-                //
-                // Delete the device object
-                //
+                /* Delete the device object */
                 IoDeleteDevice(DeviceObject);
             }
 
-            //
-            // request completed
-            //
+            /* Request completed */
             break;
         }
         case IRP_MN_START_DEVICE:
         {
-            //
-            // start the device
-            //
+            /* Start the device */
             Status = FDO_StartDevice(DeviceObject, Irp);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            //
-            // handle device relations
-            //
+            /* Handle device relations */
             Status = FDO_DeviceRelations(DeviceObject, Irp);
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
-            //
-            // copy capabilities
-            //
-            RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
+            /* Copy capabilities */
+            RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities,
+                          &FDODeviceExtension->Capabilities,
+                          sizeof(DEVICE_CAPABILITIES));
             Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
             if (NT_SUCCESS(Status))
             {
-                //
-                // surprise removal ok
-                //
+                /* Surprise removal ok */
                 IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
             }
             break;
@@ -536,31 +429,23 @@ FDO_HandlePnp(
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
-            //
-            // sure
-            //
+            /* Sure */
             Irp->IoStatus.Status = STATUS_SUCCESS;
 
-            //
-            // forward irp to next device object
-            //
+            /* Forward irp to next device object */
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
         }
        default:
        {
-            //
-            // forward irp to next device object
-            //
+            /* Forward irp to next device object */
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
        }
 
     }
 
-    //
-    // complete request
-    //
+    /* Complete request */
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
@@ -580,86 +465,60 @@ FDO_HandleResetCyclePort(
     PIRP ListIrp;
     KIRQL OldLevel;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    // get stack location 
+    /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT("FDO_HandleResetCyclePort IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT)
     {
-        //
-        // use reset port list
-        //
+        /* Use reset port list */
         ListHead = &FDODeviceExtension->ResetPortListHead;
         ResetActive = &FDODeviceExtension->ResetPortActive;
     }
     else
     {
-        //
-        // use cycle port list
-        //
+        /* Use cycle port list */
         ListHead = &FDODeviceExtension->CyclePortListHead;
         ResetActive = &FDODeviceExtension->CyclePortActive;
     }
 
-    //
-    // acquire lock
-    //
+    /* Acquire lock */
     KeAcquireSpinLock(&FDODeviceExtension->Lock, &OldLevel);
 
     if (*ResetActive)
     {
-        //
-        // insert into pending list
-        //
+        /* Insert into pending list */
         InsertTailList(ListHead, &Irp->Tail.Overlay.ListEntry);
 
-        //
-        // mark irp pending
-        //
+        /* Mark irp pending */
         IoMarkIrpPending(Irp);
         Status = STATUS_PENDING;
 
-        //
-        // release lock
-        //
+        /* Release lock */
         KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
     }
     else
     {
-        //
-        // mark reset active
-        //
+        /* Mark reset active */
         *ResetActive = TRUE;
 
-        //
-        // release lock
-        //
+        /* Release lock */
         KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
 
-        //
-        // forward request synchronized
-        //
+        /* Forward request synchronized */
         USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
 
-        //
-        // reacquire lock
-        //
+        /* Reacquire lock */
         KeAcquireSpinLock(&FDODeviceExtension->Lock, &OldLevel);
 
-        //
-        // mark reset as completed
-        //
+        /* Mark reset as completed */
         *ResetActive = FALSE;
 
-        //
-        // move all requests into temporary list
-        //
+        /* Move all requests into temporary list */
         InitializeListHead(&TempList);
         while(!IsListEmpty(ListHead))
         {
@@ -667,29 +526,21 @@ FDO_HandleResetCyclePort(
             InsertTailList(&TempList, Entry);
         }
 
-        //
-        // release lock
-        //
+        /* Release lock */
         KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
 
-        //
-        // complete pending irps
-        //
+        /* Complete pending irps */
         while(!IsListEmpty(&TempList))
         {
             Entry = RemoveHeadList(&TempList);
             ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
-            //
-            // complete request with status success
-            //
+            /* Complete request with status success */
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
         }
 
-        //
-        // status success
-        //
+        /* Status success */
         Status = STATUS_SUCCESS;
     }
 
@@ -707,37 +558,29 @@ FDO_HandleInternalDeviceControl(
     NTSTATUS Status;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
-    //
-    // get device extension
-    //
+    /* Get device extension */
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
-    // get stack location 
+    /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT || 
         IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_CYCLE_PORT)
     {
-        //
-        // handle reset / cycle ports
-        //
+        /* Handle reset / cycle ports */
         Status = FDO_HandleResetCyclePort(DeviceObject, Irp);
         DPRINT("FDO_HandleResetCyclePort Status %x\n", Status);
         if (Status != STATUS_PENDING)
         {
-            //
-            // complete request
-            //
+            /* Complete request */
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
         }
         return Status;
     }
 
-    //
-    // forward and forget request
-    //
+    /* Forward and forget request */
     IoSkipCurrentIrpStackLocation(Irp);
     return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
 }
@@ -750,7 +593,7 @@ FDO_Dispatch(
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
 
-    /* get stack location */
+    /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     switch(IoStack->MajorFunction)
@@ -768,5 +611,3 @@ FDO_Dispatch(
     }
 
 }
-
-
