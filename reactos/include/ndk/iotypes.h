@@ -599,6 +599,12 @@ typedef struct _FILE_IO_COMPLETION_INFORMATION
     IO_STATUS_BLOCK IoStatusBlock;
 } FILE_IO_COMPLETION_INFORMATION, *PFILE_IO_COMPLETION_INFORMATION;
 
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION
+{
+    ULONG FileAttributes;
+    ULONG ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
 //
 // File System Information structures for NtQueryInformationFile
 //
