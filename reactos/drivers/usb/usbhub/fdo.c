@@ -300,6 +300,7 @@ DeviceStatusChangeThread(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to clear connection change for port %d\n", PortId);
+                continue;
             }
 
             //
@@ -313,6 +314,7 @@ DeviceStatusChangeThread(
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Failed to delete child device object after disconnect\n");
+                    continue;
                 }
             }
             else
@@ -328,6 +330,7 @@ DeviceStatusChangeThread(
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Failed to reset port %d\n", PortId);
+                    continue;
                 }
             }
         }
@@ -340,6 +343,7 @@ DeviceStatusChangeThread(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to clear enable change on port %d\n", PortId);
+                continue;
             }
         }
         else if (PortStatus.Change & USB_PORT_STATUS_RESET)
@@ -351,6 +355,7 @@ DeviceStatusChangeThread(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to clear reset change on port %d\n", PortId);
+                continue;
             }
 
             //
@@ -373,6 +378,7 @@ DeviceStatusChangeThread(
             if(PortStatus.Change & USB_PORT_STATUS_RESET)
             {
                 DPRINT1("Port did not clear reset! Possible Hardware problem!\n");
+                continue;
             }
 
             //

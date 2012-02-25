@@ -1446,6 +1446,15 @@ EhciDefferedRoutine(
         for (i = 0; i < PortCount; i++)
         {
             PortStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * i));
+
+            // Check if we actually own the port
+            if (PortStatus & EHCI_PRT_RELEASEOWNERSHIP)
+            {
+                //Discard anything on this port but ack any status changes
+                This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus);
+                continue;
+            }
+
             //
             // Device connected or removed
             //
