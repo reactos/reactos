@@ -345,10 +345,29 @@ typedef struct _POOL_HEADER
 C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
 C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 
+typedef struct _POOL_TRACKER_TABLE
+{
+    ULONG Key;
+    ULONG NonPagedAllocs;
+    ULONG NonPagedFrees;
+    SIZE_T NonPagedBytes;
+    ULONG PagedAllocs;
+    ULONG PagedFrees;
+    SIZE_T PagedBytes;
+} POOL_TRACKER_TABLE, *PPOOL_TRACKER_TABLE;
+
+typedef struct _POOL_TRACKER_BIG_PAGES
+{
+    PVOID Va;
+    ULONG Key;
+    ULONG NumberOfPages;
+    PVOID QuotaObject;
+} POOL_TRACKER_BIG_PAGES, *PPOOL_TRACKER_BIG_PAGES;
+
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
 extern PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
-extern PVOID PoolTrackTable;
+extern PPOOL_TRACKER_TABLE PoolTrackTable;
 
 //
 // END FIXFIX

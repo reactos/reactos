@@ -24,8 +24,11 @@ ULONG ExpNumberOfPagedPools;
 POOL_DESCRIPTOR NonPagedPoolDescriptor;
 PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
 PPOOL_DESCRIPTOR PoolVector[2];
-PVOID PoolTrackTable;
 PKGUARDED_MUTEX ExpPagedPoolMutex;
+SIZE_T PoolTrackTableSize, PoolTrackTableMask;
+SIZE_T PoolBigPageTableSize, PoolBigPageTableHash;
+PPOOL_TRACKER_TABLE PoolTrackTable, PoolBigPageTable;
+KSPIN_LOCK ExpTaggedPoolLock;
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -329,6 +332,11 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
         ExpInitializePoolListHead(NextEntry);
         NextEntry++;
     }
+
+    //
+    // Note that ReactOS does not support Session Pool Yet
+    //
+    ASSERT(PoolType != PagedPoolSession);
 }
 
 VOID
@@ -338,12 +346,178 @@ InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
     PPOOL_DESCRIPTOR Descriptor;
+    SIZE_T TableSize;
+    ULONG i;
 
     //
     // Check what kind of pool this is
     //
     if (PoolType == NonPagedPool)
     {
+        //
+        // Compute the track table size and convert it from a power of two to an
+        // actual byte size
+        //
+        // NOTE: On checked builds, we'll assert if the registry table size was
+        // invalid, while on retail builds we'll just break out of the loop at
+        // that point.
+        //
+        TableSize = min(PoolTrackTableSize, MmSizeOfNonPagedPoolInBytes >> 8);
+        for (i = 0; i < 32; i++)
+        {
+            if (TableSize & 1)
+            {
+                ASSERT((TableSize & ~1) == 0);
+                if (!(TableSize & ~1)) break;
+            }
+            TableSize >>= 1;
+        }
+
+        //
+        // If we hit bit 32, than no size was defined in the registry, so
+        // we'll use the default size of 2048 entries.
+        //
+        // Otherwise, use the size from the registry, as long as it's not
+        // smaller than 64 entries.
+        //
+        if (i == 32)
+        {
+            PoolTrackTableSize = 2048;
+        }
+        else
+        {
+            PoolTrackTableSize = max(1 << i, 64);
+        }
+
+        //
+        // Loop trying with the biggest specified size first, and cut it down
+        // by a power of two each iteration in case not enough memory exist
+        //
+        while (TRUE)
+        {
+            //
+            // Do not allow overflow
+            //
+            if ((PoolTrackTableSize + 1) > (MAXULONG_PTR / sizeof(POOL_TRACKER_TABLE)))
+            {
+                PoolTrackTableSize >>= 1;
+                continue;
+            }
+
+            //
+            // Allocate the tracker table and exit the loop if this worked
+            //
+            PoolTrackTable = MiAllocatePoolPages(NonPagedPool,
+                                                 (PoolTrackTableSize + 1) *
+                                                 sizeof(POOL_TRACKER_TABLE));
+            if (PoolTrackTable) break;
+
+            //
+            // Otherwise, as long as we're not down to the last bit, keep
+            // iterating
+            //
+            if (PoolTrackTableSize == 1)
+            {
+                KeBugCheckEx(MUST_SUCCEED_POOL_EMPTY,
+                             TableSize,
+                             0xFFFFFFFF,
+                             0xFFFFFFFF,
+                             0xFFFFFFFF);
+            }
+            PoolTrackTableSize >>= 1;
+        }
+
+        //
+        // Finally, add one entry, compute the hash, and zero the table
+        //
+        PoolTrackTableSize++;
+        PoolTrackTableMask = PoolTrackTableSize - 2;
+
+        RtlZeroMemory(PoolTrackTable,
+                      PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
+
+        //
+        // We now do the exact same thing with the tracker table for big pages
+        //
+        TableSize = min(PoolBigPageTableSize, MmSizeOfNonPagedPoolInBytes >> 8);
+        for (i = 0; i < 32; i++)
+        {
+            if (TableSize & 1)
+            {
+                ASSERT((TableSize & ~1) == 0);
+                if (!(TableSize & ~1)) break;
+            }
+            TableSize >>= 1;
+        }
+
+        //
+        // For big pages, the default tracker table is 4096 entries, while the
+        // minimum is still 64
+        //
+        if (i == 32)
+        {
+            PoolBigPageTableSize = 4096;
+        }
+        else
+        {
+            PoolBigPageTableSize = max(1 << i, 64);
+        }
+
+        //
+        // Again, run the exact same loop we ran earlier, but this time for the
+        // big pool tracker instead
+        //
+        while (TRUE)
+        {
+            if ((PoolBigPageTableSize + 1) > (MAXULONG_PTR / sizeof(POOL_TRACKER_BIG_PAGES)))
+            {
+                PoolBigPageTableSize >>= 1;
+                continue;
+            }
+
+            PoolBigPageTable = MiAllocatePoolPages(NonPagedPool,
+                                                   PoolBigPageTableSize *
+                                                   sizeof(POOL_TRACKER_BIG_PAGES));
+            if (PoolBigPageTable) break;
+
+            if (PoolBigPageTableSize == 1)
+            {
+                KeBugCheckEx(MUST_SUCCEED_POOL_EMPTY,
+                             TableSize,
+                             0xFFFFFFFF,
+                             0xFFFFFFFF,
+                             0xFFFFFFFF);
+            }
+
+            PoolBigPageTableSize >>= 1;
+        }
+
+        //
+        // An extra entry is not needed for for the big pool tracker, so just
+        // compute the hash and zero it
+        //
+        PoolBigPageTableHash = PoolBigPageTableSize - 1;
+        RtlZeroMemory(PoolBigPageTable,
+                      PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
+
+        //
+        // During development, print this out so we can see what's happening
+        //
+        DPRINT1("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+                PoolTrackTable, PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
+        DPRINT1("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+                PoolBigPageTable, PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
+
+        //
+        // No support for NUMA systems at this time
+        //
+        ASSERT(KeNumberNodes == 1);
+
+        //
+        // Initialize the tag spinlock
+        //
+        KeInitializeSpinLock(&ExpTaggedPoolLock);
+
         //
         // Initialize the nonpaged pool descriptor
         //
@@ -356,6 +530,11 @@ InitializePool(IN POOL_TYPE PoolType,
     }
     else
     {
+        //
+        // No support for NUMA systems at this time
+        //
+        ASSERT(KeNumberNodes == 1);
+
         //
         // Allocate the pool descriptor
         //
