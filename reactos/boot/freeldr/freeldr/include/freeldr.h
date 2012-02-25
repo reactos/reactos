@@ -56,7 +56,6 @@
 
 /* internal headers */
 #include <arcemul.h>
-#include <bget.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>
