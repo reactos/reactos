@@ -123,6 +123,7 @@ protected:
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
+    ULONG m_WorkItemActive;                                                            // work item status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
 
@@ -973,13 +974,13 @@ CUSBHardwareDevice::ResetPort(
     // Reset and clean enable
     //
     PortStatus |= EHCI_PRT_RESET;
-    PortStatus &= ~EHCI_PRT_ENABLED;
+    PortStatus &= EHCI_PORTSC_DATAMASK;
     EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
 
     //
-    // delay is 20 ms for port reset as per USB 2.0 spec
+    // delay is 50 ms for port reset as per USB 2.0 spec
     //
-    Timeout.QuadPart = 20;
+    Timeout.QuadPart = 50;
     DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
 
     //
@@ -1077,7 +1078,7 @@ CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
 {
-    ULONG Value;
+    ULONG Value, WaitTime, ResetComplete;
     LARGE_INTEGER Timeout;
 
     DPRINT("CUSBHardwareDevice::ClearPortStatus PortId %x Feature %x\n", PortId, Status);
@@ -1087,32 +1088,43 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_RESET)
     {
-        //
-        // Clear reset
-        //
-        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-        Value &= ~EHCI_PRT_RESET;
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
-
         do
         {
-            //
-            // wait
-            //
-            KeStallExecutionProcessor(100);
-            
-            //
-            // Check that the port reset
-            //
+            // wait for completion
+            ResetComplete = FALSE;
+
+            // Clear reset
             Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-            if (!(Value & EHCI_PRT_RESET))
-                break;
-        } while (TRUE);
+            Value &= (EHCI_PORTSC_DATAMASK | EHCI_PRT_ENABLED);
+            Value &= ~EHCI_PRT_RESET;
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
+            for(WaitTime = 0; WaitTime < 500; WaitTime += 20)
+            {
+                // wait
+                KeStallExecutionProcessor(20);
+
+                // Check that the port reset
+                Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+
+                // is complete
+                if (!(Value & EHCI_PRT_RESET))
+                {
+                    // check for bogus value
+                    if (Value == MAXULONG)
+                        continue;
+
+                    // reset done
+                    ResetComplete = TRUE;
+                    break;
+                }
+            }
+        } while (!ResetComplete);
 
         //
         // delay is 10 ms
         //
-        Timeout.QuadPart = 10;
+        Timeout.QuadPart = 50;
         DPRINT1("Waiting %d milliseconds for port to recover after reset\n", Timeout.LowPart);
 
         //
@@ -1129,32 +1141,31 @@ CUSBHardwareDevice::ClearPortStatus(
         // check slow speed line after reset
         //
         Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-        if (Value & EHCI_PRT_SLOWSPEEDLINE)
+
+        // did the reset complete successfully
+        if (Value != MAXULONG)
         {
-            DPRINT1("Non HighSpeed device. Releasing Ownership\n");
+            if (Value & EHCI_PRT_ENABLED || !(Value & EHCI_PRT_CONNECTED) || Value & EHCI_PRT_CONNECTSTATUSCHANGE)
+            {
+                // successfully reset port
+                DPRINT1("Port is back up after reset\n");
+                return STATUS_SUCCESS;
+            }
+
+            // either the port failed to reset
+            // or it is a full speed / low speed device
+            // release control to companion controller
+            DPRINT("[USBEHCI] Failed to reset port Id %x PortStatus %x releasing ownership\n", PortId, Value);
+
+            // re-read register
+            Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+
+            // releaseing ownership
             EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value | EHCI_PRT_RELEASEOWNERSHIP);
             return STATUS_DEVICE_NOT_CONNECTED;
-        }
+       }
 
-        //
-        // this will be enabled now since we're high-speed
-        //
-        do
-        {
-            //
-            // wait
-            //
-            KeStallExecutionProcessor(100);
 
-            //
-            // Check that the port is enabled
-            //
-            Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
-            if (Value & EHCI_PRT_ENABLED)
-                break;
-        } while (TRUE);
-
-        DPRINT1("Port is back up after reset\n");
     }
     else if (Status == C_PORT_CONNECTION)
     {
@@ -1515,6 +1526,9 @@ EhciDefferedRoutine(
         //
         if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
         {
+            // work item is now active
+            This->m_WorkItemActive = TRUE;
+
             //
             // queue work item for processing
             //
@@ -1545,6 +1559,8 @@ StatusChangeWorkItemRoutine(
         This->m_SCECallBack(This->m_SCEContext);
     }
 
+    // work item is completed
+    This->m_WorkItemActive = FALSE;
 }
 
 NTSTATUS
