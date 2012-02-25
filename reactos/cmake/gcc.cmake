@@ -27,7 +27,15 @@ else()
 endif()
 
 # Warnings
-add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value")
+add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
+
+if(GCC_VERSION VERSION_LESS 4.6)
+    add_compile_flags("-Wno-error=uninitialized")
+elseif((GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6) AND GCC_VERSION VERSION_LESS 4.7)
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=uninitialized")
+elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -Wno-error=delete-non-virtual-dtor -Wno-error=narrowing")
+endif()
 
 if(ARCH MATCHES amd64)
     add_compile_flags("-Wno-format")
