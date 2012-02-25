@@ -958,7 +958,7 @@ CUSBHardwareDevice::ResetPort(
 
     PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
 
-    ASSERT(!(PortStatus & EHCI_PRT_SLOWSPEEDLINE));
+    ASSERT(!EHCI_IS_LOW_SPEED(PortStatus));
     ASSERT(PortStatus & EHCI_PRT_CONNECTED);
 
     //
@@ -1112,7 +1112,7 @@ CUSBHardwareDevice::ClearPortStatus(
         KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
 
         //
-        // check the enabled bit after reset
+        // check the port status after reset
         //
         Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         if (!(Value & EHCI_PRT_CONNECTED))
@@ -1120,9 +1120,14 @@ CUSBHardwareDevice::ClearPortStatus(
             DPRINT1("No device is here after reset. Bad controller/device?\n");
             return STATUS_UNSUCCESSFUL;
         }
+        else if (EHCI_IS_LOW_SPEED(Value))
+        {
+            DPRINT1("Low speed device connected. Releasing ownership\n");
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value | EHCI_PRT_RELEASEOWNERSHIP);
+            return STATUS_DEVICE_NOT_CONNECTED;
+        }
         else if (!(Value & EHCI_PRT_ENABLED))
         {
-            // release ownership
             DPRINT1("Full speed device connected. Releasing ownership\n");
             EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value | EHCI_PRT_RELEASEOWNERSHIP);
             return STATUS_DEVICE_NOT_CONNECTED;
@@ -1447,14 +1452,6 @@ EhciDefferedRoutine(
         {
             PortStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * i));
 
-            // Check if we actually own the port
-            if (PortStatus & EHCI_PRT_RELEASEOWNERSHIP)
-            {
-                //Discard anything on this port but ack any status changes
-                This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus);
-                continue;
-            }
-
             //
             // Device connected or removed
             //
@@ -1471,7 +1468,7 @@ EhciDefferedRoutine(
                             DPRINT1("Misbeaving controller. Port should be disabled at this point\n");
                         }
 
-                        if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
+                        if (EHCI_IS_LOW_SPEED(PortStatus))
                         {
                             DPRINT1("Low speed device connected. Releasing ownership\n");
                             This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_RELEASEOWNERSHIP);

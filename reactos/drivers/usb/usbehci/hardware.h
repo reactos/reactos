@@ -76,11 +76,14 @@
 #define EHCI_PRT_FORCERESUME            0x40
 #define EHCI_PRT_SUSPEND                0x80
 #define EHCI_PRT_RESET                  0x100
-#define EHCI_PRT_SLOWSPEEDLINE          0x400
+#define EHCI_PRT_LINESTATUSA            0x400
+#define EHCI_PRT_LINESTATUSB            0x800
 #define EHCI_PRT_POWER                  0x1000
 #define EHCI_PRT_RELEASEOWNERSHIP       0x2000
 
 #define EHCI_PORTSC_DATAMASK    0xffffffd1
+
+#define EHCI_IS_LOW_SPEED(x) (((x) & EHCI_PRT_LINESTATUSA) && !((x) & EHCI_PRT_LINESTATUSB))
 //
 // Terminate Pointer used for QueueHeads and Element Transfer Descriptors to mark Pointers as the end
 //
