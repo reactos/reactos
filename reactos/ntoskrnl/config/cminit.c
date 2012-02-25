@@ -334,7 +334,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
 
     /* Now create the file */
     Status = ZwCreateFile(Primary,
-                          DesiredAccess,
+                          DesiredAccess | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
