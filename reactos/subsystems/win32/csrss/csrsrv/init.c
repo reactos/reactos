@@ -23,7 +23,7 @@ PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort;
 HANDLE hSbApiPort = (HANDLE) 0;
 HANDLE CsrApiPort = (HANDLE) 0;
-ULONG CsrDebug = 0xFFFFFFFF;
+ULONG CsrDebug = 0;//0xFFFFFFFF;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
 ULONG SessionId;
