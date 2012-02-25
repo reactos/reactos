@@ -847,7 +847,7 @@ USBSTOR_SendFormatCapacity(
     //
     RtlZeroMemory(&Cmd, sizeof(UFI_READ_FORMAT_CAPACITY));
     Cmd.Code = SCSIOP_READ_FORMATTED_CAPACITY;
-    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN) << 5;
+    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
     Cmd.AllocationLengthMsb = HTONS(Request->DataTransferLength & 0xFFFF) >> 8;
     Cmd.AllocationLengthLsb = HTONS(Request->DataTransferLength & 0xFFFF) & 0xFF;
 
