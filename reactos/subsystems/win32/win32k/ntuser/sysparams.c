@@ -592,7 +592,6 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     HBITMAP hbmp, hOldBitmap;
     SURFACE *psurfBmp;
     ULONG ulTile, ulStyle;
-    PWINSTATION_OBJECT gpwinstaCurrent = GetW32ProcessInfo()->prpwinsta;
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -654,9 +653,9 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
             return 0;
         }
 
-        gpwinstaCurrent->cxWallpaper = psurfBmp->SurfObj.sizlBitmap.cx;
-        gpwinstaCurrent->cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
-        gpwinstaCurrent->WallpaperMode = wmCenter;
+        gspv.cxWallpaper = psurfBmp->SurfObj.sizlBitmap.cx;
+        gspv.cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
+        gspv.WallpaperMode = wmCenter;
 
         SURFACE_ShareUnlockSurface(psurfBmp);
 
@@ -671,23 +670,23 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         /* Check the values we found in the registry */
         if(ulTile && !ulStyle)
         {
-            gpwinstaCurrent->WallpaperMode = wmTile;
+            gspv.WallpaperMode = wmTile;
         }
         else if(!ulTile && ulStyle == 2)
         {
-            gpwinstaCurrent->WallpaperMode = wmStretch;
+            gspv.WallpaperMode = wmStretch;
         }
     }
     else
     {
         /* Remove wallpaper */
-        gpwinstaCurrent->cxWallpaper = 0;
-        gpwinstaCurrent->cyWallpaper = 0;
+        gspv.cxWallpaper = 0;
+        gspv.cyWallpaper = 0;
         hbmp = 0;
     }
 
     /* Take care of the old wallpaper, if any */
-    hOldBitmap = gpwinstaCurrent->hbmWallpaper;
+    hOldBitmap = gspv.hbmWallpaper;
     if(hOldBitmap != NULL)
     {
         /* Delete the old wallpaper */
@@ -696,7 +695,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     }
 
     /* Set the new wallpaper */
-    gpwinstaCurrent->hbmWallpaper = hbmp;
+    gspv.hbmWallpaper = hbmp;
 
     NtUserRedrawWindow(UserGetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 

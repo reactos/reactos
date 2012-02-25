@@ -7,19 +7,8 @@
 #define WSS_LOCKED	(1)
 #define WSS_NOINTERACTIVE	(2)
 
-typedef enum
-{
-    wmCenter = 0,
-    wmTile,
-    wmStretch
-} WALLPAPER_MODE;
-
 typedef struct _WINSTATION_OBJECT
 {
-    PVOID SharedHeap; /* Points to kmode memory! */
-
-    CSHORT Type;
-    CSHORT Size;
     KSPIN_LOCK Lock;
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
@@ -27,11 +16,6 @@ typedef struct _WINSTATION_OBJECT
     HANDLE SystemMenuTemplate;
     HANDLE ShellWindow;
     HANDLE ShellListView;
-
-    /* Wallpaper */
-    HANDLE hbmWallpaper;
-    ULONG cxWallpaper, cyWallpaper;
-    WALLPAPER_MODE WallpaperMode;
 
     ULONG Flags;
     struct _DESKTOP* ActiveDesktop;

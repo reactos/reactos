@@ -1238,8 +1238,6 @@ NtUserPaintDesktop(HDC hDC)
    COLORREF color_old;
    UINT align_old;
    int mode_old;
-   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PWINSTATION_OBJECT WinSta = pti->rpdesk->rpwinstaParent;
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
@@ -1262,7 +1260,7 @@ NtUserPaintDesktop(HDC hDC)
         /*
         * Paint desktop background
         */
-        if (WinSta->hbmWallpaper != NULL)
+        if (gspv.hbmWallpaper != NULL)
         {
             SIZE sz;
             int x, y;
@@ -1271,8 +1269,8 @@ NtUserPaintDesktop(HDC hDC)
             sz.cx = WndDesktop->rcWindow.right - WndDesktop->rcWindow.left;
             sz.cy = WndDesktop->rcWindow.bottom - WndDesktop->rcWindow.top;
 
-            if (WinSta->WallpaperMode == wmStretch ||
-                WinSta->WallpaperMode == wmTile)
+            if (gspv.WallpaperMode == wmStretch ||
+                gspv.WallpaperMode == wmTile)
             {
                 x = 0;
                 y = 0;
@@ -1280,8 +1278,8 @@ NtUserPaintDesktop(HDC hDC)
             else
             {
                 /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
-                x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
-                y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
+                x = (sz.cx / 2) - (gspv.cxWallpaper / 2);
+                y = (sz.cy / 2) - (gspv.cyWallpaper / 2);
             }
 
             hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
@@ -1303,9 +1301,9 @@ NtUserPaintDesktop(HDC hDC)
                 /*Do not fill the background after it is painted no matter the size of the picture */
                 doPatBlt = FALSE;
 
-                hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, WinSta->hbmWallpaper);
+                hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, gspv.hbmWallpaper);
 
-                if (WinSta->WallpaperMode == wmStretch)
+                if (gspv.WallpaperMode == wmStretch)
                 {
                     if(Rect.right && Rect.bottom)
                         NtGdiStretchBlt(hDC,
@@ -1316,24 +1314,24 @@ NtUserPaintDesktop(HDC hDC)
                                     hWallpaperDC,
                                     0,
                                     0,
-                                    WinSta->cxWallpaper,
-                                    WinSta->cyWallpaper,
+                                    gspv.cxWallpaper,
+                                    gspv.cyWallpaper,
                                     SRCCOPY,
                                     0);
 
                 }
-                else if (WinSta->WallpaperMode == wmTile)
+                else if (gspv.WallpaperMode == wmTile)
                 {
                     /* Paint the bitmap across the screen then down */
-                    for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
+                    for(y = 0; y < Rect.bottom; y += gspv.cyWallpaper)
                     {
-                        for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
+                        for(x = 0; x < Rect.right; x += gspv.cxWallpaper)
                         {
                             NtGdiBitBlt(hDC,
                                         x,
                                         y,
-                                        WinSta->cxWallpaper,
-                                        WinSta->cyWallpaper,
+                                        gspv.cxWallpaper,
+                                        gspv.cyWallpaper,
                                         hWallpaperDC,
                                         0,
                                         0,
@@ -1348,8 +1346,8 @@ NtUserPaintDesktop(HDC hDC)
                     NtGdiBitBlt(hDC,
                                 x,
                                 y,
-                                WinSta->cxWallpaper,
-                                WinSta->cyWallpaper,
+                                gspv.cxWallpaper,
+                                gspv.cyWallpaper,
                                 hWallpaperDC,
                                 0,
                                 0,

@@ -34,6 +34,13 @@ typedef enum _USERPREFMASKS
     UPM_DEFAULT = 0x80003E9E
 } USERPREFMASKS;
 
+typedef enum
+{
+    wmCenter = 0,
+    wmTile,
+    wmStretch
+} WALLPAPER_MODE;
+
 typedef struct _SPIVALUES
 {
     /* Metrics */
@@ -129,11 +136,16 @@ typedef struct _SPIVALUES
     TEXTMETRICW tmMenuFont;
     TEXTMETRICW tmCaptionFont;
 
+    /* Wallpaper */
+    HANDLE hbmWallpaper;
+    ULONG cxWallpaper, cyWallpaper;
+    WALLPAPER_MODE WallpaperMode;
+    UNICODE_STRING ustrWallpaper;
+    WCHAR awcWallpaper[MAX_PATH];
+
     BOOL bHandHeld;
     BOOL bFastTaskSwitch;
     UINT uiGridGranularity;
-    UNICODE_STRING ustrWallpaper;
-    WCHAR awcWallpaper[MAX_PATH];
 
     ANIMATIONINFO animationinfo;
     BOOL bSnapToDefBtn;
