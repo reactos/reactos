@@ -20,6 +20,14 @@
 
 /* GLOBALS ********************************************************************/
 
+typedef struct _POOL_DPC_CONTEXT
+{
+    PPOOL_TRACKER_TABLE PoolTrackTable;
+    SIZE_T PoolTrackTableSize;
+    PPOOL_TRACKER_TABLE PoolTrackTableExpansion;
+    SIZE_T PoolTrackTableSizeExpansion;
+} POOL_DPC_CONTEXT, *PPOOL_DPC_CONTEXT;
+
 ULONG ExpNumberOfPagedPools;
 POOL_DESCRIPTOR NonPagedPoolDescriptor;
 PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
@@ -27,8 +35,11 @@ PPOOL_DESCRIPTOR PoolVector[2];
 PKGUARDED_MUTEX ExpPagedPoolMutex;
 SIZE_T PoolTrackTableSize, PoolTrackTableMask;
 SIZE_T PoolBigPageTableSize, PoolBigPageTableHash;
-PPOOL_TRACKER_TABLE PoolTrackTable, PoolBigPageTable;
+PPOOL_TRACKER_TABLE PoolTrackTable;
+PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
 KSPIN_LOCK ExpTaggedPoolLock;
+ULONG PoolHitTag;
+BOOLEAN ExStopBadTags;
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -286,7 +297,344 @@ ExpCheckPoolBlocks(IN PVOID Block)
     }
 }
 
+FORCEINLINE
+ULONG
+ExpComputeHashForTag(IN ULONG Tag,
+                     IN SIZE_T BucketMask)
+{
+    //
+    // Compute the hash by multiplying with a large prime number and then XORing
+    // with the HIDWORD of the result.
+    //
+    // Finally, AND with the bucket mask to generate a valid index/bucket into
+    // the table
+    //
+    ULONGLONG Result = 40543 * Tag;
+    return BucketMask & (Result ^ (Result >> 32));
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+INIT_FUNCTION
+ExpSeedHotTags(VOID)
+{
+    ULONG i, Key, Hash, Index;
+    PPOOL_TRACKER_TABLE TrackTable = PoolTrackTable;
+    ULONG TagList[] =
+    {
+        '  oI',
+        ' laH',
+        'PldM',
+        'LooP',
+        'tSbO',
+        ' prI',
+        'bdDN',
+        'LprI',
+        'pOoI',
+        ' ldM',
+        'eliF',
+        'aVMC',
+        'dSeS',
+        'CFtN',
+        'looP',
+        'rPCT',
+        'bNMC',
+        'dTeS',
+        'sFtN',
+        'TPCT',
+        'CPCT',
+        ' yeK',
+        'qSbO',
+        'mNoI',
+        'aEoI',
+        'cPCT',
+        'aFtN',
+        '0ftN',
+        'tceS',
+        'SprI',
+        'ekoT',
+        '  eS',
+        'lCbO',
+        'cScC',
+        'lFtN',
+        'cAeS',
+        'mfSF',
+        'kWcC',
+        'miSF',
+        'CdfA',
+        'EdfA',
+        'orSF',
+        'nftN',
+        'PRIU',
+        'rFpN',
+        'RFpN',
+        'aPeS',
+        'sUeS',
+        'FpcA',
+        'MpcA',
+        'cSeS',
+        'mNbO',
+        'sFpN',
+        'uLeS',
+        'DPcS',
+        'nevE',
+        'vrqR',
+        'ldaV',
+        '  pP',
+        'SdaV',
+        ' daV',
+        'LdaV',
+        'FdaV',
+        ' GIB',
+    };
+
+    //
+    // Loop all 64 hot tags
+    //
+    ASSERT((sizeof(TagList) / sizeof(ULONG)) == 64);
+    for (i = 0; i < sizeof(TagList) / sizeof(ULONG); i++)
+    {
+        //
+        // Get the current tag, and compute its hash in the tracker table
+        //
+        Key = TagList[i];
+        Hash = ExpComputeHashForTag(Key, PoolTrackTableMask);
+
+        //
+        // Loop all the hashes in this index/bucket
+        //
+        Index = Hash;
+        while (TRUE)
+        {
+            //
+            // Find an empty entry, and make sure this isn't the last hash that
+            // can fit.
+            //
+            // On checked builds, also make sure this is the first time we are
+            // seeding this tag.
+            //
+            ASSERT(TrackTable[Hash].Key != Key);
+            if (!(TrackTable[Hash].Key) && (Hash != PoolTrackTableSize - 1))
+            {
+                //
+                // It has been seeded, move on to the next tag
+                //
+                TrackTable[Hash].Key = Key;
+                break;
+            }
+
+            //
+            // This entry was already taken, compute the next possible hash while
+            // making sure we're not back at our initial index.
+            //
+            ASSERT(TrackTable[Hash].Key != Key);
+            Hash = (Hash + 1) & PoolTrackTableMask;
+            if (Hash == Index) break;
+        }
+    }
+}
+
+VOID
+NTAPI
+ExpRemovePoolTracker(IN ULONG Key,
+                     IN SIZE_T NumberOfBytes,
+                     IN POOL_TYPE PoolType)
+{
+    ULONG Hash, Index;
+    PPOOL_TRACKER_TABLE Table, TableEntry;
+    SIZE_T TableMask, TableSize;
+
+    //
+    // Remove the PROTECTED_POOL flag which is not part of the tag
+    //
+    Key &= ~PROTECTED_POOL;
+
+    //
+    // With WinDBG you can set a tag you want to break on when an allocation is
+    // attempted
+    //
+    if (Key == PoolHitTag) DbgBreakPoint();
+
+    //
+    // Why the double indirection? Because normally this function is also used
+    // when doing session pool allocations, which has another set of tables,
+    // sizes, and masks that live in session pool. Now we don't support session
+    // pool so we only ever use the regular tables, but I'm keeping the code this
+    // way so that the day we DO support session pool, it won't require that
+    // many changes
+    //
+    Table = PoolTrackTable;
+    TableMask = PoolTrackTableMask;
+    TableSize = PoolTrackTableSize;
+
+    //
+    // Compute the hash for this key, and loop all the possible buckets
+    //
+    Hash = ExpComputeHashForTag(Key, TableMask);
+    Index = Hash;
+    while (TRUE)
+    {
+        //
+        // Have we found the entry for this tag? */
+        //
+        TableEntry = &Table[Hash];
+        if (TableEntry->Key == Key)
+        {
+            //
+            // Decrement the counters depending on if this was paged or nonpaged
+            // pool
+            //
+            if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+            {
+                InterlockedIncrement(&TableEntry->NonPagedFrees);
+                InterlockedExchangeAddSizeT(&TableEntry->NonPagedBytes, -NumberOfBytes);
+                return;
+            }
+            InterlockedIncrement(&TableEntry->PagedFrees);
+            InterlockedExchangeAddSizeT(&TableEntry->PagedBytes, -NumberOfBytes);
+            return;
+        }
+
+        //
+        // We should have only ended up with an empty entry if we've reached
+        // the last bucket
+        //
+        if (!TableEntry->Key) ASSERT(Hash == TableMask);
+
+        //
+        // This path is hit when we don't have an entry, and the current bucket
+        // is full, so we simply try the next one
+        //
+        Hash = (Hash + 1) & TableMask;
+        if (Hash == Index) break;
+    }
+
+    //
+    // And finally this path is hit when all the buckets are full, and we need
+    // some expansion. This path is not yet supported in ReactOS and so we'll
+    // ignore the tag
+    //
+    DPRINT1("Out of pool tag space, ignoring...\n");
+}
+
+VOID
+NTAPI
+ExpInsertPoolTracker(IN ULONG Key,
+                     IN SIZE_T NumberOfBytes,
+                     IN POOL_TYPE PoolType)
+{
+    ULONG Hash, Index;
+    KIRQL OldIrql;
+    PPOOL_TRACKER_TABLE Table, TableEntry;
+    SIZE_T TableMask, TableSize;
+
+    //
+    // Remove the PROTECTED_POOL flag which is not part of the tag
+    //
+    Key &= ~PROTECTED_POOL;
+
+    //
+    // With WinDBG you can set a tag you want to break on when an allocation is
+    // attempted
+    //
+    if (Key == PoolHitTag) DbgBreakPoint();
+
+    //
+    // There is also an internal flag you can set to break on malformed tags
+    //
+    if (ExStopBadTags) ASSERT(Key & 0xFFFFFF00);
+
+    //
+    // ASSERT on ReactOS features not yet supported
+    //
+    ASSERT(!(PoolType & SESSION_POOL_MASK));
+    ASSERT(KeGetCurrentProcessorNumber() == 0);
+
+    //
+    // Why the double indirection? Because normally this function is also used
+    // when doing session pool allocations, which has another set of tables,
+    // sizes, and masks that live in session pool. Now we don't support session
+    // pool so we only ever use the regular tables, but I'm keeping the code this
+    // way so that the day we DO support session pool, it won't require that
+    // many changes
+    //
+    Table = PoolTrackTable;
+    TableMask = PoolTrackTableMask;
+    TableSize = PoolTrackTableSize;
+
+    //
+    // Compute the hash for this key, and loop all the possible buckets
+    //
+    Hash = ExpComputeHashForTag(Key, TableMask);
+    Index = Hash;
+    while (TRUE)
+    {
+        //
+        // Do we already have an entry for this tag? */
+        //
+        TableEntry = &Table[Hash];
+        if (TableEntry->Key == Key)
+        {
+            //
+            // Increment the counters depending on if this was paged or nonpaged
+            // pool
+            //
+            if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+            {
+                InterlockedIncrement(&TableEntry->NonPagedAllocs);
+                InterlockedExchangeAddSizeT(&TableEntry->NonPagedBytes, NumberOfBytes);
+                return;
+            }
+            InterlockedIncrement(&TableEntry->PagedAllocs);
+            InterlockedExchangeAddSizeT(&TableEntry->PagedBytes, NumberOfBytes);
+            return;
+        }
+
+        //
+        // We don't have an entry yet, but we've found a free bucket for it
+        //
+        if (!(TableEntry->Key) && (Hash != PoolTrackTableSize - 1))
+        {
+            //
+            // We need to hold the lock while creating a new entry, since other
+            // processors might be in this code path as well
+            //
+            ExAcquireSpinLock(&ExpTaggedPoolLock, &OldIrql);
+            if (!PoolTrackTable[Hash].Key)
+            {
+                //
+                // We've won the race, so now create this entry in the bucket
+                //
+                ASSERT(Table[Hash].Key == 0);
+                PoolTrackTable[Hash].Key = Key;
+                TableEntry->Key = Key;
+            }
+            ExReleaseSpinLock(&ExpTaggedPoolLock, OldIrql);
+
+            //
+            // Now we force the loop to run again, and we should now end up in
+            // the code path above which does the interlocked increments...
+            //
+            continue;
+        }
+
+        //
+        // This path is hit when we don't have an entry, and the current bucket
+        // is full, so we simply try the next one
+        //
+        Hash = (Hash + 1) & TableMask;
+        if (Hash == Index) break;
+    }
+
+    //
+    // And finally this path is hit when all the buckets are full, and we need
+    // some expansion. This path is not yet supported in ReactOS and so we'll
+    // ignore the tag
+    //
+    DPRINT1("Out of pool tag space, ignoring...\n");
+}
 
 VOID
 NTAPI
@@ -499,6 +847,7 @@ InitializePool(IN POOL_TYPE PoolType,
         PoolBigPageTableHash = PoolBigPageTableSize - 1;
         RtlZeroMemory(PoolBigPageTable,
                       PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
+        for (i = 0; i < PoolBigPageTableSize; i++) PoolBigPageTable[i].Va = (PVOID)1;
 
         //
         // During development, print this out so we can see what's happening
@@ -507,6 +856,14 @@ InitializePool(IN POOL_TYPE PoolType,
                 PoolTrackTable, PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
         DPRINT1("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolBigPageTable, PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
+
+        //
+        // Insert the generic tracker for all of big pool
+        //
+        ExpInsertPoolTracker('looP',
+                             ROUND_TO_PAGES(PoolBigPageTableSize *
+                                            sizeof(POOL_TRACKER_BIG_PAGES)),
+                             NonPagedPool);
 
         //
         // No support for NUMA systems at this time
@@ -565,6 +922,13 @@ InitializePool(IN POOL_TYPE PoolType,
                                    0,
                                    Threshold,
                                    ExpPagedPoolMutex);
+
+        //
+        // Insert the generic tracker for all of nonpaged pool
+        //
+        ExpInsertPoolTracker('looP',
+                             ROUND_TO_PAGES(PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE)),
+                             NonPagedPool);
     }
 }
 
@@ -614,6 +978,146 @@ ExUnlockPool(IN PPOOL_DESCRIPTOR Descriptor,
         //
         KeReleaseGuardedMutex(Descriptor->LockAddress);
     }
+}
+
+VOID
+NTAPI
+ExpGetPoolTagInfoTarget(IN PKDPC Dpc,
+                        IN PVOID DeferredContext,
+                        IN PVOID SystemArgument1,
+                        IN PVOID SystemArgument2)
+{
+    PPOOL_DPC_CONTEXT Context = DeferredContext;
+    UNREFERENCED_PARAMETER(Dpc);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    //
+    // Make sure we win the race, and if we did, copy the data atomically
+    //
+    if (KeSignalCallDpcSynchronize(SystemArgument2))
+    {
+        RtlCopyMemory(Context->PoolTrackTable,
+                      PoolTrackTable,
+                      Context->PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
+
+        //
+        // This is here because ReactOS does not yet support expansion
+        //
+        ASSERT(Context->PoolTrackTableSizeExpansion == 0);
+    }
+
+    //
+    // Regardless of whether we won or not, we must now synchronize and then
+    // decrement the barrier since this is one more processor that has completed
+    // the callback.
+    //
+    KeSignalCallDpcSynchronize(SystemArgument2);
+    KeSignalCallDpcDone(SystemArgument1);
+}
+
+NTSTATUS
+NTAPI
+ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
+                 IN ULONG SystemInformationLength,
+                 IN OUT PULONG ReturnLength OPTIONAL)
+{
+    SIZE_T TableSize, CurrentLength;
+    ULONG EntryCount;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PSYSTEM_POOLTAG TagEntry;
+    PPOOL_TRACKER_TABLE Buffer, TrackerEntry;
+    POOL_DPC_CONTEXT Context;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    //
+    // Keep track of how much data the caller's buffer must hold
+    //
+    CurrentLength = FIELD_OFFSET(SYSTEM_POOLTAG_INFORMATION, TagInfo);
+
+    //
+    // Initialize the caller's buffer
+    //
+    TagEntry = &SystemInformation->TagInfo[0];
+    SystemInformation->Count = 0;
+
+    //
+    // Capture the number of entries, and the total size needed to make a copy
+    // of the table
+    //
+    EntryCount = PoolTrackTableSize;
+    TableSize = EntryCount * sizeof(POOL_TRACKER_TABLE);
+
+    //
+    // Allocate the "Generic DPC" temporary buffer
+    //
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, TableSize, 'ofnI');
+    if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+
+    //
+    // Do a "Generic DPC" to atomically retrieve the tag and allocation data
+    //
+    Context.PoolTrackTable = Buffer;
+    Context.PoolTrackTableSize = PoolTrackTableSize;
+    Context.PoolTrackTableExpansion = NULL;
+    Context.PoolTrackTableSizeExpansion = 0;
+    KeGenericCallDpc(ExpGetPoolTagInfoTarget, &Context);
+
+    //
+    // Now parse the results
+    //
+    for (TrackerEntry = Buffer; TrackerEntry < (Buffer + EntryCount); TrackerEntry++)
+    {
+        //
+        // If the entry is empty, skip it
+        //
+        if (!TrackerEntry->Key) continue;
+
+        //
+        // Otherwise, add one more entry to the caller's buffer, and ensure that
+        // enough space has been allocated in it
+        //
+        SystemInformation->Count++;
+        CurrentLength += sizeof(*TagEntry);
+        if (SystemInformationLength < CurrentLength)
+        {
+            //
+            // The caller's buffer is too small, so set a failure code. The
+            // caller will know the count, as well as how much space is needed.
+            //
+            // We do NOT break out of the loop, because we want to keep incrementing
+            // the Count as well as CurrentLength so that the caller can know the
+            // final numbers
+            //
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+            //
+            // Small sanity check that our accounting is working correctly
+            //
+            ASSERT(TrackerEntry->PagedAllocs >= TrackerEntry->PagedFrees);
+            ASSERT(TrackerEntry->NonPagedAllocs >= TrackerEntry->NonPagedFrees);
+
+            //
+            // Return the data into the caller's buffer
+            //
+            TagEntry->TagUlong = TrackerEntry->Key;
+            TagEntry->PagedAllocs = TrackerEntry->PagedAllocs;
+            TagEntry->PagedFrees = TrackerEntry->PagedFrees;
+            TagEntry->PagedUsed = TrackerEntry->PagedBytes;
+            TagEntry->NonPagedAllocs = TrackerEntry->NonPagedAllocs;
+            TagEntry->NonPagedFrees = TrackerEntry->NonPagedFrees;
+            TagEntry->NonPagedUsed = TrackerEntry->NonPagedBytes;
+            TagEntry++;
+        }
+    }
+
+    //
+    // Free the "Generic DPC" temporary buffer, return the buffer length and status
+    //
+    ExFreePool(Buffer);
+    if (ReturnLength) *ReturnLength = CurrentLength;
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -852,6 +1356,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             ExUnlockPool(PoolDesc, OldIrql);
 
             //
+            // Track this allocation
+            //
+            ExpInsertPoolTracker(Tag,
+                                 Entry->BlockSize * POOL_BLOCK_SIZE,
+                                 PoolType);
+
+            //
             // Return the pool allocation
             //
             Entry->PoolTag = Tag;
@@ -865,8 +1376,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // There were no free entries left, so we have to allocate a new fresh page
     //
     Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
-    if (Entry == NULL)
-        return NULL;
+    if (Entry == NULL) return NULL;
 
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
@@ -912,6 +1422,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     }
 
     //
+    // Track this allocation
+    //
+    ExpInsertPoolTracker(Tag,
+                         Entry->BlockSize * POOL_BLOCK_SIZE,
+                         PoolType);
+
+    //
     // And return the pool allocation
     //
     ExpCheckPoolBlocks(Entry);
@@ -946,6 +1463,7 @@ ExFreePoolWithTag(IN PVOID P,
     KIRQL OldIrql;
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
+    ULONG Tag;
     BOOLEAN Combined = FALSE;
 
     //
@@ -983,6 +1501,19 @@ ExFreePoolWithTag(IN PVOID P,
     BlockSize = Entry->BlockSize;
     PoolType = (Entry->PoolType - 1) & BASE_POOL_TYPE_MASK;
     PoolDesc = PoolVector[PoolType];
+
+    //
+    // Get the pool tag and get rid of the PROTECTED_POOL flag
+    //
+    Tag = Entry->PoolTag;
+    if (Tag & PROTECTED_POOL) Tag &= ~PROTECTED_POOL;
+
+    //
+    // Stop tracking this allocation
+    //
+    ExpRemovePoolTracker(Tag,
+                         BlockSize * POOL_BLOCK_SIZE,
+                         Entry->PoolType - 1);
 
     //
     // Get the pointer to the next entry

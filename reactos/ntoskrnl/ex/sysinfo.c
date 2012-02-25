@@ -1239,9 +1239,8 @@ SSI_DEF(SystemFileCacheInformation)
 /* Class 22 - Pool Tag Information */
 QSI_DEF(SystemPoolTagInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemPoolTagInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    if (Size < sizeof(SYSTEM_POOLTAG_INFORMATION)) return STATUS_INFO_LENGTH_MISMATCH;
+    return ExGetPoolTagInfo(Buffer, Size, ReqSize);
 }
 
 /* Class 23 - Interrupt Information for all processors */

@@ -348,11 +348,11 @@ C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 typedef struct _POOL_TRACKER_TABLE
 {
     ULONG Key;
-    ULONG NonPagedAllocs;
-    ULONG NonPagedFrees;
+    LONG NonPagedAllocs;
+    LONG NonPagedFrees;
     SIZE_T NonPagedBytes;
-    ULONG PagedAllocs;
-    ULONG PagedFrees;
+    LONG PagedAllocs;
+    LONG PagedFrees;
     SIZE_T PagedBytes;
 } POOL_TRACKER_TABLE, *PPOOL_TRACKER_TABLE;
 
