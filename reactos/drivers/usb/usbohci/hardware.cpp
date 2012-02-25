@@ -517,7 +517,7 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    ULONG Control, Descriptor, FrameInterval, Periodic;
+    ULONG Control, Descriptor, FrameInterval, Periodic, Port;
 
     //
     // lets write physical address of dummy control endpoint descriptor
@@ -530,7 +530,7 @@ CUSBHardwareDevice::StartController(void)
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_BULK_HEAD_ED_OFFSET), m_BulkEndpointDescriptor->PhysicalAddress.LowPart);
 
     //
-    // read descriptor
+    // read descriptor A
     //
     Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
 
@@ -552,18 +552,34 @@ CUSBHardwareDevice::StartController(void)
     Descriptor &= ~OHCI_RH_NO_POWER_SWITCHING;
 
     //
-    // control each port power independently (disabled until it's supported correctly)
+    // control each port power independently
     //
-#if 0
     Descriptor |= OHCI_RH_POWER_SWITCHING_MODE;
-#else
-    Descriptor &= ~OHCI_RH_POWER_SWITCHING_MODE;
-#endif
 
     //
     // write the configuration back
     //
+    DPRINT1("Descriptor A: %x\n", Descriptor);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
+
+    //
+    // read descriptor B
+    //
+    Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_B_OFFSET));
+
+    //
+    // set power power control for each port to use PPS
+    //
+    for (Port = 1; Port <= m_NumberOfPorts; Port++)
+    {
+        Descriptor |= (1 << (16 + Port));
+    }
+
+    //
+    // write the configuration back
+    //
+    DPRINT1("Descriptor B: %x\n", Descriptor);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_B_OFFSET), Descriptor);
 
     //
     // get frame interval
@@ -634,11 +650,6 @@ CUSBHardwareDevice::StartController(void)
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
     ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
     DPRINT1("Control %x\n", Control);
-
-    //
-    // enable power on all ports
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_STATUS_OFFSET), OHCI_RH_LOCAL_POWER_STATUS_CHANGE);
 
     //
     // done

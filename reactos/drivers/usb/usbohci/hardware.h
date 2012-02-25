@@ -113,7 +113,7 @@
 //  Root Hub Descriptor B register (section 7.4.2)
 //
 
-#define OHCI_RH_DESCRIPTOR_B        0x4c
+#define OHCI_RH_DESCRIPTOR_B_OFFSET        0x4c
 
 //
 //  Root Hub status register (section 7.4.3)
