@@ -20,7 +20,7 @@
  */
 
 #include <precomp.h>
-#include "version.h"
+#include "shell32_version.h"
 #include <reactos/version.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
