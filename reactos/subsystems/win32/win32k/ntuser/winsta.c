@@ -364,7 +364,7 @@ NtUserCreateWindowStation(
    _SEH2_TRY
    {
       ProbeForRead( ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 1);
-      Status = IntSafeCopyUnicodeString(&WindowStationName, ObjectAttributes->ObjectName);
+      Status = IntSafeCopyUnicodeStringTerminateNULL(&WindowStationName, ObjectAttributes->ObjectName);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -653,14 +653,14 @@ NtUserGetObjectInformation(
       case UOI_NAME:
          if (WinStaObject != NULL)
          {
-            pvData = ((PUNICODE_STRING)GET_DESKTOP_NAME(WinStaObject))->Buffer;
-            nDataSize = ((PUNICODE_STRING)GET_DESKTOP_NAME(WinStaObject))->Length + 2;
+             pvData = WinStaObject->Name.Buffer;
+             nDataSize = WinStaObject->Name.Length + sizeof(WCHAR);
             Status = STATUS_SUCCESS;
          }
          else if (DesktopObject != NULL)
          {
-            pvData = ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer;
-            nDataSize = ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + 2;
+             pvData = DesktopObject->pDeskInfo->szDesktopName;
+            nDataSize = (wcslen(DesktopObject->pDeskInfo->szDesktopName) + 1) * sizeof(WCHAR);
             Status = STATUS_SUCCESS;
          }
          else
@@ -671,13 +671,13 @@ NtUserGetObjectInformation(
          if (WinStaObject != NULL)
          {
             pvData = L"WindowStation";
-            nDataSize = (wcslen(pvData) + 1) * sizeof(WCHAR);
+            nDataSize = sizeof(L"WindowStation");
             Status = STATUS_SUCCESS;
          }
          else if (DesktopObject != NULL)
          {
             pvData = L"Desktop";
-            nDataSize = (wcslen(pvData) + 1) * sizeof(WCHAR);
+            nDataSize = sizeof(L"Desktop");
             Status = STATUS_SUCCESS;
          }
          else

@@ -845,7 +845,7 @@ NtUserCreateDesktop(
    {
       ProbeForRead( ObjectAttributes, sizeof(OBJECT_ATTRIBUTES),  1);
 
-      Status = IntSafeCopyUnicodeString(&DesktopName, ObjectAttributes->ObjectName);
+      Status = IntSafeCopyUnicodeStringTerminateNULL(&DesktopName, ObjectAttributes->ObjectName);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -886,7 +886,7 @@ NtUserCreateDesktop(
        RETURN(NULL);
    }
 
-   DesktopInfoSize = sizeof(DESKTOPINFO) + DesktopName.Length;
+   DesktopInfoSize = sizeof(DESKTOPINFO) + DesktopName.Length + sizeof(WCHAR);
 
    DesktopObject->pDeskInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
                                               HEAP_NO_SERIALIZE,
@@ -906,7 +906,7 @@ NtUserCreateDesktop(
    DesktopObject->pDeskInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
    RtlCopyMemory(DesktopObject->pDeskInfo->szDesktopName,
                  DesktopName.Buffer,
-                 DesktopName.Length);
+                 DesktopName.Length + sizeof(WCHAR));
 
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
