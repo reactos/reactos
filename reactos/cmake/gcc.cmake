@@ -4,12 +4,25 @@ if(CCACHE STREQUAL "ccache")
     message("-- Enabling ccache build - done")
 endif()
 
+# PDB style debug info
+if(NOT DEFINED SEPARATE_DBG)
+    set(SEPARATE_DBG FALSE)
+endif()
+
+if(SEPARATE_DBG)
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/symbols)
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions")
 
-# Debugging (Note: DWARF-4 on 4.5.1 when we ship)
-# add_compile_flags("-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types")
-add_compile_flags("-gstabs+")
+# Debugging
+if(SEPARATE_DBG)
+    add_compile_flags("-gdwarf-2 -g2")
+else()
+    add_compile_flags("-gstabs+")
+endif()
+
 
 # Do not allow warnings
 add_compile_flags("-Werror")
@@ -91,29 +104,51 @@ else()
     set(ARCH2 ${ARCH})
 endif()
 
-get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
-
-set(CMAKE_C_LINK_EXECUTABLE
-    "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-
-set(CMAKE_CXX_LINK_EXECUTABLE
-    "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
+if(SEPARATE_DBG)
+    # PDB style debug puts all dwarf debug info in a separate dbg file
+    set(OBJCOPY ${CMAKE_OBJCOPY})
+    set(CMAKE_C_LINK_EXECUTABLE
+        "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/<TARGET>.dbg"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+        "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/<TARGET>.dbg"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/<TARGET>.dbg"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY
+        "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/<TARGET>.dbg"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/<TARGET>.dbg"
+        "${OBJCOPY} --strip-debug <TARGET>")
+else()
+    # Normal rsym build
+    get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
+    set(CMAKE_C_LINK_EXECUTABLE
+        "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+        "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY
+        "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
-
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
-
-set(CMAKE_C_CREATE_SHARED_LIBRARY
-    "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-set(CMAKE_CXX_CREATE_SHARED_LIBRARY
-    "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-set(CMAKE_RC_CREATE_SHARED_LIBRARY
-    "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
 
 SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")

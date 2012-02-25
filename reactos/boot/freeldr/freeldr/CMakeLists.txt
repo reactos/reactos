@@ -1,4 +1,9 @@
 
+if(SEPARATE_DBG)
+    # FIXME: http://sourceware.org/bugzilla/show_bug.cgi?id=11822
+    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+endif()
+
 spec2def(freeldr.sys freeldr.spec)
 
 if(ARCH MATCHES i386)
