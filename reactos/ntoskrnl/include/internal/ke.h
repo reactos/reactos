@@ -36,6 +36,12 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef struct _DEFERRED_REVERSE_BARRIER
+{
+    ULONG Barrier;
+    ULONG TotalProcessors;
+} DEFERRED_REVERSE_BARRIER, *PDEFERRED_REVERSE_BARRIER;
+
 typedef struct _KI_SAMPLE_MAP
 {
     LARGE_INTEGER PerfStart;

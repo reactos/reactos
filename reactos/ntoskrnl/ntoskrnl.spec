@@ -583,7 +583,7 @@
 @ stdcall KeFindConfigurationNextEntry(ptr long long ptr ptr)
 @ stdcall KeFlushEntireTb(long long)
 @ stdcall KeFlushQueuedDpcs()
-;KeGenericCallDpc
+@ stdcall KeGenericCallDpc(ptr ptr)
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
@@ -696,8 +696,8 @@
 @ stdcall KeSetTimeIncrement(long long)
 @ stdcall KeSetTimer(ptr long long ptr)
 @ stdcall KeSetTimerEx(ptr long long long ptr)
-;KeSignalCallDpcDone
-;KeSignalCallDpcSynchronize
+@ stdcall KeSignalCallDpcDone(ptr)
+@ stdcall KeSignalCallDpcSynchronize(ptr)
 @ stdcall KeStackAttachProcess(ptr ptr)
 @ stdcall KeSynchronizeExecution(ptr ptr ptr)
 @ stdcall KeTerminateThread(long)
