@@ -13,6 +13,7 @@
 	<installfile installbase="inf">font.inf</installfile>
 	<installfile installbase="inf">hal.inf</installfile>
 	<installfile installbase="inf">hdc.inf</installfile>
+	<installfile installbase="inf">input.inf</installfile>
 	<installfile installbase="inf">intl.inf</installfile>
 	<installfile installbase="inf">keyboard.inf</installfile>
 	<installfile installbase="inf">ks.inf</installfile>
