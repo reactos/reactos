@@ -330,6 +330,7 @@ DeviceStatusChangeThread(
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Failed to reset port %d\n", PortId);
+                    SignalResetComplete = TRUE;
                     continue;
                 }
             }
@@ -348,6 +349,11 @@ DeviceStatusChangeThread(
         }
         else if (PortStatus.Change & USB_PORT_STATUS_RESET)
         {
+            //
+            // Request event signalling later
+            //
+            SignalResetComplete = TRUE;
+
             //
             // Clear Reset
             //
@@ -411,11 +417,6 @@ DeviceStatusChangeThread(
             // This is a new device
             //
             Status = CreateUsbChildDeviceObject(DeviceObject, PortId, NULL, PortStatus.Status);
-
-            //
-            // Request event signalling later
-            //
-            SignalResetComplete = TRUE;
         }
     }
 
