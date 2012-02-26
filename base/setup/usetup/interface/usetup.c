@@ -608,6 +608,9 @@ UpdateKBLayout(VOID)
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
+    PWCHAR NewLanguageId;
+    BOOL RefreshPage = FALSE;
+
     /* Initialize the computer settings list */
     if (LanguageList == NULL)
     {
@@ -619,6 +622,10 @@ LanguagePage(PINPUT_RECORD Ir)
            return INTRO_PAGE;
         }
     }
+
+    /* Load the font */
+    SelectedLanguageId = DefaultLanguage;
+    SetConsoleCodePage();
 
     DrawGenericList(LanguageList,
                     2,
@@ -637,36 +644,26 @@ LanguagePage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-#if 0
-            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
-
-            /* Redraw language selection page in native language */
-            MUIDisplayPage(LANGUAGE_PAGE);
-#endif
-
             ScrollDownGenericList (LanguageList);
+            RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-#if 0
-            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
-
-            /* Redraw language selection page in native language */
-            MUIDisplayPage(LANGUAGE_PAGE);
-#endif
-
             ScrollUpGenericList(LanguageList);
+            RefreshPage = TRUE;
         }
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
         {
             ScrollPageDownGenericList(LanguageList);
+            RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
         {
             ScrollPageUpGenericList(LanguageList);
+            RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
@@ -685,7 +682,7 @@ LanguagePage(PINPUT_RECORD Ir)
                 UpdateKBLayout();
             }
 
-            // Load the font
+            /* Load the font */
             SetConsoleCodePage();
 
             return INTRO_PAGE;
@@ -694,6 +691,28 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             /* a-z */
             GenericListKeyPress (LanguageList, Ir->Event.KeyEvent.uChar.AsciiChar);
+            RefreshPage = TRUE;
+        }
+
+        if (RefreshPage)
+        {
+            NewLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
+
+            if (SelectedLanguageId != NewLanguageId)
+            {
+                /* Clear the language page */
+                MUIClearPage(LANGUAGE_PAGE);
+
+                SelectedLanguageId = NewLanguageId;
+
+                /* Load the font */
+                SetConsoleCodePage();
+
+                /* Redraw language selection page in native language */
+                MUIDisplayPage(LANGUAGE_PAGE);
+            }
+
+            RefreshPage = FALSE;
         }
     }
 
@@ -709,19 +728,19 @@ LanguagePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
-    SYSTEM_DEVICE_INFORMATION Sdi;
+    //SYSTEM_DEVICE_INFORMATION Sdi;
     NTSTATUS Status;
     WCHAR FileNameBuffer[MAX_PATH];
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    ULONG ReturnSize;
+    //ULONG ReturnSize;
     PGENERIC_LIST_ENTRY ListEntry;
     INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-
+#if 0
     /* Check whether a harddisk is available */
     Status = NtQuerySystemInformation(SystemDeviceInformation,
                                       &Sdi,
@@ -740,6 +759,7 @@ SetupStartPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+#endif
 
     /* Get the source path and source root path */
     Status = GetSourcePaths(&SourcePath,
@@ -1445,8 +1465,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             return QUIT_PAGE;
         }
     }
-
-    CheckActiveBootPartition(PartitionList);
 
     DrawPartitionList(PartitionList);
 
@@ -2266,12 +2284,12 @@ static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
     WCHAR PathBuffer[MAX_PATH];
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     UCHAR PartNum;
     NTSTATUS Status;
 
 #ifndef NDEBUG
+    PDISKENTRY DiskEntry;
     ULONG Line;
     ULONG i;
     PLIST_ENTRY Entry;
@@ -2287,7 +2305,9 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+#ifndef NDEBUG
     DiskEntry = PartitionList->CurrentDisk;
+#endif
     PartEntry = PartitionList->CurrentPartition;
     PartNum = PartitionList->CurrentPartitionNumber;
 
@@ -2360,8 +2380,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
 
-            CheckActiveBootPartition(PartitionList);
-
 #ifndef NDEBUG
             CONSOLE_PrintTextXY(6, 12,
                                 "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
@@ -2421,19 +2439,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                                    PathBuffer);
             DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
-
-            /* Set SystemRootPath */
-            RtlFreeUnicodeString(&SystemRootPath);
-            swprintf(PathBuffer,
-                     L"\\Device\\Harddisk%lu\\Partition%lu",
-                     PartitionList->ActiveBootDisk->DiskNumber,
-                     PartitionList->ActiveBootPartition->
-                         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionNumber);
-            RtlCreateUnicodeString(&SystemRootPath,
-                                   PathBuffer);
-            DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
-
-
             if (FileSystemList->Selected->FormatFunc)
             {
                 Status = FormatPartition(&DestinationRootPath,
@@ -2483,15 +2488,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     PartitionList->CurrentPartition->PartInfo[PartNum].PartitionNumber);
     RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
     DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
-
-    /* Set SystemRootPath */
-    RtlFreeUnicodeString(&SystemRootPath);
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-    PartitionList->ActiveBootDisk->DiskNumber,
-    PartitionList->ActiveBootPartition->PartInfo[PartNum].PartitionNumber);
-    RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
-    DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
 
@@ -3350,8 +3346,30 @@ BootLoaderPage(PINPUT_RECORD Ir)
     UCHAR PartitionType;
     BOOLEAN InstallOnFloppy;
     USHORT Line = 12;
+    WCHAR PathBuffer[MAX_PATH];
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    /* Find or set the active partition */
+    CheckActiveBootPartition(PartitionList);
+
+    /* Update the partition table because we may have changed the active partition */
+    if (WritePartitionsToDisk(PartitionList) == FALSE)
+    {
+        DPRINT("WritePartitionsToDisk() failed\n");
+        MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    RtlFreeUnicodeString(&SystemRootPath);
+    swprintf(PathBuffer,
+             L"\\Device\\Harddisk%lu\\Partition%lu",
+             PartitionList->ActiveBootDisk->DiskNumber,
+             PartitionList->ActiveBootPartition->
+                PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionNumber);
+    RtlCreateUnicodeString(&SystemRootPath,
+                           PathBuffer);
+    DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;

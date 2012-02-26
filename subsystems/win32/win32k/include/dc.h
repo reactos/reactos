@@ -1,15 +1,6 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
-typedef struct _DC *PDC;
-
-#include "engobjects.h"
-#include "brush.h"
-#include "bitmaps.h"
-#include "pdevobj.h"
-#include "palette.h"
-#include "region.h"
-
 /* Constants ******************************************************************/
 
 /* Get/SetBounds/Rect support. */
@@ -154,16 +145,10 @@ extern PDC defaultDCstate;
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
 PDC NTAPI DC_AllocDcWithHandle(VOID);
-VOID FASTCALL DC_InitDC(HDC  DCToInit);
 BOOL NTAPI DC_bAllocDcAttr(PDC pdc);
-VOID FASTCALL DC_FreeDcAttr(HDC);
-BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
-BOOL FASTCALL DC_SetOwnership(HDC hDC, PEPROCESS Owner);
-VOID FASTCALL DC_LockDisplay(HDC);
-VOID FASTCALL DC_UnlockDisplay(HDC);
+BOOL NTAPI DC_Cleanup(PVOID ObjectBody);
 BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 
-VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
 VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL to);
@@ -176,27 +161,19 @@ VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
 
 VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 
-BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
-BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);
 VOID FASTCALL DCU_SetDcUndeletable(HDC);
 VOID NTAPI DC_vFreeDcAttr(PDC pdc);
 VOID NTAPI DC_vInitDc(PDC pdc, DCTYPE dctype, PPDEVOBJ ppdev);
 
 COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
 INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-COLORREF APIENTRY  IntGdiGetBkColor(HDC  hDC);
-INT APIENTRY  IntGdiGetBkMode(HDC  hDC);
 COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
 UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
-UINT APIENTRY  IntGdiGetTextAlign(HDC  hDC);
-COLORREF APIENTRY  IntGdiGetTextColor(HDC  hDC);
-INT APIENTRY  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 VOID FASTCALL IntGdiReferencePdev(PPDEVOBJ pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
-BOOL FASTCALL MakeInfoDC(PDC,BOOL);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
 

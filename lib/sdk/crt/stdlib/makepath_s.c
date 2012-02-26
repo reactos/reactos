@@ -44,9 +44,9 @@ int CDECL _makepath_s(char *path, size_t size, const char *drive,
 
     if (directory && directory[0])
     {
-        unsigned int len = strlen(directory);
+        size_t len = strlen(directory);
         unsigned int needs_separator = directory[len - 1] != '/' && directory[len - 1] != '\\';
-        unsigned int copylen = min(size - 1, len);
+        size_t copylen = min(size - 1, len);
 
         if (size < 2)
             goto range;
@@ -71,8 +71,8 @@ int CDECL _makepath_s(char *path, size_t size, const char *drive,
 
     if (filename && filename[0])
     {
-        unsigned int len = strlen(filename);
-        unsigned int copylen = min(size - 1, len);
+        size_t len = strlen(filename);
+        size_t copylen = min(size - 1, len);
 
         if (size < 2)
             goto range;
@@ -88,9 +88,9 @@ int CDECL _makepath_s(char *path, size_t size, const char *drive,
 
     if (extension && extension[0])
     {
-        unsigned int len = strlen(extension);
+        size_t len = strlen(extension);
         unsigned int needs_period = extension[0] != '.';
-        unsigned int copylen;
+        size_t copylen;
 
         if (size < 2)
             goto range;

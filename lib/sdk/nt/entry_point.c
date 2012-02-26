@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 NTSTATUS
 __cdecl

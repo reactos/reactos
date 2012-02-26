@@ -27,9 +27,8 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winreg.h"
-#include "advpub.h"
 #include "ole2.h"
+#include "rpcproxy.h"
 #include "dimm.h"
 
 #include "wine/debug.h"
@@ -60,10 +59,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 }
 
 typedef struct {
-    const IClassFactoryVtbl *lpClassFactoryVtbl;
+    IClassFactory IClassFactory_iface;
 
     HRESULT (*cf)(IUnknown*,IUnknown**);
 } ClassFactory;
+
+static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
+}
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface,
         REFIID riid, void **ppv)
@@ -100,7 +104,7 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface,
         IUnknown *pOuter, REFIID riid, void **ppv)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     HRESULT ret;
     IUnknown *obj;
     TRACE("(%p, %p, %s, %p)\n", iface, pOuter, debugstr_guid(riid), ppv);
@@ -135,7 +139,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     if(IsEqualGUID(&CLSID_CActiveIMM, rclsid)) {
         static ClassFactory cf = {
-            &ClassFactoryVtbl,
+            { &ClassFactoryVtbl },
             ActiveIMMApp_Constructor,
         };
 
@@ -154,59 +158,12 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return S_FALSE;
 }
 
-#define INF_SET_CLSID(clsid)                  \
-    do                                        \
-    {                                         \
-        static CHAR name[] = "CLSID_" #clsid; \
-                                              \
-        pse[i].pszName = name;                \
-        clsids[i++] = &CLSID_ ## clsid;       \
-    } while (0)
-
-static HRESULT register_server(BOOL doregister)
-{
-    HRESULT hres;
-    HMODULE hAdvpack;
-    HRESULT (WINAPI *pRegInstall)(HMODULE hm, LPCSTR pszSection, const STRTABLEA* pstTable);
-    STRTABLEA strtable;
-    STRENTRYA pse[1];
-    static CLSID const *clsids[34];
-    unsigned int i = 0;
-
-    static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
-
-    INF_SET_CLSID(CActiveIMM);
-
-    for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {
-        pse[i].pszValue = HeapAlloc(GetProcessHeap(), 0, 39);
-        sprintf(pse[i].pszValue, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-                clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
-                clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
-                clsids[i]->Data4[5], clsids[i]->Data4[6], clsids[i]->Data4[7]);
-    }
-
-    strtable.cEntries = sizeof(pse)/sizeof(pse[0]);
-    strtable.pse = pse;
-
-    hAdvpack = LoadLibraryW(wszAdvpack);
-    pRegInstall = (void *)GetProcAddress(hAdvpack, "RegInstall");
-
-    hres = pRegInstall(msimtf_instance, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
-
-    for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
-        HeapFree(GetProcessHeap(), 0, pse[i].pszValue);
-
-    return hres;
-}
-
-#undef INF_SET_CLSID
-
 /***********************************************************************
  *          DllRegisterServer (msimtf.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return register_server(TRUE);
+    return __wine_register_resources( msimtf_instance );
 }
 
 /***********************************************************************
@@ -214,5 +171,5 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return register_server(FALSE);
+    return __wine_unregister_resources( msimtf_instance );
 }

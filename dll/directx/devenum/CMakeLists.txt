@@ -1,5 +1,4 @@
 
-set_unicode()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -17,7 +16,7 @@ add_library(devenum SHARED
     devenum.rc
     ${CMAKE_CURRENT_BINARY_DIR}/devenum.def)
 
-set_module_type(devenum win32dll)
+set_module_type(devenum win32dll UNICODE)
 
 target_link_libraries(devenum
     strmiids

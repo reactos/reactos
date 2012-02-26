@@ -6,14 +6,14 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -73,14 +73,29 @@ CreateFileMappingW(HANDLE hFile,
     if (flProtect == PAGE_READWRITE)
     {
         /* Give it */
-        DesiredAccess |= (SECTION_MAP_WRITE | SECTION_MAP_READ);
+        DesiredAccess |= SECTION_MAP_WRITE;
+    }
+    else if (flProtect == PAGE_EXECUTE_READWRITE)
+    {
+        /* Give it */
+        DesiredAccess |= (SECTION_MAP_WRITE | SECTION_MAP_EXECUTE);
+    }
+    else if (flProtect == PAGE_EXECUTE_READ)
+    {
+        /* Give it */
+        DesiredAccess |= SECTION_MAP_EXECUTE;
+    }
+    else if ((flProtect != PAGE_READONLY) && (flProtect != PAGE_WRITECOPY))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
     }
 
     /* Now check if we got a name */
     if (lpName) RtlInitUnicodeString(&SectionName, lpName);
 
     /* Now convert the object attributes */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalAttributes,
                                                     lpFileMappingAttributes,
                                                     lpName ? &SectionName : NULL);
 
@@ -114,21 +129,21 @@ CreateFileMappingW(HANDLE hFile,
                              flProtect,
                              Attributes,
                              hFile);
-    
-    if (Status == STATUS_OBJECT_NAME_EXISTS)
-    {
-        SetLastError(ERROR_ALREADY_EXISTS);
-        return SectionHandle;
-    }
-
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
         BaseSetLastNTError(Status);
         return NULL;
     }
+    else if (Status == STATUS_OBJECT_NAME_EXISTS)
+    {
+        SetLastError(ERROR_ALREADY_EXISTS);
+    }
+    else
+    {
+        SetLastError(ERROR_SUCCESS);
+    }
 
-    SetLastError(ERROR_SUCCESS);
     /* Return the section */
     return SectionHandle;
 }
@@ -160,17 +175,19 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
     ViewSize = dwNumberOfBytesToMap;
 
     /* Convert flags to NT Protection Attributes */
-    if (dwDesiredAccess & FILE_MAP_WRITE)
+    if (dwDesiredAccess == FILE_MAP_COPY)
     {
-        Protect  = PAGE_READWRITE;
+        Protect = PAGE_WRITECOPY;
+    }
+    else if (dwDesiredAccess & FILE_MAP_WRITE)
+    {
+        Protect = (dwDesiredAccess & FILE_MAP_EXECUTE) ?
+                   PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
     }
     else if (dwDesiredAccess & FILE_MAP_READ)
     {
-        Protect = PAGE_READONLY;
-    }
-    else if (dwDesiredAccess & FILE_MAP_COPY)
-    {
-        Protect = PAGE_WRITECOPY;
+        Protect = (dwDesiredAccess & FILE_MAP_EXECUTE) ?
+                   PAGE_EXECUTE_READ : PAGE_READONLY;
     }
     else
     {
@@ -232,6 +249,18 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
     Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)lpBaseAddress);
     if (!NT_SUCCESS(Status))
     {
+        /* Check if the pages were protected */
+        if (Status == STATUS_INVALID_PAGE_PROTECTION)
+        {
+            /* Flush the region if it was a "secure memory cache" */
+            if (RtlFlushSecureMemoryCache((PVOID)lpBaseAddress, 0))
+            {
+                /* Now try to unmap again */
+                Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)lpBaseAddress);
+                if (NT_SUCCESS(Status)) return TRUE;
+            }
+        }
+
         /* We failed */
         BaseSetLastNTError(Status);
         return FALSE;
@@ -246,51 +275,22 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
  */
 HANDLE
 NTAPI
-OpenFileMappingA(DWORD dwDesiredAccess,
-                 BOOL bInheritHandle,
-                 LPCSTR lpName)
+OpenFileMappingA(IN DWORD dwDesiredAccess,
+                 IN BOOL bInheritHandle,
+                 IN LPCSTR lpName)
 {
-    NTSTATUS Status;
-    ANSI_STRING AnsiName;
-    PUNICODE_STRING UnicodeCache;
-
-    /* Check for a name */
-    if (lpName)
-    {
-        /* Use TEB Cache */
-        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
-
-        /* Convert to unicode */
-        RtlInitAnsiString(&AnsiName, lpName);
-        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Conversion failed */
-            BaseSetLastNTError(Status);
-            return NULL;
-        }
-    }
-    else
-    {
-        /* We need a name */
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-    /* Call the Unicode version */
-    return OpenFileMappingW(dwDesiredAccess,
-                            bInheritHandle,
-                            (LPCWSTR)UnicodeCache->Buffer);
+    ConvertOpenWin32AnsiObjectApiToUnicodeApi(FileMapping, dwDesiredAccess, bInheritHandle, lpName);
 }
 
 /*
  * @implemented
  */
+ /* FIXME: Convert to the new macros */
 HANDLE
 NTAPI
-OpenFileMappingW(DWORD dwDesiredAccess,
-                 BOOL bInheritHandle,
-                 LPCWSTR lpName)
+OpenFileMappingW(IN DWORD dwDesiredAccess,
+                 IN BOOL bInheritHandle,
+                 IN LPCWSTR lpName)
 {
     NTSTATUS Status;
     HANDLE SectionHandle;
@@ -310,16 +310,23 @@ OpenFileMappingW(DWORD dwDesiredAccess,
     InitializeObjectAttributes(&ObjectAttributes,
                                &UnicodeName,
                                (bInheritHandle ? OBJ_INHERIT : 0),
-                               hBaseDir,
+                               BaseGetNamedObjectDirectory(),
                                NULL);
 
     /* Convert COPY to READ */
-    if (dwDesiredAccess == FILE_MAP_COPY) dwDesiredAccess = FILE_MAP_READ;
+    if (dwDesiredAccess == FILE_MAP_COPY)
+    {
+        /* Fixup copy */
+        dwDesiredAccess = SECTION_MAP_READ;
+    }
+    else if (dwDesiredAccess & FILE_MAP_EXECUTE)
+    {
+        /* Fixup execute */
+        dwDesiredAccess = (dwDesiredAccess & ~FILE_MAP_EXECUTE) | SECTION_MAP_EXECUTE;
+    }
 
     /* Open the section */
-    Status = ZwOpenSection(&SectionHandle,
-                           dwDesiredAccess,
-                           &ObjectAttributes);
+    Status = ZwOpenSection(&SectionHandle, dwDesiredAccess, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -327,7 +334,6 @@ OpenFileMappingW(DWORD dwDesiredAccess,
         return NULL;
     }
 
-    SetLastError(ERROR_SUCCESS);
     /* Otherwise, return the handle */
     return SectionHandle;
 }
@@ -337,8 +343,8 @@ OpenFileMappingW(DWORD dwDesiredAccess,
  */
 BOOL
 NTAPI
-FlushViewOfFile(LPCVOID lpBaseAddress,
-                SIZE_T dwNumberOfBytesToFlush)
+FlushViewOfFile(IN LPCVOID lpBaseAddress,
+                IN SIZE_T dwNumberOfBytesToFlush)
 {
     SIZE_T NumberOfBytesToFlush;
     NTSTATUS Status;
@@ -352,7 +358,7 @@ FlushViewOfFile(LPCVOID lpBaseAddress,
                                   (LPVOID)lpBaseAddress,
                                   &NumberOfBytesToFlush,
                                   &IoStatusBlock);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && (Status != STATUS_NOT_MAPPED_DATA))
     {
         /* We failed */
         BaseSetLastNTError(Status);

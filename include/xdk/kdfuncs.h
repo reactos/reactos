@@ -6,10 +6,10 @@ NTSYSAPI
 ULONG
 NTAPI
 DbgPrompt(
-  IN PCCH Prompt,
-  OUT PCH Response,
-  IN ULONG MaximumResponseLength);
-$endif
+  _In_z_ PCCH Prompt,
+  _Out_writes_bytes_(MaximumResponseLength) PCH Response,
+  _In_ ULONG MaximumResponseLength);
+$endif (_NTDDK_)
 
 $if (_WDMDDK_)
 #ifndef _DBGNT_
@@ -17,16 +17,16 @@ $if (_WDMDDK_)
 ULONG
 __cdecl
 DbgPrint(
-  IN PCSTR Format,
-  IN ...);
+  _In_z_ _Printf_format_string_ PCSTR Format,
+  ...);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 ULONG
 __cdecl
 DbgPrintReturnControlC(
-  IN PCCH Format,
-  IN ...);
+  _In_z_ _Printf_format_string_ PCCH Format,
+  ...);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -35,10 +35,10 @@ NTSYSAPI
 ULONG
 __cdecl
 DbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCSTR Format,
-  IN ...);
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level,
+  _In_z_ _Printf_format_string_ PCSTR Format,
+  ...);
 
 #ifdef _VA_LIST_DEFINED
 
@@ -46,20 +46,20 @@ NTSYSAPI
 ULONG
 NTAPI
 vDbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level,
+  _In_z_ PCCH Format,
+  _In_ va_list ap);
 
 NTSYSAPI
 ULONG
 NTAPI
 vDbgPrintExWithPrefix(
-  IN PCCH Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
+  _In_z_ PCCH Prefix,
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level,
+  _In_z_ PCCH Format,
+  _In_ va_list ap);
 
 #endif /* _VA_LIST_DEFINED */
 
@@ -67,16 +67,16 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level);
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 DbgSetDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN BOOLEAN State);
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level,
+  _In_ BOOLEAN State);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
@@ -84,16 +84,16 @@ DbgSetDebugFilterState(
 
 typedef VOID
 (*PDEBUG_PRINT_CALLBACK)(
-  IN PSTRING Output,
-  IN ULONG ComponentId,
-  IN ULONG Level);
+  _In_ PSTRING Output,
+  _In_ ULONG ComponentId,
+  _In_ ULONG Level);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 DbgSetDebugPrintCallback(
-  IN PDEBUG_PRINT_CALLBACK DebugPrintCallback,
-  IN BOOLEAN Enable);
+  _In_ PDEBUG_PRINT_CALLBACK DebugPrintCallback,
+  _In_ BOOLEAN Enable);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -157,11 +157,13 @@ KdEnableDebugger(VOID);
 #if (_MSC_FULL_VER >= 150030729) && !defined(IMPORT_NATIVE_DBG_BREAK)
 #define DbgBreakPoint __debugbreak
 #else
+__analysis_noreturn
 VOID
 NTAPI
 DbgBreakPoint(VOID);
 #endif
 
+__analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
@@ -182,11 +184,11 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 KdChangeOption(
-  IN KD_OPTION Option,
-  IN ULONG InBufferBytes OPTIONAL,
-  IN PVOID InBuffer,
-  IN ULONG OutBufferBytes OPTIONAL,
-  OUT PVOID OutBuffer,
-  OUT PULONG OutBufferNeeded OPTIONAL);
+  _In_ KD_OPTION Option,
+  _In_opt_ ULONG InBufferBytes,
+  _In_ PVOID InBuffer,
+  _In_opt_ ULONG OutBufferBytes,
+  _Out_ PVOID OutBuffer,
+  _Out_opt_ PULONG OutBufferNeeded);
 #endif
-$endif
+$endif (_WDMDDK_)

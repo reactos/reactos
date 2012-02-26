@@ -239,7 +239,7 @@ AutoUpdateMonthCal(HWND hwndDlg,
 {
     UNREFERENCED_PARAMETER(lpAutoUpdate);
 
-    /* update the controls */
+    /* Update the controls */
     FillMonthsComboBox(GetDlgItem(hwndDlg,
                                   IDC_MONTHCB));
 }
@@ -254,7 +254,7 @@ DTPProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_KEYDOWN:
-            /* stop the timer when the user is about to change the time */
+            /* Stop the timer when the user is about to change the time */
             if ((wParam != VK_LEFT) & (wParam != VK_RIGHT))
                 KillTimer(GetParent(hwnd), ID_TIMER);
             break;
@@ -281,7 +281,7 @@ DateTimePageProc(HWND hwndDlg,
 
             SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
 
-            /* set range and current year */
+            /* Set range and current year */
             SendMessageW(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
             SendMessageW(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
 
@@ -393,7 +393,7 @@ DateTimePageProc(HWND hwndDlg,
         break;
 
         case WM_TIMECHANGE:
-            /* FIXME - we don't get this message as we're not a top-level window... */
+            /* FIXME: We don't get this message as we're not a top-level window... */
             SendMessageW(GetDlgItem(hwndDlg,
                                     IDC_MONTHCALENDAR),
                          MCCM_RESET,

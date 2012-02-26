@@ -15,9 +15,13 @@
 #define UNICODE
 #define _UNICODE
 
+#include <stdio.h>
+
 /* PSDK/NDK Headers */
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 /* FMIFS Public Header */
 #include <fmifs/fmifs.h>

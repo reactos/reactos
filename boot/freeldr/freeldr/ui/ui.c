@@ -19,7 +19,9 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
+#include <reactos/buildno.h>
 
+DBG_DEFAULT_CHANNEL(UI);
 
 ULONG	UiScreenWidth;							// Screen Width
 ULONG	UiScreenHeight;							// Screen Height
@@ -94,8 +96,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		return TRUE;
 	}
 
-	DPRINTM(DPRINT_UI, "Initializing User Interface.\n");
-	DPRINTM(DPRINT_UI, "Reading in UI settings from [Display] section.\n");
+	TRACE("Initializing User Interface.\n");
+	TRACE("Reading in UI settings from [Display] section.\n");
 
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
@@ -219,14 +221,15 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
 
-	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
+	TRACE("UiInitialize() returning TRUE.\n");
 	return TRUE;
 }
 
 BOOLEAN SetupUiInitialize(VOID)
 {
 	CHAR	DisplayModeText[260];
-	ULONG	Depth, Length;
+	ULONG	Depth;
+	SIZE_T	Length;
 
 
 	DisplayModeText[0] = '\0';
@@ -255,7 +258,7 @@ BOOLEAN SetupUiInitialize(VOID)
 	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
 	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
 
-	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
+	TRACE("UiInitialize() returning TRUE.\n");
 
 	return TRUE;
 }
@@ -311,12 +314,12 @@ VOID UiUpdateDateTime(VOID)
 
 VOID UiInfoBox(PCSTR MessageText)
 {
-	ULONG		TextLength;
+	SIZE_T		TextLength;
 	ULONG		BoxWidth;
 	ULONG		BoxHeight;
 	ULONG		LineBreakCount;
-	ULONG		Index;
-	ULONG		LastIndex;
+	SIZE_T		Index;
+	SIZE_T		LastIndex;
 	ULONG		Left;
 	ULONG		Top;
 	ULONG		Right;
@@ -339,7 +342,7 @@ VOID UiInfoBox(PCSTR MessageText)
 		{
 			if ((Index - LastIndex) > BoxWidth)
 			{
-				BoxWidth = (Index - LastIndex);
+				BoxWidth = (ULONG)(Index - LastIndex);
 			}
 		}
 	}

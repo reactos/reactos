@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32.def)
 
 add_library(olecli32 SHARED ${SOURCE})
-set_entrypoint(olecli32 0)
+set_module_type(olecli32 win32dll ENTRYPOINT 0 )
 
 target_link_libraries(olecli32 wine)
 

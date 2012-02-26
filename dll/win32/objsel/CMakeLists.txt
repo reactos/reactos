@@ -6,12 +6,12 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(objsel.dll objsel.spec)
 
 list(APPEND SOURCE
     factory.c
     objsel.c
-    regsvr.c
     objsel.rc
     ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
 
@@ -29,4 +29,5 @@ add_importlibs(objsel
     kernel32
     ntdll)
 
+add_pch(objsel objsel_private.h)
 add_cd_file(TARGET objsel DESTINATION reactos/system32 FOR all)

@@ -26,9 +26,6 @@ static ULONG_PTR ServicesProcessId;
 
 CSR_API(CsrRegisterServicesProcess)
 {
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
   if (ServicesProcessIdValid == TRUE)
     {
       /* Only accept a single call */

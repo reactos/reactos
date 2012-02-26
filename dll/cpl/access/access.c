@@ -82,7 +82,7 @@ ReadSettings(PGLOBAL_DATA pGlobalData)
 
     pGlobalData->uCaretBlinkTime = GetCaretBlinkTime();
 
-    /* get sound settings */
+    /* Get sound settings */
     pGlobalData->ssSoundSentry.cbSize = sizeof(SOUNDSENTRY);
     SystemParametersInfo(SPI_GETSOUNDSENTRY,
                          sizeof(SOUNDSENTRY),

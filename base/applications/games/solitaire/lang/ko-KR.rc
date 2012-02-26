@@ -1,5 +1,5 @@
 /*
- *Korean translation of solitaire by Seungju Kim(manatails007) (www.seungjukim.com)
+ * Korean translation of solitaire by Seungju Kim (manatails007) (www.seungjukim.com)
  */
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -8,23 +8,23 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "ø…º«"
+CAPTION "ÏòµÏÖò"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "ƒ´µÂ", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "«— ¿Âæø(&O)", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "ºº ¿Âæø(&T)", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Ïπ¥Îìú", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "Ìïú Ïû•Ïî©(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "ÏÑ∏ Ïû•Ïî©(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "Ω√∞£ ∫∏¿Ã±‚(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "ªÛ≈¬ «•Ω√¡Ÿ(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "ÏãúÍ∞Ñ Î≥¥Ïù¥Í∏∞(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "ÏÉÅÌÉú ÌëúÏãúÏ§Ñ(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
-    DEFPUSHBUTTON   "»Æ¿Œ", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "√Îº“", IDCANCEL, 101, 97, 50, 14
+    DEFPUSHBUTTON   "ÌôïÏù∏", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "Ï∑®ÏÜå", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "ƒ´µÂ π´¥Ã º±≈√"
+CAPTION "Ïπ¥Îìú Î¨¥Îä¨ ÏÑ†ÌÉù"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -33,15 +33,15 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
     CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
-    DEFPUSHBUTTON "»Æ¿Œ", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "√Îº“", IDCANCEL, 126, 84, 54, 13
+    DEFPUSHBUTTON "ÌôïÏù∏", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "Ï∑®ÏÜå", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -49,10 +49,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "ƒ´µÂ≥Ó¿Ã"
+    IDS_SOL_NAME    "Ïπ¥ÎìúÎÜÄÏù¥"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "«ˆ¿Á ∞‘¿”¿ª ≥°≥æ∞°ø‰?"
-    IDS_SOL_WIN     "√‡«œ«’¥œ¥Ÿ!!"
+    IDS_SOL_QUIT    "ÌòÑÏû¨ Í≤åÏûÑÏùÑ ÎÅùÎÇºÍ∞ÄÏöî?"
+    IDS_SOL_WIN     "Ï∂ïÌïòÌï©ÎãàÎã§!!"
     IDS_SOL_DEAL    "Deal again?"
 END
 
@@ -61,20 +61,20 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "∞‘¿”(&G)"
+    POPUP "Í≤åÏûÑ(&G)"
     BEGIN
-        MENUITEM "ªı ∞‘¿”(&D)\tF2",                   IDM_GAME_NEW
+        MENUITEM "ÏÉà Í≤åÏûÑ(&D)\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        /*FIXME : is µ¶ correct?*/
-        MENUITEM "µ¶(&C)...",                    IDM_GAME_DECK
-        MENUITEM "ø…º«(&O)...",                 IDM_GAME_OPTIONS
+        /* FIXME: is Îç± correct? */
+        MENUITEM "Îç±(&C)...",                    IDM_GAME_DECK
+        MENUITEM "ÏòµÏÖò(&O)...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "¡æ∑·(&E)",                       IDM_GAME_EXIT
+        MENUITEM "Ï¢ÖÎ£å(&E)",                       IDM_GAME_EXIT
     END
-    POPUP "µµøÚ∏ª(&H)"
+    POPUP "ÎèÑÏõÄÎßê(&H)"
     BEGIN
-        MENUITEM "∏Ò¬˜(&C)\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "¡§∫∏(&A)",                      IDM_HELP_ABOUT
+        MENUITEM "Î™©Ï∞®(&C)\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "Ï†ïÎ≥¥(&A)",                      IDM_HELP_ABOUT
     END
 END
 

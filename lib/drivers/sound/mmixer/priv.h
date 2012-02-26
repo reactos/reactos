@@ -525,3 +525,6 @@ MMixerGetConnectedFromLogicalTopologyPins(
     IN ULONG NodeIndex,
     OUT PULONG OutPinCount,
     OUT PULONG OutPins);
+
+VOID
+MMixerPrintTopology();

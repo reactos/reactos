@@ -1195,8 +1195,6 @@ SetupDiGetClassDevPropertySheetsW(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else if (!DeviceInfoData && IsEqualIID(&list->ClassGuid, &GUID_NULL))
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (!PropertySheetHeader)
-        SetLastError(ERROR_INVALID_PARAMETER);
     else if (PropertySheetType != DIGCDP_FLAG_ADVANCED
           && PropertySheetType != DIGCDP_FLAG_BASIC
           && PropertySheetType != DIGCDP_FLAG_REMOTE_ADVANCED

@@ -275,9 +275,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_DEVICE_EXTENSION DeviceExt;
     PFILE_FULL_EA_INFORMATION EaInfo;
     PAFD_CREATE_PACKET ConnectInfo = NULL;
-    ULONG EaLength;
+    //ULONG EaLength;
     PWCHAR EaInfoValue = NULL;
-    UINT Disposition, i;
+    //UINT Disposition;
+    UINT i;
     NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,
@@ -285,7 +286,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
-    Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
+    //Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
 
     Irp->IoStatus.Information = 0;
 
@@ -295,9 +296,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
 	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
 
-	EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-	    EaInfo->EaNameLength +
-	    EaInfo->EaValueLength;
+	//EaLength = sizeof(FILE_FULL_EA_INFORMATION) + EaInfo->EaNameLength + EaInfo->EaValueLength;
 
 	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
 				EaInfo, EaInfoValue));
@@ -439,6 +438,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
     InFlightRequest[3] = &FCB->ConnectIrp;
+    InFlightRequest[4] = &FCB->DisconnectIrp;
 
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
@@ -672,7 +672,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_DISCONNECT_INFO DisReq;
     NTSTATUS Status = STATUS_SUCCESS;
-    USHORT Flags = 0;
+    USHORT Flags;
     PLIST_ENTRY CurrentEntry;
     PIRP CurrentIrp;
 
@@ -682,11 +682,49 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0 );
     
-    if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
-	    Flags |= TDI_DISCONNECT_RELEASE;
-    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
-       DisReq->DisconnectType & AFD_DISCONNECT_ABORT )
-	    Flags |= TDI_DISCONNECT_ABORT;
+    /* Send direction only */
+    if ((DisReq->DisconnectType & AFD_DISCONNECT_SEND) &&
+        !(DisReq->DisconnectType & AFD_DISCONNECT_RECV))
+    {
+        /* Perform a controlled disconnect */
+        Flags = TDI_DISCONNECT_RELEASE;
+    }
+    /* Receive direction or both */
+    else
+    {
+        /* Mark that we can't issue another receive request */
+        FCB->TdiReceiveClosed = TRUE;
+
+        /* Try to cancel a pending TDI receive IRP if there was one in progress */
+        if (FCB->ReceiveIrp.InFlightRequest)
+            IoCancelIrp(FCB->ReceiveIrp.InFlightRequest);
+
+        /* Discard any pending data */
+        FCB->Recv.Content = 0;
+        FCB->Recv.BytesUsed = 0;
+
+        /* Mark us as overread to complete future reads with an error */
+        FCB->Overread = TRUE;
+
+        /* Set a successful close status to indicate a shutdown on overread */
+        FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
+
+        /* Clear the receive event */
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+        /* Receive direction only */
+        if ((DisReq->DisconnectType & AFD_DISCONNECT_RECV) &&
+            !(DisReq->DisconnectType & AFD_DISCONNECT_SEND))
+        {
+            /* No need to tell the transport driver for receive direction only */
+            return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );
+        }
+        else
+        {
+            /* Perform an abortive disconnect */
+            Flags = TDI_DISCONNECT_ABORT;
+        }
+    }
 
     if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
     {
@@ -723,6 +761,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->DisconnectTimeout = DisReq->Timeout;
         FCB->DisconnectPending = TRUE;
         FCB->SendClosed = TRUE;
+        FCB->PollState &= ~AFD_EVENT_SEND;
         
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
         if (Status == STATUS_PENDING)
@@ -759,6 +798,9 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         
             FCB->RemoteAddress = NULL;
         }
+        
+        FCB->PollState &= ~AFD_EVENT_SEND;
+        FCB->SendClosed = TRUE;
     }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );

@@ -1,6 +1,7 @@
 #pragma once
 
 /* Icons */
+
 #define IDC_CPLICON_1                       100
 #define IDC_CPLICON_2                       200
 
@@ -11,11 +12,13 @@
 #define IDI_MOUSE_SPEED                     205
 #define IDI_MOUSE_BUTTON                    206
 #define IDI_MOUSE_TRAILS                    207
-#define IDI_MOUSE_POINTER                   208
-#define IDI_MOUSE_WHEEL                     209
-#define IDI_REPEAT_RATE                     210
-#define IDI_REPEAT_DELAY                    211
-#define IDI_LOOK_KEY                        212
+#define IDI_FONTS_FOLDER                    400
+#define IDI_ADMIN_TOOLS_FOLDER              500
+#define IDI_MOUSE_POINTER                   600
+#define IDI_MOUSE_WHEEL                     601
+#define IDI_REPEAT_RATE                     602
+#define IDI_REPEAT_DELAY                    603
+#define IDI_LOOK_KEY                        604
 
 #define IDD_PAGE_BUTTON                     101
 #define IDD_PAGE_POINTER                    102

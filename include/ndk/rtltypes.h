@@ -36,16 +36,22 @@ Author:
 //
 #define RTL_USER_PROCESS_PARAMETERS_NORMALIZED              0x01
 #define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER            0x02
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x04
-#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x08
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x04
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x08
 #define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                 0x10
 #define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB             0x20
+#define RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB            0x40
+#define RTL_USER_PROCESS_PARAMETERS_CASE_SENSITIVE          0x80
 #define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS     0x100
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1            0x200
 #define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2            0x400
 #define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH        0x1000
 #define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH          0x2000
+#define RTL_USER_PROCESS_PARAMETERS_IMAGE_KEY_MISSING       0x4000
 #define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
+
+#define RTL_MAX_DRIVE_LETTERS 32
+#define RTL_DRIVE_LETTER_VALID (USHORT)0x0001
 
 //
 // Exception Flags
@@ -242,12 +248,19 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 //
 // RtlFindCharInUnicodeString Flags
 //
+#define RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END        1
+#define RTL_FIND_CHAR_IN_UNICODE_STRING_COMPLEMENT_CHAR_SET 2
 #define RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE    4
 
 //
 // RtlImageNtHeaderEx Flags
 //
 #define RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK          0x00000001
+
+//
+// RtlDosApplyFileIsolationRedirection_Ustr Flags
+//
+#define RTL_DOS_APPLY_FILE_REDIRECTION_USTR_FLAG_RESPECT_DOT_LOCAL  0x01
 
 //
 // Codepages
@@ -296,13 +309,13 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_INIT_OBJECT_ATTRIBUTES(n, a)                        \
     RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
 
-#else
+#else /* NTOS_MODE_USER */
 //
 // Message Resource Flag
 //
 #define MESSAGE_RESOURCE_UNICODE                            0x0001
 
-#endif
+#endif /* !NTOS_MODE_USER */
 #define MAXIMUM_LEADBYTES                                   12
 
 //
@@ -350,9 +363,23 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
     (__SOURCE_STRING__)                                         \
 }
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 #ifdef NTOS_MODE_USER
+
+//
+// Boot Status Data Field Types
+//
+typedef enum _RTL_BSD_ITEM_TYPE
+{
+    RtlBsdItemVersionNumber,
+    RtlBsdItemProductType,
+    RtlBsdItemAabEnabled,
+    RtlBsdItemAabTimeout,
+    RtlBsdItemBootGood,
+    RtlBsdItemBootShutdown,
+    RtlBsdItemMax
+} RTL_BSD_ITEM_TYPE, *PRTL_BSD_ITEM_TYPE;
 
 //
 // Table and Compare result types
@@ -372,7 +399,7 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 //
 // RTL Path Types
@@ -425,7 +452,7 @@ typedef VOID
     IN PVOID Context
 );
 
-#else
+#else /* !NTOS_MODE_USER */
 
 //
 // Handler during regular RTL Exceptions
@@ -462,7 +489,16 @@ extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
 extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 
-#endif
+#endif /* NTOS_MODE_USER */
+
+//
+// Unhandled Exception Filter
+//
+typedef ULONG
+(NTAPI *RTLP_UNHANDLED_EXCEPTION_FILTER)(
+    IN struct _EXCEPTION_POINTERS *ExceptionInfo
+);
+typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
 
 //
 // Callback for RTL Heap Enumeration
@@ -487,6 +523,21 @@ typedef VOID
 );
 
 //
+// Worker Start/Exit Function
+//
+typedef NTSTATUS
+(NTAPI *PRTL_START_POOL_THREAD)(
+    IN PTHREAD_START_ROUTINE Function,
+    IN PVOID Parameter,
+    OUT PHANDLE ThreadHandle
+);
+
+typedef NTSTATUS
+(NTAPI *PRTL_EXIT_POOL_THREAD)(
+    IN NTSTATUS ExitStatus
+);
+
+//
 // Declare empty structure definitions so that they may be referenced by
 // routines before they are defined
 //
@@ -497,52 +548,76 @@ struct _RTL_RANGE;
 //
 // Routines and callbacks for the RTL AVL/Generic Table package
 //
-#if defined(NTOS_MODE_USER) || (!defined(NTOS_MODE_USER) && !defined(_NTIFS_))
+#ifdef NTOS_MODE_USER
 typedef NTSTATUS
-(NTAPI *PRTL_AVL_MATCH_FUNCTION)(
+(NTAPI RTL_AVL_MATCH_FUNCTION)(
     struct _RTL_AVL_TABLE *Table,
     PVOID UserData,
     PVOID MatchData
 );
+typedef RTL_AVL_MATCH_FUNCTION *PRTL_AVL_MATCH_FUNCTION;
 
 typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_AVL_COMPARE_ROUTINE) (
+(NTAPI RTL_AVL_COMPARE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     PVOID FirstStruct,
     PVOID SecondStruct
 );
+typedef RTL_AVL_COMPARE_ROUTINE *PRTL_AVL_COMPARE_ROUTINE;
 
 typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_GENERIC_COMPARE_ROUTINE) (
+(NTAPI RTL_GENERIC_COMPARE_ROUTINE) (
     struct _RTL_GENERIC_TABLE *Table,
     PVOID FirstStruct,
     PVOID SecondStruct
 );
+typedef RTL_GENERIC_COMPARE_ROUTINE *PRTL_GENERIC_COMPARE_ROUTINE;
 
 typedef PVOID
-(NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
+(NTAPI RTL_GENERIC_ALLOCATE_ROUTINE) (
     struct _RTL_GENERIC_TABLE *Table,
     CLONG ByteSize
 );
-
-typedef VOID
-(NTAPI *PRTL_GENERIC_FREE_ROUTINE) (
-    struct _RTL_GENERIC_TABLE *Table,
-    PVOID Buffer
-);
+typedef RTL_GENERIC_ALLOCATE_ROUTINE *PRTL_GENERIC_ALLOCATE_ROUTINE;
 
 typedef PVOID
-(NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
+(NTAPI RTL_AVL_ALLOCATE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     CLONG ByteSize
 );
+typedef RTL_AVL_ALLOCATE_ROUTINE *PRTL_AVL_ALLOCATE_ROUTINE;
 
 typedef VOID
-(NTAPI *PRTL_AVL_FREE_ROUTINE) (
+(NTAPI RTL_GENERIC_FREE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID Buffer
+);
+typedef RTL_GENERIC_FREE_ROUTINE *PRTL_GENERIC_FREE_ROUTINE;
+
+typedef VOID
+(NTAPI RTL_AVL_FREE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     PVOID Buffer
 );
-#endif
+typedef RTL_AVL_FREE_ROUTINE *PRTL_AVL_FREE_ROUTINE;
+
+#ifdef RTL_USE_AVL_TABLES
+#undef  RTL_GENERIC_COMPARE_ROUTINE
+#undef PRTL_GENERIC_COMPARE_ROUTINE
+#undef  RTL_GENERIC_ALLOCATE_ROUTINE
+#undef PRTL_GENERIC_ALLOCATE_ROUTINE
+#undef  RTL_GENERIC_FREE_ROUTINE
+#undef PRTL_GENERIC_FREE_ROUTINE
+
+#define  RTL_GENERIC_COMPARE_ROUTINE     RTL_AVL_COMPARE_ROUTINE
+#define PRTL_GENERIC_COMPARE_ROUTINE    PRTL_AVL_COMPARE_ROUTINE
+#define  RTL_GENERIC_ALLOCATE_ROUTINE    RTL_AVL_ALLOCATE_ROUTINE
+#define PRTL_GENERIC_ALLOCATE_ROUTINE   PRTL_AVL_ALLOCATE_ROUTINE
+#define  RTL_GENERIC_FREE_ROUTINE        RTL_AVL_FREE_ROUTINE
+#define PRTL_GENERIC_FREE_ROUTINE       PRTL_AVL_FREE_ROUTINE
+#endif /* RTL_USE_AVL_TABLES */
+
+#endif /* NTOS_MODE_USER */
 
 //
 // RTL Query Registry callback
@@ -659,6 +734,7 @@ typedef struct _RTL_BALANCED_LINKS
 //
 // RTL Avl/Generic Tables
 //
+#ifndef RTL_USE_AVL_TABLES
 typedef struct _RTL_GENERIC_TABLE
 {
     PRTL_SPLAY_LINKS TableRoot;
@@ -671,6 +747,7 @@ typedef struct _RTL_GENERIC_TABLE
     PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
+#endif /* !RTL_USE_AVL_TABLES */
 
 typedef struct _RTL_AVL_TABLE
 {
@@ -686,6 +763,14 @@ typedef struct _RTL_AVL_TABLE
     PRTL_AVL_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
+
+#ifdef RTL_USE_AVL_TABLES
+#undef  RTL_GENERIC_TABLE
+#undef PRTL_GENERIC_TABLE
+
+#define  RTL_GENERIC_TABLE  RTL_AVL_TABLE
+#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
+#endif /* RTL_USE_AVL_TABLES */
 
 //
 // RTL Compression Buffer
@@ -805,7 +890,7 @@ typedef struct _ACTIVATION_CONTEXT_STACK
 } ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
 #endif
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 //
 // ACE Structure
@@ -850,28 +935,88 @@ typedef struct _RTL_PROCESS_MODULE_INFORMATION_EX
 
 typedef struct _RTL_HEAP_TAG_INFO
 {
-   ULONG NumberOfAllocations;
-   ULONG NumberOfFrees;
-   ULONG BytesAllocated;
+    ULONG NumberOfAllocations;
+    ULONG NumberOfFrees;
+    SIZE_T BytesAllocated;
 } RTL_HEAP_TAG_INFO, *PRTL_HEAP_TAG_INFO;
 
 typedef struct _RTL_HEAP_USAGE_ENTRY
 {
     struct _RTL_HEAP_USAGE_ENTRY *Next;
+    PVOID Address;
+    SIZE_T Size;
+    USHORT AllocatorBackTraceIndex;
+    USHORT TagIndex;
 } RTL_HEAP_USAGE_ENTRY, *PRTL_HEAP_USAGE_ENTRY;
 
 typedef struct _RTL_HEAP_USAGE
 {
     ULONG Length;
-    ULONG BytesAllocated;
-    ULONG BytesCommitted;
-    ULONG BytesReserved;
-    ULONG BytesReservedMaximum;
+    SIZE_T BytesAllocated;
+    SIZE_T BytesCommitted;
+    SIZE_T BytesReserved;
+    SIZE_T BytesReservedMaximum;
     PRTL_HEAP_USAGE_ENTRY Entries;
     PRTL_HEAP_USAGE_ENTRY AddedEntries;
     PRTL_HEAP_USAGE_ENTRY RemovedEntries;
-    UCHAR Reserved[32];
+    ULONG_PTR Reserved[8];
 } RTL_HEAP_USAGE, *PRTL_HEAP_USAGE;
+
+typedef struct _RTL_HEAP_WALK_ENTRY
+{
+    PVOID DataAddress;
+    SIZE_T DataSize;
+    UCHAR OverheadBytes;
+    UCHAR SegmentIndex;
+    USHORT Flags;
+    union
+    {
+        struct
+        {
+            SIZE_T Settable;
+            USHORT TagIndex;
+            USHORT AllocatorBackTraceIndex;
+            ULONG Reserved[2];
+        } Block;
+        struct
+        {
+            ULONG_PTR CommittedSize;
+            ULONG_PTR UnCommittedSize;
+            PVOID FirstEntry;
+            PVOID LastEntry;
+        } Segment;
+    };
+} RTL_HEAP_WALK_ENTRY, *PRTL_HEAP_WALK_ENTRY;
+
+typedef struct _RTL_HEAP_ENTRY
+{
+    SIZE_T Size;
+    USHORT Flags;
+    USHORT AllocatorBackTraceIndex;
+    union
+    {
+        struct
+        {
+            SIZE_T Settable;
+            ULONG Tag;
+        } s1;
+        struct
+        {
+            SIZE_T CommittedSize;
+            PVOID FirstBlock;
+        } s2;
+    } u;
+} RTL_HEAP_ENTRY, *PRTL_HEAP_ENTRY;
+
+typedef struct _RTL_HEAP_TAG
+{
+    ULONG NumberOfAllocations;
+    ULONG NumberOfFrees;
+    SIZE_T BytesAllocated;
+    USHORT TagIndex;
+    USHORT CreatorBackTraceIndex;
+    WCHAR TagName[24];
+} RTL_HEAP_TAG, *PRTL_HEAP_TAG;
 
 typedef struct _RTL_HEAP_INFORMATION
 {
@@ -879,15 +1024,15 @@ typedef struct _RTL_HEAP_INFORMATION
     ULONG Flags;
     USHORT EntryOverhead;
     USHORT CreatorBackTraceIndex;
-    ULONG BytesAllocated;
-    ULONG BytesCommitted;
+    SIZE_T BytesAllocated;
+    SIZE_T BytesCommitted;
     ULONG NumberOfTags;
     ULONG NumberOfEntries;
     ULONG NumberOfPseudoTags;
     ULONG PseudoTagGranularity;
     ULONG Reserved[4];
-    PVOID Tags;
-    PVOID Entries;
+    PRTL_HEAP_TAG Tags;
+    PRTL_HEAP_ENTRY Entries;
 } RTL_HEAP_INFORMATION, *PRTL_HEAP_INFORMATION;
 
 typedef struct _RTL_PROCESS_HEAPS
@@ -1029,7 +1174,12 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
-typedef struct _RTLP_CURDIR_REF *PRTLP_CURDIR_REF;
+typedef struct _RTLP_CURDIR_REF
+{
+    LONG RefCount;
+    HANDLE Handle;
+} RTLP_CURDIR_REF, *PRTLP_CURDIR_REF;
+
 typedef struct _RTL_RELATIVE_NAME_U
 {
     UNICODE_STRING RelativeName;
@@ -1091,7 +1241,7 @@ typedef struct _RTL_CRITICAL_SECTION
     ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
-#endif
+#endif /* !NTOS_MODE_USER */
 
 //
 // RTL Private Heap Structures
@@ -1140,6 +1290,8 @@ typedef struct _RANGE_LIST_ITERATOR
 //
 // RTL Resource
 //
+#define RTL_RESOURCE_FLAG_LONG_TERM ((ULONG)0x00000001)
+
 typedef struct _RTL_RESOURCE
 {
     RTL_CRITICAL_SECTION Lock;
@@ -1185,7 +1337,13 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
     UNICODE_STRING DesktopInfo;
     UNICODE_STRING ShellInfo;
     UNICODE_STRING RuntimeData;
-    RTL_DRIVE_LETTER_CURDIR CurrentDirectories[32];
+    RTL_DRIVE_LETTER_CURDIR CurrentDirectories[RTL_MAX_DRIVE_LETTERS];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    SIZE_T EnvironmentSize;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    SIZE_T EnvironmentVersion;
+#endif
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
 typedef struct _RTL_USER_PROCESS_INFORMATION
@@ -1260,7 +1418,7 @@ typedef struct _TIME_ZONE_INFORMATION
     SYSTEMTIME DaylightDate;
     LONG DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
-#endif
+#endif /* !_WINBASE_ */
 
 //
 // Native version of Timezone Structure
@@ -1329,6 +1487,26 @@ typedef struct _RTL_TRACE_BLOCK
     PVOID *Trace;
 } RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
 
+//
+// Auto-Managed Rtl* String Buffer
+//
+typedef struct _RTL_BUFFER
+{
+    PUCHAR Buffer;
+    PUCHAR StaticBuffer;
+    SIZE_T Size;
+    SIZE_T StaticSize;
+    SIZE_T ReservedForAllocatedSize;
+    PVOID ReservedForIMalloc;
+} RTL_BUFFER, *PRTL_BUFFER;
+
+typedef struct _RTL_UNICODE_STRING_BUFFER
+{
+    UNICODE_STRING String;
+    RTL_BUFFER ByteBuffer;
+    WCHAR MinimumStaticBufferForTerminalNul;
+} RTL_UNICODE_STRING_BUFFER, *PRTL_UNICODE_STRING_BUFFER;
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -1354,5 +1532,5 @@ typedef struct _MESSAGE_RESOURCE_DATA
     MESSAGE_RESOURCE_BLOCK Blocks[ANYSIZE_ARRAY];
 } MESSAGE_RESOURCE_DATA, *PMESSAGE_RESOURCE_DATA;
 
-#endif
-#endif
+#endif /* !NTOS_MODE_USER */
+#endif /* !_RTLTYPES_H */

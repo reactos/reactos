@@ -23,17 +23,20 @@
 #define VIDEOPRT_H
 
 #include <stdio.h>
-#include <ntddk.h>
+
+#include <ntifs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/halfuncs.h>
+#include <ndk/inbvfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
+
 #define __BROKEN__
 #include <miniport.h>
 #include <video.h>
-#include <ntddvdeo.h>
 #include <ntagp.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <dderror.h>
 #include <windef.h>
-
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  'PDIV'
@@ -190,6 +193,11 @@ IntVideoPortSetupInterrupt(
    IN PVIDEO_PORT_CONFIG_INFO ConfigInfo);
 
 /* resource.c */
+
+NTSTATUS NTAPI
+IntVideoPortFilterResourceRequirements(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
 
 NTSTATUS NTAPI
 IntVideoPortMapPhysicalMemory(

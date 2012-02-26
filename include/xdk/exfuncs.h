@@ -42,23 +42,34 @@ ExiTryToAcquireFastMutex(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+_IRQL_raises_(APC_LEVEL)
+_IRQL_saves_global_(OldIrql, FastMutex)
 NTKERNELAPI
 VOID
 FASTCALL
 ExAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_)
+    PFAST_MUTEX FastMutex);
 
+_IRQL_requires_(APC_LEVEL)
+_IRQL_restores_global_(OldIrql, FastMutex)
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
+  _Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PFAST_MUTEX FastMutex);
 
+_Must_inspect_result_
+_Success_(return!=FALSE)
+_IRQL_raises_(APC_LEVEL)
+_IRQL_saves_global_(OldIrql, FastMutex)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExTryToAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_)
+    PFAST_MUTEX FastMutex);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -79,11 +90,11 @@ ExTryToAcquireFastMutex(
     defined(_NTHAL_) || defined(_NTOSP_)
 NTKERNELAPI
 USHORT
-ExQueryDepthSList(IN PSLIST_HEADER ListHead);
+ExQueryDepthSList(_In_ PSLIST_HEADER ListHead);
 #else
 FORCEINLINE
 USHORT
-ExQueryDepthSList(IN PSLIST_HEADER ListHead)
+ExQueryDepthSList(_In_ PSLIST_HEADER ListHead)
 {
   return (USHORT)(ListHead->Alignment & 0xffff);
 }
@@ -97,13 +108,13 @@ ExpInterlockedFlushSList(
 NTKERNELAPI
 PSLIST_ENTRY
 ExpInterlockedPopEntrySList(
-  PSLIST_HEADER ListHead);
+  _Inout_ PSLIST_HEADER ListHead);
 
 NTKERNELAPI
 PSLIST_ENTRY
 ExpInterlockedPushEntrySList(
-  PSLIST_HEADER ListHead,
-  PSLIST_ENTRY ListEntry);
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry);
 
 #define ExInterlockedFlushSList(Head) \
     ExpInterlockedFlushSList(Head)
@@ -124,7 +135,7 @@ NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedFlushSList(
-  IN OUT PSLIST_HEADER ListHead);
+  _Inout_ PSLIST_HEADER ListHead);
 
 #endif /* !defined(_WIN64) */
 
@@ -134,29 +145,31 @@ NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPopEntrySList(
-  IN PSLIST_HEADER ListHead,
-  IN PKSPIN_LOCK Lock);
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPushEntrySList(
-  IN PSLIST_HEADER ListHead,
-  IN PSINGLE_LIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ __drv_aliasesMem PSINGLE_LIST_ENTRY ListEntry,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocateFromPagedLookasideList(
-  IN OUT PPAGED_LOOKASIDE_LIST Lookaside);
+  _Inout_ PPAGED_LOOKASIDE_LIST Lookaside);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreeToPagedLookasideList(
-  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
-  IN PVOID Entry);
+  _Inout_ PPAGED_LOOKASIDE_LIST Lookaside,
+  _In_ PVOID Entry);
 
 #else /* !_WIN2K_COMPAT_SLIST_USAGE */
 
@@ -167,10 +180,11 @@ ExFreeToPagedLookasideList(
     InterlockedPushEntrySList(_ListHead, _ListEntry)
 #endif
 
+_IRQL_requires_max_(APC_LEVEL)
 static __inline
 PVOID
 ExAllocateFromPagedLookasideList(
-  IN OUT PPAGED_LOOKASIDE_LIST Lookaside)
+  _Inout_ PPAGED_LOOKASIDE_LIST Lookaside)
 {
   PVOID Entry;
 
@@ -195,11 +209,12 @@ ExAllocateFromPagedLookasideList(
   return Entry;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 static __inline
 VOID
 ExFreeToPagedLookasideList(
-  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
-  IN PVOID Entry)
+  _Inout_ PPAGED_LOOKASIDE_LIST Lookaside,
+  _In_ PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
 #ifdef NONAMELESSUNION
@@ -246,7 +261,7 @@ ExFreeToPagedLookasideList(
 FORCEINLINE
 VOID
 ExInitializeFastMutex(
-  OUT PFAST_MUTEX FastMutex)
+  _Out_ PFAST_MUTEX FastMutex)
 {
   FastMutex->Count = FM_LOCK_BIT;
   FastMutex->Owner = NULL;
@@ -340,20 +355,20 @@ NTKERNELAPI
 INTERLOCKED_RESULT
 FASTCALL
 Exfi386InterlockedIncrementLong(
-  IN OUT LONG volatile *Addend);
+  _Inout_ _Interlocked_operand_ LONG volatile *Addend);
 
 NTKERNELAPI
 INTERLOCKED_RESULT
 FASTCALL
 Exfi386InterlockedDecrementLong(
-  IN PLONG  Addend);
+  _Inout_ _Interlocked_operand_ PLONG Addend);
 
 NTKERNELAPI
 ULONG
 FASTCALL
 Exfi386InterlockedExchangeUlong(
-  IN PULONG  Target,
-  IN ULONG  Value);
+  _Inout_ _Interlocked_operand_ PULONG Target,
+  _In_ ULONG Value);
 
 #endif
 
@@ -363,199 +378,300 @@ $if (_NTIFS_)
 #define ExDisableResourceBoost ExDisableResourceBoostLite
 
 VOID
-ExInitializePushLock (
-  OUT PEX_PUSH_LOCK PushLock);
+ExInitializePushLock(
+  _Out_ PEX_PUSH_LOCK PushLock);
 $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
+_IRQL_requires_max_(APC_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
 NTKERNELAPI
 VOID
 FASTCALL
 ExAcquireFastMutexUnsafe(
-  IN OUT PFAST_MUTEX FastMutex);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_)
+    PFAST_MUTEX FastMutex);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseFastMutexUnsafe(
-  IN OUT PFAST_MUTEX FastMutex);
+  _Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PFAST_MUTEX FastMutex);
 
+_Requires_lock_held_(_Global_critical_region_)
+_Requires_lock_not_held_(*Resource)
+_When_(Wait!=0, _Acquires_exclusive_lock_(*Resource))
+_IRQL_requires_max_(APC_LEVEL)
+_When_(Wait!=0, _Post_satisfies_(return == 1))
+_When_(Wait==0, _Post_satisfies_(return == 0 || return == 1) _Must_inspect_result_)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceExclusiveLite(
-  IN OUT PERESOURCE Resource,
-  IN BOOLEAN Wait);
+  _Inout_ PERESOURCE Resource,
+  _In_ _Literal_ BOOLEAN Wait);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
+_When_(Wait!=0, _Post_satisfies_(return == 1))
+_When_(Wait==0, _Post_satisfies_(return == 0 || return == 1) _Must_inspect_result_)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceSharedLite(
-  IN OUT PERESOURCE Resource,
-  IN BOOLEAN Wait);
+  _Inout_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return!=0, _Acquires_shared_lock_(*_Curr_))
+    PERESOURCE Resource,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
+_When_(Wait!=0, _Post_satisfies_(return == 1))
+_When_(Wait==0, _Post_satisfies_(return == 0 || return == 1) _Must_inspect_result_)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedStarveExclusive(
-  IN OUT PERESOURCE Resource,
-  IN BOOLEAN Wait);
+  _Inout_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return!=0, _Acquires_shared_lock_(*_Curr_))
+    PERESOURCE Resource,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
+_When_(Wait!=0, _Post_satisfies_(return == 1))
+_When_(Wait==0, _Post_satisfies_(return == 0 || return == 1) _Must_inspect_result_)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedWaitForExclusive(
-  IN OUT PERESOURCE Resource,
-  IN BOOLEAN Wait);
+  _Inout_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return!=0, _Acquires_lock_(*_Curr_))
+    PERESOURCE Resource,
+  _In_ BOOLEAN Wait);
 
+__drv_preferredFunction("ExAllocatePoolWithTag",
+                        "No tag interferes with debugging.")
+__drv_allocatesMem(Mem)
+_When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType & NonPagedPoolMustSucceed) != 0,
+  __drv_reportError("Must succeed pool allocations are forbidden. "
+                    "Allocation failures cause a system crash"))
+_When_((PoolType & (NonPagedPoolMustSucceed |
+                    POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
+  _Post_maybenull_ _Must_inspect_result_)
+_When_((PoolType & (NonPagedPoolMustSucceed |
+                    POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
+  _Post_notnull_)
+_Post_writable_byte_size_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePool(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes);
+  __drv_strictTypeMatch(__drv_typeExpr) _In_ POOL_TYPE PoolType,
+  _In_ SIZE_T NumberOfBytes);
 
+__drv_preferredFunction("ExAllocatePoolWithQuotaTag",
+                        "No tag interferes with debugging.")
+__drv_allocatesMem(Mem)
+_When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType & NonPagedPoolMustSucceed) != 0,
+  __drv_reportError("Must succeed pool allocations are forbidden. "
+                    "Allocation failures cause a system crash"))
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) != 0,
+  _Post_maybenull_ _Must_inspect_result_)
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_)
+_Post_writable_byte_size_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithQuota(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes);
+  __drv_strictTypeMatch(__drv_typeExpr) _In_ POOL_TYPE PoolType,
+  _In_ SIZE_T NumberOfBytes);
 
+__drv_allocatesMem(Mem)
+_When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType & NonPagedPoolMustSucceed) != 0,
+  __drv_reportError("Must succeed pool allocations are forbidden. "
+                    "Allocation failures cause a system crash"))
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) != 0,
+  _Post_maybenull_ _Must_inspect_result_)
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_)
+_Post_writable_byte_size_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithQuotaTag(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes,
-  IN ULONG Tag);
+  _In_ __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ ULONG Tag);
 
 #ifndef POOL_TAGGING
 #define ExAllocatePoolWithQuotaTag(a,b,c) ExAllocatePoolWithQuota(a,b)
 #endif
 
+__drv_allocatesMem(Mem)
+_When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType & NonPagedPoolMustSucceed) != 0,
+  __drv_reportError("Must succeed pool allocations are forbidden. "
+                    "Allocation failures cause a system crash"))
+_When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
+  _Post_maybenull_ _Must_inspect_result_)
+_When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
+  _Post_notnull_)
+_Post_writable_byte_size_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithTag(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes,
-  IN ULONG Tag);
+  _In_ __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ ULONG Tag);
 
 #ifndef POOL_TAGGING
 #define ExAllocatePoolWithTag(a,b,c) ExAllocatePool(a,b)
 #endif
 
+__drv_allocatesMem(Mem)
+_When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType & NonPagedPoolMustSucceed) != 0,
+  __drv_reportError("Must succeed pool allocations are forbidden. "
+                    "Allocation failures cause a system crash"))
+_When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
+  _Post_maybenull_ _Must_inspect_result_)
+_When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
+  _Post_notnull_)
+_Post_writable_byte_size_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithTagPriority(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes,
-  IN ULONG Tag,
-  IN EX_POOL_PRIORITY Priority);
+  _In_ __drv_strictTypeMatch(__drv_typeCond) POOL_TYPE PoolType,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ ULONG Tag,
+  _In_ __drv_strictTypeMatch(__drv_typeExpr) EX_POOL_PRIORITY Priority);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExConvertExclusiveToSharedLite(
-  IN OUT PERESOURCE Resource);
+  _Inout_ _Requires_lock_held_(*_Curr_) PERESOURCE Resource);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExCreateCallback(
-  OUT PCALLBACK_OBJECT *CallbackObject,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN BOOLEAN Create,
-  IN BOOLEAN AllowMultipleCallbacks);
+  _Outptr_ PCALLBACK_OBJECT *CallbackObject,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ BOOLEAN Create,
+  _In_ BOOLEAN AllowMultipleCallbacks);
 
 NTKERNELAPI
 VOID
 NTAPI
 ExDeleteNPagedLookasideList(
-  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside);
+  _Inout_ PNPAGED_LOOKASIDE_LIST Lookaside);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExDeletePagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside);
+  _Inout_ PPAGED_LOOKASIDE_LIST Lookaside);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExDeleteResourceLite(
-  IN OUT PERESOURCE Resource);
+  _Inout_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreePool(
-  IN PVOID P);
+  _In_ __drv_freesMem(Mem) PVOID P);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreePoolWithTag(
-  IN PVOID P,
-  IN ULONG Tag);
+  _In_ __drv_freesMem(Mem) PVOID P,
+  _In_ ULONG Tag);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 ExGetExclusiveWaiterCount(
-  IN PERESOURCE Resource);
+  _In_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 KPROCESSOR_MODE
 NTAPI
 ExGetPreviousMode(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 ExGetSharedWaiterCount(
-  IN PERESOURCE Resource);
+  _In_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExInitializeNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside,
-  IN PALLOCATE_FUNCTION Allocate OPTIONAL,
-  IN PFREE_FUNCTION Free OPTIONAL,
-  IN ULONG Flags,
-  IN SIZE_T Size,
-  IN ULONG Tag,
-  IN USHORT Depth);
+  _Out_ PNPAGED_LOOKASIDE_LIST Lookaside,
+  _In_opt_ PALLOCATE_FUNCTION Allocate,
+  _In_opt_ PFREE_FUNCTION Free,
+  _In_ ULONG Flags,
+  _In_ SIZE_T Size,
+  _In_ ULONG Tag,
+  _In_ USHORT Depth);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExInitializePagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside,
-  IN PALLOCATE_FUNCTION Allocate OPTIONAL,
-  IN PFREE_FUNCTION Free OPTIONAL,
-  IN ULONG Flags,
-  IN SIZE_T Size,
-  IN ULONG Tag,
-  IN USHORT Depth);
+  _Out_ PPAGED_LOOKASIDE_LIST Lookaside,
+  _In_opt_ PALLOCATE_FUNCTION Allocate,
+  _In_opt_ PFREE_FUNCTION Free,
+  _In_ ULONG Flags,
+  _In_ SIZE_T Size,
+  _In_ ULONG Tag,
+  _In_ USHORT Depth);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInitializeResourceLite(
-  OUT PERESOURCE Resource);
+  _Out_ PERESOURCE Resource);
 
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 ExInterlockedAddLargeInteger(
-  IN PLARGE_INTEGER Addend,
-  IN LARGE_INTEGER Increment,
-  IN PKSPIN_LOCK Lock);
+  _Inout_ PLARGE_INTEGER Addend,
+  _In_ LARGE_INTEGER Increment,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 #if defined(_WIN64)
 #define ExInterlockedAddLargeStatistic(Addend, Increment) \
@@ -569,9 +685,9 @@ NTKERNELAPI
 ULONG
 FASTCALL
 ExInterlockedAddUlong(
-  IN PULONG Addend,
-  IN ULONG Increment,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PULONG Addend,
+  _In_ ULONG Increment,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 #if defined(_AMD64_) || defined(_IA64_)
 
@@ -584,9 +700,9 @@ NTKERNELAPI
 LONGLONG
 FASTCALL
 ExfInterlockedCompareExchange64(
-  IN OUT LONGLONG volatile *Destination,
-  IN PLONGLONG Exchange,
-  IN PLONGLONG Comperand);
+  _Inout_ _Interlocked_operand_ LONGLONG volatile *Destination,
+  _In_ PLONGLONG Exchange,
+  _In_ PLONGLONG Comperand);
 
 #define ExInterlockedCompareExchange64(Destination, Exchange, Comperand, Lock) \
     ExfInterlockedCompareExchange64(Destination, Exchange, Comperand)
@@ -608,57 +724,60 @@ NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertHeadList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY ListEntry,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PLIST_ENTRY ListHead,
+  _Inout_ __drv_aliasesMem PLIST_ENTRY ListEntry,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertTailList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY ListEntry,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PLIST_ENTRY ListHead,
+  _Inout_ __drv_aliasesMem PLIST_ENTRY ListEntry,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPopEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PSINGLE_LIST_ENTRY ListHead,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPushEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead,
-  IN OUT PSINGLE_LIST_ENTRY ListEntry,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PSINGLE_LIST_ENTRY ListHead,
+  _Inout_ __drv_aliasesMem PSINGLE_LIST_ENTRY ListEntry,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedRemoveHeadList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PLIST_ENTRY ListHead,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExIsProcessorFeaturePresent(
-  IN ULONG ProcessorFeature);
+  _In_ ULONG ProcessorFeature);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExIsResourceAcquiredExclusiveLite(
-  IN PERESOURCE Resource);
+  _In_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 ExIsResourceAcquiredSharedLite(
-  IN PERESOURCE Resource);
+  _In_ PERESOURCE Resource);
 
 #define ExIsResourceAcquiredLite ExIsResourceAcquiredSharedLite
 
@@ -666,84 +785,99 @@ NTKERNELAPI
 VOID
 NTAPI
 ExLocalTimeToSystemTime(
-  IN PLARGE_INTEGER LocalTime,
-  OUT PLARGE_INTEGER SystemTime);
+  _In_ PLARGE_INTEGER LocalTime,
+  _Out_ PLARGE_INTEGER SystemTime);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExNotifyCallback(
-  IN PCALLBACK_OBJECT CallbackObject,
-  IN PVOID Argument1 OPTIONAL,
-  IN PVOID Argument2 OPTIONAL);
+  _In_ PCALLBACK_OBJECT CallbackObject,
+  _In_opt_ PVOID Argument1,
+  _In_opt_ PVOID Argument2);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExQueueWorkItem(
-  IN OUT PWORK_QUEUE_ITEM WorkItem,
-  IN WORK_QUEUE_TYPE QueueType);
+  _Inout_ __drv_aliasesMem PWORK_QUEUE_ITEM WorkItem,
+  __drv_strictTypeMatch(__drv_typeExpr) _In_ WORK_QUEUE_TYPE QueueType);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 DECLSPEC_NORETURN
 VOID
 NTAPI
 ExRaiseStatus(
-  IN NTSTATUS Status);
+  _In_ NTSTATUS Status);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 ExRegisterCallback(
-  IN PCALLBACK_OBJECT CallbackObject,
-  IN PCALLBACK_FUNCTION CallbackFunction,
-  IN PVOID CallbackContext OPTIONAL);
+  _Inout_ PCALLBACK_OBJECT CallbackObject,
+  _In_ PCALLBACK_FUNCTION CallbackFunction,
+  _In_opt_ PVOID CallbackContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExReinitializeResourceLite(
-  IN OUT PERESOURCE Resource);
+  _Inout_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Requires_lock_held_(_Global_critical_region_)
 NTKERNELAPI
 VOID
 NTAPI
 ExReleaseResourceForThreadLite(
-  IN OUT PERESOURCE Resource,
-  IN ERESOURCE_THREAD ResourceThreadId);
+  _Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PERESOURCE Resource,
+  _In_ ERESOURCE_THREAD ResourceThreadId);
 
+_Requires_lock_held_(_Global_critical_region_)
+_Requires_lock_held_(*Resource)
+_Releases_lock_(*Resource)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseResourceLite(
-  IN OUT PERESOURCE Resource);
+  _Inout_ PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExSetResourceOwnerPointer(
-  IN OUT PERESOURCE Resource,
-  IN PVOID OwnerPointer);
+  _Inout_ PERESOURCE Resource,
+  _In_ PVOID OwnerPointer);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 ExSetTimerResolution(
-  IN ULONG DesiredTime,
-  IN BOOLEAN SetResolution);
+  _In_ ULONG DesiredTime,
+  _In_ BOOLEAN SetResolution);
 
 NTKERNELAPI
 VOID
 NTAPI
 ExSystemTimeToLocalTime(
-  IN PLARGE_INTEGER SystemTime,
-  OUT PLARGE_INTEGER LocalTime);
+  _In_ PLARGE_INTEGER SystemTime,
+  _Out_ PLARGE_INTEGER LocalTime);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExUnregisterCallback(
-  IN OUT PVOID CbRegistration);
+  _Inout_ PVOID CbRegistration);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
@@ -751,40 +885,44 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize);
+  _Inout_ PZONE_HEADER Zone,
+  _Inout_ PVOID Segment,
+  _In_ ULONG SegmentSize);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInitializeZone(
-  OUT PZONE_HEADER Zone,
-  IN ULONG BlockSize,
-  IN OUT PVOID InitialSegment,
-  IN ULONG InitialSegmentSize);
+  _Out_ PZONE_HEADER Zone,
+  _In_ ULONG BlockSize,
+  _Inout_ PVOID InitialSegment,
+  _In_ ULONG InitialSegmentSize);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInterlockedExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize,
-  IN OUT PKSPIN_LOCK Lock);
+  _Inout_ PZONE_HEADER Zone,
+  _Inout_ PVOID Segment,
+  _In_ ULONG SegmentSize,
+  _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExUuidCreate(
-  OUT UUID *Uuid);
+  _Out_ UUID *Uuid);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 DECLSPEC_NORETURN
 VOID
 NTAPI
 ExRaiseAccessViolation(VOID);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 DECLSPEC_NORETURN
 VOID
@@ -794,181 +932,208 @@ ExRaiseDatatypeMisalignment(VOID);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 SIZE_T
 NTAPI
 ExQueryPoolBlockSize(
-  IN PVOID PoolBlock,
-  OUT PBOOLEAN QuotaCharged);
+  _In_ PVOID PoolBlock,
+  _Out_ PBOOLEAN QuotaCharged);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
-ExAdjustLookasideDepth(
-  VOID);
+ExAdjustLookasideDepth(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExDisableResourceBoostLite(
-  IN PERESOURCE Resource);
+  _In_ PERESOURCE Resource);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 
+_Must_inspect_result_
+_Post_satisfies_(return == 0 || return == 1)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtection(
-  IN OUT PEX_RUNDOWN_REF RunRef);
+  _Inout_ PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExInitializeRundownProtection(
-  OUT PEX_RUNDOWN_REF RunRef);
+  _Out_ PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReInitializeRundownProtection(
-  IN OUT PEX_RUNDOWN_REF RunRef);
+  _Inout_ PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseRundownProtection(
-  IN OUT PEX_RUNDOWN_REF RunRef);
+  _Inout_ PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExRundownCompleted(
-  OUT PEX_RUNDOWN_REF RunRef);
+  _Out_ PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExVerifySuite(
-  IN SUITE_TYPE SuiteType);
+  __drv_strictTypeMatch(__drv_typeExpr) _In_ SUITE_TYPE SuiteType);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExWaitForRundownProtectionRelease(
-  IN OUT PEX_RUNDOWN_REF RunRef);
+  _Inout_ PEX_RUNDOWN_REF RunRef);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
 PSLIST_ENTRY
 FASTCALL
 InterlockedPushListSList(
-  IN OUT PSLIST_HEADER ListHead,
-  IN OUT PSLIST_ENTRY List,
-  IN OUT PSLIST_ENTRY ListEnd,
-  IN ULONG Count);
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ __drv_aliasesMem PSLIST_ENTRY List,
+  _Inout_ PSLIST_ENTRY ListEnd,
+  _In_ ULONG Count);
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
 
+_Must_inspect_result_
+_Post_satisfies_(return == 0 || return == 1)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtectionEx(
-  IN OUT PEX_RUNDOWN_REF RunRef,
-  IN ULONG Count);
+  _Inout_ PEX_RUNDOWN_REF RunRef,
+  _In_ ULONG Count);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseRundownProtectionEx(
-  IN OUT PEX_RUNDOWN_REF RunRef,
-  IN ULONG Count);
+  _Inout_ PEX_RUNDOWN_REF RunRef,
+  _In_ ULONG Count);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXPSP2) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PEX_RUNDOWN_REF_CACHE_AWARE
 NTAPI
 ExAllocateCacheAwareRundownProtection(
-  IN POOL_TYPE PoolType,
-  IN ULONG PoolTag);
+  __drv_strictTypeMatch(__drv_typeExpr) _In_ POOL_TYPE PoolType,
+  _In_ ULONG PoolTag);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 SIZE_T
 NTAPI
 ExSizeOfRundownProtectionCacheAware(VOID);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
 NTKERNELAPI
 PVOID
 NTAPI
 ExEnterCriticalRegionAndAcquireResourceShared(
-  IN OUT PERESOURCE Resource);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_shared_lock_(*_Curr_)
+    PERESOURCE Resource);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
 NTKERNELAPI
 PVOID
 NTAPI
 ExEnterCriticalRegionAndAcquireResourceExclusive(
-  IN OUT PERESOURCE Resource);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_exclusive_lock_(*_Curr_)
+    PERESOURCE Resource);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
 NTKERNELAPI
 PVOID
 NTAPI
 ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(
-  IN OUT PERESOURCE Resource);
+  _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_)
+    PERESOURCE Resource);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Releases_lock_(_Global_critical_region_)
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseResourceAndLeaveCriticalRegion(
-  IN OUT PERESOURCE Resource);
+  _Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PERESOURCE Resource);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExInitializeRundownProtectionCacheAware(
-  OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
-  IN SIZE_T RunRefSize);
+  _Out_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  _In_ SIZE_T RunRefSize);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreeCacheAwareRundownProtection(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
+_Must_inspect_result_
+_Post_satisfies_(return == 0 || return == 1)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtectionCacheAware(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseRundownProtectionCacheAware(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
+_Must_inspect_result_
+_Post_satisfies_(return == 0 || return == 1)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtectionCacheAwareEx(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
-  IN ULONG Count);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  _In_ ULONG Count);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseRundownProtectionCacheAwareEx(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRef,
-  IN ULONG Count);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRef,
+  _In_ ULONG Count);
 
 NTKERNELAPI
 VOID
@@ -980,47 +1145,52 @@ NTKERNELAPI
 VOID
 FASTCALL
 ExReInitializeRundownProtectionCacheAware(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExRundownCompletedCacheAware(
-  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+  _Inout_ PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInitializeLookasideListEx(
-  OUT PLOOKASIDE_LIST_EX Lookaside,
-  IN PALLOCATE_FUNCTION_EX Allocate OPTIONAL,
-  IN PFREE_FUNCTION_EX Free OPTIONAL,
-  IN POOL_TYPE PoolType,
-  IN ULONG Flags,
-  IN SIZE_T Size,
-  IN ULONG Tag,
-  IN USHORT Depth);
+  _Out_ PLOOKASIDE_LIST_EX Lookaside,
+  _In_opt_ PALLOCATE_FUNCTION_EX Allocate,
+  _In_opt_ PFREE_FUNCTION_EX Free,
+  _In_ POOL_TYPE PoolType,
+  _In_ ULONG Flags,
+  _In_ SIZE_T Size,
+  _In_ ULONG Tag,
+  _In_ USHORT Depth);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExDeleteLookasideListEx(
-  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+  _Inout_ PLOOKASIDE_LIST_EX Lookaside);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFlushLookasideListEx(
-  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+  _Inout_ PLOOKASIDE_LIST_EX Lookaside);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
 PVOID
 ExAllocateFromLookasideListEx(
-  IN OUT PLOOKASIDE_LIST_EX Lookaside)
+  _Inout_ PLOOKASIDE_LIST_EX Lookaside)
 {
   PVOID Entry;
 
@@ -1047,11 +1217,12 @@ ExAllocateFromLookasideListEx(
   return Entry;
 }
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 ExFreeToLookasideListEx(
-  IN OUT PLOOKASIDE_LIST_EX Lookaside,
-  IN PVOID Entry)
+  _Inout_ PLOOKASIDE_LIST_EX Lookaside,
+  _In_ PVOID Entry)
 {
   Lookaside->L.TotalFrees += 1;
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
@@ -1067,21 +1238,23 @@ ExFreeToLookasideListEx(
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExSetResourceOwnerPointerEx(
-  IN OUT PERESOURCE Resource,
-  IN PVOID OwnerPointer,
-  IN ULONG Flags);
+  _Inout_ PERESOURCE Resource,
+  _In_ PVOID OwnerPointer,
+  _In_ ULONG Flags);
 
 #define FLAG_OWNER_POINTER_IS_THREAD 0x1
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 static __inline PVOID
 ExAllocateFromNPagedLookasideList(
-  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside)
+  _Inout_ PNPAGED_LOOKASIDE_LIST Lookaside)
 {
   PVOID Entry;
 
@@ -1116,10 +1289,11 @@ ExAllocateFromNPagedLookasideList(
   return Entry;
 }
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 static __inline VOID
 ExFreeToNPagedLookasideList(
-  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside,
-  IN PVOID Entry)
+  _Inout_ PNPAGED_LOOKASIDE_LIST Lookaside,
+  _In_ PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
 #ifdef NONAMELESSUNION

@@ -7,7 +7,7 @@ list(APPEND SOURCE
 
 add_library(wmi SHARED ${SOURCE})
 
-set_entrypoint(wmi 0)
+set_module_type(wmi win32dll ENTRYPOINT 0 )
 
 add_importlibs(wmi advapi32)
 add_dependencies(wmi psdk)

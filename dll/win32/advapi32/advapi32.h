@@ -25,7 +25,15 @@
 #include <winsafer.h>
 #include <sddl.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
 
 /* this has to go after the NDK when being used with the NDK */
 #include <ntsecapi.h>
@@ -34,6 +42,13 @@
 #include "svcctl_c.h"
 #include "lsa_c.h"
 #include "eventlogrpc_c.h"
+
+#include <rpc.h>
+
+#include "crypt/crypt.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
+#include <wincred.h>
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS

@@ -17,11 +17,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Tous les types supportés (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_ALL_TYPES_FILTER "Tous les types supportÃ©s (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
 	IDS_TOOLTIP_PLAY "Lecture"
 	IDS_TOOLTIP_STOP "Stop"
 	IDS_TOOLTIP_EJECT "Ejecter"
-	IDS_TOOLTIP_BACKWARD "Précédent"
+	IDS_TOOLTIP_BACKWARD "PrÃ©cÃ©dent"
 	IDS_TOOLTIP_SEEKBACK "Retour rapide"
 	IDS_TOOLTIP_SEEKFORW "Avance rapide"
 	IDS_TOOLTIP_FORWARD "Suivant"

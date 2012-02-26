@@ -217,8 +217,8 @@ IopLogWorker(IN PVOID Parameter)
         StringBuffer = ALIGN_UP_POINTER(StringBuffer, WCHAR);
 
         /* Set the offset for the driver's name to the current buffer */
-        ErrorMessage->DriverNameOffset = (ULONG_PTR)(StringBuffer -
-                                                 (ULONG_PTR)ErrorMessage);
+        ErrorMessage->DriverNameOffset = (ULONG)(StringBuffer -
+                                                (PCHAR)ErrorMessage);
 
         /* Check how much space we have left for the device string */
         RemainingLength = (ULONG)((ULONG_PTR)Message +
@@ -258,7 +258,7 @@ IopLogWorker(IN PVOID Parameter)
         {
             /* Use default name */
             DriverNameString.Buffer = L"Application Popup";
-            DriverNameLength = wcslen(DriverNameString.Buffer) * sizeof(WCHAR);
+            DriverNameLength = (ULONG)wcslen(DriverNameString.Buffer) * sizeof(WCHAR);
         }
 
         /* Check if we have a driver name by here */

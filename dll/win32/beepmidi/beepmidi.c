@@ -41,9 +41,11 @@
 #define CONTINUOUS_NOTES
 
 #define WIN32_NO_STATUS
-#define NTOS_MODE_USER
 #include <windows.h>
-#include <ndk/ntndk.h>
+#define NTOS_MODE_USER
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <stdio.h>
 #include <ntddbeep.h>
 #include <math.h>
@@ -498,7 +500,6 @@ PlayNote(
     {
         /* Start playing the note */
         NoteNode* new_node;
-        NoteNode* tail_node = NULL;
 
         EnterCriticalSection(&device_lock);
 
@@ -516,7 +517,6 @@ PlayNote(
             }
 #endif
 
-            tail_node = node;
             node = node->next;
         }
 

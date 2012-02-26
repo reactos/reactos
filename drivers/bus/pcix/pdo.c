@@ -91,7 +91,6 @@ PciPdoSetPowerState(IN PIRP Irp,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -210,7 +209,6 @@ PciPdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -429,7 +427,6 @@ PciPdoIrpQueryDeviceState(IN PIRP Irp,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 

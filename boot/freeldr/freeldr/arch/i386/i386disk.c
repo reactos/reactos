@@ -22,6 +22,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(DISK);
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ BOOLEAN DiskResetController(UCHAR DriveNumber)
 	REGS	RegsIn;
 	REGS	RegsOut;
 
-	DPRINTM(DPRINT_DISK, "DiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
+	WARN("DiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
 
 	// BIOS Int 13h, function 0 - Reset disk system
 	// AH = 00h
@@ -56,11 +58,11 @@ BOOLEAN DiskInt13ExtensionsSupported(UCHAR DriveNumber)
 	REGS	RegsIn;
 	REGS	RegsOut;
 
-	DPRINTM(DPRINT_DISK, "PcDiskInt13ExtensionsSupported()\n");
+	TRACE("PcDiskInt13ExtensionsSupported()\n");
 
 	if (DriveNumber == LastDriveNumber)
 	{
-		DPRINTM(DPRINT_DISK, "Using cached value %s for drive 0x%x\n", LastSupported ? "TRUE" : "FALSE", DriveNumber);
+		TRACE("Using cached value %s for drive 0x%x\n", LastSupported ? "TRUE" : "FALSE", DriveNumber);
 		return LastSupported;
 	}
 
@@ -147,7 +149,7 @@ BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT B
 	REGS	RegsOut;
 	PUSHORT	Ptr = (PUSHORT)(BIOSCALLBUFFER);
 
-	DPRINTM(DPRINT_DISK, "DiskGetExtendedDriveParameters()\n");
+	TRACE("DiskGetExtendedDriveParameters()\n");
 
 	if (!DiskInt13ExtensionsSupported(DriveNumber))
             return FALSE;
@@ -181,34 +183,34 @@ BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT B
 	memcpy(Buffer, Ptr, BufferSize);
 
 #if DBG
-    DPRINTM(DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]);
-    DPRINTM(DPRINT_DISK, "information flags:                       %x\n", Ptr[1]);
-    DPRINTM(DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
-    DPRINTM(DPRINT_DISK, "number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
-    DPRINTM(DPRINT_DISK, "number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
-    DPRINTM(DPRINT_DISK, "total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]);
-    DPRINTM(DPRINT_DISK, "bytes per sector:                        %u\n", Ptr[12]);
+    TRACE("size of buffer:                          %x\n", Ptr[0]);
+    TRACE("information flags:                       %x\n", Ptr[1]);
+    TRACE("number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
+    TRACE("number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
+    TRACE("number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
+    TRACE("total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]);
+    TRACE("bytes per sector:                        %u\n", Ptr[12]);
     if (Ptr[0] >= 0x1e)
     {
-        DPRINTM(DPRINT_DISK, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]);
+        TRACE("EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]);
         if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[13] << 4) + Ptr[14]);
-           DPRINTM(DPRINT_DISK, "SpecPtr:                                 %x\n", SpecPtr);
-           DPRINTM(DPRINT_DISK, "physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
-           DPRINTM(DPRINT_DISK, "disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
-           DPRINTM(DPRINT_DISK, "drive flags:                             %x\n", SpecPtr[4]);
-           DPRINTM(DPRINT_DISK, "proprietary information:                 %x\n", SpecPtr[5]);
-           DPRINTM(DPRINT_DISK, "IRQ for drive:                           %u\n", SpecPtr[6]);
-           DPRINTM(DPRINT_DISK, "sector count for multi-sector transfers: %u\n", SpecPtr[7]);
-           DPRINTM(DPRINT_DISK, "DMA control:                             %x\n", SpecPtr[8]);
-           DPRINTM(DPRINT_DISK, "programmed I/O control:                  %x\n", SpecPtr[9]);
-           DPRINTM(DPRINT_DISK, "drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]);
+           TRACE("SpecPtr:                                 %x\n", SpecPtr);
+           TRACE("physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
+           TRACE("disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
+           TRACE("drive flags:                             %x\n", SpecPtr[4]);
+           TRACE("proprietary information:                 %x\n", SpecPtr[5]);
+           TRACE("IRQ for drive:                           %u\n", SpecPtr[6]);
+           TRACE("sector count for multi-sector transfers: %u\n", SpecPtr[7]);
+           TRACE("DMA control:                             %x\n", SpecPtr[8]);
+           TRACE("programmed I/O control:                  %x\n", SpecPtr[9]);
+           TRACE("drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]);
         }
     }
     if (Ptr[0] >= 0x42)
     {
-        DPRINTM(DPRINT_DISK, "signature:                             %x\n", Ptr[15]);
+        TRACE("signature:                             %x\n", Ptr[15]);
     }
 #endif
 

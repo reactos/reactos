@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(mmsys.cpl mmsys.spec)
@@ -13,7 +12,7 @@ add_library(mmsys SHARED
     mmsys.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
 
-set_module_type(mmsys cpl)
+set_module_type(mmsys cpl UNICODE)
 
 add_importlibs(mmsys
     msvcrt

@@ -37,7 +37,7 @@ PUBLIC @ExInterlockedAddLargeStatistic@8
     lock add [ecx], edx
 
     /* Check for carry bit and return */
-    jb .l1
+    jc .l1
     ret
 
 .l1:
@@ -82,7 +82,7 @@ _ExpInterlockedPopEntrySListResume@0:
     or eax, eax
     jz .l7
 
-    /* Copy sequence number and adjust it */
+    /* Copy depth and adjust it */
     lea ecx, [edx-1]
 
     /* Get next pointer and do the exchange */
@@ -167,7 +167,7 @@ PUBLIC @ExInterlockedFlushSList@4
     or eax, eax
     jz .l10
 
-    /* Clear sequence and pointer */
+    /* Clear depth and pointer */
     mov ecx, edx
     mov cx, bx
 

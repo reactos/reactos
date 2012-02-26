@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(main.cpl main.spec)
@@ -11,7 +10,7 @@ add_library(main SHARED
     main.rc
     ${CMAKE_CURRENT_BINARY_DIR}/main.def)
 
-set_module_type(main cpl)
+set_module_type(main cpl UNICODE)
 
 add_importlibs(main
     msvcrt

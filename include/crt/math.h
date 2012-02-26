@@ -124,8 +124,9 @@ extern "C" {
   __CRT_INLINE long double tanl(long double x) { return (tan((double)x)); }
 #endif
 
-#if defined(__x86_64) || defined(_M_AMD64) || \
-    defined (__ia64__) || defined (_M_IA64)
+#if (_WIN32_WINNT >= 0x600) && \
+    (defined(__x86_64) || defined(_M_AMD64) || \
+     defined (__ia64__) || defined (_M_IA64))
   _CRTIMP float __cdecl acosf(float x);
   _CRTIMP float __cdecl asinf(float x);
   _CRTIMP float __cdecl atanf(float x);

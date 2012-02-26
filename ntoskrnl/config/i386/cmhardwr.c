@@ -374,7 +374,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             }
 
             /* Save the ID string length now that we've created it */
-            ConfigData.ComponentEntry.IdentifierLength = strlen(Buffer) + 1;
+            ConfigData.ComponentEntry.IdentifierLength = (ULONG)strlen(Buffer) + 1;
 
             /* Initialize the registry configuration node for it */
             Status = CmpInitializeRegistryNode(&ConfigData,
@@ -400,7 +400,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 if (Prcb->CpuType == 3) strcpy(Buffer, "80387");
 
                 /* Save the ID string length now that we've created it */
-                ConfigData.ComponentEntry.IdentifierLength = strlen(Buffer) + 1;
+                ConfigData.ComponentEntry.IdentifierLength = (ULONG)strlen(Buffer) + 1;
 
                 /* Initialize the registry configuration node for it */
                 Status = CmpInitializeRegistryNode(&ConfigData,
@@ -478,7 +478,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 }
 
                 /* Check if we had a Vendor ID */
-                if (Prcb->VendorString)
+                if (Prcb->VendorString[0])
                 {
                     /* Convert it to Unicode */
                     RtlInitAnsiString(&TempString, Prcb->VendorString);
@@ -722,8 +722,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     /* Now prepare for Video BIOS Mapping of 32KB */
     BaseAddress = 0;
     ViewSize = 8 * PAGE_SIZE;
-    ViewBase.LowPart = VideoRomBase;
-    ViewBase.HighPart = 0;
+    ViewBase.QuadPart = VideoRomBase;
 
     /* Map it */
     Status = ZwMapViewOfSection(SectionHandle,

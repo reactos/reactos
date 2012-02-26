@@ -77,8 +77,10 @@
 @ stub ??1streambuf@@UAE@XZ #
 @ stub ??1strstream@@UAE@XZ #
 @ stub ??1strstreambuf@@UAE@XZ #
-@ cdecl ??2@YAPAXI@Z(long) MSVCRT_operator_new
-@ cdecl ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
 @ stub ??4Iostream_init@@QAEAAV0@ABV0@@Z #
 @ stub ??4filebuf@@QAEAAV0@ABV0@@Z #
 @ stub ??4fstream@@QAEAAV0@AAV0@@Z #
@@ -457,7 +459,7 @@
 @ extern _HUGE
 @ cdecl _XcptFilter(long ptr)
 @ cdecl -i386 __CxxFrameHandler(ptr ptr ptr ptr)
-@ stdcall __CxxLongjmpUnwind(ptr)
+@ stdcall -i386 __CxxLongjmpUnwind(ptr)
 @ cdecl __STRINGTOLD(ptr ptr str long)
 @ extern __argc
 @ extern __argv
@@ -483,7 +485,7 @@
 @ cdecl -arch=i386 __p__daylight()
 @ cdecl -arch=i386 __p__environ()
 @ cdecl -arch=i386 __p__fmode()
-@ cdecl -arch=i386 __p__iob()
+@ cdecl -arch=i386 __p__iob() __iob_func
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
 @ cdecl -arch=i386 __p__pctype()
@@ -596,7 +598,7 @@
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat(long ptr)
 @ cdecl _ftime(ptr)
-@ cdecl -ret64 _ftol()
+@ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl _fullpath(ptr str long)
 @ cdecl _futime(long ptr)
 @ cdecl _gcvt(double long str)

@@ -1,5 +1,4 @@
 
-set_unicode()
 set_cpp()
 
 add_definitions(
@@ -7,7 +6,7 @@ add_definitions(
     -DROS_Headers)
 
 if (MSVC)
-    add_compiler_flags(/EHa-)
+    add_compile_flags("/EHa-")
 endif()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -46,7 +45,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 add_library(browseui SHARED ${SOURCE})
-set_module_type(browseui win32dll)
+allow_warnings(browseui)
+set_module_type(browseui win32dll UNICODE)
 
 target_link_libraries(browseui
     atlnew

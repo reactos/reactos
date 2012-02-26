@@ -2,7 +2,7 @@
 include_directories(include/internal/mingw-w64)
 
 if(NOT MSVC)
-    add_compiler_flags(-Wno-main)
+    add_compile_flags("-Wno-main")
 endif()
 
 list(APPEND MSVCRTEX_SOURCE
@@ -36,24 +36,22 @@ list(APPEND MSVCRTEX_SOURCE
 )
 
 if(NOT MSVC)
-list(APPEND MSVCRTEX_SOURCE
-    startup/pseudo-reloc.c
-    startup/pseudo-reloc-list.c)
+    list(APPEND MSVCRTEX_SOURCE
+        startup/pseudo-reloc.c
+        startup/pseudo-reloc-list.c)
 endif()
 
 if(ARCH MATCHES i386)
-list(APPEND MSVCRTEX_SOURCE
-    except/i386/chkstk_asm.s
-    except/i386/chkstk_ms.s
-    math/i386/ci.c
-    math/i386/ftol2_asm.s
-    math/i386/alldiv_asm.s
-)
+    list(APPEND MSVCRTEX_SOURCE
+        except/i386/chkstk_asm.s
+        except/i386/chkstk_ms.s
+        math/i386/ci.c
+        math/i386/ftol2_asm.s
+        math/i386/alldiv_asm.s)
 elseif(ARCH MATCHES amd64)
-list(APPEND MSVCRTEX_SOURCE
-    except/amd64/chkstk_asm.s
-    except/amd64/chkstk_ms.s
-    math/amd64/alldiv.S)
+    list(APPEND MSVCRTEX_SOURCE
+        except/amd64/chkstk_asm.s
+        except/amd64/chkstk_ms.s)
 endif()
 
 if(MSVC)
@@ -63,11 +61,14 @@ else()
 endif()
 
 add_library(msvcrtex ${MSVCRTEX_SOURCE})
-set_target_properties(msvcrtex PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
+add_target_compile_definitions(msvcrtex _DLL _MSVCRTEX_)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
+set_source_files_properties(startup/crtexe.c
+                            startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
+    allow_warnings(msvcrtex)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

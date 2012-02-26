@@ -10,7 +10,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/nddeapi.def)
 
 add_library(nddeapi SHARED ${SOURCE})
-set_entrypoint(nddeapi 0)
+set_module_type(nddeapi win32dll ENTRYPOINT 0 )
 
 target_link_libraries(nddeapi wine)
 

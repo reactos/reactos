@@ -150,6 +150,48 @@ RtlpFreeUserStack(IN HANDLE Process,
 
 /* FUNCTIONS ***************************************************************/
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlSetThreadIsCritical(IN BOOLEAN NewValue,
+                       OUT PBOOLEAN OldValue OPTIONAL,
+                       IN BOOLEAN NeedBreaks)
+{
+    ULONG BreakOnTermination;
+
+    /* Initialize to FALSE */
+    if (OldValue) *OldValue = FALSE;
+
+    /* Fail, if the critical breaks flag is required but is not set */
+    if ((NeedBreaks) &&
+        !(NtCurrentPeb()->NtGlobalFlag & FLG_ENABLE_SYSTEM_CRIT_BREAKS))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Check if the caller wants the old value */
+    if (OldValue)
+    {
+        /* Query and return the old break on termination flag for the process */
+        ZwQueryInformationThread(NtCurrentThread(),
+                                 ThreadBreakOnTermination,
+                                 &BreakOnTermination,
+                                 sizeof(ULONG),
+                                 NULL);
+        *OldValue = (BOOLEAN)BreakOnTermination;
+    }
+
+    /* Set the break on termination flag for the process */
+    BreakOnTermination = NewValue;
+    return ZwSetInformationThread(NtCurrentThread(),
+                                  ThreadBreakOnTermination,
+                                  &BreakOnTermination,
+                                  sizeof(ULONG));
+}
+
 /*
  @implemented
 */

@@ -36,59 +36,58 @@ typedef struct _DEBUG_DEVICE_DESCRIPTOR {
 
 typedef NTSTATUS
 (NTAPI *pKdSetupPciDeviceForDebugging)(
-  IN PVOID LoaderBlock OPTIONAL,
-  IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
+  _In_opt_ PVOID LoaderBlock,
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
 typedef NTSTATUS
 (NTAPI *pKdReleasePciDeviceForDebugging)(
-  IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
 typedef PVOID
 (NTAPI *pKdGetAcpiTablePhase0)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN ULONG Signature);
+  _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  _In_ ULONG Signature);
 
 typedef VOID
-(NTAPI *pKdCheckPowerButton)(
-  VOID);
+(NTAPI *pKdCheckPowerButton)(VOID);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN ULONG NumberPages,
-  IN BOOLEAN FlushCurrentTLB);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ ULONG NumberPages,
+  _In_ BOOLEAN FlushCurrentTLB);
 
 typedef VOID
 (NTAPI *pKdUnmapVirtualAddress)(
-  IN PVOID VirtualAddress,
-  IN ULONG NumberPages,
-  IN BOOLEAN FlushCurrentTLB);
+  _In_ PVOID VirtualAddress,
+  _In_ ULONG NumberPages,
+  _In_ BOOLEAN FlushCurrentTLB);
 #else
 typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN ULONG NumberPages);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ ULONG NumberPages);
 
 typedef VOID
 (NTAPI *pKdUnmapVirtualAddress)(
-  IN PVOID VirtualAddress,
-  IN ULONG NumberPages);
+  _In_ PVOID VirtualAddress,
+  _In_ ULONG NumberPages);
 #endif
 
 typedef ULONG
 (NTAPI *pKdGetPciDataByOffset)(
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  OUT PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 typedef ULONG
 (NTAPI *pKdSetPciDataByOffset)(
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
-$endif
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
+$endif (_NTDDK_)

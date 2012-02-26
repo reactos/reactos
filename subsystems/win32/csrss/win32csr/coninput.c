@@ -38,8 +38,6 @@ CSR_API(CsrReadConsole)
     CharSize = (Request->Data.ReadConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
     nNumberOfCharsToRead = Request->Data.ReadConsoleRequest.NrCharactersToRead;
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Buffer = (PCHAR)Request->Data.ReadConsoleRequest.Buffer;
     UnicodeBuffer = (PWCHAR)Buffer;
@@ -367,13 +365,13 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
              (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
             (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80))
     {
-        PCSRSS_PROCESS_DATA current;
+        PCSR_PROCESS current;
         PLIST_ENTRY current_entry;
         DPRINT1("Console_Api Ctrl-C\n");
         current_entry = Console->ProcessList.Flink;
         while (current_entry != &Console->ProcessList)
         {
-            current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+            current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
             current_entry = current_entry->Flink;
             ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
         }
@@ -432,8 +430,6 @@ CSR_API(CsrReadInputEvent)
 
     DPRINT("CsrReadInputEvent\n");
 
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
     Request->Data.ReadInputRequest.Event = ProcessData->ConsoleEvent;
 
     Status = ConioLockConsole(ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, &Console, GENERIC_READ);
@@ -494,8 +490,6 @@ CSR_API(CsrFlushInputBuffer)
 
     DPRINT("CsrFlushInputBuffer\n");
 
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
     Status = ConioLockConsole(ProcessData,
                               Request->Data.FlushInputBufferRequest.ConsoleInput,
                               &Console,
@@ -528,9 +522,6 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
     DWORD NumEvents;
 
     DPRINT("CsrGetNumberOfConsoleInputEvents\n");
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
@@ -566,9 +557,6 @@ CSR_API(CsrPeekConsoleInput)
     UINT NumItems;
 
     DPRINT("CsrPeekConsoleInput\n");
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if(! NT_SUCCESS(Status))
@@ -624,9 +612,6 @@ CSR_API(CsrWriteConsoleInput)
     DWORD i;
 
     DPRINT("CsrWriteConsoleInput\n");
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Status = ConioLockConsole(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, &Console, GENERIC_WRITE);
     if (! NT_SUCCESS(Status))

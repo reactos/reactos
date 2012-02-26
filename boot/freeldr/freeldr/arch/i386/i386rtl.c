@@ -19,6 +19,9 @@
 
 #include <freeldr.h>
 
+void sound(int freq);
+void delay(unsigned msec);
+
 void PcBeep(void)
 {
 	sound(700);

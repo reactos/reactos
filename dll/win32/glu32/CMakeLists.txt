@@ -1,4 +1,8 @@
 
+if(NOT MSVC)
+    set_cpp()
+endif()
+
 add_definitions(
     -DRESOLVE_3D_TEXTURE_SUPPORT
     -DBUILD_GL32
@@ -107,12 +111,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
 add_library(glu32 SHARED ${SOURCE})
-
-set_entrypoint(glu32 0)
-
-if(NOT MSVC)
-    target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
-endif()
+allow_warnings(glu32)
+set_module_type(glu32 win32dll ENTRYPOINT 0 )
 
 add_importlibs(glu32
     opengl32
@@ -122,4 +122,4 @@ add_importlibs(glu32
     ntdll)
 
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(glu32.spec)
+add_importlib_target(glu32.spec glu32.dll)

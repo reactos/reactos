@@ -7,7 +7,8 @@ list(APPEND SOURCE
 
 add_library(unicows SHARED ${SOURCE})
 
-set_module_type(unicows win32dll)
+set_module_type(unicows win32dll ENTRYPOINT 0 )
+
 add_importlibs(unicows
     avicap32
     msvfw32

@@ -22,7 +22,7 @@ INIT_FUNCTION
 KiInitializeMTRR(IN BOOLEAN FinalCpu)
 {
     /* FIXME: Support this */
-    DPRINT1("MTRR support detected but not yet taken advantage of\n");
+    DPRINT("MTRR support detected but not yet taken advantage of\n");
 }
 
 VOID
@@ -31,5 +31,5 @@ INIT_FUNCTION
 KiAmdK6InitializeMTRR(VOID)
 {
     /* FIXME: Support this */
-    DPRINT1("AMD MTRR support detected but not yet taken advantage of\n");
+    DPRINT("AMD MTRR support detected but not yet taken advantage of\n");
 }

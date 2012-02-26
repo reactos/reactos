@@ -1,13 +1,5 @@
 #pragma once
 
-/* Ported from WINE by Jason Filby */
-
-typedef struct tagDCE *PDCE;
-
-#include <include/window.h>
-
-typedef HANDLE HDCE;
-
 /* DC hook codes */
 #define DCHC_INVALIDVISRGN      0x0001
 #define DCHC_DELETEDC           0x0002
@@ -37,24 +29,20 @@ typedef struct tagDCE
     PTHREADINFO  ptiOwner;
     PPROCESSINFO ppiOwner;
     struct _MONITOR* pMonitor;
-} DCE;  /* PDCE already declared at top of file */
+} DCE, *PDCE;
 
 /* internal DCX flags, see psdk/winuser.h for the rest */
-#define DCX_DCEEMPTY		0x00000800
-#define DCX_DCEBUSY		0x00001000
-#define DCX_DCEDIRTY		0x00002000
-#define DCX_LAYEREDWIN		0x00004000
-#define DCX_DCPOWNED		0x00008000
-#define DCX_NOCLIPCHILDREN	0x00080000
-#define DCX_NORECOMPUTE		0x00100000
-#define DCX_INDESTROY           0x00400000
+#define DCX_DCEEMPTY        0x00000800
+#define DCX_DCEBUSY         0x00001000
+#define DCX_DCEDIRTY        0x00002000
+#define DCX_LAYEREDWIN      0x00004000
+#define DCX_DCPOWNED        0x00008000
+#define DCX_NOCLIPCHILDREN  0x00080000
+#define DCX_NORECOMPUTE     0x00100000
+#define DCX_INDESTROY       0x00400000
 
-BOOL FASTCALL DCE_Cleanup(PDCE pDce);
+INIT_FUNCTION NTSTATUS NTAPI InitDCEImpl(VOID);
 PDCE FASTCALL DceAllocDCE(PWND Window, DCE_TYPE Type);
-PDCE FASTCALL DCE_FreeDCE(PDCE dce);
-VOID FASTCALL DCE_FreeWindowDCE(HWND);
-INT  FASTCALL DCE_ExcludeRgn(HDC, HWND, HRGN);
-BOOL FASTCALL DCE_InvalidateDCE(HWND, const PRECTL);
 HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce, BOOLEAN Force);
 void FASTCALL DceEmptyCache(void);

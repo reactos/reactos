@@ -35,13 +35,12 @@ VOID NTAPI
 RtlDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable)
 {
    PVOID ArrayPointer;
-   SIZE_T ArraySize;
+   SIZE_T ArraySize = 0;
 
    /* free handle array */
    if (HandleTable->CommittedHandles)
      {
         ArrayPointer = (PVOID)HandleTable->CommittedHandles;
-        ArraySize = HandleTable->SizeOfHandleTableEntry * HandleTable->MaximumNumberOfHandles;
         NtFreeVirtualMemory(NtCurrentProcess(),
 		            &ArrayPointer,
 		            &ArraySize,

@@ -37,7 +37,7 @@ add_importlibs(atl
     kernel32
     ntdll)
 
-add_importlib_target(atl.spec)
+add_importlib_target(atl.spec atl.dll)
 
 add_dependencies(atl atl_atliface_header)
 add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)

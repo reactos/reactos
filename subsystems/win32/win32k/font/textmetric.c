@@ -239,6 +239,19 @@ NtGdiGetOutlineTextMetricsInternalW(
     return 0;
 }
 
+BOOL
+NTAPI
+GreGetTextExtentW(
+    HDC hdc,
+    LPWSTR lpwsz,
+    INT cwc,
+    LPSIZE psize,
+    UINT flOpts)
+{
+    ASSERT(FALSE);
+    return FALSE;
+}
+
 W32KAPI
 BOOL
 APIENTRY
@@ -267,7 +280,7 @@ GreGetTextExtentExW(
 {
     PDC pdc;
     PRFONT prfnt;
-    BOOL bResult;
+    BOOL bResult = 0;
     ESTROBJ estro;
 
     DPRINT1("GreGetTextExtentExW()\n");

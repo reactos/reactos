@@ -279,10 +279,6 @@ HandlePowerKeys(
 	if (!(InputData->Flags & KEY_E0))
 		return FALSE;
 
-	if (InputData->Flags & KEY_BREAK)
-		/* We already took care of the key press */
-		return TRUE;
-
 	switch (InputData->MakeCode)
 	{
 		case KEYBOARD_POWER_CODE:
@@ -297,6 +293,10 @@ HandlePowerKeys(
 		default:
 			return FALSE;
 	}
+
+    if (InputData->Flags & KEY_BREAK)
+		/* We already took care of the key press */
+		return TRUE;
 
 	/* Our work can only be done at passive level, so use a workitem */
 	DeviceExtension->NewCaps |= KeyPress;

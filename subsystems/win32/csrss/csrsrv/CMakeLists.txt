@@ -11,18 +11,16 @@ list(APPEND SOURCE
     procsup.c
     thredsup.c
     init.c
+    wait.c
+    session.c
+    server.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})
 
-target_link_libraries(csrsrv ${PSEH_LIB})
+target_link_libraries(csrsrv ${PSEH_LIB} smlib)
 
 set_module_type(csrsrv nativedll)
-
-if(MSVC)
-set_entrypoint(csrsrv DllMainCRTStartup)
-endif()
-
 
 add_importlibs(csrsrv ntdll smdll)
 
@@ -30,4 +28,4 @@ add_pch(csrsrv srv.h)
 
 add_dependencies(csrsrv psdk bugcodes)
 add_cd_file(TARGET csrsrv DESTINATION reactos/system32 FOR all)
-add_importlib_target(csrsrv.spec)
+add_importlib_target(csrsrv.spec csrsrv.dll)

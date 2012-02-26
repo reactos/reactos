@@ -2,30 +2,21 @@
  * COPYRIGHT:        GPL, see COPYING in the top level directory
  * PROJECT:          ReactOS win32 kernel mode subsystem server
  * PURPOSE:          System parameters functions
- * FILE:             subsystem/win32/win32k/ntuser/sysparams.c
+ * FILE:             subsystems/win32/win32k/ntuser/sysparams.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 // TODO:
-// - check all values that are in Winsta in ros
-// - does setting invalid fonts work?
-// - save appropriate text metrics
+// - Check all values that are in Winsta in ROS.
+// - Does setting invalid fonts work?
+// - Save appropriate text metrics.
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserSysparams);
 
-#define NDEBUG
-#include <debug.h>
-
-#include <winsta.h>
-
-#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
-HBITMAP NTAPI UserLoadImage(PCWSTR);
-BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
-
-BOOL gbDebug = 0;
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
-PWINSTATION_OBJECT gpwinstaCurrent = NULL;
+BOOL g_PaintDesktopVersion = FALSE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -34,13 +25,12 @@ PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
-    if (gpwinstaCurrent != InputWindowStation) \
+    if ( GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
+        ERR("NtUserSystemParametersInfo requires interactive window station (current is %wZ)\n", &GetW32ProcessInfo()->prpwinsta->Name); \
         EngSetLastError(err); \
         return 0; \
     }
-
-#define DPRINTX if (gbDebug) DPRINT1
 
 static const WCHAR* KEY_MOUSE = L"Control Panel\\Mouse";
 static const WCHAR* VAL_MOUSE1 = L"MouseThreshold1";
@@ -55,7 +45,7 @@ static const WCHAR* VAL_SWAP = L"SwapMouseButtons";
 static const WCHAR* VAL_HOVERTIME = L"MouseHoverTime";
 static const WCHAR* VAL_HOVERWIDTH = L"MouseHoverWidth";
 static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
-//static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
+static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
@@ -68,6 +58,8 @@ static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
 static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
+static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
+static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -165,7 +157,7 @@ SpiLoadMetric(PCWSTR pwszValue, INT iValue)
     INT iRegVal;
 
     iRegVal = SpiLoadInt(KEY_METRIC, pwszValue, METRIC2REG(iValue));
-    DPRINT("Loaded metric setting '%S', iValue=%d(reg:%d), ret=%d(reg:%d)\n",
+    TRACE("Loaded metric setting '%S', iValue=%d(reg:%d), ret=%d(reg:%d)\n",
            pwszValue, iValue, METRIC2REG(iValue), REG2METRIC(iRegVal), iRegVal);
     return REG2METRIC(iRegVal);
 }
@@ -200,7 +192,7 @@ SpiFixupValues()
 //                               gspv.tmMenuFont.tmExternalLeading);
     if (gspv.iDblClickTime == 0) gspv.iDblClickTime = 500;
 
-    // FIXME: hack!!!
+    // FIXME: Hack!!!
     gspv.tmMenuFont.tmHeight = 11;
     gspv.tmMenuFont.tmExternalLeading = 2;
 
@@ -220,7 +212,7 @@ SpiUpdatePerUserSystemParameters()
                            FALSE, ANSI_CHARSET, 0, 0, DEFAULT_QUALITY,
                            VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif"};
 
-    DPRINT("Enter SpiUpdatePerUserSystemParameters\n");
+    TRACE("Enter SpiUpdatePerUserSystemParameters\n");
 
     /* Clear the structure */
     memset(&gspv, 0, sizeof(gspv));
@@ -228,7 +220,8 @@ SpiUpdatePerUserSystemParameters()
     /* Load mouse settings */
     gspv.caiMouse.FirstThreshold = SpiLoadMouse(VAL_MOUSE1, 6);
     gspv.caiMouse.SecondThreshold = SpiLoadMouse(VAL_MOUSE2, 10);
-    gspv.caiMouse.Acceleration = gspv.iMouseSpeed = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.caiMouse.Acceleration = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.iMouseSpeed = SpiLoadMouse(VAL_SENSITIVITY, 10);
     gspv.bMouseBtnSwap = SpiLoadMouse(VAL_SWAP, 0);
     gspv.bSnapToDefBtn = SpiLoadMouse(VAL_SNAPDEFBTN, 0);
     gspv.iMouseTrails = SpiLoadMouse(VAL_MOUSETRAILS, 0);
@@ -277,6 +270,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
+    gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
@@ -326,13 +320,17 @@ NtUserUpdatePerUserSystemParameters(
 {
     BOOL bResult;
 
-    DPRINT("Enter NtUserUpdatePerUserSystemParameters\n");
+    TRACE("Enter NtUserUpdatePerUserSystemParameters\n");
     UserEnterExclusive();
 
     SpiUpdatePerUserSystemParameters();
-    bResult = IntDesktopUpdatePerUserSettings(bEnable);
+    if(bEnable)
+        g_PaintDesktopVersion = SpiLoadDWord(KEY_DESKTOP, VAL_PAINTDESKVER, 0);
+    else
+        g_PaintDesktopVersion = FALSE;
+    bResult = TRUE;
 
-    DPRINT("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
+    TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
     UserLeave();
 
     return bResult;
@@ -433,7 +431,7 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        DPRINT("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
+        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
     }
     return NT_SUCCESS(Status);
 }
@@ -619,7 +617,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     gspv.ustrWallpaper.Length = ustr.Length;
     gspv.awcWallpaper[ustr.Length / sizeof(WCHAR)] = 0;
 
-    DPRINT("SpiSetWallpaper, name=%S\n", gspv.awcWallpaper);
+    TRACE("SpiSetWallpaper, name=%S\n", gspv.awcWallpaper);
 
     /* Update registry */
     if (fl & SPIF_UPDATEINIFILE)
@@ -636,7 +634,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         ustr.Length = 0;
         if (!W32kDosPathNameToNtPathName(gspv.awcWallpaper, &ustr))
         {
-            DPRINT1("RtlDosPathNameToNtPathName_U failed\n");
+            ERR("RtlDosPathNameToNtPathName_U failed\n");
             return 0;
         }
 
@@ -644,7 +642,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         hbmp = UserLoadImage(ustr.Buffer);
         if (!hbmp)
         {
-            DPRINT1("UserLoadImage failed\n");
+            ERR("UserLoadImage failed\n");
             return 0;
         }
 
@@ -655,9 +653,9 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
             return 0;
         }
 
-        gpwinstaCurrent->cxWallpaper = psurfBmp->SurfObj.sizlBitmap.cx;
-        gpwinstaCurrent->cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
-        gpwinstaCurrent->WallpaperMode = wmCenter;
+        gspv.cxWallpaper = psurfBmp->SurfObj.sizlBitmap.cx;
+        gspv.cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
+        gspv.WallpaperMode = wmCenter;
 
         SURFACE_ShareUnlockSurface(psurfBmp);
 
@@ -667,28 +665,28 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         /* Yes, Windows really loads the current setting from the registry. */
         ulTile = SpiLoadInt(KEY_DESKTOP, L"TileWallpaper", 0);
         ulStyle = SpiLoadInt(KEY_DESKTOP, L"WallpaperStyle", 0);
-        DPRINT("SpiSetWallpaper: ulTile=%ld, ulStyle=%d\n", ulTile, ulStyle);
+        TRACE("SpiSetWallpaper: ulTile=%ld, ulStyle=%d\n", ulTile, ulStyle);
 
         /* Check the values we found in the registry */
         if(ulTile && !ulStyle)
         {
-            gpwinstaCurrent->WallpaperMode = wmTile;
+            gspv.WallpaperMode = wmTile;
         }
         else if(!ulTile && ulStyle == 2)
         {
-            gpwinstaCurrent->WallpaperMode = wmStretch;
+            gspv.WallpaperMode = wmStretch;
         }
     }
     else
     {
         /* Remove wallpaper */
-        gpwinstaCurrent->cxWallpaper = 0;
-        gpwinstaCurrent->cyWallpaper = 0;
+        gspv.cxWallpaper = 0;
+        gspv.cyWallpaper = 0;
         hbmp = 0;
     }
 
     /* Take care of the old wallpaper, if any */
-    hOldBitmap = gpwinstaCurrent->hbmWallpaper;
+    hOldBitmap = gspv.hbmWallpaper;
     if(hOldBitmap != NULL)
     {
         /* Delete the old wallpaper */
@@ -697,12 +695,47 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     }
 
     /* Set the new wallpaper */
-    gpwinstaCurrent->hbmWallpaper = hbmp;
+    gspv.hbmWallpaper = hbmp;
 
     NtUserRedrawWindow(UserGetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
 
     return (UINT_PTR)KEY_DESKTOP;
+}
+
+static BOOL
+SpiNotifyNCMetricsChanged()
+{
+    PWND pwndDesktop, pwndCurrent;
+    HWND *ahwnd;
+    USER_REFERENCE_ENTRY Ref;
+    int i;
+
+    pwndDesktop = UserGetDesktopWindow();
+    ASSERT(pwndDesktop);
+
+    ahwnd = IntWinListChildren(pwndDesktop);
+    if(!ahwnd)
+        return FALSE;
+
+    for (i = 0; ahwnd[i]; i++)
+    {
+        pwndCurrent = UserGetWindowObject(ahwnd[i]);
+        if(!pwndCurrent)
+            continue;
+
+        UserRefObjectCo(pwndCurrent, &Ref);
+        co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
+                                              pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
+                                              ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top, 
+                              SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
+                              SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
+        UserDerefObjectCo(pwndCurrent);
+    }
+
+    ExFreePool(ahwnd);
+
+    return TRUE;
 }
 
 static
@@ -745,7 +778,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetInt(&gspv.dwKbdSpeed, uiParam, KEY_KBD, VAL_KBDSPD, fl);
 
         case SPI_LANGDRIVER:
-            DPRINT1("SPI_LANGDRIVER is unimplemented\n");
+            ERR("SPI_LANGDRIVER is unimplemented\n");
             break;
 
         case SPI_GETSCREENSAVETIMEOUT:
@@ -774,7 +807,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetWallpaper(pvParam, fl);
 
         case SPI_SETDESKPATTERN:
-            DPRINT1("SPI_SETDESKPATTERN is unimplemented\n");
+            ERR("SPI_SETDESKPATTERN is unimplemented\n");
             break;
 
         case SPI_GETKEYBOARDDELAY:
@@ -874,6 +907,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"StatusFont", &gspv.ncm.lfStatusFont);
                 SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
             }
+            if(!SpiNotifyNCMetricsChanged())
+                return 0;
             return (UINT_PTR)KEY_METRIC;
 
         case SPI_GETMINIMIZEDMETRICS:
@@ -912,7 +947,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETWORKAREA:
         {
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
 
             if(!pmonitor)
                 return 0;
@@ -922,9 +957,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETWORKAREA:
         {
-            /*FIXME: we should set the work area of the monitor
-                     that contains the specified rectangle*/
-            PMONITOR pmonitor = IntGetPrimaryMonitor();
+            /* FIXME: We should set the work area of the monitor
+                      that contains the specified rectangle */
+            PMONITOR pmonitor = UserGetPrimaryMonitor();
             RECT rcWorkArea;
 
             if(!pmonitor)
@@ -945,13 +980,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             pmonitor->rcWork = rcWorkArea;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
         }
 
         case SPI_SETPENWINDOWS:
-            DPRINT1("SPI_SETPENWINDOWS is unimplemented\n");
+            ERR("SPI_SETPENWINDOWS is unimplemented\n");
             break;
 
         case SPI_GETFILTERKEYS:
@@ -962,7 +997,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -974,7 +1009,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -986,7 +1021,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1006,7 +1041,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1020,7 +1055,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1032,7 +1067,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1044,7 +1079,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1056,7 +1091,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1080,7 +1115,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1129,27 +1164,36 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bPwrOffActive, uiParam, KEY_DESKTOP, L"PowerOffActive", fl);
 
         case SPI_SETCURSORS:
-            DPRINT1("SPI_SETCURSORS is unimplemented\n");
+            ERR("SPI_SETCURSORS is unimplemented\n");
             break;
 
         case SPI_SETICONS:
-            DPRINT1("SPI_SETICONS is unimplemented\n");
+            ERR("SPI_SETICONS is unimplemented\n");
             break;
 
         case SPI_GETDEFAULTINPUTLANG:
-            DPRINT1("SPI_GETDEFAULTINPUTLANG is unimplemented\n");
-            break;
+            if (!gspklBaseLayout)
+                return FALSE;
+
+            return SpiGet(pvParam, &gspklBaseLayout->hkl, sizeof(HKL), fl);
 
         case SPI_SETDEFAULTINPUTLANG:
-            DPRINT1("SPI_SETDEFAULTINPUTLANG is unimplemented\n");
-            break;
+        {
+            HKL hkl;
+
+            /* Note: SPIF_UPDATEINIFILE is not supported */
+            if ((fl & SPIF_UPDATEINIFILE) || !SpiSet(&hkl, pvParam, sizeof(hkl), fl))
+                return FALSE;
+
+            return UserSetDefaultInputLang(hkl);
+        }
 
         case SPI_SETLANGTOGGLE:
-            DPRINT1("SPI_SETLANGTOGGLE is unimplemented\n");
+            ERR("SPI_SETLANGTOGGLE is unimplemented\n");
             break;
 
         case SPI_GETWINDOWSEXTENSION:
-            DPRINT1("SPI_GETWINDOWSEXTENSION is unimplemented\n");
+            ERR("SPI_GETWINDOWSEXTENSION is unimplemented\n");
             break;
 
         case SPI_GETMOUSETRAILS:
@@ -1180,7 +1224,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseHoverTime, fl);
 
         case SPI_SETMOUSEHOVERTIME:
-           /* see http://msdn2.microsoft.com/en-us/library/ms724947.aspx
+           /* See http://msdn2.microsoft.com/en-us/library/ms724947.aspx
             * copy text from it, if some agument why xp and 2003 behovir diffent
             * only if they do not have SP install
             * " Windows Server 2003 and Windows XP: The operating system does not
@@ -1218,8 +1262,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseSpeed, fl);
 
         case SPI_SETMOUSESPEED:
-            // vgl SETMOUSE
-            return SpiSetInt(&gspv.iMouseSpeed, uiParam, KEY_MOUSE, VAL_MOUSE3, fl);
+        {
+            /* Allowed range is [1:20] */
+            if ((INT_PTR)pvParam < 1 || (INT_PTR)pvParam > 20)
+                return 0;
+            else
+                return SpiSetInt(&gspv.iMouseSpeed, (INT_PTR)pvParam, KEY_MOUSE, VAL_SENSITIVITY, fl);
+        }
 
         case SPI_GETSCREENSAVERRUNNING:
             return SpiGetInt(pvParam, &gspv.bScrSaverRunning, fl);
@@ -1233,7 +1282,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGet(pvParam, &gspv.audiodesription, sizeof(AUDIODESCRIPTION), fl);
 
         case SPI_SETAUDIODESCRIPTION:
-            DPRINT1("SPI_SETAUDIODESCRIPTION is unimplemented\n");
+            ERR("SPI_SETAUDIODESCRIPTION is unimplemented\n");
             break;
 
         case SPI_GETSCREENSAVESECURE:
@@ -1476,11 +1525,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case 0x103B:
         case 0x103C:
         case 0x103D:
-            DPRINT1("Undocumented SPI value %x is unimplemented\n", uiAction);
+            ERR("Undocumented SPI value %x is unimplemented\n", uiAction);
             break;
 
         default:
-            DPRINT1("Invalid SPI value: %d\n", uiAction);
+            ERR("Invalid SPI value: %d\n", uiAction);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
     }
@@ -1497,20 +1546,23 @@ UserSystemParametersInfo(
     UINT fWinIni)
 {
     ULONG_PTR ulResult;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+
+    ASSERT(ppi);
 
     if (!gbSpiInitialized)
     {
         KeRosDumpStackFrames(NULL, 20);
+        //ASSERT(FALSE);
         return FALSE;
     }
 
     /* Get a pointer to the current Windowstation */
-    gpwinstaCurrent = IntGetWinStaObj();
-
-    if (!gpwinstaCurrent)
+    if (!ppi->prpwinsta)
     {
-        DPRINT1("UserSystemParametersInfo called without active windowstation.\n");
-        //KeRosDumpStackFrames(NULL, 0);
+        ERR("UserSystemParametersInfo called without active windowstation.\n");
+        //ASSERT(FALSE);
+        //return FALSE;
     }
 
     /* Do the actual operation */
@@ -1538,14 +1590,7 @@ UserSystemParametersInfo(
         }
         ulResult = 1;
     }
-
-    /* Dereference the windowstation */
-    if (gpwinstaCurrent)
-    {
-        ObDereferenceObject(gpwinstaCurrent);
-        gpwinstaCurrent = NULL;
-    }
-
+    
     return ulResult;
 }
 
@@ -1559,26 +1604,20 @@ NtUserSystemParametersInfo(
 {
     BOOL bResult;
 
-    DPRINT("Enter NtUserSystemParametersInfo(%d)\n", uiAction);
+    TRACE("Enter NtUserSystemParametersInfo(%d)\n", uiAction);
     UserEnterExclusive();
 
-    //if (uiAction == SPI_SETMOUSE) gbDebug = 1;
-
-    // FIXME: get rid of the flags and only use this from um. kernel can access data directly.
+    // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.
     /* Set UM memory protection flag */
     fWinIni |= SPIF_PROTECT;
 
     /* Call internal function */
     bResult = UserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 
-    //DPRINTX("NtUserSystemParametersInfo SPI_ICONHORIZONTALSPACING uiParam=%d, pvParam=%p, pvParam=%d bResult=%d\n",
-    //         uiParam, pvParam, pvParam?*(UINT*)pvParam:0, bResult);
-
-    DPRINT("Leave NtUserSystemParametersInfo, returning %d\n", bResult);
+    TRACE("Leave NtUserSystemParametersInfo, returning %d\n", bResult);
     UserLeave();
-
-    //DPRINTX("NtUserSystemParametersInfo SPI_ICONHORIZONTALSPACING bResult=%d\n", bResult);
-    //gbDebug = 0;
-
+    
     return bResult;
 }
+
+/* EOF */

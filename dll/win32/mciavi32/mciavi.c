@@ -26,11 +26,13 @@
  *	- synchronization between audio and video (especially for interleaved
  *	  files)
  *	- robustness when reading file can be enhanced
- *	- better move the AVI handling part to avifile DLL and make use of it
+ *	- reimplement the AVI handling part with avifile DLL because
+ *	  "open @1122334 type avivideo alias a" expects an AVIFile/Stream
+ *	  and MCI_DGV_SET|STATUS_SPEED maps to Rate/Scale
  *	- some files appear to have more than one audio stream (we only play the
  *	  first one)
  *	- some files contain an index of audio/video frame. Better use it,
- *	  instead of rebuilding it
+ *	  instead of rebuilding it (AVIFile does that already)
  *	- stopping while playing a file with sound blocks until all buffered
  *        audio is played... still should be stopped ASAP
  */
@@ -256,6 +258,12 @@ static	DWORD	MCIAVI_mciOpen(UINT wDevID, DWORD dwFlags,
             wma->lpFileName = HeapAlloc(GetProcessHeap(), 0, (strlenW(lpOpenParms->lpstrElementName) + 1) * sizeof(WCHAR));
             strcpyW(wma->lpFileName, lpOpenParms->lpstrElementName);
 
+	    if (lpOpenParms->lpstrElementName[0] == '@') {
+		/* The file name @11223344 encodes an AVIFile handle in decimal notation
+		 * in Win3.1 and w2k/NT, but this feature is absent in win95 (KB140750).
+		 * wma->hFile = LongToHandle(strtolW(lpOpenParms->lpstrElementName+1, NULL, 10)); */
+		FIXME("Using AVIFile/Stream %s NIY\n", debugstr_w(lpOpenParms->lpstrElementName));
+	    }
 	    wma->hFile = mmioOpenW(lpOpenParms->lpstrElementName, NULL,
 				   MMIO_ALLOCBUF | MMIO_DENYWRITE | MMIO_READ);
 

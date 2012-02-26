@@ -29,36 +29,36 @@
 
 typedef struct tagCONSOLE_MODE
 {
-  DWORD dwMode;
+  ULONG dwMode;
 } CONSOLE_MODE, *PCONSOLE_MODE;
 
 
 typedef struct tagOUTPUT_ATTRIBUTE
 {
-  WORD  wAttribute;
-  DWORD nLength;
-  COORD dwCoord;
-  DWORD dwTransfered;
+  USHORT wAttribute;
+  ULONG  nLength;
+  COORD  dwCoord;
+  ULONG  dwTransfered;
 } OUTPUT_ATTRIBUTE, *POUTPUT_ATTRIBUTE;
 
 
 typedef struct tagOUTPUT_CHARACTER
 {
   CHAR  cCharacter;
-  DWORD nLength;
+  ULONG nLength;
   COORD dwCoord;
-  DWORD dwTransfered;
+  ULONG dwTransfered;
 } OUTPUT_CHARACTER, *POUTPUT_CHARACTER;
 
 
 typedef struct tagCONSOLE_DRAW
 {
-  UINT X;       /* Origin */
-  UINT Y;
-  UINT SizeX;   /* Size of the screen buffer (chars) */
-  UINT SizeY;
-  UINT CursorX; /* New cursor position (screen-relative) */
-  UINT CursorY;
+  ULONG X;       /* Origin */
+  ULONG Y;
+  ULONG SizeX;   /* Size of the screen buffer (chars) */
+  ULONG SizeY;
+  ULONG CursorX; /* New cursor position (screen-relative) */
+  ULONG CursorY;
   /* Followed by screen buffer in char/attrib format */
 } CONSOLE_DRAW, *PCONSOLE_DRAW;
 

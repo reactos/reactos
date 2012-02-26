@@ -71,7 +71,7 @@ typedef struct _MINIPORT_SHARED_MEMORY {
     BOOLEAN               Cached;
     PNDIS_MINIPORT_BLOCK  Adapter;
     PVOID                 Context;
-    PKEVENT               Event;
+    PIO_WORKITEM          WorkItem;
 } MINIPORT_SHARED_MEMORY, *PMINIPORT_SHARED_MEMORY;
 
 /* A structure of WrapperConfigurationContext (not compatible with the

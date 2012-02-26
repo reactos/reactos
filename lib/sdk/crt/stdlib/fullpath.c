@@ -1,11 +1,9 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/stdlib/fullpath.c
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/stdlib/fullpath.c
  * PURPOSE:     Gets the fullpathname
- * PROGRAMER:   Ariadne
- * UPDATE HISTORY:
- *              28/12/98: Created
+ * PROGRAMER:   Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 #include <precomp.h>
@@ -16,18 +14,60 @@
  */
 _TCHAR* _tfullpath(_TCHAR* absPath, const _TCHAR* relPath, size_t maxLength)
 {
+    _TCHAR* lpBuffer;
     _TCHAR* lpFilePart;
-    DWORD copied;
+    DWORD retval;
 
-    if (!absPath)
+    /* First check if entry relative path was given */
+    if (!relPath || relPath[0] == 0)
     {
-        maxLength = MAX_PATH;
-        absPath = malloc(maxLength);
+        /* If not, just try to return current dir */
+        return _tgetcwd(absPath, maxLength);
     }
 
-    copied = GetFullPathName(relPath,maxLength,absPath,&lpFilePart);
-    if (copied == 0 || copied > maxLength)
-        return NULL;
+    /* If no output buffer was given */
+    if (!absPath)
+    {
+        /* Allocate one with fixed length */
+        maxLength = MAX_PATH;
+        lpBuffer = malloc(maxLength);
+        if (!lpBuffer)
+        {
+            errno = ENOMEM;
+            return NULL;
+        }
+    }
+    else
+    {
+        lpBuffer = absPath;
+    }
 
-    return absPath;
+    /* Really get full path */
+    retval = GetFullPathName(relPath, (DWORD)maxLength, lpBuffer, &lpFilePart);
+    /* Check for failures */
+    if (retval > maxLength)
+    {
+        /* Path too long, free (if needed) and return */
+        if (!absPath)
+        {
+            free(lpBuffer);
+        }
+
+        errno = ERANGE;
+        return NULL;
+    }
+    else if (!retval)
+    {
+        /* Other error, free (if needed), translate error, and return */
+        if (!absPath)
+        {
+            free(lpBuffer);
+        }
+
+        _dosmaperr(GetLastError());
+        return NULL;
+    }
+
+    /* Return buffer. Up to the caller to free if needed */
+    return lpBuffer;
 }

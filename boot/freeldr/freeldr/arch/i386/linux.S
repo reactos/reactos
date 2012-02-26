@@ -17,37 +17,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
-
+#include <asm.inc>
 #include <arch/pc/x86common.h>
 
-	.code32
-EXTERN(_BootNewLinuxKernel)
-	call	switch_to_real
-	.code16
+EXTERN i386CallRealMode:PROC
 
-	/* Set the boot drive */
-	movb	(_FrldrBootDrive),%dl
+.code32
 
-	/* Load segment registers */
-	cli
-	movw	$0x9000,%bx
-	movw	%bx,%ds
-	movw	%bx,%es
-	movw	%bx,%fs
-	movw	%bx,%gs
-	movw	%bx,%ss
-	movw	$0x9000,%sp
-
-	ljmpl	$0x9020,$0x0000
-
-
-	.code32
 /*
  *  VOID BootOldLinuxKernel(ULONG KernelSize);
  */
-EXTERN(_BootOldLinuxKernel)
+PUBLIC _BootOldLinuxKernel
+_BootOldLinuxKernel:
 
 	/* First we have to copy the kernel down from 0x100000 to 0x10000 */
 	/* The reason we can overwrite low memory is because this code */
@@ -55,25 +36,20 @@ EXTERN(_BootOldLinuxKernel)
 	/* 32k of code before we start interfering with Linux kernel address space. */
 
 	/* Get KernelSize in ECX and move the kernel down */
-	movl	0x04(%esp),%ecx
-	movl	$0x100000,%esi
-	movl	$0x10000,%edi
+	mov ecx, [esp + 4]
+	mov esi, HEX(100000)
+	mov edi, HEX(10000)
 	rep movsb
 
-	call	switch_to_real
-	.code16
+    /* Fall through */
 
-	/* Set the boot drive */
-	movb	(_FrldrBootDrive),%dl
+PUBLIC _BootNewLinuxKernel
+_BootNewLinuxKernel:
 
-	/* Load segment registers */
-	cli
-	movw	$0x9000,%bx
-	movw	%bx,%ds
-	movw	%bx,%es
-	movw	%bx,%fs
-	movw	%bx,%gs
-	movw	%bx,%ss
-	movw	$0x9000,%sp
+    mov bx, FNID_BootLinuxKernel
+    call i386CallRealMode
 
-	ljmpl	$0x9020,$0x0000
+    /* We should never get here */
+    int 3
+
+END

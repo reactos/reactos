@@ -1,8 +1,3 @@
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
- */
 /*
  * Translation made by Jerome Signouret, 2005.
  */
@@ -12,11 +7,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUtilisation : regsvr32 [/u] [/s] [/c] [/n] [/i[:lignedecommande]] nomDLL\n\
-/u -	Désenregistrement du serveur\n\
+/u -	DÃ©senregistrement du serveur\n\
 /s -	Silence; ne pas afficher les messages\n\
 /c -	Sortie sur la console\n\
-/i -	Installe la DLL avec des options dans la [:lignedecommande] ; si /u est présent, cela provoque la désinstallation de la DLL\n\
-/n -	Ne pas faire d'appel au serveur d'enregistrement ; cette option doit être utilisée avec l'option /i"
+/i -	Installe la DLL avec des options dans la [:lignedecommande] ; si /u est prÃ©sent, cela provoque la dÃ©sinstallation de la DLL\n\
+/n -	Ne pas faire d'appel au serveur d'enregistrement ; cette option doit Ãªtre utilisÃ©e avec l'option /i"
 
 IDS_NoDllSpecified,  "Aucune indication de nom de DLL."
 
@@ -24,12 +19,12 @@ IDS_InvalidFlag,     "Option non reconnue : %s"
 
 IDS_SwitchN_NoI,     "Option non reconnue : /n vous devez utiliser l'indicateur /i."
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') a échoué.\nGetLastError renvoie le code 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') a Ã©chouÃ©.\nGetLastError renvoie le code 0x%08x."
 
-IDS_MissingEntry,    "%s est chargé mais le point d'entrée de %s n'a pas été trouvé.\n\n \
-%s ne peut être exporté, ou une version corrompue de %s est en mémoire. Vous pouvez utiliser Pview pour détecter la DLL et la supprimer."
+IDS_MissingEntry,    "%s est chargÃ© mais le point d'entrÃ©e de %s n'a pas Ã©tÃ© trouvÃ©.\n\n \
+%s ne peut Ãªtre exportÃ©, ou une version corrompue de %s est en mÃ©moire. Vous pouvez utiliser Pview pour dÃ©tecter la DLL et la supprimer."
 
-IDS_FailureMessage,  "%s dans %s a échoué.\nLe code d'erreur est : 0x%08x"
+IDS_FailureMessage,  "%s dans %s a Ã©chouÃ©.\nLe code d'erreur est : 0x%08x"
 
-IDS_SuccessMessage   "%s dans %s est un succès."
+IDS_SuccessMessage,  "%s dans %s est un succÃ¨s."
 END

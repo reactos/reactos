@@ -167,7 +167,7 @@ BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext,
 
 /* Looks for the property with ID propID in the buffer buf.  Returns a pointer
  * to its header if a valid header is found, NULL if not.  Valid means the
- * length of thte property won't overrun buf, and the unknown field is 1.
+ * length of the property won't overrun buf, and the unknown field is 1.
  */
 static const WINE_CERT_PROP_HEADER *CRYPT_findPropID(const BYTE *buf,
  DWORD size, DWORD propID)

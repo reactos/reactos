@@ -70,8 +70,8 @@ ULONG
 NTAPI
 MmTrimAllSystemPageableMemory(IN ULONG PurgeTransitionList)
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*

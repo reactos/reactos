@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  07-05-2008
  */
 
@@ -6,29 +6,29 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_BCAST   "VysielacÌ"
-  IDS_P2P     "Rovn˝ s rovn˝m"
-  IDS_MIXED   "Zmieöan˝"
-  IDS_HYBRID  "Hybridn˝"
-  IDS_UNKNOWN "Nezn·my"
+  IDS_BCAST   "Vysielac√≠"
+  IDS_P2P     "Rovn√Ω s rovn√Ωm"
+  IDS_MIXED   "Zmie≈°an√Ω"
+  IDS_HYBRID  "Hybridn√Ω"
+  IDS_UNKNOWN "Nezn√°my"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_OTHER   "In˝ adaptÈr"
-  IDS_ETH     "AdaptÈr siete Ethernet"
-  IDS_TOKEN   "AdaptÈr siete Token Ring"
-  IDS_FDDI    "AdaptÈr FDDI"
-  IDS_PPP     "AdaptÈr PPP"
-  IDS_LOOP    "AdaptÈr pre sp‰tn˙ sluËku"
-  IDS_SLIP    "AdaptÈr SLIP"
+  IDS_OTHER   "In√Ω adapt√©r"
+  IDS_ETH     "Adapt√©r siete Ethernet"
+  IDS_TOKEN   "Adapt√©r siete Token Ring"
+  IDS_FDDI    "Adapt√©r FDDI"
+  IDS_PPP     "Adapt√©r PPP"
+  IDS_LOOP    "Adapt√©r pre sp√§tn√∫ sluƒçku"
+  IDS_SLIP    "Adapt√©r SLIP"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE     
-    "\nPOUéITIE:\n \
+    "\nPOU≈ΩITIE:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid adapter |\n \
@@ -57,13 +57,13 @@ BEGIN
     \n \
     For Setclassid, if no ClassId is specified, then the ClassId is removed.\n \
     \n \
-    PrÌklady:\n \
+    Pr√≠klady:\n \
         > ipconfig                   ... Show information.\n \
         > ipconfig /all              ... Show detailed information\n \
         > ipconfig /renew            ... renew all adapters\n \
         > ipconfig /renew EL*        ... renew any connection that has its\n \
                                          name starting with EL\n \
         > ipconfig /release *Con*    ... release all matching connections,\n \
-                                         napr. ""Lok·lne pripojenie 1"" alebo\n \
-                                               ""Lok·lne pripojenie 2""\n"
+                                         napr. ""Lok√°lne pripojenie 1"" alebo\n \
+                                               ""Lok√°lne pripojenie 2""\n"
 END

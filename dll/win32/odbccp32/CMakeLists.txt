@@ -11,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(odbccp32 SHARED ${SOURCE})
 
-set_entrypoint(odbccp32 0)
+set_module_type(odbccp32 win32dll ENTRYPOINT 0 )
 target_link_libraries(odbccp32 uuid wine)
 
 add_importlibs(odbccp32
@@ -20,5 +20,5 @@ add_importlibs(odbccp32
     kernel32
     ntdll)
 
-add_importlib_target(odbccp32.spec)
+add_importlib_target(odbccp32.spec odbccp32.dll)
 add_cd_file(TARGET odbccp32 DESTINATION reactos/system32 FOR all)

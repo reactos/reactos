@@ -88,12 +88,12 @@ AssignDriverLetters (PPARTLIST List)
                                      PARTENTRY,
                                      ListEntry);
 
-      for (i=0; i<3; i++)
+      for (i=0; i<4; i++)
         PartEntry->DriveLetter[i] = 0;
 
       if (PartEntry->Unpartitioned == FALSE)
       {
-        for (i=0; i<3; i++)
+        for (i=0; i<4; i++)
         {
           if (IsContainerPartition (PartEntry->PartInfo[i].PartitionType))
             continue;
@@ -374,7 +374,8 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
           PartEntry->PartInfo[j].StartingOffset.QuadPart -
           (LastStartingOffset + LastPartitionLength);
 
-          if (LastUnusedPartitionLength >= DiskEntry->CylinderSize)
+          if (PartEntry->PartInfo[j].StartingOffset.QuadPart > (LastStartingOffset + LastPartitionLength) &&
+              LastUnusedPartitionLength >= DiskEntry->CylinderSize)
           {
             DPRINT ("Unpartitioned disk space %I64u\n", LastUnusedPartitionLength);
 
@@ -718,7 +719,8 @@ AddDiskToList (HANDLE FileHandle,
     return;
   }
 
-  if (DiskGeometry.MediaType != FixedMedia)
+  if (DiskGeometry.MediaType != FixedMedia &&
+      DiskGeometry.MediaType != RemovableMedia)
   {
     return;
   }
@@ -836,8 +838,12 @@ AddDiskToList (HANDLE FileHandle,
 
   if (!DiskEntry->BiosFound)
   {
+#if 0
     RtlFreeHeap(ProcessHeap, 0, DiskEntry);
     return;
+#else
+    DPRINT1("WARNING: Setup could not find a matching BIOS disk entry. Disk %d is not be bootable by the BIOS!\n", DiskNumber);
+#endif
   }
 
   InitializeListHead (&DiskEntry->PartListHead);
@@ -869,7 +875,7 @@ AddDiskToList (HANDLE FileHandle,
 
   GetDriverName (DiskEntry);
 
-  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, BiosDiskNumber);
+  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
   /*
    * Allocate a buffer for 26 logical drives (2 entries each == 52) 
@@ -1281,6 +1287,7 @@ PrintDiskData (PPARTLIST List,
                PDISKENTRY DiskEntry)
 {
   PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry;
   CHAR LineBuffer[128];
   COORD coPos;
   DWORD Written;
@@ -1365,8 +1372,11 @@ PrintDiskData (PPARTLIST List,
   PrintEmptyLine (List);
 
   /* Print partition lines*/
-  LIST_FOR_EACH(PartEntry, &DiskEntry->PartListHead, PARTENTRY, ListEntry)
+  Entry = DiskEntry->PartListHead.Flink;
+  while (Entry != &DiskEntry->PartListHead)
   {
+    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
     /* Print disk entry */
     for (i=0; i<4; i++)
     {
@@ -1389,6 +1399,7 @@ PrintDiskData (PPARTLIST List,
                             0);
     }
 
+    Entry = Entry->Flink;
   }
 
   /* Print separator line */
@@ -1596,11 +1607,16 @@ DrawPartitionList (PPARTLIST List)
   /* print list entries */
   List->Line = - List->Offset;
 
-  LIST_FOR_EACH(DiskEntry, &List->DiskListHead, DISKENTRY, ListEntry)
+  Entry = List->DiskListHead.Flink;
+  while (Entry != &List->DiskListHead)
   {
+    DiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
+
     /* Print disk entry */
     PrintDiskData (List,
                    DiskEntry);
+
+    Entry = Entry->Flink;
   }
 }
 
@@ -2361,9 +2377,8 @@ CheckActiveBootPartition (PPARTLIST List)
   }
 #endif
 
-  DiskEntry = CONTAINING_RECORD (List->DiskListHead.Flink,
-                                 DISKENTRY,
-                                 ListEntry);
+  /* Choose the currently selected disk */
+  DiskEntry = List->CurrentDisk;
 
   /* Check for empty partition list */
   if (IsListEmpty (&DiskEntry->PartListHead))
@@ -2424,7 +2439,7 @@ CheckActiveBootPartition (PPARTLIST List)
           List->ActiveBootPartitionNumber = i;
 
           DPRINT("Found bootable partition disk %d, drive letter %c\n",
-              DiskEntry->BiosDiskNumber, PartEntry->DriveLetter[i]);
+              DiskEntry->DiskNumber, PartEntry->DriveLetter[i]);
 
           break;
         }

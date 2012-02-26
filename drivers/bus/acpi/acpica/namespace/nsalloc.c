@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -255,7 +255,7 @@ AcpiNsRemoveNode (
     ACPI_FUNCTION_TRACE_PTR (NsRemoveNode, Node);
 
 
-    ParentNode = AcpiNsGetParentNode (Node);
+    ParentNode = Node->Parent;
 
     PrevNode = NULL;
     NextNode = ParentNode->Child;
@@ -265,34 +265,22 @@ AcpiNsRemoveNode (
     while (NextNode != Node)
     {
         PrevNode = NextNode;
-        NextNode = PrevNode->Peer;
+        NextNode = NextNode->Peer;
     }
 
     if (PrevNode)
     {
         /* Node is not first child, unlink it */
 
-        PrevNode->Peer = NextNode->Peer;
-        if (NextNode->Flags & ANOBJ_END_OF_PEER_LIST)
-        {
-            PrevNode->Flags |= ANOBJ_END_OF_PEER_LIST;
-        }
+        PrevNode->Peer = Node->Peer;
     }
     else
     {
-        /* Node is first child (has no previous peer) */
-
-        if (NextNode->Flags & ANOBJ_END_OF_PEER_LIST)
-        {
-            /* No peers at all */
-
-            ParentNode->Child = NULL;
-        }
-        else
-        {   /* Link peer list to parent */
-
-            ParentNode->Child = NextNode->Peer;
-        }
+        /*
+         * Node is first child (has no previous peer).
+         * Link peer list to parent
+         */
+        ParentNode->Child = Node->Peer;
     }
 
     /* Delete the node and any attached objects */
@@ -336,38 +324,47 @@ AcpiNsInstallNode (
     ACPI_FUNCTION_TRACE (NsInstallNode);
 
 
-    /*
-     * Get the owner ID from the Walk state. The owner ID is used to track
-     * table deletion and deletion of objects created by methods.
-     */
     if (WalkState)
     {
+        /*
+         * Get the owner ID from the Walk state. The owner ID is used to
+         * track table deletion and deletion of objects created by methods.
+         */
         OwnerId = WalkState->OwnerId;
+
+        if ((WalkState->MethodDesc) &&
+            (ParentNode != WalkState->MethodNode))
+        {
+            /*
+             * A method is creating a new node that is not a child of the
+             * method (it is non-local). Mark the executing method as having
+             * modified the namespace. This is used for cleanup when the
+             * method exits.
+             */
+            WalkState->MethodDesc->Method.InfoFlags |= ACPI_METHOD_MODIFIED_NAMESPACE;
+        }
     }
 
     /* Link the new entry into the parent and existing children */
 
+    Node->Peer = NULL;
+    Node->Parent = ParentNode;
     ChildNode = ParentNode->Child;
+
     if (!ChildNode)
     {
         ParentNode->Child = Node;
-        Node->Flags |= ANOBJ_END_OF_PEER_LIST;
-        Node->Peer = ParentNode;
     }
     else
     {
-        while (!(ChildNode->Flags & ANOBJ_END_OF_PEER_LIST))
+        /* Add node to the end of the peer list */
+
+        while (ChildNode->Peer)
         {
             ChildNode = ChildNode->Peer;
         }
 
         ChildNode->Peer = Node;
-
-        /* Clear end-of-list flag */
-
-        ChildNode->Flags &= ~ANOBJ_END_OF_PEER_LIST;
-        Node->Flags |= ANOBJ_END_OF_PEER_LIST;
-        Node->Peer = ParentNode;
     }
 
     /* Init the new entry */
@@ -402,9 +399,8 @@ void
 AcpiNsDeleteChildren (
     ACPI_NAMESPACE_NODE     *ParentNode)
 {
-    ACPI_NAMESPACE_NODE     *ChildNode;
     ACPI_NAMESPACE_NODE     *NextNode;
-    UINT8                   Flags;
+    ACPI_NAMESPACE_NODE     *NodeToDelete;
 
 
     ACPI_FUNCTION_TRACE_PTR (NsDeleteChildren, ParentNode);
@@ -415,39 +411,27 @@ AcpiNsDeleteChildren (
         return_VOID;
     }
 
-    /* If no children, all done! */
-
-    ChildNode = ParentNode->Child;
-    if (!ChildNode)
-    {
-        return_VOID;
-    }
-
     /* Deallocate all children at this level */
 
-    do
+    NextNode = ParentNode->Child;
+    while (NextNode)
     {
-        /* Get the things we need */
-
-        NextNode = ChildNode->Peer;
-        Flags = ChildNode->Flags;
-
         /* Grandchildren should have all been deleted already */
 
-        if (ChildNode->Child)
+        if (NextNode->Child)
         {
             ACPI_ERROR ((AE_INFO, "Found a grandchild! P=%p C=%p",
-                ParentNode, ChildNode));
+                ParentNode, NextNode));
         }
 
         /*
          * Delete this child node and move on to the next child in the list.
          * No need to unlink the node since we are deleting the entire branch.
          */
-        AcpiNsDeleteNode (ChildNode);
-        ChildNode = NextNode;
-
-    } while (!(Flags & ANOBJ_END_OF_PEER_LIST));
+        NodeToDelete = NextNode;
+        NextNode = NextNode->Peer;
+        AcpiNsDeleteNode (NodeToDelete);
+    };
 
     /* Clear the parent's child pointer */
 
@@ -475,12 +459,21 @@ AcpiNsDeleteNamespaceSubtree (
 {
     ACPI_NAMESPACE_NODE     *ChildNode = NULL;
     UINT32                  Level = 1;
+    ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_TRACE (NsDeleteNamespaceSubtree);
 
 
     if (!ParentNode)
+    {
+        return_VOID;
+    }
+
+    /* Lock namespace for possible update */
+
+    Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
+    if (ACPI_FAILURE (Status))
     {
         return_VOID;
     }
@@ -533,10 +526,11 @@ AcpiNsDeleteNamespaceSubtree (
 
             /* Move up the tree to the grandparent */
 
-            ParentNode = AcpiNsGetParentNode (ParentNode);
+            ParentNode = ParentNode->Parent;
         }
     }
 
+    (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
     return_VOID;
 }
 
@@ -655,7 +649,7 @@ AcpiNsDeleteNamespaceByOwner (
 
             /* Move up the tree to the grandparent */
 
-            ParentNode = AcpiNsGetParentNode (ParentNode);
+            ParentNode = ParentNode->Parent;
         }
     }
 

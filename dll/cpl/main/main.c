@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS Sample Control Panel
- * FILE:            lib/cpl/main/main.c
+ * FILE:            dll/cpl/main/main.c
  * PURPOSE:         ReactOS Main Control Panel
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
@@ -149,4 +149,3 @@ DllMain(HINSTANCE hinstDLL,
 
     return TRUE;
 }
-

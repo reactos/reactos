@@ -63,10 +63,4 @@ typedef struct tag_context {
     LPWSTR  options[OPT_MAX];
     BOOL    flags[FLAG_MAX];
 } context_t;
-
-
-/* ## DLL-wide Globals ## */
-extern HINSTANCE PRINTUI_hInstance;
-
-
 #endif

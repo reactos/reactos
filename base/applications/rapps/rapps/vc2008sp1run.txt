@@ -5,7 +5,7 @@ Name = Microsoft Visual C++ 2008 SP1 Redistributable Package
 Version = 8.0
 Licence = Unknown
 Description = Visual Studio 2008 SP1 Runtime. Contains: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4.0MB
+Size = 4.02MB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en
 URLDownload = http://download.microsoft.com/download/d/d/9/dd9a82d0-52ef-40db-8dab-795376989c03/vcredist_x86.exe

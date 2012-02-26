@@ -24,6 +24,32 @@
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 
+/* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
+#define PFN_SHIFT 12
+
+/* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
+#define PDE_SHIFT 22
+#define PDE_SHIFT_PAE 18
+
+/* Converts a Physical Address Pointer into a Page Frame Number */
+#define PaPtrToPfn(p) \
+    (((ULONG_PTR)&p) >> PFN_SHIFT)
+
+/* Converts a Physical Address into a Page Frame Number */
+#define PaToPfn(p) \
+    ((p) >> PFN_SHIFT)
+
+#define STARTUP_BASE                0xC0000000
+
+#define LowMemPageTableIndex        0
+#define StartupPageTableIndex       (STARTUP_BASE >> 22)
+#define HalPageTableIndex           (HAL_BASE >> 22)
+
+typedef struct _PAGE_DIRECTORY_X86
+{
+    HARDWARE_PTE Pde[1024];
+} PAGE_DIRECTORY_X86, *PPAGE_DIRECTORY_X86;
+
 void i386DivideByZero(void);
 void i386DebugException(void);
 void i386NMIException(void);

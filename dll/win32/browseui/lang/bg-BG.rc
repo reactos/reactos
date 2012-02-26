@@ -234,13 +234,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS          "Липсват текстови етикети"
-    IDS_SELECTIVETEXTONRIGHT  "Selective text on right"
+    IDS_SELECTIVETEXTONRIGHT  "Избирателен текст отдясно"
 END
 
 STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL         "|Отиване||"
-    IDS_GOBUTTONTIPTEMPLATE   "Отиване в""%s"""
+    IDS_GOBUTTONTIPTEMPLATE   "Отиване в „%s“"
 END
 
 STRINGTABLE

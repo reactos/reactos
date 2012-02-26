@@ -36,7 +36,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Questa lingua sarà quella predefinita per il sistema finale.",
+        "\x07  Questa lingua sar… quella predefinita per il sistema finale.",
         TEXT_STYLE_NORMAL
     },
     {

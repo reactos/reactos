@@ -12,19 +12,19 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE            "ReactOS - �Թ�յ�͹�Ѻ"
+    IDS_APPTITLE            "ReactOS - ยินดีต้อนรับ"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "�Թ�յ�͹�Ѻ����к���Ժѵԡ�� React \n\n�����͡�����Һ�ᶺ�������"
-//    IDS_CHECKTEXT           "�ʴ����й��ա����"
-//    IDS_CLOSETEXT           "�͡�ҡ�����"
+    IDS_DEFAULTTOPICDESC    "ยินดีต้อนรับสู่ระบบปฏิบัติการ React \n\nกดเลือกเนื้อหาบนแถบซ้ายมือ"
+//    IDS_CHECKTEXT           "แสดงคำแนะนำอีกครั้ง"
+//    IDS_CLOSETEXT           "ออกจากโปรแกรม"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "�Դ��� ReactOS"
-    IDS_TOPICBUTTON1        "����������´�ͧ�蹫մչ��"
-    IDS_TOPICBUTTON2        "�͡�ҡ�����"
+    IDS_TOPICBUTTON0        "ติดตั้ง ReactOS"
+    IDS_TOPICBUTTON1        "ดูรายละเอียดของแผ่นซีดีนี้"
+    IDS_TOPICBUTTON2        "ออกจากโปรแกรม"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -37,9 +37,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "�Դ��� ReactOS"
-    IDS_TOPICTITLE1         "����������´�ͧ�蹫մչ��"
-    IDS_TOPICTITLE2         "�͡�ҡ�����"
+    IDS_TOPICTITLE0         "ติดตั้ง ReactOS"
+    IDS_TOPICTITLE1         "ดูรายละเอียดของแผ่นซีดีนี้"
+    IDS_TOPICTITLE2         "ออกจากโปรแกรม"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -52,9 +52,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "�س��ͧ��õԴ��� ReactOS ŧ�����ͧ����������ͧ�س\n\n���͵�ͧ��û�Ѻ����������ҡ������������."
-    IDS_TOPICDESC1          "����������´�ͧ�蹫մչ��."
-    IDS_TOPICDESC2          "�����͡��������͵�ͧ����͡�ҡ��õԴ���."
+    IDS_TOPICDESC0          "คุณต้องการติดตั้ง ReactOS ลงในเครื่องคอมพิวเตอร์ของคุณ\n\nหรือต้องการปรับแต่งเพิ่มเติมจากที่มีอยู่เดิม."
+    IDS_TOPICDESC1          "ดูรายละเอียดของแผ่นซีดีนี้."
+    IDS_TOPICDESC2          "กดเลือกที่นี่เพื่อต้องการออกจากการติดตั้ง."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."

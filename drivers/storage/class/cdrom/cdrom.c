@@ -4367,7 +4367,6 @@ RetryControl:
 
         LARGE_INTEGER  startingOffset;
         ULONG          transferBytes;
-        ULONG          startingSector;
         PRAW_READ_INFO rawReadInfo = (PRAW_READ_INFO)irpStack->Parameters.DeviceIoControl.Type3InputBuffer;
         PUCHAR         userData = (PUCHAR)Irp->AssociatedIrp.SystemBuffer;
 
@@ -4421,7 +4420,6 @@ RetryControl:
         }
 
         startingOffset.QuadPart = rawReadInfo->DiskOffset.QuadPart;
-        startingSector = (ULONG)(rawReadInfo->DiskOffset.QuadPart >> deviceExtension->SectorShift);
         transferBytes = rawReadInfo->SectorCount * RAW_SECTOR_SIZE;
 
         if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < transferBytes) {
@@ -6748,7 +6746,6 @@ Return Value:
     PREAD_CAPACITY_DATA capacityBuffer;
     PIO_STACK_LOCATION  irpStack;
     PUCHAR              senseBuffer;
-    NTSTATUS            status;
 
     irp = IoAllocateIrp((CCHAR)(DeviceExtension->DeviceObject->StackSize+1),
                         FALSE);
@@ -6853,7 +6850,7 @@ Return Value:
                         IrpToComplete->IoStatus.Status = STATUS_VERIFY_REQUIRED;
                         IoMarkIrpPending(IrpToComplete);
 
-                        status = IoCallDriver(DeviceExtension->PortDeviceObject, irp);
+                        IoCallDriver(DeviceExtension->PortDeviceObject, irp);
 
                         //
                         // status is not checked because the completion routine for this

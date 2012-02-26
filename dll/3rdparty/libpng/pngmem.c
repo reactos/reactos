@@ -1,7 +1,7 @@
 
 /* pngmem.c - stub functions for memory allocation
  *
- * Last changed in libpng 1.5.1 [February 3, 2011]
+ * Last changed in libpng 1.5.7 [December 15, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -56,9 +56,9 @@ png_create_struct_2,(int type, png_malloc_ptr malloc_fn, png_voidp mem_ptr),
    if (malloc_fn != NULL)
    {
       png_struct dummy_struct;
-      png_structp png_ptr = &dummy_struct;
-      png_ptr->mem_ptr=mem_ptr;
-      struct_ptr = (*(malloc_fn))(png_ptr, (png_uint_32)size);
+      memset(&dummy_struct, 0, sizeof dummy_struct);
+      dummy_struct.mem_ptr=mem_ptr;
+      struct_ptr = (*(malloc_fn))(&dummy_struct, (png_alloc_size_t)size);
    }
 
    else
@@ -90,9 +90,9 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn,
       if (free_fn != NULL)
       {
          png_struct dummy_struct;
-         png_structp png_ptr = &dummy_struct;
-         png_ptr->mem_ptr=mem_ptr;
-         (*(free_fn))(png_ptr, struct_ptr);
+         memset(&dummy_struct, 0, sizeof dummy_struct);
+         dummy_struct.mem_ptr=mem_ptr;
+         (*(free_fn))(&dummy_struct, struct_ptr);
          return;
       }
 
@@ -143,7 +143,7 @@ png_malloc,(png_structp png_ptr, png_alloc_size_t size),PNG_ALLOCATED)
 
 #  ifdef PNG_USER_MEM_SUPPORTED
    if (png_ptr->malloc_fn != NULL)
-      ret = ((png_voidp)(*(png_ptr->malloc_fn))(png_ptr, (png_size_t)size));
+      ret = ((png_voidp)(*(png_ptr->malloc_fn))(png_ptr, size));
 
    else
       ret = (png_malloc_default(png_ptr, size));
@@ -187,8 +187,9 @@ png_malloc_default,(png_structp png_ptr, png_alloc_size_t size),PNG_ALLOCATED)
             int num_blocks;
             png_uint_32 total_size;
             png_bytep table;
-            int i;
+            int i, mem_level, window_bits;
             png_byte huge * hptr;
+            int window_bits
 
             if (ret != NULL)
             {
@@ -196,14 +197,22 @@ png_malloc_default,(png_structp png_ptr, png_alloc_size_t size),PNG_ALLOCATED)
                ret = NULL;
             }
 
-            if (png_ptr->zlib_window_bits > 14)
-               num_blocks = (int)(1 << (png_ptr->zlib_window_bits - 14));
+            window_bits =
+                png_ptr->zlib_window_bits >= png_ptr->zlib_text_window_bits ?
+                png_ptr->zlib_window_bits : png_ptr->zlib_text_window_bits;
+
+            if (window_bits > 14)
+               num_blocks = (int)(1 << (window_bits - 14));
 
             else
                num_blocks = 1;
 
-            if (png_ptr->zlib_mem_level >= 7)
-               num_blocks += (int)(1 << (png_ptr->zlib_mem_level - 7));
+            mem_level =
+                png_ptr->zlib_mem_level >= png_ptr->zlib_text_mem_level ?
+                png_ptr->zlib_mem_level : png_ptr->zlib_text_mem_level;
+
+            if (mem_level >= 7)
+               num_blocks += (int)(1 << (mem_level - 7));
 
             else
                num_blocks++;
@@ -277,7 +286,7 @@ png_malloc_default,(png_structp png_ptr, png_alloc_size_t size),PNG_ALLOCATED)
       {
 #  ifndef PNG_USER_MEM_SUPPORTED
          if ((png_ptr->flags&PNG_FLAG_MALLOC_NULL_MEM_OK) == 0)
-            png_error(png_ptr, "Out of Memory"); /* Note "o" and "M" */
+            png_error(png_ptr, "Out of Memory"); /* Note "O" and "M" */
 
          else
             png_warning(png_ptr, "Out of Memory");

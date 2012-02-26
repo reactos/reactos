@@ -1,25 +1,9 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998 - 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * STOCKOBJ.C - GDI Stock Objects
- *
- *
+ * PROJECT:         ReactOS win32 kernel mode subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/objects/stockobj.c
+ * PURPOSE:         Stock objects functions
+ * PROGRAMMER:
  */
 
 #include <win32k.h>
@@ -62,7 +46,6 @@ static const COLORREF SysColors[] =
     RGB(49, 106, 197),  /* COLOR_MENUHILIGHT  */
     RGB(236, 233, 216)  /* COLOR_MENUBAR  */
 };
-#define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
 
 // System Bitmap DC
 HDC hSystemBM;
@@ -81,12 +64,12 @@ static LOGPEN NullPen =
 static LOGFONTW OEMFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 static LOGFONTW AnsiFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 static LOGFONTW AnsiVarFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -96,23 +79,23 @@ static LOGFONTW AnsiVarFont =
 static LOGFONTW SystemFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Courier New"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 static LOGFONTW DeviceDefaultFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 static LOGFONTW SystemFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 

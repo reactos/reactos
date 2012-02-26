@@ -115,7 +115,7 @@ NTAPI
 KeInitializeProcess(IN OUT PKPROCESS Process,
                     IN KPRIORITY Priority,
                     IN KAFFINITY Affinity,
-                    IN PULONG DirectoryTableBase,
+                    IN PULONG_PTR DirectoryTableBase,
                     IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP
@@ -125,10 +125,10 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
 #endif
 
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Process->Header,
-                                 ProcessObject,
-                                 sizeof(KPROCESS),
-                                 FALSE);
+    Process->Header.Type = ProcessObject;
+    Process->Header.Size = sizeof(KPROCESS) / sizeof(ULONG);
+    Process->Header.SignalState = 0;
+    InitializeListHead(&(Process->Header.WaitListHead));
 
     /* Initialize Scheduler Data, Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
@@ -258,6 +258,90 @@ KeSetQuantumProcess(IN PKPROCESS Process,
 
     /* Release lock */
     KiReleaseProcessLock(&ProcessLock);
+}
+
+KAFFINITY
+NTAPI
+KeSetAffinityProcess(IN PKPROCESS Process,
+                     IN KAFFINITY Affinity)
+{
+   
+    KLOCK_QUEUE_HANDLE ProcessLock;
+    PLIST_ENTRY NextEntry, ListHead;
+    KAFFINITY OldAffinity;
+    PKTHREAD Thread;
+    ASSERT_PROCESS(Process);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    ASSERT((Affinity & KeActiveProcessors) != 0);
+    
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &ProcessLock);
+    
+    /* Acquire the dispatcher lock */
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Capture old affinity and update it */
+    OldAffinity = Process->Affinity;
+    Process->Affinity = Affinity;
+
+    /* Loop all child threads */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the thread */
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+        
+        /* Set affinity on it */
+        KiSetAffinityThread(Thread, Affinity);
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* Release Dispatcher Database */
+    KiReleaseDispatcherLockFromDpcLevel();
+    
+    /* Release the process lock */
+    KiReleaseProcessLockFromDpcLevel(&ProcessLock);
+    KiExitDispatcher(ProcessLock.OldIrql);
+    
+    /* Return previous affinity */
+    return OldAffinity;
+}
+
+BOOLEAN
+NTAPI
+KeSetAutoAlignmentProcess(IN PKPROCESS Process,
+                          IN BOOLEAN Enable)
+{
+    /* Set or reset the bit depending on what the enable flag says */
+    if (Enable)
+    {
+        return InterlockedBitTestAndSet(&Process->ProcessFlags,
+                                        KPSF_AUTO_ALIGNMENT_BIT);
+    }
+    else
+    {
+        return InterlockedBitTestAndReset(&Process->ProcessFlags,
+                                          KPSF_AUTO_ALIGNMENT_BIT);
+    }
+}
+
+BOOLEAN
+NTAPI
+KeSetDisableBoostProcess(IN PKPROCESS Process,
+                         IN BOOLEAN Disable)
+{
+    /* Set or reset the bit depending on what the disable flag says */
+    if (Disable)
+    {
+        return InterlockedBitTestAndSet(&Process->ProcessFlags,
+                                        KPSF_DISABLE_BOOST_BIT);
+    }
+    else
+    {
+        return InterlockedBitTestAndReset(&Process->ProcessFlags,
+                                          KPSF_DISABLE_BOOST_BIT);
+    }
 }
 
 KPRIORITY

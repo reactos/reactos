@@ -204,9 +204,8 @@ static UINT DISTINCT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *
     return dv->table->ops->get_dimensions( dv->table, NULL, cols );
 }
 
-static UINT DISTINCT_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
-                LPWSTR *table_name)
+static UINT DISTINCT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                      UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSIDISTINCTVIEW *dv = (MSIDISTINCTVIEW*)view;
 
@@ -269,15 +268,6 @@ static UINT DISTINCT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
     return r;
 }
 
-static UINT DISTINCT_sort(struct tagMSIVIEW *view, column_info *columns)
-{
-    MSIDISTINCTVIEW *dv = (MSIDISTINCTVIEW *)view;
-
-    TRACE("%p %p\n", view, columns);
-
-    return dv->table->ops->sort( dv->table, columns );
-}
-
 static const MSIVIEWOPS distinct_ops =
 {
     DISTINCT_fetch_int,
@@ -297,7 +287,7 @@ static const MSIVIEWOPS distinct_ops =
     NULL,
     NULL,
     NULL,
-    DISTINCT_sort,
+    NULL,
     NULL,
 };
 

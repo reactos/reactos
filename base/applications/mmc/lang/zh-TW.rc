@@ -3,27 +3,27 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mmc/lang/zh-TW.rc
  * PURPOSE:     Chinese (Traditional) Language File for Management Console
- * TRANSLATOR:  Elton Chung <elton328@gmail.com>
+ * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDM_CONSOLEROOT MENU DISCARDABLE
 BEGIN
-    POPUP "¿…Æ◊(&F)"
+    POPUP "Ê™îÊ°à(&F)"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "µ≤ßÙ(&X)\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "ÁµêÊùü(&X)\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "ª°©˙(&H)"
+    POPUP "Ë™™Êòé(&H)"
     BEGIN
-        MENUITEM "√ˆ©Û ReactOS ∫ﬁ≤z±±®Ó•x(&A)...", ID_HELP_ABOUT
+        MENUITEM "ÈóúÊñº ReactOS ÊéßÂà∂Âè∞(&A)...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "ReactOS ∫ﬁ≤z±±®Ó•x"
-    IDS_CONSOLETITLE "±±®Ó•x%1!u!"
+    IDS_APPTITLE "ReactOS ÊéßÂà∂Âè∞"
+    IDS_CONSOLETITLE "ÊéßÂà∂Âè∞%1!u!"
 END

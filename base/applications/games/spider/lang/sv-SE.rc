@@ -1,20 +1,16 @@
 /*
  * PROJECT:      Spider Solitaire
  * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/en-US.rc
- * PURPOSE:      English Language File for Spider Solitaire
- * TRANSLATOR:   Gregor Schneider
+ * FILE:         base/applications/games/spider/lang/sv-SE.rc
+ * PURPOSE:      Swedish Language File for Spider Solitaire
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
-
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "V‰lj Kort Baksidan"
+CAPTION "V√§lj Kort Baksidan"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -23,7 +19,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -36,12 +32,12 @@ END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "SvÂrighet"
+CAPTION "Sv√•righet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "L‰tt: &En F‰rg",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Medel: &TvÂ F‰rger", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "SvÂrt: &Fyra F‰rger",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    AUTORADIOBUTTON "L√§tt: &En F√§rg",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Medel: &Tv√• F√§rger", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "Sv√•rt: &Fyra F√§rger",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
     PUSHBUTTON      "Avbryt", IDCANCEL, 58, 58, 40, 14
@@ -52,7 +48,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME    "Spider"
-    IDS_SPI_ABOUT   "Spider Solitaire av Gregor Schneider\n÷vers‰tt av Ronny K Svensson\n\nCardLib version 1.0"
+    IDS_SPI_ABOUT   "Spider Solitaire av Gregor Schneider\n√ñvers√§tt av Ronny K Svensson\n\nCardLib version 1.0"
     IDS_SPI_QUIT    "Avsluta ditt nuvarande spel?"
     IDS_SPI_WIN     "Grattis, du vann!"
     IDS_SPI_DEAL    "Ge igen?"
@@ -71,9 +67,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta",                       IDM_GAME_EXIT
     END
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
-        MENUITEM "&InnehÂll\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Inneh√•ll\tF1",               IDM_HELP_CONTENTS
         MENUITEM "&Om",                      IDM_HELP_ABOUT
     END
 END

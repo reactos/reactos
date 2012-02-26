@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/gdidbg.c
- * PURPOSE:         Special debugging functions for gdi
+ * PURPOSE:         Special debugging functions for GDI
  * PROGRAMMERS:     Timo Kreuzer
  */
 
@@ -17,7 +17,7 @@ extern ULONG gulFirstUnused;
 
 ULONG gulLogUnique = 0;
 
-/* note the following values need to be sorted */
+/* Note: the following values need to be sorted */
 DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"EngBlt", DbgChEngBlt},
     {L"EngBrush", DbgChEngBrush},
@@ -55,13 +55,16 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"GdiText", DbgChGdiText},
     {L"GdiXFormObj", DbgChGdiXFormObj},
     {L"UserAccel", DbgChUserAccel},
-    {L"UserCalproc", DbgChUserCalproc},
+    {L"UserCallback", DbgChUserCallback},
+    {L"UserCallProc", DbgChUserCallProc},
     {L"UserCaret", DbgChUserCaret},
     {L"UserClass", DbgChUserClass},
     {L"UserClipbrd", DbgChUserClipbrd},
     {L"UserCsr", DbgChUserCsr},
     {L"UserDce", DbgChUserDce},
+    {L"UserDefwnd", DbgChUserDefwnd},
     {L"UserDesktop", DbgChUserDesktop},
+    {L"UserDisplay",DbgChUserDisplay},
     {L"UserEvent", DbgChUserEvent},
     {L"UserFocus", DbgChUserFocus},
     {L"UserHook", DbgChUserHook},
@@ -72,20 +75,21 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"UserKbdLayout", DbgChUserKbdLayout},
     {L"UserMenu", DbgChUserMenu},
     {L"UserMetric", DbgChUserMetric},
+    {L"UserMisc", DbgChUserMisc},
     {L"UserMonitor", DbgChUserMonitor},
-    {L"UserMsgGet", DbgChUserMsgGet},
+    {L"UserMsg", DbgChUserMsg},
     {L"UserMsgQ", DbgChUserMsgQ},
-    {L"UserMsgSend", DbgChUserMsgSend},
     {L"UserObj", DbgChUserObj},
+    {L"UserPainting", DbgChUserPainting},
     {L"UserProcess", DbgChUserProcess},
     {L"UserProp", DbgChUserProp},
     {L"UserScrollbar", DbgChUserScrollbar},
-    {L"UserSysparam", DbgChUserSysparam},
+    {L"UserSysparams", DbgChUserSysparams},
     {L"UserTimer", DbgChUserTimer},
     {L"UserThread", DbgChUserThread},
+    {L"UserWinpos", DbgChUserWinpos},
     {L"UserWinsta", DbgChUserWinsta},
-    {L"UserWnd", DbgChUserWnd},
-    {L"UserWndpos", DbgChUserWndpos}
+    {L"UserWnd", DbgChUserWnd}
 };
 
 #ifdef GDI_DEBUG
@@ -121,12 +125,12 @@ DbgDumpGdiHandleTable(void)
 
     if (leak_reported)
     {
-        DPRINT1("gdi handle abusers already reported!\n");
+        DPRINT1("GDI handle abusers already reported!\n");
         return;
     }
 
     leak_reported = 1;
-    DPRINT1("reporting gdi handle abusers:\n");
+    DPRINT1("Reporting GDI handle abusers:\n");
 
     /* We've got serious business to do */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -196,7 +200,7 @@ DbgDumpGdiHandleTable(void)
     }
 
     if (i < nTraces)
-        DbgPrint("(list terminated - the remaining entries have 1 allocation only)\n");
+        DbgPrint("(List terminated - the remaining entries have 1 allocation only)\n");
 
     KeLowerIrql(OldIrql);
 
@@ -234,7 +238,7 @@ DbgGdiHTIntegrityCheck()
 
 	KeEnterCriticalRegion();
 
-	/* FIXME: check reserved entries */
+	/* FIXME: Check reserved entries */
 
 	/* Now go through the deleted objects */
 	i = gulFirstFree & 0xffff;
@@ -479,7 +483,7 @@ DbgCleanupEventList(PSLIST_HEADER pslh)
 
 void
 NTAPI
-DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
+GdiDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 {
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
@@ -494,7 +498,7 @@ DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 
 ULONG_PTR
 NTAPI
-DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 {
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
@@ -518,7 +522,7 @@ QueryEnvironmentVariable(PUNICODE_STRING Name,
    PPEB Peb;
    PWSTR Environment; 
 
-   /* Ugly hack for reactos system threads */
+   /* Ugly HACK for ReactOS system threads */
    if(!NtCurrentTeb())
    {
        return(STATUS_VARIABLE_NOT_FOUND);
@@ -590,8 +594,6 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     DBG_CHANNEL *ChannelEntry;
     UINT iLevel, iChannel;
 
-    DbgPrint("Found channel %S,level %S, operation %C\n", channel, level, op);
-
     ChannelEntry = (DBG_CHANNEL*)bsearch(channel, 
                                          DbgChannels, 
                                          DbgChCount, 
@@ -599,7 +601,6 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
                                          DbgCompareChannels);
     if(ChannelEntry == NULL)
     {
-        DbgPrint("Failed to find channel %S\n", channel);
         return FALSE;
     }
 
@@ -703,7 +704,7 @@ BOOL DbgInitDebugChannels()
         /* Get the env var again */
         Status = QueryEnvironmentVariable(&Name, &Value);
     }
-    
+
    /* Check for error */
     if(!NT_SUCCESS(Status))
     {
@@ -718,7 +719,7 @@ BOOL DbgInitDebugChannels()
     /* Parse the variable */
     ret = DbgParseDebugChannels(ppi, &Value);
 
-    /* Clean up*/
+    /* Clean up */
     if(Value.Buffer != valBuffer)
     {
         ExFreePool(Value.Buffer);
@@ -727,3 +728,4 @@ BOOL DbgInitDebugChannels()
     return ret;
 }
 
+/* EOF */

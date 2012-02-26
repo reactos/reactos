@@ -820,7 +820,10 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
     ULONG ret_blk;
 
 
-    Callback(PROGRESS, 0, (PVOID)&Percent);
+    if (Callback != NULL)
+    {
+        Callback(PROGRESS, 0, (PVOID)&Percent);
+    }
 
 
     RtlZeroMemory(&Ext2Sb, sizeof(EXT2_SUPER_BLOCK));
@@ -997,7 +1000,10 @@ clean_up:
 
     Ext2CloseDevice(&FileSys);
 
-    Callback(DONE, 0, (PVOID)&bRet);
+    if (Callback != NULL)
+    {
+        Callback(DONE, 0, (PVOID)&bRet);
+    }
 
     return Status;
 }

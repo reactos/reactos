@@ -26,5 +26,5 @@ clock(void)
 
     GetSystemTimeAsFileTime((FILETIME*)&Time);
     Time.QuadPart -= g_StartupTime.QuadPart;
-    return FileTimeToUnixTime((FILETIME*)&Time, NULL);
+    return (clock_t)FileTimeToUnixTime((FILETIME*)&Time, NULL);
 };

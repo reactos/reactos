@@ -364,6 +364,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_NODE DeviceNode;
     BOOLEAN SafeToUnload = TRUE;
 
+    /* We can't unload unless there's an unload handler */
+    if (!DriverObject->DriverUnload)
+    {
+        DPRINT1("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
+    }
+
     /* Check if removal is pending */
     ThisExtension = IoGetDevObjExtension(DeviceObject);
     if (ThisExtension->ExtensionFlags & DOE_REMOVE_PENDING)
@@ -420,10 +427,10 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
         /*
          * Check if we have an attached device and fail if we're attached
-         * and still have a reference count.
+         * or still have a reference count.
          */
         AttachedDeviceObject = DeviceObject->AttachedDevice;
-        if ((AttachedDeviceObject) && (DeviceObject->ReferenceCount)) return;
+        if ((AttachedDeviceObject) || (DeviceObject->ReferenceCount)) return;
 
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)
@@ -463,11 +470,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         DeviceObject = DeviceObject->NextDevice;
     }
 
+    DPRINT1("Unloading driver '%wZ' (automatic)\n", &DriverObject->DriverName);
+
     /* Set the unload invoked flag */
     DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
 
     /* Unload it */
-    if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+    DriverObject->DriverUnload(DriverObject);
 
     /* Make object temporary so it can be deleted */
     ObMakeTemporaryObject(DriverObject);
@@ -486,7 +495,7 @@ IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject->ReferenceCount);
 
     /* Dereference the device */
-    DeviceObject->ReferenceCount--;
+    InterlockedDecrement(&DeviceObject->ReferenceCount);
 
     /*
      * Check if we can unload it and it's safe to unload (or if we're forcing

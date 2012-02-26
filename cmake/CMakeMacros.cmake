@@ -1,53 +1,89 @@
 
 macro(set_cpp)
-    include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
     set(IS_CPP 1)
-    add_definitions(
-        -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
-        -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
+    if(MSVC)
+        include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
+        add_definitions(
+            -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
+            -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
+    endif()
 endmacro()
 
-macro(add_dependency_node _node)
+function(add_dependency_node _node)
     if(GENERATE_DEPENDENCY_GRAPH)
         get_target_property(_type ${_node} TYPE)
         if(_type MATCHES SHARED_LIBRARY OR ${_node} MATCHES ntoskrnl)
             file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "    <node id=\"${_node}\"/>\n")
         endif()
      endif()
-endmacro()
+endfunction()
 
-macro(add_dependency_edge _source _target)
+function(add_dependency_edge _source _target)
     if(GENERATE_DEPENDENCY_GRAPH)
         get_target_property(_type ${_source} TYPE)
         if(_type MATCHES SHARED_LIBRARY)
             file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "    <edge source=\"${_source}\" target=\"${_target}\"/>\n")
         endif()
     endif()
-endmacro()
+endfunction()
 
-macro(add_dependency_header)
+function(add_dependency_header)
     file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
-endmacro()
+endfunction()
 
-macro(add_dependency_footer)
+function(add_dependency_footer)
     add_dependency_node(ntdll)
     file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
-endmacro()
+endfunction()
 
-macro(add_message_headers)
+function(add_message_headers _type)
+    if(${_type} STREQUAL UNICODE)
+        set(_flag "-U")
+    else()
+        set(_flag "-A")
+    endif()
     foreach(_in_FILE ${ARGN})
         get_filename_component(FILE ${_in_FILE} NAME_WE)
-        macro_mc(${FILE})
+        macro_mc(${_flag} ${FILE})
         add_custom_command(
             OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
-            COMMAND ${COMMAND_MC}
+            COMMAND ${COMMAND_MC} ${MC_FLAGS}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
         set_source_files_properties(
             ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc
             PROPERTIES GENERATED TRUE)
         add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc)
     endforeach()
-endmacro()
+endfunction()
+
+function(add_link)
+	cmake_parse_arguments(_LINK "MINIMIZE" "NAME;PATH;CMD_LINE_ARGS;ICON;GUID" "" ${ARGN})
+    if(NOT _LINK_NAME OR NOT _LINK_PATH)
+        message(FATAL_ERROR "You must provide name and path")
+    endif()
+
+	if(_LINK_CMD_LINE_ARGS)
+		set(_LINK_CMD_LINE_ARGS -c ${_LINK_CMD_LINE_ARGS})
+	endif()
+
+	if(_LINK_ICON)
+		set(_LINK_ICON -i ${_LINK_ICON})
+	endif()
+
+	if(_LINK_GUID)
+		set(_LINK_GUID -g ${_LINK_GUID})
+	endif()
+
+	if(_LINK_MINIMIZE)
+		set(_LINK_MINIMIZE "-m")
+	endif()
+
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
+        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
+        DEPENDS native-mkshelllink)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+endfunction()
 
 macro(dir_to_num dir var)
     if(${dir} STREQUAL reactos/system32)
@@ -118,11 +154,9 @@ function(add_cd_file)
         else()
             #add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
-            if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
-            else()
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${_CD_FILE}\" ${_num}\n")
-            endif()
+            file(RELATIVE_PATH __relative_file ${REACTOS_SOURCE_DIR} ${_CD_FILE})
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${__relative_file}\" ${_num}\n")
+            unset(__relative_file)
             if(_CD_TARGET)
                 #manage dependency
                 add_dependencies(reactos_cab ${_CD_TARGET})
@@ -182,7 +216,7 @@ function(add_clean_target target)
     if(CMAKE_GENERATOR MATCHES "Unix Makefiles" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles")
         set(CLEAN_COMMAND make clean)
     elseif(CMAKE_GENERATOR MATCHES "NMake Makefiles")
-        set(CLEAN_COMMAND nmake clean)
+        set(CLEAN_COMMAND nmake /nologo clean)
     endif()
     add_custom_target(${target}_clean
         COMMAND ${CLEAN_COMMAND}
@@ -207,7 +241,9 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
         string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
     endmacro()
 
-    macro(concatenate_files _file1 _file2 _output)
+    # yeah the parameter mess sucks, but thats what works...
+    function(concatenate_files _file1 _target2 _output)
+        get_target_property(_file2 ${_target2} LOCATION)
         to_win_path("${_file1}" _real_file1)
         to_win_path("${_file2}" _real_file2)
         to_win_path("${_output}" _real_output)
@@ -215,27 +251,129 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
             OUTPUT ${_output}
             COMMAND cmd.exe /C "copy /Y /B ${_real_file1} + ${_real_file2} ${_real_output} > nul"
             DEPENDS ${_file1}
-            DEPENDS ${_file2})
-    endmacro()
+            DEPENDS ${_target2})
+    endfunction()
 else()
-    macro(concatenate_files _file1 _file2 _output)
+    macro(concatenate_files _file1 _target2 _output)
+        get_target_property(_file2 ${_target2} LOCATION)
         add_custom_command(
             OUTPUT ${_output}
             COMMAND cat ${_file1} ${_file2} > ${_output}
             DEPENDS ${_file1}
-            DEPENDS ${_file2})
+            DEPENDS ${_target2})
     endmacro()
 endif()
 
-macro(add_importlibs MODULE)
-    add_dependency_node(${MODULE})
+function(add_importlibs _module)
+    add_dependency_node(${_module})
     foreach(LIB ${ARGN})
-        if ("${LIB}" MATCHES "msvcrt")
-            add_definitions(-D_DLL -D__USE_CRTIMP)
-            target_link_libraries(${MODULE} msvcrtex)
+        if("${LIB}" MATCHES "msvcrt")
+            add_target_compile_definitions(${_module} _DLL __USE_CRTIMP)
+            target_link_libraries(${_module} msvcrtex)
         endif()
-        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}${CMAKE_STATIC_LIBRARY_SUFFIX})
-        add_dependencies(${MODULE} lib${LIB})
-        add_dependency_edge(${MODULE} ${LIB})
+        target_link_libraries(${_module} lib${LIB})
+        add_dependencies(${_module} lib${LIB})
+        add_dependency_edge(${_module} ${LIB})
     endforeach()
-endmacro()
+endfunction()
+
+function(set_module_type MODULE TYPE)
+    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
+
+    if(__module_UNPARSED_ARGUMENTS)
+        message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
+    endif()
+
+    # Set subsystem. Also take this as an occasion
+    # to error out if someone gave a non existing type
+    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) OR (${TYPE} STREQUAL kernelmodedriver))
+        set(__subsystem native)
+    elseif(${TYPE} STREQUAL win32cui)
+        set(__subsystem console)
+    elseif(${TYPE} STREQUAL win32gui)
+        set(__subsystem windows)
+    elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
+            OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
+        message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
+    endif()
+
+    if(DEFINED __subsystem)
+        set_subsystem(${MODULE} ${__subsystem})
+    endif()
+
+    #set unicode definitions
+    if(__module_UNICODE)
+        add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
+    endif()
+
+    # set entry point
+    if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
+        list(GET __module_ENTRYPOINT 0 __entrypoint)
+        list(LENGTH __module_ENTRYPOINT __length)
+        if(${__length} EQUAL 2)
+            list(GET __module_ENTRYPOINT 1 __entrystack)
+        elseif(NOT ${__length} EQUAL 1)
+            message(FATAL_ERROR "Wrong arguments for ENTRYPOINT parameter of set_module_type : ${__module_ENTRYPOINT}")
+        endif()
+        unset(__length)
+    elseif(${TYPE} STREQUAL nativecui)
+        set(__entrypoint NtProcessStartup)
+        set(__entrystack 4)
+    elseif((${TYPE} STREQUAL win32gui) OR (${TYPE} STREQUAL win32cui))
+        if(__module_UNICODE)
+            set(__entrypoint wWinMainCRTStartup)
+        else()
+            set(__entrypoint WinMainCRTStartup)
+        endif()
+    elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
+            OR (${TYPE} STREQUAL cpl))
+        set(__entrypoint DllMainCRTStartup)
+        set(__entrystack 12)
+    elseif(${TYPE} STREQUAL kernelmodedriver)
+        set(__entrypoint DriverEntry)
+        set(__entrystack 8)
+    elseif(${TYPE} STREQUAL nativedll)
+        set(__entrypoint DllMain)
+        set(__entrystack 12)
+    elseif(${TYPE} STREQUAL module)
+        set(__entrypoint 0)
+    endif()
+
+    if(DEFINED __entrypoint)
+        if(DEFINED __entrystack)
+            set_entrypoint(${MODULE} ${__entrypoint} ${__entrystack})
+        else()
+            set_entrypoint(${MODULE} ${__entrypoint})
+        endif()
+    endif()
+
+    #set base address
+    if(__module_IMAGEBASE)
+        set_image_base(${MODULE} __module_IMAGEBASE)
+    elseif(${TYPE} STREQUAL win32dll)
+        if(DEFINED baseaddress_${MODULE})
+            set_image_base(${MODULE} ${baseaddress_${MODULE}})
+        else()
+            message(STATUS "${MODULE} has no base address")
+        endif()
+    elseif(${TYPE} STREQUAL kernelmodedriver)
+        set_image_base(${MODULE} 0x00010000)
+    endif()
+
+    # Now do some stuff which is specific to each type
+    if(${TYPE} STREQUAL kernelmodedriver)
+        add_dependencies(${MODULE} bugcodes)
+        set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+    endif()
+
+    if(${TYPE} STREQUAL win32ocx)
+        set_target_properties(${MODULE} PROPERTIES SUFFIX ".ocx")
+    endif()
+
+    if(${TYPE} STREQUAL cpl)
+        set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
+    endif()
+
+    # do compiler specific stuff
+    set_module_type_toolchain(${MODULE} ${TYPE})
+endfunction()

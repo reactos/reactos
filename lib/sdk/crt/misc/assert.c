@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-static const char formatstr[] = 
+static const char formatstr[] =
     "Assertion failed!\n\n"
     "Program: %s\n"
     "File: %s\n"
@@ -23,7 +23,7 @@ void _assert(const char *exp, const char *file, unsigned line)
     HMODULE hmodUser32;
     char achProgram[40];
     char *pszBuffer;
-    int len;
+    size_t len;
     int iResult;
 
     /* Assertion failed at foo.c line 45: x<y */
@@ -40,7 +40,7 @@ void _assert(const char *exp, const char *file, unsigned line)
 
     /* Get the file name of the module */
     len = GetModuleFileNameA(NULL, achProgram, 40);
-    
+
     /* Calculate full length of the message */
     len += sizeof(formatstr) + len + strlen(exp) + strlen(file);
 
@@ -51,8 +51,8 @@ void _assert(const char *exp, const char *file, unsigned line)
     _snprintf(pszBuffer, len, formatstr, achProgram, file, line, exp);
 
     /* Display a message box */
-    iResult = pMessageBoxA(NULL, 
-                          pszBuffer, 
+    iResult = pMessageBoxA(NULL,
+                          pszBuffer,
                           "ReactOS C Runtime Library",
                           MB_ABORTRETRYIGNORE | MB_ICONERROR);
 

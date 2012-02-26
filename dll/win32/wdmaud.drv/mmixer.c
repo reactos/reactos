@@ -783,10 +783,10 @@ IoStreamingThread(
     LPVOID lpParameter)
 {
     DWORD Length;
-    MMRESULT Result;
+    //MMRESULT Result;
     LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
 
-    Result =  SyncOverlappedDeviceIoControl(Packet->hDevice,
+    /*Result = */ SyncOverlappedDeviceIoControl(Packet->hDevice,
                     Packet->IoCtl,
                     NULL,
                     0,

@@ -2,11 +2,10 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/hardlink.c
+ * FILE:            dll/win32/kernel32/client/file/hardlink.c
  * PURPOSE:         Hardlink functions
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * UPDATE HISTORY:
- *                  Created 13/03/2004
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,211 +13,162 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
-
 /*
  * @implemented
  */
-BOOL WINAPI
-CreateHardLinkW(LPCWSTR lpFileName,
-                LPCWSTR lpExistingFileName,
-                LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+BOOL
+WINAPI
+CreateHardLinkW(IN LPCWSTR lpFileName,
+                IN LPCWSTR lpExistingFileName,
+                IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  UNICODE_STRING LinkTarget, LinkName;
-  LPVOID lpSecurityDescriptor;
-  PFILE_LINK_INFORMATION LinkInformation;
-  IO_STATUS_BLOCK IoStatus;
-  NTSTATUS Status;
-  BOOL Ret = FALSE;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+    ULONG NeededSize;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hTarget = INVALID_HANDLE_VALUE;
+    PFILE_LINK_INFORMATION LinkInformation = NULL;
+    UNICODE_STRING LinkTarget, LinkName;
 
-  if(!lpFileName || !lpExistingFileName)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    /* Initialize */
+    LinkTarget.Buffer = LinkName.Buffer = NULL;
 
-  lpSecurityDescriptor = (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL);
-
-  if(RtlDetermineDosPathNameType_U((LPWSTR)lpFileName) == 1 ||
-     RtlDetermineDosPathNameType_U((LPWSTR)lpExistingFileName) == 1)
-  {
-    WARN("CreateHardLinkW() cannot handle UNC Paths!\n");
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-
-  if(RtlDosPathNameToNtPathName_U(lpExistingFileName, &LinkTarget, NULL, NULL))
-  {
-    ULONG NeededSize = RtlGetFullPathName_U((LPWSTR)lpExistingFileName, 0, NULL, NULL);
-    if(NeededSize > 0)
+    /* Validate parameters */
+    if (!(lpFileName) || !(lpExistingFileName))
     {
-      LPWSTR lpNtLinkTarget = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize * sizeof(WCHAR));
-      if(lpNtLinkTarget != NULL)
-      {
-        LPWSTR lpFilePart;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-        if(RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart) &&
-           (*lpNtLinkTarget) != L'\0')
+    _SEH2_TRY
+    {
+        /* Get target UNC path */
+        if (!RtlDosPathNameToNtPathName_U(lpExistingFileName,
+                                          &LinkTarget,
+                                          NULL,
+                                          NULL))
         {
-          UNICODE_STRING CheckDrive, LinkDrive;
-          WCHAR wCheckDrive[10];
+            /* Set the error and fail */
+            SetLastError(ERROR_PATH_NOT_FOUND);
+            _SEH2_LEAVE;
+        }
 
-          swprintf(wCheckDrive, L"\\??\\%c:", (WCHAR)(*lpNtLinkTarget));
-          RtlInitUnicodeString(&CheckDrive, wCheckDrive);
+        /* Open target */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &LinkTarget,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   lpSecurityAttributes ?
+                                   lpSecurityAttributes->lpSecurityDescriptor :
+                                   NULL);
+        Status = NtOpenFile(&hTarget,
+                            SYNCHRONIZE | FILE_WRITE_ATTRIBUTES,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_REPARSE_POINT);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Convert the error and fail */
+            BaseSetLastNTError(Status);
+            _SEH2_LEAVE;
+        }
 
-          RtlZeroMemory(&LinkDrive, sizeof(UNICODE_STRING));
+        /* Get UNC path name for link */
+        if (!RtlDosPathNameToNtPathName_U(lpFileName, &LinkName, NULL, NULL))
+        {
+            /* Set the error and fail */
+            SetLastError(ERROR_PATH_NOT_FOUND);
+            _SEH2_LEAVE;
+        }
 
-          LinkDrive.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH + 1) * sizeof(WCHAR));
-          if(LinkDrive.Buffer != NULL)
-          {
-            HANDLE hFile, hTarget;
-            OBJECT_ATTRIBUTES ObjectAttributes;
-
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &CheckDrive,
-                                       OBJ_CASE_INSENSITIVE,
-                                       NULL,
-                                       NULL);
-
-            Status = NtOpenSymbolicLinkObject(&hFile, 1, &ObjectAttributes);
-            if(NT_SUCCESS(Status))
-            {
-              UNICODE_STRING LanManager;
-
-              RtlInitUnicodeString(&LanManager, L"\\Device\\LanmanRedirector\\");
-
-              NtQuerySymbolicLinkObject(hFile, &LinkDrive, NULL);
-
-              if(!RtlPrefixUnicodeString(&LanManager, &LinkDrive, TRUE))
-              {
-                InitializeObjectAttributes(&ObjectAttributes,
-                                           &LinkTarget,
-                                           OBJ_CASE_INSENSITIVE,
-                                           NULL,
-                                           lpSecurityDescriptor);
-                Status = NtOpenFile(&hTarget,
-                                    SYNCHRONIZE | DELETE,
-                                    &ObjectAttributes,
-                                    &IoStatus,
-                                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                    FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
-                if(NT_SUCCESS(Status))
-                {
-                  if(RtlDosPathNameToNtPathName_U(lpFileName, &LinkName, NULL, NULL))
-                  {
-                    NeededSize = sizeof(FILE_LINK_INFORMATION) + LinkName.Length + sizeof(WCHAR);
-                    LinkInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize);
-                    if(LinkInformation != NULL)
-                    {
-                      LinkInformation->ReplaceIfExists = FALSE;
-                      LinkInformation->RootDirectory = 0;
-                      LinkInformation->FileNameLength = LinkName.Length;
-                      RtlCopyMemory(LinkInformation->FileName, LinkName.Buffer, LinkName.Length);
-
-                      Status = NtSetInformationFile(hTarget, &IoStatus, LinkInformation, NeededSize, FileLinkInformation);
-                      if(NT_SUCCESS(Status))
-                      {
-                        Ret = TRUE;
-                      }
-                      else
-                      {
-                        BaseSetLastNTError(Status);
-                      }
-
-                      RtlFreeHeap(RtlGetProcessHeap(), 0, LinkInformation);
-                    }
-                    else
-                    {
-                      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    }
-                  }
-                  else
-                  {
-                    SetLastError(ERROR_PATH_NOT_FOUND);
-                  }
-                  NtClose(hTarget);
-                }
-                else
-                {
-                  WARN("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
-                  BaseSetLastNTError(Status);
-                }
-              }
-              else
-              {
-                WARN("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
-                SetLastError(ERROR_INVALID_NAME);
-              }
-
-              NtClose(hFile);
-            }
-            else
-            {
-              BaseSetLastNTError(Status);
-            }
-          }
-          else
-          {
+        /* Allocate data for link */
+        NeededSize = sizeof(FILE_LINK_INFORMATION) + LinkName.Length;
+        LinkInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, NeededSize);
+        if (!LinkInformation)
+        {
+            /* We're out of memory */
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-          }
+            _SEH2_LEAVE;
+        }
+
+        /* Setup data for link and create it */
+        RtlMoveMemory(LinkInformation->FileName, LinkName.Buffer, LinkName.Length);
+        LinkInformation->ReplaceIfExists = FALSE;
+        LinkInformation->RootDirectory = 0;
+        LinkInformation->FileNameLength = LinkName.Length;
+        Status = NtSetInformationFile(hTarget,
+                                      &IoStatusBlock,
+                                      LinkInformation,
+                                      NeededSize,
+                                      FileLinkInformation);
+        if (NT_SUCCESS(Status))
+        {
+            /* Set success code */
+            Ret = TRUE;
         }
         else
         {
-          SetLastError(ERROR_INVALID_NAME);
+            /* Convert error code and return default (FALSE) */
+            BaseSetLastNTError(Status);
         }
-        RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-      }
-      else
-      {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      }
     }
-    else
+    _SEH2_FINALLY
     {
-      SetLastError(ERROR_INVALID_NAME);
+        /* Cleanup all allocations */
+        if (LinkTarget.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, LinkTarget.Buffer);
+        if (hTarget != INVALID_HANDLE_VALUE) NtClose(hTarget);
+        if (LinkName.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, LinkName.Buffer);
+        if (LinkInformation) RtlFreeHeap(RtlGetProcessHeap(), 0, LinkInformation);
     }
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkTarget.Buffer);
-  }
-  else
-  {
-    SetLastError(ERROR_PATH_NOT_FOUND);
-  }
-
-  return Ret;
+    _SEH2_END;
+    return Ret;
 }
-
 
 /*
  * @implemented
  */
-BOOL WINAPI
-CreateHardLinkA(LPCSTR lpFileName,
-                LPCSTR lpExistingFileName,
-                LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+BOOL
+WINAPI
+CreateHardLinkA(IN LPCSTR lpFileName,
+                IN LPCSTR lpExistingFileName,
+                IN LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  PWCHAR FileNameW, ExistingFileNameW;
-  BOOL Ret;
+    BOOL Ret;
+    PUNICODE_STRING lpFileNameW;
+    UNICODE_STRING ExistingFileNameW;
 
-  if(!lpFileName || !lpExistingFileName)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    /* Convert the filename to unicode, using MAX_PATH limitations */
+    lpFileNameW = Basep8BitStringToStaticUnicodeString(lpFileName);
+    if (!lpFileNameW) return FALSE;
 
-  if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
-    return FALSE;
+    /* Check if there's an existing name as well */
+    if (lpExistingFileName)
+    {
+        /* We're already using the static string above, so do this dynamically */
+        if (!Basep8BitStringToDynamicUnicodeString(&ExistingFileNameW,
+                                                   lpExistingFileName))
+        {
+            /* Out of memory -- fail */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* No existing file name */
+        ExistingFileNameW.Buffer = NULL;
+    }
 
-  if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, TRUE)))
-    return FALSE;
-
-  Ret = CreateHardLinkW(FileNameW , ExistingFileNameW , lpSecurityAttributes);
-
-  RtlFreeHeap(RtlGetProcessHeap(), 0, ExistingFileNameW);
-
-  return Ret;
+    /* Call the Wide function, and then free our dynamic string */
+    Ret = CreateHardLinkW(lpFileNameW->Buffer,
+                          ExistingFileNameW.Buffer,
+                          lpSecurityAttributes);
+    RtlFreeUnicodeString(&ExistingFileNameW);
+    return Ret;
 }
 
 /* EOF */

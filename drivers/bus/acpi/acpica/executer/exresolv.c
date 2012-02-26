@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -326,7 +326,7 @@ AcpiExResolveObjectToValue (
                 /* Invalid reference object */
 
                 ACPI_ERROR ((AE_INFO,
-                    "Unknown TargetType %X in Index/Reference object %p",
+                    "Unknown TargetType 0x%X in Index/Reference object %p",
                     StackDesc->Reference.TargetType, StackDesc));
                 Status = AE_AML_INTERNAL;
                 break;
@@ -367,7 +367,7 @@ AcpiExResolveObjectToValue (
         default:
 
             ACPI_ERROR ((AE_INFO,
-                "Unknown Reference type %X in %p", RefType, StackDesc));
+                "Unknown Reference type 0x%X in %p", RefType, StackDesc));
             Status = AE_AML_INTERNAL;
             break;
         }
@@ -503,7 +503,7 @@ AcpiExResolveMultiple (
             if (ACPI_GET_DESCRIPTOR_TYPE (Node) != ACPI_DESC_TYPE_NAMED)
             {
                 ACPI_ERROR ((AE_INFO,
-                    "Not a NS node %p [%s]",
+                    "Not a namespace node %p [%s]",
                     Node, AcpiUtGetDescriptorName (Node)));
                 return_ACPI_STATUS (AE_AML_INTERNAL);
             }
@@ -605,7 +605,7 @@ AcpiExResolveMultiple (
         default:
 
             ACPI_ERROR ((AE_INFO,
-                "Unknown Reference Class %2.2X", ObjDesc->Reference.Class));
+                "Unknown Reference Class 0x%2.2X", ObjDesc->Reference.Class));
             return_ACPI_STATUS (AE_AML_INTERNAL);
         }
     }

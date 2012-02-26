@@ -127,12 +127,6 @@ KiEspToTrapFrame(
     IN PKTRAP_FRAME TrapFrame,
     IN ULONG Esp);
 
-/* ROS Internal. Please deprecate */
-NTHALAPI
-VOID
-NTAPI
-HalReleaseDisplayOwnership();
-
 /* FUNCTIONS *****************************************************************/
 
 static VOID
@@ -1247,9 +1241,21 @@ KdbpInternalEnter()
     ULONG SavedStackLimit;
 
     KbdDisableMouse();
-    if (KdpDebugMode.Screen)
+
+    if (KdpDebugMode.Screen &&
+        InbvIsBootDriverInstalled() &&
+        !InbvCheckDisplayOwnership())
     {
+        /* Acquire ownership and reset the display */
         InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+
+        /* Display debugger prompt */
+        InbvSolidColorFill(0, 0, 639, 479, 0);
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
+        InbvSetScrollRegion(0, 0, 639, 479);
     }
 
     /* Call the interface's main loop on a different stack */

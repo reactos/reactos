@@ -43,7 +43,8 @@ NTSTATUS AddGenericHeaderIPv4(
     GetDataPtr( IPPacket->NdisPacket,
 		0,
 		(PCHAR *)&IPPacket->Header,
-		&IPPacket->ContigSize );
+		&IPPacket->TotalSize );
+    IPPacket->MappedHeader = TRUE;
 
     IPPacket->HeaderSize = 20;
 
@@ -144,10 +145,10 @@ NTSTATUS BuildRawIpPacket(
     }
 
     if( !NT_SUCCESS(Status) ) {
-	TI_DbgPrint(MIN_TRACE, ("Cannot add header. Status = (0x%X)\n",
-				Status));
-	FreeNdisPacket(Packet->NdisPacket);
-	return Status;
+        TI_DbgPrint(MIN_TRACE, ("Cannot add header. Status = (0x%X)\n",
+                                Status));
+        Packet->Free(Packet);
+        return Status;
     }
 
     TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
@@ -165,11 +166,6 @@ NTSTATUS BuildRawIpPacket(
     TI_DbgPrint(MID_TRACE, ("Leaving\n"));
 
     return STATUS_SUCCESS;
-}
-
-VOID RawIpSendPacketComplete
-( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
-    FreeNdisPacket( Packet );
 }
 
 NTSTATUS RawIPSendDatagram(
@@ -204,16 +200,16 @@ NTSTATUS RawIPSendDatagram(
     TI_DbgPrint(MID_TRACE,("RemoteAddressTa: %x\n", RemoteAddressTa));
 
     switch( RemoteAddressTa->Address[0].AddressType ) {
-    case TDI_ADDRESS_TYPE_IP:
-	RemoteAddress.Type = IP_ADDRESS_V4;
-	RemoteAddress.Address.IPv4Address =
-	    RemoteAddressTa->Address[0].Address[0].in_addr;
-	RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
-	break;
+        case TDI_ADDRESS_TYPE_IP:
+            RemoteAddress.Type = IP_ADDRESS_V4;
+            RemoteAddress.Address.IPv4Address =
+            RemoteAddressTa->Address[0].Address[0].in_addr;
+            RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
+            break;
 
-    default:
-	UnlockObject(AddrFile, OldIrql);
-	return STATUS_UNSUCCESSFUL;
+        default:
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_UNSUCCESSFUL;
     }
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
@@ -226,8 +222,8 @@ NTSTATUS RawIPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_NETWORK_UNREACHABLE;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_NETWORK_UNREACHABLE;
         }
 
         LocalAddress = NCE->Interface->Unicast;
@@ -235,8 +231,8 @@ NTSTATUS RawIPSendDatagram(
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_INVALID_PARAMETER;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_INVALID_PARAMETER;
         }
     }
 
@@ -252,16 +248,14 @@ NTSTATUS RawIPSendDatagram(
     UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
-	return Status;
+        return Status;
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
+    Status = IPSendDatagram(&Packet, NCE);
+    if (!NT_SUCCESS(Status))
         return Status;
-    }
-    
+
     *DataUsed = DataSize;
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));

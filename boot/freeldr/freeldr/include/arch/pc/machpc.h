@@ -46,7 +46,7 @@ VOID PcVideoSync(VOID);
 VOID PcVideoPrepareForReactOS(IN BOOLEAN Setup);
 VOID PcPrepareForReactOS(IN BOOLEAN Setup);
 
-ULONG PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
 
 BOOLEAN PcDiskGetBootPath(char *BootPath, unsigned Size);
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
@@ -57,5 +57,8 @@ ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 TIMEINFO* PcGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
+
+extern BIOS_MEMORY_MAP PcBiosMemoryMap[];
+extern ULONG PcBiosMapCount;
 
 /* EOF */

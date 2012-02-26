@@ -83,6 +83,8 @@ typedef struct _NPFS_CCB
     LIST_ENTRY CcbListEntry;
     CCB_TYPE Type;
     PNPFS_FCB Fcb;
+	
+	PFILE_OBJECT FileObject;
 
     struct _NPFS_CCB* OtherSide;
     struct ETHREAD *Thread;

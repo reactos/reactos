@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -10,7 +9,7 @@ add_library(dplay SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dplay.def)
 
-set_entrypoint(dplay 0)
+set_module_type(dplay win32dll UNICODE ENTRYPOINT 0)
 
 target_link_libraries(dplay
     uuid
@@ -28,4 +27,4 @@ add_importlibs(dplay
 add_dependencies(dplay psdk)
 
 add_cd_file(TARGET dplay DESTINATION reactos/system32 FOR all)
-add_importlib_target(dplay.spec libdplayx)
+add_importlib_target(dplay.spec dplay.dll libdplayx)

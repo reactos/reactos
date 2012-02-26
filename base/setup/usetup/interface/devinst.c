@@ -11,10 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define INITGUID
-#include <guiddef.h>
-#include <libs/umpnpmgr/sysguid.h>
-
 BOOLEAN
 ResetDevice(
     IN LPCWSTR DeviceId)
@@ -55,6 +51,9 @@ InstallDriver(
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
+    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
+    LPWSTR keyboardClass = L"kbdclass\0";
+    BOOLEAN keyboardDevice = FALSE;
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -67,8 +66,14 @@ InstallDriver(
     if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
-        return FALSE;
+	 && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context))
+    {
+        if (!SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
+            return FALSE;
+
+        keyboardDevice = TRUE;
+    }
+
     if (!INF_GetDataField(&Context, 1, &ImagePath))
         return FALSE;
 
@@ -132,6 +137,17 @@ InstallDriver(
         REG_SZ,
         ImagePath,
         (wcslen(ImagePath) + 1) * sizeof(WCHAR));
+
+    if (keyboardDevice)
+    {
+        DPRINT1("Installing keyboard class driver for '%S'\n", DeviceId);
+        NtSetValueKey(hDeviceKey,
+                      &UpperFiltersU,
+                      0,
+                      REG_MULTI_SZ,
+                      keyboardClass,
+                      (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
+    }
 
     /* Associate device with the service we just filled */
     Status = NtSetValueKey(

@@ -108,7 +108,7 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
     STARTUPINFO si;
     TCHAR szCmdline[2048];
 
-    /* kill off the previous preview process*/
+    /* Kill off the previous preview process */
     if (pData->PrevWindowPi.hProcess)
     {
         TerminateProcess(pData->PrevWindowPi.hProcess, 0);
@@ -214,7 +214,7 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
                      &si,
                      &pi))
     {
-        /* kill off the previous preview process */
+        /* Kill off the previous preview process */
         if (pData->PrevWindowPi.hProcess)
         {
             TerminateProcess(pData->PrevWindowPi.hProcess, 0);
@@ -243,7 +243,7 @@ ScreensaverPreview(HWND hwndDlg, PDATA pData)
     if (pData->Selection < 1)
         return;
 
-    /* kill off the previous preview process*/
+    /* Kill off the previous preview process */
     if (pData->PrevWindowPi.hProcess)
     {
         TerminateProcess(pData->PrevWindowPi.hProcess, 0);
@@ -410,6 +410,7 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
 {
     HWND hwndScreenSavers = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
     TCHAR szSearchPath[MAX_PATH];
+    TCHAR szLocalPath[MAX_PATH];
     INT i;
     ScreenSaverItem *ScreenSaverItem = NULL;
     LPTSTR lpBackSlash;
@@ -437,22 +438,24 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
     // Initialize number of items into the list
     pData->ScreenSaverCount = 1;
 
+    // Add all the screensavers where the applet is stored.
+    GetModuleFileName(hApplet, szLocalPath, MAX_PATH);
+    lpBackSlash = _tcsrchr(szLocalPath, _T('\\'));
+    if (lpBackSlash != NULL)
+    {
+        *lpBackSlash = '\0';
+        SearchScreenSavers(hwndScreenSavers, szLocalPath, pData);
+    }
+
     // Add all the screensavers in the C:\ReactOS\System32 directory.
     GetSystemDirectory(szSearchPath, MAX_PATH);
-    SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
+    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
+        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
 
     // Add all the screensavers in the C:\ReactOS directory.
     GetWindowsDirectory(szSearchPath, MAX_PATH);
-    SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
-
-    // Add all the screensavers where the applet is stored.
-    GetModuleFileName(hApplet, szSearchPath, MAX_PATH);
-    lpBackSlash = _tcsrchr(szSearchPath, _T('\\'));
-    if (lpBackSlash != NULL)
-    {
-        lpBackSlash = '\0';
+    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
         SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
-    }
 }
 
 
@@ -473,7 +476,7 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         TCHAR szTime[256], Sec;
         UINT Ret;
 
-        /* set the screensaver */
+        /* Set the screensaver */
         if (pData->ScreenSaverItems[pData->Selection].bIsScreenSaver)
         {
             RegSetValueEx(regKey,
@@ -512,7 +515,7 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
 
         SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE);
 
-        /* set the secure value */
+        /* Set the secure value */
         Ret = SendDlgItemMessage(hwndDlg,
                                  IDC_SCREENS_USEPASSCHK,
                                  BM_GETCHECK,
@@ -565,7 +568,7 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
 
     CheckRegScreenSaverIsSecure(hwndDlg);
 
-    /* set the current screensaver in the combo box */
+    /* Set the current screensaver in the combo box */
     lpCurSs = GetCurrentScreenSaverValue(_T("SCRNSAVE.EXE"));
     if (lpCurSs)
     {
@@ -607,14 +610,14 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
     }
     else
     {
-        /* set screensaver to (none) */
+        /* Set screensaver to (none) */
         SendMessage(hwndSSCombo,
                     CB_SETCURSEL,
                     0,
                     0);
     }
 
-    /* set the current timeout */
+    /* Set the current timeout */
     lpCurSs = GetCurrentScreenSaverValue(_T("ScreenSaveTimeOut"));
     if (lpCurSs)
     {
@@ -755,7 +758,7 @@ ScreenSaverPageProc(HWND hwndDlg,
 
                 case PSN_SETACTIVE:
                 {
-                    /* activate screen saver support */
+                    /* Activate screen saver support */
                     SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_SENDCHANGE);
                     SetScreenSaverPreviewBox(hwndDlg, pData);
                     break;

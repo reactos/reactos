@@ -31,7 +31,7 @@ InitFontSizeList(HWND hWnd)
             for (;;)
             {
                 TCHAR Desc[LINE_LEN];
-                
+
                 if (SetupGetStringField(&Context, 0, Desc, sizeof(Desc), NULL) &&
                     SetupGetIntField(&Context, 1, &ci))
                 {

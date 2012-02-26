@@ -127,6 +127,50 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     return strW;
 }
 
+static LPSTR FONT_GetCharsByRangeA(HDC hdc, UINT firstChar, UINT lastChar, PINT pByteLen)
+{
+    INT i, count = lastChar - firstChar + 1;
+    UINT c;
+    LPSTR str;
+
+    if (count <= 0)
+        return NULL;
+
+    switch (GdiGetCodePage(hdc))
+    {
+    case 932:
+    case 936:
+    case 949:
+    case 950:
+    case 1361:
+        if (lastChar > 0xffff)
+            return NULL;
+        if ((firstChar ^ lastChar) > 0xff)
+            return NULL;
+        break;
+    default:
+        if (lastChar > 0xff)
+            return NULL;
+        break;
+    }
+
+    str = HeapAlloc(GetProcessHeap(), 0, count * 2 + 1);
+    if (str == NULL)
+        return NULL;
+
+    for(i = 0, c = firstChar; c <= lastChar; i++, c++)
+    {
+        if (c > 0xff)
+            str[i++] = (BYTE)(c >> 8);
+        str[i] = (BYTE)c;
+    }
+    str[i] = '\0';
+
+    *pByteLen = i;
+
+    return str;
+}
+
 VOID FASTCALL
 NewTextMetricW2A(NEWTEXTMETRICA *tma, const NEWTEXTMETRICW *tmw)
 {
@@ -469,21 +513,16 @@ GetCharWidthA(
     LPINT	lpBuffer
 )
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
+    INT wlen, count = 0;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsA\n");
-    if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
-
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(iFirstChar + i);
-    str[i] = '\0';
 
     wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
@@ -517,20 +556,16 @@ GetCharWidth32A(
     LPINT	lpBuffer
 )
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
+    INT wlen, count = 0;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidths32A\n");
-    if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(iFirstChar + i);
-    str[i] = '\0';
 
     wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
@@ -564,20 +599,16 @@ GetCharWidthFloatA(
     PFLOAT	pxBuffer
 )
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
+    INT wlen, count = 0;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsFloatA\n");
-    if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(iFirstChar + i);
-    str[i] = '\0';
 
     wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
@@ -600,25 +631,21 @@ BOOL
 APIENTRY
 GetCharABCWidthsA(
     HDC	hdc,
-    UINT	uFirstChar,
-    UINT	uLastChar,
+    UINT	iFirstChar,
+    UINT	iLastChar,
     LPABC	lpabc
 )
 {
-    INT i, wlen, count = (INT)(uLastChar - uFirstChar + 1);
+    INT wlen, count = 0;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
     DPRINT("GetCharABCWidthsA\n");
-    if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(uFirstChar + i);
-    str[i] = '\0';
 
     wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
@@ -652,21 +679,16 @@ GetCharABCWidthsFloatA(
     LPABCFLOAT	lpABCF
 )
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
+    INT wlen, count = 0;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
     DPRINT("GetCharABCWidthsFloatA\n");
-    if (count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
-
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(iFirstChar + i);
-    str[i] = '\0';
 
     wstr = FONT_mbtowc( hdc, str, count+1, &wlen, NULL );
     if (!wstr)

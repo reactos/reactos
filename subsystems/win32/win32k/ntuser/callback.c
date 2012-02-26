@@ -1,29 +1,23 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/wndproc.c
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Callback to usermode support
+ * FILE:             subsystems/win32/win32k/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  * NOTES:            Please use the Callback Memory Management functions for
  *                   callbacks to make sure, the memory is freed on thread
  *                   termination!
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserCallback);
 
 /* CALLBACK MEMORY MANAGEMENT ************************************************/
 
 typedef struct _INT_CALLBACK_HEADER
 {
-   /* list entry in the THREADINFO structure */
+   /* List entry in the THREADINFO structure */
    LIST_ENTRY ListEntry;
 }
 INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
@@ -43,7 +37,7 @@ IntCbAllocateMemory(ULONG Size)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* insert the callback memory into the thread's callback list */
+   /* Insert the callback memory into the thread's callback list */
 
    InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
 
@@ -63,10 +57,10 @@ IntCbFreeMemory(PVOID Data)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* remove the memory block from the thread's callback list */
+   /* Remove the memory block from the thread's callback list */
    RemoveEntryList(&Mem->ListEntry);
 
-   /* free memory */
+   /* Free memory */
    ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
 }
 
@@ -82,18 +76,17 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
       Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER,
                               ListEntry);
 
-      /* free memory */
+      /* Free memory */
       ExFreePool(Mem);
    }
 }
-
 
 //
 // Pass the Current Window handle and pointer to the Client Callback.
 // This will help user space programs speed up read access with the window object.
 //
 static VOID
-IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
+IntSetTebWndCallback (HWND * hWnd, PWND * pWnd, PVOID * pActCtx)
 {
   HWND hWndS = *hWnd;
   PWND Window = UserGetWindowObject(*hWnd);
@@ -101,21 +94,132 @@ IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
 
   *hWnd = ClientInfo->CallbackWnd.hWnd;
   *pWnd = ClientInfo->CallbackWnd.pWnd;
+  *pActCtx = ClientInfo->CallbackWnd.pActCtx;
 
   ClientInfo->CallbackWnd.hWnd  = hWndS;
   ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
+  ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
 }
 
 static VOID
-IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
+IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 {
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->CallbackWnd.hWnd = hWnd;
   ClientInfo->CallbackWnd.pWnd = pWnd;
+  ClientInfo->CallbackWnd.pActCtx = pActCtx;
 }
 
 /* FUNCTIONS *****************************************************************/
+
+/* Calls ClientLoadLibrary in user32 */
+HMODULE
+co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName, 
+                        PUNICODE_STRING pstrInitFunc, 
+                        BOOL Unload,
+                        BOOL ApiHook)
+{
+   PVOID ResultPointer;
+   ULONG ResultLength;
+   ULONG ArgumentLength;
+   PCLIENT_LOAD_LIBRARY_ARGUMENTS pArguments;
+   NTSTATUS Status;
+   HMODULE Result;
+   ULONG_PTR pLibNameBuffer = 0, pInitFuncBuffer = 0;
+
+   TRACE("co_IntClientLoadLibrary: %S, %S, %d, %d\n", pstrLibName->Buffer, pstrLibName->Buffer, Unload, ApiHook);
+
+   /* Calculate the size of the argument */
+   ArgumentLength = sizeof(CLIENT_LOAD_LIBRARY_ARGUMENTS);
+   if(pstrLibName)
+   {
+       pLibNameBuffer = ArgumentLength;
+       ArgumentLength += pstrLibName->Length + sizeof(WCHAR);
+   }
+   if(pstrInitFunc)
+   {
+       pInitFuncBuffer = ArgumentLength; 
+       ArgumentLength += pstrInitFunc->Length + sizeof(WCHAR);
+   }
+
+   /* Allocate the argument */
+   pArguments = IntCbAllocateMemory(ArgumentLength);
+   if(pArguments == NULL)
+   {
+       return FALSE;
+   }
+
+   /* Fill the argument */
+   pArguments->Unload = Unload;
+   pArguments->ApiHook = ApiHook;
+   if(pstrLibName)
+   {
+       /* Copy the string to the callback memory */
+       pLibNameBuffer += (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)pLibNameBuffer;
+       pArguments->strLibraryName.MaximumLength = pstrLibName->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strLibraryName, pstrLibName);
+
+       /* Fix argument pointer to be relative to the argument */
+       pLibNameBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)(pLibNameBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strLibraryName, sizeof(UNICODE_STRING));
+   }
+
+   if(pstrInitFunc)
+   {
+       /* Copy the strings to the callback memory */
+       pInitFuncBuffer += (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)pInitFuncBuffer;
+       pArguments->strInitFuncName.MaximumLength = pstrInitFunc->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strInitFuncName, pstrInitFunc);
+
+       /* Fix argument pointers to be relative to the argument */
+       pInitFuncBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)(pInitFuncBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strInitFuncName, sizeof(UNICODE_STRING));
+   }
+
+   /* Do the callback */
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_CLIENTLOADLIBRARY,
+                               pArguments,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   /* Free the argument */
+   IntCbFreeMemory(pArguments);
+
+   if(!NT_SUCCESS(Status))
+   {
+       return FALSE;
+   }
+
+   _SEH2_TRY
+   {
+       ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
+       /* Simulate old behaviour: copy into our local buffer */
+       Result = *(HMODULE*)ResultPointer;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       Result = 0;
+   }
+   _SEH2_END;
+
+   return Result;
+}
 
 VOID APIENTRY
 co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
@@ -125,7 +229,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
@@ -136,7 +240,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    Arguments.Context = CompletionCallbackContext;
    Arguments.Result = Result;
 
-   IntSetTebWndCallback (&hWnd, &pWnd);
+   IntSetTebWndCallback (&hWnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -148,7 +252,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (hWnd, pWnd);
+   IntRestoreTebWndCallback (hWnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {
@@ -169,7 +273,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
@@ -181,7 +285,7 @@ co_IntCallWindowProc(WNDPROC Proc,
       Arguments = IntCbAllocateMemory(ArgumentLength);
       if (NULL == Arguments)
       {
-         DPRINT1("Unable to allocate buffer for window proc callback\n");
+         ERR("Unable to allocate buffer for window proc callback\n");
          return -1;
       }
       RtlMoveMemory((PVOID) ((char *) Arguments + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS)),
@@ -202,7 +306,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    ResultPointer = NULL;
    ResultLength = ArgumentLength;
 
-   IntSetTebWndCallback (&Wnd, &pWnd);
+   IntSetTebWndCallback (&Wnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -219,16 +323,18 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+      ERR("Failed to copy result from user mode!\n");
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (Wnd, pWnd);
+   IntRestoreTebWndCallback (Wnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {
+     ERR("Call to user mode failed!\n");
       if (0 < lParamBufferSize)
       {
          IntCbFreeMemory(Arguments);
@@ -343,7 +449,7 @@ co_IntCallHookProc(INT HookId,
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->TIF_flags & TIF_INCLEANUP)
    {
-      DPRINT1("Thread is in cleanup and trying to call hook %d\n", Code);
+      ERR("Thread is in cleanup and trying to call hook %d\n", Code);
       return 0;
    }
 
@@ -352,17 +458,17 @@ co_IntCallHookProc(INT HookId,
    switch(HookId)
    {
       case WH_CBT:
-         DPRINT("WH_CBT: Code %d\n", Code);
+         TRACE("WH_CBT: Code %d\n", Code);
          switch(Code)
          {
             case HCBT_CREATEWND:
                pWnd = UserGetWindowObject((HWND) wParam);
                if (!pWnd)
                {
-                  DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
+                  ERR("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
                   goto Fault_Exit;
                }
-               DPRINT("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
+               TRACE("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
               // Due to KsStudio.exe, just pass the callers original pointers
               // except class which point to kernel space if not an atom.
               // Found by, Olaf Siejka
@@ -389,7 +495,7 @@ co_IntCallHookProc(INT HookId,
             case HCBT_QS:
                break;
             default:
-               DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
+               ERR("Trying to call unsupported CBT hook %d\n", Code);
                goto Fault_Exit;
          }
          break;
@@ -418,14 +524,14 @@ co_IntCallHookProc(INT HookId,
       case WH_SHELL:
          break;
       default:
-         DPRINT1("Trying to call unsupported window hook %d\n", HookId);
+         ERR("Trying to call unsupported window hook %d\n", HookId);
          goto Fault_Exit;
    }
 
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("HookProc callback failed: out of memory\n");
+      ERR("HookProc callback failed: out of memory\n");
       goto Fault_Exit;
    }
    Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Argument;
@@ -527,12 +633,12 @@ co_IntCallHookProc(INT HookId,
    }
    else
    {
-      DPRINT1("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
+      ERR("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
    }
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failure to make Callback! Status 0x%x",Status);
+      ERR("Failure to make Callback! Status 0x%x",Status);
       goto Fault_Exit;
    }
    /* Support write backs... SEH is in UserCallNextHookEx. */
@@ -566,7 +672,7 @@ co_IntCallHookProc(INT HookId,
 Fault_Exit:
    if (Hit)
    {
-      DPRINT1("Exception CallHookProc HookId %d Code %d\n",HookId,Code);
+      ERR("Exception CallHookProc HookId %d Code %d\n",HookId,Code);
    }
    if (Argument) IntCbFreeMemory(Argument);
 
@@ -598,7 +704,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("EventProc callback failed: out of memory\n");
+      ERR("EventProc callback failed: out of memory\n");
       return 0;
    }
    Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Argument;
@@ -655,7 +761,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("LoadMenu callback failed: out of memory\n");
+      ERR("LoadMenu callback failed: out of memory\n");
       return 0;
    }
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
@@ -717,6 +823,5 @@ co_IntClientThreadSetup(VOID)
 
    return Status;
 }
-
 
 /* EOF */

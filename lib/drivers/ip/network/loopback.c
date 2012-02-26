@@ -17,10 +17,10 @@ VOID LoopPassiveWorker(
 {
   PIP_PACKET IPPacket = Context;
 
+  /* IPReceive() takes care of the NDIS packet */
   IPReceive(Loopback, IPPacket);
-  FreeNdisPacket(IPPacket->NdisPacket);
 
-  ExFreePool(Context);
+  ExFreePool(IPPacket);
 }
 
 VOID LoopTransmit(
@@ -43,9 +43,7 @@ VOID LoopTransmit(
     UINT PacketLength;
     PNDIS_PACKET XmitPacket;
     NDIS_STATUS NdisStatus;
-    IP_PACKET IPPacket;
-    PNDIS_BUFFER NdisBuffer;
-    PVOID WorkerBuffer;
+    PIP_PACKET IPPacket;
 
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
@@ -59,24 +57,24 @@ VOID LoopTransmit(
         ( &XmitPacket, PacketBuffer, PacketLength );
 
     if( NT_SUCCESS(NdisStatus) ) {
-        IPInitializePacket(&IPPacket, 0);
-		
-        IPPacket.NdisPacket = XmitPacket;
-		
-        NdisGetFirstBufferFromPacket(XmitPacket,
-                                     &NdisBuffer,
-                                     &IPPacket.Header,
-                                     &IPPacket.ContigSize,
-                                     &IPPacket.TotalSize);
-
-        
-        WorkerBuffer = ExAllocatePool(NonPagedPool, sizeof(IPPacket));
-        if (WorkerBuffer)
+        IPPacket = ExAllocatePool(NonPagedPool, sizeof(IP_PACKET));
+        if (IPPacket)
         {
-            RtlCopyMemory(WorkerBuffer, &IPPacket, sizeof(IPPacket));
-            if (!ChewCreate(LoopPassiveWorker, WorkerBuffer))
+            IPInitializePacket(IPPacket, 0);
+
+            IPPacket->NdisPacket = XmitPacket;
+
+            GetDataPtr(IPPacket->NdisPacket,
+                       0,
+                       (PCHAR*)&IPPacket->Header,
+                       &IPPacket->TotalSize);
+
+            IPPacket->MappedHeader = TRUE;
+
+            if (!ChewCreate(LoopPassiveWorker, IPPacket))
             {
-                ExFreePool(WorkerBuffer);
+                IPPacket->Free(IPPacket);
+                ExFreePool(IPPacket);
                 NdisStatus = NDIS_STATUS_RESOURCES;
             }
         }
@@ -108,13 +106,14 @@ NDIS_STATUS LoopRegisterAdapter(
   BindInfo.Context = NULL;
   BindInfo.HeaderSize = 0;
   BindInfo.MinFrameSize = 0;
-  BindInfo.MTU = 16384;
   BindInfo.Address = NULL;
   BindInfo.AddressLength = 0;
   BindInfo.Transmit = LoopTransmit;
 
   Loopback = IPCreateInterface(&BindInfo);
   if (!Loopback) return NDIS_STATUS_RESOURCES;
+    
+  Loopback->MTU = 16384;
 
   Loopback->Name.Buffer = L"Loopback";
   Loopback->Name.MaximumLength = Loopback->Name.Length =
@@ -125,6 +124,8 @@ NDIS_STATUS LoopRegisterAdapter(
   AddrInitIPv4(&Loopback->Broadcast, LOOPBACK_BCASTADDR_IPv4);
 
   IPRegisterInterface(Loopback);
+    
+  IPAddInterfaceRoute(Loopback);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

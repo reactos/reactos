@@ -825,9 +825,9 @@ HAL_INITIALIZATION_FAILED
 MessageId=0x5D
 Severity=Success
 Facility=System
-SymbolicName=HEAP_INITIALIZATION_FAILED
+SymbolicName=UNSUPPORTED_PROCESSOR
 Language=English
-HEAP_INITIALIZATION_FAILED
+UNSUPPORTED_PROCESSOR
 .
 
 MessageId=0x5E
@@ -1256,6 +1256,14 @@ Facility=System
 SymbolicName=ATTEMPTED_WRITE_TO_READONLY_MEMORY
 Language=English
 An attempt was made to write to read-only memory.
+.
+
+MessageId=0xC1
+Severity=Success
+Facility=System
+SymbolicName=SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
+Language=English
+SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
 .
 
 MessageId=0xC2

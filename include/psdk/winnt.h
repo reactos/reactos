@@ -66,6 +66,10 @@
 #endif
 #endif /* __ANONYMOUS_DEFINED */
 
+#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_PARAMETER(P)
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
 #ifndef DECLSPEC_ALIGN
 # if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
@@ -313,6 +317,22 @@ typedef DWORD FLONG;
 #define ERROR_SEVERITY_INFORMATIONAL 0x40000000
 #define ERROR_SEVERITY_WARNING       0x80000000
 #define ERROR_SEVERITY_ERROR         0xC0000000
+
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
+extern "C++" { \
+    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
+    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
+    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
+    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
+    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
+#endif
+
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -896,6 +916,7 @@ typedef enum {
 #define LANG_ORIYA   0x48
 #define LANG_PASHTO   0x63
 #define LANG_FARSI   0x29
+#define LANG_PERSIAN 0x29
 #define LANG_POLISH   0x15
 #define LANG_PORTUGUESE   0x16
 #define LANG_PUNJABI   0x46
@@ -1365,6 +1386,7 @@ typedef enum {
 #define SEC_NOCACHE	0x10000000
 #define SEC_WRITECOMBINE 0x40000000
 #define SEC_LARGE_PAGES  0x80000000
+#define SECTION_MAP_EXECUTE_EXPLICIT 0x0020
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
 #define SECTION_MAP_WRITE 2
@@ -3203,6 +3225,12 @@ typedef enum tagTOKEN_TYPE {
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
 
+typedef enum _TOKEN_ELEVATION_TYPE {
+    TokenElevationTypeDefault = 1,
+    TokenElevationTypeFull,
+    TokenElevationTypeLimited,
+} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
+
 #include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
   LUID TokenId;
@@ -3302,7 +3330,7 @@ typedef struct _QUOTA_LIMITS {
   SIZE_T PagefileLimit;
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
-    
+
 typedef struct _QUOTA_LIMITS_EX {
   SIZE_T PagedPoolLimit;
   SIZE_T NonPagedPoolLimit;
@@ -5235,7 +5263,8 @@ FORCEINLINE
 VOID
 MemoryBarrier(VOID)
 {
-    LONG Barrier;
+    LONG Barrier, *Dummy = &Barrier;
+    UNREFERENCED_LOCAL_VARIABLE(Dummy);
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #endif
@@ -5249,17 +5278,9 @@ MemoryBarrier(VOID)
 #error Unknown architecture
 #endif
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
 
-#ifdef _MSC_VER
-#pragma intrinsic(__int2c)
-#pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#define __int2c() __asm__ __volatile__("int $0x2c");
-#endif
-
 
 FORCEINLINE
 VOID
@@ -5268,13 +5289,6 @@ DbgRaiseAssertionFailure(VOID)
     __int2c();
 }
 
-#elif defined (_M_AMD64)
-#ifdef _MSC_VER
-#pragma intrinsic(_mm_pause)
-#define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#endif
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)

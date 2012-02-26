@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Виберіть схему керування живленням із найбільш прийнятними для цього комп'ютера параметрами. Якщо змінити нижченаведені параметри, вибрана схема також зміниться.",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "&Схеми керування живленням", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "Зберегти &як...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Сплячий режим"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE,5,5,20,20
     LTEXT           "Коли комп'ютер переходить до сплячого режиму, увесь вміст пам'яті записується на жорсткий диск і робота завершується. Виходячи зі сплячого режиму, комп'ютер повертається до попереднього стану. ",
                     -1,35,5,195,35
     GROUPBOX        "Сплячий режим",-1,5,45,235,25
@@ -164,11 +164,7 @@ BEGIN
   IDS_TIMEOUT14 "через 4 години"
   IDS_TIMEOUT15 "через 5 годин"
   IDS_TIMEOUT16 "ніколи"
-  
+
   IDS_DEL_SCHEME "Ви дійсно бажаєте видалити схему керування електроживленням?"
   IDS_DEL_SCHEME_TITLE "Видалення схеми"
 END
-
-
-
-

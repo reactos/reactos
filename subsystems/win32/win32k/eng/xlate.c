@@ -1,14 +1,12 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI Color Translation Functions
  * FILE:             subsystems/win32/win32k/eng/xlate.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #include <win32k.h>
-
-#include <intrin.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -361,7 +359,7 @@ EXLATEOBJ_vInitialize(
         return;
     }
 
-    /* Chack if both of the pallettes are indexed */
+    /* Check if both of the pallettes are indexed */
     if (!(ppalSrc->flFlags & PAL_INDEXED) || !(ppalDst->flFlags & PAL_INDEXED))
     {
         /* At least one palette is not indexed, calculate shifts/masks */
@@ -613,15 +611,6 @@ EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
     }
     pexlo->xlo.pulXlate = pexlo->aulXlate;
 }
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitXlateImpl(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
 
 /** Public DDI Functions ******************************************************/
 

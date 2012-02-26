@@ -80,7 +80,7 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Mukautettu Peli"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Rivej‰",   -1,   5,   5,  30,  10
+    LTEXT           "Rivej√§",   -1,   5,   5,  30,  10
     LTEXT           "Palstoja",   -1,   5,  35,  30,  10
     LTEXT           "Miinoja",  -1,   5,  65,  30,  10
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER

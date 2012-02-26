@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -206,7 +206,7 @@ AcpiExOpcode_3A_0T_0R (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;
@@ -239,7 +239,7 @@ AcpiExOpcode_3A_1T_1R (
     ACPI_OPERAND_OBJECT     *ReturnDesc = NULL;
     char                    *Buffer = NULL;
     ACPI_STATUS             Status = AE_OK;
-    ACPI_INTEGER            Index;
+    UINT64                  Index;
     ACPI_SIZE               Length;
 
 
@@ -345,7 +345,7 @@ AcpiExOpcode_3A_1T_1R (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;

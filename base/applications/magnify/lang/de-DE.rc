@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "&Beenden",                       IDM_EXIT
         MENUITEM "&Optionen",                      IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Über ...",                      IDM_ABOUT
+        MENUITEM "&Ãœber ...",                      IDM_ABOUT
     END
 END
 
@@ -19,7 +19,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Über"
+CAPTION "Ãœber"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_ICON,IDC_MYICON,14,9,20,20
@@ -35,10 +35,10 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Beenden",IDOK,96,161,50,14
     PUSHBUTTON      "Hilfe",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "Vergrößerungsgrad:",IDC_STATIC,6,12,68,8
+    LTEXT           "VergrÃ¶ÃŸerungsgrad:",IDC_STATIC,6,12,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Folgen",IDC_STATIC,7,25,139,59
-    GROUPBOX        "Präsentation",IDC_STATIC,7,87,139,57
+    GROUPBOX        "PrÃ¤sentation",IDC_STATIC,7,87,139,57
     CONTROL         "Maus-Cursor folgen",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
     CONTROL         "Tastaturfokus folgen",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
     CONTROL         "Texteingabe folgen",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Die Bildschirmlupe ist für Personen mit leichten visuellen Einschränkungen gedacht und stellt lediglich Grundfunktionen zur Verfügung. Die meisten Nutzer werden jedoch eine Bildschirmlupe mit mehr Funktionen für die alltägliche Nutzung benötigen.",IDC_STATIC,36,7,207,33
+    LTEXT           "Die Bildschirmlupe ist fÃ¼r Personen mit leichten visuellen EinschrÃ¤nkungen gedacht und stellt lediglich Grundfunktionen zur VerfÃ¼gung. Die meisten Nutzer werden jedoch eine Bildschirmlupe mit mehr Funktionen fÃ¼r die alltÃ¤gliche Nutzung benÃ¶tigen.",IDC_STATIC,36,7,207,33
     CONTROL         "Diese Nachricht nicht mehr anzeigen",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 

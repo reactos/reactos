@@ -63,6 +63,14 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
+
+            /* Stop listening to incoming RPC messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -84,6 +92,11 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -254,7 +267,9 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
     DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
     WCHAR *Buf = NULL, *Expanded = NULL;
     LONG Result;
-    PLOGFILE pLogf;
+    PLOGFILE pLogf = NULL;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
 
     DPRINT("LoadLogFile: %S\n", LogName);
 
@@ -301,13 +316,21 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
     ExpandEnvironmentStrings(Buf, Expanded, ExpandedLen);
 
+    if (!RtlDosPathNameToNtPathName_U(Expanded, &FileName,
+                                      NULL, NULL))
+    {
+        DPRINT1("Can't convert path!\n");
+        HeapFree(MyHeap, 0, Expanded);
+        HeapFree(MyHeap, 0, Buf);
+        return NULL;
+    }
+
     DPRINT("%S -> %S\n", Buf, Expanded);
 
-    pLogf = LogfCreate(LogName, Expanded);
-
-    if (pLogf == NULL)
+    Status = LogfCreate(&pLogf, LogName, &FileName, TRUE, FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create %S!\n", Expanded);
+        DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);
     }
 
     HeapFree(MyHeap, 0, Buf);
@@ -482,7 +505,7 @@ VOID PRINT_HEADER(PEVENTLOGHEADER header)
     DPRINT("Flags: ");
     if (header->Flags & ELF_LOGFILE_HEADER_DIRTY)  DPRINT("ELF_LOGFILE_HEADER_DIRTY");
     if (header->Flags & ELF_LOGFILE_HEADER_WRAP)  DPRINT("| ELF_LOGFILE_HEADER_WRAP ");
-    if (header->Flags & ELF_LOGGFILE_LOGFULL_WRITTEN)  DPRINT("| ELF_LOGGFILE_LOGFULL_WRITTEN ");
+    if (header->Flags & ELF_LOGFILE_LOGFULL_WRITTEN)  DPRINT("| ELF_LOGFILE_LOGFULL_WRITTEN ");
     if (header->Flags & ELF_LOGFILE_ARCHIVE_SET)  DPRINT("| ELF_LOGFILE_ARCHIVE_SET ");
     DPRINT("\n");
 }

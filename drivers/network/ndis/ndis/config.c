@@ -68,6 +68,8 @@ NdisWriteConfiguration(
     WCHAR Buff[11];
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    NDIS_DbgPrint(MID_TRACE, ("Parameter type: %d\n", ParameterValue->ParameterType));
 
     /* reset parameter type to standard reg types */
     switch(ParameterValue->ParameterType)
@@ -320,6 +322,82 @@ NdisOpenProtocolConfiguration(
     *Status = NDIS_STATUS_SUCCESS;
 }
 
+UCHAR UnicodeToHexByte(WCHAR chr)
+/*
+ * FUNCTION: Converts a unicode hex character to its numerical value
+ * ARGUMENTS:
+ *     chr: Unicode character to convert
+ * RETURNS:
+ *     The numerical value of chr
+ */
+{
+    switch(chr)
+    {
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
+        case L'6': return 6;
+        case L'7': return 7;
+        case L'8': return 8;
+        case L'9': return 9;
+        case L'A':
+        case L'a':
+            return 10;
+        case L'B':
+        case L'b':
+            return 11;
+        case L'C':
+        case L'c':
+            return 12;
+        case L'D':
+        case L'd':
+            return 13;
+        case L'E':
+        case L'e':
+            return 14;
+        case L'F':
+        case L'f':
+            return 15;
+    }
+    return 0xFF;
+}
+
+BOOLEAN
+IsValidNumericString(PNDIS_STRING String, ULONG Base)
+/*
+ * FUNCTION: Determines if a string is a valid number
+ * ARGUMENTS:
+ *     String: Unicode string to evaluate
+ * RETURNS:
+ *     TRUE if it is valid, FALSE if not
+ */
+{
+    ULONG i;
+
+    /* I don't think this will ever happen, but we warn it if it does */
+    if (String->Length == 0)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Got an empty string; not sure what to do here\n"));
+        return FALSE;
+    }
+
+    for (i = 0; i < String->Length / sizeof(WCHAR); i++)
+    {
+        /* Skip any NULL characters we find */
+        if (String->Buffer[i] == UNICODE_NULL)
+            continue;
+
+        /* Make sure the character is valid for a numeric string of this base */
+        if (UnicodeToHexByte(String->Buffer[i]) >= Base)
+            return FALSE;
+    }
+
+    /* It's valid */
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -358,6 +436,7 @@ NdisReadConfiguration(
     *Status = NDIS_STATUS_FAILURE;
 
     NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));
+    NDIS_DbgPrint(MID_TRACE,("requested parameter type: %d\n", ParameterType));
 
     if (ConfigurationContext == NULL)
     {
@@ -482,7 +561,7 @@ NdisReadConfiguration(
     *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation, NULL, 0, &KeyDataLength);
     if(*Status != STATUS_BUFFER_OVERFLOW && *Status != STATUS_BUFFER_TOO_SMALL && *Status != STATUS_SUCCESS)
     {
-        NDIS_DbgPrint(MIN_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
+        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
@@ -570,19 +649,28 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
         (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
     }
-    else
+    else if (KeyInformation->Type == REG_SZ)
     {
          UNICODE_STRING str;
+         ULONG Base;
+        
+         if (ParameterType == NdisParameterInteger)
+             Base = 10;
+         else if (ParameterType == NdisParameterHexInteger)
+             Base = 16;
+         else
+             Base = 0;
 
          str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
          str.Buffer = (PWCHAR)KeyInformation->Data;
 
-         if ((*Status = RtlUnicodeStringToInteger(&str, 0,
-                             &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS)
+         if (Base != 0 && IsValidNumericString(&str, Base) &&
+             ((*Status = RtlUnicodeStringToInteger(&str, Base,
+                             &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS))
          {
-             NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger\n"));
+             NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer\n"));
 
-             (*ParameterValue)->ParameterType = NdisParameterInteger;
+             (*ParameterValue)->ParameterType = ParameterType;
          }
          else
          {
@@ -606,6 +694,22 @@ NdisReadConfiguration(
              (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
          }
     }
+    else
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Invalid type for NdisReadConfiguration (%d)\n", KeyInformation->Type));
+        NDIS_DbgPrint(MIN_TRACE, ("Requested type: %d\n", ParameterType));
+        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
+        *Status = NDIS_STATUS_FAILURE;
+        ExFreePool(KeyInformation);
+        return;
+    }
+    
+    if ((*ParameterValue)->ParameterType != ParameterType)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Parameter type mismatch! (Requested: %d | Received: %d)\n",
+                                  ParameterType, (*ParameterValue)->ParameterType));
+        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
+    }
 
     MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
     MiniportResource->Resource = *ParameterValue;
@@ -616,51 +720,6 @@ NdisReadConfiguration(
 
     *Status = NDIS_STATUS_SUCCESS;
 }
-
-
-UCHAR UnicodeToHexByte(WCHAR chr)
-/*
- * FUNCTION: Converts a unicode hex character to its numerical value
- * ARGUMENTS:
- *     chr: Unicode character to convert
- * RETURNS:
- *     The numerical value of chr
- */
-{
-    switch(chr)
-    {
-        case L'0': return 0;
-        case L'1': return 1;
-        case L'2': return 2;
-        case L'3': return 3;
-        case L'4': return 4;
-        case L'5': return 5;
-        case L'6': return 6;
-        case L'7': return 7;
-        case L'8': return 8;
-        case L'9': return 9;
-        case L'A':
-        case L'a':
-            return 10;
-        case L'B':
-        case L'b':
-            return 11;
-        case L'C':
-        case L'c':
-            return 12;
-        case L'D':
-        case L'd':
-            return 13;
-        case L'E':
-        case L'e':
-            return 14;
-        case L'F':
-        case L'f':
-            return 15;
-    }
-    return -1;
-}
-
 
 /*
  * @implemented
@@ -697,7 +756,7 @@ NdisReadNetworkAddress(
     NdisReadConfiguration(Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterString);
     if(*Status != NDIS_STATUS_SUCCESS)
     {
-        NDIS_DbgPrint(MIN_TRACE, ("NdisReadConfiguration failed (%x)\n", *Status));
+        NDIS_DbgPrint(MID_TRACE, ("NdisReadConfiguration failed (%x)\n", *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }

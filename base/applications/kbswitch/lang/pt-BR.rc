@@ -1,0 +1,13 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Preferências...",  ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&Sair",            ID_EXIT
+    END
+END

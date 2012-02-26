@@ -264,6 +264,12 @@ xKdUnmapVirtualAddress(
      (ULONG)(p->PartitionLengthMsb0 << 16) +        \
      (ULONG)(p->PartitionLengthMsb1 << 24))
 
+#define SET_PARTITION_LENGTH(p, l)                  \
+    p->PartitionLengthLsb0 = l & 0xFF;              \
+    p->PartitionLengthLsb1 = (l >> 8) & 0xFF;       \
+    p->PartitionLengthMsb0 = (l >> 16) & 0xFF;      \
+    p->PartitionLengthMsb1 = (l >> 24) & 0xFF
+
 //
 // Structure describing a partition
 //

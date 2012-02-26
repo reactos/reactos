@@ -61,7 +61,7 @@ OptionsProc(
 				}
 				else
 				{
-					/* options have already been applied */
+					/* Options have already been applied */
 					SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 					return TRUE;
 				}
@@ -174,10 +174,10 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
   HWND hDlgCtrl;
   TCHAR szBuffer[MAX_PATH];
 
-	/* update cursor size */
+	/* Update cursor size */
 	if ( pConInfo->CursorSize == 0)
 	{
-		/* small cursor */
+		/* Small cursor */
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 
@@ -207,14 +207,14 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 	}
 
-	/* update num buffers */
+	/* Update num buffers */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_NUM_BUFFER);
 	SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG((short)999, (short)1));
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_NUM_BUFFER);
 	_stprintf(szBuffer, _T("%d"), pConInfo->NumberOfHistoryBuffers);
 	SendMessage(hDlgCtrl, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
-	/* update buffer size */
+	/* Update buffer size */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_BUFFER_SIZE);
 	SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG((short)999, (short)1));
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_BUFFER_SIZE);
@@ -223,14 +223,14 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 
 
 
-	/* update discard duplicates */
+	/* Update discard duplicates */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_DISCARD_DUPLICATES);
 	if ( pConInfo->HistoryNoDup )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 
-	/* update full/window screen */
+	/* Update full/window screen */
 	if ( pConInfo->FullScreen )
 	{
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
@@ -248,19 +248,17 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 	}
 
-	/* update quick edit */
+	/* Update quick edit */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_QUICK_EDIT);
 	if ( pConInfo->QuickEdit )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 
-	/* update insert mode */
+	/* Update insert mode */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_INSERT_MODE);
 	if ( pConInfo->InsertMode )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 }
-
-

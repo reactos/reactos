@@ -17,13 +17,7 @@
 ULONG KeFixedTbEntries;
 ULONG KiDmaIoCoherency;
 ULONG KeIcacheFlushCount = 0;
-CCHAR KeNumberProcessors;
 ULONG KeDcacheFlushCount;
-ULONG KeActiveProcessors;
-ULONG KeProcessorArchitecture;
-ULONG KeProcessorLevel;
-ULONG KeProcessorRevision;
-ULONG KeFeatureBits;
 ULONG KeLargestCacheLine = 64; // FIXME: It depends
 
 /* FUNCTIONS ******************************************************************/

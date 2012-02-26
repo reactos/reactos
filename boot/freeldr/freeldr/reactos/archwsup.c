@@ -15,7 +15,7 @@
 /* GLOBALS ********************************************************************/
 
 extern CHAR reactos_arc_hardware_data[];
-ULONG FldrpHwHeapLocation;
+SIZE_T FldrpHwHeapLocation;
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 BOOLEAN UseRealHeap = FALSE;
@@ -30,7 +30,7 @@ FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
 
 PVOID
 NTAPI
-FldrpHwHeapAlloc(IN ULONG Size)
+FldrpHwHeapAlloc(IN SIZE_T Size)
 {
     PVOID Buffer;
 
@@ -62,7 +62,7 @@ NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PCHAR IdentifierString)
 {
-    ULONG IdentifierLength;
+    SIZE_T IdentifierLength;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
     PCHAR Identifier;
     
@@ -75,7 +75,7 @@ FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
     RtlCopyMemory(Identifier, IdentifierString, IdentifierLength);
 
     /* Set component information */
-    Component->IdentifierLength = IdentifierLength;
+    Component->IdentifierLength = (ULONG)IdentifierLength;
     Component->Identifier = Identifier;
 }
 

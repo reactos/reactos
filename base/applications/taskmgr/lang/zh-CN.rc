@@ -1,106 +1,92 @@
 /*
  *  (Simplified Chinese resources)
- *  (����������Դ)
+ *  (简体中文资源)
  *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-#pragma code_page(936)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
-    POPUP "�ļ�(&F)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "�½�����(����...)(&N)",          ID_FILE_NEW
+        MENUITEM "新建任务(运行...)(&N)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "�˳����������(&X)",          ID_FILE_EXIT
+        MENUITEM "退出任务管理器(&X)",          ID_FILE_EXIT
     END
-    POPUP "ѡ��(&O)"
+    POPUP "选项(&O)"
     BEGIN
-        MENUITEM "ǰ����ʾ(&A)",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "前端显示(&A)",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "ʹ��ʱ�Զ���С��(&M)",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "使用时自动最小化(&M)",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "��С��ʱ����(&H)",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "最小化时隐藏(&H)",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "��ʾ 16 λ����(&S)",          ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "显示 16 位任务(&S)",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
-    POPUP "�鿴(&V)"
+    POPUP "查看(&V)"
     BEGIN
-        MENUITEM "����ˢ��(&R)",                ID_VIEW_REFRESH
-        POPUP "�����ٶ�(&U)"
+        MENUITEM "立即刷新(&R)",                ID_VIEW_REFRESH
+        POPUP "更新速度(&U)"
         BEGIN
-            MENUITEM "��(&H)",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "��׼(&N)",                     ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "高(&H)",                       ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "标准(&N)",                     ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "��(&L)",                        ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "��ͣ(&P)",                     ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "低(&L)",                        ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "暂停(&P)",                     ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "��ͼ��(&G)",                ID_VIEW_LARGE
-        MENUITEM "Сͼ��(&M)",                ID_VIEW_SMALL
-        MENUITEM "��ϸ��Ϣ(&D)",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "ѡ����(&S)...",          ID_VIEW_SELECTCOLUMNS
-        POPUP "CPU ��¼(&C)"
+        MENUITEM "大图标(&G)",                ID_VIEW_LARGE
+        MENUITEM "小图标(&M)",                ID_VIEW_SMALL
+        MENUITEM "详细信息(&D)",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "选择列(&S)...",          ID_VIEW_SELECTCOLUMNS
+        POPUP "CPU 记录(&C)"
         BEGIN
-            MENUITEM "���� CPU һ��ͼ��(&O)",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "所有 CPU 一张图表(&O)",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "ÿ�� CPU һ��ͼ��(&P)",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "每个 CPU 一张图表(&P)",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "��ʾ�ں�ʱ��(&S)",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "显示内核时间(&S)",          ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "����(&W)"
+    POPUP "窗口(&W)"
     BEGIN
-        MENUITEM "����ƽ��(&H)",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "����ƽ��(&V)",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "��С��(&M)",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "���(&X)",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "���(&C)",                    ID_WINDOWS_CASCADE
-        MENUITEM "ǰ��(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "横向平铺(&H)",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "纵向平铺(&V)",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "最小化(&M)",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "最大化(&X)",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "层叠(&C)",                    ID_WINDOWS_CASCADE
+        MENUITEM "前置(&B)",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "����(&H)"
+    POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "�����������������(&H)",   ID_HELP_TOPICS
+        MENUITEM "任务管理器帮助主题(&H)",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "�������������(&A)",         ID_HELP_ABOUT
+        MENUITEM "关于任务管理器(&A)",         ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "����ƽ��(&H)",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "����ƽ��(&V)",            ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "��С��(&M)",                   ID_WINDOWS_MINIMIZE
-    MENUITEM "���(&X)",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "���(&C)",                    ID_WINDOWS_CASCADE
-    MENUITEM "ǰ��(&B)",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "横向平铺(&H)",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "纵向平铺(&V)",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "最小化(&M)",                   ID_WINDOWS_MINIMIZE
+    MENUITEM "最大化(&X)",                   ID_WINDOWS_MAXIMIZE
+    MENUITEM "层叠(&C)",                    ID_WINDOWS_CASCADE
+    MENUITEM "前置(&B)",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "�½�����(����...)(&N)",          ID_FILE_NEW
+        MENUITEM "新建任务(运行...)(&N)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "��ͼ��(&G)",                ID_VIEW_LARGE
-        MENUITEM "Сͼ��(&M)",                ID_VIEW_SMALL
-        MENUITEM "��ϸ��Ϣ(&D)",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "大图标(&G)",                ID_VIEW_LARGE
+        MENUITEM "小图标(&M)",                ID_VIEW_SMALL
+        MENUITEM "详细信息(&D)",                    ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -108,17 +94,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "�л���(&S)",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "ǰ��(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "切换至(&S)",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "前置(&B)",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "����ƽ��(&H)",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "����ƽ��(&V)",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "��С��(&M)",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "���(&X)",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "���(&C)",                    ID_WINDOWS_CASCADE
+        MENUITEM "横向平铺(&H)",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "纵向平铺(&V)",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "最小化(&M)",                   ID_WINDOWS_MINIMIZE
+        MENUITEM "最大化(&X)",                   ID_WINDOWS_MAXIMIZE
+        MENUITEM "层叠(&C)",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "��������(&E)",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "ת������(&G)",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "结束任务(&E)",                   ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "转到进程(&G)",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -127,10 +113,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "��ԭ(&R)",                    ID_RESTORE
-        MENUITEM "�ر�(&C)",                      ID_FILE_EXIT
+        MENUITEM "还原(&R)",                    ID_RESTORE
+        MENUITEM "关闭(&C)",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "ǰ����ʾ(&A)",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "前端显示(&A)",              ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -138,27 +124,27 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "��������(&E)",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "����������(&T)",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "结束进程(&E)",                ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "结束进程树(&T)",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
-        MENUITEM "����(&D)",                      ID_PROCESS_PAGE_DEBUG
+        MENUITEM "调试(&D)",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "�������ȼ�(&P)"
+        POPUP "设置优先级(&P)"
         BEGIN
-            MENUITEM "ʵʱ(&R)",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "实时(&R)",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "��(&H)",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "高(&H)",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "���ڱ�׼(&A)",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "高于标准(&A)",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
-            MENUITEM "��׼(&N)",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "标准(&N)",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "���ڱ�׼(&B)",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "低于标准(&B)",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "��(&L)",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "低(&L)",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "��ϵ����(&A)...",            ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "关系设置(&A)...",            ID_PROCESS_PAGE_SETAFFINITY
 	MENUITEM "Edit Debug &Channels...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
@@ -174,7 +160,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "���������"
+CAPTION "任务管理器"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -187,9 +173,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "������(&N)...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "�л���(&S)",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "��������(&E)",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "新任务(&N)...",IDC_NEWTASK,187,189,53,14
+    PUSHBUTTON      "切换至(&S)",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
+    PUSHBUTTON      "结束任务(&E)",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -199,8 +185,8 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "��������(&E)",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "��ʾ�����û��Ľ���(&S)",IDC_SHOWALLPROCESSES,
+    PUSHBUTTON      "结束进程(&E)",IDC_ENDPROCESS,171,189,69,14
+    CONTROL         "显示所有用户的进程(&S)",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
 END
 
@@ -209,57 +195,55 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "CPU ʹ�������ʾ",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "PFʹ����",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
-    GROUPBOX        "����",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�Ͽ�����(K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�����ڴ�(K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�����ڴ�(K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "�����",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "�߳���",IDS_TOTALS_THREAD_COUNT,12,140,27,8
-    LTEXT           "������",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
+    GROUPBOX        "CPU 使用情况显示",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "PF使用率",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "总数",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "认可用量(K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "物理内存(K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "核心内存(K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    LTEXT           "句柄数",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "线程数",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "进程数",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "����",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "����",IDS_COMMIT_CHARGE_LIMIT,12,184,25,8,NOT WS_BORDER
-    LTEXT           "��ֵ",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "总数",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
+    LTEXT           "限制",IDS_COMMIT_CHARGE_LIMIT,12,184,25,8,NOT WS_BORDER
+    LTEXT           "峰值",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "����",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "������",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "ϵͳ����",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
+    LTEXT           "总数",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
+    LTEXT           "可用数",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "系统缓存",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "����",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "��ҳ��",IDS_KERNEL_MEMORY_PAGED,137,184,28,8
-    LTEXT           "δ��ҳ",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    LTEXT           "总数",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
+    LTEXT           "分页数",IDS_KERNEL_MEMORY_PAGED,137,184,28,8
+    LTEXT           "未分页",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "CPU ʹ�ü�¼",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�ڴ�ʹ�ü�¼",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "MEM Usage Display",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "CPU Usage History",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    GROUPBOX        "CPU 使用纪录",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "内存使用纪录",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "CPU 使用情况显示",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "内存使用情况显示",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU 使用纪录",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "MEM Usage History",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "内存使用纪录",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
@@ -271,7 +255,7 @@ BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "�ر�",IDOK,171,189,69,14
+    PUSHBUTTON      "关闭",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
@@ -279,8 +263,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Processor Affinity"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "ȷ��",IDOK,120,133,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,174,133,50,14
+    DEFPUSHBUTTON   "确定",IDOK,120,133,50,14
+    PUSHBUTTON      "取消",IDCANCEL,174,133,50,14
     LTEXT           "The Processor Affinity setting controls which CPUs the process will be allowed to execute on.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -351,62 +335,62 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ѡ����"
+CAPTION "选择列"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "ȷ��",IDOK,84,178,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,138,178,50,14
-    LTEXT           "��ѡ�����������������ҳ�Ͻ���ʾ���С�",
+    DEFPUSHBUTTON   "确定",IDOK,84,178,50,14
+    PUSHBUTTON      "取消",IDCANCEL,138,178,50,14
+    LTEXT           "请选择“任务管理器”进程页上将显示的列。",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "ӳ������(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "映像名称(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
-    CONTROL         "PID (���̱�ʶ��)(&P)",IDC_PID,"Button",
+    CONTROL         "PID (进程标识符)(&P)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
-    CONTROL         "CPU ʹ��(&C)",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "CPU 使用(&C)",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
-    CONTROL         "CPU ʱ��(&E)",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "CPU 时间(&E)",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
-    CONTROL         "�ڴ�ʹ��(&M)",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "内存使用(&M)",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,63,10
-    CONTROL         "�ڴ�ʹ������(&D)",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "内存使用增量(&D)",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
-    CONTROL         "�ڴ�ʹ�ø߷�ֵ(&K)",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "内存使用高峰值(&K)",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
-    CONTROL         "ҳ�����(&F)",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "页面错误(&F)",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,53,10
-    CONTROL         "USER ����(&U)",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "USER 对象(&U)",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "I/O ��ȡ",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O 读取",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "I/O ��ȡ�ֽ�",IDC_IOREADBYTES,"Button",
+    CONTROL         "I/O 读取字节",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
-    CONTROL         "�Ự ID(&S)",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "会话 ID(&S)",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
-    CONTROL         "�û���(&N)",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "用户名(&N)",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,51,10
-    CONTROL         "ҳ���������(&A)",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "页面错误增量(&A)",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "�����ڴ��С(&V)",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "虚拟内存大小(&V)",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
-    CONTROL         "ҳ�滺���(&G)",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "页面缓冲池(&G)",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
-    CONTROL         "��ҳ�滺���(&O)",IDC_NONPAGEDPOOL,"Button",
+    CONTROL         "非页面缓冲池(&O)",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
-    CONTROL         "�������ȼ�(&R)",IDC_BASEPRIORITY,"Button",
+    CONTROL         "基本优先级(&R)",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
-    CONTROL         "�������(&H)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "句柄计数(&H)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,59,10
-    CONTROL         "�̼߳���(&T)",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "线程计数(&T)",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,59,10
-    CONTROL         "GDI ����",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "GDI 对象",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
-    CONTROL         "I/O д��",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O 写入",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "I/O д���ֽ�",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "I/O 写入字节",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
-    CONTROL         "I/O ����",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O 其他",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,46,10
-    CONTROL         "I/O �����ֽ�",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "I/O 其他字节",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -531,14 +515,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "���������"
-    IDC_TASKMGR             "���������"
+    IDS_APP_TITLE           "任务管理器"
+    IDC_TASKMGR             "任务管理器"
     IDS_IDLE_PROCESS        "System Idle Process"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "Runs a new program"
+    ID_FILE_NEW             "执行新程序"
     ID_OPTIONS_ALWAYSONTOP  "Task Manager remains in front of all other windows unless minimized"
     ID_OPTIONS_MINIMIZEONUSE
                             "Task Manager is minimized when a SwitchTo operation is performed"
@@ -602,48 +586,48 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TAB_APPS                  "Ӧ�ó���"
-    IDS_TAB_PROCESSES             "����"
-    IDS_TAB_PERFORMANCE           "����"
-    IDS_TAB_TASK                  "����"
-    IDS_TAB_STATUS                "״̬"
-    IDS_TAB_IMAGENAME             "ӳ������"
+    IDS_TAB_APPS                  "应用程序"
+    IDS_TAB_PROCESSES             "进程"
+    IDS_TAB_PERFORMANCE           "性能"
+    IDS_TAB_TASK                  "任务"
+    IDS_TAB_STATUS                "状态"
+    IDS_TAB_IMAGENAME             "映像名称"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "�û���"
-    IDS_TAB_SESSIONID             "�Ự ID"
+    IDS_TAB_USERNAME              "用户名"
+    IDS_TAB_SESSIONID             "会话 ID"
     IDS_TAB_CPU                   "CPU"
-    IDS_TAB_CPUTIME               "CPU ʱ��"
-    IDS_TAB_MEMUSAGE              "�ڴ�ʹ��"
-    IDS_TAB_PEAKMEMUSAGE          "�߷��ڴ�ʹ��"
-    IDS_TAB_MEMDELTA              "�ڴ�����"
-    IDS_TAB_PAGEFAULT             "ҳ�����"
-    IDS_TAB_PFDELTA               "ҳ���������"
-    IDS_TAB_VMSIZE                "�����ڴ��С"
-    IDS_TAB_PAGEDPOOL             "ҳ�滺���"
-    IDS_TAB_NPPOOL                "��ҳ�滺���"
-    IDS_TAB_BASEPRI               "�������ȼ�"
-    IDS_TAB_HANDLES               "�����"
-    IDS_TAB_THREADS               "�߳���"
-    IDS_TAB_USERPBJECTS           "USER ����"
-    IDS_TAB_GDIOBJECTS            "GDI ����"
+    IDS_TAB_CPUTIME               "CPU 时间"
+    IDS_TAB_MEMUSAGE              "内存使用"
+    IDS_TAB_PEAKMEMUSAGE          "高峰内存使用"
+    IDS_TAB_MEMDELTA              "内存增量"
+    IDS_TAB_PAGEFAULT             "页面错误"
+    IDS_TAB_PFDELTA               "页面错误增量"
+    IDS_TAB_VMSIZE                "虚拟内存大小"
+    IDS_TAB_PAGEDPOOL             "页面缓冲池"
+    IDS_TAB_NPPOOL                "非页面缓冲池"
+    IDS_TAB_BASEPRI               "基本优先级"
+    IDS_TAB_HANDLES               "句柄数"
+    IDS_TAB_THREADS               "线程数"
+    IDS_TAB_USERPBJECTS           "USER 对象"
+    IDS_TAB_GDIOBJECTS            "GDI 对象"
     IDS_TAB_IOREADS               "I/O Reads"
     IDS_TAB_IOWRITES              "I/O Writes"
     IDS_TAB_IOOTHER               "I/O Other"
     IDS_TAB_IOREADBYTES           "I/O Read Bytes"
     IDS_TAB_IOWRITESBYTES         "I/O Write Bytes"
     IDS_TAB_IOOTHERBYTES          "I/O Other Bytes"
-    IDS_MENU_SELECTCOLUMNS        "ѡ����(&S)..."
-    IDS_MENU_16BITTASK            "��ʾ 16 λ����(&S)"
-    IDS_MENU_WINDOWS              "����(&W)"
-    IDS_MENU_LARGEICONS           "��ͼ��(&G)"
-    IDS_MENU_SMALLICONS           "Сͼ��(&M)"
-    IDS_MENU_DETAILS              "��ϸ(&D)"
-    IDS_MENU_ONEGRAPHALLCPUS      "���� CPU һ��ͼ��(&O)"
-    IDS_MENU_ONEGRAPHPERCPU       "ÿ�� CPU һ��ͼ��(&P)"
-    IDS_MENU_CPUHISTORY           "CPU ��¼(&C)"
-    IDS_MENU_SHOWKERNELTIMES      "��ʾ�ں�ʱ��(&S)"
-    IDS_CREATENEWTASK             "����������"
-    IDS_CREATENEWTASK_DESC        "���������������������������ƣ�Ϊ������Ӧ�ĳ����ļ��С��ĵ��� Internet ��Դ��"
+    IDS_MENU_SELECTCOLUMNS        "选择列(&S)..."
+    IDS_MENU_16BITTASK            "显示 16 位任务(&S)"
+    IDS_MENU_WINDOWS              "窗口(&W)"
+    IDS_MENU_LARGEICONS           "大图标(&G)"
+    IDS_MENU_SMALLICONS           "小图标(&M)"
+    IDS_MENU_DETAILS              "详细(&D)"
+    IDS_MENU_ONEGRAPHALLCPUS      "所有 CPU 一张图表(&O)"
+    IDS_MENU_ONEGRAPHPERCPU       "每个 CPU 一张图表(&P)"
+    IDS_MENU_CPUHISTORY           "CPU 纪录(&C)"
+    IDS_MENU_SHOWKERNELTIMES      "显示内核时间(&S)"
+    IDS_CREATENEWTASK             "创建新任务"
+    IDS_CREATENEWTASK_DESC        "任务管理器将根据您所输入的名称，为您打开相应的程序、文件夹、文档或 Internet 资源。"
     IDS_MSG_ACCESSPROCESSAFF      "Unable to Access or Set Process Affinity"
     IDS_MSG_PROCESSONEPRO         "The process must have affinity with at least one processor."
     IDS_MSG_INVALIDOPTION         "Invalid Option"
@@ -654,28 +638,10 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Unable to Terminate Process"
     IDS_MSG_UNABLECHANGEPRIORITY  "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
-    IDS_MSG_TRAYICONCPUUSAGE      "CPU Usage: %d%%"
-    IDS_STATUS_MEMUSAGE           "Mem Usage: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "CPU Usage: %3d%%"
-    IDS_STATUS_PROCESSES          "Processes: %d"
-    IDS_Not_Responding            "Not Responding"
-    IDS_Running                   "��������"
+    IDS_MSG_TRAYICONCPUUSAGE      "CPU 使用情况: %d%%"
+    IDS_STATUS_MEMUSAGE           "内存使用情况: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "CPU 使用情况: %3d%%"
+    IDS_STATUS_PROCESSES          "處理程序: %d"
+    IDS_Not_Responding            "没有回应"
+    IDS_Running                   "正在运行"
 END
-
-
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
-

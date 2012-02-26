@@ -17,13 +17,14 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(PELOADER);
 
-BOOLEAN
+static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
                       IN PUNICODE_STRING UnicodeName);
 
-BOOLEAN
-WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PVOID DllBase,
                       IN PVOID ImageBase,
                       IN PIMAGE_THUNK_DATA ThunkData,
@@ -31,14 +32,14 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                       IN ULONG ExportSize,
                       IN BOOLEAN ProcessForwards);
 
-BOOLEAN
-WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
                                 PCCH DirectoryPath,
                                 PCH ImportName,
                                 PLDR_DATA_TABLE_ENTRY *DataTableEntry);
 
-BOOLEAN
-WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
                               IN PIMAGE_THUNK_DATA ThunkData);
@@ -49,37 +50,38 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 /* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
 BOOLEAN
-WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
                         IN PCH DllName,
                         OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry)
 {
 	PLDR_DATA_TABLE_ENTRY DataTableEntry;
 	LIST_ENTRY *ModuleEntry;
 
-	DPRINTM(DPRINT_PELOADER, "WinLdrCheckForLoadedDll: DllName %s, LoadedEntry: %X\n",
+	TRACE("WinLdrCheckForLoadedDll: DllName %s, LoadedEntry: %X\n",
 		DllName, LoadedEntry);
 
 	/* Just go through each entry in the LoadOrderList and compare loaded module's
 	   name with a given name */
-	ModuleEntry = WinLdrBlock->LoadOrderListHead.Flink;
-	while (ModuleEntry != &WinLdrBlock->LoadOrderListHead)
+	ModuleEntry = ModuleListHead->Flink;
+	while (ModuleEntry != ModuleListHead)
 	{
 		/* Get pointer to the current DTE */
 		DataTableEntry = CONTAINING_RECORD(ModuleEntry,
 			LDR_DATA_TABLE_ENTRY,
 			InLoadOrderLinks);
 
-		DPRINTM(DPRINT_PELOADER, "WinLdrCheckForLoadedDll: DTE %p, EP %p\n",
-			DataTableEntry, DataTableEntry->EntryPoint);
+		TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%ws'\n",
+			DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
+			VaToPa(DataTableEntry->BaseDllName.Buffer));
 
 		/* Compare names */
 		if (WinLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
 		{
-			/* Yes, found it, report pointer to the loaded module's DTE 
+			/* Yes, found it, report pointer to the loaded module's DTE
 			   to the caller and increase load count for it */
 			*LoadedEntry = DataTableEntry;
 			DataTableEntry->LoadCount++;
-			DPRINTM(DPRINT_PELOADER, "WinLdrCheckForLoadedDll: LoadedEntry %X\n", DataTableEntry);
+			TRACE("WinLdrCheckForLoadedDll: LoadedEntry %X\n", DataTableEntry);
 			return TRUE;
 		}
 
@@ -92,7 +94,7 @@ WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 }
 
 BOOLEAN
-WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE)
 {
@@ -111,7 +113,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		BaseName.Buffer = VaToPa(ScanDTE->BaseDllName.Buffer);
 		BaseName.MaximumLength = ScanDTE->BaseDllName.MaximumLength;
 		BaseName.Length = ScanDTE->BaseDllName.Length;
-		DPRINTM(DPRINT_PELOADER, "WinLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
+		TRACE("WinLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
 			&BaseName, ImportTable);
 	}
 
@@ -124,37 +126,37 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	{
 		/* Get pointer to the name */
 		ImportName = (PCH)VaToPa(RVA(ScanDTE->DllBase, ImportTable->Name));
-		DPRINTM(DPRINT_PELOADER, "WinLdrScanImportDescriptorTable(): Looking at %s\n", ImportName);
+		TRACE("WinLdrScanImportDescriptorTable(): Looking at %s\n", ImportName);
 
 		/* In case we get a reference to ourselves - just skip it */
 		if (WinLdrpCompareDllName(ImportName, &ScanDTE->BaseDllName))
 			continue;
 
 		/* Load the DLL if it is not already loaded */
-		if (!WinLdrCheckForLoadedDll(WinLdrBlock, ImportName, &DataTableEntry))
+		if (!WinLdrCheckForLoadedDll(ModuleListHead, ImportName, &DataTableEntry))
 		{
-			Status = WinLdrpLoadAndScanReferencedDll(WinLdrBlock,
+			Status = WinLdrpLoadAndScanReferencedDll(ModuleListHead,
 				DirectoryPath,
 				ImportName,
 				&DataTableEntry);
 
 			if (!Status)
 			{
-				DPRINTM(DPRINT_PELOADER, "WinLdrpLoadAndScanReferencedDll() failed\n");
+				ERR("WinLdrpLoadAndScanReferencedDll() failed\n");
 				return Status;
 			}
 		}
 
 		/* Scan its import address table */
 		Status = WinLdrpScanImportAddressTable(
-			WinLdrBlock,
+			ModuleListHead,
 			DataTableEntry->DllBase,
 			ScanDTE->DllBase,
 			(PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk));
 
 		if (!Status)
 		{
-			DPRINTM(DPRINT_PELOADER, "WinLdrpScanImportAddressTable() failed\n");
+			ERR("WinLdrpScanImportAddressTable() failed\n");
 			return Status;
 		}
 	}
@@ -163,7 +165,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 }
 
 BOOLEAN
-WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
                              IN PCCH BaseDllName,
                              IN PCCH FullDllName,
                              IN PVOID BasePA,
@@ -174,6 +176,8 @@ WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	PLDR_DATA_TABLE_ENTRY DataTableEntry;
 	PIMAGE_NT_HEADERS NtHeaders;
 	USHORT Length;
+	TRACE("WinLdrAllocateDataTableEntry(, '%s', '%s', %p)\n",
+       BaseDllName, FullDllName, BasePA);
 
 	/* Allocate memory for a data table entry, zero-initialize it */
 	DataTableEntry = (PLDR_DATA_TABLE_ENTRY)MmHeapAlloc(sizeof(LDR_DATA_TABLE_ENTRY));
@@ -235,7 +239,9 @@ WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	DataTableEntry->LoadCount = 1;
 
 	/* Insert this DTE to a list in the LPB */
-	InsertTailList(&WinLdrBlock->LoadOrderListHead, &DataTableEntry->InLoadOrderLinks);
+	InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
+	TRACE("Inserting DTE %p, name='%S' DllBase=%p \n", DataTableEntry,
+          DataTableEntry->BaseDllName.Buffer, DataTableEntry->DllBase);
 
 	/* Save pointer to a newly allocated and initialized entry */
 	*NewEntry = DataTableEntry;
@@ -265,6 +271,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	LONG Status;
 	LARGE_INTEGER Position;
 	ULONG i, BytesRead;
+	TRACE("WinLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
 
 	/* Open the image file */
 	Status = ArcOpen(FileName, OpenReadOnly, &FileId);
@@ -329,7 +336,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	/* This is the real image base - in form of a virtual address */
 	VirtualBase = PaToVa(PhysicalBase);
 
-	DPRINTM(DPRINT_PELOADER, "Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
+	TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
 
 	/* Set to 0 position and fully load the file image */
 	Position.HighPart = Position.LowPart = 0;
@@ -390,14 +397,14 @@ WinLdrLoadImage(IN PCHAR FileName,
 			Position.LowPart = SectionHeader->PointerToRawData;
 			Status = ArcSeek(FileId, &Position, SeekAbsolute);
 
-			DPRINTM(DPRINT_PELOADER, "SH->VA: 0x%X\n", SectionHeader->VirtualAddress);
+			TRACE("SH->VA: 0x%X\n", SectionHeader->VirtualAddress);
 
 			/* Read this section from the file, size = SizeOfRawData */
 			Status = ArcRead(FileId, (PUCHAR)PhysicalBase + SectionHeader->VirtualAddress, SizeOfRawData, &BytesRead);
 
 			if (Status != ESUCCESS)
 			{
-				DPRINTM(DPRINT_PELOADER, "WinLdrLoadImage(): Error reading section from file!\n");
+				ERR("WinLdrLoadImage(): Error reading section from file!\n");
 				break;
 			}
 		}
@@ -405,7 +412,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 		/* Size of data is less than the virtual size - fill up the remainder with zeroes */
 		if (SizeOfRawData < VirtualSize)
 		{
-			DPRINTM(DPRINT_PELOADER, "WinLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
+			TRACE("WinLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
 			RtlZeroMemory((PVOID)(SectionHeader->VirtualAddress + (ULONG_PTR)PhysicalBase + SizeOfRawData), VirtualSize - SizeOfRawData);
 		}
 
@@ -423,8 +430,8 @@ WinLdrLoadImage(IN PCHAR FileName,
 	/* Relocate the image, if it needs it */
 	if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
 	{
-		DPRINTM(DPRINT_PELOADER, "Relocating %p -> %p\n",
-			NtHeaders->OptionalHeader.ImageBase, VirtualBase);
+		WARN("Relocating %p -> %p\n", NtHeaders->OptionalHeader.ImageBase,
+             VirtualBase);
 		return (BOOLEAN)LdrRelocateImageWithBias(PhysicalBase,
 			(ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
 			"FreeLdr",
@@ -433,27 +440,28 @@ WinLdrLoadImage(IN PCHAR FileName,
 			FALSE);
 	}
 
+	TRACE("WinLdrLoadImage() done, PA = %p\n", *ImageBasePA);
 	return TRUE;
 }
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
 /* DllName - physical, UnicodeString->Buffer - virtual */
-BOOLEAN
+static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
                       IN PUNICODE_STRING UnicodeName)
 {
 	PWSTR Buffer;
 	UNICODE_STRING UnicodeNamePA;
-	ULONG i, Length;
-	
+	SIZE_T i, Length;
+
 	/* First obvious check: for length of two names */
 	Length = strlen(DllName);
 
 	UnicodeNamePA.Length = UnicodeName->Length;
 	UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
 	UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
-	DPRINTM(DPRINT_PELOADER, "WinLdrpCompareDllName: %s and %wZ, Length = %d "
+	TRACE("WinLdrpCompareDllName: %s and %wZ, Length = %d "
 		"UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
 
 	if ((Length * sizeof(WCHAR)) > UnicodeName->Length)
@@ -485,8 +493,8 @@ WinLdrpCompareDllName(IN PCH DllName,
 	return FALSE;
 }
 
-BOOLEAN
-WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PVOID DllBase,
                       IN PVOID ImageBase,
                       IN PIMAGE_THUNK_DATA ThunkData,
@@ -500,13 +508,13 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	LONG High, Low, Middle, Result;
 	ULONG Hint;
 
-	//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
+	//TRACE("WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
 	//	DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
 	/* Check passed DllBase param */
 	if(DllBase == NULL)
 	{
-		DPRINTM(DPRINT_PELOADER, "WARNING: DllBase == NULL!\n");
+		WARN("DllBase == NULL!\n");
 		return FALSE;
 	}
 
@@ -518,7 +526,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	{
 		/* Yes, calculate the ordinal */
 		Ordinal = (ULONG)(IMAGE_ORDINAL(ThunkData->u1.Ordinal) - (UINT32)ExportDirectory->Base);
-		//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
+		//TRACE("WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
 	}
 	else
 	{
@@ -526,22 +534,22 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		if (!ProcessForwards)
 		{
 			/* AddressOfData in thunk entry will become a virtual address (from relative) */
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): ThunkData->u1.AOD was %p\n", ThunkData->u1.AddressOfData);
+			//TRACE("WinLdrpBindImportName(): ThunkData->u1.AOD was %p\n", ThunkData->u1.AddressOfData);
 			ThunkData->u1.AddressOfData =
 				(ULONG_PTR)RVA(ImageBase, ThunkData->u1.AddressOfData);
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData);
+			//TRACE("WinLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData);
 		}
 
 		/* Get pointers to Name and Ordinal tables (RVA -> VA) */
 		NameTable = (PULONG)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNames));
 		OrdinalTable = (PUSHORT)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNameOrdinals));
 
-		//DPRINTM(DPRINT_PELOADER, "NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
+		//TRACE("NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
 		//	NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
 
 		/* Get the hint, convert it to a physical pointer */
 		Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
-		//DPRINTM(DPRINT_PELOADER, "HintIndex %d\n", Hint);
+		//TRACE("HintIndex %d\n", Hint);
 
 		/* If Hint is less than total number of entries in the export directory,
 		   and import name == export name, then we can just get it from the OrdinalTable */
@@ -554,14 +562,14 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			)
 		{
 			Ordinal = OrdinalTable[Hint];
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
+			//TRACE("WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
 		}
 		else
 		{
 			/* It's not the easy way, we have to lookup import name in the name table.
 			   Let's use a binary search for this task. */
 
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName() looking up the import name using binary search...\n");
+			//TRACE("WinLdrpBindImportName() looking up the import name using binary search...\n");
 
 			/* Low boundary is set to 0, and high boundary to the maximum index */
 			Low = 0;
@@ -577,11 +585,11 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
 					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
-				/*DPRINTM(DPRINT_PELOADER, "Binary search: comparing Import '__', Export '%s'\n",*/
+				/*TRACE("Binary search: comparing Import '__', Export '%s'\n",*/
 					/*VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),*/
 					/*(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));*/
 
-				/*DPRINTM(DPRINT_PELOADER, "TE->u1.AOD %p, fulladdr %p\n",
+				/*TRACE("TE->u1.AOD %p, fulladdr %p\n",
 					ThunkData->u1.AddressOfData,
 					((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name );*/
 
@@ -608,21 +616,21 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			if (High < Low)
 			{
 				//Print(L"Error in binary search\n");
-				DPRINTM(DPRINT_PELOADER, "Error in binary search!\n");
+				ERR("Error in binary search!\n");
 				return FALSE;
 			}
 
 			/* Everything allright, get the ordinal */
 			Ordinal = OrdinalTable[Middle];
-			
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName() found Ordinal %d\n", Ordinal);
+
+			//TRACE("WinLdrpBindImportName() found Ordinal %d\n", Ordinal);
 		}
 	}
 
 	/* Check ordinal number for validity! */
 	if (Ordinal >= ExportDirectory->NumberOfFunctions)
 	{
-		DPRINTM(DPRINT_PELOADER, "Ordinal number is invalid!\n");
+		ERR("Ordinal number is invalid!\n");
 		return FALSE;
 	}
 
@@ -647,12 +655,12 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		/* Strip out its extension */
 		*strchr(ForwardDllName,'.') = '\0';
 
-		DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): ForwardDllName %s\n", ForwardDllName);
-		if (!WinLdrCheckForLoadedDll(WinLdrBlock, ForwardDllName, &DataTableEntry))
+		TRACE("WinLdrpBindImportName(): ForwardDllName %s\n", ForwardDllName);
+		if (!WinLdrCheckForLoadedDll(ModuleListHead, ForwardDllName, &DataTableEntry))
 		{
 			/* We can't continue if DLL couldn't be loaded, so bomb out with an error */
 			//Print(L"Error loading DLL!\n");
-			DPRINTM(DPRINT_PELOADER, "Error loading DLL!\n");
+			ERR("Error loading DLL!\n");
 			return FALSE;
 		}
 
@@ -689,7 +697,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 			/* And recursively call ourselves */
 			Status = WinLdrpBindImportName(
-				WinLdrBlock,
+				ModuleListHead,
 				DataTableEntry->DllBase,
 				ImageBase,
 				&RefThunkData,
@@ -714,8 +722,8 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	return TRUE;
 }
 
-BOOLEAN
-WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
                                 PCCH DirectoryPath,
                                 PCH ImportName,
                                 PLDR_DATA_TABLE_ENTRY *DataTableEntry)
@@ -728,20 +736,20 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	strcpy(FullDllName, DirectoryPath);
 	strcat(FullDllName, ImportName);
 
-	DPRINTM(DPRINT_PELOADER, "Loading referenced DLL: %s\n", FullDllName);
+	TRACE("Loading referenced DLL: %s\n", FullDllName);
 	//Print(L"Loading referenced DLL: %s\n", FullDllName);
 
 	/* Load the image */
-	Status = WinLdrLoadImage(FullDllName, LoaderHalCode, &BasePA);
+	Status = WinLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
 
 	if (!Status)
 	{
-		DPRINTM(DPRINT_PELOADER, "WinLdrLoadImage() failed\n");
+		ERR("WinLdrLoadImage() failed\n");
 		return Status;
 	}
 
 	/* Allocate DTE for newly loaded DLL */
-	Status = WinLdrAllocateDataTableEntry(WinLdrBlock,
+	Status = WinLdrAllocateDataTableEntry(ModuleListHead,
 		ImportName,
 		FullDllName,
 		BasePA,
@@ -749,29 +757,26 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 	if (!Status)
 	{
-		DPRINTM(DPRINT_PELOADER,
-			"WinLdrAllocateDataTableEntry() failed with Status=0x%X\n", Status);
+		ERR("WinLdrAllocateDataTableEntry() failed with Status=0x%X\n", Status);
 		return Status;
 	}
 
 	/* Scan its dependencies too */
-	DPRINTM(DPRINT_PELOADER,
-		"WinLdrScanImportDescriptorTable() calling ourselves for %S\n",
+	TRACE("WinLdrScanImportDescriptorTable() calling ourselves for %S\n",
 		VaToPa((*DataTableEntry)->BaseDllName.Buffer));
-	Status = WinLdrScanImportDescriptorTable(WinLdrBlock, DirectoryPath, *DataTableEntry);
+	Status = WinLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
 
 	if (!Status)
 	{
-		DPRINTM(DPRINT_PELOADER,
-			"WinLdrScanImportDescriptorTable() failed with Status=0x%X\n", Status);
+		ERR("WinLdrScanImportDescriptorTable() failed with Status=0x%X\n", Status);
 		return Status;
 	}
 
 	return TRUE;
 }
 
-BOOLEAN
-WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
                               IN PIMAGE_THUNK_DATA ThunkData)
@@ -780,13 +785,13 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	BOOLEAN Status;
 	ULONG ExportSize;
 
-	DPRINTM(DPRINT_PELOADER, "WinLdrpScanImportAddressTable(): DllBase 0x%X, "
+	TRACE("WinLdrpScanImportAddressTable(): DllBase 0x%X, "
 		"ImageBase 0x%X, ThunkData 0x%X\n", DllBase, ImageBase, ThunkData);
 
 	/* Obtain the export table from the DLL's base */
 	if (DllBase == NULL)
 	{
-		//Print(L"Error, DllBase == NULL!\n");
+		ERR("Error, DllBase == NULL!\n");
 		return FALSE;
 	}
 	else
@@ -798,18 +803,21 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 				&ExportSize);
 	}
 
-	DPRINTM(DPRINT_PELOADER, "WinLdrpScanImportAddressTable(): ExportDirectory 0x%X\n", ExportDirectory);
+	TRACE("WinLdrpScanImportAddressTable(): ExportDirectory 0x%X\n", ExportDirectory);
 
 	/* If pointer to Export Directory is */
 	if (ExportDirectory == NULL)
+	{
+		ERR("DllBase=%p(%p)\n", DllBase, VaToPa(DllBase));
 		return FALSE;
+	}
 
 	/* Go through each entry in the thunk table and bind it */
 	while (((PIMAGE_THUNK_DATA)VaToPa(ThunkData))->u1.AddressOfData != 0)
 	{
 		/* Bind it */
 		Status = WinLdrpBindImportName(
-			WinLdrBlock,
+			ModuleListHead,
 			DllBase,
 			ImageBase,
 			ThunkData,

@@ -1,7 +1,7 @@
 
 add_subdirectory(notifyhook)
 
-set_unicode()
+set_rc_compiler()
 
 #NOTE : explorer doesn't follow standard c++, and so doesn't compile with stlport headers
 #I'm not willing to do it if explorer_new is hanging around.
@@ -10,7 +10,8 @@ set_unicode()
 
 add_definitions(
     -DWIN32
-    -D__WINDRES__)
+    -D__WINDRES__
+    -DUNICODE -D_UNICODE)
 
 #add_pch(explorer precomp.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -48,20 +49,20 @@ list(APPEND SOURCE
     utility/dragdropimpl.cpp
     utility/utility.cpp
     utility/xmlstorage.cpp
-#   utility/splitpath.c     msvcrt has _wsplitpath already
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
 add_executable(explorer ${SOURCE})
 
 set_subsystem(explorer windows)
-set_entrypoint(explorer WinMainCRTStartup)
+set_entrypoint(explorer wWinMainCRTStartup)
 
 target_link_libraries(explorer
     -lsupc++
     -lstdc++
     -lgcc
     -lmingwex
+    -lmingw32
     wine
     uuid)
 

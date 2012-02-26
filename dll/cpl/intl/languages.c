@@ -1,10 +1,4 @@
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -45,7 +39,6 @@ LanguagesPageProc(HWND hwndDlg,
             }
             break;
     }
-
     return FALSE;
 }
 

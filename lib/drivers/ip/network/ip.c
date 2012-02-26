@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+#define __LWIP_INET_H__
+#include "lwip/netifapi.h"
+
 
 LIST_ENTRY InterfaceListHead;
 KSPIN_LOCK InterfaceListLock;
@@ -21,14 +24,56 @@ BOOLEAN IpWorkItemQueued = FALSE;
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
 
-VOID DontFreePacket(
+VOID
+TCPRegisterInterface(PIP_INTERFACE IF);
+
+VOID
+TCPUnregisterInterface(PIP_INTERFACE IF);
+
+VOID DeinitializePacket(
     PVOID Object)
 /*
- * FUNCTION: Do nothing for when the IPPacket struct is part of another
+ * FUNCTION: Frees buffers attached to the packet
  * ARGUMENTS:
  *     Object = Pointer to an IP packet structure
  */
 {
+    PIP_PACKET IPPacket = Object;
+
+    TI_DbgPrint(MAX_TRACE, ("Freeing object: 0x%p\n", Object));
+
+    /* Detect double free */
+    ASSERT(IPPacket->Type != 0xFF);
+    IPPacket->Type = 0xFF;
+
+    /* Check if there's a packet to free */
+    if (IPPacket->NdisPacket != NULL)
+    {
+        if (IPPacket->ReturnPacket)
+        {
+            /* Return the packet to the miniport driver */
+            TI_DbgPrint(MAX_TRACE, ("Returning packet 0x%p\n",
+                                    IPPacket->NdisPacket));
+            NdisReturnPackets(&IPPacket->NdisPacket, 1);
+        }
+        else
+        {
+            /* Free it the conventional way */
+            TI_DbgPrint(MAX_TRACE, ("Freeing packet 0x%p\n",
+                                    IPPacket->NdisPacket));
+            FreeNdisPacket(IPPacket->NdisPacket);
+        }
+    }
+
+    /* Check if we have a pool-allocated header */
+    if (!IPPacket->MappedHeader && IPPacket->Header)
+    {
+        /* Free it */
+        TI_DbgPrint(MAX_TRACE, ("Freeing header: 0x%p\n",
+                                IPPacket->Header));
+        ExFreePoolWithTag(IPPacket->Header,
+                          PACKET_BUFFER_TAG);
+    }
 }
 
 VOID FreeIF(
@@ -53,10 +98,9 @@ PIP_PACKET IPInitializePacket(
  *     Pointer to the created IP packet. NULL if there was not enough free resources.
  */
 {
-    /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    IPPacket->Free     = DontFreePacket;
+    IPPacket->Free     = DeinitializePacket;
     IPPacket->Type     = Type;
 
     return IPPacket;
@@ -162,7 +206,6 @@ PIP_INTERFACE IPCreateInterface(
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
     IF->MinFrameSize = BindInfo->MinFrameSize;
-    IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
     IF->Transmit      = BindInfo->Transmit;
@@ -174,13 +217,14 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
-    IF->TCPContext = ExAllocatePoolWithTag
-	( NonPagedPool, sizeof(OSK_IFADDR) + 3 * sizeof( struct sockaddr_in ),
-          OSKITTCP_CONTEXT_TAG );
+    IF->TCPContext = ExAllocatePool
+	( NonPagedPool, sizeof(struct netif));
     if (!IF->TCPContext) {
         ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
         return NULL;
     }
+    
+    TCPRegisterInterface(IF);
 
 #ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
@@ -203,8 +247,10 @@ VOID IPDestroyInterface(
 #ifdef __NTDRIVER__
     RemoveTDIInterfaceEntity( IF );
 #endif
+    
+    TCPUnregisterInterface(IF);
 
-    ExFreePoolWithTag(IF->TCPContext, OSKITTCP_CONTEXT_TAG);
+    ExFreePool(IF->TCPContext);
     ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
 }
 
@@ -231,6 +277,8 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
      * other computers */
     if (IF != Loopback)
        ARPTransmit(NULL, NULL, IF);
+    
+    TCPUpdateInterfaceIPInformation(IF);
 }
 
 BOOLEAN IPRegisterInterface(
@@ -264,11 +312,6 @@ BOOLEAN IPRegisterInterface(
     } while( !IndexHasBeenChosen );
 
     IF->Index = ChosenIndex;
-
-    if (!AddrIsUnspecified(&IF->Unicast))
-    {
-        IPAddInterfaceRoute(IF);
-    }
 
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,

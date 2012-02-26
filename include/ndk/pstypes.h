@@ -74,6 +74,15 @@ Author:
 #define FLG_VALID_BITS                          0x07FFFFFF
 
 //
+// Flags for NtCreateProcessEx
+//
+#define PROCESS_CREATE_FLAGS_BREAKAWAY          0x00000001
+#define PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT   0x00000002
+#define PROCESS_CREATE_FLAGS_INHERIT_HANDLES    0x00000004
+#define PROCESS_CREATE_FLAGS_OVERRIDE_ADDRESS_SPACE 0x00000008
+#define PROCESS_CREATE_FLAGS_LARGE_PAGES        0x00000010
+
+//
 // Process priority classes
 //
 #define PROCESS_PRIORITY_CLASS_INVALID          0
@@ -221,6 +230,12 @@ Author:
 #define STA_LPC_EXIT_THREAD_CALLED_BIT          0x2
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #define STA_OWNS_WORKING_SET_BITS               0x1F8
+
+//
+// Kernel Process flags (maybe in ketypes.h?)
+//
+#define KPSF_AUTO_ALIGNMENT_BIT                 0
+#define KPSF_DISABLE_BOOST_BIT                  1
 
 //
 // Process Flags
@@ -749,6 +764,19 @@ typedef struct _KERNEL_USER_TIMES
     LARGE_INTEGER UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
+typedef struct _POOLED_USAGE_AND_LIMITS
+{
+    SIZE_T PeakPagedPoolUsage;
+    SIZE_T PagedPoolUsage;
+    SIZE_T PagedPoolLimit;
+    SIZE_T PeakNonPagedPoolUsage;
+    SIZE_T NonPagedPoolUsage;
+    SIZE_T NonPagedPoolLimit;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PagefileLimit;
+} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
+
 typedef struct _PROCESS_SESSION_INFORMATION
 {
     ULONG SessionId;
@@ -761,6 +789,11 @@ typedef struct _PROCESS_PRIORITY_CLASS
     BOOLEAN Foreground;
     UCHAR PriorityClass;
 } PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
+typedef struct _PROCESS_FOREGROUND_BACKGROUND
+{
+    BOOLEAN Foreground;
+} PROCESS_FOREGROUND_BACKGROUND, *PPROCESS_FOREGROUND_BACKGROUND;
 
 //
 // Thread Information Structures for NtQueryProcessInformation
@@ -1023,11 +1056,11 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    ULONG QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
-    ULONG QuotaPeak[3];  /* ditto */
-    ULONG CommitCharge;
-    ULONG PeakVirtualSize;
-    ULONG VirtualSize;
+    SIZE_T QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
+    SIZE_T QuotaPeak[3];  /* ditto */
+    SIZE_T CommitCharge;
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
     LIST_ENTRY SessionProcessLinks;
     PVOID DebugPort;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -1042,7 +1075,7 @@ typedef struct _EPROCESS
 #endif
     PHANDLE_TABLE ObjectTable;
     EX_FAST_REF Token;
-    ULONG WorkingSetPage;
+    PFN_NUMBER WorkingSetPage;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     EX_PUSH_LOCK AddressCreationLock;
     PETHREAD RotateInProgress;
@@ -1051,11 +1084,11 @@ typedef struct _EPROCESS
     KSPIN_LOCK HyperSpaceLock;
 #endif
     PETHREAD ForkInProgress;
-    ULONG HardwareTrigger;
+    ULONG_PTR HardwareTrigger;
     PMM_AVL_TABLE PhysicalVadRoot;
     PVOID CloneRoot;
-    ULONG NumberOfPrivatePages;
-    ULONG NumberOfLockedPages;
+    PFN_NUMBER NumberOfPrivatePages;
+    PFN_NUMBER NumberOfLockedPages;
     PVOID *Win32Process;
     struct _EJOB *Job;
     PVOID SectionObject;
@@ -1079,7 +1112,7 @@ typedef struct _EPROCESS
         HARDWARE_PTE PageDirectoryPte;
         ULONGLONG Filler;
     };
-    ULONG Session;
+    ULONG Session; // FIXME: PVOID
     CHAR ImageFileName[16];
     LIST_ENTRY JobLinks;
     PVOID LockedPagesList;
@@ -1102,12 +1135,16 @@ typedef struct _EPROCESS
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-    ULONG CommitChargeLimit;
-    ULONG CommitChargePeak;
+    SIZE_T CommitChargeLimit;
+    SIZE_T CommitChargePeak;
     PVOID AweInfo;
     SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo;
     MMSUPPORT Vm;
+#ifdef _M_AMD64
+    ULONG Spares[2];
+#else
     LIST_ENTRY MmProcessLinks;
+#endif
     ULONG ModifiedPageCount;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     union

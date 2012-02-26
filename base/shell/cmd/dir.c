@@ -1260,13 +1260,11 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
 	   LPDIRSWITCHFLAGS lpFlags)		/* [IN]     The flags that we will use to sort */
 {
 	LPWIN32_FIND_DATA lpTemp;	/* A temporary pointer */
-	int First, Last, Temp;
 	BOOL Way;
 
 	if (i < j)
 	{
-		First = i;
-		Last = j;
+		int First = i, Last = j, Temp;
 		Way = TRUE;
 		while (i != j)
 		{

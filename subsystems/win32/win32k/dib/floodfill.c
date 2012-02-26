@@ -59,8 +59,7 @@ static __inline VOID addItemFlood(FLOODINFO *info,
                                   ULONG Color, 
                                   BOOL isSurf)
 {
-  if (x >= DstRect->left && x <= DstRect->right &&
-    y >= DstRect->top && y <= DstRect->bottom)
+  if (RECTL_bPointInRect(DstRect,x,y))
   {
     if (isSurf == TRUE && 
       DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != Color)

@@ -2,7 +2,7 @@ $if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
@@ -56,33 +56,43 @@ typedef enum _EX_POOL_PRIORITY {
 
 typedef struct _LOOKASIDE_LIST_EX *PLOOKASIDE_LIST_EX;
 
+_IRQL_requires_same_
+_Function_class_(ALLOCATE_FUNCTION)
 typedef PVOID
 (NTAPI *PALLOCATE_FUNCTION)(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes,
-  IN ULONG Tag);
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag);
 
+_IRQL_requires_same_
+_Function_class_(ALLOCATE_FUNCTION_EX)
 typedef PVOID
 (NTAPI *PALLOCATE_FUNCTION_EX)(
-  IN POOL_TYPE PoolType,
-  IN SIZE_T NumberOfBytes,
-  IN ULONG Tag,
-  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag,
+    _Inout_ PLOOKASIDE_LIST_EX Lookaside);
 
+_IRQL_requires_same_
+_Function_class_(FREE_FUNCTION)
 typedef VOID
 (NTAPI *PFREE_FUNCTION)(
-  IN PVOID Buffer);
+    _In_ PVOID Buffer);
 
+_IRQL_requires_same_
+_Function_class_(FREE_FUNCTION_EX)
 typedef VOID
 (NTAPI *PFREE_FUNCTION_EX)(
-  IN PVOID Buffer,
-  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+    _In_ PVOID Buffer,
+    _Inout_ PLOOKASIDE_LIST_EX Lookaside);
 
+_IRQL_requires_same_
+_Function_class_(CALLBACK_FUNCTION)
 typedef VOID
 (NTAPI CALLBACK_FUNCTION)(
-  IN PVOID CallbackContext OPTIONAL,
-  IN PVOID Argument1 OPTIONAL,
-  IN PVOID Argument2 OPTIONAL);
+  _In_opt_ PVOID CallbackContext,
+  _In_opt_ PVOID Argument1,
+  _In_opt_ PVOID Argument2);
 typedef CALLBACK_FUNCTION *PCALLBACK_FUNCTION;
 
 #define GENERAL_LOOKASIDE_LAYOUT                \
@@ -136,7 +146,7 @@ LOOKASIDE_CHECK(TotalFrees);
 LOOKASIDE_CHECK(Tag);
 LOOKASIDE_CHECK(Future);
 
-typedef struct _PAGED_LOOKASIDE_LIST {
+typedef struct LOOKASIDE_ALIGN _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE L;
 #if !defined(_AMD64_) && !defined(_IA64_)
   FAST_MUTEX Lock__ObsoleteButDoNotDelete;
@@ -182,9 +192,11 @@ typedef enum _WORK_QUEUE_TYPE {
   MaximumWorkQueue
 } WORK_QUEUE_TYPE;
 
+_IRQL_requires_same_
+_Function_class_(WORKER_THREAD_ROUTINE)
 typedef VOID
 (NTAPI WORKER_THREAD_ROUTINE)(
-  IN PVOID Parameter);
+  _In_ PVOID Parameter);
 typedef WORKER_THREAD_ROUTINE *PWORKER_THREAD_ROUTINE;
 
 typedef struct _WORK_QUEUE_ITEM {

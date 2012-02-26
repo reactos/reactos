@@ -1,6 +1,15 @@
 
 #include <asm.inc>
 
+#ifdef _M_AMD64
+.code64
+
+PUBLIC call_method
+call_method:
+    int 2ch
+    ret
+
+#else
 .code32
 
 PUBLIC _call_method
@@ -26,5 +35,6 @@ cm1:
     pop esi
     pop ebp
     ret
+#endif
 
 END

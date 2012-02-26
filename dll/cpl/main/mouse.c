@@ -19,14 +19,14 @@
 /* $Id$
  *
  * PROJECT:         ReactOS Main Control Panel
- * FILE:            lib/cpl/main/mouse.c
+ * FILE:            dll/cpl/main/mouse.c
  * PURPOSE:         Mouse Control Panel
  * PROGRAMMER:      Eric Kohl
  *                  Johannes Anderwald
  */
 
-//TODO:
-//  add missing icons
+// TODO:
+//  Add missing icons
 
 #include <windows.h>
 #include <winuser.h>
@@ -61,8 +61,8 @@ typedef struct _BUTTON_DATA
     ULONG g_OrigSwapMouseButtons;
     ULONG g_DoubleClickSpeed; // = DEFAULT_DOUBLE_CLICK_SPEED;
     ULONG g_OrigDoubleClickSpeed;
-    BOOL g_ClickLockEnabled; // = 0;
-    DWORD g_ClickLockTime; // = DEFAULT_CLICK_LOCK_TIME;
+    BOOL g_ClickLockEnabled;  // = 0;
+    DWORD g_ClickLockTime;    // = DEFAULT_CLICK_LOCK_TIME;
 
     HICON hButtonLeft;
     HICON hButtonRight;
@@ -378,7 +378,7 @@ ButtonProc(IN HWND hwndDlg,
                 {
                     pButtonData->g_OrigSwapMouseButtons = pButtonData->g_SwapMouseButtons;
                     SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-                    
+
                 }
                 SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                 //SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
@@ -414,7 +414,7 @@ ButtonProc(IN HWND hwndDlg,
                     case TB_ENDTRACK:
                         lResult = SendDlgItemMessage(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED, TBM_GETPOS, 0, 0);
                         pButtonData->g_DoubleClickSpeed = (14 - (INT)lResult) * 50 + 200;
-                	//SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                        //SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                         SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         break;
@@ -1016,12 +1016,12 @@ LoadNewCursorScheme(HWND hwndDlg)
     SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_GETLBTEXT, nSel, (LPARAM)buffer);
 
     LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-    if (_tcsstr(buffer, szSystemScheme) || nSel == 0) //avoid the default scheme can be deleted
+    if (_tcsstr(buffer, szSystemScheme) || nSel == 0) // Avoid the default scheme - Can be deleted
         bEnable = FALSE;
     else
         bEnable = TRUE;
 
-    /* delete button */
+    /* Delete button */
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_BUTTON_DELETE_SCHEME);
     EnableWindow(hDlgCtrl, bEnable);
 
@@ -1412,19 +1412,19 @@ OptionProc(IN HWND hwndDlg,
             pOptionData->OrigMouseAccel.nThreshold1 = pOptionData->MouseAccel.nThreshold1;
             pOptionData->OrigMouseAccel.nThreshold2 = pOptionData->MouseAccel.nThreshold2;
 
-            /* snap to default button */
+            /* Snap to default button */
             SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &pOptionData->bSnapToDefaultButton, 0);
             pOptionData->bOrigSnapToDefaultButton = pOptionData->bSnapToDefaultButton;
 
-            /* mouse trails */
+            /* Mouse trails */
             SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &pOptionData->uMouseTrails, 0);
             pOptionData->uOrigMouseTrails = pOptionData->uMouseTrails;
 
-            /* hide pointer while typing */
+            /* Hide pointer while typing */
             SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &pOptionData->bMouseVanish, 0);
             pOptionData->bOrigMouseVanish = pOptionData->bMouseVanish;
 
-            /* show pointer with Ctrl-Key */
+            /* Show pointer with Ctrl-Key */
             SystemParametersInfo(SPI_GETMOUSESONAR, 0, &pOptionData->bMouseSonar, 0);
             pOptionData->bOrigMouseSonar = pOptionData->bMouseSonar;
 
@@ -1445,7 +1445,7 @@ OptionProc(IN HWND hwndDlg,
                 SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
 
-            /* set mouse trail */
+            /* Set mouse trail */
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_POINTER_TRAIL);
             SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 5));
             if (pOptionData->uMouseTrails < 2)
@@ -1587,7 +1587,7 @@ OptionProc(IN HWND hwndDlg,
                 }
 
 
-                /* set snap to default button */
+                /* Set snap to default button */
                 if (pOptionData->bOrigSnapToDefaultButton != pOptionData->bSnapToDefaultButton)
                 {
                     SystemParametersInfo(SPI_SETSNAPTODEFBUTTON, (UINT)pOptionData->bSnapToDefaultButton, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
@@ -1601,14 +1601,14 @@ OptionProc(IN HWND hwndDlg,
                     pOptionData->uOrigMouseTrails = pOptionData->uMouseTrails;
                 }
 
-                /* hide pointer while typing */
+                /* Hide pointer while typing */
                 if (pOptionData->bOrigMouseVanish != pOptionData->bMouseVanish)
                 {
                     SystemParametersInfo(SPI_SETMOUSEVANISH, 0, IntToPtr(pOptionData->bMouseVanish), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                     pOptionData->bOrigMouseVanish = pOptionData->bMouseVanish;
                 }
 
-                /* show pointer with Ctrl-Key */
+                /* Show pointer with Ctrl-Key */
                 if (pOptionData->bOrigMouseSonar != pOptionData->bMouseSonar)
                 {
                     SystemParametersInfo(SPI_SETMOUSESONAR, 0, IntToPtr(pOptionData->bMouseSonar), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);

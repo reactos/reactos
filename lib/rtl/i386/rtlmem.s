@@ -65,7 +65,7 @@ NotEqual:
 
 NotEqual2:
 
-    /* Remember how many mathced */
+    /* Remember how many matched */
     dec esi
     sub esi, [esp+12]
 

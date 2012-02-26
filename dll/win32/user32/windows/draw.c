@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ReactOS User32 Library
  * - Various drawing functions
  *
@@ -1254,7 +1254,6 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
     if(!cx || !cy)
     {
         SIZE s;
-        ICONINFO ici;
         BITMAP bm;
 
         switch(opcode)
@@ -1270,12 +1269,8 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
                 break;
 
             case DST_ICON:
-                if(!GetIconInfo((HICON)lp, &ici))
+                if(!get_icon_size((HICON)lp, &s))
                     return FALSE;
-                if(!GetObjectW(ici.hbmColor, sizeof(bm), &bm))
-                    return FALSE;
-                s.cx = bm.bmWidth;
-                s.cy = bm.bmHeight;
                 break;
 
             case DST_BITMAP:
@@ -1457,7 +1452,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

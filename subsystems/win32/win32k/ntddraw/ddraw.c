@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsys/win32k/ntddraw/ddraw.c
+ * FILE:             subsystems/win32/win32k/ntddraw/ddraw.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
@@ -39,7 +39,7 @@ intEnableReactXDriver(HDC hdc)
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = NULL;
     BOOL success = FALSE;
 
-    /* FIXME get the process data */
+    /* FIXME: Get the process data */
 
     /* Do not try load dxg.sys when it have already been load once */
     if (gpfnStartupDxGraphics == NULL)
@@ -47,7 +47,7 @@ intEnableReactXDriver(HDC hdc)
         Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Warning : Failed to create the directx interface\n");
+            DPRINT1("Warning: Failed to create the directx interface\n");
             return FALSE;
         }
     }
@@ -55,13 +55,13 @@ intEnableReactXDriver(HDC hdc)
     pDC = DC_LockDc(hdc);
     if (pDC == NULL)
     {
-        DPRINT1("Warning : Failed to lock hdc\n");
+        DPRINT1("Warning: Failed to lock hdc\n");
         return FALSE;
     }
 
     pDev = pDC->ppdev;
 
-    /* test see if drv got a dx interface or not */
+    /* Test and see if drv got a DX interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
     {
@@ -70,7 +70,7 @@ intEnableReactXDriver(HDC hdc)
     else
     {
 
-        /* CHeck see if dx have been enable or not */
+        /* Check and see if DX has been enabled or not */
         if ( pDev->pEDDgpl->pvmList == NULL)
         {
             pDev->pEDDgpl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
@@ -85,7 +85,8 @@ intEnableReactXDriver(HDC hdc)
             else
             {
                 DPRINT1(" call to pfnDdEnableDirectDraw \n ");
-                /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
+
+                /* Note: it is the hdev struct it wants, not the drv hPDev aka pdc->PDev */
                 success = pfnDdEnableDirectDraw(pDC->ppdev, TRUE);
 
                 dump_edd_directdraw_global(pDev->pEDDgpl);
@@ -111,7 +112,7 @@ intEnableReactXDriver(HDC hdc)
 /************************************************************************/
 
 /************************************************************************/
-/* DirectX graphic/video driver loading and cleanup start here          */
+/* DirectX graphic/video driver loading and cleanup starts here         */
 /************************************************************************/
 NTSTATUS
 APIENTRY
@@ -127,16 +128,16 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     NTSTATUS Status = STATUS_PROCEDURE_NOT_FOUND;
 
-    /* FIXME setup of gaEngFuncs driver export list
+    /* FIXME: Setup of gaEngFuncs driver export list
      * but not in this api, we can add it here tempary until we figout where
      * no code have been writen for it yet
      */
 
 
-    /* FIXME ReactOS does not loading the dxapi.sys or import functions from it yet */
+    /* FIXME: ReactOS does not loading the dxapi.sys or import functions from it yet */
     // DxApiGetVersion()
 
-    /* Loading the kernel interface of directx for win32k */
+    /* Loading the kernel interface of DirectX for win32k */
 
     DPRINT1("Warning: trying loading xp/2003/windows7/reactos dxg.sys\n");
     ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
@@ -147,7 +148,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     }
     else
     {
-        /* import DxDdStartupDxGraphics and  DxDdCleanupDxGraphics */
+        /* Import DxDdStartupDxGraphics and  DxDdCleanupDxGraphics */
         gpfnStartupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdStartupDxGraphics");
         gpfnCleanupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdCleanupDxGraphics");
 
@@ -167,7 +168,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
                                              Proc );
         }
 
-        /* check if we manger loading the data and execute the dxStartupDxGraphics and it susscess */
+        /* Check if we manage loading the data and execute the dxStartupDxGraphics if it is successful */
         if (!NT_SUCCESS(Status))
         {
             gpfnStartupDxGraphics = NULL;
@@ -181,8 +182,8 @@ DxDdStartupDxGraphics(  ULONG ulc1,
         }
         else
         {
-            /* Sort the drv functions list in index order, this allown us doing, smaller optimze
-             * in api that are redirect to dx.sys
+            /* Sort the drv functions list in index order, this allows us doing, smaller optimize
+             * in API that are redirect to dx.sys
              */
 
             PDRVFN lstDrvFN = DxgDrv.pdrvfn;
@@ -196,7 +197,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
             DPRINT1("DirectX interface is activated\n");
 
         }
-        /* return the status */
+        /* Return the status */
     }
 
     return Status;
@@ -217,18 +218,18 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
     if (hdc == NULL)
     {
-        DPRINT1("Warning : hdc is NULL\n");
+        DPRINT1("Warning: hdc is NULL\n");
         return 0;
     }
 
-    /* FIXME This should be alloc for each drv and use it from each drv, not global for whole win32k */
+    /* FIXME: This should be alloc for each drv and use it from each drv, not global for whole win32k */
     if (intEnableReactXDriver(hdc) == FALSE)
     {
-        DPRINT1("Warning : Failed to start the directx interface from the graphic driver\n");
+        DPRINT1("Warning: Failed to start the DirectX interface from the graphic driver\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    /* get the pfnDdCreateDirectDrawObject after we load the drv */
+    /* Get the pfnDdCreateDirectDrawObject after we load the drv */
     pfnDdCreateDirectDrawObject = (PGD_DDCREATEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdCreateDirectDrawObject].pfn;
 
     if (pfnDdCreateDirectDrawObject == NULL)
@@ -247,7 +248,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 * @implemented
 *
 * The function NtGdiDxgGenericThunk redirects DirectX calls to another function.
-* It redirects to dxg.sys in windows XP/2003, dxkrnl.sys in vista and is fully implemented in win32k.sys in windows 2000 and below
+* It redirects to dxg.sys in Windows XP/2003, dxkrnl.sys in Vista and is fully implemented in win32k.sys in Windows 2000 and below
 *
 * @param ULONG_PTR ulIndex
 * The functions we want to redirect
@@ -401,7 +402,7 @@ NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
         DPRINT1("Warning: no pfnDdDeleteSurfaceObject\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
-    /* try see if the handle is vaidl */
+    /* Try and see if the handle is valid */
 
     DPRINT1("Calling dxg.sys DdDeleteSurfaceObject\n");
     return pfnDdDeleteSurfaceObject(hSurface);
@@ -664,7 +665,7 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
 }
 
 
-/* internal debug api */
+/* Internal debug API */
 void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl)
 {
     DPRINT1("0x%08lx 0x000 PEDD_DIRECTDRAW_GLOBAL->dhpdev                                         : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_GLOBAL, dhpdev), pEddgbl->dhpdev);

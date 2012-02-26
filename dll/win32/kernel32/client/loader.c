@@ -11,27 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct tagLOADPARMS32 {
-  LPSTR lpEnvAddress;
-  LPSTR lpCmdLine;
-  WORD  wMagicValue;
-  WORD  wCmdShow;
-  DWORD dwReserved;
-} LOADPARMS32;
-
-extern BOOLEAN InWindows;
-extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
-
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
-
-VOID
-NTAPI
-BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
-                       IN PVOID Context,
-                       OUT BOOLEAN *StopEnumeration);
-
 /* FUNCTIONS ****************************************************************/
 
 DWORD
@@ -88,81 +67,6 @@ BasepMapModuleHandle(HMODULE hModule, BOOLEAN AsDataFile)
 
     /* It'a a normal DLL, just return its handle */
     return hModule;
-}
-
-/**
- * @name GetDllLoadPath
- *
- * Internal function to compute the load path to use for a given dll.
- *
- * @remarks Returned pointer must be freed by caller.
- */
-
-LPWSTR
-GetDllLoadPath(LPCWSTR lpModule)
-{
-	ULONG Pos = 0, Length = 0;
-	PWCHAR EnvironmentBufferW = NULL;
-	LPCWSTR lpModuleEnd = NULL;
-	UNICODE_STRING ModuleName;
-	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
-
-    // FIXME: This function is used only by SearchPathW, and is deprecated and will be deleted ASAP.
-
-	if ((lpModule != NULL) && (wcslen(lpModule) > 2) && (lpModule[1] == ':'))
-	{
-		lpModuleEnd = lpModule + wcslen(lpModule);
-	}
-	else
-	{
-		ModuleName = NtCurrentPeb()->ProcessParameters->ImagePathName;
-		lpModule = ModuleName.Buffer;
-		lpModuleEnd = lpModule + (ModuleName.Length / sizeof(WCHAR));
-	}
-
-	if (lpModule != NULL)
-	{
-		while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
-		       *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
-		{
-			--lpModuleEnd;
-		}
-		Length = (lpModuleEnd - lpModule) + 1;
-	}
-
-	Length += GetCurrentDirectoryW(0, NULL);
-	Length += GetDllDirectoryW(0, NULL);
-	Length += GetSystemDirectoryW(NULL, 0);
-	Length += GetWindowsDirectoryW(NULL, 0);
-	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
-
-	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-	                                     Length * sizeof(WCHAR));
-	if (EnvironmentBufferW == NULL)
-	{
-		return NULL;
-	}
-
-	if (lpModule)
-	{
-		RtlCopyMemory(EnvironmentBufferW, lpModule,
-		              (lpModuleEnd - lpModule) * sizeof(WCHAR));
-		Pos += lpModuleEnd - lpModule;
-		EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Pos += GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
-
-	SetLastError(LastError);
-	return EnvironmentBufferW;
 }
 
 /*
@@ -418,9 +322,9 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
     }
 
     /* Compute the load path */
-    SearchPath = BasepGetDllPath((dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH) ? (LPWSTR)lpLibFileName : NULL,
-                                 NULL);
-
+    SearchPath = BaseComputeProcessDllPath((dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH) ?
+                                           DllName.Buffer : NULL,
+                                           NULL);
     if (!SearchPath)
     {
         /* Getting DLL path failed, so set last error, free mem and return */
@@ -434,13 +338,13 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
         if (dwFlags & LOAD_LIBRARY_AS_DATAFILE)
         {
             /* If the image is loaded as a datafile, try to get its handle */
-            Status = LdrGetDllHandle(SearchPath, NULL, &DllName, (PVOID*)&hInst);
+            Status = LdrGetDllHandleEx(0, SearchPath, NULL, &DllName, (PVOID*)&hInst);
             if (!NT_SUCCESS(Status))
             {
                 /* It's not loaded yet - so load it up */
                 Status = BasepLoadLibraryAsDatafile(SearchPath, DllName.Buffer, &hInst);
-                _SEH2_YIELD(goto done;)
             }
+            _SEH2_YIELD(goto done;)
         }
 
         /* Call the API Properly */
@@ -452,7 +356,7 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
-    } _SEH2_END
+    } _SEH2_END;
 
 
 done:
@@ -593,7 +497,6 @@ WINAPI
 FreeLibraryAndExitThread(HMODULE hLibModule,
                          DWORD dwExitCode)
 {
-    NTSTATUS Status;
 
     if (LDR_IS_DATAFILE(hLibModule))
     {
@@ -601,7 +504,7 @@ FreeLibraryAndExitThread(HMODULE hLibModule,
         if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
         {
             /* Unmap view */
-            Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
+            NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
 
             /* Unload alternate resource module */
             LdrUnloadAlternateResourceModule(hLibModule);
@@ -610,7 +513,7 @@ FreeLibraryAndExitThread(HMODULE hLibModule,
     else
     {
         /* Just unload it */
-        Status = LdrUnloadDll((PVOID)hLibModule);
+        LdrUnloadDll((PVOID)hLibModule);
     }
 
     /* Exit thread */
@@ -764,20 +667,24 @@ GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
     if (NT_SUCCESS(Status)) return Module;
 
     /* If not, then the path should be computed */
-    DllPath = BasepGetDllPath(NULL, 0);
-
-    /* Call LdrGetHandle() again providing the computed DllPath
-       and wrapped into SEH */
-    _SEH2_TRY
+    DllPath = BaseComputeProcessDllPath(NULL, 0);
+    if (!DllPath)
     {
-        Status = LdrGetDllHandle(DllPath, NULL, ModuleName, &Module);
+        Status = STATUS_NO_MEMORY;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        /* Fail with the SEH error */
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_TRY
+        {
+            Status = LdrGetDllHandle(DllPath, NULL, ModuleName, &Module);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail with the SEH error */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_END;
 
     /* Free the DllPath */
     RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);
@@ -818,7 +725,7 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
             /* Fail */
             BaseSetLastNTError(Status);
             if (phModule) *phModule = 0;
-            return Status;
+            return NT_SUCCESS(Status);
         }
     }
 
@@ -1119,9 +1026,9 @@ LoadModule(LPCSTR lpModuleName,
         }
 
         /* Wait up to 30 seconds for the process to become idle */
-        if (lpfnGlobalRegisterWaitForInputIdle)
+        if (UserWaitForInputIdleRoutine)
         {
-            lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 30000);
+            UserWaitForInputIdleRoutine(ProcessInformation.hProcess, 30000);
         }
 
         /* Close handles */
@@ -1195,6 +1102,37 @@ BOOL WINAPI UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
 VOID WINAPI UTUnRegister( HMODULE hModule )
 {
     STUB;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BaseQueryModuleData(IN LPSTR ModuleName,
+                    IN LPSTR Unknown,
+                    IN PVOID Unknown2,
+                    IN PVOID Unknown3,
+                    IN PVOID Unknown4)
+{
+    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
+            ModuleName,
+            Unknown,
+            Unknown2,
+            Unknown3,
+            Unknown4);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+BaseProcessInitPostImport(VOID)
+{
+    /* FIXME: Initialize TS pointers */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

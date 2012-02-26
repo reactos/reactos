@@ -8,20 +8,25 @@
 
 #include <asm.inc>
 
+.code64
+
 PUBLIC BaseFiberStartup
-.PROC BaseFiberStartup
+FUNC BaseFiberStartup
+    .ENDPROLOG
     UNIMPLEMENTED BaseFiberStartup
     /* FIXME: TODO */
     ret
 
-.ENDP BaseFiberStartup
+ENDFUNC
 
 
 PUBLIC SwitchToFiber
 
-SwitchToFiber:
+FUNC SwitchToFiber
+    .ENDPROLOG
     UNIMPLEMENTED BaseFiberStartup
     /* FIXME: TODO */
     ret
+ENDFUNC
 
 END

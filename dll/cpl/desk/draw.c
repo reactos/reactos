@@ -1,15 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/draw.c
+ * FILE:            dll/cpl/desk/draw.c
  * PURPOSE:         Providing drawing functions
  *
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "draw.h"
 
 #define MENU_BAR_ITEMS_SPACE (12)
 
@@ -58,7 +56,7 @@ static const signed char LTRBInnerMono[] = {
 };
 
 static BOOL
-MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
+MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *scheme)
 {
 	signed char LTInnerI, LTOuterI;
 	signed char RBInnerI, RBOuterI;
@@ -100,7 +98,7 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 		RBOuterPen = GetStockObject(DC_PEN);
 	{
 		HBRUSH hbr;
-		hbr = CreateSolidBrush(theme->crColor[COLOR_BTNFACE]);
+		hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
 		FillRect(hdc, &InnerRect, hbr);
 		DeleteObject(hbr);
 	}
@@ -108,7 +106,7 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 
 	/* Draw the outer edge */
 	SelectObject(hdc, LTOuterPen);
-	SetDCPenColor(hdc, theme->crColor[LTOuterI]);
+	SetDCPenColor(hdc, scheme->crColor[LTOuterI]);
 	if(uFlags & BF_TOP)
 	{
 		MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
@@ -120,7 +118,7 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 		LineTo(hdc, InnerRect.left, InnerRect.bottom);
 	}
 	SelectObject(hdc, RBOuterPen);
-	SetDCPenColor(hdc, theme->crColor[RBOuterI]);
+	SetDCPenColor(hdc, scheme->crColor[RBOuterI]);
 	if(uFlags & BF_BOTTOM)
 	{
 		MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
@@ -134,7 +132,7 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 
 	/* Draw the inner edge */
 	SelectObject(hdc, LTInnerPen);
-	SetDCPenColor(hdc, theme->crColor[LTInnerI]);
+	SetDCPenColor(hdc, scheme->crColor[LTInnerI]);
 	if(uFlags & BF_TOP)
 	{
 		MoveToEx(hdc, InnerRect.left+LTpenplus, InnerRect.top+1, NULL);
@@ -146,7 +144,7 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 		LineTo(hdc, InnerRect.left+1, InnerRect.bottom-LBpenplus);
 	}
 	SelectObject(hdc, RBInnerPen);
-	SetDCPenColor(hdc, theme->crColor[RBInnerI]);
+	SetDCPenColor(hdc, scheme->crColor[RBInnerI]);
 	if(uFlags & BF_BOTTOM)
 	{
 		MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
@@ -183,14 +181,14 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 }
 
 static BOOL
-MyDrawFrameButton(HDC hdc, LPRECT rc, UINT uState, THEME *theme)
+MyDrawFrameButton(HDC hdc, LPRECT rc, UINT uState, COLOR_SCHEME *scheme)
 {
 	UINT edge;
 	if(uState & (DFCS_PUSHED | DFCS_CHECKED | DFCS_FLAT))
 		edge = EDGE_SUNKEN;
 	else
 		edge = EDGE_RAISED;
-	return MyIntDrawRectEdge(hdc, rc, edge, (uState & DFCS_FLAT) | BF_RECT | BF_SOFT, theme);
+	return MyIntDrawRectEdge(hdc, rc, edge, (uState & DFCS_FLAT) | BF_RECT | BF_SOFT, scheme);
 }
 
 static int
@@ -218,7 +216,7 @@ MyMakeSquareRect(LPRECT src, LPRECT dst)
 }
 
 static BOOL
-MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
+MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
 {
 	LOGFONT lf;
 	HFONT hFont, hOldFont;
@@ -244,7 +242,7 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 		Symbol = '2';
 		break;
 	}
-	MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT, theme);
+	MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT, scheme);
 	ZeroMemory(&lf, sizeof(LOGFONT));
 	MyMakeSquareRect(r, &myr);
 	myr.left += 1;
@@ -259,22 +257,22 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lstrcpy(lf.lfFaceName, TEXT("Marlett"));
 	hFont = CreateFontIndirect(&lf);
-	/* save font and text color */
+	/* Save font and text color */
 	hOldFont = SelectObject(dc, hFont);
 	clrsave = GetTextColor(dc);
 	bkmode = GetBkMode(dc);
-	/* set color and drawing mode */
+	/* Set color and drawing mode */
 	SetBkMode(dc, TRANSPARENT);
 	if(uFlags & DFCS_INACTIVE)
 	{
-		/* draw shadow */
-		SetTextColor(dc, theme->crColor[COLOR_BTNHIGHLIGHT]);
+		/* Draw shadow */
+		SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
 		TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
 	}
-	SetTextColor(dc, theme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
-	/* draw selected symbol */
+	SetTextColor(dc, scheme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
+	/* Draw selected symbol */
 	TextOut(dc, myr.left, myr.top, &Symbol, 1);
-	/* restore previous settings */
+	/* Restore previous settings */
 	SetTextColor(dc, clrsave);
 	SelectObject(dc, hOldFont);
 	SetBkMode(dc, bkmode);
@@ -285,7 +283,7 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 /******************************************************************************/
 
 static BOOL
-MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
+MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
 {
 	LOGFONT lf;
 	HFONT hFont, hOldFont;
@@ -312,7 +310,7 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 		Symbol = '4';
 		break;
 	}
-	MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT, theme);
+	MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT, scheme);
 	ZeroMemory(&lf, sizeof(LOGFONT));
 	MyMakeSquareRect(r, &myr);
 	myr.left += 1;
@@ -327,20 +325,20 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lstrcpy(lf.lfFaceName, TEXT("Marlett"));
 	hFont = CreateFontIndirect(&lf);
-	/* save font and text color */
+	/* Save font and text color */
 	hOldFont = SelectObject(dc, hFont);
 	clrsave = GetTextColor(dc);
 	bkmode = GetBkMode(dc);
-	/* set color and drawing mode */
+	/* Set color and drawing mode */
 	SetBkMode(dc, TRANSPARENT);
 	if(uFlags & DFCS_INACTIVE)
 	{
-		/* draw shadow */
-		SetTextColor(dc, theme->crColor[COLOR_BTNHIGHLIGHT]);
+		/* Draw shadow */
+		SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
 		TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
 	}
-	SetTextColor(dc, theme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
-	/* draw selected symbol */
+	SetTextColor(dc, scheme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
+	/* Draw selected symbol */
 	TextOut(dc, myr.left, myr.top, &Symbol, 1);
 	/* restore previous settings */
 	SetTextColor(dc, clrsave);
@@ -351,28 +349,28 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, THEME *theme)
 }
 
 BOOL
-MyDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState, THEME *theme)
+MyDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState, COLOR_SCHEME *scheme)
 {
 	switch(uType)
 	{
 	case DFC_BUTTON:
-		return MyDrawFrameButton(hDC, rc, uState, theme);
+		return MyDrawFrameButton(hDC, rc, uState, scheme);
 	case DFC_CAPTION:
-		return MyDrawFrameCaption(hDC, rc, uState, theme);
+		return MyDrawFrameCaption(hDC, rc, uState, scheme);
 	case DFC_SCROLL:
-		return MyDrawFrameScroll(hDC, rc, uState, theme);
+		return MyDrawFrameScroll(hDC, rc, uState, scheme);
 	}
 	return FALSE;
 }
 
 BOOL
-MyDrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags, THEME *theme)
+MyDrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags, COLOR_SCHEME *scheme)
 {
-	return MyIntDrawRectEdge(hDC, rc, edge, flags, theme);
+	return MyIntDrawRectEdge(hDC, rc, edge, flags, scheme);
 }
 
 VOID
-MyDrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax, int x, THEME *theme)
+MyDrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax, int x, COLOR_SCHEME *scheme)
 {
 	RECT rc3;
 	RECT rc4;
@@ -383,7 +381,7 @@ MyDrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax, int x, THEME *theme)
 	rc3.right = lpRect->right - 2;
 	rc3.bottom = lpRect->bottom - 2;
 
-	MyDrawFrameControl(hdc, &rc3, DFC_CAPTION, DFCS_CAPTIONCLOSE, theme);
+	MyDrawFrameControl(hdc, &rc3, DFC_CAPTION, DFCS_CAPTIONCLOSE, scheme);
 
 	if (bMinMax)
 	{
@@ -392,19 +390,19 @@ MyDrawCaptionButtons(HDC hdc, LPRECT lpRect, BOOL bMinMax, int x, THEME *theme)
 		rc4.right = rc3.right - x - 2;
 		rc4.bottom = rc3.bottom;
 
-		MyDrawFrameControl(hdc, &rc4, DFC_CAPTION, DFCS_CAPTIONMAX, theme);
+		MyDrawFrameControl(hdc, &rc4, DFC_CAPTION, DFCS_CAPTIONMAX, scheme);
 
 		rc5.left = rc4.left - x;
 		rc5.top = rc4.top;
 		rc5.right = rc4.right - x;
 		rc5.bottom = rc4.bottom;
 
-		MyDrawFrameControl(hdc, &rc5, DFC_CAPTION, DFCS_CAPTIONMIN, theme);
+		MyDrawFrameControl(hdc, &rc5, DFC_CAPTION, DFCS_CAPTIONMIN, scheme);
 	}
 }
 
 VOID
-MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, THEME *theme)
+MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, COLOR_SCHEME *scheme)
 {
 	RECT rcTop;
 	RECT rcBottom;
@@ -428,8 +426,8 @@ MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, THEME *theme)
 	rcBottom.top = rc->bottom - width;
 	rcBottom.bottom = rc->bottom;
 
-	MyDrawFrameControl(hdc, &rcTop, DFC_SCROLL, DFCS_SCROLLUP, theme);
-	MyDrawFrameControl(hdc, &rcBottom, DFC_SCROLL, DFCS_SCROLLDOWN, theme);
+	MyDrawFrameControl(hdc, &rcTop, DFC_SCROLL, DFCS_SCROLLUP, scheme);
+	MyDrawFrameControl(hdc, &rcBottom, DFC_SCROLL, DFCS_SCROLLDOWN, scheme);
 
 	FillRect(hdc, &rcMiddle, hbrScrollbar);
 }
@@ -437,20 +435,20 @@ MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, THEME *theme)
 /******************************************************************************/
 
 BOOL
-MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, THEME *theme)
+MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, COLOR_SCHEME *scheme)
 {
-	ULONG Height;
-	UINT VCenter, Padding;
-	LONG ButtonWidth;
+	//ULONG Height;
+	//UINT VCenter, Padding;
+	//LONG ButtonWidth;
 	HBRUSH hbr;
 	HGDIOBJ hFontOld;
-    RECT rc;
+	RECT rc;
 
-	Height = theme->Size[SIZE_CAPTION_Y] - 1;
-	VCenter = (rect->bottom - rect->top) / 2;
-	Padding = VCenter - (Height / 2);
+	//Height = scheme->Size[SIZE_CAPTION_Y] - 1;
+	//VCenter = (rect->bottom - rect->top) / 2;
+	//Padding = VCenter - (Height / 2);
 
-	ButtonWidth = theme->Size[SIZE_SIZE_X] - 2;
+	//ButtonWidth = scheme->Size[SIZE_SIZE_X] - 2;
 
 	if (uFlags & DC_GRADIENT)
 	{
@@ -458,9 +456,9 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 		TRIVERTEX vert[2];
 		COLORREF Colors[2];
 
-		Colors[0] = theme->crColor[((uFlags & DC_ACTIVE) ?
+		Colors[0] = scheme->crColor[((uFlags & DC_ACTIVE) ?
 			COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION)];
-		Colors[1] = theme->crColor[((uFlags & DC_ACTIVE) ?
+		Colors[1] = scheme->crColor[((uFlags & DC_ACTIVE) ?
 			COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION)];
 
 		vert[0].x = rect->left;
@@ -477,14 +475,14 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 		vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
 		vert[1].Alpha = 0;
 
-		GradientFill(hdc, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
+		GdiGradientFill(hdc, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
 	}
 	else
 	{
 		if (uFlags & DC_ACTIVE)
-			hbr = CreateSolidBrush(theme->crColor[COLOR_ACTIVECAPTION]);
+			hbr = CreateSolidBrush(scheme->crColor[COLOR_ACTIVECAPTION]);
 		else
-			hbr = CreateSolidBrush(theme->crColor[COLOR_INACTIVECAPTION]);
+			hbr = CreateSolidBrush(scheme->crColor[COLOR_INACTIVECAPTION]);
 		FillRect(hdc, rect, hbr);
 		DeleteObject(hbr);
 	}
@@ -492,9 +490,9 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 	hFontOld = SelectObject(hdc, hFont);
 	SetBkMode(hdc, TRANSPARENT);
 	if (uFlags & DC_ACTIVE)
-		SetTextColor(hdc, theme->crColor[COLOR_CAPTIONTEXT]);
+		SetTextColor(hdc, scheme->crColor[COLOR_CAPTIONTEXT]);
 	else
-		SetTextColor(hdc, theme->crColor[COLOR_INACTIVECAPTIONTEXT]);
+		SetTextColor(hdc, scheme->crColor[COLOR_INACTIVECAPTIONTEXT]);
 	rc.left = rect->left + 2;
 	rc.top = rect->top;
 	rc.right = rect->right;
@@ -507,7 +505,7 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 /******************************************************************************/
 
 DWORD
-MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, THEME *theme)
+MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, COLOR_SCHEME *scheme)
 {
 	HBRUSH hbr;
 	HPEN hPen;
@@ -518,16 +516,16 @@ MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, THEME *
 	WCHAR Text[128];
 	UINT uFormat = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
 
-	flat_menu = theme->bFlatMenus;
+	flat_menu = scheme->bFlatMenus;
 
 	if (flat_menu)
-		hbr = CreateSolidBrush(theme->crColor[COLOR_MENUBAR]);
+		hbr = CreateSolidBrush(scheme->crColor[COLOR_MENUBAR]);
 	else
-		hbr = CreateSolidBrush(theme->crColor[COLOR_MENU]);
+		hbr = CreateSolidBrush(scheme->crColor[COLOR_MENU]);
 	FillRect(DC, Rect, hbr);
 	DeleteObject(hbr);
 
-	hPen = CreatePen(PS_SOLID, 0, theme->crColor[COLOR_3DFACE]);
+	hPen = CreatePen(PS_SOLID, 0, scheme->crColor[COLOR_3DFACE]);
 	hPenOld = SelectObject(DC, hPen);
 	MoveToEx(DC, Rect->left, Rect->bottom - 1, NULL);
 	LineTo(DC, Rect->right, Rect->bottom - 1);
@@ -553,35 +551,35 @@ MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, THEME *
 		{
 			if (flat_menu)
 			{
-				SetTextColor(DC, theme->crColor[COLOR_HIGHLIGHTTEXT]);
-				SetBkColor(DC, theme->crColor[COLOR_HIGHLIGHT]);
+				SetTextColor(DC, scheme->crColor[COLOR_HIGHLIGHTTEXT]);
+				SetBkColor(DC, scheme->crColor[COLOR_HIGHLIGHT]);
 
 				InflateRect (&rect, -1, -1);
-				hbr = CreateSolidBrush(theme->crColor[COLOR_MENUHILIGHT]);
+				hbr = CreateSolidBrush(scheme->crColor[COLOR_MENUHILIGHT]);
 				FillRect(DC, &rect, hbr);
 				DeleteObject(hbr);
 
 				InflateRect (&rect, 1, 1);
-				hbr = CreateSolidBrush(theme->crColor[COLOR_HIGHLIGHT]);
+				hbr = CreateSolidBrush(scheme->crColor[COLOR_HIGHLIGHT]);
 				FrameRect(DC, &rect, hbr);
 				DeleteObject(hbr);
 			}
 			else
 			{
-				SetTextColor(DC, theme->crColor[COLOR_MENUTEXT]);
-				SetBkColor(DC, theme->crColor[COLOR_MENU]);
+				SetTextColor(DC, scheme->crColor[COLOR_MENUTEXT]);
+				SetBkColor(DC, scheme->crColor[COLOR_MENU]);
 				DrawEdge(DC, &rect, BDR_SUNKENOUTER, BF_RECT);
 			}
 		}
 		else
 		{
 			if (i == 1)
-				SetTextColor(DC, theme->crColor[COLOR_GRAYTEXT]);
+				SetTextColor(DC, scheme->crColor[COLOR_GRAYTEXT]);
 			else
-				SetTextColor(DC, theme->crColor[COLOR_MENUTEXT]);
+				SetTextColor(DC, scheme->crColor[COLOR_MENUTEXT]);
 
-			SetBkColor(DC, theme->crColor[bkgnd]);
-			hbr = CreateSolidBrush(theme->crColor[bkgnd]);
+			SetBkColor(DC, scheme->crColor[bkgnd]);
+			hbr = CreateSolidBrush(scheme->crColor[bkgnd]);
 			FillRect(DC, &rect, hbr);
 			DeleteObject(hbr);
 		}

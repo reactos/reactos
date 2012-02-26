@@ -20,7 +20,8 @@ FindPropertyHandler(
     IN ULONG OutputBufferLength,
     OUT PVOID OutputBuffer,
     OUT PFNKSHANDLER *PropertyHandler,
-    OUT PKSPROPERTY_SET * Set)
+    OUT PKSPROPERTY_SET * Set,
+    OUT PKSPROPERTY_ITEM *PropertyItem)
 {
     ULONG Index, ItemIndex;
 
@@ -50,6 +51,7 @@ FindPropertyHandler(
 
                     /* store property set */
                     *Set = (PKSPROPERTY_SET)&PropertySet[Index];
+                    *PropertyItem = (PKSPROPERTY_ITEM)&PropertySet[Index].PropertyItem[ItemIndex];
 
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                     {
@@ -132,42 +134,151 @@ KspPropertyHandler(
     IN  ULONG PropertyItemSize OPTIONAL)
 {
     PKSPROPERTY Property;
+    PKSPROPERTY_ITEM PropertyItem;
     PKSPROPERTY_SET Set;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
     PFNKSHANDLER PropertyHandler = NULL;
-    ULONG Index;
+    ULONG Index, InputBufferLength, OutputBufferLength, TotalSize;
     LPGUID Guid;
+    //UNICODE_STRING GuidBuffer;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get parameters */
+    OutputBufferLength = (IoStack->Parameters.DeviceIoControl.OutputBufferLength + 7) & ~7;
+    InputBufferLength = IoStack->Parameters.DeviceIoControl.InputBufferLength;
+
+    /* check for invalid buffer length size */
+    if (OutputBufferLength < IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+    {
+        /* unsigned overflow */
+        return STATUS_INVALID_BUFFER_SIZE;
+    }
+
+    /* check for integer overflow */
+    if (InputBufferLength + OutputBufferLength < IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+    {
+        /* overflow */
+        return STATUS_INVALID_BUFFER_SIZE;
+    }
 
     /* check if inputbuffer at least holds KSPROPERTY item */
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
         /* invalid parameter */
-        Irp->IoStatus.Information = sizeof(KSPROPERTY);
         return STATUS_INVALID_BUFFER_SIZE;
     }
 
-    /* FIXME probe the input / output buffer if from user mode */
+    /* get total size */
+    TotalSize = InputBufferLength + OutputBufferLength;
 
     /* get input property request */
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-//    DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
+    /* have the parameters been checked yet */
+    if (!Irp->AssociatedIrp.SystemBuffer)
+    {
+        /* is it from user mode */
+        if (Irp->RequestorMode == UserMode)
+        {
+            /* probe user buffer */
+            ProbeForRead(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, InputBufferLength, 1);
+        }
+
+        /* do we have an allocator */
+        if ((Allocator) && (Property->Flags & (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET)))
+        {
+            /* call allocator */
+            Status = Allocator(Irp, TotalSize, (Property->Flags & KSPROPERTY_TYPE_GET));
+
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+                return Status;
+        }
+        else
+        {
+            /* allocate buffer */
+            Irp->AssociatedIrp.SystemBuffer = AllocateItem(NonPagedPool, TotalSize);
+
+            /* sanity check */
+            ASSERT(Irp->AssociatedIrp.SystemBuffer != NULL);
+
+            /* mark irp as buffered so that changes the stream headers are propagated back */
+            Irp->Flags |= IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
+        }
+
+        /* now copy the buffer */
+        RtlCopyMemory((PVOID)((ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + OutputBufferLength), IoStack->Parameters.DeviceIoControl.Type3InputBuffer, InputBufferLength);
+
+        /* use new property buffer */
+        Property = (PKSPROPERTY)((ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + OutputBufferLength);
+
+        /* is it a set operation */
+        if (Property->Flags & KSPROPERTY_TYPE_SET)
+        {
+            /* for set operations, the output parameters need to be copied */
+            if (Irp->RequestorMode == UserMode)
+            {
+                /* probe user parameter */
+                ProbeForRead(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, 1);
+            }
+
+            /* copy parameters, needs un-aligned parameter length */
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+        }
+
+        /* is there an output buffer */
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+        {
+            /* is it from user mode */
+            if (Irp->RequestorMode == UserMode)
+            {
+                /* probe buffer for writing */
+                ProbeForWrite(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, 1);
+            }
+
+            if (!Allocator || !(Property->Flags & KSPROPERTY_TYPE_GET))
+            {
+                /* it is an input operation */
+                Irp->Flags |= IRP_INPUT_OPERATION;
+            }
+        }
+    }
+    else
+    {
+        /* use new property buffer */
+        Property = (PKSPROPERTY)((ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + OutputBufferLength);
+    }
+
+    //RtlStringFromGUID(&Property->Set, &GuidBuffer);
+
+    //DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
+    //DPRINT("PropertyId %lu PropertyFlags %x Guid %S\n", Property->Id, Property->Flags, GuidBuffer.Buffer);
+
+    //RtlFreeUnicodeString(&GuidBuffer);
 
     /* sanity check */
     ASSERT(PropertyItemSize == 0 || PropertyItemSize == sizeof(KSPROPERTY_ITEM));
 
     /* find the property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler, &Set);
+    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, InputBufferLength, OutputBufferLength, Irp->AssociatedIrp.SystemBuffer, &PropertyHandler, &Set, &PropertyItem);
 
     if (NT_SUCCESS(Status) && PropertyHandler)
     {
-        /* call property handler */
+        /* store set */
         KSPROPERTY_SET_IRP_STORAGE(Irp) = Set;
-        Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
+
+        /* are any custom property item sizes used */
+        if (PropertyItemSize)
+        {
+            /* store custom property item */
+            KSPROPERTY_ITEM_IRP_STORAGE(Irp) = PropertyItem;
+        }
+
+        /* call property handler */
+        Status = PropertyHandler(Irp, Property, (OutputBufferLength > 0 ? Irp->AssociatedIrp.SystemBuffer : NULL));
 
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
@@ -185,7 +296,7 @@ KspPropertyHandler(
                 }
 
                 /* re-call property handler */
-                Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
+                Status = PropertyHandler(Irp, Property, Irp->AssociatedIrp.SystemBuffer);
             }
         }
     }
@@ -200,7 +311,7 @@ KspPropertyHandler(
         }
 
         // get output buffer
-        Guid = (LPGUID)Irp->UserBuffer;
+        Guid = (LPGUID)Irp->AssociatedIrp.SystemBuffer;
 
        // copy property guids from property sets
        for(Index = 0; Index < PropertySetsCount; Index++)

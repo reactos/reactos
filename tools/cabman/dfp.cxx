@@ -123,7 +123,7 @@ CDFParser::~CDFParser()
 
 void CDFParser::WriteInfLine(char* InfLine)
 {
-    char buf[MAX_PATH];
+    char buf[PATH_MAX];
     char eolbuf[2];
     char* destpath;
 #if defined(_WIN32)
@@ -432,7 +432,7 @@ void CDFParser::SetFileRelativePath(char* Path)
     strcpy(FileRelativePath, Path);
     ConvertPath(FileRelativePath, false);
     if (strlen(FileRelativePath) > 0)
-        NormalizePath(FileRelativePath, MAX_PATH);
+        NormalizePath(FileRelativePath, PATH_MAX);
 }
 
 
@@ -498,7 +498,7 @@ bool CDFParser::OnCabinetName(ULONG Number, char* Name)
  *     true if a cabinet name was returned, false if not
  */
 {
-    char Buffer[MAX_PATH];
+    char Buffer[PATH_MAX];
     ULONG i;
     int j;
     char ch;
@@ -1107,11 +1107,11 @@ ULONG CDFParser::PerformFileCopy()
     ULONG Status;
     ULONG i, j;
     char ch;
-    char SrcName[MAX_PATH];
-    char DstName[MAX_PATH];
-    char InfLine[MAX_PATH];
+    char SrcName[PATH_MAX];
+    char DstName[PATH_MAX];
+    char InfLine[PATH_MAX];
     char Options[128];
-    char BaseFilename[MAX_PATH];
+    char BaseFilename[PATH_MAX];
 
     *SrcName = '\0';
     *DstName = '\0';
@@ -1281,7 +1281,7 @@ bool CDFParser::ReadLine()
         return false;
 
     i = 0;
-    while (((j = CurrentOffset + i) < FileBufferSize) && (i < 127) &&
+    while (((j = CurrentOffset + i) < FileBufferSize) && (i < sizeof(Line) - 1) &&
         ((ch = FileBuffer[j]) != 0x0D && (ch = FileBuffer[j]) != 0x0A))
     {
         Line[i] = ch;

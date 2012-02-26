@@ -39,7 +39,7 @@ public:
 	{ if(!growable && vector<T>::size( ) == vector<T>::capacity( ))
 	return 0;
 	else
-		insert(vector<T>::end( ), item);
+		vector<T>::insert(vector<T>::end( ), item);
 	return 1; }
 
 	int AddAt(const T& item, size_type index)
@@ -48,11 +48,11 @@ public:
 	(ZeroBase(index > vector<T>::capacity( )) )))
 	return 0;
 	if(ZeroBase(index) > vector<T>::capacity( )) // out of bounds
-	{ insert(vector<T>::end( ),
+	{ vector<T>::insert(vector<T>::end( ),
 	ZeroBase(index) - vector<T>::size( ), T( ));
-	insert(vector<T>::end( ), item); }
+	vector<T>::insert(vector<T>::end( ), item); }
 	else
-	{ insert(vector<T>::begin( ) + ZeroBase(index), item); }
+	{ vector<T>::insert(vector<T>::begin( ) + ZeroBase(index), item); }
 	return 1;
 	}
 
@@ -65,13 +65,13 @@ public:
 	else
 		return location + lowerbound; }
 	void Detach(size_type index)
-	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
+	{ vector<T>::erase(vector<T>::begin( ) + ZeroBase(index)); }
 
 	void Detach(const T& item)
 	{ Destroy(Find(item)); }
 
 	void Destroy(size_type index)
-	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
+	{ vector<T>::erase(vector<T>::begin( ) + ZeroBase(index)); }
 
 	void Destroy(const T& item)
 	{ Destroy(Find(item)); }
@@ -131,9 +131,9 @@ public:
 	void Reallocate(size_type sz,
 		size_type offset = 0)
 	{ if(offset)
-	insert(vector<T>::begin( ), offset, T( ));
+	vector<T>::insert(vector<T>::begin( ), offset, T( ));
 	vector<T>::reserve(sz);
-	erase(vector<T>::end( ) - offset, vector<T>::end( )); }
+	vector<T>::erase(vector<T>::end( ) - offset, vector<T>::end( )); }
 
 	void RemoveEntry(size_type index)
 	{ Detach(index); }

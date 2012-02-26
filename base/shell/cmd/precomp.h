@@ -26,16 +26,13 @@
 #include <assert.h>
 
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 #include "resource.h"
 
 #include "cmd.h"
 #include "config.h"
 #include "batch.h"
-
-#include <reactos/buildno.h>
-#include <reactos/version.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(cmd);

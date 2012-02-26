@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -171,7 +171,7 @@ AcpiRsConvertAmlToResource (
         /* Each internal resource struct is expected to be 32-bit aligned */
 
         ACPI_WARNING ((AE_INFO,
-            "Misaligned resource pointer (get): %p Type %2.2X Len %X",
+            "Misaligned resource pointer (get): %p Type 0x%2.2X Length %u",
             Resource, Resource->Type, Resource->Length));
     }
 
@@ -659,7 +659,7 @@ Exit:
          * "IRQ Format"), so 0x00 and 0x09 are illegal.
          */
         ACPI_ERROR ((AE_INFO,
-            "Invalid interrupt polarity/trigger in resource list, %X",
+            "Invalid interrupt polarity/trigger in resource list, 0x%X",
             Aml->Irq.Flags));
         return_ACPI_STATUS (AE_BAD_DATA);
     }

@@ -170,8 +170,8 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
         while (TrackingBlock != NULL)
         {
             /* First of all, check if the lock was locked for too long */
-            if (TrackingBlock->LockMoment.QuadPart &&
-                CurrentMoment.QuadPart - TrackingBlock->LockMoment.QuadPart >  Lock->Dbg.MaxLockedTicks)
+            if (Lock->Dbg.MaxLockedTicks &&
+                CurrentMoment.QuadPart - TrackingBlock->LockMoment.QuadPart > Lock->Dbg.MaxLockedTicks)
             {
                 DPRINT("Lock %#08lx (with tag %#08lx) was supposed to be held at max %I64d ticks but lasted longer\n",
                        Lock, TrackingBlock->Tag, Lock->Dbg.MaxLockedTicks);

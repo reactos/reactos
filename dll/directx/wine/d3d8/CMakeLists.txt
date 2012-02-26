@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(
     -D__WINESRC__
@@ -29,7 +28,7 @@ list(APPEND SOURCE
 
 add_library(d3d8 SHARED ${SOURCE})
 
-set_module_type(d3d8 win32dll)
+set_module_type(d3d8 win32dll UNICODE)
 
 target_link_libraries(d3d8 uuid wine)
 

@@ -10,12 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include "precomp.h"
-#include <ddraw.h>
-#include <ddrawi.h>
-#include <ddrawint.h>
-#include <ddrawgdi.h>
-#include <ntgdi.h>
-#include <d3dhal.h>
 
 /* DATA **********************************************************************/
 
@@ -1790,7 +1784,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
             }
 
-            if ( D3dBufferCallbacks.CanCreateD3DBuffer)
+            if (D3dBufferCallbacks.CreateD3DBuffer)
             {
                 pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
             }

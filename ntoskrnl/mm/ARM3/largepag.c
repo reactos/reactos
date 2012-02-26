@@ -34,8 +34,8 @@ INIT_FUNCTION
 MiInitializeLargePageSupport(VOID)
 {
 #if _MI_PAGING_LEVELS > 2
-    DPRINT1("PAE/x64 Not Implemented\n");
-    ASSERT(FALSE);
+    DPRINT1("MiInitializeLargePageSupport: PAE/x64 Not Implemented\n");
+    //ASSERT(FALSE);
 #else
     /* Initialize the large-page hyperspace PTE used for initial mapping */
     MiLargePageHyperPte = MiReserveSystemPtes(1, SystemPteSpace);

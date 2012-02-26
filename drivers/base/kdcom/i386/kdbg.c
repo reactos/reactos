@@ -258,19 +258,27 @@ KdPortInitializeEx(
     if (PortInformation->BaudRate == 0)
         PortInformation->BaudRate = DEFAULT_BAUD_RATE;
 
-    if (PortInformation->ComPort == 0)
-        return FALSE;
-
-    if (!KdpDoesComPortExist(BaseArray[PortInformation->ComPort]))
+    if (PortInformation->ComPort != 0)
     {
-        sprintf(buffer,
-                "\nKernel Debugger: Serial port not found!\n\n");
-        HalDisplayString(buffer);
-        return FALSE;
+        if (!KdpDoesComPortExist(BaseArray[PortInformation->ComPort]))
+        {
+            sprintf(buffer,
+                    "\nKernel Debugger: Serial port not found!\n\n");
+            HalDisplayString(buffer);
+            return FALSE;
+        }
+
+        ComPortBase = BaseArray[PortInformation->ComPort];
+        PortInformation->BaseAddress = ComPortBase;
+    }
+    else
+    {
+        ComPortBase = PortInformation->BaseAddress;
     }
 
-    ComPortBase = BaseArray[PortInformation->ComPort];
-    PortInformation->BaseAddress = ComPortBase;
+    if (ComPortBase == 0)
+        return FALSE;
+
 #ifndef NDEBUG
     sprintf(buffer,
             "\nSerial port COM%ld found at 0x%lx\n",

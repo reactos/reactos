@@ -74,10 +74,10 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Ny"
         BEGIN
-            MENUITEM "&Nøkkel",                        ID_EDIT_NEW_KEY
+            MENUITEM "&NÃ¸kkel",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Strengverdi",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binær verdi",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&BinÃ¦r verdi",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-verdi",                ID_EDIT_NEW_DWORDVALUE
 			MENUITEM "&Multistreng verdi",			ID_EDIT_NEW_MULTISTRINGVALUE
 			MENUITEM "&Utvidbar strengverdi",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -88,10 +88,10 @@ BEGIN
         MENUITEM "&Slett\tDel",                ID_EDIT_DELETE
         MENUITEM "&Gi nytt navn",                     ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Kopier nøkkelnavn",              ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopier nÃ¸kkelnavn",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Søk etter...\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "Søk neste\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&SÃ¸k etter...\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "SÃ¸k neste\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Vis"
     BEGIN
@@ -103,10 +103,8 @@ BEGIN
     END
     POPUP "&Favoritter"
     BEGIN
-        MENUITEM "&Legg til i Favoritter",          ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Fjern favoritt",           ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&Legg til i Favoritter",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Fjern favoritt",           ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Hjelp"
     BEGIN
@@ -121,7 +119,7 @@ BEGIN
   POPUP ""
   BEGIN
 	MENUITEM "&Endre",                     ID_EDIT_MODIFY
-	MENUITEM "Endre binære data",          ID_EDIT_MODIFY_BIN
+	MENUITEM "Endre binÃ¦re data",          ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
 	MENUITEM "&Slett\tDel",                ID_EDIT_DELETE
 	MENUITEM "&Gi nytt navn",                     ID_EDIT_RENAME
@@ -130,10 +128,10 @@ BEGIN
   BEGIN
         POPUP "&Ny"
         BEGIN
-            MENUITEM "&Nøkkel",                        ID_EDIT_NEW_KEY
+            MENUITEM "&NÃ¸kkel",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Strengverdi",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binær verdi",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&BinÃ¦r verdi",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-verdi",                ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multistrengverdi",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Utvidbar strengverdi",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -144,15 +142,15 @@ BEGIN
         MENUITEM "Utvid/Minimer",                 ID_TREE_EXPANDBRANCH
         POPUP "&Ny"
         BEGIN
-            MENUITEM "&Nøkkel",                        ID_EDIT_NEW_KEY
+            MENUITEM "&NÃ¸kkel",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Strengverdi",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binær verdi",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&BinÃ¦r verdi",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-verdi",                ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multistrengverdi",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Utvidbar strengverdi",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Søk...",                           ID_EDIT_FIND
+        MENUITEM "&SÃ¸k...",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Slett",                         ID_TREE_DELETE
         MENUITEM "&Gi nytt navn",                         ID_TREE_RENAME
@@ -160,7 +158,7 @@ BEGIN
         MENUITEM "&Eksport",                         ID_TREE_EXPORT
         MENUITEM "&Rettigheter...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kopier nøkkelnavn",                  ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopier nÃ¸kkelnavn",                  ID_EDIT_COPYKEYNAME
   END
   POPUP ""
   BEGIN
@@ -177,16 +175,6 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | 
@@ -219,7 +207,7 @@ END
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | 
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Rediger binær verdi"
+CAPTION "Rediger binÃ¦r verdi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Verdi&navn:",IDC_STATIC,6,6,134,8
@@ -315,20 +303,20 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "Inneholder kommandoer for å arbeide med hele registret"
-    ID_EDIT_MENU            "Inneholder kommandoer for redigering av nøkler eller verdier."
-    ID_VIEW_MENU            "Inneholder kommandoer for å tilpasse registervinduet."
-    ID_FAVOURITES_MENU      "Inneholder kommandoer fo å få tilgang til registernøkler som brukes mye."
-    ID_HELP_MENU            "Inneholder kommandoer for å vise Hjelp og for å få informasjon om Registerredigering."
-    ID_EDIT_NEW_MENU        "Inneholder kommandoer for å opprette nye nøkler eller verdier"
+    ID_REGISTRY_MENU        "Inneholder kommandoer for Ã¥ arbeide med hele registret"
+    ID_EDIT_MENU            "Inneholder kommandoer for redigering av nÃ¸kler eller verdier."
+    ID_VIEW_MENU            "Inneholder kommandoer for Ã¥ tilpasse registervinduet."
+    ID_FAVOURITES_MENU      "Inneholder kommandoer fo Ã¥ fÃ¥ tilgang til registernÃ¸kler som brukes mye."
+    ID_HELP_MENU            "Inneholder kommandoer for Ã¥ vise Hjelp og for Ã¥ fÃ¥ informasjon om Registerredigering."
+    ID_EDIT_NEW_MENU        "Inneholder kommandoer for Ã¥ opprette nye nÃ¸kler eller verdier"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_MODIFY          "Endrer verdiens data"
-    ID_EDIT_NEW_KEY         "Legger til en ny nøkkel"
+    ID_EDIT_NEW_KEY         "Legger til en ny nÃ¸kkel"
     ID_EDIT_NEW_STRINGVALUE "Legger til en ny strengverdi"
-    ID_EDIT_NEW_BINARYVALUE "Legger til en ny binær verdi"
+    ID_EDIT_NEW_BINARYVALUE "Legger til en ny binÃ¦r verdi"
     ID_EDIT_NEW_DWORDVALUE  "Legger til en ny DWORD-verdi"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importerer en tekstfil inn i Registret"
     ID_REGISTRY_EXPORTREGISTRYFILE
@@ -338,9 +326,9 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE
                             "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Kobler til Registret på en annen datamaskin"
+                            "Kobler til Registret pÃ¥ en annen datamaskin"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Kobler fra Registret på en annen datamaskin"
+                            "Kobler fra Registret pÃ¥ en annen datamaskin"
     ID_REGISTRY_PRINT       "Skriver ut hele eller deler av Registret"
 /*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
     ID_HELP_ABOUT           "Viser informasjon om program, version og opphavsrett"
@@ -349,44 +337,44 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_EXIT        "Avslutter Registerredigering"
-    ID_FAVOURITES_ADDTOFAVOURITES "Legger til nøkler i Favoritt-listen"
-    ID_FAVOURITES_REMOVEFAVOURITE "Fjerner nøkler fra Favoritt-listen"
+    ID_FAVOURITES_ADDTOFAVOURITES "Legger til nÃ¸kler i Favoritt-listen"
+    ID_FAVOURITES_REMOVEFAVOURITE "Fjerner nÃ¸kler fra Favoritt-listen"
     ID_VIEW_STATUSBAR       "Viser eller skjuler statuslinjen"
     ID_VIEW_SPLIT           "Endrer delingen mellom to vinduer"
     ID_VIEW_REFRESH         "Oppdaterer vinduet"
     ID_EDIT_DELETE          "Sletter de merkede elementene"
     ID_EDIT_RENAME          "Gi nytt navn til merket element"
-    ID_EDIT_COPYKEYNAME     "Kopierer navnet på den merkede nøkkelen til utklippstavlen"
-    ID_EDIT_FIND            "Søker etter en tekststreng i en nøkkel, verdi eller data"
-    ID_EDIT_FINDNEXT        "Søker etter neste forekomst av den forige søkestrengen"
+    ID_EDIT_COPYKEYNAME     "Kopierer navnet pÃ¥ den merkede nÃ¸kkelen til utklippstavlen"
+    ID_EDIT_FIND            "SÃ¸ker etter en tekststreng i en nÃ¸kkel, verdi eller data"
+    ID_EDIT_FINDNEXT        "SÃ¸ker etter neste forekomst av den forige sÃ¸kestrengen"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Feil"
     IDS_WARNING		    "Advarsel"
-    IDS_BAD_KEY             "Kan ikke lese nøkkel '%s'"
+    IDS_BAD_KEY             "Kan ikke lese nÃ¸kkel '%s'"
     IDS_BAD_VALUE           "Kan ikke lese verdi '%s'"
-    IDS_UNSUPPORTED_TYPE    "Kan ikke endre nøkkel av type (%ld)"
+    IDS_UNSUPPORTED_TYPE    "Kan ikke endre nÃ¸kkel av type (%ld)"
     IDS_TOO_BIG_VALUE       "Verdien er for stor (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data av type REG_MULTI_SZ kan ikke inneholde tomme linjer.\nDe tomme linjene har blitt fjernet fra listen."
-    IDS_QUERY_DELETE_KEY_ONE    "Er du sikker på at du vil slette denne nøkkelen?"
-    IDS_QUERY_DELETE_KEY_MORE   "Er du sikker på at du vil slette disse nøklene?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Bekreft sletting av nøkkel"
-    IDS_QUERY_DELETE_ONE    "Er du sikker på at du vil slette denne verdien?"
-    IDS_QUERY_DELETE_MORE   "Er du sikker på at du vil slette disse verdiene?"
+    IDS_QUERY_DELETE_KEY_ONE    "Er du sikker pÃ¥ at du vil slette denne nÃ¸kkelen?"
+    IDS_QUERY_DELETE_KEY_MORE   "Er du sikker pÃ¥ at du vil slette disse nÃ¸klene?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Bekreft sletting av nÃ¸kkel"
+    IDS_QUERY_DELETE_ONE    "Er du sikker pÃ¥ at du vil slette denne verdien?"
+    IDS_QUERY_DELETE_MORE   "Er du sikker pÃ¥ at du vil slette disse verdiene?"
     IDS_QUERY_DELETE_CONFIRM "Bekreft sletting av verdi"
     IDS_ERR_DELVAL_CAPTION  "Feil ved sletting av verdi"
     IDS_ERR_DELETEVALUE     "Kunne ikke slette alle angitte verdier!"
     IDS_ERR_RENVAL_CAPTION  "Feil ved endring av navn"
-    IDS_ERR_RENVAL_TOEMPTY  "Kan ikke gi nytt navn til %s. Den angitte verdien er tom. Prøv et annet navn, og forsøk på nytt."
-    IDS_NEW_KEY             "Ny nøkkel #%d"
+    IDS_ERR_RENVAL_TOEMPTY  "Kan ikke gi nytt navn til %s. Den angitte verdien er tom. PrÃ¸v et annet navn, og forsÃ¸k pÃ¥ nytt."
+    IDS_NEW_KEY             "Ny nÃ¸kkel #%d"
     IDS_NEW_VALUE           "Ny verdi #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(binær nullverdi)"
+    IDS_BINARY_EMPTY	    "(binÃ¦r nullverdi)"
     IDS_DEFAULT_VALUE_NAME  "(Standard)"
     IDS_VALUE_NOT_SET       "(verdi ikke angitt)"
     IDS_UNKNOWN_TYPE        "Ukjent type: (0x%lx)"
@@ -415,8 +403,8 @@ BEGIN
   IDS_ACCESS_READ               "Les"
   IDS_ACCESS_QUERYVALUE         "Les verdi"
   IDS_ACCESS_SETVALUE           "Endre verdi"
-  IDS_ACCESS_CREATESUBKEY       "Opprette undernøkkel"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Liste opp undernøkler"
+  IDS_ACCESS_CREATESUBKEY       "Opprette undernÃ¸kkel"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Liste opp undernÃ¸kler"
   IDS_ACCESS_NOTIFY             "Angi informasjon"
   IDS_ACCESS_CREATELINK         "Opprette link"
   IDS_ACCESS_DELETE             "Slett"
@@ -427,17 +415,17 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "Kun denne nøkkelen"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "Denne nøkkelen og undernøkler"
-  IDS_INHERIT_SUBKEYSONLY        "Kun undernøkler"
+  IDS_INHERIT_THISKEYONLY        "Kun denne nÃ¸kkelen"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Denne nÃ¸kkelen og undernÃ¸kler"
+  IDS_INHERIT_SUBKEYSONLY        "Kun undernÃ¸kler"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_EXPAND                     "&Utvid"
   IDS_COLLAPSE                   "&Minimer"
-  IDS_GOTO_SUGGESTED_KEY         "&Gå til '%s'"
-  IDS_FINISHEDFIND               "Søket i registret er fullført."
+  IDS_GOTO_SUGGESTED_KEY         "&GÃ¥ til '%s'"
+  IDS_FINISHEDFIND               "SÃ¸ket i registret er fullfÃ¸rt."
 END
 
 STRINGTABLE DISCARDABLE
@@ -508,15 +496,25 @@ END
  */
 
 IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Eksporter område",IDC_STATIC,2,0,366,48
+   GROUPBOX "Eksporter omrÃ¥de",IDC_STATIC,2,0,366,48
    CONTROL "&Alt",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
    CONTROL "M&erket gren",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
+
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -543,35 +541,35 @@ END
 
 IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Søk"
+CAPTION "SÃ¸k"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Søk neste",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "&SÃ¸k neste",IDOK,197,7,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,197,24,50,14
-    GROUPBOX        "Se på",IDC_STATIC,7,25,63,51
-    LTEXT           "&Søk etter:",IDC_STATIC,7,8,37,10
+    GROUPBOX        "Se pÃ¥",IDC_STATIC,7,25,63,51
+    LTEXT           "&SÃ¸k etter:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Nøkler",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&NÃ¸kler",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Verdier",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "S&øk etter hele strenger",IDC_MATCHSTRING,"Button",
+    CONTROL         "S&Ã¸k etter hele strenger",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Sk&ill mellom store og små bokstaver",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Sk&ill mellom store og smÃ¥ bokstaver",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,83,48,130,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
     WS_CAPTION | WS_SYSMENU
-CAPTION "Søk"
+CAPTION "SÃ¸k"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
     DEFPUSHBUTTON   "&Avbryt",IDCANCEL,93,29,45,14
-    LTEXT           "Søker i registret...",IDC_STATIC,33,12,83,8
+    LTEXT           "SÃ¸ker i registret...",IDC_STATIC,33,12,83,8
 END
 
 /*
@@ -592,7 +590,7 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Åpne registerredigering hjelpen."
+ *    ID_HELP_HELPTOPICS      "Ã…pne registerredigering hjelpen."
  *    ID_HELP_ABOUT           "Vis program informasjon, versjon nummer, og enerett."
  *END
  */

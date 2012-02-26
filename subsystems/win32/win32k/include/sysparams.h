@@ -1,9 +1,7 @@
 #pragma once
 
-#include "cursoricon.h"
-
-// create one struct
-// make usable for different users (multiple structs!)
+// Create one struct
+// Make usable for different users (multiple structs!)
 
 #define SPI_TABLE1_MIN 1
 #define SPI_TABLE1_MAX 119
@@ -35,6 +33,13 @@ typedef enum _USERPREFMASKS
     UPM_UIEFFECTS = 0x80000000,
     UPM_DEFAULT = 0x80003E9E
 } USERPREFMASKS;
+
+typedef enum
+{
+    wmCenter = 0,
+    wmTile,
+    wmStretch
+} WALLPAPER_MODE;
 
 typedef struct _SPIVALUES
 {
@@ -131,11 +136,16 @@ typedef struct _SPIVALUES
     TEXTMETRICW tmMenuFont;
     TEXTMETRICW tmCaptionFont;
 
+    /* Wallpaper */
+    HANDLE hbmWallpaper;
+    ULONG cxWallpaper, cyWallpaper;
+    WALLPAPER_MODE WallpaperMode;
+    UNICODE_STRING ustrWallpaper;
+    WCHAR awcWallpaper[MAX_PATH];
+
     BOOL bHandHeld;
     BOOL bFastTaskSwitch;
     UINT uiGridGranularity;
-    UNICODE_STRING ustrWallpaper;
-    WCHAR awcWallpaper[MAX_PATH];
 
     ANIMATIONINFO animationinfo;
     BOOL bSnapToDefBtn;
@@ -177,3 +187,7 @@ typedef union _SPIBUFFER
 } SPIBUFFER;
 
 extern SPIVALUES gspv;
+extern BOOL g_PaintDesktopVersion;
+
+BOOL InitSysParams();
+

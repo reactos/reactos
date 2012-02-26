@@ -31,7 +31,7 @@ add_library(libxslt SHARED
     xsltlocale.c
     xsltutils.c)
 
-set_entrypoint(libxslt 0)
+set_module_type(libxslt win32dll ENTRYPOINT 0)
 target_link_libraries(libxslt libxml2)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 
@@ -41,3 +41,8 @@ endif()
 
 add_dependencies(libxslt psdk)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    add_target_compile_flags(libxslt "-Wno-pointer-sign")
+    allow_warnings(libxslt)
+endif()

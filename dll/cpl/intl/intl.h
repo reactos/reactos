@@ -1,10 +1,19 @@
-#pragma once
-
+#include <windows.h>
 #include <cpl.h>
+#include <commctrl.h>
+#include <setupapi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <prsht.h>
+#include <malloc.h>
+#include <debug.h>
+
+#include "resource.h"
 
 #define DECIMAL_RADIX          10
 
-/* limits */
+/* Limits */
 #define MAX_FMT_SIZE           30
 #define MAX_STR_SIZE          128
 #define MAX_SAMPLES_STR_SIZE   70

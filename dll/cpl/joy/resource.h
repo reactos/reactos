@@ -1,21 +1,21 @@
 #pragma once
 
-/* icons */
+/* Icons */
 #define IDI_CPLSYSTEM	102
 
-/* dialogs */
+/* Dialogs */
 #define IDD_PROPPAGEMAIN		101
 #define IDD_ADD					119
 #define IDD_CUSTOM				4099
 #define IDD_ADVANCED			8188
 
-/* strings */
+/* Strings */
 #define IDS_CPLSYSTEMNAME			1076
 #define IDS_CPLSYSTEMDESCRIPTION	1099
 #define IDS_CONTROLLER				1151
 #define IDS_STATUS					1152
 
-/* controls */
+/* Controls */
 #define IDC_CONTROLLER_LIST			1020
 #define IDC_ADD_BUTTON				1011
 #define IDC_REMOVE_BUTTON			1028

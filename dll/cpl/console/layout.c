@@ -9,7 +9,6 @@
 #include "console.h"
 
 
-
 void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 {
 	HBRUSH hBrush;
@@ -30,46 +29,46 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	}
 	else
 	{
-		//TODO
-		// calculate pos correctly when console centered
+		// TODO:
+		// Calculate pos correctly when console centered
 		startx = sizex / 3;
 		starty = sizey / 3;
 	}
 
-	//TODO
-	// strech console when bold fonts are selected
+	// TODO:
+	// Strech console when bold fonts are selected
 	endx = drawItem->rcItem.right - startx + 15;
 	endy = starty + sizey / 3;
 
-	/* draw console size */
+	/* Draw console size */
 	SetRect(&cRect, startx, starty, endx, endy);
 	FillRect(drawItem->hDC, &cRect, GetSysColorBrush(COLOR_WINDOWFRAME));
 
-	/* draw console border */
+	/* Draw console border */
 	SetRect(&fRect, startx + 1, starty + 1, cRect.right - 1, cRect.bottom - 1);
 	FrameRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
-	/* draw left box */
+	/* Draw left box */
 	SetRect(&fRect, startx + 3, starty + 3, startx + 5, starty + 5);
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
-	/* draw window title */
+	/* Draw window title */
 	SetRect(&fRect, startx + 7, starty + 3, cRect.right - 9, starty + 5);
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVECAPTION));
 
-	/* draw first right box */
+	/* Draw first right box */
 	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
-	/* draw second right box */
+	/* Draw second right box */
 	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
-	/* draw scrollbar */
+	/* Draw scrollbar */
 	SetRect(&fRect, cRect.right - 5, fRect.bottom + 1, cRect.right - 3, cRect.bottom - 3);
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_SCROLLBAR));
 
-	/* draw console background */
+	/* Draw console background */
 	hBrush = CreateSolidBrush(pConInfo->ScreenBackground);
 	SetRect(&fRect, startx + 3, starty + 6, cRect.right - 6, cRect.bottom - 3);
 	FillRect(drawItem->hDC, &fRect, hBrush);
@@ -107,7 +106,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
 	if (ntColor == nbkColor)
 	{
-		/* text has same color -> invisible */
+		/* Text has same color -> invisible */
 		return;
 	}
 
@@ -118,7 +117,6 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	SetBkColor(drawItem->hDC, pbkColor);
 	DeleteObject((HGDIOBJ)hBrush);
 }
-
 
 
 INT_PTR
@@ -167,7 +165,7 @@ LayoutProc(
 			}
 			else
 			{
-				//FIXME calculate window pos from xres, yres
+				// FIXME: Calculate window pos from xres, yres
 				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, 88, FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, 88, FALSE);
 				EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
@@ -251,7 +249,7 @@ LayoutProc(
 
 				if (lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_SIZE_WIDTH || lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_SIZE_HEIGHT)
 				{
-					/* automatically adjust screen buffer size when window size enlarges */
+					/* Automatically adjust screen buffer size when window size enlarges */
 					if (wwidth >= swidth)
 					{
 						SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, wwidth, TRUE);
@@ -269,7 +267,7 @@ LayoutProc(
 
 				if (lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_WIDTH || lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_HEIGHT)
 				{
-					/* automatically adjust window size when screen buffer decreases */
+					/* Automatically adjust window size when screen buffer decreases */
 					if (wwidth > swidth)
 					{
 						SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, swidth, TRUE);
@@ -317,7 +315,7 @@ LayoutProc(
 						swidth = max(swidth, 1);
 						sheight = max(sheight, 1);
 
-						/* automatically adjust window size when screen buffer decreases */
+						/* Automatically adjust window size when screen buffer decreases */
 						if (wwidth > swidth)
 						{
 							SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, swidth, TRUE);

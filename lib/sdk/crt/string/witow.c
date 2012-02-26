@@ -27,7 +27,7 @@ wchar_t* _i64tow(__int64 value, wchar_t* string, int radix)
   wchar_t* sp;
 
   if (radix > 36 || radix <= 1) {
-    __set_errno(EDOM);
+    _set_errno(EDOM);
     return 0;
   }
 
@@ -69,7 +69,7 @@ wchar_t* _ui64tow(unsigned __int64 value, wchar_t* string, int radix)
   wchar_t* sp;
 
   if (radix > 36 || radix <= 1) {
-    __set_errno(EDOM);
+    _set_errno(EDOM);
     return 0;
   }
 

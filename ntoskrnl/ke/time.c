@@ -16,102 +16,100 @@
 
 LONG KiTickOffset;
 ULONG KeTimeAdjustment;
+BOOLEAN KiTimeAdjustmentEnabled = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
 VOID
-FASTCALL
-KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN ULONG Increment,
-                   IN KIRQL Irql)                   
+FORCEINLINE
+KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    ULARGE_INTEGER CurrentTime, InterruptTime;
-    ULONG Hand, OldTickCount;
-    
-    /* Add the increment time to the shared data */
-    InterruptTime.HighPart = SharedUserData->InterruptTime.High1Time;
-    InterruptTime.LowPart = SharedUserData->InterruptTime.LowPart;
-    InterruptTime.QuadPart += Increment;
-    SharedUserData->InterruptTime.High1Time = InterruptTime.HighPart;
-    SharedUserData->InterruptTime.LowPart = InterruptTime.LowPart;
-    SharedUserData->InterruptTime.High2Time = InterruptTime.HighPart;
-    
-    /* Update tick count */
-    InterlockedExchangeAdd(&KiTickOffset, -(LONG)Increment);
-    
-    /* Check for incomplete tick */
-    OldTickCount = KeTickCount.LowPart;
-    if (KiTickOffset <= 0)
-    {
-        /* Update the system time */
-        CurrentTime.HighPart = SharedUserData->SystemTime.High1Time;
-        CurrentTime.LowPart = SharedUserData->SystemTime.LowPart;
-        CurrentTime.QuadPart += KeTimeAdjustment;
-        SharedUserData->SystemTime.High2Time = CurrentTime.HighPart;
-        SharedUserData->SystemTime.LowPart = CurrentTime.LowPart;
-        SharedUserData->SystemTime.High1Time = CurrentTime.HighPart;
-        
-        /* Update the tick count */
-        CurrentTime.HighPart = KeTickCount.High1Time;
-        CurrentTime.LowPart = OldTickCount;
-        CurrentTime.QuadPart += 1;
-        KeTickCount.High2Time = CurrentTime.HighPart;
-        KeTickCount.LowPart = CurrentTime.LowPart;
-        KeTickCount.High1Time = CurrentTime.HighPart;
-        
-        /* Update it in the shared user data */
-        SharedUserData->TickCount.High2Time = CurrentTime.HighPart;
-        SharedUserData->TickCount.LowPart = CurrentTime.LowPart;
-        SharedUserData->TickCount.High1Time = CurrentTime.HighPart;
-        
-        /* Check for timer expiration */
-        Hand = OldTickCount & (TIMER_TABLE_SIZE - 1);
-        if (KiTimerTableListHead[Hand].Time.QuadPart <= InterruptTime.QuadPart)
-        {
-            /* Check if we are already doing expiration */
-            if (!Prcb->TimerRequest)
-            {                        
-                /* Request a DPC to handle this */
-                Prcb->TimerRequest = (ULONG_PTR)TrapFrame;
-                Prcb->TimerHand = Hand;
-                HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-            }
-        }
-        
-        /* Check for expiration with the new tick count as well */
-        OldTickCount++;
-    }
-    
+#ifdef _WIN64
+    /* Do a single atomic write */
+    *(ULONGLONG*)SystemTime = NewTime.QuadPart;
+#else
+    /* Update in 3 steps, so that a reader can recognize partial updates */
+    SystemTime->High1Time = NewTime.HighPart;
+    SystemTime->LowPart = NewTime.LowPart;
+    SystemTime->High2Time = NewTime.HighPart;
+#endif
+}
+
+VOID
+FORCEINLINE
+KiCheckForTimerExpiration(
+    PKPRCB Prcb,
+    PKTRAP_FRAME TrapFrame,
+    ULARGE_INTEGER InterruptTime)
+{
+    ULONG Hand;
+
     /* Check for timer expiration */
-    Hand = OldTickCount & (TIMER_TABLE_SIZE - 1);
+    Hand = KeTickCount.LowPart & (TIMER_TABLE_SIZE - 1);
     if (KiTimerTableListHead[Hand].Time.QuadPart <= InterruptTime.QuadPart)
     {
         /* Check if we are already doing expiration */
         if (!Prcb->TimerRequest)
-        {                        
+        {
             /* Request a DPC to handle this */
             Prcb->TimerRequest = (ULONG_PTR)TrapFrame;
             Prcb->TimerHand = Hand;
             HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
         }
     }
-    
-    /* Check if this was a full tick */
-    if (KiTickOffset <= 0)
+}
+
+VOID
+FASTCALL
+KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Increment,
+                   IN KIRQL Irql)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULARGE_INTEGER CurrentTime, InterruptTime;
+    LONG OldTickOffset;
+
+    /* Add the increment time to the shared data */
+    InterruptTime.QuadPart = *(ULONGLONG*)&SharedUserData->InterruptTime;
+    InterruptTime.QuadPart += Increment;
+    KiWriteSystemTime(&SharedUserData->InterruptTime, InterruptTime);
+
+    /* Check for timer expiration */
+    KiCheckForTimerExpiration(Prcb, TrapFrame, InterruptTime);
+
+    /* Update the tick offset */
+    OldTickOffset = InterlockedExchangeAdd(&KiTickOffset, -(LONG)Increment);
+
+    /* Check for full tick */
+    if (OldTickOffset <= (LONG)Increment)
     {
-        /* Update the tick offset */
+        /* Update the system time */
+        CurrentTime.QuadPart = *(ULONGLONG*)&SharedUserData->SystemTime;
+        CurrentTime.QuadPart += KeTimeAdjustment;
+        KiWriteSystemTime(&SharedUserData->SystemTime, CurrentTime);
+
+        /* Update the tick count */
+        CurrentTime.QuadPart = (*(ULONGLONG*)&KeTickCount) + 1;
+        KiWriteSystemTime(&KeTickCount, CurrentTime);
+
+        /* Update it in the shared user data */
+        KiWriteSystemTime(&SharedUserData->TickCount, CurrentTime);
+
+        /* Check for expiration with the new tick count as well */
+        KiCheckForTimerExpiration(Prcb, TrapFrame, InterruptTime);
+
+        /* Reset the tick offset */
         KiTickOffset += KeMaximumIncrement;
-        
-        /* Update system runtime */
+
+        /* Update processor/thread runtime */
         KeUpdateRunTime(TrapFrame, Irql);
     }
     else
     {
-        /* Increase interrupt count and exit */
+        /* Increase interrupt count only */
         Prcb->InterruptCount++;
     }
-    
+
     /* Disable interrupts and end the interrupt */
     KiEndInterrupt(Irql, TrapFrame);
 }
@@ -126,7 +124,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
 
     /* Increase interrupt count */
     Prcb->InterruptCount++;
-    
+
     /* Check if we came from user mode */
 #ifndef _M_ARM
     if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
@@ -158,19 +156,19 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             Prcb->DpcTime++;
         }
     }
-    
+
     /* Update DPC rates */
     Prcb->DpcRequestRate = ((Prcb->DpcData[0].DpcCount - Prcb->DpcLastCount) +
                             Prcb->DpcRequestRate) >> 1;
     Prcb->DpcLastCount = Prcb->DpcData[0].DpcCount;
-    
+
     /* Check if the queue is large enough */
     if ((Prcb->DpcData[0].DpcQueueDepth) && !(Prcb->DpcRoutineActive))
     {
         /* Request a DPC */
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-        
+
         /* Fix the maximum queue depth */
         if ((Prcb->DpcRequestRate < KiIdealDpcRate) &&
             (Prcb->MaximumDpcQueueDepth > 1))
@@ -193,7 +191,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             }
         }
     }
-    
+
     /* Decrement the thread quantum */
     Thread->Quantum -= CLOCK_QUANTUM_DECREMENT;
 

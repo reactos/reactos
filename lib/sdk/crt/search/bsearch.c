@@ -9,7 +9,8 @@ bsearch(const void *key, const void *base0, size_t nelem,
 	size_t size, int (__cdecl *cmp)(const void *ck, const void *ce))
 {
   char *base = (char *)base0;
-  int lim, cmpval;
+  size_t lim;
+  int cmpval;
   void *p;
 
   for (lim = nelem; lim != 0; lim >>= 1)

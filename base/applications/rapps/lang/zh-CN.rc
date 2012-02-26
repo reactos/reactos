@@ -59,7 +59,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "普通", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "保存窗口位置(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "启动时更新可获得的程序列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "启动时更新可获得的程序列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "将程序的安装和卸载记录到日志(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "正在下载", -1, 4, 65, 240, 51

@@ -793,4 +793,219 @@ MoveFileExA (
 	                              dwFlags);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    WCHAR *replacedW, *replacementW, *backupW = NULL;
+    BOOL ret;
+
+    /* This function only makes sense when the first two parameters are defined */
+    if (!lpReplacedFileName || !(replacedW = FilenameA2W(lpReplacedFileName, TRUE)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpReplacementFileName || !(replacementW = FilenameA2W(lpReplacementFileName, TRUE)))
+    {
+        HeapFree(GetProcessHeap(), 0, replacedW);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* The backup parameter, however, is optional */
+    if (lpBackupFileName)
+    {
+        if (!(backupW = FilenameA2W(lpBackupFileName, TRUE)))
+        {
+            HeapFree(GetProcessHeap(), 0, replacedW);
+            HeapFree(GetProcessHeap(), 0, replacementW);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    ret = ReplaceFileW(replacedW, replacementW, backupW, dwReplaceFlags, lpExclude, lpReserved);
+    HeapFree(GetProcessHeap(), 0, replacedW);
+    HeapFree(GetProcessHeap(), 0, replacementW);
+    HeapFree(GetProcessHeap(), 0, backupW);
+
+    return ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    HANDLE hReplaced = NULL, hReplacement = NULL;
+    UNICODE_STRING NtReplacedName = { 0, 0, NULL };
+    UNICODE_STRING NtReplacementName = { 0, 0, NULL };
+    DWORD Error = ERROR_SUCCESS;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PVOID Buffer = NULL ;
+
+    if (dwReplaceFlags)
+        FIXME("Ignoring flags %x\n", dwReplaceFlags);
+
+    /* First two arguments are mandatory */
+    if (!lpReplacedFileName || !lpReplacementFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Back it up */
+    if(lpBackupFileName)
+    {
+        if(!CopyFileW(lpReplacedFileName, lpBackupFileName, FALSE))
+        {
+            Error = GetLastError();
+            goto Cleanup ;
+        }
+    }
+
+    /* Open the "replaced" file for reading and writing */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacedFileName, &NtReplacedName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacedName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplaced,
+                        GENERIC_READ | GENERIC_WRITE | DELETE | SYNCHRONIZE | WRITE_DAC,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Error = ERROR_FILE_NOT_FOUND;
+        else
+            Error = ERROR_UNABLE_TO_REMOVE_REPLACED;
+        goto Cleanup;
+    }
+
+    /* Blank it */
+    SetEndOfFile(hReplaced) ;
+
+    /*
+     * Open the replacement file for reading, writing, and deleting
+     * (deleting is needed when finished)
+     */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacementFileName, &NtReplacementName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacementName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplacement,
+                        GENERIC_READ | DELETE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE | FILE_DELETE_ON_CLOSE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        Error = RtlNtStatusToDosError(Status);
+        goto Cleanup;
+    }
+
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, 0x10000) ;
+    if (!Buffer)
+    {
+        Error = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup ;
+    }
+    while (Status != STATUS_END_OF_FILE)
+    {
+        Status = NtReadFile(hReplacement, NULL, NULL, NULL, &IoStatusBlock, Buffer, 0x10000, NULL, NULL) ;
+        if (NT_SUCCESS(Status))
+        {
+            Status = NtWriteFile(hReplaced, NULL, NULL, NULL, &IoStatusBlock, Buffer,
+                    IoStatusBlock.Information, NULL, NULL) ;
+            if (!NT_SUCCESS(Status))
+            {
+                Error = RtlNtStatusToDosError(Status);
+                goto Cleanup;
+            }
+        }
+        else if (Status != STATUS_END_OF_FILE)
+        {
+            Error = RtlNtStatusToDosError(Status);
+            goto Cleanup;
+        }
+    }
+
+    Ret = TRUE;
+
+    /* Perform resource cleanup */
+Cleanup:
+    if (hReplaced) NtClose(hReplaced);
+    if (hReplacement) NtClose(hReplacement);
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    if (NtReplacementName.Buffer)
+        RtlFreeHeap(GetProcessHeap(), 0, NtReplacementName.Buffer);
+    if (NtReplacedName.Buffer)
+        RtlFreeHeap(GetProcessHeap(), 0, NtReplacedName.Buffer);
+
+    /* If there was an error, set the error code */
+    if(!Ret)
+    {
+        TRACE("ReplaceFileW failed (error=%d)\n", Error);
+        SetLastError(Error);
+    }
+    return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PrivMoveFileIdentityW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+{
+    STUB;
+    return FALSE;
+}
+
 /* EOF */

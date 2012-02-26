@@ -24,19 +24,18 @@ PMMWSL MmWorkingSetList;
 
 VOID
 NTAPI
-MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
+MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID AllocatedBase = (PVOID)USER_SHARED_DATA;
+    PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
     BoundaryAddressMultiple.QuadPart = 0;
 
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
                                 &AllocatedBase,
-                                ((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - 1) -
-                                (ULONG_PTR)USER_SHARED_DATA,
+                                PAGE_SIZE,
                                 PAGE_READWRITE,
                                 &MemoryArea,
                                 TRUE,
@@ -200,6 +199,9 @@ MmDeleteTeb(IN PEPROCESS Process,
         ASSERT(VadTree->NumberGenericTableElements >= 1);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
 
+        /* Delete the pages */
+        MiDeleteVirtualAddresses((ULONG_PTR)Teb, TebEnd, NULL);
+    
         /* Release the working set */
         MiUnlockProcessWorkingSet(Process, Thread);
 
@@ -220,7 +222,8 @@ MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
     PMMPTE PointerPte;
-    PFN_NUMBER StackPages, PageFrameNumber;//, PageTableFrameNumber;
+    PFN_NUMBER PageFrameNumber, PageTableFrameNumber;
+    PFN_COUNT StackPages;
     PMMPFN Pfn1;//, Pfn2;
     ULONG i;
     KIRQL OldIrql;
@@ -253,13 +256,14 @@ MmDeleteKernelStack(IN PVOID StackBase,
             /* Get the PTE's page */
             PageFrameNumber = PFN_FROM_PTE(PointerPte);
             Pfn1 = MiGetPfnEntry(PageFrameNumber);
-#if 0 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
+#if 1 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
             /* Now get the page of the page table mapping it */
             PageTableFrameNumber = Pfn1->u4.PteFrame;
-            Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
+            //Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
 
             /* Remove a shared reference, since the page is going away */
-            MiDecrementShareCount(Pfn2, PageTableFrameNumber);
+            DPRINT("SystemPTE PDE: %lx\n", PageTableFrameNumber);
+            //MiDecrementShareCount(Pfn2, PageTableFrameNumber);
 #endif
             /* Set the special pending delete marker */
             MI_SET_PFN_DELETED(Pfn1);
@@ -293,7 +297,7 @@ NTAPI
 MmCreateKernelStack(IN BOOLEAN GuiStack,
                     IN UCHAR Node)
 {
-    PFN_NUMBER StackPtes, StackPages;
+    PFN_COUNT StackPtes, StackPages;
     PMMPTE PointerPte, StackPte;
     PVOID BaseAddress;
     MMPTE TempPte, InvalidPte;
@@ -578,12 +582,6 @@ MmCreatePeb(IN PEPROCESS Process,
     KeAttachProcess(&Process->Pcb);
 
     //
-    // Allocate the PEB
-    //
-    Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
-    ASSERT(NT_SUCCESS(Status));
-
-    //
     // Map NLS Tables
     //
     Status = MmMapViewOfSection(ExpNlsSectionPointer,
@@ -596,7 +594,25 @@ MmCreatePeb(IN PEPROCESS Process,
                                 ViewShare,
                                 MEM_TOP_DOWN,
                                 PAGE_READONLY);
-    if (!NT_SUCCESS(Status)) return Status;
+    DPRINT("NLS Tables at: %p\n", TableBase);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and exit */
+        KeDetachProcess();
+        return Status;
+    }
+
+    //
+    // Allocate the PEB
+    //
+    Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
+    DPRINT("PEB at: %p\n", Peb);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and exit */
+        KeDetachProcess();
+        return Status;
+    }
 
     //
     // Use SEH in case we can't load the PEB
@@ -636,7 +652,7 @@ MmCreatePeb(IN PEPROCESS Process,
         // Heap and Debug Data
         //
         Peb->NumberOfProcessors = KeNumberProcessors;
-        Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL ? TRUE : FALSE);
+        Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL);
         Peb->NtGlobalFlag = NtGlobalFlag;
         /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
          Peb->HeapSegmentCommit = MmHeapSegmentCommit;
@@ -730,34 +746,20 @@ MmCreatePeb(IN PEPROCESS Process,
                 Peb->OSMinorVersion = (NtHeaders->OptionalHeader.Win32VersionValue >> 8) & 0xFF;
                 Peb->OSBuildNumber = (NtHeaders->OptionalHeader.Win32VersionValue >> 16) & 0x3FFF;
                 Peb->OSPlatformId = (NtHeaders->OptionalHeader.Win32VersionValue >> 30) ^ 2;
-            }
 
-            //
-            // Process the image config data overrides if specfied
-            //
-            if (ImageConfigData != NULL)
-            {
-                //
-                // Process CSD version override
-                //
-                if (ImageConfigData->CSDVersion)
+                /* Process CSD version override */
+                if ((ImageConfigData) && (ImageConfigData->CSDVersion))
                 {
-                    //
-                    // Set new data
-                    //
+                    /* Take the value from the image configuration directory */
                     Peb->OSCSDVersion = ImageConfigData->CSDVersion;
                 }
+            }
 
-                //
-                // Process affinity mask ovverride
-                //
-                if (ImageConfigData->ProcessAffinityMask)
-                {
-                    //
-                    // Set new data
-                    //
-                    ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
-                }
+            /* Process optional process affinity mask override */
+            if ((ImageConfigData) && (ImageConfigData->ProcessAffinityMask))
+            {
+                /* Take the value from the image configuration directory */
+                ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
             }
 
             //
@@ -767,6 +769,7 @@ MmCreatePeb(IN PEPROCESS Process,
                 //
                 // Force it to use CPU 0
                 //
+                /* FIXME: this should use the MmRotatingUniprocessorNumber */
                 Peb->ImageProcessAffinityMask = 0;
             }
             else
@@ -831,7 +834,11 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
+#ifdef _M_AMD64
+        Teb->NtTib.ExceptionList = NULL;
+#else
         Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+#endif
         Teb->NtTib.Self = (PNT_TIB)Teb;
 
         //
@@ -897,6 +904,8 @@ NTAPI
 MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
 {
     PMMPFN Pfn1;
+    PMMPTE sysPte;
+    MMPTE tempPte;
 
     /* Setup some bogus list data */
     MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
@@ -913,9 +922,15 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     MmWorkingSetList->LastInitializedWsle = 4;
 
     /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
-    Pfn1 = MiGetPfnEntry(MiAddressToPte(PDE_BASE)->u.Hard.PageFrameNumber);
+    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
     Pfn1->u1.Event = (PKEVENT)CurrentProcess;
+    
+    /* Map the process working set in kernel space */
+    sysPte = MiReserveSystemPtes(1, SystemPteSpace);
+    MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
+    MI_WRITE_VALID_PTE(sysPte, tempPte);
+    CurrentProcess->Vm.VmWorkingSetList = MiPteToAddress(sysPte);
 }
 
 NTSTATUS
@@ -963,13 +978,23 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Setup the PFN for the PDE base of this process */
+#ifdef _M_AMD64
+    PointerPte = MiAddressToPte(PXE_BASE);
+#else
     PointerPte = MiAddressToPte(PDE_BASE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE);
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
+#ifdef _M_AMD64
+    PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
+#else
     PointerPde = MiAddressToPde(HYPER_SPACE);
+#endif
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
+    //ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE); // we're not lucky
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
 
     /* Setup the PFN for the PTE for the working set */
@@ -992,7 +1017,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
 
     /* Check if there's a Section Object */
     if (SectionObject)
@@ -1092,7 +1117,7 @@ INIT_FUNCTION
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverPebTebRanges(Process);
+    MiRosTakeOverSharedUserPage(Process);
     return STATUS_SUCCESS;
 }
 
@@ -1114,7 +1139,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     PMMPFN Pfn1;
 
     /* Choose a process color */
-    Process->NextPageColor = RtlRandom(&MmProcessColorSeed);
+    Process->NextPageColor = (USHORT)RtlRandom(&MmProcessColorSeed);
 
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);
@@ -1203,6 +1228,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Now write the PTE/PDE entry for the working set list index itself */
     TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = WsListIndex;
+    /* Hyperspace is local */
+    MI_MAKE_LOCAL_PAGE(&TempPte);
     PdeOffset = MiAddressToPteOffset(MmWorkingSetList);
     HyperTable[PdeOffset] = TempPte;
 
@@ -1322,9 +1349,242 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Free the VAD memory */
         ExFreePool(Vad);
     }
+    /* Delete the shared user data section */
+    MiDeleteVirtualAddresses(USER_SHARED_DATA, USER_SHARED_DATA, NULL);
 
     /* Release the address space */
     MmUnlockAddressSpace(&Process->Vm);
+}
+
+VOID
+NTAPI
+MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
+{
+    PMMPFN Pfn1, Pfn2;
+    KIRQL OldIrql;
+    PFN_NUMBER PageFrameIndex;
+
+    //ASSERT(Process->CommitCharge == 0);
+    
+    /* Acquire the PFN lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Check for fully initialized process */
+    if (Process->AddressSpaceInitialized == 2)
+    {
+        /* Map the working set page and its page table */
+        Pfn1 = MiGetPfnEntry(Process->WorkingSetPage);
+        Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);
+
+        /* Nuke it */
+        MI_SET_PFN_DELETED(Pfn1);
+        MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
+        MiDecrementShareCount(Pfn1, Process->WorkingSetPage);
+        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+        MiReleaseSystemPtes(MiAddressToPte(Process->Vm.VmWorkingSetList), 1, SystemPteSpace);
+            
+        /* Now map hyperspace and its page table */
+        PageFrameIndex = Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT;
+        Pfn1 = MiGetPfnEntry(PageFrameIndex);
+        Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);
+
+        /* Nuke it */
+        MI_SET_PFN_DELETED(Pfn1);
+        MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
+        MiDecrementShareCount(Pfn1, PageFrameIndex);
+        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+        
+        /* Finally, nuke the PDE itself */
+        PageFrameIndex = Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT;
+        Pfn1 = MiGetPfnEntry(PageFrameIndex);
+        MI_SET_PFN_DELETED(Pfn1);
+        MiDecrementShareCount(Pfn1, PageFrameIndex);
+        MiDecrementShareCount(Pfn1, PageFrameIndex);
+        
+        /* Page table is now dead. Bye bye... */
+        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+    }
+    else
+    {
+        /* A partly-initialized process should never exit through here */
+        ASSERT(FALSE);
+    }
+
+    /* Release the PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* No support for sessions yet */
+    ASSERT(Process->Session == 0);
+    
+    /* Clear out the PDE pages */
+    Process->Pcb.DirectoryTableBase[0] = 0;
+    Process->Pcb.DirectoryTableBase[1] = 0;
+}
+
+/* SESSION CODE TO MOVE TO SESSION.C ******************************************/
+
+KGUARDED_MUTEX MiSessionIdMutex;
+PRTL_BITMAP MiSessionIdBitmap;
+volatile LONG MiSessionLeaderExists;
+
+VOID
+NTAPI
+MiInitializeSessionIds(VOID)
+{
+    /* FIXME: Other stuff should go here */
+
+    /* Initialize the lock */
+    KeInitializeGuardedMutex(&MiSessionIdMutex);
+
+    /* Allocate the bitmap */
+    MiSessionIdBitmap = ExAllocatePoolWithTag(PagedPool,
+                                              sizeof(RTL_BITMAP) + ((64 + 31) / 32) * 4,
+                                              '  mM');
+    if (MiSessionIdBitmap)
+    {
+        /* Free all the bits */
+        RtlInitializeBitMap(MiSessionIdBitmap, (PVOID)(MiSessionIdBitmap + 1), 64);
+        RtlClearAllBits(MiSessionIdBitmap);
+    }
+    else
+    {
+        /* Die if we couldn't allocate the bitmap */
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MmLowestPhysicalPage,
+                     MmHighestPhysicalPage,
+                     0x200);
+    }
+}
+
+VOID
+NTAPI
+MiSessionLeader(IN PEPROCESS Process)
+{
+    KIRQL OldIrql;
+
+    /* Set the flag while under the expansion lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
+    Process->Vm.Flags.SessionLeader = TRUE;
+    KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+}
+
+NTSTATUS
+NTAPI
+MiSessionCreateInternal(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG NewFlags, Flags;
+
+    /* Loop so we can set the session-is-creating flag */
+    Flags = Process->Flags;
+    while (TRUE)
+    {
+        /* Check if it's already set */
+        if (Flags & PSF_SESSION_CREATION_UNDERWAY_BIT)
+        {
+            /* Bail out */
+            DPRINT1("Lost session race\n");
+            return STATUS_ALREADY_COMMITTED;
+        }
+
+        /* Now try to set it */
+        NewFlags = InterlockedCompareExchange((PLONG)&Process->Flags,
+                                              Flags | PSF_SESSION_CREATION_UNDERWAY_BIT,
+                                              Flags);
+        if (NewFlags == Flags) break;
+
+        /* It changed, try again */
+        Flags = NewFlags;
+    }
+
+    /* Now we should own the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+
+    /* Allocate a new Session ID */
+    KeAcquireGuardedMutex(&MiSessionIdMutex);
+    *SessionId = RtlFindClearBitsAndSet(MiSessionIdBitmap, 1, 0);
+    if (*SessionId == 0xFFFFFFFF)
+    {
+        DPRINT1("Too many sessions created. Expansion not yet supported\n");
+        return STATUS_NO_MEMORY;
+    }
+    KeReleaseGuardedMutex(&MiSessionIdMutex);
+
+    /* We're done, clear the flag */
+    ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
+    PspClearProcessFlag(Process, PSF_SESSION_CREATION_UNDERWAY_BIT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG SessionLeaderExists;
+    NTSTATUS Status;
+
+    /* Fail if the process is already in a session */
+    if (Process->Flags & PSF_PROCESS_IN_SESSION_BIT)
+    {
+        DPRINT1("Process already in session\n");
+        return STATUS_ALREADY_COMMITTED;
+    }
+
+    /* Check if the process is already the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        /* Atomically set it as the leader */
+        SessionLeaderExists = InterlockedCompareExchange(&MiSessionLeaderExists, 1, 0);
+        if (SessionLeaderExists)
+        {
+            DPRINT1("Session leader race\n");
+            return STATUS_INVALID_SYSTEM_SERVICE;
+        }
+
+        /* Do the work required to upgrade him */
+        MiSessionLeader(Process);
+    }
+
+    /* FIXME: Actually create a session */
+    KeEnterCriticalRegion();
+    Status = MiSessionCreateInternal(SessionId);
+    KeLeaveCriticalRegion();
+
+    /* Set and assert the flags, and return */
+    PspSetProcessFlag(Process, PSF_PROCESS_IN_SESSION_BIT);
+    ASSERT(MiSessionLeaderExists == 1);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+
+    /* Process must be in a session */
+    if (!(Process->Flags & PSF_PROCESS_IN_SESSION_BIT))
+    {
+        DPRINT1("Not in a session!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* It must be the session leader */
+    if (!Process->Vm.Flags.SessionLeader)
+    {
+        DPRINT1("Not a session leader!\n");
+        return STATUS_UNABLE_TO_FREE_VM;
+    }
+
+    /* Remove one reference count */
+    KeEnterCriticalRegion();
+    /* FIXME: Do it */
+    KeLeaveCriticalRegion();
+
+    /* All done */
+    return STATUS_SUCCESS;
 }
 
 /* SYSTEM CALLS ***************************************************************/

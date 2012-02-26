@@ -527,17 +527,12 @@ void ApplicationPageUpdate(void)
 
 void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
 {
-    int                           idctrl;
     LPNMHDR                       pnmh;
-    LPNM_LISTVIEW                 pnmv;
     LV_DISPINFO*                  pnmdi;
     LPAPPLICATION_PAGE_LIST_ITEM  pAPLI;
     WCHAR                         szMsg[256];
 
-
-    idctrl = (int) wParam;
     pnmh = (LPNMHDR) lParam;
-    pnmv = (LPNM_LISTVIEW) lParam;
     pnmdi = (LV_DISPINFO*) lParam;
 
     if (pnmh->hwndFrom == hApplicationPageListCtrl) {

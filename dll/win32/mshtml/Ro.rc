@@ -36,9 +36,9 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Instalator Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
-          "to work correctly. Wine can automatically download and install it for you.\n\n" \
-          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML to work correctly. Wine can automatically download and install it for you.\n\
+\n\
+Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
     CONTROL "Progres", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
     DEFPUSHBUTTON "&Instalează", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP

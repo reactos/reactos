@@ -1,3 +1,4 @@
+
 list(APPEND CRT_SOURCE
     conio/cgets.c
     conio/cputs.c
@@ -19,12 +20,11 @@ list(APPEND CRT_SOURCE
     direct/wgetdcwd.c
     direct/wmkdir.c
     direct/wrmdir.c
-    except/abnorter.c
-    except/checkesp.c
     except/cpp.c
     except/cppexcept.c
     except/except.c
     except/matherr.c
+    except/stack.c
     except/xcptfil.c
     float/chgsign.c
     float/copysign.c
@@ -122,6 +122,7 @@ list(APPEND CRT_SOURCE
     misc/amsg.c
     misc/assert.c
     misc/environ.c
+    misc/fltused.c
     misc/getargs.c
     misc/i10output.c
     misc/initterm.c
@@ -130,24 +131,35 @@ list(APPEND CRT_SOURCE
     misc/stubs.c
     misc/tls.c
     printf/_cprintf.c
+	printf/_cwprintf.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
+	printf/_vcwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
+    printf/_vsprintf_p.c
     printf/fprintf.c
+    printf/fprintf_s.c
     printf/fwprintf.c
+    printf/fwprintf_s.c
     printf/printf.c
+    printf/printf_s.c
     printf/sprintf.c
     printf/streamout.c
     printf/swprintf.c
     printf/vfprintf.c
+    printf/vfprintf_s.c
     printf/vfwprintf.c
+    printf/vfwprintf_s.c
     printf/vprintf.c
+    printf/vprintf_s.c
     printf/vsprintf.c
     printf/vswprintf.c
     printf/vwprintf.c
+    printf/vwprintf_s.c
     printf/wprintf.c
+    printf/wprintf_s.c
     printf/wstreamout.c
     process/_cwait.c
     process/_system.c
@@ -171,7 +183,6 @@ list(APPEND CRT_SOURCE
     stdio/find64.c
     stdio/findi64.c
     stdio/fmode.c
-    stdio/lock_file.c
     stdio/perror.c
     stdio/popen.c
     stdio/stat.c
@@ -215,7 +226,6 @@ list(APPEND CRT_SOURCE
     string/ctype.c
     string/itoa.c
     string/itow.c
-    string/lasttok.c
     string/scanf.c
     string/splitp.c
     string/strcoll.c
@@ -274,7 +284,6 @@ list(APPEND CRT_SOURCE
     time/time64.c
     time/time.c
     time/timezone.c
-    time/tzname.c
     time/utime32.c
     time/utime64.c
     time/utime.c
@@ -298,12 +307,12 @@ list(APPEND CRT_SOURCE
     wstring/wcstok.c
     wstring/wcsupr.c
     wstring/wcsxfrm.c
-    wstring/wlasttok.c
     wine/heap.c
     wine/undname.c)
 
 if(ARCH MATCHES i386)
     list(APPEND CRT_SOURCE
+        except/i386/chkesp.s
         except/i386/prolog.s
         except/i386/seh.s
         except/i386/seh_prolog.s
@@ -313,20 +322,6 @@ if(ARCH MATCHES i386)
         float/i386/fpreset.c
         float/i386/logb.c
         float/i386/statfp.c
-        setjmp/i386/setjmp.s)
-elseif(ARCH MATCHES amd64)
-    list(APPEND CRT_SOURCE
-        except/amd64/seh.s
-        float/i386/clearfp.c
-        float/i386/cntrlfp.c
-        float/i386/fpreset.c
-        float/i386/logb.c
-        float/i386/statfp.c
-        setjmp/amd64/setjmp.s)
-endif()
-
-if(ARCH MATCHES i386)
-    list(APPEND CRT_SOURCE
         math/i386/alldiv_asm.s
         math/i386/alldvrm_asm.s
         math/i386/allmul_asm.s
@@ -362,6 +357,7 @@ if(ARCH MATCHES i386)
         mem/i386/memmove_asm.s
         mem/i386/memset_asm.s
         misc/i386/readcr4.S
+        setjmp/i386/setjmp.s
         string/i386/strcat_asm.s
         string/i386/strchr_asm.s
         string/i386/strcmp_asm.s
@@ -382,8 +378,50 @@ if(ARCH MATCHES i386)
         string/i386/wcsncpy_asm.s
         string/i386/wcsnlen_asm.s
         string/i386/wcsrchr_asm.s)
-else()
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/i386/cpp.s)
+    endif()
+elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
+        except/amd64/seh.s
+        except/amd64/ehandler.c
+        float/amd64/clearfp.S
+        float/amd64/getsetfpcw.S
+        float/i386/cntrlfp.c
+        float/amd64/fpreset.S
+        float/amd64/logb.S
+        float/i386/statfp.c
+        math/amd64/acos.S
+        math/amd64/acosf.S
+        math/amd64/atan.S
+        math/amd64/atan2.S
+        math/amd64/ceil.S
+        math/amd64/ceilf.S
+        math/amd64/exp.S
+        math/amd64/fabs.S
+        math/amd64/floor.S
+        math/amd64/floorf.S
+        math/amd64/fmod.S
+        math/amd64/fmodf.S
+        math/amd64/ldexp.S
+        math/amd64/log.S
+        math/amd64/log10.S
+        math/amd64/pow.S
+        math/amd64/sqrt.S
+        math/amd64/sqrtf.S
+        math/amd64/tan.S
+        setjmp/amd64/setjmp.s)
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/amd64/cpp.s)
+    endif()
+endif()
+
+if(NOT ARCH MATCHES i386)
+    list(APPEND CRT_SOURCE
+        math/cos.c
+        math/sin.c
         math/stubs.c
         mem/memchr.c
         mem/memcpy.c
@@ -411,32 +449,14 @@ else()
         string/wcsrchr.c)
 endif()
 
-if(ARCH MATCHES amd64)
-    list(APPEND CRT_SOURCE
-        math/cos.c
-        math/sin.c
-        math/amd64/alldiv.S
-        math/amd64/atan.S
-        math/amd64/atan2.S
-        math/amd64/ceil.S
-        math/amd64/ceilf.S
-        math/amd64/exp.S
-        math/amd64/fabs.S
-        math/amd64/floor.S
-        math/amd64/floorf.S
-        math/amd64/fmod.S
-        math/amd64/fmodf.S
-        math/amd64/ldexp.S
-        math/amd64/log.S
-        math/amd64/log10.S
-        math/amd64/pow.S
-        math/amd64/sqrt.S
-        math/amd64/sqrtf.S
-        math/amd64/tan.S)
-endif()
-
 add_library(crt ${CRT_SOURCE})
 target_link_libraries(crt chkstk)
-set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
-add_pch(crt precomp.h)
+add_target_compile_definitions(crt
+    __MINGW_IMPORT=extern
+    USE_MSVCRT_PREFIX
+    _MSVCRT_LIB_
+    _MSVCRT_
+    _MT
+    CRTDLL)
+#add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)

@@ -31,53 +31,56 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
 /* FUNCTIONS *****************************************************************/
 
 void
 DrawCaret(HWND hWnd,
           PTHRDCARETINFO CaretInfo)
 {
-    HDC hDC, hComp;
+    HDC hdc, hdcMem;
+    HBITMAP hbmOld;
+    BOOL bDone = FALSE;
 
-    hDC = GetDC(hWnd);
-    if(hDC)
+    hdc = GetDC(hWnd);
+    if (!hdc)
     {
-        if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
-        {
-            hComp = CreateCompatibleDC(hDC);
-            if(hComp)
-            {
-                SelectObject(hComp, CaretInfo->Bitmap);
-                BitBlt(hDC,
-                       CaretInfo->Pos.x,
-                       CaretInfo->Pos.y,
-                       CaretInfo->Size.cx,
-                       CaretInfo->Size.cy,
-                       hComp,
-                       0,
-                       0,
-                       SRCINVERT);
-                DeleteDC(hComp);
-            }
-            else
-                PatBlt(hDC,
-                       CaretInfo->Pos.x,
-                       CaretInfo->Pos.y,
-                       CaretInfo->Size.cx,
-                       CaretInfo->Size.cy,
-                       DSTINVERT);
-        }
-        else
-        {
-            PatBlt(hDC,
-                   CaretInfo->Pos.x,
-                   CaretInfo->Pos.y,
-                   CaretInfo->Size.cx,
-                   CaretInfo->Size.cy,
-                   DSTINVERT);
-        }
-        ReleaseDC(hWnd, hDC);
+        ERR("GetDC failed\n");
+        return;
     }
+
+    if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
+    {
+        hdcMem = CreateCompatibleDC(hdc);
+        if (hdcMem)
+        {
+            hbmOld = SelectObject(hdcMem, CaretInfo->Bitmap);
+            bDone = BitBlt(hdc,
+                           CaretInfo->Pos.x,
+                           CaretInfo->Pos.y,
+                           CaretInfo->Size.cx,
+                           CaretInfo->Size.cy,
+                           hdcMem,
+                           0,
+                           0,
+                           SRCINVERT);
+            SelectObject(hdcMem, hbmOld);
+            DeleteDC(hdcMem);
+        }
+    }
+
+    if (!bDone)
+    {
+        PatBlt(hdc,
+               CaretInfo->Pos.x,
+               CaretInfo->Pos.y,
+               CaretInfo->Size.cx,
+               CaretInfo->Size.cy,
+               DSTINVERT);
+    }
+
+    ReleaseDC(hWnd, hdc);
 }
 
 
@@ -88,7 +91,7 @@ BOOL
 WINAPI
 DestroyCaret(VOID)
 {
-    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
+    return NtUserxDestroyCaret();
 }
 
 
@@ -99,7 +102,7 @@ BOOL
 WINAPI
 SetCaretBlinkTime(UINT uMSeconds)
 {
-    return NtUserSetCaretBlinkTime(uMSeconds);
+    return NtUserxSetCaretBlinkTime(uMSeconds);
 }
 
 
@@ -108,10 +111,9 @@ SetCaretBlinkTime(UINT uMSeconds)
  */
 BOOL
 WINAPI
-SetCaretPos(int X,
-            int Y)
+SetCaretPos(int X, int Y)
 {
-    return NtUserSetCaretPos(X, Y);
+    return NtUserxSetCaretPos(X, Y);
 }
 
 /* EOF */

@@ -79,6 +79,7 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 #define SHCNRF_RecursiveInterrupt	0x1000	/* Must be combined with SHCNRF_InterruptLevel */
 #define SHCNRF_NewDelivery		0x8000	/* Messages use shared memory */
 
+
 /****************************************************************************
  * Shell Common Dialogs
  */
@@ -132,30 +133,6 @@ DWORD WINAPI SHNetConnectionDialog(
 	HWND hwndOwner,
 	LPCWSTR lpstrRemoteName,
 	DWORD dwType);
-
-/****************************************************************************
- * Memory Routines
- */
-
-/* The Platform SDK's shlobj.h header defines similar functions with a
- * leading underscore. However those are unusable because of the leading
- * underscore, because they have an incorrect calling convention, and
- * because these functions are not exported by name anyway.
- */
-HANDLE WINAPI SHAllocShared(
-	LPVOID pv,
-	ULONG cb,
-	DWORD pid);
-
-BOOL WINAPI SHFreeShared(
-	HANDLE hMem,
-	DWORD pid);
-
-LPVOID WINAPI SHLockShared(
-	HANDLE hMem,
-	DWORD pid);
-
-BOOL WINAPI SHUnlockShared(LPVOID pv);
 
 /****************************************************************************
  * Cabinet Window Messages
@@ -406,9 +383,6 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
 	LPCWSTR lpszShortName,
 	LPCWSTR lpszLongName);
 
-BOOL WINAPI PathQualifyA(LPCSTR path);
-BOOL WINAPI PathQualifyW(LPCWSTR path);
-#define PathQualify WINELIB_NAME_AW(PathQualify)
 BOOL  WINAPI PathQualifyAW(LPCVOID path);
 
 

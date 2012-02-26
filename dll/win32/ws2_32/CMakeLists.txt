@@ -1,6 +1,4 @@
 
-set_unicode()
-
 add_definitions(-DLE)
 add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
 
@@ -24,13 +22,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 add_library(ws2_32 SHARED ${SOURCE})
-
-set_module_type(ws2_32 win32dll)
-
+set_module_type(ws2_32 win32dll UNICODE)
 target_link_libraries(ws2_32 wine)
-
-add_importlibs(ws2_32 user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
+add_delay_importlibs(ws2_32 user32)
+add_importlibs(ws2_32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
 add_pch(ws2_32 include/ws2_32.h)
-
 add_cd_file(TARGET ws2_32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(ws2_32.spec)
+add_importlib_target(ws2_32.spec ws2_32.dll)

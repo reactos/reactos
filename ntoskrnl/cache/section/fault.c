@@ -49,10 +49,12 @@
 #include "newmm.h"
 #define NDEBUG
 #include <debug.h>
+#include "../mm/ARM3/miarm.h"
 
 #define DPRINTC DPRINT
 
 extern KEVENT MmWaitPageEvent;
+extern PMMWSL MmWorkingSetList;
 
 NTSTATUS
 NTAPI
@@ -66,7 +68,7 @@ MmNotPresentFaultCachePage
 	NTSTATUS Status;
 	PVOID PAddress;
 	ULONG Consumer;
-	PMM_CACHE_SECTION_SEGMENT Segment;
+	PMM_SECTION_SEGMENT Segment;
 	LARGE_INTEGER FileOffset, TotalOffset;
 	ULONG Entry;
 	ULONG Attributes;
@@ -88,9 +90,9 @@ MmNotPresentFaultCachePage
 	PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
 	TotalOffset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
 
-	Segment = MemoryArea->Data.CacheData.Segment;
+	Segment = MemoryArea->Data.SectionData.Segment;
 
-	TotalOffset.QuadPart += MemoryArea->Data.CacheData.ViewOffset.QuadPart;
+	TotalOffset.QuadPart += MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 	FileOffset = TotalOffset;
 
 	//Consumer = (Segment->Flags & MM_DATAFILE_SEGMENT) ? MC_CACHE : MC_USER;
@@ -106,12 +108,12 @@ MmNotPresentFaultCachePage
 	/*
 	 * Lock the segment
 	 */
-	MmLockCacheSectionSegment(Segment);
+	MmLockSectionSegment(Segment);
 
 	/*
 	 * Get the entry corresponding to the offset within the section
 	 */
-	Entry = MiGetPageEntryCacheSectionSegment(Segment, &TotalOffset);
+	Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
 
 	Attributes = PAGE_READONLY;
 
@@ -125,13 +127,13 @@ MmNotPresentFaultCachePage
 		if (Required->State & 2)
 		{
 			DPRINT("Set in section @ %x\n", TotalOffset.LowPart);
-			Status = MiSetPageEntryCacheSectionSegment
+			Status = MmSetPageEntrySectionSegment
 				(Segment, &TotalOffset, Entry = MAKE_PFN_SSE(Required->Page[0]));
 			if (!NT_SUCCESS(Status))
 			{
 				MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
 			}
-			MmUnlockCacheSectionSegment(Segment);
+			MmUnlockSectionSegment(Segment);
 			MiSetPageEvent(Process, Address);
 			DPRINT("Status %x\n", Status);
 			return STATUS_MM_RESTART_OPERATION;
@@ -140,6 +142,14 @@ MmNotPresentFaultCachePage
 		{
 			DPRINT("Set %x in address space @ %x\n", Required->Page[0], Address);
 			Status = MmCreateVirtualMapping(Process, Address, Attributes, Required->Page, 1);
+#if (_MI_PAGING_LEVELS == 2)
+            /* Reference Page Directory Entry */
+            if(Address < MmSystemRangeStart)
+            {   
+                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+            }
+#endif   
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
@@ -149,7 +159,7 @@ MmNotPresentFaultCachePage
 				// Drop the reference for our address space ...
 				MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
 			}
-			MmUnlockCacheSectionSegment(Segment);
+			MmUnlockSectionSegment(Segment);
 			DPRINTC("XXX Set Event %x\n", Status);
 			MiSetPageEvent(Process, Address);
 			DPRINT("Status %x\n", Status);
@@ -164,13 +174,21 @@ MmNotPresentFaultCachePage
 		MmReferencePage(Page);
 
 		Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
+#if (_MI_PAGING_LEVELS == 2)
+        /* Reference Page Directory Entry */
+        if(Address < MmSystemRangeStart)
+        {   
+            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+        }
+#endif   
 		if (NT_SUCCESS(Status))
 		{
 			MmInsertRmap(Page, Process, Address);
 		}
 		DPRINT("XXX Set Event %x\n", Status);
 		MiSetPageEvent(Process, Address);
-		MmUnlockCacheSectionSegment(Segment);
+		MmUnlockSectionSegment(Segment);
 		DPRINT("Status %x\n", Status);
 		return Status;
 	}
@@ -188,8 +206,8 @@ MmNotPresentFaultCachePage
 		Required->FileOffset = FileOffset;
 		Required->Amount = PAGE_SIZE;
 		Required->DoAcquisition = MiReadFilePage;
-		MiSetPageEntryCacheSectionSegment(Segment, &TotalOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
-		MmUnlockCacheSectionSegment(Segment);
+		MmSetPageEntrySectionSegment(Segment, &TotalOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+		MmUnlockSectionSegment(Segment);
 		return STATUS_MORE_PROCESSING_REQUIRED;
 	}
 	ASSERT(FALSE);
@@ -232,54 +250,54 @@ MiCowCacheSectionPage
  BOOLEAN Locked,
  PMM_REQUIRED_RESOURCES Required)
 {
-   PMM_CACHE_SECTION_SEGMENT Segment;
+   PMM_SECTION_SEGMENT Segment;
    PFN_NUMBER NewPage, OldPage;
    NTSTATUS Status;
    PVOID PAddress;
    LARGE_INTEGER Offset;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
+
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
-   Segment = MemoryArea->Data.CacheData.Segment;
+   Segment = MemoryArea->Data.SectionData.Segment;
 
    /*
     * Lock the segment
     */
-   MmLockCacheSectionSegment(Segment);
+   MmLockSectionSegment(Segment);
  
    /*
     * Find the offset of the page
     */
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
    Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
-	   MemoryArea->Data.CacheData.ViewOffset.QuadPart;
+	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
-#if 0 // XXX Cache sections are not CoW.  For now, treat all access violations this way.
-   if ((!Segment->WriteCopy &&
-        !MemoryArea->Data.CacheData.WriteCopyView) ||
+   if (!Segment->WriteCopy /*&&
+       !MemoryArea->Data.SectionData.WriteCopyView*/ ||
        Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
-#endif
    {
-#if 0 // XXX Cache sections don't have regions at present, which streamlines things
+#if 0
        if (Region->Protect == PAGE_READWRITE ||
            Region->Protect == PAGE_EXECUTE_READWRITE)
 #endif
        {
+           ULONG Entry;
            DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n", Segment, Process, PAddress, Offset.u.LowPart, MmGetPfnForProcess(Process, Address));
            if (Segment->FileObject)
            {
                DPRINTC("file %wZ\n", &Segment->FileObject->FileName);
            }
-           ULONG Entry = MiGetPageEntryCacheSectionSegment(Segment, &Offset);
+           Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
            DPRINT("Entry %x\n", Entry);
            if (Entry &&
                !IS_SWAP_FROM_SSE(Entry) &&
                PFN_FROM_SSE(Entry) == MmGetPfnForProcess(Process, Address)) {
-               MiSetPageEntryCacheSectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
+               MmSetPageEntrySectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
            }
            MmSetPageProtect(Process, PAddress, PAGE_READWRITE);
-           MmUnlockCacheSectionSegment(Segment);
+           MmSetDirtyPage(Process, PAddress);
+           MmUnlockSectionSegment(Segment);
            DPRINT("Done\n");
            return STATUS_SUCCESS;
        }
@@ -287,7 +305,7 @@ MiCowCacheSectionPage
        else
        {
            DPRINT("Not supposed to be writable\n");
-           MmUnlockCacheSectionSegment(Segment);
+           MmUnlockSectionSegment(Segment);
            return STATUS_ACCESS_VIOLATION;
        }
 #endif
@@ -299,7 +317,7 @@ MiCowCacheSectionPage
 	   if (MmIsPageSwapEntry(Process, Address))
 	   {
 		   MmGetPageFileMapping(Process, Address, &SwapEntry);
-		   MmUnlockCacheSectionSegment(Segment);
+		   MmUnlockSectionSegment(Segment);
 		   if (SwapEntry == MM_WAIT_ENTRY)
 			   return STATUS_SUCCESS + 1; // Wait ... somebody else is getting it right now
 		   else
@@ -312,7 +330,7 @@ MiCowCacheSectionPage
 	   Required->Line = __LINE__;
 	   Required->DoAcquisition = MiGetOnePage;
 	   MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-	   MmUnlockCacheSectionSegment(Segment);
+	   MmUnlockSectionSegment(Segment);
 	   return STATUS_MORE_PROCESSING_REQUIRED;
    }
 
@@ -342,13 +360,13 @@ MiCowCacheSectionPage
    {
       DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
       ASSERT(FALSE);
-	  MmUnlockCacheSectionSegment(Segment);
+	  MmUnlockSectionSegment(Segment);
       return(Status);
    }
 
    MmInsertRmap(NewPage, Process, PAddress);
    MmReleasePageMemoryConsumer(MC_CACHE, OldPage);
-   MmUnlockCacheSectionSegment(Segment);
+   MmUnlockSectionSegment(Segment);
 
    DPRINT("Address 0x%.8X\n", Address);
    return(STATUS_SUCCESS);
@@ -395,6 +413,9 @@ MmpSectionAccessFaultInner
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
    MM_REQUIRED_RESOURCES Resources = { 0 };
+   WORK_QUEUE_WITH_CONTEXT Context;
+
+   RtlZeroMemory(&Context, sizeof(WORK_QUEUE_WITH_CONTEXT));
 
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -478,7 +499,6 @@ MmpSectionAccessFaultInner
 	  {
 		  if (Thread->ActiveFaultCount > 0)
 		  {
-			  WORK_QUEUE_WITH_CONTEXT Context = { };
 			  DPRINT("Already fault handling ... going to work item (%x)\n", Address);
 			  Context.AddressSpace = AddressSpace;
 			  Context.MemoryArea = MemoryArea;
@@ -588,7 +608,10 @@ MmNotPresentFaultCacheSectionInner
 	BOOLEAN Locked = FromMdl;
 	PMEMORY_AREA MemoryArea;
 	MM_REQUIRED_RESOURCES Resources = { 0 };
+	WORK_QUEUE_WITH_CONTEXT Context;
 	NTSTATUS Status = STATUS_SUCCESS;
+
+    RtlZeroMemory(&Context, sizeof(WORK_QUEUE_WITH_CONTEXT));
 
 	if (!FromMdl)
 	{
@@ -657,9 +680,8 @@ MmNotPresentFaultCacheSectionInner
 		}
 		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 		{
-			if (Thread->ActiveFaultCount > 1)
+			if (Thread->ActiveFaultCount > 2)
 			{
-				WORK_QUEUE_WITH_CONTEXT Context = { };
 				DPRINTC("Already fault handling ... going to work item (%x)\n", Address);
 				Context.AddressSpace = AddressSpace;
 				Context.MemoryArea = MemoryArea;

@@ -128,7 +128,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     RECT             rc;
 #endif
     LPRECT           pRC;
-    int              idctrl;
     LPNMHDR          pnmh;
     WINDOWPLACEMENT  wp;
 
@@ -304,7 +303,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_NOTIFY:
-        idctrl = (int)wParam;
         pnmh = (LPNMHDR)lParam;
         if ((pnmh->hwndFrom == hTabWnd) &&
             (pnmh->idFrom == IDC_TAB) &&
@@ -772,11 +770,11 @@ void SaveSettings(void)
 
 void TaskManager_OnRestoreMainWindow(void)
 {
-    HMENU hMenu, hOptionsMenu;
+    //HMENU hMenu, hOptionsMenu;
     BOOL OnTop;
 
-    hMenu = GetMenu(hMainWnd);
-    hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
+    //hMenu = GetMenu(hMainWnd);
+    //hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
     OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
     OpenIcon(hMainWnd);

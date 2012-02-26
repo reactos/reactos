@@ -166,7 +166,8 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                         OUT PULONG ErrorOffset)
 {
     PFILE_FULL_EA_INFORMATION EaBufferEnd;
-    ULONG NextEaBufferOffset, IntEaLength;
+    ULONG NextEaBufferOffset;
+    LONG IntEaLength;
 
     PAGED_CODE();
 
@@ -185,7 +186,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
             EaBufferEnd->EaNameLength + EaBufferEnd->EaValueLength +
             FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]) + 1;
 
-        if (IntEaLength >= NextEaBufferOffset)
+        if ((ULONG)IntEaLength >= NextEaBufferOffset)
         {
             /* is the EaBufferName terminated with zero? */
             if (EaBufferEnd->EaName[EaBufferEnd->EaNameLength]==0)

@@ -63,8 +63,18 @@ Author:
 #define MAP_PROCESS                                         1
 #define MAP_SYSTEM                                          2
 
-#ifndef NTOS_MODE_USER
+//
+// Flags for ProcessExecutionOptions
+//
+#define MEM_EXECUTE_OPTION_DISABLE                          0x1 
+#define MEM_EXECUTE_OPTION_ENABLE                           0x2
+#define MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION          0x4
+#define MEM_EXECUTE_OPTION_PERMANENT                        0x8
+#define MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE          0x10
+#define MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE            0x20 
+#define MEM_EXECUTE_OPTION_VALID_FLAGS                      0x3F
 
+#ifndef NTOS_MODE_USER
 //
 // Virtual Memory Flags
 //
@@ -317,11 +327,18 @@ typedef struct _SECTION_IMAGE_INFORMATION
 {
     PVOID TransferAddress;
     ULONG ZeroBits;
-    ULONG MaximumStackSize;
-    ULONG CommittedStackSize;
+    SIZE_T MaximumStackSize;
+    SIZE_T CommittedStackSize;
     ULONG SubSystemType;
-    USHORT SubSystemMinorVersion;
-    USHORT SubSystemMajorVersion;
+    union
+    {
+        struct
+        {
+            USHORT SubSystemMinorVersion;
+            USHORT SubSystemMajorVersion;
+        };
+        ULONG SubSystemVersion;
+    };
     ULONG GpValue;
     USHORT ImageCharacteristics;
     USHORT DllCharacteristics;
@@ -638,8 +655,8 @@ typedef struct _MM_AVL_TABLE
 //
 typedef struct _MMADDRESS_LIST
 {
-    ULONG StartVpn;
-    ULONG EndVpn;
+    ULONG_PTR StartVpn;
+    ULONG_PTR EndVpn;
 } MMADDRESS_LIST, *PMMADDRESS_LIST;
 
 //
@@ -647,13 +664,17 @@ typedef struct _MMADDRESS_LIST
 //
 typedef struct _MMVAD_FLAGS
 {
-    ULONG CommitCharge:19;
-    ULONG NoChange:1;
-    ULONG VadType:3;
-    ULONG MemCommit:1;
-    ULONG Protection:5;
-    ULONG Spare:2;
-    ULONG PrivateMemory:1;
+#ifdef _WIN64
+    ULONG_PTR CommitCharge:51;
+#else
+    ULONG_PTR CommitCharge:19;
+#endif
+    ULONG_PTR NoChange:1;
+    ULONG_PTR VadType:3;
+    ULONG_PTR MemCommit:1;
+    ULONG_PTR Protection:5;
+    ULONG_PTR Spare:2;
+    ULONG_PTR PrivateMemory:1;
 } MMVAD_FLAGS, *PMMVAD_FLAGS;
 
 //
@@ -684,11 +705,11 @@ typedef struct _MMVAD
     } u1;
     struct _MMVAD *LeftChild;
     struct _MMVAD *RightChild;
-    ULONG StartingVpn;
-    ULONG EndingVpn;
+    ULONG_PTR StartingVpn;
+    ULONG_PTR EndingVpn;
     union
     {
-        ULONG LongFlags;
+        ULONG_PTR LongFlags;
         MMVAD_FLAGS VadFlags;
     } u;
     PCONTROL_AREA ControlArea;
@@ -713,11 +734,11 @@ typedef struct _MMVAD_LONG
     } u1;
     PMMVAD LeftChild;
     PMMVAD RightChild;
-    ULONG StartingVpn;
-    ULONG EndingVpn;
+    ULONG_PTR StartingVpn;
+    ULONG_PTR EndingVpn;
     union
     {
-        ULONG LongFlags;
+        ULONG_PTR LongFlags;
         MMVAD_FLAGS VadFlags;
     } u;
     PCONTROL_AREA ControlArea;
@@ -752,11 +773,11 @@ typedef struct _MMVAD_SHORT
     } u1;
     PMMVAD LeftChild;
     PMMVAD RightChild;
-    ULONG StartingVpn;
-    ULONG EndingVpn;
+    ULONG_PTR StartingVpn;
+    ULONG_PTR EndingVpn;
     union
     {
-        ULONG LongFlags;
+        ULONG_PTR LongFlags;
         MMVAD_FLAGS VadFlags;
     } u;
 } MMVAD_SHORT, *PMMVAD_SHORT;
@@ -969,7 +990,7 @@ extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
 //
 // Section Object Type
 //
-extern NTKERNELAPI POBJECT_TYPE MmSectionObjectType;
+extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 
 #endif // !NTOS_MODE_USER
 

@@ -1,6 +1,6 @@
 
 if(NOT MSVC)
-    add_compiler_flags(-w)
+    add_compile_flags("-w")
 endif()
 
 add_definitions(
@@ -260,7 +260,11 @@ endif()
 
 add_library(mesa32 SHARED ${SOURCE})
 
-set_entrypoint(mesa32 0)
+set_module_type(mesa32 win32dll ENTRYPOINT 0)
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 add_dependencies(mesa32 psdk)
 add_cd_file(TARGET mesa32 DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(mesa32)
+endif()

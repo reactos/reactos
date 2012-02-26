@@ -478,7 +478,6 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Writes a cluster to the FAT12 physical and in-memory tables
  */
 {
-  ULONG FATsector;
   ULONG FATOffset;
   PUCHAR CBlock;
   PVOID BaseAddress;
@@ -510,7 +509,6 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
       CBlock[FATOffset + 1] = (UCHAR)(NewValue >> 4);
     }
   /* Write the changed FAT sector(s) to disk */
-  FATsector = FATOffset / DeviceExt->FatInfo.BytesPerSector;
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
   return(STATUS_SUCCESS);

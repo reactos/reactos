@@ -611,7 +611,7 @@ cpp_quote("#endif")
             DWORD           dwCookie;
             DWORD           dwReserved1;
             DWORD           dwReserved2;
-        } ADRESSPROPS, *LPADDRESSPROPS;
+        } ADDRESSPROPS, *LPADDRESSPROPS;
 
         typedef struct tagADDRESSLIST
         {

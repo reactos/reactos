@@ -35,20 +35,18 @@ typedef struct tagFD31_DATA
     LPOPENFILENAMEA ofnA; /* original structure if 32bits ansi dialog */
 } FD31_DATA, *PFD31_DATA;
 
-extern BOOL FD32_GetTemplate(PFD31_DATA lfs);
+extern BOOL FD32_GetTemplate(PFD31_DATA lfs) DECLSPEC_HIDDEN;
 
-extern BOOL FD31_Init(void);
-extern PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode);
-extern void FD31_DestroyPrivate(PFD31_DATA lfs);
-extern void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open);
-extern void FD31_FreeOfnW(OPENFILENAMEW *ofnW);
+extern BOOL FD31_Init(void) DECLSPEC_HIDDEN;
+extern PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode) DECLSPEC_HIDDEN;
+extern void FD31_DestroyPrivate(PFD31_DATA lfs) DECLSPEC_HIDDEN;
 extern BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
-                                LPARAM lParam);
-extern LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam);
+                                LPARAM lParam) DECLSPEC_HIDDEN;
+extern LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam) DECLSPEC_HIDDEN;
 extern LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
-                            int savedlg, const DRAWITEMSTRUCT *lpdis);
+                            int savedlg, const DRAWITEMSTRUCT *lpdis) DECLSPEC_HIDDEN;
 extern LRESULT FD31_WMCommand(HWND hWnd, LPARAM lParam, UINT notification,
-                              UINT control, const FD31_DATA *lfs);
-extern int FD31_GetFldrHeight(void);
+                              UINT control, const FD31_DATA *lfs) DECLSPEC_HIDDEN;
+extern int FD31_GetFldrHeight(void) DECLSPEC_HIDDEN;
 
 #endif /* _WINE_DLL_FILEDLG31_H */

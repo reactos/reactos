@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DLE)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -14,7 +13,8 @@ list(APPEND SOURCE
 
 add_library(mswsock SHARED ${SOURCE})
 
-set_module_type(mswsock win32dll)
+set_module_type(mswsock win32dll UNICODE)
 add_importlibs(mswsock ws2_32 msvcrt kernel32)
+add_pch(mswsock precomp.h)
 add_cd_file(TARGET mswsock DESTINATION reactos/system32 FOR all)
-add_importlib_target(mswsock.spec)
+add_importlib_target(mswsock.spec mswsock.dll)

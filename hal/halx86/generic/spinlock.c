@@ -224,7 +224,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
 VOID
 NTAPI
-HalpAcquireSystemHardwareSpinLock(VOID)
+HalpAcquireCmosSpinLock(VOID)
 {
     ULONG Flags;
 

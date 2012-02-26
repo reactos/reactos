@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.5.1 [February 3, 2011]
+ * Last changed in libpng 1.5.7 [December 15, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -99,8 +99,10 @@ png_write_info_before_PLTE(png_structp png_ptr, png_infop info_ptr)
          int keep = png_handle_as_unknown(png_ptr, up->name);
 
          if (keep != PNG_HANDLE_CHUNK_NEVER &&
-             up->location && !(up->location & PNG_HAVE_PLTE) &&
+             up->location &&
+             !(up->location & PNG_HAVE_PLTE) &&
              !(up->location & PNG_HAVE_IDAT) &&
+             !(up->location & PNG_AFTER_IDAT) &&
              ((up->name[3] & 0x20) || keep == PNG_HANDLE_CHUNK_ALWAYS ||
              (png_ptr->flags & PNG_FLAG_KEEP_UNSAFE_CHUNKS)))
          {
@@ -273,8 +275,10 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
       {
          int keep = png_handle_as_unknown(png_ptr, up->name);
          if (keep != PNG_HANDLE_CHUNK_NEVER &&
-             up->location && (up->location & PNG_HAVE_PLTE) &&
+             up->location &&
+             (up->location & PNG_HAVE_PLTE) &&
              !(up->location & PNG_HAVE_IDAT) &&
+             !(up->location & PNG_AFTER_IDAT) &&
              ((up->name[3] & 0x20) || keep == PNG_HANDLE_CHUNK_ALWAYS ||
              (png_ptr->flags & PNG_FLAG_KEEP_UNSAFE_CHUNKS)))
          {
@@ -380,7 +384,8 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
       {
          int keep = png_handle_as_unknown(png_ptr, up->name);
          if (keep != PNG_HANDLE_CHUNK_NEVER &&
-             up->location && (up->location & PNG_AFTER_IDAT) &&
+             up->location &&
+             (up->location & PNG_AFTER_IDAT) &&
              ((up->name[3] & 0x20) || keep == PNG_HANDLE_CHUNK_ALWAYS ||
              (png_ptr->flags & PNG_FLAG_KEEP_UNSAFE_CHUNKS)))
          {
@@ -462,10 +467,9 @@ png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
    png_structp png_ptr;
 #ifdef PNG_SETJMP_SUPPORTED
 #ifdef USE_FAR_KEYWORD
-   jmp_buf png_jmpbuf;
+   jmp_buf tmp_jmpbuf;
 #endif
 #endif
-   int i;
 
    png_debug(1, "in png_create_write_struct");
 
@@ -486,15 +490,16 @@ png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
 
 #ifdef PNG_SETJMP_SUPPORTED
 /* Applications that neglect to set up their own setjmp() and then
-   encounter a png_error() will longjmp here.  Since the jmpbuf is
-   then meaningless we abort instead of returning. */
+ * encounter a png_error() will longjmp here.  Since the jmpbuf is
+ * then meaningless we abort instead of returning.
+ */
 #ifdef USE_FAR_KEYWORD
-   if (setjmp(png_jmpbuf))
+   if (setjmp(tmp_jmpbuf))
 #else
    if (setjmp(png_jmpbuf(png_ptr))) /* sets longjmp to match setjmp */
 #endif
 #ifdef USE_FAR_KEYWORD
-   png_memcpy(png_jmpbuf(png_ptr), png_jmpbuf, png_sizeof(jmp_buf));
+   png_memcpy(png_jmpbuf(png_ptr), tmp_jmpbuf, png_sizeof(jmp_buf));
 #endif
       PNG_ABORT();
 #endif
@@ -504,49 +509,8 @@ png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
 #endif /* PNG_USER_MEM_SUPPORTED */
    png_set_error_fn(png_ptr, error_ptr, error_fn, warn_fn);
 
-   if (user_png_ver)
-   {
-      i = 0;
-      do
-      {
-         if (user_png_ver[i] != png_libpng_ver[i])
-            png_ptr->flags |= PNG_FLAG_LIBRARY_MISMATCH;
-      } while (png_libpng_ver[i++]);
-   }
-
-   if (png_ptr->flags & PNG_FLAG_LIBRARY_MISMATCH)
-   {
-     /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
-      * we must recompile any applications that use any older library version.
-      * For versions after libpng 1.0, we will be compatible, so we need
-      * only check the first digit.
-      */
-     if (user_png_ver == NULL || user_png_ver[0] != png_libpng_ver[0] ||
-         (user_png_ver[0] == '1' && user_png_ver[2] != png_libpng_ver[2]) ||
-         (user_png_ver[0] == '0' && user_png_ver[2] < '9'))
-     {
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-        char msg[80];
-
-        if (user_png_ver)
-        {
-            png_snprintf2(msg, 80,
-                "Application built with libpng-%.20s"
-                " but running with %.20s",
-                user_png_ver,
-                png_libpng_ver);
-            png_warning(png_ptr, msg);
-         }
-#else
-         png_warning(png_ptr,
-             "Incompatible libpng version in application and library");
-#endif
-#ifdef PNG_ERROR_NUMBERS_SUPPORTED
-        png_ptr->flags = 0;
-#endif
-        png_cleanup_needed = 1;
-     }
-   }
+   if (!png_user_version_check(png_ptr, user_png_ver))
+      png_cleanup_needed = 1;
 
    /* Initialize zbuf - compression buffer */
    png_ptr->zbuf_size = PNG_ZBUF_SIZE;
@@ -645,6 +609,9 @@ png_write_image(png_structp png_ptr, png_bytepp image)
 void PNGAPI
 png_write_row(png_structp png_ptr, png_const_bytep row)
 {
+   /* 1.5.6: moved from png_struct to be a local structure: */
+   png_row_info row_info;
+
    if (png_ptr == NULL)
       return;
 
@@ -768,36 +735,31 @@ png_write_row(png_structp png_ptr, png_const_bytep row)
 #endif
 
    /* Set up row info for transformations */
-   png_ptr->row_info.color_type = png_ptr->color_type;
-   png_ptr->row_info.width = png_ptr->usr_width;
-   png_ptr->row_info.channels = png_ptr->usr_channels;
-   png_ptr->row_info.bit_depth = png_ptr->usr_bit_depth;
-   png_ptr->row_info.pixel_depth = (png_byte)(png_ptr->row_info.bit_depth *
-      png_ptr->row_info.channels);
+   row_info.color_type = png_ptr->color_type;
+   row_info.width = png_ptr->usr_width;
+   row_info.channels = png_ptr->usr_channels;
+   row_info.bit_depth = png_ptr->usr_bit_depth;
+   row_info.pixel_depth = (png_byte)(row_info.bit_depth * row_info.channels);
+   row_info.rowbytes = PNG_ROWBYTES(row_info.pixel_depth, row_info.width);
 
-   png_ptr->row_info.rowbytes = PNG_ROWBYTES(png_ptr->row_info.pixel_depth,
-      png_ptr->row_info.width);
-
-   png_debug1(3, "row_info->color_type = %d", png_ptr->row_info.color_type);
-   png_debug1(3, "row_info->width = %u", png_ptr->row_info.width);
-   png_debug1(3, "row_info->channels = %d", png_ptr->row_info.channels);
-   png_debug1(3, "row_info->bit_depth = %d", png_ptr->row_info.bit_depth);
-   png_debug1(3, "row_info->pixel_depth = %d", png_ptr->row_info.pixel_depth);
-   png_debug1(3, "row_info->rowbytes = %lu",
-       (unsigned long)png_ptr->row_info.rowbytes);
+   png_debug1(3, "row_info->color_type = %d", row_info.color_type);
+   png_debug1(3, "row_info->width = %u", row_info.width);
+   png_debug1(3, "row_info->channels = %d", row_info.channels);
+   png_debug1(3, "row_info->bit_depth = %d", row_info.bit_depth);
+   png_debug1(3, "row_info->pixel_depth = %d", row_info.pixel_depth);
+   png_debug1(3, "row_info->rowbytes = %lu", (unsigned long)row_info.rowbytes);
 
    /* Copy user's row into buffer, leaving room for filter byte. */
-   png_memcpy(png_ptr->row_buf + 1, row, png_ptr->row_info.rowbytes);
+   png_memcpy(png_ptr->row_buf + 1, row, row_info.rowbytes);
 
 #ifdef PNG_WRITE_INTERLACING_SUPPORTED
    /* Handle interlacing */
    if (png_ptr->interlaced && png_ptr->pass < 6 &&
        (png_ptr->transformations & PNG_INTERLACE))
    {
-      png_do_write_interlace(&(png_ptr->row_info),
-          png_ptr->row_buf + 1, png_ptr->pass);
+      png_do_write_interlace(&row_info, png_ptr->row_buf + 1, png_ptr->pass);
       /* This should always get caught above, but still ... */
-      if (!(png_ptr->row_info.width))
+      if (!(row_info.width))
       {
          png_write_finish_row(png_ptr);
          return;
@@ -805,9 +767,18 @@ png_write_row(png_structp png_ptr, png_const_bytep row)
    }
 #endif
 
+#ifdef PNG_WRITE_TRANSFORMS_SUPPORTED
    /* Handle other transformations */
    if (png_ptr->transformations)
-      png_do_write_transformations(png_ptr);
+      png_do_write_transformations(png_ptr, &row_info);
+#endif
+
+   /* At this point the row_info pixel depth must match the 'transformed' depth,
+    * which is also the output depth.
+    */
+   if (row_info.pixel_depth != png_ptr->pixel_depth ||
+      row_info.pixel_depth != png_ptr->transformed_pixel_depth)
+      png_error(png_ptr, "internal write transform logic error");
 
 #ifdef PNG_MNG_FEATURES_SUPPORTED
    /* Write filter_method 64 (intrapixel differencing) only if
@@ -823,12 +794,12 @@ png_write_row(png_structp png_ptr, png_const_bytep row)
        (png_ptr->filter_type == PNG_INTRAPIXEL_DIFFERENCING))
    {
       /* Intrapixel differencing */
-      png_do_write_intrapixel(&(png_ptr->row_info), png_ptr->row_buf + 1);
+      png_do_write_intrapixel(&row_info, png_ptr->row_buf + 1);
    }
 #endif
 
    /* Find a filter if necessary, filter the row and write it out. */
-   png_write_find_filter(png_ptr, &(png_ptr->row_info));
+   png_write_find_filter(png_ptr, &row_info);
 
    if (png_ptr->write_row_fn != NULL)
       (*(png_ptr->write_row_fn))(png_ptr, png_ptr->row_number, png_ptr->pass);
@@ -884,8 +855,6 @@ png_write_flush(png_structp png_ptr)
       {
          /* Write the IDAT and reset the zlib output buffer */
          png_write_IDAT(png_ptr, png_ptr->zbuf, png_ptr->zbuf_size);
-         png_ptr->zstream.next_out = png_ptr->zbuf;
-         png_ptr->zstream.avail_out = (uInt)png_ptr->zbuf_size;
          wrote_IDAT = 1;
       }
    } while (wrote_IDAT == 1);
@@ -896,8 +865,6 @@ png_write_flush(png_structp png_ptr)
       /* Write the IDAT and reset the zlib output buffer */
       png_write_IDAT(png_ptr, png_ptr->zbuf,
           png_ptr->zbuf_size - png_ptr->zstream.avail_out);
-      png_ptr->zstream.next_out = png_ptr->zbuf;
-      png_ptr->zstream.avail_out = (uInt)png_ptr->zbuf_size;
    }
    png_ptr->flush_rows = 0;
    png_flush(png_ptr);
@@ -918,13 +885,7 @@ png_destroy_write_struct(png_structpp png_ptr_ptr, png_infopp info_ptr_ptr)
    png_debug(1, "in png_destroy_write_struct");
 
    if (png_ptr_ptr != NULL)
-   {
       png_ptr = *png_ptr_ptr;
-#ifdef PNG_USER_MEM_SUPPORTED
-      free_fn = png_ptr->free_fn;
-      mem_ptr = png_ptr->mem_ptr;
-#endif
-   }
 
 #ifdef PNG_USER_MEM_SUPPORTED
    if (png_ptr != NULL)
@@ -983,7 +944,9 @@ png_write_destroy(png_structp png_ptr)
    jmp_buf tmp_jmp; /* Save jump buffer */
 #endif
    png_error_ptr error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    png_error_ptr warning_fn;
+#endif
    png_voidp error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    png_free_ptr free_fn;
@@ -992,7 +955,8 @@ png_write_destroy(png_structp png_ptr)
    png_debug(1, "in png_write_destroy");
 
    /* Free any memory zlib uses */
-   deflateEnd(&png_ptr->zstream);
+   if (png_ptr->zlib_state != PNG_ZLIB_UNINITIALIZED)
+      deflateEnd(&png_ptr->zstream);
 
    /* Free our memory.  png_free checks NULL for us. */
    png_free(png_ptr, png_ptr->zbuf);
@@ -1005,10 +969,6 @@ png_write_destroy(png_structp png_ptr)
    png_free(png_ptr, png_ptr->paeth_row);
 #endif
 
-#ifdef PNG_TIME_RFC1123_SUPPORTED
-   png_free(png_ptr, png_ptr->time_buffer);
-#endif
-
 #ifdef PNG_WRITE_WEIGHTED_FILTER_SUPPORTED
    /* Use this to save a little code space, it doesn't free the filter_costs */
    png_reset_filter_heuristics(png_ptr);
@@ -1018,11 +978,13 @@ png_write_destroy(png_structp png_ptr)
 
 #ifdef PNG_SETJMP_SUPPORTED
    /* Reset structure */
-   png_memcpy(tmp_jmp, png_ptr->png_jmpbuf, png_sizeof(jmp_buf));
+   png_memcpy(tmp_jmp, png_ptr->longjmp_buffer, png_sizeof(jmp_buf));
 #endif
 
    error_fn = png_ptr->error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    warning_fn = png_ptr->warning_fn;
+#endif
    error_ptr = png_ptr->error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    free_fn = png_ptr->free_fn;
@@ -1031,14 +993,16 @@ png_write_destroy(png_structp png_ptr)
    png_memset(png_ptr, 0, png_sizeof(png_struct));
 
    png_ptr->error_fn = error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    png_ptr->warning_fn = warning_fn;
+#endif
    png_ptr->error_ptr = error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    png_ptr->free_fn = free_fn;
 #endif
 
 #ifdef PNG_SETJMP_SUPPORTED
-   png_memcpy(png_ptr->png_jmpbuf, tmp_jmp, png_sizeof(jmp_buf));
+   png_memcpy(png_ptr->longjmp_buffer, tmp_jmp, png_sizeof(jmp_buf));
 #endif
 }
 
@@ -1451,6 +1415,9 @@ png_set_compression_strategy(png_structp png_ptr, int strategy)
    png_ptr->zlib_strategy = strategy;
 }
 
+/* If PNG_WRITE_OPTIMIZE_CMF_SUPPORTED is defined, libpng will use a
+ * smaller value of window_bits if it can do so safely.
+ */
 void PNGAPI
 png_set_compression_window_bits(png_structp png_ptr, int window_bits)
 {
@@ -1490,6 +1457,89 @@ png_set_compression_method(png_structp png_ptr, int method)
    png_ptr->flags |= PNG_FLAG_ZLIB_CUSTOM_METHOD;
    png_ptr->zlib_method = method;
 }
+
+/* The following were added to libpng-1.5.4 */
+#ifdef PNG_WRITE_CUSTOMIZE_ZTXT_COMPRESSION_SUPPORTED
+void PNGAPI
+png_set_text_compression_level(png_structp png_ptr, int level)
+{
+   png_debug(1, "in png_set_text_compression_level");
+
+   if (png_ptr == NULL)
+      return;
+
+   png_ptr->flags |= PNG_FLAG_ZTXT_CUSTOM_LEVEL;
+   png_ptr->zlib_text_level = level;
+}
+
+void PNGAPI
+png_set_text_compression_mem_level(png_structp png_ptr, int mem_level)
+{
+   png_debug(1, "in png_set_text_compression_mem_level");
+
+   if (png_ptr == NULL)
+      return;
+
+   png_ptr->flags |= PNG_FLAG_ZTXT_CUSTOM_MEM_LEVEL;
+   png_ptr->zlib_text_mem_level = mem_level;
+}
+
+void PNGAPI
+png_set_text_compression_strategy(png_structp png_ptr, int strategy)
+{
+   png_debug(1, "in png_set_text_compression_strategy");
+
+   if (png_ptr == NULL)
+      return;
+
+   png_ptr->flags |= PNG_FLAG_ZTXT_CUSTOM_STRATEGY;
+   png_ptr->zlib_text_strategy = strategy;
+}
+
+/* If PNG_WRITE_OPTIMIZE_CMF_SUPPORTED is defined, libpng will use a
+ * smaller value of window_bits if it can do so safely.
+ */
+void PNGAPI
+png_set_text_compression_window_bits(png_structp png_ptr, int window_bits)
+{
+   if (png_ptr == NULL)
+      return;
+
+   if (window_bits > 15)
+      png_warning(png_ptr, "Only compression windows <= 32k supported by PNG");
+
+   else if (window_bits < 8)
+      png_warning(png_ptr, "Only compression windows >= 256 supported by PNG");
+
+#ifndef WBITS_8_OK
+   /* Avoid libpng bug with 256-byte windows */
+   if (window_bits == 8)
+      {
+        png_warning(png_ptr, "Text compression window is being reset to 512");
+        window_bits = 9;
+      }
+
+#endif
+   png_ptr->flags |= PNG_FLAG_ZTXT_CUSTOM_WINDOW_BITS;
+   png_ptr->zlib_text_window_bits = window_bits;
+}
+
+void PNGAPI
+png_set_text_compression_method(png_structp png_ptr, int method)
+{
+   png_debug(1, "in png_set_text_compression_method");
+
+   if (png_ptr == NULL)
+      return;
+
+   if (method != 8)
+      png_warning(png_ptr, "Only compression method 8 is supported by PNG");
+
+   png_ptr->flags |= PNG_FLAG_ZTXT_CUSTOM_METHOD;
+   png_ptr->zlib_text_method = method;
+}
+#endif /* PNG_WRITE_CUSTOMIZE_ZTXT_COMPRESSION_SUPPORTED */
+/* end of API added to libpng-1.5.4 */
 
 void PNGAPI
 png_set_write_status_fn(png_structp png_ptr, png_write_status_ptr write_row_fn)
@@ -1557,7 +1607,7 @@ png_write_png(png_structp png_ptr, png_infop info_ptr,
 #endif
 
 #ifdef PNG_WRITE_FILLER_SUPPORTED
-   /* Pack XRGB/RGBX/ARGB/RGBA into * RGB (4 channels -> 3 channels) */
+   /* Pack XRGB/RGBX/ARGB/RGBA into RGB (4 channels -> 3 channels) */
    if (transforms & PNG_TRANSFORM_STRIP_FILLER_AFTER)
       png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
 

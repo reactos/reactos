@@ -34,3 +34,8 @@ KMixAllocateDeviceHeader(
 NTSTATUS
 CreatePin(
     IN PIRP Irp);
+
+#ifndef _M_IX86
+#define KeSaveFloatingPointState(x) ((void)(x), STATUS_SUCCESS)
+#define KeRestoreFloatingPointState(x) ((void)0)
+#endif

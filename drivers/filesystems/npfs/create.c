@@ -133,9 +133,11 @@ NpfsFindListeningServerInstance(PNPFS_FCB Fcb)
             IoAcquireCancelSpinLock(&oldIrql);
             if (!Irp->Cancel)
             {
-                (void)IoSetCancelRoutine(Irp, NULL);
-                IoReleaseCancelSpinLock(oldIrql);
-                return Waiter->Ccb;
+                if (IoSetCancelRoutine(Irp, NULL) != NULL)
+                {
+                    IoReleaseCancelSpinLock(oldIrql);
+                    return Waiter->Ccb;
+                }
             }
             IoReleaseCancelSpinLock(oldIrql);
         }
@@ -191,6 +193,8 @@ NpfsOpenFileSystem(PNPFS_FCB Fcb,
         return;
     }
 
+    Ccb->FileObject = FileObject;
+
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
 
@@ -216,6 +220,8 @@ NpfsOpenRootDirectory(PNPFS_FCB Fcb,
         IoStatus->Status = STATUS_NO_MEMORY;
         return;
     }
+
+    Ccb->FileObject = FileObject;
 
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
@@ -336,6 +342,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         return STATUS_NO_MEMORY;
     }
 
+    ClientCcb->FileObject = FileObject;
     ClientCcb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
     ClientCcb->PipeEnd = FILE_PIPE_CLIENT_END;
 #ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
@@ -718,6 +725,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     Fcb->CurrentInstances++;
 
     Ccb->Fcb = Fcb;
+    Ccb->FileObject = FileObject;
     Ccb->PipeEnd = FILE_PIPE_SERVER_END;
     Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
 
@@ -748,7 +756,7 @@ NTSTATUS NTAPI
 NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             PIRP Irp)
 {
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PNPFS_CCB Ccb, OtherSide;
@@ -758,7 +766,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsCleanup(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 
@@ -862,11 +870,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
                 RemoveEntryList(Entry);
                 tmpIrp = CONTAINING_RECORD(WaitEntry, IRP, Tail.Overlay.DriverContext);
                 IoAcquireCancelSpinLock(&oldIrql);
-                if (!tmpIrp->Cancel)
-                {
-                    (void)IoSetCancelRoutine(tmpIrp, NULL);
-                    Complete = TRUE;
-                }
+                Complete = (NULL != IoSetCancelRoutine(tmpIrp, NULL));
                 IoReleaseCancelSpinLock(oldIrql);
                 if (Complete)
                 {
@@ -909,7 +913,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     BOOLEAN Server;
@@ -917,7 +921,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 

@@ -43,6 +43,8 @@ NTSTATUS RouterStartup(
 NTSTATUS RouterShutdown(
     VOID);
 
+VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface);
+
 UINT CountFIBs(PIP_INTERFACE IF);
 
 UINT CopyFIBs( PIP_INTERFACE IF, PFIB_ENTRY Target );

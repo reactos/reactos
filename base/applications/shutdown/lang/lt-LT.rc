@@ -1,4 +1,4 @@
-/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+/* Translation by Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us) */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
@@ -6,11 +6,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "Naudojimas: shutdown [-?] [-l | -s | -r] [-f]\n\n\
-  Be parametrø arba -?\tParodyti ðá praneðimà\n\
+  Be parametrÅ³ arba -?\tParodyti Å¡Ä¯ praneÅ¡imÄ…\n\
   -l\t\t\tAtsijungti\n\
-  -s\t\t\tIðjungti kompiuterá\n\
-  -r\t\t\tPerkrauti kompiuterá\n\
-  -f\t\t\tPriverstinai uþverti visas paleistas programas\n\
+  -s\t\t\tIÅ¡jungti kompiuterÄ¯\n\
+  -r\t\t\tPerkrauti kompiuterÄ¯\n\
+  -f\t\t\tPriverstinai uÅ¾verti visas paleistas programas\n\
     \t\t\tJeigu nenurodyti jokie kiti parametrai, taip pat\n\
-    \t\t\tbus ávykdytas atsijungimas"
+    \t\t\tbus Ä¯vykdytas atsijungimas"
 END

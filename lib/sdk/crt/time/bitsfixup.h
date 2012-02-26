@@ -6,18 +6,19 @@
  * PROGRAMERS:  Timo Kreuzer
  */
 
-#if defined(_USE_EXPLITIT_32BIT_TIME) || defined(_USE_EXPLITIT_64BIT_TIME)
+#if defined(_USE_EXPLICIT_32BIT_TIME) || defined(_USE_EXPLICIT_64BIT_TIME)
 #undef _timeb
 #undef _ftime
 #undef _tctime
-#undef _ftime_s
 #undef _tctime_s
 #undef _tutime
 #else
 #define _time time
 #endif
 
-#ifdef _USE_EXPLITIT_32BIT_TIME
+#undef _ftime_s
+
+#ifdef _USE_EXPLICIT_32BIT_TIME
 #define time_t __time32_t
 #define _timeb __timeb32
 #define _utimbuf __utimbuf32
@@ -37,7 +38,7 @@
 
 #endif
 
-#ifdef _USE_EXPLITIT_64BIT_TIME
+#ifdef _USE_EXPLICIT_64BIT_TIME
 #define time_t __time64_t
 #define _timeb __timeb64
 #define _utimbuf __utimbuf64

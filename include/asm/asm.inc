@@ -32,13 +32,18 @@ rip = 0
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .PROC MACRO name
-    _&name PROC
+__current_function_name EQU %name
+#ifdef _M_IX86
+    %name PROC
+#else
+    %name PROC FRAME
+#endif
 ENDM
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
-.ENDP MACRO name
-    _&name ENDP
+.ENDP MACRO
+    %__current_function_name ENDP
 ENDM
 #define ENDFUNC .ENDP
 
@@ -149,6 +154,11 @@ ljmp16 MACRO segment, offset
     DW segment
 ENDM
 
+data32 MACRO opcode:VARARG
+    DB 66h
+    opcode
+ENDM
+
 UNIMPLEMENTED MACRO name
 ENDM
 
@@ -189,16 +199,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
+#ifdef _X86_
+    /* x86 gas expects a label with _ prefix */
     _\name:
+#endif
+    \name:
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
-.macro .ENDP name
+.macro .ENDP
     .cfi_endproc
     .endfunc
 .endm
+#define ENDFUNC .ENDP
 
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol

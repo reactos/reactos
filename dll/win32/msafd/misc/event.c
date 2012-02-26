@@ -12,14 +12,12 @@
 
 #include <msafd.h>
 
-#include <debug.h>
-
-int 
-WSPAPI 
+int
+WSPAPI
 WSPEventSelect(
-	SOCKET Handle, 
-	WSAEVENT hEventObject, 
-	long lNetworkEvents, 
+	SOCKET Handle,
+	WSAEVENT hEventObject,
+	long lNetworkEvents,
 	LPINT lpErrno)
 {
 	IO_STATUS_BLOCK				IOSB;
@@ -135,9 +133,9 @@ WSPEventSelect(
 INT
 WSPAPI
 WSPEnumNetworkEvents(
-  IN  SOCKET Handle, 
-  IN  WSAEVENT hEventObject, 
-  OUT LPWSANETWORKEVENTS lpNetworkEvents, 
+  IN  SOCKET Handle,
+  IN  WSAEVENT hEventObject,
+  OUT LPWSANETWORKEVENTS lpNetworkEvents,
   OUT LPINT lpErrno)
 {
     AFD_ENUM_NETWORK_EVENTS_INFO EnumReq;
@@ -195,7 +193,7 @@ WSPEnumNetworkEvents(
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Closed event\n"));
-    AFD_DbgPrint(MID_TRACE,("About to touch struct at %x (%d)\n", 
+    AFD_DbgPrint(MID_TRACE,("About to touch struct at %x (%d)\n",
 			    lpNetworkEvents, sizeof(*lpNetworkEvents)));
 
     lpNetworkEvents->lNetworkEvents = 0;
@@ -223,13 +221,13 @@ WSPEnumNetworkEvents(
 	lpNetworkEvents->iErrorCode[FD_ACCEPT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_ACCEPT_BIT]);
     }
 
-    if (EnumReq.PollEvents & 
+    if (EnumReq.PollEvents &
 	(AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL)) {
         lpNetworkEvents->lNetworkEvents |= FD_CONNECT;
 	lpNetworkEvents->iErrorCode[FD_CONNECT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CONNECT_BIT]);
     }
 
-    if (EnumReq.PollEvents & 
+    if (EnumReq.PollEvents &
 	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
 	lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
 	lpNetworkEvents->iErrorCode[FD_CLOSE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CLOSE_BIT]);

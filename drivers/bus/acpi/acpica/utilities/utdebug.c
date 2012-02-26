@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -279,9 +279,8 @@ AcpiDebugPrint (
         if (ACPI_LV_THREADS & AcpiDbgLevel)
         {
             AcpiOsPrintf (
-                "\n**** Context Switch from TID %p to TID %p ****\n\n",
-                ACPI_CAST_PTR (void, AcpiGbl_PrevThreadId),
-                ACPI_CAST_PTR (void, ThreadId));
+                "\n**** Context Switch from TID %u to TID %u ****\n\n",
+                (UINT32) AcpiGbl_PrevThreadId, (UINT32) ThreadId);
         }
 
         AcpiGbl_PrevThreadId = ThreadId;
@@ -295,7 +294,7 @@ AcpiDebugPrint (
 
     if (ACPI_LV_THREADS & AcpiDbgLevel)
     {
-        AcpiOsPrintf ("[%p] ", ACPI_CAST_PTR (void, ThreadId));
+        AcpiOsPrintf ("[%u] ", (UINT32) ThreadId);
     }
 
     AcpiOsPrintf ("[%02ld] %-22.22s: ",
@@ -598,7 +597,7 @@ AcpiUtValueExit (
     const char              *FunctionName,
     const char              *ModuleName,
     UINT32                  ComponentId,
-    ACPI_INTEGER            Value)
+    UINT64                  Value)
 {
 
     AcpiDebugPrint (ACPI_LV_FUNCTIONS,

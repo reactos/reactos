@@ -460,8 +460,6 @@ audio_waveout::play( void )
 
     MMRESULT err;
     unsigned int i;
-    BOOL ev;
-
 
     if ( !main_buffer )
     { return; } //TODO; throw error, or assert
@@ -495,7 +493,7 @@ audio_waveout::play( void )
         // Wakeup playing thread.
         //
 
-        ev = SetEvent( wakeup_playthread );
+        SetEvent( wakeup_playthread );
 
         return;
 
@@ -553,7 +551,7 @@ audio_waveout::play( void )
     // Wakeup the playing thread.
     //
 
-    ev = SetEvent( wakeup_playthread );
+    SetEvent( wakeup_playthread );
 
 
 
@@ -752,7 +750,6 @@ audio_waveout::playing_procedure( LPVOID arg )
 {
     MSG msg;
     WAVEHDR * phdr;
-    DWORD wait;
     MMRESULT err;
     audio_waveout * _this = ( audio_waveout * ) arg;
     unsigned int read_size;
@@ -775,9 +772,7 @@ audio_waveout::playing_procedure( LPVOID arg )
     //
 
     if ( _this->wakeup_playthread )
-        wait = WaitForSingleObject( 
-                        _this->wakeup_playthread, INFINITE 
-                    );
+        WaitForSingleObject(_this->wakeup_playthread, INFINITE);
 
 
 
@@ -806,11 +801,7 @@ audio_waveout::playing_procedure( LPVOID arg )
                         ( _this->status != WAVEOUT_FLUSHING ) &&
                                     ( _this->wakeup_playthread ))
                 {
-                
-                    wait = WaitForSingleObject( 
-                                    _this->wakeup_playthread, 
-                                    INFINITE 
-                                );
+                    WaitForSingleObject(_this->wakeup_playthread, INFINITE);
                 }
 
 
@@ -956,10 +947,8 @@ audio_waveout::playing_procedure( LPVOID arg )
                             
 
                             if ( _this->wakeup_playthread )
-                                    wait = WaitForSingleObject( 
-                                                    _this->wakeup_playthread, 
-                                                    INFINITE 
-                                                );
+                                WaitForSingleObject(_this->wakeup_playthread,
+                                                    INFINITE);
 
                         }  //if ( phdr->dwUser == ( _this->buffers - 1 ))
 

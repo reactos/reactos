@@ -1,4 +1,3 @@
-#include "resource.h"
 /*
  * Copyright 2005 David Nordenberg
  */
@@ -7,6 +6,6 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_USERINIT_FAIL, "Userinit misslyckades att starta anv‰ndargr‰nssnittet!\n"
+STRING_USERINIT_FAIL, "Userinit misslyckades att starta anv√§ndargr√§nssnittet!\n"
 
 END

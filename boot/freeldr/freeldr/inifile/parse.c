@@ -20,6 +20,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(INIFILE);
+
 LIST_ENTRY		IniFileSectionListHead;
 BOOLEAN			IniFileSectionInitialized = FALSE;
 ULONG					IniFileSectionCount = 0;
@@ -36,7 +38,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 	PINI_SECTION		CurrentSection = NULL;
 	PINI_SECTION_ITEM	CurrentItem = NULL;
 
-	DPRINTM(DPRINT_INIFILE, "IniParseFile() IniFileSize: %d\n", IniFileSize);
+	TRACE("IniParseFile() IniFileSize: %d\n", IniFileSize);
 
 	if (!IniFileSectionInitialized)
 	{
@@ -71,7 +73,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
 		// Get the line of data
 		CurrentOffset = IniGetNextLine(IniFileData, IniFileSize, IniFileLine, IniFileLineSize, CurrentOffset);
-		LineLength = strlen(IniFileLine);
+		LineLength = (ULONG)strlen(IniFileLine);
 
 		// If it is a blank line or a comment then skip it
 		if (IniIsLineEmpty(IniFileLine, LineLength) || IniIsCommentLine(IniFileLine, LineLength))
@@ -172,8 +174,8 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 		CurrentLineNumber++;
 	}
 
-	DPRINTM(DPRINT_INIFILE, "Parsed %d sections and %d settings.\n", IniFileSectionCount, IniFileSettingCount);
-	DPRINTM(DPRINT_INIFILE, "IniParseFile() done.\n");
+	TRACE("Parsed %d sections and %d settings.\n", IniFileSectionCount, IniFileSettingCount);
+	TRACE("IniParseFile() done.\n");
 
 	return TRUE;
 }

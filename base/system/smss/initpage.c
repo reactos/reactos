@@ -196,6 +196,12 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
 
     }
 
+  /* FIXME */
+  if (InitialSize.QuadPart > (ULONGLONG)GIGABYTE * 2)
+    InitialSize.QuadPart = (ULONGLONG)GIGABYTE * 2;
+  if (MaximumSize.QuadPart > (ULONGLONG)GIGABYTE * 2)
+    MaximumSize.QuadPart = (ULONGLONG)GIGABYTE * 2;
+
   /* Make sure that max is not smaller then initial */
   if (InitialSize.QuadPart > MaximumSize.QuadPart)
     {
@@ -456,6 +462,12 @@ SmpCreateDefaultPagingFile(VOID)
             MaximumSizeInMB.QuadPart = 1536; /* 1.5GB */
         }
     }
+
+    /* FIXME */
+    if (InitialSizeInMB.QuadPart > 2048)
+        InitialSizeInMB.QuadPart = 2048;
+    if (MaximumSizeInMB.QuadPart > 2048)
+        MaximumSizeInMB.QuadPart = 2048;
 
     DPRINT("InitialSize %I64u MB   MaximumSize %I64u MB\n",
            InitialSizeInMB.QuadPart,

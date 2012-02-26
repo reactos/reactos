@@ -135,7 +135,7 @@ ServerCtrlHandler(DWORD dwControl,
             LogEvent(L"\nSetting the service to SERVICE_STOP_PENDING", 0, 0, LOG_FILE);
             InterlockedExchange((LONG *)&bShutdown, TRUE);
             pServInfo->servStatus.dwWin32ExitCode = 0;
-            pServInfo->servStatus.dwWaitHint = 0;
+            pServInfo->servStatus.dwWaitHint = 5000;
             UpdateStatus(pServInfo, SERVICE_STOP_PENDING, 1);
             break;
 
@@ -152,6 +152,7 @@ ServerCtrlHandler(DWORD dwControl,
             break;
 
         case SERVICE_CONTROL_INTERROGATE:
+            SetServiceStatus(pServInfo->hStatus, &pServInfo->servStatus);
             break;
 
         default:

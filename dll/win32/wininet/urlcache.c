@@ -182,6 +182,7 @@ typedef struct _URLCACHECONTAINER
 
 /* List of all containers available */
 static struct list UrlContainers = LIST_INIT(UrlContainers);
+BOOL bDefaultContainersAdded = FALSE;
 
 static DWORD URLCache_CreateHashTable(LPURLCACHE_HEADER pHeader, HASH_CACHEFILE_ENTRY *pPrevHash, HASH_CACHEFILE_ENTRY **ppHash);
 
@@ -591,6 +592,9 @@ static DWORD URLCacheContainers_FindContainerW(LPCWSTR lpwszUrl, URLCACHECONTAIN
     if(!lpwszUrl)
         return ERROR_INVALID_PARAMETER;
 
+    if (!bDefaultContainersAdded)
+        URLCacheContainers_CreateDefaults();
+
     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
     {
         int prefix_len = strlenW(pContainer->cache_prefix);
@@ -628,6 +632,9 @@ static BOOL URLCacheContainers_Enum(LPCWSTR lpwszSearchPattern, DWORD dwIndex, U
     /* non-NULL search pattern only returns one container ever */
     if (lpwszSearchPattern && dwIndex > 0)
         return FALSE;
+
+    if (!bDefaultContainersAdded)
+        URLCacheContainers_CreateDefaults();
 
     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
     {
@@ -1531,6 +1538,9 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR lpszCachePath, DWORD dwSize, DWORD dwSize
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return FALSE;
     }
+
+    if (!bDefaultContainersAdded)
+        URLCacheContainers_CreateDefaults();
 
     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
     {

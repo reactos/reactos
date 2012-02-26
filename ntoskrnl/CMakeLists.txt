@@ -18,7 +18,9 @@ add_definitions(
 
 set_rc_compiler()
 
-set(NEWCC FALSE)
+if(NOT DEFINED NEWCC)
+    set(NEWCC FALSE)
+endif(NOT DEFINED NEWCC)
 
 if(NEWCC)
     add_definitions(-DNEWCC)
@@ -29,12 +31,7 @@ if(NEWCC)
         cache/lazyrite.c
         cache/logsup.c
         cache/mdlsup.c
-        cache/pinsup.c
-        cache/section/data.c
-        cache/section/fault.c
-        cache/section/reqtools.c
-        cache/section/sptab.c
-        cache/section/swapout.c)
+        cache/pinsup.c)
 else()
     list(APPEND SOURCE
         cc/cacheman.c
@@ -47,6 +44,11 @@ endif()
 
 list(APPEND SOURCE
     cache/section/io.c
+    cache/section/data.c
+    cache/section/fault.c
+    cache/section/reqtools.c
+    cache/section/sptab.c
+    cache/section/swapout.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c
@@ -214,6 +216,7 @@ list(APPEND SOURCE
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
     mm/ARM3/section.c
+    mm/ARM3/special.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
     mm/ARM3/vadnode.c
@@ -312,6 +315,7 @@ elseif(ARCH MATCHES amd64)
         ke/amd64/interrupt.c
         ke/amd64/irql.c
         ke/amd64/kiinit.c
+        ke/amd64/krnlinit.c
         ke/amd64/spinlock.c
         ke/amd64/stubs.c
         ke/amd64/thrdini.c
@@ -387,7 +391,8 @@ if(NOT _WINKD_)
     endif()
 
     if(DBG OR KDBG)
-        list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        #list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        list(APPEND SOURCE kdbg/kdb_symbols.c)
     endif()
 
     list(APPEND SOURCE
@@ -421,7 +426,7 @@ endif()
 add_executable(ntoskrnl ${SOURCE})
 
 if (ARCH MATCHES i386)
-  set_entrypoint(ntoskrnl KiSystemStartup@4)
+  set_entrypoint(ntoskrnl KiSystemStartup 4)
 else()
   set_entrypoint(ntoskrnl KiSystemStartup)
 endif()
@@ -450,6 +455,6 @@ add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(ntoskrnl.spec)
+add_importlib_target(ntoskrnl.spec ntoskrnl.exe)
 
 add_library(ntdllsys ntdll.S)

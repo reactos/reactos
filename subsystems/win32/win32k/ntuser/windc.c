@@ -1,24 +1,17 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/ntuser/windc.c
  * PURPOSE:         Window DC management
- * COPYRIGHT:       Copyright 2007 ReactOS
- *
+ * COPYRIGHT:       Copyright 2007 ReactOS Team
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
-
-int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
+DBG_DEFAULT_CHANNEL(UserDce);
 
 /* GLOBALS *******************************************************************/
 
-/* NOTE - I think we should store this per window station (including gdi objects) */
+/* NOTE: I think we should store this per window station (including GDI objects) */
 /* Answer: No, use the DCE pMonitor to compare with! */
 
 static LIST_ENTRY LEDce;
@@ -31,34 +24,26 @@ static INT DCECount = 0; // Count of DCE in system.
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitDCEImpl(VOID)
+{
+    InitializeListHead(&LEDce);
+    return STATUS_SUCCESS;
+}
+
 //
 // This should be moved to dc.c or dcutil.c.
 //
 HDC FASTCALL
 DceCreateDisplayDC(VOID)
 {
-  HDC hDC;
-  UNICODE_STRING DriverName;
-  RtlInitUnicodeString(&DriverName, L"DISPLAY");
-  hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+  UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
 
   co_IntGraphicsCheck(TRUE);
 
-//
-// If NULL, first time through! Build the default window dc!
-//
-  if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
-  { // This is a cheesy way to do this.
-      PDC dc = DC_LockDc ( hDC );
-      ASSERT(dc);
-      defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
-      RtlZeroMemory(defaultDCstate, sizeof(DC));
-      defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-      DC_vCopyState(dc, defaultDCstate, TRUE);
-      DC_UnlockDc( dc );
-      InitializeListHead(&LEDce);
-  }
-  return hDC;
+  return IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
 }
 
 static
@@ -94,7 +79,7 @@ DceAllocDCE(PWND Window OPTIONAL, DCE_TYPE Type)
       return NULL;
   }
   DCECount++;
-  DPRINT("Alloc DCE's! %d\n",DCECount);
+  TRACE("Alloc DCE's! %d\n",DCECount);
   pDce->hwndCurrent = (Window ? Window->head.h : NULL);
   pDce->pwndOrg  = Window;
   pDce->pwndClip = Window;
@@ -107,13 +92,13 @@ DceAllocDCE(PWND Window OPTIONAL, DCE_TYPE Type)
 
   DCU_SetDcUndeletable(pDce->hDC);
 
-  if (Type == DCE_WINDOW_DC || Type == DCE_CLASS_DC) //Window DCE have ownership.
+  if (Type == DCE_WINDOW_DC || Type == DCE_CLASS_DC) // Window DCE have ownership.
   {
      pDce->ptiOwner = GetW32ThreadInfo();
   }
   else
   {
-     DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
+     TRACE("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
      GreSetDCOwner(pDce->hDC, GDI_OBJ_HMGR_NONE);
      pDce->ptiOwner = NULL;
   }
@@ -185,7 +170,7 @@ DceDeleteClipRgn(DCE* Dce)
 
    Dce->hrgnClip = NULL;
 
-   /* make it dirty so that the vis rgn gets recomputed next time */
+   /* Make it dirty so that the vis rgn gets recomputed next time */
    Dce->DCXFlags |= DCX_DCEDIRTY;
 }
 
@@ -197,7 +182,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
       return 0;
    }
 
-   /* restore previous visible region */
+   /* Restore previous visible region */
    if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
          ((dce->DCXFlags & DCX_CACHE) || EndPaint))
    {
@@ -208,7 +193,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    {
       if (!(dce->DCXFlags & DCX_NORESETATTRS))
       {
-         /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
+         /* Make the DC clean so that SetDCState doesn't try to update the vis rgn */
          IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
          // Clean the DC
@@ -216,7 +201,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
 
          if (dce->DCXFlags & DCX_DCEDIRTY)
          {
-           /* don't keep around invalidated entries
+           /* Don't keep around invalidated entries
             * because SetDCState() disables hVisRgn updates
             * by removing dirty bit. */
            dce->hwndCurrent = 0;
@@ -225,7 +210,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          }
       }
       dce->DCXFlags &= ~DCX_DCEBUSY;
-      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
+      TRACE("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
       if (!GreSetDCOwner(dce->hDC, GDI_OBJ_HMGR_NONE))
          return 0;
       dce->ptiOwner = NULL; // Reset ownership.
@@ -356,7 +341,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (Flags & DCX_USESTYLE)
    {
       Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
-      if (!(Flags & DCX_WINDOW)) // not window rectangle
+      if (!(Flags & DCX_WINDOW)) // Not window rectangle
       {
          if (Wnd->pcls->style & CS_PARENTDC)
          {
@@ -372,7 +357,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             else
             {
                if (Wnd->pcls->pdce) hDC = ((PDCE)Wnd->pcls->pdce)->hDC;
-               DPRINT("We have CLASS!!\n");
+               TRACE("We have CLASS!!\n");
             }
          }
 /*         else // For Testing!
@@ -421,7 +406,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags |= DCX_CLIPSIBLINGS;
    }
 
-   /* it seems parent clip is ignored when clipping siblings or children */
+   /* It seems parent clip is ignored when clipping siblings or children */
    if (Flags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN)) Flags &= ~DCX_PARENTCLIP;
 
    if (Flags & DCX_PARENTCLIP)
@@ -524,7 +509,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (!GreIsHandleValid(Dce->hDC))
    {
-      DPRINT1("FIXME: Got DCE with invalid hDC! 0x%x\n", Dce->hDC);
+      ERR("FIXME: Got DCE with invalid hDC! 0x%x\n", Dce->hDC);
       Dce->hDC = DceCreateDisplayDC();
       /* FIXME: Handle error */
    }
@@ -532,11 +517,11 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    Dce->DCXFlags = Flags | DCX_DCEBUSY;
 
    /*
-      Bump it up! This prevents the random errors in wine dce tests and with
-      proper bits set in DCX_CACHECOMPAREMASK.
-      Reference:
-        http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
-        http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
+    * Bump it up! This prevents the random errors in wine dce tests and with
+    * proper bits set in DCX_CACHECOMPAREMASK.
+    * Reference:
+    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
+    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
     */
    if (pLE != &LEDce)
    {
@@ -568,7 +553,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       if (Dce->hrgnClip != NULL)
       {
-         DPRINT1("Should not be called!!\n");
+         ERR("Should not be called!!\n");
          GreDeleteObject(Dce->hrgnClip);
          Dce->hrgnClip = NULL;
       }
@@ -581,7 +566,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (Dce->DCXFlags & DCX_CACHE)
    {
-      DPRINT("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
+      TRACE("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
       // Need to set ownership so Sync dcattr will work.
       GreSetDCOwner(Dce->hDC, GDI_OBJ_HMGR_POWNED);
       Dce->ptiOwner = GetW32ThreadInfo(); // Set the temp owning
@@ -625,15 +610,15 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   if (Force &&
       GreGetObjectOwner(pdce->hDC) != GDI_OBJ_HMGR_POWNED)
   {
-     DPRINT("Change ownership for DCE! -> %x\n" , pdce);
-     // Note: Windows sets W32PF_OWNDCCLEANUP and moves on.
+     TRACE("Change ownership for DCE! -> %x\n" , pdce);
+     // NOTE: Windows sets W32PF_OWNDCCLEANUP and moves on.
      if (GreIsHandleValid(pdce->hDC))
      {
          GreSetDCOwner(pdce->hDC, GDI_OBJ_HMGR_POWNED);
      }
      else
      {
-         DPRINT1("Attempted to change ownership of an DCEhDC 0x%x currently being destroyed!!!\n",pdce->hDC);
+         ERR("Attempted to change ownership of an DCEhDC 0x%x currently being destroyed!!!\n",pdce->hDC);
          Hit = TRUE;
      }
   }
@@ -655,14 +640,14 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (IsListEmpty(&pdce->List))
   {
-      DPRINT1("List is Empty! DCE! -> %x\n" , pdce);
+      ERR("List is Empty! DCE! -> %x\n" , pdce);
       return NULL;
   }
 
   ExFreePoolWithTag(pdce, USERTAG_DCE);
 
   DCECount--;
-  DPRINT("Freed DCE's! %d \n", DCECount);
+  TRACE("Freed DCE's! %d \n", DCECount);
 
   return ret;
 }
@@ -680,7 +665,7 @@ DceFreeWindowDCE(PWND Window)
 
   if (DCECount <= 0)
   {
-     DPRINT1("FreeWindowDCE No Entry! %d\n",DCECount);
+     ERR("FreeWindowDCE No Entry! %d\n",DCECount);
      return;
   }
 
@@ -690,22 +675,22 @@ DceFreeWindowDCE(PWND Window)
   {
      if (!pDCE)
      {
-        DPRINT1("FreeWindowDCE No DCE Pointer!\n");
+        ERR("FreeWindowDCE No DCE Pointer!\n");
         break;
      }
      if (IsListEmpty(&pDCE->List))
      {
-        DPRINT1("FreeWindowDCE List is Empty!!!!\n");
+        ERR("FreeWindowDCE List is Empty!!!!\n");
         break;
      }
      if ( pDCE->hwndCurrent == Window->head.h &&
           !(pDCE->DCXFlags & DCX_DCEEMPTY) )
      {
-        if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
+        if (!(pDCE->DCXFlags & DCX_CACHE)) /* Owned or Class DCE */
         {
            if (Window->pcls->style & CS_CLASSDC) /* Test Class first */
            {
-              if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
+              if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE */
                  DceDeleteClipRgn(pDCE);
               // Update and reset Vis Rgn and clear the dirty bit.
               // Should release VisRgn than reset it to default.
@@ -713,15 +698,15 @@ DceFreeWindowDCE(PWND Window)
               pDCE->DCXFlags = DCX_DCEEMPTY|DCX_CACHE;
               pDCE->hwndCurrent = 0;
 
-              DPRINT("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %x \n", pDCE->hDC);
+              TRACE("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %x \n", pDCE->hDC);
               if (!GreSetDCOwner( pDCE->hDC, GDI_OBJ_HMGR_NONE))
               {
-                  DPRINT1("Fail Owner Switch hDC-> %x \n", pDCE->hDC);
+                  ERR("Fail Owner Switch hDC-> %x \n", pDCE->hDC);
                   break;
               }
               /* Do not change owner so thread can clean up! */
            }
-           else if (Window->pcls->style & CS_OWNDC) /* owned DCE*/
+           else if (Window->pcls->style & CS_OWNDC) /* Owned DCE */
            {
               pDCE = DceFreeDCE(pDCE, FALSE);
               if (!pDCE) break;
@@ -729,22 +714,22 @@ DceFreeWindowDCE(PWND Window)
            }
            else
            {
-              DPRINT1("Not POWNED or CLASSDC hwndCurrent -> %x \n", pDCE->hwndCurrent);
+              ERR("Not POWNED or CLASSDC hwndCurrent -> %x \n", pDCE->hwndCurrent);
               // ASSERT(FALSE); /* bug 5320 */
            }
         }
         else
         {
-           if (pDCE->DCXFlags & DCX_DCEBUSY) /* shared cache DCE */
+           if (pDCE->DCXFlags & DCX_DCEBUSY) /* Shared cache DCE */
            {
               /* FIXME: AFAICS we are doing the right thing here so
-               * this should be a DPRINT. But this is best left as an ERR
+               * this should be a TRACE. But this is best left as an ERR
                * because the 'application error' is likely to come from
                * another part of Wine (i.e. it's our fault after all).
-               * We should change this to DPRINT when ReactOS is more stable
+               * We should change this to TRACE when ReactOS is more stable
                * (for 1.0?).
                */
-              DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->head.h);
+              ERR("[%p] GetDC() without ReleaseDC()!\n", Window->head.h);
               DceReleaseDC(pDCE, FALSE);
            }
            pDCE->DCXFlags |= DCX_DCEEMPTY;
@@ -944,7 +929,7 @@ UserReleaseDC(PWND Window, HDC hDc, BOOL EndPaint)
   INT nRet = 0;
   BOOL Hit = FALSE;
 
-  DPRINT("%p %p\n", Window, hDc);
+  TRACE("%p %p\n", Window, hDc);
   pLE = LEDce.Flink;
   dce = CONTAINING_RECORD(pLE, DCE, List);
   do
@@ -980,12 +965,15 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
   PWNDGDI pWndgdi;
   PWND Wnd;
   HWND hWnd;
+  PPROPERTY pprop;
 
   hWnd = IntWindowFromDC(hdc);
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-     pWndgdi = (WNDGDI *)IntGetProp(Wnd, AtomWndObj);
+     pprop = IntGetProp(Wnd, AtomWndObj);
+
+     pWndgdi = (WNDGDI *)pprop->Data;
 
      if ( pWndgdi && pWndgdi->Hwnd == hWnd )
      {
@@ -1001,7 +989,7 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   PWND Wnd=NULL;
   DECLARE_RETURN(HDC);
 
-  DPRINT("Enter NtUserGetDCEx\n");
+  TRACE("Enter NtUserGetDCEx\n");
   UserEnterExclusive();
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
@@ -1011,7 +999,7 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
 
 CLEANUP:
-  DPRINT("Leave NtUserGetDCEx, ret=%i\n",_ret_);
+  TRACE("Leave NtUserGetDCEx, ret=%i\n",_ret_);
   UserLeave();
   END_CLEANUP;
 }
@@ -1037,7 +1025,7 @@ NtUserGetWindowDC(HWND hWnd)
 HDC APIENTRY
 NtUserGetDC(HWND hWnd)
 {
- DPRINT("NtUGetDC -> %x:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE );
+ TRACE("NtUGetDC -> %x:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE );
 
   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
@@ -1066,6 +1054,5 @@ NtUserSelectPalette(HDC  hDC,
     UserLeave();
     return oldPal;
 }
-
 
 /* EOF */

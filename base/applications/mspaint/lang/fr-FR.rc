@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/fr-FR.rc
+ * FILE:        base/applications/mspaint/lang/fr-FR.rc
  * PURPOSE:     FR-French Language resource file
  * TRANSLATORS: unknown
  */
@@ -17,9 +17,9 @@ BEGIN
         MENUITEM "&Enregistrer\tCtrl+S", IDM_FILESAVE
         MENUITEM "Enregistrer &sous...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Choisir comme image d'arrière-plan (mosaïque)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Choisir comme image d'arrière-plan (centrée)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Choisir comme image d'arrière-plan (étirée)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Choisir comme image d'arriÃ¨re-plan (mosaÃ¯que)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Choisir comme image d'arriÃ¨re-plan (centrÃ©e)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Choisir comme image d'arriÃ¨re-plan (Ã©tirÃ©e)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "&Quitter\tAlt+F4", IDM_FILEEXIT
     END
@@ -27,29 +27,29 @@ BEGIN
     POPUP "&Edition"
     BEGIN
         MENUITEM "Annuler\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Rétablir\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "RÃ©tablir\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "Couper\tCtrl+X", IDM_EDITCUT
         MENUITEM "Copier\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Coller\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Effacer la sélection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Inverser la sélection", IDM_EDITINVERTSELECTION
-        MENUITEM "Sélectionner tout\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Effacer la sÃ©lection\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Inverser la sÃ©lection", IDM_EDITINVERTSELECTION
+        MENUITEM "SÃ©lectionner tout\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Copier vers...", IDM_EDITCOPYTO
-        MENUITEM "Coller à partir de...", IDM_EDITPASTEFROM
+        MENUITEM "Coller Ã  partir de...", IDM_EDITPASTEFROM
     END
 
     POPUP "&Affichage"
     BEGIN
-        MENUITEM "Boîte à outils\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "BoÃ®te Ã  outils\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "Palette de couleurs\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Barre d'état", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Barre d'Ã©tat", IDM_VIEWSTATUSBAR, CHECKED
         MENUITEM "Barre d'outils texte", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "Zoom"
         BEGIN
-            POPUP "Défini par l'utilisateur"
+            POPUP "DÃ©fini par l'utilisateur"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Montrer la grille", IDM_VIEWSHOWGRID
+            MENUITEM "Montrer la grille\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Montrer la miniature", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Plein écran\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Plein Ã©cran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Image"
     BEGIN
         MENUITEM "Retourner/Faire pivoter...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,17 +76,17 @@ BEGIN
         MENUITEM "Effacer l'image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Dessiner opaque", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Couleurs"
     BEGIN
         MENUITEM "Modifier les couleurs...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Rubriques d'aide", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "À propos de Paint", IDM_HELPINFO
+        MENUITEM "Ã€ propos de Paint", IDM_HELPINFO
     END
 END
 
@@ -104,6 +104,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -121,46 +122,46 @@ BEGIN
     AUTORADIOBUTTON "Retourner horizontalement", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Retourner verticalement", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Faire pivoter d'un angle de", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Annuler", IDCANCEL, 125, 24, 48, 14
 END
 
-IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
+IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Attributs"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
-    EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
-    LTEXT "Largeur :", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
-    LTEXT "Hauteur :", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
+    LTEXT "Largeur :", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
+    LTEXT "Hauteur :", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Dernier enregistrement du fichier :", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Taille sur le disque :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Résolution :", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "RÃ©solution :", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Non disponible", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Non disponible", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
     LTEXT "Non disponible", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
-    GROUPBOX "Unités", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
-    AUTORADIOBUTTON "Pouces", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
-    AUTORADIOBUTTON "Cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
-    AUTORADIOBUTTON "Pixels", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
-    GROUPBOX "Couleurs", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    GROUPBOX "UnitÃ©s", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
+    AUTORADIOBUTTON "Pouces", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "Cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "Pixels", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    GROUPBOX "Couleurs", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "Noir et blanc", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Couleurs", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
-    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 155, 24, 48, 14
-    PUSHBUTTON "Par défaut", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+    DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "Par dÃ©faut", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
-IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
+IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Redimensionner"
 BEGIN
-    GROUPBOX "Redimensionnement", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    GROUPBOX "Redimensionnement", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
     LTEXT "Horizontal :", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
@@ -169,8 +170,8 @@ BEGIN
     LTEXT "Vertical :", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
-    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 155, 24, 48, 14
+    DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
@@ -178,19 +179,19 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint pour ReactOS"
-    IDS_INFOTEXT, "Paint pour ReactOS est mise à disposition sous la Licence publique générale limitée GNU (LGPL) version 3 (voir www.gnu.org)"
+    IDS_INFOTEXT, "Paint pour ReactOS est mise Ã  disposition sous la Licence publique gÃ©nÃ©rale limitÃ©e GNU (LGPL) version 3 (voir www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Voulez-vous enregistrer les modifications de %s?"
     IDS_DEFAULTFILENAME, "Sans titre.bmp"
     IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Sélection libre"
-    IDS_TOOLTIP2, "Sélection"
+    IDS_TOOLTIP1, "SÃ©lection libre"
+    IDS_TOOLTIP2, "SÃ©lection"
     IDS_TOOLTIP3, "Gomme"
     IDS_TOOLTIP4, "Remplissage"
-    IDS_TOOLTIP5, "Prélèvement d'une couleur"
+    IDS_TOOLTIP5, "PrÃ©lÃ¨vement d'une couleur"
     IDS_TOOLTIP6, "Zoom"
     IDS_TOOLTIP7, "Pinceau"
     IDS_TOOLTIP8, "Brosse"
-    IDS_TOOLTIP9, "Aérographe"
+    IDS_TOOLTIP9, "AÃ©rographe"
     IDS_TOOLTIP10, "Texte"
     IDS_TOOLTIP11, "Ligne"
     IDS_TOOLTIP12, "Courbe"
@@ -201,5 +202,5 @@ BEGIN
     IDS_OPENFILTER, "Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Tous les fichiers (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmap 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE, "%d octets"
-    IDS_PRINTRES, "%d x %d pixels par mètre"
+    IDS_PRINTRES, "%d x %d pixels par mÃ¨tre"
 END

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * WINE COPYRIGHT: 
+ * WINE COPYRIGHT:
  * Copyright 1999, 2000 Juergen Schmied <juergen.schmied@debitel.net>
  * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
  * Copyright 2006 Robert Reif
@@ -11,9 +11,6 @@
  */
 
 #include <advapi32.h>
-#include "wine/unicode.h"
-#include "wine/debug.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
@@ -811,7 +808,7 @@ LookupAccountSidA(LPCSTR lpSystemName,
     /* allocate buffers for the unicode strings to receive */
     if (dwName > 0)
     {
-        NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
+        NameBuffer = LocalAlloc(LMEM_FIXED, dwName * sizeof(WCHAR));
         if (NameBuffer == NULL)
         {
             SetLastError(ERROR_OUTOFMEMORY);
@@ -823,7 +820,7 @@ LookupAccountSidA(LPCSTR lpSystemName,
 
     if (dwReferencedDomainName > 0)
     {
-        ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
+        ReferencedDomainNameBuffer = LocalAlloc(LMEM_FIXED, dwReferencedDomainName * sizeof(WCHAR));
         if (ReferencedDomainNameBuffer == NULL)
         {
             if (dwName > 0)

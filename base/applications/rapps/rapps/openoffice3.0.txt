@@ -5,7 +5,7 @@ Name = OpenOffice 3.3
 Version = 3.3.0
 Licence = LGPL
 Description = THE Open Source Office Suite.
-Size = 137.0MB
+Size = 136.79MB
 Category = 6
 URLSite = http://www.openoffice.org/
 URLDownload = http://ftp3.gwdg.de/pub/openoffice/stable/3.3.0/OOo_3.3.0_Win_x86_install_en-US.exe
@@ -14,29 +14,29 @@ CDPath = none
 [Section.0407]
 Description = DIE Open Source Office Suite.
 URLSite = http://de.openoffice.org/
-Size = 160.0MB
+Size = 160.38MB
 URLDownload = http://ftp3.gwdg.de/pub/openoffice/localized/de/3.3.0/OOo_3.3.0_Win_x86_install-wJRE_de.exe
 
 [Section.040a]
 Description = La suite de ofimática de código abierto.
 URLSite = http://es.openoffice.org/
-Size = 132.0MB
+Size = 132.4MB
 URLDownload = http://ftp.gwdg.de/pub/openoffice/localized/es/3.3.0/OOo_3.3.0_Win_x86_install_es.exe
 
 [Section.040c]
 Description = LA suite bureautique open source.
 URLSite = http://fr.openoffice.org/
-Size = 132.0MB
+Size = 131.45MB
 URLDownload = http://ftp.gwdg.de/pub/openoffice/localized/fr/3.3.0/OOo_3.3.0_Win_x86_install_fr.exe
 
 [Section.0415]
 Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org/
-Size = 134.0MB
+Size = 134.33MB
 URLDownload = http://ftp3.gwdg.de/pub/openoffice/localized/pl/3.3.0/OOo_3.3.0_Win_x86_install_pl.exe
 
 [Section.0422]
 Description = Відкритий офісний пакет.
 URLSite = http://ua.openoffice.org/
-Size = 133.0MB
+Size = 132.82MB
 URLDownload = http://ftp3.gwdg.de/pub/openoffice/localized/ru/3.3.0/OOo_3.3.0_Win_x86_install_ru.exe

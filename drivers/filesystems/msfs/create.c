@@ -198,6 +198,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
     {
         ExFreePool(Fcb->Name.Buffer);
         ExFreePool(Fcb);
+        ExFreePool(Ccb);
 
         KeUnlockMutex(&DeviceExtension->FcbListLock);
 

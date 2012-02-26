@@ -183,6 +183,10 @@ ExInterlockedRemoveHeadList(
     {
         /* Remove the first entry from the list head */
         ListEntry = RemoveHeadList(ListHead);
+#if DBG
+        ListEntry->Flink = (PLIST_ENTRY)0xBADDD0FF;
+        ListEntry->Blink = (PLIST_ENTRY)0xBADDD0FF;
+#endif
     }
 
     /* Release the spinlock and restore interrupts */
@@ -206,6 +210,10 @@ ExInterlockedPopEntryList(
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
+#if DBG
+    if (ListEntry)
+        ListEntry->Next = (PSINGLE_LIST_ENTRY)0xBADDD0FF;
+#endif
 
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
@@ -381,6 +389,10 @@ ExfInterlockedRemoveHeadList(
     {
         /* Remove the first entry from the list head */
         ListEntry = RemoveHeadList(ListHead);
+#if DBG
+        ListEntry->Flink = (PLIST_ENTRY)0x0BADD0FF;
+        ListEntry->Blink = (PLIST_ENTRY)0x0BADD0FF;
+#endif
     }
 
     /* Release the spinlock and restore interrupts */
@@ -404,6 +416,10 @@ ExfInterlockedPopEntryList(
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
+#if DBG
+    if (ListEntry)
+        ListEntry->Next = (PSINGLE_LIST_ENTRY)0xBADDD0FF;
+#endif
 
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);

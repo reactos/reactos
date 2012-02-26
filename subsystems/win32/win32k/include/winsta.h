@@ -1,89 +1,79 @@
 #pragma once
 
-#include "window.h"
-#include "clipboard.h"
-
-#define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
-#define WINSTA_ROOT_NAME_LENGTH	23
+#define WINSTA_OBJ_DIR L"\\Windows\\WindowStations"
+#define SESSION_DIR L"\\Sessions"
 
 /* Window Station Status Flags */
 #define WSS_LOCKED	(1)
 #define WSS_NOINTERACTIVE	(2)
 
-typedef enum
-{
-    wmCenter = 0,
-    wmTile,
-    wmStretch
-} WALLPAPER_MODE;
-
 typedef struct _WINSTATION_OBJECT
 {
-    PVOID SharedHeap; /* points to kmode memory! */
-
-    CSHORT Type;
-    CSHORT Size;
     KSPIN_LOCK Lock;
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
     HANDLE SystemMenuTemplate;
-    UINT CaretBlinkRate;
     HANDLE ShellWindow;
     HANDLE ShellListView;
-
-    /* Effects */
-    BOOL FontSmoothing; /* enable */
-    UINT FontSmoothingType; /* 1:Standard,2:ClearType */
-    /* FIXME: Big Icons (SPI_GETICONMETRICS?) */
-    BOOL DropShadow;
-    BOOL DragFullWindows;
-    BOOL FlatMenu;
-
-    /* ScreenSaver */
-    BOOL ScreenSaverRunning;
-    UINT  ScreenSaverTimeOut;
-   /* Should this be on each desktop ? */
-    BOOL ScreenSaverActive;
-
-    /* Wallpaper */
-    HANDLE hbmWallpaper;
-    ULONG cxWallpaper, cyWallpaper;
-    WALLPAPER_MODE WallpaperMode;
 
     ULONG Flags;
     struct _DESKTOP* ActiveDesktop;
 
-    PCLIPBOARDSYSTEM Clipboard;
-    DWORD           ClipboardSequenceNumber;
+    PTHREADINFO    ptiClipLock;
+    PTHREADINFO    ptiDrawingClipboard;
+    PWND           spwndClipOpen;
+    PWND           spwndClipViewer;
+    PWND           spwndClipOwner;
+    PCLIP          pClipBase;     // Not a clip object.
+    DWORD          cNumClipFormats;
+    INT            iClipSerialNumber;
+    INT            iClipSequenceNumber;
+    INT            fClipboardChanged : 1;
+    INT            fInDelayedRendering : 1;
 
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;
 extern PPROCESSINFO LogonProcess;
 extern HWND hwndSAS;
+extern UNICODE_STRING gustrWindowStationsDir;
+
+#define WINSTA_READ       STANDARD_RIGHTS_READ     | \
+                          WINSTA_ENUMDESKTOPS      | \
+                          WINSTA_ENUMERATE         | \
+                          WINSTA_READATTRIBUTES    | \
+                          WINSTA_READSCREEN
+
+#define WINSTA_WRITE      STANDARD_RIGHTS_WRITE    | \
+                          WINSTA_ACCESSCLIPBOARD   | \
+                          WINSTA_CREATEDESKTOP     | \
+                          WINSTA_WRITEATTRIBUTES
+
+#define WINSTA_EXECUTE    STANDARD_RIGHTS_EXECUTE  | \
+                          WINSTA_ACCESSGLOBALATOMS | \
+                          WINSTA_EXITWINDOWS
+
+#define WINSTA_ACCESS_ALL STANDARD_RIGHTS_REQUIRED | \
+                          WINSTA_ACCESSCLIPBOARD   | \
+                          WINSTA_ACCESSGLOBALATOMS | \
+                          WINSTA_CREATEDESKTOP     | \
+                          WINSTA_ENUMDESKTOPS      | \
+                          WINSTA_ENUMERATE         | \
+                          WINSTA_EXITWINDOWS       | \
+                          WINSTA_READATTRIBUTES    | \
+                          WINSTA_READSCREEN        | \
+                          WINSTA_WRITEATTRIBUTES
 
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);
+NTSTATUS NTAPI UserCreateWinstaDirectoy();
 
-NTSTATUS FASTCALL
-CleanupWindowStationImpl(VOID);
-
-NTSTATUS
-APIENTRY
-IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
-
-VOID APIENTRY
-IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
-
-NTSTATUS
-APIENTRY
-IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
-
-NTSTATUS NTAPI 
-IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+VOID APIENTRY IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
+NTSTATUS APIENTRY IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
+NTSTATUS NTAPI IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
@@ -91,25 +81,8 @@ IntValidateWindowStationHandle(
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
    PWINSTATION_OBJECT *Object);
+BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
-BOOL FASTCALL
-IntGetWindowStationObject(PWINSTATION_OBJECT Object);
-
-BOOL FASTCALL
-co_IntInitializeDesktopGraphics(VOID);
-
-VOID FASTCALL
-IntEndDesktopGraphics(VOID);
-
-BOOL FASTCALL
-IntGetFullWindowStationName(
-   OUT PUNICODE_STRING FullName,
-   IN PUNICODE_STRING WinStaName,
-   IN OPTIONAL PUNICODE_STRING DesktopName);
-
-PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
-
-BOOL FASTCALL
-UserSetProcessWindowStation(HWINSTA hWindowStation);
-
+BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
+VOID FASTCALL IntEndDesktopGraphics(VOID);
 /* EOF */

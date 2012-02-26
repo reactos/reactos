@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -128,7 +128,6 @@
 #include "acparser.h"
 #include "acdispat.h"
 #include "amlcode.h"
-#include "acnamesp.h"
 #include "acinterp.h"
 
 #define _COMPONENT          ACPI_PARSER
@@ -635,23 +634,16 @@ AcpiPsParseAml (
             /* Check for possible multi-thread reentrancy problem */
 
             if ((Status == AE_ALREADY_EXISTS) &&
-                (!WalkState->MethodDesc->Method.Mutex))
+                (!(WalkState->MethodDesc->Method.InfoFlags & ACPI_METHOD_SERIALIZED)))
             {
-                ACPI_INFO ((AE_INFO,
-                    "Marking method %4.4s as Serialized because of AE_ALREADY_EXISTS error",
-                    WalkState->MethodNode->Name.Ascii));
-
                 /*
-                 * Method tried to create an object twice. The probable cause is
-                 * that the method cannot handle reentrancy.
-                 *
-                 * The method is marked NotSerialized, but it tried to create
-                 * a named object, causing the second thread entrance to fail.
-                 * Workaround this problem by marking the method permanently
-                 * as Serialized.
+                 * Method is not serialized and tried to create an object
+                 * twice. The probable cause is that the method cannot
+                 * handle reentrancy. Mark as "pending serialized" now, and
+                 * then mark "serialized" when the last thread exits.
                  */
-                WalkState->MethodDesc->Method.MethodFlags |= AML_METHOD_SERIALIZED;
-                WalkState->MethodDesc->Method.SyncLevel = 0;
+                WalkState->MethodDesc->Method.InfoFlags |=
+                    ACPI_METHOD_SERIALIZED_PENDING;
             }
         }
 

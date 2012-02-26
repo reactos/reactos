@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/xformobj.c
- * PURPOSE:         XFORMOBJ api
+ * PURPOSE:         XFORMOBJ API
  * PROGRAMMER:      Timo Kreuzer
  */
 
@@ -111,7 +111,7 @@ HintFromAccel(ULONG flAccel)
 /** Internal functions ********************************************************/
 
 ULONG
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_UpdateAccel(
     IN XFORMOBJ *pxo)
 {
@@ -152,7 +152,7 @@ XFORMOBJ_UpdateAccel(
 
 
 ULONG
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_iSetXform(
     OUT XFORMOBJ *pxo,
     IN const XFORML *pxform)
@@ -186,7 +186,7 @@ XFORMOBJ_iSetXform(
  * | efDx  efDy  1 |
  */
 ULONG
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_iCombine(
     IN XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
@@ -218,7 +218,7 @@ XFORMOBJ_iCombine(
 
 
 ULONG
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_iCombineXform(
     IN XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
@@ -246,7 +246,7 @@ XFORMOBJ_iCombineXform(
  * A^-1 = 1/(a*d - b*c) * (a22,-a12,a21,-a11)
  */
 ULONG
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_iInverse(
     OUT XFORMOBJ *pxoDst,
     IN XFORMOBJ *pxoSrc)
@@ -285,7 +285,7 @@ XFORMOBJ_iInverse(
 
 
 BOOL
-INTERNAL_CALL
+NTAPI
 XFORMOBJ_bXformFixPoints(
     IN XFORMOBJ  *pxo,
     IN ULONG  cPoints,

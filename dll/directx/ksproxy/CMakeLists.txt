@@ -1,11 +1,7 @@
 
+set_cpp()
+
 spec2def(ksproxy.ax ksproxy.spec)
-
-add_definitions(
-    -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
-    -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
-
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
 
 add_library(ksproxy SHARED
     allocator.cpp
@@ -28,17 +24,16 @@ add_library(ksproxy SHARED
     qualityforward.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
 
-set_entrypoint(ksproxy 0)
+set_module_type(ksproxy win32dll ENTRYPOINT 0)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
+
 if(MSVC)
-    set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "/GR-")
+    add_target_compile_flags(ksproxy "/GR-")
 else()
-    #FIXME : can't build if this is enabled, check if this is needed
-    #set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
-    target_link_libraries(ksproxy -lsupc++ -lgcc -lmingw32 oldnames)
+    add_target_compile_flags(ksproxy "-fno-exceptions -fno-rtti")
 endif()
 
-target_link_libraries(ksproxy stlport strmiids)
+target_link_libraries(ksproxy strmiids)
 
 add_importlibs(ksproxy
     advapi32
@@ -48,7 +43,5 @@ add_importlibs(ksproxy
     msvcrt
     kernel32
     ntdll)
-
-add_dependencies(ksproxy psdk)
 
 add_cd_file(TARGET ksproxy DESTINATION reactos/system32 FOR all)

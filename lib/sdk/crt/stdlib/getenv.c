@@ -17,7 +17,7 @@
 char *getenv(const char *name)
 {
    char **environ;
-   unsigned int length = strlen(name);
+   size_t length = strlen(name);
 
    for (environ = *__p__environ(); *environ; environ++)
    {
@@ -35,7 +35,7 @@ char *getenv(const char *name)
 wchar_t *_wgetenv(const wchar_t *name)
 {
    wchar_t **environ;
-   unsigned int length = wcslen(name);
+   size_t length = wcslen(name);
 
    for (environ = *__p__wenviron(); *environ; environ++)
    {

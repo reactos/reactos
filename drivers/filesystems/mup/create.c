@@ -29,7 +29,7 @@
 
 #include <ntifs.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "mup.h"
@@ -57,7 +57,7 @@ MupCreate(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
 
-    Status = STATUS_ACCESS_DENIED;
+    Status = STATUS_BAD_NETWORK_PATH;
 
     Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
     Irp->IoStatus.Status = Status;

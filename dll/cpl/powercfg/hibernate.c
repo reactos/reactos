@@ -48,7 +48,7 @@ Hib_InitDialog(HWND hwndDlg)
 		msex.dwLength = sizeof(msex);
 		if (!GlobalMemoryStatusEx(&msex))
 		{
-			return; //FIXME
+			return; // FIXME
 		}
 
 		if (GetWindowsDirectory(szTemp,MAX_PATH))

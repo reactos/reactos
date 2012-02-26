@@ -2,13 +2,13 @@
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
-Version = 1.2.11
+Version = 1.2.12
 Licence = LGPL
 Description = Needed for some Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
-Size = 307kB
+Size = 548.02kB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
-URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.11-win32.zip
+URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.12-win32.zip
 CDPath = none
 
 [Section.0405]
@@ -22,6 +22,9 @@ Description = Necesario para ejecutar varios juegos de código abierto. Necesita
 
 [Section.040c]
 Description = Nécessaire pour faire tourner certains jeux open source. Vous aurez besoin de 7-Zip ou d'un outil similaire pour l'extraire.
+
+[Section.0410]
+Description = Necessario per il corretto funzionamento di alcuni giochi OpenSource. Necessita di 7-zip o utility simili per essere estratto.
 
 [Section.0415]
 Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym źródle). Do jej rozpakowania potrzebny jest 7-Zip lub podobny program.

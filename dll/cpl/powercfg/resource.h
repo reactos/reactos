@@ -1,15 +1,15 @@
 #pragma once
 
-/* metrics */
-#define PROPSHEETWIDTH  246
-#define PROPSHEETHEIGHT 228
-#define PROPSHEETPADDING        6
-#define SYSTEM_COLUMN   (18 * PROPSHEETPADDING)
-#define LABELLINE(x)    (((PROPSHEETPADDING + 2) * x) + (x + 2))
-#define ICONSIZE        16
+/* Metrics */
+#define PROPSHEETWIDTH                  246
+#define PROPSHEETHEIGHT                 228
+#define PROPSHEETPADDING                6
+#define SYSTEM_COLUMN                   (18 * PROPSHEETPADDING)
+#define LABELLINE(x)                    (((PROPSHEETPADDING + 2) * x) + (x + 2))
+#define ICONSIZE                        16
 
-/* ids */
-#define IDC_CPLICON_1	                1
+/* IDs */
+#define IDC_CPLICON_1                   1
 
 #define IDS_PROCENT                     49
 #define IDS_SOUND                       50
@@ -60,7 +60,7 @@
 #define IDI_SCREEN                      178
 #define IDI_HIBERNATE                   179
 
-#define IDS_CPLNAME_1	                190
+#define IDS_CPLNAME_1                   190
 #define IDC_ENERGYLIST                  200
 #define IDC_GRPDETAIL                   201
 #define IDC_SAT                         202
@@ -115,12 +115,12 @@
 #define IDC_DELETE_BTN                  504
 #define IDC_SAVEAS_BTN                  505
 
-#define IDS_ALPERTLOWENERGY						715
-#define IDS_ALPERTCRITICLEENERGY				716
-#define IDS_CRITCLENERGY						717
-#define IDS_LOWENERGY							718
-#define IDS_UNKNOWN								719
+#define IDS_ALPERTLOWENERGY             715
+#define IDS_ALPERTCRITICLEENERGY        716
+#define IDS_CRITCLENERGY                717
+#define IDS_LOWENERGY                   718
+#define IDS_UNKNOWN                     719
 
-#define IDS_CPLDESCRIPTION_1	        901
+#define IDS_CPLDESCRIPTION_1            901
 
 /* EOF */

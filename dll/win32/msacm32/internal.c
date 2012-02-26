@@ -1007,6 +1007,9 @@ PWINE_ACMLOCALDRIVERINST MSACM_OpenLocalDriver(PWINE_ACMLOCALDRIVER paldrv, LPAR
     PWINE_ACMLOCALDRIVERINST pDrvInst;
     
     pDrvInst = HeapAlloc(MSACM_hHeap, 0, sizeof(WINE_ACMLOCALDRIVERINST));
+    if (!pDrvInst)
+        return NULL;
+
     pDrvInst->pLocalDriver = paldrv;
     pDrvInst->dwDriverID = 0;
     pDrvInst->pNextACMInst = NULL;
@@ -1028,9 +1031,14 @@ PWINE_ACMLOCALDRIVERINST MSACM_OpenLocalDriver(PWINE_ACMLOCALDRIVER paldrv, LPAR
         ret = MSACM_OpenLocalDriver(paldrv, lParam2);
         if (!ret)
         {
-            MSACM_CloseLocalDriver(pDrvInst);
             ERR("load1 failed\n");
-            goto exit;
+            /* If MSACM_CloseLocalDriver returns TRUE,
+             * then pDrvInst has been freed
+             */
+            if (!MSACM_CloseLocalDriver(pDrvInst))
+                goto exit;
+
+            return NULL;
         }
         pDrvInst->bSession = TRUE;
         return ret;

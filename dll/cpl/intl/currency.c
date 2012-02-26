@@ -19,18 +19,12 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/currency.c
+ * FILE:            dll/cpl/intl/currency.c
  * PURPOSE:         Currency property page
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 #define POSITIVE_EXAMPLE   _T("123456789.00")
 #define NEGATIVE_EXAMPLE   _T("-123456789.00")
@@ -42,14 +36,14 @@ UpdateExamples(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
     TCHAR szBuffer[MAX_FMT_SIZE];
 
-    /* positive example */
+    /* Positive example */
     GetCurrencyFormat(pGlobalData->lcid, 0,
                       POSITIVE_EXAMPLE,
                       NULL, szBuffer, MAX_FMT_SIZE);
 
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYPOSSAMPLE), WM_SETTEXT, 0, (LPARAM)szBuffer);
 
-    /* negative example */
+    /* Negative example */
     GetCurrencyFormat(pGlobalData->lcid, 0,
                       NEGATIVE_EXAMPLE,
                       NULL, szBuffer, MAX_FMT_SIZE);
@@ -81,7 +75,7 @@ InitCurrencySymbols(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYSYMBOL),
                 CB_SETCURSEL,
-                0, /* index */
+                0, /* Index */
                 0);
 }
 
@@ -257,7 +251,7 @@ InitCurrencyDecimalSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
                   LOCALE_SMONDECIMALSEP,
                   szBuffer, MAX_FMT_SIZE);
 
-    /* decimal separator */
+    /* Decimal separator */
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYDECSEP),
                 CB_ADDSTRING,
                 0,
@@ -265,7 +259,7 @@ InitCurrencyDecimalSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYDECSEP),
                 CB_SETCURSEL,
-                0, /* index */
+                0, /* Index */
                 0);
 }
 
@@ -327,7 +321,7 @@ InitCurrencyGroupSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
                   LOCALE_SMONTHOUSANDSEP,
                   szBuffer, MAX_FMT_SIZE);
 
-    /* digit group separator */
+    /* Digit group separator */
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYGRPSEP),
                 CB_ADDSTRING,
                 0,
@@ -335,7 +329,7 @@ InitCurrencyGroupSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYGRPSEP),
                 CB_SETCURSEL,
-                0, /* index */
+                0, /* Index */
                 0);
 }
 
@@ -347,20 +341,19 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     TCHAR szGrouping[MAX_FMT_SIZE];
     TCHAR szBuffer[MAX_FMT_SIZE];
     CURRENCYFMT cyFmt;
-    INT ret;
     INT i;
 
     /* Get group separator */
-    ret = GetLocaleInfo(pGlobalData->lcid,
-                        LOCALE_SMONTHOUSANDSEP,
-                        szThousandSep, MAX_FMT_SIZE);
+    GetLocaleInfo(pGlobalData->lcid,
+                  LOCALE_SMONTHOUSANDSEP,
+                  szThousandSep, MAX_FMT_SIZE);
 
     /* Get grouping */
-    ret = GetLocaleInfo(pGlobalData->lcid,
-                        LOCALE_SMONGROUPING,
-                        szGrouping, MAX_FMT_SIZE);
+    GetLocaleInfo(pGlobalData->lcid,
+                  LOCALE_SMONGROUPING,
+                  szGrouping, MAX_FMT_SIZE);
 
-    /* digit grouping */
+    /* Digit grouping */
     cyFmt.NumDigits = 0;
     cyFmt.LeadingZero = 0;
     cyFmt.lpDecimalSep = _T("");
@@ -407,7 +400,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYGRPNUM),
                 CB_SETCURSEL,
-                i, /* index */
+                i, /* Index */
                 0);
 }
 
@@ -469,7 +462,7 @@ SetCurrencyFracSymNum(HWND hwndDlg, LCID lcid)
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szCurrencyFracSymNum, DECIMAL_RADIX);
 
     /* Save number of fractional symbols */
@@ -511,7 +504,7 @@ SetNegCurrencySumFmt(HWND hwndDlg, LCID lcid)
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szNegCurrencySumFmt, DECIMAL_RADIX);
 
     /* Save currency sum format */
@@ -533,7 +526,7 @@ SetPosCurrencySumFmt(HWND hwndDlg, LCID lcid)
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szPosCurrencySumFmt, DECIMAL_RADIX);
 
     /* Save currency sum format */
@@ -637,7 +630,6 @@ CurrencyPageProc(HWND hwndDlg,
             }
             break;
     }
-
     return FALSE;
 }
 

@@ -1,37 +1,28 @@
 #pragma once
 
-#include "surface.h"
-
-typedef struct tagBITMAPV5INFO
-{
-    BITMAPV5HEADER bmiHeader;
-    RGBQUAD        bmiColors[256];
-} BITMAPV5INFO, *PBITMAPV5INFO;
-
 INT     APIENTRY  BITMAP_GetObject(SURFACE * bmp, INT count, LPVOID buffer);
-HBITMAP FASTCALL IntCreateBitmap(IN SIZEL Size, IN LONG Width, IN ULONG Format, IN ULONG Flags, IN PVOID Bits);
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 
 HBITMAP
-APIENTRY
+NTAPI
 GreCreateBitmap(
-    IN INT nWidth,
-    IN INT nHeight,
-    IN UINT cPlanes,
-    IN UINT cBitsPixel,
-    IN OPTIONAL PVOID pvBits);
+    _In_ ULONG nWidth,
+    _In_ ULONG nHeight,
+    _In_ ULONG cPlanes,
+    _In_ ULONG cBitsPixel,
+    _In_opt_ PVOID pvBits);
 
 HBITMAP
-APIENTRY
+NTAPI
 GreCreateBitmapEx(
-    IN INT nWidth,
-    IN INT nHeight,
-    IN ULONG cjWidthBytes,
-    IN ULONG iFormat,
-    IN USHORT fjBitmap,
-    IN ULONG cjBits,
-    IN OPTIONAL PVOID pvBits,
-	IN FLONG flags);
+    _In_ ULONG nWidth,
+    _In_ ULONG nHeight,
+    _In_ ULONG cjWidthBytes,
+    _In_ ULONG iFormat,
+    _In_ USHORT fjBitmap,
+    _In_ ULONG cjSizeImage,
+    _In_opt_ PVOID pvBits,
+    _In_ FLONG flags);
 
 HBITMAP
 FASTCALL

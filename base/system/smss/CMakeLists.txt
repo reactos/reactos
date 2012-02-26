@@ -26,9 +26,6 @@ list(APPEND SOURCE
 add_executable(smss WIN32 ${SOURCE})
 
 target_link_libraries(smss nt smlib)
-if(MSVC)
-    set_entrypoint(smss DllMainCRTStartup)
-endif()
 
 add_pch(smss smss.h)
 

@@ -1,16 +1,13 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Misc User funcs
- * FILE:             subsystem/win32/win32k/ntuser/defwnd.c
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Miscellaneous User functions
+ * FILE:             subsystems/win32/win32k/ntuser/defwnd.c
  * PROGRAMER:
- *
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserDefwnd);
 
 // Client Shutdown messages
 #define MCS_SHUTDOWNTIMERS  1
@@ -21,8 +18,8 @@
 #define MCSR_DONOTSHUTDOWN    3
 
 /*
-  Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
-  Apparently CSRSS sends out messages to do this w/o going into win32k internals.
+ * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
+ * Apparently CSRSS sends out messages to do this w/o going into win32k internals.
  */
 static
 LRESULT FASTCALL
@@ -97,6 +94,43 @@ IntClientShutdown(
    return lResult;
 }
 
+HBRUSH FASTCALL
+DefWndControlColor(HDC hDC, UINT ctlType)
+{
+  if (ctlType == CTLCOLOR_SCROLLBAR)
+  {
+      HBRUSH hb = IntGetSysColorBrush(COLOR_SCROLLBAR);
+      COLORREF bk = IntGetSysColor(COLOR_3DHILIGHT);
+      IntGdiSetTextColor(hDC, IntGetSysColor(COLOR_3DFACE));
+      IntGdiSetBkColor(hDC, bk);
+
+      /* if COLOR_WINDOW happens to be the same as COLOR_3DHILIGHT
+       * we better use 0x55aa bitmap brush to make scrollbar's background
+       * look different from the window background.
+       */
+      if ( bk == IntGetSysColor(COLOR_WINDOW))
+          return gpsi->hbrGray;
+
+      NtGdiUnrealizeObject( hb );
+      return hb;
+  }
+
+  IntGdiSetTextColor(hDC, IntGetSysColor(COLOR_WINDOWTEXT));
+
+  if ((ctlType == CTLCOLOR_EDIT) || (ctlType == CTLCOLOR_LISTBOX))
+  {
+      IntGdiSetBkColor(hDC, IntGetSysColor(COLOR_WINDOW));
+  }
+  else
+  {
+      IntGdiSetBkColor(hDC, IntGetSysColor(COLOR_3DFACE));
+      return IntGetSysColorBrush(COLOR_3DFACE);
+  }
+
+  return IntGetSysColorBrush(COLOR_WINDOW);
+}
+
+
 LRESULT FASTCALL
 DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -114,7 +148,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    switch (wParam & 0xfff0)
    {
       case SC_SCREENSAVE:
-        DPRINT1("Screensaver Called!\n");
+        ERR("Screensaver Called!\n");
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
 
@@ -145,7 +179,7 @@ IntDefWindowProc(
    {
       case WM_SYSCOMMAND:
       {
-         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         ERR("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
@@ -171,10 +205,30 @@ IntDefWindowProc(
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
+      case WM_CTLCOLORMSGBOX:
+      case WM_CTLCOLOREDIT:
+      case WM_CTLCOLORLISTBOX:
+      case WM_CTLCOLORBTN:
+      case WM_CTLCOLORDLG:
+      case WM_CTLCOLORSTATIC:
+      case WM_CTLCOLORSCROLLBAR:
+           return (LRESULT) DefWndControlColor((HDC)wParam, Msg - WM_CTLCOLORMSGBOX);
+
+      case WM_CTLCOLOR:
+           return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
+
       case WM_GETHOTKEY:
          return DefWndGetHotKey(UserHMGetHandle(Wnd));                
       case WM_SETHOTKEY:
          return DefWndSetHotKey(Wnd, wParam);
+
+      case WM_NCHITTEST:
+      {
+         POINT Point;
+         Point.x = GET_X_LPARAM(lParam);
+         Point.y = GET_Y_LPARAM(lParam);
+         return GetNCHitEx(Wnd, Point);
+      }
 
       /* ReactOS only. */
       case WM_CBT:
@@ -241,26 +295,34 @@ GetNCHitEx(PWND pWnd, POINT pt)
 
    if (!pWnd) return HTNOWHERE;
 
-   rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
-   rcWindow.right = pWnd->rcWindow.right;
-   rcWindow.bottom = pWnd->rcWindow.bottom;
-   rcClient.right = pWnd->rcClient.right;
-   rcClient.bottom = pWnd->rcClient.bottom;
+   if (pWnd == UserGetDesktopWindow()) // pWnd->fnid == FNID_DESKTOP)
+   {
+      rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
+      rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);
+      rcWindow.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+      rcClient.right  = UserGetSystemMetrics(SM_CXSCREEN);
+      rcClient.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+   }
+   else
+   {
+      rcClient = pWnd->rcClient;
+      rcWindow = pWnd->rcWindow;
+   }
 
-   if (!IntPtInRect(&rcWindow, pt)) return HTNOWHERE;
+   if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y)) return HTNOWHERE;
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
 
    if (Style & WS_MINIMIZE) return HTCAPTION;
 
-   if (IntPtInRect( &rcClient, pt )) return HTCLIENT;
+   if (RECTL_bPointInRect( &rcClient,  pt.x, pt.y )) return HTCLIENT;
 
    /* Check borders */
    if (HAS_THICKFRAME( Style, ExStyle ))
    {
       RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
-      if (!IntPtInRect(&rcWindow, pt))
+      if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y ))
       {
             /* Check top sizing border */
             if (pt.y < rcWindow.top)
@@ -298,7 +360,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
         else if (HAS_THINFRAME( Style, ExStyle ))
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-        if (!IntPtInRect( &rcWindow, pt )) return HTBORDER;
+        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y  )) return HTBORDER;
     }
 
     /* Check caption */
@@ -309,7 +371,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             rcWindow.top += UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
         else
             rcWindow.top += UserGetSystemMetrics(SM_CYCAPTION) - 1;
-        if (!IntPtInRect( &rcWindow, pt ))
+        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y ))
         {
             BOOL min_or_max_box = (Style & WS_MAXIMIZEBOX) ||
                                   (Style & WS_MINIMIZEBOX);
@@ -330,7 +392,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
                 }
 
                 /* Check maximize box */
-                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                /* In Win95 there is automatically a Maximize button when there is a minimize one */
                 if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
                 {
                     rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
@@ -361,7 +423,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
                 }
 
                 /* Check maximize box */
-                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                /* In Win95 there is automatically a Maximize button when there is a minimize one */
                 if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
                 {
                     rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
@@ -394,7 +456,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             rcClient.left -= UserGetSystemMetrics(SM_CXVSCROLL);
         else
             rcClient.right += UserGetSystemMetrics(SM_CXVSCROLL);
-        if (IntPtInRect( &rcClient, pt )) return HTVSCROLL;
+        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y )) return HTVSCROLL;
     }
 
       /* Check horizontal scroll bar */
@@ -402,7 +464,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
     if (Style & WS_HSCROLL)
     {
         rcClient.bottom += UserGetSystemMetrics(SM_CYHSCROLL);
-        if (IntPtInRect( &rcClient, pt ))
+        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y ))
         {
             /* Check size box */
             if ((Style & WS_VSCROLL) &&

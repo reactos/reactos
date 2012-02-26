@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -243,7 +243,7 @@ AcpiExResolveOperands (
     ArgTypes = OpInfo->RuntimeArgs;
     if (ArgTypes == ARGI_INVALID_OPCODE)
     {
-        ACPI_ERROR ((AE_INFO, "Unknown AML opcode %X",
+        ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             Opcode));
 
         return_ACPI_STATUS (AE_AML_INTERNAL);
@@ -309,7 +309,7 @@ AcpiExResolveOperands (
             if (!AcpiUtValidObjectType (ObjectType))
             {
                 ACPI_ERROR ((AE_INFO,
-                    "Bad operand object type [%X]", ObjectType));
+                    "Bad operand object type [0x%X]", ObjectType));
 
                 return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
             }
@@ -342,7 +342,7 @@ AcpiExResolveOperands (
                 default:
 
                     ACPI_ERROR ((AE_INFO,
-                        "Unknown Reference Class %2.2X in %p",
+                        "Unknown Reference Class 0x%2.2X in %p",
                         ObjDesc->Reference.Class, ObjDesc));
 
                     return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
@@ -773,7 +773,7 @@ AcpiExResolveOperands (
             /* Unknown type */
 
             ACPI_ERROR ((AE_INFO,
-                "Internal - Unknown ARGI (required operand) type %X",
+                "Internal - Unknown ARGI (required operand) type 0x%X",
                 ThisArgType));
 
             return_ACPI_STATUS (AE_BAD_PARAMETER);

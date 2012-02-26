@@ -59,7 +59,7 @@
  * CsrMoveSatisfiedWait        753E7909 20 - wait.c    - IMPLEMENTED
  * CsrNotifyWait               753E782F 21 - wait.c    - IMPLEMENTED
  * CsrPopulateDosDevices       753E37A5 22 - init.c    - IMPLEMENTED
- * CsrQueryApiPort             753E4E42 23 - api.c     - UNIMPLEMENTED
+ * CsrQueryApiPort             753E4E42 23 - api.c     - IMPLEMENTED
  * CsrReferenceThread          753E61E5 24 - thread.c  - IMPLEMENTED
  * CsrRevertToSelf             753E615A 25 - thread.c  - IMPLEMENTED
  * CsrServerInitialization     753E3D75 26 - server.c  - IMPLEMENTED
@@ -93,7 +93,7 @@
  * - SMSS needs to be partly re-written to match some things done here.
  *   Among other things, SmConnectToSm, SmCompleteSession and the other
  *   Sm* Exported APIs have to be properly implemented, as well as the
- *   callback calling and SM LPC APIs. [NOT DONE]
+ *   callback calling and SM LPC APIs. [DONE!]
  *
  * - NTDLL needs to get the Csr* routines properly implemented. [DONE!]
  *

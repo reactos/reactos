@@ -218,6 +218,14 @@ LdrGetDllHandle(
 
 NTSTATUS
 NTAPI
+LdrGetDllHandleEx(IN ULONG Flags,
+                  IN PWSTR DllPath OPTIONAL,
+                  IN PULONG DllCharacteristics OPTIONAL,
+                  IN PUNICODE_STRING DllName,
+                  OUT PVOID *DllHandle OPTIONAL);
+
+NTSTATUS
+NTAPI
 LdrFindEntryForAddress(
     IN PVOID Address,
     OUT PLDR_DATA_TABLE_ENTRY *Module
@@ -296,7 +304,7 @@ LdrUnloadDll(
     IN PVOID BaseAddress
 );
 
-typedef VOID (NTAPI *PLDR_CALLBACK)(PVOID CallbackContext, PVOID Name);
+typedef VOID (NTAPI *PLDR_CALLBACK)(PVOID CallbackContext, PCHAR Name);
 NTSTATUS
 NTAPI
 LdrVerifyImageMatchesChecksum(
@@ -304,6 +312,25 @@ LdrVerifyImageMatchesChecksum(
     IN PLDR_CALLBACK Callback,
     IN PVOID CallbackContext,
     OUT PUSHORT ImageCharacterstics
+);
+
+NTSTATUS
+NTAPI
+LdrOpenImageFileOptionsKey(
+    IN PUNICODE_STRING SubKey,
+    IN BOOLEAN Wow64,
+    OUT PHANDLE NewKeyHandle
+);
+
+NTSTATUS
+NTAPI
+LdrQueryImageFileKeyOption(
+    IN HANDLE KeyHandle,
+    IN PCWSTR ValueName,
+    IN ULONG Type,
+    OUT PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnedLength OPTIONAL
 );
 
 #endif

@@ -15,15 +15,11 @@ extern "C" {
 
 #if defined(MINGW_HAS_SECURE_API)
 
-#ifdef _USE_32BIT_TIME_T
-#define _ftime_s _ftime32_s
-#else
-#define _ftime_s _ftime64_s
-#endif
-
   _CRTIMP errno_t __cdecl _ftime32_s(struct __timeb32 *_Time);
-#if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP errno_t __cdecl _ftime64_s(struct __timeb64 *_Time);
+
+#ifndef _USE_32BIT_TIME_T
+#define _ftime_s _ftime64_s
 #endif
 #endif
 

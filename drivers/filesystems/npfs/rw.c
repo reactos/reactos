@@ -373,20 +373,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
             KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             Context->WaitEvent = &Event;
             ExReleaseFastMutex(&Ccb->DataListLock);
-            Status = KeWaitForSingleObject(&Event,
+            KeWaitForSingleObject(&Event,
                 Executive,
-                Irp->RequestorMode,
+                KernelMode,
                 FALSE,
                 NULL);
-            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
-            {
-                Status = STATUS_CANCELLED;
-                goto done;
-            }
-            if (!NT_SUCCESS(Status))
-            {
-                ASSERT(FALSE);
-            }
             ExAcquireFastMutex(&Ccb->DataListLock);
         }
         Irp->IoStatus.Information = 0;
@@ -468,11 +459,13 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     Status = KeWaitForSingleObject(&Ccb->ReadEvent,
                         UserRequest,
                         Irp->RequestorMode,
-                        FALSE,
+                        (FileObject->Flags & FO_ALERTABLE_IO),
                         NULL);
                     DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 
-                    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+                    ExAcquireFastMutex(&Ccb->DataListLock);
+
+                    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
                     {
                         Status = STATUS_CANCELLED;
                         break;
@@ -481,7 +474,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     {
                         ASSERT(FALSE);
                     }
-                    ExAcquireFastMutex(&Ccb->DataListLock);
                 }
                 else
                 {
@@ -662,9 +654,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
         ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
 
-        if (Status == STATUS_CANCELLED)
-            goto done;
-
         if (IoIsOperationSynchronous(Irp))
         {
             RemoveEntryList(&Context->ListEntry);
@@ -818,8 +807,9 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
     ExAcquireFastMutex(&ReaderCcb->DataListLock);
 
-#ifndef NDEBUG
     DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
+
+#ifndef NDEBUG
     HexDump(Buffer, Length);
 #endif
 
@@ -840,11 +830,11 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             Status = KeWaitForSingleObject(&Ccb->WriteEvent,
                 UserRequest,
                 Irp->RequestorMode,
-                FALSE,
+                (FileObject->Flags & FO_ALERTABLE_IO),
                 NULL);
             DPRINT("Write Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
 
-            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
             {
                 Status = STATUS_CANCELLED;
                 goto done;

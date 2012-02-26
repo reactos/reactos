@@ -29,6 +29,8 @@
 
 #define MK_STR(s) #s
 
+int access_dirT(const _TCHAR *_path);
+
 _TCHAR const* extT[] =
    {
       _T(""),
@@ -117,7 +119,8 @@ const _TCHAR* find_execT(const _TCHAR* path, _TCHAR* rpath)
 static _TCHAR*
 argvtosT(const _TCHAR* const* argv, _TCHAR delim)
 {
-   int i, len;
+   int i;
+   size_t len;
    _TCHAR *ptr, *str;
 
    if (argv == NULL)
@@ -149,7 +152,7 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
 {
    va_list alist2 = alist;
    _TCHAR *ptr, *str;
-   int len;
+   size_t len;
 
    if (arg0 == NULL)
       return NULL;
@@ -199,18 +202,18 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 
    if (mode != _P_NOWAIT && mode != _P_NOWAITO && mode != _P_WAIT && mode != _P_DETACH && mode != _P_OVERLAY)
    {
-      __set_errno ( EINVAL );
+      _set_errno ( EINVAL );
       return( -1);
    }
 
    if (0 != _taccess(cmdname, F_OK))
    {
-      __set_errno ( ENOENT );
+      _set_errno ( ENOENT );
       return(-1);
    }
    if (0 == access_dirT(cmdname))
    {
-      __set_errno ( EISDIR );
+      _set_errno ( EISDIR );
       return(-1);
    }
 
@@ -233,7 +236,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
       StartupInfo.lpReserved2 = malloc(StartupInfo.cbReserved2);
       if (StartupInfo.lpReserved2 == NULL)
       {
-         __set_errno ( ENOMEM );
+         _set_errno ( ENOMEM );
          return -1;
       }
 
@@ -327,7 +330,7 @@ intptr_t _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
 {
    va_list argp;
    _TCHAR* args;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_tspawnl)"('%"sT"')\n", cmdname);
 
@@ -348,7 +351,7 @@ intptr_t _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
 intptr_t _tspawnv(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv)
 {
    _TCHAR* args;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_tspawnv)"('%"sT"')\n", cmdname);
 
@@ -371,7 +374,7 @@ intptr_t _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, 
    _TCHAR* args;
    _TCHAR* envs;
    _TCHAR const * const* ptr;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_tspawnle)"('%"sT"')\n", cmdname);
 
@@ -404,7 +407,7 @@ intptr_t _tspawnve(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv, c
 {
    _TCHAR *args;
    _TCHAR *envs;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_tspawnve)"('%"sT"')\n", cmdname);
 
@@ -442,7 +445,7 @@ intptr_t _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, N
 {
    va_list argp;
    _TCHAR* args;
-   int ret = -1;
+   intptr_t ret = -1;
    _TCHAR pathname[FILENAME_MAX];
 
    TRACE(MK_STR(_tspawnlp)"('%"sT"')\n", cmdname);
@@ -467,7 +470,7 @@ intptr_t _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, 
    _TCHAR* args;
    _TCHAR* envs;
    _TCHAR const* const * ptr;
-   int ret = -1;
+   intptr_t ret = -1;
    _TCHAR pathname[FILENAME_MAX];
 
    TRACE(MK_STR(_tspawnlpe)"('%"sT"')\n", cmdname);
@@ -512,7 +515,7 @@ intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 {
    _TCHAR* args;
    va_list argp;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_texecl)"('%"sT"')\n", cmdname);
 
@@ -545,7 +548,7 @@ intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char*
    _TCHAR* args;
    _TCHAR* envs;
    _TCHAR const* const* ptr;
-   int ret = -1;
+   intptr_t ret = -1;
 
    TRACE(MK_STR(_texecle)"('%"sT"')\n", cmdname);
 
@@ -586,7 +589,7 @@ intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 {
    _TCHAR* args;
    va_list argp;
-   int ret = -1;
+   intptr_t ret = -1;
    _TCHAR pathname[FILENAME_MAX];
 
    TRACE(MK_STR(_texeclp)"('%"sT"')\n", cmdname);
@@ -620,7 +623,7 @@ intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char
    _TCHAR* args;
    _TCHAR* envs;
    _TCHAR const* const* ptr;
-   int ret = -1;
+   intptr_t ret = -1;
    _TCHAR pathname[FILENAME_MAX];
 
    TRACE(MK_STR(_texeclpe)"('%"sT"')\n", cmdname);

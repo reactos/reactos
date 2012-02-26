@@ -178,7 +178,7 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 {
     EX_FAST_REF OldValue;
     PVOID OldObject;
-    ULONG_PTR Count;
+    ULONG Count;
 
     /* Check if we were given an object and reference it 7 times */
     if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);

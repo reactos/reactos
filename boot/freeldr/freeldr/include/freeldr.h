@@ -30,6 +30,7 @@
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 /* public headers */
+#ifdef __REACTOS__
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
@@ -45,18 +46,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <rosldr.h>
-#include <rtl.h>
 #include <ntdddisk.h>
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
-#include <reactos/buildno.h>
 #include <winerror.h>
+#else
+#include <ntsup.h>
+#endif
 
 /* internal headers */
 #include <arcemul.h>
 #include <bytesex.h>
-#include <bget.h>
 #include <cache.h>
 #include <cmdline.h>
 #include <comm.h>
@@ -95,9 +95,9 @@
 /* arch specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/hardware.h>
+#include <arch/pc/pcbios.h>
 #include <arch/pc/machpc.h>
 #include <arch/pc/x86common.h>
-#include <arch/pc/pcbios.h>
 #include <arch/pc/pxe.h>
 #endif
 #if defined(_M_IX86)
@@ -120,9 +120,5 @@
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
-
-/* Special hack for ReactOS setup OS type */
-VOID LoadReactOSSetup(VOID);
-VOID LoadReactOSSetup2(VOID);
 
 #endif  // defined __FREELDR_H

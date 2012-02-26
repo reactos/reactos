@@ -10,6 +10,11 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28719) /* disable banned api usage warning */
+#endif /* _MSC_VER */
+
 #ifndef C_ASSERT
 #ifdef _MSC_VER
 # define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
@@ -2062,4 +2067,8 @@ NTSTRSAFEAPI RtlStringLengthWorkerW(STRSAFE_LPCWSTR psz,size_t cchMax,size_t *pc
 #define RtlStringLengthWorkerA RtlStringLengthWorkerA_instead_use_StringCchLengthA_or_StringCbLengthA;
 #define RtlStringLengthWorkerW RtlStringLengthWorkerW_instead_use_StringCchLengthW_or_StringCbLengthW;
 
-#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif /* _MSC_VER */
+
+#endif /* _NTSTRSAFE_H_INCLUDED_ */

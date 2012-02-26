@@ -4,7 +4,8 @@
 
 add_definitions(
     -D_STLP_USE_EXCEPTIONS
-    -D_DLL -D__USE_CRTIMP)
+    -D_DLL -D__USE_CRTIMP
+    -D_BUILD_STLPORT)
 
 set_cpp()
 

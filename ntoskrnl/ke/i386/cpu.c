@@ -23,11 +23,7 @@ UCHAR KiNMITSS[KTSS_IO_MAPS];
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
-ULONG KeProcessorArchitecture;
-ULONG KeProcessorLevel;
-ULONG KeProcessorRevision;
-ULONG KeFeatureBits;
-ULONG KiFastSystemCallDisable;
+ULONG KiFastSystemCallDisable = 0;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
@@ -41,8 +37,6 @@ ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 ULONG KePrefetchNTAGranularity = 32;
-CHAR KeNumberProcessors = 0;
-KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
@@ -110,17 +104,21 @@ RDMSR(IN ULONG Register)
 
 /* NSC/Cyrix CPU indexed register access macros */
 static __inline
-ULONG
+UCHAR
 getCx86(UCHAR reg)
 {
     WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22, reg);
     return READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23);
 }
 
-#define setCx86(reg, data) do { \
-   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \
-   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23,(data)); \
-} while (0)
+static __inline
+void
+setCx86(UCHAR reg, UCHAR data)
+{
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22, reg);
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23, data);
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -249,8 +247,9 @@ KiGetCpuVendor(VOID)
         return CPU_RISE;
     }
 
-    /* Invalid CPU */
-    return 0;
+    /* Unknown CPU */
+    DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
+    return CPU_UNKNOWN;
 }
 
 ULONG
@@ -261,7 +260,8 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy, Ccr1;
+    ULONG Reg[4], Dummy;
+    UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -312,9 +312,6 @@ KiGetFeatureBits(VOID)
                 Reg[3] &= ~0x800;
             }
 
-            /* Set the current features */
-            CpuFeatures = Reg[3];
-
             break;
 
         /* AMD CPUs */
@@ -364,9 +361,6 @@ KiGetFeatureBits(VOID)
                 ExtendedCPUID = FALSE;
             }
 
-            /* Set the current features */
-            CpuFeatures = Reg[3];
-
             break;
 
         /* Cyrix CPUs */
@@ -385,9 +379,6 @@ KiGetFeatureBits(VOID)
                 /* Set the new CCR1 value */
                 setCx86(CX86_CCR1, Ccr1);
             }
-
-            /* Set the current features */
-            CpuFeatures = Reg[3];
 
             break;
 
@@ -413,6 +404,9 @@ KiGetFeatureBits(VOID)
 
             break;
     }
+
+    /* Set the current features */
+    CpuFeatures = Reg[3];
 
     /* Convert all CPUID Feature bits into our format */
     if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
@@ -514,8 +508,8 @@ KiGetCacheInformation(VOID)
     ULONG Data[4], Dummy;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
-    UCHAR RegisterByte;
-    ULONG Size, Associativity = 0, CacheLine = 64, CurrentSize = 0;
+    UCHAR RegisterByte, Associativity = 0;
+    ULONG Size, CacheLine = 64, CurrentSize = 0;
     BOOLEAN FirstPass = TRUE;
 
     /* Set default L2 size */
@@ -587,7 +581,7 @@ KiGetCacheInformation(VOID)
                                 /* Compute associativity */
                                 Associativity = 4;
                                 if (RegisterByte >= 0x79) Associativity = 8;
-                                
+
                                 /* Mask out only the first nibble */
                                 RegisterByte &= 0x07;
 
@@ -605,7 +599,7 @@ KiGetCacheInformation(VOID)
                             {
                                 /* Set minimum cache line size */
                                 if (CacheLine < 128) CacheLine = 128;
-                                
+
                                 /* Hard-code size/associativity */
                                 Associativity = 8;
                                 switch (RegisterByte)
@@ -614,24 +608,24 @@ KiGetCacheInformation(VOID)
                                         Size = 512 * 1024;
                                         Associativity = 4;
                                         break;
-                                        
+
                                     case 0x23:
                                         Size = 1024 * 1024;
                                         break;
-                                        
+
                                     case 0x25:
                                         Size = 2048 * 1024;
                                         break;
-                                        
+
                                     case 0x29:
                                         Size = 4096 * 1024;
                                         break;
-                                    
+
                                     default:
                                         Size = 0;
                                         break;
                                 }
-                                
+
                                 /* Check if this cache is bigger than the last */
                                 if ((Size / Associativity) > CurrentSize)
                                 {
@@ -661,7 +655,7 @@ KiGetCacheInformation(VOID)
                             {
                                 /* Set minimum cache line size */
                                 if (CacheLine < 64) CacheLine = 64;
-                                
+
                                 /* Hard-code size/associativity */
                                 switch (RegisterByte)
                                 {
@@ -669,37 +663,37 @@ KiGetCacheInformation(VOID)
                                         Size = 4 * 1024 * 1024;
                                         Associativity = 8;
                                         break;
-                                        
+
                                     case 0x4B:
                                         Size = 6 * 1024 * 1024;
                                         Associativity = 12;
                                         break;
-                                        
+
                                     case 0x4C:
                                         Size = 8 * 1024 * 1024;
                                         Associativity = 16;
                                         break;
-                                        
+
                                     case 0x78:
                                         Size = 1 * 1024 * 1024;
                                         Associativity = 4;
                                         break;
-                                        
+
                                     case 0x7D:
                                         Size = 2 * 1024 * 1024;
                                         Associativity = 8;
                                         break;
-                                            
+
                                     case 0x7F:
                                         Size = 512 * 1024;
                                         Associativity = 2;
                                         break;
-                                                
+
                                     case 0x86:
                                         Size = 512 * 1024;
                                         Associativity = 4;
                                         break;
-                                    
+
                                     case 0x87:
                                         Size = 1 * 1024 * 1024;
                                         Associativity = 8;
@@ -709,7 +703,7 @@ KiGetCacheInformation(VOID)
                                         Size = 0;
                                         break;
                                 }
-                                
+
                                 /* Check if this cache is bigger than the last */
                                 if ((Size / Associativity) > CurrentSize)
                                 {
@@ -734,46 +728,46 @@ KiGetCacheInformation(VOID)
                 /* Get L1 size first */
                 CPUID(0x80000005, &Data[0], &Data[1], &Data[2], &Data[3]);
                 KePrefetchNTAGranularity = Data[2] & 0xFF;
-                
+
                 /* Check if we support CPUID 0x80000006 */
                 CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
                 if (Data[0] >= 0x80000006)
                 {
                     /* Get 2nd level cache and tlb size */
                     CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
-                    
+
                     /* Cache line size */
                     CacheLine = Data[2] & 0xFF;
-                    
+
                     /* Hardcode associativity */
-                    RegisterByte = Data[2] >> 12;
+                    RegisterByte = (Data[2] >> 12) & 0xFF;
                     switch (RegisterByte)
                     {
                         case 2:
                             Associativity = 2;
                             break;
-                        
+
                         case 4:
                             Associativity = 4;
                             break;
-                            
+
                         case 6:
                             Associativity = 8;
                             break;
-                            
+
                         case 8:
                         case 15:
                             Associativity = 16;
                             break;
-                        
+
                         default:
                             Associativity = 1;
                             break;
                     }
-                    
+
                     /* Compute size */
                     Size = (Data[2] >> 16) << 10;
-                    
+
                     /* Hack for Model 6, Steping 300 */
                     if ((KeGetCurrentPrcb()->CpuType == 6) &&
                         (KeGetCurrentPrcb()->CpuStep == 0x300))
@@ -797,7 +791,7 @@ KiGetCacheInformation(VOID)
             /* FIXME */
             break;
     }
-    
+
     /* Set the cache line */
     if (CacheLine > KeLargestCacheLine) KeLargestCacheLine = CacheLine;
     DPRINT1("Prefetch Cache: %d bytes\tL2 Cache: %d bytes\tL2 Cache Line: %d bytes\tL2 Cache Associativity: %d\n",
@@ -1070,21 +1064,21 @@ KiRestoreFastSyscallReturnState(VOID)
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Check if it has been disabled */
-        if (!KiFastSystemCallDisable)
+        if (KiFastSystemCallDisable)
+        {
+            /* Disable fast system call */
+            KeFeatureBits &= ~KF_FAST_SYSCALL;
+            KiFastCallExitHandler = KiSystemCallTrapReturn;
+            DPRINT1("Support for SYSENTER disabled.\n");
+        }
+        else
         {
             /* Do an IPI to enable it */
             KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
 
             /* It's enabled, so use the proper exit stub */
             KiFastCallExitHandler = KiSystemCallSysExitReturn;
-            DPRINT1("Support for SYSENTER detected.\n");
-        }
-        else
-        {
-            /* Disable fast system call */
-            KeFeatureBits &= ~KF_FAST_SYSCALL;
-            KiFastCallExitHandler = KiSystemCallTrapReturn;
-            DPRINT1("Support for SYSENTER disabled.\n");
+            DPRINT("Support for SYSENTER detected.\n");
         }
     }
     else
@@ -1221,13 +1215,13 @@ KiIsNpxPresent(VOID)
 {
     ULONG Cr0;
     USHORT Magic;
-    
+
     /* Set magic */
     Magic = 0xFFFF;
-    
+
     /* Read CR0 and mask out FPU flags */
     Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
-    
+
     /* Store on FPU stack */
 #ifdef _MSC_VER
     __asm fninit;
@@ -1235,7 +1229,7 @@ KiIsNpxPresent(VOID)
 #else
     asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
 #endif
-    
+
     /* Magic should now be cleared */
     if (Magic & 0xFF)
     {
@@ -1243,13 +1237,13 @@ KiIsNpxPresent(VOID)
         __writecr0(Cr0 | CR0_EM | CR0_TS);
         return FALSE;
     }
-    
+
     /* You have an FPU, enable it */
     Cr0 |= CR0_ET;
-    
+
     /* Enable INT 16 on 486 and higher */
     if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
-    
+
     /* Set FPU state */
     __writecr0(Cr0 | CR0_EM | CR0_TS);
     return TRUE;
@@ -1260,33 +1254,54 @@ NTAPI
 INIT_FUNCTION
 KiIsNpxErrataPresent(VOID)
 {
-    BOOLEAN ErrataPresent;
+    static double Value1 = 4195835.0, Value2 = 3145727.0;
+    INT ErrataPresent;
     ULONG Cr0;
-    volatile double Value1, Value2;
-    
+
     /* Disable interrupts */
     _disable();
-    
+
     /* Read CR0 and remove FPU flags */
     Cr0 = __readcr0();
     __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
-    
+
     /* Initialize FPU state */
     Ke386FnInit();
-    
+
     /* Multiply the magic values and divide, we should get the result back */
-    Value1 = 4195835.0;
-    Value2 = 3145727.0;
-    ErrataPresent = (Value1 * Value2 / 3145727.0) != 4195835.0;
-    
+#ifdef __GNUC__
+    __asm__ __volatile__
+    (
+        "fldl %1\n\t"
+        "fdivl %2\n\t"
+        "fmull %2\n\t"
+        "fldl %1\n\t"
+        "fsubp\n\t"
+        "fistpl %0\n\t"
+        : "=m" (ErrataPresent)
+        : "m" (Value1),
+          "m" (Value2)
+    );
+#else
+    __asm
+    {
+        fld Value1
+        fdiv Value2
+        fmul Value2
+        fld Value1
+        fsubp st(1), st(0)
+        fistp ErrataPresent
+    };
+#endif
+
     /* Restore CR0 */
     __writecr0(Cr0);
-    
+
     /* Enable interrupts */
     _enable();
-    
+
     /* Return if there's an errata */
-    return ErrataPresent;
+    return ErrataPresent != 0;
 }
 
 VOID
@@ -1296,23 +1311,23 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
     ULONG EFlags, Cr0;
     PKTHREAD Thread, NpxThread;
     PFX_SAVE_AREA FxSaveArea;
-    
+
     /* Save volatiles and disable interrupts */
     EFlags = __readeflags();
     _disable();
-    
+
     /* Save the PCR and get the current thread */
     Thread = KeGetCurrentThread();
-    
+
     /* Check if we're already loaded */
     if (Thread->NpxState != NPX_STATE_LOADED)
     {
         /* If there's nothing to load, quit */
         if (!SaveArea) return;
-        
+
         /* Need FXSR support for this */
         ASSERT(KeI386FxsrPresent == TRUE);
-        
+
         /* Check for sane CR0 */
         Cr0 = __readcr0();
         if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
@@ -1320,7 +1335,7 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Mask out FPU flags */
             __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
         }
-        
+
         /* Get the NPX thread and check its FPU state */
         NpxThread = KeGetCurrentPrcb()->NpxThread;
         if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
@@ -1328,11 +1343,11 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Get the FX frame and store the state there */
             FxSaveArea = KiGetThreadNpxArea(NpxThread);
             Ke386FxSave(FxSaveArea);
-            
+
             /* NPX thread has lost its state */
             NpxThread->NpxState = NPX_STATE_NOT_LOADED;
         }
-        
+
         /* Now load NPX state from the NPX area */
         FxSaveArea = KiGetThreadNpxArea(Thread);
         Ke386FxStore(FxSaveArea);
@@ -1346,11 +1361,11 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Mask out FPU flags */
             __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
         }
-        
+
         /* Get FX frame */
         FxSaveArea = KiGetThreadNpxArea(Thread);
         Thread->NpxState = NPX_STATE_NOT_LOADED;
-        
+
         /* Save state if supported by CPU */
         if (KeI386FxsrPresent) Ke386FxSave(FxSaveArea);
     }
@@ -1360,12 +1375,12 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
 
     /* Clear NPX thread */
     KeGetCurrentPrcb()->NpxThread = NULL;
-    
+
     /* Add the CR0 from the NPX frame */
     Cr0 |= NPX_STATE_NOT_LOADED;
     Cr0 |= FxSaveArea->Cr0NpxState;
     __writecr0(Cr0);
-    
+
     /* Restore interrupt state */
     __writeeflags(EFlags);
 }
@@ -1380,10 +1395,10 @@ NTAPI
 KiCoprocessorError(VOID)
 {
     PFX_SAVE_AREA NpxArea;
-    
+
     /* Get the FPU area */
     NpxArea = KiGetThreadNpxArea(KeGetCurrentThread());
-    
+
     /* Set CR0_TS */
     NpxArea->Cr0NpxState = CR0_TS;
     __writecr0(__readcr0() | CR0_TS);
@@ -1416,7 +1431,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     };
 #endif
 
-    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
+    KeGetCurrentThread()->Header.NpxIrql = KeGetCurrentIrql();
     return STATUS_SUCCESS;
 }
 
@@ -1428,7 +1443,7 @@ NTAPI
 KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
-    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
+    ASSERT(KeGetCurrentThread()->Header.NpxIrql == KeGetCurrentIrql());
     DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
 #ifdef __GNUC__

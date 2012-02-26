@@ -62,7 +62,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Allmänna", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "&Spara fönsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Nerladding", -1, 4, 65, 240, 51

@@ -52,7 +52,7 @@
 #define IDS_NAMECOLUMN                  47
 #define IDS_PATHCOLUMN                  48
 #define IDS_MENUCOLUMN                  49
-#define IDI_REACTOS                     100
+#define IDI_COMPUTER                    100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
 #define IDB_TOOLBAR                     103
@@ -91,7 +91,7 @@
 #define IDI_SEARCH_DOC                  146
 #define IDI_PRINTER                     147
 #define IDI_NETWORK                     148
-#define IDI_COMPUTER                    149
+#define IDI_REACTOS                     149
 #define IDM_DESKTOPBAR                  150
 #define IDM_VOLUME                      151
 #define IDM_NOTIFYAREA                  152

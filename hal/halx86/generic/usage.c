@@ -18,8 +18,8 @@ BOOLEAN HalpGetInfoFromACPI;
 BOOLEAN HalpNMIDumpFlag;
 PUCHAR KdComPortInUse;
 PADDRESS_USAGE HalpAddressUsageList;
-IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
-IDTUsage HalpIDTUsage[MAXIMUM_IDTVECTOR];
+IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
+IDTUsage HalpIDTUsage[MAXIMUM_IDTVECTOR+1];
 
 USHORT HalpComPortIrqMapping[5][2] =
 {
@@ -132,7 +132,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
     RawDescriptor->u.Interrupt.Affinity = HalpActiveProcessors;
     
     /* The translated copy is identical */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* But the vector and IRQL must be set correctly */
     TranslatedDescriptor->u.Interrupt.Vector = Entry;
@@ -180,7 +180,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
     }
     
     /* Make an identical copy to begin with */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* Check what this is */
     if (RawDescriptor->Type == CmResourceTypePort)
@@ -288,7 +288,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         {
             /* Then register it for internal usage */
             HalpIDTUsageFlags[i].Flags = IDT_INTERNAL;
-            HalpIDTUsage[i].BusReleativeVector = i;
+            HalpIDTUsage[i].BusReleativeVector = (UCHAR)i;
         }
     }
     
@@ -499,7 +499,7 @@ HalpRegisterVector(IN UCHAR Flags,
 
     /* Save the vector data */
     HalpIDTUsage[SystemVector].Irql  = Irql;
-    HalpIDTUsage[SystemVector].BusReleativeVector = BusVector;
+    HalpIDTUsage[SystemVector].BusReleativeVector = (UCHAR)BusVector;
 }
 
 #ifndef _MINIHAL_

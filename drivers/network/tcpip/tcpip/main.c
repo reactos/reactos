@@ -105,144 +105,161 @@ NTSTATUS TiCreateFileObject(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
 {
-  PFILE_FULL_EA_INFORMATION EaInfo;
-  PTRANSPORT_CONTEXT Context;
-  PIO_STACK_LOCATION IrpSp;
-  PTA_IP_ADDRESS Address;
-  TDI_REQUEST Request;
-  PVOID ClientContext;
-  NTSTATUS Status;
-  ULONG Protocol;
+    PFILE_FULL_EA_INFORMATION EaInfo;
+    PTRANSPORT_CONTEXT Context;
+    PIO_STACK_LOCATION IrpSp;
+    PTA_IP_ADDRESS Address;
+    TDI_REQUEST Request;
+    PVOID ClientContext;
+    NTSTATUS Status;
+    ULONG Protocol;
 
-  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
+    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
-  EaInfo = Irp->AssociatedIrp.SystemBuffer;
+    EaInfo = Irp->AssociatedIrp.SystemBuffer;
 
-  /* Parameter check */
-  /* No EA information means that we're opening for SET/QUERY_INFORMATION
-   * style calls. */
+    /* Parameter check */
+    /* No EA information means that we're opening for SET/QUERY_INFORMATION
+    * style calls. */
 
-  /* Allocate resources here. We release them again if something failed */
-  Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(TRANSPORT_CONTEXT),
-                                  TRANS_CONTEXT_TAG);
-  if (!Context) {
-    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  Context->CancelIrps = FALSE;
-
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
-  IrpSp->FileObject->FsContext = Context;
-  Request.RequestContext       = Irp;
-
-  /* Branch to the right handler */
-  if (EaInfo &&
-      (EaInfo->EaNameLength == TDI_TRANSPORT_ADDRESS_LENGTH) &&
-      (RtlCompareMemory
-       (&EaInfo->EaName, TdiTransportAddress,
-	TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
-    /* This is a request to open an address */
-
-
-	/* XXX This should probably be done in IoCreateFile() */
-    /* Parameter checks */
-
-    Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength + 1); //0-term
-
-    if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
-      (Address->TAAddressCount != 1) ||
-      (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
-      (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {
-      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid:\n"));
-      TI_DbgPrint(MIN_TRACE, ("AddressCount: %d\n", Address->TAAddressCount));
-      if( Address->TAAddressCount == 1 ) {
-	  TI_DbgPrint(MIN_TRACE, ("AddressLength: %\n",
-				  Address->Address[0].AddressLength));
-	  TI_DbgPrint(MIN_TRACE, ("AddressType: %\n",
-				  Address->Address[0].AddressType));
-      }
-      ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-      return STATUS_INVALID_PARAMETER;
+    /* Allocate resources here. We release them again if something failed */
+    Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(TRANSPORT_CONTEXT),
+                                    TRANS_CONTEXT_TAG);
+    if (!Context)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Open address file object */
+    Context->CancelIrps = FALSE;
 
-    /* Protocol depends on device object so find the protocol */
-    if (DeviceObject == TCPDeviceObject)
-      Protocol = IPPROTO_TCP;
-    else if (DeviceObject == UDPDeviceObject)
-      Protocol = IPPROTO_UDP;
-    else if (DeviceObject == IPDeviceObject)
-      Protocol = IPPROTO_RAW;
-    else if (DeviceObject == RawIPDeviceObject) {
-      Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
-      if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    IrpSp->FileObject->FsContext = Context;
+    Request.RequestContext       = Irp;
+
+    /* Branch to the right handler */
+    if (EaInfo &&
+        (EaInfo->EaNameLength == TDI_TRANSPORT_ADDRESS_LENGTH) &&
+        (RtlCompareMemory(&EaInfo->EaName, TdiTransportAddress,
+        TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH))
+    {
+        /* This is a request to open an address */
+
+
+        /* XXX This should probably be done in IoCreateFile() */
+        /* Parameter checks */
+
+        Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength + 1); //0-term
+
+        if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
+            (Address->TAAddressCount != 1) ||
+            (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
+            (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP))
+        {
+            TI_DbgPrint(MIN_TRACE, ("Parameters are invalid:\n"));
+            TI_DbgPrint(MIN_TRACE, ("AddressCount: %d\n", Address->TAAddressCount));
+            if( Address->TAAddressCount == 1 )
+            {
+	            TI_DbgPrint(MIN_TRACE, ("AddressLength: %\n",
+				            Address->Address[0].AddressLength));
+	            TI_DbgPrint(MIN_TRACE, ("AddressType: %\n",
+				            Address->Address[0].AddressType));
+            }
+
+            ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Open address file object */
+
+        /* Protocol depends on device object so find the protocol */
+        if (DeviceObject == TCPDeviceObject)
+            Protocol = IPPROTO_TCP;
+        else if (DeviceObject == UDPDeviceObject)
+            Protocol = IPPROTO_UDP;
+        else if (DeviceObject == IPDeviceObject)
+            Protocol = IPPROTO_RAW;
+        else if (DeviceObject == RawIPDeviceObject)
+        {
+            Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
+            if (!NT_SUCCESS(Status))
+            {
+                TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
+                ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
+            ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        Status = FileOpenAddress(&Request, Address, Protocol, NULL);
+        if (NT_SUCCESS(Status))
+        {
+            IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
+            Context->Handle.AddressHandle = Request.Handle.AddressHandle;
+        }
+
+    }
+    else if (EaInfo &&
+	        (EaInfo->EaNameLength == TDI_CONNECTION_CONTEXT_LENGTH) &&
+	        (RtlCompareMemory
+	        (&EaInfo->EaName, TdiConnectionContext,
+	        TDI_CONNECTION_CONTEXT_LENGTH) ==
+	        TDI_CONNECTION_CONTEXT_LENGTH))
+    {
+        /* This is a request to open a connection endpoint */
+
+        /* Parameter checks */
+
+        if (EaInfo->EaValueLength < sizeof(PVOID))
+        {
+            TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+            ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Can only do connection oriented communication using TCP */
+
+        if (DeviceObject != TCPDeviceObject)
+        {
+            TI_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+            ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        ClientContext = *((PVOID*)(EaInfo->EaName + EaInfo->EaNameLength));
+
+        /* Open connection endpoint file object */
+
+        Status = FileOpenConnection(&Request, ClientContext);
+        if (NT_SUCCESS(Status))
+        {
+            IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
+            Context->Handle.ConnectionContext = Request.Handle.ConnectionContext;
+        }
+    }
+    else
+    {
+        /* This is a request to open a control connection */
+        Status = FileOpenControlChannel(&Request);
+        if (NT_SUCCESS(Status))
+        {
+            IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONTROL_CHANNEL_FILE;
+            Context->Handle.ControlChannel = Request.Handle.ControlChannel;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
         ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-        return STATUS_INVALID_PARAMETER;
-      }
-    } else {
-      TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
-      ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-      return STATUS_INVALID_PARAMETER;
-    }
 
-    Status = FileOpenAddress(&Request, Address, Protocol, NULL);
-    if (NT_SUCCESS(Status)) {
-      IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
-      Context->Handle.AddressHandle = Request.Handle.AddressHandle;
-    }
+    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-  } else if (EaInfo &&
-	     (EaInfo->EaNameLength == TDI_CONNECTION_CONTEXT_LENGTH) &&
-	     (RtlCompareMemory
-	      (&EaInfo->EaName, TdiConnectionContext,
-	       TDI_CONNECTION_CONTEXT_LENGTH) ==
-	      TDI_CONNECTION_CONTEXT_LENGTH)) {
-    /* This is a request to open a connection endpoint */
-
-    /* Parameter checks */
-
-    if (EaInfo->EaValueLength < sizeof(PVOID)) {
-      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-      ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-      return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Can only do connection oriented communication using TCP */
-
-    if (DeviceObject != TCPDeviceObject) {
-      TI_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
-      ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-      return STATUS_INVALID_PARAMETER;
-    }
-
-    ClientContext = *((PVOID*)(EaInfo->EaName + EaInfo->EaNameLength));
-
-    /* Open connection endpoint file object */
-
-    Status = FileOpenConnection(&Request, ClientContext);
-    if (NT_SUCCESS(Status)) {
-      IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
-      Context->Handle.ConnectionContext = Request.Handle.ConnectionContext;
-    }
-  } else {
-    /* This is a request to open a control connection */
-    Status = FileOpenControlChannel(&Request);
-    if (NT_SUCCESS(Status)) {
-      IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONTROL_CHANNEL_FILE;
-      Context->Handle.ControlChannel = Request.Handle.ControlChannel;
-    }
-  }
-
-  if (!NT_SUCCESS(Status))
-    ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
-
-  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
-
-  Irp->IoStatus.Status = Status;
-  return Status;
+    Irp->IoStatus.Status = Status;
+    return Status;
 }
 
 
@@ -260,43 +277,44 @@ NTSTATUS TiCloseFileObject(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
 {
-  PIO_STACK_LOCATION IrpSp;
-  PTRANSPORT_CONTEXT Context;
-  TDI_REQUEST Request;
-  NTSTATUS Status;
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT Context;
+    TDI_REQUEST Request;
+    NTSTATUS Status;
 
-  IrpSp   = IoGetCurrentIrpStackLocation(Irp);
-  Context = IrpSp->FileObject->FsContext;
-  if (!Context) {
-    TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
+    IrpSp   = IoGetCurrentIrpStackLocation(Irp);
+    Context = IrpSp->FileObject->FsContext;
+    if (!Context)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-  case TDI_TRANSPORT_ADDRESS_FILE:
-    Request.Handle.AddressHandle = Context->Handle.AddressHandle;
-    Status = FileCloseAddress(&Request);
-    break;
+    switch ((ULONG_PTR)IrpSp->FileObject->FsContext2)
+    {
+        case TDI_TRANSPORT_ADDRESS_FILE:
+            Request.Handle.AddressHandle = Context->Handle.AddressHandle;
+            Status = FileCloseAddress(&Request);
+            break;
 
-  case TDI_CONNECTION_FILE:
-    Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
-    Status = FileCloseConnection(&Request);
-    break;
+        case TDI_CONNECTION_FILE:
+            Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
+            Status = FileCloseConnection(&Request);
+            break;
 
-  case TDI_CONTROL_CHANNEL_FILE:
-    Request.Handle.ControlChannel = Context->Handle.ControlChannel;
-    Status = FileCloseControlChannel(&Request);
-    break;
+        case TDI_CONTROL_CHANNEL_FILE:
+            Request.Handle.ControlChannel = Context->Handle.ControlChannel;
+            Status = FileCloseControlChannel(&Request);
+            break;
 
-  default:
-    DbgPrint("Unknown type %d\n", (ULONG_PTR)IrpSp->FileObject->FsContext2);
-    Status = STATUS_INVALID_PARAMETER;
-    break;
-  }
+        default:
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
 
-  Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Status = Status;
 
-  return Irp->IoStatus.Status;
+    return Irp->IoStatus.Status;
 }
 
 
@@ -360,7 +378,7 @@ TiDispatchInternal(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatchInternal] Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
     DeviceObject, Irp, IrpSp->MinorFunction));
 
   Irp->IoStatus.Status      = STATUS_SUCCESS;
@@ -435,7 +453,7 @@ TiDispatchInternal(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatchInternal] Leaving. Status = (0x%X).\n", Status));
 
   if( Complete )
       IRPFinish( Irp, Status );
@@ -462,7 +480,7 @@ TiDispatch(
 
   IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 
-  TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Called. IRP is at (0x%X).\n", Irp));
 
   Irp->IoStatus.Information = 0;
 
@@ -505,7 +523,7 @@ TiDispatch(
     }
   }
 
-  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Leaving. Status = (0x%X).\n", Status));
 
   return IRPFinish( Irp, Status );
 }
@@ -524,7 +542,7 @@ VOID NTAPI TiUnload(
 
   TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
   if (!IsListEmpty(&AddressFileListHead)) {
-    TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
+    TI_DbgPrint(MIN_TRACE, ("[TCPIP, TiUnload] Called. Open address file objects exists.\n"));
   }
   TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
@@ -573,7 +591,7 @@ VOID NTAPI TiUnload(
   if (EntityList)
     ExFreePoolWithTag(EntityList, TDI_ENTITY_TAG);
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, TiUnload] Leaving.\n"));
 }
 
 NTSTATUS NTAPI
@@ -598,7 +616,7 @@ DriverEntry(
   NDIS_STATUS NdisStatus;
   LARGE_INTEGER DueTime;
 
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DriverEntry] Called\n"));
 
   /* TdiInitialize() ? */
 
@@ -758,6 +776,9 @@ DriverEntry(
      relative expiration time of IP_TIMEOUT milliseconds */
   DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
   KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
+
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DriverEntry] Finished\n"));
+
 
   return STATUS_SUCCESS;
 }

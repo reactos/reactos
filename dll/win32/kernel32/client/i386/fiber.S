@@ -15,7 +15,7 @@ EXTERN _BaseThreadStartup@8:PROC
 .code
 
 PUBLIC _BaseFiberStartup@0
-.PROC BaseFiberStartup@0
+.PROC _BaseFiberStartup@0
     /* Frame pointer is zeroed */
     FPO 0, 0, 0, 0, 0, FRAME_FPO
 
@@ -25,7 +25,7 @@ PUBLIC _BaseFiberStartup@0
     push dword ptr [eax+FIBER_CONTEXT_EBX] /* Parameter */
     push dword ptr [eax+FIBER_CONTEXT_EAX] /* Start Address */
     call _BaseThreadStartup@8
-.ENDP BaseFiberStartup@0
+.ENDP
 
 
 PUBLIC _SwitchToFiber@4
@@ -135,6 +135,7 @@ NoFpuStateRestore:
     /* Jump to new fiber */
     mov esp, [ecx+FIBER_CONTEXT_ESP]
     ret 4
-END
 
+
+END
 /* EOF */

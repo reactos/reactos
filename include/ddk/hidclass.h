@@ -73,15 +73,8 @@ DEFINE_GUID (GUID_HID_INTERFACE_HIDPARSE, \
 
 #define IOCTL_HID_GET_DRIVER_CONFIG           HID_BUFFER_CTL_CODE(100)
 #define IOCTL_HID_SET_DRIVER_CONFIG           HID_BUFFER_CTL_CODE(101)
+#define IOCTL_HID_GET_INDEXED_STRING          HID_OUT_CTL_CODE(120)
 #define IOCTL_HID_GET_MS_GENRE_DESCRIPTOR     HID_OUT_CTL_CODE(121)
-
-/* FIXME: these values are wrong! */
-#define IOCTL_HID_GET_STRING                  0
-#define IOCTL_HID_GET_DEVICE_ATTRIBUTES       1
-#define IOCTL_HID_GET_DEVICE_DESCRIPTOR       2
-#define IOCTL_HID_READ_REPORT                 3
-#define IOCTL_HID_WRITE_REPORT                4
-#define IOCTL_HID_GET_REPORT_DESCRIPTOR       5
 
 typedef enum _HID_STRING_TYPE
 {
@@ -98,13 +91,16 @@ enum DeviceObjectState {
   DeviceObjectRemoved
 };
 
-typedef VOID (NTAPI *PHID_STATUS_CHANGE)(
-  PVOID  Context,
-  enum DeviceObjectState  State);
+typedef VOID
+(NTAPI *PHID_STATUS_CHANGE)(
+  _In_ PVOID Context,
+  _In_ enum DeviceObjectState State);
 
-typedef NTSTATUS (NTAPI *PHIDP_GETCAPS)(
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  OUT PHIDP_CAPS  Capabilities);
+_Must_inspect_result_
+typedef NTSTATUS
+(NTAPI *PHIDP_GETCAPS)(
+  _In_ PHIDP_PREPARSED_DATA PreparsedData,
+  _Out_ PHIDP_CAPS Capabilities);
 
 typedef struct _HID_COLLECTION_INFORMATION {
   ULONG  DescriptorSize;

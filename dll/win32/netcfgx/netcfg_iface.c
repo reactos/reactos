@@ -1,5 +1,4 @@
 #include "precomp.h"
-#include <devguid.h>
 
 typedef struct
 {
@@ -171,7 +170,6 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
     DWORD dwIndex = 0;
     DWORD dwSize;
     DWORD dwType;
-    DWORD dwCharacteristics;
     WCHAR szName[100];
     WCHAR szText[100];
     HKEY hSubKey, hNDIKey;
@@ -180,7 +178,6 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
     *pHead = NULL;
     do
     {
-        dwCharacteristics = 0;
         szText[0] = L'\0';
 
         dwSize = sizeof(szName)/sizeof(WCHAR);

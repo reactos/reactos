@@ -2,7 +2,7 @@
  * Regedit resources
  *
  * Copyright 2003 Marcelo Duarte
- * Copyright 2004 Sylvain PÈtrÈolle
+ * Copyright 2004 Sylvain P√©tr√©olle
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -78,7 +78,7 @@ BEGIN
             MENUITEM "&Chave",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "Valor &Texto",                 ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "Valor &Bin·rio",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valor &Bin√°rio",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                 ID_EDIT_NEW_DWORDVALUE
 			MENUITEM "&Multi-String Value",			ID_EDIT_NEW_MULTISTRINGVALUE
 			MENUITEM "&Expandable String Value",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -92,7 +92,7 @@ BEGIN
         MENUITEM "&Copiar nome da chave",            ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Localizar\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "L&ocalizar prÛxima\tF3",           ID_EDIT_FINDNEXT
+        MENUITEM "L&ocalizar pr√≥xima\tF3",           ID_EDIT_FINDNEXT
     END
     POPUP "E&xibir"
     BEGIN
@@ -104,10 +104,8 @@ BEGIN
     END
     POPUP "&Favoritos"
     BEGIN
-        MENUITEM "&Adicionar aos Favoritos",     ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Remover Favorito",            ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&Adicionar aos Favoritos",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Remover Favorito",            ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "Aj&uda"
     BEGIN
@@ -122,7 +120,7 @@ BEGIN
   POPUP ""
   BEGIN
 	MENUITEM "&Modificar",                  ID_EDIT_MODIFY
-	MENUITEM "Modificar dados bin·rios",    ID_EDIT_MODIFY_BIN
+	MENUITEM "Modificar dados bin√°rios",    ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
 	MENUITEM "&Excluir\tDel",               ID_EDIT_DELETE
 	MENUITEM "&Renomear",                   ID_EDIT_RENAME
@@ -134,7 +132,7 @@ BEGIN
             MENUITEM "&Chave",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "Valor &Texto",                 ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "Valor &Bin·rio",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valor &Bin√°rio",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD",                 ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
@@ -179,17 +177,18 @@ END
  * Dialog
  */
 
-IDD_EDIT_STRING DIALOGEX DISCARDABLE  22, 17, 210, 75
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX  22, 17, 210, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editar texto"
 FONT 8, "System"
 BEGIN
     LTEXT           "Nome do valor:",IDC_STATIC,5,5,119,8
-    EDITTEXT        IDC_VALUE_NAME,5,15,200,12, WS_BORDER | WS_TABSTOP | WS_DISABLED
+    EDITTEXT        IDC_VALUE_NAME,5,15,200,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Dados do valor:",IDC_STATIC,5,30,119,8
-    EDITTEXT        IDC_VALUE_DATA,5,40,200,12, WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,140,60,30,11,WS_GROUP
-    PUSHBUTTON      "Cancelar",IDCANCEL,175,60,30,11,WS_GROUP
+    EDITTEXT        IDC_VALUE_DATA,5,40,200,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,140,60,30,11
+    PUSHBUTTON      "Cancelar",IDCANCEL,175,60,30,11
 END
 
 
@@ -306,12 +305,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "ContÈm comandos para trabalhar com o Registro inteiro."
-    ID_EDIT_MENU            "ContÈm comandos para ediÁ„o de valores ou chaves."
-    ID_VIEW_MENU            "ContÈm comandos para personalizaÁ„o da janela do Registro."
-    ID_FAVOURITES_MENU      "ContÈm comandos para acessar chaves frequentemente usadas."
-    ID_HELP_MENU            "ContÈm comandos para exibiÁ„o da ajuda e informaÁıes sobre o Editor do Registro."
-    ID_EDIT_NEW_MENU        "ContÈm comandos para criaÁ„o de novas chaves ou valores"
+    ID_REGISTRY_MENU        "Cont√©m comandos para trabalhar com o Registro inteiro."
+    ID_EDIT_MENU            "Cont√©m comandos para edi√ß√£o de valores ou chaves."
+    ID_VIEW_MENU            "Cont√©m comandos para personaliza√ß√£o da janela do Registro."
+    ID_FAVOURITES_MENU      "Cont√©m comandos para acessar chaves frequentemente usadas."
+    ID_HELP_MENU            "Cont√©m comandos para exibi√ß√£o da ajuda e informa√ß√µes sobre o Editor do Registro."
+    ID_EDIT_NEW_MENU        "Cont√©m comandos para cria√ß√£o de novas chaves ou valores"
 END
 
 STRINGTABLE DISCARDABLE
@@ -319,7 +318,7 @@ BEGIN
     ID_EDIT_MODIFY          "Modifica os dados do valor."
     ID_EDIT_NEW_KEY         "Adiciona uma nova chave"
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
-    ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor bin·rio."
+    ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor bin√°rio."
     ID_EDIT_NEW_DWORDVALUE  "Adiciona um novo valor DWORD."
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registro."
     ID_REGISTRY_EXPORTREGISTRYFILE
@@ -334,7 +333,7 @@ BEGIN
                             "Desconecta de um registro um computador remoto."
     ID_REGISTRY_PRINT       "Imprime todo ou parte do registro."
 /*    ID_HELP_HELPTOPICS      "Abre a ajuda do Editor do Registro." */
-    ID_HELP_ABOUT           "Exibe informaÁıes do programa, n˙mero da vers„o e copyright."
+    ID_HELP_ABOUT           "Exibe informa√ß√µes do programa, n√∫mero da vers√£o e copyright."
 END
 
 STRINGTABLE DISCARDABLE
@@ -343,13 +342,13 @@ BEGIN
     ID_FAVOURITES_ADDTOFAVOURITES "Adiciona chaves a lista de favoritos."
     ID_FAVOURITES_REMOVEFAVOURITE "Remove chaves da lista de favoritos."
     ID_VIEW_STATUSBAR       "Mostra ou oculta a barra de status."
-    ID_VIEW_SPLIT           "Altera a posiÁ„o da divis„o entre os painÈis."
+    ID_VIEW_SPLIT           "Altera a posi√ß√£o da divis√£o entre os pain√©is."
     ID_VIEW_REFRESH         "Atualiza a janela."
-    ID_EDIT_DELETE          "Exclui a selec„o."
-    ID_EDIT_RENAME          "Renomeia a selec„o."
-    ID_EDIT_COPYKEYNAME     "Copia o nome da chave selecionada para a ¡rea de transferÍncia."
+    ID_EDIT_DELETE          "Exclui a selec√£o."
+    ID_EDIT_RENAME          "Renomeia a selec√£o."
+    ID_EDIT_COPYKEYNAME     "Copia o nome da chave selecionada para a √Årea de transfer√™ncia."
     ID_EDIT_FIND            "Localiza um texto em uma chave, valor ou dado."
-    ID_EDIT_FINDNEXT        "Localiza a prÛxima ocorrÍncia do texto especificado na pesquisa anterior."
+    ID_EDIT_FINDNEXT        "Localiza a pr√≥xima ocorr√™ncia do texto especificado na pesquisa anterior."
 END
 
 STRINGTABLE DISCARDABLE
@@ -357,9 +356,9 @@ BEGIN
     IDS_ERROR		    "Erro"
     IDS_WARNING		    "Warning"
     IDS_BAD_KEY             "Can't query key '%s'"
-    IDS_BAD_VALUE           "N„o pode perguntar o valor '%s'"
-    IDS_UNSUPPORTED_TYPE    "N„o pode editar chaves deste tipo (%ld)"
-    IDS_TOO_BIG_VALUE       "Valor È muito grande (%ld)"
+    IDS_BAD_VALUE           "N√£o pode perguntar o valor '%s'"
+    IDS_UNSUPPORTED_TYPE    "N√£o pode editar chaves deste tipo (%ld)"
+    IDS_TOO_BIG_VALUE       "Valor √© muito grande (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
     IDS_QUERY_DELETE_KEY_ONE    "Are you sure you want to delete this key?"
     IDS_QUERY_DELETE_KEY_MORE   "Are you sure you want to delete these keys?"
@@ -497,6 +496,17 @@ END
 /*
  * Dialog
  */
+
+IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
+FONT 8, "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
+   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+END
+
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
@@ -507,17 +517,6 @@ FONT 8, "Ms Shell Dlg"
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
-
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
-FONT 8, "MS Shell Dlg"
-BEGIN
-   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
-   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
-END
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -159,6 +159,7 @@ AcpiDsBuildInternalObject (
 {
     ACPI_OPERAND_OBJECT     *ObjDesc;
     ACPI_STATUS             Status;
+    ACPI_OBJECT_TYPE        Type;
 
 
     ACPI_FUNCTION_TRACE (DsBuildInternalObject);
@@ -241,7 +242,20 @@ AcpiDsBuildInternalObject (
                 return_ACPI_STATUS (Status);
             }
 
-            switch (Op->Common.Node->Type)
+            /*
+             * Special handling for Alias objects. We need to setup the type
+             * and the Op->Common.Node to point to the Alias target. Note,
+             * Alias has at most one level of indirection internally.
+             */
+            Type = Op->Common.Node->Type;
+            if (Type == ACPI_TYPE_LOCAL_ALIAS)
+            {
+                Type = ObjDesc->Common.Type;
+                Op->Common.Node = ACPI_CAST_PTR (ACPI_NAMESPACE_NODE,
+                    Op->Common.Node->Object);
+            }
+
+            switch (Type)
             {
             /*
              * For these types, we need the actual node, not the subobject.
@@ -365,7 +379,7 @@ AcpiDsBuildInternalBufferObj (
         if (ByteList->Common.AmlOpcode != AML_INT_BYTELIST_OP)
         {
             ACPI_ERROR ((AE_INFO,
-                "Expecting bytelist, got AML opcode %X in op %p",
+                "Expecting bytelist, found AML opcode 0x%X in op %p",
                 ByteList->Common.AmlOpcode, ByteList));
 
             AcpiUtRemoveReference (ObjDesc);
@@ -599,7 +613,7 @@ AcpiDsBuildInternalPackageObj (
         }
 
         ACPI_INFO ((AE_INFO,
-            "Actual Package length (0x%X) is larger than NumElements field (0x%X), truncated\n",
+            "Actual Package length (%u) is larger than NumElements field (%u), truncated\n",
             i, ElementCount));
     }
     else if (i < ElementCount)
@@ -609,7 +623,7 @@ AcpiDsBuildInternalPackageObj (
          * Note: this is not an error, the package is padded out with NULLs.
          */
         ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-            "Package List length (0x%X) smaller than NumElements count (0x%X), padded with null elements\n",
+            "Package List length (%u) smaller than NumElements count (%u), padded with null elements\n",
             i, ElementCount));
     }
 
@@ -787,7 +801,7 @@ AcpiDsInitObjectFromOp (
 
             case AML_ONES_OP:
 
-                ObjDesc->Integer.Value = ACPI_INTEGER_MAX;
+                ObjDesc->Integer.Value = ACPI_UINT64_MAX;
 
                 /* Truncate value if we are executing from a 32-bit ACPI table */
 
@@ -804,7 +818,7 @@ AcpiDsInitObjectFromOp (
             default:
 
                 ACPI_ERROR ((AE_INFO,
-                    "Unknown constant opcode %X", Opcode));
+                    "Unknown constant opcode 0x%X", Opcode));
                 Status = AE_AML_OPERAND_TYPE;
                 break;
             }
@@ -821,7 +835,7 @@ AcpiDsInitObjectFromOp (
 
 
         default:
-            ACPI_ERROR ((AE_INFO, "Unknown Integer type %X",
+            ACPI_ERROR ((AE_INFO, "Unknown Integer type 0x%X",
                 OpInfo->Type));
             Status = AE_AML_OPERAND_TYPE;
             break;
@@ -902,7 +916,7 @@ AcpiDsInitObjectFromOp (
             default:
 
                 ACPI_ERROR ((AE_INFO,
-                    "Unimplemented reference type for AML opcode: %4.4X", Opcode));
+                    "Unimplemented reference type for AML opcode: 0x%4.4X", Opcode));
                 return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
             }
             break;
@@ -912,7 +926,7 @@ AcpiDsInitObjectFromOp (
 
     default:
 
-        ACPI_ERROR ((AE_INFO, "Unimplemented data type: %X",
+        ACPI_ERROR ((AE_INFO, "Unimplemented data type: 0x%X",
             ObjDesc->Common.Type));
 
         Status = AE_AML_OPERAND_TYPE;

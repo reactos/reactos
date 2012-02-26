@@ -58,6 +58,13 @@ LdrFindResourceDirectory_U(
     OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
 );
 
+NTSTATUS
+NTAPI
+LdrLoadAlternateResourceModule(
+    IN PVOID Module,
+    IN PWSTR Buffer
+);
+
 BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(
@@ -105,7 +112,7 @@ BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
     IN PVOID BaseAddress,
-    IN ULONG NumberOfBytes,
+    IN SIZE_T NumberOfBytes,
     IN ULONG FileLength
 );
 

@@ -26,7 +26,7 @@ CsrProbeForRead(IN PVOID Address,
                 IN ULONG Length,
                 IN ULONG Alignment)
 {
-    PUCHAR Pointer;
+    volatile UCHAR *Pointer;
     UCHAR Data;
 
     /* Validate length */
@@ -39,11 +39,14 @@ CsrProbeForRead(IN PVOID Address,
         RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
     }
 
-    /* Do the probe */
-    Pointer = (PUCHAR)Address;
+    /* Probe first byte */
+    Pointer = Address;
     Data = *Pointer;
-    Pointer = (PUCHAR)((ULONG)Address + Length -1);
+
+    /* Probe last byte */
+    Pointer = (PUCHAR)Address + Length - 1;
     Data = *Pointer;
+    (void)Data;
 }
 
 /*
@@ -55,8 +58,7 @@ CsrProbeForWrite(IN PVOID Address,
                  IN ULONG Length,
                  IN ULONG Alignment)
 {
-    PUCHAR Pointer;
-    UCHAR Data;
+    volatile UCHAR *Pointer;
 
     /* Validate length */
     if (Length == 0) return;
@@ -68,13 +70,13 @@ CsrProbeForWrite(IN PVOID Address,
         RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
     }
 
-    /* Do the probe */
-    Pointer = (PUCHAR)Address;
-    Data = *Pointer;
-    *Pointer = Data;
-    Pointer = (PUCHAR)((ULONG)Address + Length -1);
-    Data = *Pointer;
-    *Pointer = Data;
+    /* Probe first byte */
+    Pointer = Address;
+    *Pointer = *Pointer;
+
+    /* Probe last byte */
+    Pointer = (PUCHAR)Address + Length - 1;
+    *Pointer = *Pointer;
 }
 
 /*
@@ -216,7 +218,7 @@ CsrCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
     if (!String)
     {
         CapturedString->Length = 0;
-        CapturedString->MaximumLength = MaximumLength;
+        CapturedString->MaximumLength = (USHORT)MaximumLength;
 
         /* Allocate a pointer for it */
         CsrAllocateMessagePointer(CaptureBuffer,
@@ -226,13 +228,13 @@ CsrCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
     }
 
     /* Initialize this string */
-    CapturedString->Length = StringLength;
-    
+    CapturedString->Length = (USHORT)StringLength;
+
     /* Allocate a buffer and get its size */
     ReturnedLength = CsrAllocateMessagePointer(CaptureBuffer,
                                                MaximumLength,
                                                (PVOID*)&CapturedString->Buffer);
-    CapturedString->MaximumLength = ReturnedLength;
+    CapturedString->MaximumLength = (USHORT)ReturnedLength;
 
     /* If the string had data */
     if (StringLength)

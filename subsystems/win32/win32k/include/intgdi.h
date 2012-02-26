@@ -1,27 +1,9 @@
 #pragma once
 
-#include "region.h"
-
 /* Brush functions */
 
 extern HDC hSystemBM;
 extern HSEMAPHORE hsemDriverMgmt;
-
-XLATEOBJ*
-FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* pDestSurf, SURFACE* pSrcSurf);
-
-HBRUSH APIENTRY
-IntGdiCreateDIBBrush(
-   CONST BITMAPINFO *BitmapInfo,
-   UINT ColorSpec,
-   UINT BitmapInfoSize,
-   CONST VOID *PackedDIB);
-
-HBRUSH APIENTRY
-IntGdiCreateHatchBrush(
-   INT Style,
-   COLORREF Color);
 
 HBRUSH APIENTRY
 IntGdiCreatePatternBrush(
@@ -34,26 +16,8 @@ IntGdiCreateSolidBrush(
 HBRUSH APIENTRY
 IntGdiCreateNullBrush(VOID);
 
-BOOL FASTCALL
-IntPatBlt(
-   PDC dc,
-   INT XLeft,
-   INT YLeft,
-   INT Width,
-   INT Height,
-   DWORD ROP,
-   PBRUSH BrushObj);
-
 VOID FASTCALL
 IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
-
-/* Pen functions */
-
-HPEN APIENTRY
-IntGdiExtCreatePen(DWORD, DWORD, IN ULONG, IN ULONG, IN ULONG_PTR, IN ULONG_PTR, DWORD, PULONG, IN ULONG, IN BOOL, IN OPTIONAL HBRUSH);
-
-VOID FASTCALL
-IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color);
 
 /* Line functions */
 
@@ -95,32 +59,7 @@ IntGdiPolylineTo(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count);
 
-BOOL FASTCALL
-IntGdiArc(DC  *dc,
-          int LeftRect,
-          int TopRect,
-          int RightRect,
-          int BottomRect,
-          int XStartArc,
-          int YStartArc,
-          int XEndArc,
-          int YEndArc);
-
-INT FASTCALL
-IntGdiGetArcDirection(DC *dc);
-
 /* Shape functions */
-
-BOOL FASTCALL
-IntGdiPolygon(PDC    dc,
-              PPOINT UnsafePoints,
-              int    Count);
-
-BOOL FASTCALL
-IntGdiPolyPolygon(DC      *dc,
-                  LPPOINT Points,
-                  PULONG  PolyCounts,
-                  int     Count);
 
 BOOL
 NTAPI
@@ -133,12 +72,6 @@ GreGradientFill(
     ULONG ulMode);
 
 /* DC functions */
-
-BOOL FASTCALL
-IntGdiGetDCOrg(PDC pDC, PPOINTL pPointl);
-
-INT FASTCALL
-IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer);
 
 HDC FASTCALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
@@ -167,53 +100,17 @@ IntGetSysColor(INT nIndex);
 
 /* Other Stuff */
 
-INT
-FASTCALL
-IntGdiEscape(PDC    dc,
-             INT    Escape,
-             INT    InSize,
-             LPCSTR InData,
-             LPVOID OutData);
-
-NTSTATUS
-FASTCALL
-IntEnumDisplaySettings(
-  IN PUNICODE_STRING pDeviceName  OPTIONAL,
-  IN DWORD iModeNum,
-  IN OUT LPDEVMODEW pDevMode,
-  IN DWORD dwFlags);
-
 HBITMAP
 FASTCALL
 IntCreateCompatibleBitmap(PDC Dc,
                           INT Width,
                           INT Height);
 
-HBITMAP APIENTRY
-IntGdiCreateBitmap(
-    INT  Width,
-    INT  Height,
-    UINT  Planes,
-    UINT  BitsPixel,
-    IN OPTIONAL LPBYTE pBits);
-
-HDC APIENTRY IntGdiGetDCState(HDC  hDC);
-
 WORD APIENTRY IntGdiSetHookFlags(HDC hDC, WORD Flags);
-
-VOID APIENTRY IntGdiSetDCState ( HDC hDC, HDC hDCSave );
-
-LONG APIENTRY IntSetBitmapBits(PSURFACE bmp, DWORD  Bytes, IN PBYTE Bits);
-
-LONG APIENTRY IntGetBitmapBits(PSURFACE bmp, DWORD Bytes, OUT PBYTE Bits);
 
 UINT APIENTRY IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
 
 UINT APIENTRY IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
-
-UINT APIENTRY
-IntAnimatePalette(HPALETTE hPal, UINT StartIndex,
-   UINT NumEntries, CONST PPALETTEENTRY PaletteColors);
 
 UINT APIENTRY
 IntGetPaletteEntries(HPALETTE  hpal,
@@ -222,33 +119,20 @@ IntGetPaletteEntries(HPALETTE  hpal,
                      LPPALETTEENTRY  pe);
 
 UINT APIENTRY
-IntSetPaletteEntries(HPALETTE  hpal,
-                      UINT  Start,
-                      UINT  Entries,
-                      CONST LPPALETTEENTRY  pe);
-
-UINT APIENTRY
 IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            LPPALETTEENTRY  pe);
 
-UINT APIENTRY
-IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
+VOID  FASTCALL CreateStockObjects (VOID);
+VOID  FASTCALL CreateSysColorObjects (VOID);
 
-BOOL APIENTRY
-GreStretchBltMask(IN HDC hdcDst,
-                  IN INT xDst,
-                  IN INT yDst,
-                  IN INT cxDst,
-                  IN INT cyDst,
-                  IN HDC hdcSrc,
-                  IN INT xSrc,
-                  IN INT ySrc,
-                  IN INT cxSrc,
-                  IN INT cySrc,
-                  IN DWORD dwRop,
-                  IN DWORD dwBackColor,
-                  IN HDC hdcMask,
-                  IN INT xMask,
-                  IN INT yMask);
+PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
+
+BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
+BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PBRUSH pbrush);
+
+BOOL FASTCALL IntFillEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush);
+BOOL FASTCALL IntDrawEllipse( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush);
+BOOL FASTCALL IntFillRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse, PBRUSH pbrush);
+BOOL FASTCALL IntDrawRoundRect( PDC dc, INT Left, INT Top, INT Right, INT Bottom, INT Wellipse, INT Hellipse, PBRUSH pbrush);

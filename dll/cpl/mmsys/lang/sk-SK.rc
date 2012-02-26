@@ -239,7 +239,7 @@ BEGIN
     IDS_CPLNAME "Zvuk a zvukové zariadenia"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
     IDS_NO_SOUND "(iadne)"
-	IDS_NO_DEVICES "iadne zariadenia"
+    IDS_NO_DEVICES "iadne zariadenia"
 
     5825 "Chyba programu"
     5826 "Zavrie program"
@@ -260,15 +260,15 @@ BEGIN
     5841 "Restore Down"
     5842 "Restore Up"
     5843 "Hviezdièka"
-    5844 "Predvolenı zvuk" //Default sound
+    5844 "Predvolenı zvuk" // Default sound
     5845 "Vıkrik"
     5846 "Ukonèenie systému ReactOS"
     5847 "Kritické zastavenie"
-    5848 "Hlásenie systému" //System notif.
+    5848 "Hlásenie systému" // System notif.
     5849 "Otázka"
     5850 "Spustenie systému ReactOS"
     5851 "Ponuka Štart"
     5852 "Odhlásenie zo systému ReactOS"
     5853 "Prihlásenie do systému ReactOS"
-	5854 "ReactOS Explorer"
+    5854 "ReactOS Explorer"
 END

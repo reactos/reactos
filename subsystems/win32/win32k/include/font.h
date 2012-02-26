@@ -410,10 +410,16 @@ GreExtTextOutW(
     IN OPTIONAL LPINT Dx,
     IN DWORD dwCodePage);
 
-
-#define DbgDefaultChannel 0x0
-
 VOID
 NTAPI
 EngAcquireSemaphoreShared(
     IN HSEMAPHORE hsem);
+
+BOOL
+NTAPI
+GreGetTextExtentW(
+    HDC hdc,
+    LPWSTR lpwsz,
+    INT cwc,
+    LPSIZE psize,
+    UINT flOpts);

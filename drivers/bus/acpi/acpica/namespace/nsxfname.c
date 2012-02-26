@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -738,11 +738,10 @@ AcpiInstallMethod (
     MethodObj->Method.ParamCount = (UINT8)
         (MethodFlags & AML_METHOD_ARG_COUNT);
 
-    MethodObj->Method.MethodFlags = (UINT8)
-        (MethodFlags & ~AML_METHOD_ARG_COUNT);
-
     if (MethodFlags & AML_METHOD_SERIALIZED)
     {
+        MethodObj->Method.InfoFlags = ACPI_METHOD_SERIALIZED;
+
         MethodObj->Method.SyncLevel = (UINT8)
             ((MethodFlags & AML_METHOD_SYNC_LEVEL) >> 4);
     }
@@ -751,8 +750,7 @@ AcpiInstallMethod (
      * Now that it is complete, we can attach the new method object to
      * the method Node (detaches/deletes any existing object)
      */
-    Status = AcpiNsAttachObject (Node, MethodObj,
-                ACPI_TYPE_METHOD);
+    Status = AcpiNsAttachObject (Node, MethodObj, ACPI_TYPE_METHOD);
 
     /*
      * Flag indicates AML buffer is dynamic, must be deleted later.

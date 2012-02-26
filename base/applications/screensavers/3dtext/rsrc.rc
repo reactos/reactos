@@ -10,8 +10,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "3dtext.scr\0"
 #include <reactos/version.rc>
 
-#include "lang/bg-BG.rc"
+// UTF-8
+#pragma code_page(65001)
 #include "lang/de-DE.rc"
+#include "lang/bg-BG.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
@@ -22,12 +24,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
+#include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
+#include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
-
-// UTF-8
-#pragma code_page(65001)
-#include "lang/pl-PL.rc"
-#include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
+#include "lang/zh-TW.rc"

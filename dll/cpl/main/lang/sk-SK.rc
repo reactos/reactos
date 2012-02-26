@@ -20,8 +20,8 @@ BEGIN
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
   LTEXT "&R˝chlosù opakovania:", -1, 40, 70, 50, 10
-  LTEXT "mal·", -1, 40, 85, 20, 10 //pomaly
-  LTEXT "veæk·", -1, 200, 85, 20, 10 //r˝chlo
+  LTEXT "mal·", -1, 40, 85, 20, 10 // pomaly
+  LTEXT "veæk·", -1, 200, 85, 20, 10 // r˝chlo
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
   LTEXT "Kliknite sem a podrûte kl·ves k o&testovaniu r˝chlosti opakovania:", -1, 15, 105, 150, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP

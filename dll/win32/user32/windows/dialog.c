@@ -45,6 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
+#define DLG_ISANSI 2
 void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
@@ -74,7 +75,7 @@ typedef struct
     UINT       id;
     LPCWSTR    className;
     LPCWSTR    windowName;
-    BOOL       windowNameFree;
+    BOOL       windowNameFree; // ReactOS
     LPCVOID    data;
 } DLG_CONTROL_INFO;
 
@@ -133,32 +134,40 @@ const struct builtin_class_descr DIALOG_builtin_class =
 *
 * ReactOS
 */
-DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
+DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
 {
     PWND pWindow;
-    DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+    DIALOGINFO* dlgInfo;
 
-    if(!dlgInfo && create)
+    pWindow = ValidateHwnd( hWnd );
+    if (!pWindow)
     {
-        pWindow = ValidateHwnd( hWnd );
-        if (!pWindow)
-        {
-           SetLastError( ERROR_INVALID_WINDOW_HANDLE );
-           return NULL;
-        }
+       return NULL;
+    }
 
-        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+    dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+
+    if (!dlgInfo && create)
+    {
+        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA)
         {
             if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
                 return NULL;
 
+            dlgInfo->idResult = IDOK;
             SETDLGINFO( hWnd, dlgInfo );
+       }
+       else
+       {
+           return NULL;
+       }
+    }
 
-            NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
-        }
-        else
+    if (dlgInfo)
+    {
+        if (!(pWindow->state & WNDS_DIALOGWINDOW))
         {
-            return NULL;
+           NtUserxSetDialogPointer( hWnd, dlgInfo );
         }
     }
     return dlgInfo;
@@ -254,11 +263,14 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         /* Windows treats dialog control class ids 0-5 same way as 0x80-0x85 */
         if ((id >= 0x80) && (id <= 0x85)) id -= 0x80;
         if (id <= 5)
+        {
             info->className = class_names[id];
+        }
         else
         {
             info->className = NULL;
             /* FIXME: load other classes here? */
+            ERR("Unknown built-in class id %04x\n", id );
         }
         p += 2;
     }
@@ -274,7 +286,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
         if (info->windowName != NULL)
         {
-            swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
+            wsprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
             info->windowNameFree = TRUE;
         }
         else
@@ -289,6 +301,11 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->windowNameFree = FALSE;
         p += strlenW( info->windowName ) + 1;
     }
+
+    TRACE("    %s %s %ld, %d, %d, %d, %d, %08x, %08x, %08x\n",
+          debugstr_w( info->className ), debugstr_w( info->windowName ),
+          info->id, info->x, info->y, info->cx, info->cy,
+          info->style, info->exStyle, info->helpId );
 
     if (GET_WORD(p))
     {
@@ -318,16 +335,20 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
 
     if (!(dlgInfo = GETDLGINFO(hwnd))) return FALSE;
 
+    TRACE(" BEGIN\n" );
     while (items--)
     {
         template = (LPCSTR)DIALOG_GetControl32( (const WORD *)template, &info,
                                                 dlgTemplate->dialogEx );
-        /* Is this it? */
+        info.style &= ~WS_POPUP;
+        info.style |= WS_CHILD;
+
         if (info.style & WS_BORDER)
         {
             info.style &= ~WS_BORDER;
             info.exStyle |= WS_EX_CLIENTEDGE;
         }
+
         if (unicode)
         {
             hwndCtrl = CreateWindowExW( info.exStyle | WS_EX_NOPARENTNOTIFY,
@@ -345,14 +366,14 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             LPSTR class = (LPSTR)info.className;
             LPSTR caption = (LPSTR)info.windowName;
 
-            if (HIWORD(class))
+            if (!IS_INTRESOURCE(class))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.className, -1, NULL, 0, NULL, NULL );
                 class = HeapAlloc( GetProcessHeap(), 0, len );
                 if (class != NULL)
                     WideCharToMultiByte( CP_ACP, 0, info.className, -1, class, len, NULL, NULL );
             }
-            if (HIWORD(caption))
+            if (!IS_INTRESOURCE(caption))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, NULL, 0, NULL, NULL );
                 caption = HeapAlloc( GetProcessHeap(), 0, len );
@@ -373,8 +394,8 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             }
             else
                 hwndCtrl = NULL;
-            if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
-            if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
+            if (!IS_INTRESOURCE(class)) HeapFree( GetProcessHeap(), 0, class );
+            if (!IS_INTRESOURCE(caption)) HeapFree( GetProcessHeap(), 0, caption );
         }
 
         if (info.windowNameFree)
@@ -384,6 +405,8 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
 
         if (!hwndCtrl)
         {
+            WARN("control %s %s creation failed\n", debugstr_w(info.className),
+                  debugstr_w(info.windowName));
             if (dlgTemplate->style & DS_NOFAILCREATE) continue;
             return FALSE;
         }
@@ -401,44 +424,10 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             dlgInfo->idResult = GetWindowLongPtrA( hwndCtrl, GWLP_ID );
         }
     }
+    TRACE(" END\n" );
     return TRUE;
 }
 
- /***********************************************************************
-  *           DIALOG_FindMsgDestination
-  *
-  * The messages that IsDialogMessage sends may not go to the dialog
-  * calling IsDialogMessage if that dialog is a child, and it has the
-  * DS_CONTROL style set.
-  * We propagate up until we hit one that does not have DS_CONTROL, or
-  * whose parent is not a dialog.
-  *
-  * This is undocumented behaviour.
-  */
-static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
-{
-    while (GetWindowLongA(hwndDlg, GWL_STYLE) & DS_CONTROL)
-    {
-        PWND pWnd;
-        HWND hParent = GetParent(hwndDlg);
-        if (!hParent) break;
-// ReactOS
-        if (!IsWindow(hParent)) break;
-
-        pWnd = ValidateHwnd(hParent);
-        // FIXME: Use pWnd->fnid == FNID_DESKTOP
-        if (!pWnd || hParent == GetDesktopWindow()) break;
-
-        if (!(pWnd->state & WNDS_DIALOGWINDOW))
-        {
-            break;
-        }
-
-        hwndDlg = hParent;
-    }
-
-    return hwndDlg;
-}
 
  /***********************************************************************
   *           DIALOG_IsAccelerator
@@ -455,7 +444,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
         DWORD style = GetWindowLongPtrW( hwndControl, GWL_STYLE );
         if ((style & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE)
         {
-            dlgCode = SendMessageA( hwndControl, WM_GETDLGCODE, 0, 0 );
+            dlgCode = SendMessageW( hwndControl, WM_GETDLGCODE, 0, 0 );
             if ( (dlgCode & (DLGC_BUTTON | DLGC_STATIC)) &&
                  GetWindowTextW( hwndControl, buffer, sizeof(buffer)/sizeof(WCHAR) ))
             {
@@ -464,7 +453,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
 
                 do
                 {
-                    p = wcschr( p + 2, '&' );
+                    p = strchrW( p + 2, '&' );
                 }
                 while (p != NULL && p[1] == '&');
 
@@ -515,6 +504,42 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
 }
 
  /***********************************************************************
+  *           DIALOG_FindMsgDestination
+  *
+  * The messages that IsDialogMessage sends may not go to the dialog
+  * calling IsDialogMessage if that dialog is a child, and it has the
+  * DS_CONTROL style set.
+  * We propagate up until we hit one that does not have DS_CONTROL, or
+  * whose parent is not a dialog.
+  *
+  * This is undocumented behaviour.
+  */
+static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
+{
+    while (GetWindowLongA(hwndDlg, GWL_STYLE) & DS_CONTROL)
+    {
+        PWND pWnd;
+        HWND hParent = GetParent(hwndDlg);
+        if (!hParent) break;
+// ReactOS
+        if (!IsWindow(hParent)) break;
+
+        pWnd = ValidateHwnd(hParent);
+        // FIXME: Use pWnd->fnid == FNID_DESKTOP
+        if (!pWnd || !TestWindowProcess(pWnd) || hParent == GetDesktopWindow()) break;
+
+        if (!(pWnd->state & WNDS_DIALOGWINDOW))
+        {
+            break;
+        }
+
+        hwndDlg = hParent;
+    }
+
+    return hwndDlg;
+}
+
+ /***********************************************************************
  *           DIALOG_DoDialogBox
  */
 INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
@@ -545,15 +570,22 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                     /* No message present -> send ENTERIDLE and wait */
                     SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
                 }
-                if (!GetMessageW( &msg, 0, 0, 0 )) break;
+                GetMessageW( &msg, 0, 0, 0 );
             }
 
+            if (msg.message == WM_QUIT)
+            {
+                PostQuitMessage( msg.wParam );
+                if (!IsWindow( hwnd )) return 0;
+                break;
+            }
             if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
                 TranslateMessage( &msg );
                 DispatchMessageW( &msg );
             }
+            if (!IsWindow( hwnd )) return 0;
             if (dlgInfo->flags & DF_END) break;
 
             if (bFirstEmpty && msg.message == WM_TIMER)
@@ -603,6 +635,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     result->y       = GET_WORD(p); p++;
     result->cx      = GET_WORD(p); p++;
     result->cy      = GET_WORD(p); p++;
+    TRACE("DIALOG%s %d, %d, %d, %d, %d\n",
+           result->dialogEx ? "EX" : "", result->x, result->y,
+           result->cx, result->cy, result->helpId );
+    TRACE(" STYLE 0x%08x\n", result->style );
+    TRACE(" EXSTYLE 0x%08x\n", result->exStyle );
 
     /* Get the menu name */
 
@@ -615,9 +652,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
         case 0xffff:
             result->menuName = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
+            TRACE(" MENU %04x\n", LOWORD(result->menuName) );
             break;
         default:
             result->menuName = (LPCWSTR)p;
+            TRACE(" MENU %s\n", debugstr_w(result->menuName) );
             p += strlenW( result->menuName ) + 1;
             break;
     }
@@ -633,9 +672,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
         case 0xffff:
             result->className = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
+            TRACE(" CLASS %04x\n", LOWORD(result->className) );
             break;
         default:
             result->className = (LPCWSTR)p;
+            TRACE(" CLASS %s\n", debugstr_w( result->className ));
             p += strlenW( result->className ) + 1;
             break;
     }
@@ -644,6 +685,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
 
     result->caption = (LPCWSTR)p;
     p += strlenW( result->caption ) + 1;
+    TRACE(" CAPTION %s\n", debugstr_w( result->caption ) );
 
     /* Get the font name */
 
@@ -678,6 +720,10 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             }
             result->faceName = (LPCWSTR)p;
             p += strlenW( result->faceName ) + 1;
+
+            TRACE(" FONT %d, %s, %d, %s\n",
+                  result->pointSize, debugstr_w( result->faceName ),
+                  result->weight, result->italic ? "TRUE" : "FALSE" );
         }
     }
 
@@ -903,14 +949,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         LPSTR class_tmp = NULL;
         LPSTR caption_tmp = NULL;
 
-        if (HIWORD(class))
+        if (!IS_INTRESOURCE(class))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.className, -1, NULL, 0, NULL, NULL );
             class_tmp = HeapAlloc( GetProcessHeap(), 0, len );
             WideCharToMultiByte( CP_ACP, 0, template.className, -1, class_tmp, len, NULL, NULL );
             class = class_tmp;
         }
-        if (HIWORD(caption))
+        if (!IS_INTRESOURCE(caption))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.caption, -1, NULL, 0, NULL, NULL );
             caption_tmp = HeapAlloc( GetProcessHeap(), 0, len );
@@ -936,6 +982,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
     dlgInfo = DIALOG_get_info( hwnd, TRUE );
+    // ReactOS
     if (dlgInfo == NULL)
     {
         if (hUserFont) DeleteObject( hUserFont );
@@ -943,13 +990,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
         return 0;
     }
-
+    //
     dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = hUserFont;
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
@@ -969,13 +1015,15 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (dlgProc)
         {
             HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
-            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) &&
+            if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
+            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) && IsWindow( hwnd ) &&
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
                 /* By returning TRUE, app has requested a default focus assignment.
                  * WM_INITDIALOG may have changed the tab order, so find the first
                  * tabstop control again. */
-                dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
+                dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+                if (!dlgInfo->hwndFocus) dlgInfo->hwndFocus = GetNextDlgGroupItem( hwnd, 0, FALSE );
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
             }
@@ -1113,8 +1161,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
     {
         case WM_ERASEBKGND:
         {
-            HBRUSH brush = (HBRUSH)SendMessageW( hwnd, WM_CTLCOLORDLG, wParam, (LPARAM)hwnd );
-            if (!brush) brush = (HBRUSH)DefWindowProcW( hwnd, WM_CTLCOLORDLG, wParam, (LPARAM)hwnd );
+            HBRUSH brush = GetControlColor( hwnd, hwnd, (HDC)wParam, WM_CTLCOLORDLG);
             if (brush)
             {
                 RECT rect;
@@ -1133,7 +1180,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
                 NtUserSetThreadState(0,DF_DIALOGACTIVE);
-                NtUserCallHwndParam( hwnd, 0, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+                NtUserxSetDialogPointer( hwnd, 0 );
             }
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );
@@ -1213,12 +1260,17 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
 /***********************************************************************
  *           DEFDLG_Epilog
  */
-static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, BOOL fResult)
+static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL fResult, BOOL fAnsi)
 {
-
-    // TODO: where's wine's WM_CTLCOLOR from?
     if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
-         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
+         msg == WM_CTLCOLOR)
+       {
+          if (fResult) return fResult;
+
+          return fAnsi ? DefWindowProcA(hwnd, msg, wParam, lParam):
+                         DefWindowProcW(hwnd, msg, wParam, lParam);
+       }
+    if ( msg == WM_COMPAREITEM ||
          msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
          msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
         return fResult;
@@ -1289,6 +1341,7 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
     return retWnd ? retWnd : hwndCtrl;
 }
 
+
 /**********************************************************************
  *	    DIALOG_DlgDirListW
  *
@@ -1305,8 +1358,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     ((attrib & DDL_POSTMSGS) ? PostMessageW( hwnd, msg, wparam, lparam ) \
                              : SendMessageW( hwnd, msg, wparam, lparam ))
 
-//    TRACE("%p '%s' %d %d %04x\n",
-//          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
+    TRACE("%p %s %d %d %04x\n", hDlg, debugstr_w(spec), idLBox, idStatic, attrib );
 
     /* If the path exists and is a directory, chdir to it */
     if (!spec || !spec[0] || SetCurrentDirectoryW( spec )) spec = any;
@@ -1377,6 +1429,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     return TRUE;
 #undef SENDMSG
 }
+
 
 /**********************************************************************
  *	    DIALOG_DlgDirListA
@@ -1484,7 +1537,7 @@ CreateDialogIndirectParamAorW(
  *   Also wine has one more parameter identifying weather it should call
  *   the function with unicode or not
  */
-  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , !Flags, FALSE );
+  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , Flags == DLG_ISANSI ? FALSE : TRUE, FALSE );
 }
 
 
@@ -1500,7 +1553,7 @@ CreateDialogIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, 2 );
+  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, DLG_ISANSI);
 }
 
 
@@ -1618,7 +1671,7 @@ DefDlgProcA(
                  return DefWindowProcA( hDlg, Msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hDlg, Msg, result);
+    return DEFDLG_Epilog(hDlg, Msg, wParam, lParam, result, TRUE);
 }
 
 
@@ -1678,7 +1731,7 @@ DefDlgProcW(
                  return DefWindowProcW( hDlg, Msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hDlg, Msg, result);
+    return DEFDLG_Epilog(hDlg, Msg, wParam, lParam, result, FALSE);
 }
 
 
@@ -1700,7 +1753,7 @@ DialogBoxIndirectParamAorW(
  *  Also wine has one more parameter identifying weather it should call
  *  the function with unicode or not
  */
-  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, !Flags, TRUE );
+  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, Flags == DLG_ISANSI ? FALSE : TRUE, TRUE );
   if (hWnd) return DIALOG_DoDialogBox( hWnd, hWndParent );
   return -1;
 }
@@ -1718,7 +1771,7 @@ DialogBoxIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
-  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, 2);
+  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, DLG_ISANSI);
 }
 
 
@@ -1934,37 +1987,52 @@ DlgDirSelectExW(
 BOOL
 WINAPI
 EndDialog(
-  HWND hDlg,
-  INT_PTR nResult)
+  HWND hwnd,
+  INT_PTR retval)
 {
     BOOL wasEnabled = TRUE;
     DIALOGINFO * dlgInfo;
     HWND owner;
 
-    if (!(dlgInfo = GETDLGINFO(hDlg))) return FALSE;
+    TRACE("%p %ld\n", hwnd, retval );
 
-    dlgInfo->idResult = nResult;
+    if (!(dlgInfo = GETDLGINFO(hwnd)))
+    {
+        ERR("got invalid window handle (%p); buggy app !?\n", hwnd);
+        return FALSE;
+    }
+    dlgInfo->idResult = retval;
     dlgInfo->flags |= DF_END;
     wasEnabled = (dlgInfo->flags & DF_OWNERENABLED);
 
-    if (wasEnabled && (owner = GetWindow( hDlg, GW_OWNER )))
+    owner = GetWindow( hwnd, GW_OWNER );
+    if (wasEnabled && owner)
         DIALOG_EnableOwner( owner );
 
     /* Windows sets the focus to the dialog itself in EndDialog */
 
-    if (IsChild(hDlg, GetFocus()))
-       SetFocus( hDlg );
+    if (IsChild(hwnd, GetFocus()))
+       SetFocus( hwnd );
 
     /* Don't have to send a ShowWindow(SW_HIDE), just do
        SetWindowPos with SWP_HIDEWINDOW as done in Windows */
 
-    SetWindowPos(hDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
                  | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
 
-    if (hDlg == GetActiveWindow()) WinPosActivateOtherWindow( hDlg );
+    if (hwnd == GetActiveWindow())
+    {
+        /* If this dialog was given an owner then set the focus to that owner
+           even when the owner is disabled (normally when a window closes any
+           disabled windows cannot receive the focus). */
+        if (owner)
+            SetForegroundWindow( owner );
+        else
+            WinPosActivateOtherWindow( hwnd );
+    }
 
     /* unblock dialog loop */
-    PostMessageA(hDlg, WM_NULL, 0, 0);
+    PostMessageA(hwnd, WM_NULL, 0, 0);
     return TRUE;
 }
 
@@ -2024,6 +2092,7 @@ GetDlgItem(
     for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
     ret = list[i];
     HeapFree(GetProcessHeap(), 0, list);
+//    if (!ret) SetLastError(ERROR_CONTROL_ID_NOT_FOUND);
     return ret;
 }
 
@@ -2039,9 +2108,9 @@ GetDlgItemInt(
   BOOL *lpTranslated,
   BOOL bSigned)
 {
-	char str[30];
+    char str[30];
     char * endptr;
-    long result = 0;
+    LONG_PTR result = 0;
 
     if (lpTranslated) *lpTranslated = FALSE;
     if (!SendDlgItemMessageA(hDlg, nIDDlgItem, WM_GETTEXT, sizeof(str), (LPARAM)str))
@@ -2051,8 +2120,7 @@ GetDlgItemInt(
         result = strtol( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-		/* FIXME: errno? */
-        if (((result == 0) || (result == 0xFFFFFFFF))/* && (errno == ERANGE) */)
+        if (((result == LONG_MIN) || (result == LONG_MAX)) && (errno == ERANGE) )
             return 0;
     }
     else
@@ -2060,8 +2128,7 @@ GetDlgItemInt(
         result = strtoul( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-		/* FIXME: errno? */
-        if ((result == 0xFFFFFFFF)/* && (errno == ERANGE) */) return 0;
+        if ((result == ULONG_MAX) && (errno == ERANGE) ) return 0;
     }
     if (lpTranslated) *lpTranslated = TRUE;
     return (UINT)result;
@@ -2079,8 +2146,10 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
-  return (UINT)SendDlgItemMessageA( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
+  HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
+  if ( hWnd ) return GetWindowTextA(hWnd, lpString, nMaxCount);
+  if ( nMaxCount ) *lpString = 0;
+  return 0;
 }
 
 
@@ -2095,8 +2164,10 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
-  return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
+  HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
+  if ( hWnd ) return GetWindowTextW(hWnd, lpString, nMaxCount);
+  if ( nMaxCount ) *lpString = 0;
+  return 0;
 }
 
 /*
@@ -2227,16 +2298,26 @@ GetNextDlgTabItem(
   HWND hCtl,
   BOOL bPrevious)
 {
-	/* Undocumented but tested under Win2000 and WinME */
-	if (hDlg == hCtl) hCtl = NULL;
+    PWND pWindow;
+      
+    pWindow = ValidateHwnd( hDlg );
+    if (!pWindow) return NULL;
+    if (hCtl)
+    {
+       pWindow = ValidateHwnd( hCtl );
+       if (!pWindow) return NULL;
+    }
 
-	/* Contrary to MSDN documentation, tested under Win2000 and WinME
-	* NB GetLastError returns whatever was set before the function was
-	* called.
-	*/
-	if (!hCtl && bPrevious) return 0;
+    /* Undocumented but tested under Win2000 and WinME */
+    if (hDlg == hCtl) hCtl = NULL;
 
-	return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
+    /* Contrary to MSDN documentation, tested under Win2000 and WinME
+     * NB GetLastError returns whatever was set before the function was
+     * called.
+     */
+    if (!hCtl && bPrevious) return 0;
+
+    return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
 }
 
 
@@ -2315,6 +2396,39 @@ static void DIALOG_FixChildrenOnChangeFocus (HWND hwndDlg, HWND hwndNext)
     }
 }
 
+/***********************************************************************
+ *           DIALOG_IdToHwnd
+ *
+ * A recursive version of GetDlgItem
+ *
+ * RETURNS
+ *  The HWND for a Child ID.
+ */
+static HWND DIALOG_IdToHwnd( HWND hwndDlg, INT id )
+{
+    int i;
+    HWND *list = WIN_ListChildren( hwndDlg );
+    HWND ret = 0;
+
+    if (!list) return 0;
+
+    for (i = 0; list[i]; i++)
+    {
+        if (GetWindowLongPtrW( list[i], GWLP_ID ) == id)
+        {
+            ret = list[i];
+            break;
+        }
+
+        /* Recurse into every child */
+        if ((ret = DIALOG_IdToHwnd( list[i], id ))) break;
+    }
+
+    HeapFree( GetProcessHeap(), 0, list );
+    return ret;
+}
+
+
 /*
  * @implemented
  */
@@ -2344,6 +2458,14 @@ IsDialogMessageW(
          case VK_TAB:
             if (!(dlgCode & DLGC_WANTTAB))
             {
+                BOOL fIsDialog = TRUE;
+                WND *pWnd = ValidateHwnd(hDlg);
+
+                if (pWnd && TestWindowProcess(pWnd))
+                {
+                    fIsDialog = (GETDLGINFO(hDlg) != NULL);
+                }
+  
                 SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
 
                 /* I am not sure under which circumstances the TAB is handled
@@ -2351,7 +2473,7 @@ IsDialogMessageW(
                  * send WM_NEXTDLGCTL.  (Personally I have never yet seen it
                  * do so but I presume someone has)
                  */
-                if (GETDLGINFO(hDlg))
+                if (fIsDialog)
                     SendMessageW( hDlg, WM_NEXTDLGCTL, (GetKeyState(VK_SHIFT) & 0x8000), 0 );
                 else
                 {
@@ -2419,7 +2541,7 @@ IsDialogMessageW(
                  }
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
-                    HWND hwndDef = GetDlgItem(hDlg, LOWORD(dw));
+                    HWND hwndDef = DIALOG_IdToHwnd(hDlg, LOWORD(dw));
                     if (hwndDef ? IsWindowEnabled(hwndDef) : LOWORD(dw)==IDOK)
                         SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ), (LPARAM)hwndDef);
                  }
@@ -2452,7 +2574,7 @@ IsDialogMessageW(
 //// ReactOS
      case WM_SYSKEYDOWN:
          /* If the ALT key is being pressed display the keyboard cues */
-         if (lpMsg->lParam & (1 << 29))
+         if (HIWORD(lpMsg->lParam) & KF_ALTDOWN)
              SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
          break;
 
@@ -2515,7 +2637,9 @@ SendDlgItemMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
-	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
+	HWND hwndCtrl;
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageA( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
 }
@@ -2533,7 +2657,9 @@ SendDlgItemMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
-	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
+	HWND hwndCtrl;
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageW( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
 }
@@ -2569,7 +2695,9 @@ SetDlgItemTextA(
   int nIDDlgItem,
   LPCSTR lpString)
 {
-  return SendDlgItemMessageA( hDlg, nIDDlgItem, WM_SETTEXT, 0, (LPARAM)lpString );
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  if (hwndCtrl) return SetWindowTextA( hwndCtrl, lpString );
+  return FALSE;
 }
 
 
@@ -2583,7 +2711,9 @@ SetDlgItemTextW(
   int nIDDlgItem,
   LPCWSTR lpString)
 {
-  return SendDlgItemMessageW( hDlg, nIDDlgItem, WM_SETTEXT, 0, (LPARAM)lpString );
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  if (hwndCtrl) return SetWindowTextW( hwndCtrl, lpString );
+  return FALSE;
 }
 
 

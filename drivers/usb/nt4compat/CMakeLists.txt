@@ -1,2 +1,2 @@
 
-add_subdirectory(usbdriver)
+add_subdirectory(usbdrv)

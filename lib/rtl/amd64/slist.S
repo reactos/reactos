@@ -18,7 +18,7 @@
 #define SLIST8B_HEADERTYPE_MASK  HEX(0000000000000001)
 #define SLIST8B_INIT_MASK        HEX(0000000000000002)
 #define SLIST8B_REGION_MASK      HEX(E000000000000000)
-#define SLIST8_POINTER_MASK      HEX(000007FFFFFFFFF0)
+#define SLIST8_POINTER_MASK      HEX(000007FFFFFFFFFF)
 
 #define SLIST16A_DEPTH_MASK      HEX(000000000000FFFF)
 #define SLIST16A_DEPTH_INC       HEX(0000000000000001)
@@ -181,6 +181,15 @@ RtlInterlockedPopEntrySListEmpty16:
 RtlInterlockedPushEntrySList:
 ExpInterlockedPushEntrySList:
 
+#if DBG
+    /* Make sure the ListEntry is 16 bytes aligned */
+    test rdx, HEX(0F)
+    jz ExpInterlockedPushEntrySListChecked
+    /* Not aligned, raise an assertion */
+    int HEX(2C)
+ExpInterlockedPushEntrySListChecked:
+#endif
+
     /* Load ListHead->Alignment into rax */
     mov rax, [rcx]
 
@@ -301,7 +310,7 @@ ExpInterlockedFlushSList:
 
 RtlInterlockedFlushSListLoop:
 
-    /* Zero ListHead->Alignment */ 
+    /* Zero ListHead->Alignment */
     xor r8, r8
 
     /* If [rcx] equals rax, exchange it with r8 */

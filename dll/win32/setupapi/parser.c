@@ -149,9 +149,9 @@ static void *grow_array( void *array, unsigned int *count, size_t elem )
     if (new_count < 32) new_count = 32;
 
     if (array)
-	new_array = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, array, new_count * elem );
+        new_array = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, array, new_count * elem );
     else
-	new_array = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * elem );
+        new_array = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * elem );
 
     if (new_array)
         *count = new_count;
@@ -327,35 +327,35 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     strings_section = file->sections[file->strings_section];
     for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
     {
-	if (line->key_field == -1) continue;
-	if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
+        if (line->key_field == -1) continue;
+        if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
         if (!file->fields[line->key_field].text[*len]) break;
-     }
-     if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
-     field = &file->fields[line->first_field];
-     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
-     strcatW(StringLangId, Lang); // append the Language identifier from GetLocaleInfo
-     // now you have e.g. Strings.0407 for german translations
-     for (i = 0; i < file->nb_sections; i++) // search in all sections
-     {
-          if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
-	  {
-             strings_section = file->sections[i]; // select this section for further use
-             for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
-             {
-                 if (line->key_field == -1) continue; // if no key then skip
-                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
-                 if (!file->fields[line->key_field].text[*len]) // if value exist
-		 {
-                     field = &file->fields[line->first_field]; // then extract value and
-                     break; // no more search necessary
-                 }
-             }
-	   }
-      }
-      *len = strlenW( field->text ); // set length
-      ret = field->text; // return the english or translated string
-      return ret;
+    }
+    if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
+    field = &file->fields[line->first_field];
+    GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
+    strcatW(StringLangId, Lang); // append the Language identifier from GetLocaleInfo
+    // now you have e.g. Strings.0407 for german translations
+    for (i = 0; i < file->nb_sections; i++) // search in all sections
+    {
+        if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
+        {
+            strings_section = file->sections[i]; // select this section for further use
+            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
+            {
+                if (line->key_field == -1) continue; // if no key then skip
+                if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
+                if (!file->fields[line->key_field].text[*len]) // if value exist
+                {
+                    field = &file->fields[line->first_field]; // then extract value and
+                    break; // no more search necessary
+                }
+            }
+        }
+    }
+    *len = strlenW( field->text ); // set length
+    ret = field->text; // return the english or translated string
+    return ret;
 
 
  not_found:  /* check for integer id */
@@ -1511,7 +1511,7 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
         index -= file->sections[section_index]->nb_lines;
     }
     TRACE( "(%p,%s) not found\n", hinf, debugstr_w(section) );
-	SetLastError( ERROR_LINE_NOT_FOUND );
+    SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 
@@ -1578,7 +1578,7 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
         }
     }
     TRACE( "(%p,%s,%s): not found\n", hinf, debugstr_w(section), debugstr_w(key) );
-	SetLastError( ERROR_LINE_NOT_FOUND );
+    SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 

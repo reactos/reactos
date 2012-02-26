@@ -7,9 +7,6 @@
  */
 
 #include <win32k.h>
-
-#include <intrin.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -128,7 +125,7 @@ PDEVOBJ_bEnablePDEV(
                                   HS_DDI_MAX,
                                   ppdev->ahsurf,
                                   sizeof(GDIINFO),
-                                  &ppdev->gdiinfo,
+                                  (PULONG)&ppdev->gdiinfo,
                                   sizeof(DEVINFO),
                                   &ppdev->devinfo,
                                   (HDEV)ppdev,
@@ -205,19 +202,16 @@ PDEVOBJ_pdmMatchDevMode(
         /* Compare asked DEVMODE fields
          * Only compare those that are valid in both DEVMODE structs */
         dwFields = pdmCurrent->dmFields & pdm->dmFields ;
+
         /* For now, we only need those */
         if ((dwFields & DM_BITSPERPEL) &&
-                (pdmCurrent->dmBitsPerPel != pdm->dmBitsPerPel))
-            continue;
+            (pdmCurrent->dmBitsPerPel != pdm->dmBitsPerPel)) continue;
         if ((dwFields & DM_PELSWIDTH) &&
-                (pdmCurrent->dmPelsWidth != pdm->dmPelsWidth))
-            continue;
+            (pdmCurrent->dmPelsWidth != pdm->dmPelsWidth)) continue;
         if ((dwFields & DM_PELSHEIGHT) &&
-                (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight))
-            continue;
+            (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight)) continue;
         if ((dwFields & DM_DISPLAYFREQUENCY) &&
-                (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency))
-            continue;
+            (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency)) continue;
 
         /* Match! Return the DEVMODE */
         return pdmCurrent;
@@ -235,6 +229,7 @@ EngpCreatePDEV(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PPDEVOBJ ppdev;
+    DPRINT("EngpCreatePDEV(%wZ, %p)\n", pustrDeviceName, pdm);
 
     /* Try to find the GRAPHICS_DEVICE */
     if (pustrDeviceName)
@@ -272,8 +267,9 @@ EngpCreatePDEV(
     ppdev->pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!ppdev->pldev)
     {
-        DPRINT1("Could not load display driver '%ls'\n",
-                pGraphicsDevice->pDiplayDrivers);
+        DPRINT1("Could not load display driver '%ls', '%s'\n",
+                pGraphicsDevice->pDiplayDrivers,
+                pdm->dmDeviceName);
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
         return NULL;
     }

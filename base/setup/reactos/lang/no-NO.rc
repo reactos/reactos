@@ -6,8 +6,8 @@ CAPTION "ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Velkommen til ReactOS installering veiviseren.", IDC_STARTTITLE, 115, 8, 220, 24
-    LTEXT "Du kan ennå ikke installere ReactOS direkte fra denne CD-en! Vennligst start datamaskinen på nytt og start fra denne platen for å installere ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Trykk på Fullført for å avslutte installeringen.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Du kan ennÃ¥ ikke installere ReactOS direkte fra denne CD-en! Vennligst start datamaskinen pÃ¥ nytt og start fra denne platen for Ã¥ installere ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Trykk pÃ¥ FullfÃ¸rt for Ã¥ avslutte installeringen.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -16,11 +16,11 @@ CAPTION "ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL "Installering språk:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
+    CONTROL "Installering sprÃ¥k:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL "Tastatur eller inndataspråk:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
+    CONTROL "Tastatur eller inndatasprÃ¥k:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
-    LTEXT "Trykk på Neste for å velge installering type.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Trykk pÃ¥ Neste for Ã¥ velge installering type.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -31,7 +31,7 @@ BEGIN
     CONTROL "Installeringsvalg", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     CONTROL "Installere ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
     CONTROL "Reparere eller oppdatere en installert ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Trykk på Neste for installere enhetene.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Trykk pÃ¥ Neste for installere enhetene.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -46,7 +46,7 @@ BEGIN
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
     LTEXT "Tastatur:", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
-    LTEXT "Trykk på Neste for å installere enhetene.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Trykk pÃ¥ Neste for Ã¥ installere enhetene.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -60,7 +60,7 @@ BEGIN
     PUSHBUTTON "&Slett", IDC_PARTDELETE, 76,155,50,15
     PUSHBUTTON "S&tasjon", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "&Avansert valg...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Trykk på Neste for å starte installasjon prosessen.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Trykk pÃ¥ Neste for Ã¥ starte installasjon prosessen.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
@@ -70,7 +70,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
     CONTROL "Opprett og formater partisjon",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT "Størrelse:",IDC_STATIC, 13,24,27,9
+    LTEXT "StÃ¸rrelse:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
     LTEXT "GB",IDC_UNIT, 117,24,14,9
     LTEXT "Filsystem:",IDC_STATIC,13,46,35,9
@@ -89,8 +89,8 @@ BEGIN
 
     CONTROL "Oppstartslaster installasjon", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
-    CONTROL "Installer oppstartslaster på harddiskens (MBR og VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Installer oppstartslaster på harddiskens (bare VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11	
+    CONTROL "Installer oppstartslaster pÃ¥ harddiskens (MBR og VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Installer oppstartslaster pÃ¥ harddiskens (bare VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11	
     CONTROL "Ikke installer oppstartslaster", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
     PUSHBUTTON "&OK", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Avbryt", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
@@ -102,7 +102,7 @@ CAPTION "ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Installasjon oppsumering", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Trykk på Neste for å starte installasjon prosessen.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Trykk pÃ¥ Neste for Ã¥ starte installasjon prosessen.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -119,21 +119,21 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Fullfører ReactOS installering"
+CAPTION "FullfÃ¸rer ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Fullfører første steget av ReactOS installering", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Du har nå fullført første steget av ReactOS installering.", IDC_STATIC, 20, 50, 277, 10
+    CONTROL "FullfÃ¸rer fÃ¸rste steget av ReactOS installering", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Du har nÃ¥ fullfÃ¸rt fÃ¸rste steget av ReactOS installering.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "Når du trykker Fullført, vil din datamaskin starte på nytt.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "NÃ¥r du trykker FullfÃ¸rt, vil din datamaskin starte pÃ¥ nytt.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. For å starte din datamaskin på nytt, trykk på Fullført.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. For Ã¥ starte din datamaskin pÃ¥ nytt, trykk pÃ¥ FullfÃ¸rt.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "Språkvalg"
-    IDS_LANGSUBTITLE    "Velg språk for installering og til ferdig system."
+    IDS_LANGTITLE       "SprÃ¥kvalg"
+    IDS_LANGSUBTITLE    "Velg sprÃ¥k for installering og til ferdig system."
     IDS_TYPETITLE       "Velkommen til ReactOS installering"
     IDS_TYPESUBTITLE    "Velg installering type."
     IDS_DEVICETITLE     "Installer grunnleggende enheter"
@@ -142,11 +142,11 @@ BEGIN
     IDS_DRIVESUBTITLE   "Forbrede installasjon partisjon, system mappe og oppstartslaster."
     IDS_PROCESSTITLE    "Forbrede partisjon, kopiere filer og installere system"
     IDS_PROCESSSUBTITLE "Opprett og formater partisjon, kopier filer, installere og sett opp oppstartlaster"
-    IDS_RESTARTTITLE    "Første steget av installering er fullført"
-    IDS_RESTARTSUBTITLE "Første steget av installering har blitt fullført, start på nytt for å fortsette til andre steget"
+    IDS_RESTARTTITLE    "FÃ¸rste steget av installering er fullfÃ¸rt"
+    IDS_RESTARTSUBTITLE "FÃ¸rste steget av installering har blitt fullfÃ¸rt, start pÃ¥ nytt for Ã¥ fortsette til andre steget"
     IDS_SUMMARYTITLE    "Installasjon oppsumering"
-    IDS_SUMMARYSUBTITLE "Sjekk listen av installasjon egenskapene før du fortsetter installasjon av enhetene"
-    IDS_ABORTSETUP      "ReactOS er ikke fullstendig installert på datamaskinen. Hvis du avslutter nå, trenger du å kjøre installeringen på nytt for å installere Reactos. Vil du virkelig avslutte?"
+    IDS_SUMMARYSUBTITLE "Sjekk listen av installasjon egenskapene fÃ¸r du fortsetter installasjon av enhetene"
+    IDS_ABORTSETUP      "ReactOS er ikke fullstendig installert pÃ¥ datamaskinen. Hvis du avslutter nÃ¥, trenger du Ã¥ kjÃ¸re installeringen pÃ¥ nytt for Ã¥ installere Reactos. Vil du virkelig avslutte?"
     IDS_ABORTSETUP2     "Avbryt installasjonen?"
 END
 /* EOF */

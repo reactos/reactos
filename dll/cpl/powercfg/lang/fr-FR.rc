@@ -9,9 +9,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
   LTEXT "Choisissez le profil d'alimentation le plus approprié pour cet ordinateur. Notez que modifier les réglages suivants modifiera le profil sélectionné.",
-	-1,45,13,194,36
+        -1,45,13,194,36
   GROUPBOX "P&rofils d'alimentation", -1, 7,57,240,46
-  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Sauvegarder sous...", IDC_SAVEAS_BTN, 100,85,75,15,WS_DISABLED
   PUSHBUTTON "&Supprimer", IDC_DELETE_BTN, 180,85,55,15,WS_DISABLED
   GROUPBOX "Inconnu", IDC_GRPDETAIL, 7,108,240,105
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Mise en veille"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT           "Quand votre ordinateur se met en veille, il enregistre tout ce qu'il a en memoire sur le disque dur et s'arrête. Quand votre ordinateur sort de la mise en veille, il reprend son état précédent. ",
                     -1,35,5,195,35
     GROUPBOX        "Mise en veille",-1,5,45,235,25
@@ -158,9 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "Après 4 heures"
   IDS_TIMEOUT15 "Après 5 heures"
   IDS_TIMEOUT16 "Jamais"
-  
+
   IDS_DEL_SCHEME "Êtes-vous sûr de vouloir supprimer le profil d'alimentation ?"
   IDS_DEL_SCHEME_TITLE "Supprimer le profil"
 END
-
-

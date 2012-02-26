@@ -447,7 +447,7 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
 end:
     if (!ret)
     {
-        CryptMemFree(ctl);
+        CertFreeCTLContext(ctl);
         ctl = NULL;
         LocalFree(ctlInfo);
         CryptMemFree(content);
@@ -605,8 +605,10 @@ BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
                 ret = CertGetStoreProperty(pCTLContext->hCertStore, dwPropId,
                  pvData, pcbData);
             else
+            {
                 *(DWORD *)pvData = 0;
-            ret = TRUE;
+                ret = TRUE;
+            }
         }
         break;
     default:

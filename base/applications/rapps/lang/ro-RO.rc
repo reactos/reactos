@@ -1,0 +1,200 @@
+ /* 
+ * FILE:             base/applications/rapps/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * LAST CHANGE:      2011-12-18  small correnctions
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Fișier"
+	BEGIN
+		MENUITEM "&Preferințe…",           ID_SETTINGS
+		MENUITEM SEPARATOR
+		MENUITEM "I&eșire",                ID_EXIT
+	END
+	POPUP "&Programe"
+	BEGIN
+		MENUITEM "&Instalează",            ID_INSTALL
+		MENUITEM "&Dezinstalează",         ID_UNINSTALL
+		MENUITEM "&Modifică",              ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Elimină din registru",  ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "Împ&rospătează",         ID_REFRESH
+	END
+	POPUP "&?"
+	BEGIN
+		MENUITEM "&Manual",                ID_HELP, GRAYED
+		MENUITEM "&Despre…",               ID_ABOUT
+	END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Deschide în navigator",   ID_OPEN_LINK
+		MENUITEM "&Copiază în memorie",      ID_COPY_LINK
+	END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Instalează",           ID_INSTALL
+		MENUITEM "&Dezinstalează",        ID_UNINSTALL
+		MENUITEM "&Modifică",             ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Elimină din registru", ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "Împ&rospătează",        ID_REFRESH
+	END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Preferințe"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX      "Generale", -1, 4, 2, 240, 61
+	AUTOCHECKBOX  "&Păstrează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX  "&Actualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+	AUTOCHECKBOX  "&Menține jurnal de instalare/dezinstalare a aplicațiilor", IDC_LOG_ENABLED, 15, 46, 219, 12
+
+	GROUPBOX      "Descărcări", -1, 4, 65, 240, 51
+	LTEXT         "Dosarul pentru descărcări:", -1, 16, 75, 100, 9
+	EDITTEXT      IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+	PUSHBUTTON    "Spe&cificare…", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX  "Șt&erge instalatorul aplicației după instalare", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+
+	PUSHBUTTON  "&Implicite", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON  "Con&firmă",  IDOK, 116, 124, 60, 14
+	PUSHBUTTON  "A&nulează",  IDCANCEL, 181, 124, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalare aplicație"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT            "...",       IDC_INSTALL_TEXT, 4, 5, 209, 35
+
+	AUTORADIOBUTTON  "&Instalează de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON  "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+
+	PUSHBUTTON       "Con&firmă", IDOK, 86, 78, 60, 14
+	PUSHBUTTON       "A&nulează", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Descărcare…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL     "Progress1",  IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    LTEXT       "",           IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON  "A&nulează",  IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Despre gestionarul de aplicații ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT       "Gestionar de aplicații ReactOS\nDrept de autor (C) 2009\nde către Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON  "Î&nchide",  IDOK, 133, 46, 50, 14
+	ICON                     IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_TOOLTIP_INSTALL    "Instalează"
+	IDS_TOOLTIP_UNINSTALL  "Dezinstalează"
+	IDS_TOOLTIP_MODIFY     "Modifică"
+	IDS_TOOLTIP_SETTINGS   "Preferințe"
+	IDS_TOOLTIP_REFRESH    "Împrospătează"
+	IDS_TOOLTIP_EXIT       "Ieșire"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APP_NAME          "Nume"
+	IDS_APP_INST_VERSION  "Versiune"
+	IDS_APP_DESCRIPTION   "Descriere"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INFO_VERSION       "\nVersiune: "
+	IDS_INFO_DESCRIPTION   "\nDescriere: "
+	IDS_INFO_PUBLISHER     "\nAutor: "
+	IDS_INFO_HELPLINK      "\nAdresă pentru asistență: "
+	IDS_INFO_HELPPHONE     "\nTelefon asistență: "
+	IDS_INFO_README        "\nDe citit: "
+	IDS_INFO_REGOWNER      "\nPosesor înregistrat: "
+	IDS_INFO_PRODUCTID     "\nID produs: "
+	IDS_INFO_CONTACT       "\nContact: "
+	IDS_INFO_UPDATEINFO    "\nInformații pentru actualizare: "
+	IDS_INFO_INFOABOUT     "\nInformații despre produs: "
+	IDS_INFO_COMMENTS      "\nComentarii: "
+	IDS_INFO_INSTLOCATION  "\nInstalat în: "
+	IDS_INFO_INSTALLSRC    "\nInstalat din: "
+	IDS_INFO_UNINSTALLSTR  "\nComanda pentru dezinstalare: "
+	IDS_INFO_MODIFYPATH    "\nComanda pentru modificare: "
+	IDS_INFO_INSTALLDATE   "\nData de instalare: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_AINFO_VERSION      "\nVersiune: "
+	IDS_AINFO_DESCRIPTION  "\nDescriere: "
+	IDS_AINFO_SIZE         "\nDimensiune: "
+	IDS_AINFO_URLSITE      "\nPagină web: "
+	IDS_AINFO_LICENCE      "\nLicență: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_CAT_AUDIO     "Audio"
+	IDS_CAT_DEVEL     "Dezvoltare"
+	IDS_CAT_DRIVERS   "Module pilot"
+	IDS_CAT_EDU       "Educație"
+	IDS_CAT_ENGINEER  "Inginerie"
+	IDS_CAT_FINANCE   "Finanțe"
+	IDS_CAT_GAMES     "Jocuri & Distracție"
+	IDS_CAT_GRAPHICS  "Grafică"
+	IDS_CAT_INTERNET  "Internet & Rețea"
+	IDS_CAT_LIBS      "Biblioteci"
+	IDS_CAT_OFFICE    "Birotică"
+	IDS_CAT_OTHER     "Altele"
+	IDS_CAT_SCIENCE   "Știință"
+	IDS_CAT_TOOLS     "Instrumente"
+	IDS_CAT_VIDEO     "Video"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APPTITLE             "Gestionar de aplicații ReactOS"
+	IDS_SEARCH_TEXT          "Căutare…"
+	IDS_INSTALL              "Instalează"
+	IDS_UNINSTALL            "Dezinstalează"
+	IDS_MODIFY               "Modifică"
+	IDS_APPS_COUNT           "Numărul de aplicații: %d"
+	IDS_WELCOME_TITLE        "Bun venit la gestionarul de aplicații ReactOS!\n\n"
+	IDS_WELCOME_TEXT         "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
+	IDS_WELCOME_URL          "http://www.reactos.org"
+	IDS_INSTALLED            "Instalate"
+	IDS_AVAILABLEFORINST     "Disponibile pentru instalare"
+	IDS_UPDATES              "Actualizări"
+	IDS_APPLICATIONS         "Aplicații"
+	IDS_CHOOSE_FOLDER_TEXT   "Specificați un dosar destinație pentru descărcări:"
+	IDS_CHOOSE_FOLDER_ERROR  "Dosarul specificat nu există. Doriți crearea lui?"
+	IDS_USER_NOT_ADMIN       "Pentru a porni „Gestionar de aplicații ReactOS” sunt necesare drepturi de administrator!"
+	IDS_APP_REG_REMOVE       "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
+	IDS_INFORMATION          "Informație"
+	IDS_UNABLE_TO_REMOVE     "Nu se pot elimina datele din registru pentru această aplicație!"
+END

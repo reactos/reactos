@@ -680,7 +680,7 @@ NtGdiCheckBitmapBits(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBITMAP
@@ -706,7 +706,7 @@ NtGdiClearBrushAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -723,7 +723,7 @@ NtGdiColorCorrectPalette(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 HANDLE
@@ -742,7 +742,7 @@ NtGdiCreateColorTransform(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -766,7 +766,7 @@ NtGdiDeleteColorTransform(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -779,7 +779,7 @@ NtGdiGetPerBandInfo(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -822,7 +822,7 @@ NtGdiGetColorSpaceforBitmap(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 ULONG
@@ -836,7 +836,7 @@ NtGdiGetEudcTimeStampEx(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -847,7 +847,7 @@ NtGdiInitSpool()
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 INT
@@ -857,7 +857,7 @@ NtGdiGetSpoolMessage( DWORD u1,
                       DWORD u3,
                       DWORD u4)
 {
-    /* FIXME the prototypes */
+    /* FIXME: The prototypes */
     UNIMPLEMENTED;
     return 0;
 }
@@ -875,7 +875,7 @@ NtGdiGetObjectBitmapHandle(
     return 0;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -889,7 +889,7 @@ NtGdiGetMonitorID(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -903,17 +903,18 @@ NtGdiDrawStream(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiUpdateTransform(IN HDC hdc)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 NTSTATUS
@@ -930,7 +931,7 @@ NtGdiGetStats(
 }
 
 
- /*
+/*
  * @unimplemented
  */
 HBRUSH
@@ -943,7 +944,7 @@ NtGdiSetBrushAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -962,7 +963,7 @@ NtGdiIcmBrushInfo(
     return FALSE;
 }
 
- /*
+/*
  * @implemented
  */
 BOOL
@@ -984,7 +985,7 @@ NtGdiMonoBitmap(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 HBITMAP
@@ -997,7 +998,7 @@ NtGdiSetBitmapAttributes(
     return NULL;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1011,7 +1012,7 @@ NtGdiSetMagicColors(
     return FALSE;
 }
 
- /*
+/*
  * @unimplemented
  */
 BOOL
@@ -1049,3 +1050,5 @@ EngNineGrid(IN SURFOBJ* pDestSurfaceObj,
     UNIMPLEMENTED;
     return FALSE;
 }
+
+/* EOF */

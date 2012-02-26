@@ -9,7 +9,6 @@
  */
 
 #include "usetup.h"
-#include <zlib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -511,7 +510,6 @@ CabinetOpen(VOID)
         IO_STATUS_BLOCK IoStatusBlock;
         UNICODE_STRING FileName;
         NTSTATUS NtStatus;
-        ULONG Size;
 
         RtlInitUnicodeString(&FileName, CabinetName);
 
@@ -582,7 +580,6 @@ CabinetOpen(VOID)
             return CAB_STATUS_INVALID_CAB;
         }
 
-        Size = 0;
         Buffer = (PUCHAR)(PCABHeader + 1);
 
         /* Read/skip any reserved bytes */
@@ -697,6 +694,23 @@ CabinetFindFirst(PWCHAR FileName,
 }
 
 /*
+ * FUNCTION: Finds the next file in the cabinet that matches a search criteria
+ * ARGUMENTS:
+ *     FileName = Pointer to search criteria
+ *     Search   = Pointer to search structure
+ * RETURNS:
+ *     Status of operation
+ */
+ULONG
+CabinetFindNextFileSequential(PWCHAR FileName,
+                              PCAB_SEARCH Search)
+{
+    DPRINT("CabinetFindNextFileSequential( FileName = %S )\n", FileName);
+    wcsncpy(Search->Search, FileName, MAX_PATH);
+    return CabinetFindNext(Search);
+}
+
+/*
  * FUNCTION: Finds next file in the cabinet that matches a search criteria
  * ARGUMENTS:
  *     Search = Pointer to search structure
@@ -706,7 +720,6 @@ CabinetFindFirst(PWCHAR FileName,
 ULONG
 CabinetFindNext(PCAB_SEARCH Search)
 {
-    ULONG Status;
     PCFFILE Prev;
     ANSI_STRING AnsiString;
     UNICODE_STRING UnicodeString;
@@ -744,6 +757,12 @@ CabinetFindNext(PCAB_SEARCH Search)
             // FIXME: check for match against search criteria
             if (Search->File != Prev)
             {
+                if (Prev == NULL || Search->File->FolderIndex != Prev->FolderIndex)
+                {
+                    Search->CFData = NULL;
+                    Search->Offset = 0;
+                }
+                
                 /* don't match the file we started with */
                 if (wcscmp(Search->Search, L"*") == 0)
                 {
@@ -769,33 +788,9 @@ CabinetFindNext(PCAB_SEARCH Search)
         Search->Index++;
         if (Search->Index >= PCABHeader->FileCount)
         {
-            /* we have reached the end of this cabinet, try to open the next */
+            /* we have reached the end of this cabinet */
             DPRINT("End of cabinet reached\n");
-            if (wcslen(DiskNext) > 0)
-            {
-                CloseCabinet();
-
-                CabinetSetCabinetName(CabinetNext);
-                wcscpy(Search->Cabinet, CabinetName);
-
-                if (DiskChangeHandler != NULL)
-                {
-                    DiskChangeHandler(CabinetNext, DiskNext);
-                }
-
-                Status = CabinetOpen();
-                if (Status != CAB_STATUS_SUCCESS)
-                    return Status;
-            }
-            else
-            {
-                return CAB_STATUS_NOFILE;
-            }
-
-            /* starting new search or cabinet */
-            Search->File = (PCFFILE)(FileBuffer + PCABHeader->FileTableOffset);
-            Search->Index = 0;
-            Prev = 0;
+            return CAB_STATUS_NOFILE;
         }
         else
             Search->File = (PCFFILE)(strchr((char *)(Search->File + 1), 0) + 1);
@@ -1022,10 +1017,12 @@ CabinetExtractFile(PCAB_SEARCH Search)
         ExtractHandler(Search->File, DestName);
     }
 
-    /* find the starting block of the file
-       start with the first data block of the folder */
-    CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
-    CurrentOffset = 0;
+    if (Search->CFData)
+        CFData = Search->CFData;
+    else
+        CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
+
+    CurrentOffset = Search->Offset;
     while (CurrentOffset + CFData->UncompSize <= Search->File->FileOffset)
     {
         /* walk the data blocks until we reach
@@ -1033,6 +1030,9 @@ CabinetExtractFile(PCAB_SEARCH Search)
         CurrentOffset += CFData->UncompSize;
         CFData = (PCFDATA)((char *)(CFData + 1) + DataReserved + CFData->CompSize);
     }
+    
+    Search->CFData = CFData;
+    Search->Offset = CurrentOffset;
 
     /* now decompress and discard any data in
        the block before the start of the file */

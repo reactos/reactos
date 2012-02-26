@@ -179,7 +179,8 @@ static NTSTATUS NTAPI SendComplete
             break;
     }
     
-    if (FCB->Send.Size - FCB->Send.BytesUsed != 0)
+    if (FCB->Send.Size - FCB->Send.BytesUsed != 0 &&
+        !FCB->SendClosed)
     {
 		FCB->PollState |= AFD_EVENT_SEND;
 		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
@@ -518,6 +519,13 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
+
+    if (FCB->SendClosed)
+    {
+        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+    }
+
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );

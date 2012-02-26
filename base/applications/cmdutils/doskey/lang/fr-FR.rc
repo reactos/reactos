@@ -1,0 +1,27 @@
+LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Gère les paramètres d'édition en ligne de commande de l'historique et des macros.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Active le mode insertion.\n\
+  /OVERSTRIKE         Désactive le mode insertion.\n\
+  /EXENAME=exename    Définit le nom du programme pour afficher/modifier l'historique\n\
+                      et les macros. La valeur par défaut est cmd.exe.\n\
+  /HISTORY            Affiche l'historique des commandes.\n\
+  /LISTSIZE=size      Définit le nombre de commandes par tampon d'historique.\n\
+  /REINSTALL          Efface l'historique des commandes.\n\
+  /MACROS             Affiche les définitions de macros.\n\
+  /MACROS:exename     Affiche les définitions de macros pour un programme spécifique.\n\
+  /MACROS:ALL         Affiche les définitions de macros pour tous les programmes.\n\
+  /MACROFILE=file     Charge les définitions de macros à partir d'un fichier.\n\
+  macroname           Définit le nom d'une macro à créer.\n\
+  text                Définit le texte de remplacement pour la macro.\n"
+
+IDS_INVALID_MACRO_DEF, "Définition de macro invalide: %s\n"
+
+END

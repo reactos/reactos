@@ -94,7 +94,7 @@ RtlDebugCreateHeap(ULONG Flags,
 BOOLEAN NTAPI
 RtlDebugDestroyHeap(HANDLE HeapPtr)
 {
-    SIZE_T Size;
+    SIZE_T Size = 0;
     PHEAP Heap = (PHEAP)HeapPtr;
 
     if (Heap == RtlGetCurrentPeb()->ProcessHeap)
@@ -163,7 +163,7 @@ RtlDebugAllocateHeap(PVOID HeapPtr,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -230,7 +230,7 @@ RtlDebugReAllocateHeap(HANDLE HeapPtr,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -288,7 +288,7 @@ RtlDebugFreeHeap(HANDLE HeapPtr,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -345,7 +345,7 @@ RtlDebugGetUserInfoHeap(PVOID HeapHandle,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -397,7 +397,7 @@ RtlDebugSetUserValueHeap(PVOID HeapHandle,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -461,7 +461,7 @@ RtlDebugSetUserFlagsHeap(PVOID HeapHandle,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */
@@ -516,7 +516,7 @@ RtlDebugSizeHeap(HANDLE HeapPtr,
     /* Lock the heap ourselves */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock(Heap->LockVariable);
+        RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
 
         /* Add no serialize flag so that the main routine won't try to acquire the lock again */

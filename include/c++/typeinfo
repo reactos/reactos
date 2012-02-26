@@ -13,7 +13,7 @@ namespace std
     class type_info {
     public:
         virtual ~type_info();
-        bool before (const type_info& rhs) const;
+        bool before (const type_info& arg) const
             { return __name < __arg.__name; }
         bool operator==(const type_info& __arg) const
             { return __name == __arg.__name; }

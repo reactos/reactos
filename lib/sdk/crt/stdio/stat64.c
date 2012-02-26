@@ -2,7 +2,7 @@
 #include <tchar.h>
 #include <direct.h>
 
-HANDLE fdtoh(int fd); 
+HANDLE fdtoh(int fd);
 
 #define ALL_S_IREAD  (_S_IREAD  | (_S_IREAD  >> 3) | (_S_IREAD  >> 6))
 #define ALL_S_IWRITE (_S_IWRITE | (_S_IWRITE >> 3) | (_S_IWRITE >> 6))
@@ -27,7 +27,7 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
   DWORD dw;
   WIN32_FILE_ATTRIBUTE_DATA hfi;
   unsigned short mode = ALL_S_IREAD;
-  int plen;
+  size_t plen;
 
   TRACE(":file (%s) buf(%p)\n",path,buf);
 
@@ -136,7 +136,7 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
     buf->st_atime = dw;
     RtlTimeToSecondsSince1970((LARGE_INTEGER *)&hfi.ftLastWriteTime, &dw);
     buf->st_mtime = buf->st_ctime = dw;
-    buf->st_nlink = hfi.nNumberOfLinks;
+    buf->st_nlink = (short)hfi.nNumberOfLinks;
   }
   TRACE(":dwFileAttributes = 0x%x, mode set to 0x%x\n",hfi.dwFileAttributes,
    buf->st_mode);

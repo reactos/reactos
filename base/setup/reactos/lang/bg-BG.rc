@@ -1,119 +1,117 @@
-/* $Id: en-US.rc 36344 2008-09-20 09:38:20Z cwittich $ */
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Съветникът за настройка на РеактОС ви приветства!", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Все още не можете да сложите РеактОС направо от този КД! Презапуснете компютъра с този КД, за да сложите РеактОС.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Натиснете „Приключване“ за изход от настройването.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "РЎСЉРІРµС‚РЅРёРєСЉС‚ Р·Р° РЅР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ РІРё РїСЂРёРІРµС‚СЃС‚РІР°!", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Р’СЃРµ РѕС‰Рµ РЅРµ РјРѕР¶РµС‚Рµ РґР° СЃР»РѕР¶РёС‚Рµ Р РµР°РєС‚РћРЎ РЅР°РїСЂР°РІРѕ РѕС‚ С‚РѕР·Рё РљР”! РџСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР° СЃ С‚РѕР·Рё РљР”, Р·Р° РґР° СЃР»РѕР¶РёС‚Рµ Р РµР°РєС‚РћРЎ.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РІР°РЅРµвЂњ Р·Р° РёР·С…РѕРґ РѕС‚ РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL "Език за настройването:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 8, 109, 135, 11
+    CONTROL "Р•Р·РёРє Р·Р° РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 8, 109, 135, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 145, 107, 163, 142
-    CONTROL "Клавиатура или начин на въвеждане:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 8, 142, 135, 11
+    CONTROL "РљР»Р°РІРёР°С‚СѓСЂР° РёР»Рё РЅР°С‡РёРЅ РЅР° РІСЉРІРµР¶РґР°РЅРµ:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 8, 142, 135, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 145, 141, 163, 81
-    LTEXT "Натиснете „Напред“ за избор на вида настройване.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° РёР·Р±РѕСЂ РЅР° РІРёРґР° РЅР°СЃС‚СЂРѕР№РІР°РЅРµ.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Вид настройване", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    CONTROL "Слагане на РеактОС", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL "Поправка или осъвременяване на сложен РеактОС", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Натиснете „Напред“ за настройка на устройствата.", IDC_STATIC, 10, 180 ,297, 10
+    CONTROL "Р’РёРґ РЅР°СЃС‚СЂРѕР№РІР°РЅРµ", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "РЎР»Р°РіР°РЅРµ РЅР° Р РµР°РєС‚РћРЎ", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
+    CONTROL "РџРѕРїСЂР°РІРєР° РёР»Рё РѕСЃСЉРІСЂРµРјРµРЅСЏРІР°РЅРµ РЅР° СЃР»РѕР¶РµРЅ Р РµР°РєС‚РћРЎ", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° РЅР°СЃС‚СЂРѕР№РєР° РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Настройки на устройствата", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Компютър:", IDC_STATIC, 20,15, 80, 10
+    CONTROL "РќР°СЃС‚СЂРѕР№РєРё РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "РљРѕРјРїСЋС‚СЉСЂ:", IDC_STATIC, 20,15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
-    LTEXT "  Екран:", IDC_STATIC, 20,35, 80, 10
+    LTEXT "  Р•РєСЂР°РЅ:", IDC_STATIC, 20,35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
-    LTEXT "Клавиатура", IDC_STATIC, 20,55, 80, 10
+    LTEXT "РљР»Р°РІРёР°С‚СѓСЂР°", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
-    LTEXT "Натиснете „Напред“ за избор на устройство за слагане.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° РёР·Р±РѕСЂ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІРѕ Р·Р° СЃР»Р°РіР°РЅРµ.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Дял за слагане на РеактОС", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
+    CONTROL "Р”СЏР» Р·Р° СЃР»Р°РіР°РЅРµ РЅР° Р РµР°РєС‚РћРЎ", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Създаване", IDC_PARTCREATE, 20,155,50,15
-    PUSHBUTTON "Из&триване", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "Драйвер", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON "Раз&ширани възможности...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Натиснете „Напред“, за да започне слагането.", IDC_STATIC, 10, 180 ,277, 20
+    PUSHBUTTON "&РЎСЉР·РґР°РІР°РЅРµ", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "РР·&С‚СЂРёРІР°РЅРµ", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "Р”СЂР°Р№РІРµСЂ", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "Р Р°Р·&С€РёСЂР°РЅРё РІСЉР·РјРѕР¶РЅРѕСЃС‚Рё...", IDC_PARTMOREOPTS, 218,155,80,15
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ, Р·Р° РґР° Р·Р°РїРѕС‡РЅРµ СЃР»Р°РіР°РЅРµС‚Рѕ.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Създаване на дял"
+CAPTION "РЎСЉР·РґР°РІР°РЅРµ РЅР° РґСЏР»"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL "Създаване и форматиране на дял",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT "Размер:",IDC_STATIC, 13,24,27,9
+    CONTROL "РЎСЉР·РґР°РІР°РЅРµ Рё С„РѕСЂРјР°С‚РёСЂР°РЅРµ РЅР° РґСЏР»",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Р Р°Р·РјРµСЂ:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-    LTEXT "ГБ",IDC_UNIT, 117,24,14,9
-    LTEXT "Файлова уредба:",IDC_STATIC,13,46,35,9
+    LTEXT "Р“Р‘",IDC_UNIT, 117,24,14,9
+    LTEXT "Р¤Р°Р№Р»РѕРІР° СѓСЂРµРґР±Р°:",IDC_STATIC,13,46,35,9
     CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
-    PUSHBUTTON "&Добре",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-    PUSHBUTTON "&Отказ",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Р”РѕР±СЂРµ",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&РћС‚РєР°Р·",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 116
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Разширени дялови настройски"
+CAPTION "Р Р°Р·С€РёСЂРµРЅРё РґСЏР»РѕРІРё РЅР°СЃС‚СЂРѕР№СЃРєРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Папка за слагане", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    CONTROL "РџР°РїРєР° Р·Р° СЃР»Р°РіР°РЅРµ", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
     EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
 
-    CONTROL "Слагане на зареждач", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
+    CONTROL "РЎР»Р°РіР°РЅРµ РЅР° Р·Р°СЂРµР¶РґР°С‡", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
-    CONTROL "Слагане на начален зареждач (MBR и VBR) на твърдия диск", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Слагане на начален зареждач (само VBR) на твърдия диск", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
-    CONTROL "Без слагане на начален зареждач", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
-    PUSHBUTTON "&Добре", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Отказ", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
+    CONTROL "РЎР»Р°РіР°РЅРµ РЅР° РЅР°С‡Р°Р»РµРЅ Р·Р°СЂРµР¶РґР°С‡ (MBR Рё VBR) РЅР° С‚РІСЉСЂРґРёСЏ РґРёСЃРє", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "РЎР»Р°РіР°РЅРµ РЅР° РЅР°С‡Р°Р»РµРЅ Р·Р°СЂРµР¶РґР°С‡ (СЃР°РјРѕ VBR) РЅР° С‚РІСЉСЂРґРёСЏ РґРёСЃРє", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Р‘РµР· СЃР»Р°РіР°РЅРµ РЅР° РЅР°С‡Р°Р»РµРЅ Р·Р°СЂРµР¶РґР°С‡", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
+    PUSHBUTTON "&Р”РѕР±СЂРµ", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&РћС‚РєР°Р·", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Слагане на РеактОС"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Обобщение за слагането", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Натиснете „Напред“ за за начало на слагането.", IDC_STATIC, 10, 180 ,277, 20
+    CONTROL "РћР±РѕР±С‰РµРЅРёРµ Р·Р° СЃР»Р°РіР°РЅРµС‚Рѕ", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° Р·Р° РЅР°С‡Р°Р»Рѕ РЅР° СЃР»Р°РіР°РЅРµС‚Рѕ.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Действие", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Слагане на файлове...", IDC_ACTIVITY, 20, 50, 277, 10
+    CONTROL "Р”РµР№СЃС‚РІРёРµ", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "РЎР»Р°РіР°РЅРµ РЅР° С„Р°Р№Р»РѕРІРµ...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -121,34 +119,34 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завършване настройката на РеактОС"
+CAPTION "Р—Р°РІСЉСЂС€РІР°РЅРµ РЅР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Довършване на първата степен на настройването на РеактОС.", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Първата степен от настройването на РеактОС приключи успешно.", IDC_STATIC, 20, 50, 277, 10
+    CONTROL "Р”РѕРІСЉСЂС€РІР°РЅРµ РЅР° РїСЉСЂРІР°С‚Р° СЃС‚РµРїРµРЅ РЅР° РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ РЅР° Р РµР°РєС‚РћРЎ.", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "РџСЉСЂРІР°С‚Р° СЃС‚РµРїРµРЅ РѕС‚ РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ РЅР° Р РµР°РєС‚РћРЎ РїСЂРёРєР»СЋС‡Рё СѓСЃРїРµС€РЅРѕ.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "Когато натиснете „Край”, компютърът ви ще се презапусне.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "РљРѕРіР°С‚Рѕ РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРљСЂР°Р№вЂќ, РєРѕРјРїСЋС‚СЉСЂСЉС‚ РІРё С‰Рµ СЃРµ РїСЂРµР·Р°РїСѓСЃРЅРµ.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Ако в устройството има КД, го извадете. След това натиснете „Приключване“, за да презапуснете компютъра.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "РђРєРѕ РІ СѓСЃС‚СЂРѕР№СЃС‚РІРѕС‚Рѕ РёРјР° РљР”, РіРѕ РёР·РІР°РґРµС‚Рµ. РЎР»РµРґ С‚РѕРІР° РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РІР°РЅРµвЂњ, Р·Р° РґР° РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР°.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "Избор на език"
-    IDS_LANGSUBTITLE    "Изберете език за настройването и за крайната уредба."
-    IDS_TYPETITLE       "РеактОС ви приветства!"
-    IDS_TYPESUBTITLE    "Изберете вид на настройването."
-    IDS_DEVICETITLE     "Настройване на основните устройства"
-    IDS_DEVICESUBTITLE  "Настройка на екрана и клавиатурата."
-    IDS_DRIVETITLE      "Приготвяне на дял за слагане и системна папка"
-    IDS_DRIVESUBTITLE   "Приготвяне на дял за слагане, системна папка и зареждач."
-    IDS_PROCESSTITLE    "Подготвяне на дял, презапис на файлове и настройване на уредбата"
-    IDS_PROCESSSUBTITLE "Създаване и оразмеряване на дял, презапис на файлове, слагане и настройка на зареждач"
-    IDS_RESTARTTITLE    "Първата степен на настройването приключи"
-    IDS_RESTARTSUBTITLE "Първата степен приключи, презапуснете, за да продължите към втора степен"
-    IDS_SUMMARYTITLE    "Обобщение на слагането"
-    IDS_SUMMARYSUBTITLE "Списък на възможностите за слагане за проверка преди прилагане върху устройството за слагане"
-    IDS_ABORTSETUP      "РеактОС не е напълно сложен на компютъра ви. Ако излезете от настройването сега, ще трябва да пуснете настройването отново, за да сложите Реактос. Наистина ли излизате?"
-    IDS_ABORTSETUP2     "Прекъсване на слагането?"
+    IDS_LANGTITLE       "РР·Р±РѕСЂ РЅР° РµР·РёРє"
+    IDS_LANGSUBTITLE    "РР·Р±РµСЂРµС‚Рµ РµР·РёРє Р·Р° РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ Рё Р·Р° РєСЂР°Р№РЅР°С‚Р° СѓСЂРµРґР±Р°."
+    IDS_TYPETITLE       "Р РµР°РєС‚РћРЎ РІРё РїСЂРёРІРµС‚СЃС‚РІР°!"
+    IDS_TYPESUBTITLE    "РР·Р±РµСЂРµС‚Рµ РІРёРґ РЅР° РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ."
+    IDS_DEVICETITLE     "РќР°СЃС‚СЂРѕР№РІР°РЅРµ РЅР° РѕСЃРЅРѕРІРЅРёС‚Рµ СѓСЃС‚СЂРѕР№СЃС‚РІР°"
+    IDS_DEVICESUBTITLE  "РќР°СЃС‚СЂРѕР№РєР° РЅР° РµРєСЂР°РЅР° Рё РєР»Р°РІРёР°С‚СѓСЂР°С‚Р°."
+    IDS_DRIVETITLE      "РџСЂРёРіРѕС‚РІСЏРЅРµ РЅР° РґСЏР» Р·Р° СЃР»Р°РіР°РЅРµ Рё СЃРёСЃС‚РµРјРЅР° РїР°РїРєР°"
+    IDS_DRIVESUBTITLE   "РџСЂРёРіРѕС‚РІСЏРЅРµ РЅР° РґСЏР» Р·Р° СЃР»Р°РіР°РЅРµ, СЃРёСЃС‚РµРјРЅР° РїР°РїРєР° Рё Р·Р°СЂРµР¶РґР°С‡."
+    IDS_PROCESSTITLE    "РџРѕРґРіРѕС‚РІСЏРЅРµ РЅР° РґСЏР», РїСЂРµР·Р°РїРёСЃ РЅР° С„Р°Р№Р»РѕРІРµ Рё РЅР°СЃС‚СЂРѕР№РІР°РЅРµ РЅР° СѓСЂРµРґР±Р°С‚Р°"
+    IDS_PROCESSSUBTITLE "РЎСЉР·РґР°РІР°РЅРµ Рё РѕСЂР°Р·РјРµСЂСЏРІР°РЅРµ РЅР° РґСЏР», РїСЂРµР·Р°РїРёСЃ РЅР° С„Р°Р№Р»РѕРІРµ, СЃР»Р°РіР°РЅРµ Рё РЅР°СЃС‚СЂРѕР№РєР° РЅР° Р·Р°СЂРµР¶РґР°С‡"
+    IDS_RESTARTTITLE    "РџСЉСЂРІР°С‚Р° СЃС‚РµРїРµРЅ РЅР° РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ РїСЂРёРєР»СЋС‡Рё"
+    IDS_RESTARTSUBTITLE "РџСЉСЂРІР°С‚Р° СЃС‚РµРїРµРЅ РїСЂРёРєР»СЋС‡Рё, РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ, Р·Р° РґР° РїСЂРѕРґСЉР»Р¶РёС‚Рµ РєСЉРј РІС‚РѕСЂР° СЃС‚РµРїРµРЅ"
+    IDS_SUMMARYTITLE    "РћР±РѕР±С‰РµРЅРёРµ РЅР° СЃР»Р°РіР°РЅРµС‚Рѕ"
+    IDS_SUMMARYSUBTITLE "РЎРїРёСЃСЉРє РЅР° РІСЉР·РјРѕР¶РЅРѕСЃС‚РёС‚Рµ Р·Р° СЃР»Р°РіР°РЅРµ Р·Р° РїСЂРѕРІРµСЂРєР° РїСЂРµРґРё РїСЂРёР»Р°РіР°РЅРµ РІСЉСЂС…Сѓ СѓСЃС‚СЂРѕР№СЃС‚РІРѕС‚Рѕ Р·Р° СЃР»Р°РіР°РЅРµ"
+    IDS_ABORTSETUP      "Р РµР°РєС‚РћРЎ РЅРµ Рµ РЅР°РїСЉР»РЅРѕ СЃР»РѕР¶РµРЅ РЅР° РєРѕРјРїСЋС‚СЉСЂР° РІРё. РђРєРѕ РёР·Р»РµР·РµС‚Рµ РѕС‚ РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ СЃРµРіР°, С‰Рµ С‚СЂСЏР±РІР° РґР° РїСѓСЃРЅРµС‚Рµ РЅР°СЃС‚СЂРѕР№РІР°РЅРµС‚Рѕ РѕС‚РЅРѕРІРѕ, Р·Р° РґР° СЃР»РѕР¶РёС‚Рµ Р РµР°РєС‚РѕСЃ. РќР°РёСЃС‚РёРЅР° Р»Рё РёР·Р»РёР·Р°С‚Рµ?"
+    IDS_ABORTSETUP2     "РџСЂРµРєСЉСЃРІР°РЅРµ РЅР° СЃР»Р°РіР°РЅРµС‚Рѕ?"
 END
 /* EOF */

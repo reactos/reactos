@@ -252,7 +252,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
-    UCHAR State, BestState = 0;
+    UCHAR State;
     UINT Length, BestLength = 0, MaskLength;
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
@@ -281,7 +281,6 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
-	    BestState  = State;
 	    TI_DbgPrint(DEBUG_ROUTER,("Route selected\n"));
 	}
 
@@ -328,7 +327,7 @@ PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
     Interface = FindOnLinkInterface(Destination);
     if (Interface) {
 	/* The destination address is on-link. Check our neighbor cache */
-	NCE = NBFindOrCreateNeighbor(Interface, Destination);
+	NCE = NBFindOrCreateNeighbor(Interface, Destination, FALSE);
     } else {
 	/* Destination is not on any subnets we're on. Find a router to use */
 	NCE = RouterGetRoute(Destination);
@@ -338,6 +337,29 @@ PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
 	TI_DbgPrint(DEBUG_ROUTER,("Interface->MTU: %d\n", NCE->Interface->MTU));
 
     return NCE;
+}
+
+VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+    
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
+    
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+        Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+
+        if (Interface == Current->Router->Interface)
+            DestroyFIBE(Current);
+
+        CurrentEntry = NextEntry;
+    }
+    
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
 }
 
 NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
@@ -383,8 +405,8 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
     }
 
     if( Found ) {
-	TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
-	DestroyFIBE( Current );
+        TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
+        DestroyFIBE( Current );
     }
 
     RouterDumpRoutes();
@@ -428,24 +450,26 @@ PFIB_ENTRY RouterCreateRoute(
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
-	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+        Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
 
         NCE   = Current->Router;
 
-	if( AddrIsEqual(NetworkAddress, &Current->NetworkAddress) &&
-	    AddrIsEqual(Netmask, &Current->Netmask) ) {
-	    TI_DbgPrint(DEBUG_ROUTER,("Attempting to add duplicate route to %s\n", A2S(NetworkAddress)));
-	    TcpipReleaseSpinLock(&FIBLock, OldIrql);
-	    return NULL;
-	}
+        if(AddrIsEqual(NetworkAddress, &Current->NetworkAddress) &&
+           AddrIsEqual(Netmask, &Current->Netmask) &&
+           NCE->Interface == Interface)
+        {
+            TI_DbgPrint(DEBUG_ROUTER,("Attempting to add duplicate route to %s\n", A2S(NetworkAddress)));
+            TcpipReleaseSpinLock(&FIBLock, OldIrql);
+            return NULL;
+        }
 
-	CurrentEntry = NextEntry;
+        CurrentEntry = NextEntry;
     }
 
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
 
     /* The NCE references RouterAddress. The NCE is referenced for us */
-    NCE = NBFindOrCreateNeighbor(Interface, RouterAddress);
+    NCE = NBFindOrCreateNeighbor(Interface, RouterAddress, TRUE);
 
     if (!NCE) {
         /* Not enough free resources */

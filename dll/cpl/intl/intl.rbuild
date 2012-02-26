@@ -21,4 +21,5 @@
 	<file>advanced.c</file>
 	<file>sort.c</file>
 	<file>intl.rc</file>
+	<pch>intl.h</pch>
 </module>

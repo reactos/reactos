@@ -4,7 +4,7 @@ IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Utilidad de configuraciÛn del sistema"
+CAPTION "Utilidad de configuraci√≥n del sistema"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,2,2,374,195
@@ -27,7 +27,7 @@ IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON      "Mover &Arriba", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON      "Mover A&bajo", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
@@ -36,7 +36,7 @@ BEGIN
 
     PUSHBUTTON      "&Buscar", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON      "&Nuevo", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
-    PUSHBUTTON      "Edi&ciÛn", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
+    PUSHBUTTON      "Edi&ci√≥n", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
 
     PUSHBUTTON      "Permi&tir Todo", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
     PUSHBUTTON      "Blo&quear Todo",IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
@@ -64,9 +64,9 @@ IDD_GENERAL_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "SelecciÛn de Inicio ", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
+ GROUPBOX "Selecci√≥n de Inicio ", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
  CONTROL "Inicio &Normal - cargar todos los controladores de unidades y servicios", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 240, 10
- CONTROL "Inicio de &Diagnostico - cargar sÛlo los controladores y servicios b·sicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 240, 10
+ CONTROL "Inicio de &Diagnostico - cargar s√≥lo los controladores y servicios b√°sicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 240, 10
  CONTROL "Inicio S&electivo", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
  AUTOCHECKBOX "P&rocesar archivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 110, 10
  AUTOCHECKBOX "&Cargar Servicios del Sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 110, 10
@@ -89,7 +89,7 @@ BEGIN
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
    PUSHBUTTON "Opciones A&vazadas...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 80, 12
-   LTEXT "&Tiempo M·x:", -1, 280, 86, 30, 16
+   LTEXT "&Tiempo M√°x:", -1, 280, 86, 30, 16
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "seg.", -1, 340, 91, 15, 10
 END
@@ -121,7 +121,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_MSCONFIG             "Programa de configuraciÛn del Sistema"
+    IDS_MSCONFIG             "Programa de configuraci√≥n del Sistema"
     IDS_TAB_GENERAL          "General"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
     IDS_TAB_FREELDR          "FREELDR.INI"
@@ -141,14 +141,14 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TOOLS_COLUMN_NAME    "Nombre"
-    IDS_TOOLS_COLUMN_DESCR   "DescripciÛn"
+    IDS_TOOLS_COLUMN_DESCR   "Descripci√≥n"
 
     IDS_TOOLS_CMD_NAME       "Consola"
     IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
-    IDS_TOOLS_INFO_NAME      "VersiÛn"
-    IDS_TOOLS_INFO_DESCR     "Muestra informaciÛn de la versiÛn."
+    IDS_TOOLS_INFO_NAME      "Versi√≥n"
+    IDS_TOOLS_INFO_DESCR     "Muestra informaci√≥n de la versi√≥n."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Editor del Registro"
@@ -156,7 +156,7 @@ BEGIN
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Propiedades del sistema"
-    IDS_TOOLS_SYSDM_DESCR    "Muestra informaciÛn acerca de este equipo."
+    IDS_TOOLS_SYSDM_DESCR    "Muestra informaci√≥n acerca de este equipo."
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
@@ -167,8 +167,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "En ejecuciÛn"
+    IDS_SERVICES_STATUS_RUNNING "En ejecuci√≥n"
     IDS_SERVICES_STATUS_STOPPED "Detenido"
-    IDS_SERVICES_YES "SÌ"
+    IDS_SERVICES_YES "S√≠"
     IDS_SERVICES_UNKNOWN "Desconocido"
 END

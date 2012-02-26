@@ -35,7 +35,7 @@ target_link_libraries(win32csr
 
 set_module_type(win32csr win32dll)
 
-add_importlibs(win32csr user32 gdi32 advapi32 psapi kernel32 ntdll msvcrt)
+add_importlibs(win32csr user32 gdi32 advapi32 psapi msvcrt kernel32 ntdll csrsrv)
 
 add_pch(win32csr w32csr.h)
 

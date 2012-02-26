@@ -1650,7 +1650,8 @@ IoGetRequestorSessionId(IN PIRP Irp,
     /* Return the session */
     if ((Process = IoGetRequestorProcess(Irp)))
     {
-        *pSessionId = Process->Session;
+        // FIXME: broken
+        *pSessionId = PtrToUlong(Process->Session);
         return STATUS_SUCCESS;
     }
 
@@ -1832,7 +1833,7 @@ NTAPI
 IoIs32bitProcess(
     IN PIRP Irp OPTIONAL)
 {
-#pragma message "IoIs32bitProcess is hardcoded to FALSE"
+    UNIMPLEMENTED;
     return FALSE;
 }
 #endif

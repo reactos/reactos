@@ -13,10 +13,12 @@
 
 typedef struct _SCM_CONTROL_PACKET
 {
+    DWORD dwSize;
     DWORD dwControl;
     SERVICE_STATUS_HANDLE hServiceStatus;
-    DWORD dwSize;
-    WCHAR szArguments[1];
+    DWORD dwServiceNameOffset;
+    DWORD dwArgumentsCount;
+    DWORD dwArgumentsOffset;
 } SCM_CONTROL_PACKET, *PSCM_CONTROL_PACKET;
 
 typedef struct _SCM_REPLY_PACKET

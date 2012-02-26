@@ -40,53 +40,53 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "·øÈ¡"
+    POPUP "‡πÅ‡∏ü‡πâ‡∏°"
     BEGIN
-        MENUITEM " √È“ß„À¡Ë\tCtrl+N",       CMD_NEW
-        MENUITEM "‡ª‘¥...\tCtrl+O",         CMD_OPEN
-        MENUITEM "∫—π∑◊°\tCtrl+S",          CMD_SAVE
-        MENUITEM "∫—π∑◊°‡ªÁπ...",           CMD_SAVE_AS
+        MENUITEM "‡∏™‡∏£‡πâ‡∏≤‡∏á‡πÉ‡∏´‡∏°‡πà\tCtrl+N",       CMD_NEW
+        MENUITEM "‡πÄ‡∏õ‡∏¥‡∏î...\tCtrl+O",         CMD_OPEN
+        MENUITEM "‡∏ö‡∏±‡∏ô‡∏ó‡∏∑‡∏Å\tCtrl+S",          CMD_SAVE
+        MENUITEM "‡∏ö‡∏±‡∏ô‡∏ó‡∏∑‡∏Å‡πÄ‡∏õ‡πá‡∏ô...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "æ‘¡æÏ\tCtrl+P",           CMD_PRINT
-        MENUITEM "ª√—∫·µËßÀπÈ“...",         CMD_PAGE_SETUP
-        MENUITEM "ª√—∫·µËß‡§√◊ËÕßæ‘¡æÏ...", CMD_PRINTER_SETUP
+        MENUITEM "‡∏õ‡∏£‡∏±‡∏ö‡πÅ‡∏ï‡πà‡∏á‡∏´‡∏ô‡πâ‡∏≤...",         CMD_PAGE_SETUP
+        MENUITEM "‡∏û‡∏¥‡∏°‡∏û‡πå\tCtrl+P",           CMD_PRINT
+        MENUITEM "‡∏õ‡∏£‡∏±‡∏ö‡πÅ‡∏ï‡πà‡∏á‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡∏û‡∏¥‡∏°‡∏û‡πå...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "ÕÕ°",                     CMD_EXIT
+        MENUITEM "‡∏≠‡∏≠‡∏Å",                     CMD_EXIT
     END
-    POPUP "·°È‰¢"
+    POPUP "‡πÅ‡∏Å‡πâ‡πÑ‡∏Ç"
     BEGIN
-        MENUITEM "‡√’¬°§◊π\tCtrl+Z",     CMD_UNDO
+        MENUITEM "‡πÄ‡∏£‡∏µ‡∏¢‡∏Å‡∏Ñ‡∏∑‡∏ô\tCtrl+Z",     CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "µ—¥\tCtrl+X",          CMD_CUT
-        MENUITEM "µ—¥≈Õ°\tCtrl+C",       CMD_COPY
-        MENUITEM "«“ß\tCtrl+V",          CMD_PASTE
-        MENUITEM "≈∫\tDel",              CMD_DELETE
+        MENUITEM "‡∏ï‡∏±‡∏î\tCtrl+X",          CMD_CUT
+        MENUITEM "‡∏ï‡∏±‡∏î‡∏•‡∏≠‡∏Å\tCtrl+C",       CMD_COPY
+        MENUITEM "‡∏ß‡∏≤‡∏á\tCtrl+V",          CMD_PASTE
+        MENUITEM "‡∏•‡∏ö\tDel",              CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "§ÈπÀ“\tCtrl+F",        CMD_SEARCH
-        MENUITEM "§ÈπÀ“µËÕ‰ª\tF3",       CMD_SEARCH_NEXT
+        MENUITEM "‡∏Ñ‡πâ‡∏ô‡∏´‡∏≤\tCtrl+F",        CMD_SEARCH
+        MENUITEM "‡∏Ñ‡πâ‡∏ô‡∏´‡∏≤‡∏ï‡πà‡∏≠‡πÑ‡∏õ\tF3",       CMD_SEARCH_NEXT
         MENUITEM "Replace\tCtrl+H",      CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G",     CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "‡≈◊Õ°∑—ÈßÀ¡¥\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "«—π∑’Ë/\tF5",          CMD_TIME_DATE
+        MENUITEM "‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡∏ó‡∏±‡πâ‡∏á‡∏´‡∏°‡∏î\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "‡∏ß‡∏±‡∏ô‡∏ó‡∏µ‡πà/\tF5",          CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "ÀËÕ∫√√∑—¥¬“«",      CMD_WRAP
-        MENUITEM "√Ÿª·∫∫¥—«Õ—°…√...", CMD_FONT
+        MENUITEM "‡∏´‡πà‡∏≠‡∏ö‡∏£‡∏£‡∏ó‡∏±‡∏î‡∏¢‡∏≤‡∏ß",      CMD_WRAP
+        MENUITEM "‡∏£‡∏π‡∏õ‡πÅ‡∏ö‡∏ö‡∏î‡∏±‡∏ß‡∏≠‡∏±‡∏Å‡∏©‡∏£...", CMD_FONT
     END
     POPUP "&View"
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "™Ë«¬‡À≈’Õ"
+    POPUP "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏µ‡∏≠"
     BEGIN
-        MENUITEM "‡π◊ÈÕÀ“",            CMD_HELP_CONTENTS
-        MENUITEM "§ÈπÀ“...",           CMD_HELP_SEARCH
-        MENUITEM "‡°’Ë¬«°—∫™Ë«¬‡À≈’Õ", CMD_HELP_ON_HELP
+        MENUITEM "‡πÄ‡∏ô‡∏∑‡πâ‡∏≠‡∏´‡∏≤",            CMD_HELP_CONTENTS
+        MENUITEM "‡∏Ñ‡πâ‡∏ô‡∏´‡∏≤...",           CMD_HELP_SEARCH
+        MENUITEM "‡πÄ‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏µ‡∏≠", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About",             CMD_ABOUT
-        MENUITEM "√“¬≈–‡Õ’¬¥...",      CMD_ABOUT_WINE
+        MENUITEM "‡∏£‡∏≤‡∏¢‡∏•‡∏∞‡πÄ‡∏≠‡∏µ‡∏¢‡∏î...",      CMD_ABOUT_WINE
     END
 END
 
@@ -95,32 +95,31 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "ª√—∫·µËßÀπÈ“"
+CAPTION "‡∏õ‡∏£‡∏±‡∏ö‡πÅ‡∏ï‡πà‡∏á‡∏´‡∏ô‡πâ‡∏≤"
 BEGIN
-LTEXT    "À—«:",  0x140,   10, 07, 40, 15
+LTEXT    "‡∏´‡∏±‡∏ß:",  0x140,   10, 07, 40, 15
 EDITTEXT 0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "&Footer:",  0x142,   10, 24, 40, 15
 EDITTEXT 0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "¢Õ∫°√–¥“…:",      0x144,     10, 43,160, 45
-LTEXT    "£È“¬:",        0x145,   20, 55, 30, 10, WS_CHILD
+GROUPBOX "‡∏Ç‡∏≠‡∏ö‡∏Å‡∏£‡∏∞‡∏î‡∏≤‡∏©:",      0x144,     10, 43,160, 45
+LTEXT    "‡∏É‡πâ‡∏≤‡∏¢:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "∫π:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "‡∏ö‡∏ô:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "¢«“:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "‡∏Ç‡∏ß‡∏≤:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "≈Ë“ß:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "‡∏•‡πà‡∏≤‡∏á:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "µ°≈ß",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "¬°‡≈‘°",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "™Ë«¬‡À≈’Õ",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "‡∏ï‡∏Å‡∏•‡∏á",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏µ‡∏≠",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN
@@ -165,28 +164,28 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE, "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE, "ÀπÈ“ &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,   "20 ¡¡."     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,  "20 ¡¡."     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,    "25 ¡¡."     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE, "25 ¡¡."     /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE, "‡∏´‡∏ô‡πâ‡∏≤ &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,   "20 ‡∏°‡∏°."     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,  "20 ‡∏°‡∏°."     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,    "25 ‡∏°‡∏°."     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE, "25 ‡∏°‡∏°."     /* FIXME */
 
 STRING_NOTEPAD,       "Notepad"
-STRING_ERROR,         "§«“¡ª‘¥"
-STRING_WARNING,       "§Ì“µ◊Õπ"
-STRING_INFO,          "√“¬≈–‡Õ’¬¥"
+STRING_ERROR,         "‡∏Ñ‡∏ß‡∏≤‡∏°‡∏õ‡∏¥‡∏î"
+STRING_WARNING,       "‡∏Ñ‡πç‡∏≤‡∏ï‡∏∑‡∏≠‡∏ô"
+STRING_INFO,          "‡∏£‡∏≤‡∏¢‡∏•‡∏∞‡πÄ‡∏≠‡∏µ‡∏¢‡∏î"
 
-STRING_UNTITLED,      "‰¡Ë°Ì“Àπ¥™÷ËÕ"
+STRING_UNTITLED,      "‡πÑ‡∏°‡πà‡∏Å‡πç‡∏≤‡∏´‡∏ô‡∏î‡∏ä‡∏∂‡πà‡∏≠"
 
-STRING_ALL_FILES,       "∑ÿ°·øÈ¡ (*.*)"
-STRING_TEXT_FILES_TXT,  "·øÈ¡µÌ“√“ (*.txt)"
+STRING_ALL_FILES,       "‡∏ó‡∏∏‡∏Å‡πÅ‡∏ü‡πâ‡∏° (*.*)"
+STRING_TEXT_FILES_TXT,  "‡πÅ‡∏ü‡πâ‡∏°‡∏ï‡πç‡∏≤‡∏£‡∏≤ (*.txt)"
 
-STRING_TOOLARGE,  "·øÈ¡ '%s' „À≠Ë‡°‘π‰ª"
-STRING_NOTEXT,    "§ÿ≥‰¡Ë„¥‡¢’¬πÕ–‰√\n°√ÿ≥“≈Õß„À¡Ë"
-STRING_DOESNOTEXIST, "‰¡Ëæ∫·øÈ¡ '%s' ∑’ËµÈÕß°“√‡ª‘¥\n§ÿ≥µÈÕß°“√ √È“ß„À¡Ë‰¡Ë ?"
-STRING_NOTSAVED,  "¡’°“√‡ª≈’Ë¬π·ª≈ß°—∫‡Õ° “√\n\n'%s'\n\n§ÿ≥µÈÕß°“√∫—π∑÷°¡—πÀ√◊Õ‰¡Ë ?"
-STRING_NOTFOUND,  "‰¡Ëæ∫¢ÈÕ§«“¡ '%s' ∑’ËµÈÕß°“√§ÈπÀ“"
-STRING_OUT_OF_MEMORY, "§«“¡®Ì“À¡¥\n°√ÿ≥“≈Õß„À¡Ë"
+STRING_TOOLARGE,  "‡πÅ‡∏ü‡πâ‡∏° '%s' ‡πÉ‡∏´‡∏ç‡πà‡πÄ‡∏Å‡∏¥‡∏ô‡πÑ‡∏õ"
+STRING_NOTEXT,    "‡∏Ñ‡∏∏‡∏ì‡πÑ‡∏°‡πà‡πÉ‡∏î‡πÄ‡∏Ç‡∏µ‡∏¢‡∏ô‡∏≠‡∏∞‡πÑ‡∏£\n‡∏Å‡∏£‡∏∏‡∏ì‡∏≤‡∏•‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà"
+STRING_DOESNOTEXIST, "‡πÑ‡∏°‡πà‡∏û‡∏ö‡πÅ‡∏ü‡πâ‡∏° '%s' ‡∏ó‡∏µ‡πà‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡πÄ‡∏õ‡∏¥‡∏î\n‡∏Ñ‡∏∏‡∏ì‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡∏™‡∏£‡πâ‡∏≤‡∏á‡πÉ‡∏´‡∏°‡πà‡πÑ‡∏°‡πà ?"
+STRING_NOTSAVED,  "‡∏°‡∏µ‡∏Å‡∏≤‡∏£‡πÄ‡∏õ‡∏•‡∏µ‡πà‡∏¢‡∏ô‡πÅ‡∏õ‡∏•‡∏á‡∏Å‡∏±‡∏ö‡πÄ‡∏≠‡∏Å‡∏™‡∏≤‡∏£\n\n'%s'\n\n‡∏Ñ‡∏∏‡∏ì‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡∏ö‡∏±‡∏ô‡∏ó‡∏∂‡∏Å‡∏°‡∏±‡∏ô‡∏´‡∏£‡∏∑‡∏≠‡πÑ‡∏°‡πà ?"
+STRING_NOTFOUND,  "‡πÑ‡∏°‡πà‡∏û‡∏ö‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏° '%s' ‡∏ó‡∏µ‡πà‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡∏Ñ‡πâ‡∏ô‡∏´‡∏≤"
+STRING_OUT_OF_MEMORY, "‡∏Ñ‡∏ß‡∏≤‡∏°‡∏à‡πç‡∏≤‡∏´‡∏°‡∏î\n‡∏Å‡∏£‡∏∏‡∏ì‡∏≤‡∏•‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà"
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"

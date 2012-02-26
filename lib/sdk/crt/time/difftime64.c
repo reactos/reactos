@@ -5,5 +5,5 @@
  * PURPOSE:     Implementation of _difftime64
  * PROGRAMERS:  Timo Kreuzer
  */
-#define _USE_EXPLITIT_64BIT_TIME
+#define _USE_EXPLICIT_64BIT_TIME
 #include "difftime.c"

@@ -292,8 +292,6 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	    if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
 		return FALSE;
 
-            URLCacheContainers_CreateDefaults();
-
             WININET_hModule = hinstDLL;
 
         case DLL_THREAD_ATTACH:

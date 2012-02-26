@@ -31,11 +31,16 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 typedef struct tagDisplayAttributeMgr {
-    const ITfDisplayAttributeMgrVtbl *DisplayAttributeMgrVtbl;
+    ITfDisplayAttributeMgr ITfDisplayAttributeMgr_iface;
 
     LONG refCount;
 
 } DisplayAttributeMgr;
+
+static inline DisplayAttributeMgr *impl_from_ITfDisplayAttributeMgr(ITfDisplayAttributeMgr *iface)
+{
+    return CONTAINING_RECORD(iface, DisplayAttributeMgr, ITfDisplayAttributeMgr_iface);
+}
 
 static void DisplayAttributeMgr_Destructor(DisplayAttributeMgr *This)
 {
@@ -46,7 +51,7 @@ static void DisplayAttributeMgr_Destructor(DisplayAttributeMgr *This)
 
 static HRESULT WINAPI DisplayAttributeMgr_QueryInterface(ITfDisplayAttributeMgr *iface, REFIID iid, LPVOID *ppvOut)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfDisplayAttributeMgr))
@@ -66,13 +71,13 @@ static HRESULT WINAPI DisplayAttributeMgr_QueryInterface(ITfDisplayAttributeMgr 
 
 static ULONG WINAPI DisplayAttributeMgr_AddRef(ITfDisplayAttributeMgr *iface)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI DisplayAttributeMgr_Release(ITfDisplayAttributeMgr *iface)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -87,7 +92,7 @@ static ULONG WINAPI DisplayAttributeMgr_Release(ITfDisplayAttributeMgr *iface)
 
 static HRESULT WINAPI DisplayAttributeMgr_OnUpdateInfo(ITfDisplayAttributeMgr *iface)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -95,7 +100,7 @@ static HRESULT WINAPI DisplayAttributeMgr_OnUpdateInfo(ITfDisplayAttributeMgr *i
 
 static HRESULT WINAPI DisplayAttributeMgr_EnumDisplayAttributeInfo(ITfDisplayAttributeMgr *iface, IEnumTfDisplayAttributeInfo **ppEnum)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -103,7 +108,7 @@ static HRESULT WINAPI DisplayAttributeMgr_EnumDisplayAttributeInfo(ITfDisplayAtt
 
 static HRESULT WINAPI DisplayAttributeMgr_GetDisplayAttributeInfo(ITfDisplayAttributeMgr *iface, REFGUID guid, ITfDisplayAttributeInfo **ppInfo, CLSID *pclsidOwner)
 {
-    DisplayAttributeMgr *This = (DisplayAttributeMgr *)iface;
+    DisplayAttributeMgr *This = impl_from_ITfDisplayAttributeMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -130,7 +135,7 @@ HRESULT DisplayAttributeMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->DisplayAttributeMgrVtbl= &DisplayAttributeMgr_DisplayAttributeMgrVtbl;
+    This->ITfDisplayAttributeMgr_iface.lpVtbl = &DisplayAttributeMgr_DisplayAttributeMgrVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n", This);

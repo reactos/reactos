@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/ntpclient.c
+ * FILE:        dll/cpl/timedate/ntpclient.c
  * PURPOSE:     Queries the NTP server
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -40,13 +40,13 @@ InitConnection(PINFO pInfo,
     if (pInfo->Sock == INVALID_SOCKET)
         return FALSE;
 
-    /* setup server info */
+    /* Setup server info */
     he = gethostbyname(lpAddress);
     if (he != NULL)
     {
-        /* setup server socket info */
+        /* Setup server socket info */
         ZeroMemory(&pInfo->ntpAddr, sizeof(SOCKADDR_IN));
-        pInfo->ntpAddr.sin_family = AF_INET; //he->h_addrtype;
+        pInfo->ntpAddr.sin_family = AF_INET; // he->h_addrtype;
         pInfo->ntpAddr.sin_port = htons(NTPPORT);
         pInfo->ntpAddr.sin_addr = *((struct in_addr *)he->h_addr);
     }
@@ -71,7 +71,7 @@ GetTransmitTime(PTIMEPACKET ptp)
 }
 
 
-/* send some data to wake the server up */
+/* Send some data to wake the server up */
 static BOOL
 SendData(PINFO pInfo)
 {
@@ -106,15 +106,15 @@ RecieveData(PINFO pInfo)
     INT Ret;
     ULONG ulTime = 0;
 
-    /* monitor socket for incomming connections */
+    /* Monitor socket for incomming connections */
     FD_ZERO(&readFDS);
     FD_SET(pInfo->Sock, &readFDS);
 
-    /* set timeout values */
+    /* Set timeout values */
     timeVal.tv_sec  = TIMEOUT / 1000;
     timeVal.tv_usec = TIMEOUT % 1000;
 
-    /* check for data on the socket for TIMEOUT millisecs*/
+    /* Check for data on the socket for TIMEOUT millisecs */
     Ret = select(0, &readFDS, NULL, NULL, &timeVal);
 
     if ((Ret != SOCKET_ERROR) && (Ret != 0))

@@ -48,6 +48,7 @@ typedef struct _PORT_DEVICE_EXTENSION
 	PORT_DEVICE_STATE PnpState;
 	PDEVICE_OBJECT LowerDevice;
 	PDEVICE_OBJECT ClassDO;
+	HANDLE FileHandle;
 	UNICODE_STRING InterfaceName;
 } PORT_DEVICE_EXTENSION, *PPORT_DEVICE_EXTENSION;
 
@@ -80,13 +81,3 @@ DuplicateUnicodeString(
 	IN ULONG Flags,
 	IN PCUNICODE_STRING SourceString,
 	OUT PUNICODE_STRING DestinationString);
-
-/* setup.c */
-BOOLEAN
-IsFirstStageSetup(
-	VOID);
-
-VOID NTAPI
-Send8042StartDevice(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo);

@@ -189,14 +189,14 @@ static LPWSTR deformat_component(FORMAT *format, FORMSTR *str)
     key = msi_alloc((str->len + 1) * sizeof(WCHAR));
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
 
-    comp = get_loaded_component(format->package, key);
+    comp = msi_get_loaded_component(format->package, key);
     if (!comp)
         goto done;
 
     if (comp->Action == INSTALLSTATE_SOURCE)
-        ret = resolve_source_folder( format->package, comp->Directory, NULL );
+        ret = msi_resolve_source_folder( format->package, comp->Directory, NULL );
     else
-        ret = resolve_target_folder( format->package, comp->Directory, FALSE, TRUE, NULL );
+        ret = strdupW( msi_get_target_folder( format->package, comp->Directory ) );
 
 done:
     msi_free(key);
@@ -212,7 +212,7 @@ static LPWSTR deformat_file(FORMAT *format, FORMSTR *str, BOOL shortname)
     key = msi_alloc((str->len + 1) * sizeof(WCHAR));
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
 
-    file = get_loaded_file(format->package, key);
+    file = msi_get_loaded_file(format->package, key);
     if (!file)
         goto done;
 
@@ -1019,4 +1019,27 @@ UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
 done:
     msi_free(value);
     return r;
+}
+
+/* wrapper to resist a need for a full rewrite right now */
+DWORD deformat_string( MSIPACKAGE *package, const WCHAR *ptr, WCHAR **data )
+{
+    if (ptr)
+    {
+        DWORD size = 0;
+        MSIRECORD *rec = MSI_CreateRecord( 1 );
+
+        MSI_RecordSetStringW( rec, 0, ptr );
+        MSI_FormatRecordW( package, rec, NULL, &size );
+
+        size++;
+        *data = msi_alloc( size * sizeof(WCHAR) );
+        if (size > 1) MSI_FormatRecordW( package, rec, *data, &size );
+        else *data[0] = 0;
+
+        msiobj_release( &rec->hdr );
+        return size * sizeof(WCHAR);
+    }
+    *data = NULL;
+    return 0;
 }

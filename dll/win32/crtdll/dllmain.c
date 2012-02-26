@@ -1,5 +1,4 @@
-/* $Id: dllmain.c 12852 2005-01-06 13:58:04Z mf $
- *
+/*
  * dllmain.c
  *
  * ReactOS CRTDLL.DLL Compatibility Library
@@ -17,14 +16,19 @@
  */
 
 #include <precomp.h>
-#include <internal/wine/msvcrt.h>
-#include <sys/stat.h>
 #include <locale.h>
 #include <mbctype.h>
+#include <sys/stat.h>
+#include <internal/wine/msvcrt.h>
+#include <internal/tls.h>
+
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
 
+/* from msvcrt */
+extern void __getmainargs( int *argc, char ***argv, char ***envp,
+                           int expand_wildcards, int *new_mode );
 
 /* EXTERNAL PROTOTYPES ********************************************************/
 
@@ -38,14 +42,14 @@ extern unsigned int _winminor;
 extern unsigned int _winmajor;
 extern unsigned int _winver;
 
-unsigned int CRTDLL__basemajor_dll;
-unsigned int CRTDLL__baseminor_dll;
-unsigned int CRTDLL__baseversion_dll;
-unsigned int CRTDLL__cpumode_dll;
-unsigned int CRTDLL__osmajor_dll;
-unsigned int CRTDLL__osminor_dll;
-unsigned int CRTDLL__osmode_dll;
-unsigned int CRTDLL__osversion_dll;
+unsigned int CRTDLL__basemajor_dll = 0;
+unsigned int CRTDLL__baseminor_dll = 0;
+unsigned int CRTDLL__baseversion_dll = 0;
+unsigned int CRTDLL__cpumode_dll = 0;
+unsigned int CRTDLL__osmajor_dll = 0;
+unsigned int CRTDLL__osminor_dll = 0;
+unsigned int CRTDLL__osmode_dll = 0;
+unsigned int CRTDLL__osversion_dll = 0;
 int _fileinfo_dll;
 
 extern char* _acmdln;        /* pointer to ascii command line */
@@ -55,8 +59,6 @@ extern char** _environ;      /* pointer to environment block */
 extern char** __initenv;     /* pointer to initial environment block */
 extern wchar_t** _wenviron;  /* pointer to environment block */
 extern wchar_t** __winitenv; /* pointer to initial environment block */
-
-
 
 /* dev_t is a short in crtdll but an unsigned int in msvcrt */
 typedef short crtdll_dev_t;
@@ -92,102 +94,93 @@ static void convert_struct_stat( struct crtdll_stat *dst, const struct _stat *sr
     dst->st_ctime = src->st_ctime;
 }
 
-/* from msvcrt */
-extern void __getmainargs( int *argc, char ***argv, char ***envp,
-                           int expand_wildcards, int *new_mode );
-
-/* LIBRARY GLOBAL VARIABLES ***************************************************/
-
-HANDLE hHeap = NULL;        /* handle for heap */
-
-
 /* LIBRARY ENTRY POINT ********************************************************/
 
 BOOL
 WINAPI
 DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 {
+    DWORD version;
     switch (dwReason)
     {
-    case DLL_PROCESS_ATTACH://1
+    case DLL_PROCESS_ATTACH:
+        version = GetVersion();
+
         /* initialize version info */
-        //TRACE("Attach %d\n", nAttachCount);
-
-        _osver = GetVersion();
-
-        CRTDLL__basemajor_dll   = (_osver >> 24) & 0xFF;
-        CRTDLL__baseminor_dll   = (_osver >> 16) & 0xFF;
-        CRTDLL__baseversion_dll = (_osver >> 16);
+        CRTDLL__basemajor_dll   = (version >> 24) & 0xFF;
+        CRTDLL__baseminor_dll   = (version >> 16) & 0xFF;
+        CRTDLL__baseversion_dll = (version >> 16);
         CRTDLL__cpumode_dll     = 1; /* FIXME */
-        CRTDLL__osmajor_dll     = (_osver >>8) & 0xFF;
-        CRTDLL__osminor_dll     = (_osver & 0xFF);
+        CRTDLL__osmajor_dll     = (version >>8) & 0xFF;
+        CRTDLL__osminor_dll     = (version & 0xFF);
         CRTDLL__osmode_dll      = 1; /* FIXME */
-        CRTDLL__osversion_dll   = (_osver & 0xFFFF);
+        CRTDLL__osversion_dll   = (version & 0xFFFF);
 
         _winmajor = (_osver >> 8) & 0xFF;
         _winminor = _osver & 0xFF;
         _winver = (_winmajor << 8) + _winminor;
         _osver = (_osver >> 16) & 0xFFFF;
-        hHeap = HeapCreate(0, 100000, 0);
-        if (hHeap == NULL)
-            return FALSE;
 
         /* create tls stuff */
-        if (!CreateThreadData())
-            return FALSE;
+        if (!msvcrt_init_tls())
+          return FALSE;
 
         if (BlockEnvToEnvironA() < 0)
             return FALSE;
 
         if (BlockEnvToEnvironW() < 0)
         {
-            FreeEnvironment((char**)_wenviron);
+            FreeEnvironment(_environ);
             return FALSE;
         }
 
         _acmdln = _strdup(GetCommandLineA());
         _wcmdln = _wcsdup(GetCommandLineW());
 
-        /* FIXME: more initializations... */
-
-        /* FIXME: Initialization of the WINE code */
+        /* Initialization of the WINE code */
         msvcrt_init_mt_locks();
+        //if(!msvcrt_init_locale()) {
+            //msvcrt_free_mt_locks();
+           // msvcrt_free_tls_mem();
+            //return FALSE;
+        //}
+        //msvcrt_init_math();
         msvcrt_init_io();
-        setlocale(0, "C");
-        //_setmbcp(_MB_CP_LOCALE);
-
+        //msvcrt_init_console();
+        //msvcrt_init_args();
+        //msvcrt_init_signals();
+        _setmbcp(_MB_CP_LOCALE);
         TRACE("Attach done\n");
         break;
-
-    case DLL_THREAD_ATTACH://2
+    case DLL_THREAD_ATTACH:
         break;
 
-    case DLL_THREAD_DETACH://4
-        FreeThreadData(NULL);
+    case DLL_THREAD_DETACH:
+        msvcrt_free_tls_mem();
         break;
 
-    case DLL_PROCESS_DETACH://0
-        //TRACE("Detach %d\n", nAttachCount);
+    case DLL_PROCESS_DETACH:
+        TRACE("Detach\n");
         /* Deinit of the WINE code */
         msvcrt_free_io();
         msvcrt_free_mt_locks();
-        _atexit_cleanup();
+        //msvcrt_free_console();
+        //msvcrt_free_args();
+        //msvcrt_free_signals();
+        msvcrt_free_tls_mem();
+        if (!msvcrt_free_tls())
+          return FALSE;
+        //MSVCRT__free_locale(MSVCRT_locale);
 
-        /* destroy tls stuff */
-        DestroyThreadData();
-
-	if (__winitenv && __winitenv != _wenviron)
+    if (__winitenv && __winitenv != _wenviron)
             FreeEnvironment((char**)__winitenv);
         if (_wenviron)
             FreeEnvironment((char**)_wenviron);
 
-	if (__initenv && __initenv != _environ)
+    if (__initenv && __initenv != _environ)
             FreeEnvironment(__initenv);
         if (_environ)
             FreeEnvironment(_environ);
-
-        /* destroy heap */
-        HeapDestroy(hHeap);
 
         TRACE("Detach done\n");
         break;
@@ -195,8 +188,6 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
     return TRUE;
 }
-
-
 
 
 /*********************************************************************

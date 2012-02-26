@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(
     BEFORE include
@@ -18,7 +17,7 @@ list(APPEND SOURCE
 
 add_library(msafd SHARED ${SOURCE})
 
-set_module_type(msafd win32dll)
+set_module_type(msafd win32dll UNICODE)
 
 add_importlibs(msafd advapi32 msvcrt kernel32 ntdll)
 add_pch(msafd msafd.h)

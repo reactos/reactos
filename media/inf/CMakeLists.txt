@@ -9,7 +9,9 @@ list(APPEND INF_FILES
     display.inf
     fdc.inf
     font.inf
+    hal.inf
     hdc.inf
+    input.inf
     intl.inf
     keyboard.inf
     ks.inf

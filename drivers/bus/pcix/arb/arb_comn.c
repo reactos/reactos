@@ -127,7 +127,7 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
                            IN PCM_RESOURCE_LIST Resources)
 {
     PPCI_PDO_EXTENSION PdoExtension;
-    CM_RESOURCE_TYPE DesiredType;
+    //CM_RESOURCE_TYPE DesiredType;
     PVOID Instance;
     PCI_SIGNATURE ArbiterType;
 
@@ -162,12 +162,12 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
         if (ArbiterType == PciArb_Io)
         {
             /* I/O Port */
-            DesiredType = CmResourceTypePort;
+            //DesiredType = CmResourceTypePort;
         }
         else if (ArbiterType == PciArb_Memory)
         {
             /* Device RAM */
-            DesiredType = CmResourceTypeMemory;
+            //DesiredType = CmResourceTypeMemory;
         }
         else
         {

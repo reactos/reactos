@@ -8,7 +8,7 @@ add_library(midimap SHARED
     midimap.rc
     ${CMAKE_CURRENT_BINARY_DIR}/midimap.def)
 
-set_entrypoint(midimap 0)
+set_module_type(midimap win32dll ENTRYPOINT 0 )
 
 target_link_libraries(midimap uuid wine)
 

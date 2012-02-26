@@ -9,8 +9,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "appearance.h"
 
 /* Update all the controls with the current values for the selected screen element */
 static VOID
@@ -18,17 +16,17 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
 {
     WPARAM state;
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_GETCHECK, 0, 0);
-    g->ThemeAdv.Effects.bMenuAnimation = (state == BST_CHECKED) ? TRUE : FALSE;
-	EnableWindow(GetDlgItem(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE), g->ThemeAdv.Effects.bMenuAnimation);
+    g->SchemeAdv.Effects.bMenuAnimation = (state == BST_CHECKED) ? TRUE : FALSE;
+    EnableWindow(GetDlgItem(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE), g->SchemeAdv.Effects.bMenuAnimation);
 
-    //A boolean as an index for a 2-value list:
-    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_SETCURSEL, (WPARAM)g->ThemeAdv.Effects.bMenuFade, 0);
+    // A boolean as an index for a 2-value list:
+    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_SETCURSEL, (WPARAM)g->SchemeAdv.Effects.bMenuFade, 0);
 
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_GETCHECK, 0, 0);
-    g->ThemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
+    g->SchemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_GETCHECK, 0, 0);
-    g->ThemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
-    g->bHasChanged = TRUE;
+    g->SchemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
+    g->bSchemeChanged = TRUE;
 }
 
 
@@ -40,15 +38,15 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 static VOID
 AddToCombo(HWND hwndDlg, INT From, INT To, INT Combo)
 {
-	INT iElement, iListIndex, i=0;
-	TCHAR tstrText[80];
+    INT iElement, iListIndex, i=0;
+    TCHAR tstrText[80];
 
     for (iElement = From; iElement<=To; iElement++)
-	{
-		LoadString(hApplet, iElement, (LPTSTR)tstrText, 80);
-		iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
-		SendDlgItemMessage(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++ );
-	}
+    {
+        LoadString(hApplet, iElement, (LPTSTR)tstrText, 80);
+        iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
+        SendDlgItemMessage(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++ );
+    }
 }
 
 /* Initialize the effects appearance dialog */
@@ -58,17 +56,17 @@ EffAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     WPARAM state;
 
     /* Copy the current theme values */
-    g->ThemeAdv = g->Theme;
+    g->SchemeAdv = g->Scheme;
 
     AddToCombo(hwndDlg, IDS_SLIDEEFFECT, IDS_FADEEFFECT, IDC_EFFAPPEARANCE_ANIMATIONTYPE);
 
-    state = g->ThemeAdv.Effects.bMenuAnimation ? BST_CHECKED : BST_UNCHECKED;
+    state = g->SchemeAdv.Effects.bMenuAnimation ? BST_CHECKED : BST_UNCHECKED;
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_SETCHECK, state, 0);
 
-    state = g->ThemeAdv.Effects.bKeyboardCues ? BST_CHECKED : BST_UNCHECKED;
+    state = g->SchemeAdv.Effects.bKeyboardCues ? BST_CHECKED : BST_UNCHECKED;
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_SETCHECK, state, 0);
 
-    state = g->ThemeAdv.Effects.bDragFullWindows ? BST_CHECKED : BST_UNCHECKED;
+    state = g->SchemeAdv.Effects.bDragFullWindows ? BST_CHECKED : BST_UNCHECKED;
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_SETCHECK, state, 0);
 
     /* Update the controls */
@@ -109,7 +107,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 
 				case IDCANCEL:
-					g->ThemeAdv = g->Theme;
+					g->SchemeAdv = g->Scheme;
 					EndDialog(hwndDlg, IDCANCEL);
 					break;
 
@@ -126,7 +124,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (HIWORD(wParam) == CBN_SELCHANGE)
 					{
 						SaveCurrentValues(hwndDlg, g);
-						g->ThemeAdv.Effects.bMenuFade = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL, 0, 0);
+						g->SchemeAdv.Effects.bMenuFade = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL, 0, 0);
 						UpdateControls(hwndDlg, g);
 					}
 					break;

@@ -1,6 +1,9 @@
 #pragma once
 
 #ifdef _WIN64
+VOID
+NTAPI
+RtlInitializeSListHead(IN PSLIST_HEADER ListHead);
 #define InitializeSListHead RtlInitializeSListHead
 #endif
 

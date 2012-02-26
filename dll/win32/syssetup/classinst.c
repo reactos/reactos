@@ -6,8 +6,7 @@
  * PROGRAMMERS: Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#include <windows.h>
-#include <setupapi.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

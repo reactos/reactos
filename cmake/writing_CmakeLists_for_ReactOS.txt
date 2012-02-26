@@ -1,0 +1,22 @@
+CMake is used to build ReactOS.
+
+Here you will find what you'll need to write nice CMakeLists.txt files for ReactOS.
+CMake standard functions are available too. See http://www.cmake.org/, or type cmake --help-html in your shell to get the full documentation.
+
+Optional arguments are marked with [brackets], input is marked with <comparison signs>.
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+set_module_type(<target> <type> [UNICODE] [BASEADDRESS <baseaddress>] [ENTRYPOINT <entrypoint> <stacksize>])
+
+This set the type of the module, and take cares of setting common linker options or definitions to the specified target, module file extension, etc. Please always use this when adding a module to reactos build.
+
+ARGUMENTS:
+<target>: name of the target. The module must have been added with add_executable or add_library before calling this function.
+<type>: one of win32gui, win32cui, win32dll, win32ocx, cpl, nativecui, nativedll, kernelmodedriver
+UNICODE: provide this if the module was written for unicode API
+<baseaddress>: provide this if you want your module to have a different base address than the defualt one (according to <type>). For win32dll modules, please use baseaddress.cmake instead.
+<entrypoint>: name of the function which will be the entr point of the module. If it's not provided, it's guessed from the module type.
+<stacksize>: Size of stack required for the parameters of <entrypoint>.
+
+TYPICAL USE:
+set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)

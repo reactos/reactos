@@ -24,6 +24,8 @@ set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)
 if(MSVC)
     target_link_libraries(itss itss_guid)
+else()
+    allow_warnings(itss)
 endif()
 
 add_importlibs(itss

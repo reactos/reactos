@@ -2,6 +2,6 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Pålogging skjermsparer"
-    IDS_TEXT        "Ingen valg trenges å bli satt."
+    IDS_DESCRIPTION "PÃ¥logging skjermsparer"
+    IDS_TEXT        "Ingen valg trenges Ã¥ bli satt."
 END

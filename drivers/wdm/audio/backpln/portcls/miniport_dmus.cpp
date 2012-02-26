@@ -878,13 +878,13 @@ SynchronizedDMusMPUWrite
     ASSERT(context->BytesRead);
 
     PUCHAR  pChar = PUCHAR(context->BufferAddress);
-    NTSTATUS ntStatus,readStatus;
+    NTSTATUS ntStatus; // , readStatus
     ntStatus = STATUS_SUCCESS;
     //
     // while we're not there yet, and
     // while we don't have to wait on an aligned byte (including 0)
     // (we never wait on a byte.  Better to come back later)
-    readStatus = DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
+    /*readStatus = */ DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
     while (  (*(context->BytesRead) < context->Length)
           && (  TryMPU(context->PortBase) 
              || (*(context->BytesRead)%3)
@@ -903,7 +903,7 @@ SynchronizedDMusMPUWrite
             break;
         }
     }
-    readStatus = DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
+    /*readStatus = */ DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
     return ntStatus;
 }
 

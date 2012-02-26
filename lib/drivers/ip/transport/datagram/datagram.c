@@ -193,6 +193,9 @@ VOID DGDeliverData(
         DataBuffer,
         NULL);
 
+      if (STATUS_SUCCESS != Status)
+          TI_DbgPrint(MAX_TRACE, ("receive handler signaled failure with Status 0x%x\n", Status));
+
       DereferenceObject(AddrFile);
     }
   else

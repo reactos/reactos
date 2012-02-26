@@ -6,7 +6,7 @@ CAPTION "Adapter"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   GROUPBOX "Adaptertyp", -1, 7, 3, 237, 50
-  LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20
+  LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
   PUSHBUTTON "&Einstellungen", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
   GROUPBOX "Adapter-Informationen", -1, 7, 56, 237, 75
   LTEXT "Chiptyp:", -1, 13, 68, 58, 8

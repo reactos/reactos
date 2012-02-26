@@ -1,20 +1,10 @@
+#include <wdm.h>
 
-/* DDK/NDK/SDK Headers */
-#include <ntddk.h>
-#include <ntddmou.h>
-#include <ntifs.h>
-#include <tvout.h>
-#include <ntndk.h>
-
-#include <stdarg.h>
 #include <windef.h>
 #include <winerror.h>
 #include <wingdi.h>
 #define NT_BUILD_ENVIRONMENT
 #include <winddi.h>
-#include <prntfont.h>
-#include <dde.h>
-
 
 #include <ddkmapi.h>
 
@@ -123,7 +113,6 @@ DWORD tblCheckOutBuffer [] =
     sizeof(DWORD)
 };
 
-
 /* Internal driver function */
 DRVFN gDxApiEntryPoint [] = 
 {
@@ -150,6 +139,3 @@ DRVFN gDxApiEntryPoint [] =
     {DD_DXAPI_ADDVPCAPTUREBUFFER - DD_FIRST_DXAPI, (PFN) DxAddVpCaptureBuffer},
     {DD_DXAPI_FLUSHVPCAPTUREBUFFERS - DD_FIRST_DXAPI, (PFN) DxFlushVpCaptureBuffs}
 };
-
-
-

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "msgqueue.h"
-#include "window.h"
-
 typedef struct _DESKTOP
 {
     PDESKTOPINFO pDeskInfo;
@@ -18,7 +15,7 @@ typedef struct _DESKTOP
     PWIN32HEAP pheapDesktop;
     ULONG_PTR ulHeapSize;
     LIST_ENTRY PtiList;
-    /* use for tracking mouse moves. */
+    /* Use for tracking mouse moves. */
     PWND spwndTrack;
     DWORD htEx;
     RECT rcMouseHover;
@@ -32,21 +29,46 @@ typedef struct _DESKTOP
     /* Thread blocking input */
     PVOID BlockInputThread;
     LIST_ENTRY ShellHookWindows;
-} DESKTOP, *PDESKTOP;
+} DESKTOP;
 
 // Desktop flags
 #define DF_TME_HOVER        0x00000400
 #define DF_TME_LEAVE        0x00000800
+#define DF_HOTTRACK         0x00004000
 #define DF_DESTROYED        0x00008000
 #define DF_DESKWNDDESTROYED 0x00010000
 #define DF_DYING            0x00020000
 
+#define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
+                           DESKTOP_ENUMERATE         | \
+                           DESKTOP_READOBJECTS
+
+#define DESKTOP_WRITE       STANDARD_RIGHTS_WRITE    | \
+                            DESKTOP_CREATEMENU       | \
+                            DESKTOP_CREATEWINDOW     | \
+                            DESKTOP_HOOKCONTROL      | \
+                            DESKTOP_JOURNALPLAYBACK  | \
+                            DESKTOP_JOURNALRECORD    | \
+                            DESKTOP_WRITEOBJECTS
+
+#define DESKTOP_EXECUTE     STANDARD_RIGHTS_EXECUTE  | \
+                            DESKTOP_SWITCHDESKTOP
+
+#define DESKTOP_ALL_ACCESS  STANDARD_RIGHTS_REQUIRED | \
+                            DESKTOP_CREATEMENU       | \
+                            DESKTOP_CREATEWINDOW     | \
+                            DESKTOP_ENUMERATE        | \
+                            DESKTOP_HOOKCONTROL      | \
+                            DESKTOP_JOURNALPLAYBACK  | \
+                            DESKTOP_JOURNALRECORD    | \
+                            DESKTOP_READOBJECTS      | \
+                            DESKTOP_SWITCHDESKTOP    | \
+                            DESKTOP_WRITEOBJECTS
 
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
-extern BOOL g_PaintDesktopVersion;
 
 typedef struct _SHELL_HOOK_WINDOW
 {
@@ -58,9 +80,6 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitDesktopImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupDesktopImpl(VOID);
 
 NTSTATUS
 APIENTRY
@@ -80,9 +99,6 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS NTAPI 
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
-
-LRESULT CALLBACK
-IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HDC FASTCALL
 IntGetScreenDC(VOID);
@@ -111,9 +127,6 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height);
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP Desktop);
 
-HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
-
 BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
@@ -123,18 +136,18 @@ IntValidateDesktopHandle(
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
    PDESKTOP *Object);
+
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
                     PUNICODE_STRING DesktopPath,
                     HWINSTA *hWinSta,
                     HDESK *hDesktop);
-BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable);
+
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
-BOOL FASTCALL IntPaintDesktop(HDC hDC);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))

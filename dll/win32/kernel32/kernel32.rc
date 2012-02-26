@@ -15,5 +15,6 @@
 
 // UTF-8
 #pragma code_page(65001)
+#include "winnls/lang/ro-RO.rc"
 #include "winnls/lang/ru-RU.rc"
 #include "winnls/lang/uk-UA.rc"

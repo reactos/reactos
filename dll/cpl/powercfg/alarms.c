@@ -185,8 +185,8 @@ AlarmsDlgProc(HWND hwndDlg,
     case WM_INITDIALOG:
 		if (!Ala_InitData(hwndDlg))
 		{
-			//TODO
-			//handle initialization error
+			// TODO:
+			// Handle initialization error
 		}
 		return TRUE;
 	default:

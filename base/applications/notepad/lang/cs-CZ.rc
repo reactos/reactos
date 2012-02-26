@@ -46,48 +46,48 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "&Nov˝\tCtrl+N",          CMD_NEW
-        MENUITEM "&Otev¯Ìt\tCtrl+O",       CMD_OPEN
-        MENUITEM "&Uloûit\tCtrl+S",        CMD_SAVE
-        MENUITEM "Uloûit j&ako...",        CMD_SAVE_AS
+        MENUITEM "&Nov√Ω\tCtrl+N",          CMD_NEW
+        MENUITEM "&Otev≈ô√≠t\tCtrl+O",       CMD_OPEN
+        MENUITEM "&Ulo≈æit\tCtrl+S",        CMD_SAVE
+        MENUITEM "Ulo≈æit j&ako...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "Nas&taven√≠ str√°nky...",  CMD_PAGE_SETUP
         MENUITEM "&Tisk\tCtrl+P",          CMD_PRINT
-        MENUITEM "Nas&tavenÌ str·nky...",  CMD_PAGE_SETUP
-        MENUITEM "NastavenÌ tisk·&rny...", CMD_PRINTER_SETUP
+        MENUITEM "Nastaven√≠ tisk√°&rny...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Konec",                 CMD_EXIT
     END
     POPUP "U&pravit"
     BEGIN
-        MENUITEM "&ZpÏt\tCtrl+Z",       CMD_UNDO
+        MENUITEM "&Zpƒõt\tCtrl+Z",       CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "Vyjmou&t\tCtrl+X",    CMD_CUT
-        MENUITEM "&KopÌrovat\tCtrl+C",  CMD_COPY
-        MENUITEM "&Vloûit\tCtrl+V",     CMD_PASTE
+        MENUITEM "&Kop√≠rovat\tCtrl+C",  CMD_COPY
+        MENUITEM "&Vlo≈æit\tCtrl+V",     CMD_PASTE
         MENUITEM "&Smazat\tDel",        CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Hledej\tCtrl+F",     CMD_SEARCH
-        MENUITEM "&Najdi dalöÌ\tF3",    CMD_SEARCH_NEXT
+        MENUITEM "&Najdi dal≈°√≠\tF3",    CMD_SEARCH_NEXT
         MENUITEM "Replace\tCtrl+H",     CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G",    CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Vybrat vö&e\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "»&as/Datum\tF5",      CMD_TIME_DATE
+        MENUITEM "Vybrat v≈°&e\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "ƒå&as/Datum\tF5",      CMD_TIME_DATE
     END
-    POPUP "F&orm·t"
+    POPUP "F&orm√°t"
     BEGIN
-        MENUITEM "Zalo&mit dlouhÈ ¯·dky", CMD_WRAP
-        MENUITEM "&PÌsmo...",             CMD_FONT
+        MENUITEM "Zalo&mit dlouh√© ≈ô√°dky", CMD_WRAP
+        MENUITEM "&P√≠smo...",             CMD_FONT
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Stavov˝ ¯·dek", CMD_STATUSBAR
+        MENUITEM "&Stavov√Ω ≈ô√°dek", CMD_STATUSBAR
     END
-    POPUP "&N·povÏda"
+    POPUP "&N√°povƒõda"
     BEGIN
         MENUITEM "O&bsah",            CMD_HELP_CONTENTS
-        MENUITEM "&NajÌt...",         CMD_HELP_SEARCH
-        MENUITEM "Pomoc k n·&povÏdÏ", CMD_HELP_ON_HELP
+        MENUITEM "&Naj√≠t...",         CMD_HELP_SEARCH
+        MENUITEM "Pomoc k n√°&povƒõdƒõ", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&O programu...",    CMD_ABOUT
         MENUITEM "In&fo...",          CMD_ABOUT_WINE
@@ -99,49 +99,48 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "NastavenÌ str·nky"
+CAPTION "Nastaven√≠ str√°nky"
 BEGIN
-LTEXT    "Z·&hlavÌ:",  0x140,   10, 07, 40, 15
+LTEXT    "Z√°&hlav√≠:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Z·patÌ:",  0x142,   10, 24, 40, 15
+LTEXT    "&Z√°pat√≠:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Okraje:",      0x144,     10, 43,160, 45
-LTEXT    "&Lev˝:",        0x145,   20, 55, 30, 10, WS_CHILD
+LTEXT    "&Lev√Ω:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&HornÌ:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "&Horn√≠:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "P&rav˝:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "P&rav√Ω:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&DolnÌ:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "&Doln√≠:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Storno",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&N·povÏda",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&N√°povƒõda",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "KÛdov·nÌ"
+CAPTION "K√≥dov√°n√≠"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "KÛdov·nÌ:",0x155,5,2,41,12
+LTEXT           "K√≥dov√°n√≠:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Od¯·dkov·nÌ:",0x156,5,20,41,12
+LTEXT           "Od≈ô√°dkov√°n√≠:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "JÌt na ¯·dek"
+CAPTION "J√≠t na ≈ô√°dek"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "»Ìslo ¯·dku:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "ƒå√≠slo ≈ô√°dku:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Storno", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -155,7 +154,7 @@ BEGIN
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Zav¯Ìt",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Zav≈ô√≠t",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -177,27 +176,27 @@ STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
 STRING_NOTEPAD,                                 "Notepad"
 STRING_ERROR,                                   "CHYBA"
-STRING_WARNING,                                 "VAROV¡NÕ"
+STRING_WARNING,                                 "VAROV√ÅN√ç"
 STRING_INFO,                                    "Informace"
 
-STRING_UNTITLED,                                "(bez n·zvu)"
+STRING_UNTITLED,                                "(bez n√°zvu)"
 
-STRING_ALL_FILES,                               "Vöechny soubory (*.*)"
-STRING_TEXT_FILES_TXT,                  "TextovÈ soubory (*.txt)"
+STRING_ALL_FILES,                               "V≈°echny soubory (*.*)"
+STRING_TEXT_FILES_TXT,                  "Textov√© soubory (*.txt)"
 
-STRING_TOOLARGE,                                "Soubor '%s' je pro notepad p¯Ìliö velk˝.\n \
-Pouûijte jin˝ editor, prosÌm."
-STRING_NOTEXT,                                  "Nebyl zad·n û·dn˝ text. \
-\nVloûte nÏjak˝ text a zkuste to znovu."
+STRING_TOOLARGE,                                "Soubor '%s' je pro notepad p≈ô√≠li≈° velk√Ω.\n \
+Pou≈æijte jin√Ω editor, pros√≠m."
+STRING_NOTEXT,                                  "Nebyl zad√°n ≈æ√°dn√Ω text. \
+\nVlo≈æte nƒõjak√Ω text a zkuste to znovu."
 STRING_DOESNOTEXIST,                            "Soubor '%s'\nneexistuje.\n\n \
-Chcete ho vytvo¯it ?"
-STRING_NOTSAVED,                                "Soubor '%s'\nbyl zmÏnÏn.\n\n \
-Chcete uloûit zmÏny ?"
+Chcete ho vytvo≈ôit ?"
+STRING_NOTSAVED,                                "Soubor '%s'\nbyl zmƒõnƒõn.\n\n \
+Chcete ulo≈æit zmƒõny ?"
 STRING_NOTFOUND,                                        "'%s' nebyl nalezen."
-STRING_OUT_OF_MEMORY,                   "NenÌ dost pamÏti na dokonËenÌ tÈto ˙lohy. \
-\nUzav¯ete jednu Ëi vÌce aplikacÌ, abyste zÌskali vÌce  \nvolnÈ \
-pamÏti."
-STRING_CANNOTFIND                               "Nelze nalÈzt '%s'"
+STRING_OUT_OF_MEMORY,                   "Nen√≠ dost pamƒõti na dokonƒçen√≠ t√©to √∫lohy. \
+\nUzav≈ôete jednu ƒçi v√≠ce aplikac√≠, abyste z√≠skali v√≠ce  \nvoln√© \
+pamƒõti."
+STRING_CANNOTFIND                               "Nelze nal√©zt '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
 STRING_UNICODE_BE,                              "Unicode (big endian)"
@@ -205,5 +204,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "ÿ·dek %d, sloupec %d"
+STRING_LINE_COLUMN,                             "≈ò√°dek %d, sloupec %d"
 END

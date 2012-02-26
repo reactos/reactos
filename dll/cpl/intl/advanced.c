@@ -1,13 +1,4 @@
-#include <windows.h>
-#include <commctrl.h>
-#include <setupapi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <cpl.h>
-
 #include "intl.h"
-#include "resource.h"
 
 typedef struct CPStruct
 {

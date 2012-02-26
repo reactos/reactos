@@ -53,7 +53,7 @@ IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
     {
         // Allow user access to User Data.
         GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pbr->pBrushAttr);
-        // FIXME: allocate brush attr
+        // FIXME: Allocate brush attr
     }
 
     GDIOBJ_vSetObjectOwner(&pbr->BaseObject, ulOwner);
@@ -125,7 +125,7 @@ BRUSH_vFreeBrushAttr(PBRUSH pbr)
 }
 
 BOOL
-INTERNAL_CALL
+NTAPI
 BRUSH_Cleanup(PVOID ObjectBody)
 {
     PBRUSH pbrush = (PBRUSH)ObjectBody;
@@ -164,7 +164,7 @@ BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     /* Set Hatch */
     if ((pbrush->flAttrs & GDIBRUSH_IS_HATCH)!=0)
     {
-        /* FIXME : this is not the right value */
+        /* FIXME: This is not the right value */
         Buffer->lbHatch = (LONG)pbrush->hbmPattern;
     }
     else

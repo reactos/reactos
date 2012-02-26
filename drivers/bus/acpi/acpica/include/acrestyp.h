@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -534,7 +534,7 @@ typedef struct acpi_pci_routing_table
 {
     UINT32                          Length;
     UINT32                          Pin;
-    ACPI_INTEGER                    Address;        /* here for 64-bit alignment */
+    UINT64                          Address;        /* here for 64-bit alignment */
     UINT32                          SourceIndex;
     char                            Source[4];      /* pad to 64 bits so sizeof() works in all cases */
 

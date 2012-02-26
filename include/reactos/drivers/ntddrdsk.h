@@ -20,7 +20,7 @@ extern "C" {
 // This guid identifies a RAM disk volume
 //
 DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xd9b257fc, 0x684e, 0x4dcb, 0x79, 0xab, 0xf6, 0xa2, 0xcf, 0x03, 0x50, 0xb7);
-    
+
 //
 // Device Name - this string is the name of the device.  It is the name
 // that should be passed to NtOpenFile when accessing the device.
@@ -43,7 +43,7 @@ DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xd9b257fc, 0x684e, 0x4dcb, 0x79, 0xab, 0xf6,
 #define RAMDISK_MEMORY_MAPPED_DISK        2 // Loaded from the registry
 #define RAMDISK_BOOT_DISK                 3 // Used as a boot device
 #define RAMDISK_WIM_DISK                  4 // Used as an installation device
-    
+
 //
 // Options when creating a ramdisk
 //
@@ -73,12 +73,12 @@ typedef struct _RAMDISK_CREATE_INPUT
         struct
         {
             ULONG ViewCount;
-            ULONG ViewLength;
+            SIZE_T ViewLength;
             WCHAR FileName[ANYSIZE_ARRAY];
         };
         struct
         {
-            ULONG BasePage;
+            ULONG_PTR BasePage;
             WCHAR DriveLetter;
         };
         PVOID BaseAddress;

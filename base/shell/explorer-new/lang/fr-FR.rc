@@ -7,8 +7,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "VÈroui&ller la barre de t‚ches", ID_LOCKTASKBAR
-        MENUITEM "P&ropriÈtÈs", ID_SHELL_CMD_PROPERTIES
+        MENUITEM "V√©roui&ller la barre de t√¢ches", ID_LOCKTASKBAR
+        MENUITEM "P&ropri√©t√©s", ID_SHELL_CMD_PROPERTIES
     END
 END
 
@@ -29,27 +29,27 @@ BEGIN
         BEGIN
             MENUITEM "(Vide)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "ParamËtre&s", IDM_SETTINGS
+        POPUP "Param√®tre&s", IDM_SETTINGS
         BEGIN
-            MENUITEM "Panneau de &contrÙle", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "Panneau de &contr√¥le", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&SÈcuritÈ...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "Co&nnexions au rÈseau", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&S√©curit√©...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "Co&nnexions au r√©seau", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "Im&primantes et fax", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "Barre de &t‚ches et menu dÈmarrer", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "Barre de &t√¢ches et menu d√©marrer", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "&Chercher", IDM_SEARCH
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Aide et support", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "ExÈcuter...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "Ex√©cuter...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ynchroniser", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "Fermer &la session %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "DÈconnecter...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "LibÈr&er l'ordinateur de la station", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "…teindre...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "D√©connecter...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Lib√©r&er l'ordinateur de la station", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "√âteindre...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -116,8 +116,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_START             "DÈmarrer"
-    IDS_PROPERTIES        "P&ropriÈtÈs"
+    IDS_START             "D√©marrer"
+    IDS_PROPERTIES        "P&ropri√©t√©s"
     IDS_OPEN_ALL_USERS    "Ouvrir tous les utilisateurs"
     IDS_EXPLORE_ALL_USERS "E&xplorer tous les utilisateurs"
     IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."

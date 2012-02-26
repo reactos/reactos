@@ -1,16 +1,16 @@
-/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+/* Translation by Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us) */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Uþbaigia seansà.\n\n\
-  /v\t\tParodo informacijà apie atliktus veiksmus.\n\
-  /?\t\tParodo ðià informacijà.\n\n"
+IDS_USAGE, "UÅ¾baigia seansÄ….\n\n\
+  /v\t\tParodo informacijÄ… apie atliktus veiksmus.\n\
+  /?\t\tParodo Å¡iÄ… informacijÄ….\n\n"
 
-IDS_LOGOFF_REMOTE, "Uþbaigia seansà nutolusioje maðinoje."
-IDS_LOGOFF_LOCAL, "Uþbaigia einamàjá seansà ðioje maðinoje."
+IDS_LOGOFF_REMOTE, "UÅ¾baigia seansÄ… nutolusioje maÅ¡inoje."
+IDS_LOGOFF_LOCAL, "UÅ¾baigia einamÄ…jÄ¯ seansÄ… Å¡ioje maÅ¡inoje."
 
 IDS_ILLEGAL_PARAM, "Neteisingas(i) parametras(ai)\n"
 END

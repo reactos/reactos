@@ -18,7 +18,7 @@
 /* GLOBALS ********************************************************************/
 
 LIST_ENTRY MmNonPagedPoolFreeListHead[MI_MAX_FREE_PAGE_LISTS];
-PFN_NUMBER MmNumberOfFreeNonPagedPool, MiExpansionPoolPagesInitialCharge;
+PFN_COUNT MmNumberOfFreeNonPagedPool, MiExpansionPoolPagesInitialCharge;
 PVOID MmNonPagedPoolEnd0;
 PFN_NUMBER MiStartOfInitialPoolFrame, MiEndOfInitialPoolFrame;
 KGUARDED_MUTEX MmPagedPoolMutex;
@@ -33,7 +33,7 @@ BOOLEAN MmProtectFreedNonPagedPool;
 VOID
 NTAPI
 MiProtectFreeNonPagedPool(IN PVOID VirtualAddress,
-						  IN ULONG PageCount)
+                          IN ULONG PageCount)
 {
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte;
@@ -62,7 +62,7 @@ MiProtectFreeNonPagedPool(IN PVOID VirtualAddress,
 BOOLEAN
 NTAPI
 MiUnProtectFreeNonPagedPool(IN PVOID VirtualAddress,
-	   					  	IN ULONG PageCount)
+                            IN ULONG PageCount)
 {
     PMMPTE PointerPte;
     MMPTE TempPte;
@@ -272,7 +272,7 @@ INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
     ULONG i;
-    PFN_NUMBER PoolPages;
+    PFN_COUNT PoolPages;
     PMMFREE_POOL_ENTRY FreeEntry, FirstEntry;
     PMMPTE PointerPte;
     PAGED_CODE();
@@ -291,7 +291,7 @@ MiInitializeNonPagedPool(VOID)
     //
     // Calculate how many pages the initial nonpaged pool has
     //
-    PoolPages = BYTES_TO_PAGES(MmSizeOfNonPagedPoolInBytes);
+    PoolPages = (PFN_COUNT)BYTES_TO_PAGES(MmSizeOfNonPagedPoolInBytes);
     MmNumberOfFreeNonPagedPool = PoolPages;
 
     //
@@ -351,7 +351,7 @@ MiInitializeNonPagedPool(VOID)
     //
     // Calculate the size of the expansion region alone
     //
-    MiExpansionPoolPagesInitialCharge =
+    MiExpansionPoolPagesInitialCharge = (PFN_COUNT)
     BYTES_TO_PAGES(MmMaximumNonPagedPoolInBytes - MmSizeOfNonPagedPoolInBytes);
 
     //
@@ -369,12 +369,24 @@ MiInitializeNonPagedPool(VOID)
                            NonPagedPoolExpansion);
 }
 
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(IN PVOID PoolAddress)
+{
+    //
+    // Use a simple bounds check
+    //
+    return (PoolAddress >= MmPagedPoolStart) && (PoolAddress <= MmPagedPoolEnd) ?
+            PagedPool : NonPagedPool;
+}
+
 PVOID
 NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
                     IN SIZE_T SizeInBytes)
 {
-    PFN_NUMBER SizeInPages, PageFrameNumber, PageTableCount;
+    PFN_NUMBER PageFrameNumber;
+    PFN_COUNT SizeInPages, PageTableCount;
     ULONG i;
     KIRQL OldIrql;
     PLIST_ENTRY NextEntry, NextHead, LastHead;
@@ -391,7 +403,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Figure out how big the allocation is in pages
     //
-    SizeInPages = BYTES_TO_PAGES(SizeInBytes);
+    SizeInPages = (PFN_COUNT)BYTES_TO_PAGES(SizeInBytes);
 
     //
     // Handle paged pool
@@ -440,9 +452,9 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // We can only support this much then
                 //
-                PageTableCount = (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) -
-                                         MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
-                                         1;
+                PointerPde = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool);
+                PageTableCount = (PFN_COUNT)(PointerPde + 1 -
+                                 MmPagedPoolInfo.NextPdeForPagedPoolExpansion);
                 ASSERT(PageTableCount < i);
                 i = PageTableCount;
             }
@@ -515,7 +527,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // These pages are now available, clear their availablity bits
             //
-            EndAllocation = (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
+            EndAllocation = (ULONG)(MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
                              (PMMPDE)MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
                              PTE_COUNT;
             RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
@@ -823,10 +835,11 @@ MiFreePoolPages(IN PVOID StartingVa)
 {
     PMMPTE PointerPte, StartPte;
     PMMPFN Pfn1, StartPfn;
-    PFN_NUMBER FreePages, NumberOfPages;
+    PFN_COUNT FreePages, NumberOfPages;
     KIRQL OldIrql;
     PMMFREE_POOL_ENTRY FreeEntry, NextEntry, LastEntry;
     ULONG i, End;
+    ULONG_PTR Offset;
 
     //
     // Handle paged pool
@@ -837,7 +850,8 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Calculate the offset from the beginning of paged pool, and convert it
         // into pages
         //
-        i = ((ULONG_PTR)StartingVa - (ULONG_PTR)MmPagedPoolStart) >> PAGE_SHIFT;
+        Offset = (ULONG_PTR)StartingVa - (ULONG_PTR)MmPagedPoolStart;
+        i = (ULONG)(Offset >> PAGE_SHIFT);
         End = i;
 
         //
@@ -904,7 +918,7 @@ MiFreePoolPages(IN PVOID StartingVa)
     //
     // Now we know how many pages we have
     //
-    NumberOfPages = PointerPte - StartPte + 1;
+    NumberOfPages = (PFN_COUNT)(PointerPte - StartPte + 1);
 
     //
     // Acquire the nonpaged pool lock
@@ -1181,8 +1195,8 @@ NTAPI
 MmAllocateMappingAddress(IN SIZE_T NumberOfBytes,
                          IN ULONG PoolTag)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -1193,7 +1207,7 @@ NTAPI
 MmFreeMappingAddress(IN PVOID BaseAddress,
                      IN ULONG PoolTag)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /* EOF */

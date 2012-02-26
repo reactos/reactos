@@ -433,7 +433,7 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
              default:
                RC = STATUS_INVALID_INFO_CLASS;
 	    }
-          if (RC == STATUS_BUFFER_OVERFLOW)
+          if (RC == STATUS_BUFFER_OVERFLOW || RC == STATUS_INVALID_INFO_CLASS)
             {
               break;
             }

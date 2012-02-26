@@ -1,31 +1,26 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Misc User funcs
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Miscellaneous User functions
  * FILE:             subsystems/win32/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
- * REVISION HISTORY:
- *       2003/05/22  Created
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 SHORT
 FASTCALL
-IntGdiGetLanguageID(VOID)
+UserGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
-  ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);
   OBJECT_ATTRIBUTES ObAttr;
 //  http://support.microsoft.com/kb/324097
   ULONG Ret = 0x409; // English
-  PVOID KeyInfo;
+  PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
+  ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
   UNICODE_STRING Language;
-  
+
   RtlInitUnicodeString( &Language,
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
@@ -37,27 +32,111 @@ IntGdiGetLanguageID(VOID)
 
   if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
   {
-     KeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
-     if ( KeyInfo )
+     pKeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
+     if ( pKeyInfo )
      {
         RtlInitUnicodeString(&Language, L"Default");
 
         if ( NT_SUCCESS(ZwQueryValueKey( KeyHandle,
                                          &Language,
                         KeyValuePartialInformation,
-                                           KeyInfo,
+                                          pKeyInfo,
                                               Size,
                                              &Size)) )
       {
-        RtlInitUnicodeString(&Language, (PVOID)((char *)KeyInfo + 12));
+        RtlInitUnicodeString(&Language, (PWSTR)pKeyInfo->Data);
         RtlUnicodeStringToInteger(&Language, 16, &Ret);
       }
-      ExFreePoolWithTag(KeyInfo, TAG_STRING);
+      ExFreePoolWithTag(pKeyInfo, TAG_STRING);
     }
     ZwClose(KeyHandle);
   }
-  DPRINT("Language ID = %x\n",Ret);
+  TRACE("Language ID = %x\n",Ret);
   return (SHORT) Ret;
+}
+
+HBRUSH
+FASTCALL
+GetControlColor(
+   PWND pwndParent,
+   PWND pwnd,
+   HDC hdc,
+   UINT CtlMsg)
+{
+    HBRUSH hBrush;
+
+    if (!pwndParent) pwndParent = pwnd;
+
+    if ( pwndParent->head.pti->ppi != PsGetCurrentProcessWin32Process())
+    {
+       return (HBRUSH)IntDefWindowProc( pwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd), FALSE);
+    }
+
+    hBrush = (HBRUSH)co_IntSendMessage( UserHMGetHandle(pwndParent), CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd));
+
+    if (!hBrush || !GreIsHandleValid(hBrush))
+    {
+       hBrush = (HBRUSH)IntDefWindowProc( pwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd), FALSE);
+    }
+    return hBrush;
+}
+
+HBRUSH
+FASTCALL
+GetControlBrush(
+   PWND pwnd,
+   HDC  hdc,
+   UINT ctlType)
+{
+    PWND pwndParent = IntGetParent(pwnd);
+    return GetControlColor( pwndParent, pwnd, hdc, ctlType);
+}
+
+HBRUSH
+APIENTRY
+NtUserGetControlBrush(
+   HWND hwnd,
+   HDC  hdc,
+   UINT ctlType)
+{
+   PWND pwnd;
+   HBRUSH hBrush = NULL;
+
+   UserEnterExclusive();
+   if ( (pwnd = UserGetWindowObject(hwnd)) &&
+       ((ctlType - WM_CTLCOLORMSGBOX) < CTLCOLOR_MAX) &&
+        hdc )
+   {
+      hBrush = GetControlBrush(pwnd, hdc, ctlType);
+   }
+   UserLeave();
+   return hBrush;
+}
+
+/*
+ * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
+ */
+HBRUSH
+APIENTRY
+NtUserGetControlColor(
+   HWND hwndParent,
+   HWND hwnd,
+   HDC hdc,
+   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
+{
+   PWND pwnd, pwndParent = NULL;
+   HBRUSH hBrush = NULL;
+
+   UserEnterExclusive();
+   if ( (pwnd = UserGetWindowObject(hwnd)) &&
+       ((CtlMsg - WM_CTLCOLORMSGBOX) < CTLCOLOR_MAX) &&
+        hdc )
+   {
+      if (hwndParent) pwndParent = UserGetWindowObject(hwndParent);
+      hBrush = GetControlColor( pwndParent, pwnd, hdc, CtlMsg);
+   }
+   UserLeave();
+   return hBrush;
 }
 
 /*
@@ -69,7 +148,7 @@ NtUserGetThreadState(
 {
    DWORD_PTR ret = 0;
 
-   DPRINT("Enter NtUserGetThreadState\n");
+   TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
    {
        UserEnterShared();
@@ -85,10 +164,10 @@ NtUserGetThreadState(
          GetW32ThreadInfo();
          break;
       case THREADSTATE_FOCUSWINDOW:
-         ret = (DWORD_PTR)IntGetThreadFocusWindow();
+         ret = (DWORD_PTR)UserGetFocusWindow();
          break;
       case THREADSTATE_CAPTUREWINDOW:
-         /* FIXME should use UserEnterShared */
+         /* FIXME: Should use UserEnterShared */
          ret = (DWORD_PTR)IntGetCapture();
          break;
       case THREADSTATE_PROGMANWINDOW:
@@ -104,7 +183,7 @@ NtUserGetThreadState(
          {
            PUSER_SENT_MESSAGE Message = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
-           DPRINT1("THREADSTATE_INSENDMESSAGE\n");
+           ERR("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
            if (Message)
@@ -118,7 +197,7 @@ NtUserGetThreadState(
                 else
                    ret = ISMEX_NOTIFY;
              }
-             /* if ReplyMessage */
+             /* If ReplyMessage */
              if (Message->QS_Flags & QS_SMRESULT) ret |= ISMEX_REPLIED;
            }
 
@@ -144,7 +223,7 @@ NtUserGetThreadState(
          break;
    }
 
-   DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
+   TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);
    UserLeave();
 
    return ret;
@@ -183,13 +262,13 @@ NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
 
-   DPRINT("Enter NtUserGetDoubleClickTime\n");
+   TRACE("Enter NtUserGetDoubleClickTime\n");
    UserEnterShared();
 
    // FIXME: Check if this works on non-interactive winsta
    Result = gspv.iDblClickTime;
 
-   DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
+   TRACE("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
    UserLeave();
    return Result;
 }
@@ -197,7 +276,7 @@ NtUserGetDoubleClickTime(VOID)
 BOOL
 APIENTRY
 NtUserGetGUIThreadInfo(
-   DWORD idThread, /* if NULL use foreground thread */
+   DWORD idThread, /* If NULL use foreground thread */
    LPGUITHREADINFO lpgui)
 {
    NTSTATUS Status;
@@ -210,7 +289,7 @@ NtUserGetGUIThreadInfo(
 
    DECLARE_RETURN(BOOLEAN);
 
-   DPRINT("Enter NtUserGetGUIThreadInfo\n");
+   TRACE("Enter NtUserGetGUIThreadInfo\n");
    UserEnterShared();
 
    Status = MmCopyFromCaller(&SafeGui, lpgui, sizeof(DWORD));
@@ -238,7 +317,7 @@ NtUserGetGUIThreadInfo(
       Desktop = W32Thread->rpdesk;
    }
    else
-   {  /* get the foreground thread */
+   {  /* Get the foreground thread */
       Thread = PsGetCurrentThread();
       W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
       Desktop = W32Thread->rpdesk;
@@ -269,7 +348,7 @@ NtUserGetGUIThreadInfo(
    if (MsgQueue->MoveSize)
       SafeGui.flags |= GUI_INMOVESIZE;
 
-   /* FIXME add flag GUI_16BITTASK */
+   /* FIXME: Add flag GUI_16BITTASK */
 
    SafeGui.hwndActive = MsgQueue->ActiveWindow;
    SafeGui.hwndFocus = MsgQueue->FocusWindow;
@@ -296,7 +375,7 @@ NtUserGetGUIThreadInfo(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -314,7 +393,7 @@ NtUserGetGuiResources(
    DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetGuiResources\n");
+   TRACE("Enter NtUserGetGuiResources\n");
    UserEnterShared();
 
    Status = ObReferenceObjectByHandle(hProcess,
@@ -362,7 +441,7 @@ NtUserGetGuiResources(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -409,7 +488,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       return STATUS_SUCCESS;
    }
 
-   /* string is empty */
+   /* String is empty */
    return STATUS_SUCCESS;
 }
 
@@ -452,47 +531,78 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
          return Status;
       }
 
-      /* make sure the string is null-terminated */
+      /* Make sure the string is null-terminated */
       Src = (PWSTR)((PBYTE)Dest->Buffer + Dest->Length);
       *Src = L'\0';
 
       return STATUS_SUCCESS;
    }
 
-   /* string is empty */
+   /* String is empty */
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
-IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
+void UserDbgAssertThreadInfo(BOOL showCaller)
 {
-   if (Src->Length + sizeof(WCHAR) <= Src->MaximumLength
-         && L'\0' == Src->Buffer[Src->Length / sizeof(WCHAR)])
-   {
-      /* The unicode_string is already nul terminated. Just reuse it. */
-      *Dest = Src->Buffer;
-      return STATUS_SUCCESS;
-   }
+    PTEB Teb;
+    PPROCESSINFO ppi;
+    PCLIENTINFO pci;
+    PTHREADINFO pti;
 
-   *Dest = ExAllocatePoolWithTag(PagedPool, Src->Length + sizeof(WCHAR), TAG_STRING);
-   if (NULL == *Dest)
-   {
-      return STATUS_NO_MEMORY;
-   }
-   RtlCopyMemory(*Dest, Src->Buffer, Src->Length);
-   (*Dest)[Src->Length / 2] = L'\0';
+    ppi = PsGetCurrentProcessWin32Process();
+    pti = PsGetCurrentThreadWin32Thread();
+    Teb = NtCurrentTeb();
+    pci = GetWin32ClientInfo();
 
-   return STATUS_SUCCESS;
+    ASSERT(Teb);
+    ASSERT(pti);
+    ASSERT(pti->ppi == ppi);
+    ASSERT(pti->pClientInfo == pci);
+    ASSERT(Teb->Win32ThreadInfo == pti);
+    ASSERT(pci->ppi == ppi);
+    ASSERT(pci->fsHooks == pti->fsHooks);
+    ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
+    if (pti->pcti && pci->pDeskInfo)
+        ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
+    if (pti->KeyboardLayout) 
+        ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
+    if(pti->rpdesk != NULL)
+        ASSERT(pti->pDeskInfo == pti->rpdesk->pDeskInfo);
+
+    /*too bad we still get this assertion*/
+    /* ASSERT(pci->dwTIFlags == pti->TIF_flags); */
+    if(pci->dwTIFlags != pti->TIF_flags)
+    {
+        ERR("pci->dwTIFlags(0x%x) doesn't match pti->TIF_flags(0x%x)\n", pci->dwTIFlags, pti->TIF_flags);
+        if(showCaller)
+        {
+            DbgPrint("Caller:\n");
+            KeRosDumpStackFrames(NULL, 10);
+        }
+        pci->dwTIFlags = pti->TIF_flags;
+    }
 }
 
-void FASTCALL
-IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString)
+void
+NTAPI
+UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 {
-   if (NullTerminated != UnicodeString->Buffer)
-   {
-      ExFreePool(NullTerminated);
-   }
+    UserDbgAssertThreadInfo(FALSE);
 }
+
+ULONG_PTR
+NTAPI
+UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+{
+    /* Make sure that the first syscall is NtUserInitialize */
+    /* too bad this fails */
+    //ASSERT(gbInitialized);
+
+    UserDbgAssertThreadInfo(TRUE);
+
+    return ulResult;
+}
+
 
 PPROCESSINFO
 GetW32ProcessInfo(VOID)
@@ -503,64 +613,8 @@ GetW32ProcessInfo(VOID)
 PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
-    PTEB Teb;
-    PPROCESSINFO ppi;
-    PCLIENTINFO pci;
-    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-
-    if (pti == NULL)
-    {
-        /* FIXME - temporary hack for system threads... */
-        return NULL;
-    }
-    /* initialize it */
-    pti->ppi = ppi = GetW32ProcessInfo();
-
-    if (pti->rpdesk != NULL)
-    {
-       pti->pDeskInfo = pti->rpdesk->pDeskInfo;
-    }
-    else
-    {
-       pti->pDeskInfo = NULL;
-    }
-    /* update the TEB */
-    Teb = NtCurrentTeb();
-    pci = GetWin32ClientInfo();
-    pti->pClientInfo = pci;
-    _SEH2_TRY
-    {
-        ProbeForWrite( Teb,
-                       sizeof(TEB),
-                       sizeof(ULONG));
-
-        Teb->Win32ThreadInfo = (PW32THREAD) pti;
-
-        pci->ppi = ppi;
-        pci->fsHooks = pti->fsHooks;
-        if (pti->KeyboardLayout) pci->hKL = pti->KeyboardLayout->hkl;
-        pci->dwTIFlags = pti->TIF_flags;
-        /* CI may not have been initialized. */
-        if (!pci->pDeskInfo && pti->pDeskInfo)
-        {
-           if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
-
-           pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
-        }
-        if (pti->pcti && pci->pDeskInfo)
-           pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
-        else
-           pci->pClientThreadInfo = NULL;
-
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    return pti;
+    UserDbgAssertThreadInfo(TRUE);
+    return (PTHREADINFO)PsGetCurrentThreadWin32Thread();
 }
-
 
 /* EOF */

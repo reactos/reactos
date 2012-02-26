@@ -97,7 +97,7 @@ ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
 {
     PPCI_ARBITER_INSTANCE PciArbiter;
     //PARBITER_INSTANCE CommonInstance;
-    NTSTATUS Status;
+    //NTSTATUS Status;
 
     /* Only valid for root FDOs who are being applied the hack for the first time */
     ASSERT(!FdoExtension->BrokenVideoHackApplied);
@@ -123,7 +123,7 @@ ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
                                         NULL);
     ASSERT(NT_SUCCESS(Status));
 #else
-    Status = STATUS_SUCCESS;
+    //Status = STATUS_SUCCESS;
     UNIMPLEMENTED;
     while (TRUE);
 #endif

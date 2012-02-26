@@ -1314,6 +1314,7 @@ extern "C" {
 #define WGL_SWAP_UNDERLAY14 0x20000000
 #define WGL_SWAP_UNDERLAY15 0x40000000
 #define AC_SRC_OVER 0
+#define LAYOUT_LTR 0
 #define LAYOUT_RTL 1 // Right to left
 #define LAYOUT_BTT 2 // Bottom to top
 #define LAYOUT_VBH 4 // Vertical before horizontal
@@ -2997,6 +2998,7 @@ DWORD WINAPI GdiGetCodePage(HDC);
 DWORD WINAPI GdiGetBatchLimit(void);
 DWORD WINAPI GdiSetBatchLimit(DWORD);
 BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
+BOOL WINAPI GdiTransparentBlt(HDC,int,int,int,int,HDC,int,int,int,int,UINT);
 BOOL WINAPI GdiIsMetaFileDC(HDC);
 #define GetCValue(cmyk) ((BYTE)(cmyk))
 #define GetMValue(cmyk) ((BYTE)((cmyk)>> 8))

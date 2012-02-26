@@ -390,8 +390,13 @@ GetVersionInformationFromInfFile(
             DriverVer, RequiredSize,
             &RequiredSize);
     }
-    if (!Result)
-        goto cleanup;
+    else
+    {
+        /* windows sets default date of 00/00/0000 when this directive is missing*/
+        memset(DriverDate, 0, sizeof(FILETIME));
+        *DriverVersion = 0;
+        return TRUE;
+    }
 
     /* Get driver date and driver version, by analyzing the "DriverVer" value */
     pComma = strchrW(DriverVer, ',');
@@ -609,7 +614,7 @@ RegpApplyRestrictions( DWORD dwFlags, DWORD dwType, DWORD cbData,
 
                 if ((dwFlags & RRF_RT_DWORD) == RRF_RT_DWORD)
                     cbExpect = 4;
-                else if ((dwFlags & RRF_RT_DWORD) == RRF_RT_QWORD)
+                else if ((dwFlags & RRF_RT_QWORD) == RRF_RT_QWORD)
                     cbExpect = 8;
 
                 if (cbExpect && cbData != cbExpect)
@@ -681,9 +686,9 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
             if (dwType == REG_EXPAND_SZ)
             {
                 cbData = ExpandEnvironmentStringsW(pvBuf, pvData,
-                                                   pcbData ? *pcbData : 0);
+                                                   pcbData ? (*pcbData)/sizeof(WCHAR) : 0);
                 dwType = REG_SZ;
-                if(pcbData && cbData > *pcbData)
+                if(pcbData && cbData > ((*pcbData)/sizeof(WCHAR)))
                     ret = ERROR_MORE_DATA;
             }
             else if (pcbData)
@@ -814,7 +819,7 @@ SetupDiBuildDriverInfoList(
                 KEY_QUERY_VALUE);
             if (hDriverKey == INVALID_HANDLE_VALUE)
                 goto done;
-            RequiredSize = len - strlenW(InfFileName);
+            RequiredSize = (len - strlenW(InfFileName)) * sizeof(WCHAR);
             rc = RegGetValueW(
                 hDriverKey,
                 NULL,

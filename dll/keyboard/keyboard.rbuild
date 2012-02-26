@@ -151,6 +151,9 @@
 	<directory name="kbdno">
 		<xi:include href="kbdno/kbdno.rbuild" />
 	</directory>
+	<directory name="kbdpl">
+		<xi:include href="kbdpl/kbdpl.rbuild" />
+	</directory>
 	<directory name="kbdpl1">
 		<xi:include href="kbdpl1/kbdpl1.rbuild" />
 	</directory>

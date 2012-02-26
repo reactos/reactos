@@ -212,8 +212,8 @@ typedef struct _ACCESS_STATE {
 
 typedef VOID
 (NTAPI *PNTFS_DEREF_EXPORTED_SECURITY_DESCRIPTOR)(
-  IN PVOID Vcb,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ PVOID Vcb,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 #ifndef _NTLSA_IFS_
 
@@ -303,7 +303,7 @@ typedef struct _SE_ADT_PARAMETER_ARRAY {
 
 #endif /* !_NTLSA_AUDIT_ */
 #endif /* !_NTLSA_IFS_ */
-$endif
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 #define SE_UNSOLICITED_INPUT_PRIVILEGE    6
 
@@ -392,7 +392,7 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinConsoleLogonSid = 81,
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
-$endif
+$endif (_NTDDK_)
 $if (_NTIFS_)
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
@@ -407,13 +407,21 @@ typedef struct _SID {
   UCHAR Revision;
   UCHAR SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+#ifdef MIDL_PASS
+  [size_is(SubAuthorityCount)] ULONG SubAuthority[*];
+#else
   ULONG SubAuthority[ANYSIZE_ARRAY];
+#endif
 } SID, *PISID;
 #endif
 
 #define SID_REVISION                    1
 #define SID_MAX_SUB_AUTHORITIES         15
 #define SID_RECOMMENDED_SUB_AUTHORITIES 1
+
+#ifndef MIDL_PASS
+#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(ULONG) + (SID_MAX_SUB_AUTHORITIES * sizeof(ULONG)))
+#endif
 
 typedef enum _SID_NAME_USE {
   SidTypeUser = 1,
@@ -429,7 +437,11 @@ typedef enum _SID_NAME_USE {
 } SID_NAME_USE, *PSID_NAME_USE;
 
 typedef struct _SID_AND_ATTRIBUTES {
+#ifdef MIDL_PASS
+  PISID Sid;
+#else
   PSID Sid;
+#endif
   ULONG Attributes;
 } SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
 typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
@@ -931,7 +943,11 @@ typedef struct _TOKEN_USER {
 
 typedef struct _TOKEN_GROUPS {
   ULONG GroupCount;
+#ifdef MIDL_PASS
+  [size_is(GroupCount)] SID_AND_ATTRIBUTES Groups[*];
+#else
   SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
+#endif
 } TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
 
 typedef struct _TOKEN_PRIVILEGES {
@@ -1131,4 +1147,14 @@ typedef struct _SE_EXPORTS {
 typedef NTSTATUS
 (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
   IN PLUID LogonId);
+
+typedef struct _SECURITY_CLIENT_CONTEXT {
+  SECURITY_QUALITY_OF_SERVICE SecurityQos;
+  PACCESS_TOKEN ClientToken;
+  BOOLEAN DirectlyAccessClientToken;
+  BOOLEAN DirectAccessEffectiveOnly;
+  BOOLEAN ServerIsRemote;
+  TOKEN_CONTROL ClientTokenControl;
+} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
+
 $endif (_NTIFS_)

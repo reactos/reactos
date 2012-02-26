@@ -8,7 +8,7 @@ BEGIN
         MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Blocca la Barra delle applicazioni", ID_LOCKTASKBAR
-        MENUITEM "&Proprietà", ID_SHELL_CMD_PROPERTIES
+        MENUITEM "&ProprietÃ ", ID_SHELL_CMD_PROPERTIES
     END
 END
 
@@ -71,14 +71,14 @@ END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Menù avvio"
+CAPTION "MenÃ¹ avvio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Menù avvio", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    AUTORADIOBUTTON "&MenÃ¹ avvio", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
     LTEXT           "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20,17,150,24, WS_DISABLED
     PUSHBUTTON      "&Personalizzare...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "Menù avvio &classico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Questo stile di menù ha funzionalità e aspetto classici",-1,20,57,150,24, WS_DISABLED
+    AUTORADIOBUTTON "MenÃ¹ avvio &classico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "Questo stile di menÃ¹ ha funzionalitÃ  e aspetto classici",-1,20,57,150,24, WS_DISABLED
     PUSHBUTTON      "&Personalizza...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
     GROUPBOX        "Privacy",IDC_STATIC, 7,100,238,42
     AUTOCHECKBOX    "Memorizza e mostra un elenco di &file aperti di recente", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
@@ -117,13 +117,13 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_START             "Avvio"
-    IDS_PROPERTIES        "&Proprietà"
+    IDS_PROPERTIES        "&ProprietÃ "
     IDS_OPEN_ALL_USERS    "&Apri tutti gli utenti"
     IDS_EXPLORE_ALL_USERS "&Esplora tutti gli utenti"
-    IDS_STARTUP_ERROR     "Impossibile avviare explorer perché il registro è danneggiato o non disponibile."
+    IDS_STARTUP_ERROR     "Impossibile avviare explorer perchÃ© il registro Ã¨ danneggiato o non disponibile."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Proprietà della Barra delle applicazioni e del Menú di avvio"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "ProprietÃ  della Barra delle applicazioni e del MenÃº di avvio"
 END

@@ -1,29 +1,29 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-IDC_EVENTVWR MENU 
+IDC_EVENTVWR MENU
 BEGIN
-    POPUP "&Дневник"
+    POPUP "&Р”РЅРµРІРЅРёРє"
     BEGIN
-        MENUITEM "&Приложение",                ID_LOG_APPLICATION
-        MENUITEM "&Сигурност",                   ID_LOG_SECURITY
-        MENUITEM "&Уредба",                     ID_LOG_SYSTEM
+        MENUITEM "&РџСЂРёР»РѕР¶РµРЅРёРµ",                ID_LOG_APPLICATION
+        MENUITEM "&РЎРёРіСѓСЂРЅРѕСЃС‚",                   ID_LOG_SECURITY
+        MENUITEM "&РЈСЂРµРґР±Р°",                     ID_LOG_SYSTEM
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход",                       IDM_EXIT
+        MENUITEM "РР·&С…РѕРґ",                       IDM_EXIT
     END
-    POPUP "Из&глед"
+    POPUP "РР·&РіР»РµРґ"
     BEGIN
-        MENUITEM "О&пресняване",                    IDM_REFRESH
+        MENUITEM "Рћ&РїСЂРµСЃРЅСЏРІР°РЅРµ",                    IDM_REFRESH
     END
-    MENUITEM "На&стройки",                        ID_OPTIONS
-    POPUP "Помо&щ"
+    MENUITEM "РќР°&СЃС‚СЂРѕР№РєРё",                        ID_OPTIONS
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "Помо&щ",                       IDM_HELP
+        MENUITEM "РџРѕРјРѕ&С‰",                       IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&За...",                   IDM_ABOUT
+        MENUITEM "&Р—Р°...",                   IDM_ABOUT
     END
 END
 
-IDC_EVENTVWR ACCELERATORS 
+IDC_EVENTVWR ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -31,62 +31,62 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "За"
+CAPTION "Р—Р°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-    LTEXT           "Преглед на събития, в 1,0 за РеактОС",IDC_STATIC,49,10,150,8,SS_NOPREFIX
+    LTEXT           "РџСЂРµРіР»РµРґ РЅР° СЃСЉР±РёС‚РёСЏ, РІ 1,0 Р·Р° Р РµР°РєС‚РћРЎ",IDC_STATIC,49,10,150,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
-    DEFPUSHBUTTON   "Добре",IDOK,90,48,42,16,WS_GROUP
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER 
-CAPTION "Почакайте..."
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "РџРѕС‡Р°РєР°Р№С‚Рµ..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Зареждане на събитията. Почакайте...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
+    CTEXT           "Р—Р°СЂРµР¶РґР°РЅРµ РЅР° СЃСЉР±РёС‚РёСЏС‚Р°. РџРѕС‡Р°РєР°Р№С‚Рµ...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
 END
 
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Подробно за събитието"
+CAPTION "РџРѕРґСЂРѕР±РЅРѕ Р·Р° СЃСЉР±РёС‚РёРµС‚Рѕ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Затваряне",IDOK,12,258,50,14
-    PUSHBUTTON      "На&зад",IDPREVIOUS,78,258,50,14
-    PUSHBUTTON      "На&пред",IDNEXT,144,258,50,14
-    PUSHBUTTON      "Помо&щ",IDHELP,210,258,50,14
+    DEFPUSHBUTTON   "&Р—Р°С‚РІР°СЂСЏРЅРµ",IDOK,12,258,50,14
+    PUSHBUTTON      "РќР°&Р·Р°Рґ",IDPREVIOUS,78,258,50,14
+    PUSHBUTTON      "РќР°&РїСЂРµРґ",IDNEXT,144,258,50,14
+    PUSHBUTTON      "РџРѕРјРѕ&С‰",IDHELP,210,258,50,14
     EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-    LTEXT           "&Описание:",IDC_STATIC,15,70,39,8
-    LTEXT           "Дата:",IDC_STATIC,14,14,36,8
-    LTEXT           "Статичен",IDC_EVENTDATESTATIC,60,14,40,8
-    LTEXT           "Време:",IDC_STATIC,14,27,36,8
-    LTEXT           "Статичен",IDC_EVENTTIMESTATIC,60,27,40,8
-    LTEXT           "&Потребител:",IDC_STATIC,14,41,50,8
-    LTEXT           "Статичен",IDC_EVENTUSERSTATIC,60,41,40,8
-    LTEXT           "&Компютър:",IDC_STATIC,14,54,40,8
-    LTEXT           "Статичен",IDC_EVENTCOMPUTERSTATIC,60,54,40,8
-    LTEXT           "Означител събитие:",IDC_STATIC,105,15,71,8
-    LTEXT           "Статичен",IDC_EVENTIDSTATIC,175,15,40,8
-    LTEXT           "Източник:",IDC_STATIC,105,28,36,8
-    LTEXT           "Статичен",IDC_EVENTSOURCESTATIC,175,28,40,8
-    LTEXT           "Вид:",IDC_STATIC,105,42,36,8
-    LTEXT           "Статичен",IDC_EVENTTYPESTATIC,175,42,40,8
-    LTEXT           "Раздел:",IDC_STATIC,105,55,36,8
-    LTEXT           "Статичен",IDC_EVENTCATEGORYSTATIC,175,55,40,8
+    LTEXT           "&РћРїРёСЃР°РЅРёРµ:",IDC_STATIC,15,70,39,8
+    LTEXT           "Р”Р°С‚Р°:",IDC_STATIC,14,14,36,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTDATESTATIC,60,14,40,8
+    LTEXT           "Р’СЂРµРјРµ:",IDC_STATIC,14,27,36,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTTIMESTATIC,60,27,40,8
+    LTEXT           "&РџРѕС‚СЂРµР±РёС‚РµР»:",IDC_STATIC,14,41,50,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTUSERSTATIC,60,41,40,8
+    LTEXT           "&РљРѕРјРїСЋС‚СЉСЂ:",IDC_STATIC,14,54,40,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTCOMPUTERSTATIC,60,54,40,8
+    LTEXT           "РћР·РЅР°С‡РёС‚РµР» СЃСЉР±РёС‚РёРµ:",IDC_STATIC,105,15,71,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTIDSTATIC,175,15,40,8
+    LTEXT           "РР·С‚РѕС‡РЅРёРє:",IDC_STATIC,105,28,36,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTSOURCESTATIC,175,28,40,8
+    LTEXT           "Р’РёРґ:",IDC_STATIC,105,42,36,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTTYPESTATIC,175,42,40,8
+    LTEXT           "Р Р°Р·РґРµР»:",IDC_STATIC,105,55,36,8
+    LTEXT           "РЎС‚Р°С‚РёС‡РµРЅ",IDC_EVENTCATEGORYSTATIC,175,55,40,8
     EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
-    LTEXT           "&Данни",IDC_STATIC,14,194,25,8
-    CONTROL         "&Байтове",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,40,10
-    CONTROL         "&Думи",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,85,194,33,10
+    LTEXT           "&Р”Р°РЅРЅРё",IDC_STATIC,14,194,25,8
+    CONTROL         "&Р‘Р°Р№С‚РѕРІРµ",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,40,10
+    CONTROL         "&Р”СѓРјРё",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,85,194,33,10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE                  "Преглед на събития"
-    IDS_EVENTSTRINGIDNOTFOUND      "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
+    IDS_APP_TITLE                  "РџСЂРµРіР»РµРґ РЅР° СЃСЉР±РёС‚РёСЏ"
+    IDS_EVENTSTRINGIDNOTFOUND      "РќРµ Рµ РЅР°РјРµСЂРµРЅРѕ РѕРїРёСЃР°РЅРёРµС‚Рѕ РЅР° СЃСЉР±РёС‚РёРµ ( %lu ) РІ РёР·С‚РѕС‡РЅРёРє ( %s ). Р’СЉР·РјРѕР¶РЅРѕ Рµ РјРµСЃС‚РёСЏС‚ РєРѕРјРїСЋС‚СЉСЂ РґР° РЅСЏРјР° РЅСѓР¶РЅРёС‚Рµ СЃРІРµРґРµРЅРёСЏ РІ СЂРµРіРёСЃС‚СЉСЂР° РёР»Рё DLL С„Р°Р№Р»РѕРІРµС‚, РЅСѓР¶РЅРё Р·Р° РїРѕРєР°Р·РІР°РЅРµ РЅР° СЃСЉРѕР±С‰РµРЅРёСЏ РѕС‚ РѕС‚РґР°Р»РµС‡РµРЅ РєРѕРјРїСЋС‚СЉСЂ."
     IDS_EVENTLOG_ERROR_TYPE        "Error"
     IDS_EVENTLOG_WARNING_TYPE      "Warning"
     IDS_EVENTLOG_INFORMATION_TYPE  "Information"
@@ -98,15 +98,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Вид"
-    IDS_COLUMNDATE      "Дата"
-    IDS_COLUMNTIME      "Време"
-    IDS_COLUMNSOURCE    "Източник"
-    IDS_COLUMNCATEGORY  "Разряд"
-    IDS_COLUMNEVENT     "Събитие"
-    IDS_COLUMNUSER      "Потребител"
-    IDS_COLUMNCOMPUTER  "Компютър"
-    IDS_COLUMNEVENTDATA "Данни за събитието"
+    IDS_COLUMNTYPE      "Р’РёРґ"
+    IDS_COLUMNDATE      "Р”Р°С‚Р°"
+    IDS_COLUMNTIME      "Р’СЂРµРјРµ"
+    IDS_COLUMNSOURCE    "РР·С‚РѕС‡РЅРёРє"
+    IDS_COLUMNCATEGORY  "Р Р°Р·СЂСЏРґ"
+    IDS_COLUMNEVENT     "РЎСЉР±РёС‚РёРµ"
+    IDS_COLUMNUSER      "РџРѕС‚СЂРµР±РёС‚РµР»"
+    IDS_COLUMNCOMPUTER  "РљРѕРјРїСЋС‚СЉСЂ"
+    IDS_COLUMNEVENTDATA "Р”Р°РЅРЅРё Р·Р° СЃСЉР±РёС‚РёРµС‚Рѕ"
 END
 
 STRINGTABLE

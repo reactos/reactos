@@ -1038,10 +1038,9 @@ RpnpEvaluateStack(
                 ValueStackPointer--;
                 ull = ValueStack[ValueStackPointer];
 
-                if (ull == 0 && (Op->Data.BinaryOperator == RpnBinaryOperatorDiv ||
-                                 Op->Data.BinaryOperator == RpnBinaryOperatorDiv))
+                if (ull == 0 && Op->Data.BinaryOperator == RpnBinaryOperatorDiv)
                 {
-                    CONST_STRCPY(ErrMsg, "Devision by zero");
+                    CONST_STRCPY(ErrMsg, "Division by zero");
 
                     if (ErrOffset)
                         *ErrOffset = Op->CharacterOffset;

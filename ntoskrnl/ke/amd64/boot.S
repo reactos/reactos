@@ -10,7 +10,7 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
-EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
+EXTERN KiSystemStartupBootStack:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -21,42 +21,24 @@ EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
 
 /**
  * VOID
- * KiSetupStackAndInitializeKernel(
- *     IN PKPROCESS InitProcess,               <rsp + 0x08, rcx>
- *     IN PKTHREAD InitThread,                 <rsp + 0x10, rdx>
- *     IN PVOID IdleStack,                     <rsp + 0x18, r8>
- *     IN PKPRCB Prcb,                         <rsp + 0x20, r9>
- *     IN CCHAR Number,                        <rsp + 0x28>
- *     IN PLOADER_PARAMETER_BLOCK LoaderBlock) <rsp + 0x30>
+ * KiSwitchToBootStack(
+ *     IN ULONG_PTR InitialStack<rcx>)
  */
-PUBLIC KiSetupStackAndInitializeKernel
-.PROC KiSetupStackAndInitializeKernel
-
-    /* Save current stack */
-    mov rsi, rsp
+PUBLIC KiSwitchToBootStack
+.PROC KiSwitchToBootStack
 
     /* Setup the new stack */
     mov ax, HEX(18)
     mov ss, ax
-    mov rsp, r8
-    sub rsp, HEX(300) // FIXME
-
-    /* Copy stack parameters to the new stack */
-    sub rsp, HEX(38)
+    mov rsp, rcx
+    // Note: 8 bytes extra to compensate for the missing return address on
+    // the stack. On function entry the stack is unaligned by 8!!
+    sub rsp, HEX(308) // FIXME
     .ENDPROLOG
 
-    mov rdi, rsp
-    movsq
-    movsq
-    movsq
-    movsq
-    movsq
-    movsq
-    movsq
+    jmp KiSystemStartupBootStack
 
-    jmp KiInitializeKernelAndGotoIdleLoop
-
-.ENDP KiSetupStackAndInitializeKernel
+.ENDP
 
 END
 

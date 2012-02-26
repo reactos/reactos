@@ -245,7 +245,10 @@ LRESULT	StartButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 void DesktopBar::RegisterHotkeys()
 {
 	 // register hotkey WIN+E opening explorer
-	RegisterHotKey(_hwnd, 0, MOD_WIN, 'E');
+	RegisterHotKey(_hwnd, IDHK_EXPLORER, MOD_WIN, 'E');
+	RegisterHotKey(_hwnd, IDHK_RUN, MOD_WIN, 'R');
+	RegisterHotKey(_hwnd, IDHK_DESKTOP, MOD_WIN, 'D');
+	RegisterHotKey(_hwnd, IDHK_LOGOFF, MOD_WIN, 'L');
 
 		///@todo register all common hotkeys
 }
@@ -253,8 +256,21 @@ void DesktopBar::RegisterHotkeys()
 void DesktopBar::ProcessHotKey(int id_hotkey)
 {
 	switch(id_hotkey) {
-	  case 0:	explorer_show_frame(SW_SHOWNORMAL);
-		break;
+		case IDHK_EXPLORER:
+			explorer_show_frame(SW_SHOWNORMAL);
+			break;
+
+		case IDHK_RUN:
+			_startMenuRoot->Command(IDC_LAUNCH, 0);
+			break;
+
+		case IDHK_LOGOFF:
+			_startMenuRoot->Command(IDC_LOGOFF, 0);
+			break;
+
+		case IDHK_DESKTOP:
+			g_Globals._desktops.ToggleMinimize();
+			break;
 
 		///@todo implement all common hotkeys
 	}
@@ -290,7 +306,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			else
 				return 0;			// disable any other resizing
 		} else if (wparam == SC_TASKLIST)
-			ShowStartMenu();
+			ShowOrHideStartMenu();
 		goto def;
 
 	  case WM_SIZE:
@@ -414,7 +430,7 @@ int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_START:
-		ShowStartMenu();
+		ShowOrHideStartMenu();
 		break;
 
 	  case ID_ABOUT_EXPLORER:
@@ -468,7 +484,7 @@ int DesktopBar::Command(int id, int code)
 }
 
 
-void DesktopBar::ShowStartMenu()
+void DesktopBar::ShowOrHideStartMenu()
 {
 	if (_startMenuRoot)
 	{
@@ -476,7 +492,10 @@ void DesktopBar::ShowStartMenu()
 		if (!Button_GetState(_hwndStartButton))
 			Button_SetState(_hwndStartButton, TRUE);
 
- 		_startMenuRoot->TrackStartmenu();
+        if (_startMenuRoot->IsStartMenuVisible())
+            _startMenuRoot->CloseStartMenu();
+        else
+            _startMenuRoot->TrackStartmenu();
 
 		// StartMenu was closed, release button state
 		Button_SetState(_hwndStartButton, false);

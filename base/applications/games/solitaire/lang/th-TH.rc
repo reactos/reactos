@@ -16,15 +16,15 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Cards", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Cards", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
     AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
-    DEFPUSHBUTTON   "µ°≈ß", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "¬°‡≈‘°", IDCANCEL, 101, 97, 50, 14
+    DEFPUSHBUTTON   "‡∏ï‡∏Å‡∏•‡∏á", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
@@ -37,7 +37,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -65,19 +65,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "‡&°¡"
+    POPUP "‡πÄ&‡∏Å‡∏°"
     BEGIN
-        MENUITEM "·&®°‰æË\tF2",                 IDM_GAME_NEW
+        MENUITEM "‡πÅ&‡∏à‡∏Å‡πÑ‡∏û‡πà\tF2",                 IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "·&µËß‰æË...",                 IDM_GAME_DECK
-        MENUITEM "&µ—«‡≈◊Õ°...",                IDM_GAME_OPTIONS
+        MENUITEM "‡πÅ&‡∏ï‡πà‡∏á‡πÑ‡∏û‡πà...",                 IDM_GAME_DECK
+        MENUITEM "&‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å...",                IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&ÕÕ°",                        IDM_GAME_EXIT
+        MENUITEM "&‡∏≠‡∏≠‡∏Å",                        IDM_GAME_EXIT
     END
-    POPUP "&™Ë«¬‡À≈◊Õ"
+    POPUP "&‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠"
     BEGIN
-        MENUITEM "‡&π◊ÈÕÀ“\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "‡&°’Ë¬«°—∫...",               IDM_HELP_ABOUT
+        MENUITEM "‡πÄ&‡∏ô‡∏∑‡πâ‡∏≠‡∏´‡∏≤\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "‡πÄ&‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö...",               IDM_HELP_ABOUT
     END
 END
 

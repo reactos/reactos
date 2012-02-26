@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "Quitter",                       IDM_EXIT
         MENUITEM "&Options",                    IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&À propos ...",                  IDM_ABOUT
+        MENUITEM "&Ã€ propos ...",                  IDM_ABOUT
     END
 END
 
@@ -19,7 +19,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "À propos"
+CAPTION "Ã€ propos"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_ICON,IDC_MYICON,14,9,20,20
@@ -30,7 +30,7 @@ END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Paramètres de la loupe"
+CAPTION "ParamÃ¨tres de la loupe"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Quitter",IDOK,96,161,50,14
@@ -38,12 +38,12 @@ BEGIN
     LTEXT           "Coefficient d'agrandissement:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Poursuite",IDC_STATIC,7,25,139,59
-    GROUPBOX        "Présentation",IDC_STATIC,7,87,139,57
+    GROUPBOX        "PrÃ©sentation",IDC_STATIC,7,87,139,57
     CONTROL         "Suivre le curseur de la souris",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
     CONTROL         "Suivre le focus du clavier",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "Suivre l'édition de texte",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Suivre l'Ã©dition de texte",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
     CONTROL         "Inverser les couleurs",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
-    CONTROL         "Démarrer réduit",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "DÃ©marrer rÃ©duit",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
     CONTROL         "Montrer la loupe",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
 END
 
@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "La loupe a été réalisée pour fournir quelques fonctionnalités aux utilisateurs souffrants de déficiences visuelles. La majorité de ces utilisateurs aura besoin d'un utilitaire d'agrandissement avec plus de fonctionnalités pour une utilisation quotidienne.",IDC_STATIC,36,7,207,33
+    LTEXT           "La loupe a Ã©tÃ© rÃ©alisÃ©e pour fournir quelques fonctionnalitÃ©s aux utilisateurs souffrants de dÃ©ficiences visuelles. La majoritÃ© de ces utilisateurs aura besoin d'un utilitaire d'agrandissement avec plus de fonctionnalitÃ©s pour une utilisation quotidienne.",IDC_STATIC,36,7,207,33
     CONTROL         "Ne plus montrer ce message",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 

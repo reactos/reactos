@@ -76,7 +76,6 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     FILE_INFORMATION_CLASS FileInformationClass;
     PFILE_OBJECT FileObject;
-    PMSFS_DEVICE_EXTENSION DeviceExtension;
     PMSFS_FCB Fcb;
     PMSFS_CCB Ccb;
     PVOID SystemBuffer;
@@ -88,7 +87,6 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
     IoStack = IoGetCurrentIrpStackLocation (Irp);
     FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
-    DeviceExtension = DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Fcb = (PMSFS_FCB)FileObject->FsContext;
     Ccb = (PMSFS_CCB)FileObject->FsContext2;

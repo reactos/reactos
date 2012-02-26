@@ -103,7 +103,7 @@ LpcpAllocateFromPortZone(VOID)
 
     /* Allocate a message from the port zone while holding the lock */
     KeAcquireGuardedMutex(&LpcpLock);
-    Message = ExAllocateFromPagedLookasideList(&LpcpMessagesLookaside);
+    Message = (PLPCP_MESSAGE)ExAllocateFromPagedLookasideList(&LpcpMessagesLookaside);
     if (!Message)
     {
         /* Fail, and let caller cleanup */
@@ -136,7 +136,7 @@ LpcpGetMessageFromThread(IN PETHREAD Thread)
     }
 
     /* Otherwise, this is a message. Return the pointer */
-    return (PVOID)((ULONG_PTR)Thread->LpcReplyMessage & ~LPCP_THREAD_FLAGS);
+    return (PLPCP_MESSAGE)((ULONG_PTR)Thread->LpcReplyMessage & ~LPCP_THREAD_FLAGS);
 }
 
 FORCEINLINE
@@ -147,7 +147,7 @@ LpcpGetPortFromThread(IN PETHREAD Thread)
     if (((ULONG_PTR)Thread->LpcReplyMessage) & LPCP_THREAD_FLAG_IS_PORT)
     {
         /* The pointer is actually a port, return it */
-        return (PVOID)((ULONG_PTR)Thread->LpcWaitingOnPort &
+        return (PLPCP_PORT_OBJECT)((ULONG_PTR)Thread->LpcWaitingOnPort &
                        ~LPCP_THREAD_FLAGS);
     }
 

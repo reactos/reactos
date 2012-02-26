@@ -6,8 +6,6 @@
  * TRANSLATOR:  Igor Paliychuk
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE

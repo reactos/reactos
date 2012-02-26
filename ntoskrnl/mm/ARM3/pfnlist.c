@@ -18,12 +18,12 @@
 #if DBG
 #define ASSERT_LIST_INVARIANT(x) \
 do { \
-	ASSERT(((x)->Total == 0 && \
+    ASSERT(((x)->Total == 0 && \
             (x)->Flink == LIST_HEAD && \
-			(x)->Blink == LIST_HEAD) || \
-		   ((x)->Total != 0 && \
-			(x)->Flink != LIST_HEAD && \
-			(x)->Blink != LIST_HEAD)); \
+            (x)->Blink == LIST_HEAD) || \
+           ((x)->Total != 0 && \
+            (x)->Flink != LIST_HEAD && \
+            (x)->Blink != LIST_HEAD)); \
 } while (0)
 #else
 #define ASSERT_LIST_INVARIANT(x)
@@ -206,6 +206,11 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     if (--MmAvailablePages < MmMinimumFreePages)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
+
+        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
     }
 
 #if MI_TRACE_PFNS
@@ -226,7 +231,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     PMMPFNLIST ListHead;
     MMLISTS ListName;
     PFN_NUMBER OldFlink, OldBlink;
-    ULONG OldColor, OldCache;
+    USHORT OldColor, OldCache;
     PMMCOLOR_TABLES ColorTable;
 
     /* Make sure PFN lock is held */
@@ -280,7 +285,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     }
 
     /* We are not on a list anymore */
-	ASSERT_LIST_INVARIANT(ListHead);
+    ASSERT_LIST_INVARIANT(ListHead);
     Pfn1->u1.Flink = Pfn1->u2.Blink = 0;
 
     /* Zero flags but restore color and cache */
@@ -330,6 +335,11 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     if (--MmAvailablePages < MmMinimumFreePages)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
+
+        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
     }
 
 #if MI_TRACE_PFNS
@@ -776,6 +786,64 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     Pfn1->u2.ShareCount++;
 }
 
+VOID
+NTAPI
+MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
+                               IN PMMPTE PointerPte,
+                               IN MMPTE TempPte)
+{
+    PMMPFN Pfn1;
+    NTSTATUS Status;
+    PMMPTE PointerPtePte;
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* PTE must be invalid */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+
+    /* Setup the PTE */
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+    Pfn1->PteAddress = PointerPte;
+    Pfn1->OriginalPte = DemandZeroPte;
+
+    /* Otherwise this is a fresh page -- set it up */
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    Pfn1->u3.e2.ReferenceCount++;
+    Pfn1->u2.ShareCount++;
+    Pfn1->u3.e1.PageLocation = ActiveAndValid;
+    ASSERT(Pfn1->u3.e1.Rom == 0);
+    Pfn1->u3.e1.Modified = 1;
+
+    /* Get the page table for the PTE */
+    PointerPtePte = MiAddressToPte(PointerPte);
+    if (PointerPtePte->u.Hard.Valid == 0)
+    {
+        /* Make sure the PDE gets paged in properly */
+        Status = MiCheckPdeForPagedPool(PointerPte);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Crash */
+            KeBugCheckEx(MEMORY_MANAGEMENT,
+                         0x61940,
+                         (ULONG_PTR)PointerPte,
+                         (ULONG_PTR)PointerPtePte->u.Long,
+                         (ULONG_PTR)MiPteToAddress(PointerPte));
+        }
+    }
+
+    /* Get the PFN for the page table */
+    PageFrameIndex = PFN_FROM_PTE(PointerPtePte);
+    ASSERT(PageFrameIndex != 0);
+    Pfn1->u4.PteFrame = PageFrameIndex;
+
+    /* Increase its share count so we don't get rid of it */
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+    Pfn1->u2.ShareCount++;
+
+    /* Write valid PTE */
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+}
+
+
 PFN_NUMBER
 NTAPI
 MiAllocatePfn(IN PMMPTE PointerPte,
@@ -798,7 +866,11 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     if (MmAvailablePages < 128)
     {
         DPRINT1("Warning, running low on memory: %d pages left\n", MmAvailablePages);
+
         //MiEnsureAvailablePageOrWait(NULL, OldIrql);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
     }
 
     /* Grab a page */
@@ -860,7 +932,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
             /* In ReactOS, this path should always be hit with a deleted PFN */
-            ASSERT(MI_IS_PFN_DELETED(Pfn1) == TRUE);
+            ASSERT((MI_IS_PFN_DELETED(Pfn1) == TRUE) || (Pfn1->u3.e1.PrototypePte == 1));
 
             /* Clear the last reference */
             Pfn1->u3.e2.ReferenceCount = 0;

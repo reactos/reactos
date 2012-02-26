@@ -12,7 +12,7 @@
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
 @ stdcall ImmDisableTextFrameService(long)
-@ stub ImmEnumInputContext
+@ stdcall ImmEnumInputContext(long ptr long)
 @ stdcall ImmEnumRegisterWordA(long ptr str long str ptr)
 @ stdcall ImmEnumRegisterWordW(long ptr wstr long wstr ptr)
 @ stdcall ImmEscapeA(long long long ptr)

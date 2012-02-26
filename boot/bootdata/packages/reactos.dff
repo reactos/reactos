@@ -76,6 +76,7 @@ base\applications\network\route\route.exe               1
 base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
+base\applications\network\wlanconf\wlanconf.exe         1
 base\applications\notepad\notepad.exe                   1
 base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
@@ -101,6 +102,7 @@ base\services\svchost\svchost.exe                   1
 base\services\tcpsvcs\tcpsvcs.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\telnetd\telnetd.exe                   1
+base\services\thmsvc\thmsvc.exe                     1
 base\services\umpnpmgr\umpnpmgr.exe                 1
 base\services\wlansvc\wlansvc.exe                   1
 
@@ -115,6 +117,7 @@ base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
 base\system\bootok\bootok.exe                       1
+base\system\diskpart\diskpart.exe                   1
 base\system\expand\expand.exe                       1
 base\system\subst\subst.exe                         1
 base\system\format\format.exe                       1
@@ -124,7 +127,7 @@ base\system\regsvr32\regsvr32.exe                   1
 base\system\rundll32\rundll32.exe                   1
 base\system\runonce\runonce.exe                     1
 base\system\services\services.exe                   1
-base\system\smss\smss.exe                           1
+base\system\smss2\smss.exe                          1
 base\system\userinit\userinit.exe                   1
 base\system\winlogon\winlogon.exe                   1
 
@@ -230,6 +233,7 @@ dll\keyboard\kbdlv\kbdlv.dll                        1
 dll\keyboard\kbdmac\kbdmac.dll                      1
 dll\keyboard\kbdne\kbdne.dll                        1
 dll\keyboard\kbdno\kbdno.dll                        1
+dll\keyboard\kbdpl\kbdpl.dll                        1
 dll\keyboard\kbdpl1\kbdpl1.dll                      1
 dll\keyboard\kbdpo\kbdpo.dll                        1
 dll\keyboard\kbdro\kbdro.dll                        1
@@ -529,6 +533,7 @@ drivers\network\tcpip\tcpip.sys                     2
 drivers\network\tdi\tdi.sys                         2
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
+drivers\network\ndisuio\ndisuio.sys                 2
 
 drivers\serial\serenum\serenum.sys                  2
 drivers\serial\serial\serial.sys                    2
@@ -536,11 +541,7 @@ drivers\serial\serial\serial.sys                    2
 drivers\storage\ide\pciide\pciide.sys               2
 drivers\storage\ide\pciidex\pciidex.sys             2
 
-;drivers\usb\miniport\usbohci\usbohci.sys           2
-;drivers\usb\miniport\usbuhci\usbuhci.sys           2
-;drivers\usb\usbhub\usbhub.sys                      2
-;drivers\usb\usbport\usbport.sys                    2
-;drivers\usb\nt4compat\usbdriver\usbdriver.sys      2
+drivers\hid\mouhid\mouhid.sys                       2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1
@@ -663,7 +664,9 @@ media\inf\disk.inf                                  6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
+media\inf\hal.inf                                   6
 media\inf\hdc.inf                                   6
+media\inf\input.inf                                 6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
 media\inf\machine.inf                               6
@@ -777,8 +780,6 @@ modules\rosapps\drivers\green\green.sys                                    2   o
 
 ; Rostests
 modules\rostests\rosautotest\rosautotest.exe                               1   optional
-modules\rostests\drivers\kmtest\kmtest.sys                                 2   optional
-modules\rostests\drivers\kmtest\kmtestassist.sys                           2   optional
 modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
@@ -816,6 +817,7 @@ modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   o
 modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
 modules\rostests\winetests\msacm32\msacm32_winetest.exe                    7   optional
 modules\rostests\winetests\mscms\mscms_winetest.exe                        7   optional
+modules\rostests\winetests\mscoree\mscoree_winetest.exe                    7   optional
 modules\rostests\winetests\msctf\msctf_winetest.exe                        7   optional
 modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
 modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
@@ -869,11 +871,19 @@ modules\rostests\winetests\wldap32\wldap32_winetest.exe                    7   o
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   optional
 
+modules\rostests\apitests\advapi32\advapi32_apitest.exe                    7   optional
 modules\rostests\apitests\dciman32\dciman32_apitest.exe                    7   optional
 modules\rostests\apitests\gdi32\gdi32_apitest.exe                          7   optional
 modules\rostests\apitests\kernel32\kernel32_apitest.exe                    7   optional
+modules\rostests\apitests\msvcrt\msvcrt_apitest.exe                        7   optional
 modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   optional
 modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
 modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional
+
+modules\rostests\kmtests\kmtest_.exe                                       7   optional
+modules\rostests\kmtests\kmtest_drv.sys                                    7   optional
+modules\rostests\kmtests\example\example_drv.sys                           7   optional
+modules\rostests\kmtests\ntos_io\iodeviceobject_drv.sys                    7   optional
+modules\rostests\kmtests\ntos_io\iohelper_drv.sys                          7   optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional

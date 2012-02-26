@@ -45,7 +45,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX    "自動的にインターネット時刻サーバーと同期する", IDC_AUTOSYNC,
-                    11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+                    11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "サーバー:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "今すぐ更新", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23

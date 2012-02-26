@@ -16,16 +16,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
 
 add_library(wintrust SHARED ${SOURCE})
-
 set_module_type(wintrust win32dll)
-
-target_link_libraries(wintrust
-    wine
-    ${PSEH_LIB})
-
-add_importlibs(wintrust crypt32 cryptui user32 advapi32 imagehlp msvcrt kernel32 ntdll)
-
-add_importlib_target(wintrust.spec)
-
+target_link_libraries(wintrust wine ${PSEH_LIB})
+add_delay_importlibs(wintrust cryptui imagehlp)
+add_importlibs(wintrust crypt32 user32 advapi32 msvcrt kernel32 ntdll)
+add_importlib_target(wintrust.spec wintrust.dll)
 add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
-

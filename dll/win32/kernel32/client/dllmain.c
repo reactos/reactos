@@ -19,10 +19,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern UNICODE_STRING SystemDirectory;
-extern UNICODE_STRING WindowsDirectory;
-
-
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 BOOLEAN BaseRunningInServerProcess;
@@ -30,14 +26,11 @@ BOOLEAN BaseRunningInServerProcess;
 WCHAR BaseDefaultPathBuffer[6140];
 
 HANDLE BaseNamedObjectDirectory;
-HANDLE hProcessHeap = NULL;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
-HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
-UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 static BOOL DllInitialized = FALSE;
 
 BOOL WINAPI
@@ -59,71 +52,10 @@ extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 BOOLEAN InWindows = FALSE;
 
-HANDLE
-WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD dwDesiredAccess,
-                       BOOL	bInheritHandle,
-                       DWORD dwOptions);
-
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
 /* FUNCTIONS *****************************************************************/
-
-NTSTATUS
-WINAPI
-BaseGetNamedObjectDirectory(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &BaseStaticServerData->NamedObjectDirectory,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
-                                   DIRECTORY_ALL_ACCESS &
-                                   ~(DELETE | WRITE_DAC | WRITE_OWNER),
-                                   &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
-    return Status;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-BaseQueryModuleData(IN LPSTR ModuleName,
-                    IN LPSTR Unknown,
-                    IN PVOID Unknown2,
-                    IN PVOID Unknown3,
-                    IN PVOID Unknown4)
-{
-    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
-            ModuleName,
-            Unknown,
-            Unknown2,
-            Unknown3,
-            Unknown4);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-BaseProcessInitPostImport(VOID)
-{
-    /* FIXME: Initialize TS pointers */
-    return STATUS_SUCCESS;
-}
 
 BOOL
 WINAPI
@@ -135,7 +67,11 @@ BasepInitConsole(VOID)
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
-
+    STARTUPINFO si;
+    WCHAR SessionDir[256];
+    ULONG SessionId = NtCurrentPeb()->SessionId;
+    BOOLEAN InServer;
+    
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
@@ -154,8 +90,9 @@ BasepInitConsole(VOID)
     else
     {
         /* Assume one is needed */
+        GetStartupInfo(&si);
         Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-        Request.Data.AllocConsoleRequest.Visible = TRUE;
+        Request.Data.AllocConsoleRequest.ShowCmd = si.wShowWindow;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -176,7 +113,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            Request.Data.AllocConsoleRequest.Visible = FALSE;
+            Request.Data.AllocConsoleRequest.ShowCmd = SW_HIDE;
         }
         else
         {
@@ -202,6 +139,38 @@ BasepInitConsole(VOID)
 
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
+    
+    /* Setup the right Object Directory path */
+    if (!SessionId)
+    {
+        /* Use the raw path */
+        wcscpy(SessionDir, WIN_OBJ_DIR);
+    }
+    else
+    {
+        /* Use the session path */
+        swprintf(SessionDir,
+                 L"%ws\\%ld%ws",
+                 SESSION_DIR,
+                 SessionId,
+                 WIN_OBJ_DIR);
+    }
+
+    /* Connect to the base server */
+    DPRINT("Connecting to CSR...\n");
+    Status = CsrClientConnectToServer(SessionDir,
+                                      2,
+                                      NULL,
+                                      NULL,
+                                      &InServer);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Nothing to do for server-to-server */
+    if (InServer) return TRUE;
 
     /*
      * Normally, we should be connecting to the Console CSR Server...
@@ -222,6 +191,7 @@ BasepInitConsole(VOID)
         return TRUE;
     }
 
+    /* Nothing to do if not a console app */
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
@@ -250,110 +220,44 @@ BasepInitConsole(VOID)
     return TRUE;
 }
 
-VOID
-WINAPI
-BasepFakeStaticServerData(VOID)
+NTSTATUS
+NTAPI
+BaseCreateThreadPoolThread(IN PTHREAD_START_ROUTINE Function,
+                           IN PVOID Parameter,
+                           OUT PHANDLE ThreadHandle)
 {
     NTSTATUS Status;
-    WCHAR Buffer[MAX_PATH];
-    UNICODE_STRING SystemRootString;
-    UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
-    UNICODE_STRING BaseSrvCSDString;
-    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
+
+    /* Create a Win32 thread */
+    *ThreadHandle = CreateRemoteThread(NtCurrentProcess(),
+                                       NULL,
+                                       0,
+                                       Function,
+                                       Parameter,
+                                       CREATE_SUSPENDED,
+                                       NULL);
+    if (!(*ThreadHandle))
     {
-        {
-            NULL,
-            RTL_QUERY_REGISTRY_DIRECT,
-            L"CSDVersion",
-            &BaseSrvCSDString
-        },
-        {0}
-    };
-
-    /* Allocate the fake data */
-    BaseStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(BASE_STATIC_SERVER_DATA));
-    ASSERT(BaseStaticServerData != NULL);
-
-    /* Get the Windows directory */
-    RtlInitEmptyUnicodeString(&SystemRootString, Buffer, sizeof(Buffer));
-    Status = RtlExpandEnvironmentStrings_U(NULL,
-                                           &UnexpandedSystemRootString,
-                                           &SystemRootString,
-                                           NULL);
-    DPRINT1("Status: %lx. Root: %wZ\n", Status, &SystemRootString);
-    ASSERT(NT_SUCCESS(Status));
-
-    Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
-
-    wcscat(SystemRootString.Buffer, L"\\system32");
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsSystemDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
-
-    if (!SessionId)
-    {
-        Status = RtlCreateUnicodeString(&BaseStaticServerData->NamedObjectDirectory,
-                                        L"\\BaseNamedObjects");
-        ASSERT(NT_SUCCESS(Status));
+        /* Get the status value if we couldn't get a handle */
+        Status = NtCurrentTeb()->LastStatusValue;
+        if (NT_SUCCESS(Status)) Status = STATUS_UNSUCCESSFUL;
     }
     else
     {
-        /* Hopefully we'll fix CSRSS Before we add multiple sessions... */
-        ASSERT(FALSE);
+        /* Set success code */
+        Status = STATUS_SUCCESS;
     }
 
-    /*
-     * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
-     * and MaximumLength of the CSD String, since the same UNICODE_STRING is
-     * being queried twice, the first time as a ULONG!
-     *
-     * Somehow, in Windows this doesn't cause a buffer overflow, but it might
-     * in ReactOS, so this code is disabled until someone figures out WTF.
-     */
-    BaseStaticServerData->CSDNumber = 0;
-    BaseStaticServerData->RCNumber = 0;
+    /* All done */
+    return Status;
+}
 
-    /* Initialize the CSD string */
-    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    L"",
-                                    BaseServerRegistryConfigurationTable,
-                                    NULL,
-                                    NULL);
-    if (NT_SUCCESS(Status))
-    {
-        wcsncpy(BaseStaticServerData->CSDVersion,
-                BaseSrvCSDString.Buffer,
-                BaseSrvCSDString.Length / sizeof(WCHAR));
-    }
-    else
-    {
-        BaseStaticServerData->CSDVersion[0] = UNICODE_NULL;
-    }
-
-    Status = NtQuerySystemInformation(SystemBasicInformation,
-                                      &BaseStaticServerData->SysInfo,
-                                      sizeof(BaseStaticServerData->SysInfo),
-                                      NULL);
-    ASSERT(NT_SUCCESS(Status));
-
-    BaseStaticServerData->DefaultSeparateVDM = FALSE;
-    BaseStaticServerData->IsWowTaskReady = FALSE;
-    BaseStaticServerData->LUIDDeviceMapsEnabled = FALSE;
-    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
-    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
-
-    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
-                                      &BaseStaticServerData->TimeOfDay,
-                                      sizeof(BaseStaticServerData->TimeOfDay),
-                                      NULL);
-    ASSERT(NT_SUCCESS(Status));
+NTSTATUS
+NTAPI
+BaseExitThreadPoolThread(IN NTSTATUS ExitStatus)
+{
+    /* Exit the thread */
+    ExitThread(ExitStatus);
 }
 
 BOOL
@@ -379,6 +283,12 @@ DllMain(HANDLE hDll,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+        
+        /* Set no filter intially */
+        GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
+        
+        /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
+        RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);
@@ -417,21 +327,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Get the server data */
-        if (!Peb->ReadOnlyStaticServerData)
-        {
-            /* Build fake one for ReactOS */
-            BasepFakeStaticServerData();
-
-            /* Allocate the array */
-            Peb->ReadOnlyStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                            HEAP_ZERO_MEMORY,
-                                                            4 * sizeof(PVOID));
-
-            /* Set the data for the BASESRV DLL Index */
-            Peb->ReadOnlyStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
-        }
-
-        /* Get the server data */
+        ASSERT(Peb->ReadOnlyStaticServerData);
         BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
         ASSERT(BaseStaticServerData);
 
@@ -444,11 +340,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Initialize heap handle table */
-        hProcessHeap = RtlGetProcessHeap();
-        RtlInitializeHandleTable(0xFFFF,
-                                 sizeof(BASE_HEAP_HANDLE_ENTRY),
-                                 &BaseHeapHandleTable);
-        DPRINT("Heap: %p\n", hProcessHeap);
+        BaseDllInitializeMemoryManager();
 
         /* Set HMODULE for our DLL */
         kernel32_handle = hCurrentModule = hDll;
@@ -456,12 +348,10 @@ DllMain(HANDLE hDll,
         /* Set the directories */
         BaseWindowsDirectory = BaseStaticServerData->WindowsDirectory;
         BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
-        SystemDirectory = BaseWindowsSystemDirectory;
-        WindowsDirectory = BaseWindowsDirectory;
 
         /* Construct the default path (using the static buffer) */
         _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
-            L".;%wZ;%wZ\\system;%wZ;", &SystemDirectory, &WindowsDirectory, &WindowsDirectory);
+            L".;%wZ;%wZ\\system;%wZ;", &BaseWindowsSystemDirectory, &BaseWindowsDirectory, &BaseWindowsDirectory);
 
         BaseDefaultPath.Buffer = BaseDefaultPathBuffer;
         BaseDefaultPath.Length = wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
@@ -474,15 +364,6 @@ DllMain(HANDLE hDll,
 
         /* Initialize command line */
         InitCommandLines();
-
-        /* Open object base directory */
-        Status = BaseGetNamedObjectDirectory();
-        hBaseDir = BaseNamedObjectDirectory;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to open object base directory (Status %lx)\n", Status);
-            return FALSE;
-        }
 
         /* Initialize the DLL critical section */
         RtlInitializeCriticalSection(&BaseDllDirectoryLock);
@@ -500,6 +381,10 @@ DllMain(HANDLE hDll,
             DPRINT1("Failure to set up console\n");
             return FALSE;
         }
+
+        /* Initialize application certification globals */
+        InitializeListHead(&BasepAppCertDllsList);
+        RtlInitializeCriticalSection(&gcsAppCert);
 
         /* Insert more dll attach stuff here! */
         DllInitialized = TRUE;
@@ -521,9 +406,6 @@ DllMain(HANDLE hDll,
                     RtlDeleteCriticalSection (&ConsoleLock);
                 }
                 RtlDeleteCriticalSection (&BaseDllDirectoryLock);
-
-                /* Close object base directory */
-                NtClose(hBaseDir);
             }
             break;
 
@@ -532,52 +414,6 @@ DllMain(HANDLE hDll,
     }
 
     return TRUE;
-}
-
-#undef InterlockedIncrement
-#undef InterlockedDecrement
-#undef InterlockedExchange
-#undef InterlockedExchangeAdd
-#undef InterlockedCompareExchange
-
-LONG
-WINAPI
-InterlockedIncrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedIncrement(lpAddend);
-}
-
-LONG
-WINAPI
-InterlockedDecrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedDecrement(lpAddend);
-}
-
-#undef InterlockedExchange
-LONG
-WINAPI
-InterlockedExchange(IN OUT LONG volatile *Target,
-                    IN LONG Value)
-{
-    return _InterlockedExchange(Target, Value);
-}
-
-LONG
-WINAPI
-InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
-                       IN LONG Value)
-{
-    return _InterlockedExchangeAdd(Addend, Value);
-}
-
-LONG
-WINAPI
-InterlockedCompareExchange(IN OUT LONG volatile *Destination,
-                           IN LONG Exchange,
-                           IN LONG Comperand)
-{
-    return _InterlockedCompareExchange(Destination, Exchange, Comperand);
 }
 
 /* EOF */

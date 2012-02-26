@@ -56,7 +56,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     ASSERT(MI_IS_SESSION_ADDRESS(VirtualAddress) == FALSE);
 
     /* Special case for shared data */
-    if (PAGE_ALIGN(VirtualAddress) == (PVOID)USER_SHARED_DATA)
+    if (PAGE_ALIGN(VirtualAddress) == (PVOID)MM_SHARED_USER_DATA_VA)
     {
         /* It's a read-only page */
         *ProtectCode = MM_READONLY;
@@ -80,7 +80,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     {
         /* This must be a TEB/PEB VAD */
         ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
-        *ProtectCode = Vad->u.VadFlags.Protection;
+        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
         return NULL;
     }
     else
@@ -95,9 +95,31 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         ASSERT(PointerPte != NULL);
 
         /* Return the Prototype PTE and the protection for the page mapping */
-        *ProtectCode = Vad->u.VadFlags.Protection;
+        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
         return PointerPte;
     }
+}
+
+#if (_MI_PAGING_LEVELS == 2)
+BOOLEAN
+FORCEINLINE
+MiSynchronizeSystemPde(PMMPDE PointerPde)
+{
+    MMPDE SystemPde;
+    ULONG Index;
+
+    /* Get the Index from the PDE */
+    Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
+
+    /* Copy the PDE from the double-mapped system page directory */
+    SystemPde = MmSystemPagePtes[Index];
+    *PointerPde = SystemPde;
+
+    /* Make sure we re-read the PDE and PTE */
+    KeMemoryBarrierWithoutFence();
+
+    /* Return, if we had success */
+    return (BOOLEAN)SystemPde.u.Hard.Valid;
 }
 
 NTSTATUS
@@ -159,6 +181,14 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     return Status;
 }
+#else
+NTSTATUS
+FASTCALL
+MiCheckPdeForPagedPool(IN PVOID Address)
+{
+    return STATUS_ACCESS_VIOLATION;
+}
+#endif
 
 VOID
 NTAPI
@@ -209,11 +239,12 @@ MiZeroPfn(IN PFN_NUMBER PageFrameNumber)
 NTSTATUS
 NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
-                         IN PMMPTE PointerPte,
+                         IN ULONG Protection,
                          IN PEPROCESS Process,
                          IN KIRQL OldIrql)
 {
     PFN_NUMBER PageFrameNumber = 0;
+    PMMPTE PointerPte = MiAddressToPte(Address);
     MMPTE TempPte;
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
@@ -294,34 +325,20 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
+    /* Increment demand zero faults */
+    KeGetCurrentPrcb()->MmDemandZeroCount++;
+
     /* Release PFN lock if needed */
     if (HaveLock) KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-    //
-    // Increment demand zero faults
-    //
-    InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
 
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
 
     /* Build the PTE */
-    if (PointerPte <= MiHighestUserPte)
-    {
-        /* For user mode */
-        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
-                                  PointerPte,
-                                  PointerPte->u.Soft.Protection,
-                                  PageFrameNumber);
-    }
-    else
-    {
-        /* For kernel mode */
-        MI_MAKE_HARDWARE_PTE(&TempPte,
-                             PointerPte,
-                             PointerPte->u.Soft.Protection,
-                             PageFrameNumber);
-    }
+    MI_MAKE_HARDWARE_PTE(&TempPte,
+                         PointerPte,
+                         Protection,
+                         PageFrameNumber);
 
     /* Set it dirty if it's a writable page */
     if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
@@ -347,7 +364,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
 {
     MMPTE TempPte;
     PMMPTE OriginalPte;
-    ULONG Protection;
+    ULONG_PTR Protection;
     PFN_NUMBER PageFrameIndex;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
@@ -462,7 +479,10 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     ASSERT(TempPte.u.Soft.Transition == 0);
 
     /* Resolve the demand zero fault */
-    Status = MiResolveDemandZeroFault(Address, PointerProtoPte, Process, OldIrql);
+    Status = MiResolveDemandZeroFault(Address,
+                                      (ULONG)PointerProtoPte->u.Soft.Protection,
+                                      Process,
+                                      OldIrql);
     ASSERT(NT_SUCCESS(Status));
 
     /* Complete the prototype PTE fault -- this will release the PFN lock */
@@ -493,6 +513,9 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
              Address,
              Process);
+
+    /* Make sure the addresses are ok */
+    ASSERT(PointerPte == MiAddressToPte(Address));
 
     //
     // Make sure APCs are off and we're not at dispatch
@@ -590,6 +613,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     /* Check if the PTE is completely empty */
     if (TempPte.u.Long == 0)
     {
+        /* The address is not from any pageable area! */
         KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                      (ULONG_PTR)Address,
                      StoreInstruction,
@@ -609,7 +633,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     // we want. Go handle it!
     //
     Status = MiResolveDemandZeroFault(Address,
-                                      PointerPte,
+                                      (ULONG)PointerPte->u.Soft.Protection,
                                       Process,
                                       MM_NOIRQL);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -637,8 +661,15 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                  IN PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
-    PMMPTE PointerPte, ProtoPte = NULL;
-    PMMPDE PointerPde;
+    PMMPTE ProtoPte = NULL;
+    PMMPTE PointerPte = MiAddressToPte(Address);
+    PMMPDE PointerPde = MiAddressToPde(Address);
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPDE PointerPpe = MiAddressToPpe(Address);
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPDE PointerPxe = MiAddressToPxe(Address);
+#endif
+#endif
     MMPTE TempPte;
     PETHREAD CurrentThread;
     PEPROCESS CurrentProcess;
@@ -648,74 +679,62 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     PMMVAD Vad;
     PFN_NUMBER PageFrameIndex;
     ULONG Color;
+
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
-    //
-    // Get the PTE and PDE
-    //
-    PointerPte = MiAddressToPte(Address);
-    PointerPde = MiAddressToPde(Address);
-#if (_MI_PAGING_LEVELS >= 3)
-    /* We need the PPE and PXE addresses */
-    ASSERT(FALSE);
-#endif
-
-    //
-    // Check for dispatch-level snafu
-    //
+    /* Check for page fault on high IRQL */
     if (OldIrql > APC_LEVEL)
     {
-        //
         // There are some special cases where this is okay, but not in ARM3 yet
-        //
         DbgPrint("MM:***PAGE FAULT AT IRQL > 1  Va %p, IRQL %lx\n",
                  Address,
                  OldIrql);
         ASSERT(OldIrql <= APC_LEVEL);
     }
 
-    //
-    // Check for kernel fault
-    //
-    while (Address >= MmSystemRangeStart)
+    /* Check for kernel fault address */
+    if (Address >= MmSystemRangeStart)
     {
-        //
-        // What are you even DOING here?
-        //
+        /* Bail out, if the fault came from user mode */
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
 
+        /* PXEs and PPEs for kernel mode are mapped for everything we need */
 #if (_MI_PAGING_LEVELS >= 3)
-        /* Need to check PXE and PDE validity */
-        ASSERT(FALSE);
+        if (
+#if (_MI_PAGING_LEVELS == 4)
+            (PointerPxe->u.Hard.Valid == 0) ||
+#endif
+            (PointerPpe->u.Hard.Valid == 0))
+        {
+            /* The address is not from any pageable area! */
+            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                         (ULONG_PTR)Address,
+                         StoreInstruction,
+                         (ULONG_PTR)TrapInformation,
+                         2);
+        }
 #endif
 
-        //
-        // Is the PDE valid?
-        //
+#if (_MI_PAGING_LEVELS == 2)
+        /* Check if we have a situation that might need synchronization
+           of the PDE with the system page directory */
+        if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address))
+        {
+            /* This could be a paged pool commit with an unsychronized PDE.
+               NOTE: This way it works on x86, verify for other architectures! */
+            if (MiSynchronizeSystemPde((PMMPDE)PointerPte)) return STATUS_SUCCESS;
+        }
+#endif
+
+        /* Check if the PDE is invalid */
         if (PointerPde->u.Hard.Valid == 0)
         {
-            //
-            // Debug spew (eww!)
-            //
-            DPRINT("Invalid PDE\n");
 #if (_MI_PAGING_LEVELS == 2)
-            //
-            // Handle mapping in "Special" PDE directoreis
-            //
-            MiCheckPdeForPagedPool(Address);
+            /* Sync this PDE and check, if that made it valid */
+            if (!MiSynchronizeSystemPde(PointerPde))
 #endif
-            //
-            // Now we SHOULD be good
-            //
-            if (PointerPde->u.Hard.Valid == 0)
             {
-                //
-                // FIXFIX: Do the S-LIST hack
-                //
-
-                //
-                // Kill the system
-                //
+                /* PDE (still) not valid, kill the system */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
                              StoreInstruction,
@@ -724,9 +743,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             }
         }
 
-        //
-        // The PDE is valid, so read the PTE
-        //
+        /* The PDE is valid, so read the PTE */
         TempPte = *PointerPte;
         if (TempPte.u.Hard.Valid == 1)
         {
@@ -743,51 +760,45 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_SUCCESS;
         }
 
-        //
-        // Check for a fault on the page table or hyperspace itself
-        //
+        /* Get the current thread */
+        CurrentThread = PsGetCurrentThread();
+
+        // Check for a fault on the page table or hyperspace
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be paged pool access from a new process -- synchronize the page directories */
-            if (MiCheckPdeForPagedPool(Address) == STATUS_WAIT_1)
-            {
-                DPRINT1("PAGE TABLES FAULTED IN!\n");
-                return STATUS_SUCCESS;
-            }
-#endif
-            /* Otherwise this could be a commit of a virtual address */
-            break;
+            ASSERT(TempPte.u.Long != (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS));
+            ASSERT(TempPte.u.Soft.Prototype == 0);
+
+            /* Use the process working set */
+            CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
+            WorkingSet = &CurrentProcess->Vm;
+        }
+        else
+        {
+            /* Otherwise use the system working set */
+            WorkingSet = &MmSystemCacheWs;
+            CurrentProcess = NULL;
         }
 
-        /* In this path, we are using the system working set */
-        CurrentThread = PsGetCurrentThread();
-        WorkingSet = &MmSystemCacheWs;
-
-        /* Acquire it */
+        /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
 
-        //
-        // Re-read PTE now that the IRQL has been raised
-        //
+        /* Re-read PTE now that we own the lock */
         TempPte = *PointerPte;
         if (TempPte.u.Hard.Valid == 1)
         {
-            //
             // Only two things can go wrong here:
             // Executing NX page (we couldn't care less)
             // Writing to a read-only page (the stuff ARM3 works with is write,
-            // so again, moot point.
-            //
+            // so again, moot point).
+            ASSERT(TempPte.u.Hard.Write == 1);
 
             /* Release the working set */
             MiUnlockWorkingSet(CurrentThread, WorkingSet);
             KeLowerIrql(LockIrql);
 
-            //
             // Otherwise, the PDE was probably invalid, and all is good now
-            //
             return STATUS_SUCCESS;
         }
 
@@ -815,47 +826,43 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
         else
         {
-            //
-            // We don't implement transition PTEs
-            //
+            /* We don't implement transition PTEs */
             ASSERT(TempPte.u.Soft.Transition == 0);
 
             /* Check for no-access PTE */
             if (TempPte.u.Soft.Protection == MM_NOACCESS)
             {
-                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                /* Bugcheck the system! */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
                              StoreInstruction,
                              (ULONG_PTR)TrapInformation,
                              1);
             }
-        }
 
-        /* Check for demand page */
-        if ((StoreInstruction) && !(ProtoPte) && !(TempPte.u.Hard.Valid))
-        {
-            /* Get the protection code */
-            if (!(TempPte.u.Soft.Protection & MM_READWRITE))
+            /* Check for demand page */
+            if ((StoreInstruction) && !(TempPte.u.Hard.Valid))
             {
-                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
-                KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
-                             (ULONG_PTR)Address,
-                             TempPte.u.Long,
-                             (ULONG_PTR)TrapInformation,
-                             14);
+                /* Get the protection code */
+                if (!(TempPte.u.Soft.Protection & MM_READWRITE))
+                {
+                    /* Bugcheck the system! */
+                    KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
+                                 (ULONG_PTR)Address,
+                                 TempPte.u.Long,
+                                 (ULONG_PTR)TrapInformation,
+                                 14);
+                }
             }
         }
 
-        //
-        // Now do the real fault handling
-        //
+        /* Now do the real fault handling */
         Status = MiDispatchFault(StoreInstruction,
                                  Address,
                                  PointerPte,
                                  ProtoPte,
                                  FALSE,
-                                 NULL,
+                                 CurrentProcess,
                                  TrapInformation,
                                  NULL);
 
@@ -864,62 +871,90 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         MiUnlockWorkingSet(CurrentThread, WorkingSet);
         KeLowerIrql(LockIrql);
 
-        //
-        // We are done!
-        //
+        /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
         return Status;
     }
 
     /* This is a user fault */
     CurrentThread = PsGetCurrentThread();
-    CurrentProcess = PsGetCurrentProcess();
+    CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
 
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
 
-#if (_MI_PAGING_LEVELS >= 3)
-    /* Need to check/handle PPE and PXE validity too */
-    ASSERT(FALSE);
+#if (_MI_PAGING_LEVELS == 2)
+    ASSERT(PointerPde->u.Hard.LargePage == 0);
 #endif
 
-    /* First things first, is the PDE valid? */
-    ASSERT(PointerPde->u.Hard.LargePage == 0);
+    /* Check if this address range belongs to a valid allocation (VAD) */
+    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    if (ProtectionCode == MM_NOACCESS)
+    {
+        /* This is a bogus VA */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+#if (_MI_PAGING_LEVELS == 4)
+    /* Check if the PXE is valid */
+    if (PointerPxe->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PXE is totally empty */
+        ASSERT(PointerPxe->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPpe,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
+
+        /* We should come back with a valid PXE */
+        ASSERT(PointerPxe->u.Hard.Valid == 1);
+    }
+#endif
+
+#if (_MI_PAGING_LEVELS >= 3)
+    /* Check if the PPE is valid */
+    if (PointerPpe->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PPE is totally empty */
+        ASSERT(PointerPpe->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPde,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
+
+        /* We should come back with a valid PPE */
+        ASSERT(PointerPpe->u.Hard.Valid == 1);
+    }
+#endif
+
+    /* Check if the PDE is valid */
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PDE is totally empty */
         ASSERT(PointerPde->u.Long == 0);
 
-        /* Check if this address range belongs to a valid allocation (VAD) */
-        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-
         /* Right now, we expect a valid protection mask on the VAD */
         ASSERT(ProtectionCode != MM_NOACCESS);
-
-        /* Make the PDE demand-zero */
-        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;
 #endif
-        Status = MiDispatchFault(TRUE,
-                                 PointerPte,
-                                 (PMMPTE)PointerPde,
-                                 NULL,
-                                 FALSE,
-                                 PsGetCurrentProcess(),
-                                 TrapInformation,
-                                 NULL);
+        /* Resolve a demand zero fault */
+        Status = MiResolveDemandZeroFault(PointerPte,
+                                          MM_READWRITE,
+                                          CurrentProcess,
+                                          MM_NOIRQL);
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
-#if (_MI_PAGING_LEVELS >= 3)
-        /* Need to check/handle PPE and PXE validity too */
-        ASSERT(FALSE);
-#endif
         ASSERT(PointerPde->u.Hard.Valid == 1);
     }
 
@@ -931,8 +966,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
     {
         /* Resolve the fault */
+        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
         MiResolveDemandZeroFault(Address,
-                                 PointerPte,
+                                 (ULONG)PointerPte->u.Soft.Protection,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
@@ -941,15 +977,13 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return STATUS_PAGE_FAULT_DEMAND_ZERO;
     }
 
-    /* Get protection and check if it's a prototype PTE */
-    ProtectionCode = TempPte.u.Soft.Protection;
+    /* Make sure it's not a prototype PTE */
     ASSERT(TempPte.u.Soft.Prototype == 0);
 
     /* Check for non-demand zero PTE */
     if (TempPte.u.Long != 0)
     {
-        /* This is a page fault, check for valid protection */
-        ASSERT(ProtectionCode != 0x100);
+        /* This is a page fault */
 
         /* FIXME: Run MiAccessCheck */
 
@@ -970,33 +1004,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
 
-    /* Check if this address range belongs to a valid allocation (VAD) */
-    ASSERT(TempPte.u.Long == 0);
-    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-    if (ProtectionCode == MM_NOACCESS)
-    {
-        /* This is a bogus VA */
-        Status = STATUS_ACCESS_VIOLATION;
-
-        /* Could be a not-yet-mapped paged pool page table */
 #if (_MI_PAGING_LEVELS == 2)
-        MiCheckPdeForPagedPool(Address);
+    /* Add an additional page table reference */
+    MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+    ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
 #endif
-        /* See if that fixed it */
-        if (PointerPte->u.Hard.Valid == 1) Status = STATUS_SUCCESS;
-
-        /* Return the status */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-        return Status;
-    }
-
-    /* Is this a user address? */
-    if (Address <= MM_HIGHEST_USER_ADDRESS)
-    {
-        /* Add an additional page table reference */
-        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
-    }
 
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
@@ -1031,29 +1043,17 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Initialize the PFN entry now */
         MiInitializePfn(PageFrameIndex, PointerPte, 1);
 
+        /* One more demand-zero fault */
+        KeGetCurrentPrcb()->MmDemandZeroCount++;
+
         /* And we're done with the lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-        /* One more demand-zero fault */
-        InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
-
-        /* Was the fault on an actual user page, or a kernel page for the user? */
-        if (PointerPte <= MiHighestUserPte)
-        {
-            /* User fault, build a user PTE */
-            MI_MAKE_HARDWARE_PTE_USER(&TempPte,
-                                      PointerPte,
-                                      PointerPte->u.Soft.Protection,
-                                      PageFrameIndex);
-        }
-        else
-        {
-            /* Session, kernel, or user PTE, figure it out and build it */
-            MI_MAKE_HARDWARE_PTE(&TempPte,
-                                 PointerPte,
-                                 PointerPte->u.Soft.Protection,
-                                 PageFrameIndex);
-        }
+        /* User fault, build a user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  PointerPte->u.Soft.Protection,
+                                  PageFrameIndex);
 
         /* Write the dirty bit for writeable pages */
         if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
@@ -1091,6 +1091,116 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     /* Release the working set */
     MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmGetExecuteOptions(IN PULONG ExecuteOptions)
+{
+    PKPROCESS CurrentProcess = &PsGetCurrentProcess()->Pcb;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    *ExecuteOptions = 0;
+    
+    if (CurrentProcess->Flags.ExecuteDisable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE;
+    }
+    
+    if (CurrentProcess->Flags.ExecuteEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_ENABLE;
+    }
+    
+    if (CurrentProcess->Flags.DisableThunkEmulation)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION;
+    }
+    
+    if (CurrentProcess->Flags.Permanent)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_PERMANENT;
+    }
+    
+    if (CurrentProcess->Flags.ExecuteDispatchEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE;
+    }
+    
+    if (CurrentProcess->Flags.ImageDispatchEnable)
+    {
+        *ExecuteOptions |= MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE;
+    }
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmSetExecuteOptions(IN ULONG ExecuteOptions)
+{
+    PKPROCESS CurrentProcess = &PsGetCurrentProcess()->Pcb;
+    KLOCK_QUEUE_HANDLE ProcessLock;
+    NTSTATUS Status = STATUS_ACCESS_DENIED;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    /* Only accept valid flags */
+    if (ExecuteOptions & ~MEM_EXECUTE_OPTION_VALID_FLAGS)
+    {
+        /* Fail */
+        DPRINT1("Invalid no-execute options\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Change the NX state in the process lock */
+    KiAcquireProcessLock(CurrentProcess, &ProcessLock);
+
+    /* Don't change anything if the permanent flag was set */
+    if (!CurrentProcess->Flags.Permanent)
+    {
+        /* Start by assuming it's not disabled */
+        CurrentProcess->Flags.ExecuteDisable = FALSE;
+
+        /* Now process each flag and turn the equivalent bit on */
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_DISABLE)
+        {
+            CurrentProcess->Flags.ExecuteDisable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_ENABLE)
+        {
+            CurrentProcess->Flags.ExecuteEnable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION)
+        {
+            CurrentProcess->Flags.DisableThunkEmulation = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_PERMANENT)
+        {
+            CurrentProcess->Flags.Permanent = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE)
+        {
+            CurrentProcess->Flags.ExecuteDispatchEnable = TRUE;
+        }
+        if (ExecuteOptions & MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE)
+        {
+            CurrentProcess->Flags.ImageDispatchEnable = TRUE;
+        }
+
+        /* These are turned on by default if no-execution is also eanbled */
+        if (CurrentProcess->Flags.ExecuteEnable)
+        {
+            CurrentProcess->Flags.ExecuteDispatchEnable = TRUE;
+            CurrentProcess->Flags.ImageDispatchEnable = TRUE;
+        }
+
+        /* All good */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Release the lock and return status */
+    KiReleaseProcessLock(&ProcessLock);
     return Status;
 }
 

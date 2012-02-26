@@ -840,7 +840,7 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         0,
         0,
-        "   Почакайте...",
+        "   Почакайте...",  /* Редът да не се превежда, защото списъкът с дяловете ще се размести */
         TEXT_TYPE_STATUS
     },
     {
@@ -995,13 +995,13 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Слагане на зареждач на твърдия диск (MBR и VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Слагане на зареждач на твърдия диск (само VBR).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1418,7 +1418,7 @@ MUI_ERROR bgBGErrorEntries[] =
     {
         //ERROR_INITIALIZE_REGISTRY,
         //There is something wrong with this line.
-        "Неуспешно означаване на регистъра.",
+        "Неуспешно задаване на начални стойности на регистъра.",
         "ENTER = Презапускане на компютъра"
     },
     {

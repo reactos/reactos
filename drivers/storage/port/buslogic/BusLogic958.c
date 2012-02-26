@@ -207,7 +207,7 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
 //    static UCHAR k = 0;
     PACCESS_RANGE   accessRange;
 //    PCI_COMMON_CONFIG PCICommonConfig;
-    PUCHAR   pciAddress, portFound;
+    PUCHAR   pciAddress;
     char    NumPort = 0;
 
     DebugPrint((TRACE,"\n BusLogic -  Inside the Find Adapter Routine\n"));
@@ -290,8 +290,6 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
 
     // Should we change this to double-word aligned to increase performance
     ConfigInfo->AlignmentMask = 0x0;
-
-    portFound =     hcsp->IO_Address;
 
     if (!Buslogic_InitBT958(deviceExtension,ConfigInfo)) // harware specific initializations. Find what's for our card
     {

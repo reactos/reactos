@@ -1,21 +1,13 @@
 /*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* PURPOSE:          Messages
-* FILE:             subsystems/win32/win32k/ntuser/message.c
-* PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
-* REVISION HISTORY:
-*       06-06-2001  CSH  Created
-*/
-
-/* INCLUDES ******************************************************************/
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Messages
+ * FILE:             subsystems/win32/win32k/ntuser/message.c
+ * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
-
-BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
+DBG_DEFAULT_CHANNEL(UserMsg);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
@@ -107,6 +99,7 @@ static inline int is_pointer_message( UINT message )
     if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
         return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
+#undef SET
 
 #define MMS_SIZE_WPARAM      -1
 #define MMS_SIZE_WPARAMWCHAR -2
@@ -223,7 +216,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH2_GetExceptionCode());
+        ERR("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH2_GetExceptionCode());
         Size = 0;
     }
     _SEH2_END;
@@ -260,7 +253,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
 
         if (NULL == PackedNcCalcsize)
         {
-            DPRINT1("Not enough memory to pack lParam\n");
+            ERR("Not enough memory to pack lParam\n");
             return STATUS_NO_MEMORY;
         }
         RtlCopyMemory(PackedNcCalcsize, UnpackedNcCalcsize, sizeof(NCCALCSIZE_PARAMS));
@@ -285,7 +278,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         PackedCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
         if (NULL == PackedCs)
         {
-            DPRINT1("Not enough memory to pack lParam\n");
+            ERR("Not enough memory to pack lParam\n");
             return STATUS_NO_MEMORY;
         }
         RtlCopyMemory(PackedCs, UnpackedCs, sizeof(CREATESTRUCTW));
@@ -331,10 +324,15 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         size = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
         if (!size)
         {
-           DPRINT1("No size for lParamPacked\n");
+           ERR("No size for lParamPacked\n");
            return STATUS_SUCCESS;
         }
         PackedData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_MSG);
+        if (PackedData == NULL)
+        {
+            ERR("Not enough memory to pack lParam\n");
+            return STATUS_NO_MEMORY;
+        }
         RtlCopyMemory(PackedData, (PVOID)lParam, MsgMemorySize(MsgMemoryEntry, wParam, lParam));
         *lParamPacked = (LPARAM)PackedData;
     }
@@ -376,6 +374,7 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     {
         PMSGMEMORY MsgMemoryEntry;
         MsgMemoryEntry = FindMsgMemory(Msg);
+        ASSERT(MsgMemoryEntry);
         if (MsgMemoryEntry->Size < 0)
         {
             /* Keep previous behavior */
@@ -421,7 +420,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
         if (NULL == KernelMem)
         {
-            DPRINT1("Not enough memory to copy message to kernel mem\n");
+            ERR("Not enough memory to copy message to kernel mem\n");
             return STATUS_NO_MEMORY;
         }
         KernelModeMsg->lParam = (LPARAM) KernelMem;
@@ -432,7 +431,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
             Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message to kernel: invalid usermode buffer\n");
                 ExFreePoolWithTag(KernelMem, TAG_MSG);
                 return Status;
             }
@@ -477,7 +476,7 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
             Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message from kernel: invalid usermode buffer\n");
                 ExFreePool((PVOID) KernelModeMsg->lParam);
                 return Status;
             }
@@ -520,10 +519,10 @@ IdlePing(VOID)
       }
    }
 
-   DPRINT("IdlePing ppi 0x%x\n",ppi);
+   TRACE("IdlePing ppi 0x%x\n",ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
-      DPRINT("InputIdleEvent\n");
+      TRACE("InputIdleEvent\n");
       KeSetEvent( ppi->InputIdleEvent, IO_NO_INCREMENT, FALSE);
    }
 }
@@ -533,7 +532,7 @@ IdlePong(VOID)
 {
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   DPRINT("IdlePong ppi 0x%x\n",ppi);
+   TRACE("IdlePong ppi 0x%x\n",ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       KeClearEvent(ppi->InputIdleEvent);
@@ -588,8 +587,41 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
     CWPR.message = Msg;
     CWPR.wParam  = wParam;
     CWPR.lParam  = lParam;
-    CWPR.lResult = *uResult;
+    CWPR.lResult = uResult ? (*uResult) : 0;
     co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+}
+
+static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPARAM lparam )
+{
+    LRESULT lRes;
+
+    if (!pWnd ||
+         pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+         pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+       return 0;
+
+    ERR("Internal Event Msg %p\n",msg);
+
+    switch(msg)
+    {
+       case WM_ASYNC_SHOWWINDOW:
+          return co_WinPosShowWindow( pWnd, wparam );
+       case WM_ASYNC_SETWINDOWPOS:
+       {
+          PWINDOWPOS winpos = (PWINDOWPOS)lparam;
+          if (!winpos) return 0;
+          lRes = co_WinPosSetWindowPos( pWnd,
+                                        winpos->hwndInsertAfter,
+                                        winpos->x,
+                                        winpos->y,
+                                        winpos->cx,
+                                        winpos->cy,
+                                        winpos->flags);
+          ExFreePoolWithTag(winpos, USERTAG_SWP);
+          return lRes;
+       }
+    }
+    return 0;
 }
 
 LRESULT FASTCALL
@@ -600,6 +632,7 @@ IntDispatchMessage(PMSG pMsg)
     LRESULT retval = 0;
     PTHREADINFO pti;
     PWND Window = NULL;
+    HRGN hrgn;
 
     if (pMsg->hwnd)
     {
@@ -609,7 +642,7 @@ IntDispatchMessage(PMSG pMsg)
 
     pti = PsGetCurrentThreadWin32Thread();
 
-    if ( Window->head.pti != pti)
+    if ( Window && Window->head.pti != pti)
     {
        EngSetLastError( ERROR_MESSAGE_SYNC_ONLY );
        return 0;
@@ -650,6 +683,13 @@ IntDispatchMessage(PMSG pMsg)
     // Need a window!
     if ( !Window ) return 0;
 
+    if (pMsg->message == WM_PAINT) Window->state |= WNDS_PAINTNOTPROCESSED;
+
+    if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+    {
+       TRACE("Dispatch: Server Side Window Procedure\n");
+    }
+
     /* Since we are doing a callback on the same thread right away, there is
        no need to copy the lparam to kernel mode and then back to usermode.
        We just pretend it isn't a pointer */
@@ -664,8 +704,9 @@ IntDispatchMessage(PMSG pMsg)
 
     if (pMsg->message == WM_PAINT)
     {
+        Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-        HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
+        hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
         GreDeleteObject(hrgn);
     }
@@ -685,7 +726,7 @@ co_IntPeekMessage( PMSG Msg,
                    BOOL bGMSG )
 {
     PTHREADINFO pti;
-    PCLIENTINFO pci;
+    //PCLIENTINFO pci;
     LARGE_INTEGER LargeTickCount;
     PUSER_MESSAGE_QUEUE ThreadQueue;
     BOOL RemoveMessages;
@@ -694,7 +735,7 @@ co_IntPeekMessage( PMSG Msg,
 
     pti = PsGetCurrentThreadWin32Thread();
     ThreadQueue = pti->MessageQueue;
-    pci = pti->pClientInfo;
+    //pci = pti->pClientInfo;
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
     ProcessMask = HIWORD(RemoveMsg);
@@ -723,7 +764,7 @@ co_IntPeekMessage( PMSG Msg,
         if (ProcessMask & QS_POSTMESSAGE)
         {
            pti->pcti->fsChangeBits &= ~(QS_POSTMESSAGE | QS_HOTKEY | QS_TIMER);
-           if (MsgFilterMin == 0 && MsgFilterMax == 0) // wine hack does this; ~0U)
+           if (MsgFilterMin == 0 && MsgFilterMax == 0) // Wine hack does this; ~0U)
            {
               pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
            }
@@ -860,7 +901,7 @@ co_IntWaitMessage( PWND Window,
         if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
-            DPRINT1("Exit co_IntWaitMessage on error!\n");
+            ERR("Exit co_IntWaitMessage on error!\n");
             return FALSE;
         }
         if (Status == STATUS_USER_APC || Status == STATUS_TIMEOUT)
@@ -982,7 +1023,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     {
        // Clear the spin cycle to fix the mix.
        pti->pClientInfo->cSpins = 0;
-       //if (!(pti->TIF_flags & TIF_SPINNING)) FIXME need to swap vinyl..
+       //if (!(pti->TIF_flags & TIF_SPINNING)) // FIXME: Need to swap vinyl...
     }
     return Present;
 }
@@ -1098,7 +1139,7 @@ UserPostMessage( HWND Wnd,
         PWND DesktopWindow;
         ULONG i;
 
-        DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+        DesktopWindow = UserGetDesktopWindow();
         List = IntWinListChildren(DesktopWindow);
 
         if (List != NULL)
@@ -1106,6 +1147,13 @@ UserPostMessage( HWND Wnd,
             UserPostMessage(DesktopWindow->head.h, Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
+                PWND pwnd = UserGetWindowObject(List[i]);
+                if (!pwnd) continue;
+
+                if ( pwnd->fnid == FNID_MENU || // Also need pwnd->pcls->atomClassName == gaOleMainThreadWndClass
+                     pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                   continue;
+
                 UserPostMessage(List[i], Msg, wParam, lParam);
             }
             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
@@ -1124,14 +1172,14 @@ UserPostMessage( HWND Wnd,
         pti = Window->head.pti;
         if ( pti->TIF_flags & TIF_INCLEANUP )
         {
-            DPRINT1("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
+            ERR("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
             return FALSE;
         }
 
         if ( Window->state & WNDS_DESTROYED )
         {
-            DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
-            /* FIXME - last error code? */
+            ERR("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
+            /* FIXME: Last error code? */
             return FALSE;
         }
 
@@ -1146,7 +1194,6 @@ UserPostMessage( HWND Wnd,
     }
     return TRUE;
 }
-
 
 LRESULT FASTCALL
 co_IntSendMessage( HWND hWnd,
@@ -1177,7 +1224,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     INT lParamBufferSize;
     LPARAM lParamPacked;
     PTHREADINFO Win32Thread;
-    ULONG_PTR Result = 0;
+    ULONG_PTR Hi, Lo, Result = 0;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
 
@@ -1190,9 +1237,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
-
-    if ( NULL != Win32Thread &&
+    if ( Win32Thread &&
          Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
@@ -1201,21 +1246,44 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             RETURN( FALSE);
         }
 
+        if (Msg & 0x80000000)
+        {
+           ERR("SMTS: Internal Message!\n");
+           Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
+           if (uResult) *uResult = Result;
+           RETURN( TRUE);
+        }
+
+        // Only happens when calling the client!
+        IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
+        if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+        {
+           TRACE("SMT: Server Side Window Procedure\n");
+           IoGetStackLimits(&Lo, &Hi);
+           // Handle it here. Safeguard against excessive recursions.
+           if (((ULONG_PTR)&uResult - Lo) < 4096 )
+           {
+              ERR("Server Callback Exceeded Stack!\n");
+              RETURN( FALSE);
+           }
+           /* Return after server side call, IntCallWndProcRet will not be called. */
+        }
         /* See if this message type is present in the table */
         MsgMemoryEntry = FindMsgMemory(Msg);
         if (NULL == MsgMemoryEntry)
         {
-            lParamBufferSize = -1;
+           lParamBufferSize = -1;
         }
         else
         {
-            lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+           lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
         }
 
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to pack message parameters\n");
-            RETURN( FALSE);
+           ERR("Failed to pack message parameters\n");
+           RETURN( FALSE);
         }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
@@ -1230,28 +1298,29 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             *uResult = Result;
         }
 
-        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
-
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to unpack message parameters\n");
+            ERR("Failed to unpack message parameters\n");
             RETURN( TRUE);
         }
+
+        // Only happens when calling the client!
+        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
         RETURN( TRUE);
     }
 
     if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti->MessageQueue))
     {
-        // FIXME - Set window hung and add to a list.
-        /* FIXME - Set a LastError? */
+        // FIXME: Set window hung and add to a list.
+        /* FIXME: Set a LastError? */
         RETURN( FALSE);
     }
 
     if (Window->state & WNDS_DESTROYED)
     {
-        /* FIXME - last error? */
-        DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        /* FIXME: Last error? */
+        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN( FALSE);
     }
 
@@ -1269,24 +1338,22 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME - Set window hung and add to a list.
-
-    IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME: Set window hung and add to a list.
 
     if (STATUS_TIMEOUT == Status)
     {
 /*
-    MSDN says:
-    Microsoft Windows 2000: If GetLastError returns zero, then the function
-    timed out.
-    XP+ : If the function fails or times out, the return value is zero.
-    To get extended error information, call GetLastError. If GetLastError
-    returns ERROR_TIMEOUT, then the function timed out.
-*/
+ *  MSDN says:
+ *  Microsoft Windows 2000: If GetLastError returns zero, then the function
+ *  timed out.
+ *  XP+ : If the function fails or times out, the return value is zero.
+ *  To get extended error information, call GetLastError. If GetLastError
+ *  returns ERROR_TIMEOUT, then the function timed out.
+ */
         EngSetLastError(ERROR_TIMEOUT);
         RETURN( FALSE);
     }
-    else if (! NT_SUCCESS(Status))
+    else if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
         RETURN( FALSE);
@@ -1312,20 +1379,23 @@ co_IntSendMessageTimeout( HWND hWnd,
     HWND *Children;
     HWND *Child;
 
-    if (HWND_BROADCAST != hWnd)
+    if (hWnd != HWND_BROADCAST && hWnd != HWND_TOPMOST)
     {
         return co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
     }
 
-    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+    DesktopWindow = UserGetDesktopWindow();
     if (NULL == DesktopWindow)
     {
-        EngSetLastError(ERROR_INTERNAL_ERROR);
-        return 0;
+       EngSetLastError(ERROR_INTERNAL_ERROR);
+       return 0;
     }
 
-    /* Send message to the desktop window too! */
-    co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    if (hWnd != HWND_TOPMOST)
+    {
+       /* Send message to the desktop window too! */
+       co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    }
 
     Children = IntWinListChildren(DesktopWindow);
     if (NULL == Children)
@@ -1335,7 +1405,26 @@ co_IntSendMessageTimeout( HWND hWnd,
 
     for (Child = Children; NULL != *Child; Child++)
     {
-        co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+        if (hWnd == HWND_TOPMOST)
+        {
+           DesktopWindow = UserGetWindowObject(*Child);
+           if (DesktopWindow && DesktopWindow->ExStyle & WS_EX_TOPMOST)
+           {
+              ERR("HWND_TOPMOST Found\n");
+              co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+           }
+        }
+        else
+        {
+           PWND pwnd = UserGetWindowObject(*Child);
+           if (!pwnd) continue;
+
+           if ( pwnd->fnid == FNID_MENU ||
+                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+              continue;
+
+           co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+        }
     }
 
     ExFreePool(Children);
@@ -1350,13 +1439,16 @@ co_IntSendMessageNoWait(HWND hWnd,
                         LPARAM lParam)
 {
     ULONG_PTR Result = 0;
-    co_IntSendMessageWithCallBack(hWnd,
-                                  Msg,
-                                  wParam,
-                                  lParam,
-                                  NULL,
-                                  0,
-                                  &Result);
+    if (!co_IntSendMessageWithCallBack( hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam,
+                                        NULL,
+                                        0,
+                                       &Result))
+    {
+       Result = ((ULONG_PTR)-1);
+    }
     return Result;
 }
 /* MSDN:
@@ -1394,8 +1486,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (Window->state & WNDS_DESTROYED)
     {
-        /* FIXME - last error? */
-        DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        /* FIXME: last error? */
+        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN(FALSE);
     }
 
@@ -1419,7 +1511,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->head.pti->MessageQueue != Win32Thread->MessageQueue)))
     {
-        DPRINT1("Failed to pack message parameters\n");
+        ERR("Failed to pack message parameters\n");
         RETURN( FALSE);
     }
 
@@ -1433,7 +1525,20 @@ co_IntSendMessageWithCallBack( HWND hWnd,
             RETURN(FALSE);
         }
 
+        if (Msg & 0x80000000)
+        {
+           ERR("SMWCB: Internal Message!\n");
+           Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
+           if (uResult) *uResult = Result;
+           RETURN( TRUE);
+        }
+
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
+        if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+        {
+           TRACE("SMWCB: Server Side Window Procedure\n");
+        }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
@@ -1459,20 +1564,18 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         }
     }
 
-
-
     if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to unpack message parameters\n");
+            ERR("Failed to unpack message parameters\n");
         }
         RETURN(TRUE);
     }
 
     if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
     {
-        DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
+        ERR("MsqSendMessage(): Not enough memory to allocate a message");
         RETURN( FALSE);
     }
 
@@ -1510,9 +1613,12 @@ CLEANUP:
     END_CLEANUP;
 }
 
-/* This function posts a message if the destination's message queue belongs to
-another thread, otherwise it sends the message. It does not support broadcast
-messages! */
+
+/*
+  This HACK function posts a message if the destination's message queue belongs to
+  another thread, otherwise it sends the message. It does not support broadcast
+  messages!
+*/
 LRESULT FASTCALL
 co_IntPostOrSendMessage( HWND hWnd,
                          UINT Msg,
@@ -1558,7 +1664,7 @@ co_IntDoSendMessage( HWND hWnd,
                      LPARAM lParam,
                      PDOSENDMESSAGE dsm)
 {
-    PTHREADINFO pti;
+    //PTHREADINFO pti;
     LRESULT Result = TRUE;
     NTSTATUS Status;
     PWND Window = NULL;
@@ -1566,7 +1672,7 @@ co_IntDoSendMessage( HWND hWnd,
     MSG KernelModeMsg;
     PMSGMEMORY MsgMemoryEntry;
 
-    if (HWND_BROADCAST != hWnd)
+    if (hWnd != HWND_BROADCAST && hWnd != HWND_TOPMOST)
     {
         Window = UserGetWindowObject(hWnd);
         if ( !Window )
@@ -1578,11 +1684,11 @@ co_IntDoSendMessage( HWND hWnd,
     /* Check for an exiting window. */
     if (Window && Window->state & WNDS_DESTROYED)
     {
-        DPRINT1("co_IntDoSendMessage Window Exiting!\n");
+        ERR("co_IntDoSendMessage Window Exiting!\n");
     }
 
     /* See if the current thread can handle the message */
-    pti = PsGetCurrentThreadWin32Thread();
+    //pti = PsGetCurrentThreadWin32Thread();
 
     UserModeMsg.hwnd = hWnd;
     UserModeMsg.message = Msg;
@@ -1640,13 +1746,13 @@ UserSendNotifyMessage( HWND hWnd,
     }
 
     // Basicly the same as IntPostOrSendMessage
-    if (hWnd == HWND_BROADCAST) //Handle Broadcast
+    if (hWnd == HWND_BROADCAST) // Handle Broadcast
     {
         HWND *List;
         PWND DesktopWindow;
         ULONG i;
 
-        DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+        DesktopWindow = UserGetDesktopWindow();
         List = IntWinListChildren(DesktopWindow);
 
         if (List != NULL)
@@ -1654,21 +1760,22 @@ UserSendNotifyMessage( HWND hWnd,
             UserSendNotifyMessage(DesktopWindow->head.h, Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
-                Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+               PWND pwnd = UserGetWindowObject(List[i]);
+               if (!pwnd) continue;
+
+               if ( pwnd->fnid == FNID_MENU ||
+                    pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                  continue;
+
+               Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
             }
             ExFreePool(List);
         }
     }
     else
     {
-        ULONG_PTR lResult = 0;
-        Ret = co_IntSendMessageWithCallBack( hWnd,
-                                             Msg,
-                                             wParam,
-                                             lParam,
-                                             NULL,
-                                             0,
-                                            &lResult);
+        Ret = co_IntSendMessageNoWait( hWnd, Msg, wParam, lParam);
+        if (-1 == (int) Ret || !Ret) Ret = FALSE;
     }
     return Ret;
 }
@@ -1678,11 +1785,11 @@ DWORD APIENTRY
 IntGetQueueStatus(DWORD Changes)
 {
     PTHREADINFO pti;
-    PUSER_MESSAGE_QUEUE Queue;
+    //PUSER_MESSAGE_QUEUE Queue;
     DWORD Result;
 
     pti = PsGetCurrentThreadWin32Thread();
-    Queue = pti->MessageQueue;
+    //Queue = pti->MessageQueue;
 // wine:
     Changes &= (QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT);
 
@@ -1740,7 +1847,7 @@ NtUserDragDetect(
     WORD wDragWidth, wDragHeight;
     DECLARE_RETURN(BOOL);
 
-    DPRINT("Enter NtUserDragDetect(%x)\n", hWnd);
+    TRACE("Enter NtUserDragDetect(%x)\n", hWnd);
     UserEnterExclusive();
 
     wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
@@ -1770,7 +1877,7 @@ NtUserDragDetect(
                 POINT tmp;
                 tmp.x = (short)LOWORD(msg.lParam);
                 tmp.y = (short)HIWORD(msg.lParam);
-                if( !IntPtInRect( &rect, tmp ) )
+                if( !RECTL_bPointInRect( &rect, tmp.x, tmp.y ) )
                 {
                     co_UserSetCapture(NULL);
                     RETURN( TRUE);
@@ -1794,7 +1901,7 @@ NtUserDragDetect(
     RETURN( FALSE);
 
 CLEANUP:
-   DPRINT("Leave NtUserDragDetect, ret=%i\n",_ret_);
+   TRACE("Leave NtUserDragDetect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1839,9 +1946,9 @@ NtUserWaitMessage(VOID)
     BOOL ret;
 
     UserEnterExclusive();
-    DPRINT("NtUserWaitMessage Enter\n");
+    TRACE("NtUserWaitMessage Enter\n");
     ret = co_IntWaitMessage(NULL, 0, 0);
-    DPRINT("NtUserWaitMessage Leave\n");
+    TRACE("NtUserWaitMessage Leave\n");
     UserLeave();
 
     return ret;
@@ -2049,9 +2156,25 @@ NtUserMessageCall( HWND hWnd,
 
     switch(dwType)
     {
+    case FNID_SCROLLBAR:
+        {
+           switch(Msg)
+           {
+               case WM_ENABLE:
+                  {
+                     Window = UserGetWindowObject(hWnd);
+                     if (Window->pSBInfo)
+                     {
+                        Window->pSBInfo->WSBflags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
+                     }
+                  }
+                  break;
+           }
+           break;
+        }
     case FNID_DEFWINDOWPROC:
         /* Validate input */
-        if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
+        if (hWnd)
         {
            Window = UserGetWindowObject(hWnd);
            if (!Window)
@@ -2059,18 +2182,19 @@ NtUserMessageCall( HWND hWnd,
                UserLeave();
                return FALSE;
            }
+           UserRefObjectCo(Window, &Ref);
         }
-        UserRefObjectCo(Window, &Ref);
         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
         Ret = TRUE;
-        UserDerefObjectCo(Window);
+        if (hWnd)
+            UserDerefObjectCo(Window);
         break;
     case FNID_SENDNOTIFYMESSAGE:
         Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);
         break;
     case FNID_BROADCASTSYSTEMMESSAGE:
         {
-            BROADCASTPARM parm;
+            BROADCASTPARM parm, *retparam;
             DWORD_PTR RetVal = 0;
 
             if (ResultInfo)
@@ -2090,53 +2214,286 @@ NtUserMessageCall( HWND hWnd,
                 break;
 
             if ( parm.recipients & BSM_ALLDESKTOPS ||
-                    parm.recipients == BSM_ALLCOMPONENTS )
+                 parm.recipients == BSM_ALLCOMPONENTS )
             {
+               PLIST_ENTRY DesktopEntry;
+               PDESKTOP rpdesk;
+               HWND *List, hwndDenied = NULL;
+               HDESK hDesk = NULL;
+               PWND pwnd, pwndDesk;
+               ULONG i;
+               UINT fuFlags;
+
+               for (DesktopEntry = InputWindowStation->DesktopListHead.Flink;
+                    DesktopEntry != &InputWindowStation->DesktopListHead;
+                    DesktopEntry = DesktopEntry->Flink)
+               {
+                  rpdesk = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
+                  pwndDesk = rpdesk->pDeskInfo->spwnd;
+                  List = IntWinListChildren(pwndDesk);
+
+                  if (parm.flags & BSF_QUERY)
+                  {
+                     if (List != NULL)
+                     {
+                        if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
+                        {
+                           fuFlags = SMTO_ABORTIFHUNG;
+                        }
+                        else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
+                        {
+                           fuFlags = SMTO_NOTIMEOUTIFNOTHUNG;
+                        }
+                        else
+                        {
+                           fuFlags = SMTO_NORMAL;
+                        }
+                        co_IntSendMessageTimeout( UserHMGetHandle(pwndDesk),
+                                                  Msg,
+                                                  wParam,
+                                                  lParam,
+                                                  fuFlags,
+                                                  2000,
+                                                 &RetVal);
+                        Ret = TRUE;
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           co_IntSendMessageTimeout( List[i],
+                                                     Msg,
+                                                     wParam,
+                                                     lParam,
+                                                     fuFlags,
+                                                     2000,
+                                                    &RetVal);
+
+                           if (!RetVal && EngGetLastError() == ERROR_TIMEOUT)
+                           {
+                              if (!(parm.flags & BSF_FORCEIFHUNG))
+                                 Ret = FALSE;
+                           }
+                           if (RetVal == BROADCAST_QUERY_DENY)
+                           {
+                              hwndDenied = List[i];
+                              hDesk = UserHMGetHandle(pwndDesk);
+                              Ret = FALSE;
+                           }
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                        _SEH2_TRY
+                        {
+                           retparam = (PBROADCASTPARM) ResultInfo;
+                           retparam->hDesk = hDesk;
+                           retparam->hWnd = hwndDenied;
+                        }
+                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                        {
+                           _SEH2_YIELD(break);
+                        }
+                        _SEH2_END;
+                        if (!Ret) break; // Have a hit! Let everyone know!
+                     }
+                  }
+                  else if (parm.flags & BSF_POSTMESSAGE)
+                  {
+                     if (List != NULL)
+                     {
+                        UserPostMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           UserPostMessage(List[i], Msg, wParam, lParam);
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     }
+                     Ret = TRUE;
+                  }
+                  else
+                  {
+                     if (List != NULL)
+                     {
+                        UserSendNotifyMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     }
+                     Ret = TRUE;
+                  }
+               }
             }
             else if (parm.recipients & BSM_APPLICATIONS)
             {
-                if (parm.flags & BSF_QUERY)
-                {
-                    if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
+               HWND *List, hwndDenied = NULL;
+               HDESK hDesk = NULL;
+               PWND pwnd, pwndDesk;
+               ULONG i;
+               UINT fuFlags;
+
+               pwndDesk = UserGetDesktopWindow();
+               List = IntWinListChildren(pwndDesk);
+
+               if (parm.flags & BSF_QUERY)
+               {
+                  if (List != NULL)
+                  {
+                     if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
+                     {
+                        fuFlags = SMTO_ABORTIFHUNG;
+                     }
+                     else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
+                     {
+                        fuFlags = SMTO_NOTIMEOUTIFNOTHUNG;
+                     }
+                     else
+                     {
+                        fuFlags = SMTO_NORMAL;
+                     }
+                     co_IntSendMessageTimeout( UserHMGetHandle(pwndDesk),
+                                               Msg,
+                                               wParam,
+                                               lParam,
+                                               fuFlags,
+                                               2000,
+                                              &RetVal);
+                     Ret = TRUE;
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        co_IntSendMessageTimeout( List[i],
                                                   Msg,
                                                   wParam,
                                                   lParam,
-                                                  SMTO_ABORTIFHUNG,
+                                                  fuFlags,
                                                   2000,
                                                  &RetVal);
-                    }
-                    else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
-                                                  Msg,
-                                                  wParam,
-                                                  lParam,
-                                                  SMTO_NOTIMEOUTIFNOTHUNG,
-                                                  2000,
-                                                 &RetVal);
-                    }
-                    else
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
-                                                  Msg,
-			                          wParam,
-                                                  lParam,
-                                                  SMTO_NORMAL,
-                                                  2000,
-                                                 &RetVal);
-                    }
-                    Ret = RetVal;
-                }
-                else if (parm.flags & BSF_POSTMESSAGE)
-                {
-                    Ret = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
-                }
-                else //Everything else,,,, if ( parm.flags & BSF_SENDNOTIFYMESSAGE)
-                {
-                    Ret = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
-                }
+
+                        if (!RetVal && EngGetLastError() == ERROR_TIMEOUT)
+                        {
+                           if (!(parm.flags & BSF_FORCEIFHUNG))
+                              Ret = FALSE;
+                        }
+                        if (RetVal == BROADCAST_QUERY_DENY)
+                        {
+                           hwndDenied = List[i];
+                           hDesk = UserHMGetHandle(pwndDesk);
+                           Ret = FALSE;
+                        }
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     _SEH2_TRY
+                     {
+                        retparam = (PBROADCASTPARM) ResultInfo;
+                        retparam->hDesk = hDesk;
+                        retparam->hWnd = hwndDenied;
+                     }
+                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                     {
+                        _SEH2_YIELD(break);
+                     }
+                     _SEH2_END;
+                  }
+               }
+               else if (parm.flags & BSF_POSTMESSAGE)
+               {
+                  if (List != NULL)
+                  {
+                     UserPostMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        UserPostMessage(List[i], Msg, wParam, lParam);
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                  }
+                  Ret = TRUE;
+               }
+               else
+               {
+                  if (List != NULL)
+                  {
+                     UserSendNotifyMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                  }
+                  Ret = TRUE;
+               }
             }
         }
         break;
@@ -2165,7 +2522,7 @@ NtUserMessageCall( HWND hWnd,
             if (!(Ret = co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
                         CallBackInfo.CallBack, CallBackInfo.Context, &uResult)))
             {
-                DPRINT1("Callback failure!\n");
+                ERR("Callback failure!\n");
             }
         }
         break;
@@ -2189,7 +2546,8 @@ NtUserMessageCall( HWND hWnd,
             }
             break;
         }
-    case FNID_SENDMESSAGETIMEOUT:
+    case FNID_SENDMESSAGEFF:
+    case FNID_SENDMESSAGEWTOOPTION:
         {
             DOSENDMESSAGE dsm, *pdsm = (PDOSENDMESSAGE)ResultInfo;
             if (ResultInfo)
@@ -2261,7 +2619,7 @@ NtUserMessageCall( HWND hWnd,
                 CWP.message = Msg;
                 CWP.wParam  = wParam;
                 CWP.lParam  = lParam;
-                DPRINT("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+                TRACE("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
 
                 lResult = co_IntCallHookProc( Hook->HookId,
                                               HC_ACTION,
@@ -2387,8 +2745,8 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
 
-    DPRINT("WFII: ppi 0x%x\n",W32Process);
-    DPRINT("WFII: waiting for %p\n", Handles[1] );
+    TRACE("WFII: ppi 0x%x\n",W32Process);
+    TRACE("WFII: waiting for %p\n", Handles[1] );
     do
     {
         UserLeave();
@@ -2418,17 +2776,17 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
             {
                MSG Msg;
                co_IntGetPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE, FALSE);
-               DPRINT1("WFII: WAIT 2\n");
+               ERR("WFII: WAIT 2\n");
             }
             break;
 
         case STATUS_TIMEOUT:
-            DPRINT1("WFII: timeout\n");
+            ERR("WFII: timeout\n");
         case WAIT_FAILED:
             goto WaitExit;
 
         default:
-            DPRINT1("WFII: finished\n");
+            ERR("WFII: finished\n");
             Status = STATUS_SUCCESS;
             goto WaitExit;
         }

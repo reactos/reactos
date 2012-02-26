@@ -28,7 +28,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "uxtheme.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "comctl32.h"
 
 #define BUTTON_TYPE 0x0f /* bit mask for the available button types */
@@ -246,18 +246,26 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     DWORD dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
     UINT dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
-    ButtonState drawState = IsWindowEnabled(hwnd) ? STATE_NORMAL : STATE_DISABLED;
+    int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
+    ButtonState drawState;
     pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
 
-    if (paint)
-    {
-        hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-        paint(theme, hwnd, hDC, drawState, dtFlags);
-        if (!hParamDC) EndPaint(hwnd, &ps);
-        return TRUE;
-    }
+    if(!paint)
+        return FALSE;
 
-    return FALSE; /* Delegate drawing to the non-themed code. */
+    if(IsWindowEnabled(hwnd))
+    {
+        if(state & BST_PUSHED) drawState = STATE_PRESSED;
+        else if(state & BST_HOT) drawState = STATE_HOT;
+        else if(state & BST_FOCUS) drawState = STATE_DEFAULTED;
+        else drawState = STATE_NORMAL;
+    }
+    else drawState = STATE_DISABLED;
+
+    hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
+    paint(theme, hwnd, hDC, drawState, dtFlags);
+    if (!hParamDC) EndPaint(hwnd, &ps);
+    return TRUE;
 }
 
 /**********************************************************************
@@ -308,6 +316,37 @@ LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
         if (theme) RedrawWindow(hwnd, NULL, NULL,
                                 RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
         return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
+
+    case WM_MOUSEMOVE:
+    {
+        TRACKMOUSEEVENT mouse_event;
+        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
+        mouse_event.dwFlags = TME_QUERY;
+        if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
+        {
+            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+            mouse_event.hwndTrack = hwnd;
+            mouse_event.dwHoverTime = 1;
+            TrackMouseEvent(&mouse_event);
+        }
+        break;
+    }
+
+    case WM_MOUSEHOVER:
+    {
+        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
+        SetWindowLongW(hwnd, 0, state|BST_HOT);
+        InvalidateRect(hwnd, NULL, FALSE);
+        break;
+    }
+
+    case WM_MOUSELEAVE:
+    {
+        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
+        SetWindowLongW(hwnd, 0, state&(~BST_HOT));
+        InvalidateRect(hwnd, NULL, FALSE);
+        break;
+    }
 
     default:
 	/* Call old proc */

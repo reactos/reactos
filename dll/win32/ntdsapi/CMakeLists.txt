@@ -10,11 +10,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
 
 add_library(ntdsapi SHARED ${SOURCE})
-set_entrypoint(ntdsapi 0)
+set_module_type(ntdsapi win32dll ENTRYPOINT 0 )
 
 target_link_libraries(ntdsapi wine)
 
 add_importlibs(ntdsapi user32 kernel32 ntdll)
-add_importlib_target(ntdsapi.spec)
+add_importlib_target(ntdsapi.spec ntdsapi.dll)
 add_dependencies(ntdsapi psdk)
 add_cd_file(TARGET ntdsapi DESTINATION reactos/system32 FOR all)

@@ -3,7 +3,6 @@
  * FILE:            subsystems/win32/win32k/misc/rtlstr.c
  * PURPOSE:         Large Strings
  * PROGRAMMER:
- * UPDATE HISTORY:
  *
  */
 
@@ -12,11 +11,13 @@
 #include <win32k.h>
 
 /* FUNCTIONS *****************************************************************/
+
 VOID
 NTAPI
-RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING DestinationString,
-                       IN PCSZ SourceString,
-                       IN INT Unknown)
+RtlInitLargeAnsiString(
+    IN OUT PLARGE_ANSI_STRING DestinationString,
+    IN PCSZ SourceString,
+    IN INT Unknown)
 {
     ULONG DestSize;
 
@@ -38,9 +39,10 @@ RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING DestinationString,
 
 VOID
 NTAPI
-RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING DestinationString,
-                          IN PCWSTR SourceString,
-                          IN INT Unknown)
+RtlInitLargeUnicodeString(
+    IN OUT PLARGE_UNICODE_STRING DestinationString,
+    IN PCWSTR SourceString,
+    IN INT Unknown)
 {
     ULONG DestSize;
 
@@ -62,21 +64,29 @@ RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING DestinationString,
 
 BOOL
 NTAPI
-RtlLargeStringToUnicodeString( PUNICODE_STRING DestinationString,
-                               PLARGE_STRING SourceString)
+RtlLargeStringToUnicodeString(
+    PUNICODE_STRING DestinationString,
+    PLARGE_STRING SourceString)
 {
-  ANSI_STRING AnsiString;
+    ANSI_STRING AnsiString;
 
-  RtlInitUnicodeString(DestinationString, NULL);
-  if (DestinationString && SourceString && SourceString->bAnsi)
-  {
-     RtlInitAnsiString(&AnsiString, (LPSTR)SourceString->Buffer);
-     return NT_SUCCESS(RtlAnsiStringToUnicodeString(DestinationString, &AnsiString, TRUE));
-  }
-  else if (DestinationString && SourceString)
-  {
-     return RtlCreateUnicodeString(DestinationString, SourceString->Buffer);
-  }
-  else
-     return FALSE;
+    /* Check parameters */
+    if (!DestinationString || !SourceString) return FALSE;
+
+    /* Check if size if ok */
+    // We can't do this atm and truncate the string instead.
+    //if (SourceString->Length > 0xffff) return FALSE;
+
+    RtlInitUnicodeString(DestinationString, NULL);
+
+    if (SourceString->bAnsi)
+    {
+        RtlInitAnsiString(&AnsiString, (LPSTR)SourceString->Buffer);
+        return NT_SUCCESS(RtlAnsiStringToUnicodeString(DestinationString, &AnsiString, TRUE));
+    }
+    else
+    {
+        return RtlCreateUnicodeString(DestinationString, SourceString->Buffer);
+    }
 }
+

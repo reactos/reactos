@@ -33,7 +33,7 @@ typedef struct _GDI_POOL
     ULONG cjSectionSize; // 32 * cjAllocSize, rounded up to pages
     ULONG cSlotsPerSection;
     ULONG cEmptySections;
-    EX_PUSH_LOCK pushlock; // for pool growth
+    EX_PUSH_LOCK pushlock; // For pool growth
 #if DBG_ENABLE_EVENT_LOGGING
     SLIST_HEADER slhLog;
 #endif
@@ -127,7 +127,6 @@ GdiPoolAllocate(
     PLIST_ENTRY ple;
     PVOID pvAlloc, pvBaseAddress;
     SIZE_T cjSize;
-    NTSTATUS status;
 
     /* Disable APCs and acquire the pool lock */
     KeEnterCriticalRegion();
@@ -192,12 +191,12 @@ GdiPoolAllocate(
         /* Commit the pages */
         pvBaseAddress = PAGE_ALIGN(pvAlloc);
         cjSize = ADDRESS_AND_SIZE_TO_SPAN_PAGES(pvAlloc, pPool->cjAllocSize) * PAGE_SIZE;
-        status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                         &pvBaseAddress,
-                                         0,
-                                         &cjSize,
-                                         MEM_COMMIT,
-                                         PAGE_READWRITE);
+        ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                &pvBaseAddress,
+                                0,
+                                &cjSize,
+                                MEM_COMMIT,
+                                PAGE_READWRITE);
 
         pSection->ulCommitBitmap |= ulPageBit;
     }

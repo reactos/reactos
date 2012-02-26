@@ -9,404 +9,311 @@
  *                  Created 01/11/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
-/*
- * @implemented
- */
-DWORD WINAPI
-CreateTapePartition (HANDLE hDevice,
-		     DWORD dwPartitionMethod,
-		     DWORD dwCount,
-		     DWORD dwSize)
+DWORD
+WINAPI
+BasepDoTapeOperation(IN HANDLE DeviceHandle,
+                     IN ULONG Ioctl,
+                     IN PVOID Input,
+                     IN ULONG InputLength,
+                     IN PVOID Output,
+                     IN ULONG OutputLength)
 {
-  TAPE_CREATE_PARTITION TapeCreatePartition;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    HANDLE TapeEvent;
+    DWORD ErrorCode;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
 
-  TapeCreatePartition.Method = dwPartitionMethod;
-  TapeCreatePartition.Count = dwCount;
-  TapeCreatePartition.Size = dwSize;
+    /* Create the wait event */
+    TapeEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!TapeEvent) return GetLastError();
 
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_CREATE_PARTITION,
-				  &TapeCreatePartition,
-				  sizeof(TAPE_CREATE_PARTITION),
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
+    /* Send the IOCTL */
+    Status = NtDeviceIoControlFile(DeviceHandle,
+                                   TapeEvent,
+                                   0,
+                                   0,
+                                   &IoStatusBlock,
+                                   Ioctl,
+                                   Input,
+                                   InputLength,
+                                   Output,
+                                   OutputLength);
+    if (Status == STATUS_PENDING)
     {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
+        /* Wait for its completion */
+        WaitForSingleObject(TapeEvent, INFINITE);
+        Status = IoStatusBlock.Status;
     }
 
-  return ERROR_SUCCESS;
+    /* Get rid of the wait event and check status */
+    CloseHandle(TapeEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert to Win32 */
+        BaseSetLastNTError(Status);
+        ErrorCode = GetLastError();
+    }
+    else
+    {
+        /* Set sucess */
+        ErrorCode = ERROR_SUCCESS;
+    }
+
+    /* Return the Win32 error code */
+    return ErrorCode;
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
  */
-DWORD WINAPI
-EraseTape (HANDLE hDevice,
-	   DWORD dwEraseType,
-	   BOOL bImmediate)
+DWORD
+WINAPI
+CreateTapePartition(IN HANDLE hDevice,
+                    IN DWORD dwPartitionMethod,
+                    IN DWORD dwCount,
+                    IN DWORD dwSize)
 {
-  TAPE_ERASE TapeErase;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    TAPE_CREATE_PARTITION TapeCreatePartition;
 
-  TapeErase.Type = dwEraseType;
-  TapeErase.Immediate = (BOOLEAN)bImmediate;
-
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_ERASE,
-				  &TapeErase,
-				  sizeof(TAPE_ERASE),
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  return ERROR_SUCCESS;
+    TapeCreatePartition.Method = dwPartitionMethod;
+    TapeCreatePartition.Count = dwCount;
+    TapeCreatePartition.Size = dwSize;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_CREATE_PARTITION,
+                                &TapeCreatePartition,
+                                sizeof(TapeCreatePartition),
+                                NULL,
+                                0);
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-GetTapeParameters (HANDLE hDevice,
-		   DWORD dwOperation,
-		   LPDWORD lpdwSize,
-		   LPVOID lpTapeInformation)
+DWORD
+WINAPI
+EraseTape(IN HANDLE hDevice,
+          IN DWORD dwEraseType,
+          IN BOOL bImmediate)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    TAPE_ERASE TapeErase;
 
-  if (dwOperation == GET_TAPE_MEDIA_INFORMATION)
-    {
-      if (*lpdwSize < sizeof(TAPE_GET_MEDIA_PARAMETERS))
-	{
-	  *lpdwSize = sizeof(TAPE_GET_MEDIA_PARAMETERS);
-	  return ERROR_MORE_DATA;
-	}
-
-      Status = NtDeviceIoControlFile (hDevice,
-				      NULL,
-				      NULL,
-				      NULL,
-				      &IoStatusBlock,
-				      IOCTL_TAPE_GET_MEDIA_PARAMS,
-				      NULL,
-				      0,
-				      lpTapeInformation,
-				      sizeof(TAPE_GET_MEDIA_PARAMETERS));
-    }
-  else if (dwOperation == GET_TAPE_DRIVE_INFORMATION)
-    {
-      if (*lpdwSize < sizeof(TAPE_GET_DRIVE_PARAMETERS))
-	{
-	  *lpdwSize = sizeof(TAPE_GET_DRIVE_PARAMETERS);
-	  return ERROR_MORE_DATA;
-	}
-
-      Status = NtDeviceIoControlFile (hDevice,
-				      NULL,
-				      NULL,
-				      NULL,
-				      &IoStatusBlock,
-				      IOCTL_TAPE_GET_DRIVE_PARAMS,
-				      NULL,
-				      0,
-				      lpTapeInformation,
-				      sizeof(TAPE_GET_DRIVE_PARAMETERS));
-    }
-  else
-    {
-      return ERROR_INVALID_FUNCTION;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  return ERROR_SUCCESS;
+    TapeErase.Type = dwEraseType;
+    TapeErase.Immediate = (BOOLEAN)bImmediate;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_ERASE,
+                                &TapeErase,
+                                sizeof(TapeErase),
+                                NULL,
+                                0);
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-GetTapePosition (HANDLE hDevice,
-		 DWORD dwPositionType,
-		 LPDWORD lpdwPartition,
-		 LPDWORD lpdwOffsetLow,
-		 LPDWORD lpdwOffsetHigh)
+DWORD
+WINAPI
+GetTapeParameters(IN HANDLE hDevice,
+                  IN DWORD dwOperation,
+                  IN LPDWORD lpdwSize,
+                  IN LPVOID lpTapeInformation)
 {
-  TAPE_GET_POSITION TapeGetPosition;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
-
-  TapeGetPosition.Type = dwPositionType;
-
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_GET_POSITION,
-				  &TapeGetPosition,
-				  sizeof(TAPE_GET_POSITION),
-				  &TapeGetPosition,
-				  sizeof(TAPE_GET_POSITION));
-  if (!NT_SUCCESS(Status))
+    if (dwOperation == GET_TAPE_MEDIA_INFORMATION)
     {
-      *lpdwPartition = 0;
-      *lpdwOffsetLow = 0;
-      *lpdwOffsetHigh = 0;
+        if (*lpdwSize < sizeof(TAPE_GET_MEDIA_PARAMETERS))
+        {
+            *lpdwSize = sizeof(TAPE_GET_MEDIA_PARAMETERS);
+            return ERROR_MORE_DATA;
+        }
 
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
+        return BasepDoTapeOperation(hDevice,
+                                    IOCTL_TAPE_GET_MEDIA_PARAMS,
+                                    NULL,
+                                    0,
+                                    lpTapeInformation,
+                                    sizeof(TAPE_GET_MEDIA_PARAMETERS));
+    }
+    else if (dwOperation == GET_TAPE_DRIVE_INFORMATION)
+    {
+        if (*lpdwSize < sizeof(TAPE_GET_DRIVE_PARAMETERS))
+        {
+            *lpdwSize = sizeof(TAPE_GET_DRIVE_PARAMETERS);
+            return ERROR_MORE_DATA;
+        }
+
+        return BasepDoTapeOperation(hDevice,
+                                    IOCTL_TAPE_GET_DRIVE_PARAMS,
+                                    NULL,
+                                    0,
+                                    lpTapeInformation,
+                                    sizeof(TAPE_GET_DRIVE_PARAMETERS));
     }
 
-  *lpdwPartition = TapeGetPosition.Partition;
-  *lpdwOffsetLow = TapeGetPosition.Offset.u.LowPart;
-  *lpdwOffsetHigh = TapeGetPosition.Offset.u.HighPart;
-
-  return ERROR_SUCCESS;
+    return ERROR_INVALID_FUNCTION;
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-GetTapeStatus (HANDLE hDevice)
+DWORD
+WINAPI
+GetTapePosition(IN HANDLE hDevice,
+                IN DWORD dwPositionType,
+                IN LPDWORD lpdwPartition,
+                IN LPDWORD lpdwOffsetLow,
+                IN LPDWORD lpdwOffsetHigh)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    TAPE_GET_POSITION TapeGetPosition;
+    DWORD Result;
 
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_GET_STATUS,
-				  NULL,
-				  0,
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
+    TapeGetPosition.Type = dwPositionType;
+    Result = BasepDoTapeOperation(hDevice,
+                                  IOCTL_TAPE_GET_POSITION,
+                                  &TapeGetPosition,
+                                  sizeof(TapeGetPosition),
+                                  &TapeGetPosition,
+                                  sizeof(TapeGetPosition));
+
+    if (Result)
     {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
+        *lpdwPartition = 0;
+        *lpdwOffsetLow = 0;
+        *lpdwOffsetHigh = 0;
+    }
+    else
+    {
+        *lpdwPartition = TapeGetPosition.Partition;
+        *lpdwOffsetLow = TapeGetPosition.Offset.u.LowPart;
+        *lpdwOffsetHigh = TapeGetPosition.Offset.u.HighPart;
     }
 
-  return ERROR_SUCCESS;
+    return Result;
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-PrepareTape (HANDLE hDevice,
-	     DWORD dwOperation,
-	     BOOL bImmediate)
+DWORD
+WINAPI
+GetTapeStatus(IN HANDLE hDevice)
 {
-  TAPE_PREPARE TapePrepare;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
-
-  TapePrepare.Operation = dwOperation;
-  TapePrepare.Immediate = (BOOLEAN)bImmediate;
-
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_PREPARE,
-				  &TapePrepare,
-				  sizeof(TAPE_PREPARE),
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  return ERROR_SUCCESS;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_GET_STATUS,
+                                NULL,
+                                0,
+                                NULL,
+                                0);
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-SetTapeParameters (HANDLE hDevice,
-		   DWORD dwOperation,
-		   LPVOID lpTapeInformation)
+DWORD
+WINAPI
+PrepareTape(IN HANDLE hDevice,
+            IN DWORD dwOperation,
+            IN BOOL bImmediate)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    TAPE_PREPARE TapePrepare;
 
-  if (dwOperation == SET_TAPE_MEDIA_INFORMATION)
-    {
-      Status = NtDeviceIoControlFile (hDevice,
-				      NULL,
-				      NULL,
-				      NULL,
-				      &IoStatusBlock,
-				      IOCTL_TAPE_SET_MEDIA_PARAMS,
-				      lpTapeInformation,
-				      sizeof(TAPE_SET_MEDIA_PARAMETERS),
-				      NULL,
-				      0);
-    }
-  else if (dwOperation == SET_TAPE_DRIVE_INFORMATION)
-    {
-      Status = NtDeviceIoControlFile (hDevice,
-				      NULL,
-				      NULL,
-				      NULL,
-				      &IoStatusBlock,
-				      IOCTL_TAPE_SET_DRIVE_PARAMS,
-				      lpTapeInformation,
-				      sizeof(TAPE_SET_DRIVE_PARAMETERS),
-				      NULL,
-				      0);
-    }
-  else
-    {
-      return ERROR_INVALID_FUNCTION;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  return ERROR_SUCCESS;
+    TapePrepare.Operation = dwOperation;
+    TapePrepare.Immediate = (BOOLEAN)bImmediate;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_PREPARE,
+                                &TapePrepare,
+                                sizeof(TapePrepare),
+                                NULL,
+                                0);
 }
 
-
 /*
  * @implemented
  */
-DWORD WINAPI
-SetTapePosition (HANDLE hDevice,
-		 DWORD dwPositionMethod,
-		 DWORD dwPartition,
-		 DWORD dwOffsetLow,
-		 DWORD dwOffsetHigh,
-		 BOOL bImmediate)
+DWORD
+WINAPI
+SetTapeParameters(IN HANDLE hDevice,
+                  IN DWORD dwOperation,
+                  IN LPVOID lpTapeInformation)
 {
-  TAPE_SET_POSITION TapeSetPosition;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
-
-  TapeSetPosition.Method = dwPositionMethod;
-  TapeSetPosition.Partition = dwPartition;
-  TapeSetPosition.Offset.u.LowPart = dwOffsetLow;
-  TapeSetPosition.Offset.u.HighPart = dwOffsetHigh;
-  TapeSetPosition.Immediate = (BOOLEAN)bImmediate;
-
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_SET_POSITION,
-				  &TapeSetPosition,
-				  sizeof(TAPE_SET_POSITION),
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
+    if (dwOperation == SET_TAPE_MEDIA_INFORMATION)
     {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
+        return BasepDoTapeOperation(hDevice,
+                                    IOCTL_TAPE_SET_MEDIA_PARAMS,
+                                    lpTapeInformation,
+                                    sizeof(TAPE_SET_MEDIA_PARAMETERS),
+                                    NULL,
+                                    0);
+    }
+    else if (dwOperation == SET_TAPE_DRIVE_INFORMATION)
+    {
+        return BasepDoTapeOperation(hDevice,
+                                    IOCTL_TAPE_SET_DRIVE_PARAMS,
+                                    lpTapeInformation,
+                                    sizeof(TAPE_SET_DRIVE_PARAMETERS),
+                                    NULL,
+                                    0);
     }
 
-  return ERROR_SUCCESS;
+    return ERROR_INVALID_FUNCTION;
 }
 
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+SetTapePosition(IN HANDLE hDevice,
+                IN DWORD dwPositionMethod,
+                IN DWORD dwPartition,
+                IN DWORD dwOffsetLow,
+                IN DWORD dwOffsetHigh,
+                IN BOOL bImmediate)
+{
+    TAPE_SET_POSITION TapeSetPosition;
+
+    TapeSetPosition.Method = dwPositionMethod;
+    TapeSetPosition.Partition = dwPartition;
+    TapeSetPosition.Offset.u.LowPart = dwOffsetLow;
+    TapeSetPosition.Offset.u.HighPart = dwOffsetHigh;
+    TapeSetPosition.Immediate = (BOOLEAN)bImmediate;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_SET_POSITION,
+                                &TapeSetPosition,
+                                sizeof(TapeSetPosition),
+                                NULL,
+                                0);
+}
 
 /*
  * @implemented
  */
-DWORD WINAPI
-WriteTapemark (HANDLE hDevice,
-	       DWORD dwTapemarkType,
-	       DWORD dwTapemarkCount,
-	       BOOL bImmediate)
+DWORD
+WINAPI
+WriteTapemark(IN HANDLE hDevice,
+              IN DWORD dwTapemarkType,
+              IN DWORD dwTapemarkCount,
+              IN BOOL bImmediate)
 {
-  TAPE_WRITE_MARKS TapeWriteMarks;
-  IO_STATUS_BLOCK IoStatusBlock;
-  DWORD ErrorCode;
-  NTSTATUS Status;
+    TAPE_WRITE_MARKS TapeWriteMarks;
 
-  TapeWriteMarks.Type = dwTapemarkType;
-  TapeWriteMarks.Count = dwTapemarkCount;
-  TapeWriteMarks.Immediate = (BOOLEAN)bImmediate;
-
-  Status = NtDeviceIoControlFile (hDevice,
-				  NULL,
-				  NULL,
-				  NULL,
-				  &IoStatusBlock,
-				  IOCTL_TAPE_WRITE_MARKS,
-				  &TapeWriteMarks,
-				  sizeof(TAPE_WRITE_MARKS),
-				  NULL,
-				  0);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError(Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  return ERROR_SUCCESS;
+    TapeWriteMarks.Type = dwTapemarkType;
+    TapeWriteMarks.Count = dwTapemarkCount;
+    TapeWriteMarks.Immediate = (BOOLEAN)bImmediate;
+    return BasepDoTapeOperation(hDevice,
+                                IOCTL_TAPE_WRITE_MARKS,
+                                &TapeWriteMarks,
+                                sizeof(TapeWriteMarks),
+                                NULL,
+                                0);
 }
 
 /* EOF */

@@ -1801,7 +1801,15 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
      {
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1844,10 +1852,13 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
+
+#ifdef __REACTOS__
+    case WM_NCDESTROY:
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+      break;
+#endif
 
     case WM_SHOWWINDOW:
       if (0 != wParam)
@@ -1888,9 +1899,21 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
   {
      if (!pWnd->fnid)
      {
+        if (Message != WM_NCCREATE)
+        {
+           return DefWindowProcW(Wnd, Message, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1933,9 +1956,6 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
 
     case WM_SHOWWINDOW:
@@ -2048,14 +2068,15 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
  * Parse an extended menu resource and add items to the menu.
  * Return a pointer to the end of the resource.
  */
-static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
+static LPCSTR MENUEX_ParseResource(LPCSTR res, HMENU hMenu)
 {
     WORD resinfo;
-    do {
-        MENUITEMINFOW mii;
+    MENUITEMINFOW mii;
 
+    do
+    {
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_FTYPE;
+        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_TYPE;
         mii.fType = GET_DWORD(res);
         res += sizeof(DWORD);
         mii.fState = GET_DWORD(res);
@@ -2066,7 +2087,8 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
         res += sizeof(WORD);
         /* Align the text on a word boundary.  */
         res += (~((UINT_PTR)res - 1)) & 1;
-        mii.dwTypeData = (LPWSTR) res;
+        mii.dwTypeData = (LPWSTR)res;
+        mii.cch = strlenW(mii.dwTypeData);
         res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
         /* Align the following fields on a dword boundary.  */
         res += (~((UINT_PTR)res - 1)) & 3;
@@ -2074,25 +2096,32 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
         TRACE("Menu item: [%08x,%08x,%04x,%04x,%S]\n",
               mii.fType, mii.fState, mii.wID, resinfo, mii.dwTypeData);
 
-		if (resinfo & 1) { /* Pop-up? */
-            /* DWORD helpid = GET_DWORD(res); FIXME: use this.  */
+		if (resinfo & 1) /* Pop-up? */
+		{
+            /* DWORD helpid = GET_DWORD(res); FIXME: use this. */
             res += sizeof(DWORD);
             mii.hSubMenu = CreatePopupMenu();
             if (!mii.hSubMenu)
+            {
+                ERR("CreatePopupMenu failed\n");
                 return NULL;
-            if (!(res = MENUEX_ParseResource(res, mii.hSubMenu))) {
+            }
+
+            if (!(res = MENUEX_ParseResource(res, mii.hSubMenu)))
+            {
+                ERR("MENUEX_ParseResource failed\n");
                 DestroyMenu(mii.hSubMenu);
                 return NULL;
             }
             mii.fMask |= MIIM_SUBMENU;
             mii.fType |= MF_POPUP;
-            mii.wID = (UINT) mii.hSubMenu;
+            mii.wID = (UINT)mii.hSubMenu;
         }
-        else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
-        {
+        else if (!mii.dwTypeData[0])
             mii.fType |= MF_SEPARATOR;
-        }
-        InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
+
+        if (!InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii))
+            ERR("InsertMenuItemW failed\n");
     } while (!(resinfo & MF_END));
     return res;
 }
@@ -2139,14 +2168,14 @@ MenuInit(VOID)
     ncm.cbSize = sizeof(ncm);
     if(!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
     {
-      DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
+      ERR("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
       return FALSE;
     }
 
     hMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFont == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
 
@@ -2154,7 +2183,7 @@ MenuInit(VOID)
     hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFontBold == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
+      ERR("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
       DeleteObject(hMenuFont);
       hMenuFont = NULL;
       return FALSE;
@@ -2915,7 +2944,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk, UINT wFlags)
       if (NewWnd != Mt->OwnerWnd)
         {
           Mt->OwnerWnd = NewWnd;
-          (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd); // 1
+          NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd); // 1
           SetCapture(Mt->OwnerWnd);                                          // 2
         }
 
@@ -3206,13 +3235,13 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
     /* owner may not be visible when tracking a popup, so use the menu itself */
     capture_win = (wFlags & TPM_POPUPMENU) ? MenuInfo.Wnd : mt.OwnerWnd;
-    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
+    NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
     SetCapture(capture_win);                                          // 2
 
     while (! fEndMenu)
     {
         BOOL ErrorExit = FALSE;
-        PVOID menu = ValidateHandle(mt.CurrentMenu, VALIDATE_TYPE_MENU);
+        PVOID menu = ValidateHandle(mt.CurrentMenu, otMenu);
         if (!menu) /* sometimes happens if I do a window manager close */
            break;
 
@@ -3464,7 +3493,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         else mt.TrackFlags &= ~TF_SKIPREMOVE;
     }
 
-    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
+    NtUserxSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
     SetCapture(NULL);  /* release the capture */
 
     /* If dropdown is still painted and the close box is clicked on
@@ -4072,7 +4101,7 @@ HMENU WINAPI
 CreateMenu(VOID)
 {
   MenuLoadBitmaps();
-  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
+  return NtUserxCreateMenu();
 }
 
 
@@ -4083,7 +4112,7 @@ HMENU WINAPI
 CreatePopupMenu(VOID)
 {
   MenuLoadBitmaps();
-  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
+  return NtUserxCreatePopupMenu();
 }
 
 
@@ -4093,7 +4122,7 @@ CreatePopupMenu(VOID)
 BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
-//  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
+//  return NtUserxDrawMenuBar(hWnd);
   ROSMENUINFO MenuInfo;
   HMENU hMenu;
   hMenu = GetMenu(hWnd);
@@ -4344,7 +4373,7 @@ GetMenuItemInfoA(
          {
             AnsiBuffer[miiW.cch] = 0;
          }
-         mii->cch = mii->cch;
+         mii->cch = miiW.cch;
       }
    }
    else
@@ -4720,7 +4749,7 @@ WINAPI
 IsMenu(
   HMENU Menu)
 {
-  if (ValidateHandle(Menu, VALIDATE_TYPE_MENU)) return TRUE;
+  if (ValidateHandle(Menu, otMenu)) return TRUE;
   return FALSE;
 }
 
@@ -4787,7 +4816,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       }
       return hMenu;
     default:
-      DbgPrint("LoadMenuIndirectW(): version %d not supported.\n", version);
+      ERR("Menu template version %d not supported.\n", version);
       return 0;
   }
 }

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -228,7 +228,7 @@ AcpiPsGetAmlOpcode (
         /* The opcode is unrecognized. Just skip unknown opcodes */
 
         ACPI_ERROR ((AE_INFO,
-             "Found unknown opcode %X at AML address %p offset %X, ignoring",
+             "Found unknown opcode 0x%X at AML address %p offset 0x%X, ignoring",
               WalkState->Opcode, WalkState->ParserState.Aml, WalkState->AmlOffset));
 
         ACPI_DUMP_BUFFER (WalkState->ParserState.Aml, 128);
@@ -767,7 +767,7 @@ AcpiPsLinkModuleCode (
         MethodObj->Method.AmlStart = AmlStart;
         MethodObj->Method.AmlLength = AmlLength;
         MethodObj->Method.OwnerId = OwnerId;
-        MethodObj->Method.Flags |= AOPOBJ_MODULE_LEVEL;
+        MethodObj->Method.InfoFlags |= ACPI_METHOD_MODULE_LEVEL;
 
         /*
          * Save the parent node in NextObject. This is cheating, but we
@@ -1149,7 +1149,6 @@ AcpiPsParseLoop (
                     {
                         ACPI_EXCEPTION ((AE_INFO, Status,
                             "Invoked method did not return a value"));
-
                     }
 
                     ACPI_EXCEPTION ((AE_INFO, Status, "GetPredicate Failed"));

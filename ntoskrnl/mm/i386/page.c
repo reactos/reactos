@@ -29,7 +29,7 @@
 #define PA_BIT_CD        (4)
 #define PA_BIT_ACCESSED  (5)
 #define PA_BIT_DIRTY     (6)
-#define PA_BIT_GLOBAL	 (8)
+#define PA_BIT_GLOBAL    (8)
 
 #define PA_PRESENT   (1 << PA_BIT_PRESENT)
 #define PA_READWRITE (1 << PA_BIT_READWRITE)
@@ -40,10 +40,8 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define HYPERSPACE		(0xc0400000)
-#define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
-
-ULONG MmGlobalKernelPageDirectory[1024];
+#define HYPERSPACE          (0xc0400000)
+#define IS_HYPERSPACE(v)    (((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
 
 #define PTE_TO_PFN(X)  ((X) >> PAGE_SHIFT)
 #define PFN_TO_PTE(X)  ((X) << PAGE_SHIFT)
@@ -163,7 +161,7 @@ static ULONG
 ProtectToPTE(ULONG flProtect)
 {
     ULONG Attributes = 0;
-    
+
     if (flProtect & (PAGE_NOACCESS|PAGE_GUARD))
     {
         Attributes = 0;
@@ -181,7 +179,7 @@ ProtectToPTE(ULONG flProtect)
         DPRINT1("Unknown main protection type.\n");
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     if (flProtect & PAGE_SYSTEM)
     {
     }
@@ -200,117 +198,126 @@ ProtectToPTE(ULONG flProtect)
     return(Attributes);
 }
 
+/* Taken from ARM3/pagfault.c */
+BOOLEAN
+FORCEINLINE
+MiSynchronizeSystemPde(PMMPDE PointerPde)
+{
+    MMPDE SystemPde;
+    ULONG Index;
+
+    /* Get the Index from the PDE */
+    Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
+
+    /* Copy the PDE from the double-mapped system page directory */
+    SystemPde = MmSystemPagePtes[Index];
+    *PointerPde = SystemPde;
+
+    /* Make sure we re-read the PDE and PTE */
+    KeMemoryBarrierWithoutFence();
+
+    /* Return, if we had success */
+    return SystemPde.u.Hard.Valid != 0;
+}
+
+NTSTATUS
+NTAPI
+MiResolveDemandZeroFault(IN PVOID Address,
+                         IN ULONG Protection,
+                         IN PEPROCESS Process,
+                         IN KIRQL OldIrql);
+VOID
+NTAPI
+MiFillSystemPageDirectory(IN PVOID Base,
+                          IN SIZE_T NumberOfBytes);
+
 static PULONG
 MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
-    ULONG PdeOffset = ADDR_TO_PDE_OFFSET(Address);
-    NTSTATUS Status;
     PFN_NUMBER Pfn;
-    ULONG Entry;
-    PULONG Pt, PageDir;
-    
-    if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
+    PULONG Pt;
+    PMMPDE PointerPde;
+
+    if (Address < MmSystemRangeStart)
     {
-        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-        if (PageDir == NULL)
+        /* We should have a process for user land addresses */
+        ASSERT(Process != NULL);
+
+        if(Process != PsGetCurrentProcess())
         {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        if (0 == InterlockedCompareExchangePte(&PageDir[PdeOffset], 0, 0))
-        {
-            if (Create == FALSE)
-            {
-                MmDeleteHyperspaceMapping(PageDir);
-                return NULL;
-            }
-            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
-            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
-            if (!NT_SUCCESS(Status) || Pfn == 0)
+            PMMPDE PdeBase;
+            ULONG PdeOffset = MiGetPdeOffset(Address);
+            
+            /* Nobody but page fault should ask for creating the PDE,
+             * Which imples that Process is the current one */
+            ASSERT(Create == FALSE);
+            
+            PdeBase = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+            if (PdeBase == NULL)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
             }
-            Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
-            if (Entry != 0)
+            PointerPde = PdeBase + PdeOffset;
+            if (PointerPde->u.Hard.Valid == 0)
             {
-                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-                Pfn = PTE_TO_PFN(Entry);
+                MmDeleteHyperspaceMapping(PdeBase);
+                return NULL;
             }
-        }
-        else
-        {
-            Pfn = PTE_TO_PFN(PageDir[PdeOffset]);
-        }
-        MmDeleteHyperspaceMapping(PageDir);
-        Pt = MmCreateHyperspaceMapping(Pfn);
-        if (Pt == NULL)
-        {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        return Pt + ADDR_TO_PTE_OFFSET(Address);
-    }
-    PageDir = (PULONG)MiAddressToPde(Address);
-    if (0 == InterlockedCompareExchangePte(PageDir, 0, 0))
-    {
-        if (Address >= MmSystemRangeStart)
-        {
-            if (0 == InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
+            else
             {
-                if (Create == FALSE)
-                {
-                    return NULL;
-                }
-                MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-                if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-                if (!Process) MI_SET_PROCESS2("Kernel Legacy");
-                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
-                if (!NT_SUCCESS(Status) || Pfn == 0)
-                {
-                    KeBugCheck(MEMORY_MANAGEMENT);
-                }
-                Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-                if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
-                {
-                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-                }
-                InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
-                RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
-                return (PULONG)MiAddressToPte(Address);
+                Pfn = PointerPde->u.Hard.PageFrameNumber;
             }
-            InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+            MmDeleteHyperspaceMapping(PdeBase);
+            Pt = MmCreateHyperspaceMapping(Pfn);
+            if (Pt == NULL)
+            {
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
+            return Pt + MiAddressToPteOffset(Address);
         }
-        else
+        /* This is for our process */
+        PointerPde = MiAddressToPde(Address);
+        Pt = (PULONG)MiAddressToPte(Address);
+        if (PointerPde->u.Hard.Valid == 0)
         {
             if (Create == FALSE)
             {
                 return NULL;
             }
-            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
-            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
-            if (!NT_SUCCESS(Status) || Pfn == 0)
-            {
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-            Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
-            if (Entry != 0)
-            {
-                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-            }
+            MiResolveDemandZeroFault(Pt,
+                                     MM_READWRITE,
+                                     Process,
+                                     MM_NOIRQL);
+            ASSERT(PointerPde->u.Hard.Valid == 1);
+        }
+        return (PULONG)MiAddressToPte(Address);
+    }
+
+    /* This is for kernel land address */
+    ASSERT(Process == NULL);
+    PointerPde = MiAddressToPde(Address);
+    Pt = (PULONG)MiAddressToPte(Address);
+    if (PointerPde->u.Hard.Valid == 0)
+    {
+        /* Let ARM3 synchronize the PDE */
+        if(!MiSynchronizeSystemPde(PointerPde))
+        {
+            /* PDE (still) not valid, let ARM3 allocate one if asked */
+            if(Create == FALSE)
+                return NULL;
+            MiFillSystemPageDirectory(Address, PAGE_SIZE);
         }
     }
-    return (PULONG)MiAddressToPte(Address);
+    return Pt;
 }
 
 BOOLEAN MmUnmapPageTable(PULONG Pt)
 {
-    if (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024)
+    if (!IS_HYPERSPACE(Pt))
     {
         return TRUE;
     }
-    
+
     if (Pt)
     {
         MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pt));
@@ -322,7 +329,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
     ULONG Pte;
     PULONG Pt;
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt)
     {
@@ -357,12 +364,13 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     BOOLEAN WasValid;
     ULONG Pte;
     PULONG Pt;
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
+
     /*
      * Atomically disable the present bit and get the old value.
      */
@@ -370,14 +378,15 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
-    
+
     MiFlushTlb(Pt, Address);
-    WasValid = (PAGE_MASK(Pte) != 0);
+
+    WasValid = (Pte & PA_PRESENT);
     if (!WasValid)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     /*
      * Return some information to the caller
      */
@@ -396,7 +405,7 @@ NTAPI
 MmRawDeleteVirtualMapping(PVOID Address)
 {
     PULONG Pt;
-    
+
     Pt = MmGetPageTableForProcess(NULL, Address, FALSE);
     if (Pt && *Pt)
     {
@@ -420,12 +429,12 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     PFN_NUMBER Pfn;
     ULONG Pte;
     PULONG Pt;
-    
+
     DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
            Process, Address, FreePage, WasDirty, Page);
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    
+
     if (Pt == NULL)
     {
         if (WasDirty != NULL)
@@ -438,35 +447,40 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
         }
         return;
     }
-    
+
     /*
      * Atomically set the entry to zero and get the old value.
      */
     Pte = InterlockedExchangePte(Pt, 0);
-    
-    MiFlushTlb(Pt, Address);
-    
-    WasValid = (PAGE_MASK(Pte) != 0);
+
+    WasValid = (Pte & PA_PRESENT);
     if (WasValid)
     {
+        /* Flush the TLB since we transitioned this PTE
+         * from valid to invalid so any stale translations
+         * are removed from the cache */
+        MiFlushTlb(Pt, Address);
+
         Pfn = PTE_TO_PFN(Pte);
+
+        if (FreePage)
+        {
+            MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
+            Pfn = 0;
+        }
     }
     else
     {
+        MmUnmapPageTable(Pt);
         Pfn = 0;
     }
-    
-    if (FreePage && WasValid)
-    {
-        MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-    }
-    
+
     /*
      * Return some information to the caller
      */
     if (WasDirty != NULL)
     {
-        *WasDirty = Pte & PA_DIRTY ? TRUE : FALSE;
+        *WasDirty = ((Pte & PA_DIRTY) && (Pte & PA_PRESENT)) ? TRUE : FALSE;
     }
     if (Page != NULL)
     {
@@ -477,13 +491,13 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 VOID
 NTAPI
 MmGetPageFileMapping(PEPROCESS Process, PVOID Address,
-					 SWAPENTRY* SwapEntry)
+                     SWAPENTRY* SwapEntry)
 /*
  * FUNCTION: Get a page file mapping
  */
 {
-	ULONG Entry = MmGetPageEntryForProcess(Process, Address);
-	*SwapEntry = Entry >> 1;
+    ULONG Entry = MmGetPageEntryForProcess(Process, Address);
+    *SwapEntry = Entry >> 1;
 }
 
 VOID
@@ -496,22 +510,29 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 {
     ULONG Pte;
     PULONG Pt;
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    
+
     if (Pt == NULL)
     {
         *SwapEntry = 0;
         return;
     }
-    
+
     /*
      * Atomically set the entry to zero and get the old value.
      */
     Pte = InterlockedExchangePte(Pt, 0);
-    
-    MiFlushTlb(Pt, Address);
-    
+
+    /* We don't need to flush here because page file entries
+     * are invalid translations, so the processor won't cache them */
+    MmUnmapPageTable(Pt);
+
+    if ((Pte & PA_PRESENT) || !(Pte & 0x800))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
     /*
      * Return some information to the caller
      */
@@ -519,19 +540,18 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 }
 
 BOOLEAN
-Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
+Mmi386MakeKernelPageTableGlobal(PVOID Address)
 {
-    PULONG Pt, Pde;
-    Pde = (PULONG)MiAddressToPde(PAddress);
-    if (*Pde == 0)
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPTE PointerPte = MiAddressToPte(Address);
+    
+    if (PointerPde->u.Hard.Valid == 0)
     {
-        Pt = MmGetPageTableForProcess(NULL, PAddress, FALSE);
-        if (Pt != NULL)
-        {
-            return TRUE;
-        }
+        if(!MiSynchronizeSystemPde(PointerPde))
+            return FALSE;
+        return PointerPte->u.Hard.Valid != 0;
     }
-    return(FALSE);
+    return FALSE;
 }
 
 BOOLEAN
@@ -547,26 +567,29 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
     PULONG Pt;
     ULONG Pte;
-    
+
     if (Address < MmSystemRangeStart && Process == NULL)
     {
         DPRINT1("MmSetCleanPage is called for user space without a process.\n");
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     do
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_DIRTY, Pte));
-    
-    if (Pte & PA_DIRTY)
+
+    if (!(Pte & PA_PRESENT))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    else if (Pte & PA_DIRTY)
     {
         MiFlushTlb(Pt, Address);
     }
@@ -582,29 +605,32 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
     PULONG Pt;
     ULONG Pte;
-    
+
     if (Address < MmSystemRangeStart && Process == NULL)
     {
         DPRINT1("MmSetDirtyPage is called for user space without a process.\n");
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
+
     do
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_DIRTY, Pte));
-    if (!(Pte & PA_DIRTY))
+
+    if (!(Pte & PA_PRESENT))
     {
-        MiFlushTlb(Pt, Address);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
     else
     {
+        /* The processor will never clear this bit itself, therefore
+         * we do not need to flush the TLB here when setting it */
         MmUnmapPageTable(Pt);
     }
 }
@@ -615,25 +641,27 @@ MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
     PULONG Pt;
     ULONG Pte;
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
-        KeBugCheck(MEMORY_MANAGEMENT);
+        //HACK to get DPH working, waiting for MM rewrite :-/
+        //KeBugCheck(MEMORY_MANAGEMENT);
+        return;
     }
-    
+
+    /* Do not mark a 0 page as present */
+    if(0 == InterlockedCompareExchangePte(Pt, 0, 0))
+        return;
+
     do
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_PRESENT, Pte));
-    if (!(Pte & PA_PRESENT))
-    {
-        MiFlushTlb(Pt, Address);
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-    }
+
+    /* We don't need to flush the TLB here because it
+     * won't cache translations for non-present pages */
+    MmUnmapPageTable(Pt);
 }
 
 BOOLEAN
@@ -649,7 +677,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
     Entry = MmGetPageEntryForProcess(Process, Address);
-    return !(Entry & PA_PRESENT) && (Entry & 0x800) && Entry != 0;
+    return !(Entry & PA_PRESENT) && (Entry & 0x800);
 }
 
 NTSTATUS
@@ -660,7 +688,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 {
     PULONG Pt;
     ULONG Pte;
-    
+
     if (Process == NULL && Address < MmSystemRangeStart)
     {
         DPRINT1("No process\n");
@@ -676,23 +704,24 @@ MmCreatePageFileMapping(PEPROCESS Process,
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    
-    Pt = MmGetPageTableForProcess(Process, Address, TRUE);
+
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
+    {
+        /* Nobody should page out an address that hasn't even been mapped */
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    Pte = InterlockedExchangePte(Pt, SwapEntry << 1);
+    if (Pte != 0)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    Pte = *Pt;
-    InterlockedExchangePte(Pt, SwapEntry << 1);
-    if (Pte != 0)
-    {
-        MiFlushTlb(Pt, Address);
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-    }
-    
+
+    /* We don't need to flush the TLB here because it
+     * only caches valid translations and a zero PTE
+     * is not a valid translation */
+    MmUnmapPageTable(Pt);
+
     return(STATUS_SUCCESS);
 }
 
@@ -713,7 +742,9 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG Pte;
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
-    
+
+    ASSERT(((ULONG_PTR)Address % PAGE_SIZE) == 0);
+
     if (Process == NULL)
     {
         if (Address < MmSystemRangeStart)
@@ -743,7 +774,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
-    
+
     Attributes = ProtectToPTE(flProtect);
     Attributes &= 0xfff;
     if (Address >= MmSystemRangeStart)
@@ -754,8 +785,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     {
         Attributes |= PA_USER;
     }
-    
+
     Addr = Address;
+    /* MmGetPageTableForProcess should be called on the first run, so
+     * let this trigger it */
     oldPdeOffset = ADDR_TO_PDE_OFFSET(Addr) + 1;
     for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
     {
@@ -769,7 +802,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
         if (oldPdeOffset != PdeOffset)
         {
-            MmUnmapPageTable(Pt);
+            if(Pt) MmUnmapPageTable(Pt);
             Pt = MmGetPageTableForProcess(Process, Addr, TRUE);
             if (Pt == NULL)
             {
@@ -781,28 +814,23 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             Pt++;
         }
         oldPdeOffset = PdeOffset;
-        
-        Pte = *Pt;
-        if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
+
+        Pte = InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
+
+        /* There should not be anything valid here */
+        if (Pte != 0)
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-        if (Pte != 0)
-        {
-            if (Address > MmSystemRangeStart ||
-                (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
-            {
-                MiFlushTlb(Pt, Address);
-            }
-        }
+
+        /* We don't need to flush the TLB here because it only caches valid translations
+         * and we're moving this PTE from invalid to valid so it can't be cached right now */
     }
-    if (Addr > Address)
-    {
-        MmUnmapPageTable(Pt);
-    }
-    
+
+    ASSERT(Addr > Address);
+    MmUnmapPageTable(Pt);
+
     return(STATUS_SUCCESS);
 }
 
@@ -815,7 +843,8 @@ MmCreateVirtualMapping(PEPROCESS Process,
                        ULONG PageCount)
 {
     ULONG i;
-    
+
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
     for (i = 0; i < PageCount; i++)
     {
         if (!MmIsPageInUse(Pages[i]))
@@ -824,7 +853,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
-    
+
     return(MmCreateVirtualMappingUnsafe(Process,
                                         Address,
                                         flProtect,
@@ -838,10 +867,10 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
     ULONG Protect;
-    
+
     Entry = MmGetPageEntryForProcess(Process, Address);
-    
-    
+
+
     if (!(Entry & PA_PRESENT))
     {
         Protect = PAGE_NOACCESS;
@@ -868,7 +897,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
         {
             Protect |= PAGE_SYSTEM;
         }
-        
+
     }
     return(Protect);
 }
@@ -879,10 +908,11 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
     ULONG Attributes = 0;
     PULONG Pt;
-    
+    ULONG Pte;
+
     DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
            Process, Address, flProtect);
-    
+
     Attributes = ProtectToPTE(flProtect);
 
     Attributes &= 0xfff;
@@ -894,14 +924,24 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     {
         Attributes |= PA_USER;
     }
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
-    MiFlushTlb(Pt, Address);
+    Pte = InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
+
+    if (!(Pte & PA_PRESENT))
+    {
+        DPRINT1("Invalid Pte %lx\n", Pte);
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    if((Pte & Attributes) != Attributes)
+        MiFlushTlb(Pt, Address);
+    else
+        MmUnmapPageTable(Pt);
 }
 
 /*
@@ -915,10 +955,10 @@ MmGetPhysicalAddress(PVOID vaddr)
 {
     PHYSICAL_ADDRESS p;
     ULONG Pte;
-    
+
     DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
     Pte = MmGetPageEntryForProcess(NULL, vaddr);
-    if (Pte != 0 && Pte & PA_PRESENT)
+    if (Pte != 0 && (Pte & PA_PRESENT))
     {
         p.QuadPart = PAGE_MASK(Pte);
         p.u.LowPart |= (ULONG_PTR)vaddr & (PAGE_SIZE - 1);
@@ -935,20 +975,7 @@ INIT_FUNCTION
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {
-    ULONG i;
-    PULONG CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
-    
-    DPRINT("MmInitGlobalKernelPageDirectory()\n");
-    
-    for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
-    {
-        if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&
-            i != ADDR_TO_PDE_OFFSET(HYPERSPACE) &&
-            0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
-        {
-            MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
-        }
-    }
+    /* Nothing to do here */
 }
 
 /* EOF */

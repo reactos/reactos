@@ -10,10 +10,10 @@ list(APPEND SOURCE
 
 add_library(lz32 SHARED ${SOURCE})
 
-set_entrypoint(lz32 0)
+set_module_type(lz32 win32dll ENTRYPOINT 0 )
 target_link_libraries(lz32 wine)
 
 add_importlibs(lz32 kernel32 ntdll)
 add_dependencies(lz32 psdk)
 add_cd_file(TARGET lz32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(lz32.spec)
+add_importlib_target(lz32.spec lz32.dll)

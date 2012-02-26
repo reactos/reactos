@@ -305,7 +305,8 @@ RemoveHandles(IN DWORD dwProcessId,
 
     /* Loop all thread data events */
     ThreadData = (PDBGSS_THREAD_DATA*)NtCurrentTeb()->DbgSsReserved;
-    for (ThisData = *ThreadData; ThisData; ThisData = ThisData->Next)
+    ThisData = *ThreadData;
+    while(ThisData)
     {
         /* Check if this one matches */
         if ((ThisData->HandleMarked) &&
@@ -326,6 +327,7 @@ RemoveHandles(IN DWORD dwProcessId,
             /* Move to the next one */
             ThreadData = &ThisData->Next;
         }
+        ThisData = *ThreadData;
     }
 }
 
@@ -338,7 +340,8 @@ CloseAllProcessHandles(IN DWORD dwProcessId)
 
     /* Loop all thread data events */
     ThreadData = (PDBGSS_THREAD_DATA*)NtCurrentTeb()->DbgSsReserved;
-    for (ThisData = *ThreadData; ThisData; ThisData = ThisData->Next)
+    ThisData = *ThreadData;
+    while(ThisData)
     {
         /* Check if this one matches */
         if (ThisData->ProcessId == dwProcessId)
@@ -358,6 +361,7 @@ CloseAllProcessHandles(IN DWORD dwProcessId)
             /* Move to the next one */
             ThreadData = &ThisData->Next;
         }
+        ThisData = *ThreadData;
     }
 }
 

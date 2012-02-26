@@ -49,7 +49,8 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
                               OUT PULONG UnicodeStringCount)
 {
     PWCHAR p, pp, ps;
-    ULONG i = 0, n;
+    ULONG i = 0;
+    SIZE_T n;
     ULONG Count = 0;
     
     /* Validate the key information */
@@ -114,8 +115,8 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
             RtlCopyMemory((*UnicodeStringList)[i].Buffer, ps, n);
             
             /* Set the lengths */
-            (*UnicodeStringList)[i].MaximumLength = n;
-            (*UnicodeStringList)[i].Length = n - sizeof(UNICODE_NULL);
+            (*UnicodeStringList)[i].MaximumLength = (USHORT)n;
+            (*UnicodeStringList)[i].Length = (USHORT)(n - sizeof(UNICODE_NULL));
             
             /* One more entry done */
             i++;
@@ -156,8 +157,8 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
         (*UnicodeStringList)[i].Buffer[n / sizeof(WCHAR)] = UNICODE_NULL;
         
         /* Set the lenghts */
-        (*UnicodeStringList)[i].Length = n;
-        (*UnicodeStringList)[i].MaximumLength = n + sizeof(UNICODE_NULL);
+        (*UnicodeStringList)[i].Length = (USHORT)n;
+        (*UnicodeStringList)[i].MaximumLength = (USHORT)(n + sizeof(UNICODE_NULL));
     }
     
     /* And we're done */
@@ -178,7 +179,7 @@ PnpRegSzToString(IN PWCHAR RegSzData,
     for (p = RegSzData; p < pp; p++) if (!*p) break;
     
     /* Return it */
-    if (StringLength) *StringLength = (p - RegSzData) * sizeof(WCHAR);
+    if (StringLength) *StringLength = (USHORT)(p - RegSzData) * sizeof(WCHAR);
     return TRUE;
 }
 

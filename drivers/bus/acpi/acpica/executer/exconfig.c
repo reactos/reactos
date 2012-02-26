@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -164,8 +164,9 @@ AcpiExAddTable (
     ACPI_NAMESPACE_NODE     *ParentNode,
     ACPI_OPERAND_OBJECT     **DdbHandle)
 {
-    ACPI_STATUS             Status;
     ACPI_OPERAND_OBJECT     *ObjDesc;
+    ACPI_STATUS             Status;
+    ACPI_OWNER_ID           OwnerId;
 
 
     ACPI_FUNCTION_TRACE (ExAddTable);
@@ -205,7 +206,18 @@ AcpiExAddTable (
     AcpiNsExecModuleCodeList ();
     AcpiExEnterInterpreter ();
 
-    return_ACPI_STATUS (Status);
+    /*
+     * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is
+     * responsible for discovering any new wake GPEs by running _PRW methods
+     * that may have been loaded by this table.
+     */
+    Status = AcpiTbGetOwnerId (TableIndex, &OwnerId);
+    if (ACPI_SUCCESS (Status))
+    {
+        AcpiEvUpdateGpes (OwnerId);
+    }
+
+    return_ACPI_STATUS (AE_OK);
 }
 
 
@@ -347,9 +359,8 @@ AcpiExLoadTableOp (
     Status = AcpiGetTableByIndex (TableIndex, &Table);
     if (ACPI_SUCCESS (Status))
     {
-        ACPI_INFO ((AE_INFO,
-            "Dynamic OEM Table Load - [%.4s] OemId [%.6s] OemTableId [%.8s]",
-            Table->Signature, Table->OemId, Table->OemTableId));
+        ACPI_INFO ((AE_INFO, "Dynamic OEM Table Load:"));
+        AcpiTbPrintTableHeader (0, Table);
     }
 
     /* Invoke table handler if present */
@@ -387,7 +398,7 @@ AcpiExRegionRead (
     UINT8                   *Buffer)
 {
     ACPI_STATUS             Status;
-    ACPI_INTEGER            Value;
+    UINT64                  Value;
     UINT32                  RegionOffset = 0;
     UINT32                  i;
 
@@ -610,7 +621,10 @@ AcpiExLoadOp (
     Status = AcpiTbAddTable (&TableDesc, &TableIndex);
     if (ACPI_FAILURE (Status))
     {
-        goto Cleanup;
+        /* Delete allocated table buffer */
+
+        AcpiTbDeleteTable (&TableDesc);
+        return_ACPI_STATUS (Status);
     }
 
     /*
@@ -641,6 +655,9 @@ AcpiExLoadOp (
         return_ACPI_STATUS (Status);
     }
 
+    ACPI_INFO ((AE_INFO, "Dynamic OEM Table Load:"));
+    AcpiTbPrintTableHeader (0, TableDesc.Pointer);
+
     /* Remove the reference by added by AcpiExStore above */
 
     AcpiUtRemoveReference (DdbHandle);
@@ -653,13 +670,6 @@ AcpiExLoadOp (
                     AcpiGbl_TableHandlerContext);
     }
 
-Cleanup:
-    if (ACPI_FAILURE (Status))
-    {
-        /* Delete allocated table buffer */
-
-        AcpiTbDeleteTable (&TableDesc);
-    }
     return_ACPI_STATUS (Status);
 }
 

@@ -517,7 +517,7 @@ ProSend(
     } else {
         if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
         {
-            NDIS_DbgPrint(MIN_TRACE, ("Using Scatter/Gather DMA\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Using Scatter/Gather DMA\n"));
 
             NdisQueryPacket(Packet,
                             NULL,
@@ -908,20 +908,22 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
    */
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING RegistryPath;
-    WCHAR *RegistryPathStr;
+    WCHAR *RegistryPathStr, *DataPtr = NULL;
     NTSTATUS NtStatus;
-    WCHAR *DataPtr;
     HANDLE DriverKeyHandle = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
     PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics = &Protocol->Chars;
+    UNICODE_STRING ValueName;
+    ULONG ResultLength;
+    PLIST_ENTRY CurrentEntry = NULL;
 
     RegistryPathStr = ExAllocatePoolWithTag(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY), NDIS_TAG + __LINE__);
     if(!RegistryPathStr)
-      {
+    {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         *Status = NDIS_STATUS_RESOURCES;
         return;
-      }
+    }
 
     wcscpy(RegistryPathStr, SERVICES_KEY);
     wcsncat(RegistryPathStr, ((WCHAR *)ProtocolCharacteristics->Name.Buffer), ProtocolCharacteristics->Name.Length / sizeof(WCHAR));
@@ -936,130 +938,165 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
 
     ExFreePool(RegistryPathStr);
 
-    if(!NT_SUCCESS(NtStatus))
-      {
-        NDIS_DbgPrint(MIN_TRACE, ("Unable to open protocol configuration\n"));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-      }
-
-  NDIS_DbgPrint(MAX_TRACE, ("Successfully opened the registry configuration\n"));
-
-  {
-    UNICODE_STRING ValueName;
-    ULONG ResultLength;
-
-    RtlInitUnicodeString(&ValueName, L"Bind");
-
-    NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, NULL, 0, &ResultLength);
-    if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL && NtStatus != STATUS_SUCCESS)
-      {
-        NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value for size\n"));
-        ZwClose(DriverKeyHandle);
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-      }
-
-    KeyInformation = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, NDIS_TAG + __LINE__);
-    if(!KeyInformation)
-      {
-        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        ZwClose(DriverKeyHandle);
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-      }
-
-    NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, KeyInformation,
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, &ResultLength);
-
-    ZwClose(DriverKeyHandle);
-
-    if(!NT_SUCCESS(NtStatus))
-      {
-        NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value\n"));
-        ExFreePool(KeyInformation);
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-      }
-  }
-
-  /* Assume success for now */
-  *Status = NDIS_STATUS_SUCCESS;
-
-  for (DataPtr = (WCHAR *)KeyInformation->Data;
-       *DataPtr != 0;
-       DataPtr += wcslen(DataPtr) + 1)
+    if(NT_SUCCESS(NtStatus))
     {
-      /* BindContext is for tracking pending binding operations */
-      VOID *BindContext = 0;
-      NDIS_STRING DeviceName;
-      NDIS_STRING RegistryPath;
-      WCHAR *RegistryPathStr = NULL;
-      ULONG PathLength = 0;
+        NDIS_DbgPrint(MAX_TRACE, ("Successfully opened the registry configuration\n"));
 
-      RtlInitUnicodeString(&DeviceName, DataPtr);	/* we know this is 0-term */
+        RtlInitUnicodeString(&ValueName, L"Bind");
 
-      /* Make sure the adapter has started */
-      if (!MiniLocateDevice(&DeviceName))
-      {
-          /* It wasn't in the global miniport list, so skip the bind entry */
-          continue;
-      }
-
-      /* Make sure this device isn't already bound to this protocol */
-      if (LocateAdapterBindingByName(Protocol, &DeviceName))
-      {
-          /* It was already in this protocol's bound adapter list, so skip the bind entry */
-          continue;
-      }
-
-      /*
-       * RegistryPath should be:
-       *     \Registry\Machine\System\CurrentControlSet\Services\Nic1\Parameters\Tcpip
-       *
-       *  This is constructed as follows:
-       *      SERVICES_KEY + extracted device name + Protocol name from characteristics
-       */
-
-      PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
-          wcslen( DataPtr + 8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
-          sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
-          ProtocolCharacteristics->Name.Length + sizeof(WCHAR);                         /* Tcpip                                                */
-
-      RegistryPathStr = ExAllocatePool(PagedPool, PathLength);
-      if(!RegistryPathStr)
+        NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, NULL, 0, &ResultLength);
+        if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL && NtStatus != STATUS_SUCCESS)
         {
-          NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
-          ExFreePool(KeyInformation);
-          *Status = NDIS_STATUS_RESOURCES;
-          return;
+            NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value for size\n"));
+            ZwClose(DriverKeyHandle);
         }
-
-      wcscpy(RegistryPathStr, SERVICES_KEY);
-      wcscat(RegistryPathStr, DataPtr + 8 );
-      wcscat(RegistryPathStr, PARAMETERS_KEY);
-      wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length / sizeof(WCHAR) );
-
-      RegistryPathStr[PathLength/sizeof(WCHAR) - 1] = 0;
-
-      RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
-
-      NDIS_DbgPrint(MAX_TRACE, ("Calling protocol's BindAdapter handler with DeviceName %wZ and RegistryPath %wZ\n",
-          &DeviceName, &RegistryPath));
-
+        else
         {
-          BIND_HANDLER BindHandler = ProtocolCharacteristics->BindAdapterHandler;
-          if(BindHandler)
-          {
-            BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
-            NDIS_DbgPrint(MIN_TRACE, ("%wZ's BindAdapter handler returned 0x%x for %wZ\n", &ProtocolCharacteristics->Name, *Status, &DeviceName));
-          }
-          else
-            NDIS_DbgPrint(MIN_TRACE, ("No protocol bind handler specified\n"));
+            KeyInformation = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, NDIS_TAG + __LINE__);
+            if(!KeyInformation)
+            {
+                NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+                ZwClose(DriverKeyHandle);
+                NtStatus = STATUS_NO_MEMORY;
+            }
+            else
+            {
+                NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, KeyInformation,
+                                           sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, &ResultLength);
+
+                ZwClose(DriverKeyHandle);
+
+                if(!NT_SUCCESS(NtStatus))
+                {
+                    NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value\n"));
+                    ExFreePool(KeyInformation);
+                    KeyInformation = NULL;
+                }
+            }
         }
     }
 
-   ExFreePool(KeyInformation);
+    if (!NT_SUCCESS(NtStatus))
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Performing global bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
+        KeyInformation = NULL;
+
+        CurrentEntry = AdapterListHead.Flink;
+    }
+    else
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Performing standard bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
+
+        DataPtr = (WCHAR*)KeyInformation->Data;
+    }
+
+    /* Assume success for now */
+    *Status = NDIS_STATUS_SUCCESS;
+
+    while (TRUE)
+    {
+        /* BindContext is for tracking pending binding operations */
+        VOID *BindContext = 0;
+        NDIS_STRING DeviceName;
+        NDIS_STRING RegistryPath;
+        WCHAR *RegistryPathStr = NULL;
+        ULONG PathLength = 0;
+        PLOGICAL_ADAPTER Adapter;
+
+        if (KeyInformation)
+        {
+            /* Parse the REG_MULTI_SZ entry for device names */
+            if (!(*DataPtr))
+                break;
+
+            RtlInitUnicodeString(&DeviceName, DataPtr);
+        }
+        else
+        {
+            /* Use the device name from the global adapter list */
+            if (CurrentEntry == &AdapterListHead)
+                break;
+
+            Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
+
+            DeviceName = Adapter->NdisMiniportBlock.MiniportName;
+        }
+
+        /* Make sure the adapter has started */
+        if (!MiniLocateDevice(&DeviceName))
+        {
+            /* It wasn't in the global miniport list, so skip the bind entry */
+            goto next;
+        }
+        
+        /* Make sure this device isn't already bound to this protocol */
+        if (LocateAdapterBindingByName(Protocol, &DeviceName))
+        {
+            /* It was already in this protocol's bound adapter list, so skip the bind entry */
+            goto next;
+        }
+
+        /*
+         * RegistryPath should be:
+         *     \Registry\Machine\System\CurrentControlSet\Services\Nic1\Parameters\Tcpip
+         *
+         *  This is constructed as follows:
+         *      SERVICES_KEY + extracted device name + Protocol name from characteristics
+         */
+
+        PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
+        wcslen( DeviceName.Buffer + 8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
+        sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
+        ProtocolCharacteristics->Name.Length + sizeof(WCHAR);                         /* Tcpip                                                */
+
+        RegistryPathStr = ExAllocatePool(PagedPool, PathLength);
+        if(!RegistryPathStr)
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
+            *Status = NDIS_STATUS_RESOURCES;
+            break;
+        }
+
+        wcscpy(RegistryPathStr, SERVICES_KEY);
+        wcscat(RegistryPathStr, DeviceName.Buffer + 8 );
+        wcscat(RegistryPathStr, PARAMETERS_KEY);
+        wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length / sizeof(WCHAR) );
+
+        RegistryPathStr[PathLength/sizeof(WCHAR) - 1] = 0;
+
+        RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
+
+        NDIS_DbgPrint(MAX_TRACE, ("Calling protocol's BindAdapter handler with DeviceName %wZ and RegistryPath %wZ\n",
+                                  &DeviceName, &RegistryPath));
+
+        {
+            BIND_HANDLER BindHandler = ProtocolCharacteristics->BindAdapterHandler;
+            if(BindHandler)
+            {
+                BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
+                NDIS_DbgPrint(MIN_TRACE, ("%wZ's BindAdapter handler returned 0x%x for %wZ\n", &ProtocolCharacteristics->Name, *Status, &DeviceName));
+            }
+            else
+                NDIS_DbgPrint(MIN_TRACE, ("No protocol bind handler specified\n"));
+        }
+
+    next:
+        if (KeyInformation)
+        {
+            /* Advance to the next adapter in the REG_MULTI_SZ */
+            DataPtr += (DeviceName.Length / sizeof(WCHAR)) + 1;
+        }
+        else
+        {
+            /* Advance to the next adapter in the global list */
+            CurrentEntry = CurrentEntry->Flink;
+        }
+    }
+
+    if (KeyInformation)
+    {
+        ExFreePool(KeyInformation);
+    }
 }
 
 /*

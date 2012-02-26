@@ -2,20 +2,20 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDM_CONSOLEROOT MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "РР·&С…РѕРґ\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "&За Прибора за управление на РеактОС...", ID_HELP_ABOUT
+        MENUITEM "&Р—Р° РџСЂРёР±РѕСЂР° Р·Р° СѓРїСЂР°РІР»РµРЅРёРµ РЅР° Р РµР°РєС‚РћРЎ...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "Прибор за управление на РеактОС"
-    IDS_CONSOLETITLE "Прибор%1!u!"
+    IDS_APPTITLE "РџСЂРёР±РѕСЂ Р·Р° СѓРїСЂР°РІР»РµРЅРёРµ РЅР° Р РµР°РєС‚РћРЎ"
+    IDS_CONSOLETITLE "РџСЂРёР±РѕСЂ%1!u!"
 END

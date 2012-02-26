@@ -10,7 +10,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -412,7 +412,7 @@ AcpiHwGetBitRegisterInfo (
 
     if (RegisterId > ACPI_BITREG_MAX)
     {
-        ACPI_ERROR ((AE_INFO, "Invalid BitRegister ID: %X", RegisterId));
+        ACPI_ERROR ((AE_INFO, "Invalid BitRegister ID: 0x%X", RegisterId));
         return (NULL);
     }
 
@@ -539,7 +539,7 @@ AcpiHwRegisterRead (
 
 
     default:
-        ACPI_ERROR ((AE_INFO, "Unknown Register ID: %X",
+        ACPI_ERROR ((AE_INFO, "Unknown Register ID: 0x%X",
             RegisterId));
         Status = AE_BAD_PARAMETER;
         break;
@@ -682,7 +682,7 @@ AcpiHwRegisterWrite (
 
 
     default:
-        ACPI_ERROR ((AE_INFO, "Unknown Register ID: %X",
+        ACPI_ERROR ((AE_INFO, "Unknown Register ID: 0x%X",
             RegisterId));
         Status = AE_BAD_PARAMETER;
         break;

@@ -127,12 +127,12 @@ static void dump_obj_locator( const rtti_object_locator *ptr )
 }
 
 /* Internal common ctor for exception */
-static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
+static void EXCEPTION_ctor(exception *_this, const char** name)
 {
   _this->vtable = &MSVCRT_exception_vtable;
   if (*name)
   {
-    unsigned int name_len = strlen(*name) + 1;
+    size_t name_len = strlen(*name) + 1;
     _this->name = MSVCRT_malloc(name_len);
     memcpy(_this->name, *name, name_len);
     _this->do_free = TRUE;
@@ -599,32 +599,25 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
   if (!_this->name)
   {
     /* Create and set the demangled name */
-    /* Nota: mangled name in type_info struct always start with a '.', while
+    /* Note: mangled name in type_info struct always starts with a '.', while
      * it isn't valid for mangled name.
      * Is this '.' really part of the mangled name, or has it some other meaning ?
      */
     char* name = __unDName(0, _this->mangled + 1, 0,
                            MSVCRT_malloc, MSVCRT_free, 0x2800);
-
     if (name)
     {
-      unsigned int len = strlen(name);
+      size_t len = strlen(name);
 
       /* It seems _unDName may leave blanks at the end of the demangled name */
       while (len && name[--len] == ' ')
         name[len] = '\0';
 
-      _mlock(_EXIT_LOCK2);
-
-      if (_this->name)
+      if (InterlockedCompareExchangePointer((void**)&_this->name, name, NULL))
       {
         /* Another thread set this member since we checked above - use it */
         MSVCRT_free(name);
       }
-      else
-        _this->name = name;
-
-      _munlock(_EXIT_LOCK2);
     }
   }
   TRACE("(%p) returning %s\n", _this, _this->name);
@@ -708,15 +701,6 @@ __ASM_EXCEPTION_VTABLE(__non_rtti_object)
 #ifndef __GNUC__
 }
 #endif
-#endif
-
-#ifdef _MSC_VER
-#pragma message ("HAXX!")
-const vtable_ptr MSVCRT_exception_vtable;
-const vtable_ptr MSVCRT_bad_typeid_vtable;
-const vtable_ptr MSVCRT_bad_cast_vtable;
-const vtable_ptr MSVCRT___non_rtti_object_vtable;
-const vtable_ptr MSVCRT_type_info_vtable;
 #endif
 
 /* Static RTTI for exported objects */
@@ -1023,11 +1007,20 @@ static const cxx_exception_type __non_rtti_object_exception_type =
  */
 terminate_function CDECL MSVCRT_set_terminate(terminate_function func)
 {
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
+    thread_data_t *data = msvcrt_get_thread_data();
     terminate_function previous = data->terminate_handler;
     TRACE("(%p) returning %p\n",func,previous);
     data->terminate_handler = func;
     return previous;
+}
+
+/******************************************************************
+ *              _get_terminate (MSVCRT.@)
+ */
+terminate_function CDECL _get_terminate(void)
+{
+    thread_data_t *data = msvcrt_get_thread_data();
+    return data->terminate_handler;
 }
 
 /******************************************************************
@@ -1043,7 +1036,7 @@ terminate_function CDECL MSVCRT_set_terminate(terminate_function func)
  */
 unexpected_function CDECL MSVCRT_set_unexpected(unexpected_function func)
 {
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
+    thread_data_t *data = msvcrt_get_thread_data();
     unexpected_function previous = data->unexpected_handler;
     TRACE("(%p) returning %p\n",func,previous);
     data->unexpected_handler = func;
@@ -1051,11 +1044,20 @@ unexpected_function CDECL MSVCRT_set_unexpected(unexpected_function func)
 }
 
 /******************************************************************
+ *              _get_unexpected (MSVCRT.@)
+ */
+unexpected_function CDECL _get_unexpected(void)
+{
+    thread_data_t *data = msvcrt_get_thread_data();
+    return data->unexpected_handler;
+}
+
+/******************************************************************
  *              ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z  (MSVCRT.@)
  */
 _se_translator_function CDECL MSVCRT__set_se_translator(_se_translator_function func)
 {
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
+    thread_data_t *data = msvcrt_get_thread_data();
     _se_translator_function previous = data->se_translator;
     TRACE("(%p) returning %p\n",func,previous);
     data->se_translator = func;
@@ -1077,7 +1079,7 @@ _se_translator_function CDECL MSVCRT__set_se_translator(_se_translator_function 
  */
 void CDECL MSVCRT_terminate(void)
 {
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
+    thread_data_t *data = msvcrt_get_thread_data();
     if (data->terminate_handler) data->terminate_handler();
     abort();
 }
@@ -1087,7 +1089,7 @@ void CDECL MSVCRT_terminate(void)
  */
 void CDECL MSVCRT_unexpected(void)
 {
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
+    thread_data_t *data = msvcrt_get_thread_data();
     if (data->unexpected_handler) data->unexpected_handler();
     MSVCRT_terminate();
 }

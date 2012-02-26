@@ -29,7 +29,7 @@ HalMakeBeep(IN ULONG Frequency)
     //
     // Acquire CMOS Lock
     //
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     //
     // Turn the timer off by disconnecting its output pin and speaker gate
@@ -58,7 +58,7 @@ HalMakeBeep(IN ULONG Frequency)
             // Program the PIT for binary mode
             //
             TimerControl.BcdMode = FALSE;
-            
+
             //
             // Program the PIT to generate a square wave (Mode 3) on channel 2.
             // Channel 0 is used for the IRQ0 clock interval timer, and channel
@@ -76,22 +76,22 @@ HalMakeBeep(IN ULONG Frequency)
             //
             TimerControl.OperatingMode = PitOperatingMode3;
             TimerControl.Channel = PitChannel2;
-            
+
             //
             // Set the access mode that we'll use to program the reload value.
             //
             TimerControl.AccessMode = PitAccessModeLowHigh;
-            
+
             //
             // Now write the programming bits
             //
             __outbyte(TIMER_CONTROL_PORT, TimerControl.Bits);
-            
+
             //
             // Next we write the reload value for channel 2
             //
             __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider & 0xFF);
-            __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider >> 8);
+            __outbyte(TIMER_CHANNEL2_DATA_PORT, (Divider >> 8) & 0xFF);
 
             //
             // Reconnect the speaker to the timer and re-enable the output pin

@@ -1,4 +1,4 @@
-// Location: \dll\cpl\main\lang
+// Location: dll/cpl/main/lang/bg-BG.rc
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228

@@ -8,12 +8,7 @@
  * REVISIONS:
  */
 
-#include <windows.h>
-#include <stdlib.h>
-#include <winsock2.h>
-#include <mswsock.h>
-#include <ws2spi.h>
-#include <nspapi.h>
+#include "precomp.h"
 
 typedef DWORD (* LPFN_NSPAPI)(VOID);
 typedef struct _NS_ROUTINE {

@@ -9,7 +9,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "このコンピュータに最も適した電源設定を選択してください。下の設定を変更すると、選択された電源設定も変更される点に注意してください。",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "電源設定(&O)", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "名前を付けて保存(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED

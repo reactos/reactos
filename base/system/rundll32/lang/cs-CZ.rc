@@ -1,17 +1,11 @@
-/* FILE:        system/rundll/lang/cs-CZ.rc
+/* FILE:        base/system/rundll32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2008-04-21
- */
-
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary se nepoda¯ilo naËÌst '%s'"
-    IDS_MissingEntry,   "ChybÌ vstupnÌ bod:%s\nV %s"
+    IDS_DllNotLoaded,   "LoadLibrary se nepoda≈ôilo naƒç√≠st '%s'"
+    IDS_MissingEntry,   "Chyb√≠ vstupn√≠ bod:%s\nV %s"
 END

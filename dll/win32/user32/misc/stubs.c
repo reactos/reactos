@@ -129,7 +129,7 @@ UINT
 WINAPI
 UserRealizePalette ( HDC hDC )
 {
-  return NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+  return NtUserxRealizePalette(hDC);
 }
 
 
@@ -553,7 +553,8 @@ VOID
 WINAPI
 CreateSystemThreads(DWORD dwUnknown)
 {
-    NtUserCallOneParam(dwUnknown, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserxCreateSystemThreads(dwUnknown);
+    ExitThread(0);
 }
 
 BOOL
@@ -572,12 +573,13 @@ DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
     return FALSE;
 }
 
-BOOL
+HCURSOR
 WINAPI
-GetCursorFrameInfo(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+GetCursorFrameInfo(HCURSOR hCursor, LPCWSTR name, DWORD istep, PDWORD rate_jiffies, INT *num_steps)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+   if (hCursor) return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
+
+   return LoadImageW( NULL, name, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
 }
 
 BOOL

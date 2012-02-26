@@ -116,8 +116,9 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                              IN PVOID Context,
                              IN PVOID Environment)
 {
-    ULONG InfoLength, Length, c;
-    LONG RequiredLength, SpareLength;
+    ULONG InfoLength;
+    SIZE_T Length, SpareLength, c;
+    ULONG RequiredLength;
     PCHAR SpareData, DataEnd;
     ULONG Type;
     PWCHAR Name, p, ValueEnd;
@@ -207,7 +208,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
             if (SpareLength < RequiredLength)
             {
                 /* Fail and return the missing length */
-                *InfoSize = SpareData - (PCHAR)KeyValueInfo + RequiredLength;
+                *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) + RequiredLength;
                 return STATUS_BUFFER_TOO_SMALL;
             }
 
@@ -257,7 +258,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                     /* Do the query */
                     Status = RtlpQueryRegistryDirect(REG_SZ,
                                                      Data,
-                                                     Length,
+                                                     (ULONG)Length,
                                                      QueryTable->EntryContext);
                     QueryTable->EntryContext = (PVOID)((ULONG_PTR)QueryTable->
                                                        EntryContext +
@@ -269,7 +270,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                     Status = QueryTable->QueryRoutine(Name,
                                                       REG_SZ,
                                                       Data,
-                                                      Length,
+                                                      (ULONG)Length,
                                                       Context,
                                                       QueryTable->EntryContext);
                 }
@@ -311,7 +312,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
             if (FoundExpander)
             {
                 /* Setup the source string */
-                RtlInitEmptyUnicodeString(&Source, Data, Length);
+                RtlInitEmptyUnicodeString(&Source, Data, (USHORT)Length);
                 Source.Length = Source.MaximumLength - sizeof(UNICODE_NULL);
 
                 /* Setup the desination string */
@@ -326,7 +327,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 else if (SpareLength <= MAXUSHORT)
                 {
                     /* This is the good case, where we fit into a string */
-                    Destination.MaximumLength = SpareLength;
+                    Destination.MaximumLength = (USHORT)SpareLength;
                     Destination.Buffer[SpareLength / 2 - 1] = UNICODE_NULL;
                 }
                 else
@@ -340,7 +341,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 Status = RtlExpandEnvironmentStrings_U(Environment,
                                                        &Source,
                                                        &Destination,
-                                                       (PULONG)&RequiredLength);
+                                                       &RequiredLength);
                 Type = REG_SZ;
 
                 /* Check for success */
@@ -356,9 +357,8 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                     if (Status == STATUS_BUFFER_TOO_SMALL)
                     {
                         /* Set the required missing length */
-                        *InfoSize = SpareData -
-                                    (PCHAR)KeyValueInfo +
-                                    RequiredLength;
+                        *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) +
+                                           RequiredLength;
 
                         /* Notify debugger */
                         DPRINT1("RTL: Expand variables for %wZ failed - "
@@ -391,7 +391,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         /* Return the data */
         Status = RtlpQueryRegistryDirect(Type,
                                          Data,
-                                         Length,
+                                         (ULONG)Length,
                                          QueryTable->EntryContext);
     }
     else
@@ -400,7 +400,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         Status = QueryTable->QueryRoutine(Name,
                                           Type,
                                           Data,
-                                          Length,
+                                          (ULONG)Length,
                                           Context,
                                           QueryTable->EntryContext);
     }
@@ -756,7 +756,7 @@ RtlFormatCurrentUserKeyPath(OUT PUNICODE_STRING KeyPath)
     /* Initialize a string */
     RtlInitEmptyUnicodeString(KeyPath,
                               RtlpAllocateStringMemory(Length, TAG_USTR),
-                              Length);
+                              (USHORT)Length);
     if (!KeyPath->Buffer)
     {
         /* Free the string and fail */
@@ -840,7 +840,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
         if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
         {
             /* Set the length */
-            SubKeyName->Length = KeyInfo->NameLength;
+            SubKeyName->Length = (USHORT)KeyInfo->NameLength;
 
             /* Copy it */
             RtlMoveMemory(SubKeyName->Buffer,
@@ -1094,7 +1094,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
                                          &KeyValueName,
                                          KeyValueFullInformation,
                                          KeyValueInfo,
-                                         InfoSize,
+                                         (ULONG)InfoSize,
                                          &ResultLength);
                 if (Status == STATUS_BUFFER_OVERFLOW)
                 {
@@ -1111,7 +1111,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
                         /* Setup a default */
                         KeyValueInfo->Type = REG_NONE;
                         KeyValueInfo->DataLength = 0;
-                        ResultLength = InfoSize;
+                        ResultLength = (ULONG)InfoSize;
 
                         /* Call the query routine */
                         Status = RtlpCallQueryRegistryRoutine(QueryTable,
@@ -1151,7 +1151,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
                     }
 
                     /* Call the query routine */
-                    ResultLength = InfoSize;
+                    ResultLength = (ULONG)InfoSize;
                     Status = RtlpCallQueryRegistryRoutine(QueryTable,
                                                           KeyValueInfo,
                                                           &ResultLength,
@@ -1212,7 +1212,7 @@ ProcessValues:
                                              Value,
                                              KeyValueFullInformation,
                                              KeyValueInfo,
-                                             InfoSize,
+                                             (ULONG)InfoSize,
                                              &ResultLength);
                 if (Status == STATUS_BUFFER_OVERFLOW)
                 {
@@ -1242,7 +1242,7 @@ ProcessValues:
                 if (NT_SUCCESS(Status))
                 {
                     /* Call the query routine */
-                    ResultLength = InfoSize;
+                    ResultLength = (ULONG)InfoSize;
                     Status = RtlpCallQueryRegistryRoutine(QueryTable,
                                                           KeyValueInfo,
                                                           &ResultLength,

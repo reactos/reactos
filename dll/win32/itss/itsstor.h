@@ -29,18 +29,16 @@ extern HRESULT ITSS_StgOpenStorage(
     DWORD grfMode,
     SNB snbExclude,
     DWORD reserved,
-    IStorage** ppstgOpen);
+    IStorage** ppstgOpen) DECLSPEC_HIDDEN;
 
 extern HRESULT ITS_IParseDisplayName_create(
     IUnknown *pUnkOuter,
-    LPVOID *ppObj);
+    LPVOID *ppObj) DECLSPEC_HIDDEN;
 
-extern HRESULT ITSProtocol_create(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT ITSProtocol_create(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
 
-extern LONG dll_count;
+extern LONG dll_count DECLSPEC_HIDDEN;
 static inline void ITSS_LockModule(void) { InterlockedIncrement(&dll_count); }
 static inline void ITSS_UnlockModule(void) { InterlockedDecrement(&dll_count); }
-
-#define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
 #endif /* __WINE_ITS_STORAGE_PRIVATE__ */

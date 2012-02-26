@@ -5,6 +5,7 @@
  * Copyright 1996 Albrecht Kleine
  * Copyright 1999 Klaas van Gend
  * Copyright 2000 Huw D M Davies
+ * Copyright 2010 Vitaly Perov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -542,9 +543,15 @@ static BOOL PRINTDLG_UpdatePrintDlgW(HWND hDlg,
 		nToPage < lppd->nMinPage || nToPage > lppd->nMaxPage) {
 	        WCHAR resourcestr[256];
 		WCHAR resultstr[256];
+                DWORD_PTR args[2];
 		LoadStringW(COMDLG32_hInstance, PD32_INVALID_PAGE_RANGE,
 			    resourcestr, 255);
-		wsprintfW(resultstr,resourcestr, lppd->nMinPage, lppd->nMaxPage);
+                args[0] = lppd->nMinPage;
+                args[1] = lppd->nMaxPage;
+                FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                               resourcestr, 0, 0, resultstr,
+                               sizeof(resultstr)/sizeof(*resultstr),
+                               (__ms_va_list*)args);
 		LoadStringW(COMDLG32_hInstance, PD32_PRINT_TITLE,
 			    resourcestr, 255);
 		MessageBoxW(hDlg, resultstr, resourcestr,
@@ -615,8 +622,8 @@ static BOOL PRINTDLG_SetUpPaperComboBoxA(HWND hDlg,
     int     NrOfEntries;
     char*   Names;
     WORD*   Words;
-    DWORD   Sel;
-    WORD    oldWord = 0;
+    DWORD   Sel, old_Sel;
+    WORD    oldWord = 0, newWord = 0; /* DMPAPER_ and DMBIN_ start at 1 */
     int     NamesSize;
     int     fwCapability_Names;
     int     fwCapability_Words;
@@ -632,25 +639,13 @@ static BOOL PRINTDLG_SetUpPaperComboBoxA(HWND hDlg,
          */
         oldWord = SendDlgItemMessageA(hDlg, nIDComboBox, CB_GETITEMDATA,
                                       Sel, 0);
-        if (dm) {
-            if (nIDComboBox == cmb2)
-                dm->u1.s1.dmPaperSize = oldWord;
-            else
-                dm->u1.s1.dmDefaultSource = oldWord;
-        }
+        if(oldWord >= DMPAPER_USER) /* DMPAPER_USER == DMBIN_USER */
+            oldWord = 0; /* There's no point in trying to keep custom
+                            paper / bin sizes across printers */
     }
-    else {
-        /* we enter here only when the Print setup dialog is initially
-         * opened. In this case the settings are restored from when
-         * the dialog was last closed.
-         */
-        if (dm) {
-            if (nIDComboBox == cmb2)
-                oldWord = dm->u1.s1.dmPaperSize;
-            else
-                oldWord = dm->u1.s1.dmDefaultSource;
-        }
-    }
+
+    if (dm)
+        newWord = (nIDComboBox == cmb2) ? dm->u1.s1.dmPaperSize : dm->u1.s1.dmDefaultSource;
 
     if (nIDComboBox == cmb2) {
          NamesSize          = 64;
@@ -694,16 +689,32 @@ static BOOL PRINTDLG_SetUpPaperComboBoxA(HWND hDlg,
 			    Words[i]);
     }
 
-    /* Look for old selection - can't do this is previous loop since
-       item order will change as more items are added */
+    /* Look for old selection or the new default.
+       Can't do this is previous loop since item order will change as more items are added */
     Sel = 0;
+    old_Sel = NrOfEntries;
     for (i = 0; i < NrOfEntries; i++) {
         if(SendDlgItemMessageA(hDlg, nIDComboBox, CB_GETITEMDATA, i, 0) ==
 	   oldWord) {
-	    Sel = i;
+	    old_Sel = i;
 	    break;
 	}
+        if(SendDlgItemMessageA(hDlg, nIDComboBox, CB_GETITEMDATA, i, 0) == newWord)
+	    Sel = i;
     }
+
+    if(old_Sel < NrOfEntries)
+    {
+        if (dm)
+        {
+            if(nIDComboBox == cmb2)
+                dm->u1.s1.dmPaperSize = oldWord;
+            else
+                dm->u1.s1.dmDefaultSource = oldWord;
+        }
+        Sel = old_Sel;
+    }
+
     SendDlgItemMessageA(hDlg, nIDComboBox, CB_SETCURSEL, Sel, 0);
 
     HeapFree(GetProcessHeap(),0,Words);
@@ -721,8 +732,8 @@ static BOOL PRINTDLG_SetUpPaperComboBoxW(HWND hDlg,
     int     NrOfEntries;
     WCHAR*  Names;
     WORD*   Words;
-    DWORD   Sel;
-    WORD    oldWord = 0;
+    DWORD   Sel, old_Sel;
+    WORD    oldWord = 0, newWord = 0; /* DMPAPER_ and DMBIN_ start at 1 */
     int     NamesSize;
     int     fwCapability_Names;
     int     fwCapability_Words;
@@ -738,25 +749,14 @@ static BOOL PRINTDLG_SetUpPaperComboBoxW(HWND hDlg,
          */
         oldWord = SendDlgItemMessageW(hDlg, nIDComboBox, CB_GETITEMDATA,
                                       Sel, 0);
-        if (dm) {
-            if (nIDComboBox == cmb2)
-                dm->u1.s1.dmPaperSize = oldWord;
-            else
-                dm->u1.s1.dmDefaultSource = oldWord;
-        }
+
+        if(oldWord >= DMPAPER_USER) /* DMPAPER_USER == DMBIN_USER */
+            oldWord = 0; /* There's no point in trying to keep custom
+                            paper / bin sizes across printers */
     }
-    else {
-        /* we enter here only when the Print setup dialog is initially
-         * opened. In this case the settings are restored from when
-         * the dialog was last closed.
-         */
-        if (dm) {
-            if (nIDComboBox == cmb2)
-                oldWord = dm->u1.s1.dmPaperSize;
-            else
-                oldWord = dm->u1.s1.dmDefaultSource;
-        }
-    }
+
+    if (dm)
+        newWord = (nIDComboBox == cmb2) ? dm->u1.s1.dmPaperSize : dm->u1.s1.dmDefaultSource;
 
     if (nIDComboBox == cmb2) {
          NamesSize          = 64;
@@ -800,16 +800,32 @@ static BOOL PRINTDLG_SetUpPaperComboBoxW(HWND hDlg,
 			    Words[i]);
     }
 
-    /* Look for old selection - can't do this is previous loop since
-       item order will change as more items are added */
+    /* Look for old selection or the new default.
+       Can't do this is previous loop since item order will change as more items are added */
     Sel = 0;
+    old_Sel = NrOfEntries;
     for (i = 0; i < NrOfEntries; i++) {
         if(SendDlgItemMessageW(hDlg, nIDComboBox, CB_GETITEMDATA, i, 0) ==
 	   oldWord) {
-	    Sel = i;
+	    old_Sel = i;
 	    break;
 	}
+        if(SendDlgItemMessageA(hDlg, nIDComboBox, CB_GETITEMDATA, i, 0) == newWord)
+            Sel = i;
     }
+
+    if(old_Sel < NrOfEntries)
+    {
+        if (dm)
+        {
+            if(nIDComboBox == cmb2)
+                dm->u1.s1.dmPaperSize = oldWord;
+            else
+                dm->u1.s1.dmDefaultSource = oldWord;
+        }
+        Sel = old_Sel;
+    }
+
     SendDlgItemMessageW(hDlg, nIDComboBox, CB_SETCURSEL, Sel, 0);
 
     HeapFree(GetProcessHeap(),0,Words);
@@ -2417,7 +2433,7 @@ static WCHAR get_decimal_sep(void)
 
     if(!sep)
     {
-        WCHAR buf[2] = {'.',0};
+        WCHAR buf[] = {'.', 0};
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buf, sizeof(buf) / sizeof(buf[0]));
         sep = buf[0];
     }
@@ -2576,7 +2592,7 @@ static inline WORD get_devname_offset(const DEVNAMES *dn, devnames_name which)
     case devnames_device_name: return dn->wDeviceOffset;
     case devnames_output_name: return dn->wOutputOffset;
     }
-    ERR("Souldn't be here\n");
+    ERR("Shouldn't be here\n");
     return 0;
 }
 
@@ -3353,7 +3369,7 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     HDC hdc;
     HBRUSH hbrush, holdbrush;
     pagesetup_data *data;
-    int papersize=0, orientation=0; /* FIXME: set this values for user paint hook */
+    int papersize=0, orientation=0; /* FIXME: set these values for the user paint hook */
     double scalx, scaly;
 
     if (uMsg != WM_PAINT)
@@ -3486,8 +3502,7 @@ static INT_PTR CALLBACK pagesetup_dlg_proc(HWND hDlg, UINT uMsg, WPARAM wParam, 
         SetPropW(hDlg, pagesetupdlg_prop, data);
         SetPropW(hDrawWnd, pagesetupdlg_prop, data);
         GetWindowRect(hDrawWnd, &data->rtDrawRect); /* Calculating rect in client coordinates where paper draws */
-        ScreenToClient(hDlg, (LPPOINT)&data->rtDrawRect);
-        ScreenToClient(hDlg, (LPPOINT)(&data->rtDrawRect.right));
+        MapWindowPoints( 0, hDlg, (LPPOINT)&data->rtDrawRect, 2 );
         lpfnStaticWndProc = (WNDPROC)SetWindowLongPtrW(
             hDrawWnd,
             GWLP_WNDPROC,
@@ -3584,7 +3599,7 @@ static WCHAR *get_default_printer(void)
     return name;
 }
 
-static void pagesetup_dump_dlg_struct(pagesetup_data *data)
+static void pagesetup_dump_dlg_struct(const pagesetup_data *data)
 {
     if(TRACE_ON(commdlg))
     {
@@ -3752,14 +3767,94 @@ BOOL WINAPI PageSetupDlgW(LPPAGESETUPDLGW setupdlg)
  */
 HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lppd)
 {
+    DWORD     ret = E_FAIL;
+    LPVOID    ptr;
 
-    FIXME("(%p) stub\n", lppd);
-    if ((lppd == NULL) || (lppd->lStructSize != sizeof(PRINTDLGEXA))) {
+    FIXME("(%p) not fully implemented\n", lppd);
+    if ((lppd == NULL) || (lppd->lStructSize != sizeof(PRINTDLGEXA)))
         return E_INVALIDARG;
-    }
 
-    if (!IsWindow(lppd->hwndOwner)) {
+    if (!IsWindow(lppd->hwndOwner))
         return E_HANDLE;
+
+    if (lppd->Flags & PD_RETURNDEFAULT)
+    {
+        PRINTER_INFO_2A *pbuf;
+        DRIVER_INFO_2A  *dbuf;
+        HANDLE hprn;
+        DWORD needed = 1024;
+        BOOL bRet;
+
+        if (lppd->hDevMode || lppd->hDevNames)
+        {
+            WARN("hDevMode or hDevNames non-zero for PD_RETURNDEFAULT\n");
+            COMDLG32_SetCommDlgExtendedError(PDERR_RETDEFFAILURE);
+            return E_INVALIDARG;
+        }
+        if (!PRINTDLG_OpenDefaultPrinter(&hprn))
+        {
+            WARN("Can't find default printer\n");
+            COMDLG32_SetCommDlgExtendedError(PDERR_NODEFAULTPRN);
+            return E_FAIL;
+        }
+
+        pbuf = HeapAlloc(GetProcessHeap(), 0, needed);
+        bRet = GetPrinterA(hprn, 2, (LPBYTE)pbuf, needed, &needed);
+        if (!bRet && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+        {
+            HeapFree(GetProcessHeap(), 0, pbuf);
+            pbuf = HeapAlloc(GetProcessHeap(), 0, needed);
+            bRet = GetPrinterA(hprn, 2, (LPBYTE)pbuf, needed, &needed);
+        }
+        if (!bRet)
+        {
+            HeapFree(GetProcessHeap(), 0, pbuf);
+            ClosePrinter(hprn);
+            return E_FAIL;
+        }
+
+        needed = 1024;
+        dbuf = HeapAlloc(GetProcessHeap(), 0, needed);
+        bRet = GetPrinterDriverA(hprn, NULL, 3, (LPBYTE)dbuf, needed, &needed);
+        if (!bRet && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+        {
+            HeapFree(GetProcessHeap(), 0, dbuf);
+            dbuf = HeapAlloc(GetProcessHeap(), 0, needed);
+            bRet = GetPrinterDriverA(hprn, NULL, 3, (LPBYTE)dbuf, needed, &needed);
+        }
+        if (!bRet)
+        {
+            ERR("GetPrinterDriverА failed, last error %d, fix your config for printer %s!\n",
+                GetLastError(), pbuf->pPrinterName);
+            HeapFree(GetProcessHeap(), 0, dbuf);
+            HeapFree(GetProcessHeap(), 0, pbuf);
+            COMDLG32_SetCommDlgExtendedError(PDERR_RETDEFFAILURE);
+            ClosePrinter(hprn);
+            return E_FAIL;
+        }
+        ClosePrinter(hprn);
+
+        PRINTDLG_CreateDevNames(&(lppd->hDevNames),
+                      dbuf->pDriverPath,
+                      pbuf->pPrinterName,
+                      pbuf->pPortName);
+        lppd->hDevMode = GlobalAlloc(GMEM_MOVEABLE, pbuf->pDevMode->dmSize +
+                                     pbuf->pDevMode->dmDriverExtra);
+        if (lppd->hDevMode)
+        {
+            ptr = GlobalLock(lppd->hDevMode);
+            if (ptr)
+            {
+                memcpy(ptr, pbuf->pDevMode, pbuf->pDevMode->dmSize +
+                       pbuf->pDevMode->dmDriverExtra);
+                GlobalUnlock(lppd->hDevMode);
+                ret = S_OK;
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, pbuf);
+        HeapFree(GetProcessHeap(), 0, dbuf);
+
+        return ret;
     }
 
     return E_NOTIMPL;

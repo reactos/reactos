@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "&Avsluta",                    ID_REGISTRY_EXIT
     END
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
         MENUITEM "&Om ...",                     ID_HELP_ABOUT
     END
@@ -54,13 +54,13 @@ BEGIN
         MENUITEM "&Exportera registerfil...",   ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "L‰s in Registerdata...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "L√§s in Registerdata...",				ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Ta bort Registerdata...",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "&Anslut N‰tverksregister...",
+        MENUITEM "&Anslut N√§tverksregister...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Koppla ifrÂn N‰tverksregister...",
+        MENUITEM "&Koppla ifr√•n N√§tverksregister...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
@@ -70,32 +70,32 @@ BEGIN
     END
     POPUP "&Redigera"
     BEGIN
-        MENUITEM "&ƒndra",                      ID_EDIT_MODIFY
+        MENUITEM "&√Ñndra",                      ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Nytt"
         BEGIN
             MENUITEM "&Nyckel",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Str‰ngv‰rde",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin‰rv‰rde",                 ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-v‰rde",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Multistr‰ngv‰rde",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Expanderbart Str‰ngv‰rde",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Str√§ngv√§rde",                ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√§rv√§rde",                 ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-v√§rde",                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multistr√§ngv√§rde",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expanderbart Str√§ngv√§rde",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "B&ehˆrigheter...",		ID_EDIT_PERMISSIONS
+        MENUITEM "B&eh√∂righeter...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort\tDel",               ID_EDIT_DELETE
         MENUITEM "&Byt namn",                   ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn",         ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Sˆk...\tCtrl+F",                ID_EDIT_FIND
-        MENUITEM "Sˆk N&‰sta\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&S√∂k...\tCtrl+F",                ID_EDIT_FIND
+        MENUITEM "S√∂k N&√§sta\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Visa"
     BEGIN
-        MENUITEM "Statusf‰lt",                  ID_VIEW_STATUSBAR
+        MENUITEM "Statusf√§lt",                  ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "Dela",                        ID_VIEW_SPLIT
         MENUITEM SEPARATOR
@@ -103,12 +103,12 @@ BEGIN
     END
     POPUP "&Favoriter"
     BEGIN
-        MENUITEM "&L‰gg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Ta bort frÂn Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "&L√§gg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Ta bort fr√•n Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
-        MENUITEM "&Hj‰lpavsnitt\tF1",           ID_HELP_HELPTOPICS
+        MENUITEM "&Hj√§lpavsnitt\tF1",           ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Om Registereditorn",         ID_HELP_ABOUT
     END
@@ -118,8 +118,8 @@ IDR_POPUP_MENUS MENU DISCARDABLE
 BEGIN
   POPUP ""
   BEGIN
-	MENUITEM "&ƒndra",                      ID_EDIT_MODIFY
-	MENUITEM "ƒndra bin‰rdata",             ID_EDIT_MODIFY_BIN
+	MENUITEM "&√Ñndra",                      ID_EDIT_MODIFY
+	MENUITEM "√Ñndra bin√§rdata",             ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
 	MENUITEM "&Ta bort\tDel",               ID_EDIT_DELETE
 	MENUITEM "&Byt namn",                   ID_EDIT_RENAME
@@ -130,33 +130,33 @@ BEGIN
         BEGIN
             MENUITEM "&Nyckel",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Str‰ngv‰rde",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin‰rv‰rde",                 ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-v‰rde",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multistr‰ngv‰rde",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expanderbart Str‰ngvalue",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Str√§ngv√§rde",                ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√§rv√§rde",                 ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-v√§rde",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multistr√§ngv√§rde",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expanderbart Str√§ngvalue",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
   BEGIN
-        MENUITEM "Visa/dˆlj nivÂ",                 ID_TREE_EXPANDBRANCH
+        MENUITEM "Visa/d√∂lj niv√•",                 ID_TREE_EXPANDBRANCH
         POPUP "&Ny(tt)"
         BEGIN
             MENUITEM "&Nyckel",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Str‰ngv‰rde",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Bin‰rv‰rde",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-v‰rde",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Str√§ngv√§rde",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Bin√§rv√§rde",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-v√§rde",                ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Sˆk",                           ID_EDIT_FIND
+        MENUITEM "&S√∂k",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort",                         ID_TREE_DELETE
         MENUITEM "&Byt namn",                         ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportera",                         ID_TREE_EXPORT
-        MENUITEM "&Behˆrigheter...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Beh√∂righeter...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME
   END
@@ -175,24 +175,14 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "L‰s in registerdata"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Nyckel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Avbryt", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒndra str‰ng"
+CAPTION "√Ñndra str√§ng"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&V‰rde:",IDC_STATIC,6,6,134,8
+    LTEXT           "&V√§rde:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Data:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
@@ -203,10 +193,10 @@ END
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒndra multistr‰ng"
+CAPTION "√Ñndra multistr√§ng"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&V‰rde:",IDC_STATIC,6,6,134,8
+    LTEXT           "&V√§rde:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Data:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
@@ -217,10 +207,10 @@ END
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒndra Bin‰rv‰rde"
+CAPTION "√Ñndra Bin√§rv√§rde"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&V‰rde:",IDC_STATIC,6,6,134,8
+    LTEXT           "&V√§rde:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Data:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
@@ -232,10 +222,10 @@ END
 IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒndra DWORD-v‰rde"
+CAPTION "√Ñndra DWORD-v√§rde"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&V‰rde:",IDC_STATIC,6,6,134,8
+    LTEXT           "&V√§rde:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Data:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
@@ -313,87 +303,87 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "InnehÂller kommandon fˆr att arbeta med hela registret"
-    ID_EDIT_MENU            "InnehÂller kommandon fˆr att ‰ndra v‰rden och nycklar"
-    ID_VIEW_MENU            "InnehÂller kommandon fˆr att anpassa registerfˆnstret"
-    ID_FAVOURITES_MENU      "InnehÂller kommandon fˆr att komma Ât nycklar som anv‰nds ofta"
-    ID_HELP_MENU            "InnehÂller kommandon fˆr att visa hj‰lpen och information om Registereditorn"
-    ID_EDIT_NEW_MENU        "InnehÂller kommandon fˆr att skapa nya nycklar eller v‰rden"
+    ID_REGISTRY_MENU        "Inneh√•ller kommandon f√∂r att arbeta med hela registret"
+    ID_EDIT_MENU            "Inneh√•ller kommandon f√∂r att √§ndra v√§rden och nycklar"
+    ID_VIEW_MENU            "Inneh√•ller kommandon f√∂r att anpassa registerf√∂nstret"
+    ID_FAVOURITES_MENU      "Inneh√•ller kommandon f√∂r att komma √•t nycklar som anv√§nds ofta"
+    ID_HELP_MENU            "Inneh√•ller kommandon f√∂r att visa hj√§lpen och information om Registereditorn"
+    ID_EDIT_NEW_MENU        "Inneh√•ller kommandon f√∂r att skapa nya nycklar eller v√§rden"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_EDIT_MODIFY          "ƒndrar v‰rdets data"
-    ID_EDIT_NEW_KEY         "L‰gger till en ny nyckel"
-    ID_EDIT_NEW_STRINGVALUE "L‰gger till ett nytt str‰ngv‰rde"
-    ID_EDIT_NEW_BINARYVALUE "L‰gger till ett nytt bin‰rt v‰rde"
-    ID_EDIT_NEW_DWORDVALUE  "L‰gger till ett nytt dubbelordsv‰rde"
+    ID_EDIT_MODIFY          "√Ñndrar v√§rdets data"
+    ID_EDIT_NEW_KEY         "L√§gger till en ny nyckel"
+    ID_EDIT_NEW_STRINGVALUE "L√§gger till ett nytt str√§ngv√§rde"
+    ID_EDIT_NEW_BINARYVALUE "L√§gger till ett nytt bin√§rt v√§rde"
+    ID_EDIT_NEW_DWORDVALUE  "L√§gger till ett nytt dubbelordsv√§rde"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importerar en textfil till registret"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporterar hela eller en del av registret till en textfil"
     ID_REGISTRY_LOADHIVE
-                            "L‰ser in registerdatafil till registret"
+                            "L√§ser in registerdatafil till registret"
     ID_REGISTRY_UNLOADHIVE
-                            "Tar bort registerdatafil frÂn registret"
+                            "Tar bort registerdatafil fr√•n registret"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Ansluter till en annan dators register"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Kopplar ifrÂn en annan dators register"
+                            "Kopplar ifr√•n en annan dators register"
     ID_REGISTRY_PRINT       "Skriver ut hela eller en del av registret"
-/*    ID_HELP_HELPTOPICS      "÷ppnar hj‰lpen fˆr Registereditorn" */
-    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsr‰tt"
+/*    ID_HELP_HELPTOPICS      "√ñppnar hj√§lpen f√∂r Registereditorn" */
+    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsr√§tt"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_EXIT        "Avslutar Registereditorn"
-    ID_FAVOURITES_ADDTOFAVOURITES "L‰gger till nycklar till Favoriter"
-    ID_FAVOURITES_REMOVEFAVOURITE "Tar bort nycklar frÂn Favoriter"
-    ID_VIEW_STATUSBAR       "Visar eller dˆljer statusf‰ltet"
-    ID_VIEW_SPLIT           "ƒndra storlek pÂ delningslisten"
-    ID_VIEW_REFRESH         "Uppdaterar fˆnstret"
+    ID_FAVOURITES_ADDTOFAVOURITES "L√§gger till nycklar till Favoriter"
+    ID_FAVOURITES_REMOVEFAVOURITE "Tar bort nycklar fr√•n Favoriter"
+    ID_VIEW_STATUSBAR       "Visar eller d√∂ljer statusf√§ltet"
+    ID_VIEW_SPLIT           "√Ñndra storlek p√• delningslisten"
+    ID_VIEW_REFRESH         "Uppdaterar f√∂nstret"
     ID_EDIT_DELETE          "Tar bort markeringen"
-    ID_EDIT_RENAME          "Byter namn pÂ markeringen"
-    ID_EDIT_COPYKEYNAME     "Kopierar namnet pÂ den valda nyckeln till urklippet"
-    ID_EDIT_FIND            "Hittar en textstr‰ng i en nyckel, ett v‰rde eller data"
-    ID_EDIT_FINDNEXT        "Sˆker igen efter n‰sta tr‰ff i registret"
+    ID_EDIT_RENAME          "Byter namn p√• markeringen"
+    ID_EDIT_COPYKEYNAME     "Kopierar namnet p√• den valda nyckeln till urklippet"
+    ID_EDIT_FIND            "Hittar en textstr√§ng i en nyckel, ett v√§rde eller data"
+    ID_EDIT_FINDNEXT        "S√∂ker igen efter n√§sta tr√§ff i registret"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Fel"
     IDS_WARNING		    "Varning"
-    IDS_BAD_KEY             "Kan inte l‰sa nyckel '%s'"
-    IDS_BAD_VALUE           "Kan inte l‰sa v‰rdet  '%s'"
-    IDS_UNSUPPORTED_TYPE    "Kan inte ‰ndra nycklar av typen %ld"
-    IDS_TOO_BIG_VALUE       "V‰rdet ‰r fˆr stort (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Data av typen REG_MULTI_SZ kan inte innehÂlla tomma str‰ngar.\nDe tomma str‰ngarna har tagits bort frÂn listan."
-    IDS_QUERY_DELETE_KEY_ONE    "ƒr du s‰ker pÂ att du vill ta bort denna nyckeln?"
-    IDS_QUERY_DELETE_KEY_MORE   "ƒr du s‰ker pÂ att du vill ta bort dessa nycklarna?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Bek‰rfta borttagning av nyckel"
-    IDS_QUERY_DELETE_ONE    "ƒr du s‰ker pÂ att du vill ta bort detta v‰rdet?"
-    IDS_QUERY_DELETE_MORE   "ƒr du s‰ker pÂ att du vill ta bort dessa v‰rdena?"
-    IDS_QUERY_DELETE_CONFIRM "Bekr‰fta borttagning av v‰rde"
-    IDS_ERR_DELVAL_CAPTION  "Fel vid borttagning av v‰rde"
-    IDS_ERR_DELETEVALUE     "Det gick inte att ta bort alla specificerade v‰rden!"
-    IDS_ERR_RENVAL_CAPTION  "Fel vid namn‰ndring av v‰rde"
-    IDS_ERR_RENVAL_TOEMPTY  "Kunde inte byta namn pÂ %s. Det specificerade v‰rdenamnet ‰r tomt. Ange ett annat namn och fˆrsˆk igen."
+    IDS_BAD_KEY             "Kan inte l√§sa nyckel '%s'"
+    IDS_BAD_VALUE           "Kan inte l√§sa v√§rdet  '%s'"
+    IDS_UNSUPPORTED_TYPE    "Kan inte √§ndra nycklar av typen %ld"
+    IDS_TOO_BIG_VALUE       "V√§rdet √§r f√∂r stort (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Data av typen REG_MULTI_SZ kan inte inneh√•lla tomma str√§ngar.\nDe tomma str√§ngarna har tagits bort fr√•n listan."
+    IDS_QUERY_DELETE_KEY_ONE    "√Ñr du s√§ker p√• att du vill ta bort denna nyckeln?"
+    IDS_QUERY_DELETE_KEY_MORE   "√Ñr du s√§ker p√• att du vill ta bort dessa nycklarna?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Bek√§rfta borttagning av nyckel"
+    IDS_QUERY_DELETE_ONE    "√Ñr du s√§ker p√• att du vill ta bort detta v√§rdet?"
+    IDS_QUERY_DELETE_MORE   "√Ñr du s√§ker p√• att du vill ta bort dessa v√§rdena?"
+    IDS_QUERY_DELETE_CONFIRM "Bekr√§fta borttagning av v√§rde"
+    IDS_ERR_DELVAL_CAPTION  "Fel vid borttagning av v√§rde"
+    IDS_ERR_DELETEVALUE     "Det gick inte att ta bort alla specificerade v√§rden!"
+    IDS_ERR_RENVAL_CAPTION  "Fel vid namn√§ndring av v√§rde"
+    IDS_ERR_RENVAL_TOEMPTY  "Kunde inte byta namn p√• %s. Det specificerade v√§rdenamnet √§r tomt. Ange ett annat namn och f√∂rs√∂k igen."
     IDS_NEW_KEY             "Ny Nyckel #%d"
-    IDS_NEW_VALUE           "Nytt V‰rde #%d"
+    IDS_NEW_VALUE           "Nytt V√§rde #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(Tomt bin‰rv‰rde)"
+    IDS_BINARY_EMPTY	    "(Tomt bin√§rv√§rde)"
     IDS_DEFAULT_VALUE_NAME  "(Standard)"
-    IDS_VALUE_NOT_SET       "(v‰rde ej angivet)"
-    IDS_UNKNOWN_TYPE        "Ok‰nd typ: (0x%lx)"
-    IDS_MY_COMPUTER         "Den h‰r datorn"
+    IDS_VALUE_NOT_SET       "(v√§rde ej angivet)"
+    IDS_UNKNOWN_TYPE        "Ok√§nd typ: (0x%lx)"
+    IDS_MY_COMPUTER         "Den h√§r datorn"
     IDS_IMPORT_REG_FILE     "Importera registerfil"
     IDS_EXPORT_REG_FILE     "Exportera registerfil"
-    IDS_LOAD_HIVE           "L‰s in registerdatafil"
+    IDS_LOAD_HIVE           "L√§s in registerdatafil"
     IDS_UNLOAD_HIVE         "Ta bort registerdatafil"
-    IDS_INVALID_DWORD       "(felaktigt DWORD-v‰rde)"
+    IDS_INVALID_DWORD       "(felaktigt DWORD-v√§rde)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -409,18 +399,18 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Fullst‰ndig behˆrighet"
-  IDS_ACCESS_READ               "L‰sa"
-  IDS_ACCESS_QUERYVALUE         "L‰sa v‰rde"
-  IDS_ACCESS_SETVALUE           "Ange v‰rde"
+  IDS_ACCESS_FULLCONTROL        "Fullst√§ndig beh√∂righet"
+  IDS_ACCESS_READ               "L√§sa"
+  IDS_ACCESS_QUERYVALUE         "L√§sa v√§rde"
+  IDS_ACCESS_SETVALUE           "Ange v√§rde"
   IDS_ACCESS_CREATESUBKEY       "Skapa undernyckel"
-  IDS_ACCESS_ENUMERATESUBKEYS   "R‰kna upp undernycklar"
+  IDS_ACCESS_ENUMERATESUBKEYS   "R√§kna upp undernycklar"
   IDS_ACCESS_NOTIFY             "Meddela"
-  IDS_ACCESS_CREATELINK         "Skapa l‰nk"
+  IDS_ACCESS_CREATELINK         "Skapa l√§nk"
   IDS_ACCESS_DELETE             "Ta bort"
   IDS_ACCESS_WRITEDAC           "Skriva DAC"
-  IDS_ACCESS_WRITEOWNER         "Skriva ‰gare"
-  IDS_ACCESS_READCONTROL        "L‰sa behˆrighet"
+  IDS_ACCESS_WRITEOWNER         "Skriva √§gare"
+  IDS_ACCESS_READCONTROL        "L√§sa beh√∂righet"
 END
 
 STRINGTABLE DISCARDABLE
@@ -432,10 +422,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_EXPAND                     "&Visa nivÂ"
-  IDS_COLLAPSE                   "&Dˆlj nivÂ"
+  IDS_EXPAND                     "&Visa niv√•"
+  IDS_COLLAPSE                   "&D√∂lj niv√•"
   IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
-  IDS_FINISHEDFIND               "Slutfˆrt sˆkningen av registret."
+  IDS_FINISHEDFIND               "Slutf√∂rt s√∂kningen av registret."
 END
 
 STRINGTABLE DISCARDABLE
@@ -515,14 +505,25 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "L√§s in registerdata"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Nyckel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Avbryt", IDCANCEL, 89, 17, 50, 14
+}
+
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "L‰gg till i Favoriter"
+CAPTION "L√§gg till i Favoriter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,129,24,50,14
-    LTEXT           "&Namn pÂ Favorit:",IDC_STATIC,7,7,70,10
+    LTEXT           "&Namn p√• Favorit:",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
@@ -535,40 +536,40 @@ BEGIN
     PUSHBUTTON      "Avbryt",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "V‰lj Favorit(er):",IDC_STATIC,7,7,99,12
+    LTEXT           "V√§lj Favorit(er):",IDC_STATIC,7,7,99,12
 END
 
 IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Sˆk"
+CAPTION "S√∂k"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Sˆk N‰sta",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "&S√∂k N√§sta",IDOK,197,7,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,197,24,50,14
-    GROUPBOX        "Sˆk i",IDC_STATIC,7,25,63,51
-    LTEXT           "&Sˆk efter:",IDC_STATIC,7,8,37,10
+    GROUPBOX        "S√∂k i",IDC_STATIC,7,25,63,51
+    LTEXT           "&S√∂k efter:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Nycklar",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
-    CONTROL         "&V‰rden",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&V√§rden",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Matcha endast &hela str‰ngar",IDC_MATCHSTRING,"Button",
+    CONTROL         "Matcha endast &hela str√§ngar",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Matcha &shiftl‰ge",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Matcha &shiftl√§ge",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-CAPTION "Sˆk"
+CAPTION "S√∂k"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
     DEFPUSHBUTTON   "&Avbryt",IDCANCEL,93,29,45,14
-    LTEXT           "Sˆk i registret...",IDC_STATIC,33,12,83,8
+    LTEXT           "S√∂k i registret...",IDC_STATIC,33,12,83,8
 END
 
 /*
@@ -589,8 +590,8 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "÷ppnar hj‰lpen fˆr Registereditorn."
- *    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsr‰tt."
+ *    ID_HELP_HELPTOPICS      "√ñppnar hj√§lpen f√∂r Registereditorn."
+ *    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsr√§tt."
  *END
  */
 

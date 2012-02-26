@@ -4,8 +4,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "ê›íË(&P)...",     ID_PREFERENCES
+        MENUITEM "Ë®≠ÂÆö(&P)...",     ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "èIóπ(&E)",        ID_EXIT
+        MENUITEM "ÁµÇ‰∫Ü(&E)",        ID_EXIT
     END
 END

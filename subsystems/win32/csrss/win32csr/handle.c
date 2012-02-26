@@ -73,7 +73,7 @@ Win32CsrCloseHandleEntry(
 NTSTATUS
 FASTCALL
 Win32CsrReleaseObject(
-    PCSRSS_PROCESS_DATA ProcessData,
+    PCSR_PROCESS ProcessData,
     HANDLE Handle)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
@@ -93,7 +93,7 @@ Win32CsrReleaseObject(
 
 NTSTATUS
 FASTCALL
-Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
+Win32CsrLockObject(PCSR_PROCESS ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
                    DWORD Access,
@@ -132,10 +132,10 @@ Win32CsrUnlockObject(Object_t *Object)
         ConioDeleteConsole(&Console->Header);
 }
 
-NTSTATUS
+VOID
 WINAPI
 Win32CsrReleaseConsole(
-    PCSRSS_PROCESS_DATA ProcessData)
+    PCSR_PROCESS ProcessData)
 {
     PCSRSS_CONSOLE Console;
     ULONG i;
@@ -154,21 +154,21 @@ Win32CsrReleaseConsole(
     {
         ProcessData->Console = NULL;
         EnterCriticalSection(&Console->Lock);
-        RemoveEntryList(&ProcessData->ProcessEntry);
+        RemoveEntryList(&ProcessData->ConsoleLink);
         LeaveCriticalSection(&Console->Lock);
         if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
             ConioDeleteConsole(&Console->Header);
+        //CloseHandle(ProcessData->ConsoleEvent);
+        //ProcessData->ConsoleEvent = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_SUCCESS;
     }
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return STATUS_INVALID_PARAMETER;
 }
 
 NTSTATUS
 FASTCALL
 Win32CsrInsertObject(
-    PCSRSS_PROCESS_DATA ProcessData,
+    PCSR_PROCESS ProcessData,
     PHANDLE Handle,
     Object_t *Object,
     DWORD Access,
@@ -217,10 +217,13 @@ Win32CsrInsertObject(
 NTSTATUS
 WINAPI
 Win32CsrDuplicateHandleTable(
-    PCSRSS_PROCESS_DATA SourceProcessData,
-    PCSRSS_PROCESS_DATA TargetProcessData)
+    PCSR_PROCESS SourceProcessData,
+    PCSR_PROCESS TargetProcessData)
 {
     ULONG i;
+    
+    /* Only inherit if the flag was set */
+    if (!TargetProcessData->bInheritHandles) return STATUS_SUCCESS;
 
     if (TargetProcessData->HandleTableSize)
     {
@@ -257,9 +260,6 @@ Win32CsrDuplicateHandleTable(
 CSR_API(CsrGetHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Request->Data.GetInputHandleRequest.Handle = INVALID_HANDLE_VALUE;
 
@@ -304,9 +304,6 @@ CSR_API(CsrGetHandle)
 
 CSR_API(CsrCloseHandle)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     return Win32CsrReleaseObject(ProcessData, Request->Data.CloseHandleRequest.Handle);
 }
 
@@ -314,9 +311,6 @@ CSR_API(CsrVerifyHandle)
 {
     ULONG_PTR Index;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Index = (ULONG_PTR)Request->Data.VerifyHandleRequest.Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -336,9 +330,6 @@ CSR_API(CsrDuplicateHandle)
     ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
-
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Index = (ULONG_PTR)Request->Data.DuplicateHandleRequest.Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -385,9 +376,6 @@ CSR_API(CsrDuplicateHandle)
 
 CSR_API(CsrGetInputWaitHandle)
 {
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
     Request->Data.GetConsoleInputWaitHandle.InputWaitHandle = ProcessData->ConsoleEvent;
     return STATUS_SUCCESS;
 }

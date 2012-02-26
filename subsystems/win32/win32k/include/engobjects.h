@@ -28,9 +28,6 @@
 
 #pragma once
 
-#include <ft2build.h>
-#include <freetype/freetype.h>
-
 /* Structure of internal gdi objects that win32k manages for ddi engine:
    |---------------------------------|
    |         Public part             |
@@ -124,7 +121,7 @@ typedef struct _XFORMGDI {
   /* XFORMOBJ has no public members */
 } XFORMGDI;
 
-/* as the *OBJ structures are located at the beginning of the *GDI structures
+/* As the *OBJ structures are located at the beginning of the *GDI structures
    we can simply typecast the pointer */
 #define ObjToGDI(ClipObj, Type) (Type##GDI *)(ClipObj)
 #define GDIToObj(ClipGDI, Type) (Type##OBJ *)(ClipGDI)

@@ -163,12 +163,10 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 //#endif
 
 #ifdef __GNUC__
-#ifndef __clang__
 #define __int8 char
 #define __int16 short
 #define __int32 int
 #define __int64 long long
-#endif
 #ifdef _WIN64
    typedef int __int128 __attribute__ ((mode (TI)));
 # endif
@@ -207,8 +205,10 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 
 #ifdef _MSC_VER
 #define ATTRIB_NORETURN
+#define _DECLSPEC_INTRIN_TYPE __declspec(intrin_type)
 #else
 #define ATTRIB_NORETURN DECLSPEC_NORETURN
+#define _DECLSPEC_INTRIN_TYPE
 #endif
 
 #include "_mingw_mac.h"

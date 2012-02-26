@@ -84,7 +84,7 @@ static const WCHAR regfont2[] =
  * Code based off of code located here
  * http://www.codeproject.com/gdi/fontnamefromfile.asp
  */
-WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
+static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
 {
     TT_TABLE_DIRECTORY tblDir;
     BOOL bFound = FALSE;
@@ -111,7 +111,8 @@ WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
     ttOffsetTable.uMajorVersion = SWAPWORD(ttOffsetTable.uMajorVersion);
     ttOffsetTable.uMinorVersion = SWAPWORD(ttOffsetTable.uMinorVersion);
 
-    if (ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0)
+    if ((ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0) &&
+        (ttOffsetTable.uMajorVersion != 0x4f54 || ttOffsetTable.uMinorVersion != 0x544f))
         goto end;
 
     for (i=0; i< ttOffsetTable.uNumOfTables; i++)
@@ -136,33 +137,36 @@ WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
 
     ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
     ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
-    bFound = FALSE;
     for(i=0; i<ttNTHeader.uNRCount; i++)
     {
         if (!ReadFile(handle,&ttRecord, sizeof(TT_NAME_RECORD),&dwRead,NULL))
             break;
 
         ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
-        if (ttRecord.uNameID == id)
+        ttRecord.uPlatformID = SWAPWORD(ttRecord.uPlatformID);
+        ttRecord.uEncodingID = SWAPWORD(ttRecord.uEncodingID);
+        if (ttRecord.uNameID == id && ttRecord.uPlatformID == 3 &&
+            (ttRecord.uEncodingID == 0 || ttRecord.uEncodingID == 1))
         {
-            int nPos;
-            LPSTR buf;
+            WCHAR *buf;
+            unsigned int i;
 
             ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
             ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
-            nPos = SetFilePointer(handle, 0, NULL, FILE_CURRENT);
             SetFilePointer(handle, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset,
                            NULL, FILE_BEGIN);
-            buf = msi_alloc_zero( ttRecord.uStringLength + 1 );
+            if (!(buf = msi_alloc_zero( ttRecord.uStringLength + sizeof(WCHAR) ))) goto end;
+            dwRead = 0;
             ReadFile(handle, buf, ttRecord.uStringLength, &dwRead, NULL);
-            if (strlen(buf) > 0)
+            if (dwRead % sizeof(WCHAR))
             {
-                ret = strdupAtoW(buf);
                 msi_free(buf);
-                break;
+                goto end;
             }
+            for (i = 0; i < dwRead / sizeof(WCHAR); i++) buf[i] = SWAPWORD(buf[i]);
+            ret = strdupW(buf);
             msi_free(buf);
-            SetFilePointer(handle,nPos, NULL, FILE_BEGIN);
+            break;
         }
     }
 
@@ -179,6 +183,12 @@ static WCHAR *font_name_from_file( const WCHAR *filename )
 
     if ((name = load_ttf_name_id( filename, NAME_ID_FULL_FONT_NAME )))
     {
+        if (!name[0])
+        {
+            WARN("empty font name\n");
+            msi_free( name );
+            return NULL;
+        }
         ret = msi_alloc( (strlenW( name ) + strlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
         strcpyW( ret, name );
         strcatW( ret, truetypeW );
@@ -187,15 +197,28 @@ static WCHAR *font_name_from_file( const WCHAR *filename )
     return ret;
 }
 
-WCHAR *font_version_from_file( const WCHAR *filename )
+WCHAR *msi_font_version_from_file( const WCHAR *filename )
 {
-    WCHAR *version, *p, *ret = NULL;
+    static const WCHAR fmtW[] = {'%','u','.','%','u','.','0','.','0',0};
+    WCHAR *version, *p, *q, *ret = NULL;
 
-    if ((p = version = load_ttf_name_id( filename, NAME_ID_VERSION )))
+    if ((version = load_ttf_name_id( filename, NAME_ID_VERSION )))
     {
+        int len, major = 0, minor = 0;
+        if ((p = strchrW( version, ';' ))) *p = 0;
+        p = version;
         while (*p && !isdigitW( *p )) p++;
-        ret = msi_alloc( (strlenW( p ) + 1) * sizeof(WCHAR) );
-        strcpyW( ret, p );
+        if ((q = strchrW( p, '.' )))
+        {
+            major = atoiW( p );
+            p = ++q;
+            while (*q && isdigitW( *q )) q++;
+            if (!*q || *q == ' ') minor = atoiW( p );
+            else major = 0;
+        }
+        len = strlenW( fmtW ) + 20;
+        ret = msi_alloc( len * sizeof(WCHAR) );
+        sprintfW( ret, fmtW, major, minor );
         msi_free( version );
     }
     return ret;
@@ -207,27 +230,28 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     LPWSTR name;
     LPCWSTR filename;
     MSIFILE *file;
+    MSICOMPONENT *comp;
     HKEY hkey1, hkey2;
     MSIRECORD *uirow;
     LPWSTR uipath, p;
 
     filename = MSI_RecordGetString( row, 1 );
-    file = get_loaded_file( package, filename );
+    file = msi_get_loaded_file( package, filename );
     if (!file)
     {
-        ERR("Unable to load file\n");
+        WARN("unable to find file %s\n", debugstr_w(filename));
         return ERROR_SUCCESS;
     }
-
-    if (!file->Component->Enabled)
+    comp = msi_get_loaded_component( package, file->Component->Component );
+    if (!comp)
     {
-        TRACE("component is disabled\n");
+        WARN("unable to find component %s\n", debugstr_w(file->Component->Component));
         return ERROR_SUCCESS;
     }
-
-    if (file->Component->ActionRequest != INSTALLSTATE_LOCAL)
+    comp->Action = msi_get_component_action( package, comp );
+    if (comp->Action != INSTALLSTATE_LOCAL)
     {
-        TRACE("Component not scheduled for installation\n");
+        TRACE("component not scheduled for installation %s\n", debugstr_w(comp->Component));
         return ERROR_SUCCESS;
     }
 
@@ -256,33 +280,28 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
-    ui_actiondata( package, szRegisterFonts, uirow);
+    msi_ui_actiondata( package, szRegisterFonts, uirow );
     msiobj_release( &uirow->hdr );
     msi_free( uipath );
-    /* FIXME: call ui_progress? */
+    /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_RegisterFonts(MSIPACKAGE *package)
 {
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
+    MSIQUERY *view;
     UINT rc;
-    MSIQUERY * view;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','F','o','n','t','`',0};
 
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
-    {
-        TRACE("MSI_DatabaseOpenViewW failed: %d\n", rc);
         return ERROR_SUCCESS;
-    }
 
-    MSI_IterateRecords(view, NULL, ITERATE_RegisterFonts, package);
+    rc = MSI_IterateRecords(view, NULL, ITERATE_RegisterFonts, package);
     msiobj_release(&view->hdr);
-
-    return ERROR_SUCCESS;
+    return rc;
 }
 
 static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
@@ -291,27 +310,28 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     LPWSTR name;
     LPCWSTR filename;
     MSIFILE *file;
+    MSICOMPONENT *comp;
     HKEY hkey1, hkey2;
     MSIRECORD *uirow;
     LPWSTR uipath, p;
 
     filename = MSI_RecordGetString( row, 1 );
-    file = get_loaded_file( package, filename );
+    file = msi_get_loaded_file( package, filename );
     if (!file)
     {
-        ERR("Unable to load file\n");
+        WARN("unable to find file %s\n", debugstr_w(filename));
         return ERROR_SUCCESS;
     }
-
-    if (!file->Component->Enabled)
+    comp = msi_get_loaded_component( package, file->Component->Component );
+    if (!comp)
     {
-        TRACE("component is disabled\n");
+        WARN("unable to find component %s\n", debugstr_w(file->Component->Component));
         return ERROR_SUCCESS;
     }
-
-    if (file->Component->ActionRequest != INSTALLSTATE_ABSENT)
+    comp->Action = msi_get_component_action( package, comp );
+    if (comp->Action != INSTALLSTATE_ABSENT)
     {
-        TRACE("Component not scheduled for removal\n");
+        TRACE("component not scheduled for removal %s\n", debugstr_w(comp->Component));
         return ERROR_SUCCESS;
     }
 
@@ -340,31 +360,26 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
-    ui_actiondata( package, szUnregisterFonts, uirow );
+    msi_ui_actiondata( package, szUnregisterFonts, uirow );
     msiobj_release( &uirow->hdr );
     msi_free( uipath );
-    /* FIXME: call ui_progress? */
+    /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
 {
-    UINT r;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
-    static const WCHAR query[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','F','o','n','t','`',0};
+    UINT r;
 
     r = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (r != ERROR_SUCCESS)
-    {
-        TRACE("MSI_DatabaseOpenViewW failed: %u\n", r);
         return ERROR_SUCCESS;
-    }
 
-    MSI_IterateRecords( view, NULL, ITERATE_UnregisterFonts, package );
+    r = MSI_IterateRecords( view, NULL, ITERATE_UnregisterFonts, package );
     msiobj_release( &view->hdr );
-
-    return ERROR_SUCCESS;
+    return r;
 }

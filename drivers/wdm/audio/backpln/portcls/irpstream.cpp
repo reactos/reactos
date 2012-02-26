@@ -43,7 +43,7 @@ protected:
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
-    ULONG m_OutOfMapping;
+    BOOLEAN m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
     ULONG m_TagSupportEnabled;
@@ -372,7 +372,7 @@ CIrpQueue::UpdateMapping(
     ASSERT(StreamData);
 
     // add to current offset
-    InterlockedExchangeAdd((volatile PLONG)&m_CurrentOffset, (LONG)BytesWritten);
+    InterlockedExchangeAdd((PLONG)&m_CurrentOffset, (LONG)BytesWritten);
 
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
     {

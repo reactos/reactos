@@ -14,9 +14,9 @@ intptr_t _tfindfirst(const _TCHAR* _name, struct _tfinddata_t* result)
     }
 
     result->attrib = FindFileData.dwFileAttributes;
-    result->time_create = FileTimeToUnixTime(&FindFileData.ftCreationTime,NULL);
-    result->time_access = FileTimeToUnixTime(&FindFileData.ftLastAccessTime,NULL);
-    result->time_write = FileTimeToUnixTime(&FindFileData.ftLastWriteTime,NULL);
+    result->time_create = (time_t)FileTimeToUnixTime(&FindFileData.ftCreationTime,NULL);
+    result->time_access = (time_t)FileTimeToUnixTime(&FindFileData.ftLastAccessTime,NULL);
+    result->time_write = (time_t)FileTimeToUnixTime(&FindFileData.ftLastWriteTime,NULL);
     result->size = (((__int64)FindFileData.nFileSizeHigh)<<32) + FindFileData.nFileSizeLow;
     _tcsncpy(result->name,FindFileData.cFileName,MAX_PATH);
 
@@ -36,9 +36,9 @@ int _tfindnext(intptr_t handle, struct _tfinddata_t* result)
 	}
 
     result->attrib = FindFileData.dwFileAttributes;
-    result->time_create = FileTimeToUnixTime(&FindFileData.ftCreationTime,NULL);
-    result->time_access = FileTimeToUnixTime(&FindFileData.ftLastAccessTime,NULL);
-    result->time_write = FileTimeToUnixTime(&FindFileData.ftLastWriteTime,NULL);
+    result->time_create = (time_t)FileTimeToUnixTime(&FindFileData.ftCreationTime,NULL);
+    result->time_access = (time_t)FileTimeToUnixTime(&FindFileData.ftLastAccessTime,NULL);
+    result->time_write = (time_t)FileTimeToUnixTime(&FindFileData.ftLastWriteTime,NULL);
     result->size = (((__int64)FindFileData.nFileSizeHigh)<<32) + FindFileData.nFileSizeLow;
     _tcsncpy(result->name,FindFileData.cFileName, MAX_PATH);
 

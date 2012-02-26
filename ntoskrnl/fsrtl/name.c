@@ -23,8 +23,10 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
+    SHORT StarFound = -1;
+    PUSHORT BackTracking = NULL;
     UNICODE_STRING IntExpression;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
     PAGED_CODE();
 
     /* Check if we were given strings at all */
@@ -99,76 +101,45 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
 
     while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
     {
+        /* Basic check to test if chars are equal */
         if ((Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition])))
         {
             NamePosition++;
             ExpressionPosition++;
         }
-        else if (StarFound != MAXUSHORT && (Expression->Buffer[StarFound + 1] == L'*' ||
-                 Expression->Buffer[StarFound + 1] == L'?' || Expression->Buffer[StarFound + 1] == DOS_DOT))
-        {
-            ExpressionPosition = StarFound + 1;
-            switch (Expression->Buffer[ExpressionPosition])
-            {
-                case L'*':
-                    StarFound = MAXUSHORT;
-                    break;
-
-                case L'?':
-                    if (++ExpressionPosition == Expression->Length / sizeof(WCHAR))
-                    {
-                        NamePosition = Name->Length / sizeof(WCHAR);
-                        break;
-                    }
-
-                    MatchingChars = NamePosition;
-                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
-                           (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
-                    {
-                        NamePosition++;
-                    }
-
-                    if (NamePosition - MatchingChars > 0)
-                    {
-                        StarFound = MAXUSHORT;
-                    }
-                    break;
-
-                case DOS_DOT:
-                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
-                           Name->Buffer[NamePosition] != L'.')
-                    {
-                        NamePosition++;
-                    }
-                    ExpressionPosition++;
-                    StarFound = MAXUSHORT;
-                    break;
-
-                default:
-                    /* Should never happen */
-                    ASSERT(FALSE);                   
-            }
-        }
+        /* Check cases that eat one char */
         else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM) ||
                  (Expression->Buffer[ExpressionPosition] == DOS_DOT && Name->Buffer[NamePosition] == L'.'))
         {
             NamePosition++;
             ExpressionPosition++;
-            StarFound = MAXUSHORT;
         }
+        /* Test star */
         else if (Expression->Buffer[ExpressionPosition] == L'*')
         {
-            StarFound = ExpressionPosition++;
+            /* Save star position */
+            if (!BackTracking)
+            {
+                BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                     (Expression->Length / sizeof(WCHAR)) * sizeof(USHORT),
+                                                     'nrSF');
+            }
+            BackTracking[++StarFound] = ExpressionPosition++;
+
+            /* If star is at the end, then eat all rest and leave */
             if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
             {
                 NamePosition = Name->Length / sizeof(WCHAR);
                 break;
             }
+            else if (Expression->Buffer[ExpressionPosition] != L'?')
+            {
+                NamePosition++;
+            }
         }
+        /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
         {
-            StarFound = MAXUSHORT;
             MatchingChars = NamePosition;
             while (MatchingChars < Name->Length / sizeof(WCHAR))
             {
@@ -180,25 +151,35 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             }
             ExpressionPosition++;
         }
-        else if (StarFound != MAXUSHORT)
+        /* If nothing match, try to backtrack */
+        else if (StarFound >= 0)
         {
-            ExpressionPosition = StarFound + 1;
-            while (NamePosition < Name->Length / sizeof(WCHAR) &&
-                   (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
-            {
-                NamePosition++;
-            }
+            ExpressionPosition = BackTracking[StarFound--];
         }
+        /* Otherwise, fail */
         else
         {
             break;
+        }
+
+        /* Under certain circumstances, expression is over, but name isn't
+         * and we can backtrack, then, backtrack */
+        if (ExpressionPosition == Expression->Length / sizeof(WCHAR) &&
+            NamePosition != Name->Length / sizeof(WCHAR) &&
+            StarFound >= 0)
+        {
+            ExpressionPosition = BackTracking[StarFound--];
         }
     }
     if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
         Expression->Buffer[ExpressionPosition] == DOS_DOT)
     {
         ExpressionPosition++;
+    }
+
+    if (BackTracking)
+    {
+        ExFreePoolWithTag(BackTracking, 'nrSF');
     }
 
     return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));

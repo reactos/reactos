@@ -35,7 +35,7 @@
         ULONG Id;
     } DBG_CHANNEL;
 
-    /* note: the following values don't need to be sorted */
+    /* Note: The following values don't need to be sorted */
     enum _DEBUGCHANNELS
     {
         DbgChEngBlt,
@@ -74,13 +74,16 @@
         DbgChGdiText,
         DbgChGdiXFormObj,
         DbgChUserAccel,
-        DbgChUserCalproc,
+        DbgChUserCallback,
+        DbgChUserCallProc,
         DbgChUserCaret,
         DbgChUserClass,
         DbgChUserClipbrd,
         DbgChUserCsr,
         DbgChUserDce,
+        DbgChUserDefwnd,
         DbgChUserDesktop,
+        DbgChUserDisplay,
         DbgChUserEvent,
         DbgChUserFocus,
         DbgChUserHook,
@@ -91,20 +94,21 @@
         DbgChUserKbdLayout,
         DbgChUserMenu,
         DbgChUserMetric,
+        DbgChUserMisc,
         DbgChUserMonitor,
-        DbgChUserMsgGet,
+        DbgChUserMsg,
         DbgChUserMsgQ,
-        DbgChUserMsgSend,
         DbgChUserObj,
+        DbgChUserPainting,
         DbgChUserProcess,
         DbgChUserProp,
         DbgChUserScrollbar,
-        DbgChUserSysparam,
+        DbgChUserSysparams,
         DbgChUserThread,
         DbgChUserTimer,
         DbgChUserWinsta,
         DbgChUserWnd,
-        DbgChUserWndpos,
+        DbgChUserWinpos,
         DbgChCount
     };
     
@@ -116,34 +120,34 @@
 
     #define MAX_LEVEL ERR_LEVEL | FIXME_LEVEL | WARN_LEVEL | TRACE_LEVEL
 
-    /* the following assert is needed to make sure that the 
-       debugging routines are not used before we get a ppi*/
-    #define DBG_GET_PPI (ASSERT(PsGetCurrentProcessWin32Process()), (PPROCESSINFO)PsGetCurrentProcessWin32Process())
+    #define DBG_GET_PPI ((PPROCESSINFO)PsGetCurrentProcessWin32Process())
     #define DBG_DEFAULT_CHANNEL(x) static int DbgDefaultChannel = DbgCh##x;
 
     #define DBG_ENABLE_CHANNEL(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] |= level)
     #define DBG_DISABLE_CHANNEL(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] &= ~level)
     #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] & level)
 
-    #define DBG_PRINT(ppi,ch,level,fmt, ...)  do {                    \
-    if(DBG_IS_CHANNEL_ENABLED(ppi,ch,level))                          \
-        DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__);  \
+    #define DBG_PRINT(ppi,ch,level,fmt, ...)  do {                            \
+    if((level == ERR_LEVEL) || (ppi && DBG_IS_CHANNEL_ENABLED(ppi,ch,level))) \
+        DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__);          \
     }while(0);
 
-    #define ERR(fmt, ...)     DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, ERR_LEVEL,"err: " fmt, __VA_ARGS__)
-    #define FIXME(fmt, ...)   DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, FIXME_LEVEL,"fixme: " fmt, __VA_ARGS__)
-    #define WARN(fmt, ...)    DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, WARN_LEVEL,"warn: " fmt, __VA_ARGS__)
-    #define TRACE(fmt, ...)   DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, TRACE_LEVEL,"trace: " fmt, __VA_ARGS__)
+    #define ERR(fmt, ...)     DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, ERR_LEVEL,"err: " fmt, ##__VA_ARGS__)
+    #define FIXME(fmt, ...)   DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, FIXME_LEVEL,"fixme: " fmt, ##__VA_ARGS__)
+    #define WARN(fmt, ...)    DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, WARN_LEVEL,"warn: " fmt, ##__VA_ARGS__)
+    #define TRACE(fmt, ...)   DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, TRACE_LEVEL,"trace: " fmt, ##__VA_ARGS__)
 
-    #define ERR_CH(ch,fmt, ...)        DBG_PRINT(DBG_GET_PPI, DbgCh##ch, ERR_LEVEL, "err: " fmt, __VA_ARGS__)
-    #define FIXME_CH(ch,fmt, ...)      DBG_PRINT(DBG_GET_PPI, DbgCh##ch, FIXME_LEVEL, "fixme: " fmt, __VA_ARGS__)
-    #define WARN_CH(ch,fmt, ...)       DBG_PRINT(DBG_GET_PPI, DbgCh##ch, WARN_LEVEL, "warn: " fmt, __VA_ARGS__)
-    #define TRACE_CH(ch,fmt, ...)      DBG_PRINT(DBG_GET_PPI, DbgCh##ch, TRACE_LEVEL, "trace: " fmt, __VA_ARGS__)
+    #define ERR_CH(ch,fmt, ...)        DBG_PRINT(DBG_GET_PPI, DbgCh##ch, ERR_LEVEL, "err: " fmt, ##__VA_ARGS__)
+    #define FIXME_CH(ch,fmt, ...)      DBG_PRINT(DBG_GET_PPI, DbgCh##ch, FIXME_LEVEL, "fixme: " fmt, ##__VA_ARGS__)
+    #define WARN_CH(ch,fmt, ...)       DBG_PRINT(DBG_GET_PPI, DbgCh##ch, WARN_LEVEL, "warn: " fmt, ##__VA_ARGS__)
+    #define TRACE_CH(ch,fmt, ...)      DBG_PRINT(DBG_GET_PPI, DbgCh##ch, TRACE_LEVEL, "trace: " fmt, ##__VA_ARGS__)
 
-    #define ERR_PPI(ppi,ch,fmt, ...)   DBG_PRINT(ppi, DbgCh##ch, ERR_LEVEL,"err: " fmt, __VA_ARGS__)
-    #define FIXME_PPI(ppi,ch,fmt, ...) DBG_PRINT(ppi, DbgCh##ch, FIXME_LEVEL,"fixme: " fmt, __VA_ARGS__)
-    #define WARN_PPI(ppi,ch,fmt, ...)  DBG_PRINT(ppi, DbgCh##ch, WARN_LEVEL,"warn: " fmt, __VA_ARGS__)
-    #define TRACE_PPI(ppi,ch,fmt, ...) DBG_PRINT(ppi, DbgCh##ch, TRACE_LEVEL,"trace: " fmt, __VA_ARGS__)
+    #define ERR_PPI(ppi,ch,fmt, ...)   DBG_PRINT(ppi, DbgCh##ch, ERR_LEVEL,"err: " fmt, ##__VA_ARGS__)
+    #define FIXME_PPI(ppi,ch,fmt, ...) DBG_PRINT(ppi, DbgCh##ch, FIXME_LEVEL,"fixme: " fmt, ##__VA_ARGS__)
+    #define WARN_PPI(ppi,ch,fmt, ...)  DBG_PRINT(ppi, DbgCh##ch, WARN_LEVEL,"warn: " fmt, ##__VA_ARGS__)
+    #define TRACE_PPI(ppi,ch,fmt, ...) DBG_PRINT(ppi, DbgCh##ch, TRACE_LEVEL,"trace: " fmt, ##__VA_ARGS__)
+
+    #define STUB         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
 #else
     #define DBG_GET_PPI 
@@ -169,6 +173,10 @@
     #define FIXME_PPI(ppi,ch,fmt, ...) 
     #define WARN_PPI(ppi,ch,fmt, ...)  
     #define TRACE_PPI(ppi,ch,fmt, ...) 
+
+    #define UNIMPLEMENTED
 #endif
+
+#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 
 BOOL DbgInitDebugChannels();

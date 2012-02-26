@@ -23,13 +23,15 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 VOID FileSystemError(PCSTR ErrorString)
 {
-	DPRINTM(DPRINT_FILESYSTEM, "%s\n", ErrorString);
+	ERR("%s\n", ErrorString);
 
 	UiMessageBox(ErrorString);
 }
@@ -43,7 +45,7 @@ PFILE FsOpenFile(PCSTR FileName)
 	//
 	// Print status message
 	//
-	DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName);
+	TRACE("Opening file '%s'...\n", FileName);
 
 	//
 	// Create full file name
@@ -163,7 +165,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
 	}
 	num++;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+	TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
 	return num;
 }
@@ -195,7 +197,7 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	Buffer[i] = 0;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
+	TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
 typedef struct tagFILEDATA
@@ -246,19 +248,19 @@ LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 
 LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
-    ULONG i, ret;
+    ULONG Count, i, ret;
     PLIST_ENTRY pEntry;
     DEVICE* pDevice;
     CHAR* DeviceName;
     CHAR* FileName;
     CHAR* p;
     CHAR* q;
-    ULONG dwCount, dwLength;
+    SIZE_T Length;
     OPENMODE DeviceOpenMode;
     ULONG DeviceId;
 
     /* Print status message */
-    DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", Path);
+    TRACE("Opening file '%s'...\n", Path);
 
     *FileId = MAX_FDS;
 
@@ -269,16 +271,16 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     FileName++;
 
     /* Count number of "()", which needs to be replaced by "(0)" */
-    dwCount = 0;
+    Count = 0;
     for (p = Path; p != FileName; p++)
         if (*p == '(' && *(p + 1) == ')')
-            dwCount++;
+            Count++;
 
     /* Duplicate device name, and replace "()" by "(0)" (if required) */
-    dwLength = FileName - Path + dwCount;
-    if (dwCount != 0)
+    Length = FileName - Path + Count;
+    if (Count != 0)
     {
-        DeviceName = MmHeapAlloc(FileName - Path + dwCount);
+        DeviceName = MmHeapAlloc(FileName - Path + Count);
         if (!DeviceName)
             return ENOMEM;
         for (p = Path, q = DeviceName; p != FileName; p++)
@@ -300,7 +302,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     while (pEntry != &DeviceListHead)
     {
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
-        if (strncmp(pDevice->Prefix, DeviceName, dwLength) == 0)
+        if (strncmp(pDevice->Prefix, DeviceName, Length) == 0)
         {
             /* OK, device found. It is already opened? */
             if (pDevice->ReferenceCount == 0)
@@ -339,7 +341,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
 #endif
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
 #endif
@@ -410,18 +412,18 @@ LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
 {
     DEVICE* pNewEntry;
-    ULONG dwLength;
+    SIZE_T Length;
 
-    DPRINTM(DPRINT_FILESYSTEM, "FsRegisterDevice() Prefix = %s\n", Prefix);
+    TRACE("FsRegisterDevice() Prefix = %s\n", Prefix);
 
-    dwLength = strlen(Prefix) + 1;
-    pNewEntry = MmHeapAlloc(sizeof(DEVICE) + dwLength);
+    Length = strlen(Prefix) + 1;
+    pNewEntry = MmHeapAlloc(sizeof(DEVICE) + Length);
     if (!pNewEntry)
         return;
     pNewEntry->FuncTable = FuncTable;
     pNewEntry->ReferenceCount = 0;
     pNewEntry->Prefix = (CHAR*)(pNewEntry + 1);
-    memcpy(pNewEntry->Prefix, Prefix, dwLength);
+    memcpy(pNewEntry->Prefix, Prefix, Length);
 
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
 }

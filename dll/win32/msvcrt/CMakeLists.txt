@@ -23,24 +23,18 @@ list(APPEND SOURCE
 
 add_library(msvcrt SHARED ${SOURCE})
 
-if (NOT MSVC)
-set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
-endif()
+set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 
 add_dependencies(msvcrt psdk)
-set_entrypoint(msvcrt DllMain@12)
-set_image_base(msvcrt ${baseaddress_msvcrt})
 
-target_link_libraries(msvcrt
-    crt
-    wine)
+target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 
-if(NOT MSVC)
-  target_link_libraries(msvcrt pseh)
+if(MSVC)
+    # export of deleting destructor "name"
+    add_target_link_flags(msvcrt "/ignore:4102")
 endif()
 
-add_pch(msvcrt precomp.h)
 add_importlibs(msvcrt kernel32 ntdll)
+add_pch(msvcrt precomp.h)
 add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)
-add_importlib_target(msvcrt.spec)
-
+add_importlib_target(msvcrt.spec msvcrt.dll)

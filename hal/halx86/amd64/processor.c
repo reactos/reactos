@@ -31,26 +31,6 @@ HaliHaltSystem(VOID)
 /*
  * @implemented
  */
-VOID
-NTAPI
-HalInitializeProcessor(IN ULONG ProcessorNumber,
-                       IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    /* Set default stall count */
-    KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
-
-    /* Update the interrupt affinity and processor mask */
-    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
-
-    /* Register routines for KDCOM */
-    //HalpRegisterKdSupportFunctions();
-}
-
-/*
- * @implemented
- */
 BOOLEAN
 NTAPI
 HalAllProcessorsStarted(VOID)

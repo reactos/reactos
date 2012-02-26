@@ -57,8 +57,7 @@ BEGIN
   LTEXT "Merk av i denne avmerkningsboksen for å gjøre knappen til høyre til den du bruker til primærfunksjoner som å velge å dra.", -1, 10, 36, 156, 30
   GROUPBOX "Hastighet på dobbeltklikking", -1, 5, 78, 236, 70
   LTEXT "Dobbeltklikk mappen for å teste innstillingen. Hvis mappen ikke lukkes eller åpnes, kan du prøve med en langsommere innstilling.", -1, 10, 90, 156, 28
-  LTEXT "Hastig&het:", -1, 10, 123, 90, 10
-  LTEXT "Langsom", -1, 10, 130, 90, 10
+  LTEXT "Hastig&het:   Langsom", -1, 10, 123, 90, 10
   LTEXT "Rask", -1, 140, 130, 24, 10
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 40, 130, 90, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE

@@ -540,9 +540,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         after they are done, so a region has better to exist
         else everything ends clipped */
         GetClientRect(descr->self, &r);
-        hrgn = CreateRectRgnIndirect(&r);
-        SelectClipRgn( hdc, hrgn);
-        DeleteObject( hrgn );
+        hrgn = set_control_clipping( hdc, &r );
 
         dis.CtlType      = ODT_LISTBOX;
         dis.CtlID        = GetWindowLongPtrW( descr->self, GWLP_ID );
@@ -562,6 +560,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
               descr->self, index, item ? debugstr_w(item->str) : "", action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
+        SelectClipRgn( hdc, hrgn );
+        if (hrgn) DeleteObject( hrgn );
     }
     else
     {
@@ -660,8 +660,7 @@ static void LISTBOX_RepaintItem( LB_DESCR *descr, INT index, UINT action )
     if (LISTBOX_GetItemRect( descr, index, &rect ) != 1) return;
     if (!(hdc = GetDCEx( descr->self, 0, DCX_CACHE ))) return;
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
-    hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
-				   (WPARAM)hdc, (LPARAM)descr->self );
+    hbrush = GetControlColor( descr->owner, descr->self, hdc, WM_CTLCOLORLISTBOX);
     if (hbrush) oldBrush = SelectObject( hdc, hbrush );
     if (!IsWindowEnabled(descr->self))
         SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
@@ -786,7 +785,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
 
 	TRACE("index %d (0x%04x) %s\n", index, index, debugstr_w(descr->items[index].str));
 
-        __TRY  /* hide a Delphi bug that passes a read-only buffer */
+        _SEH2_TRY  /* hide a Delphi bug that passes a read-only buffer */
         {
             if(unicode)
             {
@@ -799,13 +798,13 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
                                           (LPSTR)buffer, 0x7FFFFFFF, NULL, NULL) - 1;
             }
         }
-        __EXCEPT_PAGE_FAULT
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             WARN( "got an invalid buffer (Delphi bug?)\n" );
             SetLastError( ERROR_INVALID_PARAMETER );
-            return LB_ERR;
+            len = LB_ERR;
         }
-        __ENDTRY
+        _SEH2_END
     } else {
         if (buffer)
             *((LPDWORD)buffer)=*(LPDWORD)(&descr->items[index].data);
@@ -1032,8 +1031,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
     }
 
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
-    hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
-			   	   (WPARAM)hdc, (LPARAM)descr->self );
+    hbrush = GetControlColor( descr->owner, descr->self, hdc, WM_CTLCOLORLISTBOX);
     if (hbrush) oldBrush = SelectObject( hdc, hbrush );
     if (!IsWindowEnabled(descr->self)) SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
 
@@ -2584,6 +2582,14 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
        {
           NtUserSetWindowFNID(hwnd, FNID_LISTBOX); // Could be FNID_COMBOLBOX by class.
        }
+       else
+       {
+          if (pWnd->fnid != FNID_LISTBOX)
+          {
+             ERR("Wrong window class for listbox! fnId 0x%x\n",pWnd->fnid);
+             return 0;
+          }
+       }
     }    
 #endif    
 
@@ -3000,9 +3006,6 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
 
     case WM_DESTROY:
-#ifdef __REACTOS__
-        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-#endif
         return LISTBOX_Destroy( descr );
 
     case WM_ENABLE:
@@ -3157,8 +3160,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         if ((IS_OWNERDRAW(descr)) && !(descr->style & LBS_DISPLAYCHANGED))
         {
             RECT rect;
-            HBRUSH hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
-                                              wParam, (LPARAM)descr->self );
+            HBRUSH hbrush = GetControlColor( descr->owner, descr->self, (HDC)wParam, WM_CTLCOLORLISTBOX);
 	    TRACE("hbrush = %p\n", hbrush);
 	    if(!hbrush)
 		hbrush = GetSysColorBrush(COLOR_WINDOW);
@@ -3177,6 +3179,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_NCDESTROY:
         if( lphc && (lphc->dwStyle & CBS_DROPDOWNLIST) != CBS_SIMPLE )
             lphc->hWndLBox = 0;
+#ifdef __REACTOS__
+        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
         break;
 
     case WM_NCACTIVATE:

@@ -32,19 +32,16 @@ list(APPEND SOURCE
     font.c
     format.c
     handle.c
-    helpers.c
     insert.c
     install.c
-    join.c
     media.c
     msi.c
     msi_main.c
     msiquery.c
     package.c
-    preview.c
+    patch.c
     record.c
     registry.c
-    regsvr.c
     script.c
     select.c
     source.c
@@ -69,18 +66,21 @@ endif()
 
 add_library(msi SHARED ${SOURCE})
 
-add_idl_Headers(msi_idlheader msiserver.idl)
-add_typelib(msi_tlb msiserver.idl)
+add_idl_headers(msi_idlheader msiserver.idl)
+add_typelib(msiserver.idl)
+
+set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb)
+
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
-add_dependencies(msi msi_idlheader msi_tlb)
+add_dependencies(msi msi_idlheader)
+add_delay_importlibs(msi odbccp32 crypt32 imagehlp wintrust)
 
 add_importlibs(msi
     advapi32
     cabinet
     comctl32
     gdi32
-    odbccp32
     ole32
     oleaut32
     shell32
@@ -93,8 +93,9 @@ add_importlibs(msi
     kernel32
     ntdll)
 
+add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)
 
-add_importlib_target(msi.spec)
+add_importlib_target(msi.spec msi.dll)

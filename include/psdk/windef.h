@@ -5,6 +5,7 @@
  */
 #ifndef _WINDEF_
 #define _WINDEF_
+#pragma once
 
 #define _WINDEF_H // wine ...
 
@@ -106,8 +107,6 @@ typedef int INT;
 #define PACKED
 #else
 #define PACKED
-#define _cdecl
-#define __cdecl
 #endif
 
 #ifdef __GNUC__
@@ -141,9 +140,9 @@ typedef int INT;
 #define near
 #define pascal __stdcall
 
-//#define cdecl _cdecl
+#define cdecl
 #ifndef CDECL
-#define CDECL _cdecl
+#define CDECL
 #endif
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
@@ -247,8 +246,8 @@ typedef LONG HRESULT;
 #endif
 #endif
 
-#define MAKEWORD(a,b) ((WORD)(((BYTE)((DWORD_PTR)(a) & 0xff)) | ((WORD)((BYTE)((DWORD_PTR)(b) & 0xff))) << 8))
-#define MAKELONG(a,b) ((LONG)(((WORD)((DWORD_PTR)(a) & 0xffff)) | ((DWORD)((WORD)((DWORD_PTR)(b) & 0xffff))) << 16))
+#define MAKEWORD(a,b) ((WORD)(((BYTE)((DWORD_PTR)(a) & 0xff)) | (((WORD)((BYTE)((DWORD_PTR)(b) & 0xff))) << 8)))
+#define MAKELONG(a,b) ((LONG)(((WORD)((DWORD_PTR)(a) & 0xffff)) | (((DWORD)((WORD)((DWORD_PTR)(b) & 0xffff))) << 16)))
 #define LOWORD(l) ((WORD)((DWORD_PTR)(l) & 0xffff))
 #define HIWORD(l) ((WORD)((DWORD_PTR)(l) >> 16))
 #define LOBYTE(w) ((BYTE)((DWORD_PTR)(w) & 0xff))
@@ -416,11 +415,6 @@ typedef struct _FILETIME {
 #else
 # define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
 #endif
-
-#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
-#define DBG_UNREFERENCED_PARAMETER(P)
-#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
 #ifndef __WATCOMC__
 #ifndef _export

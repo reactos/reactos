@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -174,7 +174,7 @@ AcpiRsConvertAmlToResources (
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
-            "Could not convert AML resource (Type %X)", *Aml));
+            "Could not convert AML resource (Type 0x%X)", *Aml));
         return_ACPI_STATUS (Status);
     }
 
@@ -232,7 +232,7 @@ AcpiRsConvertResourcesToAml (
         if (Resource->Type > ACPI_RESOURCE_TYPE_MAX)
         {
             ACPI_ERROR ((AE_INFO,
-                "Invalid descriptor type (%X) in resource list",
+                "Invalid descriptor type (0x%X) in resource list",
                 Resource->Type));
             return_ACPI_STATUS (AE_BAD_DATA);
         }
@@ -245,7 +245,7 @@ AcpiRsConvertResourcesToAml (
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
-                "Could not convert resource (type %X) to AML",
+                "Could not convert resource (type 0x%X) to AML",
                 Resource->Type));
             return_ACPI_STATUS (Status);
         }

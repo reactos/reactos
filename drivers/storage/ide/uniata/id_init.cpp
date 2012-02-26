@@ -855,6 +855,32 @@ for_ugly_chips:
             ULONG IoSize = 0;
             ULONG BaseMemAddress = 0;
 
+            /*
+             * vt6420/1 has problems talking to some drives.  The following
+             * is based on the fix from Joseph Chan <JosephChan@via.com.tw>.
+             *
+             * When host issues HOLD, device may send up to 20DW of data
+             * before acknowledging it with HOLDA and the host should be
+             * able to buffer them in FIFO.  Unfortunately, some WD drives
+             * send upto 40DW before acknowledging HOLD and, in the
+             * default configuration, this ends up overflowing vt6421's
+             * FIFO, making the controller abort the transaction with
+             * R_ERR.
+             *
+             * Rx52[2] is the internal 128DW FIFO Flow control watermark
+             * adjusting mechanism enable bit and the default value 0
+             * means host will issue HOLD to device when the left FIFO
+             * size goes below 32DW.  Setting it to 1 makes the watermark
+             * 64DW.
+             *
+             * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
+             */
+
+            if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
+                KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));
+                ChangePciConfig1(0x52, a | (1 << 2));
+            }
+
             switch(DeviceID) {
             case 0x3149: // VIA 6420
                 KdPrint2((PRINT_PREFIX "VIA 6420\n"));

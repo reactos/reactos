@@ -549,26 +549,44 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
+    /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
-#if 0
-    /* Remove the device */
-    if (DeviceNode->Flags & DNF_ENUMERATED)
+    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+
+    /* Check if there's already a driver loaded for this device */
+    if (DeviceNode->Flags & DNF_ADDED)
     {
+        /* Remove the device node */
         Status = IopRemoveDevice(DeviceNode);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            DPRINT1("WARNING: Ignoring failed IopRemoveDevice() for %wZ (likely a driver bug)\n", &DeviceNode->InstancePath);
+            /* Invalidate device relations for the parent to reenumerate the device */
+            Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+            DPRINT1("A new driver has been loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
+        }
+        else
+        {
+            /* A driver has already been loaded for this device */
+            DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
         }
     }
-#endif
+    else
+    {
+        /* FIXME: What if the device really is disabled? */
+        DeviceNode->Flags &= ~DNF_DISABLED;
 
-    /* Reenumerate the device and its children */
-    DeviceNode->Flags &= ~DNF_DISABLED;
-    Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+        /* Load service data from the registry */
+        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
-    if (NT_SUCCESS(Status))
-        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        if (NT_SUCCESS(Status))
+        {
+            /* Start the service and begin PnP initialization of the device again */
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+            DPRINT1("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+        }
+    }
 
     ObDereferenceObject(DeviceObject);
 

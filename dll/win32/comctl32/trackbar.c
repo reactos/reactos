@@ -42,7 +42,7 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "uxtheme.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "wine/debug.h"
 
 #include "comctl32.h"
@@ -1555,7 +1555,8 @@ TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr)
 static LRESULT
 TRACKBAR_Size (TRACKBAR_INFO *infoPtr)
 {
-    TRACKBAR_InitializeThumb (infoPtr);
+    TRACKBAR_CalcChannel (infoPtr);
+    TRACKBAR_UpdateThumb (infoPtr);
     TRACKBAR_AlignBuddies (infoPtr);
 
     return 0;

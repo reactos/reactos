@@ -23,19 +23,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if defined(USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
-
-#define _SEH2_TRY  {
-#define _SEH2_FINALLY }  {
-#define _SEH2_EXCEPT(...) } if (0) {
-#define _SEH2_END }
-#define _SEH2_GetExceptionInformation()
-#define _SEH2_GetExceptionCode() 0
-#define _SEH2_AbnormalTermination()
-#define _SEH2_YIELD(STMT_) STMT_
-#define _SEH2_LEAVE
-
-#elif defined(USE_NATIVE_SEH) || defined(_MSC_VER)
+#if defined(USE_NATIVE_SEH) || defined(_MSC_VER)
 
 #include <excpt.h>
 #define _SEH2_TRY __try
@@ -47,6 +35,18 @@
 #define _SEH2_AbnormalTermination() (AbnormalTermination())
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE __leave
+
+#elif defined(USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
+
+#define _SEH2_TRY  {
+#define _SEH2_FINALLY }  {
+#define _SEH2_EXCEPT(...) } if (0) {
+#define _SEH2_END }
+#define _SEH2_GetExceptionInformation()
+#define _SEH2_GetExceptionCode() 0
+#define _SEH2_AbnormalTermination()
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE
 
 #elif defined(__GNUC__)
 

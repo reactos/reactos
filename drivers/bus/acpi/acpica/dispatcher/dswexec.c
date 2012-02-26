@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -227,7 +227,7 @@ AcpiDsGetPredicateValue (
     if (LocalObjDesc->Common.Type != ACPI_TYPE_INTEGER)
     {
         ACPI_ERROR ((AE_INFO,
-            "Bad predicate (not an integer) ObjDesc=%p State=%p Type=%X",
+            "Bad predicate (not an integer) ObjDesc=%p State=%p Type=0x%X",
             ObjDesc, WalkState, ObjDesc->Common.Type));
 
         Status = AE_AML_OPERAND_TYPE;
@@ -400,10 +400,26 @@ AcpiDsExecBeginOp (
              * we must enter this object into the namespace.  The created
              * object is temporary and will be deleted upon completion of
              * the execution of this method.
+             *
+             * Note 10/2010: Except for the Scope() op. This opcode does
+             * not actually create a new object, it refers to an existing
+             * object. However, for Scope(), we want to indeed open a
+             * new scope.
              */
-            Status = AcpiDsLoad2BeginOp (WalkState, NULL);
+            if (Op->Common.AmlOpcode != AML_SCOPE_OP)
+            {
+                Status = AcpiDsLoad2BeginOp (WalkState, NULL);
+            }
+            else
+            {
+                Status = AcpiDsScopeStackPush (Op->Named.Node,
+                            Op->Named.Node->Type, WalkState);
+                if (ACPI_FAILURE (Status))
+                {
+                    return_ACPI_STATUS (Status);
+                }
+            }
         }
-
         break;
 
 
@@ -463,7 +479,7 @@ AcpiDsExecEndOp (
 
     if (OpClass == AML_CLASS_UNKNOWN)
     {
-        ACPI_ERROR ((AE_INFO, "Unknown opcode %X", Op->Common.AmlOpcode));
+        ACPI_ERROR ((AE_INFO, "Unknown opcode 0x%X", Op->Common.AmlOpcode));
         return_ACPI_STATUS (AE_NOT_IMPLEMENTED);
     }
 
@@ -783,7 +799,7 @@ AcpiDsExecEndOp (
         default:
 
             ACPI_ERROR ((AE_INFO,
-                "Unimplemented opcode, class=%X type=%X Opcode=%X Op=%p",
+                "Unimplemented opcode, class=0x%X type=0x%X Opcode=-0x%X Op=%p",
                 OpClass, OpType, Op->Common.AmlOpcode, Op));
 
             Status = AE_NOT_IMPLEMENTED;

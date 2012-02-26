@@ -14,8 +14,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /* DEFINES ******************************************************************/
@@ -2545,7 +2543,7 @@ RegEnumKeyExA(HKEY hKey,
             if (KeyInfo->Node.NameLength > NameLength ||
                 KeyInfo->Node.ClassLength > ClassLength)
             {
-				ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_BUFFER_OVERFLOW;
             }
             else
             {
@@ -4016,7 +4014,7 @@ RegQueryValueExA(HKEY hkeyorg,
     static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
 
     TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
-          hkey, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
+          hkeyorg, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
 
     if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
     status = MapDefaultKey(&hkey, hkeyorg);
@@ -4031,8 +4029,8 @@ RegQueryValueExA(HKEY hkeyorg,
     RtlInitAnsiString( &nameA, name );
     if ((status = RtlAnsiStringToUnicodeString( &nameW, &nameA, TRUE )))
     {
-        return RtlNtStatusToDosError(status);
         ClosePredefKey(hkey);
+        return RtlNtStatusToDosError(status);
     }
 
     status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,

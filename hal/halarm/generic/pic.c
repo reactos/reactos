@@ -234,10 +234,10 @@ KfLowerIrql(IN KIRQL NewIrql)
     ARM_STATUS_REGISTER Flags;
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG InterruptMask;
-    
+
     /* Disableinterrupts */
     Flags = KeArmStatusRegisterGet();
-    _disable();    
+    _disable();
     
 #ifdef IRQL_DEBUG
     /* Validate correct lower */
@@ -292,7 +292,7 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
  */
 BOOLEAN
 NTAPI
-HalEnableSystemInterrupt(IN UCHAR Vector,
+HalEnableSystemInterrupt(IN ULONG Vector,
                          IN KIRQL Irql,
                          IN KINTERRUPT_MODE InterruptMode)
 {
@@ -306,7 +306,7 @@ HalEnableSystemInterrupt(IN UCHAR Vector,
  */
 VOID
 NTAPI
-HalDisableSystemInterrupt(IN UCHAR Vector,
+HalDisableSystemInterrupt(IN ULONG Vector,
                           IN KIRQL Irql)
 {
     UNIMPLEMENTED;
@@ -319,7 +319,7 @@ HalDisableSystemInterrupt(IN UCHAR Vector,
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(IN KIRQL Irql,
-                        IN UCHAR Vector,
+                        IN ULONG Vector,
                         OUT PKIRQL OldIrql)
 {
     UNIMPLEMENTED;

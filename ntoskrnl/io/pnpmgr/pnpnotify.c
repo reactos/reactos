@@ -259,10 +259,11 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
     NTSTATUS Status;
     PAGED_CODE();
 
-    DPRINT("__FUNCTION__(EventCategory 0x%x, EventCategoryFlags 0x%lx, DriverObject %p) called.\n",
-        EventCategory,
-        EventCategoryFlags,
-        DriverObject);
+    DPRINT("%s(EventCategory 0x%x, EventCategoryFlags 0x%lx, DriverObject %p) called.\n",
+           __FUNCTION__,
+           EventCategory,
+           EventCategoryFlags,
+           DriverObject);
 
     ObReferenceObject(DriverObject);
 
@@ -344,19 +345,18 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
         }
         default:
         {
-            DPRINT1("__FUNCTION__(): unknown EventCategory 0x%x UNIMPLEMENTED\n",
-              EventCategory);
+            DPRINT1("%s: unknown EventCategory 0x%x UNIMPLEMENTED\n",
+                    __FUNCTION__, EventCategory);
             break;
         }
     }
 
     KeAcquireGuardedMutex(&PnpNotifyListLock);
-	InsertHeadList(&PnpNotifyListHead,
+    InsertHeadList(&PnpNotifyListHead,
                    &Entry->PnpNotifyList);
     KeReleaseGuardedMutex(&PnpNotifyListLock);
 
-    DPRINT("IoRegisterPlugPlayNotification() returns NotificationEntry %p\n",
-        Entry);
+    DPRINT("%s returns NotificationEntry %p\n", __FUNCTION__, Entry);
 
     *NotificationEntry = Entry;
 
@@ -374,7 +374,7 @@ IoUnregisterPlugPlayNotification(IN PVOID NotificationEntry)
     PAGED_CODE();
 
     Entry = (PPNP_NOTIFY_ENTRY)NotificationEntry;
-    DPRINT("__FUNCTION__(NotificationEntry %p) called\n", Entry);
+    DPRINT("%s(NotificationEntry %p) called\n", __FUNCTION__, Entry);
 
     KeAcquireGuardedMutex(&PnpNotifyListLock);
     RemoveEntryList(&Entry->PnpNotifyList);

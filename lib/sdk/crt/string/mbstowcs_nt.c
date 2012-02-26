@@ -32,7 +32,7 @@ int mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
 
 	*wchar = wc;
 
-	return mbs - mbarr;
+	return (int)(mbs - mbarr);
 }
 
 /*
@@ -44,7 +44,7 @@ size_t mbstowcs (wchar_t *wcstr, const char *mbstr, size_t count)
 	ULONG Size;
 	ULONG Length;
 
-	Length = strlen (mbstr);
+	Length = (ULONG)strlen (mbstr);
 
 	if (wcstr == NULL)
 	{
@@ -56,7 +56,7 @@ size_t mbstowcs (wchar_t *wcstr, const char *mbstr, size_t count)
 	}
 
 	Status = RtlMultiByteToUnicodeN (wcstr,
-	                                 count * sizeof(WCHAR),
+	                                 (ULONG)count * sizeof(WCHAR),
 	                                 &Size,
 	                                 mbstr,
 	                                 Length);

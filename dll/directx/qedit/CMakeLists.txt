@@ -1,6 +1,4 @@
 
-set_unicode()
-
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -17,7 +15,7 @@ add_library(qedit SHARED
     samplegrabber.c
     ${CMAKE_CURRENT_BINARY_DIR}/qedit.def)
 
-set_module_type(qedit win32dll)
+set_module_type(qedit win32dll UNICODE)
 
 target_link_libraries(qedit
     strmiids

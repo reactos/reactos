@@ -11,18 +11,10 @@
  * The encoding may be small, but it sure isn't simple!
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "dwarf.h"
-#include "pe.h"
-
 #define trace 0
 
 enum

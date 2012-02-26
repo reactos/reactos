@@ -536,9 +536,9 @@ SetAllVars(HWND hwndDlg,
 
     /* Get the handle to the list box with all system vars in it */
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
-    /* first item is 0 */
+    /* First item is 0 */
     iItem = 0;
-    /* set up struct to retreive item */
+    /* Set up struct to retreive item */
     lvi.mask = LVIF_PARAM;
     lvi.iItem = iItem;
 
@@ -608,7 +608,7 @@ SetAllVars(HWND hwndDlg,
             {
                 if (aValueArray[i] != NULL)
                 {
-                    /* Delete the value*/
+                    /* Delete the value */
                     RegDeleteValue(hKey,
                                    aValueArray[i]);
 

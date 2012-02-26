@@ -440,21 +440,21 @@ BOOLEAN  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
   CurrentMode->Length = sizeof(VIDEO_MODE_INFORMATION);
-  CurrentMode->ModeIndex = 12;
+  CurrentMode->ModeIndex = 2;
   CurrentMode->VisScreenWidth = 640;
   CurrentMode->VisScreenHeight = 480;
-  CurrentMode->ScreenStride = 320;
-  CurrentMode->NumberOfPlanes = 1;
-  CurrentMode->BitsPerPlane = 4;
+  CurrentMode->ScreenStride = 80;
+  CurrentMode->NumberOfPlanes = 4;
+  CurrentMode->BitsPerPlane = 1;
   CurrentMode->Frequency = 60;
-  CurrentMode->XMillimeter = 0; /* FIXME */
-  CurrentMode->YMillimeter = 0; /* FIXME */
+  CurrentMode->XMillimeter = 320;
+  CurrentMode->YMillimeter = 240;
   CurrentMode->NumberRedBits =
   CurrentMode->NumberGreenBits =
   CurrentMode->NumberBlueBits = 6;
   CurrentMode->RedMask =
   CurrentMode->GreenMask =
-  CurrentMode->BlueMask = 0; /* FIXME */
+  CurrentMode->BlueMask = 0;
   CurrentMode->VideoMemoryBitmapWidth = 640;
   CurrentMode->VideoMemoryBitmapHeight = 480;
   CurrentMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |

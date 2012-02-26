@@ -333,7 +333,7 @@ KspPinPropertyHandler(
     LPGUID Guid;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Buffer = Irp->UserBuffer;
+    Buffer = Data;
 
     //DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %u\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
@@ -775,7 +775,7 @@ KsHandleSizedListQuery(
     Size = DataItemSize * DataItemsCount + sizeof(KSMULTIPLE_ITEM);
 
     /* get multiple item */
-    Item = (PKSMULTIPLE_ITEM)Irp->UserBuffer;
+    Item = (PKSMULTIPLE_ITEM)Irp->AssociatedIrp.SystemBuffer;
 
     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == 0)
     {

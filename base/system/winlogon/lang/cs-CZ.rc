@@ -2,44 +2,44 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "VypnutÌ poËÌtaËe"
+CAPTION "Vypnut√≠ poƒç√≠taƒçe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "NynÌ m˘ûete bez obav vypnout V·ö poËÌtaË.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Nyn√≠ m≈Ø≈æete V√°≈° poƒç√≠taƒç bez obav vypnout.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
     DEFPUSHBUTTON "&Restartovat", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Chyba uûivatelskÈho rozhranÌ"
+CAPTION "Chyba u≈æivatelsk√©ho rozhran√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dynamick· knihovna %s selhala p¯i nahr·vanÌ.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Kontaktujte spr·vce poËÌtaËe pro nahrazenÌ dynamickÏ knihovny nebo obnovte p˘vodnÌ dynamickou knihovnu.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "Dynamick√° knihovna %s selhala p≈ôi nahr√°van√≠.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Kontaktujte spr√°vce poƒç√≠taƒçe pro nahrazen√≠ dynamickƒõ knihovny nebo obnovte p≈Øvodn√≠ dynamickou knihovnu.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "P¯Ìprava sÌùov˝ch p¯ipojenÌ..."
-    IDS_APPLYINGCOMPUTERSETTINGS "NastavenÌ poËÌtaËe..."
-    IDS_RUNNINGSTARTUPSCRIPTS "SpouötÏcÌ skripty..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "UkonËovacÌ skripty..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "OsobnÌ nastavenÌ..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Skripty po odhl·öenÌ..."
-    IDS_RUNNINGLOGONSCRIPTS "Skripty po p¯ihl·öenÌ..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Nahr·v·nÌ osobnÌho nastavenÌ..."
-    IDS_CLOSINGNETWORKCONNECTIONS "UkonËenÌ sÌùov˝ch p¯ipojenÌ..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS se vypÌn·..."
-    IDS_PREPARETOSTANDBY "P¯Ìprava k p¯echodu do ˙spornÈho reûimu..."
-    IDS_PREPARETOHIBERNATE "P¯Ìprava k p¯echodu do reûimu hibernace..."
-    IDS_SAVEYOURSETTINGS "Ukl·d·nÌ osobnÌho nastavenÌ..."
-    IDS_REACTOSISSTARTINGUP "ReactOS se spouötÌ..."
+    IDS_PREPARENETWORKCONNECTIONS "P≈ô√≠prava s√≠≈•ov√Ωch p≈ôipojen√≠..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Nastaven√≠ poƒç√≠taƒçe..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Spou≈°tƒõc√≠ skripty..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Ukonƒçovac√≠ skripty..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Osobn√≠ nastaven√≠..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Skripty po odhl√°≈°en√≠..."
+    IDS_RUNNINGLOGONSCRIPTS "Skripty po p≈ôihl√°≈°en√≠..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Nahr√°v√°n√≠ osobn√≠ho nastaven√≠..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Ukonƒçen√≠ s√≠≈•ov√Ωch p≈ôipojen√≠..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS se vyp√≠n√°..."
+    IDS_PREPARETOSTANDBY "P≈ô√≠prava k p≈ôechodu do √∫sporn√©ho re≈æimu..."
+    IDS_PREPARETOHIBERNATE "P≈ô√≠prava k p≈ôechodu do re≈æimu hibernace..."
+    IDS_SAVEYOURSETTINGS "Ukl√°d√°n√≠ osobn√≠ho nastaven√≠..."
+    IDS_REACTOSISSTARTINGUP "ReactOS se spou≈°t√≠..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Aplikace Winlogon selhala p¯i aktivaci shellu!"
+    IDS_FAILEDACTIVATEUSERSHELL "Aplikace Winlogon selhala p≈ôi aktivaci u≈æivatelsk√©ho rozhran√≠!"
 END
 

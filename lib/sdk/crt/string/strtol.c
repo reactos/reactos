@@ -54,7 +54,7 @@ strtol(const char *nptr, char **endptr, int base)
    * Set any if any `digits' consumed; make it negative to indicate
    * overflow.
    */
-  cutoff = neg ? -(unsigned long)LONG_MIN : LONG_MAX;
+  cutoff = neg ? ((unsigned long)LONG_MAX+1) : LONG_MAX;
   cutlim = cutoff % (unsigned long)base;
   cutoff /= (unsigned long)base;
   for (acc = 0, any = 0;; c = *s++)
@@ -80,11 +80,11 @@ strtol(const char *nptr, char **endptr, int base)
   {
     acc = neg ? LONG_MIN : LONG_MAX;
 #ifndef _LIBCNT_
-    __set_errno(ERANGE);
+    _set_errno(ERANGE);
 #endif
   }
   else if (neg)
-    acc = -acc;
+    acc = 0-acc;
   if (endptr != 0)
     *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;

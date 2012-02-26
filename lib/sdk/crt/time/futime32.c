@@ -5,5 +5,5 @@
  * PURPOSE:     Implementation of _futime32
  * PROGRAMERS:  Timo Kreuzer
  */
-#define _USE_EXPLITIT_32BIT_TIME
+#define _USE_EXPLICIT_32BIT_TIME
 #include "futime.c"

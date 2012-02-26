@@ -2,8 +2,6 @@
 #include <float.h>
 #include "ieee754/ieee754.h"
 
-typedef int fpclass_t;
-fpclass_t _fpclass(double __d);
 int *_errno(void);
 
 /*
@@ -11,7 +9,7 @@ int *_errno(void);
  */
 double _j0(double num)
 {
-  /* FIXME: errno handling */
+  if (!_finite(num)) *_errno() = EDOM;
   return __ieee754_j0(num);
 }
 
@@ -21,7 +19,12 @@ double _j0(double num)
 double _y0(double num)
 {
   double retval;
-  if (!_finite(num)) *_errno() = EDOM;
+  int fpclass = _fpclass(num);
+
+  if (!_finite(num) || fpclass == _FPCLASS_NN ||
+      fpclass == _FPCLASS_ND || fpclass == _FPCLASS_NZ)
+    *_errno() = EDOM;
+
   retval  = __ieee754_y0(num);
   if (_fpclass(retval) == _FPCLASS_NINF)
   {

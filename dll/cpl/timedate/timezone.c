@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/timezone.c
+ * FILE:        dll/cpl/timedate/timezone.c
  * PURPOSE:     Time Zone property page
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
@@ -331,7 +331,7 @@ GetAutoDaylightInfo(HWND hwnd)
                       &hKey))
         return;
 
-    /* if the call fails (non zero), the reg value isn't available,
+    /* If the call fails (non zero), the reg value isn't available,
      * which means it shouldn't be disabled, so we should check the button.
      */
     if (RegQueryValueExW(hKey,

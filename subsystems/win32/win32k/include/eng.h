@@ -1,7 +1,5 @@
 #pragma once
 
-BOOL APIENTRY  EngIntersectRect (PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);
-VOID FASTCALL EngDeleteXlate (XLATEOBJ *XlateObj);
 BOOL APIENTRY
 IntEngMaskBlt(SURFOBJ *psoDest,
               SURFOBJ *psoMask,

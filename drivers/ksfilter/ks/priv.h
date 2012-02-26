@@ -2,25 +2,22 @@
 
 #define _KSDDK_
 
+#include <stdio.h>
+
 #include <ntifs.h>
-#include <ntddk.h>
 #define NDEBUG
 //#define YDEBUG
 #include <debug.h>
 #include <portcls.h>
-#include <ks.h>
 #include <kcom.h>
 #include <pseh/pseh2.h>
-#include <ntndk.h>
+
+#include <ntimage.h>
+#include <ndk/ldrfuncs.h>
 
 #include "ksfunc.h"
-#include "kstypes.h"
-#include "ksiface.h"
-
-#include "ksmedia.h"
 #include "bdamedia.h"
 #include <swenum.h>
-
 
 #define TAG_DEVICE_HEADER 'KSDH'
 #define REG_PINFLAG_B_MANY 0x4 /* strmif.h */
@@ -51,7 +48,6 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING_EX(PropAllocatorFraming)\
 }
 
-
 #define DEFINE_KSPROPERTY_STREAMSET(PinSet,\
     PropStreamAllocator, PropMasterClock, PropPipeId)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
@@ -59,7 +55,3 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_STREAM_MASTERCLOCK(PropMasterClock, PropMasterClock),\
     DEFINE_KSPROPERTY_ITEM_STREAM_PIPE_ID(PropPipeId, PropPipeId)\
 }
-
-
-
-

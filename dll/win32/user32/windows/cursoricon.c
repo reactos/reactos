@@ -76,8 +76,7 @@ static
 HICON
 CreateCursorIconHandle( PICONINFO IconInfo )
 {
-	HICON hIcon = (HICON)NtUserCallOneParam(0,
-									 ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+	HICON hIcon = NtUserxCreateEmptyCurObject(0);
 	if(!hIcon)
 		return NULL;
 
@@ -242,7 +241,9 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *compr  = 0;
         return 0;
     }
-    else if (header->biSize >= sizeof(BITMAPINFOHEADER))
+    else if (header->biSize == sizeof(BITMAPINFOHEADER) ||
+             header->biSize == sizeof(BITMAPV4HEADER) ||
+             header->biSize == sizeof(BITMAPV5HEADER))
     {
         *width  = header->biWidth;
         *height = header->biHeight;
@@ -884,7 +885,8 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
 {
     HANDLE handle = 0;
     HICON hIcon = 0;
-    HRSRC hRsrc, hGroupRsrc;
+    HRSRC hRsrc;
+    //HRSRC hGroupRsrc;
     CURSORICONDIR *dir;
     CURSORICONDIRENTRY *dirEntry;
     LPBYTE bits;
@@ -907,7 +909,7 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
     if (!(hRsrc = FindResourceW( hInstance, name,
                                  (LPWSTR)(fCursor ? RT_GROUP_CURSOR : RT_GROUP_ICON) )))
         return 0;
-    hGroupRsrc = hRsrc;
+    //hGroupRsrc = hRsrc;
 
     /* Find the best entry in the directory */
 
@@ -1239,24 +1241,11 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 }
 
 /***********************************************************************
- *		SetCursor (USER32.@)
- *
- * Set the cursor shape.
- *
- * RETURNS
- *	A handle to the previous cursor shape.
- */
-HCURSOR WINAPI /*DECLSPEC_HOTPATCH*/ SetCursor( HCURSOR hCursor /* [in] Handle of cursor to show */ )
-{
-    return NtUserSetCursor(hCursor);
-}
-
-/***********************************************************************
  *		ShowCursor (USER32.@)
  */
 INT WINAPI /*DECLSPEC_HOTPATCH*/ ShowCursor( BOOL bShow )
 {
-    return NtUserShowCursor(bShow);
+    return NtUserxShowCursor(bShow);
 }
 
 /***********************************************************************
@@ -1270,24 +1259,6 @@ HCURSOR WINAPI GetCursor(void)
         return ci.hCursor;
     else
         return (HCURSOR)0;
-}
-
-
-/***********************************************************************
- *		ClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ ClipCursor( const RECT *rect )
-{
-    return NtUserClipCursor((RECT *)rect);
-}
-
-
-/***********************************************************************
- *		GetClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ GetClipCursor( RECT *rect )
-{
-    return NtUserGetClipCursor(rect);
 }
 
 
@@ -1482,31 +1453,31 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         // the size of the mask bitmap always determines the icon size!
         width = bmpAnd.bmWidth;
         height = bmpAnd.bmHeight;
-        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
+        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1 )
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
-			if(!color)
-			{
-				ERR("Unable to create color bitmap!\n");
-				return NULL;
-			}
+            if(!color)
+            {
+                ERR("Unable to create color bitmap!\n");
+		return NULL;
+            }
             mask = CreateBitmap( width, height, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				DeleteObject(color);
-				return NULL;
-			}
+	    if(!mask)
+	    {
+               ERR("Unable to create mask bitmap!\n");
+               DeleteObject(color);
+               return NULL;
+	    }
         }
         else 
-		{
-			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				return NULL;
-			}
-		}
+	{
+           mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+           if(!mask)
+           {
+              ERR("Unable to create mask bitmap!\n");
+              return NULL;
+           }
+        }
     }
     else
     {
@@ -1734,13 +1705,13 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
     else
         new_height = height;
 
-    if(bm_type == 0)
+    if (bm_type == 0)
     {
         BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)&scaled_info->bmiHeader;
         core->bcWidth = new_width;
         core->bcHeight = new_height;
     }
-    else
+    else if (bm_type == 1)
     {
         /* Some sanity checks for BITMAPINFO (not applicable to BITMAPCOREINFO) */
         if (info->bmiHeader.biHeight > 65535 || info->bmiHeader.biWidth > 65535) {
@@ -1751,6 +1722,8 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
         scaled_info->bmiHeader.biWidth = new_width;
         scaled_info->bmiHeader.biHeight = new_height;
     }
+    else
+        goto end;
 
     if (new_height < 0) new_height = -new_height;
 
@@ -1800,16 +1773,18 @@ HANDLE WINAPI LoadImageA( HINSTANCE hinst, LPCSTR name, UINT type,
     if (IS_INTRESOURCE(name))
         return LoadImageW(hinst, (LPCWSTR)name, type, desiredx, desiredy, loadflags);
 
-    __TRY {
+    _SEH2_TRY
+    {
         DWORD len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
         u_name = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
         MultiByteToWideChar( CP_ACP, 0, name, -1, u_name, len );
     }
-    __EXCEPT_PAGE_FAULT {
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
+        _SEH2_YIELD(return 0);
     }
-    __ENDTRY
+    _SEH2_END
     res = LoadImageW(hinst, u_name, type, desiredx, desiredy, loadflags);
     HeapFree(GetProcessHeap(), 0, u_name);
     return res;
@@ -2133,10 +2108,9 @@ CursorIconToCursor(HICON hIcon,
  */
 BOOL
 WINAPI
-SetCursorPos(int X,
-             int Y)
+SetCursorPos(int X, int Y)
 {
-    return NtUserSetCursorPos(X,Y);
+    return NtUserxSetCursorPos(X,Y);
 }
 
 /*
@@ -2154,7 +2128,7 @@ GetCursorPos(LPPOINT lpPoint)
         return FALSE;
     }
 
-    res = NtUserGetCursorPos(lpPoint);
+    res = NtUserxGetCursorPos(lpPoint);
 
     return res;
 }
@@ -2201,6 +2175,12 @@ BOOL get_icon_size(HICON hIcon, SIZE *size)
     {
         size->cy /= 2;
     }
+    else
+    {
+        DeleteObject(info.hbmColor);
+    }
+
+    DeleteObject(info.hbmMask);
 
     return TRUE;
 }

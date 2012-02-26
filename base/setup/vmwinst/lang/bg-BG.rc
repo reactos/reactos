@@ -2,24 +2,24 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "РеактОС установи, че сте го пуснали във VMware(r).", -1, 117, 8, 140, 24
-  LTEXT "Ако искате да сложите SVGA водача (driver) VMware(r), натиснете „Напред”, в противен случай натиснете „Отказ”.", -1, 117, 140, 140, 24
+  LTEXT "Р РµР°РєС‚РћРЎ СѓСЃС‚Р°РЅРѕРІРё, С‡Рµ СЃС‚Рµ РіРѕ РїСѓСЃРЅР°Р»Рё РІСЉРІ VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "РђРєРѕ РёСЃРєР°С‚Рµ РґР° СЃР»РѕР¶РёС‚Рµ SVGA РІРѕРґР°С‡Р° (driver) VMware(r), РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂќ, РІ РїСЂРѕС‚РёРІРµРЅ СЃР»СѓС‡Р°Р№ РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРћС‚РєР°Р·вЂќ.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач (driver)"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡ (driver)"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "РеактОС идва без SVGA водача (driver) VMware(r).\n\nЗатова, отидете във „VM” в менюто на работната ви установка на VMware(r) и изберете „Сложи VMware средствата...”\n\n\nНатиснете „Напред”, за да продължите или „Отказ”, за да прекратите слагането на SVGA водач.",-1,25,25,225,85
+  LTEXT "Р РµР°РєС‚РћРЎ РёРґРІР° Р±РµР· SVGA РІРѕРґР°С‡Р° (driver) VMware(r).\n\nР—Р°С‚РѕРІР°, РѕС‚РёРґРµС‚Рµ РІСЉРІ вЂћVMвЂќ РІ РјРµРЅСЋС‚Рѕ РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РІРё СѓСЃС‚Р°РЅРѕРІРєР° РЅР° VMware(r) Рё РёР·Р±РµСЂРµС‚Рµ вЂћРЎР»РѕР¶Рё VMware СЃСЂРµРґСЃС‚РІР°С‚Р°...вЂќ\n\n\nРќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂќ, Р·Р° РґР° РїСЂРѕРґСЉР»Р¶РёС‚Рµ РёР»Рё вЂћРћС‚РєР°Р·вЂќ, Р·Р° РґР° РїСЂРµРєСЂР°С‚РёС‚Рµ СЃР»Р°РіР°РЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач (driver)"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡ (driver)"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -28,10 +28,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач (driver)"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡ (driver)"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Водачът (driver) VMware(r) SVGA бе сложен успешно. Изберете разделителна способност на екрана:",-1,25,5,225,20
+  LTEXT "Р’РѕРґР°С‡СЉС‚ (driver) VMware(r) SVGA Р±Рµ СЃР»РѕР¶РµРЅ СѓСЃРїРµС€РЅРѕ. РР·Р±РµСЂРµС‚Рµ СЂР°Р·РґРµР»РёС‚РµР»РЅР° СЃРїРѕСЃРѕР±РЅРѕСЃС‚ РЅР° РµРєСЂР°РЅР°:",-1,25,5,225,20
   PUSHBUTTON "640x480", 540, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -43,89 +43,89 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "Изберете качество на цвета:", -1, 25, 93, 225, 12
+  LTEXT "РР·Р±РµСЂРµС‚Рµ РєР°С‡РµСЃС‚РІРѕ РЅР° С†РІРµС‚Р°:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач (driver)"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡ (driver)"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Слагачът на РеактОС не успя да сложи водача VMware(r) SVGA.\n\n\nНатиснете „Приключи” за да продължите слагането.",-1,25,25,225,85
+  LTEXT "РЎР»Р°РіР°С‡СЉС‚ РЅР° Р РµР°РєС‚РћРЎ РЅРµ СѓСЃРїСЏ РґР° СЃР»РѕР¶Рё РІРѕРґР°С‡Р° VMware(r) SVGA.\n\n\nРќР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РёвЂќ Р·Р° РґР° РїСЂРѕРґСЉР»Р¶РёС‚Рµ СЃР»Р°РіР°РЅРµС‚Рѕ.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач (driver)"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡ (driver)"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "SVGA водачът VMware(r) вече е сложен.\n\nИзберете от следните възможности:",-1,25,5,225,30
-  PUSHBUTTON "Настройки на екрана", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Използване на друг графичен водач (driver)", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Премахване на SVGA водача VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Натиснете „Напред”, за да продължите или „Отказ”, за да излезете от съветника.", -1, 25, 93, 225, 19
+  LTEXT "SVGA РІРѕРґР°С‡СЉС‚ VMware(r) РІРµС‡Рµ Рµ СЃР»РѕР¶РµРЅ.\n\nРР·Р±РµСЂРµС‚Рµ РѕС‚ СЃР»РµРґРЅРёС‚Рµ РІСЉР·РјРѕР¶РЅРѕСЃС‚Рё:",-1,25,5,225,30
+  PUSHBUTTON "РќР°СЃС‚СЂРѕР№РєРё РЅР° РµРєСЂР°РЅР°", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "РР·РїРѕР»Р·РІР°РЅРµ РЅР° РґСЂСѓРі РіСЂР°С„РёС‡РµРЅ РІРѕРґР°С‡ (driver)", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "РџСЂРµРјР°С…РІР°РЅРµ РЅР° SVGA РІРѕРґР°С‡Р° VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂќ, Р·Р° РґР° РїСЂРѕРґСЉР»Р¶РёС‚Рµ РёР»Рё вЂћРћС‚РєР°Р·вЂќ, Р·Р° РґР° РёР·Р»РµР·РµС‚Рµ РѕС‚ СЃСЉРІРµС‚РЅРёРєР°.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Изберете графичния водач, който искате да използвате:",-1,25,25,225,15
+  LTEXT "РР·Р±РµСЂРµС‚Рµ РіСЂР°С„РёС‡РЅРёСЏ РІРѕРґР°С‡, РєРѕР№С‚Рѕ РёСЃРєР°С‚Рµ РґР° РёР·РїРѕР»Р·РІР°С‚Рµ:",-1,25,25,225,15
   PUSHBUTTON "VGA ", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "VBE водач (SVGA) на РеактОС", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Натиснете „Край”, за да приключите действието или „Отказ”, за да излезете без да прилагате промени.", -1, 25, 93, 225, 20
+  PUSHBUTTON "VBE РІРѕРґР°С‡ (SVGA) РЅР° Р РµР°РєС‚РћРЎ", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРљСЂР°Р№вЂќ, Р·Р° РґР° РїСЂРёРєР»СЋС‡РёС‚Рµ РґРµР№СЃС‚РІРёРµС‚Рѕ РёР»Рё вЂћРћС‚РєР°Р·вЂќ, Р·Р° РґР° РёР·Р»РµР·РµС‚Рµ Р±РµР· РґР° РїСЂРёР»Р°РіР°С‚Рµ РїСЂРѕРјРµРЅРё.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Слагане на видео водач"
+CAPTION "РЎР»Р°РіР°РЅРµ РЅР° РІРёРґРµРѕ РІРѕРґР°С‡"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Настройката на РеактОС ще премахне SVGA водача VMware(r)!!!\n\n\nНатиснете „Приключи”, за да премахнете водача или „Отказ”, за да оставите нещата както са си.",-1,25,25,225,85
+  LTEXT "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ С‰Рµ РїСЂРµРјР°С…РЅРµ SVGA РІРѕРґР°С‡Р° VMware(r)!!!\n\n\nРќР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РёвЂќ, Р·Р° РґР° РїСЂРµРјР°С…РЅРµС‚Рµ РІРѕРґР°С‡Р° РёР»Рё вЂћРћС‚РєР°Р·вЂќ, Р·Р° РґР° РѕСЃС‚Р°РІРёС‚Рµ РЅРµС‰Р°С‚Р° РєР°РєС‚Рѕ СЃР° СЃРё.",-1,25,25,225,85
 END
 
 STRINGTABLE
 BEGIN
-  IDS_WIZARD_NAME "Открит е VMware(r)"
-  IDS_FAILEDTOLOCATEDRIVERS "Настройката на РеактОС не успя да открие нужните файлове.\nПроверете дали е поставен компактният диск VMware(r) средствата."
-  IDS_FAILEDTOCOPYFILES "Настройката на РеактОС не успя да открие нужните файлове.\nПроверете дали е поставен компактният диск VMware(r) средствата.\n"
-  IDS_FAILEDTOACTIVATEDRIVER "Неуспешно задействане на SVGA водача VMware(r)!"
-  IDS_FAILEDTOSELVGADRIVER "Неуспешно задействане на VGA водача на ReactOS!"
-  IDS_FAILEDTOSELVBEDRIVER "Неуспешно задействане на VGA водача на ReactOS!"
-  IDS_UNINSTNOTICE "Файловете на SVGA водача VMware(r) все още не са изтрити.\nИтрийте ги ръчно след презапускане на уредбата."
-  IDS_FAILEDTOADDREGENTRIES "Неуспех при създаване на попълнения в регистъра за SVGA водача VMware(r)!"
+  IDS_WIZARD_NAME "РћС‚РєСЂРёС‚ Рµ VMware(r)"
+  IDS_FAILEDTOLOCATEDRIVERS "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ РЅРµ СѓСЃРїСЏ РґР° РѕС‚РєСЂРёРµ РЅСѓР¶РЅРёС‚Рµ С„Р°Р№Р»РѕРІРµ.\nРџСЂРѕРІРµСЂРµС‚Рµ РґР°Р»Рё Рµ РїРѕСЃС‚Р°РІРµРЅ РєРѕРјРїР°РєС‚РЅРёСЏС‚ РґРёСЃРє VMware(r) СЃСЂРµРґСЃС‚РІР°С‚Р°."
+  IDS_FAILEDTOCOPYFILES "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ РЅРµ СѓСЃРїСЏ РґР° РѕС‚РєСЂРёРµ РЅСѓР¶РЅРёС‚Рµ С„Р°Р№Р»РѕРІРµ.\nРџСЂРѕРІРµСЂРµС‚Рµ РґР°Р»Рё Рµ РїРѕСЃС‚Р°РІРµРЅ РєРѕРјРїР°РєС‚РЅРёСЏС‚ РґРёСЃРє VMware(r) СЃСЂРµРґСЃС‚РІР°С‚Р°.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "РќРµСѓСЃРїРµС€РЅРѕ Р·Р°РґРµР№СЃС‚РІР°РЅРµ РЅР° SVGA РІРѕРґР°С‡Р° VMware(r)!"
+  IDS_FAILEDTOSELVGADRIVER "РќРµСѓСЃРїРµС€РЅРѕ Р·Р°РґРµР№СЃС‚РІР°РЅРµ РЅР° VGA РІРѕРґР°С‡Р° РЅР° ReactOS!"
+  IDS_FAILEDTOSELVBEDRIVER "РќРµСѓСЃРїРµС€РЅРѕ Р·Р°РґРµР№СЃС‚РІР°РЅРµ РЅР° VGA РІРѕРґР°С‡Р° РЅР° ReactOS!"
+  IDS_UNINSTNOTICE "Р¤Р°Р№Р»РѕРІРµС‚Рµ РЅР° SVGA РІРѕРґР°С‡Р° VMware(r) РІСЃРµ РѕС‰Рµ РЅРµ СЃР° РёР·С‚СЂРёС‚Рё.\nРС‚СЂРёР№С‚Рµ РіРё СЂСЉС‡РЅРѕ СЃР»РµРґ РїСЂРµР·Р°РїСѓСЃРєР°РЅРµ РЅР° СѓСЂРµРґР±Р°С‚Р°."
+  IDS_FAILEDTOADDREGENTRIES "РќРµСѓСЃРїРµС… РїСЂРё СЃСЉР·РґР°РІР°РЅРµ РЅР° РїРѕРїСЉР»РЅРµРЅРёСЏ РІ СЂРµРіРёСЃС‚СЉСЂР° Р·Р° SVGA РІРѕРґР°С‡Р° VMware(r)!"
 END
 
 STRINGTABLE
 BEGIN
-  10001 "Най- ниско (8Б/Т)"
-  10002 "Средно (16Б/Т)"
-  10003 "Най- високо (32Б/Т)"
+  10001 "РќР°Р№- РЅРёСЃРєРѕ (8Р‘/Рў)"
+  10002 "РЎСЂРµРґРЅРѕ (16Р‘/Рў)"
+  10003 "РќР°Р№- РІРёСЃРѕРєРѕ (32Р‘/Рў)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_SEARCHINGFORCDROM "Търсене на КД с VMware(r) Tools..."
-  IDS_COPYINGFILES      "Запис на файловете..."
-  IDS_ENABLINGDRIVER    "Включване на SVGA водач VMware(r)..."
+  IDS_SEARCHINGFORCDROM "РўСЉСЂСЃРµРЅРµ РЅР° РљР” СЃ VMware(r) Tools..."
+  IDS_COPYINGFILES      "Р—Р°РїРёСЃ РЅР° С„Р°Р№Р»РѕРІРµС‚Рµ..."
+  IDS_ENABLINGDRIVER    "Р’РєР»СЋС‡РІР°РЅРµ РЅР° SVGA РІРѕРґР°С‡ VMware(r)..."
 END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE     	"Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Поставете КД с VMware tool."
-  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Търсене и презапис на SVGA водач VMware (r)."
-  IDD_CONFIGTITLE     			"Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_CONFIGSUBTITLE     		"Изберете разделителна способност."
-  IDD_INSTALLATION_FAILEDTITLE     	"Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "Неуспешно поставянето водач VMware (r) SVGA."
-  IDD_CHOOSEACTIONTITLE    	        "Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_CHOOSEACTIONSUBTITLE              "Изберете какво да направите."
-  IDD_SELECTDRIVERTITLE                 "Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_SELECTDRIVERSUBTITLE              "Избор на водач."
-  IDD_DOUNINSTALLTITLE                  "Вълшебник за поставянето на SVGA водач VMware (r)"
-  IDD_DOUNINSTALLSUBTITLE               "Премахване на водача."
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "РџРѕСЃС‚Р°РІРµС‚Рµ РљР” СЃ VMware tool."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "РўСЉСЂСЃРµРЅРµ Рё РїСЂРµР·Р°РїРёСЃ РЅР° SVGA РІРѕРґР°С‡ VMware (r)."
+  IDD_CONFIGTITLE     			"Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_CONFIGSUBTITLE     		"РР·Р±РµСЂРµС‚Рµ СЂР°Р·РґРµР»РёС‚РµР»РЅР° СЃРїРѕСЃРѕР±РЅРѕСЃС‚."
+  IDD_INSTALLATION_FAILEDTITLE     	"Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "РќРµСѓСЃРїРµС€РЅРѕ РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РІРѕРґР°С‡ VMware (r) SVGA."
+  IDD_CHOOSEACTIONTITLE    	        "Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_CHOOSEACTIONSUBTITLE              "РР·Р±РµСЂРµС‚Рµ РєР°РєРІРѕ РґР° РЅР°РїСЂР°РІРёС‚Рµ."
+  IDD_SELECTDRIVERTITLE                 "Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_SELECTDRIVERSUBTITLE              "РР·Р±РѕСЂ РЅР° РІРѕРґР°С‡."
+  IDD_DOUNINSTALLTITLE                  "Р’СЉР»С€РµР±РЅРёРє Р·Р° РїРѕСЃС‚Р°РІСЏРЅРµС‚Рѕ РЅР° SVGA РІРѕРґР°С‡ VMware (r)"
+  IDD_DOUNINSTALLSUBTITLE               "РџСЂРµРјР°С…РІР°РЅРµ РЅР° РІРѕРґР°С‡Р°."
 END

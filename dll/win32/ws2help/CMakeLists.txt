@@ -12,8 +12,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ws2help.def)
 
 add_library(ws2help SHARED ${SOURCE})
-
 set_module_type(ws2help win32dll)
 add_importlibs(ws2help advapi32 ws2_32 msvcrt kernel32 ntdll)
+add_pch(ws2help precomp.h)
 add_cd_file(TARGET ws2help DESTINATION reactos/system32 FOR all)
-add_importlib_target(ws2help.spec)
+add_importlib_target(ws2help.spec ws2help.dll)

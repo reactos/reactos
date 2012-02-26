@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -227,7 +227,7 @@ AcpiFindRootPointer (
     if (!TablePtr)
     {
         ACPI_ERROR ((AE_INFO,
-            "Could not map memory at %8.8X for length %X",
+            "Could not map memory at 0x%8.8X for length %u",
             ACPI_EBDA_PTR_LOCATION, ACPI_EBDA_PTR_LENGTH));
 
         return_ACPI_STATUS (AE_NO_MEMORY);
@@ -254,7 +254,7 @@ AcpiFindRootPointer (
         if (!TablePtr)
         {
             ACPI_ERROR ((AE_INFO,
-                "Could not map memory at %8.8X for length %X",
+                "Could not map memory at 0x%8.8X for length %u",
                 PhysicalAddress, ACPI_EBDA_WINDOW_SIZE));
 
             return_ACPI_STATUS (AE_NO_MEMORY);
@@ -284,7 +284,7 @@ AcpiFindRootPointer (
     if (!TablePtr)
     {
         ACPI_ERROR ((AE_INFO,
-            "Could not map memory at %8.8X for length %X",
+            "Could not map memory at 0x%8.8X for length %u",
             ACPI_HI_RSDP_WINDOW_BASE, ACPI_HI_RSDP_WINDOW_SIZE));
 
         return_ACPI_STATUS (AE_NO_MEMORY);

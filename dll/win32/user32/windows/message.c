@@ -88,6 +88,22 @@ static inline int is_pointer_message( UINT message )
         return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
 
+#undef SET
+
+/* check whether a combobox expects strings or ids in CB_ADDSTRING/CB_INSERTSTRING */
+static BOOL FASTCALL combobox_has_strings( HWND hwnd )
+{
+    DWORD style = GetWindowLongA( hwnd, GWL_STYLE );
+    return (!(style & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) || (style & CBS_HASSTRINGS));
+}
+
+/* check whether a listbox expects strings or ids in LB_ADDSTRING/LB_INSERTSTRING */
+static BOOL FASTCALL listbox_has_strings( HWND hwnd )
+{
+    DWORD style = GetWindowLongA( hwnd, GWL_STYLE );
+    return (!(style & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) || (style & LBS_HASSTRINGS));
+}
+
 /* DDE message exchange
  *
  * - Session initialization
@@ -232,36 +248,24 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
         {
           PKMDDELPARAM DdeLparam;
           DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDELPARAM));
-          if (NULL == DdeLparam)
-            {
-              return FALSE;
-            }
-          if (Posted)
-            {
-              DdeLparam->Packed = TRUE;
-              if (! UnpackDDElParam(UMMsg->message, UMMsg->lParam,
-                                    &DdeLparam->Value.Packed.uiLo,
-                                    &DdeLparam->Value.Packed.uiHi))
-                {
-                  return FALSE;
-                }
-              if (0 != HIWORD(DdeLparam->Value.Packed.uiHi))
-                {
-                  /* uiHi should contain a hMem from WM_DDE_EXECUTE */
-                  HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
-                  if (NULL != h)
-                    {
-                      GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
-                      DdeLparam->Value.Packed.uiHi = (UINT_PTR) h;
-                    }
-                }
-              FreeDDElParam(UMMsg->message, UMMsg->lParam);
-            }
-          else
-            {
-              DdeLparam->Packed = FALSE;
-              DdeLparam->Value.Unpacked = UMMsg->lParam;
-            }
+          if (!DdeLparam ||
+              !UnpackDDElParam( UMMsg->message, UMMsg->lParam, &DdeLparam->uiLo, &DdeLparam->uiHi))
+             return FALSE;
+         /*
+             If this is a reply to WM_DDE_EXECUTE then
+             uiHi will contain a hMem, hence >= 0x10000.
+             Otherwise, it will be be an atom, a 16-bit value.
+          */
+          if (!IS_ATOM(DdeLparam->uiHi))
+          {
+             HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
+             if (h)
+             {
+                GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
+                DdeLparam->uiHi = (UINT_PTR) h;
+             }
+          }
+          FreeDDElParam(UMMsg->message, UMMsg->lParam);
           KMMsg->lParam = (LPARAM) DdeLparam;
         }
         break;
@@ -274,17 +278,17 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
 
           Size = GlobalSize((HGLOBAL) UMMsg->lParam);
           Data = GlobalLock((HGLOBAL) UMMsg->lParam);
-          if (NULL == Data)
-            {
-              SetLastError(ERROR_INVALID_HANDLE);
-              return FALSE;
-            }
+          if (!Data)
+          {
+             SetLastError(ERROR_INVALID_HANDLE);
+             return FALSE;
+          }
           KMDdeExecuteData = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDEEXECUTEDATA) + Size);
-          if (NULL == KMDdeExecuteData)
-            {
-              SetLastError(ERROR_OUTOFMEMORY);
-              return FALSE;
-            }
+          if (!KMDdeExecuteData)
+          {
+             SetLastError(ERROR_OUTOFMEMORY);
+             return FALSE;
+          }
           KMDdeExecuteData->Sender = (HWND) UMMsg->wParam;
           KMDdeExecuteData->ClientMem = (HGLOBAL) UMMsg->lParam;
           memcpy((PVOID) (KMDdeExecuteData + 1), Data, Size);
@@ -301,11 +305,11 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
 
           pKMCopyData = HeapAlloc(GetProcessHeap(), 0,
                                   sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
-          if (pKMCopyData == NULL)
-            {
+          if (!pKMCopyData)
+          {
               SetLastError(ERROR_OUTOFMEMORY);
               return FALSE;
-            }
+          }
 
           pKMCopyData->dwData = pUMCopyData->dwData;
           pKMCopyData->cbData = pUMCopyData->cbData;
@@ -374,16 +378,7 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
       case WM_DDE_ACK:
         {
           PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
-          if (DdeLparam->Packed)
-            {
-              UMMsg->lParam = PackDDElParam(KMMsg->message,
-                                            DdeLparam->Value.Packed.uiLo,
-                                            DdeLparam->Value.Packed.uiHi);
-            }
-          else
-            {
-              UMMsg->lParam = DdeLparam->Value.Unpacked;
-            }
+          UMMsg->lParam = PackDDElParam(KMMsg->message, DdeLparam->uiLo, DdeLparam->uiHi);
         }
         break;
 
@@ -395,23 +390,23 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
 
           KMDdeExecuteData = (PKMDDEEXECUTEDATA) KMMsg->lParam;
           GlobalData = GlobalAlloc(GMEM_MOVEABLE, KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
-          if (NULL == GlobalData)
-            {
-              return FALSE;
-            }
+          if (!GlobalData)
+          {
+             return FALSE;
+          }
           Data = GlobalLock(GlobalData);
-          if (NULL == Data)
-            {
-              GlobalFree(GlobalData);
-              return FALSE;
-            }
+          if (!Data)
+          {
+             GlobalFree(GlobalData);
+             return FALSE;
+          }
           memcpy(Data, (PVOID) (KMDdeExecuteData + 1), KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
           GlobalUnlock(GlobalData);
-          if (! DdeAddPair(KMDdeExecuteData->ClientMem, GlobalData))
-            {
-              GlobalFree(GlobalData);
-              return FALSE;
-            }
+          if (!DdeAddPair(KMDdeExecuteData->ClientMem, GlobalData))
+          {
+             GlobalFree(GlobalData);
+             return FALSE;
+          }
           UMMsg->wParam = (WPARAM) KMDdeExecuteData->Sender;
           UMMsg->lParam = (LPARAM) GlobalData;
         }
@@ -503,9 +498,7 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & LBS_HASSTRINGS))
+        if (listbox_has_strings(AnsiMsg->hwnd))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
             UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
@@ -519,9 +512,7 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & CBS_HASSTRINGS))
+        if (combobox_has_strings(AnsiMsg->hwnd))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
             UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
@@ -598,7 +589,6 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
   return TRUE;
 }
 
-
 static BOOL FASTCALL
 MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
@@ -636,9 +626,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & LBS_HASSTRINGS))
+        if (listbox_has_strings(AnsiMsg->hwnd))
           {
             RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
             RtlFreeUnicodeString(&UnicodeString);
@@ -652,9 +640,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & CBS_HASSTRINGS))
+        if (combobox_has_strings(AnsiMsg->hwnd))
           {
             RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
             RtlFreeUnicodeString(&UnicodeString);
@@ -705,10 +691,10 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
   return(TRUE);
 }
 
-
 static BOOL FASTCALL
 MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
 {
+  LRESULT Size;
   switch (AnsiMsg->message)
     {
     case WM_GETTEXT:
@@ -717,11 +703,40 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
         LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
         LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
         if (UnicodeMsg->wParam > 0 &&
-            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
-            AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
-          {
+            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
+        {
             AnsiBuffer[UnicodeMsg->wParam - 1] = 0;
-          }
+        }
+        break;
+      }
+    case LB_GETTEXT:
+      {
+        LPWSTR Buffer = (LPWSTR) UnicodeMsg->lParam;
+        LPSTR AnsiBuffer = (LPSTR) AnsiMsg->lParam;
+        if (!listbox_has_strings( UnicodeMsg->hwnd )) break;
+        Size = SendMessageW( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == LB_ERR) break;
+        Size = Size + 1;
+        if (Size > 1 &&
+            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
+        {
+            AnsiBuffer[Size - 1] = 0;
+        }        
+        break;
+      }
+    case CB_GETLBTEXT:
+      {
+        LPWSTR Buffer = (LPWSTR) UnicodeMsg->lParam;
+        LPSTR AnsiBuffer = (LPSTR) AnsiMsg->lParam;
+        if (!combobox_has_strings( UnicodeMsg->hwnd )) break;
+        Size = SendMessageW( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == CB_ERR) break;
+        Size = Size + 1;
+        if (Size > 1 &&
+            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
+        {
+            AnsiBuffer[Size - 1] = 0;
+        }        
         break;
       }
     }
@@ -730,7 +745,6 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
 
   return TRUE;
 }
-
 
 static BOOL FASTCALL
 MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
@@ -828,9 +842,7 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-              (dwStyle & LBS_HASSTRINGS))
+          if (listbox_has_strings(AnsiMsg->hwnd))
             {
               RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
               if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
@@ -850,9 +862,7 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case CB_FINDSTRINGEXACT:
       case CB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-               (dwStyle & CBS_HASSTRINGS))
+          if (combobox_has_strings(AnsiMsg->hwnd))
             {
               RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
               if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
@@ -885,6 +895,7 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
                                                             &UnicodeString,
                                                             TRUE)))
                 {
+                  HeapFree(GetProcessHeap(), 0, cs);
                   return FALSE;
                 }
               cs->szClass = AnsiString.Buffer;
@@ -900,6 +911,8 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
                   RtlInitAnsiString(&AnsiString, cs->szClass);
                   RtlFreeAnsiString(&AnsiString);
                 }
+
+              HeapFree(GetProcessHeap(), 0, cs);
               return FALSE;
             }
           cs->szTitle = AnsiString.Buffer;
@@ -911,7 +924,6 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
 
   return TRUE;
 }
-
 
 static BOOL FASTCALL
 MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
@@ -958,9 +970,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-              (dwStyle & LBS_HASSTRINGS))
+          if (listbox_has_strings(AnsiMsg->hwnd))
             {
               RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
               RtlFreeAnsiString(&AnsiString);
@@ -1003,10 +1013,10 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
   return TRUE;
 }
 
-
 static BOOL FASTCALL
 MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
 {
+  LRESULT Size;
   switch (UnicodeMsg->message)
     {
     case WM_GETTEXT:
@@ -1016,9 +1026,39 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
         LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
         if (0 < AnsiMsg->wParam &&
             ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, UnicodeMsg->wParam))
-          {
+        {
             UBuffer[UnicodeMsg->wParam - 1] = L'\0';
-          }
+        }
+        break;
+      }
+    case LB_GETTEXT:
+      {
+        LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
+        LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
+        if (!listbox_has_strings( UnicodeMsg->hwnd )) break;
+        Size = SendMessageW( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == LB_ERR) break;
+        Size = Size + 1;
+        if (1 < Size &&
+            ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
+        {
+            UBuffer[Size - 1] = L'\0';
+        }        
+        break;
+      }
+    case CB_GETLBTEXT:
+      {
+        LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
+        LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
+        if (!combobox_has_strings( UnicodeMsg->hwnd )) break;
+        Size = SendMessageW( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == CB_ERR) break;
+        Size = Size + 1;
+        if (1 < Size &&
+            ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
+        {
+            UBuffer[Size - 1] = L'\0';
+        }        
         break;
       }
     }
@@ -1028,6 +1068,97 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
   return TRUE;
 }
 
+/***********************************************************************
+ *		map_wparam_AtoW
+ *
+ * Convert the wparam of an ASCII message to Unicode.
+ */
+static WPARAM
+map_wparam_AtoW( UINT message, WPARAM wparam )
+{
+    char ch[2];
+    WCHAR wch[2];
+
+    wch[0] = wch[1] = 0;
+    switch(message)
+    {
+    case WM_CHAR:
+        /* WM_CHAR is magic: a DBCS char can be sent/posted as two consecutive WM_CHAR
+         * messages, in which case the first char is stored, and the conversion
+         * to Unicode only takes place once the second char is sent/posted.
+         */
+#if 0
+        if (mapping != WMCHAR_MAP_NOMAPPING) // NlsMbCodePageTag
+        {
+            PCLIENTINFO pci = GetWin32ClientInfo();
+
+            struct wm_char_mapping_data *data = get_user_thread_info()->wmchar_data;
+
+            BYTE low = LOBYTE(wparam);
+
+            if (HIBYTE(wparam))
+            {
+                ch[0] = low;
+                ch[1] = HIBYTE(wparam);
+                RtlMultiByteToUnicodeN( wch, sizeof(wch), NULL, ch, 2 );
+                TRACE( "map %02x,%02x -> %04x mapping %u\n", (BYTE)ch[0], (BYTE)ch[1], wch[0], mapping );
+                if (data) data->lead_byte[mapping] = 0;
+            }
+            else if (data && data->lead_byte[mapping])
+            {
+                ch[0] = data->lead_byte[mapping];
+                ch[1] = low;
+                RtlMultiByteToUnicodeN( wch, sizeof(wch), NULL, ch, 2 );
+                TRACE( "map stored %02x,%02x -> %04x mapping %u\n", (BYTE)ch[0], (BYTE)ch[1], wch[0], mapping );
+                data->lead_byte[mapping] = 0;
+            }
+            else if (!IsDBCSLeadByte( low ))
+            {
+                ch[0] = low;
+                RtlMultiByteToUnicodeN( wch, sizeof(wch), NULL, ch, 1 );
+                TRACE( "map %02x -> %04x\n", (BYTE)ch[0], wch[0] );
+                if (data) data->lead_byte[mapping] = 0;
+            }
+            else  /* store it and wait for trail byte */
+            {
+                if (!data)
+                {
+                    if (!(data = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*data) )))
+                        return FALSE;
+                    get_user_thread_info()->wmchar_data = data;
+                }
+                TRACE( "storing lead byte %02x mapping %u\n", low, mapping );
+                data->lead_byte[mapping] = low;
+                return FALSE;
+            }
+            wparam = MAKEWPARAM(wch[0], wch[1]);
+            break;
+        }
+#endif
+        /* else fall through */
+    case WM_CHARTOITEM:
+    case EM_SETPASSWORDCHAR:
+    case WM_DEADCHAR:
+    case WM_SYSCHAR:
+    case WM_SYSDEADCHAR:
+    case WM_MENUCHAR:
+        ch[0] = LOBYTE(wparam);
+        ch[1] = HIBYTE(wparam);
+        RtlMultiByteToUnicodeN( wch, sizeof(wch), NULL, ch, 2 );
+        wparam = MAKEWPARAM(wch[0], wch[1]);
+        break;
+    case WM_IME_CHAR:
+        ch[0] = HIBYTE(wparam);
+        ch[1] = LOBYTE(wparam);
+        if (ch[0]) RtlMultiByteToUnicodeN( wch, sizeof(wch[0]), NULL, ch, 2 );
+        else RtlMultiByteToUnicodeN( wch, sizeof(wch[0]), NULL, ch + 1, 1 );
+        wparam = MAKEWPARAM(wch[0], HIWORD(wparam));
+        break;
+    }
+    return wparam;
+}
+
+
 /*
  * @implemented
  */
@@ -1035,7 +1166,7 @@ LPARAM
 WINAPI
 GetMessageExtraInfo(VOID)
 {
-  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
+  return NtUserxGetMessageExtraInfo();
 }
 
 
@@ -1046,7 +1177,7 @@ DWORD
 WINAPI
 GetMessagePos(VOID)
 {
-  return NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
+  return NtUserxGetMessagePos();
 }
 
 
@@ -1061,7 +1192,7 @@ GetMessageTime(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1080,7 +1211,7 @@ InSendMessage(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
@@ -1100,10 +1231,9 @@ InSendMessageEx(
  */
 BOOL
 WINAPI
-ReplyMessage(
-  LRESULT lResult)
+ReplyMessage(LRESULT lResult)
 {
-  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
+  return NtUserxReplyMessage(lResult);
 }
 
 
@@ -1115,7 +1245,7 @@ WINAPI
 SetMessageExtraInfo(
   LPARAM lParam)
 {
-  return NtUserSetMessageExtraInfo(lParam);
+  return NtUserxSetMessageExtraInfo(lParam);
 }
 
 LRESULT FASTCALL
@@ -1129,14 +1259,23 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
+  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
-  DWORD Data = 0;
+  DWORD Hit = 0, Data = 0;
 
   if (WndProc == NULL)
   {
       WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
+  }
+
+  // Safeguard against excessive recursions.
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
+  {
+     ERR("IntCallWindowsProcW() Exceeded Stack!\n");
+     return FALSE;
   }
 
   if (pWnd)
@@ -1187,6 +1326,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 1;
       }
       _SEH2_END;
 
@@ -1235,6 +1375,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 2;
       }
       _SEH2_END;
 
@@ -1256,6 +1397,18 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
 Exit:
   if (Hook) EndUserApiHook();
+  if (Hit)
+  {
+     switch(Hit)
+     {
+     case 1:
+         ERR("CallWindowProcW Ansi Failed! Msg %d WndProc %p\n",Msg,WndProc);
+         break;
+     case 2:
+         ERR("CallWindowProcW Unicode Failed! Msg %d WndProc %p\n",Msg,WndProc);
+         break;
+     }
+  }
   return Result;
 }
 
@@ -1270,14 +1423,22 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
+  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
-  DWORD Data = 0;
+  DWORD Hit = 0, Data = 0;
 
   if (WndProc == NULL)
   {
       WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
       return FALSE;
+  }
+
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
+  {
+     ERR("IntCallWindowsProcA() Exceeded Stack!\n");
+     return FALSE;
   }
 
   if (pWnd)
@@ -1319,6 +1480,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 1;
       }
       _SEH2_END;
 
@@ -1372,6 +1534,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 2;
       }
       _SEH2_END;
 
@@ -1398,6 +1561,18 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
 Exit:
   if (Hook) EndUserApiHook();
+  if (Hit)
+  {
+     switch(Hit)
+     {
+     case 1:
+         ERR("CallWindowProcA Ansi Failed! Msg %d WndProc %p\n",Msg,WndProc);
+         break;
+     case 2:
+         ERR("CallWindowProcA Unicode Failed! Msg %d WndProc %p\n",Msg,WndProc);
+         break;
+     }
+  }
   return Result;
 }
 
@@ -1421,7 +1596,7 @@ IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN 
       This is the message exchange for user32. If there's a need to monitor messages,
       do it here!
    */
-    TRACE("HWND 0x%x, MSG %d, WPARAM 0x%x, LPARAM 0x%x, Ansi &d\n",hWnd,Msg,wParam,lParam,Ansi);
+    TRACE("HWND %p, MSG %u, WPARAM %p, LPARAM %p, Ansi %d\n", hWnd, Msg, wParam, lParam, Ansi);
 //    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON )
     if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_FIRST )
     {
@@ -1560,6 +1735,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     LRESULT Ret = 0;
     MSG UnicodeMsg;
     PWND Wnd;
+    BOOL Hit = FALSE;
 
     if ( lpmsg->message & ~WM_MAXIMUM )
     {
@@ -1588,7 +1764,11 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        {
+           WARN("Validating Timer Callback failed!\n");
+           return 0;
+        }
 
        _SEH2_TRY // wine does this. Hint: Prevents call to another thread....
        {
@@ -1599,6 +1779,7 @@ DispatchMessageA(CONST MSG *lpmsg)
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
+           Hit = TRUE;
        }
        _SEH2_END;
     }
@@ -1628,6 +1809,11 @@ DispatchMessageA(CONST MSG *lpmsg)
           }
        }
     }
+
+    if (Hit)
+    {
+       WARN("Exception in Timer Callback WndProcA!\n");
+    }
     return Ret;
 }
 
@@ -1640,6 +1826,7 @@ DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
     PWND Wnd;
+    BOOL Hit = FALSE;
 
     if ( lpmsg->message & ~WM_MAXIMUM )
     {
@@ -1668,7 +1855,11 @@ DispatchMessageW(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        {
+           WARN("Validating Timer Callback failed!\n");
+           return 0;
+        }
 
        _SEH2_TRY
        {
@@ -1679,6 +1870,7 @@ DispatchMessageW(CONST MSG *lpmsg)
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
+          Hit = TRUE;
        }
        _SEH2_END;
     }
@@ -1697,18 +1889,43 @@ DispatchMessageW(CONST MSG *lpmsg)
          Ret = NtUserDispatchMessage( (PMSG) lpmsg );
     }
 
+    if (Hit)
+    {
+       WARN("Exception in Timer Callback WndProcW!\n");
+    }
     return Ret;
 }
 
+static VOID
+IntConvertMsgToAnsi(LPMSG lpMsg)
+{
+    CHAR ch[2];
+    WCHAR wch[2];
+
+    switch (lpMsg->message)
+    {
+        case WM_CHAR:
+        case WM_DEADCHAR:
+        case WM_SYSCHAR:
+        case WM_SYSDEADCHAR:
+        case WM_MENUCHAR:
+            wch[0] = LOWORD(lpMsg->wParam);
+            wch[1] = HIWORD(lpMsg->wParam);
+            ch[0] = ch[1] = 0;
+            WideCharToMultiByte(CP_THREAD_ACP, 0, wch, 2, ch, 2, NULL, NULL);
+            lpMsg->wParam = MAKEWPARAM(ch[0] | (ch[1] << 8), 0);
+            break;
+    }
+}
 
 /*
  * @implemented
  */
 BOOL WINAPI
 GetMessageA(LPMSG lpMsg,
-	        HWND hWnd,
-	        UINT wMsgFilterMin,
-	        UINT wMsgFilterMax)
+            HWND hWnd,
+            UINT wMsgFilterMin,
+            UINT wMsgFilterMax)
 {
   BOOL Res;
 
@@ -1720,9 +1937,11 @@ GetMessageA(LPMSG lpMsg,
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
-    {
+  {
       return Res;
-    }
+  }
+
+  IntConvertMsgToAnsi(lpMsg);
 
   return Res;
 }
@@ -1732,9 +1951,9 @@ GetMessageA(LPMSG lpMsg,
  */
 BOOL WINAPI
 GetMessageW(LPMSG lpMsg,
-	    HWND hWnd,
-	    UINT wMsgFilterMin,
-	    UINT wMsgFilterMax)
+            HWND hWnd,
+            UINT wMsgFilterMin,
+            UINT wMsgFilterMax)
 {
   BOOL Res;
 
@@ -1746,9 +1965,9 @@ GetMessageW(LPMSG lpMsg,
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
-    {
+  {
       return Res;
-    }
+  }
 
   return Res;
 }
@@ -1804,9 +2023,11 @@ PeekMessageA(LPMSG lpMsg,
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
-    {
+  {
       return FALSE;
-    }
+  }
+
+  IntConvertMsgToAnsi(lpMsg);
 
   return Res;
 }
@@ -1828,9 +2049,9 @@ PeekMessageW(
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
-    {
+  {
       return FALSE;
-    }
+  }
 
   return Res;
 }
@@ -1933,7 +2154,7 @@ WINAPI
 PostQuitMessage(
   int nExitCode)
 {
-    NtUserCallOneParam(nExitCode, ONEPARAM_ROUTINE_POSTQUITMESSAGE);
+    NtUserxPostQuitMessage(nExitCode);
 }
 
 
@@ -1987,7 +2208,7 @@ SendMessageW(HWND Wnd,
      return 0;
   }
 
-  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  if (Wnd != HWND_TOPMOST && Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(Wnd);
 
@@ -2052,7 +2273,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
      return 0;
   }
 
-  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  if (Wnd != HWND_TOPMOST && Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(Wnd);
 
@@ -2216,7 +2437,8 @@ SendMessageTimeoutA(
   
   if (lpdwResult) *lpdwResult = 0;
 
-  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  //// This is due to message system bug.
+  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(hWnd);
 
@@ -2231,6 +2453,7 @@ SendMessageTimeoutA(
           return TRUE;
       }
   }
+  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
@@ -2251,7 +2474,7 @@ SendMessageTimeoutA(
                               UcMsg.wParam,
                               UcMsg.lParam,
                              (ULONG_PTR)&dsm,
-                              FNID_SENDMESSAGETIMEOUT,
+                              FNID_SENDMESSAGEWTOOPTION,
                               TRUE);
 
   MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
@@ -2291,7 +2514,8 @@ SendMessageTimeoutW(
   
   if (lpdwResult) *lpdwResult = 0;
 
-  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  //// This is due to message system bug.
+  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(hWnd);
 
@@ -2306,6 +2530,7 @@ SendMessageTimeoutW(
           return TRUE;
       }
   }
+  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
@@ -2316,7 +2541,7 @@ SendMessageTimeoutW(
                               wParam,
                               lParam,
                              (ULONG_PTR)&dsm,
-                              FNID_SENDMESSAGETIMEOUT,
+                              FNID_SENDMESSAGEWTOOPTION,
                               FALSE);
 
   if (lpdwResult) *lpdwResult = dsm.Result;
@@ -2495,7 +2720,7 @@ GetCapture(VOID)
 BOOL WINAPI
 ReleaseCapture(VOID)
 {
-  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
+  return NtUserxReleaseCapture();
 }
 
 
@@ -2512,7 +2737,7 @@ RealGetQueueStatus(UINT flags)
       SetLastError( ERROR_INVALID_FLAGS );
       return 0;
    }
-   return NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
+   return NtUserxGetQueueStatus(flags);
 }
 
 
@@ -2536,6 +2761,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   MSG KMMsg, UMMsg;
   PWND pWnd = NULL;
+  ULONG_PTR LowLimit;
   PCLIENTINFO pci = GetWin32ClientInfo();
 
   /* Make sure we don't try to access mem beyond what we were given */
@@ -2543,6 +2769,13 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
       return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&ArgumentLength - LowLimit) < PAGE_SIZE )
+  {
+     ERR("Callback from Win32k Exceeded Stack!\n");
+     return STATUS_BAD_STACK;
+  }
 
   CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS) Arguments;
   KMMsg.hwnd = CallbackArgs->Wnd;
@@ -2579,7 +2812,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
   if (pci->CallbackWnd.hWnd == UMMsg.hwnd)
      pWnd  = pci->CallbackWnd.pWnd;
-    
+
   CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
                                              CallbackArgs->Proc,
                                              pWnd,
@@ -2677,7 +2910,7 @@ BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
 			return FALSE;
 		}
 	}
-	if(NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP)) {
+	if(NtUserxInitMessagePump()) {
 		LeaveCriticalSection(&gcsMPH);
 		return FALSE;
 	}
@@ -2692,7 +2925,7 @@ BOOL WINAPI UnregisterMessagePumpHook(VOID)
 {
 	EnterCriticalSection(&gcsMPH);
 	if(gcLoadMPH > 0) {
-		if(NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP)) {
+		if(NtUserxUnInitMessagePump()) {
 			gcLoadMPH--;
 			if(!gcLoadMPH) {
 				InterlockedExchange((PLONG)&gfMessagePumpHook, 0);
@@ -2767,7 +3000,7 @@ RealMsgWaitForMultipleObjectsEx(
       }
    }
 
-   MessageQueueHandle = NtUserMsqSetWakeMask(MAKELONG(dwWakeMask, dwFlags));
+   MessageQueueHandle = NtUserxMsqSetWakeMask(MAKELONG(dwWakeMask, dwFlags));
    if (MessageQueueHandle == NULL)
    {
       SetLastError(0); /* ? */
@@ -2777,7 +3010,7 @@ RealMsgWaitForMultipleObjectsEx(
    RealHandles = HeapAlloc(GetProcessHeap(), 0, (nCount + 1) * sizeof(HANDLE));
    if (RealHandles == NULL)
    {
-      NtUserMsqClearWakeMask();
+      NtUserxMsqClearWakeMask();
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return WAIT_FAILED;
    }
@@ -2790,7 +3023,7 @@ RealMsgWaitForMultipleObjectsEx(
                                      dwMilliseconds, dwFlags & MWMO_ALERTABLE);
 
    HeapFree(GetProcessHeap(), 0, RealHandles);
-   NtUserMsqClearWakeMask();
+   NtUserxMsqClearWakeMask();
    //FIXME("Result 0X%x\n",Result);
    return Result;
 }
@@ -2837,47 +3070,6 @@ VOID FASTCALL MessageCleanup(VOID)
 {
   DeleteCriticalSection(&DdeCrst);
   DeleteCriticalSection(&gcsMPH);
-}
-
-/***********************************************************************
- *		map_wparam_AtoW
- *
- * Convert the wparam of an ASCII message to Unicode.
- */
-static WPARAM
-map_wparam_AtoW( UINT message, WPARAM wparam )
-{
-    switch(message)
-    {
-    case WM_CHARTOITEM:
-    case EM_SETPASSWORDCHAR:
-    case WM_CHAR:
-    case WM_DEADCHAR:
-    case WM_SYSCHAR:
-    case WM_SYSDEADCHAR:
-    case WM_MENUCHAR:
-        {
-            char ch[2];
-            WCHAR wch[2];
-            ch[0] = (wparam & 0xff);
-            ch[1] = (wparam >> 8);
-            MultiByteToWideChar(CP_ACP, 0, ch, 2, wch, 2);
-            wparam = MAKEWPARAM(wch[0], wch[1]);
-        }
-        break;
-    case WM_IME_CHAR:
-        {
-            char ch[2];
-            WCHAR wch;
-            ch[0] = (wparam >> 8);
-            ch[1] = (wparam & 0xff);
-            if (ch[0]) MultiByteToWideChar(CP_ACP, 0, ch, 2, &wch, 1);
-            else MultiByteToWideChar(CP_ACP, 0, &ch[1], 1, &wch, 1);
-            wparam = MAKEWPARAM( wch, HIWORD(wparam) );
-        }
-        break;
-    }
-    return wparam;
 }
 
 /*
@@ -2951,16 +3143,13 @@ IntBroadcastSystemMessage(
 
     if (dwflags & BSF_LUID) parm.luid = pBSMInfo->luid;
 
-    if (*lpdwRecipients & BSM_APPLICATIONS)
-    {
-        ret = NtUserMessageCall(GetDesktopWindow(),
-                                         uiMessage,
-                                            wParam,
-                                            lParam,
-                                  (ULONG_PTR)&parm,
-                       FNID_BROADCASTSYSTEMMESSAGE,
-                                              Ansi);
-    }
+    ret = NtUserMessageCall(GetDesktopWindow(),
+                                     uiMessage,
+                                        wParam,
+                                        lParam,
+                              (ULONG_PTR)&parm,
+                   FNID_BROADCASTSYSTEMMESSAGE,
+                                          Ansi);
 
     if (!ret)
     {

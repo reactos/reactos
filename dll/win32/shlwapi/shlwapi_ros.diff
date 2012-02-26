@@ -1,0 +1,22 @@
+Index: path.c
+===================================================================
+--- path.c	(working copy)
++++ path.c	(working copy)
+@@ -2186,7 +2186,7 @@
+ {
+   TRACE("(%s)\n",debugstr_a(lpszPath));
+ 
+-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
++  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+     return TRUE;
+   return FALSE;
+ }
+@@ -2200,7 +2200,7 @@
+ {
+   TRACE("(%s)\n",debugstr_w(lpszPath));
+ 
+-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
++  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+     return TRUE;
+   return FALSE;
+ }

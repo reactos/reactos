@@ -31,6 +31,10 @@ list(APPEND SOURCE
     ks.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc.S)
+endif()
+
 add_library(ks SHARED ${SOURCE})
 
 set_target_properties(ks PROPERTIES SUFFIX ".sys")
@@ -45,4 +49,4 @@ add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 
 add_cd_file(TARGET ks DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(ks.spec)
+add_importlib_target(ks.spec ks.sys)

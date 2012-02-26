@@ -52,13 +52,62 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "commoncontrols.h"
-#include "imagelist.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imagelist);
 
-
 #define MAX_OVERLAYIMAGE 15
+
+struct _IMAGELIST
+{
+    const struct IImageListVtbl *lpVtbl; /* 00: IImageList vtable */
+
+    INT         cCurImage;                 /* 04: ImageCount */
+    INT         cMaxImage;                 /* 08: maximages */
+    INT         cGrow;                     /* 0C: cGrow */
+    INT         cx;                        /* 10: cx */
+    INT         cy;                        /* 14: cy */
+    DWORD       x4;
+    UINT        flags;                     /* 1C: flags */
+    COLORREF    clrFg;                     /* 20: foreground color */
+    COLORREF    clrBk;                     /* 24: background color */
+
+
+    HBITMAP     hbmImage;                  /* 28: images Bitmap */
+    HBITMAP     hbmMask;                   /* 2C: masks  Bitmap */
+    HDC         hdcImage;                  /* 30: images MemDC  */
+    HDC         hdcMask;                   /* 34: masks  MemDC  */
+    INT         nOvlIdx[MAX_OVERLAYIMAGE]; /* 38: overlay images index */
+
+    /* not yet found out */
+    HBRUSH  hbrBlend25;
+    HBRUSH  hbrBlend50;
+    INT     cInitial;
+    UINT    uBitsPixel;
+    char   *has_alpha;
+
+    LONG        ref;                       /* reference count */
+};
+
+#define IMAGELIST_MAGIC 0x53414D58
+
+/* Header used by ImageList_Read() and ImageList_Write() */
+#include "pshpack2.h"
+typedef struct _ILHEAD
+{
+    USHORT	usMagic;
+    USHORT	usVersion;
+    WORD	cCurImage;
+    WORD	cMaxImage;
+    WORD	cGrow;
+    WORD	cx;
+    WORD	cy;
+    COLORREF	bkcolor;
+    WORD	flags;
+    SHORT	ovls[4];
+} ILHEAD;
+#include "poppack.h"
 
 /* internal image list data used for Drag & Drop operations */
 typedef struct
@@ -113,6 +162,17 @@ static inline void imagelist_get_bitmap_size( HIMAGELIST himl, UINT count, SIZE 
     sz->cy = imagelist_height( count ) * himl->cy;
 }
 
+static inline int get_dib_stride( int width, int bpp )
+{
+    return ((width * bpp + 31) >> 3) & ~3;
+}
+
+static inline int get_dib_image_size( const BITMAPINFO *info )
+{
+    return get_dib_stride( info->bmiHeader.biWidth, info->bmiHeader.biBitCount )
+        * abs( info->bmiHeader.biHeight );
+}
+
 /*
  * imagelist_copy_images()
  *
@@ -138,6 +198,56 @@ static inline void imagelist_copy_images( HIMAGELIST himl, HDC hdcSrc, HDC hdcDe
     }
 }
 
+static void add_dib_bits( HIMAGELIST himl, int pos, int count, int width, int height,
+                          BITMAPINFO *info, BITMAPINFO *mask_info, DWORD *bits, BYTE *mask_bits )
+{
+    int i, j, n;
+    POINT pt;
+    int stride = info->bmiHeader.biWidth;
+    int mask_stride = (info->bmiHeader.biWidth + 31) / 32 * 4;
+
+    for (n = 0; n < count; n++)
+    {
+        int has_alpha = 0;
+
+        imagelist_point_from_index( himl, pos + n, &pt );
+
+        /* check if bitmap has an alpha channel */
+        for (i = 0; i < height && !has_alpha; i++)
+            for (j = n * width; j < (n + 1) * width; j++)
+                if ((has_alpha = ((bits[i * stride + j] & 0xff000000) != 0))) break;
+
+        if (!has_alpha)  /* generate alpha channel from the mask */
+        {
+            for (i = 0; i < height; i++)
+                for (j = n * width; j < (n + 1) * width; j++)
+                    if (!mask_info || !((mask_bits[i * mask_stride + j / 8] << (j % 8)) & 0x80))
+                        bits[i * stride + j] |= 0xff000000;
+                    else
+                        bits[i * stride + j] = 0;
+        }
+        else
+        {
+            himl->has_alpha[pos + n] = 1;
+
+            if (mask_info && himl->hbmMask)  /* generate the mask from the alpha channel */
+            {
+                for (i = 0; i < height; i++)
+                    for (j = n * width; j < (n + 1) * width; j++)
+                        if ((bits[i * stride + j] >> 24) > 25) /* more than 10% alpha */
+                            mask_bits[i * mask_stride + j / 8] &= ~(0x80 >> (j % 8));
+                        else
+                            mask_bits[i * mask_stride + j / 8] |= 0x80 >> (j % 8);
+            }
+        }
+        StretchDIBits( himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
+                       n * width, 0, width, height, bits, info, DIB_RGB_COLORS, SRCCOPY );
+        if (mask_info)
+            StretchDIBits( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
+                           n * width, 0, width, height, mask_bits, mask_info, DIB_RGB_COLORS, SRCCOPY );
+    }
+}
+
 /* add images with an alpha channel when the image list is 32 bpp */
 static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
                             int width, int height, HBITMAP hbmImage, HBITMAP hbmMask )
@@ -147,8 +257,6 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
     BITMAPINFO *info, *mask_info = NULL;
     DWORD *bits = NULL;
     BYTE *mask_bits = NULL;
-    int i, j, n;
-    POINT pt;
     DWORD mask_width;
 
     if (!GetObjectW( hbmImage, sizeof(bm), &bm )) return FALSE;
@@ -187,46 +295,7 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
         if (!GetDIBits( hdc, hbmMask, 0, height, mask_bits, mask_info, DIB_RGB_COLORS )) goto done;
     }
 
-    for (n = 0; n < count; n++)
-    {
-        int has_alpha = 0;
-
-        imagelist_point_from_index( himl, pos + n, &pt );
-
-        /* check if bitmap has an alpha channel */
-        for (i = 0; i < height && !has_alpha; i++)
-            for (j = n * width; j < (n + 1) * width; j++)
-                if ((has_alpha = ((bits[i * bm.bmWidth + j] & 0xff000000) != 0))) break;
-
-        if (!has_alpha)  /* generate alpha channel from the mask */
-        {
-            for (i = 0; i < height; i++)
-                for (j = n * width; j < (n + 1) * width; j++)
-                    if (!mask_bits || !((mask_bits[i * mask_width + j / 8] << (j % 8)) & 0x80))
-                        bits[i * bm.bmWidth + j] |= 0xff000000;
-                    else
-                        bits[i * bm.bmWidth + j] = 0;
-        }
-        else
-        {
-            himl->has_alpha[pos + n] = 1;
-
-            if (mask_info && himl->hbmMask)  /* generate the mask from the alpha channel */
-            {
-                for (i = 0; i < height; i++)
-                    for (j = n * width; j < (n + 1) * width; j++)
-                        if ((bits[i * bm.bmWidth + j] >> 24) > 25) /* more than 10% alpha */
-                            mask_bits[i * mask_width + j / 8] &= ~(0x80 >> (j % 8));
-                        else
-                            mask_bits[i * mask_width + j / 8] |= 0x80 >> (j % 8);
-            }
-        }
-        StretchDIBits( himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
-                       n * width, 0, width, height, bits, info, DIB_RGB_COLORS, SRCCOPY );
-        if (mask_info)
-            StretchDIBits( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
-                           n * width, 0, width, height, mask_bits, mask_info, DIB_RGB_COLORS, SRCCOPY );
-    }
+    add_dib_bits( himl, pos, count, width, height, info, mask_info, bits, mask_bits );
     ret = TRUE;
 
 done:
@@ -474,8 +543,6 @@ ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
     SetBkColor (hdcBitmap, bkColor);
     BitBlt (hdcMask, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcBitmap, 0, 0, SRCCOPY);
 
-    SetBkColor(hdcBitmap, RGB(255,255,255));
-
     /*
      * Remove the background from the image
      *
@@ -489,7 +556,11 @@ ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
      *
      *  Blt mode 0x220326 is NOTSRCAND
      */
-    BitBlt(hdcBitmap, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcMask, 0, 0, 0x220326);
+    if (bmp.bmBitsPixel > 8)  /* NOTSRCAND can't work with palettes */
+    {
+        SetBkColor(hdcBitmap, RGB(255,255,255));
+        BitBlt(hdcBitmap, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcMask, 0, 0, 0x220326);
+    }
 
     DeleteDC(hdcBitmap);
     DeleteDC(hdcMask);
@@ -700,7 +771,14 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     if (FAILED(ImageListImpl_CreateInstance(NULL, &IID_IImageList, (void **)&himl)))
         return NULL;
 
-    cGrow = (cGrow < 4) ? 4 : (cGrow + 3) & ~3;
+    cGrow = (WORD)((max( cGrow, 1 ) + 3) & ~3);
+
+    if (cGrow > 256)
+    {
+        /* Windows doesn't limit the size here, but X11 doesn't let us allocate such huge bitmaps */
+        WARN( "grow %d too large, limiting to 256\n", cGrow );
+        cGrow = 256;
+    }
 
     himl->cx        = cx;
     himl->cy        = cy;
@@ -727,7 +805,10 @@ ImageList_Create (INT cx, INT cy, UINT flags,
 
     /* Default to ILC_COLOR4 if none of the ILC_COLOR* flags are specified */
     if (ilc == ILC_COLOR)
+    {
         ilc = ILC_COLOR4;
+        himl->flags |= ILC_COLOR4;
+    }
 
     if (ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32)
         himl->uBitsPixel = ilc;
@@ -1225,6 +1306,14 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
         /* generate alpha channel from the mask */
         info->bmiHeader.biBitCount = 1;
         info->bmiHeader.biSizeImage = width_bytes * cy;
+        info->bmiColors[0].rgbRed      = 0;
+        info->bmiColors[0].rgbGreen    = 0;
+        info->bmiColors[0].rgbBlue     = 0;
+        info->bmiColors[0].rgbReserved = 0;
+        info->bmiColors[1].rgbRed      = 0xff;
+        info->bmiColors[1].rgbGreen    = 0xff;
+        info->bmiColors[1].rgbBlue     = 0xff;
+        info->bmiColors[1].rgbReserved = 0;
         if (!(mask = CreateDIBSection( himl->hdcMask, info, DIB_RGB_COLORS, &mask_bits, 0, 0 )))
             goto done;
         SelectObject( hdc, mask );
@@ -2060,66 +2149,24 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
 }
 
 
-/***********************************************************************
- *           DIB_GetDIBWidthBytes
- *
- * Return the width of a DIB bitmap in bytes. DIB bitmap data is 32-bit aligned.
- */
-static int DIB_GetDIBWidthBytes( int width, int depth )
-{
-    int words;
-
-    switch(depth)
-    {
-    case 1:  words = (width + 31) / 32; break;
-    case 4:  words = (width + 7) / 8; break;
-    case 8:  words = (width + 3) / 4; break;
-    case 15:
-    case 16: words = (width + 1) / 2; break;
-    case 24: words = (width * 3 + 3)/4; break;
-
-    default:
-        WARN("(%d): Unsupported depth\n", depth );
-        /* fall through */
-    case 32:
-        words = width;
-        break;
-    }
-    return 4 * words;
-}
-
-/***********************************************************************
- *           DIB_GetDIBImageBytes
- *
- * Return the number of bytes used to hold the image in a DIB bitmap.
- */
-static int DIB_GetDIBImageBytes( int width, int height, int depth )
-{
-    return DIB_GetDIBWidthBytes( width, depth ) * abs( height );
-}
-
-
 /* helper for ImageList_Read, see comments below */
-static BOOL _read_bitmap(HDC hdcIml, LPSTREAM pstm)
+static void *read_bitmap(LPSTREAM pstm, BITMAPINFO *bmi)
 {
     BITMAPFILEHEADER	bmfh;
     int bitsperpixel, palspace;
-    char bmi_buf[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256];
-    LPBITMAPINFO bmi = (LPBITMAPINFO)bmi_buf;
-    int                result = FALSE;
-    LPBYTE             bits = NULL;
+    void *bits;
 
     if (FAILED(IStream_Read ( pstm, &bmfh, sizeof(bmfh), NULL)))
-        return FALSE;
+        return NULL;
 
     if (bmfh.bfType != (('M'<<8)|'B'))
-        return FALSE;
+        return NULL;
 
     if (FAILED(IStream_Read ( pstm, &bmi->bmiHeader, sizeof(bmi->bmiHeader), NULL)))
-        return FALSE;
+        return NULL;
 
     if ((bmi->bmiHeader.biSize != sizeof(bmi->bmiHeader)))
-        return FALSE;
+        return NULL;
 
     TRACE("width %u, height %u, planes %u, bpp %u\n",
           bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight,
@@ -2131,27 +2178,21 @@ static BOOL _read_bitmap(HDC hdcIml, LPSTREAM pstm)
     else
         palspace = 0;
 
-    bmi->bmiHeader.biSizeImage = DIB_GetDIBImageBytes(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, bitsperpixel);
+    bmi->bmiHeader.biSizeImage = get_dib_image_size( bmi );
 
     /* read the palette right after the end of the bitmapinfoheader */
     if (palspace && FAILED(IStream_Read(pstm, bmi->bmiColors, palspace, NULL)))
-	goto error;
+        return NULL;
 
     bits = Alloc(bmi->bmiHeader.biSizeImage);
-    if (!bits)
-        goto error;
+    if (!bits) return NULL;
+
     if (FAILED(IStream_Read(pstm, bits, bmi->bmiHeader.biSizeImage, NULL)))
-        goto error;
-
-    if (!StretchDIBits(hdcIml, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight,
-                  0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight,
-                  bits, bmi, DIB_RGB_COLORS, SRCCOPY))
-        goto error;
-    result = TRUE;
-
-error:
-    Free(bits);
-    return result;
+    {
+        Free(bits);
+        return NULL;
+    }
+    return bits;
 }
 
 /*************************************************************************
@@ -2187,6 +2228,11 @@ error:
  */
 HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
 {
+    char image_buf[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256];
+    char mask_buf[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256];
+    BITMAPINFO *image_info = (BITMAPINFO *)image_buf;
+    BITMAPINFO *mask_info = (BITMAPINFO *)mask_buf;
+    void *image_bits, *mask_bits = NULL;
     ILHEAD	ilHead;
     HIMAGELIST	himl;
     int		i;
@@ -2207,19 +2253,56 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
     if (!himl)
 	return NULL;
 
-    if (!_read_bitmap(himl->hdcImage, pstm))
+    if (!(image_bits = read_bitmap(pstm, image_info)))
     {
 	WARN("failed to read bitmap from stream\n");
 	return NULL;
     }
     if (ilHead.flags & ILC_MASK)
     {
-        if (!_read_bitmap(himl->hdcMask, pstm))
+        if (!(mask_bits = read_bitmap(pstm, mask_info)))
         {
             WARN("failed to read mask bitmap from stream\n");
 	    return NULL;
 	}
     }
+    else mask_info = NULL;
+
+    if (himl->has_alpha && image_info->bmiHeader.biBitCount == 32)
+    {
+        DWORD *ptr = image_bits;
+        BYTE *mask_ptr = mask_bits;
+        int stride = himl->cy * image_info->bmiHeader.biWidth;
+
+        if (image_info->bmiHeader.biHeight > 0)  /* bottom-up */
+        {
+            ptr += image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride;
+            mask_ptr += (image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride) / 8;
+            stride = -stride;
+            image_info->bmiHeader.biHeight = himl->cy;
+        }
+        else image_info->bmiHeader.biHeight = -himl->cy;
+
+        for (i = 0; i < ilHead.cCurImage; i += TILE_COUNT)
+        {
+            add_dib_bits( himl, i, min( ilHead.cCurImage - i, TILE_COUNT ),
+                          himl->cx, himl->cy, image_info, mask_info, ptr, mask_ptr );
+            ptr += stride;
+            mask_ptr += stride / 8;
+        }
+    }
+    else
+    {
+        StretchDIBits( himl->hdcImage, 0, 0, image_info->bmiHeader.biWidth, image_info->bmiHeader.biHeight,
+                       0, 0, image_info->bmiHeader.biWidth, image_info->bmiHeader.biHeight,
+                       image_bits, image_info, DIB_RGB_COLORS, SRCCOPY);
+        if (mask_info)
+            StretchDIBits( himl->hdcMask, 0, 0, mask_info->bmiHeader.biWidth, mask_info->bmiHeader.biHeight,
+                           0, 0, mask_info->bmiHeader.biWidth, mask_info->bmiHeader.biHeight,
+                           mask_bits, mask_info, DIB_RGB_COLORS, SRCCOPY);
+    }
+    Free( image_bits );
+    Free( mask_bits );
 
     himl->cCurImage = ilHead.cCurImage;
     himl->cMaxImage = ilHead.cMaxImage;
@@ -2276,7 +2359,7 @@ ImageList_Remove (HIMAGELIST himl, INT i)
 	    return TRUE;
 	}
 
-        himl->cMaxImage = himl->cInitial + himl->cGrow - 1;
+        himl->cMaxImage = himl->cGrow;
         himl->cCurImage = 0;
         for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
              himl->nOvlIdx[nCount] = -1;
@@ -2455,7 +2538,6 @@ done:
 INT WINAPI
 ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
 {
-    HDC     hdcImage;
     HICON   hBestFitIcon;
     ICONINFO  ii;
     BITMAP  bmp;
@@ -2487,38 +2569,19 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
     if (!hBestFitIcon)
         return -1;
 
-    ret = GetIconInfo (hBestFitIcon, &ii);
-    if (!ret) {
-        DestroyIcon(hBestFitIcon);
-        return -1;
-    }
-
-    ret = GetObjectW (ii.hbmMask, sizeof(BITMAP), &bmp);
-    if (!ret) {
-        ERR("couldn't get mask bitmap info\n");
-        if (ii.hbmColor)
-            DeleteObject (ii.hbmColor);
-        if (ii.hbmMask)
-            DeleteObject (ii.hbmMask);
-        DestroyIcon(hBestFitIcon);
-        return -1;
-    }
-
     if (nIndex == -1) {
-        if (himl->cCurImage + 1 > himl->cMaxImage)
+        if (himl->cCurImage + 1 >= himl->cMaxImage)
             IMAGELIST_InternalExpandBitmaps(himl, 1);
 
         nIndex = himl->cCurImage;
         himl->cCurImage++;
     }
 
-    hdcImage = CreateCompatibleDC (0);
-    TRACE("hdcImage=%p\n", hdcImage);
-    if (hdcImage == 0)
-	ERR("invalid hdcImage!\n");
-
-    if (himl->has_alpha)
+    if (himl->has_alpha && GetIconInfo (hBestFitIcon, &ii))
     {
+        HDC hdcImage = CreateCompatibleDC( 0 );
+        GetObjectW (ii.hbmMask, sizeof(BITMAP), &bmp);
+
         if (!ii.hbmColor)
         {
             UINT height = bmp.bmHeight / 2;
@@ -2530,48 +2593,38 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
             ret = add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, height, color, ii.hbmMask );
             DeleteDC( hdcMask );
             DeleteObject( color );
-            if (ret) goto done;
         }
-        else if (add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, bmp.bmHeight,
-                                 ii.hbmColor, ii.hbmMask )) goto done;
+        else ret = add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, bmp.bmHeight,
+                                   ii.hbmColor, ii.hbmMask );
+
+        DeleteDC( hdcImage );
+        DeleteObject (ii.hbmMask);
+        if (ii.hbmColor) DeleteObject (ii.hbmColor);
+        if (ret) goto done;
     }
 
     imagelist_point_from_index(himl, nIndex, &pt);
 
-    SetTextColor(himl->hdcImage, RGB(0,0,0));
-    SetBkColor  (himl->hdcImage, RGB(255,255,255));
-
-    if (ii.hbmColor)
+    if (himl->hbmMask)
     {
-        SelectObject (hdcImage, ii.hbmColor);
-        StretchBlt (himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
-                    hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-        if (himl->hbmMask)
-        {
-            SelectObject (hdcImage, ii.hbmMask);
-            StretchBlt (himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
-                        hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-        }
+        DrawIconEx( himl->hdcImage, pt.x, pt.y, hBestFitIcon, himl->cx, himl->cy, 0, 0, DI_IMAGE );
+        PatBlt( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy, WHITENESS );
+        DrawIconEx( himl->hdcMask, pt.x, pt.y, hBestFitIcon, himl->cx, himl->cy, 0, 0, DI_MASK );
     }
     else
     {
-        UINT height = bmp.bmHeight / 2;
-        SelectObject (hdcImage, ii.hbmMask);
-        StretchBlt (himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
-                    hdcImage, 0, height, bmp.bmWidth, height, SRCCOPY);
-        if (himl->hbmMask)
-            StretchBlt (himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
-                        hdcImage, 0, 0, bmp.bmWidth, height, SRCCOPY);
+        COLORREF color = himl->clrBk != CLR_NONE ? himl->clrBk : comctl32_color.clrWindow;
+        HBRUSH brush = CreateSolidBrush( GetNearestColor( himl->hdcImage, color ));
+
+        SelectObject( himl->hdcImage, brush );
+        PatBlt( himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy, PATCOPY );
+        SelectObject( himl->hdcImage, GetStockObject(BLACK_BRUSH) );
+        DeleteObject( brush );
+        DrawIconEx( himl->hdcImage, pt.x, pt.y, hBestFitIcon, himl->cx, himl->cy, 0, 0, DI_NORMAL );
     }
 
 done:
     DestroyIcon(hBestFitIcon);
-    if (hdcImage)
-	DeleteDC (hdcImage);
-    if (ii.hbmColor)
-	DeleteObject (ii.hbmColor);
-    if (ii.hbmMask)
-	DeleteObject (ii.hbmMask);
 
     TRACE("Insert index = %d, himl->cCurImage = %d\n", nIndex, himl->cCurImage);
     return nIndex;
@@ -2802,14 +2855,8 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 
     if (!is_valid(himl))
 	return FALSE;
-    if (himl->cMaxImage > iImageCount)
-    {
-        himl->cCurImage = iImageCount;
-        /* TODO: shrink the bitmap when cMaxImage-cCurImage>cGrow ? */
-	return TRUE;
-    }
 
-    nNewCount = iImageCount + himl->cGrow;
+    nNewCount = iImageCount + 1;
     nCopyCount = min(himl->cCurImage, iImageCount);
 
     hdcBitmap = CreateCompatibleDC (0);
@@ -2920,11 +2967,11 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
     if (!GetObjectW(hBitmap, sizeof(BITMAP), &bm))
         return FALSE;
 
-    bitCount = bm.bmBitsPixel == 1 ? 1 : 24;
-    sizeImage = DIB_GetDIBImageBytes(bm.bmWidth, bm.bmHeight, bitCount);
+    bitCount = bm.bmBitsPixel;
+    sizeImage = get_dib_stride(bm.bmWidth, bitCount) * bm.bmHeight;
 
     totalSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-    if(bitCount != 24)
+    if(bitCount <= 8)
 	totalSize += (1 << bitCount) * sizeof(RGBQUAD);
     offBits = totalSize;
     totalSize += sizeImage;
@@ -2963,13 +3010,6 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
     TRACE("width %u, height %u, planes %u, bpp %u\n",
           bmih->biWidth, bmih->biHeight,
           bmih->biPlanes, bmih->biBitCount);
-
-    if(bitCount == 1) {
-        /* Hack. */
-	LPBITMAPINFO inf = (LPBITMAPINFO)bmih;
-	inf->bmiColors[0].rgbRed = inf->bmiColors[0].rgbGreen = inf->bmiColors[0].rgbBlue = 0;
-	inf->bmiColors[1].rgbRed = inf->bmiColors[1].rgbGreen = inf->bmiColors[1].rgbBlue = 0xff;
-    }
 
     if(FAILED(IStream_Write(pstm, data, totalSize, NULL)))
 	goto failed;
@@ -3054,54 +3094,28 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 
     if ((ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32) || ilc == ILC_COLOR)
     {
-        VOID* bits;
-        BITMAPINFO *bmi;
+        char buffer[sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)];
+        BITMAPINFO *bmi = (BITMAPINFO *)buffer;
 
         TRACE("Creating DIBSection %d x %d, %d Bits per Pixel\n",
               sz.cx, sz.cy, himl->uBitsPixel);
 
-	if (himl->uBitsPixel <= ILC_COLOR8)
-	{
-	    LPPALETTEENTRY pal;
-	    ULONG i, colors;
-	    BYTE temp;
-
-	    colors = 1 << himl->uBitsPixel;
-	    bmi = Alloc(sizeof(BITMAPINFOHEADER) +
-	                    sizeof(PALETTEENTRY) * colors);
-
-	    pal = (LPPALETTEENTRY)bmi->bmiColors;
-	    GetPaletteEntries(GetStockObject(DEFAULT_PALETTE), 0, colors, pal);
-
-	    /* Swap colors returned by GetPaletteEntries so we can use them for
-	     * CreateDIBSection call. */
-	    for (i = 0; i < colors; i++)
-	    {
-	        temp = pal[i].peBlue;
-	        bmi->bmiColors[i].rgbRed = pal[i].peRed;
-	        bmi->bmiColors[i].rgbBlue = temp;
-	    }
-	}
-	else
-	{
-	    bmi = Alloc(sizeof(BITMAPINFOHEADER));
-	}
-
+        memset( buffer, 0, sizeof(buffer) );
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi->bmiHeader.biWidth = sz.cx;
 	bmi->bmiHeader.biHeight = sz.cy;
 	bmi->bmiHeader.biPlanes = 1;
 	bmi->bmiHeader.biBitCount = himl->uBitsPixel;
 	bmi->bmiHeader.biCompression = BI_RGB;
-	bmi->bmiHeader.biSizeImage = 0;
-	bmi->bmiHeader.biXPelsPerMeter = 0;
-	bmi->bmiHeader.biYPelsPerMeter = 0;
-	bmi->bmiHeader.biClrUsed = 0;
-	bmi->bmiHeader.biClrImportant = 0;
 
-	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, &bits, 0, 0);
-
-	Free (bmi);
+	if (himl->uBitsPixel <= ILC_COLOR8)
+	{
+            /* retrieve the default color map */
+            HBITMAP tmp = CreateBitmap( 1, 1, 1, 1, NULL );
+            GetDIBits( hdc, tmp, 0, 0, NULL, bmi, DIB_RGB_COLORS );
+            DeleteObject( tmp );
+	}
+	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, NULL, 0, 0);
     }
     else /*if (ilc == ILC_COLORDDB)*/
     {
@@ -3613,9 +3627,19 @@ static const IImageListVtbl ImageListImpl_Vtbl = {
     ImageListImpl_GetOverlayImage
 };
 
-static inline BOOL is_valid(HIMAGELIST himl)
+static BOOL is_valid(HIMAGELIST himl)
 {
-    return himl && himl->lpVtbl == &ImageListImpl_Vtbl;
+    BOOL valid;
+    __TRY
+    {
+        valid = himl && himl->lpVtbl == &ImageListImpl_Vtbl;
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        valid = FALSE;
+    }
+    __ENDTRY
+    return valid;
 }
 
 /*************************************************************************

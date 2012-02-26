@@ -9,7 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/ntndk.h>
+#include <ndk/lpctypes.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <psdk/ntsecapi.h>
 #include <lsass/lsass.h>
 

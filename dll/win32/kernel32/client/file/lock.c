@@ -9,14 +9,12 @@
  *                  Created 01/11/98
  */
 
-/* FIXME: the large integer manipulations in this file dont handle overflow  */
 
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -25,165 +23,207 @@ DEBUG_CHANNEL(kernel32file);
  */
 BOOL
 WINAPI
-LockFile(HANDLE hFile,
-         DWORD dwFileOffsetLow,
-         DWORD dwFileOffsetHigh,
-         DWORD nNumberOfBytesToLockLow,
-         DWORD nNumberOfBytesToLockHigh)
+LockFile(IN HANDLE hFile,
+         IN DWORD dwFileOffsetLow,
+         IN DWORD dwFileOffsetHigh,
+         IN DWORD nNumberOfBytesToLockLow,
+         IN DWORD nNumberOfBytesToLockHigh)
 {
-    DWORD dwReserved;
-    OVERLAPPED Overlapped;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    LARGE_INTEGER BytesToLock, Offset;
 
-    Overlapped.Offset = dwFileOffsetLow;
-    Overlapped.OffsetHigh = dwFileOffsetHigh;
-    Overlapped.hEvent = NULL;
-    dwReserved = 0;
-
-    return LockFileEx(hFile,
-                      LOCKFILE_FAIL_IMMEDIATELY |
-                      LOCKFILE_EXCLUSIVE_LOCK,
-                      dwReserved,
-                      nNumberOfBytesToLockLow,
-                      nNumberOfBytesToLockHigh,
-                      &Overlapped ) ;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-LockFileEx(HANDLE hFile,
-           DWORD dwFlags,
-           DWORD dwReserved,
-           DWORD nNumberOfBytesToLockLow,
-           DWORD nNumberOfBytesToLockHigh,
-           LPOVERLAPPED lpOverlapped /* required! */)
-{
-    LARGE_INTEGER BytesToLock;
-    BOOL LockImmediate;
-    BOOL LockExclusive;
-    NTSTATUS errCode;
-    LARGE_INTEGER Offset;
-
-    if(dwReserved != 0 || lpOverlapped==NULL)
+    /* Is this a console handle? */
+    if (IsConsoleHandle(hFile))
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        /* Can't "lock" a console! */
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
         return FALSE;
     }
 
-    TRACE( "%p %x%08x %x%08x flags %x\n",
-        hFile, lpOverlapped->OffsetHigh, lpOverlapped->Offset, 
-        nNumberOfBytesToLockHigh, nNumberOfBytesToLockLow, dwFlags );
-
-    lpOverlapped->Internal = STATUS_PENDING;
-
-    Offset.u.LowPart = lpOverlapped->Offset;
-    Offset.u.HighPart = lpOverlapped->OffsetHigh;
-
-    if ( (dwFlags & LOCKFILE_FAIL_IMMEDIATELY) == LOCKFILE_FAIL_IMMEDIATELY )
-        LockImmediate = TRUE;
-    else
-        LockImmediate = FALSE;
-
-    if ( (dwFlags & LOCKFILE_EXCLUSIVE_LOCK) == LOCKFILE_EXCLUSIVE_LOCK )
-        LockExclusive = TRUE;
-    else
-        LockExclusive = FALSE;
-
+    /* Setup the parameters in NT style and call the native API */
     BytesToLock.u.LowPart = nNumberOfBytesToLockLow;
     BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
-
-    errCode = NtLockFile(hFile,
-                         lpOverlapped->hEvent,
-                         NULL,
-                         NULL,
-                         (PIO_STATUS_BLOCK)lpOverlapped,
-                         &Offset,
-                         &BytesToLock,
-                         0,
-                         (BOOLEAN)LockImmediate,
-                         (BOOLEAN)LockExclusive);
-
-    if ( !NT_SUCCESS(errCode) )
+    Offset.u.LowPart = dwFileOffsetLow;
+    Offset.u.HighPart = dwFileOffsetHigh;
+    Status = NtLockFile(hFile,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        &Offset,
+                        &BytesToLock,
+                        0,
+                        TRUE,
+                        TRUE);
+    if (Status == STATUS_PENDING)
     {
-        BaseSetLastNTError(errCode);
+        /* Wait for completion if needed */
+        Status = NtWaitForSingleObject(hFile, FALSE, NULL);
+        if (NT_SUCCESS(Status)) Status = IoStatusBlock.Status;
+    }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert the error code and fail */
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Success! */
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-UnlockFile(HANDLE hFile,
-           DWORD dwFileOffsetLow,
-           DWORD dwFileOffsetHigh,
-           DWORD nNumberOfBytesToUnlockLow,
-           DWORD nNumberOfBytesToUnlockHigh)
+LockFileEx(IN HANDLE hFile,
+           IN DWORD dwFlags,
+           IN DWORD dwReserved,
+           IN DWORD nNumberOfBytesToLockLow,
+           IN DWORD nNumberOfBytesToLockHigh,
+           IN LPOVERLAPPED lpOverlapped)
 {
-    OVERLAPPED Overlapped;
-    DWORD dwReserved;
-    Overlapped.Offset = dwFileOffsetLow;
-    Overlapped.OffsetHigh = dwFileOffsetHigh;
-    dwReserved = 0;
+    LARGE_INTEGER BytesToLock, Offset;
+    NTSTATUS Status;
 
-    return UnlockFileEx(hFile,
-                        dwReserved,
-                        nNumberOfBytesToUnlockLow,
-                        nNumberOfBytesToUnlockHigh,
-                        &Overlapped);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-UnlockFileEx(HANDLE hFile,
-             DWORD dwReserved,
-             DWORD nNumberOfBytesToUnLockLow,
-             DWORD nNumberOfBytesToUnLockHigh,
-             LPOVERLAPPED lpOverlapped /* required! */)
-{
-    LARGE_INTEGER BytesToUnLock;
-    LARGE_INTEGER StartAddress;
-    NTSTATUS errCode;
-
-    if(dwReserved != 0 || lpOverlapped == NULL)
+    /* Is this a console handle? */
+    if (IsConsoleHandle(hFile))
     {
+        /* Can't "lock" a console! */
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* This parameter should be zero */
+    if (dwReserved)
+    {
+        /* Fail since it isn't */
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    TRACE( "%p %x%08x %x%08x\n",
-        hFile, lpOverlapped->OffsetHigh, lpOverlapped->Offset, 
-        nNumberOfBytesToUnLockHigh, nNumberOfBytesToUnLockLow);
+    /* Set the initial status in the IO_STATUS_BLOCK to pending... */
+    lpOverlapped->Internal = STATUS_PENDING;
 
-    BytesToUnLock.u.LowPart = nNumberOfBytesToUnLockLow;
-    BytesToUnLock.u.HighPart = nNumberOfBytesToUnLockHigh;
-
-    StartAddress.u.LowPart = lpOverlapped->Offset;
-    StartAddress.u.HighPart = lpOverlapped->OffsetHigh;
-
-    errCode = NtUnlockFile(hFile,
-                           (PIO_STATUS_BLOCK)lpOverlapped,
-                           &StartAddress,
-                           &BytesToUnLock,
-                           0);
-
-    if ( !NT_SUCCESS(errCode) )
+    /* Convert the parameters to NT format and call the native API */
+    Offset.u.LowPart = lpOverlapped->Offset;
+    Offset.u.HighPart = lpOverlapped->OffsetHigh;
+    BytesToLock.u.LowPart = nNumberOfBytesToLockLow;
+    BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
+    Status = NtLockFile(hFile,
+                        lpOverlapped->hEvent,
+                        NULL,
+                        NULL,
+                        (PIO_STATUS_BLOCK)lpOverlapped,
+                        &Offset,
+                        &BytesToLock,
+                        0,
+                        dwFlags & LOCKFILE_FAIL_IMMEDIATELY ? TRUE : FALSE,
+                        dwFlags & LOCKFILE_EXCLUSIVE_LOCK ? TRUE: FALSE);
+    if ((NT_SUCCESS(Status)) && (Status != STATUS_PENDING))
     {
-        BaseSetLastNTError(errCode);
+        /* Pending status is *not* allowed in the Ex API */
+        return TRUE;
+    }
+
+    /* Convert the error code and fail */
+    BaseSetLastNTError(Status);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnlockFile(IN HANDLE hFile,
+           IN DWORD dwFileOffsetLow,
+           IN DWORD dwFileOffsetHigh,
+           IN DWORD nNumberOfBytesToUnlockLow,
+           IN DWORD nNumberOfBytesToUnlockHigh)
+{
+    OVERLAPPED Overlapped;
+    NTSTATUS Status;
+    BOOLEAN Result;
+
+    /* Convert parameters to Ex format and call the new API */
+    Overlapped.Offset = dwFileOffsetLow;
+    Overlapped.OffsetHigh = dwFileOffsetHigh;
+    Result = UnlockFileEx(hFile,
+                          0,
+                          nNumberOfBytesToUnlockLow,
+                          nNumberOfBytesToUnlockHigh,
+                          &Overlapped);
+    if (!(Result) && (GetLastError() == ERROR_IO_PENDING))
+    {
+        /* Ex fails during STATUS_PENDING, handle that here by waiting */
+        Status = NtWaitForSingleObject(hFile, FALSE, NULL);
+        if (NT_SUCCESS(Status)) Status = Overlapped.Internal;
+
+        /* Now if the status is successful, return */
+        if (!NT_SUCCESS(Status)) return TRUE;
+
+        /* Otherwise the asynchronous operation had a failure, so fail */
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Success or error case -- Ex took care of the rest, just return */
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnlockFileEx(IN HANDLE hFile,
+             IN DWORD dwReserved,
+             IN DWORD nNumberOfBytesToUnLockLow,
+             IN DWORD nNumberOfBytesToUnLockHigh,
+             IN LPOVERLAPPED lpOverlapped)
+{
+    LARGE_INTEGER BytesToUnLock, StartAddress;
+    NTSTATUS Status;
+
+    /* Is this a console handle? */
+    if (IsConsoleHandle(hFile))
+    {
+        /* Can't "unlock" a console! */
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* This parameter should be zero */
+    if (dwReserved)
+    {
+        /* Fail since it isn't */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Convert to NT format and call the native function */
+    BytesToUnLock.u.LowPart = nNumberOfBytesToUnLockLow;
+    BytesToUnLock.u.HighPart = nNumberOfBytesToUnLockHigh;
+    StartAddress.u.LowPart = lpOverlapped->Offset;
+    StartAddress.u.HighPart = lpOverlapped->OffsetHigh;
+    Status = NtUnlockFile(hFile,
+                          (PIO_STATUS_BLOCK)lpOverlapped,
+                          &StartAddress,
+                          &BytesToUnLock,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert the error and fail */
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* All good */
     return TRUE;
 }
 

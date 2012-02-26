@@ -9,11 +9,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
-
 int
-__cdecl
-vwprintf(const wchar_t *format, va_list argptr)
+_cdecl
+vwprintf(const wchar_t *format, va_list valist)
 {
-    return wstreamout(stdout, format, argptr);
+    return vfwprintf(stdout,format,valist);
 }

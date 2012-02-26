@@ -39,9 +39,7 @@
  */
 BOOL
 WINAPI
-KillSystemTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent)
+KillSystemTimer( HWND hWnd, UINT_PTR IDEvent)
 {
-  return NtUserCallHwndParam(hWnd, IDEvent, HWNDPARAM_ROUTINE_KILLSYSTEMTIMER);
+  return NtUserxKillSystemTimer(hWnd, IDEvent);
 }

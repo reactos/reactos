@@ -9,7 +9,7 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** An tokenizer for SQL
+** A tokenizer for SQL
 **
 ** This file contains C code that splits an SQL input string up into
 ** individual tokens and sends those tokens one-by-one over to the
@@ -190,19 +190,19 @@ static const char isIdChar[] = {
 ** -1 if the token is (or might be) incomplete.  Store the token
 ** type in *tokenType before returning.
 */
-int sqliteGetToken(const WCHAR *z, int *tokenType){
+int sqliteGetToken(const WCHAR *z, int *tokenType, int *skip){
   int i;
+
+  *skip = 0;
   switch( *z ){
-    case ' ': case '\t': case '\n': case '\f': {
+    case ' ': case '\t': case '\n': case '\f':
       for(i=1; isspace(z[i]) && z[i] != '\r'; i++){}
       *tokenType = TK_SPACE;
       return i;
-    }
-    case '-': {
+    case '-':
       if( z[1]==0 ) return -1;
       *tokenType = TK_MINUS;
       return 1;
-    }
     case '(':
       *tokenType = TK_LP;
       return 1;
@@ -215,7 +215,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
     case '=':
       *tokenType = TK_EQ;
       return 1;
-    case '<': {
+    case '<':
       if( z[1]=='=' ){
         *tokenType = TK_LE;
         return 2;
@@ -226,8 +226,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
         *tokenType = TK_LT;
         return 1;
       }
-    }
-    case '>': {
+    case '>':
       if( z[1]=='=' ){
         *tokenType = TK_GE;
         return 2;
@@ -235,8 +234,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
         *tokenType = TK_GT;
         return 1;
       }
-    }
-    case '!': {
+    case '!':
       if( z[1]!='=' ){
         *tokenType = TK_ILLEGAL;
         return 2;
@@ -244,7 +242,6 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
         *tokenType = TK_NE;
         return 2;
       }
-    }
     case '?':
       *tokenType = TK_WILDCARD;
       return 1;
@@ -264,32 +261,29 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
         *tokenType = TK_STRING;
       return i;
     }
-    case '.': {
+    case '.':
       if( !isdigit(z[1]) ){
         *tokenType = TK_DOT;
         return 1;
       }
       /* Fall thru into the next case */
-    }
     case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9': {
+    case '5': case '6': case '7': case '8': case '9':
       *tokenType = TK_INTEGER;
       for(i=1; isdigit(z[i]); i++){}
       return i;
-    }
-    case '[': {
+    case '[':
       for(i=1; z[i] && z[i-1]!=']'; i++){}
       *tokenType = TK_ID;
       return i;
-    }
-    default: {
+    default:
       if( !isIdChar[*z] ){
         break;
       }
       for(i=1; isIdChar[z[i]]; i++){}
       *tokenType = sqliteKeywordCode(z, i);
+      if( *tokenType == TK_ID && z[i] == '`' ) *skip = 1;
       return i;
-    }
   }
   *tokenType = TK_ILLEGAL;
   return 1;

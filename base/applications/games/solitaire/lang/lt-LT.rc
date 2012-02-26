@@ -4,7 +4,7 @@
  * FILE:        base/applications/games/solitaire/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * TRANSLATORS: Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATORS: Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us)
  */
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
@@ -16,12 +16,12 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Nuostatos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Kortos", -1, 7, 7, 75, 40
-    AUTORADIOBUTTON "Dalinti po &vienà", IDC_OPT_DRAWONE, 14, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Dalinti po &tris", IDC_OPT_DRAWTHREE, 14, 32, 60, 10
+    GROUPBOX        "Kortos", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "Dalinti po &vienÄ…", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Dalinti po &tris", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Rodyti laikà", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "&Bûsenos juosta", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Rodyti laikÄ…", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&BÅ«senos juosta", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "Gerai", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Atsisakyti", IDCANCEL, 101, 97, 50, 14
@@ -29,7 +29,7 @@ END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Kortø virðelio pasirinkimas"
+CAPTION "KortÅ³ virÅ¡elio pasirinkimas"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -38,7 +38,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -56,9 +56,9 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire\n\nSukurta J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Baigti þaidimà?"
-    IDS_SOL_WIN     "Sveikiname, jûs laimëjote!!"
-    IDS_SOL_DEAL    "Dalinti vël?"
+    IDS_SOL_QUIT    "Baigti Å¾aidimÄ…?"
+    IDS_SOL_WIN     "Sveikiname, jÅ«s laimÄ—jote!!"
+    IDS_SOL_DEAL    "Dalinti vÄ—l?"
 END
 
 
@@ -66,7 +66,7 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Þaidimas"
+    POPUP "&Å½aidimas"
     BEGIN
         MENUITEM "&Dalinti\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR

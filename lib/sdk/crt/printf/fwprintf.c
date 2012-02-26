@@ -10,7 +10,7 @@
 #include <stdarg.h>
 
 int
-__cdecl
+_cdecl
 fwprintf(FILE* file, const wchar_t *format, ...)
 {
     va_list argptr;
@@ -21,3 +21,4 @@ fwprintf(FILE* file, const wchar_t *format, ...)
     va_end(argptr);
     return result;
 }
+

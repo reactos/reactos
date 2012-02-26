@@ -85,7 +85,7 @@ RtlQueryTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 NTSTATUS NTAPI
 RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
-   ULONG Length;
+   SIZE_T Length;
    NTSTATUS Status;
 
    DPRINT("RtlSetTimeZoneInformation()\n");
@@ -109,7 +109,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
                                   L"Standard Name",
                                   REG_SZ,
                                   TimeZoneInformation->StandardName,
-                                  Length);
+                                  (ULONG)Length);
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -143,7 +143,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
                                   L"Daylight Name",
                                   REG_SZ,
                                   TimeZoneInformation->DaylightName,
-                                  Length);
+                                  (ULONG)Length);
    if (!NT_SUCCESS(Status))
    {
       return Status;

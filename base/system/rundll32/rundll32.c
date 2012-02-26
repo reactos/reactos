@@ -4,7 +4,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS rundll32.exe
- * FILE:            apps/utils/rundll32/rundll32.c
+ * FILE:            base/system/rundll32/rundll32.c
  * PURPOSE:         Run a DLL as a program
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */

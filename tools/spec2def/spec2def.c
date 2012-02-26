@@ -54,6 +54,7 @@ enum
     CC_STDCALL,
     CC_CDECL,
     CC_FASTCALL,
+    CC_THISCALL,
     CC_EXTERN,
     CC_STUB,
 };
@@ -65,7 +66,8 @@ enum
     ARG_STR,
     ARG_WSTR,
     ARG_DBL,
-    ARG_INT64
+    ARG_INT64,
+    ARG_FLOAT
 };
 
 char* astrCallingConventions[] =
@@ -73,6 +75,7 @@ char* astrCallingConventions[] =
     "STDCALL",
     "CDECL",
     "FASTCALL",
+    "THISCALL",
     "EXTERN"
 };
 
@@ -189,6 +192,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_STR:  fprintf(file, "char*"); break;
             case ARG_WSTR: fprintf(file, "wchar_t*"); break;
             case ARG_DBL: case ARG_INT64 :  fprintf(file, "__int64"); break;
+            case ARG_FLOAT: fprintf(file, "float"); break;
         }
         fprintf(file, " a%d", i);
     }
@@ -206,6 +210,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_WSTR: fprintf(file, "'%%ws'"); break;
             case ARG_DBL:  fprintf(file, "%%f"); break;
             case ARG_INT64: fprintf(file, "%%\"PRix64\""); break;
+            case ARG_FLOAT: fprintf(file, "%%f"); break;
         }
     }
     fprintf(file, ")\\n\"");
@@ -221,6 +226,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_WSTR: fprintf(file, "(wchar_t*)a%d", i); break;
             case ARG_DBL:  fprintf(file, "(double)a%d", i); break;
             case ARG_INT64: fprintf(file, "(__int64)a%d", i); break;
+            case ARG_FLOAT: fprintf(file, "(float)a%d", i); break;
         }
     }
     fprintf(file, ");\n");
@@ -338,10 +344,18 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     }
     else if (pexp->pcRedirection)
     {
-        int fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
+        if (gbMSComp && (pexp->pcName[0] == '?'))
+        {
+            /* ignore c++ redirection, since link doesn't like that! */
+        }
+        else
+        {
+            int fDeco;
 
-        fprintf(fileDest, "=");
-        PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+            fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
+            fprintf(fileDest, "=");
+            PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+        }
     }
     else if (((pexp->uFlags & FL_STUB) || (pexp->nCallingConvention == CC_STUB)) &&
              (pexp->pcName[0] == '?'))
@@ -443,6 +457,10 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         else if (CompareToken(pc, "fastcall"))
         {
             exp.nCallingConvention = CC_FASTCALL;
+        }
+        else if (CompareToken(pc, "thiscall"))
+        {
+            exp.nCallingConvention = CC_THISCALL;
         }
         else if (CompareToken(pc, "extern"))
         {
@@ -581,6 +599,11 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                 {
                     exp.nStackBytes += 8;
                     exp.anArgs[exp.nArgCount] = ARG_INT64;
+                }
+                else if (CompareToken(pc, "float"))
+                {
+                    exp.nStackBytes += 4;
+                    exp.anArgs[exp.nArgCount] = ARG_FLOAT;
                 }
                 else
                     fprintf(stderr, "error: line %d, expected type, got: %.10s\n", nLine, pc);
@@ -799,7 +822,11 @@ int main(int argc, char *argv[])
 
     /* Allocate memory buffer */
     pszSource = malloc(nFileSize + 1);
-    if (!pszSource) return -4;
+    if (!pszSource)
+    {
+        fclose(file);
+        return -4;
+    }
 
     /* Load input file into memory */
     nFileSize = fread(pszSource, 1, nFileSize, file);

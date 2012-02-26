@@ -30,28 +30,13 @@
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/nl-NL.rc"
-#include "lang/pt-PT.rc"
+#include "lang/pl-PL.rc"
+#include "lang/pt-BR.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/Sr.rc"
 #include "lang/sv-SE.rc"
 #include "lang/uk-UA.rc"
-
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
-END
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILENAME_STR "inetcpl.cpl"
 #define WINE_FILEDESCRIPTION_STR "Internet Control Panel"

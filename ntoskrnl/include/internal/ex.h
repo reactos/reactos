@@ -61,6 +61,13 @@ typedef struct
     PWSTR Name;
 } SYSTEM_CALLBACKS;
 
+typedef struct _HARDERROR_USER_PARAMETERS
+{
+    ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];
+    UNICODE_STRING Strings[MAXIMUM_HARDERROR_PARAMETERS];
+    WCHAR Buffer[ANYSIZE_ARRAY];
+} HARDERROR_USER_PARAMETERS, *PHARDERROR_USER_PARAMETERS;
+
 #define MAX_FAST_REFS           7
 
 #define ExAcquireRundownProtection                      _ExAcquireRundownProtection
@@ -123,6 +130,14 @@ typedef struct
 #define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
 #define ExpSetRundown(x, y) InterlockedExchangePointer(&x->Ptr, (PVOID)y)
 
+NTSTATUS
+NTAPI
+ExGetPoolTagInfo(
+    IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
+    IN ULONG SystemInformationLength,
+    IN OUT PULONG ReturnLength OPTIONAL
+);
+                 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID

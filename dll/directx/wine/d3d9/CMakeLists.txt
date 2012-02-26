@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(
     -D__WINESRC__
@@ -32,7 +31,7 @@ list(APPEND SOURCE
 
 add_library(d3d9 SHARED ${SOURCE})
 
-set_module_type(d3d9 win32dll)
+set_module_type(d3d9 win32dll UNICODE)
 
 target_link_libraries(d3d9 uuid wine)
 
@@ -47,4 +46,4 @@ add_importlibs(d3d9
 
 add_dependencies(d3d9 wineheaders)
 add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
-add_importlib_target(d3d9.spec)
+add_importlib_target(d3d9.spec d3d9.dll)

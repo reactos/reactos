@@ -1,21 +1,22 @@
 /*
  * PROJECT:         ReactOS RAPPS
- * FILE:            \reactos\base\applications\cmdutils\more\lang\sv-SE.rc
+ * FILE:            base\applications\cmdutils\more\lang\sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_USAGE, "Visa data sida-efter-sida pÂ sk‰rmen.\n\n\
+  IDS_USAGE, "Visa data sida-efter-sida p√• sk√§rmen.\n\n\
   MORE < [Enhet:][Mapp]Filnamn\n\
   Kommando | MORE \n\
   MORE [Enhet:][Mapp]Filnamn\n\n\
-  [Enhet:][Mapp]Filnamn    En fil, V‰lj innehÂll som skall visas.\n\
-  Kommando\t\t     Ett kommando, V‰lj vad som skall visas.\n\n\
-  vid prompten ""-- Forts‰tt --"" du kan trycka valfri knapp fˆr att visa n‰sta sida.\n"
+  [Enhet:][Mapp]Filnamn    En fil, V√§lj inneh√•ll som skall visas.\n\
+  Kommando\t\t     Ett kommando, V√§lj vad som skall visas.\n\n\
+  vid prompten ""-- Forts√§tt --"" du kan trycka valfri knapp f√∂r att visa n√§sta sida.\n"
 
-  IDS_CONTINUE, " -- Forts‰tt (100%) -- "
-  IDS_FILE_ACCESS, "FÂr inte tillgÂng till filen %s."
+  IDS_CONTINUE, " -- Forts√§tt (100%) -- "
+  IDS_FILE_ACCESS, "F√•r inte tillg√•ng till filen %s."
 END

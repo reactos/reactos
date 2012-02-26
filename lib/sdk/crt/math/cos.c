@@ -19,7 +19,7 @@ cos(double x)
     double x2, result;
 
     /* Calculate the quadrant */
-    quadrant = x * (2./M_PI);
+    quadrant = (int)(x * (2./M_PI));
 
     /* Get offset inside quadrant */
     x = x - quadrant * (M_PI/2.);
@@ -33,7 +33,7 @@ cos(double x)
     /* Calculate the negative of the square of x */
     x2 = - (x * x);
 
-    /* This is an unrolled taylor series using <PRECISION> iterations 
+    /* This is an unrolled taylor series using <PRECISION> iterations
      * Example with 4 iterations:
      * result = 1 - x^2/2! + x^4/4! - x^6/6! + x^8/8!
      * To save multiplications and to keep the precision high, it's performed

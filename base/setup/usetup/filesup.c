@@ -35,6 +35,7 @@
 
 static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
+static CAB_SEARCH Search;
 
 NTSTATUS
 SetupCreateDirectory(PWCHAR DirectoryName)
@@ -167,7 +168,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			    FileHandleSource);
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection failed: %x\n", Status);
+      DPRINT1("NtCreateSection failed: %x, %wZ\n", Status, SourceFileName);
       goto closesrc;
     }
 
@@ -183,7 +184,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			       PAGE_READONLY );
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtMapViewOfSection failed: %x\n", Status);
+      DPRINT1("NtMapViewOfSection failed: %x, %wZ\n", Status, SourceFileName);
       goto closesrcsec;
     }
 
@@ -275,7 +276,6 @@ SetupExtractFile(PWCHAR CabinetFileName,
 	      PWCHAR DestinationPathName)
 {
   ULONG CabStatus;
-  CAB_SEARCH Search;
 
   DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
     CabinetFileName, SourceFileName, DestinationPathName);
@@ -288,6 +288,16 @@ SetupExtractFile(PWCHAR CabinetFileName,
   if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
     {
       DPRINT("Using same cabinet as last time\n");
+
+      /* Use our last location because the files should be sequential */
+      CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
+      if (CabStatus != CAB_STATUS_SUCCESS)
+      {
+          DPRINT("Sequential miss on file: %S\n", SourceFileName);
+          
+          /* Looks like we got unlucky */
+          CabStatus = CabinetFindFirst(SourceFileName, &Search);
+      }
     }
   else
     {
@@ -315,10 +325,18 @@ SetupExtractFile(PWCHAR CabinetFileName,
           DPRINT("Cannot open cabinet (%d)\n", CabStatus);
           return STATUS_UNSUCCESSFUL;
         }
+        
+      /* We have to start at the beginning here */
+      CabStatus = CabinetFindFirst(SourceFileName, &Search);
     }
+    
+  if (CabStatus != CAB_STATUS_SUCCESS)
+  {
+      DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
+      return STATUS_UNSUCCESSFUL;
+  }
 
   CabinetSetDestinationPath(DestinationPathName);
-  CabinetFindFirst( SourceFileName, &Search );
   CabStatus = CabinetExtractFile(&Search);
   if (CabStatus != CAB_STATUS_SUCCESS)
     {

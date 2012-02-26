@@ -21,6 +21,12 @@
 #define REGISTERCALL __attribute__((regparm(3)))
 #endif
 
+#ifdef CONFIG_SMP
+#define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
+#else
+#define HAL_BUILD_TYPE ((DBG ? PRCB_BUILD_DEBUG : 0) | PRCB_BUILD_UNIPROCESSOR)
+#endif
+
 typedef struct _HAL_BIOS_FRAME
 {
     ULONG SegSs;
@@ -161,9 +167,9 @@ typedef union _TIMER_CONTROL_PORT_REGISTER
     struct
     {
         UCHAR BcdMode:1;
-        TIMER_OPERATING_MODES OperatingMode:3;
-        TIMER_ACCESS_MODES AccessMode:2;
-        TIMER_CHANNELS Channel:2;
+        UCHAR OperatingMode:3;
+        UCHAR AccessMode:2;
+        UCHAR Channel:2;
     };
     UCHAR Bits;
 } TIMER_CONTROL_PORT_REGISTER, *PTIMER_CONTROL_PORT_REGISTER;
@@ -633,18 +639,27 @@ HalpReleasePciDeviceForDebugging(
 //
 // Memory routines
 //
+ULONG_PTR
+NTAPI
+HalpAllocPhysicalMemory(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG_PTR MaxAddress,
+    IN PFN_NUMBER PageCount,
+    IN BOOLEAN Aligned
+);
+
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(
     IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG NumberPage
+    IN PFN_NUMBER PageCount
 );
 
 VOID
 NTAPI
 HalpUnmapVirtualAddress(
     IN PVOID VirtualAddress,
-    IN ULONG NumberPages
+    IN PFN_NUMBER NumberPages
 );
 
 /* sysinfo.c */
@@ -722,7 +737,7 @@ HalpWriteCmos(
 //
 VOID
 NTAPI
-HalpAcquireSystemHardwareSpinLock(
+HalpAcquireCmosSpinLock(
     VOID
 );
 
@@ -730,22 +745,6 @@ VOID
 NTAPI
 HalpReleaseCmosSpinLock(
     VOID
-);
-
-ULONG
-NTAPI
-HalpAllocPhysicalMemory(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN ULONG MaxAddress,
-    IN ULONG PageCount,
-    IN BOOLEAN Aligned
-);
-
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG PageCount
 );
 
 NTSTATUS
@@ -836,8 +835,18 @@ HalpDebugPciDumpBus(
     IN PPCI_COMMON_CONFIG PciData
 );
 
+VOID
+NTAPI
+HalpInitProcessor(
+    IN ULONG ProcessorNumber,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
+#define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
+#define KiEoiHelper(TrapFrame) return /* Just return to the caller */
+#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) TRUE
 #ifndef CONFIG_SMP
 /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
 #define KiAcquireSpinLock(SpinLock)
@@ -865,5 +874,6 @@ extern PWCHAR HalName;
 
 extern KAFFINITY HalpDefaultInterruptAffinity;
 
-extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
+extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
+extern const USHORT HalpBuildType;

@@ -1,8 +1,8 @@
 Index: usp10.c
 ===================================================================
---- usp10.c	(revision 44689)
-+++ usp10.c	(working copy)
-@@ -1841,3 +1841,9 @@
+--- usp10.c     (revision 54504)
++++ usp10.c     (working copy)
+@@ -1989,3 +3159,9 @@
      for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
      return S_OK;
  }
@@ -14,7 +14,7 @@ Index: usp10.c
 +}
 Index: usp10.spec
 ===================================================================
---- usp10.spec	(revision 44689)
+--- usp10.spec	(revision 54504)
 +++ usp10.spec	(working copy)
 @@ -1,4 +1,4 @@
 -@ stub LpkPresent

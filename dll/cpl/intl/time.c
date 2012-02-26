@@ -18,19 +18,12 @@
  */
 /*
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/time.c
+ * FILE:            dll/cpl/intl/time.c
  * PURPOSE:         Time property page
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include <malloc.h>
-
 #include "intl.h"
-#include "resource.h"
 
 static HWND hwndEnum = NULL;
 
@@ -61,26 +54,26 @@ GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, TCHAR *Buffer, UINT uSize)
     int nIndex;
     HWND hChildWnd;
 
-    /* get handle to time format control */
+    /* Get handle to time format control */
     hChildWnd = GetDlgItem(hwndDlg, dwIdc);
     /* Get index to selected time format */
     nIndex = SendMessage(hChildWnd, CB_GETCURSEL, 0, 0);
     if (nIndex == CB_ERR)
-        /* no selection? get content of the edit control */
+        /* No selection? Get content of the edit control */
         SendMessage(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
     else {
         LPTSTR tmp;
         UINT   uReqSize;
 
-        /* get requested size, including the null terminator;
+        /* Get requested size, including the null terminator;
          * it shouldn't be required because the previous CB_LIMITTEXT,
          * but it would be better to check it anyways */
         uReqSize = SendMessage(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
-        /* allocate enough space to be more safe */
+        /* Allocate enough space to be more safe */
         tmp = (LPTSTR)_alloca(uReqSize*sizeof(TCHAR));
-        /* get selected time format text */
+        /* Get selected time format text */
         SendMessage(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
-        /* finally, copy the result into the output */
+        /* Finally, copy the result into the output */
         _tcsncpy(Buffer, tmp, uSize);
     }
 }
@@ -133,7 +126,7 @@ TimePageProc(HWND hwndDlg,
                         (LPARAM)Buffer);
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                         CB_SETCURSEL,
-                        0, /* index */
+                        0, /* Index */
                         0);
 
             /* Get the AM symbol */
@@ -153,7 +146,7 @@ TimePageProc(HWND hwndDlg,
             }
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                         CB_SETCURSEL,
-                        0, /* index */
+                        0, /* Index */
                         0);
 
             /* Get the PM symbol */
@@ -173,7 +166,7 @@ TimePageProc(HWND hwndDlg,
             }
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                         CB_SETCURSEL,
-                        0, /* index */
+                        0, /* Index */
                         0);
         }
         break;
@@ -202,25 +195,25 @@ TimePageProc(HWND hwndDlg,
             {
                 TCHAR Buffer[80];
 
-                /* get selected/typed time format text */
+                /* Get selected/typed time format text */
                 GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT, Buffer, sizeof(Buffer)/sizeof(TCHAR));
 
                 /* Set time format */
                 SetLocaleInfo(pGlobalData->lcid, LOCALE_STIMEFORMAT, Buffer);
 
-                /* get selected/typed time separator text */
+                /* Get selected/typed time separator text */
                 GetSelectedComboEntry(hwndDlg, IDC_TIMESEPARATOR, Buffer, sizeof(Buffer)/sizeof(TCHAR));
 
                 /* Set time separator */
                 SetLocaleInfo(pGlobalData->lcid, LOCALE_STIME, Buffer);
 
-                /* get selected/typed AM symbol text */
+                /* Get selected/typed AM symbol text */
                 GetSelectedComboEntry(hwndDlg, IDC_TIMEAMSYMBOL, Buffer, sizeof(Buffer)/sizeof(TCHAR));
 
                 /* Set the AM symbol */
                 SetLocaleInfo(pGlobalData->lcid, LOCALE_S1159, Buffer);
 
-                /* get selected/typed PM symbol text */
+                /* Get selected/typed PM symbol text */
                 GetSelectedComboEntry(hwndDlg, IDC_TIMEPMSYMBOL, Buffer, sizeof(Buffer)/sizeof(TCHAR));
 
                 /* Set the PM symbol */

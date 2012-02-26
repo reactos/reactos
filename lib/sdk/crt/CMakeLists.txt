@@ -37,8 +37,8 @@ add_library(user32_wsprintf
     string/mbstowcs_nt.c
     string/wcstombs_nt.c)
 
-set_property(TARGET user32_wsprintf PROPERTY COMPILE_DEFINITIONS _USER32_WSPRINTF)
+add_target_compile_definitions(user32_wsprintf _USER32_WSPRINTF)
 
 add_library(getopt misc/getopt.c)
-set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)

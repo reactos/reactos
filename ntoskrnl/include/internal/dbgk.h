@@ -43,7 +43,7 @@
     }
 #endif
 #else
-#define DBGKTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define DBGKTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 VOID
@@ -134,6 +134,14 @@ DbgkClearProcessDebugObject(
     IN PDEBUG_OBJECT SourceDebugObject
 );
 
+NTSTATUS
+NTAPI
+DbgkOpenProcessDebugPort(
+    IN PEPROCESS Process,
+    IN KPROCESSOR_MODE PreviousMode,
+    OUT HANDLE *DebugHandle
+);
+                         
 extern ULONG DbgkpTraceLevel;
 extern POBJECT_TYPE DbgkDebugObjectType;
 

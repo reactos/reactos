@@ -28,6 +28,9 @@
 
 #define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
 
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+#define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
+#define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
@@ -75,6 +78,8 @@
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
+#define MiIsPteOnPdeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
@@ -161,7 +166,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #error Define these please!
 #endif
 
-extern const ULONG MmProtectToPteMask[32];
+extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
@@ -230,7 +235,7 @@ extern const ULONG MmProtectToValue[32];
 #define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
 #elif defined(_M_AMD64)
 #define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
-#define COLORED_LIST_HEAD ((1 << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
+#define COLORED_LIST_HEAD ((1ULL << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
 #else
 #error Define these please!
 #endif
@@ -259,7 +264,11 @@ extern const ULONG MmProtectToValue[32];
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
+#ifdef _M_AMD64
+#define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
+#else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+#endif
 
 //
 // System views are binned into 64K chunks
@@ -302,10 +311,10 @@ typedef struct _POOL_HEADER
         struct
         {
 #ifdef _M_AMD64
-            ULONG PreviousSize:8;
-            ULONG PoolIndex:8;
-            ULONG BlockSize:8;
-            ULONG PoolType:8;
+            USHORT PreviousSize:8;
+            USHORT PoolIndex:8;
+            USHORT BlockSize:8;
+            USHORT PoolType:8;
 #else
             USHORT PreviousSize:9;
             USHORT PoolIndex:7;
@@ -336,10 +345,29 @@ typedef struct _POOL_HEADER
 C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
 C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 
+typedef struct _POOL_TRACKER_TABLE
+{
+    ULONG Key;
+    LONG NonPagedAllocs;
+    LONG NonPagedFrees;
+    SIZE_T NonPagedBytes;
+    LONG PagedAllocs;
+    LONG PagedFrees;
+    SIZE_T PagedBytes;
+} POOL_TRACKER_TABLE, *PPOOL_TRACKER_TABLE;
+
+typedef struct _POOL_TRACKER_BIG_PAGES
+{
+    PVOID Va;
+    ULONG Key;
+    ULONG NumberOfPages;
+    PVOID QuotaObject;
+} POOL_TRACKER_BIG_PAGES, *PPOOL_TRACKER_BIG_PAGES;
+
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
 extern PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
-extern PVOID PoolTrackTable;
+extern PPOOL_TRACKER_TABLE PoolTrackTable;
 
 //
 // END FIXFIX
@@ -368,14 +396,14 @@ typedef enum _MI_PFN_CACHE_ATTRIBUTE
 
 typedef struct _PHYSICAL_MEMORY_RUN
 {
-    ULONG BasePage;
-    ULONG PageCount;
+    PFN_NUMBER BasePage;
+    PFN_NUMBER PageCount;
 } PHYSICAL_MEMORY_RUN, *PPHYSICAL_MEMORY_RUN;
 
 typedef struct _PHYSICAL_MEMORY_DESCRIPTOR
 {
     ULONG NumberOfRuns;
-    ULONG NumberOfPages;
+    PFN_NUMBER NumberOfPages;
     PHYSICAL_MEMORY_RUN Run[1];
 } PHYSICAL_MEMORY_DESCRIPTOR, *PPHYSICAL_MEMORY_DESCRIPTOR;
 
@@ -441,6 +469,7 @@ extern SIZE_T MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
 extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
+extern SIZE_T MiNonPagedSystemSize;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
@@ -489,7 +518,7 @@ extern SIZE_T MmDefaultMaximumNonPagedPool;
 extern ULONG MmMaxAdditionNonPagedPoolPerMb;
 extern ULONG MmSecondaryColors;
 extern ULONG MmSecondaryColorMask;
-extern ULONG_PTR MmNumberOfSystemPtes;
+extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
 extern PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
@@ -509,7 +538,7 @@ extern PFN_NUMBER MiLowNonPagedPoolThreshold;
 extern PFN_NUMBER MiHighNonPagedPoolThreshold;
 extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
-extern PFN_NUMBER MiExpansionPoolPagesInitialCharge;
+extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
 extern PFN_NUMBER MmResidentAvailablePages;
 extern PFN_NUMBER MmResidentAvailableAtInit;
 extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
@@ -526,11 +555,84 @@ extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;
 extern PMMWSL MmWorkingSetList;
+extern PFN_NUMBER MiNumberOfFreePages;
+extern SIZE_T MmSessionViewSize;
+extern SIZE_T MmSessionPoolSize;
+extern SIZE_T MmSessionImageSize;
+extern PVOID MiSystemViewStart;
+extern PVOID MiSessionPoolEnd;     // 0xBE000000
+extern PVOID MiSessionPoolStart;   // 0xBD000000
+extern PVOID MiSessionViewStart;   // 0xBE000000
+
+BOOLEAN
+FORCEINLINE
+MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
+{
+    return ((MemoryType == LoaderFree) ||
+            (MemoryType == LoaderLoadedProgram) ||
+            (MemoryType == LoaderFirmwareTemporary) ||
+            (MemoryType == LoaderOsloaderStack));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
+{
+    return ((MemoryType == LoaderFirmwarePermanent) ||
+            (MemoryType == LoaderSpecialMemory) ||
+            (MemoryType == LoaderHALCachedMemory) ||
+            (MemoryType == LoaderBBTMemory));
+}
+
+#ifdef _M_AMD64
+BOOLEAN
+FORCEINLINE
+MiIsUserPxe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPpe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
+}
+#else
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
+            (Address <= (PVOID)MiHighestUserPde));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return (Address <= (PVOID)MiHighestUserPte);
+}
+#endif
 
 //
 // Figures out the hardware bits for a PTE
 //
-ULONG
+ULONG_PTR
 FORCEINLINE
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
@@ -544,9 +646,15 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
     MI_MAKE_ACCESSED_PAGE(&TempPte);
 
     /* Is this for user-mode? */
-    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
-        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
-         (PointerPte <= (PVOID)MiHighestUserPde)))
+    if (
+#if (_MI_PAGING_LEVELS == 4)
+        MiIsUserPxe(PointerPte) ||
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        MiIsUserPpe(PointerPte) ||
+#endif
+        MiIsUserPde(PointerPte) ||
+        MiIsUserPte(PointerPte))
     {
         /* Set the owner bit */
         MI_MAKE_OWNER_PAGE(&TempPte);
@@ -565,7 +673,7 @@ FORCEINLINE
 VOID
 MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
                             IN PMMPTE MappingPte,
-                            IN ULONG ProtectionMask,
+                            IN ULONG_PTR ProtectionMask,
                             IN PFN_NUMBER PageFrameNumber)
 {
     /* Only valid for kernel, non-session PTEs */
@@ -588,7 +696,7 @@ FORCEINLINE
 VOID
 MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
                      IN PMMPTE MappingPte,
-                     IN ULONG ProtectionMask,
+                     IN ULONG_PTR ProtectionMask,
                      IN PFN_NUMBER PageFrameNumber)
 {
     /* Set the protection and page */
@@ -604,7 +712,7 @@ FORCEINLINE
 VOID
 MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
                           IN PMMPTE MappingPte,
-                          IN ULONG ProtectionMask,
+                          IN ULONG_PTR ProtectionMask,
                           IN PFN_NUMBER PageFrameNumber)
 {
     /* Only valid for kernel, non-session PTEs */
@@ -910,6 +1018,10 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+VOID
+NTAPI
+MiInitializeSessionSpaceLayout();
+
 NTSTATUS
 NTAPI
 MiInitMachineDependent(
@@ -938,6 +1050,12 @@ VOID
 NTAPI
 MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeSessionIds(
+    VOID
 );
 
 BOOLEAN
@@ -1116,6 +1234,14 @@ MiInitializePfn(
 
 VOID
 NTAPI
+MiInitializePfnAndMakePteValid(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN MMPTE TempPte
+);
+
+VOID
+NTAPI
 MiInitializePfnForOtherProcess(
     IN PFN_NUMBER PageFrameIndex,
     IN PMMPTE PointerPte,
@@ -1160,7 +1286,7 @@ MiInsertPageInFreeList(
     IN PFN_NUMBER PageFrameIndex
 );
 
-PFN_NUMBER
+PFN_COUNT
 NTAPI
 MiDeleteSystemPageableVm(
     IN PMMPTE PointerPte,
@@ -1317,6 +1443,12 @@ MiLocateSubsection(
     IN ULONG_PTR Vpn
 );
 
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(
+    IN PVOID PoolAddress
+);
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
@@ -1335,7 +1467,14 @@ MiRemoveZeroPageSafe(IN ULONG Color)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
 #define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
 #define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
 #define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
 typedef struct _MMROSPFN

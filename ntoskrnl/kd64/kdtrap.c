@@ -91,7 +91,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     }
     else if (SecondChanceException == FALSE)
     {
-        /* 
+        /*
          * This isn't a debug exception and the stop-on-exception flag isn't
          * set, so don't bother
          */
@@ -275,7 +275,7 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
         IN KPROCESSOR_MODE PreviousMode,
         IN BOOLEAN SecondChanceException)
 {
-    ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
+    ULONG_PTR ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
 
     /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&

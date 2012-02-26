@@ -2,24 +2,24 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "ReactOS zjistil, ûe bÏûÌ pod VMware(r).", -1, 117, 8, 140, 24
-  LTEXT "Pokud chcete nainstalovat VMware(r) SVGA ovladaË klepnÏte na 'DalöÌ', pokud ovladaË instalovat nechcete, klepnÏte na 'Storno'.", -1, 117, 140, 140, 24
+  LTEXT "ReactOS zjistil, ≈æe je spu≈°tƒõn pod VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Pokud chcete nainstalovat VMware(r) SVGA ovladaƒç kliknƒõte na 'Dal≈°√≠', pokud ovladaƒç instalovat nechcete, klepnƒõte na 'Storno'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "StandardnÌ instalace ReactOS neobsahuje VMware(r) SVGA ovladaË.\n\nProto musÌte v oknÏ VMware(r) workstation vybrat nabÌdku 'VM' a zvolit poloûku 'Install VMware tools...'\n\n\nKlepnÏte na 'DalöÌ' pro pokraËov·nÌ nebo 'Storno' pro p¯eskoËenÌ instalace SVGA ovladaËe.",-1,25,25,225,85
+  LTEXT "Standardn√≠ instalace ReactOS neobsahuje VMware(r) SVGA ovladaƒç.\n\nProto mus√≠te v oknƒõ VMware(r) workstation vybrat nab√≠dku 'VM' a zvolit polo≈æku 'Install VMware tools...'\n\n\nKlepnƒõte na 'Dal≈°√≠' pro pokraƒçov√°n√≠ nebo 'Storno' pro p≈ôeskoƒçen√≠ instalace SVGA ovladaƒçe.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -28,10 +28,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "OvladaË obrazovky VMware(r) SVGA byl ˙spÏönÏ nainstalov·n. NynÌ, prosÌm, vyberte preferovanÈ rozliöenÌ obrazovky:",-1,25,5,225,20
+  LTEXT "Ovladaƒç obrazovky VMware(r) SVGA byl √∫spƒõ≈°nƒõ nainstalov√°n. Nyn√≠, pros√≠m, vyberte preferovan√© rozli≈°en√≠ obrazovky:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -43,89 +43,89 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "NynÌ vyberte preferovanou hloubku barev:", -1, 25, 93, 225, 12
+  LTEXT "Nyn√≠ vyberte preferovanou hloubku barev:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Nelze nainstalovat VMware(r) SVGA ovladaË.\n\n\nKlepnÏte na 'DokonËit' pro pokraËov·nÌ v instalaËnÌm procesu.",-1,25,25,225,85
+  LTEXT "Nelze nainstalovat VMware(r) SVGA ovladaƒç.\n\n\nKlepnƒõte na 'Dokonƒçit' pro pokraƒçov√°n√≠ v instalaƒçn√≠m procesu.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "OvladaË VMware(r) SVGA je jiû nainstalov·n.\n\nNynÌ, prosÌm, zvolte, co chete provÈst:",-1,25,5,225,30
-  PUSHBUTTON "Upravit nastavenÌ obrazovky", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "PouûÌt jin˝ grafick˝ ovladaË", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Odebrat ovladaË VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "KlepnÏte na 'DalöÌ' pro pokraËov·nÌ nebo na 'Storno' pro ukonËenÌ pr˘vodce.", -1, 25, 93, 225, 19
+  LTEXT "Ovladaƒç VMware(r) SVGA je ji≈æ nainstalov√°n.\n\nNyn√≠, pros√≠m, zvolte, co chete prov√©st:",-1,25,5,225,30
+  PUSHBUTTON "Upravit nastaven√≠ obrazovky", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Pou≈æ√≠t jin√Ω grafick√Ω ovladaƒç", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Odebrat ovladaƒç VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Klepnƒõte na 'Dal≈°√≠' pro pokraƒçov√°n√≠ nebo na 'Storno' pro ukonƒçen√≠ pr≈Øvodce.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Vyberte, prosÌm, grafick˝ ovladaË, kter˝ chcete pouûÌt:",-1,25,25,225,15
-  PUSHBUTTON "ReactOS VGA ovladaË", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "ReactOS VBE ovladaË (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "KlepnÏte na 'DokonËit' pro dokonËenÌ operace nebo na 'Storno' pro ukonËenÌ nastavenÌ beze zmÏn.", -1, 25, 93, 225, 20
+  LTEXT "Vyberte, pros√≠m, grafick√Ω ovladaƒç, kter√Ω chcete pou≈æ√≠t:",-1,25,25,225,15
+  PUSHBUTTON "ReactOS VGA ovladaƒç", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "ReactOS VBE ovladaƒç (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "Klepnƒõte na 'Dokonƒçit' pro dokonƒçen√≠ operace nebo na 'Storno' pro ukonƒçen√≠ nastaven√≠ beze zmƒõn.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalace ovladaËe obrazovky"
+CAPTION "Instalace ovladaƒçe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "NynÌ bude odebr·n ovladaË VMware(r) SVGA!!!\n\n\nKlepnÏte na 'DokonËit' pro odebr·nÌ ovladaËe nebo na 'Storno' pro ponech·nÌ.",-1,25,25,225,85
+  LTEXT "Nyn√≠ bude odebr√°n ovladaƒç VMware(r) SVGA!!!\n\n\nKlepnƒõte na 'Dokonƒçit' pro odebr√°n√≠ ovladaƒçe nebo na 'Storno' pro ponech√°n√≠.",-1,25,25,225,85
 END
 
 STRINGTABLE
 BEGIN
-  IDS_WIZARD_NAME "Detekov·no prost¯edÌ VMware(r)"
-  IDS_FAILEDTOLOCATEDRIVERS "ReactOS nem˘ûe nalÈzt poûadovanÈ soubory.\nZkontrolujte, prosÌm, zda je VMware(r) tools CD-ROM spr·vnÏ vloûeno."
-  IDS_FAILEDTOCOPYFILES "Nelze zkopÌrovat poûadovanÈ soubory.\nZkontrolujte, prosÌm, zda je VMware(r) tools CD-ROM spr·vnÏ vloûeno.\n"
-  IDS_FAILEDTOACTIVATEDRIVER "Nepoda¯ilo se zaktivovat VMware(r) SVGA ovladaË!"
-  IDS_FAILEDTOSELVGADRIVER "Nepoda¯ilo se zaktivovat ReactOS VGA ovladaË!"
-  IDS_FAILEDTOSELVBEDRIVER "Nepoda¯ilo se zaktivovat ReactOS VBE ovladaË!"
-  IDS_UNINSTNOTICE "Podp˘rnÈ soubory VMware(r) SVGA ovladaËe nebyly odstranÏny.\nSmaûte je, prosÌm, po restarov·nÌ systÈmu."
-  IDS_FAILEDTOADDREGENTRIES "Nepoda¯ilo se vytvo¯it v registru z·pis pro VMware(r) SVGA ovladaË!"
+  IDS_WIZARD_NAME "Detekov√°no prost≈ôed√≠ VMware(r)"
+  IDS_FAILEDTOLOCATEDRIVERS "ReactOS nem≈Ø≈æe nal√©zt po≈æadovan√© soubory.\nZkontrolujte, pros√≠m, zda je VMware(r) tools CD-ROM spr√°vnƒõ vlo≈æeno."
+  IDS_FAILEDTOCOPYFILES "Nelze zkop√≠rovat po≈æadovan√© soubory.\nZkontrolujte, pros√≠m, zda je VMware(r) tools CD-ROM spr√°vnƒõ vlo≈æeno.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "Nepoda≈ôilo se zaktivovat VMware(r) SVGA ovladaƒç!"
+  IDS_FAILEDTOSELVGADRIVER "Nepoda≈ôilo se zaktivovat ReactOS VGA ovladaƒç!"
+  IDS_FAILEDTOSELVBEDRIVER "Nepoda≈ôilo se zaktivovat ReactOS VBE ovladaƒç!"
+  IDS_UNINSTNOTICE "Podp≈Ørn√© soubory VMware(r) SVGA ovladaƒçe nebyly odstranƒõny.\nSma≈æte je, pros√≠m, po restarov√°n√≠ syst√©mu."
+  IDS_FAILEDTOADDREGENTRIES "Nepoda≈ôilo se vytvo≈ôit v registru z√°pis pro VMware(r) SVGA ovladaƒç!"
 END
 
 STRINGTABLE
 BEGIN
-  10001 "NejniûöÌ (8BPP)"
-  10002 "St¯ednÌ (16BPP)"
-  10003 "NejvyööÌ (32BPP)"
+  10001 "Nejni≈æ≈°√≠ (8BPP)"
+  10002 "St≈ôedn√≠ (16BPP)"
+  10003 "Nejvy≈°≈°√≠ (32BPP)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_SEARCHINGFORCDROM "Hled· se VMware(r) Tools CD-ROM..."
-  IDS_COPYINGFILES      "kopÌrujÌ se soubory..."
-  IDS_ENABLINGDRIVER    "Zav·dÌ se ovladaË VMware(r) SVGA..."
+  IDS_SEARCHINGFORCDROM "Hled√° se VMware(r) Tools CD-ROM..."
+  IDS_COPYINGFILES      "kop√≠ruj√≠ se soubory..."
+  IDS_ENABLINGDRIVER    "Zav√°d√≠ se ovladaƒç VMware(r) SVGA..."
 END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE     	"Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Vloûte, prosÌm, VMware(r) tools CD-ROM."
-  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Vyhled·nÌ a kopÌrov·nÌ VMware (r) SVGA ovladaËe."
-  IDD_CONFIGTITLE     			"Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_CONFIGSUBTITLE     		"Vyberte, prosÌm, preferovanÈ rozliöenÌ obrazovky:"
-  IDD_INSTALLATION_FAILEDTITLE     	"Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "Instalace ovladaËe VMware (r) SVGA selhala."
-  IDD_CHOOSEACTIONTITLE    	        "Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_CHOOSEACTIONSUBTITLE              "Zvolte, prosÌm,  co chete provÈst."
-  IDD_SELECTDRIVERTITLE                 "Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_SELECTDRIVERSUBTITLE              "Vyberte ovladaË."
-  IDD_DOUNINSTALLTITLE                  "Pr˘vodce instalacÌ VMware (r) SVGA ovladaËe"
-  IDD_DOUNINSTALLSUBTITLE               "OdstranÏnÌ ovladaËe."
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Vlo≈æte, pros√≠m, VMware(r) tools CD-ROM."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Vyhled√°n√≠ a kop√≠rov√°n√≠ VMware (r) SVGA ovladaƒçe."
+  IDD_CONFIGTITLE     			"Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_CONFIGSUBTITLE     		"Vyberte, pros√≠m, preferovan√© rozli≈°en√≠ obrazovky:"
+  IDD_INSTALLATION_FAILEDTITLE     	"Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "Instalace ovladaƒçe VMware (r) SVGA selhala."
+  IDD_CHOOSEACTIONTITLE    	        "Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_CHOOSEACTIONSUBTITLE              "Zvolte, pros√≠m,  co chete prov√©st."
+  IDD_SELECTDRIVERTITLE                 "Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_SELECTDRIVERSUBTITLE              "Vyberte ovladaƒç."
+  IDD_DOUNINSTALLTITLE                  "Pr≈Øvodce instalac√≠ VMware (r) SVGA ovladaƒçe"
+  IDD_DOUNINSTALLSUBTITLE               "Odstranƒõn√≠ ovladaƒçe."
 END

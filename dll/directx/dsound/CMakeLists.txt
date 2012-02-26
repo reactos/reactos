@@ -39,4 +39,4 @@ add_importlibs(dsound
     ntdll)
 
 add_cd_file(TARGET dsound DESTINATION reactos/system32 FOR all)
-add_importlib_target(dsound.spec)
+add_importlib_target(dsound.spec dsound.dll)

@@ -1,4 +1,4 @@
-/* 
+/*
  * Simplified Chinese Resource for Powercfg (dll/cpl/powercfg/lang/zh-CN.rc)
  * CREATED: Jingjing Fu (jingjingf AT 188.com) 2009-05-02
  */
@@ -12,7 +12,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "请选定对于您使用计算机方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "电源使用方案(&O)", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "另存为(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -161,9 +161,7 @@ BEGIN
   IDS_TIMEOUT14 "4 小时之后"
   IDS_TIMEOUT15 "5 小时之后"
   IDS_TIMEOUT16 "从不"
-  
+
   IDS_DEL_SCHEME "您确定要删除电源使用方案吗?"
   IDS_DEL_SCHEME_TITLE "删除方案"
 END
-
-

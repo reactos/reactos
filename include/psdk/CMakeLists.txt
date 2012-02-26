@@ -11,6 +11,7 @@ list(APPEND SOURCE
     asptlb.idl
 #   asynot.idl
 #   asysta.idl
+    atliface.idl
     bdaiface.idl
 #   binres.idl
     bits.idl
@@ -20,6 +21,8 @@ list(APPEND SOURCE
     comcat.idl
     commoncontrols.idl
     control.idl
+    cor.idl
+    cordebug.idl
 #   crtrow.idl
     ctxtcall.idl
 #   dbccmd.idl
@@ -43,6 +46,7 @@ list(APPEND SOURCE
     imnact.idl
     imnxport.idl
     indexsrv.idl
+    metahost.idl
     mimeinfo.idl
     mimeole.idl
     mlang.idl
@@ -59,6 +63,7 @@ list(APPEND SOURCE
     netcon.idl
     netfw.idl
     oaidl.idl
+    objectarray.idl
     objidl.idl
     objsafe.idl
     ocidl.idl
@@ -114,7 +119,8 @@ endif()
 
 add_idl_headers(psdk ${SOURCE})
 
-add_typelib(stdole2 stdole2.idl)
+add_typelib(stdole2.idl)
+add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
 
 add_iid_library(wuguid wuapi.idl)
 add_iid_library(xml_uuids msxml2.idl)

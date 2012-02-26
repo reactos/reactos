@@ -512,7 +512,7 @@ void CCabinet::SetDestinationPath(char* DestinationPath)
     strcpy(DestPath, DestinationPath);
     ConvertPath(DestPath, false);
     if (strlen(DestPath) > 0)
-        NormalizePath(DestPath, MAX_PATH);
+        NormalizePath(DestPath, PATH_MAX);
 }
 
 ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
@@ -1030,8 +1030,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
 #if defined(_WIN32)
     FILETIME FileTime;
 #endif
-    CHAR DestName[MAX_PATH];
-    CHAR TempName[MAX_PATH];
+    CHAR DestName[PATH_MAX];
+    CHAR TempName[PATH_MAX];
 
     Status = LocateFile(FileName, &File);
     if (Status != CAB_STATUS_SUCCESS)
@@ -1155,12 +1155,14 @@ ULONG CCabinet::ExtractFile(char* FileName)
     if (Offset == INVALID_SET_FILE_POINTER)
     {
         DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", (UINT)GetLastError()));
+        CloseFile(DestFile);
         return CAB_STATUS_INVALID_CAB;
     }
 #else
     if (fseek(FileHandle, (off_t)File->DataBlock->AbsoluteOffset, SEEK_SET) != 0)
     {
         DPRINT(MIN_TRACE, ("fseek() failed.\n"));
+        CloseFile(DestFile);
         return CAB_STATUS_FAILURE;
     }
     Offset = ftell(FileHandle);
@@ -2039,6 +2041,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_NOMEMORY;
     }
 
@@ -2051,6 +2054,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read from file.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2058,6 +2062,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read file times.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2065,6 +2070,7 @@ ULONG CCabinet::AddFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("Cannot read file attributes.\n"));
         FreeMemory(NewFileName);
+        CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
 
@@ -2080,8 +2086,8 @@ bool CCabinet::CreateSimpleCabinet()
 {
     bool bRet = false;
     char* pszFile;
-    char szFilePath[MAX_PATH];
-    char szFile[MAX_PATH];
+    char szFilePath[PATH_MAX];
+    char szFile[PATH_MAX];
     PSEARCH_CRITERIA Criteria;
     ULONG Status;
 
@@ -2548,7 +2554,7 @@ ULONG CCabinet::ReadFileTable()
             return CAB_STATUS_INVALID_CAB;
         }
 
-        File->FileName = (char*)AllocateMemory(MAX_PATH);
+        File->FileName = (char*)AllocateMemory(PATH_MAX);
         if (!File->FileName)
         {
             DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
@@ -2556,7 +2562,7 @@ ULONG CCabinet::ReadFileTable()
         }
 
         /* Read file name */
-        Status = ReadString(File->FileName, MAX_PATH);
+        Status = ReadString(File->FileName, PATH_MAX);
         if (Status != CAB_STATUS_SUCCESS)
             return Status;
 
@@ -3648,7 +3654,7 @@ ULONG CCabinet::GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File)
             &File->File.FileTime);
 #else
     struct stat stbuf;
-    char buf[MAX_PATH];
+    char buf[PATH_MAX];
 
     // Check for an absolute path
     if (IsSeparator(File->FileName[0]))
@@ -3692,7 +3698,7 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
     File->File.Attributes = (USHORT)(Attributes & 0x37);
 #else
     struct stat stbuf;
-    char buf[MAX_PATH];
+    char buf[PATH_MAX];
 
     // Check for an absolute path
     if (IsSeparator(File->FileName[0]))

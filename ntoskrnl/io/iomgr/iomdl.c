@@ -132,8 +132,8 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     TargetMdl->MappedSystemVa = (PCHAR)SourceMdl->MappedSystemVa + Offset;
 
     /* Now do the copy */
-    Offset = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) >>
-             PAGE_SHIFT;
+    Offset = (ULONG)(((ULONG_PTR)TargetMdl->StartVa -
+                      (ULONG_PTR)SourceMdl->StartVa) >> PAGE_SHIFT);
     SourcePages += Offset;
     RtlCopyMemory(TargetPages, SourcePages, Length * sizeof(PFN_NUMBER));
 }

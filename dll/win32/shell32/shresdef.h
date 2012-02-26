@@ -21,12 +21,16 @@
 
 #define IDC_STATIC                  -1
 
-/* Bitmap ID's */
+/*
+ * Bitmaps
+ */
 #define IDB_SHELL_ABOUT_LOGO_24BPP  131
 
 /*
-	columntitles for the shellview
-*/
+ * Strings
+ */
+
+/* Column titles for the shellview */
 #define IDS_SHV_COLUMN1             7
 #define IDS_SHV_COLUMN2             8
 #define IDS_SHV_COLUMN3             9
@@ -42,7 +46,6 @@
 #define IDS_SHV_COLUMN_DELDATE      19
 
 #define IDS_DESKTOP                 20
-#define IDS_MYCOMPUTER              21
 
 #define IDS_SELECT                  22
 #define IDS_OPEN                    23
@@ -57,7 +60,6 @@
 #define IDS_SHUTDOWN_PROMPT         43
 
 #define IDS_PROGRAMS                45
-#define IDS_PERSONAL                46
 #define IDS_FAVORITES               47
 #define IDS_STARTUP                 48
 #define IDS_RECENT                  49
@@ -86,9 +88,6 @@
 #define IDS_DRIVE_FIXED             72
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
-#define IDS_NETWORKPLACE            75
-#define IDS_FONTS                   76
-#define IDS_PRINTERS                77
 
 #define IDS_LOGOFF_TITLE            78
 #define IDS_LOGOFF_PROMPT           79
@@ -115,7 +114,6 @@
 #define FCIDM_SHVIEW_VIEW           147
 #define IDS_CONTROLPANEL            148
 #define IDS_NEWFOLDER               149
-#define IDS_FOLDER_OPTIONS          150
 #define IDS_COLUMN_EXTENSION        151
 #define IDS_NO_EXTENSION            152
 #define IDS_RECYCLEBIN_LOCATION     153
@@ -142,11 +140,17 @@
 #define IDS_FILE_TYPES              174
 #define IDS_FILE_DETAILS            175
 #define IDS_FILE_DETAILSADV         176
+#define IDS_BYTES_FORMAT            177
+#define IDS_OPEN_WITH_RECOMMENDED   178
+#define IDS_OPEN_WITH_OTHER         179
 
 #define IDS_RUNDLG_ERROR            180
 #define IDS_RUNDLG_BROWSE_ERROR     181
 #define IDS_RUNDLG_BROWSE_CAPTION   182
 #define IDS_RUNDLG_BROWSE_FILTER    183
+
+#define IDS_UNKNOWN_APP             190
+#define IDS_EXE_DESCRIPTION         191
 
 #define IDS_OPEN_VERB               300
 #define IDS_EXPLORE_VERB            301
@@ -155,80 +159,130 @@
 #define IDS_FIND_VERB               304
 #define IDS_PRINT_VERB              305
 
-#define IDS_FILE_FOLDER             307
-#define IDS_CREATELINK              308
-#define IDS_INSTALLNEWFONT          309
-#define IDS_SHV_COLUMN_FONTTYPE     310
-#define IDS_SHV_COLUMN12            311
-#define IDS_SHV_COLUMN13            312
-#define IDS_SHV_COLUMN_WORKGROUP    313
-#define IDS_SHV_NETWORKLOCATION     314
-#define IDS_COPY                    315
-#define IDS_DELETE                  316
-#define IDS_PROPERTIES              317
-#define IDS_SHV_COLUMN_DOCUMENTS    318
-#define IDS_SHV_COLUMN_STATUS       319
-#define IDS_SHV_COLUMN_COMMENTS     320
-#define IDS_SHV_COLUMN_LOCATION     321
-#define IDS_SHV_COLUMN_MODEL        322
-#define IDS_CUT                     323
-#define IDS_RESTORE                 324
-#define IDS_DEFAULT_CLUSTER_SIZE    325
-#define IDS_ADMINISTRATIVETOOLS     326
-#define IDS_FORMATDRIVE             327
-#define IDS_RENAME                  328
-#define IDS_INSERT                  329
-#define IDS_DESCRIPTION             330
-#define IDS_COPY_OF                 331
+#define IDS_FILE_FOLDER             308
+#define IDS_CREATELINK              309
+#define IDS_INSTALLNEWFONT          310
+#define IDS_SHV_COLUMN_FONTTYPE     311
+#define IDS_SHV_COLUMN12            312
+#define IDS_SHV_COLUMN13            313
+#define IDS_SHV_COLUMN_WORKGROUP    314
+#define IDS_SHV_NETWORKLOCATION     315
+#define IDS_COPY                    316
+#define IDS_DELETE                  317
+#define IDS_PROPERTIES              318
+#define IDS_SHV_COLUMN_DOCUMENTS    319
+#define IDS_SHV_COLUMN_STATUS       320
+#define IDS_SHV_COLUMN_COMMENTS     321
+#define IDS_SHV_COLUMN_LOCATION     322
+#define IDS_SHV_COLUMN_MODEL        323
+#define IDS_CUT                     324
+#define IDS_RESTORE                 325
+#define IDS_DEFAULT_CLUSTER_SIZE    326
+#define IDS_FORMATDRIVE             328
+#define IDS_RENAME                  329
+#define IDS_INSERT                  330
+#define IDS_DESCRIPTION             331
+#define IDS_COPY_OF                 332
 
-/* Note: this string is referenced from the registry */
-#define IDS_RECYCLEBIN_FOLDER_NAME   8964
+/* Note: those strings are referenced from the registry */
+#define IDS_RECYCLEBIN_FOLDER_NAME  8964
+#define IDS_ADMINISTRATIVETOOLS     22982
+#define IDS_FOLDER_OPTIONS          22985
+#define IDS_FONTS                   22981
+#define IDS_PRINTERS                9319
+#define IDS_MYCOMPUTER              9216
+#define IDS_PERSONAL                9227
+#define IDS_NETWORKPLACE            9217
 
-#define IDD_ICON                    0x4300
-#define IDD_MESSAGE                 0x4301
+/*
+ * Dialogs
+ */
 
-/* these IDs are the same as on native */
-#define IDD_YESTOALL                0x3207
-
-/* browse for folder dialog box */
-#define IDD_MAKENEWFOLDER           0x3746
-#define IDD_FOLDERTEXT              0x3745
-#define IDD_FOLDER                  0x3744
-#define IDD_STATUS                  0x3743
-#define IDD_TITLE                   0x3742
-#define IDD_TREEVIEW                0x3741
-#define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
-#define OPEN_WITH_PROGRAMM_DLG      0x4001
-#define IDD_SH_FILE_COPY            0x4002
-
-/* run dialog */
+/* Run dialog */
+#define IDD_RUN                 1
 #define IDC_RUNDLG_DESCRIPTION  12289
 #define IDC_RUNDLG_BROWSE       12288
 #define IDC_RUNDLG_ICON         12297
 #define IDC_RUNDLG_EDITPATH     12298
 #define IDC_RUNDLG_LABEL        12305
 
-/* ID's of the ShellAbout controls */
-// Part 1 - ID's identical to Windows Server 2003 SP1's shell32.dll
-#define IDD_SHELL_ABOUT                   0x3810
-#define IDC_SHELL_ABOUT_ICON              0x3009
-#define IDC_SHELL_ABOUT_APPNAME           0x3500
-#define IDC_SHELL_ABOUT_OTHERSTUFF        0x350D
-#define IDC_SHELL_ABOUT_REG_USERNAME      0x3507
-#define IDC_SHELL_ABOUT_REG_ORGNAME       0x3508
-#define IDC_SHELL_ABOUT_PHYSMEM           0x3503
+/* ShellAbout dialog */
+#define IDD_ABOUT                   2
+#define IDC_ABOUT_ICON              0x3009
+#define IDC_ABOUT_APPNAME           0x3500
+#define IDC_ABOUT_OTHERSTUFF        0x350D
+#define IDC_ABOUT_REG_USERNAME      0x3507
+#define IDC_ABOUT_REG_ORGNAME       0x3508
+#define IDC_ABOUT_PHYSMEM           0x3503
 
-// Part 2 - ReactOS-specific ID's
-#define IDD_SHELL_ABOUT_AUTHORS           0x4100
-#define IDC_SHELL_ABOUT_AUTHORS           0x4101
-#define IDC_SHELL_ABOUT_AUTHORS_LISTBOX   0x4102
-#define IDD_PICK_ICON_DIALOG              0x4120
-#define IDC_PICKICON_LIST                 0x4121
-#define IDC_BUTTON_PATH                   0x4122
-#define IDC_EDIT_PATH                     0x4123
-#define IDS_PICK_ICON_TITLE               0x4124
-#define IDS_PICK_ICON_FILTER              0x4125
+/* About authors dialog */
+#define IDD_ABOUT_AUTHORS           3
+#define IDC_ABOUT_AUTHORS           0x4101
+#define IDC_ABOUT_AUTHORS_LISTBOX   0x4102
 
+/* Pick icon dialog */
+#define IDD_PICK_ICON               4
+#define IDC_PICKICON_LIST           0x4121
+#define IDC_BUTTON_PATH             0x4122
+#define IDC_EDIT_PATH               0x4123
+#define IDS_PICK_ICON_TITLE         0x4124
+#define IDS_PICK_ICON_FILTER        0x4125
+
+/* Properties dialog */
+#define IDD_FILE_PROPERTIES        8
+#define IDD_FOLDER_PROPERTIES      9
+#define IDD_DRIVE_PROPERTIES       10
+#define IDD_DRIVE_TOOLS            11
+#define IDD_DRIVE_HARDWARE         12
+#define IDD_RECYCLE_BIN_PROPERTIES 13
+#define IDD_SHORTCUT_PROPERTIES    14
+
+/* File version */
+#define IDD_FILE_VERSION 15
+
+/* Shortcut */
+#define IDD_SHORTCUT_EXTENDED_PROPERTIES 16
+
+/* Folder Options */
+#define IDD_FOLDER_OPTIONS_GENERAL   17
+#define IDD_FOLDER_OPTIONS_VIEW      18
+#define IDD_FOLDER_OPTIONS_FILETYPES 19
+
+/* Yes to all msgbox */
+#define IDD_YESTOALL_MSGBOX  20
+#define IDC_YESTOALL         0x3207
+#define IDC_YESTOALL_ICON    0x4300
+#define IDC_YESTOALL_MESSAGE 0x4301
+
+/* Browse for folder dialog box */
+#define IDD_BROWSE_FOR_FOLDER             21
+#define IDD_BROWSE_FOR_FOLDER_NEW         22
+#define IDC_BROWSE_FOR_FOLDER_NEW_FOLDER  0x3746
+#define IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT 0x3745
+#define IDC_BROWSE_FOR_FOLDER_FOLDER      0x3744
+#define IDC_BROWSE_FOR_FOLDER_STATUS      0x3743
+#define IDC_BROWSE_FOR_FOLDER_TITLE       0x3742
+#define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
+
+/* Other dialogs */
+#define IDD_RUN_AS               23
+#define IDD_OPEN_WITH            24
+#define IDD_FORMAT_DRIVE         25
+#define IDD_CHECK_DISK           26
+
+/* Not used dialogs */
+#define IDD_FILE_COPY            27
+#define IDD_SHUTDOWN             28
+#define IDD_LOG_OFF              29
+#define IDD_DISCONNECT           30
+#define IDD_CONFIRM_FILE_REPLACE 31
+#define IDD_AUTOPLAY1            32
+#define IDD_MIXED_CONTENT1       33
+#define IDD_MIXED_CONTENT2       34
+
+/*
+ * Icons
+ */
 #define IDI_SHELL_DOCUMENT           1
 #define IDI_SHELL_RICH_TEXT          2
 #define IDI_SHELL_EXE                3
@@ -392,8 +446,6 @@
 #define IDI_SHELL_DELETE4  16718
 #define IDI_SHELL_DELETE5  16721
 
-#define IDI_SHELL_ADMINTOOLS       1700 /* FIXME */
-
 // Icons for Folder Options (ID's identical to Windows XP SP3)
 #define IDI_SHELL_SHOW_COMMON_TASKS    182
 #define IDI_SHELL_CLASSIC_FOLDERS      183
@@ -403,10 +455,12 @@
 #define IDI_SHELL_DOUBLE_CLICK_TO_OPEN 187
 
 /*
-AVI resources, windows shell32 has 14 of them: 150-152 and 160-170
-FIXME: Need to add them, but for now just let them use the same: searching.avi
-(also to limit shell32's size)
-*/
+ * AVI resources
+ *
+ * windows shell32 has 14 of them: 150-152 and 160-170
+ * FIXME: Need to add them, but for now just let them use the same: searching.avi
+ * (also to limit shell32's size)
+ */
 #define IDR_AVI_SEARCH             150
 #define IDR_AVI_SEARCHING          151
 #define IDR_AVI_FINDCOMPUTER       152
@@ -415,6 +469,9 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define IDR_AVI_FILENUKE           163
 #define IDR_AVI_FILEDELETE         164
 
+/*
+ * Shell view commands
+ */
 #define FCIDM_SHVIEW_ARRANGE    0x7001
 #define FCIDM_SHVIEW_DELETE     0x7011
 #define FCIDM_SHVIEW_PROPERTIES 0x7013
@@ -444,11 +501,35 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define FCIDM_SHVIEW_EXPLORE    0x7101 /* FIXME */
 #define FCIDM_SHVIEW_OPEN       0x7102 /* FIXME */
 
-
 #define FCIDM_TB_UPFOLDER       0xA001
 #define FCIDM_TB_NEWFOLDER      0xA002
 #define FCIDM_TB_SMALLICON      0xA003
 #define FCIDM_TB_REPORTVIEW     0xA004
 #define FCIDM_TB_DESKTOP        0xA005  /* FIXME */
+
+/*
+ * Registrar scripts (RGS)
+ */
+#define IDR_ADMINFOLDERSHORTCUT 128
+#define IDR_AUTOCOMPLETE        129
+#define IDR_CONTROLPANEL        130
+#define IDR_DRAGDROPHELPER      131
+#define IDR_FOLDEROPTIONS       132
+#define IDR_FOLDERSHORTCUT      133
+#define IDR_FONTSFOLDERSHORTCUT 134
+#define IDR_MENUBANDSITE        135
+#define IDR_MYCOMPUTER          136
+#define IDR_MYDOCUMENTS         137
+#define IDR_NETWORKPLACES       138
+#define IDR_NEWMENU             139
+#define IDR_PRINTERS            140
+#define IDR_RECYCLEBIN          141
+#define IDR_SHELLDESKTOP        142
+#define IDR_SHELLFSFOLDER       143
+#define IDR_SHELLLINK           144
+#define IDR_STARTMENU           145
+#define IDR_OPENWITHMENU        146
+#define IDR_FILEDEFEXT          147
+#define IDR_DRVDEFEXT           148
 
 #endif

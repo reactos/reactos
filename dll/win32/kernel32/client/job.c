@@ -9,14 +9,14 @@
  *                  Created 9/23/2004
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -47,9 +47,9 @@ CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
  */
 HANDLE
 WINAPI
-OpenJobObjectW(DWORD dwDesiredAccess,
-               BOOL bInheritHandle,
-               LPCWSTR lpName)
+OpenJobObjectW(IN DWORD dwDesiredAccess,
+               IN BOOL bInheritHandle,
+               IN LPCWSTR lpName)
 {
     /* Open the NT object */
     OpenNtObjectFromWin32Api(JobObject, dwDesiredAccess, bInheritHandle, lpName);
@@ -61,23 +61,22 @@ OpenJobObjectW(DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
-OpenJobObjectA(DWORD dwDesiredAccess,
-               BOOL bInheritHandle,
-               LPCSTR lpName)
+OpenJobObjectA(IN DWORD dwDesiredAccess,
+               IN BOOL bInheritHandle,
+               IN LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertOpenWin32AnsiObjectApiToUnicodeApi(JobObject, dwDesiredAccess, bInheritHandle, lpName);
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-IsProcessInJob(HANDLE ProcessHandle,
-               HANDLE JobHandle,
-               PBOOL Result)
+IsProcessInJob(IN HANDLE ProcessHandle,
+               IN HANDLE JobHandle,
+               OUT PBOOL Result)
 {
     NTSTATUS Status;
 
@@ -92,14 +91,13 @@ IsProcessInJob(HANDLE ProcessHandle,
     return FALSE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-AssignProcessToJobObject(HANDLE hJob,
-                         HANDLE hProcess)
+AssignProcessToJobObject(IN HANDLE hJob,
+                         IN HANDLE hProcess)
 {
     NTSTATUS Status;
 
@@ -113,81 +111,92 @@ AssignProcessToJobObject(HANDLE hJob,
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-QueryInformationJobObject(HANDLE hJob,
-                          JOBOBJECTINFOCLASS JobObjectInformationClass,
-                          LPVOID lpJobObjectInformation,
-                          DWORD cbJobObjectInformationLength,
-                          LPDWORD lpReturnLength)
+QueryInformationJobObject(IN HANDLE hJob,
+                          IN JOBOBJECTINFOCLASS JobObjectInformationClass,
+                          IN LPVOID lpJobObjectInformation,
+                          IN DWORD cbJobObjectInformationLength,
+                          OUT LPDWORD lpReturnLength)
 {
     NTSTATUS Status;
+    PVOID JobInfo;
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION LocalInfo;
+    ULONG ExpectedSize;
+
+    if (JobObjectInformationClass == JobObjectBasicLimitInformation)
+    {
+        ExpectedSize = sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION);
+        JobInfo = &LocalInfo;
+    }
+    else if (JobObjectInformationClass == JobObjectExtendedLimitInformation)
+    {
+        ExpectedSize = sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION);
+        JobInfo = &LocalInfo;
+    }
+    else
+    {
+        ExpectedSize = cbJobObjectInformationLength;
+        JobInfo = lpJobObjectInformation;
+    }
+
+    if (cbJobObjectInformationLength != ExpectedSize)
+    {
+        BaseSetLastNTError(STATUS_INFO_LENGTH_MISMATCH);
+        return FALSE;
+    }
 
     Status = NtQueryInformationJobObject(hJob,
                                          JobObjectInformationClass,
-                                         lpJobObjectInformation,
-                                         cbJobObjectInformationLength,
+                                         JobInfo,
+                                         ExpectedSize,
                                          lpReturnLength);
     if (NT_SUCCESS(Status))
     {
-        PJOBOBJECT_BASIC_LIMIT_INFORMATION BasicInfo;
+        if (JobInfo != &LocalInfo) return TRUE;
 
-        switch (JobObjectInformationClass)
+        switch (LocalInfo.BasicLimitInformation.PriorityClass)
         {
-            case JobObjectBasicLimitInformation:
-                BasicInfo = (PJOBOBJECT_BASIC_LIMIT_INFORMATION)lpJobObjectInformation;
+            case PROCESS_PRIORITY_CLASS_IDLE:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                IDLE_PRIORITY_CLASS;
                 break;
 
-            case JobObjectExtendedLimitInformation:
-                BasicInfo = &((PJOBOBJECT_EXTENDED_LIMIT_INFORMATION)lpJobObjectInformation)->BasicLimitInformation;
+            case PROCESS_PRIORITY_CLASS_BELOW_NORMAL:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                BELOW_NORMAL_PRIORITY_CLASS;
+                break;
+
+            case PROCESS_PRIORITY_CLASS_NORMAL:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                NORMAL_PRIORITY_CLASS;
+                break;
+
+            case PROCESS_PRIORITY_CLASS_ABOVE_NORMAL:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                ABOVE_NORMAL_PRIORITY_CLASS;
+                break;
+
+            case PROCESS_PRIORITY_CLASS_HIGH:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                HIGH_PRIORITY_CLASS;
+                break;
+
+            case PROCESS_PRIORITY_CLASS_REALTIME:
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                REALTIME_PRIORITY_CLASS;
                 break;
 
             default:
-                BasicInfo = NULL;
+                LocalInfo.BasicLimitInformation.PriorityClass =
+                NORMAL_PRIORITY_CLASS;
                 break;
         }
 
-        if (BasicInfo != NULL)
-        {
-            /* we need to convert the process priority classes in the
-               JOBOBJECT_BASIC_LIMIT_INFORMATION structure the same way as
-               GetPriorityClass() converts it! */
-            switch (BasicInfo->PriorityClass)
-            {
-                case PROCESS_PRIORITY_CLASS_IDLE:
-                    BasicInfo->PriorityClass = IDLE_PRIORITY_CLASS;
-                    break;
-
-                case PROCESS_PRIORITY_CLASS_BELOW_NORMAL:
-                    BasicInfo->PriorityClass = BELOW_NORMAL_PRIORITY_CLASS;
-                    break;
-
-                case PROCESS_PRIORITY_CLASS_NORMAL:
-                    BasicInfo->PriorityClass = NORMAL_PRIORITY_CLASS;
-                    break;
-
-                case PROCESS_PRIORITY_CLASS_ABOVE_NORMAL:
-                    BasicInfo->PriorityClass = ABOVE_NORMAL_PRIORITY_CLASS;
-                    break;
-
-                case PROCESS_PRIORITY_CLASS_HIGH:
-                    BasicInfo->PriorityClass = HIGH_PRIORITY_CLASS;
-                    break;
-
-                case PROCESS_PRIORITY_CLASS_REALTIME:
-                    BasicInfo->PriorityClass = REALTIME_PRIORITY_CLASS;
-                    break;
-
-                default:
-                    BasicInfo->PriorityClass = NORMAL_PRIORITY_CLASS;
-                    break;
-            }
-        }
-
+        RtlCopyMemory(lpJobObjectInformation, &LocalInfo, ExpectedSize);
         return TRUE;
     }
 
@@ -195,112 +204,119 @@ QueryInformationJobObject(HANDLE hJob,
     return FALSE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetInformationJobObject(HANDLE hJob,
-                        JOBOBJECTINFOCLASS JobObjectInformationClass,
-                        LPVOID lpJobObjectInformation,
-                        DWORD cbJobObjectInformationLength)
+SetInformationJobObject(IN HANDLE hJob,
+                        IN JOBOBJECTINFOCLASS JobObjectInformationClass,
+                        IN LPVOID lpJobObjectInformation,
+                        IN DWORD cbJobObjectInformationLength)
 {
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimitInfo;
-    PJOBOBJECT_BASIC_LIMIT_INFORMATION BasicInfo;
-    PVOID ObjectInfo;
     NTSTATUS Status;
+    PVOID JobInfo;
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION LocalInfo;
+    ULONG ExpectedSize;
+    PVOID State = NULL;
+    ULONG Privilege = SE_INC_BASE_PRIORITY_PRIVILEGE;
 
-    switch (JobObjectInformationClass)
+    if (JobObjectInformationClass == JobObjectBasicLimitInformation)
     {
-        case JobObjectBasicLimitInformation:
-            if (cbJobObjectInformationLength != sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION))
-            {
-                SetLastError(ERROR_BAD_LENGTH);
-                return FALSE;
-            }
-
-            ObjectInfo = &ExtendedLimitInfo.BasicLimitInformation;
-            BasicInfo = (PJOBOBJECT_BASIC_LIMIT_INFORMATION)ObjectInfo;
-            RtlCopyMemory(ObjectInfo, lpJobObjectInformation, cbJobObjectInformationLength);
-            break;
-
-        case JobObjectExtendedLimitInformation:
-            if (cbJobObjectInformationLength != sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION))
-            {
-                SetLastError(ERROR_BAD_LENGTH);
-                return FALSE;
-            }
-
-            ObjectInfo = &ExtendedLimitInfo;
-            BasicInfo = &ExtendedLimitInfo.BasicLimitInformation;
-            RtlCopyMemory(ObjectInfo, lpJobObjectInformation, cbJobObjectInformationLength);
-            break;
-
-        default:
-            ObjectInfo = lpJobObjectInformation;
-            BasicInfo = NULL;
-            break;
+        ExpectedSize = sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION);
+        JobInfo = &LocalInfo;
+    }
+    else if (JobObjectInformationClass == JobObjectExtendedLimitInformation)
+    {
+        ExpectedSize = sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION);
+        JobInfo = &LocalInfo;
+    }
+    else
+    {
+        ExpectedSize = cbJobObjectInformationLength;
+        JobInfo = lpJobObjectInformation;
     }
 
-    if (BasicInfo != NULL)
+    if (cbJobObjectInformationLength != ExpectedSize)
     {
-        /* we need to convert the process priority classes in the
-           JOBOBJECT_BASIC_LIMIT_INFORMATION structure the same way as
-           SetPriorityClass() converts it! */
-        switch(BasicInfo->PriorityClass)
+        BaseSetLastNTError(STATUS_INFO_LENGTH_MISMATCH);
+        return FALSE;
+    }
+
+    if (JobInfo == &LocalInfo)
+    {
+        RtlCopyMemory(&LocalInfo, lpJobObjectInformation, ExpectedSize);
+
+        if (LocalInfo.BasicLimitInformation.LimitFlags &
+            JOB_OBJECT_LIMIT_PRIORITY_CLASS)
         {
-            case IDLE_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_IDLE;
-                break;
+            switch (LocalInfo.BasicLimitInformation.PriorityClass)
+            {
+                case IDLE_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_IDLE;
+                    break;
 
-            case BELOW_NORMAL_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
-                break;
+                case BELOW_NORMAL_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
+                    break;
 
-            case NORMAL_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
-                break;
+                case NORMAL_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_NORMAL;
+                    break;
 
-            case ABOVE_NORMAL_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
-                break;
+                case ABOVE_NORMAL_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
+                    break;
 
-            case HIGH_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
-                break;
+                case HIGH_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_HIGH;
+                    break;
 
-            case REALTIME_PRIORITY_CLASS:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_REALTIME;
-                break;
+                case REALTIME_PRIORITY_CLASS:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_REALTIME;
+                    break;
 
-            default:
-                BasicInfo->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
-                break;
+                default:
+                    LocalInfo.BasicLimitInformation.PriorityClass =
+                    PROCESS_PRIORITY_CLASS_NORMAL;
+                    break;
+            }
+        }
+
+        if (LocalInfo.BasicLimitInformation.LimitFlags &
+            JOB_OBJECT_LIMIT_WORKINGSET)
+        {
+            Status = RtlAcquirePrivilege(&Privilege, TRUE, FALSE, &State);
         }
     }
 
     Status = NtSetInformationJobObject(hJob,
                                        JobObjectInformationClass,
-                                       ObjectInfo,
-                                       cbJobObjectInformationLength);
-    if (!NT_SUCCESS(Status))
+                                       JobInfo,
+                                       ExpectedSize);
+    if (NT_SUCCESS(Status))
     {
-        BaseSetLastNTError(Status);
-        return FALSE;
+        if (State != NULL) RtlReleasePrivilege(State);
+        return TRUE;
     }
 
-    return TRUE;
+    BaseSetLastNTError(Status);
+    return FALSE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-TerminateJobObject(HANDLE hJob,
-                   UINT uExitCode)
+TerminateJobObject(IN HANDLE hJob,
+                   IN UINT uExitCode)
 {
     NTSTATUS Status;
 
@@ -315,17 +331,24 @@ TerminateJobObject(HANDLE hJob,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-CreateJobSet (
-    ULONG NumJob,
-    PJOB_SET_ARRAY UserJobSet,
-    ULONG Flags)
+CreateJobSet(IN ULONG NumJob,
+             IN PJOB_SET_ARRAY UserJobSet,
+             IN ULONG Flags)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status;
+
+    Status = NtCreateJobSet(NumJob, UserJobSet, Flags);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

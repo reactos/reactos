@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystem/win32/win32k/objects/dcobjs.c
+ * FILE:              subsystems/win32/win32k/objects/dcobjs.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -149,7 +149,7 @@ GdiSelectPalette(
     HPALETTE oldPal = NULL;
     PPALETTE ppal;
 
-    // FIXME: mark the palette as a [fore\back]ground pal
+    // FIXME: Mark the palette as a [fore\back]ground pal
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
@@ -261,11 +261,9 @@ NtGdiSelectBitmap(
     IN HBITMAP hbmp)
 {
     PDC pdc;
-    PDC_ATTR pdcattr;
     HBITMAP hbmpOld;
-    PSURFACE psurfNew;
+    PSURFACE psurfNew, psurfOld;
     HRGN hVisRgn;
-    SIZEL sizlBitmap = {1, 1};
     HDC hdcOld;
     ASSERT_NOGDILOCKS();
 
@@ -278,7 +276,6 @@ NtGdiSelectBitmap(
     {
         return NULL;
     }
-    pdcattr = pdc->pdcattr;
 
     /* Must be a memory dc to select a bitmap */
     if (pdc->dctype != DC_TYPE_MEMORY)
@@ -287,22 +284,37 @@ NtGdiSelectBitmap(
         return NULL;
     }
 
-    /* Check if there was a bitmap selected before */
-    if (pdc->dclevel.pSurface)
+    /* Save the old bitmap */
+    psurfOld = pdc->dclevel.pSurface;
+
+    /* Check if there is a bitmap selected */
+    if (psurfOld)
     {
-        /* Return its handle */
-        hbmpOld = pdc->dclevel.pSurface->BaseObject.hHmgr;
+        /* Get the old bitmap's handle */
+        hbmpOld = psurfOld->BaseObject.hHmgr;
     }
     else
     {
-        /* Return default bitmap */
+        /* Use the default bitmap */
         hbmpOld = StockObjects[DEFAULT_BITMAP];
+    }
+
+    /* Check if the new bitmap is already selected */
+    if (hbmp == hbmpOld)
+    {
+        /* Unlock the DC and return the old bitmap */
+        DC_UnlockDc(pdc);
+        return hbmpOld;
     }
 
     /* Check if the default bitmap was passed */
     if (hbmp == StockObjects[DEFAULT_BITMAP])
     {
         psurfNew = NULL;
+
+        /* Default bitmap is 1x1 pixel */
+        pdc->dclevel.sizl.cx = 1;
+        pdc->dclevel.sizl.cy = 1;
 
         // HACK
         psurfNew = SURFACE_ShareLockSurface(hbmp);
@@ -317,56 +329,65 @@ NtGdiSelectBitmap(
             return NULL;
         }
 
-        /* Set the bitmp's hdc */
+        /* Set the bitmap's hdc and check if it was set before */
         hdcOld = InterlockedCompareExchangePointer((PVOID*)&psurfNew->hdc, hdc, 0);
-        if (hdcOld != NULL && hdcOld != hdc)
+        if (hdcOld != NULL)
         {
-            /* The bitmap is already selected, fail */
+            /* The bitmap is already selected into a different DC */
+            ASSERT(hdcOld != hdc);
+
+            /* Dereference the bitmap, unlock the DC and fail. */
             SURFACE_ShareUnlockSurface(psurfNew);
             DC_UnlockDc(pdc);
             return NULL;
         }
 
-        /* Get the bitmap size */
-        sizlBitmap = psurfNew->SurfObj.sizlBitmap;
+        /* Copy the bitmap size */
+        pdc->dclevel.sizl = psurfNew->SurfObj.sizlBitmap;
 
         /* Check if the bitmap is a dibsection */
         if(psurfNew->hSecure)
         {
             /* Set DIBSECTION attribute */
-            pdcattr->ulDirty_ |= DC_DIBSECTION;
+            pdc->pdcattr->ulDirty_ |= DC_DIBSECTION;
         }
         else
         {
-            pdcattr->ulDirty_ &= ~DC_DIBSECTION;
+            /* Remove DIBSECTION attribute */
+            pdc->pdcattr->ulDirty_ &= ~DC_DIBSECTION;
         }
     }
 
-    /* Select the new surface, release the old */
-    DC_vSelectSurface(pdc, psurfNew);
+    /* Select the new bitmap */
+    pdc->dclevel.pSurface = psurfNew;
 
-    /* Set the new size */
-    pdc->dclevel.sizl = sizlBitmap;
+    /* Check if there was a bitmap selected before */
+    if (psurfOld)
+    {
+        /* Reset hdc of the old bitmap, it isn't selected anymore */
+        psurfOld->hdc = NULL;
 
-    /* Release one reference we added */
-    SURFACE_ShareUnlockSurface(psurfNew);
+        /* Dereference the old bitmap */
+        SURFACE_ShareUnlockSurface(psurfOld);
+    }
 
     /* Mark the dc brushes invalid */
-    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+    pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
 
-    /* Unlock the DC */
-    DC_UnlockDc(pdc);
-
-    /* FIXME; improve by using a region without a handle and selecting it */
+    /* FIXME: Improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
                                    0,
-                                   sizlBitmap.cx,
-                                   sizlBitmap.cy);
+                                   pdc->dclevel.sizl.cx,
+                                   pdc->dclevel.sizl.cy);
+
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdc, hVisRgn);
         GreDeleteObject(hVisRgn);
     }
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
 
     /* Return the old bitmap handle */
     return hbmpOld;
@@ -493,21 +514,21 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
     return SelObject;
 }
 
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
-
-   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
-
-   The intersection of the clip with the meta region is not Rao it's API!
-   Go back and read 7.2 Clipping pages 418-19:
-   Rao = API & Vis:
-   1) The Rao region is the intersection of the API region and the system region,
-      named after the Microsoft engineer who initially proposed it.
-   2) The Rao region can be calculated from the API region and the system region.
-
-   API:
-      API region is the intersection of the meta region and the clipping region,
-      clearly named after the fact that it is controlled by GDI API calls.
-*/
+/* See WINE, MSDN, OSR and Feng Yuan - Windows Graphics Programming Win32 GDI and DirectDraw
+ *
+ * 1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+ *
+ * The intersection of the clip with the meta region is not Rao it's API!
+ * Go back and read 7.2 Clipping pages 418-19:
+ * Rao = API & Vis:
+ * 1) The Rao region is the intersection of the API region and the system region,
+ *    named after the Microsoft engineer who initially proposed it.
+ * 2) The Rao region can be calculated from the API region and the system region.
+ *
+ * API:
+ *    API region is the intersection of the meta region and the clipping region,
+ *    clearly named after the fact that it is controlled by GDI API calls.
+ */
 INT
 APIENTRY
 NtGdiGetRandomRgn(
@@ -583,3 +604,4 @@ NtGdiEnumObjects(
     return 0;
 }
 
+/* EOF */

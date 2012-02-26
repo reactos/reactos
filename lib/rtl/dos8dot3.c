@@ -15,7 +15,7 @@
 
 /* CONSTANTS *****************************************************************/
 
-const PCHAR RtlpShortIllegals = " ;+=[],\"*\\<>/?:|";
+const PCHAR RtlpShortIllegals = ";+=[],\"*\\<>/?:|";
 
 
 /* FUNCTIONS *****************************************************************/
@@ -103,7 +103,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
       {
          NameBuffer[NameLength++] = L'_';
       }
-      else if (c != '.')
+      else if (c != '.' && c != ' ')
       {
          NameBuffer[NameLength++] = (WCHAR)c;
       }
@@ -119,11 +119,11 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
       {
          c = 0;
          RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-         if (Count != 1 || c == 0 || RtlpIsShortIllegal(Name->Buffer[i]))
+         if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
          {
             ExtBuffer[ExtLength++] = L'_';
          }
-         else
+         else if (c != ' ')
          {
             ExtBuffer[ExtLength++] = c;
          }
@@ -211,12 +211,12 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    j += IndexLength + 1;
 
    memcpy(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
-   Name8dot3->Length = (j + ExtLength) * sizeof(WCHAR);
+   Name8dot3->Length = (USHORT)(j + ExtLength) * sizeof(WCHAR);
 
    DPRINT("Name8dot3: '%wZ'\n", Name8dot3);
 
    /* Update context */
-   Context->NameLength = CopyLength;
+   Context->NameLength = (UCHAR)CopyLength;
    Context->ExtensionLength = ExtLength;
    memcpy(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
    memcpy(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));

@@ -37,7 +37,7 @@ extern "C" {
 
 #define NTOS_MODE_USER
 #include <winddi.h>
-#include <ndk/ntndk.h>
+#include <ndk/pstypes.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>

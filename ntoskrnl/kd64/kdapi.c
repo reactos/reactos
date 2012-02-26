@@ -316,7 +316,7 @@ DumpTraceData(IN PSTRING TraceData)
     TraceDataBuffer[0] = TraceDataBufferPosition;
 
     /* Setup the trace data */
-    TraceData->Length = TraceDataBufferPosition * sizeof(ULONG);
+    TraceData->Length = (USHORT)(TraceDataBufferPosition * sizeof(ULONG));
     TraceData->Buffer = (PCHAR)TraceDataBuffer;
 
     /* Reset the buffer location */
@@ -351,7 +351,7 @@ KdpSetCommonState(IN ULONG NewState,
                         0,
                         MMDBG_COPY_UNSAFE,
                         &InstructionCount);
-    WaitStateChange->ControlReport.InstructionCount = InstructionCount;
+    WaitStateChange->ControlReport.InstructionCount = (USHORT)InstructionCount;
 
     /* Clear all the breakpoints in this region */
     HadBreakpoints =
@@ -433,7 +433,8 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                                               &Length);
 
     /* Return the actual length read */
-    Data->Length = ReadMemory->ActualBytesRead = Length;
+    ReadMemory->ActualBytesRead = Length;
+    Data->Length = (USHORT)Length;
 
     /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -524,7 +525,8 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
                                               &Length);
 
     /* Return the actual length read */
-    Data->Length = ReadMemory->ActualBytesRead = Length;
+    ReadMemory->ActualBytesRead = Length;
+    Data->Length = (USHORT)Length;
 
     /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -614,7 +616,8 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                                  &Length);
 
     /* Return the actual length read */
-    Data->Length = ReadMemory->ActualBytesRead = Length;
+    ReadMemory->ActualBytesRead = Length;
+    Data->Length = (USHORT)Length;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -851,7 +854,8 @@ KdpGetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
                                             &Length);
 
     /* Return the actual length read */
-    Data->Length = GetBusData->Length = Length;
+    GetBusData->Length = Length;
+    Data->Length = (USHORT)Length;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -909,7 +913,7 @@ KdpReadIoSpace(IN PDBGKD_MANIPULATE_STATE64 State,
 
     /*
      * Clear the value so 1 or 2 byte reads
-     * don't leave the higher bits unmodified 
+     * don't leave the higher bits unmodified
      */
     ReadIo->DataValue = 0;
 
@@ -976,7 +980,7 @@ KdpReadIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
 
     /*
      * Clear the value so 1 or 2 byte reads
-     * don't leave the higher bits unmodified 
+     * don't leave the higher bits unmodified
      */
     ReadIoExtended->DataValue = 0;
 
@@ -1085,7 +1089,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
     Data.MaximumLength = sizeof(KdpMessageBuffer);
     Data.Buffer = KdpMessageBuffer;
 
-    /* 
+    /*
      * Reset the context state to ensure the debugger has received
      * the current context before it sets it
      */
@@ -1418,7 +1422,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 
             /* Set up the data */
             Data.Buffer = KdpPathBuffer;
-            Data.Length = PathNameLength;
+            Data.Length = (USHORT)PathNameLength;
             ExtraData = &Data;
         }
         else
@@ -1506,7 +1510,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
         /* Now set up the header and the data */
         Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
         Header.Buffer = (PCHAR)&WaitStateChange;
-        Data.Length = TotalLength;
+        Data.Length = (USHORT)TotalLength;
         Data.Buffer = KdpMessageBuffer;
 
         /* Send State Change packet and wait for a reply */
@@ -1944,6 +1948,26 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN OUT PULONG ReturnLength,
                      IN KPROCESSOR_MODE PreviousMode)
 {
+    /* handle sime internal commands */
+    if (Command == ' soR')
+    {
+        switch ((ULONG_PTR)InputBuffer)
+        {
+            case 0x30: // ManualBugCheck:
+                KeBugCheck(MANUALLY_INITIATED_CRASH);
+                break;
+
+             case 0x25: // EnterDebugger:
+                DbgBreakPoint();
+                break;
+
+            case 0x24:
+                MmDumpArmPfnDatabase(FALSE);
+                break;
+        }
+        return STATUS_SUCCESS;
+    }
+
     /* Local kernel debugging is not yet supported */
     DbgPrint("KdSystemDebugControl is unimplemented!\n");
     return STATUS_NOT_IMPLEMENTED;

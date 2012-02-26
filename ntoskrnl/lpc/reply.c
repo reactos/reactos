@@ -160,12 +160,9 @@ NtReplyPort(IN HANDLE PortHandle,
     {
         _SEH2_TRY
         {
-            if (ReplyMessage != NULL)
-            {
-                ProbeForRead(ReplyMessage, sizeof(PORT_MESSAGE), sizeof(ULONG));
-                /*RtlCopyMemory(&CapturedReplyMessage, ReplyMessage, sizeof(PORT_MESSAGE));
-                ReplyMessage = &CapturedReplyMessage;*/
-            }
+            ProbeForRead(ReplyMessage, sizeof(PORT_MESSAGE), sizeof(ULONG));
+            /*RtlCopyMemory(&CapturedReplyMessage, ReplyMessage, sizeof(PORT_MESSAGE));
+            ReplyMessage = &CapturedReplyMessage;*/
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {

@@ -467,10 +467,14 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		// redraw background window - it's done by system
 		//InvalidateRect(g_Globals._hwndShellView, NULL, TRUE);
 
-		 // forward message to common controls
+		// forward message to common controls
 		SendMessage(g_Globals._hwndShellView, WM_SYSCOLORCHANGE, 0, 0);
 		SendMessage(_desktopBar, WM_SYSCOLORCHANGE, 0, 0);
 		break;
+
+      case WM_SETTINGCHANGE:
+        SendMessage(g_Globals._hwndShellView, nmsg, wparam, lparam);
+        break;
 
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);

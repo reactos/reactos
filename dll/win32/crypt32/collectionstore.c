@@ -134,7 +134,7 @@ static BOOL CRYPT_CollectionAddContext(PWINE_COLLECTIONSTORE store,
  * Assumes the collection store's lock is held.
  */
 static void *CRYPT_CollectionAdvanceEnum(PWINE_COLLECTIONSTORE store,
- PWINE_STORE_LIST_ENTRY storeEntry, PCONTEXT_FUNCS contextFuncs,
+ PWINE_STORE_LIST_ENTRY storeEntry, const CONTEXT_FUNCS *contextFuncs,
  PCWINE_CONTEXT_INTERFACE contextInterface, void *pPrev, size_t contextSize)
 {
     void *ret, *child;
@@ -165,7 +165,7 @@ static void *CRYPT_CollectionAdvanceEnum(PWINE_COLLECTIONSTORE store,
             /* We always want the same function pointers (from certs, crls)
              * in the next store, so use the same offset into the next store.
              */
-            size_t offset = (LPBYTE)contextFuncs - (LPBYTE)storeEntry->store;
+            size_t offset = (const BYTE *)contextFuncs - (LPBYTE)storeEntry->store;
             PWINE_STORE_LIST_ENTRY storeNextEntry =
              LIST_ENTRY(storeNext, WINE_STORE_LIST_ENTRY, entry);
             PCONTEXT_FUNCS storeNextContexts =

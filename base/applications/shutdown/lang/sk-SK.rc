@@ -11,13 +11,13 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Poußitie: shutdown [-?] [-l | -s | -r] [-f]\n\n\
-  ¶iadne argumenty\tZobraz° sa t†to spr†va\n\
-  -?\t\t\tZobraz° t£to spr†vu\n\
-  -l\t\t\tOdhl†si pouß°vateña\n\
-  -s\t\t\tVypne poü°taü\n\
-  -r\t\t\tReÁtartuje poü°taü\n\
-  -f\t\t\tDon£ti spustenÇ programy aby sa vypli bez upozornen°.\n\
-    \t\t\tAk nebol zadanÏ ßiadny inÏ parameter, tak aj odhl†si\n\
-    \t\t\tpouß°vateña."
+IDS_USAGE, "Pou≈æitie: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  ≈Ωiadne argumenty\tZobraz√≠ sa t√°to spr√°va\n\
+  -?\t\t\tZobraz√≠ t√∫to spr√°vu\n\
+  -l\t\t\tOdhl√°si pou≈æ√≠vateƒæa\n\
+  -s\t\t\tVypne poƒç√≠taƒç\n\
+  -r\t\t\tRe≈°tartuje poƒç√≠taƒç\n\
+  -f\t\t\tDon√∫ti spusten√© programy aby sa vypli bez upozornen√≠.\n\
+    \t\t\tAk nebol zadan√Ω ≈æiadny in√Ω parameter, tak aj odhl√°si\n\
+    \t\t\tpou≈æ√≠vateƒæa."
 END

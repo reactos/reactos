@@ -38,7 +38,7 @@
 #define IDS_WARNINITIALRANGE            80
 #define IDS_WARNMAXIMUMRANGE            81
 
-/* propsheet - general */
+/* Propsheet - general */
 #define IDD_PROPPAGEGENERAL             100
 #define IDC_MACHINELINE1                101
 #define IDC_MACHINELINE2                102
@@ -50,7 +50,7 @@
 #define IDC_ROSHOMEPAGE_LINK            108
 
 
-/* propsheet - hardware */
+/* Propsheet - hardware */
 #define IDD_PROPPAGEHARDWARE            300
 #define IDC_HARDWARE_WIZARD             207
 #define IDC_HARDWARE_PROFILE            209
@@ -58,7 +58,7 @@
 #define IDC_HARDWARE_DEVICE_MANAGER     211
 
 
-/* propsheet - advanced */
+/* Propsheet - advanced */
 #define IDD_PROPPAGEADVANCED            400
 #define IDC_SYSSETTINGS                 401
 #define IDC_ENVVAR                      402
@@ -67,11 +67,11 @@
 #define IDC_USERPROFILE                 405
 #define IDC_ERRORREPORT                 406
 
-/* system settings */
+/* System settings */
 #define IDD_SYSSETTINGS                 800
 #define IDC_REPORTASWORKSTATION         801
 
-/* user profiles */
+/* User profiles */
 #define IDD_USERPROFILE                 500
 #define IDC_USERPROFILE_LIST            501
 #define IDC_USERPROFILE_CHANGE          503
@@ -80,7 +80,7 @@
 #define IDC_USERACCOUNT_LINK            506
 
 
-/* environment variables */
+/* Environment variables */
 #define IDD_ENVIRONMENT_VARIABLES       600
 #define IDC_USER_VARIABLE_LIST          601
 #define IDC_USER_VARIABLE_NEW           602
@@ -92,7 +92,7 @@
 #define IDC_SYSTEM_VARIABLE_DELETE      608
 
 
-/* edit environment variables */
+/* Edit environment variables */
 #define IDD_EDIT_VARIABLE               700
 #define IDC_VARIABLE_NAME               701
 #define IDC_VARIABLE_VALUE              702
@@ -116,7 +116,7 @@
 #define IDC_CURRENT                     914
 
 
-/* startup and recovery */
+/* Startup and recovery */
 #define IDD_STARTUPRECOVERY             1000
 #define IDC_STRECOSCOMBO                1001
 #define IDC_STRECLIST                   1002
@@ -134,7 +134,7 @@
 #define IDC_STRRECOVERWRITE             1014
 
 
-/* hardware profiles */
+/* Hardware profiles */
 #define IDD_HARDWAREPROFILES            1100
 #define IDC_HRDPROFLSTBOX               1102
 #define IDC_HRDPROFUP                   1103
@@ -149,12 +149,19 @@
 #define IDC_HRDPROFUPDWN                1112
 
 
-/* rename profile */
-#define IDD_RENAMEPROFILE               1200
-#define IDC_RENPROFEDITFROM             1201
-#define IDC_RENPROFEDITTO               1202
+/* Copy profile */
+#define IDD_COPYPROFILE                 1200
+#define IDC_COPYPROFILEFROM             1201
+#define IDC_COPYPROFILETO               1202
 
-/* licence */
+
+/* Rename profile */
+#define IDD_RENAMEPROFILE               1300
+#define IDC_RENPROFEDITFROM             1301
+#define IDC_RENPROFEDITTO               1302
+
+
+/* Licence */
 #define IDD_LICENCE                     1500
 #define IDC_LICENCEEDIT                 1501
 #define RC_LICENSE                      1502

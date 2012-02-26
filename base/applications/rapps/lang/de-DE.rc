@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Allgemein", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "Fensterposition &speichern", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "Beim Start Liste der verfügbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "Beim Start Liste der verfügbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "Hinzufügen und Entfernen von Programmen mit&loggen", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Download", -1, 4, 65, 240, 51

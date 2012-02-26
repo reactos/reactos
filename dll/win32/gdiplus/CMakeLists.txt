@@ -33,9 +33,9 @@ if(MSVC)
 endif()
 
 add_library(gdiplus SHARED ${SOURCE})
-
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus uuid wine)
+add_delay_importlibs(gdiplus windowscodecs)
 
 add_importlibs(gdiplus
     msvcrt
@@ -44,11 +44,10 @@ add_importlibs(gdiplus
     ole32
     user32
     gdi32
-    windowscodecs
     kernel32
     ntdll)
 
-add_importlib_target(gdiplus.spec)
+add_importlib_target(gdiplus.spec gdiplus.dll)
 
 if(ARCH MATCHES amd64)
     target_link_libraries(gdiplus crt)

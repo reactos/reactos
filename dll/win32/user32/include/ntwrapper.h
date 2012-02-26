@@ -235,9 +235,37 @@ ChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 }
 
 EXTINLINE BOOL WINAPI
+GetClipCursor(LPRECT lpRect)
+{
+    return NtUserGetClipCursor(lpRect);
+}
+
+EXTINLINE HBRUSH WINAPI GetControlBrush(HWND hwnd, HDC  hdc, UINT ctlType)
+{
+    return NtUserGetControlBrush(hwnd, hdc, ctlType);
+}
+
+EXTINLINE HBRUSH WINAPI GetControlColor(HWND hwndParent, HWND hwnd, HDC hdc, UINT CtlMsg)
+{
+    return NtUserGetControlColor(hwndParent, hwnd, hdc, CtlMsg);
+}
+
+EXTINLINE BOOL WINAPI
 GetCursorInfo(PCURSORINFO pci)
 {
     return NtUserGetCursorInfo(pci);
+}
+
+EXTINLINE BOOL WINAPI
+ClipCursor(CONST RECT *lpRect)
+{
+    return NtUserClipCursor((RECT *)lpRect);
+}
+
+EXTINLINE HCURSOR WINAPI
+SetCursor(HCURSOR hCursor)
+{
+    return NtUserSetCursor(hCursor);
 }
 
 EXTINLINE HDC WINAPI
@@ -483,4 +511,301 @@ InvalidateRect(HWND hWnd, CONST RECT* lpRect, BOOL bErase)
 EXTINLINE BOOL WINAPI ValidateRect( HWND hWnd, CONST RECT *lpRect)
 {
    return NtUserValidateRect(hWnd, lpRect);
+}
+
+EXTINLINE BOOL WINAPI ShowCaret( HWND hWnd )
+{
+   return NtUserShowCaret(hWnd);
+}
+
+EXTINLINE BOOL WINAPI HideCaret( HWND hWnd )
+{
+   return NtUserHideCaret(hWnd);
+}
+
+
+
+
+/*
+    Inline functions that make calling NtUserCall*** functions readable
+    These functions are prepended with NtUserx because they are not
+    real syscalls and they are inlined
+*/
+
+EXTINLINE BOOL NtUserxDestroyCaret(VOID)
+{
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
+}
+
+EXTINLINE VOID NtUserxMsqClearWakeMask()
+{
+    NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK);
+}
+
+EXTINLINE HMENU NtUserxCreateMenu()
+{
+    return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
+}
+
+EXTINLINE HMENU NtUserxCreatePopupMenu()
+{
+    return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
+}
+
+EXTINLINE DWORD NtUserxGetMessagePos(VOID)
+{
+  return (DWORD)NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
+}
+
+EXTINLINE BOOL NtUserxReleaseCapture(VOID)
+{
+  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
+}
+
+EXTINLINE BOOL NtUserxInitMessagePump()
+{
+    return NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP);
+}
+
+EXTINLINE BOOL NtUserxUnInitMessagePump()
+{
+    return NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP);
+}
+
+EXTINLINE HANDLE NtUserxMsqSetWakeMask(DWORD_PTR dwWaitMask)
+{
+    return (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_GETINPUTEVENT);
+}
+
+EXTINLINE BOOL NtUserxSetCaretBlinkTime(UINT uMSeconds)
+{
+    return (BOOL)NtUserCallOneParam(uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME);
+}
+
+EXTINLINE HWND NtUserxWindowFromDC(HDC hDC)
+{
+    return (HWND)NtUserCallOneParam((DWORD_PTR)hDC, ONEPARAM_ROUTINE_WINDOWFROMDC);
+}
+
+EXTINLINE BOOL NtUserxSwapMouseButton(BOOL fSwap)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)fSwap, ONEPARAM_ROUTINE_SWAPMOUSEBUTTON);
+}
+
+EXTINLINE LPARAM NtUserxSetMessageExtraInfo(LPARAM lParam)
+{
+    return (LPARAM)NtUserCallOneParam((DWORD_PTR)lParam, ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO);
+}
+
+EXTINLINE INT NtUserxShowCursor(BOOL bShow)
+{
+    return (INT)NtUserCallOneParam((DWORD_PTR)bShow, ONEPARAM_ROUTINE_SHOWCURSOR);
+}
+
+EXTINLINE UINT NtUserxEnumClipboardFormats(UINT format)
+{
+    return (UINT)NtUserCallOneParam((DWORD_PTR)format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS);
+}
+
+EXTINLINE HICON NtUserxCreateEmptyCurObject(DWORD_PTR Param)
+{
+	return (HICON)NtUserCallOneParam(Param, ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+}
+
+EXTINLINE BOOL NtUserxMessageBeep(UINT uType)
+{
+    return (BOOL)NtUserCallOneParam(uType, ONEPARAM_ROUTINE_MESSAGEBEEP);
+}
+
+EXTINLINE HKL NtUserxGetKeyboardLayout(DWORD idThread)
+{
+  return (HKL)NtUserCallOneParam((DWORD_PTR) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
+}
+
+EXTINLINE INT NtUserxGetKeyboardType(INT nTypeFlag)
+{
+    return (INT)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
+}
+
+EXTINLINE INT NtUserxReleaseDC(HDC hDC)
+{
+    return (INT)NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_RELEASEDC);
+}
+
+EXTINLINE UINT NtUserxRealizePalette ( HDC hDC )
+{
+    return (UINT)NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+}
+
+EXTINLINE VOID NtUserxCreateSystemThreads(DWORD param)
+{
+    NtUserCallOneParam(param, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+}
+
+EXTINLINE HDWP NtUserxBeginDeferWindowPos(INT nNumWindows)
+{
+    return (HDWP)NtUserCallOneParam((DWORD_PTR)nNumWindows, ONEPARAM_ROUTINE_BEGINDEFERWNDPOS);
+}
+
+EXTINLINE BOOL NtUserxReplyMessage(LRESULT lResult)
+{
+  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
+}
+
+EXTINLINE VOID NtUserxPostQuitMessage(int nExitCode)
+{
+    NtUserCallOneParam(nExitCode, ONEPARAM_ROUTINE_POSTQUITMESSAGE);
+}
+
+EXTINLINE DWORD NtUserxGetQueueStatus(UINT flags)
+{
+   return (DWORD)NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
+}
+
+EXTINLINE BOOL NtUserxValidateRgn(HWND hWnd, HRGN hRgn)
+{
+    return (BOOL)NtUserCallHwndParamLock(hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+}
+
+EXTINLINE BOOL NtUserxSetCursorPos(INT x, INT y)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD)x, (DWORD)y, TWOPARAM_ROUTINE_SETCURSORPOS);
+}
+
+EXTINLINE BOOL NtUserxEnableWindow(HWND hWnd, BOOL bEnable)
+{
+  return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bEnable, TWOPARAM_ROUTINE_ENABLEWINDOW);
+}
+
+EXTINLINE BOOL NtUserxUpdateUiState(HWND hWnd, DWORD Param)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)Param, TWOPARAM_ROUTINE_ROS_UPDATEUISTATE);
+}
+
+EXTINLINE BOOL NtUserxShowOwnedPopups(HWND hWnd, BOOL fShow)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
+}
+
+EXTINLINE BOOL NtUserxUnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
+{
+  return (BOOL)NtUserCallTwoParam(nCode, (DWORD_PTR)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
+}
+
+EXTINLINE BOOL NtUserxSetWindowContextHelpId(HWND hWnd, DWORD_PTR dwContextHelpId)
+{
+    return (BOOL)NtUserCallHwndParam(hWnd, dwContextHelpId, HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID);
+}
+  
+EXTINLINE BOOL NtUserxKillSystemTimer(HWND hWnd, UINT_PTR IDEvent)
+{
+    return (BOOL)NtUserCallHwndParam(hWnd, IDEvent, HWNDPARAM_ROUTINE_KILLSYSTEMTIMER);
+}
+
+EXTINLINE VOID NtUserxSetDialogPointer(HWND hWnd, PVOID dlgInfo)
+{
+    NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+}
+
+EXTINLINE VOID NtUserxNotifyWinEvent(HWND hWnd, PVOID ne)
+{
+    NtUserCallHwndParam(hWnd, (DWORD_PTR)ne, HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT);
+}
+
+EXTINLINE DWORD NtUserxGetWindowContextHelpId(HWND hwnd)
+{
+    return NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
+}
+
+EXTINLINE BOOL NtUserxDeregisterShellHookWindow(HWND hWnd)
+{
+  return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
+}
+
+EXTINLINE BOOL NtUserxRegisterShellHookWindow(HWND hWnd)
+{
+  return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
+}
+
+EXTINLINE HWND NtUserxSetTaskmanWindow(HWND hWnd)
+{
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
+}
+
+EXTINLINE HWND NtUserxSetProgmanWindow(HWND hWnd)
+{
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETPROGMANWINDOW);
+}
+
+EXTINLINE UINT NtUserxArrangeIconicWindows(HWND hWnd)
+{
+    return (UINT)NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
+}
+
+EXTINLINE BOOL NtUserxUpdateWindow(HWND hWnd)
+{
+    return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
+}
+
+EXTINLINE BOOL NtUserxDrawMenuBar(HWND hWnd)
+{
+    return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
+}
+
+EXTINLINE BOOL NtUserxMDIRedrawFrame(HWND hWnd)
+{
+  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_REDRAWFRAME);
+}
+
+EXTINLINE BOOL NtUserxSetForegroundWindow(HWND hWnd)
+{
+    return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
+}
+
+
+/* Reactos specific definitions */
+
+EXTINLINE LPARAM NtUserxGetMessageExtraInfo(VOID)
+{
+  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
+}
+
+EXTINLINE BOOL NtUserxSwitchCaretShowing(THRDCARETINFO* CaretInfo)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING);
+}
+
+EXTINLINE VOID NtUserxEnableProcessWindowGhosting(BOOL bEnable)
+{
+    NtUserCallOneParam((DWORD_PTR)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING);
+}
+
+EXTINLINE PVOID NtUserxGetDesktopMapping(PVOID ptr)
+{
+    return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
+}
+
+EXTINLINE BOOL NtUserxGetCursorPos(POINT* lpPoint)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION);
+}
+
+EXTINLINE BOOL NtUserxSetMenuBarHeight(HMENU menu, INT height)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)menu, (DWORD_PTR)height, TWOPARAM_ROUTINE_SETMENUBARHEIGHT);
+}
+
+EXTINLINE BOOL NtUserxSetGUIThreadHandle(DWORD_PTR field, HWND hwnd)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)field, (DWORD_PTR)hwnd, TWOPARAM_ROUTINE_SETGUITHRDHANDLE);
+}
+
+EXTINLINE BOOL NtUserxSetCaretPos(INT x, INT y)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)x, (DWORD_PTR)y, TWOPARAM_ROUTINE_SETCARETPOS);
+}
+
+EXTINLINE BOOL NtUserxRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
+{
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)dwProcessId, (DWORD_PTR)bRegister, TWOPARAM_ROUTINE_REGISTERLOGONPROCESS);
 }

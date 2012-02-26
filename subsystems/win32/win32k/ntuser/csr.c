@@ -1,5 +1,4 @@
-/* $Id$
- *
+/* 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Interface to csrss
@@ -8,9 +7,6 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
 
 static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;

@@ -586,13 +586,13 @@ typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
   ULONG TitleIndex;
   ULONG Type;
   ULONG DataLength;
-  UCHAR Data[1];
+  _Field_size_bytes_(DataLength) UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
 
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION_ALIGN64 {
   ULONG Type;
   ULONG DataLength;
-  UCHAR Data[1];
+  _Field_size_bytes_(DataLength) UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, *PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64;
 
 typedef struct _KEY_VALUE_ENTRY {
@@ -680,11 +680,13 @@ typedef enum _REG_NOTIFY_CLASS {
   MaxRegNtNotifyClass
 } REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
 
+_IRQL_requires_same_
+_Function_class_(EX_CALLBACK_FUNCTION)
 typedef NTSTATUS
 (NTAPI EX_CALLBACK_FUNCTION)(
-  IN PVOID CallbackContext,
-  IN PVOID Argument1,
-  IN PVOID Argument2);
+  _In_ PVOID CallbackContext,
+  _In_opt_ PVOID Argument1,
+  _In_opt_ PVOID Argument2);
 typedef EX_CALLBACK_FUNCTION *PEX_CALLBACK_FUNCTION;
 
 typedef struct _REG_DELETE_KEY_INFORMATION {

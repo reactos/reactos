@@ -137,8 +137,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT           "COM ポートを入力してください (例: COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "通信速度を入力してください (例: 115200):",IDC_STATIC,7,38,114,
-                    8
+    LTEXT           "通信速度を入力してください (例: 115200):",IDC_STATIC,7,38,114,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
     PUSHBUTTON      "キャンセル",IDCANCEL,100,79,50,14
@@ -176,3 +175,16 @@ END
 
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

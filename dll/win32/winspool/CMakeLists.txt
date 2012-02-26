@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -14,12 +13,12 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/winspool_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool.def)
 
-add_library(winspool SHARED ${SOURCE})
+add_library(winspool.drv SHARED ${SOURCE})
 
-set_target_properties(winspool PROPERTIES SUFFIX ".drv")
+set_target_properties(winspool.drv PROPERTIES SUFFIX "")
 
-set_module_type(winspool win32dll)
-target_link_libraries(winspool wine)
-add_importlibs(winspool advapi32 shlwapi msvcrt kernel32 ntdll)
-add_cd_file(TARGET winspool DESTINATION reactos/system32 FOR all)
-add_importlib_target(winspool.spec)
+set_module_type(winspool.drv win32dll UNICODE)
+target_link_libraries(winspool.drv wine)
+add_importlibs(winspool.drv advapi32 shlwapi msvcrt kernel32 ntdll)
+add_cd_file(TARGET winspool.drv DESTINATION reactos/system32 FOR all)
+add_importlib_target(winspool.spec winspool.drv)

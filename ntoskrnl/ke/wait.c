@@ -53,7 +53,7 @@ KiWaitTest(IN PVOID ObjectPointer,
 VOID
 FASTCALL
 KiUnlinkThread(IN PKTHREAD Thread,
-               IN NTSTATUS WaitStatus)
+               IN LONG_PTR WaitStatus)
 {
     PKWAIT_BLOCK WaitBlock;
     PKTIMER Timer;
@@ -351,7 +351,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
             ASSERT(Thread->WaitIrql <= DISPATCH_LEVEL);
             KiSetThreadSwapBusy(Thread);
             KxInsertTimer(Timer, Hand);
-            WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
+            WaitStatus = (NTSTATUS)KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if were swapped ok */
             if (WaitStatus != STATUS_KERNEL_APC)
@@ -454,7 +454,7 @@ KeWaitForSingleObject(IN PVOID Object,
                     {
                         /* It has a normal signal state. Unwait and return */
                         KiSatisfyMutantWait(CurrentObject, Thread);
-                        WaitStatus = Thread->WaitStatus;
+                        WaitStatus = (NTSTATUS)Thread->WaitStatus;
                         goto DontWait;
                     }
                     else
@@ -524,7 +524,7 @@ KeWaitForSingleObject(IN PVOID Object,
             }
 
             /* Do the actual swap */
-            WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
+            WaitStatus = (NTSTATUS)KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
             if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
@@ -661,7 +661,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                             {
                                 /* Normal signal state, unwait it and return */
                                 KiSatisfyMutantWait(CurrentObject, Thread);
-                                WaitStatus = Thread->WaitStatus | Index;
+                                WaitStatus = (NTSTATUS)Thread->WaitStatus | Index;
                                 goto DontWait;
                             }
                             else
@@ -737,7 +737,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                     } while(WaitBlock != WaitBlockArray);
 
                     /* Set the wait status and get out */
-                    WaitStatus = Thread->WaitStatus;
+                    WaitStatus = (NTSTATUS)Thread->WaitStatus;
                     goto DontWait;
                 }
             }
@@ -807,7 +807,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             }
 
             /* Swap the thread */
-            WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
+            WaitStatus = (NTSTATUS)KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
             if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;

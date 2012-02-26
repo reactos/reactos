@@ -1,4 +1,4 @@
-/* FILE:        dll/cpl/console/lang/cs-CZ.rc
+/* FILE:        base/setup/reactos/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   kario for introducing the file
  * UPDATED:     2011-03-31
@@ -8,78 +8,78 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "VÌtejte v pr˘vodci instalace systÈmu ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "SystÈm ReactOS zatÌm nelze nainstalovat p¯Ìmo z tohoto CD! Pro instalaci restartuje poËÌtaË z tohoto CD.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "KlepnutÌm na DokonËit ukonËÌte instalaci.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "V√≠tejte v pr≈Øvodci instalace syst√©mu ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Syst√©m ReactOS zat√≠m nelze nainstalovat p≈ô√≠mo z tohoto CD! Pro instalaci restartuje poƒç√≠taƒç z tohoto CD.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klepnut√≠m na Dokonƒçit ukonƒç√≠te instalaci.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
     CONTROL "Jazyk instalace:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL "Kl·vesnice Ëi metoda zad·v·nÌ:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
+    CONTROL "Kl√°vesnice ƒçi metoda zad√°v√°n√≠:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
-    LTEXT "Po klepnutÌ na DalöÌ bude moûnÈ zvolit typ instalace.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Po klepnut√≠ na Dal≈°√≠ bude mo≈æn√© zvolit typ instalace.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Typ instalace", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    CONTROL "Nainstalovat systÈm ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL "Opravit nebo aktualizovat jiû nainstalovan˝ systÈm ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Po klepnutÌ na DalöÌ bude moûnÈ nastavit za¯ÌzenÌ.", IDC_STATIC, 10, 180 ,297, 10
+    CONTROL "Nainstalovat syst√©m ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
+    CONTROL "Opravit nebo aktualizovat ji≈æ nainstalovan√Ω syst√©m ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
+    LTEXT "Po klepnut√≠ na Dal≈°√≠ bude mo≈æn√© nastavit za≈ô√≠zen√≠.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "NastavenÌ za¯ÌzenÌ", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "PoËÌtaË:", IDC_STATIC, 20,15, 80, 10
+    CONTROL "Nastaven√≠ za≈ô√≠zen√≠", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Poƒç√≠taƒç:", IDC_STATIC, 20,15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
     LTEXT "Obrazovka:", IDC_STATIC, 20,35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
-    LTEXT "Kl·vesnice:", IDC_STATIC, 20,55, 80, 10
+    LTEXT "Kl√°vesnice:", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
-    LTEXT "Po klepnutÌ na DalöÌ bude moûnÈ nastavit instalaËnÌ za¯ÌzenÌ.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Po klepnut√≠ na Dal≈°√≠ bude mo≈æn√© nastavit instalaƒçn√≠ za≈ô√≠zen√≠.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "OddÌl, do kterÈho bude systÈm ReactOS nainstalov·n", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
+    CONTROL "Odd√≠l, do kter√©ho bude syst√©m ReactOS nainstalov√°n", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Vytvo¯it", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "&Vytvo≈ôit", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Smazat", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "&OvladaË", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON "&PokroËilÈ volby...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Po klepnutÌ na DalöÌ bude moûnÈ zkontrolovat vöechna nastavenÌ.", IDC_STATIC, 10, 180 ,277, 20
+    PUSHBUTTON "&Ovladaƒç", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "&Pokroƒçil√© volby...", IDC_PARTMOREOPTS, 218,155,80,15
+    LTEXT "Po klepnut√≠ na Dal≈°√≠ bude mo≈æn√© zkontrolovat v≈°echna nastaven√≠.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Vytvo¯it oddÌl"
+CAPTION "Vytvo≈ôit odd√≠l"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL "Vytvo¯it a naform·tovat oddÌl",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    CONTROL "Vytvo≈ôit a naform√°tovat odd√≠l",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
     LTEXT "Velikost:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
     LTEXT "GB",IDC_UNIT, 117,24,14,9
-    LTEXT "Souborov˝ systÈm:",IDC_STATIC,13,46,35,9
+    LTEXT "Souborov√Ω syst√©m:",IDC_STATIC,13,46,35,9
     CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
     PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
     PUSHBUTTON "&Storno",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
@@ -87,37 +87,37 @@ END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 116
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "PokroËil· nastavenÌ oddÌlu"
+CAPTION "Pokroƒçil√° nastaven√≠ odd√≠lu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "InstalaËnÌ sloûka", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    CONTROL "Instalaƒçn√≠ slo≈æka", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
     EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
 
-    CONTROL "Instalace zavadÏËe", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
+    CONTROL "Instalace zavadƒõƒçe", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
-    CONTROL "Nainstalovat zavadÏË na pevn˝ disk (MBR a VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Nainstalovat zavadÏË na pevn˝ disk (jen VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
-    CONTROL "ZavadÏË neinstalovat", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
+    CONTROL "Nainstalovat zavadƒõƒç na pevn√Ω disk (MBR a VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Nainstalovat zavadƒõƒç na pevn√Ω disk (jen VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Zavadƒõƒç neinstalovat", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
     PUSHBUTTON "&OK", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Storno", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ShrnutÌ instalace", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "KlepnutÌm na DalöÌ zah·jÌte instalaËnÌ proces.", IDC_STATIC, 10, 180 ,277, 20
+    CONTROL "Shrnut√≠ instalace", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Klepnut√≠m na Dal≈°√≠ zah√°j√≠te instalaƒçn√≠ proces.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace systÈmu ReactOS"
+CAPTION "Instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Akce instalace", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Instalace soubor˘...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Instalace soubor≈Ø...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -125,34 +125,34 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "DokonËenÌ instalace systÈmu ReactOS"
+CAPTION "Dokonƒçen√≠ instalace syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "DokonËenÌ prvnÌ Ë·sti instalace systÈmu ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "PrvnÌ Ë·st instalace systÈmu ReactOS byla ˙spÏönÏ dokonËena.", IDC_STATIC, 20, 50, 277, 10
+    CONTROL "Dokonƒçen√≠ prvn√≠ ƒç√°sti instalace syst√©mu ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Prvn√≠ ƒç√°st instalace syst√©mu ReactOS byla √∫spƒõ≈°nƒõ dokonƒçena.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "Po klepnutÌ na DokonËit bude poËÌtaË restartov·n.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Po klepnut√≠ na Dokonƒçit bude poƒç√≠taƒç restartov√°n.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Pokud je v mechanice instalaËnÌ CD, vyjmÏte jej. PotÈ kliknutÌm na DokonËit restartujte poËÌtaË.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Pokud je v mechanice instalaƒçn√≠ CD, vyjmƒõte jej. Pot√© kliknut√≠m na Dokonƒçit restartujte poƒç√≠taƒç.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "V˝bÏr jazyka"
-    IDS_LANGSUBTITLE    "Volba jazyka, kter˝ bude pouûit p¯i instalaci a ve v˝slednÈm systÈmu."
-    IDS_TYPETITLE       "VÌtejte v pr˘vodci instalace systÈmu ReactOS"
+    IDS_LANGTITLE       "V√Ωbƒõr jazyka"
+    IDS_LANGSUBTITLE    "Volba jazyka, kter√Ω bude pou≈æit p≈ôi instalaci a ve v√Ωsledn√©m syst√©mu."
+    IDS_TYPETITLE       "V√≠tejte v pr≈Øvodci instalace syst√©mu ReactOS"
     IDS_TYPESUBTITLE    "Volba typu instalace."
-    IDS_DEVICETITLE     "NastavenÌ z·kladnÌch za¯ÌzenÌ"
-    IDS_DEVICESUBTITLE  "Volba nastavenÌ obrazovky a kl·vesnice."
-    IDS_DRIVETITLE      "NastavenÌ instalaËnÌho oddÌlu a systÈmovÈ sloûky"
-    IDS_DRIVESUBTITLE   "P¯Ìprava instalaËnÌho oddÌlu, systÈmovÈ sloûky a zavadÏËe."
-    IDS_PROCESSTITLE    "P¯Ìprava oddÌlu, kopÌrov·nÌ soubor˘ a nastavenÌ systÈmu"
-    IDS_PROCESSSUBTITLE "Vytvo¯enÌ a naform·tov·nÌ oddÌlu, kopÌrov·nÌ soubor˘, instalace a nastavenÌ zavadÏËe"
-    IDS_RESTARTTITLE    "PrvnÌ Ë·st instalace dokonËena"
-    IDS_RESTARTSUBTITLE "PrvnÌ Ë·st instalace byla dokonËena, po restartov·nÌ poËÌtaËe se bude pokraËovat druhou Ë·stÌ"
-    IDS_SUMMARYTITLE    "ShrnutÌ instalace"
-    IDS_SUMMARYSUBTITLE "V˝pis voleb instalace k ovÏ¯enÌ p¯ed tÌm, neû zaËne instalace"
-    IDS_ABORTSETUP      "SystÈm ReactOS nenÌ na tomto poËÌtaËi kompletnÏ nainstalovan˝. Pokud nynÌ ukonËÌte instalaci, bude ji pro nainstalov·nÌ systÈmu ReactOS nutnÈ provÈst znova. Opravdu ukonËit?"
-    IDS_ABORTSETUP2     "P¯eruöit instalaci?"
+    IDS_DEVICETITLE     "Nastaven√≠ z√°kladn√≠ch za≈ô√≠zen√≠"
+    IDS_DEVICESUBTITLE  "Volba nastaven√≠ obrazovky a kl√°vesnice."
+    IDS_DRIVETITLE      "Nastaven√≠ instalaƒçn√≠ho odd√≠lu a syst√©mov√© slo≈æky"
+    IDS_DRIVESUBTITLE   "P≈ô√≠prava instalaƒçn√≠ho odd√≠lu, syst√©mov√© slo≈æky a zavadƒõƒçe."
+    IDS_PROCESSTITLE    "P≈ô√≠prava odd√≠lu, kop√≠rov√°n√≠ soubor≈Ø a nastaven√≠ syst√©mu"
+    IDS_PROCESSSUBTITLE "Vytvo≈ôen√≠ a naform√°tov√°n√≠ odd√≠lu, kop√≠rov√°n√≠ soubor≈Ø, instalace a nastaven√≠ zavadƒõƒçe"
+    IDS_RESTARTTITLE    "Prvn√≠ ƒç√°st instalace dokonƒçena"
+    IDS_RESTARTSUBTITLE "Prvn√≠ ƒç√°st instalace byla dokonƒçena, po restartov√°n√≠ poƒç√≠taƒçe se bude pokraƒçovat druhou ƒç√°st√≠"
+    IDS_SUMMARYTITLE    "Shrnut√≠ instalace"
+    IDS_SUMMARYSUBTITLE "V√Ωpis voleb instalace k ovƒõ≈ôen√≠ p≈ôed t√≠m, ne≈æ zaƒçne instalace"
+    IDS_ABORTSETUP      "Syst√©m ReactOS nen√≠ na tomto poƒç√≠taƒçi kompletnƒõ nainstalovan√Ω. Pokud nyn√≠ ukonƒç√≠te instalaci, bude ji pro nainstalov√°n√≠ syst√©mu ReactOS nutn√© prov√©st znova. Opravdu ukonƒçit?"
+    IDS_ABORTSETUP2     "P≈ôeru≈°it instalaci?"
 END
 /* EOF */

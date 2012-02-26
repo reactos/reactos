@@ -26,22 +26,43 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
+static VOID HandleReceiveComplete( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
 {
-	if (Status != STATUS_SUCCESS)
-	{
-        FCB->TdiReceiveClosed = TRUE;
+    FCB->Recv.BytesUsed = 0;
 
+    /* We got closed while the receive was in progress */
+    if (FCB->TdiReceiveClosed)
+    {
+        FCB->Recv.Content = 0;
+    }
+    /* Receive successful with new data */
+    else if (Status == STATUS_SUCCESS && Information)
+    {
+        FCB->Recv.Content = Information;
+    }
+    /* Receive successful with no data (graceful closure) */
+    else if (Status == STATUS_SUCCESS)
+    {
+        FCB->Recv.Content = 0;
+        FCB->TdiReceiveClosed = TRUE;
+            
+        /* Signal graceful receive shutdown */
+        FCB->PollState |= AFD_EVENT_DISCONNECT;
+        FCB->PollStatus[FD_CLOSE_BIT] = Status;
+            
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+    /* Receive failed with no data (unexpected closure) */
+    else
+    {
+        FCB->Recv.Content = 0;
+        FCB->TdiReceiveClosed = TRUE;
+        
         /* Signal complete connection failure immediately */
 		FCB->PollState |= AFD_EVENT_CLOSE;
 		FCB->PollStatus[FD_CLOSE_BIT] = Status;
 
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
-	}
-    else if (Status == STATUS_SUCCESS && !Information)
-    {
-        /* Wait to signal graceful close until all data is read */
-        FCB->TdiReceiveClosed = TRUE;
     }
 }
 
@@ -231,17 +252,6 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-    else if (CantReadMore(FCB) &&
-             !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)))
-    {
-        FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-        /* Signal graceful receive shutdown */
-        FCB->PollState |= AFD_EVENT_DISCONNECT;
-		FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
-		
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
-    }
     else
     {
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
@@ -276,9 +286,6 @@ NTSTATUS NTAPI ReceiveComplete
     ASSERT(FCB->ReceiveIrp.InFlightRequest == Irp);
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    FCB->Recv.Content = Irp->IoStatus.Information;
-    FCB->Recv.BytesUsed = 0;
-
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
@@ -301,7 +308,7 @@ NTSTATUS NTAPI ReceiveComplete
         return STATUS_INVALID_PARAMETER;
     }
 	
-	HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
+	HandleReceiveComplete( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
 
 	ReceiveActivity( FCB, NULL );
 		
@@ -584,6 +591,12 @@ PacketSocketRecvComplete(
         return Irp->IoStatus.Status;
     }
 
+    if (FCB->TdiReceiveClosed)
+    {
+        SocketStateUnlock(FCB);
+        return STATUS_FILE_CLOSED;
+    }
+
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
 
     if( DatagramRecv ) {
@@ -694,6 +707,13 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
+
+    if (FCB->TdiReceiveClosed)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Receive closed\n"));
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+    }
+
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );

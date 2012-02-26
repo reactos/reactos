@@ -31,7 +31,7 @@ BEGIN
                   /setclassid kort [classid] ]\n \
     \n \
     der\n \
-        kort         Tilkoblingsnavn\n \
+        kort            Tilkoblingsnavn\n \
                        (jokertegnene * og ? er tillatt, se eksemplene)\n \
     \n \
         Eksempler:\n \
@@ -39,13 +39,13 @@ BEGIN
            /all         Viser detaljert informasjon.\n \
            /release     Frigir IP addressen for det angitte kortet.\n \
            /renew       Forny alle IP addresser for alle valgte kort.\n \
-           /flushdns    Tømmer DNS Resolver-bufferen.\n \
-           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n \
+           /flushdns    TÃ¸mmer DNS Resolver-bufferen.\n \
+           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn pÃ¥ nytt.\n \
            /displaydns  Viser innhold av DNS Resolver-bufferen.\n \
            /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n \
            /setclassid  Endrer klasse-IDene for DHCP.\n \
     \n \
-    Standardverdien er å bare vise IP-addressen, nettverksmasken og\n \
+    Standardverdien er Ã¥ bare vise IP-addressen, nettverksmasken og\n \
     standard gatewayen for hver kort knyttet til TCP/IP.\n \
     \n \
     For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n \

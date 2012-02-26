@@ -145,7 +145,7 @@ VOID RunLoader(VOID)
 	}
 	TimeOut = GetTimeOut();
 
-	if (!UiInitialize(TimeOut != 0))
+	if (!UiInitialize(TRUE))
 	{
 		UiMessageBoxCritical("Unable to initialize UI.");
 		return;
@@ -213,7 +213,7 @@ VOID RunLoader(VOID)
 		if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
 		{
 			// Try to infere boot type value
-#ifdef __i386__
+#ifdef _M_IX86
 			ULONG FileId;
 			if (ArcOpen((CHAR*)SectionName, OpenReadOnly, &FileId) == ESUCCESS)
 			{
@@ -231,20 +231,15 @@ VOID RunLoader(VOID)
 		IniOpenSection("Operating Systems", &SectionId);
 		IniReadSettingByName(SectionId, SectionName, SettingValue, sizeof(SettingValue));
 
-#ifndef _M_ARM
 		// Install the drive mapper according to this sections drive mappings
-#if defined(__i386__) && !defined(_MSC_VER)
+#if defined(_M_IX86) && !defined(_MSC_VER)
 		DriveMapMapDrivesInSection(SectionName);
 #endif
+
 #ifdef FREELDR_REACTOS_SETUP
-		if (_stricmp(BootType, "ReactOSSetup2") == 0)
-		{
-			// WinLdr-style boot
-			LoadReactOSSetup2();
-		}
-		else
-#endif
-#ifdef __i386__
+        // WinLdr-style boot
+        LoadReactOSSetup();
+#elif defined(_M_IX86)
 		if (_stricmp(BootType, "Windows") == 0)
 		{
 			LoadAndBootWindows(SectionName, SettingValue, 0);
@@ -273,12 +268,10 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootDrive(SectionName);
 		}
-#endif
 #else
-        LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
+		LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
 #endif
 	}
-
 
 reboot:
 	UiUnInitialize("Rebooting...");

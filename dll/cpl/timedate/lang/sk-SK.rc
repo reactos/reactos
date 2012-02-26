@@ -50,9 +50,9 @@ CAPTION "Internetov˝ Ëas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Automaticky &synchronizovaù Ëas s internetov˝m Ëasov˝m serverom", IDC_AUTOSYNC,
-                    "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
-    LTEXT           "Server:", -1, 34, 22, 28, 13
+    AUTOCHECKBOX    "Automaticky &synchronizovaù Ëas s internetov˝m Ëasov˝m serverom", IDC_AUTOSYNC,
+                    11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+    LTEXT           "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "&Aktualizovaù", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12

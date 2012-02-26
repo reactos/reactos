@@ -1,5 +1,3 @@
-/* $Id: en-US.rc 24952 2006-11-28 21:44:53Z janderwald $ */
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 /* String Tables */
@@ -9,8 +7,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Bem vindo"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Bem vindo ao Sistema Operacional React (ReactOS).\n\nClique em um tÛpico ‡ esquerda."
-//    IDS_CHECKTEXT           "Exibir este di·logo novamente"
+    IDS_DEFAULTTOPICDESC    "Bem vindo ao Sistema Operacional React (ReactOS).\n\nClique em um t√≥pico √† esquerda."
+//    IDS_CHECKTEXT           "Exibir este di√°logo novamente"
 //    IDS_CLOSETEXT           "Sair"
 END
 
@@ -47,7 +45,7 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Cria uma nova instalaÁ„o do ReactOS em seu computador ou atualiza uma instalaÁ„o j· existente."
+    IDS_TOPICDESC0          "Cria uma nova instala√ß√£o do ReactOS em seu computador ou atualiza uma instala√ß√£o j√° existente."
     IDS_TOPICDESC1          "Exibe os arquivos contidos no CD."
     IDS_TOPICDESC2          "Clique para fechar este aplicativo."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."

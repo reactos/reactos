@@ -3,13 +3,13 @@ LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Finalitza una sessiÛ.\n\n\
-  /v\t\tMostra informaciÛ en quant a les accions dutes a terme.\n\
-  /?\t\tMostra aquesta informaciÛ.\n\n"
+IDS_USAGE, "Finalitza una sessi√≥.\n\n\
+  /v\t\tMostra informaci√≥ en quant a les accions dutes a terme.\n\
+  /?\t\tMostra aquesta informaci√≥.\n\n"
 
-IDS_LOGOFF_REMOTE, "Finalitzant sessiÛ en un equip remot."
-IDS_LOGOFF_LOCAL, "Finalitzant la sessiÛ actual en aquesta equip."
+IDS_LOGOFF_REMOTE, "Finalitzant sessi√≥ en un equip remot."
+IDS_LOGOFF_LOCAL, "Finalitzant la sessi√≥ actual en aquesta equip."
 
-IDS_ILLEGAL_PARAM, "Parametre(s) no v‡lid(s)\n"
+IDS_ILLEGAL_PARAM, "Parametre(s) no v√†lid(s)\n"
 END
 /* EOF */

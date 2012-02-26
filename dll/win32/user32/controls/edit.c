@@ -85,6 +85,7 @@ typedef struct tagLINEDEF {
 	LINE_END ending;
 	INT width;			/* width of the line in pixels */
 	INT index; 			/* line index into the buffer */
+	SCRIPT_STRING_ANALYSIS ssa;     /* Uniscribe Data */
 	struct tagLINEDEF *next;
 } LINEDEF;
 
@@ -141,6 +142,11 @@ typedef struct
 	 */
 	UINT composition_len;   /* length of composition, 0 == no composition */
 	int composition_start;  /* the character position for the composition */
+       /*
+        * Uniscribe Data
+        */
+       SCRIPT_LOGATTR *logAttr;
+       SCRIPT_STRING_ANALYSIS ssa; /* Uniscribe Data for single line controls */
 } EDITSTATE;
 
 
@@ -158,6 +164,7 @@ typedef struct
 	} while(0)
 
 static const WCHAR empty_stringW[] = {0};
+static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap);
 
 /*********************************************************************
  *
@@ -228,10 +235,16 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
 		msg = WM_CTLCOLOREDIT;
 
 	/* why do we notify to es->hwndParent, and we send this one to GetParent()? */
-        hbrush = (HBRUSH)SendMessageW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
-        if (!hbrush)
-            hbrush = (HBRUSH)DefWindowProcW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
+        hbrush = GetControlBrush(es->hwndSelf, hdc, msg);
         return hbrush;
+}
+
+
+static inline UINT get_text_length(EDITSTATE *es)
+{
+    if(es->text_length == (UINT)-1)
+        es->text_length = strlenW(es->text);
+    return es->text_length;
 }
 
 
@@ -244,61 +257,51 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
  *		allows to be called without linebreaks between s[0] up to
  *		s[count - 1].  Remember it is only called
  *		internally, so we can decide this for ourselves.
+ *             Additional we will always be breaking the full string.
  *
  */
-static INT EDIT_WordBreakProc(LPWSTR s, INT index, INT count, INT action)
+static INT EDIT_WordBreakProc(EDITSTATE *es, LPWSTR s, INT index, INT count, INT action)
 {
-	INT ret = 0;
+    INT ret = 0;
 
-	TRACE("s=%p, index=%d, count=%d, action=%d\n", s, index, count, action);
+    TRACE("s=%p, index=%d, count=%d, action=%d\n", s, index, count, action);
 
-	if(!s) return 0;
+    if(!s) return 0;
 
-	switch (action) {
-	case WB_LEFT:
-		if (!count)
-			break;
-		if (index)
-			index--;
-		if (s[index] == ' ') {
-			while (index && (s[index] == ' '))
-				index--;
-			if (index) {
-				while (index && (s[index] != ' '))
-					index--;
-				if (s[index] == ' ')
-					index++;
-			}
-		} else {
-			while (index && (s[index] != ' '))
-				index--;
-			if (s[index] == ' ')
-				index++;
-		}
-		ret = index;
-		break;
-	case WB_RIGHT:
-		if (!count)
-			break;
-		if (index)
-			index--;
-		if (s[index] == ' ')
-			while ((index < count) && (s[index] == ' ')) index++;
-		else {
-			while (s[index] && (s[index] != ' ') && (index < count))
-				index++;
-			while ((s[index] == ' ') && (index < count)) index++;
-		}
-		ret = index;
-		break;
-	case WB_ISDELIMITER:
-		ret = (s[index] == ' ');
-		break;
-	default:
-		ERR("unknown action code, please report !\n");
-		break;
-	}
-	return ret;
+    if (!es->logAttr)
+    {
+        SCRIPT_ANALYSIS psa;
+
+        memset(&psa,0,sizeof(SCRIPT_ANALYSIS));
+        psa.eScript = SCRIPT_UNDEFINED;
+
+        es->logAttr = HeapAlloc(GetProcessHeap(), 0, sizeof(SCRIPT_LOGATTR) * get_text_length(es));
+        ScriptBreak(es->text, get_text_length(es), &psa, es->logAttr);
+    }
+
+    switch (action) {
+    case WB_LEFT:
+        if (index)
+            index--;
+        while (index && !es->logAttr[index].fSoftBreak)
+            index--;
+        ret = index;
+        break;
+    case WB_RIGHT:
+        if (!count)
+            break;
+        while (s[index] && index < count && !es->logAttr[index].fSoftBreak)
+            index++;
+        ret = index;
+        break;
+    case WB_ISDELIMITER:
+        ret = es->logAttr[index].fWhiteSpace;
+        break;
+    default:
+        ERR("unknown action code, please report !\n");
+        break;
+    }
+    return ret;
 }
 
 
@@ -346,9 +349,108 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 	    }
         }
 	else
-            ret = EDIT_WordBreakProc(es->text + start, index, count, action);
+            ret = EDIT_WordBreakProc(es, es->text, index+start, count+start, action) - start;
 
 	return ret;
+}
+
+static inline void EDIT_InvalidateUniscribeData_linedef(LINEDEF *line_def)
+{
+	if (line_def->ssa)
+	{
+		ScriptStringFree(&line_def->ssa);
+		line_def->ssa = NULL;
+	}
+}
+
+static inline void EDIT_InvalidateUniscribeData(EDITSTATE *es)
+{
+	LINEDEF *line_def = es->first_line_def;
+	while (line_def)
+	{
+		EDIT_InvalidateUniscribeData_linedef(line_def);
+		line_def = line_def->next;
+	}
+	if (es->ssa)
+	{
+		ScriptStringFree(&es->ssa);
+		es->ssa = NULL;
+	}
+}
+
+static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HDC dc, LINEDEF *line_def)
+{
+	if (!line_def)
+		return NULL;
+
+	if (line_def->net_length && !line_def->ssa)
+	{
+		int index = line_def->index;
+		HFONT old_font = NULL;
+		HDC udc = dc;
+		SCRIPT_TABDEF tabdef;
+
+		if (!udc)
+			udc = GetDC(es->hwndSelf);
+		if (es->font)
+			old_font = SelectObject(udc, es->font);
+
+		tabdef.cTabStops = es->tabs_count;
+		tabdef.iScale = 0;
+		tabdef.pTabStops = es->tabs;
+		tabdef.iTabOrigin = 0;
+
+		ScriptStringAnalyse(udc, &es->text[index], line_def->net_length, (1.5*line_def->net_length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1, NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
+
+		if (es->font)
+			SelectObject(udc, old_font);
+		if (udc != dc)
+			ReleaseDC(es->hwndSelf, udc);
+	}
+
+	return line_def->ssa;
+}
+
+static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, INT line)
+{
+	LINEDEF *line_def;
+
+	if (!(es->style & ES_MULTILINE))
+	{
+		if (!es->ssa)
+		{
+			INT length = get_text_length(es);
+			HFONT old_font = NULL;
+			HDC udc = dc;
+
+			if (!udc)
+				udc = GetDC(es->hwndSelf);
+			if (es->font)
+				old_font = SelectObject(udc, es->font);
+
+			if (es->style & ES_PASSWORD)
+				ScriptStringAnalyse(udc, &es->password_char, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
+			else
+				ScriptStringAnalyse(udc, es->text, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
+
+			if (es->font)
+				SelectObject(udc, old_font);
+			if (udc != dc)
+				ReleaseDC(es->hwndSelf, udc);
+		}
+		return es->ssa;
+	}
+	else
+	{
+		line_def = es->first_line_def;
+		while (line_def && line)
+		{
+			line_def = line_def->next;
+			line--;
+		}
+
+		return EDIT_UpdateUniscribeData_linedef(es,dc,line_def);
+	}
 }
 
 /*********************************************************************
@@ -362,8 +464,6 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
  */
 static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta, HRGN hrgn)
 {
-	HDC dc;
-	HFONT old_font = 0;
 	LPWSTR current_position, cp;
 	INT fw;
 	LINEDEF *current_line;
@@ -376,10 +476,6 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 
 	if (istart == iend && delta == 0)
 		return;
-
-	dc = GetDC(es->hwndSelf);
-	if (es->font)
-		old_font = SelectObject(dc, es->font);
 
 	previous_line = NULL;
 	current_line = es->first_line_def;
@@ -399,7 +495,6 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 	if (!current_line) /* Error occurred start is not inside previous buffer */
 	{
 		FIXME(" modification occurred outside buffer\n");
-		ReleaseDC(es->hwndSelf, dc);
 		return;
 	}
 
@@ -425,9 +520,9 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			{
 				/* The buffer has been expanded, create a new line and
 				   insert it into the link list */
-				LINEDEF *new_line = HeapAlloc(GetProcessHeap(), 0, sizeof(LINEDEF));
-                if (new_line == NULL) // reactos r33509
-                    break; // reactos r33509
+				LINEDEF *new_line = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF));
+				if (new_line == NULL) // reactos r33509
+				   break; // reactos r33509
 				new_line->next = previous_line->next;
 				previous_line->next = new_line;
 				current_line = new_line;
@@ -477,33 +572,69 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			current_line->net_length = cp - current_position;
 		}
 
-		/* Calculate line width */
-		current_line->width = (INT)LOWORD(GetTabbedTextExtentW(dc,
-					current_position, current_line->net_length,
-					es->tabs_count, es->tabs));
+		if (current_line->net_length)
+		{
+			const SIZE *sz;
+			EDIT_InvalidateUniscribeData_linedef(current_line);
+			EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
+			sz = ScriptString_pSize(current_line->ssa);
+			/* Calculate line width */
+			current_line->width = sz->cx;
+		}
+		else current_line->width = 0;
 
 		/* FIXME: check here for lines that are too wide even in AUTOHSCROLL (> 32767 ???) */
+
+/* Line breaks just look back from the end and find the next break and try that. */
+
 		if (!(es->style & ES_AUTOHSCROLL)) {
-		   if (current_line->width > fw) {
-			INT next = 0;
-			INT prev;
+		   if (current_line->width > fw && fw > es->char_width) {
+
+			INT prev, next;
+			int w;
+			const SIZE *sz;
+			float d;
+
+			prev = current_line->net_length - 1;
+			w = current_line->net_length;
+			d = (float)current_line->width/(float)fw;
+			if (d > 1.2) d -= 0.2;
+			next = prev/d;
+			if (next >= prev) next = prev-1;
 			do {
-				prev = next;
-				next = EDIT_CallWordBreakProc(es, current_position - es->text,
-						prev + 1, current_line->net_length, WB_RIGHT);
-				current_line->width = (INT)LOWORD(GetTabbedTextExtentW(dc,
-							current_position, next, es->tabs_count, es->tabs));
-			} while (current_line->width <= fw);
-			if (!prev) { /* Didn't find a line break so force a break */
-				next = 0;
+				prev = EDIT_CallWordBreakProc(es, current_position - es->text,
+						next, current_line->net_length, WB_LEFT);
+				current_line->net_length = prev;
+				EDIT_InvalidateUniscribeData_linedef(current_line);
+				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
+				sz = ScriptString_pSize(current_line->ssa);
+				if (sz)
+					current_line->width = sz->cx;
+				else
+					prev = 0;
+				next = prev - 1;
+			} while (prev && current_line->width > fw);
+			current_line->net_length = w;
+
+			if (prev == 0) { /* Didn't find a line break so force a break */
+				INT *piDx;
+				const INT *count;
+
+				EDIT_InvalidateUniscribeData_linedef(current_line);
+				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
+
+				count = ScriptString_pcOutChars(current_line->ssa);
+				piDx = HeapAlloc(GetProcessHeap(),0,sizeof(INT) * (*count));
+				ScriptStringGetLogicalWidths(current_line->ssa,piDx);
+
+				prev = current_line->net_length-1;
 				do {
-					prev = next;
-					next++;
-					current_line->width = (INT)LOWORD(GetTabbedTextExtentW(dc,
-								current_position, next, es->tabs_count, es->tabs));
-				} while (current_line->width <= fw);
-				if (!prev)
+					current_line->width -= piDx[prev];
+					prev--;
+				} while ( prev > 0 && current_line->width > fw);
+				if (prev<=0)
 					prev = 1;
+				HeapFree(GetProcessHeap(),0,piDx);
 			}
 
 			/* If the first line we are calculating, wrapped before istart, we must
@@ -524,8 +655,14 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 
 			current_line->net_length = prev;
 			current_line->ending = END_WRAP;
-			current_line->width = (INT)LOWORD(GetTabbedTextExtentW(dc, current_position,
-					current_line->net_length, es->tabs_count, es->tabs));
+
+			if (current_line->net_length > 0)
+			{
+				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
+				sz = ScriptString_pSize(current_line->ssa);
+				current_line->width = sz->cx;
+			}
+			else current_line->width = 0;
 		    }
 		    else if (current_line == start_line &&
                              current_line->index != nstart_index &&
@@ -572,6 +709,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		while (current_line)
 		{
 			pnext = current_line->next;
+			EDIT_InvalidateUniscribeData_linedef(current_line);
 			HeapFree(GetProcessHeap(), 0, current_line);
 			current_line = pnext;
 			es->line_count--;
@@ -601,9 +739,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		if ((es->style & ES_CENTER) || (es->style & ES_RIGHT))
 			rc.left = es->format_rect.left;
 		else
-			rc.left = es->format_rect.left + (INT)LOWORD(GetTabbedTextExtentW(dc,
-					es->text + nstart_index, istart - nstart_index,
-					es->tabs_count, es->tabs)) - es->x_offset; /* Adjust for horz scroll */
+            rc.left = LOWORD(EDIT_EM_PosFromChar(es, nstart_index, FALSE));
 		rc.right = es->format_rect.right;
 		SetRectRgn(hrgn, rc.left, rc.top, rc.right, rc.bottom);
 
@@ -626,40 +762,6 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		CombineRgn(hrgn, hrgn, tmphrgn, RGN_OR);
 		DeleteObject(tmphrgn);
 	}
-
-	if (es->font)
-		SelectObject(dc, old_font);
-
-	ReleaseDC(es->hwndSelf, dc);
-}
-
-
-static inline UINT get_text_length(EDITSTATE *es)
-{
-    if(es->text_length == (UINT)-1)
-        es->text_length = strlenW(es->text);
-    return es->text_length;
-}
-
-/*********************************************************************
- *
- *	EDIT_GetPasswordPointer_SL
- *
- *	note: caller should free the (optionally) allocated buffer
- *
- */
-static LPWSTR EDIT_GetPasswordPointer_SL(EDITSTATE *es)
-{
-	if (es->style & ES_PASSWORD) {
-		INT len = get_text_length(es);
-		LPWSTR text = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-        if (text == NULL)
-            return NULL;
-		text[len] = '\0';
-		while(len) text[--len] = es->password_char;
-		return text;
-	} else
-		return es->text;
 }
 
 
@@ -670,27 +772,15 @@ static LPWSTR EDIT_GetPasswordPointer_SL(EDITSTATE *es)
  */
 static void EDIT_CalcLineWidth_SL(EDITSTATE *es)
 {
-	SIZE size;
-	LPWSTR text;
-	HDC dc;
-	HFONT old_font = 0;
-
-	text = EDIT_GetPasswordPointer_SL(es);
-
-	dc = GetDC(es->hwndSelf);
-	if (es->font)
-		old_font = SelectObject(dc, es->font);
-
-	GetTextExtentPoint32W(dc, text, strlenW(text), &size);
-
-	if (es->font)
-		SelectObject(dc, old_font);
-	ReleaseDC(es->hwndSelf, dc);
-
-	if (es->style & ES_PASSWORD)
-		HeapFree(GetProcessHeap(), 0, text);
-
-	es->text_width = size.cx;
+	EDIT_UpdateUniscribeData(es, NULL, 0);
+	if (es->ssa)
+	{
+		const SIZE *size;
+		size = ScriptString_pSize(es->ssa);
+		es->text_width = size->cx;
+	}
+	else
+		es->text_width = 0;
 }
 
 /*********************************************************************
@@ -706,20 +796,19 @@ static void EDIT_CalcLineWidth_SL(EDITSTATE *es)
 static INT EDIT_CharFromPos(EDITSTATE *es, INT x, INT y, LPBOOL after_wrap)
 {
 	INT index;
-	HDC dc;
-	HFONT old_font = 0;
-	INT x_high = 0, x_low = 0;
 
 	if (es->style & ES_MULTILINE) {
+		int trailing;
 		INT line = (y - es->format_rect.top) / es->line_height + es->y_offset;
 		INT line_index = 0;
 		LINEDEF *line_def = es->first_line_def;
-		INT low, high;
+		EDIT_UpdateUniscribeData(es, NULL, line);
 		while ((line > 0) && line_def->next) {
 			line_index += line_def->length;
 			line_def = line_def->next;
 			line--;
 		}
+
 		x += es->x_offset - es->format_rect.left;
 		if (es->style & ES_RIGHT)
 			x -= (es->format_rect.right - es->format_rect.left) - line_def->width;
@@ -730,39 +819,21 @@ static INT EDIT_CharFromPos(EDITSTATE *es, INT x, INT y, LPBOOL after_wrap)
 				*after_wrap = (line_def->ending == END_WRAP);
 			return line_index + line_def->net_length;
 		}
-		if (x <= 0) {
+		if (x <= 0 || !line_def->ssa) {
 			if (after_wrap)
 				*after_wrap = FALSE;
 			return line_index;
 		}
-		dc = GetDC(es->hwndSelf);
-		if (es->font)
-			old_font = SelectObject(dc, es->font);
-                    low = line_index;
-                    high = line_index + line_def->net_length + 1;
-                    while (low < high - 1)
-                    {
-                        INT mid = (low + high) / 2;
-                        INT x_now = LOWORD(GetTabbedTextExtentW(dc, es->text + line_index, mid - line_index, es->tabs_count, es->tabs));
-                        if (x_now > x) {
-                            high = mid;
-                            x_high = x_now;
-                        } else {
-                            low = mid;
-                            x_low = x_now;
-                        }
-                    }
-                    if (abs(x_high - x) + 1 <= abs(x_low - x))
-                        index = high;
-                    else
-                        index = low;
 
+		ScriptStringXtoCP(line_def->ssa, x , &index, &trailing);
+		if (trailing) index++;
+		index += line_index;
 		if (after_wrap)
 			*after_wrap = ((index == line_index + line_def->net_length) &&
 							(line_def->ending == END_WRAP));
 	} else {
-		LPWSTR text;
-		SIZE size;
+		INT xoff = 0;
+		INT trailing;
 		if (after_wrap)
 			*after_wrap = FALSE;
 		x -= es->format_rect.left;
@@ -778,60 +849,55 @@ static INT EDIT_CharFromPos(EDITSTATE *es, INT x, INT y, LPBOOL after_wrap)
 				x -= indent / 2;
 		}
 
-		text = EDIT_GetPasswordPointer_SL(es);
-		dc = GetDC(es->hwndSelf);
-		if (es->font)
-			old_font = SelectObject(dc, es->font);
+		EDIT_UpdateUniscribeData(es, NULL, 0);
+		if (es->x_offset)
+		{
+			if (es->ssa)
+			{
+				if (es->x_offset>= get_text_length(es))
+				{
+					const SIZE *size;
+					size = ScriptString_pSize(es->ssa);
+					xoff = size->cx;
+				}
+				ScriptStringCPtoX(es->ssa, es->x_offset, FALSE, &xoff);
+			}
+			else
+				xoff = 0;
+		}
 		if (x < 0)
-                {
-                    INT low = 0;
-                    INT high = es->x_offset;
-                    while (low < high - 1)
-                    {
-                        INT mid = (low + high) / 2;
-                        GetTextExtentPoint32W( dc, text + mid,
-                                               es->x_offset - mid, &size );
-                        if (size.cx > -x) {
-                            low = mid;
-                            x_low = size.cx;
-                        } else {
-                            high = mid;
-                            x_high = size.cx;
-                        }
-                    }
-                    if (abs(x_high + x) <= abs(x_low + x) + 1)
-                        index = high;
-                    else
-                        index = low;
+		{
+			if (x + xoff > 0 || !es->ssa)
+			{
+				ScriptStringXtoCP(es->ssa, x+xoff, &index, &trailing);
+				if (trailing) index++;
+			}
+			else
+				index = 0;
 		}
-                else
-                {
-                    INT low = es->x_offset;
-                    INT high = get_text_length(es) + 1;
-                    while (low < high - 1)
-                    {
-                        INT mid = (low + high) / 2;
-                        GetTextExtentPoint32W( dc, text + es->x_offset,
-                                               mid - es->x_offset, &size );
-                        if (size.cx > x) {
-                               high = mid;
-                               x_high = size.cx;
-                        } else {
-                               low = mid;
-                               x_low = size.cx;
-                       }
-                    }
-                   if (abs(x_high - x) <= abs(x_low - x) + 1)
-                       index = high;
-                   else
-                       index = low;
+		else
+		{
+			if (x)
+			{
+				const SIZE *size = NULL;
+				if (es->ssa)
+					size = ScriptString_pSize(es->ssa);
+				if (!size)
+					index = 0;
+				else if (x > size->cx)
+					index = get_text_length(es);
+				else if (es->ssa)
+				{
+					ScriptStringXtoCP(es->ssa, x+xoff, &index, &trailing);
+					if (trailing) index++;
+				}
+				else
+                                        index = 0;
+			}
+			else
+				index = es->x_offset;
 		}
-		if (es->style & ES_PASSWORD)
-			HeapFree(GetProcessHeap(), 0, text);
 	}
-	if (es->font)
-		SelectObject(dc, old_font);
-	ReleaseDC(es->hwndSelf, dc);
 	return index;
 }
 
@@ -961,22 +1027,17 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 	INT len = get_text_length(es);
 	INT l;
 	INT li;
-	INT x;
+	INT x = 0;
 	INT y = 0;
 	INT w;
 	INT lw = 0;
-	INT ll = 0;
-	HDC dc;
-	HFONT old_font = 0;
-	SIZE size;
 	LINEDEF *line_def;
 
 	index = min(index, len);
-	dc = GetDC(es->hwndSelf);
-	if (es->font)
-		old_font = SelectObject(dc, es->font);
 	if (es->style & ES_MULTILINE) {
 		l = EDIT_EM_LineFromChar(es, index);
+		EDIT_UpdateUniscribeData(es, NULL, l);
+
 		y = (l - es->y_offset) * es->line_height;
 		li = EDIT_EM_LineIndex(es, l);
 		if (after_wrap && (li == index) && l) {
@@ -997,38 +1058,68 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 		while (line_def->index != li)
 			line_def = line_def->next;
 
-		ll = line_def->net_length;
 		lw = line_def->width;
-
 		w = es->format_rect.right - es->format_rect.left;
-		if (es->style & ES_RIGHT)
+		if (line_def->ssa)
 		{
-			x = LOWORD(GetTabbedTextExtentW(dc, es->text + li + (index - li), ll - (index - li),
-				es->tabs_count, es->tabs)) - es->x_offset;
-			x = w - x;
+			ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
+			x -= es->x_offset;
 		}
-		else if (es->style & ES_CENTER)
-		{
-			x = LOWORD(GetTabbedTextExtentW(dc, es->text + li, index - li,
-				es->tabs_count, es->tabs)) - es->x_offset;
-			x += (w - lw) / 2;
-		}
-		else /* ES_LEFT */
-		{
-		    x = LOWORD(GetTabbedTextExtentW(dc, es->text + li, index - li,
-				es->tabs_count, es->tabs)) - es->x_offset;
-		}
-	} else {
-		LPWSTR text = EDIT_GetPasswordPointer_SL(es);
-		if (index < es->x_offset) {
-			GetTextExtentPoint32W(dc, text + index,
-					es->x_offset - index, &size);
-			x = -size.cx;
-		} else {
-			GetTextExtentPoint32W(dc, text + es->x_offset,
-					index - es->x_offset, &size);
-			 x = size.cx;
+		else
+			x = es->x_offset;
 
+		if (es->style & ES_RIGHT)
+			x = w - (lw - x);
+		else if (es->style & ES_CENTER)
+			x += (w - lw) / 2;
+	} else {
+		INT xoff = 0;
+		INT xi = 0;
+		EDIT_UpdateUniscribeData(es, NULL, 0);
+		if (es->x_offset)
+		{
+			if (es->ssa)
+			{
+				if (es->x_offset >= get_text_length(es))
+				{
+					int leftover = es->x_offset - get_text_length(es);
+					if (es->ssa)
+					{
+						const SIZE *size;
+						size = ScriptString_pSize(es->ssa);
+						xoff = size->cx;
+					}
+					else
+						xoff = 0;
+					xoff += es->char_width * leftover;
+				}
+				else
+					ScriptStringCPtoX(es->ssa, es->x_offset, FALSE, &xoff);
+			}
+			else
+				xoff = 0;
+		}
+		if (index)
+		{
+			if (index >= get_text_length(es))
+			{
+				if (es->ssa)
+				{
+					const SIZE *size;
+					size = ScriptString_pSize(es->ssa);
+					xi = size->cx;
+				}
+				else
+					xi = 0;
+			}
+			else if (es->ssa)
+				ScriptStringCPtoX(es->ssa, index, FALSE, &xi);
+			else
+				xi = 0;
+		}
+		x = xi - xoff;
+
+		if (index >= es->x_offset) {
 			if (!es->x_offset && (es->style & (ES_RIGHT | ES_CENTER)))
 			{
 				w = es->format_rect.right - es->format_rect.left;
@@ -1042,14 +1133,9 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 			}
 		}
 		y = 0;
-		if (es->style & ES_PASSWORD)
-			HeapFree(GetProcessHeap(), 0, text);
 	}
 	x += es->format_rect.left;
 	y += es->format_rect.top;
-	if (es->font)
-		SelectObject(dc, old_font);
-	ReleaseDC(es->hwndSelf, dc);
 	return MAKELONG((INT16)x, (INT16)y);
 }
 
@@ -1064,21 +1150,62 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
  */
 static void EDIT_GetLineRect(EDITSTATE *es, INT line, INT scol, INT ecol, LPRECT rc)
 {
-	INT line_index =  EDIT_EM_LineIndex(es, line);
+	SCRIPT_STRING_ANALYSIS ssa;
+	INT line_index = 0;
+	INT pt1, pt2, pt3;
 
 	if (es->style & ES_MULTILINE)
+	{
+		const LINEDEF *line_def = NULL;
 		rc->top = es->format_rect.top + (line - es->y_offset) * es->line_height;
+		if (line >= es->line_count)
+			return;
+
+		line_def = es->first_line_def;
+		if (line == -1) {
+			INT index = es->selection_end - line_def->length;
+			while ((index >= 0) && line_def->next) {
+				line_index += line_def->length;
+				line_def = line_def->next;
+				index -= line_def->length;
+			}
+		} else {
+			while (line > 0) {
+				line_index += line_def->length;
+				line_def = line_def->next;
+				line--;
+			}
+		}
+		ssa = line_def->ssa;
+	}
 	else
+	{
+		line_index = 0;
 		rc->top = es->format_rect.top;
+		ssa = es->ssa;
+	}
+
 	rc->bottom = rc->top + es->line_height;
-	rc->left = (scol == 0) ? es->format_rect.left : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + scol, TRUE));
-	rc->right = (ecol == -1) ? es->format_rect.right : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + ecol, TRUE));
+	pt1 = (scol == 0) ? es->format_rect.left : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + scol, TRUE));
+	pt2 = (ecol == -1) ? es->format_rect.right : (short)LOWORD(EDIT_EM_PosFromChar(es, line_index + ecol, TRUE));
+	if (ssa)
+	{
+		ScriptStringCPtoX(ssa, scol, FALSE, &pt3);
+		pt3+=es->format_rect.left;
+	}
+	else pt3 = pt1;
+	rc->right = max(max(pt1 , pt2),pt3);
+	rc->left = min(min(pt1, pt2),pt3);
 }
 
 
 static inline void text_buffer_changed(EDITSTATE *es)
 {
     es->text_length = (UINT)-1;
+
+    HeapFree( GetProcessHeap(), 0, es->logAttr );
+    es->logAttr = NULL;
+    EDIT_InvalidateUniscribeData(es);
 }
 
 /*********************************************************************
@@ -1090,7 +1217,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	if (!es->text) {
 
 	    CHAR *textA = NULL; // ReactOS Hacked!
-	    UINT countA = 0;
+	    //UINT countA = 0;
 
 	    if(es->hloc32W)
 	    {
@@ -1098,7 +1225,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 		{
 		    TRACE("Synchronizing with 32-bit ANSI buffer\n");
 		    textA = LocalLock(es->hloc32A);
-		    countA = strlen(textA) + 1;
+		    //countA = strlen(textA) + 1;
 		}
 	    }
 	    else {
@@ -2037,7 +2164,7 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 		ret = (INT)LOWORD(TabbedTextOutW(dc, x, y, es->text + li + col, count,
 					es->tabs_count, es->tabs, es->format_rect.left - es->x_offset));
 	} else {
-		LPWSTR text = EDIT_GetPasswordPointer_SL(es);
+		LPWSTR text = es->text;
 		TextOutW(dc, x, y, text + li + col, count);
 		GetTextExtentPoint32W(dc, text + li + col, count, &size);
 		ret = size.cx;
@@ -2070,13 +2197,14 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
  */
 static void EDIT_PaintLine(EDITSTATE *es, HDC dc, INT line, BOOL rev)
 {
-	INT s = es->selection_start;
-	INT e = es->selection_end;
-	INT li;
-	INT ll;
+	INT s = 0;
+	INT e = 0;
+	INT li = 0;
+	INT ll = 0;
 	INT x;
 	INT y;
 	LRESULT pos;
+	SCRIPT_STRING_ANALYSIS ssa;
 
 	if (es->style & ES_MULTILINE) {
 		INT vlc = get_vertical_line_count(es);
@@ -2088,16 +2216,49 @@ static void EDIT_PaintLine(EDITSTATE *es, HDC dc, INT line, BOOL rev)
 
 	TRACE("line=%d\n", line);
 
+        ssa = EDIT_UpdateUniscribeData(es, dc, line);
 	pos = EDIT_EM_PosFromChar(es, EDIT_EM_LineIndex(es, line), FALSE);
 	x = (short)LOWORD(pos);
 	y = (short)HIWORD(pos);
-	li = EDIT_EM_LineIndex(es, line);
-	ll = EDIT_EM_LineLength(es, li);
-	s = min(es->selection_start, es->selection_end);
-	e = max(es->selection_start, es->selection_end);
-	s = min(li + ll, max(li, s));
-	e = min(li + ll, max(li, e));
-	if (rev && (s != e) &&
+
+	if (es->style & ES_MULTILINE)
+	{
+		int line_idx = line;
+		x =  -es->x_offset;
+		if (es->style & ES_RIGHT || es->style & ES_CENTER)
+		{
+			LINEDEF *line_def = es->first_line_def;
+			int w, lw;
+
+			while (line_def && line_idx)
+			{
+				line_def = line_def->next;
+				line_idx--;
+			}
+			w = es->format_rect.right - es->format_rect.left;
+			lw = line_def->width;
+
+			if (es->style & ES_RIGHT)
+				x = w - (lw - x);
+			else if (es->style & ES_CENTER)
+				x += (w - lw) / 2;
+		}
+		x += es->format_rect.left;
+	}
+
+	if (rev)
+	{
+		li = EDIT_EM_LineIndex(es, line);
+		ll = EDIT_EM_LineLength(es, li);
+		s = min(es->selection_start, es->selection_end);
+		e = max(es->selection_start, es->selection_end);
+		s = min(li + ll, max(li, s));
+		e = min(li + ll, max(li, e));
+	}
+
+	if (ssa)
+	        ScriptStringOut(ssa, x, y, 0, &es->format_rect, s - li, e - li, FALSE);
+	else if (rev && (s != e) &&
 			((es->flags & EF_FOCUSED) || (es->style & ES_NOHIDESEL))) {
 		x += EDIT_PaintText(es, dc, x, y, line, 0, s - li, FALSE);
 		x += EDIT_PaintText(es, dc, x, y, line, s - li, e - s, TRUE);
@@ -2393,6 +2554,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 	s = es->selection_start;
 	e = es->selection_end;
 
+        EDIT_InvalidateUniscribeData(es);
 	if ((s == e) && !strl)
 		return;
 
@@ -2468,12 +2630,15 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 	}
 	else {
 		INT fw = es->format_rect.right - es->format_rect.left;
+		EDIT_InvalidateUniscribeData(es);
 		EDIT_CalcLineWidth_SL(es);
 		/* remove chars that don't fit */
 		if (honor_limit && !(es->style & ES_AUTOHSCROLL) && (es->text_width > fw)) {
 			while ((es->text_width > fw) && s + strl >= s) {
 				strcpyW(es->text + s + strl - 1, es->text + s + strl);
 				strl--;
+				es->text_length = -1;
+				EDIT_InvalidateUniscribeData(es);
 				EDIT_CalcLineWidth_SL(es);
 			}
                         text_buffer_changed(es);
@@ -2571,6 +2736,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 	    es->flags &= ~EF_UPDATE;
 	    EDIT_NOTIFY_PARENT(es, EN_CHANGE);
 	}
+	EDIT_InvalidateUniscribeData(es);
 }
 
 
@@ -2771,6 +2937,7 @@ static void EDIT_EM_SetPasswordChar(EDITSTATE *es, WCHAR c)
             SetWindowLongW( es->hwndSelf, GWL_STYLE, style & ~ES_PASSWORD );
             es->style &= ~ES_PASSWORD;
 	}
+	EDIT_InvalidateUniscribeData(es);
 	EDIT_UpdateText(es, NULL, TRUE);
 }
 
@@ -2797,6 +2964,7 @@ static BOOL EDIT_EM_SetTabStops(EDITSTATE *es, INT count, const INT *tabs)
         } // reactos r33503
 		memcpy(es->tabs, tabs, count * sizeof(INT));
 	}
+	EDIT_InvalidateUniscribeData(es);
 	return TRUE;
 }
 
@@ -3127,6 +3295,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             /* Windows places the menu at the edit's center in this case */
             GetClientRect(es->hwndSelf, &rc);
             MapWindowPoints(es->hwndSelf, 0, (POINT *)&rc, 2);
+            //WIN_GetRectangles( es->hwndSelf, COORDS_SCREEN, NULL, &rc );
             x = rc.left + (rc.right - rc.left) / 2;
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
@@ -3536,6 +3705,9 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 					(es->style & ES_NOHIDESEL));
         dc = hdc ? hdc : BeginPaint(es->hwndSelf, &ps);
 
+       /* The dc we use for calculating may not be the one we paint into.
+          This is the safest action. */
+        EDIT_InvalidateUniscribeData(es);
 	GetClientRect(es->hwndSelf, &rcClient);
 
 	/* get the background brush */
@@ -3586,11 +3758,13 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 	if (es->style & ES_MULTILINE) {
 		INT vlc = get_vertical_line_count(es);
 		for (i = es->y_offset ; i <= min(es->y_offset + vlc, es->y_offset + es->line_count - 1) ; i++) {
+			EDIT_UpdateUniscribeData(es, dc, i);
 			EDIT_GetLineRect(es, i, 0, -1, &rcLine);
 			if (IntersectRect(&rc, &rcRgn, &rcLine))
 				EDIT_PaintLine(es, dc, i, rev);
 		}
 	} else {
+		EDIT_UpdateUniscribeData(es, dc, 0);
 		EDIT_GetLineRect(es, 0, 0, -1, &rcLine);
 		if (IntersectRect(&rc, &rcRgn, &rcLine))
 			EDIT_PaintLine(es, dc, 0, rev);
@@ -3648,6 +3822,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	RECT clientRect;
 
 	es->font = font;
+	EDIT_InvalidateUniscribeData(es);
 	dc = GetDC(es->hwndSelf);
 	if (font)
 		old_font = SelectObject(dc, font);
@@ -3738,7 +3913,8 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
         EDIT_NOTIFY_PARENT(es, EN_CHANGE);
     }
     EDIT_EM_ScrollCaret(es);
-    EDIT_UpdateScrollInfo(es);    
+    EDIT_UpdateScrollInfo(es);
+    EDIT_InvalidateUniscribeData(es);    
 }
 
 
@@ -4359,9 +4535,11 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 
 cleanup:
 	SetWindowLongPtrW(es->hwndSelf, 0, 0);
+	EDIT_InvalidateUniscribeData(es);
 	HeapFree(GetProcessHeap(), 0, es->first_line_def);
 	HeapFree(GetProcessHeap(), 0, es->undo_text);
 	if (es->hloc32W) LocalFree(es->hloc32W);
+	HeapFree(GetProcessHeap(), 0, es->logAttr);
 	HeapFree(GetProcessHeap(), 0, es);
 	return FALSE;
 }
@@ -4476,6 +4654,14 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
            if (!pWnd->fnid)
            {
               NtUserSetWindowFNID(hwnd, FNID_EDIT);
+           }
+           else
+           {
+              if (pWnd->fnid != FNID_EDIT)
+              {
+                 ERR("Wrong window class for Edit! fnId 0x%x\n",pWnd->fnid);
+                 return 0;
+              }
            }
         }
 #endif

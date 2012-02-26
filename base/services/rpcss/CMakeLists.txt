@@ -1,21 +1,27 @@
 
-set_unicode()
+add_rpc_files(server
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine/epm.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine/irot.idl)
+    
 
 list(APPEND SOURCE
     epmp.c
     irotp.c
     rpcss_main.c
     service_main.c
-    rpcss.rc)
+    rpcss.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/epm_s.c
+    ${CMAKE_CURRENT_BINARY_DIR}/irot_s.c)
 
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
 
 add_executable(rpcss ${SOURCE})
 
-target_link_libraries(rpcss epmrpc irotrpc ${PSEH_LIB} wine)
+target_link_libraries(rpcss
+    ${PSEH_LIB}
+    wine)
 
-set_module_type(rpcss win32cui)
+set_module_type(rpcss win32cui UNICODE)
 
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_cd_file(TARGET rpcss DESTINATION reactos/system32 FOR all)
-add_dependencies(rpcss winesdk)

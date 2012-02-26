@@ -28,7 +28,7 @@ NTAPI
 KeInitializeProfile(PKPROFILE Profile,
                     PKPROCESS Process,
                     PVOID ImageBase,
-                    ULONG ImageSize,
+                    SIZE_T ImageSize,
                     ULONG BucketSize,
                     KPROFILE_SOURCE ProfileSource,
                     KAFFINITY Affinity)
@@ -270,7 +270,7 @@ KeSetIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     if (ProfileSource == ProfileTime)
     {
         /* Set the interval through HAL */
-        KiProfileTimeInterval = HalSetProfileInterval(Interval);
+        KiProfileTimeInterval = (ULONG)HalSetProfileInterval(Interval);
     }
     else if (ProfileSource == ProfileAlignmentFixup)
     {

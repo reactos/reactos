@@ -4,22 +4,21 @@
  * FILE:            lib/sdk/crt/printf/wprintf.c
  * PURPOSE:         Implementation of wprintf
  * PROGRAMMER:      Timo Kreuzer
+ *                  Samuel Serapión
  */
 
 #include <stdio.h>
 #include <stdarg.h>
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
-
 int
-__cdecl
+_cdecl
 wprintf(const wchar_t *format, ...)
 {
     va_list argptr;
     int result;
 
     va_start(argptr, format);
-    result = wstreamout(stdout, format, argptr);
+    result = vwprintf(format, argptr);
     va_end(argptr);
     return result;
 }

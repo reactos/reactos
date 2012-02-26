@@ -16,6 +16,16 @@
 #include <wdbgexts.h>
 #include <kddll.h>
 
+#ifdef _M_AMD64
+enum
+{
+    P1Home = 1 * sizeof(PVOID),
+    P2Home = 2 * sizeof(PVOID),
+    P3Home = 3 * sizeof(PVOID),
+    P4Home = 4 * sizeof(PVOID),
+};
+#endif
+
 // FIXME: where to put this?
 typedef struct _FIBER                                      /* Field offsets:  */
 {                                                          /* 32 bit   64 bit */

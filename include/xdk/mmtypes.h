@@ -103,6 +103,8 @@ typedef ULONG PFN_COUNT;
 typedef LONG_PTR SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG_PTR PFN_NUMBER, *PPFN_NUMBER;
 
+_Struct_size_bytes_(_Inexpressible_(sizeof(struct _MDL) +
+    (ByteOffset + ByteCount + PAGE_SIZE-1) / PAGE_SIZE * sizeof(PFN_NUMBER)))
 typedef struct _MDL {
   struct _MDL *Next;
   CSHORT Size;
@@ -113,7 +115,11 @@ typedef struct _MDL {
   ULONG ByteCount;
   ULONG ByteOffset;
 } MDL, *PMDL;
+#if (_MSC_VER >= 1600)
+typedef _Readable_bytes_(_Inexpressible_(polymorphism)) MDL *PMDLX;
+#else
 typedef MDL *PMDLX;
+#endif
 
 typedef enum _MEMORY_CACHING_TYPE_ORIG {
   MmFrameBufferCached = 2
@@ -154,9 +160,9 @@ typedef struct _PHYSICAL_MEMORY_RANGE {
 
 typedef NTSTATUS
 (NTAPI *PMM_ROTATE_COPY_CALLBACK_FUNCTION)(
-  IN PMDL DestinationMdl,
-  IN PMDL SourceMdl,
-  IN PVOID Context);
+  _In_ PMDL DestinationMdl,
+  _In_ PMDL SourceMdl,
+  _In_ PVOID Context);
 
 typedef enum _MM_ROTATE_DIRECTION {
   MmToFrameBuffer,

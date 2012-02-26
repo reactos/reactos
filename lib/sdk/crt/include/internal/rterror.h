@@ -27,5 +27,7 @@
 
 void _amsg_exit (int errnum);
 
+/* not in any other header */
+void _dosmaperr(unsigned long oserrcode);
 
 #endif  /* __MSVCRT_INTERNAL_RTERROR_H */

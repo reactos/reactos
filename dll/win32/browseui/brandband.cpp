@@ -78,6 +78,7 @@ CBrandBand::CBrandBand()
 	fCurrentFrame = 0;
 	fMaxFrameCount = 0;
 	fImageBitmap = NULL;
+	fBitmapSize = 0;
 	fAdviseCookie = 0;
 }
 

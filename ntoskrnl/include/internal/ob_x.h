@@ -398,7 +398,7 @@ ObpCalloutEnd(IN KIRQL CalloutIrql,
     if (CalloutIrql != KeGetCurrentIrql())
     {
         /* Print error */
-        DbgPrint("OB: ObjectType: %wZ  Procedure: %s  Object: %08x\n",
+        DbgPrint("OB: ObjectType: %wZ  Procedure: %s  Object: %p\n",
                  &ObjectType->Name, Procedure, Object);
         DbgPrint("    Returned at %x IRQL, but was called at %x IRQL\n",
                  KeGetCurrentIrql(), CalloutIrql);

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -21,7 +20,7 @@ add_library(dinput SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
 
-set_module_type(dinput win32dll)
+set_module_type(dinput win32dll UNICODE)
 
 target_link_libraries(dinput
     dxguid
@@ -38,4 +37,4 @@ add_importlibs(dinput
     ntdll)
 
 add_cd_file(TARGET dinput DESTINATION reactos/system32 FOR all)
-add_importlib_target(dinput.spec)
+add_importlib_target(dinput.spec dinput.dll)

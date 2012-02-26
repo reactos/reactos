@@ -7,34 +7,34 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nPouûitÌ: ping [-t] [-n poËet] [-l velikost] [-w timeout] cÌl\n\n\
+    IDS_USAGE "\nPou≈æit√≠: ping [-t] [-n poƒçet] [-l velikost] [-w timeout] c√≠l\n\n\
 Options:\n\
-    -t             OpakovanÏ zasÌl· poûadavky o ozvÏnu zadanÈmu cÌli aû do zastavenÌ.\n\
-                   UkonËenÌ stisknutÌm Ctrl+C.\n\
-    -n poËet       PoËet poûadavk˘ o ozvÏnu, kterÈ budou zasl·ny.\n\
-    -l velikost    Velikost vyrovn·vacÌ pamÏti.\n\
-    -w timeout     Doba v milisekund·ch, po kterou se bude Ëekat na odpovÏÔ.\n\n\0"
+    -t             Opakovanƒõ zas√≠l√° po≈æadavky o ozvƒõnu zadan√©mu c√≠li a≈æ do zastaven√≠.\n\
+                   Ukonƒçen√≠ stisknut√≠m Ctrl+C.\n\
+    -n poƒçet       Poƒçet po≈æadavk≈Ø o ozvƒõnu, kter√© budou zasl√°ny.\n\
+    -l velikost    Velikost vyrovn√°vac√≠ pamƒõti.\n\
+    -w timeout     Doba v milisekund√°ch, po kterou se bude ƒçekat na odpovƒõƒè.\n\n\0"
 
     IDS_PING_WITH_BYTES             "\nPing na %1 [%2] s %3!d! bajty dat:\n\n\0"
     IDS_PING_STATISTICS             "\nStatistika pro %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakety: Odesl·no = %1!d!, P¯ijato = %2!d!, Ztraceno = %3!d! (%4!d!%% ztr·ta),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP      "P¯ibliûn· doba do p¯ijetÌ odezvy v milisekund·ch:\n\0"
-    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Pr˘mÏr = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES        "NenÌ k dispozici dostatek voln˝ch zdroj˘.\n\0"
-    IDS_UNKNOWN_HOST                "Nezn·m˝ hostitel %1.\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakety: Odesl√°no = %1!d!, P≈ôijato = %2!d!, Ztraceno = %3!d! (%4!d!%% ztr√°ta),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "P≈ôibli≈æn√° doba do p≈ôijet√≠ odezvy v milisekund√°ch:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Pr≈Ømƒõr = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Nen√≠ k dispozici dostatek voln√Ωch zdroj≈Ø.\n\0"
+    IDS_UNKNOWN_HOST                "Nezn√°m√Ω hostitel %1.\n\0"
     IDS_SETSOCKOPT_FAILED           "setsockopt selhalo (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET     "Nebylo moûnÈ vytvo¯it socket (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK      "Nebylo moûnÈ inicializovat knihovnu winsock.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "Je nutno zadat n·zev nebo IP adresu cÌle.\n\0"
-    IDS_BAD_PARAMETER               "Nespr·vn˝ parametr %1.\n\0"
-    IDS_BAD_OPTION_FORMAT           "Nespr·vn˝ form·t volby %1.\n\0"
-    IDS_BAD_OPTION                  "Nespr·vn· volba %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L          "Nespr·vn· hodnota volby -l, platn˝ rozsah je od 0 do %1!d!.\n\0"
-    IDS_REPLY_FROM                  "OdpovÏÔ od %1: bajt˘=%2!d! Ëas%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE            "CÌl je nedostupn˝.\n\0"
-    IDS_COULD_NOT_TRANSMIT          "Nebylo moûnÈ p¯enÈst data (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV              "Nebylo moûnÈ p¯ijmout data (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT             "»asov˝ limit û·dosti vypröel.\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Nebylo mo≈æn√© vytvo≈ôit socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Nebylo mo≈æn√© inicializovat knihovnu winsock.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Je nutno zadat n√°zev nebo IP adresu c√≠le.\n\0"
+    IDS_BAD_PARAMETER               "Nespr√°vn√Ω parametr %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Nespr√°vn√Ω form√°t volby %1.\n\0"
+    IDS_BAD_OPTION                  "Nespr√°vn√° volba %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Nespr√°vn√° hodnota volby -l, platn√Ω rozsah je od 0 do %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Odpovƒõƒè od %1: bajt≈Ø=%2!d! ƒças%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "C√≠l je nedostupn√Ω.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Nebylo mo≈æn√© p≈ôen√©st data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Nebylo mo≈æn√© p≈ôijmout data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "ƒåasov√Ω limit ≈æ√°dosti vypr≈°el.\n\0"
     IDS_MS                          "ms\0"
     IDS_1MS                         "1ms\0"
 END

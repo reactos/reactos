@@ -236,7 +236,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Zielnummer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Dieser Schritt wird die Zielrufummer in die Callingcard-Wählfolge einfügen. Welche Teile der Zielrufnummer sollen gewählt werden, wenn sie die Zielnummer anwählen?", 2000, 7, 7, 238, 24
+	LTEXT "Dieser Schritt wird die Zielrufummer in die Callingcard-Wählfolge einfügen. Welche Teile der Zielrufnummer sollen gewählt werden, wenn Sie die Zielnummer anwählen?", 2000, 7, 7, 238, 24
 	AUTOCHECKBOX "&Landes-/Regionalkennzahl wählen", 1027, 7, 39, 238, 10
 	AUTOCHECKBOX "&Vorwahl wählen", 1034, 7, 55, 238, 10
 	AUTOCHECKBOX "&Rufnummer wählen", 1008, 7, 71, 238, 10, WS_DISABLED

@@ -21,6 +21,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(HWDETECT);
+
 BOOLEAN AcpiPresent = FALSE;
 
 static PRSDP_DESCRIPTOR
@@ -34,7 +36,7 @@ FindAcpiBios(VOID)
     {
         if (!memcmp(Ptr, "RSD PTR ", 8))
         {
-            DPRINTM(DPRINT_HWDETECT, "ACPI supported\n");
+            TRACE("ACPI supported\n");
 
             return (PRSDP_DESCRIPTOR)Ptr;
         }
@@ -42,7 +44,7 @@ FindAcpiBios(VOID)
         Ptr = (PUCHAR)((ULONG_PTR)Ptr + 0x10);
     }
 
-    DPRINTM(DPRINT_HWDETECT, "ACPI not supported\n");
+    TRACE("ACPI not supported\n");
 
     return NULL;
 }
@@ -56,8 +58,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PRSDP_DESCRIPTOR Rsdp;
     PACPI_BIOS_DATA AcpiBiosData;
-    BIOS_MEMORY_MAP BiosMemoryMap[32];
-    ULONG BiosMemoryMapEntryCount, TableSize;
+    ULONG TableSize;
 
     Rsdp = FindAcpiBios();
 
@@ -66,13 +67,8 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Set up the flag in the loader block */
         AcpiPresent = TRUE;
 
-        /* Get BIOS memory map */
-        RtlZeroMemory(BiosMemoryMap, sizeof(BiosMemoryMap));
-        BiosMemoryMapEntryCount = PcMemGetMemoryMap(BiosMemoryMap,
-            sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
-
         /* Calculate the table size */
-        TableSize = BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP) +
+        TableSize = PcBiosMapCount * sizeof(BIOS_MEMORY_MAP) +
             sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
 
         /* Set 'Configuration Data' value */
@@ -81,8 +77,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         if (PartialResourceList == NULL)
         {
-            DPRINTM(DPRINT_HWDETECT,
-                    "Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor\n");
             return;
         }
 
@@ -99,11 +94,11 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
         AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
-        AcpiBiosData->Count = BiosMemoryMapEntryCount;
-        memcpy(AcpiBiosData->MemoryMap, BiosMemoryMap,
-            BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
+        AcpiBiosData->Count = PcBiosMapCount;
+        memcpy(AcpiBiosData->MemoryMap, PcBiosMemoryMap,
+            PcBiosMapCount * sizeof(BIOS_MEMORY_MAP));
 
-        DPRINTM(DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
+        TRACE("RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
             TableSize);
 
         /* Create new bus key */

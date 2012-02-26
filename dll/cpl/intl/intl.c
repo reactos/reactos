@@ -19,19 +19,12 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/intl.c
+ * FILE:            dll/cpl/intl/intl.c
  * PURPOSE:         Property sheet code
  * PROGRAMMER:      Eric Kohl
  */
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <setupapi.h>
-#include <tchar.h>
 
 #include "intl.h"
-#include "resource.h"
-
 
 #define NUM_APPLETS    (1)
 
@@ -74,29 +67,26 @@ OpenSetupInf(VOID)
     lpCmdLine = GetCommandLine();
 
     lpSwitch = _tcsstr(lpCmdLine, _T("/f:\""));
-
-    if(!lpSwitch)
-    {
+    if (!lpSwitch)
         return FALSE;
-    }
 
     len = _tcslen(lpSwitch);
-    if (len < 5)
+    if (len < 5 || lpSwitch[len-1] != _T('\"'))
     {
-        return FALSE;
-    }
-
-    if(lpSwitch[len-1] != _T('\"'))
-    {
+        DPRINT1("Invalid switch: %ls\n", lpSwitch);
         return FALSE;
     }
 
     lpSwitch[len-1] = _T('\0');
 
-    hSetupInf = SetupOpenInfFile(&lpSwitch[4], NULL,
-                                 INF_STYLE_OLDNT, NULL);
+    hSetupInf = SetupOpenInfFile(&lpSwitch[4], NULL, INF_STYLE_OLDNT, NULL);
+    if (hSetupInf == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Failed to open INF file: %ls\n", &lpSwitch[4]);
+        return FALSE;
+    }
 
-    return (hSetupInf != INVALID_HANDLE_VALUE);
+    return TRUE;
 }
 
 VOID
@@ -111,6 +101,7 @@ ParseSetupInf(VOID)
                             &InfContext))
     {
         SetupCloseInfFile(hSetupInf);
+        DPRINT1("SetupFindFirstLine failed\n");
         return;
     }
 
@@ -118,6 +109,7 @@ ParseSetupInf(VOID)
                              sizeof(szBuffer) / sizeof(TCHAR), NULL))
     {
         SetupCloseInfFile(hSetupInf);
+        DPRINT1("SetupGetStringField failed\n");
         return;
     }
 
@@ -214,4 +206,3 @@ DllMain(HINSTANCE hinstDLL,
 
   return TRUE;
 }
-

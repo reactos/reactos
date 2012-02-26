@@ -44,7 +44,7 @@ KdpPortInitialize()
 {
     ULONG Mode;
 
-    KDDBGPRINT("KdpPortInitialize\n");
+    KDDBGPRINT("KdpPortInitialize, Port = COM%ld\n", ComPortNumber);
 
     /* Enable loop mode (set Bit 4 of the MCR) */
     WRITE_PORT_UCHAR(ComPortBase + COM_MCR, MCR_LOOP);

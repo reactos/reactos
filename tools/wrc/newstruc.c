@@ -43,34 +43,145 @@ typedef struct
 } BITMAPOS2HEADER;
 #include <poppack.h>
 
-/* Generate new_* functions that have no parameters (NOTE: no ';') */
-__NEW_STRUCT_FUNC(dialog)
-__NEW_STRUCT_FUNC(dialogex)
-__NEW_STRUCT_FUNC(name_id)
-__NEW_STRUCT_FUNC(menu)
-__NEW_STRUCT_FUNC(menuex)
-__NEW_STRUCT_FUNC(menu_item)
-__NEW_STRUCT_FUNC(menuex_item)
-__NEW_STRUCT_FUNC(control)
-__NEW_STRUCT_FUNC(icon)
-__NEW_STRUCT_FUNC(cursor)
-__NEW_STRUCT_FUNC(versioninfo)
-__NEW_STRUCT_FUNC(ver_value)
-__NEW_STRUCT_FUNC(ver_block)
-__NEW_STRUCT_FUNC(stt_entry)
-__NEW_STRUCT_FUNC(accelerator)
-__NEW_STRUCT_FUNC(event)
-__NEW_STRUCT_FUNC(raw_data)
-__NEW_STRUCT_FUNC(lvc)
-__NEW_STRUCT_FUNC(res_count)
-__NEW_STRUCT_FUNC(string)
-__NEW_STRUCT_FUNC(toolbar_item)
-__NEW_STRUCT_FUNC(ani_any)
-
 /* New instances for all types of structures */
 /* Very inefficient (in size), but very functional :-]
  * Especially for type-checking.
  */
+
+dialog_t *new_dialog(void)
+{
+    dialog_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+name_id_t *new_name_id(void)
+{
+    name_id_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+menu_t *new_menu(void)
+{
+    menu_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+menu_item_t *new_menu_item(void)
+{
+    menu_item_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+control_t *new_control(void)
+{
+    control_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+icon_t *new_icon(void)
+{
+    icon_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+cursor_t *new_cursor(void)
+{
+    cursor_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+versioninfo_t *new_versioninfo(void)
+{
+    versioninfo_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+ver_value_t *new_ver_value(void)
+{
+    ver_value_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+ver_block_t *new_ver_block(void)
+{
+    ver_block_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+stt_entry_t *new_stt_entry(void)
+{
+    stt_entry_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+accelerator_t *new_accelerator(void)
+{
+    accelerator_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+event_t *new_event(void)
+{
+    event_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+raw_data_t *new_raw_data(void)
+{
+    raw_data_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+lvc_t *new_lvc(void)
+{
+    lvc_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+res_count_t *new_res_count(void)
+{
+    res_count_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+string_t *new_string(void)
+{
+    string_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    set_location( &ret->loc );
+    return ret;
+}
+
+toolbar_item_t *new_toolbar_item(void)
+{
+    toolbar_item_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
+ani_any_t *new_ani_any(void)
+{
+    ani_any_t *ret = xmalloc( sizeof(*ret) );
+    memset( ret, 0, sizeof(*ret) );
+    return ret;
+}
+
 resource_t *new_resource(enum res_e t, void *res, int memopt, language_t *lan)
 {
 	resource_t *r = xmalloc(sizeof(resource_t));
@@ -207,41 +318,42 @@ fontdir_t *new_fontdir(raw_data_t *rd, int *memopt)
 /*
  * Convert bitmaps to proper endian
  */
-static void convert_bitmap_swap_v3(BITMAPINFOHEADER *bih)
+static void convert_bitmap_swap(BITMAPV5HEADER *bh, DWORD size)
 {
-	bih->biSize		= BYTESWAP_DWORD(bih->biSize);
-	bih->biWidth		= BYTESWAP_DWORD(bih->biWidth);
-	bih->biHeight		= BYTESWAP_DWORD(bih->biHeight);
-	bih->biPlanes		= BYTESWAP_WORD(bih->biPlanes);
-	bih->biBitCount		= BYTESWAP_WORD(bih->biBitCount);
-	bih->biCompression	= BYTESWAP_DWORD(bih->biCompression);
-	bih->biSizeImage	= BYTESWAP_DWORD(bih->biSizeImage);
-	bih->biXPelsPerMeter	= BYTESWAP_DWORD(bih->biXPelsPerMeter);
-	bih->biYPelsPerMeter	= BYTESWAP_DWORD(bih->biYPelsPerMeter);
-	bih->biClrUsed		= BYTESWAP_DWORD(bih->biClrUsed);
-	bih->biClrImportant	= BYTESWAP_DWORD(bih->biClrImportant);
-}
-
-static void convert_bitmap_swap_v4(BITMAPV4HEADER *b4h)
-{
-	convert_bitmap_swap_v3((BITMAPINFOHEADER *)b4h);
-	b4h->bV4RedMask		= BYTESWAP_DWORD(b4h->bV4RedMask);
-	b4h->bV4GreenMask	= BYTESWAP_DWORD(b4h->bV4GreenMask);
-	b4h->bV4BlueMask	= BYTESWAP_DWORD(b4h->bV4BlueMask);
-	b4h->bV4AlphaMask	= BYTESWAP_DWORD(b4h->bV4AlphaMask);
-	b4h->bV4CSType		= BYTESWAP_DWORD(b4h->bV4CSType);
-	b4h->bV4Endpoints.ciexyzRed.ciexyzX	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzRed.ciexyzX);
-	b4h->bV4Endpoints.ciexyzRed.ciexyzY	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzRed.ciexyzY);
-	b4h->bV4Endpoints.ciexyzRed.ciexyzZ	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzRed.ciexyzZ);
-	b4h->bV4Endpoints.ciexyzGreen.ciexyzX	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzGreen.ciexyzX);
-	b4h->bV4Endpoints.ciexyzGreen.ciexyzY	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzGreen.ciexyzY);
-	b4h->bV4Endpoints.ciexyzGreen.ciexyzZ	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzGreen.ciexyzZ);
-	b4h->bV4Endpoints.ciexyzBlue.ciexyzX	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzBlue.ciexyzX);
-	b4h->bV4Endpoints.ciexyzBlue.ciexyzY	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzBlue.ciexyzY);
-	b4h->bV4Endpoints.ciexyzBlue.ciexyzZ	= BYTESWAP_DWORD(b4h->bV4Endpoints.ciexyzBlue.ciexyzZ);
-	b4h->bV4GammaRed	= BYTESWAP_DWORD(b4h->bV4GammaRed);
-	b4h->bV4GammaGreen	= BYTESWAP_DWORD(b4h->bV4GammaGreen);
-	b4h->bV4GammaBlue	= BYTESWAP_DWORD(b4h->bV4GammaBlue);
+	bh->bV5Size		= BYTESWAP_DWORD(bh->bV5Size);
+	bh->bV5Width		= BYTESWAP_DWORD(bh->bV5Width);
+	bh->bV5Height		= BYTESWAP_DWORD(bh->bV5Height);
+	bh->bV5Planes		= BYTESWAP_WORD(bh->bV5Planes);
+	bh->bV5BitCount		= BYTESWAP_WORD(bh->bV5BitCount);
+	bh->bV5Compression	= BYTESWAP_DWORD(bh->bV5Compression);
+	bh->bV5SizeImage	= BYTESWAP_DWORD(bh->bV5SizeImage);
+	bh->bV5XPelsPerMeter	= BYTESWAP_DWORD(bh->bV5XPelsPerMeter);
+	bh->bV5YPelsPerMeter	= BYTESWAP_DWORD(bh->bV5YPelsPerMeter);
+	bh->bV5ClrUsed		= BYTESWAP_DWORD(bh->bV5ClrUsed);
+	bh->bV5ClrImportant	= BYTESWAP_DWORD(bh->bV5ClrImportant);
+        if (size == sizeof(BITMAPINFOHEADER)) return;
+	bh->bV5RedMask		= BYTESWAP_DWORD(bh->bV5RedMask);
+	bh->bV5GreenMask	= BYTESWAP_DWORD(bh->bV5GreenMask);
+	bh->bV5BlueMask		= BYTESWAP_DWORD(bh->bV5BlueMask);
+	bh->bV5AlphaMask	= BYTESWAP_DWORD(bh->bV5AlphaMask);
+	bh->bV5CSType		= BYTESWAP_DWORD(bh->bV5CSType);
+	bh->bV5Endpoints.ciexyzRed.ciexyzX	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzRed.ciexyzX);
+	bh->bV5Endpoints.ciexyzRed.ciexyzY	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzRed.ciexyzY);
+	bh->bV5Endpoints.ciexyzRed.ciexyzZ	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzRed.ciexyzZ);
+	bh->bV5Endpoints.ciexyzGreen.ciexyzX	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzGreen.ciexyzX);
+	bh->bV5Endpoints.ciexyzGreen.ciexyzY	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzGreen.ciexyzY);
+	bh->bV5Endpoints.ciexyzGreen.ciexyzZ	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzGreen.ciexyzZ);
+	bh->bV5Endpoints.ciexyzBlue.ciexyzX	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzBlue.ciexyzX);
+	bh->bV5Endpoints.ciexyzBlue.ciexyzY	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzBlue.ciexyzY);
+	bh->bV5Endpoints.ciexyzBlue.ciexyzZ	= BYTESWAP_DWORD(bh->bV5Endpoints.ciexyzBlue.ciexyzZ);
+	bh->bV5GammaRed		= BYTESWAP_DWORD(bh->bV5GammaRed);
+	bh->bV5GammaGreen	= BYTESWAP_DWORD(bh->bV5GammaGreen);
+	bh->bV5GammaBlue	= BYTESWAP_DWORD(bh->bV5GammaBlue);
+        if (size == sizeof(BITMAPV4HEADER)) return;
+	bh->bV5Intent		= BYTESWAP_DWORD(bh->bV5Intent);
+	bh->bV5ProfileData	= BYTESWAP_DWORD(bh->bV5ProfileData);
+	bh->bV5ProfileSize	= BYTESWAP_DWORD(bh->bV5ProfileSize);
+	bh->bV5Reserved		= BYTESWAP_DWORD(bh->bV5Reserved);
 }
 
 static void convert_bitmap_swap_os2(BITMAPOS2HEADER *boh)
@@ -255,31 +367,13 @@ static void convert_bitmap_swap_os2(BITMAPOS2HEADER *boh)
 
 #define FL_SIGBE	0x01
 #define FL_SIZEBE	0x02
-#define FL_V4		0x04
-#define FL_OS2		0x08
 static int convert_bitmap(char *data, int size)
 {
-	BITMAPINFOHEADER *bih = (BITMAPINFOHEADER *)data;
-	BITMAPV4HEADER *b4h = (BITMAPV4HEADER *)data;
+	BITMAPV5HEADER *bih = (BITMAPV5HEADER *)data;
 	BITMAPOS2HEADER *boh = (BITMAPOS2HEADER *)data;
+	DWORD bmsize;
 	int type = 0;
 	int returnSize = 0;           /* size to be returned */
-#ifdef WORDS_BIGENDIAN
-	DWORD bisizel = BYTESWAP_DWORD(sizeof(BITMAPINFOHEADER));
-	DWORD b4sizel = BYTESWAP_DWORD(sizeof(BITMAPV4HEADER));
-	DWORD bosizel = BYTESWAP_DWORD(sizeof(BITMAPOS2HEADER));
-	DWORD bisizeb = sizeof(BITMAPINFOHEADER);
-	DWORD b4sizeb = sizeof(BITMAPV4HEADER);
-	DWORD bosizeb = sizeof(BITMAPOS2HEADER);
-#else
-	DWORD bisizel = sizeof(BITMAPINFOHEADER);
-	DWORD b4sizel = sizeof(BITMAPV4HEADER);
-	DWORD bosizel = sizeof(BITMAPOS2HEADER);
-	DWORD bisizeb = BYTESWAP_DWORD(sizeof(BITMAPINFOHEADER));
-	DWORD b4sizeb = BYTESWAP_DWORD(sizeof(BITMAPV4HEADER));
-	DWORD bosizeb = BYTESWAP_DWORD(sizeof(BITMAPOS2HEADER));
-#endif
-
 
     /*
      * Originally the bih and b4h pointers were simply incremented here,
@@ -300,47 +394,40 @@ static int convert_bitmap(char *data, int size)
 
 	}
 
-	if(bih->biSize == bisizel)
-	{
-		/* Little endian */
-	}
-	else if(bih->biSize == bisizeb)
-	{
-		type |= FL_SIZEBE;
-	}
-	else if(bih->biSize == b4sizel)
-	{
-		type |= FL_V4;
-	}
-	else if(bih->biSize == b4sizeb)
-	{
-		type |= FL_SIZEBE | FL_V4;
-	}
-	else if(!bih->biSize || bih->biSize == bosizel)
-	{
-		type |= FL_OS2;
-	}
-	else if(bih->biSize == bosizeb)
-	{
-		type |= FL_SIZEBE | FL_OS2;
-	}
-	else
-		parser_error("Invalid bitmap format, bih->biSize = %d", bih->biSize);
+        bmsize = bih->bV5Size;
+        if (bmsize >> 16)  /* assume swapped */
+        {
+#ifndef WORDS_BIGENDIAN
+            type |= FL_SIZEBE;
+#endif
+            bmsize = BYTESWAP_DWORD( bmsize );
+        }
+        else
+        {
+#ifdef WORDS_BIGENDIAN
+            type |= FL_SIZEBE;
+#endif
+        }
+
+        switch (bmsize)
+        {
+        case sizeof(BITMAPOS2HEADER):
+        case sizeof(BITMAPINFOHEADER):
+        case sizeof(BITMAPV4HEADER):
+        case sizeof(BITMAPV5HEADER):
+            break;
+        default:
+		parser_error("Invalid bitmap format, bih->biSize = %d", bih->bV5Size);
+        }
 
 	switch(type)
 	{
-	default:
-		break;
 	case FL_SIZEBE:
-	case FL_SIZEBE | FL_V4:
-	case FL_SIZEBE | FL_OS2:
-		parser_warning("Bitmap v%c signature little-endian, but size big-endian\n", type & FL_V4 ? '4' : '3');
-		break;
+            parser_warning("Bitmap signature little-endian, but size big-endian\n");
+            break;
 	case FL_SIGBE:
-	case FL_SIGBE | FL_V4:
-	case FL_SIGBE | FL_OS2:
-		parser_warning("Bitmap v%c signature big-endian, but size little-endian\n", type & FL_V4 ? '4' : '3');
-		break;
+            parser_warning("Bitmap signature big-endian, but size little-endian\n");
+            break;
 	}
 
 	switch(byteorder)
@@ -351,14 +438,10 @@ static int convert_bitmap(char *data, int size)
 	case WRC_BO_BIG:
 		if(!(type & FL_SIZEBE))
 		{
-			if(type & FL_V4)
-				convert_bitmap_swap_v4(b4h);
-			else if(type & FL_OS2)
-			{
-				convert_bitmap_swap_os2(boh);
-			}
-			else
-				convert_bitmap_swap_v3(bih);
+                    if (bmsize == sizeof(BITMAPOS2HEADER))
+                        convert_bitmap_swap_os2(boh);
+                    else
+                        convert_bitmap_swap(bih, bmsize);
 		}
 		break;
 #ifndef WORDS_BIGENDIAN
@@ -367,14 +450,10 @@ static int convert_bitmap(char *data, int size)
 	case WRC_BO_LITTLE:
 		if(type & FL_SIZEBE)
 		{
-			if(type & FL_V4)
-				convert_bitmap_swap_v4(b4h);
-			else if(type & FL_OS2)
-			{
-				convert_bitmap_swap_os2(boh);
-			}
-			else
-				convert_bitmap_swap_v3(bih);
+                    if (bmsize == sizeof(BITMAPOS2HEADER))
+                        convert_bitmap_swap_os2(boh);
+                    else
+                        convert_bitmap_swap(bih, bmsize);
 		}
 		break;
 	}
@@ -389,7 +468,6 @@ static int convert_bitmap(char *data, int size)
 }
 #undef FL_SIGBE
 #undef FL_SIZEBE
-#undef FL_V4
 
 /*
  * Cursor and icon splitter functions used when allocating

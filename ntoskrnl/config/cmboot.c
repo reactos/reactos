@@ -191,9 +191,9 @@ CmpAddDriverToList(IN PHHIVE Hive,
     PBOOT_DRIVER_NODE DriverNode;
     PBOOT_DRIVER_LIST_ENTRY DriverEntry;
     PCM_KEY_NODE Node;
-    ULONG NameLength, Length;
-    HCELL_INDEX ValueCell, TagCell;    
-    PCM_KEY_VALUE Value;
+    ULONG Length;
+    USHORT NameLength;
+    HCELL_INDEX ValueCell, TagCell;    PCM_KEY_VALUE Value;
     PUNICODE_STRING FileName, RegistryString;
     UNICODE_STRING UnicodeString;
     PULONG ErrorControl;
@@ -212,7 +212,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     ASSERT(Node);
     
     /* Get the name from the cell */
-    DriverNode->Name.Length = Node->Flags & KEY_COMP_NAME ? 
+    DriverNode->Name.Length = Node->Flags & KEY_COMP_NAME ?
                               CmpCompressedNameSize(Node->Name, Node->NameLength) :
                               Node->NameLength;
     DriverNode->Name.MaximumLength = DriverNode->Name.Length;
@@ -246,14 +246,14 @@ CmpAddDriverToList(IN PHHIVE Hive,
         /* Allocate the path name */
         FileName = &DriverEntry->FilePath;
         FileName->Length = 0;
-        FileName->MaximumLength = Length;
+        FileName->MaximumLength = (USHORT)Length;
         FileName->Buffer = CmpAllocate(Length, FALSE,TAG_CM);
         if (!FileName->Buffer) return FALSE;
 
         /* Write the path name */
         RtlAppendUnicodeToString(FileName, L"System32\\Drivers\\");
         RtlAppendUnicodeStringToString(FileName, &DriverNode->Name);
-        RtlAppendUnicodeToString(FileName, L".sys");        
+        RtlAppendUnicodeToString(FileName, L".sys");
     }
     else
     {
@@ -264,11 +264,11 @@ CmpAddDriverToList(IN PHHIVE Hive,
         /* Allocate and setup the path name */
         FileName = &DriverEntry->FilePath;
         Buffer = (PWCHAR)CmpValueToData(Hive, Value, &Length);
-        FileName->MaximumLength = FileName->Length = Length;
+        FileName->MaximumLength = FileName->Length = (USHORT)Length;
         FileName->Buffer = CmpAllocate(Length, FALSE, TAG_CM);
         
-        /* Transfer the data */  
-        if (!(FileName->Buffer) || !(Buffer)) return FALSE;        
+        /* Transfer the data */
+        if (!(FileName->Buffer) || !(Buffer)) return FALSE;
         RtlCopyMemory(FileName->Buffer, Buffer, Length);
     }
     
@@ -286,7 +286,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     /* The entry is done, add it */
     InsertHeadList(BootDriverListHead, &DriverEntry->Link);
     
-    /* Now find error control settings */    
+    /* Now find error control settings */
     RtlInitUnicodeString(&UnicodeString, L"ErrorControl");
     ValueCell = CmpFindValueByName(Hive, Node, &UnicodeString);
     if (ValueCell == HCELL_NIL)
@@ -321,7 +321,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
         /* Copy it into the node */
         DriverNode->Group.Buffer = (PWCHAR)CmpValueToData(Hive, Value, &Length);
         if (!DriverNode->Group.Buffer) return FALSE;
-        DriverNode->Group.Length = Length - sizeof(UNICODE_NULL);
+        DriverNode->Group.Length = (USHORT)Length - sizeof(UNICODE_NULL);
         DriverNode->Group.MaximumLength = DriverNode->Group.Length;
     }
     
@@ -522,7 +522,7 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
 
         /* This is our cleaned up string for this specific group */
         ASSERT(End != NULL);
-        GroupName.Length = (End - Current) * sizeof(WCHAR);
+        GroupName.Length = (USHORT)(End - Current) * sizeof(WCHAR);
         GroupName.MaximumLength = GroupName.Length;
         GroupName.Buffer = Current;
 
@@ -546,7 +546,7 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
                 RemoveEntryList(&CurrentNode->ListEntry.Link);
                 InsertHeadList(DriverListHead, &CurrentNode->ListEntry.Link);
             }
-        }        
+        }
         
         /* Move on */
         Current--;
@@ -599,7 +599,7 @@ CmpSortDriverList(IN PHHIVE Hive,
     /* Copy it into a buffer */
     DependList.Buffer = (PWCHAR)CmpValueToData(Hive, ListNode, &Length);
     if (!DependList.Buffer) return FALSE;
-    DependList.Length = DependList.MaximumLength = Length - sizeof(UNICODE_NULL);
+    DependList.Length = DependList.MaximumLength = (USHORT)Length - sizeof(UNICODE_NULL);
     
     /* And start the recurive sort algorithm */
     return CmpDoSort(DriverListHead, &DependList);
@@ -756,7 +756,7 @@ CmpIsSafe(IN PHHIVE Hive,
             /* Compose the search 'key' */
             Name.Buffer = (PWCHAR)CmpValueToData(Hive, KeyValue, &Length);
             if (!Name.Buffer) return FALSE;
-            Name.Length = Length - sizeof(UNICODE_NULL);
+            Name.Length = (USHORT)Length - sizeof(UNICODE_NULL);
             Name.MaximumLength = Name.Length;
             /* Search for corresponding key in the Safe Boot key */
             CellIndex = CmpFindSubKeyByName(Hive, SafeBootNode, &Name);
@@ -807,7 +807,7 @@ CmpIsSafe(IN PHHIVE Hive,
             if (!Name.Buffer) return FALSE;
             ++Name.Buffer;
             /* Length of the base name must be >=1 */
-            Name.Length = Length - ((PUCHAR)Name.Buffer - (PUCHAR)OriginalName)
+            Name.Length = (USHORT)Length - (USHORT)((PUCHAR)Name.Buffer - (PUCHAR)OriginalName)
                                  - sizeof(UNICODE_NULL);
             if(Name.Length < 1) return FALSE;
             Name.MaximumLength = Name.Length;

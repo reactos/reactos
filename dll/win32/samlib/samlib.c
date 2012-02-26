@@ -26,14 +26,9 @@
  */
 
 /* INCLUDES *****************************************************************/
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <winerror.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
 
 #define NDEBUG
-#include "debug.h"
+#include "precomp.h"
 
 
 /* GLOBALS *******************************************************************/

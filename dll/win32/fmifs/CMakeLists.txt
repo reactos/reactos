@@ -15,12 +15,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_library(fmifs SHARED ${SOURCE})
-
-add_pch(fmifs precomp.h)
-
-set_entrypoint(fmifs InitializeFmIfs@12)
-
+set_module_type(fmifs win32dll ENTRYPOINT InitializeFmIfs 12)
 add_importlibs(fmifs kernel32 ntdll)
+add_pch(fmifs precomp.h)
 add_dependencies(fmifs psdk)
 add_cd_file(TARGET fmifs DESTINATION reactos/system32 FOR all)
-add_importlib_target(fmifs.spec)
+add_importlib_target(fmifs.spec fmifs.dll)

@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(syssetup.dll syssetup.spec)
@@ -16,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(syssetup SHARED ${SOURCE})
 
-set_module_type(syssetup win32dll)
+set_module_type(syssetup win32dll UNICODE)
 
 target_link_libraries(syssetup uuid ${PSEH_LIB})
 

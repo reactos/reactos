@@ -195,6 +195,15 @@
 #define DBGKD_PARTITION_ALTERNATE           0x01
 
 //
+// AMD64 Control Space types
+//
+#define AMD64_DEBUG_CONTROL_SPACE_KPCR 0
+#define AMD64_DEBUG_CONTROL_SPACE_KPRCB 1
+#define AMD64_DEBUG_CONTROL_SPACE_KSPECIAL 2
+#define AMD64_DEBUG_CONTROL_SPACE_KTHREAD 3
+
+
+//
 // KD Packet Structure
 //
 typedef struct _KD_PACKET

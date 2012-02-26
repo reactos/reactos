@@ -18,14 +18,37 @@
 
 #include "shlobj.h"
 
-/* Creates an IEnumIDList; add LPITEMIDLISTs to it with AddToEnumList. */
-LPENUMIDLIST IEnumIDList_Constructor(void);
-BOOL AddToEnumList(IEnumIDList *list, LPITEMIDLIST pidl);
-BOOL HasItemWithCLSID(IEnumIDList *list, LPITEMIDLIST pidl);
+struct ENUMLIST
+{
+	ENUMLIST				*pNext;
+	LPITEMIDLIST			pidl;
+};
 
-/* Enumerates the folders and/or files (depending on dwFlags) in lpszPath and
- * adds them to the already-created list.
- */
-BOOL CreateFolderEnumList(IEnumIDList *list, LPCWSTR lpszPath, DWORD dwFlags);
+class IEnumIDListImpl :
+	public CComObjectRootEx<CComMultiThreadModelNoCS>,
+	public IEnumIDList
+{
+private:
+	ENUMLIST				*mpFirst;
+	ENUMLIST				*mpLast;
+	ENUMLIST				*mpCurrent;
+public:
+	IEnumIDListImpl();
+	~IEnumIDListImpl();
+	BOOL AddToEnumList(LPITEMIDLIST pidl);
+	BOOL DeleteList();
+	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
+	BOOL CreateFolderEnumList(LPCWSTR lpszPath, DWORD dwFlags);
+
+	// *** IEnumIDList methods ***
+	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);
+	virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
+	virtual HRESULT STDMETHODCALLTYPE Reset();
+	virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+
+BEGIN_COM_MAP(IEnumIDListImpl)
+	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+END_COM_MAP()
+};
 
 #endif /* ndef __ENUMIDLIST_H__ */

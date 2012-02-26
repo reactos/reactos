@@ -432,35 +432,6 @@ FindSectionForRVA(DWORD RVA, unsigned NumberOfSections, PIMAGE_SECTION_HEADER Se
 }
 
 static int
-IncludeRelocationsForSection(PIMAGE_SECTION_HEADER SectionHeader)
-{
-  static char *BlacklistedSections[] =
-    {
-      ".edata",
-      ".idata",
-      ".reloc"
-    };
-  char SectionName[IMAGE_SIZEOF_SHORT_NAME];
-  unsigned i;
-
-  if (0 != (SectionHeader->Characteristics & IMAGE_SCN_LNK_REMOVE))
-    {
-      return 0;
-    }
-
-  for (i = 0; i < sizeof(BlacklistedSections) / sizeof(BlacklistedSections[0]); i++)
-    {
-      strncpy(SectionName, BlacklistedSections[i], IMAGE_SIZEOF_SHORT_NAME);
-      if (0 == memcmp(SectionName, SectionHeader->Name, IMAGE_SIZEOF_SHORT_NAME))
-        {
-          return 0;
-        }
-    }
-
-  return 1;
-}
-
-static int
 ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
                    void *RawData, PIMAGE_OPTIONAL_HEADER OptHeader,
                    unsigned NumberOfSections, PIMAGE_SECTION_HEADER SectionHeaders)
@@ -505,7 +476,7 @@ ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
     {
       TargetSectionHeader = FindSectionForRVA(BaseReloc->VirtualAddress, NumberOfSections,
                                               SectionHeaders);
-      if (NULL != TargetSectionHeader && IncludeRelocationsForSection(TargetSectionHeader))
+      if (NULL != TargetSectionHeader)
         {
           AcceptedRelocs = *ProcessedRelocs;
           Found = 0;
@@ -557,7 +528,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
       if ((0 == StartOfRawData
            || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
           && 0 != InSectionHeaders[Section].PointerToRawData
-          && 0 == (InSectionHeaders[Section].Characteristics & IMAGE_SCN_LNK_REMOVE))
+          && 0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
         {
           StartOfRawData = InSectionHeaders[Section].PointerToRawData;
         }
@@ -609,7 +580,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
   OutRelocSection = NULL;
   for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-      if (0 == (InSectionHeaders[Section].Characteristics & IMAGE_SCN_LNK_REMOVE))
+      if (0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
         {
           *CurrentSectionHeader = InSectionHeaders[Section];
           CurrentSectionHeader->PointerToLinenumbers = 0;

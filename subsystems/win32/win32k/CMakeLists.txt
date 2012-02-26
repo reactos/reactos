@@ -22,7 +22,8 @@ list(APPEND GENDIB_FILES
 
 add_custom_command(
     OUTPUT ${GENDIB_FILES}
-    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib)
+    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib
+    DEPENDS native-gendib)
 
 list(APPEND SOURCE
     dib/alphablend.c
@@ -104,6 +105,7 @@ list(APPEND SOURCE
     ntuser/metric.c
     ntuser/misc.c
     ntuser/monitor.c
+    ntuser/mouse.c
     ntuser/msgqueue.c
     ntuser/ntstubs.c
     ntuser/ntuser.c
@@ -206,7 +208,7 @@ target_link_libraries(win32k
 add_importlibs(win32k ntoskrnl hal)
 add_pch(win32k pch.h)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
-add_importlib_target(win32k.spec)
+add_importlib_target(win32k.spec win32k.sys)
 
 add_library(win32ksys sys-stubs.S)
 set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)

@@ -42,7 +42,7 @@ BEGIN
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
   PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
   PUSHBUTTON "’&κυρο", IDCANCEL, 175, 75, 50, 15
-  LTEXT "&Επιλέξτε πόσο πρέπει να κρατήσετε πατημένο το κουμπί του ποντικιού μέχρι να κλειδωθεί",-1,60,15,170,30  
+  LTEXT "&Επιλέξτε πόσο πρέπει να κρατήσετε πατημένο το κουμπί του ποντικιού μέχρι να κλειδωθεί",-1,60,15,170,30
   ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 

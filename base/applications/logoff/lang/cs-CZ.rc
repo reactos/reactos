@@ -8,13 +8,13 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Ukonèí sezení.\n\n\
-  /v\t\tZobrazí informace o provedenıch akcích.\n\
-  /?\t\tZobrazí tuto informaci.\n\n"
+IDS_USAGE, "UkonÄÃ­ sezenÃ­.\n\n\
+  /v\t\tZobrazÃ­ informace o provedenÃ½ch akcÃ­ch.\n\
+  /?\t\tZobrazÃ­ tuto informaci.\n\n"
 
-IDS_LOGOFF_REMOTE, "Ukonèuje se sezení na vzdáleném poèítaèi."
-IDS_LOGOFF_LOCAL, "Ukonèuje se souèasné sezení na tomto poèítaèi."
+IDS_LOGOFF_REMOTE, "UkonÄuje se sezenÃ­ na vzdÃ¡lenÃ©m poÄÃ­taÄi."
+IDS_LOGOFF_LOCAL, "UkonÄuje se souÄasnÃ© sezenÃ­ na tomto poÄÃ­taÄi."
 
-IDS_ILLEGAL_PARAM, "Neplatné parametry\n"
+IDS_ILLEGAL_PARAM, "NeplatnÃ© parametry\n"
 END
 /* EOF */

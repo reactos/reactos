@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
+ * 
  * TODO: Handle non-i386 architectures
  */
 
@@ -37,6 +37,7 @@
 
 #include "cpsf.h"
 #include "ndr_misc.h"
+#include "ndr_stubless.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -44,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /* I don't know what MS's std proxy structure looks like,
    so this probably doesn't match, but that shouldn't matter */
 typedef struct {
-  const IRpcProxyBufferVtbl *lpVtbl;
+  IRpcProxyBuffer IRpcProxyBuffer_iface;
   LPVOID *PVtbl;
   LONG RefCount;
   const IID* piid;
@@ -58,46 +59,129 @@ typedef struct {
 
 static const IRpcProxyBufferVtbl StdProxy_Vtbl;
 
-#define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
+static inline StdProxyImpl *impl_from_IRpcProxyBuffer(IRpcProxyBuffer *iface)
+{
+    return CONTAINING_RECORD(iface, StdProxyImpl, IRpcProxyBuffer_iface);
+}
 
-#if defined(__i386__)
+static inline StdProxyImpl *impl_from_proxy_obj( void *iface )
+{
+    return CONTAINING_RECORD(iface, StdProxyImpl, PVtbl);
+}
 
-#include "pshpack1.h"
-
-struct thunk {
-  BYTE push;
-  DWORD index;
-  BYTE jmp;
-  LONG handler;
-};
-
-#include "poppack.h"
+#ifdef __i386__
 
 extern void call_stubless_func(void);
 __ASM_GLOBAL_FUNC(call_stubless_func,
-                  "pushl %esp\n\t"  /* pointer to index */
+                  "movl 4(%esp),%ecx\n\t"         /* This pointer */
+                  "movl (%ecx),%ecx\n\t"          /* This->lpVtbl */
+                  "movl -8(%ecx),%ecx\n\t"        /* MIDL_STUBLESS_PROXY_INFO */
+                  "movl 8(%ecx),%edx\n\t"         /* info->FormatStringOffset */
+                  "movzwl (%edx,%eax,2),%edx\n\t" /* FormatStringOffset[index] */
+                  "addl 4(%ecx),%edx\n\t"         /* info->ProcFormatString + offset */
+                  "movzwl 8(%edx),%eax\n\t"       /* arguments size */
+                  "pushl %eax\n\t"
                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
-                  "call " __ASM_NAME("ObjectStubless") __ASM_STDCALL(4) "\n\t"
-                  "popl %edx\n\t"  /* args size */
+                  "leal 8(%esp),%eax\n\t"         /* &This */
+                  "pushl %eax\n\t"
+                  __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+                  "pushl %edx\n\t"                /* format string */
+                  __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+                  "pushl (%ecx)\n\t"              /* info->pStubDesc */
+                  __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+                  "call " __ASM_NAME("ndr_client_call") "\n\t"
+                  "leal 12(%esp),%esp\n\t"
+                  __ASM_CFI(".cfi_adjust_cfa_offset -12\n\t")
+                  "popl %edx\n\t"                 /* arguments size */
                   __ASM_CFI(".cfi_adjust_cfa_offset -4\n\t")
                   "movl (%esp),%ecx\n\t"  /* return address */
                   "addl %edx,%esp\n\t"
                   "jmp *%ecx" );
 
-HRESULT WINAPI ObjectStubless(DWORD *args)
+#include "pshpack1.h"
+struct thunk
 {
-    DWORD index = args[0];
-    void **iface = (void **)args[2];
-    const void **vtbl = (const void **)*iface;
-    const MIDL_STUBLESS_PROXY_INFO *stubless = *(const MIDL_STUBLESS_PROXY_INFO **)(vtbl - 2);
-    const PFORMAT_STRING fs = stubless->ProcFormatString + stubless->FormatStringOffset[index];
+  BYTE mov_eax;
+  DWORD index;
+  BYTE jmp;
+  LONG handler;
+};
+#include "poppack.h"
 
-    /* store bytes to remove from stack */
-    args[0] = *(const WORD*)(fs + 8);
-    TRACE("(%p)->(%d)([%d bytes]) ret=%08x\n", iface, index, args[0], args[1]);
-
-    return NdrClientCall2(stubless->pStubDesc, fs, args + 2).Simple;
+static inline void init_thunk( struct thunk *thunk, unsigned int index )
+{
+    thunk->mov_eax = 0xb8; /* movl $n,%eax */
+    thunk->index   = index;
+    thunk->jmp     = 0xe9; /* jmp */
+    thunk->handler = (char *)call_stubless_func - (char *)(&thunk->handler + 1);
 }
+
+#elif defined(__x86_64__)
+
+extern void call_stubless_func(void);
+__ASM_GLOBAL_FUNC(call_stubless_func,
+                  "movq %rcx,0x8(%rsp)\n\t"
+                  "movq %rdx,0x10(%rsp)\n\t"
+                  "movq %r8,0x18(%rsp)\n\t"
+                  "movq %r9,0x20(%rsp)\n\t"
+                  "leaq 0x8(%rsp),%r8\n\t"        /* &This */
+                  "movq (%rcx),%rcx\n\t"          /* This->lpVtbl */
+                  "movq -0x10(%rcx),%rcx\n\t"     /* MIDL_STUBLESS_PROXY_INFO */
+                  "movq 0x10(%rcx),%rdx\n\t"      /* info->FormatStringOffset */
+                  "movzwq (%rdx,%r10,2),%rdx\n\t" /* FormatStringOffset[index] */
+                  "addq 8(%rcx),%rdx\n\t"         /* info->ProcFormatString + offset */
+                  "movq (%rcx),%rcx\n\t"          /* info->pStubDesc */
+                  "subq $0x38,%rsp\n\t"
+                  __ASM_CFI(".cfi_adjust_cfa_offset 0x38\n\t")
+                  "movq %xmm1,0x20(%rsp)\n\t"
+                  "movq %xmm2,0x28(%rsp)\n\t"
+                  "movq %xmm3,0x30(%rsp)\n\t"
+                  "leaq 0x18(%rsp),%r9\n\t"       /* fpu_args */
+                  "call " __ASM_NAME("ndr_client_call") "\n\t"
+                  "addq $0x38,%rsp\n\t"
+                  __ASM_CFI(".cfi_adjust_cfa_offset -0x38\n\t")
+                  "ret" );
+
+#include "pshpack1.h"
+struct thunk
+{
+    BYTE mov_r10[3];
+    DWORD index;
+    BYTE mov_rax[2];
+    void *call_stubless;
+    BYTE jmp_rax[2];
+};
+#include "poppack.h"
+
+static const struct thunk thunk_template =
+{
+    { 0x49, 0xc7, 0xc2 }, 0,  /* movq $index,%r10 */
+    { 0x48, 0xb8 }, 0,        /* movq $call_stubless_func,%rax */
+    { 0xff, 0xe0 }            /* jmp *%rax */
+};
+
+static inline void init_thunk( struct thunk *thunk, unsigned int index )
+{
+    *thunk = thunk_template;
+    thunk->index = index;
+    thunk->call_stubless = call_stubless_func;
+}
+
+#else  /* __i386__ */
+
+#warning You must implement stubless proxies for your CPU
+
+struct thunk
+{
+  DWORD index;
+};
+
+static inline void init_thunk( struct thunk *thunk, unsigned int index )
+{
+    thunk->index = index;
+}
+
+#endif  /* __i386__ */
 
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 64  /* 64k methods should be enough for anybody */
@@ -113,13 +197,7 @@ static const struct thunk *allocate_block( unsigned int num )
                           MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
     if (!block) return NULL;
 
-    for (i = 0; i < BLOCK_SIZE; i++)
-    {
-        block[i].push    = 0x68; /* pushl */
-        block[i].index   = BLOCK_SIZE * num + i + 3;
-        block[i].jmp     = 0xe9; /* jmp */
-        block[i].handler = (char *)call_stubless_func - (char *)(&block[i].handler + 1);
-    }
+    for (i = 0; i < BLOCK_SIZE; i++) init_thunk( &block[i], BLOCK_SIZE * num + i + 3 );
     VirtualProtect( block, BLOCK_SIZE * sizeof(*block), PAGE_EXECUTE_READ, NULL );
     prev = InterlockedCompareExchangePointer( (void **)&method_blocks[num], block, NULL );
     if (prev) /* someone beat us to it */
@@ -149,16 +227,6 @@ static BOOL fill_stubless_table( IUnknownVtbl *vtbl, DWORD num )
     }
     return TRUE;
 }
-
-#else  /* __i386__ */
-
-static BOOL fill_stubless_table( IUnknownVtbl *vtbl, DWORD num )
-{
-    ERR("stubless proxies are not supported on this architecture\n");
-    return FALSE;
-}
-
-#endif  /* __i386__ */
 
 HRESULT StdProxy_Construct(REFIID riid,
                            LPUNKNOWN pUnkOuter,
@@ -191,7 +259,7 @@ HRESULT StdProxy_Construct(REFIID riid,
   if (!This) return E_OUTOFMEMORY;
 
   if (!pUnkOuter) pUnkOuter = (IUnknown *)This;
-  This->lpVtbl = &StdProxy_Vtbl;
+  This->IRpcProxyBuffer_iface.lpVtbl = &StdProxy_Vtbl;
   This->PVtbl = vtbl->Vtbl;
   /* one reference for the proxy */
   This->RefCount = 1;
@@ -214,7 +282,7 @@ HRESULT StdProxy_Construct(REFIID riid,
       }
   }
 
-  *ppProxy = (LPRPCPROXYBUFFER)&This->lpVtbl;
+  *ppProxy = &This->IRpcProxyBuffer_iface;
   *ppvObj = &This->PVtbl;
   IUnknown_AddRef((IUnknown *)*ppvObj);
   IPSFactoryBuffer_AddRef(pPSFactory);
@@ -224,25 +292,11 @@ HRESULT StdProxy_Construct(REFIID riid,
   return S_OK;
 }
 
-static void StdProxy_Destruct(LPRPCPROXYBUFFER iface)
-{
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
-
-  if (This->pChannel)
-    IRpcProxyBuffer_Disconnect(iface);
-
-  if (This->base_object) IUnknown_Release( This->base_object );
-  if (This->base_proxy) IRpcProxyBuffer_Release( This->base_proxy );
-
-  IPSFactoryBuffer_Release(This->pPSFactory);
-  HeapFree(GetProcessHeap(),0,This);
-}
-
 static HRESULT WINAPI StdProxy_QueryInterface(LPRPCPROXYBUFFER iface,
                                              REFIID riid,
                                              LPVOID *obj)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+  StdProxyImpl *This = impl_from_IRpcProxyBuffer(iface);
   TRACE("(%p)->QueryInterface(%s,%p)\n",This,debugstr_guid(riid),obj);
 
   if (IsEqualGUID(&IID_IUnknown,riid) ||
@@ -253,7 +307,7 @@ static HRESULT WINAPI StdProxy_QueryInterface(LPRPCPROXYBUFFER iface,
   }
 
   if (IsEqualGUID(&IID_IRpcProxyBuffer,riid)) {
-    *obj = &This->lpVtbl;
+    *obj = &This->IRpcProxyBuffer_iface;
     InterlockedIncrement(&This->RefCount);
     return S_OK;
   }
@@ -263,7 +317,7 @@ static HRESULT WINAPI StdProxy_QueryInterface(LPRPCPROXYBUFFER iface,
 
 static ULONG WINAPI StdProxy_AddRef(LPRPCPROXYBUFFER iface)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+  StdProxyImpl *This = impl_from_IRpcProxyBuffer(iface);
   TRACE("(%p)->AddRef()\n",This);
 
   return InterlockedIncrement(&This->RefCount);
@@ -272,19 +326,29 @@ static ULONG WINAPI StdProxy_AddRef(LPRPCPROXYBUFFER iface)
 static ULONG WINAPI StdProxy_Release(LPRPCPROXYBUFFER iface)
 {
   ULONG refs;
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+  StdProxyImpl *This = impl_from_IRpcProxyBuffer(iface);
   TRACE("(%p)->Release()\n",This);
 
   refs = InterlockedDecrement(&This->RefCount);
   if (!refs)
-    StdProxy_Destruct((LPRPCPROXYBUFFER)&This->lpVtbl);
+  {
+    if (This->pChannel)
+      IRpcProxyBuffer_Disconnect(&This->IRpcProxyBuffer_iface);
+
+    if (This->base_object) IUnknown_Release( This->base_object );
+    if (This->base_proxy) IRpcProxyBuffer_Release( This->base_proxy );
+
+    IPSFactoryBuffer_Release(This->pPSFactory);
+    HeapFree(GetProcessHeap(),0,This);
+  }
+
   return refs;
 }
 
 static HRESULT WINAPI StdProxy_Connect(LPRPCPROXYBUFFER iface,
                                       LPRPCCHANNELBUFFER pChannel)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+  StdProxyImpl *This = impl_from_IRpcProxyBuffer(iface);
   TRACE("(%p)->Connect(%p)\n",This,pChannel);
 
   This->pChannel = pChannel;
@@ -295,7 +359,7 @@ static HRESULT WINAPI StdProxy_Connect(LPRPCPROXYBUFFER iface,
 
 static VOID WINAPI StdProxy_Disconnect(LPRPCPROXYBUFFER iface)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+  StdProxyImpl *This = impl_from_IRpcProxyBuffer(iface);
   TRACE("(%p)->Disconnect()\n",This);
 
   if (This->base_proxy) IRpcProxyBuffer_Disconnect( This->base_proxy );
@@ -316,7 +380,7 @@ static const IRpcProxyBufferVtbl StdProxy_Vtbl =
 static void StdProxy_GetChannel(LPVOID iface,
                                    LPRPCCHANNELBUFFER *ppChannel)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
+  StdProxyImpl *This = impl_from_proxy_obj( iface );
   TRACE("(%p)->GetChannel(%p) %s\n",This,ppChannel,This->name);
 
   *ppChannel = This->pChannel;
@@ -325,7 +389,7 @@ static void StdProxy_GetChannel(LPVOID iface,
 static void StdProxy_GetIID(LPVOID iface,
                                const IID **ppiid)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
+  StdProxyImpl *This = impl_from_proxy_obj( iface );
   TRACE("(%p)->GetIID(%p) %s\n",This,ppiid,This->name);
 
   *ppiid = This->piid;
@@ -335,21 +399,21 @@ HRESULT WINAPI IUnknown_QueryInterface_Proxy(LPUNKNOWN iface,
                                             REFIID riid,
                                             LPVOID *ppvObj)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
+  StdProxyImpl *This = impl_from_proxy_obj( iface );
   TRACE("(%p)->QueryInterface(%s,%p) %s\n",This,debugstr_guid(riid),ppvObj,This->name);
   return IUnknown_QueryInterface(This->pUnkOuter,riid,ppvObj);
 }
 
 ULONG WINAPI IUnknown_AddRef_Proxy(LPUNKNOWN iface)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
+  StdProxyImpl *This = impl_from_proxy_obj( iface );
   TRACE("(%p)->AddRef() %s\n",This,This->name);
   return IUnknown_AddRef(This->pUnkOuter);
 }
 
 ULONG WINAPI IUnknown_Release_Proxy(LPUNKNOWN iface)
 {
-  ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
+  StdProxyImpl *This = impl_from_proxy_obj( iface );
   TRACE("(%p)->Release() %s\n",This,This->name);
   return IUnknown_Release(This->pUnkOuter);
 }
@@ -472,6 +536,27 @@ CreateProxyFromTypeInfo( LPTYPEINFO pTypeInfo, LPUNKNOWN pUnkOuter, REFIID riid,
     MessageBoxA pMessageBoxA = (void *)GetProcAddress(hUser32, "MessageBoxA");
 
     FIXME("%p %p %s %p %p\n", pTypeInfo, pUnkOuter, debugstr_guid(riid), ppProxy, ppv);
+    if (pMessageBoxA)
+    {
+        pMessageBoxA(NULL,
+            "The native implementation of OLEAUT32.DLL cannot be used "
+            "with Wine's RPCRT4.DLL. Remove OLEAUT32.DLL and try again.\n",
+            "Wine: Unimplemented CreateProxyFromTypeInfo",
+            0x10);
+        ExitProcess(1);
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI
+CreateStubFromTypeInfo(ITypeInfo *pTypeInfo, REFIID riid, IUnknown *pUnkServer,
+                       IRpcStubBuffer **ppStub )
+{
+    typedef INT (WINAPI *MessageBoxA)(HWND,LPCSTR,LPCSTR,UINT);
+    HMODULE hUser32 = LoadLibraryA("user32");
+    MessageBoxA pMessageBoxA = (void *)GetProcAddress(hUser32, "MessageBoxA");
+
+    FIXME("%p %s %p %p\n", pTypeInfo, debugstr_guid(riid), pUnkServer, ppStub);
     if (pMessageBoxA)
     {
         pMessageBoxA(NULL,

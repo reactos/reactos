@@ -29,7 +29,7 @@ typedef struct
 typedef struct
 {
     PWCHAR FontName;
-    PWCHAR SubFontName;   
+    PWCHAR SubFontName;
 } MUI_SUBFONT;
 
 typedef struct
@@ -55,6 +55,9 @@ typedef struct
 
 VOID
 MUIDisplayPage (ULONG PageNumber);
+
+VOID
+MUIClearPage (ULONG PageNumber);
 
 VOID
 MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);

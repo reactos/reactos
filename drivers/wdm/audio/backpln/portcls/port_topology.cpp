@@ -137,21 +137,26 @@ CPortTopology::QueryInterface(
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
-    else if (IsEqualGUIDAligned(refiid, IID_ISubdevice))
-    {
-        *Output = PVOID(PSUBDEVICE(this));
-        PUNKNOWN(*Output)->AddRef();
-        return STATUS_SUCCESS;
-    }
     else if (IsEqualGUIDAligned(refiid, IID_IPortEvents))
     {
         *Output = PVOID(PPORTEVENTS(this));
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, IID_ISubdevice))
+    {
+        *Output = PVOID(PSUBDEVICE(this));
+        PUNKNOWN(*Output)->AddRef();
+        return STATUS_SUCCESS;
+    }
     else if (IsEqualGUIDAligned(refiid, IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, IID_IDrmPort) ||
+             IsEqualGUIDAligned(refiid, IID_IDrmPort2))
+    {
+        return NewIDrmPort((PDRMPORT2*)Output);
     }
     else if (IsEqualGUIDAligned(refiid, IID_IUnregisterSubdevice))
     {
@@ -164,7 +169,7 @@ CPortTopology::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT1("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
     return STATUS_UNSUCCESSFUL;

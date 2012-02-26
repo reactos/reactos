@@ -13,6 +13,8 @@
 //#include <ndk/ldrtypes.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 /* FUNCTIONS **************************************************************/
 
 #ifndef _ZOOM2_
@@ -43,38 +45,32 @@ PaToVa(PVOID Pa)
 #endif
 
 VOID
-List_PaToVa(LIST_ENTRY *ListEntry)
+List_PaToVa(PLIST_ENTRY ListHeadPa)
 {
-	LIST_ENTRY *ListHead = ListEntry;
-	LIST_ENTRY *Next = ListEntry->Flink;
-	LIST_ENTRY *NextPA;
+	PLIST_ENTRY EntryPa, NextPa;
 
-	//Print(L"\n\nList_Entry: %X, First Next: %X\n", ListEntry, Next);
-	//
-	// Walk through the whole list
-	//
-	if (Next != NULL)
+	/* List must be properly initialized */
+	ASSERT(ListHeadPa->Flink != 0);
+	ASSERT(ListHeadPa->Blink != 0);
+
+	/* Loop the list in physical address space */
+	EntryPa = ListHeadPa->Flink;
+	while (EntryPa != ListHeadPa)
 	{
-		while (Next != PaToVa(ListHead))
-		{
-			NextPA = VaToPa(Next);
-			//Print(L"Current: %X, Flink: %X, Blink: %X\n", Next, NextPA->Flink, NextPA->Blink);
+		/* Save the physical address of the next entry */
+		NextPa = EntryPa->Flink;
 
-			NextPA->Flink = PaToVa((PVOID)NextPA->Flink);
-			NextPA->Blink = PaToVa((PVOID)NextPA->Blink);
+		/* Convert the addresses of this entry */
+		EntryPa->Flink = PaToVa(EntryPa->Flink);
+		EntryPa->Blink = PaToVa(EntryPa->Blink);
 
-			//Print(L"After converting Flink: %X, Blink: %X\n", NextPA->Flink, NextPA->Blink);
-
-			Next = NextPA->Flink;
-		}
-
-		//
-		// Finally convert first Flink/Blink
-		//
-		ListEntry->Flink = PaToVa((PVOID)ListEntry->Flink);
-		if (ListEntry->Blink)
-			ListEntry->Blink = PaToVa((PVOID)ListEntry->Blink);
+		/* Go to the next entry */
+		EntryPa = NextPa;
 	}
+
+	/* Finally convert the list head */
+	ListHeadPa->Flink = PaToVa(ListHeadPa->Flink);
+	ListHeadPa->Blink = PaToVa(ListHeadPa->Blink);
 }
 
 // This function converts only Child->Child, and calls itself for each Sibling
@@ -84,7 +80,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 	PCONFIGURATION_COMPONENT_DATA Child;
 	PCONFIGURATION_COMPONENT_DATA Sibling;
 
-	DPRINTM(DPRINT_WINDOWS, "ConvertConfigToVA(Start 0x%X)\n", Start);
+	TRACE("ConvertConfigToVA(Start 0x%X)\n", Start);
 	Child = Start;
 
 	while (Child != NULL)
@@ -104,7 +100,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 		if (Child->ComponentEntry.Identifier)
 			Child->ComponentEntry.Identifier = PaToVa(Child->ComponentEntry.Identifier);
 
-		DPRINTM(DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Child,
+		TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Child,
 			Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent);
 
 		// Go through siblings list
@@ -126,7 +122,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 			if (Sibling->ComponentEntry.Identifier)
 				Sibling->ComponentEntry.Identifier = PaToVa(Sibling->ComponentEntry.Identifier);
 
-			DPRINTM(DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
+			TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
 				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent);
 
 			// Recurse into the Child tree

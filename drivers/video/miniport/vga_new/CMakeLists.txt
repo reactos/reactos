@@ -12,9 +12,9 @@ add_library(vga SHARED ${SOURCE})
 target_link_libraries(vga libcntpr)
 
 if(MSVC)
-set_target_properties(vga PROPERTIES COMPILE_FLAGS "/Gz")
+    add_target_compile_flags(vga "/Gz")
 else()
-set_target_properties(vga PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
+    add_target_compile_flags(vga "-mrtd -fno-builtin")
 endif()
 
 set_module_type(vga kernelmodedriver)

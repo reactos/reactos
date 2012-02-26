@@ -146,7 +146,7 @@ typedef struct STRUCT(_PEB)
     PTR(PVOID*) FlsCallback;
     STRUCT(LIST_ENTRY) FlsListHead;
     PTR(PVOID) FlsBitmap;
-    ULONG FlsBitmapBits[4];
+    ULONG FlsBitmapBits[4]; // [FLS_MAXIMUM_AVAILABLE/(sizeof(ULONG)*8)];
     ULONG FlsHighIndex;
 #endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -189,6 +189,7 @@ C_ASSERT(FIELD_OFFSET(STRUCT(PEB), FlsHighIndex) == 0x22C);
 #endif
 #endif
 
+#define GDI_BATCH_BUFFER_SIZE 0x136
 //
 // GDI Batch Descriptor
 //
@@ -196,7 +197,7 @@ typedef struct STRUCT(_GDI_TEB_BATCH)
 {
     ULONG Offset;
     PTR(HANDLE) HDC;
-    ULONG Buffer[0x136];
+    ULONG Buffer[GDI_BATCH_BUFFER_SIZE];
 } STRUCT(GDI_TEB_BATCH), *STRUCT(PGDI_TEB_BATCH);
 
 //

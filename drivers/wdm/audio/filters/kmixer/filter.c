@@ -14,10 +14,6 @@ Dispatch_fnDeviceIoControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

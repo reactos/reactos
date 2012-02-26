@@ -16,4 +16,4 @@ set_module_type(pciidex kernelmodedriver)
 add_importlibs(pciidex ntoskrnl)
 
 add_cd_file(TARGET pciidex DESTINATION reactos/system32/drivers NO_CAB FOR all)
-add_importlib_target(pciidex.spec)
+add_importlib_target(pciidex.spec pciidex.sys)

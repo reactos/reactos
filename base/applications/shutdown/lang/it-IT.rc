@@ -9,6 +9,6 @@ IDS_USAGE, "Uso: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   -s\t\t\tSpegnimento del computer\n\
   -r\t\t\tRiavvio del computer\n\
   -f\t\t\tArresta le applicazioni senza nessun avviso\n\
-    \t\t\tSe non viene specificato nessun altro parametro verr‡\n\
+    \t\t\tSe non viene specificato nessun altro parametro verr√†\n\
     \t\t\tchiusa la sessione"
 END

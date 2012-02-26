@@ -258,10 +258,9 @@ struct CBandSiteBase::BandObject *CBandSiteBase::GetBandFromHwnd(HWND hwnd)
 
 CBandSiteBase::~CBandSiteBase()
 {
-    int										i;
 
     TRACE("destroying %p\n", this);
-    
+
     if (fRebarWindow != NULL)
     {
         DestroyWindow(fRebarWindow);
@@ -270,6 +269,7 @@ CBandSiteBase::~CBandSiteBase()
 
     if (fBands != NULL)
     {
+        int i;
         for (i = 0; i < fBandsAllocated; i++)
         {
             if (fBands[i].DeskBand != NULL)
@@ -420,6 +420,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
             WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
 
             /* Remove the band from the ReBar control */
+            BuildRebarBandInfo(NewBand, &rbi);
             uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
             if (uBand != (UINT)-1)
             {
@@ -730,7 +731,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
     if (fRebarWindow == NULL)
         return E_FAIL;
 
-    if (IsEqualIID(pguidCmdGroup, IID_IDeskBand))
+    if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
     {
         switch (nCmdID)
         {

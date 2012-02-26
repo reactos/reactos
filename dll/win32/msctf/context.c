@@ -262,7 +262,7 @@ static HRESULT WINAPI Context_RequestEditSession (ITfContext *iface,
 
     if (!This->pITextStoreACP)
     {
-        FIXME("No ITextStoreACP avaliable\n");
+        FIXME("No ITextStoreACP available\n");
         *phrSession = E_FAIL;
         return E_FAIL;
     }
@@ -1013,7 +1013,10 @@ static HRESULT WINAPI TextStoreACPSink_OnLockGranted(ITextStoreACPSink *iface,
 
     sinkcookie = HeapAlloc(GetProcessHeap(),0,sizeof(EditCookie));
     if (!sinkcookie)
+    {
+        HeapFree(GetProcessHeap(), 0, cookie);
         return E_OUTOFMEMORY;
+    }
 
     cookie->lockType = dwLockFlags;
     cookie->pOwningContext = This->pContext;

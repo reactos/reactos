@@ -183,7 +183,7 @@ static INT_PTR CALLBACK COMDLG32_FindReplaceDlgProc(HWND hDlgWnd, UINT iMsg, WPA
                 pdata = (COMDLG32_FR_Data *)lParam;
 		if(!SetPropA(hDlgWnd, (LPSTR)COMDLG32_Atom, (HANDLE)pdata))
                 {
-			ERR("Could not Set prop; invent a gracefull exit?...\n");
+			ERR("Could not Set prop; invent a graceful exit?...\n");
 			DestroyWindow(hDlgWnd);
                         return FALSE;
                 }

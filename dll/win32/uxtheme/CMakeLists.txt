@@ -11,21 +11,22 @@ list(APPEND SOURCE
     main.c
     metric.c
     msstyles.c
+    ncscrollbar.c
+    nonclient.c
     property.c
     stylemap.c
     system.c
+    themehooks.c
     uxini.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
 
 add_library(uxtheme SHARED ${SOURCE})
-
 set_module_type(uxtheme win32dll)
-
 target_link_libraries(uxtheme wine)
-
-add_importlibs(uxtheme user32 advapi32 gdi32 msimg32 msvcrt kernel32 ntdll)
-
+add_delay_importlibs(uxtheme msimg32)
+add_importlibs(uxtheme user32 advapi32 gdi32 msvcrt kernel32 ntdll)
+add_pch(uxtheme uxthemep.h)
 add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)
-add_importlib_target(uxtheme.spec)
+add_importlib_target(uxtheme.spec uxtheme.dll)

@@ -12,6 +12,6 @@ add_library(scsiport SHARED ${SOURCE})
 set_module_type(scsiport kernelmodedriver)
 
 add_importlibs(scsiport ntoskrnl hal)
-add_importlib_target(scsiport.spec)
+add_importlib_target(scsiport.spec scsiport.sys)
 
 add_cd_file(TARGET scsiport DESTINATION reactos/system32/drivers NO_CAB FOR all)

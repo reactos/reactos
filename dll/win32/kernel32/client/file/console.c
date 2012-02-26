@@ -31,7 +31,7 @@ ULONG NrCtrlHandlers;
 ULONG NrAllocatedHandlers;
 
 #define INPUTEXENAME_BUFLEN 256
-static WCHAR InputExeName[INPUTEXENAME_BUFLEN] = L"";
+static WCHAR InputExeName[INPUTEXENAME_BUFLEN];
 
 /* Default Console Control Handler *******************************************/
 
@@ -1823,6 +1823,7 @@ AllocConsole(VOID)
     ULONG CsrRequest;
     NTSTATUS Status;
     HANDLE hStdError;
+    STARTUPINFO si;
 
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
     {
@@ -1831,9 +1832,11 @@ AllocConsole(VOID)
         return FALSE;
     }
 
+    GetStartupInfo(&si);
+
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
     Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-    Request.Data.AllocConsoleRequest.Visible = TRUE;
+    Request.Data.AllocConsoleRequest.ShowCmd = si.wShowWindow;
 
     CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
 
@@ -2045,7 +2048,6 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     ULONG Size;
 
     if (lpBuffer == NULL)
@@ -2079,10 +2081,10 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     Request.Data.PeekConsoleInputRequest.Length = nLength;
 
     /* Call the server */
-    Status = CsrClientCallServer(&Request,
-                                 CaptureBuffer,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
+    CsrClientCallServer(&Request,
+                        CaptureBuffer,
+                        CsrRequest,
+                        sizeof(CSR_API_MESSAGE));
     DPRINT("Server returned: %x\n", Request.Status);
 
     /* Check for success*/
@@ -2280,7 +2282,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     DWORD Size;
 
     if (lpBuffer == NULL)
@@ -2314,10 +2315,10 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     Request.Data.WriteConsoleInputRequest.Length = nLength;
 
     /* Call the server */
-    Status = CsrClientCallServer(&Request,
-                                 CaptureBuffer,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
+    CsrClientCallServer(&Request,
+                        CaptureBuffer,
+                        CsrRequest,
+                        sizeof(CSR_API_MESSAGE));
     DPRINT("Server returned: %x\n", Request.Status);
 
     /* Check for success*/
@@ -2394,7 +2395,6 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     DWORD Size, SizeX, SizeY;
 
     if (lpBuffer == NULL)
@@ -2430,10 +2430,10 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     Request.Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
 
     /* Call the server */
-    Status = CsrClientCallServer(&Request,
-                                 CaptureBuffer,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
+    CsrClientCallServer(&Request,
+                        CaptureBuffer,
+                        CsrRequest,
+                        sizeof(CSR_API_MESSAGE));
     DPRINT("Server returned: %x\n", Request.Status);
 
     /* Check for success*/
@@ -2522,7 +2522,6 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     ULONG Size;
 
     Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
@@ -2555,10 +2554,10 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     Request.Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
 
     /* Call the server */
-    Status = CsrClientCallServer(&Request,
-                                 CaptureBuffer,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
+    CsrClientCallServer(&Request,
+                        CaptureBuffer,
+                        CsrRequest,
+                        sizeof(CSR_API_MESSAGE));
     DPRINT("Server returned: %x\n", Request.Status);
 
     /* Check for success*/
@@ -2635,18 +2634,17 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
     PCSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
-    ULONG nChars, SizeBytes, CharSize;
+    ULONG SizeBytes, CharSize;
     DWORD CharsRead = 0;
 
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    nChars = min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR) / CharSize;
-    SizeBytes = nChars * CharSize;
+    nLength = min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize);
+    SizeBytes = nLength * CharSize;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                               max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR)
-                                  + min (nChars, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize) * CharSize));
+                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR) + SizeBytes));
     if (Request == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2662,7 +2660,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
 
         Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
         Request->Data.ReadConsoleOutputCharRequest.Unicode = bUnicode;
-        Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead = min(nLength, nChars);
+        Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead = nLength;
         SizeBytes = Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead * CharSize;
 
         Status = CsrClientCallServer(Request,
@@ -2823,13 +2821,14 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
     PCSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
-    ULONG SizeBytes, CharSize, nChars;
+    ULONG CharSize, nChars;
+    //ULONG SizeBytes;
     DWORD Written = 0;
 
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
     nChars = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CharSize);
-    SizeBytes = nChars * CharSize;
+    //SizeBytes = nChars * CharSize;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                               max(sizeof(CSR_API_MESSAGE),

@@ -12,6 +12,15 @@
 #define NDEBUG
 #include <debug.h>
 
+/* maximum length of an ipv4 address expressed as a string */
+#define IPV4_ADDR_STRING_MAX_LEN 16
+
+/* maximum length of an ipv4 port expressed as a string */
+#define IPV4_PORT_STRING_MAX_LEN 7 /* with the leading ':' */
+
+/* network to host order conversion for little endian machines */
+#define WN2H(w) (((w & 0xFF00) >> 8) | ((w & 0x00FF) << 8))
+
 /* FUNCTIONS ***************************************************************/
 
 /*
@@ -22,14 +31,20 @@ NTAPI
 RtlIpv4AddressToStringA(IN struct in_addr *Addr,
                         OUT PCHAR S)
 {
-    return S + sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                         Addr->S_un.S_un_b.s_b2,
-                                         Addr->S_un.S_un_b.s_b3,
-                                         Addr->S_un.S_un_b.s_b4);
+    INT Length;
+    
+    if (!S) return (LPSTR)~0;
+
+    Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
+                                            Addr->S_un.S_un_b.s_b2,
+                                            Addr->S_un.S_un_b.s_b3,
+                                            Addr->S_un.S_un_b.s_b4);
+
+    return S + Length;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -38,8 +53,28 @@ RtlIpv4AddressToStringExA(IN struct in_addr *Address,
                           OUT PCHAR AddressString,
                           IN OUT PULONG AddressStringLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    ULONG Length;
+
+    if (!Address || !AddressString || !AddressStringLength)
+        return STATUS_INVALID_PARAMETER;
+
+    Length = sprintf(Buffer, "%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
+                                            Address->S_un.S_un_b.s_b2,
+                                            Address->S_un.S_un_b.s_b3,
+                                            Address->S_un.S_un_b.s_b4);
+
+    if (Port) Length += sprintf(Buffer + Length, ":%u", WN2H(Port));
+
+    if (*AddressStringLength > Length)
+    {
+        *AddressStringLength = Length + 1;
+        strcpy(AddressString, Buffer);
+        return STATUS_SUCCESS;
+    }
+
+    *AddressStringLength = Length + 1;
+    return STATUS_INVALID_PARAMETER;
 }
 
 /*
@@ -50,14 +85,19 @@ NTAPI
 RtlIpv4AddressToStringW(IN struct in_addr *Addr,
                         OUT PWCHAR S)
 {
-    return S + swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                           Addr->S_un.S_un_b.s_b2,
-                                           Addr->S_un.S_un_b.s_b3,
-                                           Addr->S_un.S_un_b.s_b4);
+    INT Length;
+
+    if (!S) return (LPWSTR)~0;
+    
+    Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
+                                         Addr->S_un.S_un_b.s_b2,
+                                         Addr->S_un.S_un_b.s_b3,
+                                         Addr->S_un.S_un_b.s_b4);
+    return S + Length;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -66,8 +106,28 @@ RtlIpv4AddressToStringExW(IN struct in_addr *Address,
                           OUT PWCHAR AddressString,
                           IN OUT PULONG AddressStringLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    ULONG Length;
+
+    if (!Address || !AddressString || !AddressStringLength)
+        return STATUS_INVALID_PARAMETER;
+
+    Length = swprintf(Buffer, L"%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
+                                              Address->S_un.S_un_b.s_b2,
+                                              Address->S_un.S_un_b.s_b3,
+                                              Address->S_un.S_un_b.s_b4);
+
+    if (Port) Length += swprintf(Buffer + Length, L":%u", WN2H(Port));
+
+    if (*AddressStringLength > Length)
+    {
+        *AddressStringLength = Length + 1;
+        wcscpy(AddressString, Buffer);
+        return STATUS_SUCCESS;
+    }
+
+    *AddressStringLength = Length + 1;
+    return STATUS_INVALID_PARAMETER;
 }
 
 /*

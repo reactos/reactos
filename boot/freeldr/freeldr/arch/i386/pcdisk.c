@@ -18,9 +18,9 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
+
+DBG_DEFAULT_CHANNEL(DISK);
 
 #include <pshpack2.h>
 typedef struct
@@ -47,7 +47,7 @@ static BOOLEAN PcDiskResetController(UCHAR DriveNumber)
 	REGS	RegsIn;
 	REGS	RegsOut;
 
-	DPRINTM(DPRINT_DISK, "PcDiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
+	WARN("PcDiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
 
 	// BIOS Int 13h, function 0 - Reset disk system
 	// AH = 00h
@@ -72,7 +72,7 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 	ULONG							RetryCount;
 	PI386_DISK_ADDRESS_PACKET	Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
-	DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
+	TRACE("PcDiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
     ASSERT(((ULONG_PTR)Buffer) <= 0xFFFFF);
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
@@ -125,7 +125,7 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 	}
 
 	// If we get here then the read failed
-	DiskError("Disk Read Failed in LBA mode", RegsOut.b.ah);
+	ERR("Disk Read Failed in LBA mode: %x (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n", RegsOut.b.ah, DriveNumber, SectorNumber, SectorCount);
 
 	return FALSE;
 }
@@ -141,7 +141,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
 	REGS		RegsOut;
 	ULONG			RetryCount;
 
-	DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsCHS()\n");
+	TRACE("PcDiskReadLogicalSectorsCHS()\n");
 
 	//
 	// Get the drive geometry
@@ -249,7 +249,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
 		// If we retried 3 times then fail
 		if (RetryCount >= 3)
 		{
-			DiskError("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
+			ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x\n", RegsOut.b.ah);
 			return FALSE;
 		}
 
@@ -269,17 +269,20 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
 
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
+	BOOLEAN ExtensionsSupported;
 
-	DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
+	TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
 
 	//
 	// Check to see if it is a fixed disk drive
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((DriveNumber >= 0x80) && DiskInt13ExtensionsSupported(DriveNumber))
+	ExtensionsSupported = DiskInt13ExtensionsSupported(DriveNumber);
+
+	if ((DriveNumber >= 0x80) && ExtensionsSupported)
 	{
-		DPRINTM(DPRINT_DISK, "Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, DiskInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE");
+		TRACE("Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, ExtensionsSupported ? "TRUE" : "FALSE");
 
 		//
 		// LBA is easy, nothing to calculate
@@ -299,11 +302,24 @@ BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULON
 BOOLEAN
 PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
+  EXTENDED_GEOMETRY ExtGeometry;
   REGS RegsIn;
   REGS RegsOut;
   ULONG Cylinders;
 
-  DPRINTM(DPRINT_DISK, "DiskGetDriveGeometry()\n");
+  TRACE("DiskGetDriveGeometry()\n");
+
+  /* Try to get the extended geometry first */
+  ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
+  if (DiskGetExtendedDriveParameters(DriveNumber, &ExtGeometry, ExtGeometry.Size))
+  {
+    Geometry->Cylinders = ExtGeometry.Cylinders;
+    Geometry->Heads = ExtGeometry.Heads;
+    Geometry->Sectors = ExtGeometry.SectorsPerTrack;
+    Geometry->BytesPerSector = ExtGeometry.BytesPerSector;
+
+    return TRUE;
+  }
 
   /* BIOS Int 13h, function 08h - Get drive parameters
    * AH = 08h

@@ -5,7 +5,7 @@ Name = Mozilla Firefox 3.0
 Version = 3.0.19
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
-Size = 7.2M
+Size = 7.16MB
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
 URLDownload = http://svn.reactos.org/packages/Firefox%20Setup%203.0.19.exe
@@ -47,9 +47,7 @@ URLSite = http://www.mozilla-europe.org/ru/
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
-Size = 7,5 MB
 URLSite = http://www.mozilla-europe.org/sk/
-URLDownload = http://hyperion.zih.tu-dresden.de/moz/firefox/releases/3.0.19-real-real/win32/sk/Firefox%20Setup%203.0.19.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.

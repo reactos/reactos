@@ -1,27 +1,16 @@
 /*
- * ReactOS Win32 Subsystem
- * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Focus functions
+ * FILE:             subsystems/win32/win32k/ntuser/focus.c
+ * PROGRAMER:        ReactOS Team
  */
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserFocus);
 
-#define NDEBUG
-#include <debug.h>
+PUSER_MESSAGE_QUEUE gpqForeground = NULL;
+PUSER_MESSAGE_QUEUE gpqForegroundPrev = NULL;
 
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
@@ -31,10 +20,17 @@ IntGetCaptureWindow(VOID)
 }
 
 HWND FASTCALL
-IntGetFocusWindow(VOID)
+UserGetFocusWindow(VOID)
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-   return ForegroundQueue != NULL ? ForegroundQueue->FocusWindow : 0;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+   /* Is it a foreground queue? */
+   if (!ThreadQueue || ThreadQueue != IntGetFocusMessageQueue())
+     return NULL;
+   return ThreadQueue->FocusWindow;
 }
 
 HWND FASTCALL
@@ -45,7 +41,9 @@ IntGetThreadFocusWindow(VOID)
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   return ThreadQueue != NULL ? ThreadQueue->FocusWindow : 0;
+   if (!ThreadQueue)
+     return NULL;
+   return ThreadQueue->FocusWindow;
 }
 
 VOID FASTCALL
@@ -77,7 +75,8 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
-      if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (gpsi->PUSIFlags & PUSIF_PALETTEDISPLAY &&
+          co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
          UserSendNotifyMessage( HWND_BROADCAST,
                                 WM_PALETTEISCHANGING,
@@ -87,7 +86,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       if (Window->spwndPrev != NULL)
          co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
-                               SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                               SWP_NOSIZE | SWP_NOMOVE);
 
       if (!Window->spwndOwner && !IntGetParent(Window))
       {
@@ -112,10 +111,10 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          HANDLE OldTID = IntGetWndThreadId(WindowPrev);
          HANDLE NewTID = IntGetWndThreadId(Window);
 
-         DPRINT("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
+         TRACE("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
          if (Window->style & WS_MINIMIZE)
          {
-            DPRINT("Widow was minimized\n");
+            TRACE("Widow was minimized\n");
          }
 
          if (OldTID != NewTID)
@@ -203,9 +202,24 @@ IntFindChildWindowToOwner(PWND Root, PWND Owner)
    return NULL;
 }
 
+/*
+   MSDN:
+   The system restricts which processes can set the foreground window. A process
+   can set the foreground window only if one of the following conditions is true: 
+
+    * The process is the foreground process.
+    * The process was started by the foreground process.
+    * The process received the last input event.
+    * There is no foreground process.
+    * The foreground process is being debugged.
+    * The foreground is not locked (see LockSetForegroundWindow).
+    * The foreground lock time-out has expired (see SPI_GETFOREGROUNDLOCKTIMEOUT in SystemParametersInfo). 
+    * No menus are active.
+*/
 static BOOL FASTCALL
 co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate)
 {
+   CBTACTIVATESTRUCT cbt;
    HWND hWnd = Wnd->head.h;
    HWND hWndPrev = NULL;
    HWND hWndFocus = FocusWindow->head.h;
@@ -214,18 +228,18 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 
    ASSERT_REFS_CO(Wnd);
 
-   DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
+   TRACE("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
 
    if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
-      DPRINT("Failed - Child\n");
+      TRACE("Failed - Child\n");
       return FALSE;
    }
 
    if (0 == (Wnd->style & WS_VISIBLE) &&
        Wnd->head.pti->pEThread->ThreadsProcess != CsrProcess)
    {
-      DPRINT("Failed - Invisible\n");
+      ERR("Failed - Invisible\n");
       return FALSE;
    }
 
@@ -238,11 +252,18 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 
    if (hWndPrev == hWnd)
    {
-      DPRINT("Failed - Same\n");
+      TRACE("Failed - Same\n");
       return TRUE;
    }
 
-   /* FIXME: Call hooks. */
+   /* Call CBT hook chain */
+   cbt.fMouse     = MouseActivate;
+   cbt.hWndActive = hWndPrev;
+   if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
+   {
+      ERR("IntSetForegroundAndFocusWindow WH_CBT Call Hook return!\n");
+      return 0;
+   }
 
    co_IntSendDeactivateMessages(hWndPrev, hWnd);
    co_IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
@@ -272,7 +293,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 }
 
 BOOL FASTCALL
-co_IntSetForegroundWindow(PWND Window)//FIXME: can Window be NULL??
+co_IntSetForegroundWindow(PWND Window) // FIXME: Can Window be NULL??
 {
    /*if (Window)*/ ASSERT_REFS_CO(Window);
 
@@ -339,12 +360,11 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
    ASSERT(ThreadQueue != 0);
 
    if (Wnd != 0)
-   {
-      if ((!(Wnd->style & WS_VISIBLE) &&
-           Wnd->head.pti->pEThread->ThreadsProcess != CsrProcess) ||
-          (Wnd->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+   { 
+      if ((Wnd->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
-         return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
+         /* Windows doesn't seem to return an error here */
+         return ThreadQueue->ActiveWindow;
       }
       hWnd = Wnd->head.h;
    }
@@ -355,17 +375,19 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
       return hWndPrev;
    }
 
-   /* call CBT hook chain */
+   /* Call CBT hook chain */
    cbt.fMouse     = FALSE;
    cbt.hWndActive = hWndPrev;
    if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
    {
-      DPRINT1("SetActiveWindow WH_CBT Call Hook return!\n");
+      ERR("SetActiveWindow WH_CBT Call Hook return!\n");
       return 0;
    }
-   ThreadQueue->ActiveWindow = hWnd;
 
    co_IntSendDeactivateMessages(hWndPrev, hWnd);
+
+   ThreadQueue->ActiveWindow = hWnd;
+
    co_IntSendActivateMessages(hWndPrev, hWnd, FALSE);
 
    /* FIXME */
@@ -373,11 +395,11 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
    return hWndPrev;
 }
 
-static
 HWND FASTCALL
-co_IntSetFocusWindow(PWND Window OPTIONAL)
+co_UserSetFocus(PWND Window)
 {
    HWND hWndPrev = 0;
+   PWND pwndTop;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
@@ -394,15 +416,38 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
    {
       if (hWndPrev == Window->head.h)
       {
-         return hWndPrev;
+         return hWndPrev; /* Nothing to do */
+      }
+
+      /* Check if we can set the focus to this window */
+      for (pwndTop = Window; pwndTop != NULL; pwndTop = pwndTop->spwndParent )
+      {
+         if (pwndTop->style & (WS_MINIMIZED|WS_DISABLED)) return 0;
+         if ((pwndTop->style & (WS_POPUP|WS_CHILD)) != WS_CHILD) break;
       }
 
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))
       {
-         DPRINT1("SetFocusWindow 1 WH_CBT Call Hook return!\n");
+         ERR("SetFocus 1 WH_CBT Call Hook return!\n");
          return 0;
       }
+
+      /* Activate pwndTop if needed. */
+      if (pwndTop->head.h != ThreadQueue->ActiveWindow)
+      {
+         co_IntSetActiveWindow(pwndTop);
+         /* Abort if window destroyed */
+         if (Window->state2 & WNDS2_INDESTROY) return 0;
+         /* Do not change focus if the window is no longer active */
+         if (pwndTop->head.h != ThreadQueue->ActiveWindow)
+         {
+            ERR("SetFocus Top window did not go active!\n");
+            return 0;
+         }
+      }
+
       ThreadQueue->FocusWindow = Window->head.h;
+      TRACE("Focus: %d -> %d\n", hWndPrev, Window->head.h);
 
       co_IntSendKillFocusMessages(hWndPrev, Window->head.h);
       co_IntSendSetFocusMessages(hWndPrev, Window->head.h);
@@ -412,7 +457,7 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
       ThreadQueue->FocusWindow = 0;
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
       {
-         DPRINT1("SetFocusWindow 2 WH_CBT Call Hook return!\n");
+         ERR("SetFocusWindow 2 WH_CBT Call Hook return!\n");
          return 0;
       }
 
@@ -421,10 +466,6 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
    return hWndPrev;
 }
 
-
-/*
- * @implemented
- */
 HWND FASTCALL
 UserGetForegroundWindow(VOID)
 {
@@ -433,27 +474,6 @@ UserGetForegroundWindow(VOID)
    ForegroundQueue = IntGetFocusMessageQueue();
    return( ForegroundQueue != NULL ? ForegroundQueue->ActiveWindow : 0);
 }
-
-
-/*
- * @implemented
- */
-HWND APIENTRY
-NtUserGetForegroundWindow(VOID)
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetForegroundWindow\n");
-   UserEnterExclusive();
-
-   RETURN( UserGetForegroundWindow());
-
-CLEANUP:
-   DPRINT("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 
 HWND FASTCALL UserGetActiveWindow(VOID)
 {
@@ -465,57 +485,6 @@ HWND FASTCALL UserGetActiveWindow(VOID)
    return( ThreadQueue ? ThreadQueue->ActiveWindow : 0);
 }
 
-
-HWND APIENTRY
-NtUserSetActiveWindow(HWND hWnd)
-{
-   USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserSetActiveWindow(%x)\n", hWnd);
-   UserEnterExclusive();
-
-   if (hWnd)
-   {
-      PWND Window;
-      PTHREADINFO pti;
-      PUSER_MESSAGE_QUEUE ThreadQueue;
-      HWND hWndPrev;
-
-      if (!(Window = UserGetWindowObject(hWnd)))
-      {
-         RETURN( 0);
-      }
-
-      pti = PsGetCurrentThreadWin32Thread();
-      ThreadQueue = pti->MessageQueue;
-
-      if (Window->head.pti->MessageQueue != ThreadQueue)
-      {
-         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-         RETURN( 0);
-      }
-
-      UserRefObjectCo(Window, &Ref);
-      hWndPrev = co_IntSetActiveWindow(Window);
-      UserDerefObjectCo(Window);
-
-      RETURN( hWndPrev);
-   }
-   else
-   {
-      RETURN( co_IntSetActiveWindow(0));
-   }
-
-CLEANUP:
-   DPRINT("Leave NtUserSetActiveWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-/*
- * @implemented
- */
 HWND APIENTRY
 IntGetCapture(VOID)
 {
@@ -523,17 +492,16 @@ IntGetCapture(VOID)
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter IntGetCapture\n");
+   TRACE("Enter IntGetCapture\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 
 CLEANUP:
-   DPRINT("Leave IntGetCapture, ret=%i\n",_ret_);
+   TRACE("Leave IntGetCapture, ret=%i\n",_ret_);
    END_CLEANUP;
 }
-
 
 HWND FASTCALL
 co_UserSetCapture(HWND hWnd)
@@ -583,8 +551,8 @@ co_UserSetCapture(HWND hWnd)
    if (hWnd == NULL) // Release mode.
    {
       MOUSEINPUT mi;
-   /// These are hacks!
-      /* also remove other windows if not capturing anymore */
+   /// These are HACKS!
+      /* Also remove other windows if not capturing anymore */
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
    ///
@@ -594,8 +562,8 @@ co_UserSetCapture(HWND hWnd)
       mi.mouseData = 0;
       mi.dwFlags = MOUSEEVENTF_MOVE;
       mi.time = 0;
-      mi.dwExtraInfo = 0;      
-      IntMouseInput(&mi,FALSE);
+      mi.dwExtraInfo = 0;
+      UserSendMouseInput(&mi, FALSE);
    }
    return hWndPrev;
 }
@@ -622,69 +590,86 @@ IntReleaseCapture(VOID)
  * @implemented
  */
 HWND APIENTRY
+NtUserGetForegroundWindow(VOID)
+{
+   DECLARE_RETURN(HWND);
+
+   TRACE("Enter NtUserGetForegroundWindow\n");
+   UserEnterExclusive();
+
+   RETURN( UserGetForegroundWindow());
+
+CLEANUP:
+   TRACE("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
+HWND APIENTRY
+NtUserSetActiveWindow(HWND hWnd)
+{
+   USER_REFERENCE_ENTRY Ref;
+   DECLARE_RETURN(HWND);
+
+   TRACE("Enter NtUserSetActiveWindow(%x)\n", hWnd);
+   UserEnterExclusive();
+
+   if (hWnd)
+   {
+      PWND Window;
+      PTHREADINFO pti;
+      PUSER_MESSAGE_QUEUE ThreadQueue;
+      HWND hWndPrev;
+
+      if (!(Window = UserGetWindowObject(hWnd)))
+      {
+         RETURN( 0);
+      }
+
+      pti = PsGetCurrentThreadWin32Thread();
+      ThreadQueue = pti->MessageQueue;
+
+      if (Window->head.pti->MessageQueue != ThreadQueue)
+      {
+         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+         RETURN( 0);
+      }
+
+      UserRefObjectCo(Window, &Ref);
+      hWndPrev = co_IntSetActiveWindow(Window);
+      UserDerefObjectCo(Window);
+
+      RETURN( hWndPrev);
+   }
+   else
+   {
+      RETURN( co_IntSetActiveWindow(0));
+   }
+
+CLEANUP:
+   TRACE("Leave NtUserSetActiveWindow, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
+/*
+ * @implemented
+ */
+HWND APIENTRY
 NtUserSetCapture(HWND hWnd)
 {
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
+   TRACE("Enter NtUserSetCapture(%x)\n", hWnd);
    UserEnterExclusive();
 
    RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetCapture, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetCapture, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
-
-
-
-HWND FASTCALL co_UserSetFocus(PWND Wnd OPTIONAL)
-{
-   if (Wnd)
-   {
-      PTHREADINFO pti;
-      PUSER_MESSAGE_QUEUE ThreadQueue;
-      HWND hWndPrev;
-      PWND TopWnd;
-      USER_REFERENCE_ENTRY Ref;
-
-      ASSERT_REFS_CO(Wnd);
-
-      pti = PsGetCurrentThreadWin32Thread();
-      ThreadQueue = pti->MessageQueue;
-
-      if (Wnd->style & (WS_MINIMIZE | WS_DISABLED))
-      {
-         return( (ThreadQueue ? ThreadQueue->FocusWindow : 0));
-      }
-
-      if (Wnd->head.pti->MessageQueue != ThreadQueue)
-      {
-         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-         return( 0);
-      }
-
-      TopWnd = UserGetAncestor(Wnd, GA_ROOT);
-      if (TopWnd && TopWnd->head.h != UserGetActiveWindow())
-      {
-//         PWND WndTops = UserGetWindowObject(hWndTop);
-         UserRefObjectCo(TopWnd, &Ref);
-         co_IntSetActiveWindow(TopWnd);
-         UserDerefObjectCo(TopWnd);
-      }
-
-      hWndPrev = co_IntSetFocusWindow(Wnd);
-
-      return( hWndPrev);
-   }
-   else
-   {
-      return( co_IntSetFocusWindow(NULL));
-   }
-
-}
-
 
 /*
  * @implemented
@@ -697,7 +682,7 @@ NtUserSetFocus(HWND hWnd)
    DECLARE_RETURN(HWND);
    HWND ret;
 
-   DPRINT("Enter NtUserSetFocus(%x)\n", hWnd);
+   TRACE("Enter NtUserSetFocus(%x)\n", hWnd);
    UserEnterExclusive();
 
    if (hWnd)
@@ -719,7 +704,7 @@ NtUserSetFocus(HWND hWnd)
    }
 
 CLEANUP:
-   DPRINT("Leave NtUserSetFocus, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetFocus, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

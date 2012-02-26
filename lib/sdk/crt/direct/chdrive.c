@@ -37,7 +37,7 @@ int _chdrive(int newdrive)
     _dosmaperr(GetLastError());
     if (newdrive <= 0)
     {
-      __set_errno(EACCES);
+      _set_errno(EACCES);
     }
     return -1;
   }

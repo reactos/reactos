@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FIXME: From winbase.h... what to do? */
+#define SEM_NOALIGNMENTFAULTEXCEPT 0x04
+
 /* Include Information Class Tables */
 #include "internal/ps_i.h"
 
@@ -66,6 +69,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     ULONG Length = 0;
+    HANDLE DebugPort = 0;
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
     PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
@@ -78,7 +82,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     PUNICODE_STRING ImageName;
-    ULONG Cookie;
+    ULONG Cookie, ExecuteOptions = 0;
+    ULONG_PTR Wow64 = 0;
     PAGED_CODE();
 
     /* Check for user-mode caller */
@@ -247,6 +252,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
             _SEH2_TRY
             {
+                /* FIXME: Call KeQueryValuesProcess */
                 IoCounters->ReadOperationCount = Process->ReadOperationCount.QuadPart;
                 IoCounters->ReadTransferCount = Process->ReadTransferCount.QuadPart;
                 IoCounters->WriteOperationCount = Process->WriteOperationCount.QuadPart;
@@ -292,11 +298,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Copy time information from EPROCESS/KPROCESS */
+                /* FIXME: Call KeQueryRuntimeProcess */
                 ProcessTime->CreateTime = Process->CreateTime;
                 ProcessTime->UserTime.QuadPart = Process->Pcb.UserTime *
-                                                 100000LL;
+                                                 KeMaximumIncrement;
                 ProcessTime->KernelTime.QuadPart = Process->Pcb.KernelTime *
-                                                   100000LL;
+                                                   KeMaximumIncrement;
                 ProcessTime->ExitTime = Process->ExitTime;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -347,27 +354,6 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
             /* Dereference the process */
             ObDereferenceObject(Process);
-            break;
-
-        /* LDT, WS and VDM Information: not implemented */
-        case ProcessLdtInformation:
-        case ProcessWorkingSetWatch:
-        case ProcessWx86Information:
-
-            /* Reference the process */
-            Status = ObReferenceObjectByHandle(ProcessHandle,
-                                               PROCESS_QUERY_INFORMATION,
-                                               PsProcessType,
-                                               PreviousMode,
-                                               (PVOID*)&Process,
-                                               NULL);
-            if (!NT_SUCCESS(Status)) break;
-
-            DPRINT1("Not implemented: %lx\n", ProcessInformationClass);
-
-            /* Dereference the process */
-            ObDereferenceObject(Process);
-            Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         case ProcessHandleCount:
@@ -435,50 +421,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Write back the Session ID */
-                SessionInfo->SessionId = Process->Session;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            /* Dereference the process */
-            ObDereferenceObject(Process);
-            break;
-
-        /* WOW64: Not implemented */
-        case ProcessWow64Information:
-
-            /* Set the return length */
-            Length = sizeof(ULONG_PTR);
-
-            if (ProcessInformationLength != Length)
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
-            /* Reference the process */
-            Status = ObReferenceObjectByHandle(ProcessHandle,
-                                               PROCESS_QUERY_INFORMATION,
-                                               PsProcessType,
-                                               PreviousMode,
-                                               (PVOID*)&Process,
-                                               NULL);
-            if (!NT_SUCCESS(Status)) break;
-
-            /* Protect write in SEH */
-            _SEH2_TRY
-            {
-#ifdef _WIN64
-                DPRINT1("Not implemented: ProcessWow64Information\n");
-                Status = STATUS_NOT_IMPLEMENTED;
-#else
-                /* Wow64 not present */
-                *(PULONG_PTR)ProcessInformation = 0;
-#endif
+                SessionInfo->SessionId = PtrToUlong(PsGetProcessSessionId(Process));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -494,10 +437,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Virtual Memory Statistics */
         case ProcessVmCounters:
 
-            /* Set the return length */
-            Length = sizeof(VM_COUNTERS);
-
-            if (ProcessInformationLength != Length)
+            /* Validate the input length */
+            if ((ProcessInformationLength != sizeof(VM_COUNTERS)) &&
+                (ProcessInformationLength != sizeof(VM_COUNTERS_EX)))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -525,9 +467,13 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 VmCounters->QuotaPagedPoolUsage = Process->QuotaUsage[0];
                 VmCounters->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
                 VmCounters->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-                VmCounters->PagefileUsage = Process->QuotaUsage[2];
-                VmCounters->PeakPagefileUsage = Process->QuotaPeak[2];
-
+                VmCounters->PagefileUsage = Process->QuotaUsage[2] << PAGE_SHIFT;
+                VmCounters->PeakPagefileUsage = Process->QuotaPeak[2] << PAGE_SHIFT;
+                //VmCounters->PrivateUsage = Process->CommitCharge << PAGE_SHIFT;
+                // 
+                
+                /* Set the return length */
+                Length = ProcessInformationLength;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -582,7 +528,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Priority Boosting status */
         case ProcessPriorityBoost:
 
-            /* Set the return length*/
+            /* Set the return length */
             Length = sizeof(ULONG);
 
             if (ProcessInformationLength != Length)
@@ -621,12 +567,20 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            /* Set the return length*/
+            /* Set the return length */
             Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
 
             if (ProcessInformationLength != Length)
             {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
+                if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
+                {
+                    DPRINT1("PROCESS_DEVICEMAP_INFORMATION_EX not supported!\n");
+                    Status = STATUS_NOT_IMPLEMENTED;
+                }
+                else
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
                 break;
             }
 
@@ -751,6 +705,42 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             ObDereferenceObject(Process);
             break;
 
+        case ProcessDebugFlags:
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Enter SEH for writing back data */
+            _SEH2_TRY
+            {
+                /* Return the debug flag state */
+                *(PULONG)ProcessInformation = Process->NoDebugInherit ? 0 : 1;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
+            break;
+
         case ProcessBreakOnTermination:
 
             /* Set the return length*/
@@ -832,19 +822,219 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_END;
             break;
 
-        /* Not yet implemented, or unknown */
-        case ProcessBasePriority:
-        case ProcessRaisePriority:
-        case ProcessExceptionPort:
-        case ProcessAccessToken:
-        case ProcessLdtSize:
-        case ProcessIoPortHandlers:
-        case ProcessUserModeIOPL:
-        case ProcessEnableAlignmentFaultFixup:
-        case ProcessAffinityMask:
-        case ProcessForegroundInformation:
+        case ProcessImageInformation:
+            DPRINT1("Image Information Query Not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessDebugObjectHandle:
+
+            /* Set the return length */
+            Length = sizeof(HANDLE);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Get the debug port */
+            Status = DbgkOpenProcessDebugPort(Process, PreviousMode, &DebugPort);
+
+            /* Let go of the process */
+            ObDereferenceObject(Process);
+
+            /* Protect write in SEH */
+            _SEH2_TRY
+            {
+                /* Return debug port's handle */
+                *(PHANDLE)ProcessInformation = DebugPort;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+            break;
+
+        case ProcessHandleTracing:
+            DPRINT1("Handle tracing Not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessLUIDDeviceMapsEnabled:
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+            
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
+            
+            /* Protect write in SEH */
+            _SEH2_TRY
+            {
+                /* Return FALSE -- we don't support this */
+                *(PULONG)ProcessInformation = FALSE;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+            break;
+
+        case ProcessWx86Information:
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Protect write in SEH */
+            _SEH2_TRY
+            {
+                /* Return if the flag is set */
+                *(PULONG)ProcessInformation = (ULONG)Process->VdmAllowed;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
+            break;
+
+        case ProcessWow64Information:
+
+            /* Set return length */
+            Length = sizeof(ULONG_PTR);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Make sure the process isn't dying */
+            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            {
+                /* Get the WOW64 process structure */
+#ifdef _WIN64
+                Wow64 = Process->Wow64Process;
+#else
+                Wow64 = 0;
+#endif
+                /* Release the lock */
+                ExReleaseRundownProtection(&Process->RundownProtect);
+            }
+            
+            /* Protect write with SEH */
+            _SEH2_TRY
+            {
+                /* Return whether or not we have a debug port */
+                *(PULONG_PTR)ProcessInformation = Wow64;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
+            break;
+            
+        case ProcessExecuteFlags:
+        
+            /* Set return length */
+            Length = sizeof(ULONG);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            if (ProcessHandle != NtCurrentProcess())
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Get the options */
+            Status = MmGetExecuteOptions(&ExecuteOptions);
+            if (NT_SUCCESS(Status))
+            {
+                /* Protect write with SEH */
+                _SEH2_TRY
+                {
+                    /* Return them */
+                    *(PULONG)ProcessInformation = ExecuteOptions;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* Get exception code */
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+            }
+            break;
+
+        case ProcessLdtInformation:
+            DPRINT1("VDM/16-bit not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessWorkingSetWatch:
+            DPRINT1("WS Watch Not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessPooledUsageAndLimits:
+            DPRINT1("Pool limits Not implemented: %lx\n", ProcessInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        /* Not supported by Server 2003 */
         default:
-            DPRINT1("Unsupported or unimplemented: %lx\n", ProcessInformationClass);
+            DPRINT1("Unsupported info class: %lx\n", ProcessInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
@@ -852,7 +1042,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     _SEH2_TRY
     {
         /* Check if caller wanted return length */
-        if (ReturnLength) *ReturnLength = Length;
+        if ((ReturnLength) && (Length)) *ReturnLength = Length;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -882,8 +1072,19 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     HANDLE TokenHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
     PROCESS_PRIORITY_CLASS PriorityClass = {0};
+    PROCESS_FOREGROUND_BACKGROUND Foreground = {0};
     PVOID ExceptionPort;
     ULONG Break;
+    KAFFINITY ValidAffinity, Affinity = 0;
+    KPRIORITY BasePriority = 0;
+    UCHAR MemoryPriority = 0;
+    BOOLEAN DisableBoost = 0;
+    ULONG DefaultHardErrorMode = 0;
+    ULONG DebugFlags = 0, EnableFixup = 0, Boost = 0;
+    ULONG NoExecute = 0, VdmPower = 0;
+    BOOLEAN HasPrivilege;
+    PLIST_ENTRY Next;
+    PETHREAD Thread;
     PAGED_CODE();
 
     /* Verify Information Class validity */
@@ -922,6 +1123,49 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     /* Check what kind of information class this is */
     switch (ProcessInformationClass)
     {
+        case ProcessWx86Information:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Use SEH for capture */
+            _SEH2_TRY
+            {
+                /* Capture the boolean */
+                VdmPower = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Getting VDM powers requires the SeTcbPrivilege */
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+            {
+                /* Bail out */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                DPRINT1("Need TCB privilege\n");
+                break;
+            }
+
+            /* Set or clear the flag */
+            if (VdmPower)
+            {
+                PspSetProcessFlag(Process, PSF_VDM_ALLOWED_BIT);
+            }
+            else
+            {
+                PspClearProcessFlag(Process, PSF_VDM_ALLOWED_BIT);
+            }
+            break;
+
         /* Error/Exception Port */
         case ProcessExceptionPort:
 
@@ -945,6 +1189,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
+
+            /* Setting the error port requires the SeTcbPrivilege */
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+            {
+                /* Can't set the session ID, bail out. */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
 
             /* Get the LPC Port */
             Status = ObReferenceObjectByHandle(PortHandle,
@@ -1008,16 +1260,29 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Enter SEH for direct buffer read */
             _SEH2_TRY
             {
-                /* Update the current mode abd return the previous one */
-                InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
-                                    *(PLONG)ProcessInformation);
+                DefaultHardErrorMode = *(PULONG)ProcessInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
                 Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
             _SEH2_END;
+
+            /* Set the mode */
+            Process->DefaultHardErrorProcessing = DefaultHardErrorMode;
+
+            /* Call Ke for the update */
+            if (DefaultHardErrorMode & SEM_NOALIGNMENTFAULTEXCEPT)
+            {
+                KeSetAutoAlignmentProcess(&Process->Pcb, TRUE);
+            }
+            else
+            {
+                KeSetAutoAlignmentProcess(&Process->Pcb, FALSE);
+            }
+            Status = STATUS_SUCCESS;
             break;
 
         /* Session ID */
@@ -1119,7 +1384,21 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 break;
             }
 
-            /* TODO: Check privileges */
+            if ((PriorityClass.PriorityClass != Process->PriorityClass) &&
+                (PriorityClass.PriorityClass == PROCESS_PRIORITY_CLASS_REALTIME))
+            {
+                /* Check the privilege */
+                HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                                       ProcessHandle,
+                                                       PROCESS_SET_INFORMATION,
+                                                       PreviousMode);
+                if (!HasPrivilege)
+                {
+                    ObDereferenceObject(Process);
+                    DPRINT1("Privilege to change priority to realtime lacking\n");
+                    return STATUS_PRIVILEGE_NOT_HELD;
+                }
+            }
 
             /* Check if we have a job */
             if (Process->Job)
@@ -1132,75 +1411,159 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
             /* Set process priority mode (foreground or background) */
             PsSetProcessPriorityByClass(Process,
-                                        !PriorityClass.Foreground ? PsProcessPriorityBackground :
-                                        PsProcessPriorityForeground);
-
+                                        PriorityClass.Foreground ?
+                                        PsProcessPriorityForeground :
+                                        PsProcessPriorityBackground);
             Status = STATUS_SUCCESS;
             break;
 
-        case ProcessQuotaLimits:
+        case ProcessForegroundInformation:
 
             /* Check buffer length */
-            if (ProcessInformationLength != sizeof(QUOTA_LIMITS))
+            if (ProcessInformationLength != sizeof(PROCESS_FOREGROUND_BACKGROUND))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
-            DPRINT1("Not implemented: ProcessQuotaLimits\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Enter SEH for capture */
+            _SEH2_TRY
+            {
+                /* Capture the caller's buffer */
+                Foreground = *(PPROCESS_FOREGROUND_BACKGROUND)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Return the exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Set process priority mode (foreground or background) */
+            PsSetProcessPriorityByClass(Process,
+                                        Foreground.Foreground ?
+                                        PsProcessPriorityForeground :
+                                        PsProcessPriorityBackground);
+            Status = STATUS_SUCCESS;
             break;
 
         case ProcessBasePriority:
 
-            /* Check buffer length */
+            /* Validate input length */
             if (ProcessInformationLength != sizeof(KPRIORITY))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
-            DPRINT1("Not implemented: ProcessBasePriority\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                BasePriority = *(KPRIORITY*)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Extract the memory priority out of there */
+            if (BasePriority & 0x80000000)
+            {
+                MemoryPriority = MEMORY_PRIORITY_FOREGROUND;
+                BasePriority &= ~0x80000000;
+            }
+            else
+            {
+                MemoryPriority = MEMORY_PRIORITY_BACKGROUND;
+            }
+
+            /* Validate the number */
+            if ((BasePriority > HIGH_PRIORITY) || (BasePriority <= LOW_PRIORITY))
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Check if the new base is higher */
+            if (BasePriority > Process->Pcb.BasePriority)
+            {
+                HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                                       ProcessHandle,
+                                                       PROCESS_SET_INFORMATION,
+                                                       PreviousMode);
+                if (!HasPrivilege)
+                {
+                    ObDereferenceObject(Process);
+                    DPRINT1("Privilege to change priority from %lx to %lx lacking\n", BasePriority, Process->Pcb.BasePriority);
+                    return STATUS_PRIVILEGE_NOT_HELD;
+                }
+            }
+
+            /* Call Ke */
+            KeSetPriorityAndQuantumProcess(&Process->Pcb, BasePriority, 0);
+
+            /* Now set the memory priority */
+            MmSetMemoryPriorityProcess(Process, MemoryPriority);
+            Status = STATUS_SUCCESS;
             break;
 
         case ProcessRaisePriority:
 
-            /* Check buffer length */
+            /* Validate input length */
             if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
-            DPRINT1("Not implemented: ProcessRaisePriority\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case ProcessWx86Information:
-
-            /* Check buffer length */
-            if (ProcessInformationLength != sizeof(HANDLE))
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
             {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
+                Boost = *(PULONG)ProcessInformation;
             }
-
-            DPRINT1("Not implemented: ProcessWx86Information\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case ProcessDebugPort:
-
-            /* Check buffer length */
-            if (ProcessInformationLength != sizeof(HANDLE))
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
+            _SEH2_END;
 
-            DPRINT1("Not implemented: ProcessDebugPort\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Make sure the process isn't dying */
+            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            {
+                /* Lock it */
+                KeEnterCriticalRegion();
+                ExAcquirePushLockShared(&Process->ProcessLock);
+
+                /* Loop the threads */
+                for (Next = Process->ThreadListHead.Flink;
+                     Next != &Process->ThreadListHead;
+                     Next = Next->Flink)
+                {
+                    /* Call Ke for the thread */
+                    Thread = CONTAINING_RECORD(Next, ETHREAD, ThreadListEntry);
+                    KeBoostPriorityThread(&Thread->Tcb, Boost);
+                }
+
+                /* Release the lock and rundown */
+                ExReleasePushLockShared(&Process->ProcessLock);
+                KeLeaveCriticalRegion();
+                ExReleaseRundownProtection(&Process->RundownProtect);
+
+                /* Set success code */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Avoid race conditions */
+                Status = STATUS_PROCESS_IS_TERMINATING;
+            }
             break;
 
         case ProcessBreakOnTermination:
@@ -1225,14 +1588,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
-            
+
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
-            
+
             /* Set or clear the flag */
             if (Break)
             {
@@ -1245,27 +1608,293 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
             break;
 
+        case ProcessAffinityMask:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(KAFFINITY))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                Affinity = *(PKAFFINITY)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Make sure it's valid for the CPUs present */
+            ValidAffinity = Affinity & KeActiveProcessors;
+            if (!Affinity || (ValidAffinity != Affinity))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Check if it's within job affinity limits */
+            if (Process->Job)
+            {
+                /* Not yet implemented */
+                UNIMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            /* Make sure the process isn't dying */
+            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            {
+                /* Lock it */
+                KeEnterCriticalRegion();
+                ExAcquirePushLockShared(&Process->ProcessLock);
+
+                /* Call Ke to do the work */
+                KeSetAffinityProcess(&Process->Pcb, ValidAffinity);
+
+                /* Release the lock and rundown */
+                ExReleasePushLockShared(&Process->ProcessLock);
+                KeLeaveCriticalRegion();
+                ExReleaseRundownProtection(&Process->RundownProtect);
+
+                /* Set success code */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Avoid race conditions */
+                Status = STATUS_PROCESS_IS_TERMINATING;
+            }
+            break;
+
+        /* Priority Boosting status */
+        case ProcessPriorityBoost:
+
+            /* Validate input length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                DisableBoost = *(PBOOLEAN)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Make sure the process isn't dying */
+            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            {
+                /* Lock it */
+                KeEnterCriticalRegion();
+                ExAcquirePushLockShared(&Process->ProcessLock);
+
+                /* Call Ke to do the work */
+                KeSetDisableBoostProcess(&Process->Pcb, DisableBoost);
+
+                /* Loop the threads too */
+                for (Next = Process->ThreadListHead.Flink;
+                     Next != &Process->ThreadListHead;
+                     Next = Next->Flink)
+                {
+                    /* Call Ke for the thread */
+                    Thread = CONTAINING_RECORD(Next, ETHREAD, ThreadListEntry);
+                    KeSetDisableBoostThread(&Thread->Tcb, DisableBoost);
+                }
+
+                /* Release the lock and rundown */
+                ExReleasePushLockShared(&Process->ProcessLock);
+                KeLeaveCriticalRegion();
+                ExReleaseRundownProtection(&Process->RundownProtect);
+
+                /* Set success code */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Avoid race conditions */
+                Status = STATUS_PROCESS_IS_TERMINATING;
+            }
+            break;
+
+        case ProcessDebugFlags:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                DebugFlags = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Set the mode */
+            if (DebugFlags & ~1)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+            }
+            else
+            {
+                if (DebugFlags & 1)
+                {
+                    PspClearProcessFlag(Process, PSF_NO_DEBUG_INHERIT_BIT);
+                }
+                else
+                {
+                    PspSetProcessFlag(Process, PSF_NO_DEBUG_INHERIT_BIT);
+                }
+            }
+
+            /* Done */
+            Status = STATUS_SUCCESS;
+            break;
+
+        case ProcessEnableAlignmentFaultFixup:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                EnableFixup = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Set the mode */
+            if (EnableFixup)
+            {
+                Process->DefaultHardErrorProcessing |= SEM_NOALIGNMENTFAULTEXCEPT;
+            }
+            else
+            {
+                Process->DefaultHardErrorProcessing &= ~SEM_NOALIGNMENTFAULTEXCEPT;
+            }
+
+            /* Call Ke for the update */
+            KeSetAutoAlignmentProcess(&Process->Pcb, FALSE);
+            Status = STATUS_SUCCESS;
+            break;
+            
+        case ProcessUserModeIOPL:
+
+            /* Only TCB can do this */
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode)) 
+            {
+                /* Fail */
+                DPRINT1("Need TCB to set IOPL\n");
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+
+            /* Only supported on x86 */
+#if defined (_X86_)
+            Ke386SetIOPL();
+#else
+            Status = STATUS_NOT_IMPLEMENTED;
+#endif
+            /* Done */
+            break;
+
+        case ProcessExecuteFlags:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            if (ProcessHandle != NtCurrentProcess())
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                NoExecute = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Call Mm for the update */
+            Status = MmSetExecuteOptions(NoExecute);
+            break;
+                
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
         case ProcessIoPortHandlers:
-        case ProcessWorkingSetWatch:
-        case ProcessUserModeIOPL:
-        case ProcessEnableAlignmentFaultFixup:
-        case ProcessAffinityMask:
-            DPRINT1("Not implemented: %lx\n", ProcessInformationClass);
+             DPRINT1("VDM/16-bit Request not implemented: %lx\n", ProcessInformationClass);
+             Status = STATUS_NOT_IMPLEMENTED;
+             break;
+
+        case ProcessQuotaLimits:
+            DPRINT1("Quota Limits not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
-        /* Supposedly these are invalid...!? verify! */
-        case ProcessBasicInformation:
-        case ProcessIoCounters:
-        case ProcessTimes:
-        case ProcessPooledUsageAndLimits:
-        case ProcessHandleCount:
-        case ProcessWow64Information:
+        case ProcessWorkingSetWatch:
+            DPRINT1("WS watch not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessDeviceMap:
+            DPRINT1("Device map not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessHandleTracing:
+            DPRINT1("Handle tracing not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        /* Anything else is invalid */
         default:
-            DPRINT1("Unsupported or unimplemented: %lx\n", ProcessInformationClass);
+            DPRINT1("Invalid Server 2003 Info Class: %lx\n", ProcessInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
@@ -1293,10 +1922,11 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     KAFFINITY Affinity = 0, CombinedAffinity;
     PVOID Address = NULL;
     PEPROCESS Process;
-    ULONG DisableBoost = 0;
-    ULONG IdealProcessor = 0;
+    ULONG_PTR DisableBoost = 0;
+    ULONG_PTR IdealProcessor = 0;
+    ULONG_PTR Break = 0;
     PTEB Teb;
-    ULONG TlsIndex = 0;
+    ULONG_PTR TlsIndex = 0;
     PVOID *ExpansionSlots;
     PETHREAD ProcThread;
     PAGED_CODE();
@@ -1434,6 +2064,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             {
                 /* Get the exception code */
                 Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
             _SEH2_END;
 
@@ -1688,10 +2319,51 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
             /* All done */
             break;
+            
+        case ThreadBreakOnTermination:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                Break = *(PULONG)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Break = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Setting 'break on termination' requires the SeDebugPrivilege */
+            if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+            {
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+
+            /* Set or clear the flag */
+            if (Break)
+            {
+                PspSetCrossThreadFlag(Thread, CT_BREAK_ON_TERMINATION_BIT);
+            }
+            else
+            {
+                PspClearCrossThreadFlag(Thread, CT_BREAK_ON_TERMINATION_BIT);
+            }
+            break;
 
         default:
             /* We don't implement it yet */
-            DPRINT1("Not implemented: %lx\n", ThreadInformationClass);
+            DPRINT1("Not implemented: %d\n", ThreadInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1804,12 +2476,19 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             _SEH2_TRY
             {
                 /* Copy time information from ETHREAD/KTHREAD */
-                ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime *
-                                                   100000LL;
-                ThreadTime->UserTime.QuadPart = Thread->Tcb.UserTime *
-                                                 100000LL;
+                ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime * KeMaximumIncrement;
+                ThreadTime->UserTime.QuadPart = Thread->Tcb.UserTime * KeMaximumIncrement;
                 ThreadTime->CreateTime = Thread->CreateTime;
-                ThreadTime->ExitTime = Thread->ExitTime;
+
+                /* Exit time is in a union and only valid on actual exit! */
+                if (KeReadStateThread(&Thread->Tcb))
+                {
+                    ThreadTime->ExitTime = Thread->ExitTime;
+                }
+                else
+                {
+                    ThreadTime->ExitTime.QuadPart = 0;
+                }
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
