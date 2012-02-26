@@ -64,6 +64,8 @@
     _MmSetPageEntrySectionSegment(S,O,E,__FILE__,__LINE__); \
 	} while (0)
 
+extern MMSESSION MmSession;
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -4939,7 +4941,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     if ((ULONG_PTR)SectionObject & 1)
     {
-        extern PVOID MmSession;
         return MiMapViewInSystemSpace((PVOID)((ULONG_PTR)SectionObject & ~1),
                                       &MmSession,
                                       MappedBase,
