@@ -970,7 +970,6 @@ CHubController::HandleClassOther(
                     break;
            }
 
-            Status = STATUS_SUCCESS;
             break;
         }
         case USB_REQUEST_SET_FEATURE:
