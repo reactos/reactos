@@ -1443,6 +1443,12 @@ MiLocateSubsection(
     IN ULONG_PTR Vpn
 );
 
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(
+    IN PVOID PoolAddress
+);
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of

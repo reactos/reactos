@@ -20,6 +20,8 @@
 
 /* GLOBALS ********************************************************************/
 
+#define POOL_BIG_TABLE_ENTRY_FREE 0x1
+
 typedef struct _POOL_DPC_CONTEXT
 {
     PPOOL_TRACKER_TABLE PoolTrackTable;
@@ -40,6 +42,8 @@ PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
 KSPIN_LOCK ExpTaggedPoolLock;
 ULONG PoolHitTag;
 BOOLEAN ExStopBadTags;
+KSPIN_LOCK ExpLargePoolTableLock;
+LONG ExpPoolBigEntriesInUse;
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -311,6 +315,24 @@ ExpComputeHashForTag(IN ULONG Tag,
     //
     ULONGLONG Result = 40543 * Tag;
     return BucketMask & (Result ^ (Result >> 32));
+}
+
+FORCEINLINE
+ULONG
+ExpComputePartialHashForAddress(IN PVOID BaseAddress)
+{
+    ULONG Result;
+    //
+    // Compute the hash by converting the address into a page number, and then
+    // XORing each nibble with the next one.
+    //
+    // We do *NOT* AND with the bucket mask at this point because big table expansion
+    // might happen. Therefore, the final step of the hash must be performed
+    // while holding the expansion pushlock, and this is why we call this a
+    // "partial" hash only.
+    //
+    Result = (ULONG_PTR)BaseAddress >> PAGE_SHIFT;
+    return (Result >> 24) ^ (Result >> 16) ^ (Result >> 8) ^ Result;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1120,6 +1142,169 @@ ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+ExpAddTagForBigPages(IN PVOID Va,
+                     IN ULONG Key,
+                     IN ULONG NumberOfPages,
+                     IN POOL_TYPE PoolType)
+{
+    ULONG Hash, i = 0;
+    PVOID OldVa;
+    KIRQL OldIrql;
+    SIZE_T TableSize;
+    PPOOL_TRACKER_BIG_PAGES Entry, EntryEnd, EntryStart;
+    ASSERT(((ULONG_PTR)Va & POOL_BIG_TABLE_ENTRY_FREE) == 0);
+    ASSERT(!(PoolType & SESSION_POOL_MASK));
+
+    //
+    // As the table is expandable, these values must only be read after acquiring
+    // the lock to avoid a teared access during an expansion
+    //
+    Hash = ExpComputePartialHashForAddress(Va);
+    KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
+    Hash &= PoolBigPageTableHash;
+    TableSize = PoolBigPageTableSize;
+
+    //
+    // We loop from the current hash bucket to the end of the table, and then
+    // rollover to hash bucket 0 and keep going from there. If we return back
+    // to the beginning, then we attempt expansion at the bottom of the loop
+    //
+    EntryStart = Entry = &PoolBigPageTable[Hash];
+    EntryEnd = &PoolBigPageTable[TableSize];
+    do
+    {
+        //
+        // Make sure that this is a free entry and attempt to atomically make the
+        // entry busy now
+        //
+        OldVa = Entry->Va;
+        if (((ULONG_PTR)OldVa & POOL_BIG_TABLE_ENTRY_FREE) &&
+            (InterlockedCompareExchangePointer(&Entry->Va, Va, OldVa) == OldVa))
+        {
+            //
+            // We now own this entry, write down the size and the pool tag
+            //
+            Entry->Key = Key;
+            Entry->NumberOfPages = NumberOfPages;
+
+            //
+            // Add one more entry to the count, and see if we're getting within
+            // 25% of the table size, at which point we'll do an expansion now
+            // to avoid blocking too hard later on.
+            //
+            // Note that we only do this if it's also been the 16th time that we
+            // keep losing the race or that we are not finding a free entry anymore,
+            // which implies a massive number of concurrent big pool allocations.
+            //
+            InterlockedIncrement(&ExpPoolBigEntriesInUse);
+            if ((i >= 16) && (ExpPoolBigEntriesInUse > (TableSize / 4)))
+            {
+                DPRINT1("Should attempt expansion since we now have %d entries\n",
+                        ExpPoolBigEntriesInUse);
+            }
+
+            //
+            // We have our entry, return
+            //
+            KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+            return TRUE;
+        }
+
+        //
+        // We don't have our entry yet, so keep trying, making the entry list
+        // circular if we reach the last entry. We'll eventually break out of
+        // the loop once we've rolled over and returned back to our original
+        // hash bucket
+        //
+        i++;
+        if (++Entry >= EntryEnd) Entry = &PoolBigPageTable[0];
+    } while (Entry != EntryStart);
+
+    //
+    // This means there's no free hash buckets whatsoever, so we would now have
+    // to attempt expanding the table
+    //
+    DPRINT1("Big pool expansion needed, not implemented!");
+    KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+    return FALSE;
+}
+
+ULONG
+NTAPI
+ExpFindAndRemoveTagBigPages(IN PVOID Va,
+                            OUT PULONG BigPages,
+                            IN POOL_TYPE PoolType)
+{
+    BOOLEAN FirstTry = TRUE;
+    SIZE_T TableSize;
+    KIRQL OldIrql;
+    ULONG PoolTag, Hash;
+    PPOOL_TRACKER_BIG_PAGES Entry;
+    ASSERT(((ULONG_PTR)Va & POOL_BIG_TABLE_ENTRY_FREE) == 0);
+    ASSERT(!(PoolType & SESSION_POOL_MASK));
+
+    //
+    // As the table is expandable, these values must only be read after acquiring
+    // the lock to avoid a teared access during an expansion
+    //
+    Hash = ExpComputePartialHashForAddress(Va);
+    KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
+    Hash &= PoolBigPageTableHash;
+    TableSize = PoolBigPageTableSize;
+
+    //
+    // Loop while trying to find this big page allocation
+    //
+    while (PoolBigPageTable[Hash].Va != Va)
+    {
+        //
+        // Increment the size until we go past the end of the table
+        //
+        if (++Hash >= TableSize)
+        {
+            //
+            // Is this the second time we've tried?
+            //
+            if (!FirstTry)
+            {
+                //
+                // This means it was never inserted into the pool table and it
+                // received the special "BIG" tag -- return that and return 0
+                // so that the code can ask Mm for the page count instead
+                //
+                KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+                *BigPages = 0;
+                return ' GIB';
+            }
+
+            //
+            // The first time this happens, reset the hash index and try again
+            //
+            Hash = 0;
+            FirstTry = FALSE;
+        }
+    }
+
+    //
+    // Now capture all the information we need from the entry, since after we
+    // release the lock, the data can change
+    //
+    Entry = &PoolBigPageTable[Hash];
+    *BigPages = Entry->NumberOfPages;
+    PoolTag = Entry->Key;
+
+    //
+    // Set the free bit, and decrement the number of allocations. Finally, release
+    // the lock and return the tag that was located
+    //
+    InterlockedIncrement((PLONG)&Entry->Va);
+    InterlockedDecrement(&ExpPoolBigEntriesInUse);
+    KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+    return PoolTag;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1169,9 +1354,18 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     if (NumberOfBytes > POOL_MAX_ALLOC)
     {
         //
-        // Then just return the number of pages requested
+        // Allocate pages for it
         //
-        return MiAllocatePoolPages(PoolType, NumberOfBytes);
+        Entry = MiAllocatePoolPages(PoolType, NumberOfBytes);
+        if (!Entry) return NULL;
+        
+        //
+        // Add a tag for the big page allocation and switch to the generic "BIG"
+        // tag if we failed to do so, then insert a tracker for this alloation.
+        //
+        if (!ExpAddTagForBigPages(Entry, Tag, BYTES_TO_PAGES(NumberOfBytes), PoolType)) Tag = ' GIB';
+        ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), PoolType);
+        return Entry;
     }
 
     //
@@ -1465,6 +1659,7 @@ ExFreePoolWithTag(IN PVOID P,
     PPOOL_DESCRIPTOR PoolDesc;
     ULONG Tag;
     BOOLEAN Combined = FALSE;
+    PFN_NUMBER PageCount;
 
     //
     // Check if it was allocated from a special pool
@@ -1479,10 +1674,40 @@ ExFreePoolWithTag(IN PVOID P,
     }
 
     //
-    // Quickly deal with big page allocations
+    // Check if this is a big page allocation
     //
     if (PAGE_ALIGN(P) == P)
     {
+        //
+        // We need to find the tag for it, so first we need to find out what
+        // kind of allocation this was (paged or nonpaged), then we can go
+        // ahead and try finding the tag for it. Remember to get rid of the
+        // PROTECTED_POOL tag if it's found.
+        //
+        // Note that if at insertion time, we failed to add the tag for a big
+        // pool allocation, we used a special tag called 'BIG' to identify the
+        // allocation, and we may get this tag back. In this scenario, we must
+        // manually get the size of the allocation by actually counting through
+        // the PFN database.
+        //
+        PoolType = MmDeterminePoolType(P);
+        Tag = ExpFindAndRemoveTagBigPages(P, &PageCount, PoolType);
+        if (!Tag)
+        {
+            DPRINT1("We do not know the size of this allocation. This is not yet supported\n");
+            ASSERT(Tag == ' GIB');
+            PageCount = 1; // We are going to lie! This might screw up accounting?
+        }
+        else if (Tag & PROTECTED_POOL)
+        {
+            Tag &= ~PROTECTED_POOL;
+        }
+
+        //
+        // We have our tag and our page count, so we can go ahead and remove this
+        // tracker now
+        //
+        ExpRemovePoolTracker(Tag, PageCount << PAGE_SHIFT, PoolType);
         MiFreePoolPages(P);
         return;
     }

@@ -369,6 +369,17 @@ MiInitializeNonPagedPool(VOID)
                            NonPagedPoolExpansion);
 }
 
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(IN PVOID PoolAddress)
+{
+    //
+    // Use a simple bounds check
+    //
+    return (PoolAddress >= MmPagedPoolStart) && (PoolAddress <= MmPagedPoolEnd) ?
+            PagedPool : NonPagedPool;
+}
+
 PVOID
 NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
