@@ -155,6 +155,7 @@ else()
 
     # Compiler specific definitions and macros
     if(MSVC)
+        include(cmake/msvc.cmake)
     else()
         include(cmake/gcc.cmake)
     endif()
