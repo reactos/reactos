@@ -750,23 +750,27 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
-    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
-    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
-    PAGE_ROUND_DOWN(PBaseAddress);
+    /* Now it's for real... assert on the things we don't yet support */
+    ASSERT(ZeroBits == 0);
+    ASSERT((AllocationType & MEM_LARGE_PAGES) == 0);
+    ASSERT((AllocationType & MEM_PHYSICAL) == 0);
+    ASSERT((AllocationType & MEM_WRITE_WATCH) == 0);
+    ASSERT((AllocationType & MEM_TOP_DOWN) == 0);
+    ASSERT((AllocationType & MEM_RESET) == 0);
+    ASSERT(Process->VmTopDown == 0);
 
-
-    /*
-    * Copy on Write is reserved for system use. This case is a certain failure
-    * but there may be other cases...needs more testing
-    */
-    if ((!BaseAddress || (AllocationType & MEM_RESERVE)) &&
-            (Protect & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY)))
+    /* Do not allow COPY_ON_WRITE through this API */
+    if ((Protect & PAGE_WRITECOPY) || (Protect & PAGE_EXECUTE_WRITECOPY))
     {
-        DPRINT1("Copy on write is not supported by VirtualAlloc\n");
+        DPRINT1("Illegal use of CopyOnWrite\n");
         if (Attached) KeUnstackDetachProcess(&ApcState);
         if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
         return STATUS_INVALID_PAGE_PROTECTION;
     }
+    
+    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
+    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
+    PAGE_ROUND_DOWN(PBaseAddress);
 
     Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
     DPRINT("Type %x\n", Type);
@@ -1053,6 +1057,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     KAPC_STATE ApcState;
     BOOLEAN Attached = FALSE;
+    ULONG_PTR StartingAddress, EndingAddress;
+    PMMVAD Vad;
     PAGED_CODE();
 
     /* Only two flags are supported */
@@ -1134,9 +1140,23 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
     BaseAddress = (PVOID)PAGE_ROUND_DOWN((PBaseAddress));
 
-    AddressSpace = &Process->Vm;
-
+    /* Lock address space */
+    AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
+    ASSERT(Process->VmDeleted == 0);
+
+    /* Compute start and end addresses, and locate the VAD */
+    StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
+    EndingAddress = ((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
+    Vad = MiLocateAddress((PVOID)StartingAddress);
+
+    /* This is the kind of VAD we expect right now */
+    ASSERT(Vad);
+    ASSERT(Vad->EndingVpn >= (EndingAddress >> PAGE_SHIFT));
+    ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
+    ASSERT(Vad->u.VadFlags.NoChange == 0);
+    ASSERT(Vad->u.VadFlags.VadType == VadNone);
+    
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
     if (MemoryArea == NULL)
     {

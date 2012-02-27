@@ -159,29 +159,8 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
-                           Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
-                                      Address, PageOp);
+       /* Do not page out virtual memory during ARM3 transition */
+       Status = STATUS_SUCCESS;
    }
    else
    {
