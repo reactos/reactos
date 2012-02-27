@@ -527,9 +527,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
     if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
-        Status = MmProtectAnonMem(AddressSpace, MemoryArea, *BaseAddress,
-            *NumberOfBytesToProtect, NewAccessProtection,
-            OldAccessProtection);
+        Status = STATUS_SUCCESS;
     }
     else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
@@ -775,6 +773,11 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
     AddressSpace = &Process->Vm;
     MmLockAddressSpace(AddressSpace);
+    
+    //
+    // Force PAGE_EXECUTE_READWRITE for everything, for now
+    //
+    Protect = PAGE_EXECUTE_READWRITE;
 
     if (PBaseAddress != 0)
     {
@@ -1247,86 +1250,6 @@ unlock_deref_and_return:
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
     return(Status);
-}
-
-NTSTATUS
-NTAPI
-MmProtectAnonMem(PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MemoryArea,
-    PVOID BaseAddress,
-    SIZE_T Length,
-    ULONG Protect,
-    PULONG OldProtect)
-{
-    PMM_REGION Region;
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG_PTR LengthCount = 0;
-
-    /* Search all Regions in MemoryArea up to Length */
-    /* Every Region up to Length must be committed for success */
-    for (;;)
-    {
-        Region = MmFindRegion(MemoryArea->StartingAddress,
-            &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-            (PVOID)((ULONG_PTR)BaseAddress + LengthCount), NULL);
-
-        /* If a Region was found and it is committed */
-        if ((Region) && (Region->Type == MEM_COMMIT))
-        {
-            LengthCount += Region->Length;
-            if (Length <= LengthCount) break;
-            continue;
-        }
-        /* If Region was found and it is not commited */
-        else if (Region)
-        {
-            Status = STATUS_NOT_COMMITTED;
-            break;
-        }
-        /* If no Region was found at all */
-        else if (LengthCount == 0)
-        {
-            Status = STATUS_INVALID_ADDRESS;
-            break;
-        }
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        *OldProtect = Region->Protect;
-        Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
-            &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-            BaseAddress, Length, Region->Type, Protect,
-            MmModifyAttributes);
-    }
-
-    return (Status);
-}
-
-NTSTATUS NTAPI
-MmQueryAnonMem(PMEMORY_AREA MemoryArea,
-    PVOID Address,
-    PMEMORY_BASIC_INFORMATION Info,
-    PSIZE_T ResultLength)
-{
-    PMM_REGION Region;
-    PVOID RegionBase = NULL;
-
-    Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
-
-    Region = MmFindRegion(MemoryArea->StartingAddress,
-        &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-        Address, &RegionBase);
-    Info->BaseAddress = RegionBase;
-    Info->AllocationBase = MemoryArea->StartingAddress;
-    Info->AllocationProtect = MemoryArea->Protect;
-    Info->RegionSize = Region->Length;
-    Info->State = Region->Type;
-    Info->Protect = Region->Protect;
-    Info->Type = MEM_PRIVATE;
-
-    *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-    return(STATUS_SUCCESS);
 }
 
 /* EOF */
