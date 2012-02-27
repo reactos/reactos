@@ -76,11 +76,19 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     ASSERT(Vad->u.VadFlags.VadType == VadNone);
 
     /* Check if it's a section, or just an allocation */
-    if (Vad->u.VadFlags.PrivateMemory == TRUE)
+    if (Vad->u.VadFlags.PrivateMemory)
     {
         /* This must be a TEB/PEB VAD */
-        ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
-        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
+        if (Vad->u.VadFlags.MemCommit)
+        {
+            /* It's committed, so return the VAD protection */
+            *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
+        }
+        else
+        {
+            /* It has not yet been committed, so return no access */
+            *ProtectCode = MM_NOACCESS;
+        }
         return NULL;
     }
     else
@@ -349,7 +357,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     // It's all good now
     //
-    DPRINT("Paged pool page has now been paged in\n");
+    DPRINT("Demand zero page has now been paged in\n");
     return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
@@ -679,7 +687,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     PMMVAD Vad;
     PFN_NUMBER PageFrameIndex;
     ULONG Color;
-
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     /* Check for page fault on high IRQL */
@@ -887,15 +894,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     ASSERT(PointerPde->u.Hard.LargePage == 0);
 #endif
 
-    /* Check if this address range belongs to a valid allocation (VAD) */
-    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-    if (ProtectionCode == MM_NOACCESS)
-    {
-        /* This is a bogus VA */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-        return STATUS_ACCESS_VIOLATION;
-    }
-
 #if (_MI_PAGING_LEVELS == 4)
     /* Check if the PXE is valid */
     if (PointerPxe->u.Hard.Valid == 0)
@@ -966,7 +964,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
     {
         /* Resolve the fault */
-        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
         MiResolveDemandZeroFault(Address,
                                  (ULONG)PointerPte->u.Soft.Protection,
                                  CurrentProcess,
@@ -979,6 +976,15 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     /* Make sure it's not a prototype PTE */
     ASSERT(TempPte.u.Soft.Prototype == 0);
+    
+    /* Check if this address range belongs to a valid allocation (VAD) */
+    ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    if (ProtectionCode == MM_NOACCESS)
+    {
+        /* This is a bogus VA */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return STATUS_ACCESS_VIOLATION;
+    }
 
     /* Check for non-demand zero PTE */
     if (TempPte.u.Long != 0)
