@@ -159,7 +159,7 @@ USBSTOR_HandleTransferError(
     pCDB = (PCDB)Request->Cdb;
     ASSERT(pCDB);
 
-    if (Status != STATUS_SUCCESS)
+    if (Status != STATUS_SUCCESS || Context->RetryCount >= 1)
     {
         //
         // Complete the master IRP
