@@ -1149,6 +1149,12 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
     EndingAddress = ((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
     Vad = MiLocateAddress((PVOID)StartingAddress);
+    if (!Vad)
+    {
+        DPRINT1("Unable to VAD for address 0x%p\n", BaseAddress);
+        Status = STATUS_UNABLE_TO_FREE_VM;
+        goto unlock_deref_and_return;
+    }
 
     /* This is the kind of VAD we expect right now */
     ASSERT(Vad);
