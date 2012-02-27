@@ -147,9 +147,14 @@ else()
     # Activate language support for resource files
     enable_language(RC)
 
+    # Localization definitions
+    include(cmake/localization.cmake)
+    set(I18N_DEFS "")
+    # This will set I18N_DEFS for later use
+    set_i18n_language(${I18N_LANG})
+
     # Compiler specific definitions and macros
     if(MSVC)
-        include(cmake/msvc.cmake)
     else()
         include(cmake/gcc.cmake)
     endif()

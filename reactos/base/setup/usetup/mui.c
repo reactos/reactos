@@ -63,6 +63,22 @@ FindLanguageIndex(VOID)
     return 0;
 }
 
+BOOLEAN
+IsLanguageAvailable(PWCHAR LanguageId)
+{
+    ULONG lngIndex = 0;
+
+    do
+    {
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , LanguageId) == 0)
+            return TRUE;
+
+        lngIndex++;
+    }while (LanguageList[lngIndex].MuiPages != NULL);
+
+    return FALSE;
+}
+
 
 static
 const MUI_ENTRY *

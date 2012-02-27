@@ -24,29 +24,75 @@
 
 #include "version.rc"
 
-#include "mpr_Bg.rc"
-#include "mpr_Cs.rc"
-#include "mpr_Da.rc"
-#include "mpr_En.rc"
-#include "mpr_Es.rc"
-#include "mpr_Hu.rc"
-#include "mpr_It.rc"
-#include "mpr_Ko.rc"
-#include "mpr_Nl.rc"
-#include "mpr_No.rc"
-#include "mpr_Pl.rc"
-#include "mpr_Sv.rc"
-#include "mpr_Tr.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "mpr_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "mpr_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "mpr_Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "mpr_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "mpr_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "mpr_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "mpr_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "mpr_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "mpr_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "mpr_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "mpr_Pl.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "mpr_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "mpr_Tr.rc"
+#endif
 
 /* UTF-8 */
-#include "mpr_De.rc"
-#include "mpr_Fr.rc"
-#include "mpr_Ja.rc"
-#include "mpr_Lt.rc"
-#include "mpr_Pt.rc"
-#include "mpr_Ro.rc"
-#include "mpr_Ru.rc"
-#include "mpr_Si.rc"
-#include "mpr_Uk.rc"
-#include "mpr_Zh.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "mpr_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "mpr_Fr.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "mpr_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "mpr_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "mpr_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "mpr_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "mpr_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "mpr_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "mpr_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "mpr_Zh.rc"
+#endif
 

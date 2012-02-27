@@ -1,4 +1,5 @@
 
+add_definitions(${I18N_DEFS})
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${REACTOS_SOURCE_DIR}/lib/newinflib

@@ -28,25 +28,59 @@
 #include "winnls.h"
 
 /* Add your language specific defines here */
-#include "winmm_Br.rc"
-#include "winmm_Cs.rc"
-#include "winmm_De.rc"
-#include "winmm_En.rc"
-#include "winmm_Es.rc"
-#include "winmm_Fr.rc"
-#include "winmm_Id.rc"
-#include "winmm_It.rc"
+#ifdef LANGUAGE_PT_BR
+    #include "winmm_Br.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "winmm_Cs.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "winmm_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "winmm_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "winmm_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "winmm_Fr.rc"
+#endif
+#ifdef LANGUAGE_ID_ID
+    #include "winmm_Id.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "winmm_It.rc"
+#endif
 /* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
-#include "winmm_Nl.rc"
-#include "winmm_No.rc"
-#include "winmm_Pl.rc"
-#include "winmm_Pt.rc"
-#include "winmm_Ro.rc"
-#include "winmm_Ru.rc"
-#include "winmm_Si.rc"
-#include "winmm_Sk.rc"
+#ifdef LANGUAGE_NL_NL
+    #include "winmm_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "winmm_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "winmm_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "winmm_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "winmm_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "winmm_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "winmm_Si.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "winmm_Sk.rc"
+#endif
 //#include "winmm_Hu.rc"
-#include "winmm_Uk.rc"
+#ifdef LANGUAGE_UK_UA
+    #include "winmm_Uk.rc"
+#endif
 
 /* do not add NLS specific stuff below that line */
 
