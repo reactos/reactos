@@ -335,7 +335,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         MmSetSavedSwapEntryPage(Page, SwapEntry);
-        
+
 #if (_MI_PAGING_LEVELS == 2)
         /* PTE was already "created", no need to reference PDE */
         refPde = FALSE;
@@ -561,13 +561,20 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     IN ULONG Protect)
 {
     PEPROCESS Process;
+#if 1
     MEMORY_AREA* MemoryArea;
-    ULONG_PTR MemoryAreaLength;
+    ULONG_PTR MemoryAreaLength, EndingAddress;
     ULONG Type;
-    NTSTATUS Status;
-    PMMSUPPORT AddressSpace;
     PVOID BaseAddress;
     ULONG RegionSize;
+#else
+    PFN_NUMBER PageCount;
+    PETHREAD CurrentThread = PsGetCurrentThread();
+    PMMVAD Vad;
+    ULONG_PTR StartingAddress, EndingAddress;
+#endif
+    NTSTATUS Status;
+    PMMSUPPORT AddressSpace;
     PVOID PBaseAddress;
     ULONG_PTR PRegionSize;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -576,7 +583,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     KAPC_STATE ApcState;
     ULONG ProtectionMask;
     BOOLEAN Attached = FALSE;
-    ULONG_PTR EndingAddress;
     BoundaryAddressMultiple.QuadPart = 0;
     PAGED_CODE();
 
@@ -767,7 +773,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
         return STATUS_INVALID_PAGE_PROTECTION;
     }
-    
+
+#if 1
     BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
     RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
     PAGE_ROUND_DOWN(PBaseAddress);
@@ -777,7 +784,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
     AddressSpace = &Process->Vm;
     MmLockAddressSpace(AddressSpace);
-    
+
     //
     // Force PAGE_EXECUTE_READWRITE for everything, for now
     //
@@ -907,8 +914,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
         (ULONG_PTR)MemoryArea->StartingAddress;
     EndingAddress = ((ULONG_PTR)MemoryArea->StartingAddress + RegionSize - 1) | (PAGE_SIZE - 1);
-    RegionSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1; 
-    
+    RegionSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress + 1;
+
     MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
         MemoryAreaLength, Type, Protect);
 
@@ -928,6 +935,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
 
     return(STATUS_SUCCESS);
+#endif
 }
 #endif // __USE_ARM3__
 
@@ -1047,18 +1055,23 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 * RETURNS: Status
 */
 {
+#if 1
     MEMORY_AREA* MemoryArea;
+    PVOID BaseAddress = NULL, PBaseAddress;
+    SIZE_T RegionSize = 0, PRegionSize;
+#else
+    ULONG PRegionSize;
+    PVOID PBaseAddress;
+#endif
+    ULONG_PTR StartingAddress, EndingAddress;
+    PMMVAD Vad;
     NTSTATUS Status;
     PEPROCESS Process;
     PMMSUPPORT AddressSpace;
-    PVOID BaseAddress = NULL, PBaseAddress;
-    SIZE_T RegionSize = 0, PRegionSize;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     KAPC_STATE ApcState;
     BOOLEAN Attached = FALSE;
-    ULONG_PTR StartingAddress, EndingAddress;
-    PMMVAD Vad;
     PAGED_CODE();
 
     /* Only two flags are supported */
@@ -1138,8 +1151,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
-    BaseAddress = (PVOID)PAGE_ROUND_DOWN((PBaseAddress));
-
     /* Lock address space */
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
@@ -1151,9 +1162,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     Vad = MiLocateAddress((PVOID)StartingAddress);
     if (!Vad)
     {
-        DPRINT1("Unable to VAD for address 0x%p\n", BaseAddress);
+        DPRINT1("Unable to VAD for address 0x%p\n", StartingAddress);
         Status = STATUS_UNABLE_TO_FREE_VM;
-        goto unlock_deref_and_return;
+        goto FinalPath;
     }
 
     /* This is the kind of VAD we expect right now */
@@ -1162,7 +1173,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
     ASSERT(Vad->u.VadFlags.NoChange == 0);
     ASSERT(Vad->u.VadFlags.VadType == VadNone);
-    
+
+#if 1
+    BaseAddress = (PVOID)PAGE_ROUND_DOWN((PBaseAddress));
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
     if (MemoryArea == NULL)
     {
@@ -1252,6 +1265,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         goto unlock_deref_and_return;
     }
 
+FinalPath:
 unlock_deref_and_return:
     MmUnlockAddressSpace(AddressSpace);
 
@@ -1276,6 +1290,7 @@ unlock_deref_and_return:
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
     return(Status);
+#endif
 }
 
 /* EOF */
