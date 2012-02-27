@@ -40,10 +40,12 @@ SIZE_T PoolBigPageTableSize, PoolBigPageTableHash;
 PPOOL_TRACKER_TABLE PoolTrackTable;
 PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
 KSPIN_LOCK ExpTaggedPoolLock;
-ULONG PoolHitTag;
+ULONG PoolHitTag = 'ht  ';
 BOOLEAN ExStopBadTags;
 KSPIN_LOCK ExpLargePoolTableLock;
 LONG ExpPoolBigEntriesInUse;
+ULONG ExpPoolFlags;
+ULONG ExPoolFailures;
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -298,6 +300,31 @@ ExpCheckPoolBlocks(IN PVOID Block)
     {
         /* Otherwise, the blocks are messed up */
         KeBugCheckEx(BAD_POOL_HEADER, 10, (ULONG_PTR)Block, __LINE__, (ULONG_PTR)Entry);
+    }
+}
+
+FORCEINLINE
+VOID
+ExpCheckPoolIrqlLevel(IN POOL_TYPE PoolType,
+                      IN ULONG NumberOfBytes,
+                      IN PVOID Entry)
+{
+    //
+    // Validate IRQL: It must be APC_LEVEL or lower for Paged Pool, and it must
+    // be DISPATCH_LEVEL or lower for Non Paged Pool
+    //
+    if (((PoolType & BASE_POOL_TYPE_MASK) == PagedPool) ?
+        (KeGetCurrentIrql() > APC_LEVEL) :
+        (KeGetCurrentIrql() > DISPATCH_LEVEL))
+    {
+        //
+        // Take the system down
+        //
+        KeBugCheckEx(BAD_POOL_CALLER,
+                     !Entry ? POOL_ALLOC_IRQL_INVALID : POOL_FREE_IRQL_INVALID,
+                     KeGetCurrentIrql(),
+                     PoolType,
+                     !Entry ? NumberOfBytes : (ULONG_PTR)Entry);
     }
 }
 
@@ -938,6 +965,7 @@ InitializePool(IN POOL_TYPE PoolType,
         //
         PoolVector[PagedPool] = Descriptor;
         ExpPagedPoolMutex = (PKGUARDED_MUTEX)(Descriptor + 1);
+        ExpPagedPoolDescriptor[0] = Descriptor;
         KeInitializeGuardedMutex(ExpPagedPoolMutex);
         ExInitializePoolDescriptor(Descriptor,
                                    PagedPool,
@@ -1305,6 +1333,70 @@ ExpFindAndRemoveTagBigPages(IN PVOID Va,
     return PoolTag;
 }
 
+VOID
+NTAPI
+ExQueryPoolUsage(OUT PULONG PagedPoolPages,
+                 OUT PULONG NonPagedPoolPages,
+                 OUT PULONG PagedPoolAllocs,
+                 OUT PULONG PagedPoolFrees,
+                 OUT PULONG PagedPoolLookasideHits,
+                 OUT PULONG NonPagedPoolAllocs,
+                 OUT PULONG NonPagedPoolFrees,
+                 OUT PULONG NonPagedPoolLookasideHits)
+{
+    ULONG i;
+    PPOOL_DESCRIPTOR PoolDesc;
+    
+    //
+    // Assume all failures
+    //
+    *PagedPoolPages = 0;
+    *PagedPoolAllocs = 0;
+    *PagedPoolFrees = 0;
+
+    //
+    // Tally up the totals for all the apged pool
+    //
+    for (i = 0; i < ExpNumberOfPagedPools + 1; i++)
+    {
+        PoolDesc = ExpPagedPoolDescriptor[i];
+        *PagedPoolPages += PoolDesc->TotalPages + PoolDesc->TotalBigPages;
+        *PagedPoolAllocs += PoolDesc->RunningAllocs;
+        *PagedPoolFrees += PoolDesc->RunningDeAllocs;
+    }
+
+    //
+    // The first non-paged pool has a hardcoded well-known descriptor name
+    //
+    PoolDesc = &NonPagedPoolDescriptor;
+    *NonPagedPoolPages = PoolDesc->TotalPages + PoolDesc->TotalBigPages;
+    *NonPagedPoolAllocs = PoolDesc->RunningAllocs;
+    *NonPagedPoolFrees = PoolDesc->RunningDeAllocs;
+
+    //
+    // If the system has more than one non-paged pool, copy the other descriptor
+    // totals as well
+    //
+#if 0
+    if (ExpNumberOfNonPagedPools > 1)
+    {
+        for (i = 0; i < ExpNumberOfNonPagedPools; i++)
+        {
+            PoolDesc = ExpNonPagedPoolDescriptor[i];
+            *NonPagedPoolPages += PoolDesc->TotalPages + PoolDesc->TotalBigPages;
+            *NonPagedPoolAllocs += PoolDesc->RunningAllocs;
+            *NonPagedPoolFrees += PoolDesc->RunningDeAllocs;
+        }
+    }
+#endif
+
+    //
+    // FIXME: Not yet supported
+    //
+    *NonPagedPoolLookasideHits += 0;
+    *PagedPoolLookasideHits += 0;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1321,6 +1413,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
     KIRQL OldIrql;
     USHORT BlockSize, i;
+    ULONG OriginalType;
 
     //
     // Some sanity checks
@@ -1328,25 +1421,53 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ASSERT(Tag != 0);
     ASSERT(Tag != ' GIB');
     ASSERT(NumberOfBytes != 0);
+    ExpCheckPoolIrqlLevel(PoolType, NumberOfBytes, NULL);
+
+    //
+    // Not supported in ReactOS
+    //
+    ASSERT(!(PoolType & SESSION_POOL_MASK));
+
+    //
+    // Check if verifier or special pool is enabled
+    //
+    if (ExpPoolFlags & (POOL_FLAG_VERIFIER | POOL_FLAG_SPECIAL_POOL))
+    {
+        //
+        // For verifier, we should call the verification routine
+        //
+        if (ExpPoolFlags & POOL_FLAG_VERIFIER)
+        {
+            DPRINT1("Driver Verifier is not yet supported\n");
+        }
+
+        //
+        // For special pool, we check if this is a suitable allocation and do
+        // the special allocation if needed
+        //
+        if (ExpPoolFlags & POOL_FLAG_SPECIAL_POOL)
+        {
+            //
+            // Check if this is a special pool allocation
+            //
+            if (MmUseSpecialPool(NumberOfBytes, Tag))
+            {
+                //
+                // Try to allocate using special pool
+                //
+                Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
+                if (Entry) return Entry;
+            }
+        }
+    }
 
     //
     // Get the pool type and its corresponding vector for this request
     //
+    OriginalType = PoolType;
     PoolType = PoolType & BASE_POOL_TYPE_MASK;
     PoolDesc = PoolVector[PoolType];
     ASSERT(PoolDesc != NULL);
-
-    //
-    // Check if this is a special pool allocation
-    //
-    if (MmUseSpecialPool(NumberOfBytes, Tag))
-    {
-        //
-        // Try to allocate using special pool
-        //
-        Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
-        if (Entry) return Entry;
-    }
 
     //
     // Check if this is a big page allocation
@@ -1356,15 +1477,68 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Allocate pages for it
         //
-        Entry = MiAllocatePoolPages(PoolType, NumberOfBytes);
-        if (!Entry) return NULL;
-        
+        Entry = MiAllocatePoolPages(OriginalType, NumberOfBytes);
+        if (!Entry)
+        {
+            //
+            // Must succeed pool is deprecated, but still supported. These allocation
+            // failures must cause an immediate bugcheck
+            //
+            if (OriginalType & MUST_SUCCEED_POOL_MASK)
+            {
+                KeBugCheckEx(MUST_SUCCEED_POOL_EMPTY,
+                             NumberOfBytes,
+                             NonPagedPoolDescriptor.TotalPages,
+                             NonPagedPoolDescriptor.TotalBigPages,
+                             0);
+            }
+
+            //
+            // Internal debugging
+            //
+            ExPoolFailures++;
+
+            //
+            // This flag requests printing failures, and can also further specify
+            // breaking on failures
+            //
+            if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
+            {
+                DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+                        NumberOfBytes,
+                        OriginalType);
+                if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();
+            }
+
+            //
+            // Finally, this flag requests an exception, which we are more than
+            // happy to raise!
+            //
+            if (OriginalType & POOL_RAISE_IF_ALLOCATION_FAILURE)
+            {
+                ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+            }
+        }
+
+        //
+        // Increment required counters
+        //
+        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages, BYTES_TO_PAGES(NumberOfBytes));
+        InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, NumberOfBytes);
+        InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
+
         //
         // Add a tag for the big page allocation and switch to the generic "BIG"
         // tag if we failed to do so, then insert a tracker for this alloation.
         //
-        if (!ExpAddTagForBigPages(Entry, Tag, BYTES_TO_PAGES(NumberOfBytes), PoolType)) Tag = ' GIB';
-        ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), PoolType);
+        if (!ExpAddTagForBigPages(Entry,
+                                  Tag,
+                                  BYTES_TO_PAGES(NumberOfBytes),
+                                  OriginalType))
+        {
+            Tag = ' GIB';
+        }
+        ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), OriginalType);
         return Entry;
     }
 
@@ -1550,11 +1724,17 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             ExUnlockPool(PoolDesc, OldIrql);
 
             //
+            // Increment required counters
+            //
+            InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, Entry->BlockSize * POOL_BLOCK_SIZE);
+            InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
+
+            //
             // Track this allocation
             //
             ExpInsertPoolTracker(Tag,
                                  Entry->BlockSize * POOL_BLOCK_SIZE,
-                                 PoolType);
+                                 OriginalType);
 
             //
             // Return the pool allocation
@@ -1570,8 +1750,56 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // There were no free entries left, so we have to allocate a new fresh page
     //
     Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
-    if (Entry == NULL) return NULL;
+    if (!Entry)
+    {
+        //
+        // Must succeed pool is deprecated, but still supported. These allocation
+        // failures must cause an immediate bugcheck
+        //
+        if (OriginalType & MUST_SUCCEED_POOL_MASK)
+        {
+            KeBugCheckEx(MUST_SUCCEED_POOL_EMPTY,
+                         PAGE_SIZE,
+                         NonPagedPoolDescriptor.TotalPages,
+                         NonPagedPoolDescriptor.TotalBigPages,
+                         0);
+        }
 
+        //
+        // Internal debugging
+        //
+        ExPoolFailures++;
+
+        //
+        // This flag requests printing failures, and can also further specify
+        // breaking on failures
+        //
+        if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
+        {
+            DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+                    NumberOfBytes,
+                    OriginalType);
+            if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();
+        }
+
+        //
+        // Finally, this flag requests an exception, which we are more than
+        // happy to raise!
+        //
+        if (OriginalType & POOL_RAISE_IF_ALLOCATION_FAILURE)
+        {
+            ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Return NULL to the caller in all other cases
+        //
+        return NULL;
+    }
+
+    //
+    // Setup the entry data
+    //
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
     Entry->PoolType = PoolType + 1;
@@ -1587,6 +1815,12 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     FragmentEntry->Ulong1 = 0;
     FragmentEntry->BlockSize = BlockSize;
     FragmentEntry->PreviousSize = i;
+
+    //
+    // Increment required counters
+    //
+    InterlockedIncrement((PLONG)&PoolDesc->TotalPages);
+    InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, Entry->BlockSize * POOL_BLOCK_SIZE);
 
     //
     // Now check if enough free bytes remained for us to have a "full" entry,
@@ -1614,10 +1848,18 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         ExpCheckPoolBlocks(Entry);
         ExUnlockPool(PoolDesc, OldIrql);
     }
+    else
+    {
+        //
+        // Simply do a sanity check
+        //
+        ExpCheckPoolBlocks(Entry);
+    }
 
     //
-    // Track this allocation
+    // Increment performance counters and track this allocation
     //
+    InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
     ExpInsertPoolTracker(Tag,
                          Entry->BlockSize * POOL_BLOCK_SIZE,
                          PoolType);
@@ -1659,18 +1901,67 @@ ExFreePoolWithTag(IN PVOID P,
     PPOOL_DESCRIPTOR PoolDesc;
     ULONG Tag;
     BOOLEAN Combined = FALSE;
-    PFN_NUMBER PageCount;
+    PFN_NUMBER PageCount, RealPageCount;
 
     //
-    // Check if it was allocated from a special pool
+    // Check if any of the debug flags are enabled
     //
-    if (MmIsSpecialPoolAddress(P))
+    if (ExpPoolFlags & (POOL_FLAG_CHECK_TIMERS |
+                        POOL_FLAG_CHECK_WORKERS |
+                        POOL_FLAG_CHECK_RESOURCES |
+                        POOL_FLAG_VERIFIER |
+                        POOL_FLAG_CHECK_DEADLOCK |
+                        POOL_FLAG_SPECIAL_POOL))
     {
         //
-        // It is, so handle it via special pool free routine
+        // Check if special pool is enabled
         //
-        MmFreeSpecialPool(P);
-        return;
+        if (ExpPoolFlags & POOL_FLAG_SPECIAL_POOL)
+        {
+            //
+            // Check if it was allocated from a special pool
+            //
+            if (MmIsSpecialPoolAddress(P))
+            {
+                //
+                // Was deadlock verification also enabled? We can do some extra
+                // checks at this point
+                //
+                if (ExpPoolFlags & POOL_FLAG_CHECK_DEADLOCK)
+                {
+                    DPRINT1("Verifier not yet supported\n");
+                }
+
+                //
+                // It is, so handle it via special pool free routine
+                //
+                MmFreeSpecialPool(P);
+                return;
+            }
+        }
+
+        //
+        // For non-big page allocations, we'll do a bunch of checks in here
+        //
+        if (PAGE_ALIGN(P) != P)
+        {
+            //
+            // Get the entry for this pool allocation
+            // The pointer math here may look wrong or confusing, but it is quite right
+            //
+            Entry = P;
+            Entry--;
+
+            //
+            // Get the pool type
+            //
+            PoolType = (Entry->PoolType - 1) & BASE_POOL_TYPE_MASK;
+
+            //
+            // FIXME: Many other debugging checks go here
+            //
+            ExpCheckPoolIrqlLevel(PoolType, 0, P);
+        }
     }
 
     //
@@ -1691,6 +1982,7 @@ ExFreePoolWithTag(IN PVOID P,
         // the PFN database.
         //
         PoolType = MmDeterminePoolType(P);
+        ExpCheckPoolIrqlLevel(PoolType, 0, P);
         Tag = ExpFindAndRemoveTagBigPages(P, &PageCount, PoolType);
         if (!Tag)
         {
@@ -1708,7 +2000,42 @@ ExFreePoolWithTag(IN PVOID P,
         // tracker now
         //
         ExpRemovePoolTracker(Tag, PageCount << PAGE_SHIFT, PoolType);
-        MiFreePoolPages(P);
+
+        //
+        // Check if any of the debug flags are enabled
+        //
+        if (ExpPoolFlags & (POOL_FLAG_CHECK_TIMERS |
+                            POOL_FLAG_CHECK_WORKERS |
+                            POOL_FLAG_CHECK_RESOURCES |
+                            POOL_FLAG_CHECK_DEADLOCK))
+        {
+            //
+            // Was deadlock verification also enabled? We can do some extra
+            // checks at this point
+            //
+            if (ExpPoolFlags & POOL_FLAG_CHECK_DEADLOCK)
+            {
+                DPRINT1("Verifier not yet supported\n");
+            }
+
+            //
+            // FIXME: Many debugging checks go here
+            //
+        }
+
+        //
+        // Update counters
+        //
+        PoolDesc = PoolVector[PoolType];
+        InterlockedIncrement((PLONG)&PoolDesc->RunningDeAllocs);
+        InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, -PageCount << PAGE_SHIFT);
+
+        //
+        // Do the real free now and update the last counter with the big page count
+        //
+        RealPageCount = MiFreePoolPages(P);
+        ASSERT(RealPageCount == PageCount);
+        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages, -RealPageCount);
         return;
     }
 
@@ -1728,6 +2055,11 @@ ExFreePoolWithTag(IN PVOID P,
     PoolDesc = PoolVector[PoolType];
 
     //
+    // Make sure that the IRQL makes sense
+    //
+    ExpCheckPoolIrqlLevel(PoolType, 0, P);
+
+    //
     // Get the pool tag and get rid of the PROTECTED_POOL flag
     //
     Tag = Entry->PoolTag;
@@ -1744,6 +2076,12 @@ ExFreePoolWithTag(IN PVOID P,
     // Get the pointer to the next entry
     //
     NextEntry = POOL_BLOCK(Entry, BlockSize);
+
+    //
+    // Update performance counters
+    //
+    InterlockedIncrement((PLONG)&PoolDesc->RunningDeAllocs);
+    InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, -BlockSize * sizeof(POOL_BLOCK_SIZE));
 
     //
     // Acquire the pool lock
@@ -1854,9 +2192,11 @@ ExFreePoolWithTag(IN PVOID P,
         (PAGE_ALIGN(POOL_NEXT_BLOCK(Entry)) == POOL_NEXT_BLOCK(Entry)))
     {
         //
-        // In this case, release the pool lock, and free the page
+        // In this case, release the pool lock, update the performance counter,
+        // and free the page
         //
         ExUnlockPool(PoolDesc, OldIrql);
+        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalPages, -1);
         MiFreePoolPages(Entry);
         return;
     }

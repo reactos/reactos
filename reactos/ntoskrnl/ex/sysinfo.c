@@ -456,7 +456,17 @@ static NTSTATUS QSI_USE(n) (PVOID Buffer, ULONG Size, PULONG ReqSize)
 #define SSI_DEF(n) \
 static NTSTATUS SSI_USE(n) (PVOID Buffer, ULONG Size)
 
-
+VOID
+NTAPI
+ExQueryPoolUsage(OUT PULONG PagedPoolPages,
+                 OUT PULONG NonPagedPoolPages,
+                 OUT PULONG PagedPoolAllocs,
+                 OUT PULONG PagedPoolFrees,
+                 OUT PULONG PagedPoolLookasideHits,
+                 OUT PULONG NonPagedPoolAllocs,
+                 OUT PULONG NonPagedPoolFrees,
+                 OUT PULONG NonPagedPoolLookasideHits);
+    
 /* Class 0 - Basic Information */
 QSI_DEF(SystemBasicInformation)
 {
@@ -571,21 +581,27 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->MappedPagesWriteCount = 0; /* FIXME */
     Spi->MappedWriteIoCount = 0; /* FIXME */
 
-    Spi->PagedPoolPages = 0; /* FIXME */
-    Spi->PagedPoolAllocs = 0; /* FIXME */
-    Spi->PagedPoolFrees = 0; /* FIXME */
-    Spi->NonPagedPoolPages = 0; /* FIXME */
-    Spi->NonPagedPoolAllocs = 0; /* FIXME */
-    Spi->NonPagedPoolFrees = 0; /* FIXME */
-
+    Spi->PagedPoolPages = 0;
+    Spi->NonPagedPoolPages = 0;
+    Spi->PagedPoolAllocs = 0;
+    Spi->PagedPoolFrees = 0;
+    Spi->PagedPoolLookasideHits = 0;
+    Spi->NonPagedPoolAllocs = 0;
+    Spi->NonPagedPoolFrees = 0;
+    Spi->NonPagedPoolLookasideHits = 0;
+    ExQueryPoolUsage(&Spi->PagedPoolPages,
+                     &Spi->NonPagedPoolPages,
+                     &Spi->PagedPoolAllocs,
+                     &Spi->PagedPoolFrees,
+                     &Spi->PagedPoolLookasideHits,
+                     &Spi->NonPagedPoolAllocs,
+                     &Spi->NonPagedPoolFrees,
+                     &Spi->NonPagedPoolLookasideHits);
     Spi->FreeSystemPtes = 0; /* FIXME */
 
     Spi->ResidentSystemCodePage = 0; /* FIXME */
 
     Spi->TotalSystemDriverPages = 0; /* FIXME */
-    Spi->TotalSystemCodePages = 0; /* FIXME */
-    Spi->NonPagedPoolLookasideHits = 0; /* FIXME */
-    Spi->PagedPoolLookasideHits = 0; /* FIXME */
     Spi->Spare3Count = 0; /* FIXME */
 
     Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
