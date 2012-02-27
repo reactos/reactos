@@ -506,10 +506,10 @@ CheckUnattendedSetup(VOID)
 
     UnattendDestinationPartitionNumber = IntValue;
 
-    /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    /* Search for 'InstallationDirectory' in the 'Unattend' section */
+    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SetupFindFirstLine() failed for key 'InstallationDirectory'\n");
         SetupCloseInfFile(UnattendInf);
         return;
     }
@@ -2594,8 +2594,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     WCHAR InstallDir[51];
-    PWCHAR DefaultPath;
-    INFCONTEXT Context;
     ULONG Length;
 
     if (PartitionList == NULL ||
@@ -2609,22 +2607,10 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
-    /* Search for 'DefaultPath' in the 'SetupData' section */
-    if (!SetupFindFirstLineW(SetupInf, L"SetupData", L"DefaultPath", &Context))
-    {
-        MUIDisplayError(ERROR_FIND_SETUPDATA, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Read the 'DefaultPath' data */
-    if (INF_GetData(&Context, NULL, &DefaultPath))
-    {
-        wcscpy(InstallDir, DefaultPath);
-    }
+    if (IsUnattendedSetup)
+        wcscpy(InstallDir, UnattendInstallationDirectory);
     else
-    {
         wcscpy(InstallDir, L"\\ReactOS");
-    }
 
     Length = wcslen(InstallDir);
     CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
