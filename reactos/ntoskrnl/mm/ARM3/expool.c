@@ -40,7 +40,7 @@ SIZE_T PoolBigPageTableSize, PoolBigPageTableHash;
 PPOOL_TRACKER_TABLE PoolTrackTable;
 PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
 KSPIN_LOCK ExpTaggedPoolLock;
-ULONG PoolHitTag = 'ht  ';
+ULONG PoolHitTag;
 BOOLEAN ExStopBadTags;
 KSPIN_LOCK ExpLargePoolTableLock;
 LONG ExpPoolBigEntriesInUse;
