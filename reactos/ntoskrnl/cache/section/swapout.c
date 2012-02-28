@@ -54,6 +54,7 @@
 
 extern KEVENT MmWaitPageEvent;
 extern FAST_MUTEX RmapListLock;
+extern PMMWSL MmWorkingSetList;
 
 FAST_MUTEX MiGlobalPageOperation;
 
@@ -186,7 +187,6 @@ MmPageOutCacheSection
  BOOLEAN Dirty,
  PMM_REQUIRED_RESOURCES Required)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG Entry;
     PFN_NUMBER OurPage;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -213,14 +213,16 @@ MmPageOutCacheSection
     MmDeleteVirtualMapping(Process, Address, FALSE, NULL, &OurPage);
     ASSERT(OurPage == Required->Page[0]);
 
-	if (NT_SUCCESS(Status)) 
-	{
-		MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
-	} 
+	MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
+
+#if (_MI_PAGING_LEVELS == 2)
+    if (Address < MmSystemRangeStart)
+        Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+#endif
 
 	MmUnlockSectionSegment(Segment);
 	MiSetPageEvent(Process, Address);
-	return Status;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS

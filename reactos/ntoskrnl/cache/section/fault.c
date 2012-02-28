@@ -143,13 +143,12 @@ MmNotPresentFaultCachePage
 			DPRINT("Set %x in address space @ %x\n", Required->Page[0], Address);
 			Status = MmCreateVirtualMapping(Process, Address, Attributes, Required->Page, 1);
 #if (_MI_PAGING_LEVELS == 2)
-            /* Reference Page Directory Entry */
-            if(Address < MmSystemRangeStart)
-            {   
-                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+            if (Address < MmSystemRangeStart)
+            {
+                Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+                ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
             }
-#endif   
+#endif 
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
@@ -175,11 +174,10 @@ MmNotPresentFaultCachePage
 
 		Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
 #if (_MI_PAGING_LEVELS == 2)
-        /* Reference Page Directory Entry */
-        if(Address < MmSystemRangeStart)
-        {   
-            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+        if (Address < MmSystemRangeStart)
+        {
+            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
         }
 #endif   
 		if (NT_SUCCESS(Status))
