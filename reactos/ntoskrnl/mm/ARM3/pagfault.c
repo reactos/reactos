@@ -936,9 +936,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Right now, we only handle scenarios where the PDE is totally empty */
         ASSERT(PointerPde->u.Long == 0);
 
-        /* Right now, we expect a valid protection mask on the VAD */
-        ASSERT(ProtectionCode != MM_NOACCESS);
-
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;
@@ -976,7 +973,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     /* Make sure it's not a prototype PTE */
     ASSERT(TempPte.u.Soft.Prototype == 0);
-    
+
     /* Check if this address range belongs to a valid allocation (VAD) */
     ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
     if (ProtectionCode == MM_NOACCESS)
@@ -1108,37 +1105,37 @@ MmGetExecuteOptions(IN PULONG ExecuteOptions)
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     *ExecuteOptions = 0;
-    
+
     if (CurrentProcess->Flags.ExecuteDisable)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE;
     }
-    
+
     if (CurrentProcess->Flags.ExecuteEnable)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_ENABLE;
     }
-    
+
     if (CurrentProcess->Flags.DisableThunkEmulation)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION;
     }
-    
+
     if (CurrentProcess->Flags.Permanent)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_PERMANENT;
     }
-    
+
     if (CurrentProcess->Flags.ExecuteDispatchEnable)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE;
     }
-    
+
     if (CurrentProcess->Flags.ImageDispatchEnable)
     {
         *ExecuteOptions |= MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE;
     }
-    
+
     return STATUS_SUCCESS;
 }
 
