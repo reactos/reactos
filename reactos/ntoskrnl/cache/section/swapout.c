@@ -157,11 +157,10 @@ MmFinalizeSectionPageOut
 	{
 		DPRINT("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
-		// Note: the other one is held by MmTrimUserMemory
-		if (MmGetReferenceCountPage(Page) != 2) {
+		if (MmGetReferenceCountPage(Page) != 1) {
 			DPRINT1("ALERT: Page %x about to be evicted with ref count %d\n", Page, MmGetReferenceCountPage(Page));
 		}
-		MmDereferencePage(Page);
+		MmReleasePageMemoryConsumer(MC_CACHE, Page);
 	}
 
 	MmUnlockSectionSegment(Segment);
@@ -216,7 +215,7 @@ MmPageOutCacheSection
 
 	if (NT_SUCCESS(Status)) 
 	{
-		MmDereferencePage(Required->Page[0]);
+		MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
 	} 
 
 	MmUnlockSectionSegment(Segment);
@@ -461,13 +460,11 @@ MiCacheEvictPages(PMM_SECTION_SEGMENT Segment, ULONG Target)
 			Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
 			if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
 				Page = PFN_FROM_SSE(Entry);
-				MmReferencePage(Page);
 				MmUnlockSectionSegment(Segment);
 				Status = MmpPageOutPhysicalAddress(Page);
 				if (NT_SUCCESS(Status))
 					Result++;
 				MmLockSectionSegment(Segment);
-				MmReleasePageMemoryConsumer(MC_CACHE, Page);
 			}
 		}
 	}

@@ -278,7 +278,7 @@ _MiFlushMappedSection
 					 &Segment->FileObject->FileName,
 					 Status);
 			}
-			MmDereferencePage(Page);
+			MmReleasePageMemoryConsumer(MC_CACHE, Page);
 		}
 	}
 
