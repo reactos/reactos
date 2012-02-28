@@ -1218,7 +1218,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    Resources.Consumer = MC_USER;
    Resources.Amount = PAGE_SIZE;
 
-   DPRINT1("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
+   DPRINT("%S, offset 0x%x, len 0x%x, page 0x%x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
 
    Status = MiReadFilePage(MmGetKernelAddressSpace(), MemoryArea, &Resources);
    *Page = Resources.Page[0];

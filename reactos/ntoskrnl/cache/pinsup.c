@@ -230,7 +230,7 @@ ULONG CcpAllocateCacheSections
 	
 	if (!RtlTestBit(CcCacheBitmap, i))
 	{
-	    DPRINT("Somebody stoeled BCB #%x\n", i);
+	    DPRINT1("Somebody stoeled BCB #%x\n", i);
 	}
 	ASSERT(RtlTestBit(CcCacheBitmap, i));
 	
@@ -239,7 +239,7 @@ ULONG CcpAllocateCacheSections
     }
     else
     {
-	DPRINT("Failed to allocate cache segment\n");
+	DPRINT1("Failed to allocate cache segment\n");
     }
     return i;
 }

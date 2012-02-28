@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #include "newcc.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -95,7 +95,7 @@ NTAPI
 CcMdlReadComplete2(IN PMDL MdlChain,
 				   IN PFILE_OBJECT FileObject)
 {
-	DPRINT("Not sure\n");
+	UNIMPLEMENTED
 }
 
 VOID
@@ -128,7 +128,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain)
 {
-	DPRINT("Not sure\n");
+	UNIMPLEMENTED
 }
 
 VOID

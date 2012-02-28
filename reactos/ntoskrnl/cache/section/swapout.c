@@ -328,12 +328,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 		   KeBugCheck(MEMORY_MANAGEMENT);
 	   }
 
-	   if (!MmTryToLockAddressSpace(AddressSpace))
-	   {
-		   DPRINT1("Could not lock address space for process %x\n", MmGetAddressSpaceOwner(AddressSpace));
-		   Status = STATUS_UNSUCCESSFUL;
-		   goto bail;
-	   }
+	   MmLockAddressSpace(AddressSpace);
 
 	   do 
 	   {
@@ -495,12 +490,14 @@ MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     PMM_SECTION_SEGMENT Segment;
     *NrFreed = 0;
 
+    DPRINT1("Need to trim %d cache pages\n", Target);
     for (Entry = MiSegmentList.Flink; *NrFreed < Target && Entry != &MiSegmentList; Entry = Entry->Flink) {
         Segment = CONTAINING_RECORD(Entry, MM_SECTION_SEGMENT, ListOfSegments);
         // Defer to MM to try recovering pages from it
         Freed = MiCacheEvictPages(Segment, Target);
         *NrFreed += Freed;
     }
+    DPRINT1("Evicted %d cache pages\n", Target);
 
     if (!IsListEmpty(&MiSegmentList)) {
         Entry = MiSegmentList.Flink;

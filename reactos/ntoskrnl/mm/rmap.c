@@ -63,7 +63,11 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    // Special case for NEWCC: we can have a page that's only in a segment
    // page table
    if (entry && RMAP_IS_SEGMENT(entry->Address) && entry->Next == NULL)
+   {
+       /* NEWCC does locking itself */
+       ExReleaseFastMutex(&RmapListLock);
        return MmpPageOutPhysicalAddress(Page);
+   }
 #endif
 
    while (entry && RMAP_IS_SEGMENT(entry->Address))
@@ -155,11 +159,14 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    }
    else if (Type == MEMORY_AREA_CACHE)
    {
-      Status = MmpPageOutPhysicalAddress(Page);
+       /* NEWCC does locking itself */
+       MmUnlockAddressSpace(AddressSpace);
+       Status = MmpPageOutPhysicalAddress(Page);
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
        /* Do not page out virtual memory during ARM3 transition */
+       MmUnlockAddressSpace(AddressSpace);
        Status = STATUS_SUCCESS;
    }
    else
