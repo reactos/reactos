@@ -128,8 +128,25 @@ definition, enumeration, or prototype. Please make sure that your addition is:
    for the purpose of locating the actual name or definition of a structure (sometimes possible due
    to ASSERTs or debugging strings) is considered 'fair use' and will be a likely candidate.
 
-If your addition satsfies these points, then please submit it, and also include whether or not
-you would like to be credited for it.
+If your contribution satsfies these points, then please submit it to the author with the following
+statement:
+
+"
+Copyright Grant.
+I grant to you a perpetual (for the duration of the applicable copyright), worldwide, non-exclusive,
+no-charge, royalty-free, copyright license, without any obligation for accounting to me, to reproduce,
+prepare derivative works of, publicly display, publicly perform, sublicense, distribute, and implement
+my Contribution to the full extent of my copyright interest in the Contribution.
+"
+
+If you wish to be credited for your contribution (which the author is more than happy to do!), you
+should add:
+
+"As a condition of the copyright grant, you must include an attribution in any derivative work you make
+based on the Contribution. That attribution must include, at minimum, my name."
+
+This will allow you to have your name in the readme.txt file (which you are now reading). If you wish to
+remain anonymous, simply do not include this statement.
 
 3. USAGE
 
