@@ -13,7 +13,7 @@
 #include "usbehci.h"
 #include "hardware.h"
 
-class CUSBRequest : public IUSBRequest
+class CUSBRequest : public IEHCIRequest
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -36,20 +36,9 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
-    virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode, IN struct _QUEUE_HEAD *QueueHead);
-    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode, IN struct _QUEUE_HEAD *QueueHead);
-    virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead);
-    virtual BOOLEAN IsRequestComplete();
-    virtual ULONG GetTransferType();
-    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
-    virtual BOOLEAN IsRequestInitialized();
-    virtual BOOLEAN ShouldReleaseRequestAfterCompletion();
-    virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead);
-    virtual VOID GetTransferBuffer(OUT PMDL * OutMDL, OUT PULONG TransferLength);
-    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-
+    IMP_IUSBREQUEST
+    // IEHCI Request interface functions
+    IMP_IEHCIREQUEST
 
     // local functions
     ULONG InternalGetTransferType();
@@ -426,63 +415,7 @@ CUSBRequest::CompletionCallback(
         KeSetEvent(m_CompletionEvent, 0, FALSE);
     }
 }
-//----------------------------------------------------------------------------------------
-VOID
-CUSBRequest::CancelCallback(
-    IN NTSTATUS NtStatusCode,
-    IN struct _QUEUE_HEAD *QueueHead)
-{
-    PIO_STACK_LOCATION IoStack;
-    PURB Urb;
 
-    //
-    // FIXME: support linked queue heads
-    //
-
-    //
-    // store cancelleation code
-    //
-    m_NtStatusCode = NtStatusCode;
-
-    if (m_Irp)
-    {
-        //
-        // set irp completion status
-        //
-        m_Irp->IoStatus.Status = NtStatusCode;
-
-        //
-        // get current irp stack location
-        //
-        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
-
-        //
-        // get urb
-        //
-        Urb = (PURB)IoStack->Parameters.Others.Argument1;
-
-        //
-        // store urb status
-        //
-        DPRINT1("Request Cancelled\n");
-        Urb->UrbHeader.Status = USBD_STATUS_CANCELED;
-        Urb->UrbHeader.Length = 0;
-
-        //
-        // FIXME: check if the transfer was split
-        // if yes dont complete irp yet
-        //
-        IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
-    }
-    else
-    {
-        //
-        // signal completion event
-        //
-        PC_ASSERT(m_CompletionEvent);
-        KeSetEvent(m_CompletionEvent, 0, FALSE);
-    }
-}
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBRequest::GetQueueHead(
@@ -1621,25 +1554,6 @@ CUSBRequest::GetResultStatus(
 
 }
 
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsRequestInitialized()
-{
-    if (m_Irp || m_SetupPacket)
-    {
-        //
-        // request is initialized
-        //
-        return TRUE;
-    }
-
-    //
-    // request is not initialized
-    //
-    return FALSE;
-}
-
 //-----------------------------------------------------------------------------------------
 BOOLEAN
 CUSBRequest::ShouldReleaseRequestAfterCompletion()
@@ -1785,19 +1699,6 @@ CUSBRequest::IsQueueHeadComplete(
     return TRUE;
 }
 
-//-----------------------------------------------------------------------------------------
-VOID
-CUSBRequest::GetTransferBuffer(
-    OUT PMDL * OutMDL,
-    OUT PULONG TransferLength)
-{
-    // sanity checks
-    PC_ASSERT(OutMDL);
-    PC_ASSERT(TransferLength);
-
-    *OutMDL = m_TransferBufferMDL;
-    *TransferLength = m_TransferBufferLength;
-}
 //-----------------------------------------------------------------------------------------
 ULONG
 CUSBRequest::InternalCalculateTransferLength()

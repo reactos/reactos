@@ -54,42 +54,15 @@ public:
         return m_Ref;
     }
     // com
-    NTSTATUS Initialize(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT FunctionalDeviceObject, PDEVICE_OBJECT PhysicalDeviceObject, PDEVICE_OBJECT LowerDeviceObject);
-    NTSTATUS PnpStart(PCM_RESOURCE_LIST RawResources, PCM_RESOURCE_LIST TranslatedResources);
-    NTSTATUS PnpStop(void);
-    NTSTATUS HandlePower(PIRP Irp);
-    NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
-    NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
-
-    NTSTATUS StartController();
-    NTSTATUS StopController();
-    NTSTATUS ResetController();
-    NTSTATUS ResetPort(ULONG PortIndex);
-
-    NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
-    NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
-    NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
-
-    VOID SetAsyncListRegister(ULONG PhysicalAddress);
-    VOID SetPeriodicListRegister(ULONG PhysicalAddress);
-    struct _QUEUE_HEAD * GetAsyncListQueueHead();
-    ULONG GetPeriodicListRegister();
-
-    VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
-
-    KIRQL AcquireDeviceLock(void);
-    VOID ReleaseDeviceLock(KIRQL OldLevel);
-    // set command
-    VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
-
-    // get command
-    VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
-
+    IMP_IUSBHARDWAREDEVICE
+    IMP_IUSBEHCIHARDWARE
 
     // local
     BOOLEAN InterruptService();
     VOID PrintCapabilities();
+    NTSTATUS StartController();
+    NTSTATUS StopController();
+    NTSTATUS ResetController();
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
@@ -117,7 +90,7 @@ protected:
     USHORT m_VendorID;                                                                 // vendor id
     USHORT m_DeviceID;                                                                 // device id
     PQUEUE_HEAD AsyncQueueHead;                                                        // async queue head terminator
-    PUSBQUEUE m_UsbQueue;                                                              // usb request queue
+    PEHCIQUEUE m_UsbQueue;                                                              // usb request queue
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
@@ -179,7 +152,7 @@ CUSBHardwareDevice::Initialize(
     //
     // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
     //
-    Status = CreateUSBQueue(&m_UsbQueue);
+    Status = CreateUSBQueue((PUSBQUEUE*)&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
@@ -551,14 +524,6 @@ CUSBHardwareDevice::PnpStart(
 
 NTSTATUS
 CUSBHardwareDevice::PnpStop(void)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-CUSBHardwareDevice::HandlePower(
-    PIRP Irp)
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -1279,30 +1244,6 @@ VOID CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
 {
     m_SCECallBack = (HD_INIT_CALLBACK*)CallBack;
     m_SCEContext = Context;
-}
-
-KIRQL
-CUSBHardwareDevice::AcquireDeviceLock(void)
-{
-    KIRQL OldLevel;
-
-    //
-    // acquire lock
-    //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
-
-    //
-    // return old irql
-    //
-    return OldLevel;
-}
-
-
-VOID
-CUSBHardwareDevice::ReleaseDeviceLock(
-    KIRQL OldLevel)
-{
-    KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 
 BOOLEAN

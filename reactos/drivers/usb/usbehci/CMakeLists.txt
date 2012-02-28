@@ -4,20 +4,20 @@ set_cpp()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/drivers/libusb)
+
+
 add_library(usbehci SHARED
     usbehci.cpp
-    usb_device.cpp
     usb_request.cpp
     usb_queue.cpp
-    hcd_controller.cpp
     hardware.cpp
-    misc.cpp
-    purecall.cpp
-    hub_controller.cpp
-    memory_manager.cpp
     usbehci.rc)
 
 target_link_libraries(usbehci
+    libusb
     libcntpr
     ${PSEH_LIB})
 
