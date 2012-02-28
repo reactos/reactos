@@ -7,6 +7,14 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
+
+extern "C"
+{
+#include <usbdlib.h>
+}
+
+
+
 //
 // FIXME: 
 // #include <usbprotocoldefs.h>
@@ -49,15 +57,16 @@ typedef struct _USB_ENDPOINT
 
 typedef struct _USB_INTERFACE
 {
-    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    USB_ENDPOINT *EndPoints;
+    LIST_ENTRY ListEntry;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT EndPoints[1];
 } USB_INTERFACE, *PUSB_INTERFACE;
 
-typedef struct _USB_CONFIGURATION
+typedef struct
 {
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-    USB_INTERFACE *Interfaces;
-} USB_CONFIGURATION, *PUSB_CONFIGURATION;
+    LIST_ENTRY InterfaceList;
+}USB_CONFIGURATION, *PUSB_CONFIGURATION;
 
 typedef struct
 {
