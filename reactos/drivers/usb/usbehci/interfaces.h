@@ -128,14 +128,14 @@ typedef IEHCIRequest *PEHCIREQUEST;
         IN NTSTATUS Status,                                                 \
         OUT PULONG ShouldRingDoorBell) PURE;                                \
                                                                             \
-    STDMETHOD_(VOID, CompleteAsyncRequests)( THIS);
+    STDMETHOD_(VOID, CompleteAsyncRequests)( THIS) PURE;
 
 #define IMP_IEHCIQUEUE                                                      \
     STDMETHODIMP_(VOID) InterruptCallback(                                  \
         IN NTSTATUS Status,                                                 \
         OUT PULONG ShouldRingDoorBell);                                     \
                                                                             \
-    STDMETHODIMP_(VOID) CompleteAsyncRequests(THIS);                        \
+    STDMETHODIMP_(VOID) CompleteAsyncRequests();
 
 DECLARE_INTERFACE_(IEHCIQueue, IUSBQueue)
 {
