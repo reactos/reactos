@@ -302,17 +302,20 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 // CancelCallback routine is invoked.
 //
 
+struct IUSBDevice;
+
 #define DEFINE_ABSTRACT_USBREQUEST()                                        \
     STDMETHOD_(NTSTATUS, InitializeWithSetupPacket)( THIS_                  \
         IN PDMAMEMORYMANAGER DmaManager,                                    \
         IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,                      \
-        IN UCHAR DeviceAddress,                                             \
+        IN struct IUSBDevice *Device,                                       \
         IN OPTIONAL struct _USB_ENDPOINT *EndpointDescriptor,               \
         IN OUT ULONG TransferBufferLength,                                  \
         IN OUT PMDL TransferBuffer) PURE;                                   \
                                                                             \
     STDMETHOD_(NTSTATUS, InitializeWithIrp)( THIS_                          \
         IN PDMAMEMORYMANAGER DmaManager,                                    \
+        IN struct IUSBDevice *Device,                                       \
         IN OUT PIRP Irp) PURE;                                              \
                                                                             \
     STDMETHOD_(BOOLEAN, IsRequestComplete)( THIS) PURE;                     \
@@ -327,13 +330,14 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
     STDMETHODIMP_(NTSTATUS) InitializeWithSetupPacket(                      \
         IN PDMAMEMORYMANAGER DmaManager,                                    \
         IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,                      \
-        IN UCHAR DeviceAddress,                                             \
+        IN struct IUSBDevice *Device,                                       \
         IN OPTIONAL struct _USB_ENDPOINT *EndpointDescriptor,               \
         IN OUT ULONG TransferBufferLength,                                  \
         IN OUT PMDL TransferBuffer);                                        \
                                                                             \
     STDMETHODIMP_(NTSTATUS) InitializeWithIrp(                              \
         IN PDMAMEMORYMANAGER DmaManager,                                    \
+        IN struct IUSBDevice *Device,                                       \
         IN OUT PIRP Irp);                                                   \
                                                                             \
     STDMETHODIMP_(BOOLEAN) IsRequestComplete(VOID);                         \

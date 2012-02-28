@@ -142,3 +142,11 @@ DriverEntry(
 
     return STATUS_SUCCESS;
 }
+
+
+extern "C" {
+   void free(void * ptr)
+   {
+       ExFreePool(ptr);
+   }
+}

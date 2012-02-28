@@ -34,13 +34,8 @@ public:
     }
 
     // com
-    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
-    virtual ULONG GetPendingRequestCount();
-    virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
-    virtual NTSTATUS CancelRequests();
-    virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
-    virtual VOID TransferDescriptorCompletionCallback(ULONG TransferDescriptorLogicalAddress);
-    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+    IMP_IUSBQUEUE
+    IMP_IUSBOHCIQUEUE
 
     // local functions
     BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
@@ -63,7 +58,7 @@ public:
 protected:
     LONG m_Ref;                                                                         // reference count
     KSPIN_LOCK m_Lock;                                                                  // list lock
-    PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
+    POHCIHARDWAREDEVICE m_Hardware;                                                     // hardware
     POHCI_ENDPOINT_DESCRIPTOR m_BulkHeadEndpointDescriptor;                             // bulk head descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_ControlHeadEndpointDescriptor;                          // control head descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_IsoHeadEndpointDescriptor;                              // isochronous head descriptor
@@ -98,24 +93,30 @@ CUSBQueue::Initialize(
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
     //
+    // store hardware
+    //
+    m_Hardware = POHCIHARDWAREDEVICE(Hardware);
+
+
+    //
     // get bulk endpoint descriptor
     //
-    Hardware->GetBulkHeadEndpointDescriptor(&m_BulkHeadEndpointDescriptor);
+    m_Hardware->GetBulkHeadEndpointDescriptor(&m_BulkHeadEndpointDescriptor);
 
     //
     // get control endpoint descriptor
     //
-    Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
+    m_Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
 
     //
     // get isochronous endpoint
     //
-    Hardware->GetIsochronousHeadEndpointDescriptor(&m_IsoHeadEndpointDescriptor);
+    m_Hardware->GetIsochronousHeadEndpointDescriptor(&m_IsoHeadEndpointDescriptor);
 
     //
     // get interrupt endpoints
     //
-    Hardware->GetInterruptEndpointDescriptors(&m_InterruptEndpoints);
+    m_Hardware->GetInterruptEndpointDescriptors(&m_InterruptEndpoints);
 
     //
     // initialize spinlock
@@ -127,24 +128,7 @@ CUSBQueue::Initialize(
     //
     InitializeListHead(&m_PendingRequestList);
 
-
-    //
-    // store hardware
-    //
-    m_Hardware = Hardware;
-
     return STATUS_SUCCESS;
-}
-
-ULONG
-CUSBQueue::GetPendingRequestCount()
-{
-    //
-    // Loop through the pending list and iterrate one for each QueueHead that
-    // has a IRP to complete.
-    //
-
-    return 0;
 }
 
 VOID
@@ -177,7 +161,7 @@ VOID
 CUSBQueue::AddEndpointDescriptor(
     IN POHCI_ENDPOINT_DESCRIPTOR Descriptor)
 {
-    IUSBRequest *Request;
+    IOHCIRequest *Request;
     ULONG Type;
     POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
     POHCI_ISO_TD CurrentDescriptor;
@@ -189,7 +173,7 @@ CUSBQueue::AddEndpointDescriptor(
     // sanity check
     //
     ASSERT(Descriptor->Request);
-    Request = (IUSBRequest*)Descriptor->Request;
+    Request = (IOHCIRequest*)Descriptor->Request;
 
     //
     // get request type
@@ -305,12 +289,17 @@ CUSBQueue::AddEndpointDescriptor(
 
 NTSTATUS
 CUSBQueue::AddUSBRequest(
-    IUSBRequest * Request)
+    IUSBRequest * Req)
 {
     NTSTATUS Status;
     IN POHCI_ENDPOINT_DESCRIPTOR Descriptor;
+    POHCIREQUEST Request;
 
     DPRINT("CUSBQueue::AddUSBRequest\n");
+
+    // get request
+    Request = POHCIREQUEST(Req);
+
 
     //
     // sanity check
@@ -345,13 +334,6 @@ CUSBQueue::AddUSBRequest(
     //
     AddEndpointDescriptor(Descriptor);
     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CUSBQueue::CancelRequests()
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -589,7 +571,7 @@ CUSBQueue::CleanupEndpointDescriptor(
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
     POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor)
 {
-    PUSBREQUEST Request;
+    POHCIREQUEST Request;
     POHCI_ENDPOINT_DESCRIPTOR NewEndpointDescriptor;
     USBD_STATUS UrbStatus;
     KIRQL OldLevel;
@@ -603,7 +585,7 @@ CUSBQueue::CleanupEndpointDescriptor(
     //
     // get corresponding request
     //
-    Request = PUSBREQUEST(EndpointDescriptor->Request);
+    Request = POHCIREQUEST(EndpointDescriptor->Request);
     ASSERT(Request);
 
     //

@@ -12,7 +12,7 @@
 // Description: This class provides access to the usb hardware controller
 //
 
-#define DEFINE_ABSTRACT_USBEHCIHARDWARE()                                    \
+#define DEFINE_ABSTRACT_USBEHCIHARDWARE()                                   \
     STDMETHOD_(VOID, SetAsyncListRegister)( THIS_                           \
         IN ULONG PhysicalAddress) PURE;                                     \
                                                                             \

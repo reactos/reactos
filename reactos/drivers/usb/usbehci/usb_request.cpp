@@ -148,7 +148,7 @@ NTSTATUS
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-    IN UCHAR DeviceAddress,
+    IN PUSBDEVICE Device,
     IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
@@ -166,7 +166,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
-    m_DeviceAddress = DeviceAddress;
+    m_DeviceAddress = Device->GetDeviceAddress();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
 
@@ -201,6 +201,7 @@ CUSBRequest::InitializeWithSetupPacket(
 NTSTATUS
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
+    IN PUSBDEVICE Device,
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;

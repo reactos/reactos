@@ -36,17 +36,8 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
-    virtual BOOLEAN IsRequestComplete();
-    virtual ULONG GetTransferType();
-    virtual NTSTATUS GetEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutEndpointDescriptor);
-    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
-    virtual BOOLEAN IsRequestInitialized();
-    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-    virtual VOID CompletionCallback();
-    virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
-    virtual UCHAR GetInterval();
+    IMP_IUSBREQUEST
+    IMP_IOHCIREQUEST
 
     // local functions
     ULONG InternalGetTransferType();
@@ -169,9 +160,8 @@ NTSTATUS
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-    IN UCHAR DeviceAddress,
+    IN PUSBDEVICE Device,
     IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor,
-    IN USB_DEVICE_SPEED DeviceSpeed,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -188,10 +178,10 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
-    m_DeviceAddress = DeviceAddress;
+    m_DeviceAddress = Device->GetDeviceAddress();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // Set Length Completed to 0
@@ -224,8 +214,8 @@ CUSBRequest::InitializeWithSetupPacket(
 NTSTATUS
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
-    IN OUT PIRP Irp,
-    IN USB_DEVICE_SPEED DeviceSpeed)
+    IN struct IUSBDevice* Device,
+    IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
 
@@ -263,7 +253,7 @@ CUSBRequest::InitializeWithIrp(
     //
     // store speed
     //
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // check function type
@@ -1953,25 +1943,7 @@ CUSBRequest::CompletionCallback()
     }
 }
 
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsRequestInitialized()
-{
-    if (m_Irp || m_SetupPacket)
-    {
-        //
-        // request is initialized
-        //
-        return TRUE;
-    }
-
-    //
-    // request is not initialized
-    //
-    return FALSE;
-}
-
+#if 0
 //-----------------------------------------------------------------------------------------
 BOOLEAN
 CUSBRequest::IsQueueHeadComplete(
@@ -1980,7 +1952,7 @@ CUSBRequest::IsQueueHeadComplete(
     UNIMPLEMENTED
     return TRUE;
 }
-
+#endif
 
 
 //-----------------------------------------------------------------------------------------

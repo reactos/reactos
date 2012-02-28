@@ -54,36 +54,13 @@ public:
         return m_Ref;
     }
     // com
-    NTSTATUS Initialize(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT FunctionalDeviceObject, PDEVICE_OBJECT PhysicalDeviceObject, PDEVICE_OBJECT LowerDeviceObject);
-    NTSTATUS PnpStart(PCM_RESOURCE_LIST RawResources, PCM_RESOURCE_LIST TranslatedResources);
-    NTSTATUS PnpStop(void);
-    NTSTATUS HandlePower(PIRP Irp);
-    NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    NTSTATUS GetBulkHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
-    NTSTATUS GetControlHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
-    NTSTATUS GetInterruptEndpointDescriptors(struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptor);
-    NTSTATUS GetIsochronousHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
-    VOID HeadEndpointDescriptorModified(ULONG HeadType);
+    IMP_IUSBHARDWAREDEVICE
+    IMP_IUSBOHCIHARDWAREDEVICE
 
 
-    NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
-    NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
-
+    // local
     NTSTATUS StartController();
     NTSTATUS StopController();
-    NTSTATUS ResetController();
-    NTSTATUS ResetPort(ULONG PortIndex);
-
-    NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
-    NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
-    NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
-
-    VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
-
-    KIRQL AcquireDeviceLock(void);
-    VOID ReleaseDeviceLock(KIRQL OldLevel);
-    virtual VOID GetCurrentFrameNumber(PULONG FrameNumber);
-    // local
     BOOLEAN InterruptService();
     NTSTATUS InitializeController();
     NTSTATUS AllocateEndpointDescriptor(OUT POHCI_ENDPOINT_DESCRIPTOR *OutDescriptor);
@@ -112,7 +89,7 @@ protected:
     ULONG m_MapRegisters;                                                              // map registers count
     USHORT m_VendorID;                                                                 // vendor id
     USHORT m_DeviceID;                                                                 // device id
-    PUSBQUEUE m_UsbQueue;                                                              // usb request queue
+    POHCIQUEUE m_UsbQueue;                                                              // usb request queue
     POHCIHCCA m_HCCA;                                                                  // hcca virtual base
     PHYSICAL_ADDRESS m_HCCAPhysicalAddress;                                            // hcca physical address
     POHCI_ENDPOINT_DESCRIPTOR m_ControlEndpointDescriptor;                             // dummy control endpoint descriptor
@@ -174,7 +151,7 @@ CUSBHardwareDevice::Initialize(
     //
     // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
     //
-    Status = CreateUSBQueue(&m_UsbQueue);
+    Status = CreateUSBQueue((PUSBQUEUE*)&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
@@ -445,14 +422,6 @@ CUSBHardwareDevice::PnpStop(void)
 }
 
 NTSTATUS
-CUSBHardwareDevice::HandlePower(
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 CUSBHardwareDevice::GetDeviceDetails(
     OUT OPTIONAL PUSHORT VendorId,
     OUT OPTIONAL PUSHORT DeviceId,
@@ -698,31 +667,25 @@ CUSBHardwareDevice::AllocateEndpointDescriptor(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+VOID
 CUSBHardwareDevice::GetBulkHeadEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
     *OutDescriptor = m_BulkEndpointDescriptor;
-    return STATUS_SUCCESS;
 }
 
-NTSTATUS
+VOID
 CUSBHardwareDevice::GetInterruptEndpointDescriptors(
     struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptor)
 {
     *OutDescriptor = m_InterruptEndpoints;
-    return STATUS_SUCCESS;
 }
 
-NTSTATUS
+VOID
 CUSBHardwareDevice::GetIsochronousHeadEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
-    //
-    // get descriptor
-    //
     *OutDescriptor = m_IsoEndpointDescriptor;
-    return STATUS_SUCCESS;
 }
 
 VOID
@@ -745,12 +708,11 @@ CUSBHardwareDevice::HeadEndpointDescriptorModified(
     }
 }
 
-NTSTATUS
+VOID
 CUSBHardwareDevice::GetControlHeadEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
     *OutDescriptor = m_ControlEndpointDescriptor;
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1079,13 +1041,6 @@ CUSBHardwareDevice::StopController(void)
 }
 
 NTSTATUS
-CUSBHardwareDevice::ResetController(void)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 CUSBHardwareDevice::ResetPort(
     IN ULONG PortIndex)
 {
@@ -1329,22 +1284,6 @@ CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
     m_SCEContext = Context;
 }
 
-KIRQL
-CUSBHardwareDevice::AcquireDeviceLock(void)
-{
-    KIRQL OldLevel;
-
-    //
-    // acquire lock
-    //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
-
-    //
-    // return old irql
-    //
-    return OldLevel;
-}
-
 VOID
 CUSBHardwareDevice::GetCurrentFrameNumber(
     PULONG FrameNumber)
@@ -1375,12 +1314,6 @@ CUSBHardwareDevice::GetCurrentFrameNumber(
 
 }
 
-VOID
-CUSBHardwareDevice::ReleaseDeviceLock(
-    KIRQL OldLevel)
-{
-    KeReleaseSpinLock(&m_Lock, OldLevel);
-}
 
 BOOLEAN
 NTAPI
