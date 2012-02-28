@@ -13,7 +13,7 @@
 #include "usbuhci.h"
 #include "hardware.h"
 
-class CUSBRequest : public IUSBRequest
+class CUSBRequest : public IUHCIRequest
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -35,19 +35,9 @@ public:
         return m_Ref;
     }
 
-    // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL struct _USB_ENDPOINT * EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
-    virtual BOOLEAN IsRequestComplete();
-    virtual ULONG GetTransferType();
-    virtual NTSTATUS GetEndpointDescriptor(struct _UHCI_QUEUE_HEAD ** OutQueueHead);
-    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
-    virtual BOOLEAN IsRequestInitialized();
-    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-    virtual UCHAR GetInterval();
-    virtual USB_DEVICE_SPEED GetDeviceSpeed();
-    virtual VOID CompletionCallback();
-    virtual VOID FreeEndpointDescriptor(struct _UHCI_QUEUE_HEAD * OutDescriptor);
+    // com
+    IMP_IUSBREQUEST
+    IMP_IUHCIREQUEST
 
     // local functions
     ULONG InternalGetTransferType();
@@ -160,9 +150,8 @@ NTSTATUS
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-    IN UCHAR DeviceAddress,
+    IN PUSBDEVICE Device,
     IN OPTIONAL struct _USB_ENDPOINT * EndpointDescriptor,
-    IN USB_DEVICE_SPEED DeviceSpeed,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -179,10 +168,10 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
-    m_DeviceAddress = DeviceAddress;
+    m_DeviceAddress = Device->GetDeviceAddress();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // Set Length Completed to 0
@@ -215,8 +204,8 @@ CUSBRequest::InitializeWithSetupPacket(
 NTSTATUS
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
-    IN OUT PIRP Irp,
-    IN USB_DEVICE_SPEED DeviceSpeed)
+    IN PUSBDEVICE Device,
+    IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
@@ -229,7 +218,7 @@ CUSBRequest::InitializeWithIrp(
 
     m_DmaManager = DmaManager;
     m_TotalBytesTransferred = 0;
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // get current irp stack location
@@ -684,32 +673,6 @@ CUSBRequest::GetResultStatus(
 
 }
 
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsRequestInitialized()
-{
-    if (m_Irp || m_SetupPacket)
-    {
-        //
-        // request is initialized
-        //
-        return TRUE;
-    }
-
-    //
-    // request is not initialized
-    //
-    return FALSE;
-}
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsQueueHeadComplete(
-    struct _QUEUE_HEAD * QueueHead)
-{
-    UNIMPLEMENTED
-    return TRUE;
-}
 //-----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBRequest::CreateDescriptor(
@@ -1248,6 +1211,7 @@ CUSBRequest::FreeEndpointDescriptor(
     PUHCI_TRANSFER_DESCRIPTOR Descriptor, NextDescriptor;
     ULONG ErrorCount;
     UCHAR DataToggle = 0;
+    ULONG Index = 0;
 
     //
     // grab first transfer descriptor
@@ -1278,22 +1242,22 @@ CUSBRequest::FreeEndpointDescriptor(
 
                  if (Descriptor->Status & TD_STATUS_ERROR_BUFFER)
                  {
-                     DPRINT1("[USBUHCI] Buffer Error detected in descriptor %p\n", Descriptor);
+                     DPRINT1("[USBUHCI] Buffer Error detected in descriptor %p Index %lu\n", Descriptor, Index);
                      m_UrbStatusCode = USBD_STATUS_DATA_BUFFER_ERROR;
                  }
                  else if (Descriptor->Status & TD_STATUS_ERROR_TIMEOUT)
                  {
-                     DPRINT1("[USBUHCI] Timeout detected in descriptor %p\n", Descriptor);
+                     DPRINT1("[USBUHCI] Timeout detected in descriptor %p Index %lu\n", Descriptor, Index);
                      m_UrbStatusCode = USBD_STATUS_TIMEOUT;
                  }
                  else if (Descriptor->Status & TD_STATUS_ERROR_NAK)
                  {
-                     DPRINT1("[USBUHCI] Unexpected pid detected in descriptor %p\n", Descriptor);
+                     DPRINT1("[USBUHCI] Unexpected pid detected in descriptor %p Index %lu\n", Descriptor, Index);
                      m_UrbStatusCode = USBD_STATUS_UNEXPECTED_PID;
                  }
                  else if (Descriptor->Status & TD_STATUS_ERROR_BITSTUFF)
                  {
-                     DPRINT1("[USBUHCI] BitStuff detected in descriptor %p\n", Descriptor);
+                     DPRINT1("[USBUHCI] BitStuff detected in descriptor %p Index %lu\n", Descriptor, Index);
                      m_UrbStatusCode = USBD_STATUS_BTSTUFF;
                  }
             }
@@ -1302,7 +1266,7 @@ CUSBRequest::FreeEndpointDescriptor(
                  //
                  // babble error
                  //
-                 DPRINT1("[USBUHCI] Babble detected in descriptor %p\n", Descriptor);
+                 DPRINT1("[USBUHCI] Babble detected in descriptor %p Index %lu\n", Descriptor, Index);
                  m_UrbStatusCode = USBD_STATUS_BABBLE_DETECTED;
             }
             else
@@ -1310,7 +1274,7 @@ CUSBRequest::FreeEndpointDescriptor(
                 //
                 // stall detected
                 //
-                DPRINT1("[USBUHCI] Stall detected\n");
+                DPRINT1("[USBUHCI] Stall detected Descriptor %p Index %lu\n", Descriptor, Index);
                 m_UrbStatusCode = USBD_STATUS_STALL_PID;
             }
         }
@@ -1341,6 +1305,7 @@ CUSBRequest::FreeEndpointDescriptor(
         // move to next
         //
         Descriptor = NextDescriptor;
+        Index++;
     }
 
     //

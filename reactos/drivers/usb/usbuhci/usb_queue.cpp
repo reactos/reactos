@@ -11,7 +11,7 @@
 #include "usbuhci.h"
 #include "hardware.h"
 
-class CUSBQueue : public IUSBQueue
+class CUSBQueue : public IUHCIQueue
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -34,14 +34,8 @@ public:
     }
 
     // com
-    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
-    virtual ULONG GetPendingRequestCount();
-    virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
-    virtual NTSTATUS CancelRequests();
-    virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
-    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN struct _USB_ENDPOINT * EndpointDescriptor);
-    virtual VOID TransferInterrupt(UCHAR ErrorInterrupt);
-
+    IMP_IUSBQUEUE
+    IMP_IUHCIQUEUE
 
     // local
     VOID LinkQueueHead(PUHCI_QUEUE_HEAD QueueHead, PUHCI_QUEUE_HEAD NextQueueHead);
@@ -58,7 +52,7 @@ public:
 protected:
     LONG m_Ref;                                                                         // reference count
     KSPIN_LOCK m_Lock;                                                                  // list lock
-    PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
+    PUHCIHARDWAREDEVICE m_Hardware;                                                     // hardware
     
 };
 
@@ -88,42 +82,31 @@ CUSBQueue::Initialize(
     IN PDMAMEMORYMANAGER MemManager,
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
-    //
-    // initialize spinlock
-    //
-    KeInitializeSpinLock(&m_Lock);
 
     //
     // store hardware
     //
-    m_Hardware = Hardware;
+    m_Hardware = PUHCIHARDWAREDEVICE(Hardware);
 
+    //
+    // initialize spinlock
+    //
+    KeInitializeSpinLock(&m_Lock);
     return STATUS_SUCCESS;
-}
-
-ULONG
-CUSBQueue::GetPendingRequestCount()
-{
-    //
-    // Loop through the pending list and iterrate one for each QueueHead that
-    // has a IRP to complete.
-    //
-
-    return 0;
 }
 
 NTSTATUS
 CUSBQueue::AddQueueHead(
     PUHCI_QUEUE_HEAD NewQueueHead)
 {
-    PUSBREQUEST Request;
+    PUHCIREQUEST Request;
     PUHCI_QUEUE_HEAD QueueHead = NULL;
 
 
     //
     // get request
     //
-    Request = (PUSBREQUEST)NewQueueHead->Request;
+    Request = (PUHCIREQUEST)NewQueueHead->Request;
     if (!Request)
     {
         //
@@ -194,10 +177,14 @@ CUSBQueue::AddQueueHead(
 
 NTSTATUS
 CUSBQueue::AddUSBRequest(
-    IUSBRequest * Request)
+    IUSBRequest * Req)
 {
     PUHCI_QUEUE_HEAD NewQueueHead;
     NTSTATUS Status;
+    PUHCIREQUEST Request;
+
+    // get request
+    Request = (PUHCIREQUEST)Req;
 
     //
     // get queue head
@@ -247,24 +234,19 @@ CUSBQueue::UnLinkQueueHead(
     PreviousQueueHead->NextLogicalDescriptor = QueueHeadToRemove->NextLogicalDescriptor;
 }
 
-
-NTSTATUS
-CUSBQueue::CancelRequests()
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 NTSTATUS
 CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
-    IN struct _USB_ENDPOINT *EndpointDescriptor)
+    IN PUSB_ENDPOINT_DESCRIPTOR EndDescriptor)
 {
     KIRQL OldLevel;
     PUHCI_TRANSFER_DESCRIPTOR Descriptor;
     PUHCI_QUEUE_HEAD QueueHead, PreviousQueueHead = NULL;
     UCHAR EndpointAddress, EndpointDeviceAddress;
+    PUSB_ENDPOINT EndpointDescriptor;
 
+    // get descriptor
+    EndpointDescriptor = (PUSB_ENDPOINT)EndDescriptor;
 
     // acquire lock
     KeAcquireSpinLock(&m_Lock, &OldLevel);
@@ -412,7 +394,7 @@ CUSBQueue::QueueHeadCleanup(
     IN PUHCI_QUEUE_HEAD PreviousQueueHead,
     OUT PUHCI_QUEUE_HEAD *NextQueueHead)
 {
-    PUSBREQUEST Request;
+    PUHCIREQUEST Request;
     PUHCI_QUEUE_HEAD NewQueueHead;
     NTSTATUS Status;
 
@@ -430,7 +412,7 @@ CUSBQueue::QueueHeadCleanup(
     //
     // the queue head is complete, is the transfer now completed?
     //
-    Request = (PUSBREQUEST)QueueHead->Request;
+    Request = (PUHCIREQUEST)QueueHead->Request;
     ASSERT(Request);
 
     //
