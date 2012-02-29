@@ -42,7 +42,7 @@ public:
     // local functions
     ULONG InternalGetTransferType();
     UCHAR InternalGetPidDirection();
-    UCHAR GetDeviceAddress();
+    UCHAR STDMETHODCALLTYPE GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
     NTSTATUS BuildControlTransferDescriptor(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
