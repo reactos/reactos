@@ -6,10 +6,6 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-#ifndef TAG
-#define TAG(w,x,y,z) (((w)<<24)|((x)<<16)|((y)<<8)|(z))
-#endif
-
 //
 // Define this if you want debugging support
 //

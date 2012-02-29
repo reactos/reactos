@@ -495,7 +495,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
     *NotifySync = NULL;
     
     RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                           sizeof(REAL_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
+                                           sizeof(REAL_NOTIFY_SYNC), 'FSNS');
     ExInitializeFastMutex(&(RealNotifySync->FastMutex));
     RealNotifySync->OwningThread = 0;
     RealNotifySync->OwnerCount = 0;
@@ -570,7 +570,7 @@ FsRtlNotifyUninitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
     if (*NotifySync)
     {
-        ExFreePoolWithTag(*NotifySync, TAG('F', 'S', 'N', 'S'));
+        ExFreePoolWithTag(*NotifySync, 'FSNS');
         *NotifySync = NULL;
     }
 }
