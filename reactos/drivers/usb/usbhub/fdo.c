@@ -27,71 +27,6 @@ DestroyUsbChildDeviceObject(
     IN PDEVICE_OBJECT UsbHubDeviceObject,
     IN LONG PortId);
 
-NTSTATUS
-SubmitRequestToRootHub(
-    IN PDEVICE_OBJECT RootHubDeviceObject,
-    IN ULONG IoControlCode,
-    OUT PVOID OutParameter1,
-    OUT PVOID OutParameter2)
-{
-    KEVENT Event;
-    PIRP Irp;
-    IO_STATUS_BLOCK IoStatus;
-    NTSTATUS Status;
-    PIO_STACK_LOCATION Stack = NULL;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    //
-    // Build Control Request
-    //
-    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                                        RootHubDeviceObject,
-                                        NULL, 0,
-                                        NULL, 0,
-                                        TRUE,
-                                        &Event,
-                                        &IoStatus);
-
-    if (Irp == NULL)
-    {
-        DPRINT("Usbhub: IoBuildDeviceIoControlRequest() failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // Initialize the status block before sending the IRP
-    //
-    IoStatus.Status = STATUS_NOT_SUPPORTED;
-    IoStatus.Information = 0;
-
-    //
-    // Get Next Stack Location and Initialize it
-    //
-    Stack = IoGetNextIrpStackLocation(Irp);
-    Stack->Parameters.Others.Argument1 = OutParameter1;
-    Stack->Parameters.Others.Argument2 = OutParameter2;
-
-    //
-    // Call RootHub
-    //
-    Status = IoCallDriver(RootHubDeviceObject, Irp);
-
-    //
-    // Its ok to block here as this function is called in an nonarbitrary thread
-    //
-    if    (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        Status = IoStatus.Status;
-    }
-
-    //
-    // The IO Manager will free the IRP
-    //
-
-    return Status;
-}
 
 NTSTATUS
 GetPortStatusAndChange(
@@ -1507,6 +1442,31 @@ RootHubInitCallbackFunction(
     }
 }
 
+BOOLEAN
+USBHUB_IsRootHubFDO(
+   IN PDEVICE_OBJECT DeviceObject)
+{
+    NTSTATUS Status;
+    PDEVICE_OBJECT RootHubPhysicalDeviceObject = NULL;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+
+    // get hub device extension
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    // Get the Root Hub Pdo
+    Status = SubmitRequestToRootHub(HubDeviceExtension->LowerDeviceObject,
+                                    IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO,
+                                    &RootHubPhysicalDeviceObject,
+                                    NULL);
+
+    // FIXME handle error
+    ASSERT(NT_SUCCESS(Status));
+
+    // physical device object is only obtained for root hubs
+    return (RootHubPhysicalDeviceObject != NULL);
+}
+
+
 NTSTATUS
 USBHUB_FdoStartDevice(
    IN PDEVICE_OBJECT DeviceObject,
@@ -1969,7 +1929,15 @@ USBHUB_FdoHandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            Status = USBHUB_FdoStartDevice(DeviceObject, Irp);
+            if (USBHUB_IsRootHubFDO(DeviceObject))
+            {
+                // start root hub fdo
+                Status = USBHUB_FdoStartDevice(DeviceObject, Irp);
+            }
+            else
+            {
+                Status = USBHUB_ParentFDOStartDevice(DeviceObject, Irp);
+            }
             break;
         }
 

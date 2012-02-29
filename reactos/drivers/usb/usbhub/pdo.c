@@ -339,8 +339,39 @@ USBHUB_PdoHandleInternalDeviceControl(
             DPRINT1("IOCTL_INTERNAL_USB_CYCLE_PORT\n");
             break;
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
+        {
             DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
+            if (Stack->Parameters.Others.Argument1)
+            {
+                // store device handle
+                *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)ChildDeviceExtension->UsbDeviceHandle;
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                // invalid parameter
+                Status = STATUS_INVALID_PARAMETER;
+            }
             break;
+        }
+        case IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO:
+        {
+            if (Stack->Parameters.Others.Argument1)
+            {
+                // inform caller that it is a real usb hub
+                *(PVOID *)Stack->Parameters.Others.Argument1 = NULL;
+            }
+
+            if (Stack->Parameters.Others.Argument2)
+            {
+                // output device object
+                *(PVOID *)Stack->Parameters.Others.Argument2 = DeviceObject;
+            }
+
+            // done
+            Status = STATUS_SUCCESS;
+            break;
+        }
         default:
         {
             DPRINT1("Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
