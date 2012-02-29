@@ -178,12 +178,12 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
             NotifyChange->Flags |= CLEANUP_IN_PROCESS;
 
             /* If there are pending IRPs, complete them using the STATUS_NOTIFY_CLEANUP status */
-            if (!IsListEmpty(NotifyChange->NotifyIrps))
+            if (!IsListEmpty(&NotifyChange->NotifyIrps))
             {
                 FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_NOTIFY_CLEANUP);
             }
             /* Remove from the list */
-            RemoveEntryList(NotifyChange->NotifyList);
+            RemoveEntryList(&NotifyChange->NotifyList);
 
             /* Downcrease reference number and if 0 is reached, it's time to do complete cleanup */
             if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))

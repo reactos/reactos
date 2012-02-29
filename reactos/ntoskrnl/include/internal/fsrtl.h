@@ -75,8 +75,8 @@ typedef struct _NOTIFY_CHANGE
     PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback;
     PSECURITY_SUBJECT_CONTEXT SubjectContext;
     PSTRING FullDirectoryName;
-    PLIST_ENTRY NotifyList;
-    PLIST_ENTRY NotifyIrps;
+    LIST_ENTRY NotifyList;
+    LIST_ENTRY NotifyIrps;
     PFILTER_REPORT_CHANGE FilterCallback;
     USHORT Flags;
     UCHAR CharacterSize;
