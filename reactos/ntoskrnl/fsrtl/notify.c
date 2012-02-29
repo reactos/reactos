@@ -14,6 +14,50 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
+                           IN NTSTATUS Status);
+
+BOOLEAN
+FsRtlNotifySetCancelRoutine(IN PIRP Irp,
+                            IN PNOTIFY_CHANGE NotifyChange OPTIONAL);
+
+VOID
+NTAPI
+FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp)
+{
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+FsRtlCheckNotifyForDelete(IN PLIST_ENTRY NotifyList,
+                          IN PVOID FsContext)
+{
+    PLIST_ENTRY NextEntry;
+    PNOTIFY_CHANGE NotifyChange;
+
+    if (!IsListEmpty(NotifyList))
+    {
+        /* Browse the notifications list to find the matching entry */
+        for (NextEntry = NotifyList->Flink;
+             NextEntry != NotifyList;
+             NextEntry = NextEntry->Flink)
+        {
+            NotifyChange = CONTAINING_RECORD(NextEntry, NOTIFY_CHANGE, NotifyList);
+            /* If the current record matches with the given context, it's the good one */
+            if (NotifyChange->FsContext == FsContext && !IsListEmpty(&(NotifyChange->NotifyIrps)))
+            {
+                FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_DELETE_PENDING);
+            }
+        }
+    }
+}
+
 PNOTIFY_CHANGE
 FsRtlIsNotifyOnList(IN PLIST_ENTRY NotifyList,
                     IN PVOID FsContext)
@@ -55,10 +99,138 @@ FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
     RealNotifySync->OwnerCount++;
 }
 
+/*
+ * @implemented
+ */
+VOID
+FsRtlNotifyCompleteIrp(IN PIRP Irp,
+                       IN PNOTIFY_CHANGE NotifyChange,
+                       IN ULONG DataLength,
+                       IN NTSTATUS Status,
+                       IN BOOLEAN SkipCompletion)
+{
+    PVOID Buffer;
+    PIO_STACK_LOCATION Stack;
+
+    PAGED_CODE();
+
+    /* Check if we need to complete */
+    if (!FsRtlNotifySetCancelRoutine(Irp, NotifyChange) && SkipCompletion)
+    {
+        return;
+    }
+
+    /* No succes => no data to return just complete */
+    if (Status != STATUS_SUCCESS)
+    {
+        goto Completion;
+    }
+
+    /* Ensure there's something to return */
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    if (!DataLength || Stack->Parameters.NotifyDirectory.Length < DataLength)
+    {
+        Status = STATUS_NOTIFY_ENUM_DIR;
+        goto Completion;
+    }
+
+    /* Ensture there's a buffer where to find data */
+    if (!NotifyChange->AllocatedBuffer)
+    {
+        Irp->IoStatus.Information = DataLength;
+        NotifyChange->Buffer = NULL;
+        goto Completion;
+    }
+
+    /* Now, browse all the way to return data
+     * and find the one that will work. We will
+     * return data whatever happens
+     */
+    if (Irp->AssociatedIrp.SystemBuffer)
+    {
+        Buffer = Irp->AssociatedIrp.SystemBuffer;
+        goto CopyAndComplete;
+    }
+
+    if (Irp->MdlAddress)
+    {
+        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+        goto CopyAndComplete;
+    }
+
+    if (!(Stack->Control & SL_PENDING_RETURNED))
+    {
+        Buffer = Irp->UserBuffer;
+        goto CopyAndComplete;
+    }
+
+    Irp->Flags |= (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER | IRP_SYNCHRONOUS_PAGING_IO);
+    Irp->AssociatedIrp.SystemBuffer = NotifyChange->AllocatedBuffer;
+    /* Nothing to copy */
+    goto ReleaseAndComplete;
+
+CopyAndComplete:
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Buffer, NotifyChange->AllocatedBuffer, DataLength);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Do nothing */
+    }
+    _SEH2_END;
+
+ReleaseAndComplete:
+    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
+
+    /* Release buffer UNLESS it's used */
+    if (NotifyChange->AllocatedBuffer != Irp->AssociatedIrp.SystemBuffer &&
+        NotifyChange->AllocatedBuffer)
+    {
+        ExFreePoolWithTag(NotifyChange->AllocatedBuffer, 0);
+    }
+
+    /* Prepare for return */
+    NotifyChange->AllocatedBuffer = 0;
+    NotifyChange->ThisBufferLength = 0;
+    Irp->IoStatus.Information = DataLength;
+    NotifyChange->Buffer = NULL;
+
+    /* Finally complete */
+Completion:
+    IoMarkIrpPending(Irp);
+    Irp->IoStatus.Status = Status;
+    IofCompleteRequest(Irp, EVENT_INCREMENT);
+}
+
+/*
+ * @implemented
+ */
 VOID
 FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
                            IN NTSTATUS Status)
 {
+    PIRP Irp;
+    ULONG DataLength;
+    PLIST_ENTRY NextEntry;
+
+    DataLength = NotifyChange->DataLength;
+
+    NotifyChange->Flags &= (INVALIDATE_BUFFERS | WATCH_TREE);
+    NotifyChange->DataLength = 0;
+    NotifyChange->LastEntry = 0;
+
+    while (!IsListEmpty(&(NotifyChange->NotifyIrps)))
+    {
+        /* We take the first entry */
+        NextEntry = RemoveHeadList(&(NotifyChange->NotifyIrps));
+        Irp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
+        /* We complete it */
+        FsRtlNotifyCompleteIrp(Irp, NotifyChange, DataLength, Status, TRUE);
+        /* If we're notifying success, just notify first one */
+        if (Status == STATUS_SUCCESS)
+            break;
+    }
 }
 
 VOID
@@ -72,6 +244,55 @@ FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
         ExReleaseFastMutexUnsafe(&(RealNotifySync->FastMutex));
         RealNotifySync->OwningThread = (ULONG_PTR)0;
     }
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+FsRtlNotifySetCancelRoutine(IN PIRP Irp,
+                            IN PNOTIFY_CHANGE NotifyChange OPTIONAL)
+{
+    PDRIVER_CANCEL CancelRoutine;
+
+    /* Acquire cancel lock */
+    IoAcquireCancelSpinLock(&Irp->CancelIrql);
+
+    /* If NotifyChange was given */
+    if (NotifyChange)
+    {
+        /* First get cancel routine */
+        CancelRoutine = IoSetCancelRoutine(Irp, NULL);
+        Irp->IoStatus.Information = 0;
+        /* Release cancel lock */
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+        /* If there was a cancel routine */
+        if (CancelRoutine)
+        {
+            /* Decrease reference count */
+            InterlockedDecrement((PLONG)&NotifyChange->ReferenceCount);
+            /* Notify that we removed cancel routine */
+            return TRUE;
+        }
+    }
+    else
+    {
+        /* If IRP is cancel, call FsRtl cancel routine */
+        if (Irp->Cancel)
+        {
+             FsRtlCancelNotify(NULL, Irp);
+        }
+        else
+        {
+            /* Otherwise, define FsRtl cancel routine as IRP cancel routine */
+            IoSetCancelRoutine(Irp, FsRtlCancelNotify);
+            /* Release lock */
+            IoReleaseCancelSpinLock(Irp->CancelIrql);
+        }
+    }
+
+    /* Return that we didn't removed cancel routine */
+    return FALSE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
