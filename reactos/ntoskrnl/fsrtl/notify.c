@@ -208,15 +208,15 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
     }
     _SEH2_FINALLY
     {
-      /* Release fast mutex */
-      FsRtlNotifyReleaseFastMutex(RealNotifySync);
+        /* Release fast mutex */
+        FsRtlNotifyReleaseFastMutex(RealNotifySync);
 
-      /* If the subject security context was captured, release and free it */
-      if (SubjectContext)
-      {
-          SeReleaseSubjectContext(SubjectContext);
-          ExFreePool(SubjectContext);
-      }
+        /* If the subject security context was captured, release and free it */
+        if (SubjectContext)
+        {
+            SeReleaseSubjectContext(SubjectContext);
+            ExFreePool(SubjectContext);
+        }
     }
     _SEH2_END;
 }
