@@ -99,6 +99,7 @@ protected:
     ULONG m_WorkItemActive;                                                            // work item status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
+    BOOLEAN m_PortResetInProgress[0xF];                                                // stores reset in progress (vbox hack)
 
     // read register
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -357,8 +358,8 @@ CUSBHardwareDevice::PnpStart(
 
                 DPRINT1("Controller has %d Length\n", m_Capabilities.Length);
                 DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
-                DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
-                DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+                DPRINT1("Controller EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
+                DPRINT1("Controller EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
                 DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
 
                 //
@@ -977,7 +978,7 @@ CUSBHardwareDevice::GetPortStatus(
         Status |= USB_PORT_STATUS_OVER_CURRENT;
 
     // In a reset state?
-    if (Value & EHCI_PRT_RESET)
+    if ((Value & EHCI_PRT_RESET) || m_PortResetInProgress[PortId])
     {
         Status |= USB_PORT_STATUS_RESET;
         Change |= USB_PORT_STATUS_RESET;
@@ -1013,6 +1014,9 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_RESET)
     {
+        // reset done
+        m_PortResetInProgress[PortId] = FALSE;
+
         // Clear reset
         Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         Value &= (EHCI_PORTSC_DATAMASK | EHCI_PRT_ENABLED);
@@ -1136,6 +1140,9 @@ CUSBHardwareDevice::SetPortFeature(
         // call the helper
         //
         ResetPort(PortId);
+
+        // reset in progress
+        m_PortResetInProgress[PortId] = TRUE;
 
         //
         // is there a status change callback
