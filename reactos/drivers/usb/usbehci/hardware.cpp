@@ -202,39 +202,6 @@ CUSBHardwareDevice::Initialize(
     m_VendorID = PciConfig.VendorID;
     m_DeviceID = PciConfig.DeviceID;
 
-
-    if (PciConfig.Command & PCI_ENABLE_BUS_MASTER)
-    {
-        //
-        // master is enabled
-        //
-        return STATUS_SUCCESS;
-    }
-
-     DPRINT1("PCI Configuration shows this as a non Bus Mastering device! Enabling...\n");
-
-     PciConfig.Command |= PCI_ENABLE_BUS_MASTER;
-     m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &PciConfig, 0, PCI_COMMON_HDR_LENGTH);
-
-     BytesRead = (*m_BusInterface.GetBusData)(m_BusInterface.Context,
-                                            PCI_WHICHSPACE_CONFIG,
-                                            &PciConfig,
-                                            0,
-                                            PCI_COMMON_HDR_LENGTH);
-
-    if (BytesRead != PCI_COMMON_HDR_LENGTH)
-    {
-        DPRINT1("Failed to get pci config information!\n");
-        ASSERT(FALSE);
-        return STATUS_SUCCESS;
-    }
-
-    if (!(PciConfig.Command & PCI_ENABLE_BUS_MASTER))
-    {
-        PciConfig.Command |= PCI_ENABLE_BUS_MASTER;
-        DPRINT1("Failed to enable master\n");
-        return STATUS_UNSUCCESSFUL;
-    }
     return STATUS_SUCCESS;
 }
 
