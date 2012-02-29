@@ -758,7 +758,7 @@ MmFreeMemoryArea(
             {
                 ASSERT(AddressSpace != MmGetKernelAddressSpace());
                 MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
                 if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
                 {
                     /* No PTE relies on this PDE. Release it */
