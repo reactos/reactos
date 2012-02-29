@@ -479,6 +479,7 @@ extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
 extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
+extern MMPTE MmDecommittedPte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
 extern BOOLEAN MmProtectFreedNonPagedPool;
@@ -1327,6 +1328,12 @@ MiDeleteSystemPageableVm(
     IN PFN_NUMBER PageCount,
     IN ULONG Flags,
     OUT PPFN_NUMBER ValidPages
+);
+
+ULONG
+NTAPI
+MiGetPageProtection(
+    IN PMMPTE PointerPte
 );
 
 PLDR_DATA_TABLE_ENTRY
