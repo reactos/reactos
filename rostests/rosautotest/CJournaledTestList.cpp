@@ -83,6 +83,7 @@ CJournaledTestList::SerializeIntoJournal(const string& String)
 {
     DWORD BytesWritten;
     WriteFile(m_hJournal, String.c_str(), String.size() + 1, &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 }
 
 /**
@@ -98,6 +99,7 @@ CJournaledTestList::SerializeIntoJournal(const wstring& String)
 {
     DWORD BytesWritten;
     WriteFile(m_hJournal, String.c_str(), (String.size() + 1) * sizeof(WCHAR), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 }
 
 /**
@@ -169,6 +171,7 @@ CJournaledTestList::WriteInitialJournalFile()
     }
 
     WriteFile(m_hJournal, &TerminatingNull, sizeof(TerminatingNull), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 
     CloseHandle(m_hJournal);
     m_hJournal = INVALID_HANDLE_VALUE;
@@ -248,6 +251,7 @@ CJournaledTestList::UpdateJournal()
     SetFilePointer(m_hJournal, sizeof(szJournalHeader), NULL, FILE_CURRENT);
 
     WriteFile(m_hJournal, &m_ListIterator, sizeof(m_ListIterator), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 
     CloseHandle(m_hJournal);
     m_hJournal = NULL;
