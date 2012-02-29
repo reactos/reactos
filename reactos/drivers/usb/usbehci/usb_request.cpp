@@ -45,14 +45,14 @@ public:
     UCHAR InternalGetPidDirection();
     NTSTATUS BuildControlTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
-    NTSTATUS CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
+    NTSTATUS STDMETHODCALLTYPE CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
     NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
-    UCHAR GetDeviceAddress();
+    UCHAR STDMETHODCALLTYPE GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
     ULONG InternalCalculateTransferLength();
-    NTSTATUS BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, IN PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
-    VOID InitDescriptor(IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR DataToggle, OUT PULONG OutDescriptorLength);
+    NTSTATUS STDMETHODCALLTYPE BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
+    VOID STDMETHODCALLTYPE InitDescriptor(IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR DataToggle, OUT PULONG OutDescriptorLength);
     VOID DumpQueueHead(IN PQUEUE_HEAD QueueHead);
 
     // constructor / destructor
@@ -565,6 +565,7 @@ CUSBRequest::InternalGetPidDirection()
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::InitDescriptor(
     IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor,
     IN PVOID TransferBuffer,
@@ -673,13 +674,13 @@ CUSBRequest::InitDescriptor(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::BuildTransferDescriptorChain(
     IN PQUEUE_HEAD QueueHead,
     IN PVOID TransferBuffer,
     IN ULONG TransferBufferLength,
     IN UCHAR PidCode,
     IN UCHAR InitialDataToggle,
-    IN  PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor,
     OUT PUCHAR OutDataToggle,
@@ -757,15 +758,6 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             LastDescriptor->NextPointer = CurrentDescriptor->PhysicalAddr;
             LastDescriptor = CurrentDescriptor;
-
-            if (AlternativeDescriptor)
-            {
-                //
-                // link to alternative next pointer
-                //
-                LastDescriptor->AlternateNextPointer = AlternativeDescriptor->PhysicalAddr;
-            }
-
         }
         else
         {
@@ -929,7 +921,6 @@ CUSBRequest::BuildControlTransferQueueHead(
                                               m_TransferBufferLength,
                                               InternalGetPidDirection(),
                                               TRUE,
-                                              NULL,
                                               &FirstDescriptor,
                                               &LastDescriptor,
                                               NULL,
@@ -939,7 +930,12 @@ CUSBRequest::BuildControlTransferQueueHead(
         // FIXME handle errors
         //
         ASSERT(Status == STATUS_SUCCESS);
-        ASSERT(DescriptorChainLength == m_TransferBufferLength);
+        if (m_TransferBufferLength != DescriptorChainLength)
+        {
+            DPRINT1("DescriptorChainLength %x\n", DescriptorChainLength);
+            DPRINT1("m_TransferBufferLength %x\n", m_TransferBufferLength);
+            ASSERT(FALSE);
+        }
 
         //
         // now link the descriptors
@@ -1125,7 +1121,6 @@ CUSBRequest::BuildBulkTransferQueueHead(
                                           MaxTransferLength,
                                           InternalGetPidDirection(),
                                           m_EndpointDescriptor->DataToggle,
-                                          NULL,
                                           &FirstDescriptor,
                                           &LastDescriptor,
                                           &m_EndpointDescriptor->DataToggle,
@@ -1176,6 +1171,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::CreateDescriptor(
     PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor)
 {
@@ -1430,7 +1426,7 @@ CUSBRequest::BuildSetupPacketFromURB()
             m_DescriptorPacket->wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
             m_DescriptorPacket->wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
             m_DescriptorPacket->wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
-            m_DescriptorPacket->wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            m_DescriptorPacket->wLength = (USHORT)Urb->UrbControlDescriptorRequest.TransferBufferLength;
             m_DescriptorPacket->bmRequestType.B = 0x80;
             break;
 
