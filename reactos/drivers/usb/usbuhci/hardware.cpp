@@ -227,11 +227,6 @@ CUSBHardwareDevice::Initialize(
         return STATUS_SUCCESS;
     }
 
-    if (!(PciConfig.Command & PCI_ENABLE_BUS_MASTER))
-    {
-        DPRINT1("PCI Configuration shows this as a non Bus Mastering device!\n");
-    }
-
     m_VendorID = PciConfig.VendorID;
     m_DeviceID = PciConfig.DeviceID;
 

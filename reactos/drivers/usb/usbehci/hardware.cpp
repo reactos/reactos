@@ -467,13 +467,6 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
-    // Stop the controller before modifying schedules
-    //
-    Status = StopController();
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    //
     // Initialize the DMAMemoryManager
     //
     Status = m_MemoryManager->Initialize(this, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
