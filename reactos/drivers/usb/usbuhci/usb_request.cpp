@@ -1385,6 +1385,7 @@ CUSBRequest::CompletionCallback()
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)
 {

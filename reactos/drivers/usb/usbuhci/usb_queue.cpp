@@ -518,6 +518,7 @@ CUSBQueue::TransferInterrupt(
 }
 
 NTSTATUS
+NTAPI
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {

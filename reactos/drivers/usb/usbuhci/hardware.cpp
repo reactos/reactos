@@ -1487,6 +1487,7 @@ StatusChangeWorkItemRoutine(
 }
 
 NTSTATUS
+NTAPI
 CreateUSBHardware(
     PUSBHARDWAREDEVICE *OutHardware)
 {
