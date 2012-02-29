@@ -117,6 +117,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
         else if(Address < MmSystemRangeStart)
         {
             AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
         }
 #endif
         MmUnlockAddressSpace(AddressSpace);
@@ -416,6 +417,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                 if(Address < MmSystemRangeStart)
                 {
                     AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+                    ASSERT(AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
                 }
 #endif
             }
@@ -440,6 +442,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                     if(Address < MmSystemRangeStart)
                     {
                         AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+                        ASSERT(AddressSpace->VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
                     }
 #endif
                 }
