@@ -378,15 +378,15 @@ int
 _lrintf(float f)
 {
 #if defined(_M_IX86) && defined(__GNUC__)
-    int ret;
-    __asm__ __volatile__ ("fistpl %0" : "=m" (ret) : "t" (f) : "st");
-    return ret;
+    int result;
+    __asm__ __volatile__ ("fistpl %0" : "=m" (result) : "t" (f) : "st");
+    return result;
 #elif defined(_M_IX86) && defined(_MSC_VER)
-    int ret;
+    int result;
     __asm
     {
         fld f;
-        fistp ret;
+        fistp result;
     }
 #else
     /* slow, but portable */
