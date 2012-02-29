@@ -789,9 +789,9 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     MmLockAddressSpace(AddressSpace);
 
     //
-    // Force PAGE_EXECUTE_READWRITE for everything, for now
+    // Force PAGE_READWRITE for everything, for now
     //
-    Protect = PAGE_EXECUTE_READWRITE;
+    Protect = PAGE_READWRITE;
 
     if (PBaseAddress != 0)
     {
