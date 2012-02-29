@@ -13,7 +13,7 @@
 #include "usbohci.h"
 #include "hardware.h"
 
-class CUSBRequest : public IUSBRequest
+class CUSBRequest : public IOHCIRequest
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -157,6 +157,7 @@ CUSBRequest::QueryInterface(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
@@ -212,6 +213,7 @@ CUSBRequest::InitializeWithSetupPacket(
 }
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
     IN struct IUSBDevice* Device,
@@ -422,6 +424,7 @@ CUSBRequest::InitializeWithIrp(
 
 //----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsRequestComplete()
 {
     //
@@ -443,6 +446,7 @@ CUSBRequest::IsRequestComplete()
 }
 //----------------------------------------------------------------------------------------
 ULONG
+STDMETHODCALLTYPE
 CUSBRequest::GetTransferType()
 {
     //
@@ -483,6 +487,7 @@ CUSBRequest::GetMaxPacketSize()
 }
 
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetInterval()
 {
     ASSERT(m_EndpointDescriptor);
@@ -568,6 +573,7 @@ CUSBRequest::InternalGetPidDirection()
 
 //----------------------------------------------------------------------------------------
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetDeviceAddress()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1560,11 +1566,13 @@ CUSBRequest::BuildControlTransferDescriptor(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::GetEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
     ULONG TransferType;
     NTSTATUS Status;
+
 
     //
     // get transfer type
@@ -1592,6 +1600,8 @@ CUSBRequest::GetEndpointDescriptor(
             break;
     }
 
+
+
     if (NT_SUCCESS(Status))
     {
         //
@@ -1613,6 +1623,7 @@ CUSBRequest::GetEndpointDescriptor(
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::GetResultStatus(
     OUT OPTIONAL NTSTATUS * NtStatusCode,
     OUT OPTIONAL PULONG UrbStatusCode)
@@ -1646,6 +1657,7 @@ CUSBRequest::GetResultStatus(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::FreeEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
@@ -1878,12 +1890,10 @@ CUSBRequest::CheckError(
             TransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
         }
     }
-
-
-
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::CompletionCallback()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1943,20 +1953,9 @@ CUSBRequest::CompletionCallback()
     }
 }
 
-#if 0
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsQueueHeadComplete(
-    struct _QUEUE_HEAD * QueueHead)
-{
-    UNIMPLEMENTED
-    return TRUE;
-}
-#endif
-
-
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)
 {

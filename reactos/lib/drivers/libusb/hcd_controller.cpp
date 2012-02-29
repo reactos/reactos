@@ -747,6 +747,7 @@ CHCDController::SetSymbolicLink(
 }
 
 NTSTATUS
+NTAPI
 CreateHCDController(
     PHCDCONTROLLER *OutHcdController)
 {

@@ -1183,6 +1183,7 @@ CUSBDevice::AbortPipe(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 CreateUSBDevice(
     PUSBDEVICE *OutDevice)
 {

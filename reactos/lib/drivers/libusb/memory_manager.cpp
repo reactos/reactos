@@ -335,6 +335,7 @@ CDMAMemoryManager::Release(
 }
 
 NTSTATUS
+NTAPI
 CreateDMAMemoryManager(
     PDMAMEMORYMANAGER *OutMemoryManager)
 {

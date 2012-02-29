@@ -3718,6 +3718,7 @@ CHubController::CreatePDO(
 
 
 NTSTATUS
+NTAPI
 CreateHubController(
     PHUBCONTROLLER *OutHcdController)
 {

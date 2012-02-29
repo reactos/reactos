@@ -16,6 +16,9 @@
 //
 DRIVER_ADD_DEVICE USBLIB_AddDevice;
 
+extern
+"C"
+{
 NTSTATUS
 NTAPI
 USBLIB_AddDevice(
@@ -54,7 +57,11 @@ USBLIB_AddDevice(
     return Status;
 
 }
+}
 
+extern
+"C"
+{
 NTSTATUS
 NTAPI
 USBLIB_Dispatch(
@@ -120,4 +127,5 @@ USBLIB_Dispatch(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
+}
 }

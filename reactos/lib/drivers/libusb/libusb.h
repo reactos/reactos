@@ -66,35 +66,31 @@ typedef struct
     RtlAssert((PVOID) #exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
 
 // hcd_controller.cpp
-NTSTATUS CreateHCDController(PHCDCONTROLLER *HcdController);
+extern "C"
+{
+NTSTATUS NTAPI CreateHCDController(PHCDCONTROLLER *HcdController);
 
 // hardware.cpp
-NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
+NTSTATUS NTAPI CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 
 // misc.cpp
 NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS NTAPI GetBusInterface(PDEVICE_OBJECT DeviceObject, PBUS_INTERFACE_STANDARD busInterface);
 
 // root_hub_controller.cpp
-NTSTATUS CreateHubController(PHUBCONTROLLER * OutHubController);
+NTSTATUS NTAPI CreateHubController(PHUBCONTROLLER * OutHubController);
 
 // memory_manager.cpp
-NTSTATUS CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
-
+NTSTATUS NTAPI CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
 
 // usb_device.cpp
-NTSTATUS CreateUSBDevice(PUSBDEVICE *OutDevice);
-
-// usb_queue.cpp
-NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
-
-// usb_request.cpp
-NTSTATUS InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
+NTSTATUS NTAPI CreateUSBDevice(PUSBDEVICE *OutDevice);
 
 // libusb.cpp
 NTSTATUS NTAPI USBLIB_AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT PhysicalDeviceObject);
 NTSTATUS NTAPI USBLIB_Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+}
 
 
 #endif

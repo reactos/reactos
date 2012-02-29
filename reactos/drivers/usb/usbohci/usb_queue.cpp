@@ -11,7 +11,7 @@
 #include "usbohci.h"
 #include "hardware.h"
 
-class CUSBQueue : public IUSBQueue
+class CUSBQueue : public IOHCIQueue
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -86,17 +86,25 @@ CUSBQueue::QueryInterface(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::Initialize(
     IN PUSBHARDWAREDEVICE Hardware,
     IN PDMA_ADAPTER AdapterObject,
     IN PDMAMEMORYMANAGER MemManager,
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
+    if (!Hardware)
+    {
+        // WTF
+        DPRINT1("[USBOHCI] Failed to initialize queue\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
     //
     // store hardware
     //
     m_Hardware = POHCIHARDWAREDEVICE(Hardware);
-
+    ASSERT(m_Hardware);
 
     //
     // get bulk endpoint descriptor
@@ -288,6 +296,7 @@ CUSBQueue::AddEndpointDescriptor(
 
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AddUSBRequest(
     IUSBRequest * Req)
 {
@@ -337,6 +346,7 @@ CUSBQueue::AddUSBRequest(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::CreateUSBRequest(
     IUSBRequest **OutRequest)
 {
@@ -696,6 +706,7 @@ CUSBQueue::PrintEndpointList(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBQueue::TransferDescriptorCompletionCallback(
     ULONG TransferDescriptorLogicalAddress)
 {
@@ -860,6 +871,7 @@ CUSBQueue::FindInterruptEndpointDescriptor(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
@@ -973,6 +985,7 @@ CUSBQueue::AbortDevicePipe(
 
 
 NTSTATUS
+NTAPI
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {
