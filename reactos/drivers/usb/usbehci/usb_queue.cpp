@@ -96,6 +96,7 @@ CUSBQueue::QueryInterface(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::Initialize(
     IN PUSBHARDWAREDEVICE Hardware,
     IN PDMA_ADAPTER AdapterObject,
@@ -276,6 +277,7 @@ CUSBQueue::InitializeSyncSchedule(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AddUSBRequest(
     IUSBRequest * Req)
 {
@@ -367,6 +369,7 @@ CUSBQueue::AddUSBRequest(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::CreateUSBRequest(
     IUSBRequest **OutRequest)
 {
@@ -657,6 +660,7 @@ CUSBQueue::ProcessAsyncList(
 
 
 VOID
+STDMETHODCALLTYPE
 CUSBQueue::InterruptCallback(
     IN NTSTATUS Status, 
     OUT PULONG ShouldRingDoorBell)
@@ -826,6 +830,7 @@ CUSBQueue::QueueHeadCleanup(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBQueue::CompleteAsyncRequests()
 {
     KIRQL OldLevel;
@@ -900,6 +905,7 @@ CUSBQueue::CompleteAsyncRequests()
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
@@ -984,6 +990,7 @@ CUSBQueue::AbortDevicePipe(
 
 
 NTSTATUS
+NTAPI
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {

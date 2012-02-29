@@ -32,7 +32,7 @@ VOID
 NTAPI
 StatusChangeWorkItemRoutine(PVOID Context);
 
-class CUSBHardwareDevice : public IUSBHardwareDevice
+class CUSBHardwareDevice : public IEHCIHardwareDevice
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -127,6 +127,7 @@ CUSBHardwareDevice::QueryInterface(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::Initialize(
     PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT FunctionalDeviceObject,
@@ -206,6 +207,7 @@ CUSBHardwareDevice::Initialize(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
@@ -214,6 +216,7 @@ CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
@@ -277,6 +280,7 @@ CUSBHardwareDevice::PrintCapabilities()
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStart(
     PCM_RESOURCE_LIST RawResources,
     PCM_RESOURCE_LIST TranslatedResources)
@@ -483,6 +487,7 @@ CUSBHardwareDevice::PnpStart(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStop(void)
 {
     UNIMPLEMENTED
@@ -490,6 +495,7 @@ CUSBHardwareDevice::PnpStop(void)
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetDeviceDetails(
     OUT OPTIONAL PUSHORT VendorId,
     OUT OPTIONAL PUSHORT DeviceId,
@@ -508,7 +514,9 @@ CUSBHardwareDevice::GetDeviceDetails(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS CUSBHardwareDevice::GetDMA(
+NTSTATUS
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetDMA(
     OUT struct IDMAMemoryManager **OutDMAMemoryManager)
 {
     if (!m_MemoryManager)
@@ -518,6 +526,7 @@ NTSTATUS CUSBHardwareDevice::GetDMA(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetUSBQueue(
     OUT struct IUSBQueue **OutUsbQueue)
 {
@@ -872,6 +881,7 @@ CUSBHardwareDevice::ResetController(void)
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::ResetPort(
     IN ULONG PortIndex)
 {
@@ -913,6 +923,7 @@ CUSBHardwareDevice::ResetPort(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetPortStatus(
     ULONG PortId,
     OUT USHORT *PortStatus,
@@ -987,6 +998,7 @@ CUSBHardwareDevice::GetPortStatus(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
@@ -1096,6 +1108,7 @@ CUSBHardwareDevice::ClearPortStatus(
 
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
@@ -1170,6 +1183,7 @@ CUSBHardwareDevice::SetPortFeature(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetAsyncListRegister(
     ULONG PhysicalAddress)
 {
@@ -1177,6 +1191,7 @@ CUSBHardwareDevice::SetAsyncListRegister(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetPeriodicListRegister(
     ULONG PhysicalAddress)
 {
@@ -1187,18 +1202,23 @@ CUSBHardwareDevice::SetPeriodicListRegister(
 }
 
 struct _QUEUE_HEAD *
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetAsyncListQueueHead()
 {
     return AsyncQueueHead;
 }
 
-ULONG CUSBHardwareDevice::GetPeriodicListRegister()
+ULONG
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetPeriodicListRegister()
 {
     UNIMPLEMENTED
     return NULL;
 }
 
-VOID CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
+VOID
+STDMETHODCALLTYPE
+CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
     PVOID CallBack,
     PVOID Context)
 {
@@ -1437,6 +1457,7 @@ StatusChangeWorkItemRoutine(
 }
 
 NTSTATUS
+NTAPI
 CreateUSBHardware(
     PUSBHARDWAREDEVICE *OutHardware)
 {

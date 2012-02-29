@@ -48,16 +48,16 @@ extern "C"
 //
 // hardware.cpp
 //
-NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
+NTSTATUS NTAPI CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 
 //
 // usb_queue.cpp
 //
-NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
+NTSTATUS NTAPI CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 
 //
 // usb_request.cpp
 //
-NTSTATUS InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
+NTSTATUS NTAPI InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
 
 #endif

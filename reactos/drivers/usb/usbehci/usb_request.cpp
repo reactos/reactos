@@ -145,6 +145,7 @@ CUSBRequest::QueryInterface(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
@@ -199,6 +200,7 @@ CUSBRequest::InitializeWithSetupPacket(
 }
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSBDEVICE Device,
@@ -330,6 +332,7 @@ CUSBRequest::InitializeWithIrp(
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::CompletionCallback(
     IN NTSTATUS NtStatusCode,
     IN ULONG UrbStatusCode,
@@ -419,6 +422,7 @@ CUSBRequest::CompletionCallback(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::GetQueueHead(
     struct _QUEUE_HEAD ** OutHead)
 {
@@ -476,6 +480,7 @@ CUSBRequest::GetQueueHead(
 
 //----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsRequestComplete()
 {
     //
@@ -497,6 +502,7 @@ CUSBRequest::IsRequestComplete()
 }
 //----------------------------------------------------------------------------------------
 ULONG
+STDMETHODCALLTYPE
 CUSBRequest::GetTransferType()
 {
     //
@@ -1283,6 +1289,7 @@ CUSBRequest::CreateQueueHead(
 
 //----------------------------------------------------------------------------------------
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetDeviceAddress()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1523,6 +1530,7 @@ CUSBRequest::BuildSetupPacketFromURB()
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::GetResultStatus(
     OUT OPTIONAL NTSTATUS * NtStatusCode,
     OUT OPTIONAL PULONG UrbStatusCode)
@@ -1557,6 +1565,7 @@ CUSBRequest::GetResultStatus(
 
 //-----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::ShouldReleaseRequestAfterCompletion()
 {
     if (m_Irp)
@@ -1577,6 +1586,7 @@ CUSBRequest::ShouldReleaseRequestAfterCompletion()
 
 //-----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::FreeQueueHead(
     IN struct _QUEUE_HEAD * QueueHead)
 {
@@ -1639,6 +1649,7 @@ CUSBRequest::FreeQueueHead(
 
 //-----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsQueueHeadComplete(
     struct _QUEUE_HEAD * QueueHead)
 {
@@ -1733,6 +1744,7 @@ CUSBRequest::InternalCalculateTransferLength()
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)
 {
