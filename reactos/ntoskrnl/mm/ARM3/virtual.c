@@ -412,7 +412,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             {
                 DPRINT("Decrement used PTEs by address: %lx\n", Va);
                 (*UsedPageTableEntries)--;
-                ASSERT((*UsedPageTableEntries) < PTE_COUNT);
+                ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
                 DPRINT("Refs: %lx\n", (*UsedPageTableEntries));
                 
                 /* Check if the PTE is actually mapped in */

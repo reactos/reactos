@@ -1978,7 +1978,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
     if((Address < MmSystemRangeStart) && (Process != PageOutContext->CallingProcess))
     {
         Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-        ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+        ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
     }
 #endif
 
@@ -2158,7 +2158,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         if(Address < MmSystemRangeStart)
         {
             Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
         }
 #endif
          MmSetSavedSwapEntryPage(Page, 0);
@@ -2186,7 +2186,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          if(Address < MmSystemRangeStart)
          {
             Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
          }
 #endif
          MmSetSavedSwapEntryPage(Page, 0);
@@ -2209,7 +2209,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if(Address < MmSystemRangeStart)
       {
          Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
       }
 #endif
       if (SwapEntry != 0)
@@ -2247,7 +2247,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if(Address < MmSystemRangeStart)
       {
          Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
       }
 #endif
       MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -2413,7 +2413,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if(Address < MmSystemRangeStart)
       {
          Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
       }
 #endif
       Entry = MAKE_SWAP_SSE(SwapEntry);
