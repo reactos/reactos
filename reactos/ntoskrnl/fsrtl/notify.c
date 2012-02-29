@@ -501,7 +501,180 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
                                  IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL)
 {
-    KeBugCheck(FILE_SYSTEM);
+    ULONG SavedLength;
+    PIO_STACK_LOCATION Stack;
+    PNOTIFY_CHANGE NotifyChange;
+    PREAL_NOTIFY_SYNC RealNotifySync;
+
+    PAGED_CODE();
+
+    DPRINT("FsRtlNotifyFilterChangeDirectory(): %p, %p, %p, %wZ, %d, %d, %u, %p, %p, %p, %p\n",
+    NotifySync, NotifyList, FsContext, FullDirectoryName, WatchTree, IgnoreBuffer, CompletionFilter, NotifyIrp,
+    TraverseCallback, SubjectContext, FilterCallback);
+
+    /* Get real structure hidden behind the opaque pointer */
+    RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
+
+    /* Acquire the fast mutex */
+    FsRtlNotifyAcquireFastMutex(RealNotifySync);
+
+    _SEH2_TRY
+    {
+        /* If we have no IRP, FSD is performing a cleanup */
+        if (!NotifyIrp)
+        {
+            /* So, we delete */
+            FsRtlCheckNotifyForDelete(NotifyList, FsContext);
+            _SEH2_LEAVE;
+        }
+
+        NotifyIrp->IoStatus.Status = STATUS_SUCCESS;
+        NotifyIrp->IoStatus.Information = (ULONG_PTR)NULL;
+
+        Stack = IoGetCurrentIrpStackLocation(NotifyIrp);
+        /* If FileObject's been cleaned up, just return */
+        if (Stack->FileObject->Flags & FO_CLEANUP_COMPLETE)
+        {
+            IoMarkIrpPending(NotifyIrp);
+            NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
+            IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            _SEH2_LEAVE;
+        }
+
+        /* Try to find a matching notification has been already registered */
+        NotifyChange = FsRtlIsNotifyOnList(NotifyList, FsContext);
+        if (NotifyChange)
+        {
+            /* If it's been found, and is cleaned up, immediatly complete */
+            if (NotifyChange->Flags & CLEANUP_IN_PROCESS)
+            {
+                IoMarkIrpPending(NotifyIrp);
+                NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
+                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            }
+            /* Or if it's about to be deleted, complete */
+            else if (NotifyChange->Flags & DELETE_IN_PROCESS)
+            {
+                IoMarkIrpPending(NotifyIrp);
+                NotifyIrp->IoStatus.Status = STATUS_DELETE_PENDING;
+                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            }
+            /* Complete if there is directory enumeration and no buffer available any more */
+            if ((NotifyChange->Flags & INVALIDATE_BUFFERS) && (NotifyChange->Flags & ENUMERATE_DIR))
+            {
+                NotifyChange->Flags &= ~INVALIDATE_BUFFERS;
+                IoMarkIrpPending(NotifyIrp);
+                NotifyIrp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
+                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            }
+            /* If no data yet, or directory enumeration, handle */
+            else if (NotifyChange->DataLength == 0 || (NotifyChange->Flags & ENUMERATE_DIR))
+            {
+                goto HandleIRP;
+            }
+            /* Else, just complete with we have */
+            else
+            {
+                SavedLength = NotifyChange->DataLength;
+                NotifyChange->DataLength = 0;
+                FsRtlNotifyCompleteIrp(NotifyIrp, NotifyChange, SavedLength, STATUS_SUCCESS, FALSE);
+            }
+
+            _SEH2_LEAVE;
+        }
+
+        /* Allocate new notification */
+        NotifyChange = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                             sizeof(NOTIFY_CHANGE), 'FSrN');
+        RtlZeroMemory(NotifyChange, sizeof(NOTIFY_CHANGE));
+
+        /* Set basic information */
+        NotifyChange->NotifySync = NotifySync;
+        NotifyChange->FsContext = FsContext;
+        NotifyChange->StreamID = Stack->FileObject->FsContext;
+        NotifyChange->TraverseCallback = TraverseCallback;
+        NotifyChange->SubjectContext = SubjectContext;
+        NotifyChange->FullDirectoryName = FullDirectoryName;
+        NotifyChange->FilterCallback = FilterCallback;
+        InitializeListHead(&(NotifyChange->NotifyIrps));
+
+        /* Keep trace of WatchTree */
+        if (WatchTree)
+        {
+            NotifyChange->Flags |= WATCH_TREE;
+        }
+
+        /* If string is empty, faulty to ANSI */
+        if (FullDirectoryName->Length == 0)
+        {
+            NotifyChange->CharacterSize = sizeof(CHAR);
+        }
+        else
+        {
+            /* If it can't contain WCHAR, it's ANSI */
+            if (FullDirectoryName->Length < sizeof(WCHAR))
+            {
+                NotifyChange->CharacterSize = sizeof(CHAR);
+            }
+            /* First char is \, so in unicode, right part is 0
+             * whereas in ANSI it contains next char
+             */
+            else if (((CHAR*)FullDirectoryName->Buffer)[1] == 0)
+            {
+                NotifyChange->CharacterSize = sizeof(WCHAR);
+            }
+            else
+            {
+                NotifyChange->CharacterSize = sizeof(CHAR);
+            }
+
+            /* Now, check is user is willing to watch root */
+            if (FullDirectoryName->Length == NotifyChange->CharacterSize)
+            {
+                NotifyChange->Flags |= WATCH_ROOT;
+            }
+        }
+
+        NotifyChange->CompletionFilter = CompletionFilter;
+
+        /* In case we have not to ignore buffer , keep its length */
+        if (!IgnoreBuffer)
+        {
+            NotifyChange->BufferLength = Stack->Parameters.NotifyDirectory.Length;
+        }
+
+        NotifyChange->OwningProcess = NotifyIrp->Tail.Overlay.Thread->ThreadsProcess;
+
+        /* Insert the notification into the notification list */
+        InsertTailList(NotifyList, &(NotifyChange->NotifyList));
+
+        NotifyChange->ReferenceCount = 1;
+
+HandleIRP:
+        /* Associate the notification to the IRP */
+        NotifyIrp->IoStatus.Information = (ULONG_PTR)NotifyChange;
+        /* The IRP is pending */
+        IoMarkIrpPending(NotifyIrp);
+        /* Insert the IRP in the IRP list */
+        InsertTailList(&(NotifyChange->NotifyIrps), &(NotifyIrp->Tail.Overlay.ListEntry));
+        /* Increment reference count */
+        InterlockedIncrement((PLONG)&(NotifyChange->ReferenceCount));
+        /* Set cancel routine to FsRtl one */
+        FsRtlNotifySetCancelRoutine(NotifyIrp, NULL);
+    }
+    _SEH2_FINALLY
+    {
+        /* Release fast mutex */
+        FsRtlNotifyReleaseFastMutex(RealNotifySync);
+
+        /* If the subject security context was captured and there's no notify */
+        if (SubjectContext && (!NotifyChange || FullDirectoryName))
+        {
+            SeReleaseSubjectContext(SubjectContext);
+            ExFreePool(SubjectContext);
+        }
+    }
+    _SEH2_END;
 }
 
 /*++
