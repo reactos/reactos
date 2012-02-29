@@ -133,6 +133,10 @@ GetPortStatusAndChange(
                           sizeof(PORT_STATUS_CHANGE),
                           0);
 
+    // FIXME: support usb hubs
+    Urb->UrbHeader.UsbdDeviceHandle = NULL;
+
+
     //
     // Query the Root Hub
     //
@@ -185,6 +189,10 @@ SetPortFeature(
                           0,
                           0,
                           0);
+
+    // FIXME support usbhubs
+    Urb->UrbHeader.UsbdDeviceHandle = NULL;
+
     //
     // Query the Root Hub
     //
@@ -237,6 +245,10 @@ ClearPortFeature(
                           0,
                           0,
                           0);
+
+    // FIXME: support usb hubs
+    Urb->UrbHeader.UsbdDeviceHandle = NULL;
+
     //
     // Query the Root Hub
     //
@@ -515,15 +527,12 @@ QueryStatusChangeEndpoint(
                                            USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
                                            NULL);
 
-    //
-    // Set the device handle to null for roothub
-    //
-    PendingSCEUrb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
+    // Set the device handle
+    PendingSCEUrb->UrbHeader.UsbdDeviceHandle = HubDeviceExtension->RootHubHandle;
 
     //
     // Allocate an Irp
     //
-
     HubDeviceExtension->PendingSCEIrp = ExAllocatePoolWithTag(NonPagedPool,
                                                               IoSizeOfIrp(RootHubDeviceObject->StackSize),
                                                               USB_HUB_TAG);
@@ -798,12 +807,8 @@ GetUsbStringDescriptor(
         ExFreePool(StringDesc);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-	DPRINT("Buffer %p\n", Buffer);
-    RtlZeroMemory(Buffer, SizeNeeded);
 
-	DPRINT("SizeNeeded %lu\n", SizeNeeded);
-	DPRINT("Offset %lu\n", FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
-    DPRINT("Length %lu\n", SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+    RtlZeroMemory(Buffer, SizeNeeded);
 
     //
     // Copy the string to destination
@@ -1503,6 +1508,450 @@ RootHubInitCallbackFunction(
 }
 
 NTSTATUS
+USBHUB_FdoStartDevice(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+    PURB Urb;
+    PUSB_INTERFACE_DESCRIPTOR Pid;
+    ULONG Result = 0, PortId;
+    USBD_INTERFACE_LIST_ENTRY InterfaceList[2] = {{NULL, NULL}, {NULL, NULL}};
+    PURB ConfigUrb = NULL;
+    ULONG HubStatus;
+    PIO_STACK_LOCATION Stack;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PDEVICE_OBJECT RootHubDeviceObject;
+    PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
+    PORT_STATUS_CHANGE StatusChange;
+
+    // get current stack location
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    // get hub device extension
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+
+    // Allocated size including the sizeof USBD_INTERFACE_LIST_ENTRY
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB) + sizeof(USBD_INTERFACE_LIST_ENTRY), USB_HUB_TAG);
+    if (!Urb)
+    {
+         // no memory
+         return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // zero urb
+    RtlZeroMemory(Urb, sizeof(URB) + sizeof(USBD_INTERFACE_LIST_ENTRY));
+
+    // Get the Root Hub Pdo
+    Status = SubmitRequestToRootHub(HubDeviceExtension->LowerDeviceObject,
+                                    IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO,
+                                    &HubDeviceExtension->RootHubPhysicalDeviceObject,
+                                    &HubDeviceExtension->RootHubFunctionalDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to obtain hub pdo
+        DPRINT1("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO failed with %x\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    // sanity checks
+    ASSERT(HubDeviceExtension->RootHubPhysicalDeviceObject);
+    ASSERT(HubDeviceExtension->RootHubFunctionalDeviceObject);
+
+    // get roothub
+    RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
+
+    // Send the StartDevice to RootHub
+    Status = ForwardIrpAndWait(RootHubDeviceObject, Irp);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to start pdo
+        DPRINT1("Failed to start the RootHub PDO\n");
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    // Get the current number of hubs
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_GET_HUB_COUNT,
+                                    &HubDeviceExtension->NumberOfHubs, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get number of hubs
+        DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT failed with %x\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    // Get the Hub Interface
+    Status = QueryInterface(RootHubDeviceObject,
+                            USB_BUS_INTERFACE_HUB_GUID,
+                            sizeof(USB_BUS_INTERFACE_HUB_V5),
+                            USB_BUSIF_HUB_VERSION_5,
+                            (PVOID)&HubDeviceExtension->HubInterface);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get root hub interface
+        DPRINT1("Failed to get HUB_GUID interface with status 0x%08lx\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    HubInterfaceBusContext = HubDeviceExtension->HubInterface.BusContext;
+
+    // Get the USBDI Interface
+    Status = QueryInterface(RootHubDeviceObject,
+                            USB_BUS_INTERFACE_USBDI_GUID,
+                            sizeof(USB_BUS_INTERFACE_USBDI_V2),
+                            USB_BUSIF_USBDI_VERSION_2,
+                            (PVOID)&HubDeviceExtension->UsbDInterface);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get usbdi interface
+        DPRINT1("Failed to get USBDI_GUID interface with status 0x%08lx\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    UsbDInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
+
+    // Get Root Hub Device Handle
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE,
+                                    &HubDeviceExtension->RootHubHandle,
+                                    NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed
+        DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE failed with status 0x%08lx\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    //
+    // Get Hub Device Information
+    //
+    Status = HubDeviceExtension->HubInterface.QueryDeviceInformation(HubInterfaceBusContext,
+                                                                        HubDeviceExtension->RootHubHandle,
+                                                                        &HubDeviceExtension->DeviceInformation,
+                                                                        sizeof(USB_DEVICE_INFORMATION_0),
+                                                                        &Result);
+
+    DPRINT1("Status %x, Result 0x%08lx\n", Status, Result);
+    DPRINT1("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
+    DPRINT1("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
+    DPRINT1("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
+    DPRINT1("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
+    DPRINT1("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
+    DPRINT1("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
+
+    // Get Root Hubs Device Descriptor
+    UsbBuildGetDescriptorRequest(Urb,
+                                    sizeof(Urb->UrbControlDescriptorRequest),
+                                    USB_DEVICE_DESCRIPTOR_TYPE,
+                                    0,
+                                    0,
+                                    &HubDeviceExtension->HubDeviceDescriptor,
+                                    NULL,
+                                    sizeof(USB_DEVICE_DESCRIPTOR),
+                                    NULL);
+
+    // set device handle
+    Urb->UrbHeader.UsbdDeviceHandle = HubDeviceExtension->RootHubHandle;
+
+    // get hub device descriptor
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                    Urb,
+                                    NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get device descriptor of hub
+        DPRINT1("Failed to get HubDeviceDescriptor!\n");
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    // build configuration request
+    UsbBuildGetDescriptorRequest(Urb,
+                                    sizeof(Urb->UrbControlDescriptorRequest),
+                                    USB_CONFIGURATION_DESCRIPTOR_TYPE,
+                                    0,
+                                    0,
+                                    &HubDeviceExtension->HubConfigDescriptor,
+                                    NULL,
+                                    sizeof(USB_CONFIGURATION_DESCRIPTOR) + sizeof(USB_INTERFACE_DESCRIPTOR) + sizeof(USB_ENDPOINT_DESCRIPTOR),
+                                    NULL);
+
+    // set device handle
+    Urb->UrbHeader.UsbdDeviceHandle = HubDeviceExtension->RootHubHandle;
+
+    // request configuration descriptor
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                    Urb,
+                                    NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get configuration descriptor
+        DPRINT1("Failed to get RootHub Configuration with status %x\n", Status);
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    // sanity checks
+    ASSERT(HubDeviceExtension->HubConfigDescriptor.wTotalLength == sizeof(USB_CONFIGURATION_DESCRIPTOR) + sizeof(USB_INTERFACE_DESCRIPTOR) + sizeof(USB_ENDPOINT_DESCRIPTOR));
+    ASSERT(HubDeviceExtension->HubConfigDescriptor.bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE);
+    ASSERT(HubDeviceExtension->HubConfigDescriptor.bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    ASSERT(HubDeviceExtension->HubConfigDescriptor.bNumInterfaces == 1);
+    ASSERT(HubDeviceExtension->HubInterfaceDescriptor.bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
+    ASSERT(HubDeviceExtension->HubInterfaceDescriptor.bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
+    ASSERT(HubDeviceExtension->HubInterfaceDescriptor.bNumEndpoints == 1);
+    ASSERT(HubDeviceExtension->HubEndPointDescriptor.bDescriptorType == USB_ENDPOINT_DESCRIPTOR_TYPE);
+    ASSERT(HubDeviceExtension->HubEndPointDescriptor.bLength == sizeof(USB_ENDPOINT_DESCRIPTOR));
+    ASSERT(HubDeviceExtension->HubEndPointDescriptor.bmAttributes == USB_ENDPOINT_TYPE_INTERRUPT);
+    ASSERT(HubDeviceExtension->HubEndPointDescriptor.bEndpointAddress == 0x81); // interrupt in
+
+    // get hub information
+    Status = HubDeviceExtension->HubInterface.GetExtendedHubInformation(HubInterfaceBusContext,
+                                                                        RootHubDeviceObject,
+                                                                        &HubDeviceExtension->UsbExtHubInfo,
+                                                                        sizeof(USB_EXTHUB_INFORMATION_0),
+                                                                        &Result);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get hub information
+        DPRINT1("Failed to extended hub information. Unable to determine the number of ports!\n");
+        ExFreePool(Urb);
+        return Status;
+    }
+
+    if (!HubDeviceExtension->UsbExtHubInfo.NumberOfPorts)
+    {
+        // bogus port driver
+        DPRINT1("Failed to retrieve the number of ports\n");
+        ExFreePool(Urb);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    DPRINT1("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
+
+    // Build hub descriptor request
+    UsbBuildVendorRequest(Urb,
+                            URB_FUNCTION_CLASS_DEVICE,
+                            sizeof(Urb->UrbControlVendorClassRequest),
+                            USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                            0,
+                            USB_REQUEST_GET_DESCRIPTOR,
+                            USB_DEVICE_CLASS_RESERVED,
+                            0,
+                            &HubDeviceExtension->HubDescriptor,
+                            NULL,
+                            sizeof(USB_HUB_DESCRIPTOR),
+                            NULL);
+
+    // set device handle
+    Urb->UrbHeader.UsbdDeviceHandle = HubDeviceExtension->RootHubHandle;
+
+    // send request
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                    Urb,
+                                    NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get Hub Descriptor!\n");
+        ExFreePool(Urb);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    // sanity checks
+    ASSERT(HubDeviceExtension->HubDescriptor.bDescriptorLength == sizeof(USB_HUB_DESCRIPTOR));
+    ASSERT(HubDeviceExtension->HubDescriptor.bNumberOfPorts == HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
+    ASSERT(HubDeviceExtension->HubDescriptor.bDescriptorType == 0x29);
+
+    // build get status request
+    HubStatus = 0;
+    UsbBuildGetStatusRequest(Urb,
+                                URB_FUNCTION_GET_STATUS_FROM_DEVICE,
+                                0,
+                                &HubStatus,
+                                0,
+                                NULL);
+    // set device handle
+    Urb->UrbHeader.UsbdDeviceHandle = HubDeviceExtension->RootHubHandle;
+
+    // send request
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                    Urb,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get hub status
+        DPRINT1("Failed to get Hub Status!\n");
+        ExFreePool(Urb);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    // Allocate memory for PortStatusChange to hold 2 USHORTs for each port on hub
+    HubDeviceExtension->PortStatusChange = ExAllocatePoolWithTag(NonPagedPool,
+                                                                    sizeof(ULONG) * HubDeviceExtension->UsbExtHubInfo.NumberOfPorts,
+                                                                    USB_HUB_TAG);
+
+    // Get the first Configuration Descriptor
+    Pid = USBD_ParseConfigurationDescriptorEx(&HubDeviceExtension->HubConfigDescriptor,
+                                                &HubDeviceExtension->HubConfigDescriptor,
+                                                -1, -1, -1, -1, -1);
+    if (Pid == NULL)
+    {
+        // failed parse hub descriptor
+        DPRINT1("Failed to parse configuration descriptor\n");
+        ExFreePool(Urb);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    // create configuration request
+    InterfaceList[0].InterfaceDescriptor = Pid;
+    ConfigUrb = USBD_CreateConfigurationRequestEx(&HubDeviceExtension->HubConfigDescriptor,
+                                                    (PUSBD_INTERFACE_LIST_ENTRY)&InterfaceList);
+    if (ConfigUrb == NULL)
+    {
+        // failed to build urb
+        DPRINT1("Failed to allocate urb\n");
+        ExFreePool(Urb);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // send request
+    Status = SubmitRequestToRootHub(RootHubDeviceObject,
+                                    IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                    ConfigUrb,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to select configuration
+        DPRINT1("Failed to select configuration with %x\n", Status);
+        ExFreePool(Urb);
+        ExFreePool(ConfigUrb);
+        return Status;
+    }
+
+    // store configuration & pipe handle
+    HubDeviceExtension->ConfigurationHandle = ConfigUrb->UrbSelectConfiguration.ConfigurationHandle;
+    HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
+    DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
+
+    // free urb
+    ExFreePool(ConfigUrb);
+
+    // check if function is available
+    if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
+    {
+        // is it high speed bus
+        if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed(HubInterfaceBusContext))
+        {
+            // initialize usb 2.0 hub
+            Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubInterfaceBusContext,
+                                                                        HubDeviceExtension->RootHubHandle, 1);
+            DPRINT("Status %x\n", Status);
+
+            // FIXME handle error
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+    }
+
+
+    // Enable power on all ports
+    DPRINT("Enabling PortPower on all ports!\n");
+    for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
+    {
+        Status = SetPortFeature(RootHubDeviceObject, PortId, PORT_POWER);
+        if (!NT_SUCCESS(Status))
+            DPRINT1("Failed to power on port %d\n", PortId);
+
+        Status = ClearPortFeature(RootHubDeviceObject, PortId, C_PORT_CONNECTION);
+        if (!NT_SUCCESS(Status))
+            DPRINT1("Failed to power on port %d\n", PortId);
+    }
+
+    // init root hub notification
+    if (HubDeviceExtension->HubInterface.RootHubInitNotification)
+    {
+        Status = HubDeviceExtension->HubInterface.RootHubInitNotification(HubInterfaceBusContext,
+                                                                            DeviceObject,
+                                                                            RootHubInitCallbackFunction);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to set callback\n");
+            ExFreePool(Urb);
+            return Status;
+        }
+    }
+    else
+    {
+        // Send the first SCE Request
+        QueryStatusChangeEndpoint(DeviceObject);
+
+        //
+        // reset ports
+        //
+        for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
+        {
+            //
+            // get port status
+            //
+            Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &StatusChange);
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // is there a device connected
+                //
+                if (StatusChange.Status & USB_PORT_STATUS_CONNECT)
+                {
+                    //
+                    // reset port
+                    //
+                    Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("Failed to reset on port %d\n", PortId);
+                    }
+                    else
+                    {
+                        //
+                        // wait for the reset to be handled since we want to enumerate synchronously
+                        //
+                        KeWaitForSingleObject(&HubDeviceExtension->ResetComplete,
+                                                Executive,
+                                                KernelMode,
+                                                FALSE,
+                                                NULL);
+                        KeClearEvent(&HubDeviceExtension->ResetComplete);
+                    }
+                }
+            }
+        }
+    }
+
+    // free urb
+    ExFreePool(Urb);
+
+    // done
+    return Status;
+}
+
+NTSTATUS
 USBHUB_FdoHandlePnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -1511,9 +1960,6 @@ USBHUB_FdoHandlePnp(
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG_PTR Information = 0;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
-    PDEVICE_OBJECT RootHubDeviceObject;
-    PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
-    PORT_STATUS_CHANGE StatusChange;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -1523,380 +1969,7 @@ USBHUB_FdoHandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            PURB Urb;
-            PUSB_INTERFACE_DESCRIPTOR Pid;
-            ULONG Result = 0, PortId;
-            USBD_INTERFACE_LIST_ENTRY InterfaceList[2] = {{NULL, NULL}, {NULL, NULL}};
-            PURB ConfigUrb = NULL;
-            ULONG HubStatus;
-
-            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-
-            //
-            // Allocated size including the sizeof USBD_INTERFACE_LIST_ENTRY
-            //
-            Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB) + sizeof(USBD_INTERFACE_LIST_ENTRY), USB_HUB_TAG);
-            RtlZeroMemory(Urb, sizeof(URB) + sizeof(USBD_INTERFACE_LIST_ENTRY));
-
-            //
-            // Get the Root Hub Pdo
-            //
-            SubmitRequestToRootHub(HubDeviceExtension->LowerDeviceObject,
-                                   IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO,
-                                   &HubDeviceExtension->RootHubPhysicalDeviceObject,
-                                   &HubDeviceExtension->RootHubFunctionalDeviceObject);
-
-            RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
-            ASSERT(HubDeviceExtension->RootHubPhysicalDeviceObject);
-            ASSERT(HubDeviceExtension->RootHubFunctionalDeviceObject);
-            DPRINT("RootPdo %x, RootFdo %x\n",
-                    HubDeviceExtension->RootHubPhysicalDeviceObject,
-                    HubDeviceExtension->RootHubFunctionalDeviceObject);
-
-            //
-            // Send the StartDevice to RootHub
-            //
-            Status = ForwardIrpAndWait(RootHubDeviceObject, Irp);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to start the RootHub PDO\n");
-                ASSERT(FALSE);
-            }
-
-            //
-            // Get the current number of hubs
-            //
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_GET_HUB_COUNT,
-                                            &HubDeviceExtension->NumberOfHubs, NULL);
-
-            //
-            // Get the Hub Interface
-            //
-            Status = QueryInterface(RootHubDeviceObject,
-                                    USB_BUS_INTERFACE_HUB_GUID,
-                                    sizeof(USB_BUS_INTERFACE_HUB_V5),
-                                    USB_BUSIF_HUB_VERSION_5,
-                                    (PVOID)&HubDeviceExtension->HubInterface);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get HUB_GUID interface with status 0x%08lx\n", Status);
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            HubInterfaceBusContext = HubDeviceExtension->HubInterface.BusContext;
-
-            //
-            // Get the USBDI Interface
-            //
-            Status = QueryInterface(RootHubDeviceObject,
-                                    USB_BUS_INTERFACE_USBDI_GUID,
-                                    sizeof(USB_BUS_INTERFACE_USBDI_V2),
-                                    USB_BUSIF_USBDI_VERSION_2,
-                                    (PVOID)&HubDeviceExtension->UsbDInterface);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get USBDI_GUID interface with status 0x%08lx\n", Status);
-                return Status;
-            }
-
-            UsbDInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
-
-            //
-            // Get Root Hub Device Handle
-            //
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE,
-                                            &HubDeviceExtension->RootHubHandle,
-                                            NULL);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("GetRootHubDeviceHandle failed with status 0x%08lx\n", Status);
-                return Status;
-            }
-
-            //
-            // Get Hub Device Information
-            //
-            Status = HubDeviceExtension->HubInterface.QueryDeviceInformation(HubInterfaceBusContext,
-                                                                             HubDeviceExtension->RootHubHandle,
-                                                                             &HubDeviceExtension->DeviceInformation,
-                                                                             sizeof(USB_DEVICE_INFORMATION_0),
-                                                                             &Result);
-
-            DPRINT1("Status %x, Result 0x%08lx\n", Status, Result);
-            DPRINT1("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
-            DPRINT1("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
-            DPRINT1("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
-            DPRINT1("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
-            DPRINT1("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
-            DPRINT1("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
-
-            //
-            // Get Root Hubs Device Descriptor
-            //
-            UsbBuildGetDescriptorRequest(Urb,
-                                         sizeof(Urb->UrbControlDescriptorRequest),
-                                         USB_DEVICE_DESCRIPTOR_TYPE,
-                                         0,
-                                         0,
-                                         &HubDeviceExtension->HubDeviceDescriptor,
-                                         NULL,
-                                         sizeof(USB_DEVICE_DESCRIPTOR),
-                                         NULL);
-
-            Urb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
-
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_SUBMIT_URB,
-                                            Urb,
-                                            NULL);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get HubDeviceDescriptor!\n");
-            }
-
-            DumpDeviceDescriptor(&HubDeviceExtension->HubDeviceDescriptor);
-
-            //
-            // Get Root Hubs Configuration Descriptor
-            //
-            UsbBuildGetDescriptorRequest(Urb,
-                                         sizeof(Urb->UrbControlDescriptorRequest),
-                                         USB_CONFIGURATION_DESCRIPTOR_TYPE,
-                                         0,
-                                         0,
-                                         &HubDeviceExtension->HubConfigDescriptor,
-                                         NULL,
-                                         sizeof(USB_CONFIGURATION_DESCRIPTOR) + sizeof(USB_INTERFACE_DESCRIPTOR) + sizeof(USB_ENDPOINT_DESCRIPTOR),
-                                         NULL);
-
-            DPRINT("RootHub Handle %x\n", HubDeviceExtension->RootHubHandle);
-            Urb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
-
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_SUBMIT_URB,
-                                            Urb,
-                                            NULL);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get RootHub Configuration with status %x\n", Status);
-                ASSERT(FALSE);
-            }
-            ASSERT(HubDeviceExtension->HubConfigDescriptor.wTotalLength);
-
-            DumpConfigurationDescriptor(&HubDeviceExtension->HubConfigDescriptor);
-
-            Status = HubDeviceExtension->HubInterface.GetExtendedHubInformation(HubInterfaceBusContext,
-                                                                                RootHubDeviceObject,
-                                                                                &HubDeviceExtension->UsbExtHubInfo,
-                                                                                sizeof(USB_EXTHUB_INFORMATION_0),
-                                                                                &Result);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to extended hub information. Unable to determine the number of ports!\n");
-                ASSERT(FALSE);
-            }
-
-            DPRINT1("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
-
-            //
-            // Get the Hub Descriptor
-            //
-            UsbBuildVendorRequest(Urb,
-                                  URB_FUNCTION_CLASS_DEVICE,
-                                  sizeof(Urb->UrbControlVendorClassRequest),
-                                  USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
-                                  0,
-                                  USB_REQUEST_GET_DESCRIPTOR,
-                                  USB_DEVICE_CLASS_RESERVED,
-                                  0,
-                                  &HubDeviceExtension->HubDescriptor,
-                                  NULL,
-                                  sizeof(USB_HUB_DESCRIPTOR),
-                                  NULL);
-
-            Urb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
-
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_SUBMIT_URB,
-                                            Urb,
-                                            NULL);
-
-            DPRINT1("bDescriptorType %x\n", HubDeviceExtension->HubDescriptor.bDescriptorType);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get Hub Descriptor!\n");
-                ExFreePool(Urb);
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            HubStatus = 0;
-            UsbBuildGetStatusRequest(Urb,
-                                     URB_FUNCTION_GET_STATUS_FROM_DEVICE,
-                                     0,
-                                     &HubStatus,
-                                     0,
-                                     NULL);
-            Urb->UrbHeader.UsbdDeviceHandle = NULL;//HubDeviceExtension->RootHubHandle;
-
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_SUBMIT_URB,
-                                            Urb,
-                                            NULL);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to get Hub Status!\n");
-                ExFreePool(Urb);
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            DPRINT1("HubStatus %x\n", HubStatus);
-
-            //
-            // Allocate memory for PortStatusChange to hold 2 USHORTs for each port on hub
-            //
-            HubDeviceExtension->PortStatusChange = ExAllocatePoolWithTag(NonPagedPool,
-                                                                         sizeof(ULONG) * HubDeviceExtension->UsbExtHubInfo.NumberOfPorts,
-                                                                         USB_HUB_TAG);
-
-            //
-            // Get the first Configuration Descriptor
-            //
-            Pid = USBD_ParseConfigurationDescriptorEx(&HubDeviceExtension->HubConfigDescriptor,
-                                                      &HubDeviceExtension->HubConfigDescriptor,
-                                                     -1, -1, -1, -1, -1);
-
-            ASSERT(Pid != NULL);
-
-            InterfaceList[0].InterfaceDescriptor = Pid;
-            ConfigUrb = USBD_CreateConfigurationRequestEx(&HubDeviceExtension->HubConfigDescriptor,
-                                                          (PUSBD_INTERFACE_LIST_ENTRY)&InterfaceList);
-            ASSERT(ConfigUrb != NULL);
-
-            Status = SubmitRequestToRootHub(RootHubDeviceObject,
-                                            IOCTL_INTERNAL_USB_SUBMIT_URB,
-                                            ConfigUrb,
-                                            NULL);
-
-            HubDeviceExtension->ConfigurationHandle = ConfigUrb->UrbSelectConfiguration.ConfigurationHandle;
-            HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
-            DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
-
-            //
-            // check if function is available
-            //
-            if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
-            {
-                //
-                // is it high speed bus
-                //
-                if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed(HubInterfaceBusContext))
-                {
-                    //
-                    // initialize usb 2.0 hub
-                    //
-                    Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubInterfaceBusContext,
-                                                                              HubDeviceExtension->RootHubHandle, 1);
-                    DPRINT("Status %x\n", Status);
-
-                    //
-                    // FIXME handle error
-                    //
-                    ASSERT(Status == STATUS_SUCCESS);
-                }
-            }
-
-            ExFreePool(ConfigUrb);
-
-            //
-            // Enable power on all ports
-            //
-
-            DPRINT("Enabling PortPower on all ports!\n");
-
-            for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
-            {
-                Status = SetPortFeature(RootHubDeviceObject, PortId, PORT_POWER);
-                if (!NT_SUCCESS(Status))
-                    DPRINT1("Failed to power on port %d\n", PortId);
-
-                Status = ClearPortFeature(RootHubDeviceObject, PortId, C_PORT_CONNECTION);
-                if (!NT_SUCCESS(Status))
-                    DPRINT1("Failed to power on port %d\n", PortId);
-            }
-
-            DPRINT("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
-
-            //
-            // init root hub notification
-            //
-            if (HubDeviceExtension->HubInterface.RootHubInitNotification)
-            {
-                Status = HubDeviceExtension->HubInterface.RootHubInitNotification(HubInterfaceBusContext,
-                                                                                  DeviceObject,
-                                                                                  RootHubInitCallbackFunction);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Failed to set callback\n");
-                }
-            }
-            else
-            {
-                //
-                // Send the first SCE Request
-                //
-                QueryStatusChangeEndpoint(DeviceObject);
-
-                //
-                // reset ports
-                //
-                for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
-                {
-                    //
-                    // get port status
-                    //
-                    Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &StatusChange);
-                    if (NT_SUCCESS(Status))
-                    {
-                        //
-                        // is there a device connected
-                        //
-                        if (StatusChange.Status & USB_PORT_STATUS_CONNECT)
-                        {
-                            //
-                            // reset port
-                            //
-                            Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_RESET);
-                            if (!NT_SUCCESS(Status))
-                            {
-                                DPRINT1("Failed to reset on port %d\n", PortId);
-                            }
-                            else
-                            {
-                                //
-                                // wait for the reset to be handled since we want to enumerate synchronously
-                                //
-                                KeWaitForSingleObject(&HubDeviceExtension->ResetComplete,
-                                                      Executive,
-                                                      KernelMode,
-                                                      FALSE,
-                                                      NULL);
-                                KeClearEvent(&HubDeviceExtension->ResetComplete);
-                            }
-                        }
-                    }
-                }
-            }
-
-            ExFreePool(Urb);
+            Status = USBHUB_FdoStartDevice(DeviceObject, Irp);
             break;
         }
 

@@ -836,7 +836,7 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     // Is the Request for the root hub
     //
-    if (Urb->UrbHeader.UsbdDeviceHandle == 0)
+    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
     {
         ASSERT(m_PendingSCEIrp == NULL);
         if (QueryStatusChageEndpoint(Irp))
@@ -1179,7 +1179,7 @@ CHubController::HandleGetStatusFromDevice(
     DeviceStatus = (PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer;
 
 
-    if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
     {
         //
         // FIXME need more flags ?
@@ -1311,46 +1311,66 @@ CHubController::HandleClassDevice(
                 case USB_DEVICE_CLASS_RESERVED: // FALL THROUGH
                 case USB_DEVICE_CLASS_HUB:
                 {
-                    //
-                    // sanity checks
-                    //
-                    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
-                    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR));
+                    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+                    {
+                        //
+                        // sanity checks
+                        //
+                        PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
+                        PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR));
 
-                    //
-                    // get hub descriptor
-                    //
-                    UsbHubDescriptor = (PUSB_HUB_DESCRIPTOR)Urb->UrbControlVendorClassRequest.TransferBuffer;
+                        //
+                        // get hub descriptor
+                        //
+                        UsbHubDescriptor = (PUSB_HUB_DESCRIPTOR)Urb->UrbControlVendorClassRequest.TransferBuffer;
 
-                    //
-                    // one hub is handled
-                    //
-                    UsbHubDescriptor->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
-                    Urb->UrbControlVendorClassRequest.TransferBufferLength = sizeof(USB_HUB_DESCRIPTOR);
+                        //
+                        // one hub is handled
+                        //
+                        UsbHubDescriptor->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
+                        Urb->UrbControlVendorClassRequest.TransferBufferLength = sizeof(USB_HUB_DESCRIPTOR);
 
-                    //
-                    // type should 0x29 according to msdn
-                    //
-                    UsbHubDescriptor->bDescriptorType = 0x29;
+                        //
+                        // type should 0x29 according to msdn
+                        //
+                        UsbHubDescriptor->bDescriptorType = 0x29;
 
-                    //
-                    // get port count
-                    //
-                    Status = m_Hardware->GetDeviceDetails(&Dummy1, &Dummy1, &PortCount, &Dummy2);
-                    PC_ASSERT(Status == STATUS_SUCCESS);
+                        //
+                        // get port count
+                        //
+                        Status = m_Hardware->GetDeviceDetails(&Dummy1, &Dummy1, &PortCount, &Dummy2);
+                        PC_ASSERT(Status == STATUS_SUCCESS);
 
-                    //
-                    // FIXME: retrieve values
-                    //
-                    UsbHubDescriptor->bNumberOfPorts = (UCHAR)PortCount;
-                    UsbHubDescriptor->wHubCharacteristics = 0x00;
-                    UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
-                    UsbHubDescriptor->bHubControlCurrent = 0x00;
+                        //
+                        // FIXME: retrieve values
+                        //
+                        UsbHubDescriptor->bNumberOfPorts = (UCHAR)PortCount;
+                        UsbHubDescriptor->wHubCharacteristics = 0x00;
+                        UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
+                        UsbHubDescriptor->bHubControlCurrent = 0x00;
 
-                    //
-                    // done
-                    //
-                    Status = STATUS_SUCCESS;
+                        //
+                        // done
+                        //
+                        Status = STATUS_SUCCESS;
+                    }
+                    else
+                    {
+                        if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
+                        {
+                            DPRINT1("HandleClassDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                            //
+                            // invalid device handle
+                            //
+                            return STATUS_DEVICE_NOT_CONNECTED;
+                        }
+
+                        //
+                        // FIXME: implement support for real hubs
+                        //
+                        UNIMPLEMENTED
+                        Status = STATUS_NOT_IMPLEMENTED;
+                    }
                     break;
                }
                default:
@@ -1450,7 +1470,7 @@ CHubController::HandleGetDescriptor(
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR));
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
 
-            if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
             {
                 //
                 // copy root hub device descriptor
@@ -1494,7 +1514,7 @@ CHubController::HandleGetDescriptor(
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
 
-            if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
             {
                 //
                 // request is for the root bus controller
