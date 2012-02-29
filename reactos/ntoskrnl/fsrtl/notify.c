@@ -182,12 +182,13 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
             {
                 FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_NOTIFY_CLEANUP);
             }
-            /* Remove from the list */
-            RemoveEntryList(&NotifyChange->NotifyList);
 
-            /* Downcrease reference number and if 0 is reached, it's time to do complete cleanup */
+            /* Decrease reference number and if 0 is reached, it's time to do complete cleanup */
             if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
             {
+                /* Remove it from the notifications list */
+                RemoveEntryList(&NotifyChange->NotifyList);
+
                 /* In case there was an allocated buffer, free it */
                 if (NotifyChange->AllocatedBuffer)
                 {
