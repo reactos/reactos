@@ -12,6 +12,68 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+PNOTIFY_CHANGE
+FsRtlIsNotifyOnList(IN PLIST_ENTRY NotifyList,
+                    IN PVOID FsContext)
+{
+    PLIST_ENTRY NextEntry;
+    PNOTIFY_CHANGE NotifyChange;
+
+    if (!IsListEmpty(NotifyList))
+    {
+        /* Browse the notifications list to find the matching entry */
+        for (NextEntry = NotifyList->Flink;
+             NextEntry != NotifyList;
+             NextEntry = NextEntry->Flink)
+        {
+            NotifyChange = CONTAINING_RECORD(NextEntry, NOTIFY_CHANGE, NotifyList);
+            /* If the current record matches with the given context, it's the good one */
+            if (NotifyChange->FsContext == FsContext)
+            {
+                return NotifyChange;
+            }
+        }
+    }
+    return NULL;
+}
+
+VOID
+FORCEINLINE
+FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    ULONG_PTR CurrentThread = (ULONG_PTR)KeGetCurrentThread();
+
+    /* Only acquire fast mutex if it's not already acquired by the current thread */
+    if (RealNotifySync->OwningThread != CurrentThread)
+    {
+        ExAcquireFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = CurrentThread;
+    }
+    /* Whatever the case, keep trace of the attempt to acquire fast mutex */
+    RealNotifySync->OwnerCount++;
+}
+
+VOID
+FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
+                           IN NTSTATUS Status)
+{
+}
+
+VOID
+FORCEINLINE
+FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    RealNotifySync->OwnerCount--;
+    /* Release the fast mutex only if no other instance needs it */
+    if (!RealNotifySync->OwnerCount)
+    {
+        ExReleaseFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = (ULONG_PTR)0;
+    }
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -44,8 +106,7 @@
  *
  * @return None
  *
- * @remarks This function only redirects to FsRtlNotifyFullChangeDirectory.
- * So, it's better to call the entire function.  
+ * @remarks This function only redirects to FsRtlNotifyFilterChangeDirectory.
  *
  *--*/
 VOID
@@ -58,32 +119,33 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                            IN ULONG CompletionFilter,
                            IN PIRP NotifyIrp)
 {
-    FsRtlNotifyFullChangeDirectory(NotifySync,
-                                   NotifyList,
-                                   FsContext,
-                                   FullDirectoryName,
-                                   WatchTree,
-                                   TRUE,
-                                   CompletionFilter,
-                                   NotifyIrp,
-                                   NULL,
-                                   NULL);
+    FsRtlNotifyFilterChangeDirectory(NotifySync,
+                                     NotifyList,
+                                     FsContext,
+                                     FullDirectoryName,
+                                     WatchTree,
+                                     TRUE,
+                                     CompletionFilter,
+                                     NotifyIrp,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 }
 
 /*++
  * @name FsRtlNotifyCleanup
- * @unimplemented
+ * @implemented
  *
  * Called by FSD when all handles to FileObject (identified by FsContext) are closed
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FsContext
- *        FILLME
+ *        Used to identify the notify structure
  *
  * @return None
  *
@@ -96,7 +158,67 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                    IN PLIST_ENTRY NotifyList,
                    IN PVOID FsContext)
 {
-    KeBugCheck(FILE_SYSTEM);
+    PNOTIFY_CHANGE NotifyChange;
+    PREAL_NOTIFY_SYNC RealNotifySync;
+    PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
+
+    /* Get real structure hidden behind the opaque pointer */
+    RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
+
+    /* Acquire the fast mutex */
+    FsRtlNotifyAcquireFastMutex(RealNotifySync);
+
+    _SEH2_TRY
+    {
+        /* Find if there's a matching notification with the FsContext */
+        NotifyChange = FsRtlIsNotifyOnList(NotifyList, FsContext);
+        if (NotifyChange)
+        {
+            /* Mark it as to know that cleanup is in process */
+            NotifyChange->Flags |= CLEANUP_IN_PROCESS;
+
+            /* If there are pending IRPs, complete them using the STATUS_NOTIFY_CLEANUP status */
+            if (!IsListEmpty(NotifyChange->NotifyIrps))
+            {
+                FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_NOTIFY_CLEANUP);
+            }
+            /* Remove from the list */
+            RemoveEntryList(NotifyChange->NotifyList);
+
+            /* Downcrease reference number and if 0 is reached, it's time to do complete cleanup */
+            if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
+            {
+                /* In case there was an allocated buffer, free it */
+                if (NotifyChange->AllocatedBuffer)
+                {
+                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
+                    ExFreePool(NotifyChange->AllocatedBuffer);
+                }
+
+                /* In case there the string was set, get the captured subject security context */
+                if (NotifyChange->FullDirectoryName)
+                {
+                    SubjectContext = NotifyChange->SubjectContext;
+                }
+
+                /* Finally, free the notification, as it's not needed anymore */
+                ExFreePool(NotifyChange);
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+      /* Release fast mutex */
+      FsRtlNotifyReleaseFastMutex(RealNotifySync);
+
+      /* If the subject security context was captured, release and free it */
+      if (SubjectContext)
+      {
+          SeReleaseSubjectContext(SubjectContext);
+          ExFreePool(SubjectContext);
+      }
+    }
+    _SEH2_END;
 }
 
 /*++
@@ -219,43 +341,46 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
 
 /*++
  * @name FsRtlNotifyFullChangeDirectory
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Lets FSD know if changes occures in the specified directory. 
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FsContext
- *        FILLME
+ *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        FILLME
+ *        String (A or W) containing the full directory name 
  *
  * @param WatchTree
- *        FILLME
+ *        True to notify changes in subdirectories too
  *
  * @param IgnoreBuffer
- *        FILLME
+ *        True to reenumerate directory. It's ignored it NotifyIrp is null
  *
  * @param CompletionFilter
- *        FILLME
+ *        Used to define types of changes to notify
  *
- * @param Irp
- *        FILLME
+ * @param NotifyIrp
+ *        IRP pointer to complete notify operation. It can be null
  *
  * @param TraverseCallback
- *        FILLME
+ *        Pointer to a callback function. It's called each time a change is
+ *        done in a subdirectory of the main directory. It's ignored it NotifyIrp
+ *        is null
  *
  * @param SubjectContext
- *        FILLME
+ *        Pointer to pass to SubjectContext member of TraverseCallback.
+ *        It's freed after use. It's ignored it NotifyIrp is null
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterChangeDirectory.
  *
  *--*/
 VOID
@@ -267,49 +392,60 @@ FsRtlNotifyFullChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                IN BOOLEAN WatchTree,
                                IN BOOLEAN IgnoreBuffer,
                                IN ULONG CompletionFilter,
-                               IN PIRP Irp,
+                               IN PIRP NotifyIrp,
                                IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
                                IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL)
 {
-    KeBugCheck(FILE_SYSTEM);
+    FsRtlNotifyFilterChangeDirectory(NotifySync,
+                                     NotifyList,
+                                     FsContext,
+                                     FullDirectoryName,
+                                     WatchTree,
+                                     IgnoreBuffer,
+                                     CompletionFilter,
+                                     NotifyIrp,
+                                     TraverseCallback,
+                                     SubjectContext,
+                                     NULL);
 }
 
 /*++
  * @name FsRtlNotifyFullReportChange
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Complets the pending notify IRPs.
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FullTargetName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed
  *
  * @param TargetNameOffset
- *        FILLME
+ *        Offset, in FullTargetName, of the final component that is in the changed directory 
  *
  * @param StreamName
- *        FILLME
+ *        String (A or W) containing a stream name
  *
  * @param NormalizedParentName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed with long names
  *
  * @param FilterMatch
- *        FILLME
+ *        Flags that will be compared to the completion filter
  *
  * @param Action
- *        FILLME
+ *        Action code to store in user's buffer
  *
  * @param TargetContext
- *        FILLME
+ *        Pointer to a callback function. It's called each time a change is
+ *        done in a subdirectory of the main directory.
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterReportChange.
  *
  *--*/
 VOID
@@ -324,54 +460,73 @@ FsRtlNotifyFullReportChange(IN PNOTIFY_SYNC NotifySync,
                             IN ULONG Action,
                             IN PVOID TargetContext)
 {
-    KeBugCheck(FILE_SYSTEM);
+    FsRtlNotifyFilterReportChange(NotifySync,
+                                  NotifyList,
+                                  FullTargetName,
+                                  TargetNameOffset,
+                                  StreamName,
+                                  NormalizedParentName,
+                                  FilterMatch,
+                                  Action,
+                                  TargetContext,
+                                  NULL);
 }
 
 /*++
  * @name FsRtlNotifyInitializeSync
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Allocates the internal structure associated with notifications.
  *
  * @param NotifySync
- *        FILLME
+ *        Opaque pointer. It will receive the address of the allocated internal structure.
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function raise an exception in case of a failure.
  *
  *--*/
 VOID
 NTAPI
 FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KeBugCheck(FILE_SYSTEM);
+    PREAL_NOTIFY_SYNC RealNotifySync;
+
+    *NotifySync = NULL;
+    
+    RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                           sizeof(REAL_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
+    ExInitializeFastMutex(&(RealNotifySync->FastMutex));
+    RealNotifySync->OwningThread = 0;
+    RealNotifySync->OwnerCount = 0;
+
+    *NotifySync = RealNotifySync;
 }
 
 /*++
  * @name FsRtlNotifyReportChange
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Complets the pending notify IRPs.
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FullTargetName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed
  *
  * @param FileNamePartLength
- *        FILLME
+ *        Length of the final component that is in the changed directory
  *
  * @param FilterMatch
- *        FILLME
+ *        Flags that will be compared to the completion filter
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterReportChange.
  *
  *--*/
 VOID
@@ -382,11 +537,20 @@ FsRtlNotifyReportChange(IN PNOTIFY_SYNC NotifySync,
                         IN PUSHORT FileNamePartLength,
                         IN ULONG FilterMatch)
 {
-    KeBugCheck(FILE_SYSTEM);
+      FsRtlNotifyFilterReportChange(NotifySync,
+                                    NotifyList,
+                                    FullTargetName,
+                                    FullTargetName->Length - *FileNamePartLength,
+                                    NULL,
+                                    NULL,
+                                    FilterMatch,
+                                    0,
+                                    NULL,
+                                    NULL); 
 }
 
 /*++
- * @name FsRtlCurrentBatchOplock
+ * @name FsRtlNotifyUninitializeSync
  * @implemented
  *
  * Uninitialize a NOTIFY_SYNC object
@@ -404,6 +568,10 @@ VOID
 NTAPI
 FsRtlNotifyUninitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KeBugCheck(FILE_SYSTEM);
+    if (*NotifySync)
+    {
+        ExFreePoolWithTag(*NotifySync, TAG('F', 'S', 'N', 'S'));
+        *NotifySync = NULL;
+    }
 }
 

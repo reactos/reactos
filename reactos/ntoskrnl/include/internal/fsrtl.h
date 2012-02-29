@@ -6,6 +6,10 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
+#ifndef TAG
+#define TAG(w,x,y,z) (((w)<<24)|((x)<<16)|((y)<<8)|(z))
+#endif
+
 //
 // Define this if you want debugging support
 //
@@ -36,7 +40,7 @@
     if (x & FsRtlpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define FSTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
+#define FSTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //
@@ -45,11 +49,67 @@
 #define FSRTL_MAX_RESOURCES 16
 
 //
+// Number of maximum pair count per MCB
+//
+#define MAXIMUM_PAIR_COUNT  15
+
+//
+// Notifications flags
+//
+#define CLEANUP_IN_PROCESS 4
+
+//
+// Internal structure for NOTIFY_SYNC
+//
+typedef struct _REAL_NOTIFY_SYNC
+{
+    FAST_MUTEX FastMutex;
+    ULONG_PTR OwningThread;
+    ULONG OwnerCount;
+} REAL_NOTIFY_SYNC, * PREAL_NOTIFY_SYNC;
+
+//
+// Internal structure for notifications
+//
+typedef struct _NOTIFY_CHANGE
+{
+    PREAL_NOTIFY_SYNC NotifySync;
+    PVOID FsContext;
+    PVOID StreamID;
+    PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback;
+    PSECURITY_SUBJECT_CONTEXT SubjectContext;
+    PSTRING FullDirectoryName;
+    PLIST_ENTRY NotifyList;
+    PLIST_ENTRY NotifyIrps;
+    PFILTER_REPORT_CHANGE FilterCallback;
+    USHORT Flags;
+    UCHAR CharacterSize;
+    ULONG CompletionFilter;
+    PVOID AllocatedBuffer;
+    PVOID Buffer;
+    ULONG BufferLength;
+    ULONG ThisBufferLength;
+    ULONG DataLength;
+    ULONG LastEntry;
+    ULONG ReferenceCount;
+    PEPROCESS OwningProcess;
+} NOTIFY_CHANGE, *PNOTIFY_CHANGE;
+
+//
+// Internal structure for MCB Mapping pointer
+//
+typedef struct _INT_MAPPING
+{
+    VBN Vbn;
+    LBN Lbn;
+} INT_MAPPING, *PINT_MAPPING;
+
+//
 // Initialization Routines
 //
-BOOLEAN
+VOID
 NTAPI
-FsRtlInitSystem(
+FsRtlInitializeLargeMcbs(
     VOID
 );
 
@@ -60,6 +120,12 @@ VOID
 NTAPI
 FsRtlPTeardownPerFileObjectContexts(
     IN PFILE_OBJECT FileObject
+);
+
+BOOLEAN
+NTAPI
+FsRtlInitSystem(
+    VOID
 );
 
 //
