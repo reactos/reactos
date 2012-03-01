@@ -16,6 +16,14 @@ endif()
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions")
 
+#bug
+#file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
+#workaround
+if (WIN32)
+STRING(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
+endif()
+add_compile_flags("-fdebug-prefix-map=${REACTOS_SOURCE_DIR_NATIVE}=ReactOS")
+
 # Debugging
 if(SEPARATE_DBG)
     add_compile_flags("-gdwarf-2 -g2")
