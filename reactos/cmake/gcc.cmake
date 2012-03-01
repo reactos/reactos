@@ -19,6 +19,7 @@ add_compile_flags("-pipe -fms-extensions")
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
 #workaround
+set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 if (WIN32)
 STRING(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
