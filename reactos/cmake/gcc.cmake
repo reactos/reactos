@@ -20,7 +20,7 @@ add_compile_flags("-pipe -fms-extensions")
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
 #workaround
 set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
-if (WIN32)
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 STRING(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
 add_compile_flags("-fdebug-prefix-map=${REACTOS_SOURCE_DIR_NATIVE}=ReactOS")
