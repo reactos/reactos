@@ -54,6 +54,7 @@
 
 extern KEVENT MmWaitPageEvent;
 extern FAST_MUTEX RmapListLock;
+extern PMMWSL MmWorkingSetList;
 
 FAST_MUTEX MiGlobalPageOperation;
 
@@ -157,11 +158,10 @@ MmFinalizeSectionPageOut
 	{
 		DPRINT("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
-		// Note: the other one is held by MmTrimUserMemory
-		if (MmGetReferenceCountPage(Page) != 2) {
+		if (MmGetReferenceCountPage(Page) != 1) {
 			DPRINT1("ALERT: Page %x about to be evicted with ref count %d\n", Page, MmGetReferenceCountPage(Page));
 		}
-		MmDereferencePage(Page);
+		MmReleasePageMemoryConsumer(MC_CACHE, Page);
 	}
 
 	MmUnlockSectionSegment(Segment);
@@ -187,7 +187,6 @@ MmPageOutCacheSection
  BOOLEAN Dirty,
  PMM_REQUIRED_RESOURCES Required)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG Entry;
     PFN_NUMBER OurPage;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -214,14 +213,16 @@ MmPageOutCacheSection
     MmDeleteVirtualMapping(Process, Address, FALSE, NULL, &OurPage);
     ASSERT(OurPage == Required->Page[0]);
 
-	if (NT_SUCCESS(Status)) 
-	{
-		MmDereferencePage(Required->Page[0]);
-	} 
+	MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
+
+#if (_MI_PAGING_LEVELS == 2)
+    if (Address < MmSystemRangeStart)
+        Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+#endif
 
 	MmUnlockSectionSegment(Segment);
 	MiSetPageEvent(Process, Address);
-	return Status;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -328,12 +329,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 		   KeBugCheck(MEMORY_MANAGEMENT);
 	   }
 
-	   if (!MmTryToLockAddressSpace(AddressSpace))
-	   {
-		   DPRINT1("Could not lock address space for process %x\n", MmGetAddressSpaceOwner(AddressSpace));
-		   Status = STATUS_UNSUCCESSFUL;
-		   goto bail;
-	   }
+	   MmLockAddressSpace(AddressSpace);
 
 	   do 
 	   {
@@ -466,13 +462,11 @@ MiCacheEvictPages(PMM_SECTION_SEGMENT Segment, ULONG Target)
 			Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
 			if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
 				Page = PFN_FROM_SSE(Entry);
-				MmReferencePage(Page);
 				MmUnlockSectionSegment(Segment);
 				Status = MmpPageOutPhysicalAddress(Page);
 				if (NT_SUCCESS(Status))
 					Result++;
 				MmLockSectionSegment(Segment);
-				MmReleasePageMemoryConsumer(MC_CACHE, Page);
 			}
 		}
 	}
@@ -495,12 +489,14 @@ MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     PMM_SECTION_SEGMENT Segment;
     *NrFreed = 0;
 
+    DPRINT1("Need to trim %d cache pages\n", Target);
     for (Entry = MiSegmentList.Flink; *NrFreed < Target && Entry != &MiSegmentList; Entry = Entry->Flink) {
         Segment = CONTAINING_RECORD(Entry, MM_SECTION_SEGMENT, ListOfSegments);
         // Defer to MM to try recovering pages from it
         Freed = MiCacheEvictPages(Segment, Target);
         *NrFreed += Freed;
     }
+    DPRINT1("Evicted %d cache pages\n", Target);
 
     if (!IsListEmpty(&MiSegmentList)) {
         Entry = MiSegmentList.Flink;

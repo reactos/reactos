@@ -428,7 +428,7 @@ ScrollToPositionGenericList (PGENERIC_LIST List, ULONG uIndex)
     PLIST_ENTRY Entry;
     ULONG uCount = 0;
 
-    if (List->CurrentEntry == NULL)
+    if (List->CurrentEntry == NULL || uIndex == 0)
         return;
 
     do

@@ -6,15 +6,16 @@ Native Development Kit README
 
 0.1 COPYRIGHT
 
-The NDK is Copyright © 2005 Alex Ionescu.
+The NDK is Copyright © 2005-2012 Alex Ionescu.
+It is actively maintained by Alex Ionescu, and open contributions are welcome.
 
 0.2 CONTACT INFORMATION
 
-The author, Alex Ionescu, may be reached through the following means:
+The maintainer and author, Alex Ionescu, may be reached through the following means:
 
-Email: 	alexi@tinykrnl.org
-Mail:	2246, Duvernay. H3J 2Y3. Montreal, QC. CANADA.	
-Phone: 	(514)581-7156
+Email: 	aionescu@gmail.com
+Mail:	512 Van Ness #302. San Francisco, CA
+Phone: 	(424) 781-7156
 
 1. LICENSE
 
@@ -31,7 +32,7 @@ GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
                 OR
 
 EITHER of the aforementioned licenses AND (at your option)
-any later version of the above said licenses
+any later version of the above said licenses.
 
 1.2 LICENSE LIMITATIONS
 
@@ -54,7 +55,6 @@ license displayed below in section 1.3
 
 If you are unsure of whether or not your product qualifies as an Open Source product,
 please contact the Free Software Foundation, or visit their website at www.fsf.org.
-
 
 1.3 PROPRIETARY USAGE
 
@@ -107,6 +107,9 @@ Additionally, the following people contributed to the NDK:
 - Eric Kohl
 - Filip Navara
 - Steven Edwards
+- Matthieu Suiche
+- Stefan Ginsberg
+- Timo Kreuzer
 
 2.2 BECOMING A CONTRIBUTOR
 
@@ -114,7 +117,7 @@ To contribute information to the NDK, simply contact the author with your new st
 definition, enumeration, or prototype. Please make sure that your addition is:
 
 1) Actually correct!
-2) Present in Windows NT 5, 5.1, 5.2 and/or 6.0
+2) Present in Windows NT 5, 5.1, 5.2, 6.0, 6.1 and/or 6.2
 3) Not already accessible through another public header in the DDK, IFS, WDK and/or PSDK.
 4) From a publically verifiable source. The author needs to be able to search for your
    addition in a public information location (book, Internet, etc) and locate this definition.
@@ -125,8 +128,25 @@ definition, enumeration, or prototype. Please make sure that your addition is:
    for the purpose of locating the actual name or definition of a structure (sometimes possible due
    to ASSERTs or debugging strings) is considered 'fair use' and will be a likely candidate.
 
-If your addition satsfies these points, then please submit it, and also include whether or not
-you would like to be credited for it.
+If your contribution satsfies these points, then please submit it to the author with the following
+statement:
+
+"
+Copyright Grant.
+I grant to you a perpetual (for the duration of the applicable copyright), worldwide, non-exclusive,
+no-charge, royalty-free, copyright license, without any obligation for accounting to me, to reproduce,
+prepare derivative works of, publicly display, publicly perform, sublicense, distribute, and implement
+my Contribution to the full extent of my copyright interest in the Contribution.
+"
+
+If you wish to be credited for your contribution (which the author is more than happy to do!), you
+should add:
+
+"As a condition of the copyright grant, you must include an attribution in any derivative work you make
+based on the Contribution. That attribution must include, at minimum, my name."
+
+This will allow you to have your name in the readme.txt file (which you are now reading). If you wish to
+remain anonymous, simply do not include this statement.
 
 3. USAGE
 

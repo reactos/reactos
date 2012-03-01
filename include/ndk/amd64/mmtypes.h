@@ -1,7 +1,6 @@
 /*++ NDK Version: 0095
 
 Copyright (c) Alex Ionescu.  All rights reserved.
-Copyright (c) Timo Kreuzer  All rights reserved.
 
 Header Name:
 

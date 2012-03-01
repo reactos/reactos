@@ -278,7 +278,7 @@ _MiFlushMappedSection
 					 &Segment->FileObject->FileName,
 					 Status);
 			}
-			MmDereferencePage(Page);
+			MmReleasePageMemoryConsumer(MC_CACHE, Page);
 		}
 	}
 
@@ -676,6 +676,10 @@ MmFreeCacheSectionPage
 	   MmDeleteRmap(Page, Process, Address);
 	   MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
 	   MmReleasePageMemoryConsumer(MC_CACHE, Page);
+#if (_MI_PAGING_LEVELS == 2)
+       if (Address < MmSystemRangeStart)
+           Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+#endif 
    }
    if (SwapEntry != 0)
    {

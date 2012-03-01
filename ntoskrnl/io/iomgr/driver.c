@@ -1538,6 +1538,10 @@ try_again:
                                        KernelMode,
                                        (PVOID*)&DriverObject,
                                        NULL);
+
+    /* Close the extra handle */
+    ZwClose(hDriver);
+
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -1545,9 +1549,6 @@ try_again:
         ObDereferenceObject(DriverObject);
         return Status;
     }
-
-    /* Close the extra handle */
-    ZwClose(hDriver);
 
     DriverObject->HardwareDatabase = &IopHardwareDatabaseKey;
     DriverObject->DriverStart = ModuleObject ? ModuleObject->DllBase : 0;
@@ -1564,6 +1565,7 @@ try_again:
         DriverObject->DriverSection = NULL;
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
+        return Status;
     }
     else
     {

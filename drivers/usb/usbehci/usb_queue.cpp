@@ -11,7 +11,7 @@
 #include "usbehci.h"
 #include "hardware.h"
 
-class CUSBQueue : public IUSBQueue
+class CUSBQueue : public IEHCIQueue
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -33,16 +33,11 @@ public:
         return m_Ref;
     }
 
-    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
-    virtual ULONG GetPendingRequestCount();
-    virtual NTSTATUS AddUSBRequest(PURB Urb);
-    virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
-    virtual NTSTATUS CancelRequests();
-    virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
-    virtual VOID InterruptCallback(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
-    virtual VOID CompleteAsyncRequests();
-    virtual NTSTATUS AbortDevicePipe(UCHAR DeviceAddress, IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+    // IUSBQueue functions
+    IMP_IUSBQUEUE
 
+    // IEHCIQueue functions
+    IMP_IEHCIQUEUE
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -52,7 +47,7 @@ protected:
     LONG m_Ref;                                                                         // reference count
     PKSPIN_LOCK m_Lock;                                                                  // list lock
     PDMA_ADAPTER m_Adapter;                                                             // dma adapter
-    PUSBHARDWAREDEVICE m_Hardware;                                                      // stores hardware object
+    PEHCIHARDWAREDEVICE m_Hardware;                                                     // stores hardware object
     PQUEUE_HEAD AsyncListQueueHead;                                                     // async queue head
     LIST_ENTRY m_CompletedRequestAsyncList;                                             // completed async request list
     LIST_ENTRY m_PendingRequestAsyncList;                                               // pending async request list
@@ -78,7 +73,7 @@ protected:
     VOID QueueHeadCleanup(PQUEUE_HEAD QueueHead);
 
     // intializes the sync schedule
-    NTSTATUS InitializeSyncSchedule(IN PUSBHARDWAREDEVICE Hardware, IN PDMAMEMORYMANAGER MemManager);
+    NTSTATUS InitializeSyncSchedule(IN PEHCIHARDWAREDEVICE Hardware, IN PDMAMEMORYMANAGER MemManager);
 };
 
 //=================================================================================================
@@ -101,6 +96,7 @@ CUSBQueue::QueryInterface(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::Initialize(
     IN PUSBHARDWAREDEVICE Hardware,
     IN PDMA_ADAPTER AdapterObject,
@@ -114,14 +110,20 @@ CUSBQueue::Initialize(
     ASSERT(Hardware);
 
     //
-    // initialize device lock
+    // store device lock
     //
     m_Lock = Lock;
 
     //
+    // store hardware object
+    //
+    m_Hardware = PEHCIHARDWAREDEVICE(Hardware);
+
+
+    //
     // Get the AsyncQueueHead
     //
-    AsyncListQueueHead = (PQUEUE_HEAD)Hardware->GetAsyncListQueueHead();
+    AsyncListQueueHead = (PQUEUE_HEAD)m_Hardware->GetAsyncListQueueHead();
 
     //
     // Initialize the List Head
@@ -141,19 +143,15 @@ CUSBQueue::Initialize(
     //
     // now initialize sync schedule
     //
-    Status = InitializeSyncSchedule(Hardware, MemManager);
+    Status = InitializeSyncSchedule(m_Hardware, MemManager);
 
-    //
-    // store hardware object
-    //
-    m_Hardware = Hardware;
 
     return Status;
 }
 
 NTSTATUS
 CUSBQueue::InitializeSyncSchedule(
-    IN PUSBHARDWAREDEVICE Hardware,
+    IN PEHCIHARDWAREDEVICE Hardware,
     IN PDMAMEMORYMANAGER MemManager)
 {
     PHYSICAL_ADDRESS QueueHeadPhysAddr;
@@ -278,30 +276,22 @@ CUSBQueue::InitializeSyncSchedule(
     return STATUS_SUCCESS;
 }
 
-ULONG
-CUSBQueue::GetPendingRequestCount()
-{
-    //
-    // Loop through the pending list and iterrate one for each QueueHead that
-    // has a IRP to complete.
-    //
-
-    return 0;
-}
-
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AddUSBRequest(
-    IUSBRequest * Request)
+    IUSBRequest * Req)
 {
     PQUEUE_HEAD QueueHead;
     NTSTATUS Status;
     ULONG Type;
     KIRQL OldLevel;
+    PEHCIREQUEST Request;
 
-    //
     // sanity check
-    //
-    ASSERT(Request != NULL);
+    ASSERT(Req != NULL);
+
+    // get internal req
+    Request = PEHCIREQUEST(Req);
 
     //
     // get request type
@@ -379,21 +369,7 @@ CUSBQueue::AddUSBRequest(
 }
 
 NTSTATUS
-CUSBQueue::AddUSBRequest(
-    PURB Urb)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-CUSBQueue::CancelRequests()
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::CreateUSBRequest(
     IUSBRequest **OutRequest)
 {
@@ -615,7 +591,7 @@ CUSBQueue::ProcessAsyncList(
     KIRQL OldLevel;
     PLIST_ENTRY Entry;
     PQUEUE_HEAD QueueHead;
-    IUSBRequest * Request;
+    PEHCIREQUEST Request;
     BOOLEAN IsQueueHeadComplete;
 
     //
@@ -645,7 +621,7 @@ CUSBQueue::ProcessAsyncList(
         //
         // get IUSBRequest interface
         //
-        Request = (IUSBRequest*)QueueHead->Request;
+        Request = (PEHCIREQUEST)QueueHead->Request;
 
         //
         // move to next entry
@@ -684,6 +660,7 @@ CUSBQueue::ProcessAsyncList(
 
 
 VOID
+STDMETHODCALLTYPE
 CUSBQueue::InterruptCallback(
     IN NTSTATUS Status, 
     OUT PULONG ShouldRingDoorBell)
@@ -707,7 +684,7 @@ CUSBQueue::QueueHeadCleanup(
     PQUEUE_HEAD CurrentQH)
 {
     PQUEUE_HEAD NewQueueHead;
-    IUSBRequest * Request;
+    PEHCIREQUEST Request;
     BOOLEAN ShouldReleaseWhenDone;
     USBD_STATUS UrbStatus;
     KIRQL OldLevel;
@@ -722,7 +699,7 @@ CUSBQueue::QueueHeadCleanup(
     //
     // get request
     //
-    Request = (IUSBRequest*)CurrentQH->Request;
+    Request = (PEHCIREQUEST)CurrentQH->Request;
 
     //
     // sanity check
@@ -853,6 +830,7 @@ CUSBQueue::QueueHeadCleanup(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBQueue::CompleteAsyncRequests()
 {
     KIRQL OldLevel;
@@ -927,6 +905,7 @@ CUSBQueue::CompleteAsyncRequests()
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBQueue::AbortDevicePipe(
     IN UCHAR DeviceAddress,
     IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor)
@@ -1011,6 +990,7 @@ CUSBQueue::AbortDevicePipe(
 
 
 NTSTATUS
+NTAPI
 CreateUSBQueue(
     PUSBQUEUE *OutUsbQueue)
 {

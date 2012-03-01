@@ -119,6 +119,7 @@ list(APPEND SOURCE
     fsrtl/fsfilter.c
     fsrtl/fsrtlpc.c
     fsrtl/largemcb.c
+    fsrtl/mcb.c
     fsrtl/name.c
     fsrtl/notify.c
     fsrtl/oplock.c

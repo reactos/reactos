@@ -64,6 +64,8 @@
     _MmSetPageEntrySectionSegment(S,O,E,__FILE__,__LINE__); \
 	} while (0)
 
+extern MMSESSION MmSession;
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -1216,7 +1218,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    Resources.Consumer = MC_USER;
    Resources.Amount = PAGE_SIZE;
 
-   DPRINT1("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
+   DPRINT("%S, offset 0x%x, len 0x%x, page 0x%x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
 
    Status = MiReadFilePage(MmGetKernelAddressSpace(), MemoryArea, &Resources);
    *Page = Resources.Page[0];
@@ -1600,6 +1602,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         if(Address < MmSystemRangeStart)
         {
             MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
         }
 #endif
          MmLockAddressSpace(AddressSpace);
@@ -2207,7 +2210,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if(Address < MmSystemRangeStart)
       {
          Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+         ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
       }
 #endif
       if (SwapEntry != 0)
@@ -4939,7 +4942,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     if ((ULONG_PTR)SectionObject & 1)
     {
-        extern PVOID MmSession;
         return MiMapViewInSystemSpace((PVOID)((ULONG_PTR)SectionObject & ~1),
                                       &MmSession,
                                       MappedBase,

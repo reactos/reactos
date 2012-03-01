@@ -13,7 +13,7 @@
 #include "usbohci.h"
 #include "hardware.h"
 
-class CUSBRequest : public IUSBRequest
+class CUSBRequest : public IOHCIRequest
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -36,22 +36,13 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor, IN USB_DEVICE_SPEED DeviceSpeed, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp, IN USB_DEVICE_SPEED DeviceSpeed);
-    virtual BOOLEAN IsRequestComplete();
-    virtual ULONG GetTransferType();
-    virtual NTSTATUS GetEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutEndpointDescriptor);
-    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
-    virtual BOOLEAN IsRequestInitialized();
-    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-    virtual VOID CompletionCallback();
-    virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
-    virtual UCHAR GetInterval();
+    IMP_IUSBREQUEST
+    IMP_IOHCIREQUEST
 
     // local functions
     ULONG InternalGetTransferType();
     UCHAR InternalGetPidDirection();
-    UCHAR GetDeviceAddress();
+    UCHAR STDMETHODCALLTYPE GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
     NTSTATUS BuildControlTransferDescriptor(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
@@ -166,12 +157,12 @@ CUSBRequest::QueryInterface(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-    IN UCHAR DeviceAddress,
+    IN PUSBDEVICE Device,
     IN OPTIONAL struct _USB_ENDPOINT* EndpointDescriptor,
-    IN USB_DEVICE_SPEED DeviceSpeed,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -188,10 +179,10 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
-    m_DeviceAddress = DeviceAddress;
+    m_DeviceAddress = Device->GetDeviceAddress();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // Set Length Completed to 0
@@ -222,10 +213,11 @@ CUSBRequest::InitializeWithSetupPacket(
 }
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
-    IN OUT PIRP Irp,
-    IN USB_DEVICE_SPEED DeviceSpeed)
+    IN struct IUSBDevice* Device,
+    IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
 
@@ -263,7 +255,7 @@ CUSBRequest::InitializeWithIrp(
     //
     // store speed
     //
-    m_DeviceSpeed = DeviceSpeed;
+    m_DeviceSpeed = Device->GetSpeed();
 
     //
     // check function type
@@ -432,6 +424,7 @@ CUSBRequest::InitializeWithIrp(
 
 //----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsRequestComplete()
 {
     //
@@ -453,6 +446,7 @@ CUSBRequest::IsRequestComplete()
 }
 //----------------------------------------------------------------------------------------
 ULONG
+STDMETHODCALLTYPE
 CUSBRequest::GetTransferType()
 {
     //
@@ -493,6 +487,7 @@ CUSBRequest::GetMaxPacketSize()
 }
 
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetInterval()
 {
     ASSERT(m_EndpointDescriptor);
@@ -578,6 +573,7 @@ CUSBRequest::InternalGetPidDirection()
 
 //----------------------------------------------------------------------------------------
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetDeviceAddress()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1570,11 +1566,13 @@ CUSBRequest::BuildControlTransferDescriptor(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::GetEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
     ULONG TransferType;
     NTSTATUS Status;
+
 
     //
     // get transfer type
@@ -1602,6 +1600,8 @@ CUSBRequest::GetEndpointDescriptor(
             break;
     }
 
+
+
     if (NT_SUCCESS(Status))
     {
         //
@@ -1623,6 +1623,7 @@ CUSBRequest::GetEndpointDescriptor(
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::GetResultStatus(
     OUT OPTIONAL NTSTATUS * NtStatusCode,
     OUT OPTIONAL PULONG UrbStatusCode)
@@ -1656,6 +1657,7 @@ CUSBRequest::GetResultStatus(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::FreeEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
@@ -1888,12 +1890,10 @@ CUSBRequest::CheckError(
             TransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
         }
     }
-
-
-
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::CompletionCallback()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1953,38 +1953,9 @@ CUSBRequest::CompletionCallback()
     }
 }
 
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsRequestInitialized()
-{
-    if (m_Irp || m_SetupPacket)
-    {
-        //
-        // request is initialized
-        //
-        return TRUE;
-    }
-
-    //
-    // request is not initialized
-    //
-    return FALSE;
-}
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
-CUSBRequest::IsQueueHeadComplete(
-    struct _QUEUE_HEAD * QueueHead)
-{
-    UNIMPLEMENTED
-    return TRUE;
-}
-
-
-
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)
 {

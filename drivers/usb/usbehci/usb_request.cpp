@@ -13,7 +13,7 @@
 #include "usbehci.h"
 #include "hardware.h"
 
-class CUSBRequest : public IUSBRequest
+class CUSBRequest : public IEHCIRequest
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -36,34 +36,23 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
-    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
-    virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode, IN struct _QUEUE_HEAD *QueueHead);
-    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode, IN struct _QUEUE_HEAD *QueueHead);
-    virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead);
-    virtual BOOLEAN IsRequestComplete();
-    virtual ULONG GetTransferType();
-    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
-    virtual BOOLEAN IsRequestInitialized();
-    virtual BOOLEAN ShouldReleaseRequestAfterCompletion();
-    virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead);
-    virtual VOID GetTransferBuffer(OUT PMDL * OutMDL, OUT PULONG TransferLength);
-    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-
+    IMP_IUSBREQUEST
+    // IEHCI Request interface functions
+    IMP_IEHCIREQUEST
 
     // local functions
     ULONG InternalGetTransferType();
     UCHAR InternalGetPidDirection();
     NTSTATUS BuildControlTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
-    NTSTATUS CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
+    NTSTATUS STDMETHODCALLTYPE CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
     NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
-    UCHAR GetDeviceAddress();
+    UCHAR STDMETHODCALLTYPE GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
     ULONG InternalCalculateTransferLength();
-    NTSTATUS BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, IN PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
-    VOID InitDescriptor(IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR DataToggle, OUT PULONG OutDescriptorLength);
+    NTSTATUS STDMETHODCALLTYPE BuildTransferDescriptorChain(IN PQUEUE_HEAD QueueHead, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PUCHAR OutDataToggle, OUT PULONG OutTransferBufferOffset);
+    VOID STDMETHODCALLTYPE InitDescriptor(IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR DataToggle, OUT PULONG OutDescriptorLength);
     VOID DumpQueueHead(IN PQUEUE_HEAD QueueHead);
 
     // constructor / destructor
@@ -156,10 +145,11 @@ CUSBRequest::QueryInterface(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-    IN UCHAR DeviceAddress,
+    IN PUSBDEVICE Device,
     IN OPTIONAL PUSB_ENDPOINT EndpointDescriptor,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
@@ -177,7 +167,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
-    m_DeviceAddress = DeviceAddress;
+    m_DeviceAddress = Device->GetDeviceAddress();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
 
@@ -210,8 +200,10 @@ CUSBRequest::InitializeWithSetupPacket(
 }
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::InitializeWithIrp(
     IN PDMAMEMORYMANAGER DmaManager,
+    IN PUSBDEVICE Device,
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
@@ -340,6 +332,7 @@ CUSBRequest::InitializeWithIrp(
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::CompletionCallback(
     IN NTSTATUS NtStatusCode,
     IN ULONG UrbStatusCode,
@@ -426,65 +419,10 @@ CUSBRequest::CompletionCallback(
         KeSetEvent(m_CompletionEvent, 0, FALSE);
     }
 }
-//----------------------------------------------------------------------------------------
-VOID
-CUSBRequest::CancelCallback(
-    IN NTSTATUS NtStatusCode,
-    IN struct _QUEUE_HEAD *QueueHead)
-{
-    PIO_STACK_LOCATION IoStack;
-    PURB Urb;
 
-    //
-    // FIXME: support linked queue heads
-    //
-
-    //
-    // store cancelleation code
-    //
-    m_NtStatusCode = NtStatusCode;
-
-    if (m_Irp)
-    {
-        //
-        // set irp completion status
-        //
-        m_Irp->IoStatus.Status = NtStatusCode;
-
-        //
-        // get current irp stack location
-        //
-        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
-
-        //
-        // get urb
-        //
-        Urb = (PURB)IoStack->Parameters.Others.Argument1;
-
-        //
-        // store urb status
-        //
-        DPRINT1("Request Cancelled\n");
-        Urb->UrbHeader.Status = USBD_STATUS_CANCELED;
-        Urb->UrbHeader.Length = 0;
-
-        //
-        // FIXME: check if the transfer was split
-        // if yes dont complete irp yet
-        //
-        IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
-    }
-    else
-    {
-        //
-        // signal completion event
-        //
-        PC_ASSERT(m_CompletionEvent);
-        KeSetEvent(m_CompletionEvent, 0, FALSE);
-    }
-}
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::GetQueueHead(
     struct _QUEUE_HEAD ** OutHead)
 {
@@ -542,6 +480,7 @@ CUSBRequest::GetQueueHead(
 
 //----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsRequestComplete()
 {
     //
@@ -563,6 +502,7 @@ CUSBRequest::IsRequestComplete()
 }
 //----------------------------------------------------------------------------------------
 ULONG
+STDMETHODCALLTYPE
 CUSBRequest::GetTransferType()
 {
     //
@@ -625,6 +565,7 @@ CUSBRequest::InternalGetPidDirection()
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::InitDescriptor(
     IN PQUEUE_TRANSFER_DESCRIPTOR CurrentDescriptor,
     IN PVOID TransferBuffer,
@@ -733,13 +674,13 @@ CUSBRequest::InitDescriptor(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::BuildTransferDescriptorChain(
     IN PQUEUE_HEAD QueueHead,
     IN PVOID TransferBuffer,
     IN ULONG TransferBufferLength,
     IN UCHAR PidCode,
     IN UCHAR InitialDataToggle,
-    IN  PQUEUE_TRANSFER_DESCRIPTOR AlternativeDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutFirstDescriptor,
     OUT PQUEUE_TRANSFER_DESCRIPTOR * OutLastDescriptor,
     OUT PUCHAR OutDataToggle,
@@ -817,15 +758,6 @@ CUSBRequest::BuildTransferDescriptorChain(
             //
             LastDescriptor->NextPointer = CurrentDescriptor->PhysicalAddr;
             LastDescriptor = CurrentDescriptor;
-
-            if (AlternativeDescriptor)
-            {
-                //
-                // link to alternative next pointer
-                //
-                LastDescriptor->AlternateNextPointer = AlternativeDescriptor->PhysicalAddr;
-            }
-
         }
         else
         {
@@ -989,7 +921,6 @@ CUSBRequest::BuildControlTransferQueueHead(
                                               m_TransferBufferLength,
                                               InternalGetPidDirection(),
                                               TRUE,
-                                              NULL,
                                               &FirstDescriptor,
                                               &LastDescriptor,
                                               NULL,
@@ -999,7 +930,12 @@ CUSBRequest::BuildControlTransferQueueHead(
         // FIXME handle errors
         //
         ASSERT(Status == STATUS_SUCCESS);
-        ASSERT(DescriptorChainLength == m_TransferBufferLength);
+        if (m_TransferBufferLength != DescriptorChainLength)
+        {
+            DPRINT1("DescriptorChainLength %x\n", DescriptorChainLength);
+            DPRINT1("m_TransferBufferLength %x\n", m_TransferBufferLength);
+            ASSERT(FALSE);
+        }
 
         //
         // now link the descriptors
@@ -1185,7 +1121,6 @@ CUSBRequest::BuildBulkTransferQueueHead(
                                           MaxTransferLength,
                                           InternalGetPidDirection(),
                                           m_EndpointDescriptor->DataToggle,
-                                          NULL,
                                           &FirstDescriptor,
                                           &LastDescriptor,
                                           &m_EndpointDescriptor->DataToggle,
@@ -1236,6 +1171,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBRequest::CreateDescriptor(
     PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor)
 {
@@ -1349,6 +1285,7 @@ CUSBRequest::CreateQueueHead(
 
 //----------------------------------------------------------------------------------------
 UCHAR
+STDMETHODCALLTYPE
 CUSBRequest::GetDeviceAddress()
 {
     PIO_STACK_LOCATION IoStack;
@@ -1489,7 +1426,7 @@ CUSBRequest::BuildSetupPacketFromURB()
             m_DescriptorPacket->wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
             m_DescriptorPacket->wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
             m_DescriptorPacket->wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
-            m_DescriptorPacket->wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            m_DescriptorPacket->wLength = (USHORT)Urb->UrbControlDescriptorRequest.TransferBufferLength;
             m_DescriptorPacket->bmRequestType.B = 0x80;
             break;
 
@@ -1589,6 +1526,7 @@ CUSBRequest::BuildSetupPacketFromURB()
 
 //----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::GetResultStatus(
     OUT OPTIONAL NTSTATUS * NtStatusCode,
     OUT OPTIONAL PULONG UrbStatusCode)
@@ -1621,27 +1559,9 @@ CUSBRequest::GetResultStatus(
 
 }
 
-
 //-----------------------------------------------------------------------------------------
 BOOLEAN
-CUSBRequest::IsRequestInitialized()
-{
-    if (m_Irp || m_SetupPacket)
-    {
-        //
-        // request is initialized
-        //
-        return TRUE;
-    }
-
-    //
-    // request is not initialized
-    //
-    return FALSE;
-}
-
-//-----------------------------------------------------------------------------------------
-BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::ShouldReleaseRequestAfterCompletion()
 {
     if (m_Irp)
@@ -1662,6 +1582,7 @@ CUSBRequest::ShouldReleaseRequestAfterCompletion()
 
 //-----------------------------------------------------------------------------------------
 VOID
+STDMETHODCALLTYPE
 CUSBRequest::FreeQueueHead(
     IN struct _QUEUE_HEAD * QueueHead)
 {
@@ -1724,6 +1645,7 @@ CUSBRequest::FreeQueueHead(
 
 //-----------------------------------------------------------------------------------------
 BOOLEAN
+STDMETHODCALLTYPE
 CUSBRequest::IsQueueHeadComplete(
     struct _QUEUE_HEAD * QueueHead)
 {
@@ -1786,19 +1708,6 @@ CUSBRequest::IsQueueHeadComplete(
 }
 
 //-----------------------------------------------------------------------------------------
-VOID
-CUSBRequest::GetTransferBuffer(
-    OUT PMDL * OutMDL,
-    OUT PULONG TransferLength)
-{
-    // sanity checks
-    PC_ASSERT(OutMDL);
-    PC_ASSERT(TransferLength);
-
-    *OutMDL = m_TransferBufferMDL;
-    *TransferLength = m_TransferBufferLength;
-}
-//-----------------------------------------------------------------------------------------
 ULONG
 CUSBRequest::InternalCalculateTransferLength()
 {
@@ -1831,6 +1740,7 @@ CUSBRequest::InternalCalculateTransferLength()
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+NTAPI
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)
 {

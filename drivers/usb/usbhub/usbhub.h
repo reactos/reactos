@@ -142,6 +142,13 @@ ForwardIrpAndForget(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
+NTSTATUS
+SubmitRequestToRootHub(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG IoControlCode,
+    OUT PVOID OutParameter1,
+    OUT PVOID OutParameter2);
+
 // pdo.c
 NTSTATUS
 USBHUB_PdoHandlePnp(
@@ -170,3 +177,10 @@ GetPortStatusAndChange(
     IN PDEVICE_OBJECT RootHubDeviceObject,
     IN ULONG PortId,
     OUT PPORT_STATUS_CHANGE StatusChange);
+
+// hub_fdo.c
+
+NTSTATUS
+USBHUB_ParentFDOStartDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);

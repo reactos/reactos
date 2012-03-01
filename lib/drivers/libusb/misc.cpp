@@ -1,14 +1,15 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Driver Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbuhci/misc.cpp
- * PURPOSE:     USB UHCI device driver.
+ * FILE:        lib/drivers/libusb/misc.cpp
+ * PURPOSE:     USB Common Driver Library.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#include "usbuhci.h"
+
+#include "libusb.h"
 
 //
 // driver verifier

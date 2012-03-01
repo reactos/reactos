@@ -912,7 +912,7 @@ CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage)
     INFCONTEXT Context;
     PWCHAR KeyName;
     PWCHAR KeyValue;
-    PWCHAR UserData;
+    PWCHAR UserData = NULL;
     ULONG uIndex = 0;
 
     /* Get default language id */
@@ -945,25 +945,37 @@ CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage)
             break;
         }
 
-        UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
-                                            0,
-                                            (wcslen(KeyName) + 1) * sizeof(WCHAR));
-        if (UserData == NULL)
+        if (IsLanguageAvailable(KeyName))
         {
-            /* FIXME: Handle error! */
+
+            UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
+                                                0,
+                                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
+            if (UserData == NULL)
+            {
+                /* FIXME: Handle error! */
+            }
+
+            wcscpy(UserData, KeyName);
+
+            if (!_wcsicmp(KeyName, DefaultLanguage))
+                DefaultLanguageIndex = uIndex;
+
+            sprintf(Buffer, "%S", KeyValue);
+            AppendGenericListEntry(List,
+                                   Buffer,
+                                   UserData,
+                                   FALSE);
+            uIndex++;
         }
-
-        wcscpy(UserData, KeyName);
-
-        if (!_wcsicmp(KeyName, DefaultLanguage)) DefaultLanguageIndex = uIndex;
-
-        sprintf(Buffer, "%S", KeyValue);
-        AppendGenericListEntry(List,
-                               Buffer,
-                               UserData,
-                               FALSE);
-        uIndex++;
     } while (SetupFindNextLine(&Context, &Context));
+
+    /* Only one language available, make it the default one */
+    if(uIndex == 1 && UserData != NULL)
+    {
+        DefaultLanguageIndex = 0;
+        wcscpy(DefaultLanguage, UserData);
+    }
 
     return List;
 }

@@ -27,24 +27,62 @@
 /* @makedep: banner.bmp */
 IDB_BANNER BITMAP banner.bmp
 
-#include "credui_En.rc"
-#include "credui_Ko.rc"
-#include "credui_Nl.rc"
-#include "credui_No.rc"
-#include "credui_Pl.rc"
-#include "credui_Sv.rc"
+#ifdef LANGUAGE_EN_US
+    #include "credui_En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "credui_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "credui_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "credui_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "credui_Pl.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "credui_Sv.rc"
+#endif
 
 /* UTF-8 */
-#include "credui_Da.rc"
-#include "credui_De.rc"
-#include "credui_Es.rc"
-#include "credui_Fr.rc"
-#include "credui_Hu.rc"
-#include "credui_It.rc"
-#include "credui_Lt.rc"
-#include "credui_Pt.rc"
-#include "credui_Ro.rc"
-#include "credui_Ru.rc"
-#include "credui_Si.rc"
-#include "credui_Uk.rc"
-#include "credui_Zh.rc"
+#ifdef LANGUAGE_DA_DK
+    #include "credui_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "credui_De.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "credui_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "credui_Fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "credui_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "credui_It.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "credui_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "credui_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "credui_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "credui_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "credui_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "credui_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "credui_Zh.rc"
+#endif

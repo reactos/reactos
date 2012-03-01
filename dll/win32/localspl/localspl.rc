@@ -36,25 +36,65 @@
 
 #include "wine/wine_common_ver.rc"
 
-#include "spl_Da.rc"
-#include "spl_En.rc"
-#include "spl_Fr.rc"
-#include "spl_Ko.rc"
-#include "spl_Nl.rc"
-#include "spl_No.rc"
-#include "spl_Pl.rc"
-#include "spl_Pt.rc"
-#include "spl_Sv.rc"
+#ifdef LANGUAGE_DA_DK
+    #include "spl_Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "spl_En.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "spl_Fr.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "spl_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "spl_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "spl_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "spl_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "spl_Pt.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "spl_Sv.rc"
+#endif
 
 /* UTF-8 */
-#include "spl_De.rc"
-#include "spl_Es.rc"
-#include "spl_Hu.rc"
-#include "spl_It.rc"
-#include "spl_Ja.rc"
-#include "spl_Lt.rc"
-#include "spl_Ro.rc"
-#include "spl_Ru.rc"
-#include "spl_Si.rc"
-#include "spl_Uk.rc"
-#include "spl_Zh.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "spl_De.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "spl_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "spl_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "spl_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "spl_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "spl_Lt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "spl_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "spl_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "spl_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "spl_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "spl_Zh.rc"
+#endif

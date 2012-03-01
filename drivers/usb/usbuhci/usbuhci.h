@@ -46,17 +46,10 @@ extern
 #define C_PORT_OVER_CURRENT 19
 #define C_PORT_RESET        20
 
-typedef struct
-{
-    BOOLEAN IsFDO;                                               // is device a FDO or PDO
-    BOOLEAN IsHub;                                               // is device a hub / child - not yet used
-    PDISPATCHIRP Dispatcher;                                     // dispatches the code
-}COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
-
 //
 // tag for allocations
 //
-#define TAG_USBUHCI 'ICHO'
+#define TAG_USBUHCI 'ICHU'
 
 //
 // assert for c++ - taken from portcls
@@ -66,67 +59,18 @@ typedef struct
     RtlAssert((PVOID) #exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
 
 //
-// hcd_controller.cpp
-//
-NTSTATUS CreateHCDController(PHCDCONTROLLER *HcdController);
-
-//
 // hardware.cpp
 //
-NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
-
-//
-// misc.cpp
-//
-NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS NTAPI GetBusInterface(PDEVICE_OBJECT DeviceObject, PBUS_INTERFACE_STANDARD busInterface);
-
-//
-// root_hub_controller.cpp
-//
-NTSTATUS CreateHubController(PHUBCONTROLLER * OutHubController);
-
-//
-// memory_manager.cpp
-//
-NTSTATUS CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
-
-
-//
-// usb_device.cpp
-//
-NTSTATUS CreateUSBDevice(PUSBDEVICE *OutDevice);
+NTSTATUS NTAPI CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 
 //
 // usb_queue.cpp
 //
-NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
+NTSTATUS NTAPI CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 
 //
 // usb_request.cpp
 //
-NTSTATUS InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
-
-
-typedef struct _USB_ENDPOINT
-{
-    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
-    UCHAR HubAddress;
-    UCHAR HubPort;
-    UCHAR DataToggle;
-} USB_ENDPOINT, *PUSB_ENDPOINT;
-
-typedef struct _USB_INTERFACE
-{
-    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    USB_ENDPOINT *EndPoints;
-} USB_INTERFACE, *PUSB_INTERFACE;
-
-typedef struct _USB_CONFIGURATION
-{
-    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-    USB_INTERFACE *Interfaces;
-} USB_CONFIGURATION, *PUSB_CONFIGURATION;
-
+NTSTATUS NTAPI InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
 
 #endif

@@ -115,7 +115,7 @@
 #endif
 #endif
 
-#define TAG_CM 0x68742020
+#define TAG_CM 'CM25'
 
 #define CMAPI NTAPI
 

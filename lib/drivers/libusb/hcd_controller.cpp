@@ -1,15 +1,15 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Driver Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbehci/hcd_controller.cpp
- * PURPOSE:     USB EHCI device driver.
+ * FILE:        lib/drivers/libusb/hcd_controller.cpp
+ * PURPOSE:     USB Common Driver Library.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #define INITGUID
-#include "usbehci.h"
+#include "libusb.h"
 
 class CHCDController : public IHCDController,
                        public IDispatchIrp
@@ -93,7 +93,7 @@ CHCDController::Initialize(
         //
         // failed to create hardware object
         //
-        DPRINT1("Failed to create hardware object\n");
+        DPRINT1("[USBLIB] Failed to create hardware object\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -137,7 +137,7 @@ CHCDController::Initialize(
     Status = m_Hardware->Initialize(m_DriverObject, m_FunctionalDeviceObject, m_PhysicalDeviceObject, m_NextDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to initialize hardware object %x\n", Status);
+        DPRINT1("[USBLIB] Failed to initialize hardware object %x\n", Status);
 
         //
         // failed to initialize hardware object, detach from device stack
@@ -234,7 +234,7 @@ CHCDController::HandleDeviceControl(
     //
     PC_ASSERT(DeviceExtension->IsFDO);
 
-    DPRINT1("HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
+    DPRINT1("[USBLIB] HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
         IoStack->Parameters.DeviceIoControl.IoControlCode,
         IoStack->Parameters.DeviceIoControl.InputBufferLength,
         IoStack->Parameters.DeviceIoControl.OutputBufferLength);
@@ -279,7 +279,7 @@ CHCDController::HandleDeviceControl(
                         //
                         // informal debug print
                         //
-                        DPRINT1("Result %S\n", DriverKey->DriverKeyName);
+                        DPRINT1("[USBLIB] Result %S\n", DriverKey->DriverKeyName);
                     }
                 }
 
@@ -331,7 +331,7 @@ CHCDController::HandleDeviceControl(
                 PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG) - sizeof(WCHAR) >= ResultLength);
 
                 DriverKey->DriverKeyName[ResultLength / sizeof(WCHAR)] = L'\0';
-                DPRINT1("Result %S\n", DriverKey->DriverKeyName);
+                DPRINT1("[USBLIB] Result %S\n", DriverKey->DriverKeyName);
             }
 
             //
@@ -394,7 +394,7 @@ CHCDController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO\n");
+            DPRINT("[USBLIB] HandlePnp IRP_MN_START FDO\n");
 
             //
             // first start lower device object
@@ -423,12 +423,12 @@ CHCDController::HandlePnp(
                 Status = SetSymbolicLink(TRUE);
             }
 
-            DPRINT("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
+            DPRINT("[USBLIB] HandlePnp IRP_MN_START FDO: Status %x\n", Status);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (m_HubController == NULL)
             {
@@ -508,7 +508,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
+            DPRINT("[USBLIB] HandlePnp IRP_MN_STOP_DEVICE\n");
 
             if (m_Hardware)
             {
@@ -549,7 +549,7 @@ CHCDController::HandlePnp(
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(m_NextDeviceObject, Irp);
 #else
-            DPRINT1("Denying controller removal due to reinitialization bugs\n");
+            DPRINT1("[USBLIB] Denying controller removal due to reinitialization bugs\n");
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_UNSUCCESSFUL;
@@ -557,7 +557,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
+            DPRINT("[USBLIB] HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
 
             //
             // delete the symbolic link
@@ -670,7 +670,7 @@ CHCDController::CreateFDO(
         //
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("CreateFDO: Failed to create %wZ, Status %x\n", &DeviceName, Status);
+            DPRINT1("[USBLIB] CreateFDO: Failed to create %wZ, Status %x\n", &DeviceName, Status);
             return Status;
         }
     }
@@ -680,7 +680,7 @@ CHCDController::CreateFDO(
     //
     m_FDODeviceNumber = UsbDeviceNumber;
 
-    DPRINT("CreateFDO: DeviceName %wZ\n", &DeviceName);
+    DPRINT("[USBLIB] CreateFDO: DeviceName %wZ\n", &DeviceName);
 
     /* done */
     return Status;
@@ -747,6 +747,7 @@ CHCDController::SetSymbolicLink(
 }
 
 NTSTATUS
+NTAPI
 CreateHCDController(
     PHCDCONTROLLER *OutHcdController)
 {
@@ -755,7 +756,7 @@ CreateHCDController(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBEHCI) CHCDController(0);
+    This = new(NonPagedPool, TAG_USBLIB) CHCDController(0);
     if (!This)
     {
         //

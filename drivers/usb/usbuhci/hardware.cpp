@@ -43,7 +43,7 @@ StatusChangeWorkItemRoutine(PVOID Context);
 
 
 
-class CUSBHardwareDevice : public IUSBHardwareDevice
+class CUSBHardwareDevice : public IUHCIHardwareDevice
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -65,32 +65,13 @@ public:
         return m_Ref;
     }
     // com
-    NTSTATUS Initialize(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT FunctionalDeviceObject, PDEVICE_OBJECT PhysicalDeviceObject, PDEVICE_OBJECT LowerDeviceObject);
-    NTSTATUS PnpStart(PCM_RESOURCE_LIST RawResources, PCM_RESOURCE_LIST TranslatedResources);
-    NTSTATUS PnpStop(void);
-    NTSTATUS HandlePower(PIRP Irp);
-    NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    VOID HeadEndpointDescriptorModified(ULONG HeadType);
+    IMP_IUSBHARDWAREDEVICE
+    IMP_IUHCIHARDWAREDEVICE
 
-
-    NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
-    NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
-
+    // local
     NTSTATUS StartController();
     NTSTATUS StopController();
     NTSTATUS ResetController();
-    NTSTATUS ResetPort(ULONG PortIndex);
-
-    NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
-    NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
-    NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
-    VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
-    VOID GetQueueHead(ULONG QueueHeadIndex, PUHCI_QUEUE_HEAD *OutQueueHead);
-
-
-    KIRQL AcquireDeviceLock(void);
-    VOID ReleaseDeviceLock(KIRQL OldLevel);
-    // local
     VOID GlobalReset();
     BOOLEAN InterruptService();
     NTSTATUS InitializeController();
@@ -127,7 +108,7 @@ protected:
     ULONG m_MapRegisters;                                                              // map registers count
     USHORT m_VendorID;                                                                 // vendor id
     USHORT m_DeviceID;                                                                 // device id
-    PUSBQUEUE m_UsbQueue;                                                              // usb request queue
+    PUHCIQUEUE m_UsbQueue;                                                              // usb request queue
     ULONG m_NumberOfPorts;                                                             // number of ports
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
@@ -191,7 +172,7 @@ CUSBHardwareDevice::Initialize(
     //
     // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
     //
-    Status = CreateUSBQueue(&m_UsbQueue);
+    Status = CreateUSBQueue((PUSBQUEUE*)&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
@@ -244,11 +225,6 @@ CUSBHardwareDevice::Initialize(
     {
         DPRINT1("Failed to get pci config information!\n");
         return STATUS_SUCCESS;
-    }
-
-    if (!(PciConfig.Command & PCI_ENABLE_BUS_MASTER))
-    {
-        DPRINT1("PCI Configuration shows this as a non Bus Mastering device!\n");
     }
 
     m_VendorID = PciConfig.VendorID;
@@ -407,14 +383,6 @@ CUSBHardwareDevice::PnpStart(
 
 NTSTATUS
 CUSBHardwareDevice::PnpStop(void)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-CUSBHardwareDevice::HandlePower(
-    PIRP Irp)
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -1232,29 +1200,6 @@ CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
     m_SCEContext = Context;
 }
 
-KIRQL
-CUSBHardwareDevice::AcquireDeviceLock(void)
-{
-    KIRQL OldLevel;
-
-    //
-    // acquire lock
-    //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
-
-    //
-    // return old irql
-    //
-    return OldLevel;
-}
-
-VOID
-CUSBHardwareDevice::ReleaseDeviceLock(
-    KIRQL OldLevel)
-{
-    KeReleaseSpinLock(&m_Lock, OldLevel);
-}
-
 BOOLEAN
 NTAPI
 InterruptServiceRoutine(
@@ -1542,6 +1487,7 @@ StatusChangeWorkItemRoutine(
 }
 
 NTSTATUS
+NTAPI
 CreateUSBHardware(
     PUSBHARDWAREDEVICE *OutHardware)
 {

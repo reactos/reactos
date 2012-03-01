@@ -229,6 +229,9 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
+    /* We're enumerated already */
+    IopDeviceNodeSetFlag(DeviceNode, DNF_ENUMERATED);
+    
     /* We don't call AddDevice for devices reported this way */
     IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 

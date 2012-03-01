@@ -373,6 +373,8 @@ MmInsertMemoryArea(
    PMEMORY_AREA Node;
    PMEMORY_AREA PreviousNode;
    ULONG Depth = 0;
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   PETHREAD CurrentThread = PsGetCurrentThread();
 
    /* Build a lame VAD if this is a user-space allocation */
    if ((marea->EndingAddress < MmSystemRangeStart) && (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
@@ -400,8 +402,16 @@ MmInsertMemoryArea(
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
        Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
-       MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
+       
+       /* Pretend as if we own the working set */
+       if (marea->Type == MEMORY_AREA_VIRTUAL_MEMORY) MiLockProcessWorkingSet(Process, CurrentThread);
+       
+       /* Insert the VAD */
+       MiInsertVad(Vad, Process);
        marea->Vad = Vad;
+       
+       /* Release the working set */
+       if (marea->Type == MEMORY_AREA_VIRTUAL_MEMORY) MiUnlockProcessWorkingSet(Process, CurrentThread);
    }
    else
    {

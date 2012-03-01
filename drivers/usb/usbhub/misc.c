@@ -143,3 +143,68 @@ ForwardIrpAndForget(
     return IoCallDriver(LowerDevice, Irp);
 }
 
+NTSTATUS
+SubmitRequestToRootHub(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG IoControlCode,
+    OUT PVOID OutParameter1,
+    OUT PVOID OutParameter2)
+{
+    KEVENT Event;
+    PIRP Irp;
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack = NULL;
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    //
+    // Build Control Request
+    //
+    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
+                                        RootHubDeviceObject,
+                                        NULL, 0,
+                                        NULL, 0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatus);
+
+    if (Irp == NULL)
+    {
+        DPRINT("Usbhub: IoBuildDeviceIoControlRequest() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Initialize the status block before sending the IRP
+    //
+    IoStatus.Status = STATUS_NOT_SUPPORTED;
+    IoStatus.Information = 0;
+
+    //
+    // Get Next Stack Location and Initialize it
+    //
+    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack->Parameters.Others.Argument1 = OutParameter1;
+    Stack->Parameters.Others.Argument2 = OutParameter2;
+
+    //
+    // Call RootHub
+    //
+    Status = IoCallDriver(RootHubDeviceObject, Irp);
+
+    //
+    // Its ok to block here as this function is called in an nonarbitrary thread
+    //
+    if    (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+
+    //
+    // The IO Manager will free the IRP
+    //
+
+    return Status;
+}

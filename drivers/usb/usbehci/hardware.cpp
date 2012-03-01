@@ -32,7 +32,7 @@ VOID
 NTAPI
 StatusChangeWorkItemRoutine(PVOID Context);
 
-class CUSBHardwareDevice : public IUSBHardwareDevice
+class CUSBHardwareDevice : public IEHCIHardwareDevice
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -54,42 +54,15 @@ public:
         return m_Ref;
     }
     // com
-    NTSTATUS Initialize(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT FunctionalDeviceObject, PDEVICE_OBJECT PhysicalDeviceObject, PDEVICE_OBJECT LowerDeviceObject);
-    NTSTATUS PnpStart(PCM_RESOURCE_LIST RawResources, PCM_RESOURCE_LIST TranslatedResources);
-    NTSTATUS PnpStop(void);
-    NTSTATUS HandlePower(PIRP Irp);
-    NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
-    NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
-
-    NTSTATUS StartController();
-    NTSTATUS StopController();
-    NTSTATUS ResetController();
-    NTSTATUS ResetPort(ULONG PortIndex);
-
-    NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
-    NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
-    NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
-
-    VOID SetAsyncListRegister(ULONG PhysicalAddress);
-    VOID SetPeriodicListRegister(ULONG PhysicalAddress);
-    struct _QUEUE_HEAD * GetAsyncListQueueHead();
-    ULONG GetPeriodicListRegister();
-
-    VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
-
-    KIRQL AcquireDeviceLock(void);
-    VOID ReleaseDeviceLock(KIRQL OldLevel);
-    // set command
-    VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
-
-    // get command
-    VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
-
+    IMP_IUSBHARDWAREDEVICE
+    IMP_IUSBEHCIHARDWARE
 
     // local
     BOOLEAN InterruptService();
     VOID PrintCapabilities();
+    NTSTATUS StartController();
+    NTSTATUS StopController();
+    NTSTATUS ResetController();
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
@@ -117,7 +90,7 @@ protected:
     USHORT m_VendorID;                                                                 // vendor id
     USHORT m_DeviceID;                                                                 // device id
     PQUEUE_HEAD AsyncQueueHead;                                                        // async queue head terminator
-    PUSBQUEUE m_UsbQueue;                                                              // usb request queue
+    PEHCIQUEUE m_UsbQueue;                                                              // usb request queue
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
@@ -126,6 +99,7 @@ protected:
     ULONG m_WorkItemActive;                                                            // work item status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
+    BOOLEAN m_PortResetInProgress[0xF];                                                // stores reset in progress (vbox hack)
 
     // read register
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -154,6 +128,7 @@ CUSBHardwareDevice::QueryInterface(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::Initialize(
     PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT FunctionalDeviceObject,
@@ -179,7 +154,7 @@ CUSBHardwareDevice::Initialize(
     //
     // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
     //
-    Status = CreateUSBQueue(&m_UsbQueue);
+    Status = CreateUSBQueue((PUSBQUEUE*)&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
@@ -229,43 +204,11 @@ CUSBHardwareDevice::Initialize(
     m_VendorID = PciConfig.VendorID;
     m_DeviceID = PciConfig.DeviceID;
 
-
-    if (PciConfig.Command & PCI_ENABLE_BUS_MASTER)
-    {
-        //
-        // master is enabled
-        //
-        return STATUS_SUCCESS;
-    }
-
-     DPRINT1("PCI Configuration shows this as a non Bus Mastering device! Enabling...\n");
-
-     PciConfig.Command |= PCI_ENABLE_BUS_MASTER;
-     m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &PciConfig, 0, PCI_COMMON_HDR_LENGTH);
-
-     BytesRead = (*m_BusInterface.GetBusData)(m_BusInterface.Context,
-                                            PCI_WHICHSPACE_CONFIG,
-                                            &PciConfig,
-                                            0,
-                                            PCI_COMMON_HDR_LENGTH);
-
-    if (BytesRead != PCI_COMMON_HDR_LENGTH)
-    {
-        DPRINT1("Failed to get pci config information!\n");
-        ASSERT(FALSE);
-        return STATUS_SUCCESS;
-    }
-
-    if (!(PciConfig.Command & PCI_ENABLE_BUS_MASTER))
-    {
-        PciConfig.Command |= PCI_ENABLE_BUS_MASTER;
-        DPRINT1("Failed to enable master\n");
-        return STATUS_UNSUCCESSFUL;
-    }
     return STATUS_SUCCESS;
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
@@ -274,6 +217,7 @@ CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
@@ -337,6 +281,7 @@ CUSBHardwareDevice::PrintCapabilities()
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStart(
     PCM_RESOURCE_LIST RawResources,
     PCM_RESOURCE_LIST TranslatedResources)
@@ -413,8 +358,8 @@ CUSBHardwareDevice::PnpStart(
 
                 DPRINT1("Controller has %d Length\n", m_Capabilities.Length);
                 DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
-                DPRINT1("Controler EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
-                DPRINT1("Controler EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+                DPRINT1("Controller EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
+                DPRINT1("Controller EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
                 DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
 
                 //
@@ -494,13 +439,6 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
-    // Stop the controller before modifying schedules
-    //
-    Status = StopController();
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    //
     // Initialize the DMAMemoryManager
     //
     Status = m_MemoryManager->Initialize(this, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
@@ -550,6 +488,7 @@ CUSBHardwareDevice::PnpStart(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStop(void)
 {
     UNIMPLEMENTED
@@ -557,14 +496,7 @@ CUSBHardwareDevice::PnpStop(void)
 }
 
 NTSTATUS
-CUSBHardwareDevice::HandlePower(
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetDeviceDetails(
     OUT OPTIONAL PUSHORT VendorId,
     OUT OPTIONAL PUSHORT DeviceId,
@@ -583,7 +515,9 @@ CUSBHardwareDevice::GetDeviceDetails(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS CUSBHardwareDevice::GetDMA(
+NTSTATUS
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetDMA(
     OUT struct IDMAMemoryManager **OutDMAMemoryManager)
 {
     if (!m_MemoryManager)
@@ -593,6 +527,7 @@ NTSTATUS CUSBHardwareDevice::GetDMA(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetUSBQueue(
     OUT struct IUSBQueue **OutUsbQueue)
 {
@@ -947,6 +882,7 @@ CUSBHardwareDevice::ResetController(void)
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::ResetPort(
     IN ULONG PortIndex)
 {
@@ -988,6 +924,7 @@ CUSBHardwareDevice::ResetPort(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetPortStatus(
     ULONG PortId,
     OUT USHORT *PortStatus,
@@ -1041,7 +978,7 @@ CUSBHardwareDevice::GetPortStatus(
         Status |= USB_PORT_STATUS_OVER_CURRENT;
 
     // In a reset state?
-    if (Value & EHCI_PRT_RESET)
+    if ((Value & EHCI_PRT_RESET) || m_PortResetInProgress[PortId])
     {
         Status |= USB_PORT_STATUS_RESET;
         Change |= USB_PORT_STATUS_RESET;
@@ -1062,6 +999,7 @@ CUSBHardwareDevice::GetPortStatus(
 }
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
@@ -1076,6 +1014,9 @@ CUSBHardwareDevice::ClearPortStatus(
 
     if (Status == C_PORT_RESET)
     {
+        // reset done
+        m_PortResetInProgress[PortId] = FALSE;
+
         // Clear reset
         Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
         Value &= (EHCI_PORTSC_DATAMASK | EHCI_PRT_ENABLED);
@@ -1171,6 +1112,7 @@ CUSBHardwareDevice::ClearPortStatus(
 
 
 NTSTATUS
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
@@ -1198,6 +1140,9 @@ CUSBHardwareDevice::SetPortFeature(
         // call the helper
         //
         ResetPort(PortId);
+
+        // reset in progress
+        m_PortResetInProgress[PortId] = TRUE;
 
         //
         // is there a status change callback
@@ -1245,6 +1190,7 @@ CUSBHardwareDevice::SetPortFeature(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetAsyncListRegister(
     ULONG PhysicalAddress)
 {
@@ -1252,6 +1198,7 @@ CUSBHardwareDevice::SetAsyncListRegister(
 }
 
 VOID
+STDMETHODCALLTYPE
 CUSBHardwareDevice::SetPeriodicListRegister(
     ULONG PhysicalAddress)
 {
@@ -1262,47 +1209,28 @@ CUSBHardwareDevice::SetPeriodicListRegister(
 }
 
 struct _QUEUE_HEAD *
+STDMETHODCALLTYPE
 CUSBHardwareDevice::GetAsyncListQueueHead()
 {
     return AsyncQueueHead;
 }
 
-ULONG CUSBHardwareDevice::GetPeriodicListRegister()
+ULONG
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetPeriodicListRegister()
 {
     UNIMPLEMENTED
     return NULL;
 }
 
-VOID CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
+VOID
+STDMETHODCALLTYPE
+CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
     PVOID CallBack,
     PVOID Context)
 {
     m_SCECallBack = (HD_INIT_CALLBACK*)CallBack;
     m_SCEContext = Context;
-}
-
-KIRQL
-CUSBHardwareDevice::AcquireDeviceLock(void)
-{
-    KIRQL OldLevel;
-
-    //
-    // acquire lock
-    //
-    KeAcquireSpinLock(&m_Lock, &OldLevel);
-
-    //
-    // return old irql
-    //
-    return OldLevel;
-}
-
-
-VOID
-CUSBHardwareDevice::ReleaseDeviceLock(
-    KIRQL OldLevel)
-{
-    KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 
 BOOLEAN
@@ -1536,6 +1464,7 @@ StatusChangeWorkItemRoutine(
 }
 
 NTSTATUS
+NTAPI
 CreateUSBHardware(
     PUSBHARDWAREDEVICE *OutHardware)
 {

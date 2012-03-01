@@ -25,29 +25,75 @@
 
 #include "version.rc"
 
-#include "shlwapi_Da.rc"
-#include "shlwapi_En.rc"
-#include "shlwapi_Es.rc"
-#include "shlwapi_Fi.rc"
-#include "shlwapi_It.rc"
-#include "shlwapi_Ko.rc"
-#include "shlwapi_Nl.rc"
-#include "shlwapi_No.rc"
-#include "shlwapi_Pl.rc"
-#include "shlwapi_Sk.rc"
-#include "shlwapi_Sv.rc"
-#include "shlwapi_Tr.rc"
+#ifdef LANGUAGE_DA_DK
+    #include "shlwapi_Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "shlwapi_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "shlwapi_Es.rc"
+#endif
+#ifdef LANGUAGE_FI_FI
+    #include "shlwapi_Fi.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "shlwapi_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "shlwapi_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "shlwapi_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "shlwapi_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "shlwapi_Pl.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "shlwapi_Sk.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "shlwapi_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "shlwapi_Tr.rc"
+#endif
 
 /* UTF-8 */
 
-#include "shlwapi_De.rc"
-#include "shlwapi_Fr.rc"
-#include "shlwapi_Hu.rc"
-#include "shlwapi_Ja.rc"
-#include "shlwapi_Lt.rc"
-#include "shlwapi_Pt.rc"
-#include "shlwapi_Ro.rc"
-#include "shlwapi_Ru.rc"
-#include "shlwapi_Si.rc"
-#include "shlwapi_Uk.rc"
-#include "shlwapi_Zh.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "shlwapi_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "shlwapi_Fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "shlwapi_Hu.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "shlwapi_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "shlwapi_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "shlwapi_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "shlwapi_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "shlwapi_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "shlwapi_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "shlwapi_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "shlwapi_Zh.rc"
+#endif

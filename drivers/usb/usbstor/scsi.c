@@ -434,6 +434,7 @@ USBSTOR_DataCompletionRoutine(
     PVOID Ctx)
 {
     PIRP_CONTEXT Context;
+    NTSTATUS Status;
 
 
     DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
@@ -443,7 +444,6 @@ USBSTOR_DataCompletionRoutine(
     //
     Context = (PIRP_CONTEXT)Ctx;
 
-#if 0
     if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
         //
@@ -454,7 +454,6 @@ USBSTOR_DataCompletionRoutine(
         ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
-#endif
 
     //
     // send csw

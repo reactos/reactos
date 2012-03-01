@@ -15,7 +15,7 @@ PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
 PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
 
 /* export from dxeng.c */
-extern DRVFN gaEngFuncs;
+extern DRVFN gaEngFuncs[];
 extern ULONG gcEngFuncs;
 extern EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
@@ -157,7 +157,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
         {
             /* Setup driver data for activate the dx interface */
             DxEngDrv.iDriverVersion = DDI_DRIVER_VERSION_NT5_01;
-            DxEngDrv.pdrvfn = &gaEngFuncs;
+            DxEngDrv.pdrvfn = gaEngFuncs;
             DxEngDrv.c = gcEngFuncs;
 
             Status = gpfnStartupDxGraphics ( sizeof(DRVENABLEDATA),

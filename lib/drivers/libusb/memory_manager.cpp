@@ -1,14 +1,15 @@
 /*
- * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Driver Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbohci/memory_manager.cpp
- * PURPOSE:     USB OHCI device driver.
+ * FILE:        lib/drivers/libusb/memory_manager.cpp
+ * PURPOSE:     USB Common Driver Library.
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#include "usbohci.h"
+
+#include "libusb.h"
 
 class CDMAMemoryManager : public IDMAMemoryManager
 {
@@ -90,7 +91,7 @@ CDMAMemoryManager::Initialize(
     //
     // allocate bitmap buffer
     //
-    m_BitmapBuffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, BitmapLength, TAG_USBOHCI);
+    m_BitmapBuffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, BitmapLength, TAG_USBLIB);
     if (!m_BitmapBuffer)
     {
         //
@@ -334,6 +335,7 @@ CDMAMemoryManager::Release(
 }
 
 NTSTATUS
+NTAPI
 CreateDMAMemoryManager(
     PDMAMEMORYMANAGER *OutMemoryManager)
 {
@@ -342,7 +344,7 @@ CreateDMAMemoryManager(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, TAG_USBOHCI) CDMAMemoryManager(0);
+    This = new(NonPagedPool, TAG_USBLIB) CDMAMemoryManager(0);
     if (!This)
     {
         //

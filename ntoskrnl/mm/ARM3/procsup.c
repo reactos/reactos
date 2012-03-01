@@ -201,7 +201,7 @@ MmDeleteTeb(IN PEPROCESS Process,
 
         /* Delete the pages */
         MiDeleteVirtualAddresses((ULONG_PTR)Teb, TebEnd, NULL);
-    
+
         /* Release the working set */
         MiUnlockProcessWorkingSet(Process, Thread);
 
@@ -224,7 +224,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
     PMMPTE PointerPte;
     PFN_NUMBER PageFrameNumber, PageTableFrameNumber;
     PFN_COUNT StackPages;
-    PMMPFN Pfn1;//, Pfn2;
+    PMMPFN Pfn1, Pfn2;
     ULONG i;
     KIRQL OldIrql;
 
@@ -256,15 +256,14 @@ MmDeleteKernelStack(IN PVOID StackBase,
             /* Get the PTE's page */
             PageFrameNumber = PFN_FROM_PTE(PointerPte);
             Pfn1 = MiGetPfnEntry(PageFrameNumber);
-#if 1 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
+
             /* Now get the page of the page table mapping it */
             PageTableFrameNumber = Pfn1->u4.PteFrame;
-            //Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
+            Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
 
             /* Remove a shared reference, since the page is going away */
-            DPRINT("SystemPTE PDE: %lx\n", PageTableFrameNumber);
-            //MiDecrementShareCount(Pfn2, PageTableFrameNumber);
-#endif
+            MiDecrementShareCount(Pfn2, PageTableFrameNumber);
+
             /* Set the special pending delete marker */
             MI_SET_PFN_DELETED(Pfn1);
 
@@ -925,7 +924,7 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
     Pfn1->u1.Event = (PKEVENT)CurrentProcess;
-    
+
     /* Map the process working set in kernel space */
     sysPte = MiReserveSystemPtes(1, SystemPteSpace);
     MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
@@ -1365,7 +1364,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     PFN_NUMBER PageFrameIndex;
 
     //ASSERT(Process->CommitCharge == 0);
-    
+
     /* Acquire the PFN lock */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
@@ -1382,7 +1381,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn1, Process->WorkingSetPage);
         ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
         MiReleaseSystemPtes(MiAddressToPte(Process->Vm.VmWorkingSetList), 1, SystemPteSpace);
-            
+
         /* Now map hyperspace and its page table */
         PageFrameIndex = Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT;
         Pfn1 = MiGetPfnEntry(PageFrameIndex);
@@ -1393,14 +1392,14 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn2, Pfn1->u4.PteFrame);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
         ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
-        
+
         /* Finally, nuke the PDE itself */
         PageFrameIndex = Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT;
         Pfn1 = MiGetPfnEntry(PageFrameIndex);
         MI_SET_PFN_DELETED(Pfn1);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
         MiDecrementShareCount(Pfn1, PageFrameIndex);
-        
+
         /* Page table is now dead. Bye bye... */
         ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
     }
@@ -1415,7 +1414,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
 
     /* No support for sessions yet */
     ASSERT(Process->Session == 0);
-    
+
     /* Clear out the PDE pages */
     Process->Pcb.DirectoryTableBase[0] = 0;
     Process->Pcb.DirectoryTableBase[1] = 0;
