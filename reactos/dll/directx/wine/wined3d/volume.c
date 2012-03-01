@@ -25,7 +25,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
 
 /* Context activation is done by the caller. */
-static void volume_bind_and_dirtify(struct wined3d_volume *volume, const struct wined3d_gl_info *gl_info)
+static void volume_bind_and_dirtify(const struct wined3d_volume *volume, struct wined3d_context *context)
 {
     struct wined3d_texture *container = volume->container;
     DWORD active_sampler;
@@ -37,49 +37,35 @@ static void volume_bind_and_dirtify(struct wined3d_volume *volume, const struct 
      * To be more specific, this is tricky because we can implicitly be called
      * from sampler() in state.c. This means we can't touch anything other than
      * whatever happens to be the currently active texture, or we would risk
-     * marking already applied sampler states dirty again.
-     *
-     * TODO: Track the current active texture per GL context instead of using glGet
-     */
-    if (gl_info->supported[ARB_MULTITEXTURE])
-    {
-        GLint active_texture;
-        ENTER_GL();
-        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-        LEAVE_GL();
-        active_sampler = volume->resource.device->rev_tex_unit_map[active_texture - GL_TEXTURE0_ARB];
-    } else {
-        active_sampler = 0;
-    }
+     * marking already applied sampler states dirty again. */
+    active_sampler = volume->resource.device->rev_tex_unit_map[context->active_texture];
 
     if (active_sampler != WINED3D_UNMAPPED_STAGE)
-    {
-        IWineD3DDeviceImpl_MarkStateDirty(volume->resource.device, STATE_SAMPLER(active_sampler));
-    }
+        device_invalidate_state(volume->resource.device, STATE_SAMPLER(active_sampler));
 
-    container->texture_ops->texture_bind(container, gl_info, FALSE);
+    container->texture_ops->texture_bind(container, context, FALSE);
 }
 
-void volume_add_dirty_box(struct wined3d_volume *volume, const WINED3DBOX *dirty_box)
+void volume_add_dirty_box(struct wined3d_volume *volume, const struct wined3d_box *dirty_box)
 {
     volume->dirty = TRUE;
     if (dirty_box)
     {
-        volume->lockedBox.Left = min(volume->lockedBox.Left, dirty_box->Left);
-        volume->lockedBox.Top = min(volume->lockedBox.Top, dirty_box->Top);
-        volume->lockedBox.Front = min(volume->lockedBox.Front, dirty_box->Front);
-        volume->lockedBox.Right = max(volume->lockedBox.Right, dirty_box->Right);
-        volume->lockedBox.Bottom = max(volume->lockedBox.Bottom, dirty_box->Bottom);
-        volume->lockedBox.Back = max(volume->lockedBox.Back, dirty_box->Back);
+        volume->lockedBox.left = min(volume->lockedBox.left, dirty_box->left);
+        volume->lockedBox.top = min(volume->lockedBox.top, dirty_box->top);
+        volume->lockedBox.front = min(volume->lockedBox.front, dirty_box->front);
+        volume->lockedBox.right = max(volume->lockedBox.right, dirty_box->right);
+        volume->lockedBox.bottom = max(volume->lockedBox.bottom, dirty_box->bottom);
+        volume->lockedBox.back = max(volume->lockedBox.back, dirty_box->back);
     }
     else
     {
-        volume->lockedBox.Left = 0;
-        volume->lockedBox.Top = 0;
-        volume->lockedBox.Front = 0;
-        volume->lockedBox.Right = volume->resource.width;
-        volume->lockedBox.Bottom = volume->resource.height;
-        volume->lockedBox.Back = volume->resource.depth;
+        volume->lockedBox.left = 0;
+        volume->lockedBox.top = 0;
+        volume->lockedBox.front = 0;
+        volume->lockedBox.right = volume->resource.width;
+        volume->lockedBox.bottom = volume->resource.height;
+        volume->lockedBox.back = volume->resource.depth;
     }
 }
 
@@ -91,15 +77,15 @@ void volume_set_container(struct wined3d_volume *volume, struct wined3d_texture 
 }
 
 /* Context activation is done by the caller. */
-void volume_load(struct wined3d_volume *volume, UINT level, BOOL srgb_mode)
+void volume_load(const struct wined3d_volume *volume, struct wined3d_context *context, UINT level, BOOL srgb_mode)
 {
-    const struct wined3d_gl_info *gl_info = &volume->resource.device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_format *format = volume->resource.format;
 
-    TRACE("volume %p, level %u, srgb %#x, format %s (%#x).\n",
-            volume, level, srgb_mode, debug_d3dformat(format->id), format->id);
+    TRACE("volume %p, context %p, level %u, srgb %#x, format %s (%#x).\n",
+            volume, context, level, srgb_mode, debug_d3dformat(format->id), format->id);
 
-    volume_bind_and_dirtify(volume, gl_info);
+    volume_bind_and_dirtify(volume, context);
 
     ENTER_GL();
     GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D, level, format->glInternal,
@@ -175,23 +161,6 @@ void * CDECL wined3d_volume_get_parent(const struct wined3d_volume *volume)
     return volume->resource.parent;
 }
 
-HRESULT CDECL wined3d_volume_set_private_data(struct wined3d_volume *volume,
-        REFGUID guid, const void *data, DWORD data_size, DWORD flags)
-{
-    return resource_set_private_data(&volume->resource, guid, data, data_size, flags);
-}
-
-HRESULT CDECL wined3d_volume_get_private_data(const struct wined3d_volume *volume,
-        REFGUID guid, void *data, DWORD *data_size)
-{
-    return resource_get_private_data(&volume->resource, guid, data, data_size);
-}
-
-HRESULT CDECL wined3d_volume_free_private_data(struct wined3d_volume *volume, REFGUID guid)
-{
-    return resource_free_private_data(&volume->resource, guid);
-}
-
 DWORD CDECL wined3d_volume_set_priority(struct wined3d_volume *volume, DWORD priority)
 {
     return resource_set_priority(&volume->resource, priority);
@@ -216,44 +185,44 @@ struct wined3d_resource * CDECL wined3d_volume_get_resource(struct wined3d_volum
 }
 
 HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
-        WINED3DLOCKED_BOX *locked_box, const WINED3DBOX *box, DWORD flags)
+        struct wined3d_mapped_box *mapped_box, const struct wined3d_box *box, DWORD flags)
 {
-    TRACE("volume %p, locked_box %p, box %p, flags %#x.\n",
-            volume, locked_box, box, flags);
+    TRACE("volume %p, mapped_box %p, box %p, flags %#x.\n",
+            volume, mapped_box, box, flags);
 
     if (!volume->resource.allocatedMemory)
         volume->resource.allocatedMemory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, volume->resource.size);
 
     TRACE("allocatedMemory %p.\n", volume->resource.allocatedMemory);
 
-    locked_box->RowPitch = volume->resource.format->byte_count * volume->resource.width; /* Bytes / row */
-    locked_box->SlicePitch = volume->resource.format->byte_count
+    mapped_box->row_pitch = volume->resource.format->byte_count * volume->resource.width; /* Bytes / row */
+    mapped_box->slice_pitch = volume->resource.format->byte_count
             * volume->resource.width * volume->resource.height; /* Bytes / slice */
     if (!box)
     {
         TRACE("No box supplied - all is ok\n");
-        locked_box->pBits = volume->resource.allocatedMemory;
-        volume->lockedBox.Left   = 0;
-        volume->lockedBox.Top    = 0;
-        volume->lockedBox.Front  = 0;
-        volume->lockedBox.Right  = volume->resource.width;
-        volume->lockedBox.Bottom = volume->resource.height;
-        volume->lockedBox.Back   = volume->resource.depth;
+        mapped_box->data = volume->resource.allocatedMemory;
+        volume->lockedBox.left   = 0;
+        volume->lockedBox.top    = 0;
+        volume->lockedBox.front  = 0;
+        volume->lockedBox.right  = volume->resource.width;
+        volume->lockedBox.bottom = volume->resource.height;
+        volume->lockedBox.back   = volume->resource.depth;
     }
     else
     {
-        TRACE("Lock Box (%p) = l %d, t %d, r %d, b %d, fr %d, ba %d\n",
-                box, box->Left, box->Top, box->Right, box->Bottom, box->Front, box->Back);
-        locked_box->pBits = volume->resource.allocatedMemory
-                + (locked_box->SlicePitch * box->Front)     /* FIXME: is front < back or vica versa? */
-                + (locked_box->RowPitch * box->Top)
-                + (box->Left * volume->resource.format->byte_count);
-        volume->lockedBox.Left   = box->Left;
-        volume->lockedBox.Top    = box->Top;
-        volume->lockedBox.Front  = box->Front;
-        volume->lockedBox.Right  = box->Right;
-        volume->lockedBox.Bottom = box->Bottom;
-        volume->lockedBox.Back   = box->Back;
+        TRACE("Lock Box (%p) = l %u, t %u, r %u, b %u, fr %u, ba %u\n",
+                box, box->left, box->top, box->right, box->bottom, box->front, box->back);
+        mapped_box->data = volume->resource.allocatedMemory
+                + (mapped_box->slice_pitch * box->front)     /* FIXME: is front < back or vica versa? */
+                + (mapped_box->row_pitch * box->top)
+                + (box->left * volume->resource.format->byte_count);
+        volume->lockedBox.left   = box->left;
+        volume->lockedBox.top    = box->top;
+        volume->lockedBox.front  = box->front;
+        volume->lockedBox.right  = box->right;
+        volume->lockedBox.bottom = box->bottom;
+        volume->lockedBox.back   = box->back;
     }
 
     if (!(flags & (WINED3DLOCK_NO_DIRTY_UPDATE | WINED3DLOCK_READONLY)))
@@ -265,7 +234,7 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
     volume->locked = TRUE;
 
     TRACE("Returning memory %p, row pitch %d, slice pitch %d.\n",
-            locked_box->pBits, locked_box->RowPitch, locked_box->SlicePitch);
+            mapped_box->data, mapped_box->row_pitch, mapped_box->slice_pitch);
 
     return WINED3D_OK;
 }
@@ -297,7 +266,7 @@ static const struct wined3d_resource_ops volume_resource_ops =
 };
 
 static HRESULT volume_init(struct wined3d_volume *volume, struct wined3d_device *device, UINT width,
-        UINT height, UINT depth, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool,
+        UINT height, UINT depth, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
@@ -310,8 +279,8 @@ static HRESULT volume_init(struct wined3d_volume *volume, struct wined3d_device 
         return WINED3DERR_INVALIDCALL;
     }
 
-    hr = resource_init(&volume->resource, device, WINED3DRTYPE_VOLUME, format,
-            WINED3DMULTISAMPLE_NONE, 0, usage, pool, width, height, depth,
+    hr = resource_init(&volume->resource, device, WINED3D_RTYPE_VOLUME, format,
+            WINED3D_MULTISAMPLE_NONE, 0, usage, pool, width, height, depth,
             width * height * depth * format->byte_count, parent, parent_ops,
             &volume_resource_ops);
     if (FAILED(hr))
@@ -331,7 +300,7 @@ static HRESULT volume_init(struct wined3d_volume *volume, struct wined3d_device 
 }
 
 HRESULT CDECL wined3d_volume_create(struct wined3d_device *device, UINT width, UINT height,
-        UINT depth, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool, void *parent,
+        UINT depth, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool, void *parent,
         const struct wined3d_parent_ops *parent_ops, struct wined3d_volume **volume)
 {
     struct wined3d_volume *object;

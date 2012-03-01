@@ -45,7 +45,7 @@ IDirect3D8* WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT SDKVersion) {
 
     object->IDirect3D8_iface.lpVtbl = &Direct3D8_Vtbl;
     object->ref = 1;
-    object->WineD3D = wined3d_create(8, &object->IDirect3D8_iface);
+    object->WineD3D = wined3d_create(8, WINED3D_LEGACY_DEPTH_BIAS, &object->IDirect3D8_iface);
 
     TRACE("Created Direct3D object @ %p, WineObj @ %p\n", object, object->WineD3D);
 

@@ -16,19 +16,18 @@ spec2def(ddraw.dll ddraw.spec)
 list(APPEND SOURCE
     clipper.c
     ddraw.c
+    ddraw.rc
     device.c
     executebuffer.c
     light.c
     main.c
     material.c
     palette.c
-    regsvr.c
     stubs.c
     surface.c
     utils.c
     vertexbuffer.c
     viewport.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
 

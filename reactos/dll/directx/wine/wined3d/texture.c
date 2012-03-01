@@ -26,14 +26,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 
 static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_texture_ops *texture_ops,
-        UINT layer_count, UINT level_count, WINED3DRESOURCETYPE resource_type, struct wined3d_device *device,
-        DWORD usage, const struct wined3d_format *format, WINED3DPOOL pool, void *parent,
+        UINT layer_count, UINT level_count, enum wined3d_resource_type resource_type, struct wined3d_device *device,
+        DWORD usage, const struct wined3d_format *format, enum wined3d_pool pool, void *parent,
         const struct wined3d_parent_ops *parent_ops, const struct wined3d_resource_ops *resource_ops)
 {
     HRESULT hr;
 
     hr = resource_init(&texture->resource, device, resource_type, format,
-            WINED3DMULTISAMPLE_NONE, 0, usage, pool, 0, 0, 0, 0,
+            WINED3D_MULTISAMPLE_NONE, 0, usage, pool, 0, 0, 0, 0,
             parent, parent_ops, resource_ops);
     if (FAILED(hr))
     {
@@ -53,7 +53,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
 
     texture->layer_count = layer_count;
     texture->level_count = level_count;
-    texture->filter_type = (usage & WINED3DUSAGE_AUTOGENMIPMAP) ? WINED3DTEXF_LINEAR : WINED3DTEXF_NONE;
+    texture->filter_type = (usage & WINED3DUSAGE_AUTOGENMIPMAP) ? WINED3D_TEXF_LINEAR : WINED3D_TEXF_NONE;
     texture->lod = 0;
     texture->texture_rgb.dirty = TRUE;
     texture->texture_srgb.dirty = TRUE;
@@ -133,14 +133,14 @@ void wined3d_texture_set_dirty(struct wined3d_texture *texture, BOOL dirty)
 
 /* Context activation is done by the caller. */
 static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
-        const struct wined3d_gl_info *gl_info, BOOL srgb, BOOL *set_surface_desc)
+        struct wined3d_context *context, BOOL srgb, BOOL *set_surface_desc)
 {
     struct gl_texture *gl_tex;
     BOOL new_texture = FALSE;
     HRESULT hr = WINED3D_OK;
     GLenum target;
 
-    TRACE("texture %p, srgb %#x, set_surface_desc %p.\n", texture, srgb, set_surface_desc);
+    TRACE("texture %p, context %p, srgb %#x, set_surface_desc %p.\n", texture, context, srgb, set_surface_desc);
 
     /* sRGB mode cache for preload() calls outside drawprim. */
     if (srgb)
@@ -148,7 +148,7 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
     else
         texture->flags &= ~WINED3D_TEXTURE_IS_SRGB;
 
-    gl_tex = wined3d_texture_get_gl_texture(texture, gl_info, srgb);
+    gl_tex = wined3d_texture_get_gl_texture(texture, context->gl_info, srgb);
     target = texture->target;
 
     ENTER_GL();
@@ -159,7 +159,7 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
         glGenTextures(1, &gl_tex->name);
         checkGLcall("glGenTextures");
         TRACE("Generated texture %d.\n", gl_tex->name);
-        if (texture->resource.pool == WINED3DPOOL_DEFAULT)
+        if (texture->resource.pool == WINED3D_POOL_DEFAULT)
         {
             /* Tell OpenGL to try and keep this texture in video ram (well mostly). */
             GLclampf tmp = 0.9f;
@@ -167,16 +167,16 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
         }
         /* Initialise the state of the texture object to the OpenGL defaults,
          * not the D3D defaults. */
-        gl_tex->states[WINED3DTEXSTA_ADDRESSU] = WINED3DTADDRESS_WRAP;
-        gl_tex->states[WINED3DTEXSTA_ADDRESSV] = WINED3DTADDRESS_WRAP;
-        gl_tex->states[WINED3DTEXSTA_ADDRESSW] = WINED3DTADDRESS_WRAP;
+        gl_tex->states[WINED3DTEXSTA_ADDRESSU] = WINED3D_TADDRESS_WRAP;
+        gl_tex->states[WINED3DTEXSTA_ADDRESSV] = WINED3D_TADDRESS_WRAP;
+        gl_tex->states[WINED3DTEXSTA_ADDRESSW] = WINED3D_TADDRESS_WRAP;
         gl_tex->states[WINED3DTEXSTA_BORDERCOLOR] = 0;
-        gl_tex->states[WINED3DTEXSTA_MAGFILTER] = WINED3DTEXF_LINEAR;
-        gl_tex->states[WINED3DTEXSTA_MINFILTER] = WINED3DTEXF_POINT; /* GL_NEAREST_MIPMAP_LINEAR */
-        gl_tex->states[WINED3DTEXSTA_MIPFILTER] = WINED3DTEXF_LINEAR; /* GL_NEAREST_MIPMAP_LINEAR */
+        gl_tex->states[WINED3DTEXSTA_MAGFILTER] = WINED3D_TEXF_LINEAR;
+        gl_tex->states[WINED3DTEXSTA_MINFILTER] = WINED3D_TEXF_POINT; /* GL_NEAREST_MIPMAP_LINEAR */
+        gl_tex->states[WINED3DTEXSTA_MIPFILTER] = WINED3D_TEXF_LINEAR; /* GL_NEAREST_MIPMAP_LINEAR */
         gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] = 0;
         gl_tex->states[WINED3DTEXSTA_MAXANISOTROPY] = 1;
-        if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+        if (context->gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
             gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE] = TRUE;
         else
             gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE] = srgb;
@@ -189,8 +189,7 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
             /* This means double binding the texture at creation, but keeps
              * the code simpler all in all, and the run-time path free from
              * additional checks. */
-            glBindTexture(target, gl_tex->name);
-            checkGLcall("glBindTexture");
+            context_bind_texture(context, target, gl_tex->name);
             glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
             checkGLcall("glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE)");
         }
@@ -202,8 +201,7 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
 
     if (gl_tex->name)
     {
-        glBindTexture(target, gl_tex->name);
-        checkGLcall("glBindTexture");
+        context_bind_texture(context, target, gl_tex->name);
         if (new_texture)
         {
             /* For a new texture we have to set the texture levels after
@@ -239,22 +237,22 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
 
 /* GL locking is done by the caller */
 static void apply_wrap(const struct wined3d_gl_info *gl_info, GLenum target,
-        WINED3DTEXTUREADDRESS d3d_wrap, GLenum param, BOOL cond_np2)
+        enum wined3d_texture_address d3d_wrap, GLenum param, BOOL cond_np2)
 {
     GLint gl_wrap;
 
-    if (d3d_wrap < WINED3DTADDRESS_WRAP || d3d_wrap > WINED3DTADDRESS_MIRRORONCE)
+    if (d3d_wrap < WINED3D_TADDRESS_WRAP || d3d_wrap > WINED3D_TADDRESS_MIRROR_ONCE)
     {
-        FIXME("Unrecognized or unsupported WINED3DTEXTUREADDRESS %#x.\n", d3d_wrap);
+        FIXME("Unrecognized or unsupported texture address mode %#x.\n", d3d_wrap);
         return;
     }
 
     /* Cubemaps are always set to clamp, regardless of the sampler state. */
     if (target == GL_TEXTURE_CUBE_MAP_ARB
-            || (cond_np2 && d3d_wrap == WINED3DTADDRESS_WRAP))
+            || (cond_np2 && d3d_wrap == WINED3D_TADDRESS_WRAP))
         gl_wrap = GL_CLAMP_TO_EDGE;
     else
-        gl_wrap = gl_info->wrap_lookup[d3d_wrap - WINED3DTADDRESS_WRAP];
+        gl_wrap = gl_info->wrap_lookup[d3d_wrap - WINED3D_TADDRESS_WRAP];
 
     TRACE("Setting param %#x to %#x for target %#x.\n", param, gl_wrap, target);
     glTexParameteri(target, param, gl_wrap);
@@ -279,32 +277,32 @@ void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
 
     /* This function relies on the correct texture being bound and loaded. */
 
-    if (sampler_states[WINED3DSAMP_ADDRESSU] != gl_tex->states[WINED3DTEXSTA_ADDRESSU])
+    if (sampler_states[WINED3D_SAMP_ADDRESS_U] != gl_tex->states[WINED3DTEXSTA_ADDRESSU])
     {
-        state = sampler_states[WINED3DSAMP_ADDRESSU];
+        state = sampler_states[WINED3D_SAMP_ADDRESS_U];
         apply_wrap(gl_info, target, state, GL_TEXTURE_WRAP_S, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSU] = state;
     }
 
-    if (sampler_states[WINED3DSAMP_ADDRESSV] != gl_tex->states[WINED3DTEXSTA_ADDRESSV])
+    if (sampler_states[WINED3D_SAMP_ADDRESS_V] != gl_tex->states[WINED3DTEXSTA_ADDRESSV])
     {
-        state = sampler_states[WINED3DSAMP_ADDRESSV];
+        state = sampler_states[WINED3D_SAMP_ADDRESS_V];
         apply_wrap(gl_info, target, state, GL_TEXTURE_WRAP_T, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSV] = state;
     }
 
-    if (sampler_states[WINED3DSAMP_ADDRESSW] != gl_tex->states[WINED3DTEXSTA_ADDRESSW])
+    if (sampler_states[WINED3D_SAMP_ADDRESS_W] != gl_tex->states[WINED3DTEXSTA_ADDRESSW])
     {
-        state = sampler_states[WINED3DSAMP_ADDRESSW];
+        state = sampler_states[WINED3D_SAMP_ADDRESS_W];
         apply_wrap(gl_info, target, state, GL_TEXTURE_WRAP_R, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSW] = state;
     }
 
-    if (sampler_states[WINED3DSAMP_BORDERCOLOR] != gl_tex->states[WINED3DTEXSTA_BORDERCOLOR])
+    if (sampler_states[WINED3D_SAMP_BORDER_COLOR] != gl_tex->states[WINED3DTEXSTA_BORDERCOLOR])
     {
         float col[4];
 
-        state = sampler_states[WINED3DSAMP_BORDERCOLOR];
+        state = sampler_states[WINED3D_SAMP_BORDER_COLOR];
         D3DCOLORTOGLFLOAT4(state, col);
         TRACE("Setting border color for %#x to %#x.\n", target, state);
         glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, &col[0]);
@@ -312,52 +310,52 @@ void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
         gl_tex->states[WINED3DTEXSTA_BORDERCOLOR] = state;
     }
 
-    if (sampler_states[WINED3DSAMP_MAGFILTER] != gl_tex->states[WINED3DTEXSTA_MAGFILTER])
+    if (sampler_states[WINED3D_SAMP_MAG_FILTER] != gl_tex->states[WINED3DTEXSTA_MAGFILTER])
     {
         GLint gl_value;
 
-        state = sampler_states[WINED3DSAMP_MAGFILTER];
-        if (state > WINED3DTEXF_ANISOTROPIC)
+        state = sampler_states[WINED3D_SAMP_MAG_FILTER];
+        if (state > WINED3D_TEXF_ANISOTROPIC)
             FIXME("Unrecognized or unsupported MAGFILTER* value %d.\n", state);
 
         gl_value = wined3d_gl_mag_filter(texture->mag_lookup,
-                min(max(state, WINED3DTEXF_POINT), WINED3DTEXF_LINEAR));
+                min(max(state, WINED3D_TEXF_POINT), WINED3D_TEXF_LINEAR));
         TRACE("ValueMAG=%#x setting MAGFILTER to %#x.\n", state, gl_value);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, gl_value);
 
         gl_tex->states[WINED3DTEXSTA_MAGFILTER] = state;
     }
 
-    if ((sampler_states[WINED3DSAMP_MINFILTER] != gl_tex->states[WINED3DTEXSTA_MINFILTER]
-            || sampler_states[WINED3DSAMP_MIPFILTER] != gl_tex->states[WINED3DTEXSTA_MIPFILTER]
-            || sampler_states[WINED3DSAMP_MAXMIPLEVEL] != gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL]))
+    if ((sampler_states[WINED3D_SAMP_MIN_FILTER] != gl_tex->states[WINED3DTEXSTA_MINFILTER]
+            || sampler_states[WINED3D_SAMP_MIP_FILTER] != gl_tex->states[WINED3DTEXSTA_MIPFILTER]
+            || sampler_states[WINED3D_SAMP_MAX_MIP_LEVEL] != gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL]))
     {
         GLint gl_value;
 
-        gl_tex->states[WINED3DTEXSTA_MIPFILTER] = sampler_states[WINED3DSAMP_MIPFILTER];
-        gl_tex->states[WINED3DTEXSTA_MINFILTER] = sampler_states[WINED3DSAMP_MINFILTER];
-        gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] = sampler_states[WINED3DSAMP_MAXMIPLEVEL];
+        gl_tex->states[WINED3DTEXSTA_MIPFILTER] = sampler_states[WINED3D_SAMP_MIP_FILTER];
+        gl_tex->states[WINED3DTEXSTA_MINFILTER] = sampler_states[WINED3D_SAMP_MIN_FILTER];
+        gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] = sampler_states[WINED3D_SAMP_MAX_MIP_LEVEL];
 
-        if (gl_tex->states[WINED3DTEXSTA_MINFILTER] > WINED3DTEXF_ANISOTROPIC
-            || gl_tex->states[WINED3DTEXSTA_MIPFILTER] > WINED3DTEXF_ANISOTROPIC)
+        if (gl_tex->states[WINED3DTEXSTA_MINFILTER] > WINED3D_TEXF_ANISOTROPIC
+            || gl_tex->states[WINED3DTEXSTA_MIPFILTER] > WINED3D_TEXF_ANISOTROPIC)
         {
-            FIXME("Unrecognized or unsupported D3DSAMP_MINFILTER value %#x D3DSAMP_MIPFILTER value %#x.\n",
+            FIXME("Unrecognized or unsupported MIN_FILTER value %#x MIP_FILTER value %#x.\n",
                   gl_tex->states[WINED3DTEXSTA_MINFILTER],
                   gl_tex->states[WINED3DTEXSTA_MIPFILTER]);
         }
         gl_value = wined3d_gl_min_mip_filter(texture->min_mip_lookup,
-                min(max(sampler_states[WINED3DSAMP_MINFILTER], WINED3DTEXF_POINT), WINED3DTEXF_LINEAR),
-                min(max(sampler_states[WINED3DSAMP_MIPFILTER], WINED3DTEXF_NONE), WINED3DTEXF_LINEAR));
+                min(max(sampler_states[WINED3D_SAMP_MIN_FILTER], WINED3D_TEXF_POINT), WINED3D_TEXF_LINEAR),
+                min(max(sampler_states[WINED3D_SAMP_MIP_FILTER], WINED3D_TEXF_NONE), WINED3D_TEXF_LINEAR));
 
         TRACE("ValueMIN=%#x, ValueMIP=%#x, setting MINFILTER to %#x.\n",
-              sampler_states[WINED3DSAMP_MINFILTER],
-              sampler_states[WINED3DSAMP_MIPFILTER], gl_value);
+              sampler_states[WINED3D_SAMP_MIN_FILTER],
+              sampler_states[WINED3D_SAMP_MIP_FILTER], gl_value);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, gl_value);
         checkGLcall("glTexParameter GL_TEXTURE_MIN_FILTER, ...");
 
         if (!cond_np2)
         {
-            if (gl_tex->states[WINED3DTEXSTA_MIPFILTER] == WINED3DTEXF_NONE)
+            if (gl_tex->states[WINED3DTEXSTA_MIPFILTER] == WINED3D_TEXF_NONE)
                 gl_value = texture->lod;
             else if (gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] >= texture->level_count)
                 gl_value = texture->level_count - 1;
@@ -367,21 +365,21 @@ void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
             else
                 gl_value = gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL];
 
-            /* Note that WINED3DSAMP_MAXMIPLEVEL specifies the largest mipmap
+            /* Note that WINED3D_SAMP_MAX_MIP_LEVEL specifies the largest mipmap
              * (default 0), while GL_TEXTURE_MAX_LEVEL specifies the smallest
-             * mimap used (default 1000). So WINED3DSAMP_MAXMIPLEVEL
+             * mimap used (default 1000). So WINED3D_SAMP_MAX_MIP_LEVEL
              * corresponds to GL_TEXTURE_BASE_LEVEL. */
             glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, gl_value);
         }
     }
 
-    if ((gl_tex->states[WINED3DTEXSTA_MAGFILTER] != WINED3DTEXF_ANISOTROPIC
-         && gl_tex->states[WINED3DTEXSTA_MINFILTER] != WINED3DTEXF_ANISOTROPIC
-         && gl_tex->states[WINED3DTEXSTA_MIPFILTER] != WINED3DTEXF_ANISOTROPIC)
+    if ((gl_tex->states[WINED3DTEXSTA_MAGFILTER] != WINED3D_TEXF_ANISOTROPIC
+            && gl_tex->states[WINED3DTEXSTA_MINFILTER] != WINED3D_TEXF_ANISOTROPIC
+            && gl_tex->states[WINED3DTEXSTA_MIPFILTER] != WINED3D_TEXF_ANISOTROPIC)
             || cond_np2)
         aniso = 1;
     else
-        aniso = sampler_states[WINED3DSAMP_MAXANISOTROPY];
+        aniso = sampler_states[WINED3D_SAMP_MAX_ANISOTROPY];
 
     if (gl_tex->states[WINED3DTEXSTA_MAXANISOTROPY] != aniso)
     {
@@ -398,11 +396,12 @@ void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
     }
 
     /* These should always be the same unless EXT_texture_sRGB_decode is supported. */
-    if (sampler_states[WINED3DSAMP_SRGBTEXTURE] != gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE])
+    if (sampler_states[WINED3D_SAMP_SRGB_TEXTURE] != gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE])
     {
         glTexParameteri(target, GL_TEXTURE_SRGB_DECODE_EXT,
-                sampler_states[WINED3DSAMP_SRGBTEXTURE] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT);
+                sampler_states[WINED3D_SAMP_SRGB_TEXTURE] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT);
         checkGLcall("glTexParameteri(GL_TEXTURE_SRGB_DECODE_EXT)");
+        gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE] = sampler_states[WINED3D_SAMP_SRGB_TEXTURE];
     }
 
     if (!(texture->resource.format->flags & WINED3DFMT_FLAG_SHADOW)
@@ -450,21 +449,11 @@ ULONG CDECL wined3d_texture_decref(struct wined3d_texture *texture)
     return refcount;
 }
 
-HRESULT CDECL wined3d_texture_set_private_data(struct wined3d_texture *texture,
-        REFGUID guid, const void *data, DWORD data_size, DWORD flags)
+struct wined3d_resource * CDECL wined3d_texture_get_resource(struct wined3d_texture *texture)
 {
-    return resource_set_private_data(&texture->resource, guid, data, data_size, flags);
-}
+    TRACE("texture %p.\n", texture);
 
-HRESULT CDECL wined3d_texture_get_private_data(const struct wined3d_texture *texture,
-        REFGUID guid, void *data, DWORD *data_size)
-{
-    return resource_get_private_data(&texture->resource, guid, data, data_size);
-}
-
-HRESULT CDECL wined3d_texture_free_private_data(struct wined3d_texture *texture, REFGUID guid)
-{
-    return resource_free_private_data(&texture->resource, guid);
+    return &texture->resource;
 }
 
 DWORD CDECL wined3d_texture_set_priority(struct wined3d_texture *texture, DWORD priority)
@@ -483,13 +472,6 @@ void CDECL wined3d_texture_preload(struct wined3d_texture *texture)
     texture->texture_ops->texture_preload(texture, SRGB_ANY);
 }
 
-WINED3DRESOURCETYPE CDECL wined3d_texture_get_type(const struct wined3d_texture *texture)
-{
-    TRACE("texture %p.\n", texture);
-
-    return texture->resource.resourceType;
-}
-
 void * CDECL wined3d_texture_get_parent(const struct wined3d_texture *texture)
 {
     TRACE("texture %p.\n", texture);
@@ -505,7 +487,7 @@ DWORD CDECL wined3d_texture_set_lod(struct wined3d_texture *texture, DWORD lod)
 
     /* The d3d9:texture test shows that SetLOD is ignored on non-managed
      * textures. The call always returns 0, and GetLOD always returns 0. */
-    if (texture->resource.pool != WINED3DPOOL_MANAGED)
+    if (texture->resource.pool != WINED3D_POOL_MANAGED)
     {
         TRACE("Ignoring SetLOD on %s texture, returning 0.\n", debug_d3dpool(texture->resource.pool));
         return 0;
@@ -521,7 +503,7 @@ DWORD CDECL wined3d_texture_set_lod(struct wined3d_texture *texture, DWORD lod)
         texture->texture_rgb.states[WINED3DTEXSTA_MAXMIPLEVEL] = ~0U;
         texture->texture_srgb.states[WINED3DTEXSTA_MAXMIPLEVEL] = ~0U;
         if (texture->bind_count)
-            IWineD3DDeviceImpl_MarkStateDirty(texture->resource.device, STATE_SAMPLER(texture->sampler));
+            device_invalidate_state(texture->resource.device, STATE_SAMPLER(texture->sampler));
     }
 
     return old;
@@ -542,7 +524,7 @@ DWORD CDECL wined3d_texture_get_level_count(const struct wined3d_texture *textur
 }
 
 HRESULT CDECL wined3d_texture_set_autogen_filter_type(struct wined3d_texture *texture,
-        WINED3DTEXTUREFILTERTYPE filter_type)
+        enum wined3d_texture_filter_type filter_type)
 {
     FIXME("texture %p, filter_type %s stub!\n", texture, debug_d3dtexturefiltertype(filter_type));
 
@@ -557,7 +539,7 @@ HRESULT CDECL wined3d_texture_set_autogen_filter_type(struct wined3d_texture *te
     return WINED3D_OK;
 }
 
-WINED3DTEXTUREFILTERTYPE CDECL wined3d_texture_get_autogen_filter_type(const struct wined3d_texture *texture)
+enum wined3d_texture_filter_type CDECL wined3d_texture_get_autogen_filter_type(const struct wined3d_texture *texture)
 {
     TRACE("texture %p.\n", texture);
 
@@ -587,7 +569,7 @@ struct wined3d_resource * CDECL wined3d_texture_get_sub_resource(struct wined3d_
 }
 
 HRESULT CDECL wined3d_texture_add_dirty_region(struct wined3d_texture *texture,
-        UINT layer, const WINED3DBOX *dirty_region)
+        UINT layer, const struct wined3d_box *dirty_region)
 {
     struct wined3d_resource *sub_resource;
 
@@ -607,23 +589,23 @@ HRESULT CDECL wined3d_texture_add_dirty_region(struct wined3d_texture *texture,
 
 /* Context activation is done by the caller. */
 static HRESULT texture2d_bind(struct wined3d_texture *texture,
-        const struct wined3d_gl_info *gl_info, BOOL srgb)
+        struct wined3d_context *context, BOOL srgb)
 {
     BOOL set_gl_texture_desc;
     HRESULT hr;
 
-    TRACE("texture %p, gl_info %p, srgb %#x.\n", texture, gl_info, srgb);
+    TRACE("texture %p, context %p, srgb %#x.\n", texture, context, srgb);
 
-    hr = wined3d_texture_bind(texture, gl_info, srgb, &set_gl_texture_desc);
+    hr = wined3d_texture_bind(texture, context, srgb, &set_gl_texture_desc);
     if (set_gl_texture_desc && SUCCEEDED(hr))
     {
         UINT sub_count = texture->level_count * texture->layer_count;
-        BOOL srgb_tex = !gl_info->supported[EXT_TEXTURE_SRGB_DECODE]
+        BOOL srgb_tex = !context->gl_info->supported[EXT_TEXTURE_SRGB_DECODE]
                 && (texture->flags & WINED3D_TEXTURE_IS_SRGB);
         struct gl_texture *gl_tex;
         UINT i;
 
-        gl_tex = wined3d_texture_get_gl_texture(texture, gl_info, srgb_tex);
+        gl_tex = wined3d_texture_get_gl_texture(texture, context->gl_info, srgb_tex);
 
         for (i = 0; i < sub_count; ++i)
         {
@@ -653,18 +635,18 @@ static HRESULT texture2d_bind(struct wined3d_texture *texture,
             glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             checkGLcall("glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST)");
             LEAVE_GL();
-            gl_tex->states[WINED3DTEXSTA_ADDRESSU]      = WINED3DTADDRESS_CLAMP;
-            gl_tex->states[WINED3DTEXSTA_ADDRESSV]      = WINED3DTADDRESS_CLAMP;
-            gl_tex->states[WINED3DTEXSTA_MAGFILTER]     = WINED3DTEXF_POINT;
-            gl_tex->states[WINED3DTEXSTA_MINFILTER]     = WINED3DTEXF_POINT;
-            gl_tex->states[WINED3DTEXSTA_MIPFILTER]     = WINED3DTEXF_NONE;
+            gl_tex->states[WINED3DTEXSTA_ADDRESSU] = WINED3D_TADDRESS_CLAMP;
+            gl_tex->states[WINED3DTEXSTA_ADDRESSV] = WINED3D_TADDRESS_CLAMP;
+            gl_tex->states[WINED3DTEXSTA_MAGFILTER] = WINED3D_TEXF_POINT;
+            gl_tex->states[WINED3DTEXSTA_MINFILTER] = WINED3D_TEXF_POINT;
+            gl_tex->states[WINED3DTEXSTA_MIPFILTER] = WINED3D_TEXF_NONE;
         }
     }
 
     return hr;
 }
 
-static BOOL texture_srgb_mode(struct wined3d_texture *texture, enum WINED3DSRGB srgb)
+static BOOL texture_srgb_mode(const struct wined3d_texture *texture, enum WINED3DSRGB srgb)
 {
     switch (srgb)
     {
@@ -702,25 +684,6 @@ static void texture2d_preload(struct wined3d_texture *texture, enum WINED3DSRGB 
         context = context_acquire(device, NULL);
     }
 
-    if (texture->resource.format->id == WINED3DFMT_P8_UINT
-            || texture->resource.format->id == WINED3DFMT_P8_UINT_A8_UNORM)
-    {
-        for (i = 0; i < sub_count; ++i)
-        {
-            struct wined3d_surface *surface = surface_from_resource(texture->sub_resources[i]);
-
-            if (palette9_changed(surface))
-            {
-                TRACE("Reloading surface %p because the d3d8/9 palette was changed.\n", surface);
-                /* TODO: This is not necessarily needed with hw palettized texture support. */
-                surface_load_location(surface, SFLAG_INSYSMEM, NULL);
-                /* Make sure the texture is reloaded because of the palette
-                 * change, this kills performance though :( */
-                surface_modify_location(surface, SFLAG_INTEXTURE, FALSE);
-            }
-        }
-    }
-
     if (gl_tex->dirty)
     {
         /* Reload the surfaces if the texture is marked dirty. */
@@ -741,7 +704,7 @@ static void texture2d_preload(struct wined3d_texture *texture, enum WINED3DSRGB 
 }
 
 static void texture2d_sub_resource_add_dirty_region(struct wined3d_resource *sub_resource,
-        const WINED3DBOX *dirty_region)
+        const struct wined3d_box *dirty_region)
 {
     surface_add_dirty_rect(surface_from_resource(sub_resource), dirty_region);
 }
@@ -795,7 +758,7 @@ static const struct wined3d_resource_ops texture2d_resource_ops =
 };
 
 static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_length, UINT levels,
-        struct wined3d_device *device, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool,
+        struct wined3d_device *device, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
@@ -813,7 +776,7 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_lengt
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (!gl_info->supported[ARB_TEXTURE_CUBE_MAP] && pool != WINED3DPOOL_SCRATCH)
+    if (!gl_info->supported[ARB_TEXTURE_CUBE_MAP] && pool != WINED3D_POOL_SCRATCH)
     {
         WARN("(%p) : Tried to create not supported cube texture.\n", texture);
         return WINED3DERR_INVALIDCALL;
@@ -843,7 +806,7 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_lengt
     }
 
     hr = wined3d_texture_init(texture, &texture2d_ops, 6, levels,
-            WINED3DRTYPE_CUBETEXTURE, device, usage, format, pool,
+            WINED3D_RTYPE_CUBE_TEXTURE, device, usage, format, pool,
             parent, parent_ops, &texture2d_resource_ops);
     if (FAILED(hr))
     {
@@ -914,7 +877,7 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_lengt
 }
 
 static HRESULT texture_init(struct wined3d_texture *texture, UINT width, UINT height, UINT levels,
-        struct wined3d_device *device, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool,
+        struct wined3d_device *device, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
@@ -980,7 +943,7 @@ static HRESULT texture_init(struct wined3d_texture *texture, UINT width, UINT he
     }
 
     hr = wined3d_texture_init(texture, &texture2d_ops, 1, levels,
-            WINED3DRTYPE_TEXTURE, device, usage, format, pool,
+            WINED3D_RTYPE_TEXTURE, device, usage, format, pool,
             parent, parent_ops, &texture2d_resource_ops);
     if (FAILED(hr))
     {
@@ -1072,28 +1035,28 @@ static HRESULT texture_init(struct wined3d_texture *texture, UINT width, UINT he
 
 /* Context activation is done by the caller. */
 static HRESULT texture3d_bind(struct wined3d_texture *texture,
-        const struct wined3d_gl_info *gl_info, BOOL srgb)
+        struct wined3d_context *context, BOOL srgb)
 {
     BOOL dummy;
 
-    TRACE("texture %p, gl_info %p, srgb %#x.\n", texture, gl_info, srgb);
+    TRACE("texture %p, context %p, srgb %#x.\n", texture, context, srgb);
 
-    return wined3d_texture_bind(texture, gl_info, srgb, &dummy);
+    return wined3d_texture_bind(texture, context, srgb, &dummy);
 }
 
 /* Do not call while under the GL lock. */
 static void texture3d_preload(struct wined3d_texture *texture, enum WINED3DSRGB srgb)
 {
     struct wined3d_device *device = texture->resource.device;
-    struct wined3d_context *context = NULL;
+    struct wined3d_context *context;
     BOOL srgb_was_toggled = FALSE;
     unsigned int i;
 
     TRACE("texture %p, srgb %#x.\n", texture, srgb);
 
-    if (!device->isInDraw)
-        context = context_acquire(device, NULL);
-    else if (texture->bind_count > 0)
+    /* TODO: Use already acquired context when possible. */
+    context = context_acquire(device, NULL);
+    if (texture->bind_count > 0)
     {
         BOOL texture_srgb = texture->flags & WINED3D_TEXTURE_IS_SRGB;
         BOOL sampler_srgb = texture_srgb_mode(texture, srgb);
@@ -1114,7 +1077,7 @@ static void texture3d_preload(struct wined3d_texture *texture, enum WINED3DSRGB 
     {
         for (i = 0; i < texture->level_count; ++i)
         {
-            volume_load(volume_from_resource(texture->sub_resources[i]), i,
+            volume_load(volume_from_resource(texture->sub_resources[i]), context, i,
                     texture->flags & WINED3D_TEXTURE_IS_SRGB);
         }
     }
@@ -1124,7 +1087,7 @@ static void texture3d_preload(struct wined3d_texture *texture, enum WINED3DSRGB 
         {
             struct wined3d_volume *volume = volume_from_resource(texture->sub_resources[i]);
             volume_add_dirty_box(volume, NULL);
-            volume_load(volume, i, texture->flags & WINED3D_TEXTURE_IS_SRGB);
+            volume_load(volume, context, i, texture->flags & WINED3D_TEXTURE_IS_SRGB);
         }
     }
     else
@@ -1132,15 +1095,14 @@ static void texture3d_preload(struct wined3d_texture *texture, enum WINED3DSRGB 
         TRACE("Texture %p not dirty, nothing to do.\n", texture);
     }
 
-    if (context)
-        context_release(context);
+    context_release(context);
 
     /* No longer dirty */
     texture->texture_rgb.dirty = FALSE;
 }
 
 static void texture3d_sub_resource_add_dirty_region(struct wined3d_resource *sub_resource,
-        const WINED3DBOX *dirty_region)
+        const struct wined3d_box *dirty_region)
 {
     volume_add_dirty_box(volume_from_resource(sub_resource), dirty_region);
 }
@@ -1186,7 +1148,7 @@ static const struct wined3d_resource_ops texture3d_resource_ops =
 
 static HRESULT volumetexture_init(struct wined3d_texture *texture, UINT width, UINT height,
         UINT depth, UINT levels, struct wined3d_device *device, DWORD usage, enum wined3d_format_id format_id,
-        WINED3DPOOL pool, void *parent, const struct wined3d_parent_ops *parent_ops)
+        enum wined3d_pool pool, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_format *format = wined3d_get_format(gl_info, format_id);
@@ -1232,7 +1194,7 @@ static HRESULT volumetexture_init(struct wined3d_texture *texture, UINT width, U
     }
 
     hr = wined3d_texture_init(texture, &texture3d_ops, 1, levels,
-            WINED3DRTYPE_VOLUMETEXTURE, device, usage, format, pool,
+            WINED3D_RTYPE_VOLUME_TEXTURE, device, usage, format, pool,
             parent, parent_ops, &texture3d_resource_ops);
     if (FAILED(hr))
     {
@@ -1280,7 +1242,7 @@ static HRESULT volumetexture_init(struct wined3d_texture *texture, UINT width, U
 }
 
 HRESULT CDECL wined3d_texture_create_2d(struct wined3d_device *device, UINT width, UINT height,
-        UINT level_count, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool, void *parent,
+        UINT level_count, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool, void *parent,
         const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
     struct wined3d_texture *object;
@@ -1316,7 +1278,7 @@ HRESULT CDECL wined3d_texture_create_2d(struct wined3d_device *device, UINT widt
 }
 
 HRESULT CDECL wined3d_texture_create_3d(struct wined3d_device *device, UINT width, UINT height, UINT depth,
-        UINT level_count, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool, void *parent,
+        UINT level_count, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool, void *parent,
         const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
     struct wined3d_texture *object;
@@ -1352,7 +1314,7 @@ HRESULT CDECL wined3d_texture_create_3d(struct wined3d_device *device, UINT widt
 }
 
 HRESULT CDECL wined3d_texture_create_cube(struct wined3d_device *device, UINT edge_length,
-        UINT level_count, DWORD usage, enum wined3d_format_id format_id, WINED3DPOOL pool, void *parent,
+        UINT level_count, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool, void *parent,
         const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
     struct wined3d_texture *object;

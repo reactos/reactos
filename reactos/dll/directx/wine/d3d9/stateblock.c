@@ -150,7 +150,7 @@ HRESULT stateblock_init(IDirect3DStateBlock9Impl *stateblock, IDirect3DDevice9Im
     {
         wined3d_mutex_lock();
         hr = wined3d_stateblock_create(device->wined3d_device,
-                (WINED3DSTATEBLOCKTYPE)type, &stateblock->wined3d_stateblock);
+                (enum wined3d_stateblock_type)type, &stateblock->wined3d_stateblock);
         wined3d_mutex_unlock();
         if (FAILED(hr))
         {

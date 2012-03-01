@@ -1721,7 +1721,7 @@ BOOL (WINAPI *pwglShareLists)(HGLRC, HGLRC) DECLSPEC_HIDDEN;
     USE_WGL_FUNC(wglShareLists)
 
 /* OpenGL extensions. */
-typedef enum wined3d_gl_extension
+enum wined3d_gl_extension
 {
     WINED3D_GL_EXT_NONE,
 
@@ -1738,12 +1738,14 @@ typedef enum wined3d_gl_extension
     ARB_DEPTH_CLAMP,
     ARB_DEPTH_TEXTURE,
     ARB_DRAW_BUFFERS,
+    ARB_DRAW_ELEMENTS_BASE_VERTEX,
     ARB_FRAGMENT_PROGRAM,
     ARB_FRAGMENT_SHADER,
     ARB_FRAMEBUFFER_OBJECT,
     ARB_GEOMETRY_SHADER4,
     ARB_HALF_FLOAT_PIXEL,
     ARB_HALF_FLOAT_VERTEX,
+    ARB_MAP_BUFFER_ALIGNMENT,
     ARB_MAP_BUFFER_RANGE,
     ARB_MULTISAMPLE,
     ARB_MULTITEXTURE,
@@ -1844,7 +1846,7 @@ typedef enum wined3d_gl_extension
     WINED3D_GL_VERSION_2_0,
 
     WINED3D_GL_EXT_COUNT,
-} GL_SupportedExt;
+};
 
 /* GL_APPLE_client_storage */
 #ifndef GL_APPLE_client_storage
@@ -1891,9 +1893,9 @@ typedef void (WINE_GLAPI *PGLFNFINISHOBJECTAPPLEPROC)(GLenum, GLuint);
 #define GL_APPLE_flush_buffer_range 1
 #define GL_BUFFER_SERIALIZED_MODIFY_APPLE                   0x8a12
 #define GL_BUFFER_FLUSHING_UNMAP_APPLE                      0x8a13
+#endif
 typedef void (WINE_GLAPI *PGLFNBUFFERPARAMETERIAPPLE)(GLenum target, GLenum pname, GLint param);
 typedef void (WINE_GLAPI *PGLFNFLUSHMAPPEDBUFFERRANGEAPPLE)(GLenum target, GLintptr offset, GLsizeiptr size);
-#endif
 
 /* GL_APPLE_flush_render */
 typedef void (WINE_GLAPI *PGLFNFLUSHRENDERAPPLEPROC)(void);
@@ -1964,6 +1966,19 @@ typedef void (WINE_GLAPI *PGLFNCLAMPCOLORARBPROC)(GLenum target, GLenum clamp);
 #define GL_DRAW_BUFFER15_ARB                                0x8834
 #endif
 typedef void (WINE_GLAPI *PGLFNDRAWBUFFERSARBPROC)(GLsizei n, const GLenum *bufs);
+
+/* GL_ARB_draw_elements_base_vertex */
+#ifndef GL_ARB_draw_elements_base_vertex
+#define GL_ARB_draw_elements_base_vertex 1
+#endif
+typedef void (WINE_GLAPI *PGLFNDRAWELEMENTSBASEVERTEXPROC)(GLenum mode, GLsizei count, GLenum type,
+        const GLvoid *indices, GLint basevertex);
+typedef void (WINE_GLAPI *PGLFNDRAWRANGEELEMENTSBASEVERTEXPROC)(GLenum mode, GLuint start, GLuint end,
+        GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
+typedef void (WINE_GLAPI *PGLFNDRAWELEMENTSINSTANCEDBASEVERTEXPROC)(GLenum mode, GLsizei count,
+        GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
+typedef void (WINE_GLAPI *PGLFNMULTIDRAWELEMENTSBASEVERTEXPROC)(GLenum mode, GLsizei *count, GLenum type,
+        const GLvoid **indices, GLsizei primcount, GLint *basevertex);
 
 /* GL_ARB_fragment_program */
 #ifndef GL_ARB_fragment_program
@@ -2145,6 +2160,12 @@ typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTUREFACEARBPROC)(GLenum target, GLe
 #define GL_ARB_half_float_vertex 1
 /* No _ARB, see extension spec */
 #define GL_HALF_FLOAT                                       0x140b
+#endif
+
+/* GL_ARB_map_buffer_alignment */
+#ifndef GL_ARB_map_buffer_alignment
+#define GL_ARB_map_buffer_alignment 1
+#define GL_MIN_MAP_BUFFER_ALIGNMENT                         0x90bc
 #endif
 
 /* GL_ARB_map_buffer_range */
@@ -3069,11 +3090,11 @@ typedef void (WINE_GLAPI *PGLFNGLGENERATEMIPMAPEXTPROC)(GLenum target);
 /* GL_EXT_gpu_program_parameters */
 #ifndef GL_EXT_gpu_program_parameters
 #define GL_EXT_gpu_program_parameters 1
+#endif
 typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETERS4FVEXTPROC)(GLenum target,
         GLuint index, GLsizei count, const float *params);
 typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC)(GLenum target,
         GLuint index, GLsizei count, const float *params);
-#endif
 
 /* GL_EXT_gpu_shader4 */
 #ifndef GL_EXT_gpu_shader4
@@ -3789,6 +3810,15 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSWAPINTERVALEXTPROC)(int interval);
     /* GL_ARB_draw_buffers */ \
     USE_GL_FUNC(PGLFNDRAWBUFFERSARBPROC, \
             glDrawBuffersARB,                           ARB_DRAW_BUFFERS,               NULL) \
+    /* GL_ARB_draw_elements_base_vertex */ \
+    USE_GL_FUNC(PGLFNDRAWELEMENTSBASEVERTEXPROC, \
+            glDrawElementsBaseVertex,                   ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
+    USE_GL_FUNC(PGLFNDRAWRANGEELEMENTSBASEVERTEXPROC, \
+            glDrawRangeElementsBaseVertex,              ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
+    USE_GL_FUNC(PGLFNDRAWELEMENTSINSTANCEDBASEVERTEXPROC, \
+            glDrawElementsInstancedBaseVertex,          ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
+    USE_GL_FUNC(PGLFNMULTIDRAWELEMENTSBASEVERTEXPROC, \
+            glMultiDrawElementsBaseVertex,              ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
     /* GL_ARB_framebuffer_object */ \
     USE_GL_FUNC(PGLFNGLISRENDERBUFFERPROC, \
             glIsRenderbuffer,                           ARB_FRAMEBUFFER_OBJECT,         NULL) \

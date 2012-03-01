@@ -19,7 +19,6 @@ list(APPEND SOURCE
     ati_fragment_shader.c
     arb_program_shader.c
     buffer.c
-    clipper.c
     context.c
     device.c
     directx.c
@@ -53,7 +52,7 @@ list(APPEND SOURCE
 endif()
 
 add_library(wined3d SHARED ${SOURCE})
-set_module_type(wined3d win32dll)
+set_module_type(wined3d win32dll ENTRYPOINT 0)
 
 target_link_libraries(wined3d wine)
 

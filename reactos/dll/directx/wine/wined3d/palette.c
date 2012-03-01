@@ -133,7 +133,7 @@ HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
     /* If the palette is attached to the render target, update all render targets */
     LIST_FOR_EACH_ENTRY(resource, &palette->device->resources, struct wined3d_resource, resource_list_entry)
     {
-        if (resource->resourceType == WINED3DRTYPE_SURFACE)
+        if (resource->type == WINED3D_RTYPE_SURFACE)
         {
             struct wined3d_surface *surface = surface_from_resource(resource);
             if (surface->palette == palette)

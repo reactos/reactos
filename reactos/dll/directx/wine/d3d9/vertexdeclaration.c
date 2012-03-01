@@ -320,8 +320,8 @@ static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops
     d3d9_vertexdeclaration_wined3d_object_destroyed,
 };
 
-static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elements,
-        WINED3DVERTEXELEMENT **wined3d_elements, UINT *element_count)
+static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elements,
+        struct wined3d_vertex_element **wined3d_elements, UINT *element_count)
 {
     const D3DVERTEXELEMENT9* element;
     UINT count = 1;
@@ -337,7 +337,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elem
     /* Skip the END element */
     --count;
 
-    *wined3d_elements = HeapAlloc(GetProcessHeap(), 0, count * sizeof(WINED3DVERTEXELEMENT));
+    *wined3d_elements = HeapAlloc(GetProcessHeap(), 0, count * sizeof(**wined3d_elements));
     if (!*wined3d_elements) {
         FIXME("Memory allocation failed\n");
         return D3DERR_OUTOFVIDEOMEMORY;
@@ -368,7 +368,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elem
 HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
         IDirect3DDevice9Impl *device, const D3DVERTEXELEMENT9 *elements)
 {
-    WINED3DVERTEXELEMENT *wined3d_elements;
+    struct wined3d_vertex_element *wined3d_elements;
     UINT wined3d_element_count;
     UINT element_count;
     HRESULT hr;

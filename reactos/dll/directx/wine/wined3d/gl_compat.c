@@ -391,7 +391,7 @@ void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
          * too, which would allow fog coord emulation in a fixed function vertex pipeline replacement.
          *
          * Fog vs texture: We apply the fog in the vertex color. An app could set up texturing settings which
-         * ignore the vertex color, thus effectively disabing our fog. However, in D3D this type of fog is
+         * ignore the vertex color, thus effectively disabling our fog. However, in D3D this type of fog is
          * a per-vertex fog too, so the apps shouldn't do that.
          *
          * Fog vs lighting: The app could in theory use D3DFOG_NONE table and D3DFOG_NONE vertex fog with

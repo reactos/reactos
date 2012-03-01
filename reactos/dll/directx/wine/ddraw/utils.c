@@ -216,10 +216,9 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         case WINED3DFMT_D24_UNORM_S8_UINT:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;
-            /* Should I set dwZBufferBitDepth to 32 here? */
             DDPixelFormat->u1.dwZBufferBitDepth = 32;
             DDPixelFormat->u2.dwStencilBitDepth = 8;
-            DDPixelFormat->u3.dwZBitMask = 0x00FFFFFFFF;
+            DDPixelFormat->u3.dwZBitMask = 0x00FFFFFF;
             DDPixelFormat->u4.dwStencilBitMask = 0xFF000000;
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
@@ -229,7 +228,7 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwZBufferBitDepth = 32;
             DDPixelFormat->u2.dwStencilBitDepth = 0;
-            DDPixelFormat->u3.dwZBitMask = 0x00FFFFFFFF;
+            DDPixelFormat->u3.dwZBitMask = 0x00FFFFFF;
             DDPixelFormat->u4.dwStencilBitMask = 0x00000000;
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
@@ -427,7 +426,7 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
                 {
                     return WINED3DFMT_B2G3R3A8_UNORM;
                 }
-                ERR("16 bit RGB Pixel format does not match\n");
+                WARN("16 bit RGB Pixel format does not match.\n");
                 return WINED3DFMT_UNKNOWN;
 
             case 24:
@@ -446,10 +445,10 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
                         return WINED3DFMT_B8G8R8X8_UNORM;
 
                 }
-                ERR("32 bit RGB pixel format does not match\n");
+                WARN("32 bit RGB pixel format does not match.\n");
 
             default:
-                ERR("Invalid dwRGBBitCount in Pixelformat structure\n");
+                WARN("Invalid dwRGBBitCount in Pixelformat structure.\n");
                 return WINED3DFMT_UNKNOWN;
         }
     }
@@ -461,12 +460,12 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
             case 1:
             case 2:
             case 4:
-                ERR("Unsupported Alpha-Only bit depth 0x%x\n", DDPixelFormat->u1.dwAlphaBitDepth);
+                FIXME("Unsupported Alpha-Only bit depth 0x%x.\n", DDPixelFormat->u1.dwAlphaBitDepth);
             case 8:
                 return WINED3DFMT_A8_UNORM;
 
             default:
-                ERR("Invalid AlphaBitDepth in Alpha-Only Pixelformat\n");
+                WARN("Invalid AlphaBitDepth in Alpha-Only Pixelformat.\n");
                 return WINED3DFMT_UNKNOWN;
         }
     }
@@ -481,17 +480,17 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
                 case 4:
                     if(DDPixelFormat->u1.dwAlphaBitDepth == 4)
                         return WINED3DFMT_L4A4_UNORM;
-                    ERR("Unknown Alpha / Luminance bit depth combination\n");
+                    WARN("Unknown Alpha / Luminance bit depth combination.\n");
                     return WINED3DFMT_UNKNOWN;
 
                 case 6:
-                    ERR("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now!!\n");
+                    FIXME("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now.\n");
                     return WINED3DFMT_R5G5_SNORM_L6_UNORM;
 
                 case 8:
                     if(DDPixelFormat->u1.dwAlphaBitDepth == 8)
                         return WINED3DFMT_L8A8_UNORM;
-                    ERR("Unknown Alpha / Lumincase bit depth combination\n");
+                    WARN("Unknown Alpha / Lumincase bit depth combination.\n");
                     return WINED3DFMT_UNKNOWN;
             }
         }
@@ -501,14 +500,14 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
             switch(DDPixelFormat->u1.dwLuminanceBitCount)
             {
                 case 6:
-                    ERR("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now!!\n");
+                    FIXME("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now.\n");
                     return WINED3DFMT_R5G5_SNORM_L6_UNORM;
 
                 case 8:
                     return WINED3DFMT_L8_UNORM;
 
                 default:
-                    ERR("Unknown luminance-only bit depth 0x%x\n", DDPixelFormat->u1.dwLuminanceBitCount);
+                    WARN("Unknown luminance-only bit depth 0x%x.\n", DDPixelFormat->u1.dwLuminanceBitCount);
                     return WINED3DFMT_UNKNOWN;
              }
         }
@@ -520,31 +519,22 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
         {
             switch(DDPixelFormat->u1.dwZBufferBitDepth)
             {
-                case 8:
-                    FIXME("8 Bits Z+Stencil buffer pixelformat is not supported. Returning WINED3DFMT_UNKNOWN\n");
-                    return WINED3DFMT_UNKNOWN;
-
-                case 15:
-                    FIXME("15 bit depth buffer not handled yet, assuming 16 bit\n");
                 case 16:
-                    if(DDPixelFormat->u2.dwStencilBitDepth == 1)
-                        return WINED3DFMT_S1_UINT_D15_UNORM;
-
-                    FIXME("Don't know how to handle a 16 bit Z buffer with %d bit stencil buffer pixelformat\n", DDPixelFormat->u2.dwStencilBitDepth);
+                    if (DDPixelFormat->u2.dwStencilBitDepth == 1) return WINED3DFMT_S1_UINT_D15_UNORM;
+                    WARN("Unknown depth stenil format: 16 z bits, %u stencil bits\n",
+                            DDPixelFormat->u2.dwStencilBitDepth);
                     return WINED3DFMT_UNKNOWN;
-
-                case 24:
-                    FIXME("Don't know how to handle a 24 bit depth buffer with stencil bits\n");
-                    return WINED3DFMT_D24_UNORM_S8_UINT;
 
                 case 32:
-                    if(DDPixelFormat->u2.dwStencilBitDepth == 8)
-                        return WINED3DFMT_D24_UNORM_S8_UINT;
-                    else
-                        return WINED3DFMT_S4X4_UINT_D24_UNORM;
+                    if (DDPixelFormat->u2.dwStencilBitDepth == 8) return WINED3DFMT_D24_UNORM_S8_UINT;
+                    else if (DDPixelFormat->u2.dwStencilBitDepth == 4) return WINED3DFMT_S4X4_UINT_D24_UNORM;
+                    WARN("Unknown depth stenil format: 32 z bits, %u stencil bits\n",
+                            DDPixelFormat->u2.dwStencilBitDepth);
+                    return WINED3DFMT_UNKNOWN;
 
                 default:
-                    ERR("Unknown Z buffer depth %d\n", DDPixelFormat->u1.dwZBufferBitDepth);
+                    WARN("Unknown depth stenil format: %u z bits, %u stencil bits\n",
+                            DDPixelFormat->u1.dwZBufferBitDepth, DDPixelFormat->u2.dwStencilBitDepth);
                     return WINED3DFMT_UNKNOWN;
             }
         }
@@ -552,26 +542,23 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
         {
             switch(DDPixelFormat->u1.dwZBufferBitDepth)
             {
-                case 8:
-                    ERR("8 Bit Z buffers are not supported. Trying a 16 Bit one\n");
-                    return WINED3DFMT_D16_UNORM;
-
                 case 16:
                     return WINED3DFMT_D16_UNORM;
 
                 case 24:
-                    FIXME("24 Bit depth buffer, treating like a 32 bit one\n");
+                    return WINED3DFMT_X8D24_UNORM;
+
                 case 32:
-                    if(DDPixelFormat->u3.dwZBitMask == 0x00FFFFFF) {
-                        return WINED3DFMT_X8D24_UNORM;
-                    } else if(DDPixelFormat->u3.dwZBitMask == 0xFFFFFFFF) {
-                        return WINED3DFMT_D32_UNORM;
-                    }
-                    FIXME("Unhandled 32 bit depth buffer bitmasks, returning WINED3DFMT_D24X8\n");
-                    return WINED3DFMT_X8D24_UNORM; /* That's most likely to make games happy */
+                    if (DDPixelFormat->u3.dwZBitMask == 0x00FFFFFF) return WINED3DFMT_X8D24_UNORM;
+                    else if (DDPixelFormat->u3.dwZBitMask == 0xFFFFFF00) return WINED3DFMT_X8D24_UNORM;
+                    else if (DDPixelFormat->u3.dwZBitMask == 0xFFFFFFFF) return WINED3DFMT_D32_UNORM;
+                    WARN("Unknown depth-only format: 32 z bits, mask 0x%08x\n",
+                            DDPixelFormat->u3.dwZBitMask);
+                    return WINED3DFMT_UNKNOWN;
 
                 default:
-                    ERR("Unsupported Z buffer depth %d\n", DDPixelFormat->u1.dwZBufferBitDepth);
+                    WARN("Unknown depth-only format: %u z bits, mask 0x%08x\n",
+                            DDPixelFormat->u1.dwZBufferBitDepth, DDPixelFormat->u3.dwZBitMask);
                     return WINED3DFMT_UNKNOWN;
             }
         }
@@ -612,7 +599,7 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
         }
     }
 
-    ERR("Unknown Pixelformat!\n");
+    WARN("Unknown Pixelformat.\n");
     return WINED3DFMT_UNKNOWN;
 }
 
@@ -1180,4 +1167,94 @@ hr_ddraw_from_wined3d(HRESULT hr)
         case WINED3DERR_INVALIDCALL: return DDERR_INVALIDPARAMS;
         default: return hr;
     }
+}
+
+/* Note that this function writes the full sizeof(DDSURFACEDESC2) size, don't use it
+ * for writing into application-provided DDSURFACEDESC2 structures if the size may
+ * be different */
+void DDSD_to_DDSD2(const DDSURFACEDESC *in, DDSURFACEDESC2 *out)
+{
+    /* The output of this function is never passed to the application directly, so
+     * the memset is not strictly needed. CreateSurface still has problems with this
+     * though. Don't forget to set ddsCaps.dwCaps2/3/4 to 0 when removing this */
+    memset(out, 0x00, sizeof(*out));
+    out->dwSize = sizeof(*out);
+    out->dwFlags = in->dwFlags & ~DDSD_ZBUFFERBITDEPTH;
+    if (in->dwFlags & DDSD_WIDTH) out->dwWidth = in->dwWidth;
+    if (in->dwFlags & DDSD_HEIGHT) out->dwHeight = in->dwHeight;
+    if (in->dwFlags & DDSD_PIXELFORMAT) out->u4.ddpfPixelFormat = in->ddpfPixelFormat;
+    else if(in->dwFlags & DDSD_ZBUFFERBITDEPTH)
+    {
+        out->dwFlags |= DDSD_PIXELFORMAT;
+        memset(&out->u4.ddpfPixelFormat, 0, sizeof(out->u4.ddpfPixelFormat));
+        out->u4.ddpfPixelFormat.dwSize = sizeof(out->u4.ddpfPixelFormat);
+        out->u4.ddpfPixelFormat.dwFlags = DDPF_ZBUFFER;
+        out->u4.ddpfPixelFormat.u1.dwZBufferBitDepth = in->u2.dwZBufferBitDepth;
+        /* 0 is not a valid DDSURFACEDESC / DDPIXELFORMAT on either side of the
+         * conversion */
+        out->u4.ddpfPixelFormat.u3.dwZBitMask = ~0U >> (32 - in->u2.dwZBufferBitDepth);
+    }
+    /* ddsCaps is read even without DDSD_CAPS set. See dsurface:no_ddsd_caps_test */
+    out->ddsCaps.dwCaps = in->ddsCaps.dwCaps;
+    if (in->dwFlags & DDSD_PITCH) out->u1.lPitch = in->u1.lPitch;
+    if (in->dwFlags & DDSD_BACKBUFFERCOUNT) out->u5.dwBackBufferCount = in->dwBackBufferCount;
+    if (in->dwFlags & DDSD_ALPHABITDEPTH) out->dwAlphaBitDepth = in->dwAlphaBitDepth;
+    /* DDraw(native, and wine) does not set the DDSD_LPSURFACE, so always copy */
+    out->lpSurface = in->lpSurface;
+    if (in->dwFlags & DDSD_CKDESTOVERLAY) out->u3.ddckCKDestOverlay = in->ddckCKDestOverlay;
+    if (in->dwFlags & DDSD_CKDESTBLT) out->ddckCKDestBlt = in->ddckCKDestBlt;
+    if (in->dwFlags & DDSD_CKSRCOVERLAY) out->ddckCKSrcOverlay = in->ddckCKSrcOverlay;
+    if (in->dwFlags & DDSD_CKSRCBLT) out->ddckCKSrcBlt = in->ddckCKSrcBlt;
+    if (in->dwFlags & DDSD_MIPMAPCOUNT) out->u2.dwMipMapCount = in->u2.dwMipMapCount;
+    if (in->dwFlags & DDSD_REFRESHRATE) out->u2.dwRefreshRate = in->u2.dwRefreshRate;
+    if (in->dwFlags & DDSD_LINEARSIZE) out->u1.dwLinearSize = in->u1.dwLinearSize;
+    /* Does not exist in DDSURFACEDESC:
+     * DDSD_TEXTURESTAGE, DDSD_FVF, DDSD_SRCVBHANDLE,
+     */
+}
+
+/* Note that this function writes the full sizeof(DDSURFACEDESC) size, don't use it
+ * for writing into application-provided DDSURFACEDESC structures if the size may
+ * be different */
+void DDSD2_to_DDSD(const DDSURFACEDESC2 *in, DDSURFACEDESC *out)
+{
+    memset(out, 0, sizeof(*out));
+    out->dwSize = sizeof(*out);
+    out->dwFlags = in->dwFlags;
+    if (in->dwFlags & DDSD_WIDTH) out->dwWidth = in->dwWidth;
+    if (in->dwFlags & DDSD_HEIGHT) out->dwHeight = in->dwHeight;
+    if (in->dwFlags & DDSD_PIXELFORMAT)
+    {
+        out->ddpfPixelFormat = in->u4.ddpfPixelFormat;
+        if ((in->dwFlags & DDSD_CAPS) && (in->ddsCaps.dwCaps & DDSCAPS_ZBUFFER))
+        {
+            /* Z buffers have DDSD_ZBUFFERBITDEPTH set, but not DDSD_PIXELFORMAT. They do
+             * have valid data in ddpfPixelFormat though */
+            out->dwFlags &= ~DDSD_PIXELFORMAT;
+            out->dwFlags |= DDSD_ZBUFFERBITDEPTH;
+            out->u2.dwZBufferBitDepth = in->u4.ddpfPixelFormat.u1.dwZBufferBitDepth;
+        }
+    }
+    /* ddsCaps is read even without DDSD_CAPS set. See dsurface:no_ddsd_caps_test */
+    out->ddsCaps.dwCaps = in->ddsCaps.dwCaps;
+    if (in->dwFlags & DDSD_PITCH) out->u1.lPitch = in->u1.lPitch;
+    if (in->dwFlags & DDSD_BACKBUFFERCOUNT) out->dwBackBufferCount = in->u5.dwBackBufferCount;
+    if (in->dwFlags & DDSD_ZBUFFERBITDEPTH) out->u2.dwZBufferBitDepth = in->u2.dwMipMapCount; /* same union */
+    if (in->dwFlags & DDSD_ALPHABITDEPTH) out->dwAlphaBitDepth = in->dwAlphaBitDepth;
+    /* DDraw(native, and wine) does not set the DDSD_LPSURFACE, so always copy */
+    out->lpSurface = in->lpSurface;
+    if (in->dwFlags & DDSD_CKDESTOVERLAY) out->ddckCKDestOverlay = in->u3.ddckCKDestOverlay;
+    if (in->dwFlags & DDSD_CKDESTBLT) out->ddckCKDestBlt = in->ddckCKDestBlt;
+    if (in->dwFlags & DDSD_CKSRCOVERLAY) out->ddckCKSrcOverlay = in->ddckCKSrcOverlay;
+    if (in->dwFlags & DDSD_CKSRCBLT) out->ddckCKSrcBlt = in->ddckCKSrcBlt;
+    if (in->dwFlags & DDSD_MIPMAPCOUNT) out->u2.dwMipMapCount = in->u2.dwMipMapCount;
+    if (in->dwFlags & DDSD_REFRESHRATE) out->u2.dwRefreshRate = in->u2.dwRefreshRate;
+    if (in->dwFlags & DDSD_LINEARSIZE) out->u1.dwLinearSize = in->u1.dwLinearSize;
+    /* Does not exist in DDSURFACEDESC:
+     * DDSD_TEXTURESTAGE, DDSD_FVF, DDSD_SRCVBHANDLE,
+     */
+    if (in->dwFlags & DDSD_TEXTURESTAGE) WARN("Does not exist in DDSURFACEDESC: DDSD_TEXTURESTAGE\n");
+    if (in->dwFlags & DDSD_FVF) WARN("Does not exist in DDSURFACEDESC: DDSD_FVF\n");
+    if (in->dwFlags & DDSD_SRCVBHANDLE) WARN("Does not exist in DDSURFACEDESC: DDSD_SRCVBHANDLE\n");
+    out->dwFlags &= ~(DDSD_TEXTURESTAGE | DDSD_FVF | DDSD_SRCVBHANDLE);
 }

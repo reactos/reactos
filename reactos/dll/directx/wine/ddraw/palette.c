@@ -70,7 +70,7 @@ IDirectDrawPaletteImpl_QueryInterface(IDirectDrawPalette *iface,
 static ULONG WINAPI
 IDirectDrawPaletteImpl_AddRef(IDirectDrawPalette *iface)
 {
-    IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
+    IDirectDrawPaletteImpl *This = impl_from_IDirectDrawPalette(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("%p increasing refcount to %u.\n", This, ref);
@@ -90,20 +90,21 @@ IDirectDrawPaletteImpl_AddRef(IDirectDrawPalette *iface)
 static ULONG WINAPI
 IDirectDrawPaletteImpl_Release(IDirectDrawPalette *iface)
 {
-    IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
+    IDirectDrawPaletteImpl *This = impl_from_IDirectDrawPalette(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("%p decreasing refcount to %u.\n", This, ref);
 
     if (ref == 0)
     {
-        EnterCriticalSection(&ddraw_cs);
+        wined3d_mutex_lock();
         wined3d_palette_decref(This->wineD3DPalette);
         if(This->ifaceToRelease)
         {
             IUnknown_Release(This->ifaceToRelease);
         }
-        LeaveCriticalSection(&ddraw_cs);
+        wined3d_mutex_unlock();
+
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -155,13 +156,13 @@ static HRESULT WINAPI
 IDirectDrawPaletteImpl_GetCaps(IDirectDrawPalette *iface,
                                DWORD *Caps)
 {
-    IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
+    IDirectDrawPaletteImpl *This = impl_from_IDirectDrawPalette(iface);
 
     TRACE("iface %p, caps %p.\n", iface, Caps);
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     *Caps = wined3d_palette_get_flags(This->wineD3DPalette);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
 
     return D3D_OK;
 }
@@ -191,7 +192,7 @@ IDirectDrawPaletteImpl_SetEntries(IDirectDrawPalette *iface,
                                   DWORD Count,
                                   PALETTEENTRY *PalEnt)
 {
-    IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
+    IDirectDrawPaletteImpl *This = impl_from_IDirectDrawPalette(iface);
     HRESULT hr;
 
     TRACE("iface %p, flags %#x, start %u, count %u, entries %p.\n",
@@ -200,9 +201,10 @@ IDirectDrawPaletteImpl_SetEntries(IDirectDrawPalette *iface,
     if(!PalEnt)
         return DDERR_INVALIDPARAMS;
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     hr = wined3d_palette_set_entries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -230,7 +232,7 @@ IDirectDrawPaletteImpl_GetEntries(IDirectDrawPalette *iface,
                                   DWORD Count,
                                   PALETTEENTRY *PalEnt)
 {
-    IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
+    IDirectDrawPaletteImpl *This = impl_from_IDirectDrawPalette(iface);
     HRESULT hr;
 
     TRACE("iface %p, flags %#x, start %u, count %u, entries %p.\n",
@@ -239,9 +241,10 @@ IDirectDrawPaletteImpl_GetEntries(IDirectDrawPalette *iface,
     if(!PalEnt)
         return DDERR_INVALIDPARAMS;
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     hr = wined3d_palette_get_entries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -258,12 +261,19 @@ static const struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
     IDirectDrawPaletteImpl_SetEntries
 };
 
+IDirectDrawPaletteImpl *unsafe_impl_from_IDirectDrawPalette(IDirectDrawPalette *iface)
+{
+    if (!iface) return NULL;
+    assert(iface->lpVtbl == &ddraw_palette_vtbl);
+    return CONTAINING_RECORD(iface, IDirectDrawPaletteImpl, IDirectDrawPalette_iface);
+}
+
 HRESULT ddraw_palette_init(IDirectDrawPaletteImpl *palette,
         IDirectDrawImpl *ddraw, DWORD flags, PALETTEENTRY *entries)
 {
     HRESULT hr;
 
-    palette->lpVtbl = &ddraw_palette_vtbl;
+    palette->IDirectDrawPalette_iface.lpVtbl = &ddraw_palette_vtbl;
     palette->ref = 1;
 
     hr = wined3d_palette_create(ddraw->wined3d_device, flags,
