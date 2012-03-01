@@ -1,5 +1,3 @@
-#pragma once
-
 #define _KSDDK_
 
 #include <stdio.h>

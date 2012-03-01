@@ -33,8 +33,6 @@
  *                           necessary.
  */
 
-#include <ndis.h>
-#include "pcnethw.h"
 #include "pcnet.h"
 
 #define NDEBUG

@@ -1,7 +1,7 @@
 /* $Id$
  *
  */
-#include <ntddk.h>
+#include "precomp.h"
 
 /*
  * @unimplemented

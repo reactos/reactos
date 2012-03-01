@@ -23,4 +23,5 @@ list(APPEND SOURCE
     utf8.c)
 
 add_library(dnslib ${SOURCE})
+add_pch(dnslib inc/precomp.h)
 add_dependencies(dnslib psdk)

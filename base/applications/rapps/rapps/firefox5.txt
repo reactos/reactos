@@ -12,13 +12,13 @@ URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.
 CDPath = none
 
 [Section.0407]
-Description = Der popul�rste und einer der besten freien Webbrowser.
+Description = Der populärste und einer der besten freien Webbrowser.
 Size = 14.92MB
 URLSite = http://www.mozilla-europe.org/de/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/de/Firefox%20Setup%2010.0.2.exe
 
 [Section.040a]
-Description = El m�s popular y uno de los mejores navegadores web gratuitos que hay.
+Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
 Size = 14.88MB
 URLSite = http://www.mozilla-europe.org/es/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/es-ES/Firefox%20Setup%2010.0.2.exe
@@ -30,31 +30,31 @@ URLSite = http://www.mozilla-europe.org/fr/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/fr/Firefox%20Setup%2010.0.2.exe
 
 [Section.0414]
-Description = Mest popul�re og best ogs� gratis nettleserene der ute.
+Description = Mest populære og best også gratis nettleserene der ute.
 Size = 14.91MB
 URLSite = http://www.mozilla-europe.org/no/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/nb-NO/Firefox%20Setup%2010.0.2.exe
 
 [Section.0415]
-Description = Najpopularniejsza i jedna z najlepszych darmowych przegladarek internetowych.
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 15.76MB
 URLSite = http://www.mozilla-europe.org/pl/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/pl/Firefox%20Setup%2010.0.2.exe
 
 [Section.0419]
-Description = ???? ?? ????? ?????????? ? ?????? ?????????? ?????????.
+Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 15.33MB
 URLSite = http://www.mozilla-europe.org/ru/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/ru/Firefox%20Setup%2010.0.2.exe
 
 [Section.041b] 
-Description = Najpopul�rnej�� a jeden z najlep��ch slobodn� webov�ch prehliadacov.
+Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
 Size = 15.57MB
 URLSite = http://www.mozilla-europe.org/sk/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/sk/Firefox%20Setup%2010.0.2.exe
 
 [Section.0422]
-Description = ??????????????? ?? ???? ? ?????? ?????????? ???-?????????.
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 Size = 15.32MB
 URLSite = http://www.mozilla-europe.org/uk/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/10.0.2/win32/uk/Firefox%20Setup%2010.0.2.exe

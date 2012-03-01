@@ -12,13 +12,13 @@ URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/1
 CDPath = none
 
 [Section.0407]
-Description = Der popul�rste und einer der besten freien Mail-Clients.
+Description = Der populärste und einer der besten freien Mail-Clients.
 Size = 15.1MB
 URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/de/Thunderbird%20Setup%2010.0.2.exe
 
 [Section.040a]
-Description = El m�s popular y uno de los mejores clientes mail que hay.
+Description = El más popular y uno de los mejores clientes mail que hay.
 Size = 15.0MB
 URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/es-ES/Thunderbird%20Setup%2010.0.2.exe
@@ -30,19 +30,19 @@ URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/fr/Thunderbird%20Setup%2010.0.2.exe
 
 [Section.0415]
-Description = Najpopularniejszy i jeden z najlepszych darmowych klient�w poczty.
+Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 Size = 15.9MB
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/pl/Thunderbird%20Setup%2010.0.2.exe
 
 [Section.0419]
-Description = ???? ?? ????? ?????????? ? ?????? ?????????? ???????? ????????.
+Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 Size = 15.5MB
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/ru/Thunderbird%20Setup%2010.0.2.exe
 
 [Section.0422]
-Description = ??????????????? ?? ???? ? ?????? ???????? ????????.
+Description = Найпопулярніший та один з кращих поштових клієнтів.
 Size = 15.5MB
 URLSite = http://www.mozillamessaging.com/uk/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/10.0.2/win32/uk/Thunderbird%20Setup%2010.0.2.exe

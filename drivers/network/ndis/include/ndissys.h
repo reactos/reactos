@@ -21,6 +21,7 @@
 
 #include "miniport.h"
 #include "protocol.h"
+#include "efilter.h"
 #include "buffer.h"
 
 /* Exported functions */

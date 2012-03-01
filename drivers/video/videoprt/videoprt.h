@@ -37,6 +37,9 @@
 #include <ntagp.h>
 #include <dderror.h>
 #include <windef.h>
+#include <initguid.h>
+#include <wdmguid.h>
+
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  'PDIV'

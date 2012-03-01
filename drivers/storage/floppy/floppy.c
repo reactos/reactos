@@ -40,14 +40,7 @@
  * TODO: Media detection based on sector 1
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "hardware.h"
-#include "csqrtns.h"
-#include "ioctl.h"
-#include "readwrite.h"
+#include "precomp.h"
 
 /*
  * Global controller info structures.  Each controller gets one.  Since the system

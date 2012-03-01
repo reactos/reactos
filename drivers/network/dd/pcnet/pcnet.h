@@ -25,7 +25,9 @@
  *     - this assumes 32-bit physical addresses
  */
 
-#pragma once
+#include <ndis.h>
+#include "pci.h"
+#include "pcnethw.h"
 
 /* statistics struct */
 typedef struct _ADAPTER_STATS

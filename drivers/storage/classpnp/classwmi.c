@@ -21,17 +21,7 @@ Revision History:
 
 --*/
 
-#include "stddef.h"
-#include "ntddk.h"
-#include "scsi.h"
-
-#include "classpnp.h"
-
-#include "mountdev.h"
-
-#include <stdarg.h>
-
-#include "wmistr.h"
+#include "classp.h"
 
 NTSTATUS
 ClassSystemControl(

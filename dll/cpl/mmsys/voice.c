@@ -8,13 +8,7 @@
  *                  Dmitry Chapyshev <dmitry@reactos.org>
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include <stdio.h>
 #include "mmsys.h"
-#include "resource.h"
 
 /* Voice property page dialog callback */
 INT_PTR CALLBACK

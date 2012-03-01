@@ -31,4 +31,5 @@ add_importlibs(intl
     kernel32
     ntdll)
 
+add_pch(intl intl.h)
 add_cd_file(TARGET intl DESTINATION reactos/system32 FOR all)

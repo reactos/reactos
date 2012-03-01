@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
+#include "precomp.h"
 
 typedef struct _CTEBLOCK_EVENT
 {

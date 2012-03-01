@@ -39,5 +39,5 @@ add_importlibs(dmusic
     ntdll)
 
 add_dependencies(dmusic psdk)
-
+add_pch(dmusic dmusic_private.h)
 add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)

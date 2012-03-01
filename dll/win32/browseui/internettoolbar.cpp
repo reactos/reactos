@@ -22,20 +22,7 @@
 Implements a class that knows how to hold and manage the menu band, brand band,
 toolbar, and address band for an explorer window
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <exdisp.h>
-#include <exdispid.h>
-#include <objbase.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "internettoolbar.h"
+#include "precomp.h"
 
 // navigation controls and menubar just send a message to parent window
 /*

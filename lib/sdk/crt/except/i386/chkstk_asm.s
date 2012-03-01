@@ -51,7 +51,6 @@ l1:
  guard page for the stack is hit, and the stack growing triggered
  */
 __chkstk:
-___chkstk:
 __alloca_probe:
 
     /* EAX = size to be allocated */

@@ -14,17 +14,7 @@
 //typedef long NTSTATUS;
 //#endif
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <stdio.h>
-#include <tchar.h>
-
-#include "resource.h"
 #include "powercfg.h"
-
 
 BOOLEAN Pos_InitData();
 void Adv_InitDialog();

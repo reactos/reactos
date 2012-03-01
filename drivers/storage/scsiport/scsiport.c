@@ -27,21 +27,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
-#include <srb.h>
-#include <scsi.h>
-#include <ntddscsi.h>
-#include <ntddstor.h>
-#include <ntdddisk.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include "precomp.h"
 
 #ifndef NDEBUG
 #define NDEBUG
 #endif
 #include <debug.h>
-
-#include "scsiport_int.h"
 
 ULONG InternalDebugLevel = 0x00;
 

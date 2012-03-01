@@ -24,4 +24,5 @@ add_importlibs(dxdiagn
     kernel32
     ntdll)
 
+add_pch(dxdiagn dxdiag_private.h)
 add_cd_file(TARGET dxdiagn DESTINATION reactos/system32 FOR all)

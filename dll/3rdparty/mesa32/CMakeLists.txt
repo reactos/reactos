@@ -259,7 +259,7 @@ else()
 endif()
 
 add_library(mesa32 SHARED ${SOURCE})
-
+add_pch(mesa32 src/main/glheader.h)
 set_module_type(mesa32 win32dll ENTRYPOINT 0)
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 add_dependencies(mesa32 psdk)

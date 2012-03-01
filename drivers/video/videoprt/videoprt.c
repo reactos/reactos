@@ -21,7 +21,6 @@
 
 
 #include "videoprt.h"
-#include <wdmguid.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
 

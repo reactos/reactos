@@ -33,4 +33,5 @@ list(APPEND SOURCE
     transport/udp/udp.c)
 
 add_library(ip ${SOURCE})
+add_pch(ip precomp.h)
 add_dependencies(ip bugcodes)

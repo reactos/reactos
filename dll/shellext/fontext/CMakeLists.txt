@@ -24,4 +24,5 @@ add_importlibs(fontext
     kernel32
     ntdll)
 
+add_pch(fontext fontext.h)
 add_cd_file(TARGET fontext DESTINATION reactos/system32 FOR all)

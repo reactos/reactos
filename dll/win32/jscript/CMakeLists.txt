@@ -57,6 +57,7 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
+add_pch(jscript jscript.h)
 # jsglobal.tlb needs stdole2.tlb
 add_dependencies(jscript stdole2)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)

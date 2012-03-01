@@ -28,22 +28,7 @@
 // TODO:
 //  Add missing icons
 
-#include <windows.h>
-#include <winuser.h>
-#include <devguid.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include <math.h>
-#include <limits.h>
-#include <shlobj.h>
-#include <cplext.h>
-#include <regstr.h>
-
-#include <stdio.h>
-
 #include "main.h"
-#include "resource.h"
 
 #define DEFAULT_DOUBLE_CLICK_SPEED	500
 #define DEFAULT_CLICK_LOCK_TIME		2200

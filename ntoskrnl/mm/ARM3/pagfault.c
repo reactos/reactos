@@ -919,9 +919,6 @@ UserFault:
         /* Right now, we only handle scenarios where the PDE is totally empty */
         ASSERT(PointerPde->u.Long == 0);
 
-        /* Right now, we expect a valid protection mask on the VAD */
-        ASSERT(ProtectionCode != MM_NOACCESS);
-
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;

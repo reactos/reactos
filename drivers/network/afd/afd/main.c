@@ -13,9 +13,6 @@
 /* INCLUDES */
 
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 #if DBG
 

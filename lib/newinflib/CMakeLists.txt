@@ -11,6 +11,7 @@ if(CMAKE_CROSSCOMPILING)
         infrosput.c)
 
     add_library(inflib ${GLOBAL_FILES} ${SOURCE})
+    add_pch(inflib inflib.h)
     add_dependencies(inflib psdk)
 else()
     list(APPEND SOURCE

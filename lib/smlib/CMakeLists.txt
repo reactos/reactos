@@ -9,4 +9,5 @@ list(APPEND SOURCE
     smclient.c)
     
 add_library(smlib ${SOURCE})
+add_pch(smlib precomp.h)
 add_dependencies(smlib psdk)

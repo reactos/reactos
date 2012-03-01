@@ -2,7 +2,7 @@
  * DESCRIPTION: Entry point for TDI.SYS
  * (c) Captain Obvious
  */
-#include <ntddk.h>
+#include "precomp.h"
 
 extern LONG CteTimeIncrement;
 

@@ -28,6 +28,11 @@
 #include <windef.h>
 #include <winsock2.h>
 #include <afd/shared.h>
+#include <pseh/pseh2.h>
+
+#include "tdi_proto.h"
+#include "tdiconn.h"
+#include "debug.h"
 
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))

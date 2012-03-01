@@ -34,4 +34,5 @@ add_importlibs(devenum
     kernel32
     ntdll)
 
+add_pch(devenum devenum_private.h)
 add_cd_file(TARGET devenum DESTINATION reactos/system32 FOR all)

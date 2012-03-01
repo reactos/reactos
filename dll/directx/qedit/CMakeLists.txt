@@ -30,5 +30,6 @@ add_importlibs(qedit
     kernel32
     ntdll)
 
+add_pch(qedit qedit_private.h)
 add_dependencies(qedit dxsdk)
 add_cd_file(TARGET qedit DESTINATION reactos/system32 FOR all)

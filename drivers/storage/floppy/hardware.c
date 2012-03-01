@@ -47,11 +47,7 @@
  *       I prefer bit fields, but they break endianness.
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "hardware.h"
+#include "precomp.h"
 
 /*
  * Hardware Support Routines
