@@ -43,7 +43,7 @@ StatusChangeWorkItemRoutine(PVOID Context);
 
 
 
-class CUSBHardwareDevice : public IUSBHardwareDevice
+class CUSBHardwareDevice : public IUHCIHardwareDevice
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
