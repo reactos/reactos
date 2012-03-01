@@ -63,6 +63,7 @@ public:
     virtual NTSTATUS CreateDeviceDescriptor();
     virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
     virtual VOID DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+    virtual NTSTATUS GetConfigurationDescriptor(UCHAR ConfigurationIndex, USHORT BufferSize, PVOID Buffer);
 
     // constructor / destructor
     CUSBDevice(IUnknown *OuterUnknown){}
@@ -370,6 +371,7 @@ CUSBDevice::SetDeviceAddress(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CUSBDevice::SetDeviceAddress> failed to retrieve configuration %lu\n", Index);
+            ASSERT(FALSE);
             break;
         }
     }
@@ -651,13 +653,69 @@ CUSBDevice::CreateDeviceDescriptor()
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
-CUSBDevice::CreateConfigurationDescriptor(
-    UCHAR Index)
+CUSBDevice::GetConfigurationDescriptor(
+    IN UCHAR ConfigurationIndex, 
+    IN USHORT BufferSize,
+    IN PVOID Buffer)
 {
-    PVOID Buffer;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
     PMDL Mdl;
+
+
+    //
+    // now build MDL describing the buffer
+    //
+    Mdl = IoAllocateMdl(Buffer, BufferSize, FALSE, FALSE, 0);
+    if (!Mdl)
+    {
+        //
+        // failed to allocate mdl
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // build mdl for non paged pool
+    //
+    MmBuildMdlForNonPagedPool(Mdl);
+
+
+    //
+    // build setup packet
+    //
+    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+    CtrlSetup.bmRequestType._BM.Reserved = 0;
+    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+    CtrlSetup.wValue.LowByte = ConfigurationIndex;
+    CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;
+    CtrlSetup.wIndex.W = 0;
+    CtrlSetup.wLength = BufferSize;
+
+    //
+    // commit packet
+    //
+    Status = CommitSetupPacket(&CtrlSetup, 0, BufferSize, Mdl);
+
+    //
+    // free mdl
+    //
+    IoFreeMdl(Mdl);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBDevice::CreateConfigurationDescriptor(
+    UCHAR Index)
+{
+    NTSTATUS Status;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
 
     //
@@ -668,8 +726,8 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     // first allocate a buffer which should be enough to store all different interfaces and endpoints
     //
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_USBLIB);
-    if (!Buffer)
+    ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_USBLIB);
+    if (!ConfigurationDescriptor)
     {
         //
         // failed to allocate buffer
@@ -678,59 +736,32 @@ CUSBDevice::CreateConfigurationDescriptor(
     }
 
     //
-    // build setup packet
+    // get partial configuration descriptor
     //
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
-    CtrlSetup.bmRequestType._BM.Reserved = 0;
-    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
-    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
-    CtrlSetup.wValue.LowByte = Index;
-    CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;
-    CtrlSetup.wIndex.W = 0;
-    CtrlSetup.wLength = PAGE_SIZE;
-
-    //
-    // now build MDL describing the buffer
-    //
-    Mdl = IoAllocateMdl(Buffer, PAGE_SIZE, FALSE, FALSE, 0);
-    if (!Mdl)
-    {
-        //
-        // failed to allocate mdl
-        //
-        ExFreePoolWithTag(Buffer, TAG_USBLIB);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // build mdl for non paged pool
-    //
-    MmBuildMdlForNonPagedPool(Mdl);
-
-    //
-    // commit packet
-    //
-    Status = CommitSetupPacket(&CtrlSetup, 0, PAGE_SIZE, Mdl);
+    Status = GetConfigurationDescriptor(Index, sizeof(USB_CONFIGURATION_DESCRIPTOR), ConfigurationDescriptor);
     if (!NT_SUCCESS(Status))
     {
         //
-        // failed to issue request, cleanup
+        // failed to get partial configuration descriptor
         //
-        IoFreeMdl(Mdl);
-        ExFreePool(Buffer);
+        DPRINT1("[USBLIB] Failed to get partial configuration descriptor Status %x Index %x\n", Status, Index);
+        ExFreePoolWithTag(ConfigurationDescriptor, TAG_USBLIB);
         return Status;
     }
 
     //
-    // now free the mdl
+    // now get full descriptor
     //
-    IoFreeMdl(Mdl);
-
-    //
-    // get configuration descriptor
-    //
-    ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Buffer;
+    Status = GetConfigurationDescriptor(Index, ConfigurationDescriptor->wTotalLength, ConfigurationDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get full configuration descriptor
+        //
+        DPRINT1("[USBLIB] Failed to get full configuration descriptor Status %x Index %x\n", Status, Index);
+        ExFreePoolWithTag(ConfigurationDescriptor, TAG_USBLIB);
+        return Status;
+    }
 
     //
     // informal debug print

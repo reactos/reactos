@@ -1111,7 +1111,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // failed to allocate descriptor
         //
-        DPRINT1("[UHCI] Failed to create setup descriptor\n");
+        DPRINT1("[UHCI] Failed to create status descriptor\n");
         FreeDescriptor(SetupDescriptor);
         m_DmaManager->Release(QueueHead, sizeof(UHCI_QUEUE_HEAD));
         return Status;
