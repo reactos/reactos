@@ -1040,8 +1040,8 @@ Return Value:
                                                sizeof(SRB_IO_CONTROL));
 
                 DiskSmartStatus->Reason = 0; // Unknown;
-                DiskSmartStatus->PredictFailure = ((cmdOutParameters->bBuffer[3] == 0xf4) &&
-                                                   (cmdOutParameters->bBuffer[4] == 0x2c));
+                DiskSmartStatus->PredictFailure = ((((PUCHAR)cmdOutParameters->bBuffer)[3] == 0xf4) &&
+                                                   (((PUCHAR)cmdOutParameters->bBuffer)[4] == 0x2c));
             }
             break;
         }
