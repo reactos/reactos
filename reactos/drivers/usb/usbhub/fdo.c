@@ -869,11 +869,6 @@ CreateDeviceIds(
     else
     {
         //
-        // sanity checks for simple usb device
-        //
-        ASSERT(ConfigurationDescriptor->bNumInterfaces == 1);
-
-        //
         // FIXME: support multiple configurations
         //
         ASSERT(DeviceDescriptor->bNumConfigurations == 1);
