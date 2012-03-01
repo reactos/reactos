@@ -367,18 +367,6 @@ CUSBHardwareDevice::PnpStart(
         return Status;
     }
 
-
-    //
-    // Stop the controller before modifying schedules
-    //
-    Status = StopController();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to stop the controller \n");
-        return Status;
-    }
-
-
     //
     // Start the controller
     //
@@ -468,7 +456,195 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    ULONG Control, Descriptor, FrameInterval, Periodic, Port;
+    ULONG Control, Descriptor, FrameInterval, Periodic, Port, Reset, Index;
+    ULONG NewControl, WaitInMs;
+    LARGE_INTEGER Timeout;
+    BOOLEAN Again = FALSE;
+
+    //
+    // check context
+    //
+    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+
+    //Save this
+    NewControl = Control & OHCI_REMOTE_WAKEUP_CONNECTED;
+
+    if ((Control & OHCI_INTERRUPT_ROUTING))
+    {
+        //
+        // change ownership
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_OWNERSHIP_CHANGE_REQUEST);
+        for(Index = 0; Index < 100; Index++)
+        {
+            //
+            // wait a bit
+            //
+            KeStallExecutionProcessor(100);
+
+            //
+            // check control
+            //
+            Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+            if (!(Control & OHCI_INTERRUPT_ROUTING))
+            {
+                //
+                // acquired ownership
+                //
+                break;
+            }
+        }    
+
+        //
+        // if the ownership is still not changed, perform reset
+        //
+        if (Control & OHCI_INTERRUPT_ROUTING)
+        {
+            DPRINT1("SMM not responding\n");
+        }
+        else
+        {
+            DPRINT1("SMM has given up ownership\n");
+        }
+    }
+
+    //
+    // read contents of control register
+    //
+    
+    Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
+    DPRINT1("Controller State %x\n", Control);
+    
+    switch (Control)
+    {
+        case OHCI_HC_FUNCTIONAL_STATE_RESET:
+            NewControl |= OHCI_HC_FUNCTIONAL_STATE_RESET;
+            WaitInMs = 50;
+            break;
+        
+        case OHCI_HC_FUNCTIONAL_STATE_SUSPEND:
+        case OHCI_HC_FUNCTIONAL_STATE_RESUME:
+            NewControl |= OHCI_HC_FUNCTIONAL_STATE_RESUME;
+            WaitInMs = 10;
+            break;
+
+        default:
+            WaitInMs = 0;
+            break;
+    }
+
+retry:
+    if (WaitInMs != 0)
+    {
+        // Do the state transition
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), NewControl);
+
+        if (!Again)
+        {
+            //
+            // delay is 100 ms
+            //
+            Timeout.QuadPart = WaitInMs;
+            DPRINT1("Waiting %d milliseconds for controller to transition state\n", Timeout.LowPart);
+            
+            //
+            // convert to 100 ns units (absolute)
+            //
+            Timeout.QuadPart *= -10000;
+            
+            //
+            // perform the wait
+            //
+            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+        }
+    }
+
+    //
+    // now reset controller
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_HOST_CONTROLLER_RESET);
+
+    //
+    // reset time is 10ms
+    //
+    for(Index = 0; Index < 100; Index++)
+    {
+        //
+        // wait a bit
+        //
+        KeStallExecutionProcessor(10);
+
+        //
+        // read command status
+        //
+        Reset = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
+
+        //
+        // was reset bit cleared
+        //
+        if ((Reset & OHCI_HOST_CONTROLLER_RESET) == 0)
+        {
+            //
+            // controller completed reset
+            //
+            break;
+        }
+    }
+
+    if ((Reset & OHCI_HOST_CONTROLLER_RESET))
+    {
+        //
+        // failed to reset controller
+        //
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // get frame interval
+    //
+    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
+
+    FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
+
+    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
+    FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
+    DPRINT1("Computed FrameInterval %x\n", FrameInterval);
+
+    //
+    // write frame interval
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
+
+    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    DPRINT1("Read FrameInterval %x\n", FrameInterval);
+
+    //
+    // 90 % periodic
+    //
+    Periodic = OHCI_PERIODIC(m_IntervalValue);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
+    DPRINT1("Computed Periodic Start %x\n", Periodic);
+
+    Periodic = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET));
+    DPRINT1("Read Periodic Start %x\n", Periodic);
+
+    // Linux does this hack for some bad controllers
+    if (!(FrameInterval & 0x3FFF0000) ||
+        !(Periodic))
+    {
+        if (!Again)
+        {
+            DPRINT1("Trying reset again on faulty controller\n");
+            Again = TRUE;
+            goto retry;
+        }
+        else
+        {
+            DPRINT1("Second reset didn't solve the problem, failing\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
 
     //
     // lets write physical address of dummy control endpoint descriptor
@@ -533,23 +709,6 @@ CUSBHardwareDevice::StartController(void)
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_B_OFFSET), Descriptor);
 
     //
-    // get frame interval
-    //
-    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
-    m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
-
-    FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
-
-    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
-    FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
-    DPRINT1("FrameInterval %x\n", FrameInterval);
-
-    //
-    // write frame interval
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
-
-    //
     // HCCA alignment check
     //
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET), 0xFFFFFFFF);
@@ -571,19 +730,15 @@ CUSBHardwareDevice::StartController(void)
     //
     // enable all queues
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_ENABLE_LIST);
-
-    //
-    // 90 % periodic
-    //
-    Periodic = OHCI_PERIODIC(m_IntervalValue);
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
-    DPRINT("Periodic Start %x\n", Periodic);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), (NewControl & OHCI_REMOTE_WAKEUP_CONNECTED) | OHCI_ENABLE_LIST);
 
     //
     // start the controller
     //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_ENABLE_LIST | OHCI_CONTROL_BULK_RATIO_1_4 | OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_ENABLE_LIST |
+                                                                         (NewControl & OHCI_REMOTE_WAKEUP_CONNECTED) |
+                                                                         OHCI_CONTROL_BULK_RATIO_1_4 |
+                                                                         OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
 
     //
     // wait a bit
@@ -836,194 +991,8 @@ CUSBHardwareDevice::InitializeController()
 NTSTATUS
 CUSBHardwareDevice::StopController(void)
 {
-    ULONG Control, Reset;
-    ULONG Index, FrameInterval;
+    ASSERT(FALSE);
 
-    //
-    // check context
-    //
-    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
-
-    if ((Control & OHCI_INTERRUPT_ROUTING))
-    {
-        //
-        // change ownership
-        //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_OWNERSHIP_CHANGE_REQUEST);
-        for(Index = 0; Index < 100; Index++)
-        {
-            //
-            // wait a bit
-            //
-            KeStallExecutionProcessor(100);
-
-            //
-            // check control
-            //
-            Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
-            if (!(Control & OHCI_INTERRUPT_ROUTING))
-            {
-                //
-                // acquired ownership
-                //
-                break;
-            }
-        }    
-
-        //
-        // if the ownership is still not changed, perform reset
-        //
-        if (Control & OHCI_INTERRUPT_ROUTING)
-        {
-            DPRINT1("SMM not responding\n");
-        }
-        else
-        {
-            DPRINT("SMM has given up ownership\n");
-        }
-    }
-    else
-    {
-        //
-        // read contents of control register
-        //
-        Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-        DPRINT("Controller State %x\n", Control);
-
-        if (Control != OHCI_HC_FUNCTIONAL_STATE_RESET)
-        {
-            //
-            // OHCI 5.1.1.3.4, no SMM, BIOS active
-            //
-            if (Control != OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL)
-            {
-                //
-                // lets resume
-                //
-                WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESUME);
-                Index = 0;
-                do
-                {
-                    //
-                    // wait untill its resumed
-                    //
-                    KeStallExecutionProcessor(10);
-
-                    //
-                    // check control register
-                    //
-                    Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-                    if (Control == OHCI_HC_FUNCTIONAL_STATE_RESUME)
-                    {
-                        //
-                        // it has resumed
-                        //
-                        break;
-                    }
-
-                    //
-                    // check for time outs
-                    //
-                    Index++;
-                    if(Index > 100)
-                    {
-                        DPRINT1("Failed to resume controller\n");
-                        break;
-                    }
-                }while(TRUE);
-            }
-        }
-        else
-        {
-            //
-            // 5.1.1.3.5 OHCI, no SMM, no BIOS
-            //
-            Index = 0;
-
-            //
-            // some controllers also depend on this
-            //
-            WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
-            do
-            {
-                 //
-                 // wait untill its reset
-                 //
-                 KeStallExecutionProcessor(10);
-
-                 //
-                 // check control register
-                 //
-                 Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-                 if (Control == OHCI_HC_FUNCTIONAL_STATE_RESET)
-                 {
-                     //
-                     // it has reset
-                     //
-                     break;
-                 }
-
-                 //
-                 // check for time outs
-                 //
-                 Index++;
-                 if(Index > 100)
-                 {
-                    DPRINT1("Failed to reset controller\n");
-                    break;
-                 }
-
-            }while(TRUE);
-        }
-    }
-
-    //
-    // read from interval
-    //
-    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
-
-    //
-    // store interval value for later
-    //
-    m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
-
-    DPRINT1("FrameInterval %x Interval %x\n", FrameInterval, m_IntervalValue);
-
-    //
-    // now reset controller
-    //
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_HOST_CONTROLLER_RESET);
- 
-    //
-    // reset time is 10ms
-    //
-    for(Index = 0; Index < 100; Index++)
-    {
-        //
-        // wait a bit
-        //
-        KeStallExecutionProcessor(10);
-
-        //
-        // read command status
-        //
-        Reset = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
-
-        //
-        // was reset bit cleared
-        //
-        if ((Reset & OHCI_HOST_CONTROLLER_RESET) == 0)
-        {
-            //
-            // controller completed reset
-            //
-            return STATUS_SUCCESS;
-        }
-    }
-
-    //
-    // failed to reset controller
-    //
     return STATUS_UNSUCCESSFUL;
 }
 
