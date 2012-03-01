@@ -664,6 +664,13 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
     virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
 
+//-----------------------------------------------------------------------------------------
+//
+// GetMaxPacketSize
+//
+// Description: aborts all pending requsts
+
+    virtual UCHAR GetMaxPacketSize() = 0;
 };
 
 typedef IUSBDevice *PUSBDEVICE;

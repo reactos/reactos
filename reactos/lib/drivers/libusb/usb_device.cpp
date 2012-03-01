@@ -54,6 +54,7 @@ public:
     virtual NTSTATUS SelectConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor, IN PUSBD_INTERFACE_INFORMATION Interface, OUT USBD_CONFIGURATION_HANDLE *ConfigurationHandle);
     virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle, IN OUT PUSBD_INTERFACE_INFORMATION Interface);
     virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+    virtual UCHAR GetMaxPacketSize();
 
 
     // local function
@@ -342,17 +343,30 @@ CUSBDevice::SetDeviceAddress(
     // store new device address
     m_DeviceAddress = DeviceAddress;
 
-    // check that setting device address succeeded by retrieving the device descriptor
+    // fetch device descriptor
     Status = CreateDeviceDescriptor();
     if (!NT_SUCCESS(Status))
     {
-        // failed to retrieve device descriptor
         DPRINT1("CUSBbDevice::SetDeviceAddress> failed to retrieve device descriptor with device address set Error %x\n", Status);
-        m_DeviceAddress = OldAddress;
-
         // return error status
         return Status;
     }
+
+    // check for invalid device descriptor
+    if (m_DeviceDescriptor.bLength != sizeof(USB_DEVICE_DESCRIPTOR) ||
+        m_DeviceDescriptor.bDescriptorType != USB_DEVICE_DESCRIPTOR_TYPE ||
+        m_DeviceDescriptor.bNumConfigurations == 0)
+    {
+        // failed to retrieve device descriptor
+        DPRINT1("CUSBbDevice::SetDeviceAddress> device returned bogus device descriptor\n");
+        DumpDeviceDescriptor(&m_DeviceDescriptor);
+
+        // return error status
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    // dump device descriptor
+    DumpDeviceDescriptor(&m_DeviceDescriptor);
 
     // sanity checks
     PC_ASSERT(m_DeviceDescriptor.bNumConfigurations);
@@ -633,10 +647,9 @@ CUSBDevice::CreateDeviceDescriptor()
     if (NT_SUCCESS(Status))
     {
         //
-        // informal dbg print
+        // copy device descriptor
         //
         RtlCopyMemory(&m_DeviceDescriptor, Buffer, sizeof(USB_DEVICE_DESCRIPTOR));
-        DumpDeviceDescriptor(&m_DeviceDescriptor);
     }
 
     //
@@ -1209,6 +1222,12 @@ CUSBDevice::AbortPipe(
     // done
     //
     return m_Queue->AbortDevicePipe(m_DeviceAddress, EndpointDescriptor);
+}
+
+UCHAR
+CUSBDevice::GetMaxPacketSize()
+{
+    return m_DeviceDescriptor.bMaxPacketSize0;
 }
 
 
