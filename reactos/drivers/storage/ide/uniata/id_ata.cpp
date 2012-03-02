@@ -8858,17 +8858,21 @@ DriverEntry(
             }
             continue;
         }
-        BMList[i].AltInitMasterDev = (UCHAR)0xff;
-
         if(GlobalConfig->AtDiskPrimaryAddressClaimed)
             PrimaryClaimed = TRUE;
         if(GlobalConfig->AtDiskSecondaryAddressClaimed)
             SecondaryClaimed = TRUE;
+        
+        if(PrimaryClaimed && SecondaryClaimed) {
+            KdPrint2((PRINT_PREFIX "Both legacy channels claimed\n"));
+            break;
+        }
+
+        BMList[i].AltInitMasterDev = (UCHAR)0xff;
 
         if(g_opt_Verbose) {
             _PrintNtConsole("Init standard Dual-channel PCI ATA controller:");
         }
-
 
         for(alt = 0; alt < (ULONG)(WinVer_WDM_Model ? 1 : 2) ; alt++) {
 
