@@ -71,6 +71,9 @@ protected:
     // called for each completed queue head
     VOID QueueHeadCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
 
+    // called for each completed queue head
+    VOID QueueHeadInterruptCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
+
     // called when the completion queue is cleaned up
     VOID QueueHeadCleanup(PQUEUE_HEAD QueueHead);
 
@@ -80,10 +83,15 @@ protected:
     // links interrupt queue head
     VOID LinkInterruptQueueHead(PQUEUE_HEAD QueueHead);
 
+    // interval index
+    UCHAR GetIntervalIndex(UCHAR Interval);
+
+
     // interrupt queue heads
     PQUEUE_HEAD m_InterruptQueueHeads[EHCI_INTERRUPT_ENTRIES_COUNT];
 
-
+    // contains the periodic queue heads
+    LIST_ENTRY m_PeriodicQueueHeads;
 };
 
 //=================================================================================================
@@ -151,6 +159,11 @@ CUSBQueue::Initialize(
     InitializeListHead(&m_PendingRequestAsyncList);
 
     //
+    // initialize periodic queue heads
+    //
+    InitializeListHead(&m_PeriodicQueueHeads);
+
+    //
     // now initialize sync schedule
     //
     Status = InitializeSyncSchedule(m_Hardware, MemManager);
@@ -198,6 +211,14 @@ CUSBQueue::InitializeSyncSchedule(
         // allocate queue head
         //
         Status = MemManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysAddr);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to create queue head
+            //
+            DPRINT1("Failed to create queue head\n");
+            return Status;
+        }
 
         //
         // initialize queue head
@@ -347,6 +368,36 @@ CUSBQueue::CreateUSBRequest(
     return Status;
 }
 
+UCHAR
+CUSBQueue::GetIntervalIndex(
+    UCHAR Interval)
+{
+    UCHAR IntervalIndex;
+
+    if (Interval == 1)
+        IntervalIndex = 1;
+    else if (Interval == 2)
+        IntervalIndex = 2;
+    else if (Interval <= 4)
+        IntervalIndex = 3;
+    else if (Interval <= 8)
+        IntervalIndex = 4;
+    else if (Interval <= 16)
+        IntervalIndex = 5;
+    else if (Interval <= 32)
+        IntervalIndex = 6;
+    else if (Interval <= 64)
+        IntervalIndex = 7;
+    else if (Interval <= 128)
+        IntervalIndex = 8;
+    else if (Interval <= 256)
+        IntervalIndex = 9;
+    else
+        IntervalIndex = 10;
+
+    return IntervalIndex;
+}
+
 VOID
 CUSBQueue::LinkInterruptQueueHead(
     PQUEUE_HEAD QueueHead)
@@ -388,26 +439,9 @@ CUSBQueue::LinkInterruptQueueHead(
     // sanitize interrupt interval
     Interval = max(1, Interval);
 
-    if (Interval == 1)
-        IntervalIndex = 1;
-    else if (Interval == 2)
-        IntervalIndex = 2;
-    else if (Interval <= 4)
-        IntervalIndex = 3;
-    else if (Interval <= 8)
-        IntervalIndex = 4;
-    else if (Interval <= 16)
-        IntervalIndex = 5;
-    else if (Interval <= 32)
-        IntervalIndex = 6;
-    else if (Interval <= 64)
-        IntervalIndex = 7;
-    else if (Interval <= 128)
-        IntervalIndex = 8;
-    else if (Interval <= 256)
-        IntervalIndex = 9;
-    else
-        IntervalIndex = 10;
+    // get interval index
+    IntervalIndex = GetIntervalIndex(Interval);
+
 
     // get interrupt queue head
     InterruptQueueHead = m_InterruptQueueHeads[IntervalIndex];
@@ -418,6 +452,9 @@ CUSBQueue::LinkInterruptQueueHead(
 
     InterruptQueueHead->HorizontalLinkPointer = QueueHead->PhysicalAddr | QH_TYPE_QH;
     InterruptQueueHead->NextQueueHead = QueueHead;
+
+    // store in periodic list
+    InsertTailList(&m_PeriodicQueueHeads, &QueueHead->LinkedQueueHeads);
 }
 
 //
@@ -595,6 +632,67 @@ CUSBQueue::UnlinkQueueHeadChain(
 }
 
 VOID
+CUSBQueue::QueueHeadInterruptCompletion(
+    PQUEUE_HEAD QueueHead,
+    NTSTATUS Status)
+{
+    PEHCIREQUEST Request;
+    UCHAR Interval, IntervalIndex;
+    PQUEUE_HEAD InterruptQueueHead, LastQueueHead = NULL;
+
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(QueueHead->Request);
+
+    //
+    // get IUSBRequest interface
+    //
+    Request = (PEHCIREQUEST)QueueHead->Request;
+
+    // get interval
+    Interval = Request->GetInterval();
+
+    // sanitize interval
+    Interval = max(1, Interval);
+
+    // get interval index
+    IntervalIndex = GetIntervalIndex(Interval);
+
+    // get interrupt queue head from index
+    InterruptQueueHead = m_InterruptQueueHeads[IntervalIndex];
+
+    while(InterruptQueueHead != NULL)
+    {
+        if (InterruptQueueHead == QueueHead)
+            break;
+
+        // move to next queue head
+        LastQueueHead = InterruptQueueHead;
+        InterruptQueueHead = (PQUEUE_HEAD)InterruptQueueHead->NextQueueHead;
+    }
+
+    if (InterruptQueueHead != QueueHead)
+    {
+        // queue head not in list
+        ASSERT(FALSE);
+        return;
+    }
+
+    // now unlink queue head
+    LastQueueHead->HorizontalLinkPointer = QueueHead->HorizontalLinkPointer;
+    LastQueueHead->NextQueueHead = QueueHead->NextQueueHead;
+
+    DPRINT1("Periodic QueueHead %p Addr $x unlinked\n", QueueHead, QueueHead->PhysicalAddr);
+
+    // insert into completed list
+    InsertTailList(&m_CompletedRequestAsyncList, &QueueHead->LinkedQueueHeads);
+}
+
+
+
+VOID
 CUSBQueue::QueueHeadCompletion(
     PQUEUE_HEAD CurrentQH,
     NTSTATUS Status)
@@ -622,7 +720,74 @@ CUSBQueue::ProcessPeriodicSchedule(
     IN NTSTATUS Status,
     OUT PULONG ShouldRingDoorBell)
 {
+    KIRQL OldLevel;
+    PLIST_ENTRY Entry;
+    PQUEUE_HEAD QueueHead;
+    PEHCIREQUEST Request;
+    BOOLEAN IsQueueHeadComplete;
 
+    //
+    // lock completed async list
+    //
+    KeAcquireSpinLock(m_Lock, &OldLevel);
+
+    //
+    // walk async list 
+    //
+    ASSERT(AsyncListQueueHead);
+    Entry = m_PeriodicQueueHeads.Flink;
+
+    while(Entry != &m_PeriodicQueueHeads)
+    {
+        //
+        // get queue head structure
+        //
+        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+        ASSERT(QueueHead);
+
+        //
+        // sanity check
+        //
+        PC_ASSERT(QueueHead->Request);
+
+        //
+        // get IUSBRequest interface
+        //
+        Request = (PEHCIREQUEST)QueueHead->Request;
+
+        //
+        // move to next entry
+        //
+        Entry = Entry->Flink;
+
+        //
+        // check if queue head is complete
+        //
+        IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
+
+        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+
+        //
+        // check if queue head is complete
+        //
+        if (IsQueueHeadComplete)
+        {
+            //
+            // current queue head is complete
+            //
+            QueueHeadInterruptCompletion(QueueHead, Status);
+
+            //
+            // ring door bell is going to be necessary
+            //
+            *ShouldRingDoorBell = TRUE;
+        }
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(m_Lock, OldLevel);
 
 }
 
