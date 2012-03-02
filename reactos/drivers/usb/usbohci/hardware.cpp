@@ -662,9 +662,14 @@ retry:
     Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
 
     //
-    // get port count
+    // get port count (in a loop due to AMD errata)
     //
-    m_NumberOfPorts = OHCI_RH_GET_PORT_COUNT(Descriptor);
+    do
+    {
+        KeStallExecutionProcessor(20);
+        m_NumberOfPorts = OHCI_RH_GET_PORT_COUNT(Descriptor);
+    } while (m_NumberOfPorts == 0);
+
     DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
     ASSERT(m_NumberOfPorts < OHCI_MAX_PORT_COUNT);
 
