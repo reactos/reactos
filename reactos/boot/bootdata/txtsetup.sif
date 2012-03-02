@@ -94,7 +94,7 @@ isapnp = isapnp.sys
 [InputDevicesSupport.Load]
 usbehci = usbehci.sys
 usbohci = usbohci.sys
-;usbuhci = usbuhci.sys
+usbuhci = usbuhci.sys
 usbhub = usbhub.sys
 usbccgp = usbccgp.sys
 hidusb = hidusb.sys
