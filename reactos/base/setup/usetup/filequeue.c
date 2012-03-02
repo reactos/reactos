@@ -382,7 +382,7 @@ SetupCommitFileQueueW(HWND Owner,
       }
 
     /* FIXME: Do it! */
-    DPRINT("'%S' ==> '%S'\n",
+    DPRINT1("'%S' ==> '%S'\n",
 	   FileSrcPath,
 	   FileDstPath);
 
