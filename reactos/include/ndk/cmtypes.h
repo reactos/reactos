@@ -171,12 +171,30 @@ typedef enum _KEY_SET_INFORMATION_CLASS {
 //
 typedef enum _PLUGPLAY_CONTROL_CLASS
 {
-    PlugPlayControlUserResponse = 0x07,
-    PlugPlayControlProperty = 0x0A,
-    PlugPlayControlGetRelatedDevice = 0x0C,
-    PlugPlayControlDeviceStatus = 0x0E,
+    PlugPlayControlEnumerateDevice,
+    PlugPlayControlRegisterNewDevice,
+    PlugPlayControlDeregisterDevice,
+    PlugPlayControlInitializeDevice,
+    PlugPlayControlStartDevice,
+    PlugPlayControlUnlockDevice,
+    PlugPlayControlQueryAndRemoveDevice,
+    PlugPlayControlUserResponse,
+    PlugPlayControlGenerateLegacyDevice,
+    PlugPlayControlGetInterfaceDeviceList,
+    PlugPlayControlProperty,
+    PlugPlayControlDeviceClassAssociation,
+    PlugPlayControlGetRelatedDevice,
+    PlugPlayControlGetInterfaceDeviceAlias,
+    PlugPlayControlDeviceStatus,
     PlugPlayControlGetDeviceDepth,
-    PlugPlayControlResetDevice = 0x14
+    PlugPlayControlQueryDeviceRelations,
+    PlugPlayControlTargetDeviceRelation,
+    PlugPlayControlQueryConflictList,
+    PlugPlayControlRetrieveDock,
+    PlugPlayControlResetDevice,
+    PlugPlayControlHaltDevice,
+    PlugPlayControlGetBlockedDriverList,
+    MaxPlugPlayControl
 } PLUGPLAY_CONTROL_CLASS;
 
 typedef enum _PLUGPLAY_BUS_CLASS
