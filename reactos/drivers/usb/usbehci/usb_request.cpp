@@ -44,7 +44,7 @@ public:
     ULONG InternalGetTransferType();
     UCHAR InternalGetPidDirection();
     NTSTATUS BuildControlTransferQueueHead(PQUEUE_HEAD * OutHead);
-    NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
+    NTSTATUS BuildBulkInterruptTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS STDMETHODCALLTYPE CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
     NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
     UCHAR STDMETHODCALLTYPE GetDeviceAddress();
@@ -129,7 +129,11 @@ protected:
     NTSTATUS m_NtStatusCode;
     ULONG m_UrbStatusCode;
 
+    // buffer base address
     PVOID m_Base;
+
+    // device speed
+    USB_DEVICE_SPEED m_Speed;
 
 };
 
@@ -168,6 +172,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
     m_DeviceAddress = Device->GetDeviceAddress();
+    m_Speed = Device->GetSpeed();
     m_EndpointDescriptor = EndpointDescriptor;
     m_TotalBytesTransferred = 0;
 
@@ -217,6 +222,7 @@ CUSBRequest::InitializeWithIrp(
 
     m_DmaManager = DmaManager;
     m_TotalBytesTransferred = 0;
+    m_Speed = Device->GetSpeed();
 
     //
     // get current irp stack location
@@ -442,12 +448,9 @@ CUSBRequest::GetQueueHead(
         case USB_ENDPOINT_TYPE_CONTROL:
             Status = BuildControlTransferQueueHead(OutHead);
             break;
-        case USB_ENDPOINT_TYPE_BULK:
-            Status = BuildBulkTransferQueueHead(OutHead);
-            break;
         case USB_ENDPOINT_TYPE_INTERRUPT:
-            DPRINT1("USB_ENDPOINT_TYPE_INTERRUPT not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+        case USB_ENDPOINT_TYPE_BULK:
+            Status = BuildBulkInterruptTransferQueueHead(OutHead);
             break;
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
             DPRINT1("USB_ENDPOINT_TYPE_ISOCHRONOUS not implemented\n");
@@ -1059,7 +1062,7 @@ CUSBRequest::DumpQueueHead(
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
-CUSBRequest::BuildBulkTransferQueueHead(
+CUSBRequest::BuildBulkInterruptTransferQueueHead(
     PQUEUE_HEAD * OutHead)
 {
     NTSTATUS Status;
@@ -1736,6 +1739,21 @@ CUSBRequest::InternalCalculateTransferLength()
     // bulk out transfer
     //
     return m_TransferBufferLength;
+}
+
+USB_DEVICE_SPEED
+CUSBRequest::GetSpeed()
+{
+    return m_Speed;
+}
+
+UCHAR
+CUSBRequest::GetInterval()
+{
+    if (!m_EndpointDescriptor)
+        return 0;
+
+    return m_EndpointDescriptor->EndPointDescriptor.bInterval;
 }
 
 //-----------------------------------------------------------------------------------------

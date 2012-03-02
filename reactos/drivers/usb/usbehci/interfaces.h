@@ -86,8 +86,11 @@ struct _USB_ENDPOINT;
         IN struct _QUEUE_HEAD * QueueHead) PURE;                            \
                                                                             \
     STDMETHOD_(BOOLEAN, IsQueueHeadComplete)( THIS_                         \
-        IN struct _QUEUE_HEAD * QueueHead) PURE;
-
+        IN struct _QUEUE_HEAD * QueueHead) PURE;                            \
+                                                                            \
+    STDMETHOD_(USB_DEVICE_SPEED, GetSpeed)( THIS) PURE;                     \
+                                                                            \
+    STDMETHOD_(UCHAR, GetInterval)( THIS) PURE;
 
 #define IMP_IEHCIREQUEST                                                    \
     STDMETHODIMP_(VOID) CompletionCallback(                                 \
@@ -103,8 +106,11 @@ struct _USB_ENDPOINT;
     STDMETHODIMP_(VOID) FreeQueueHead(struct _QUEUE_HEAD * QueueHead);      \
                                                                             \
     STDMETHODIMP_(BOOLEAN) IsQueueHeadComplete(                             \
-        IN struct _QUEUE_HEAD * QueueHead);
-
+        IN struct _QUEUE_HEAD * QueueHead);                                 \
+                                                                            \
+    STDMETHODIMP_(USB_DEVICE_SPEED) GetSpeed( THIS);                        \
+                                                                            \
+    STDMETHODIMP_(UCHAR) GetInterval( THIS);
 
 DECLARE_INTERFACE_(IEHCIRequest, IUSBRequest)
 {

@@ -222,6 +222,7 @@ typedef struct _QUEUE_HEAD
     ULONG PhysicalAddr;
     LIST_ENTRY LinkedQueueHeads;
     LIST_ENTRY TransferDescriptorListHead;
+    PVOID NextQueueHead;
     PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
@@ -309,4 +310,19 @@ typedef struct
     ULONG PortChange;
 }EHCI_PORT_STATUS;
 
+#define EHCI_INTERRUPT_ENTRIES_COUNT    (10 + 1)
+#define EHCI_VFRAMELIST_ENTRIES_COUNT    128
+#define EHCI_FRAMELIST_ENTRIES_COUNT     1024
 
+#define MAX_AVAILABLE_BANDWIDTH 125 // Microseconds
+
+#define EHCI_QH_CAPS_MULT_SHIFT 30			// Transactions per Micro-Frame
+#define EHCI_QH_CAPS_MULT_MASK 0x03
+#define EHCI_QH_CAPS_PORT_SHIFT 23			// Hub Port (Split-Transaction)
+#define EHCI_QH_CAPS_PORT_MASK 0x7f
+#define EHCI_QH_CAPS_HUB_SHIFT 16			// Hub Address (Split-Transaction)
+#define EHCI_QH_CAPS_HUB_MASK  0x7f
+#define EHCI_QH_CAPS_SCM_SHIFT  8			// Split Completion Mask
+#define EHCI_QH_CAPS_SCM_MASK   0xff
+#define EHCI_QH_CAPS_ISM_SHIFT  0			// Interrupt Schedule Mask
+#define EHCI_QH_CAPS_ISM_MASK  0xff

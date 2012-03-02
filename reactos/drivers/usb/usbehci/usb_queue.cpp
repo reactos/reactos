@@ -55,7 +55,6 @@ protected:
     ULONG m_MaxPollingInterval;                                                         // max polling interval
     PHYSICAL_ADDRESS m_SyncFrameListAddr;                                               // physical address of sync frame list
     PULONG m_SyncFrameList;                                                             // virtual address of sync frame list
-    PQUEUE_HEAD * m_SyncFrameListQueueHeads;                                            // stores the frame list of queue head
 
     // queue head manipulation functions
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
@@ -66,6 +65,9 @@ protected:
     // processes the async list
     VOID ProcessAsyncList(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
 
+    // processes the async list
+    VOID ProcessPeriodicSchedule(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
+
     // called for each completed queue head
     VOID QueueHeadCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
 
@@ -74,6 +76,14 @@ protected:
 
     // intializes the sync schedule
     NTSTATUS InitializeSyncSchedule(IN PEHCIHARDWAREDEVICE Hardware, IN PDMAMEMORYMANAGER MemManager);
+
+    // links interrupt queue head
+    VOID LinkInterruptQueueHead(PQUEUE_HEAD QueueHead);
+
+    // interrupt queue heads
+    PQUEUE_HEAD m_InterruptQueueHeads[EHCI_INTERRUPT_ENTRIES_COUNT];
+
+
 };
 
 //=================================================================================================
@@ -156,7 +166,7 @@ CUSBQueue::InitializeSyncSchedule(
 {
     PHYSICAL_ADDRESS QueueHeadPhysAddr;
     NTSTATUS Status;
-    ULONG Index;
+    ULONG Index, Interval, IntervalIndex;
     PQUEUE_HEAD QueueHead;
 
     //
@@ -165,23 +175,10 @@ CUSBQueue::InitializeSyncSchedule(
     m_MaxPeriodicListEntries = 1024;
 
     //
-    // use polling scheme of 32ms
+    // use polling scheme of 512ms
     //
-    m_MaxPollingInterval = 32;
+    m_MaxPollingInterval = 512;
 
-    //
-    // allocate dummy frame list array
-    //
-    m_SyncFrameListQueueHeads = (PQUEUE_HEAD*)ExAllocatePool(NonPagedPool, m_MaxPollingInterval * sizeof(PQUEUE_HEAD));
-    if (!m_SyncFrameListQueueHeads)
-    {
-        //
-        // no memory
-        //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  
     //
     // first allocate a page to hold the queue array
     //
@@ -192,77 +189,52 @@ CUSBQueue::InitializeSyncSchedule(
         // failed to allocate sync frame list array
         //
         DPRINT1("Failed to allocate sync frame list\n");
-        ExFreePool(m_SyncFrameListQueueHeads);
-        //ASSERT(FALSE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // now allocate queue head descriptors for the polling interval
-    //
-    for(Index = 0; Index < m_MaxPeriodicListEntries; Index++)
+    for(Index = 0; Index < EHCI_INTERRUPT_ENTRIES_COUNT; Index++)
     {
         //
-        // check if is inside our polling interrupt frequency window
+        // allocate queue head
         //
-        if (Index < m_MaxPollingInterval)
+        Status = MemManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysAddr);
+
+        //
+        // initialize queue head
+        //
+        QueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
+        QueueHead->AlternateNextPointer = TERMINATE_POINTER;
+        QueueHead->NextPointer = TERMINATE_POINTER;
+        QueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
+        QueueHead->EndPointCharacteristics.NakCountReload = 0x3;
+        QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
+        QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x01;
+        QueueHead->PhysicalAddr = QueueHeadPhysAddr.LowPart;
+        QueueHead->Token.Bits.Halted = TRUE; //FIXME
+        m_InterruptQueueHeads[Index]= QueueHead;
+
+        if (Index > 0)
         {
-            //
-            // allocate queue head
-            //
-            Status = MemManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysAddr);
-
-            //
-            // initialize queue head
-            //
-            QueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
-            QueueHead->AlternateNextPointer = TERMINATE_POINTER;
-            QueueHead->NextPointer = TERMINATE_POINTER;
-
-            //
-            // 1 for non high speed, 0 for high speed device
-            //
-            QueueHead->EndPointCharacteristics.ControlEndPointFlag = 0;
-            QueueHead->EndPointCharacteristics.HeadOfReclamation = FALSE;
-            QueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
-
-            //
-            // Set NakCountReload to max value possible
-            //
-            QueueHead->EndPointCharacteristics.NakCountReload = 0xF;
-
-            //
-            // Get the Initial Data Toggle from the QEDT
-            //
-            QueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
-
-            //
-            // FIXME: check if High Speed Device
-            //
-            QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
-            QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
-            QueueHead->Token.DWord = 0;
-            QueueHead->Token.Bits.InterruptOnComplete = FALSE;
-            QueueHead->PhysicalAddr = QueueHeadPhysAddr.LowPart;
-
-
-            //
-            // store in queue head array
-            //
-            m_SyncFrameListQueueHeads[Index] = QueueHead;
+             // link all to the first queue head
+             QueueHead->HorizontalLinkPointer = m_InterruptQueueHeads[0]->PhysicalAddr | QH_TYPE_QH;
+             QueueHead->NextQueueHead = m_InterruptQueueHeads[0];
         }
-        else
+    }
+
+    //
+    // build interrupt tree
+    //
+    Interval = EHCI_FRAMELIST_ENTRIES_COUNT;
+    IntervalIndex = EHCI_INTERRUPT_ENTRIES_COUNT - 1;
+    while (Interval > 1)
+    {
+        for (Index = Interval / 2; Index < EHCI_FRAMELIST_ENTRIES_COUNT; Index += Interval) 
         {
-            //
-            // get cached entry
-            //
-            QueueHead = m_SyncFrameListQueueHeads[m_MaxPeriodicListEntries % m_MaxPollingInterval];
+            DPRINT("Index %lu IntervalIndex %lu\n", Index, IntervalIndex);
+            m_SyncFrameList[Index] = m_InterruptQueueHeads[IntervalIndex]->PhysicalAddr | QH_TYPE_QH;
         }
-
-        //
-        // store entry
-        //
-        m_SyncFrameList[Index] = (QueueHead->PhysicalAddr | 0x2);
+        IntervalIndex--;
+        Interval /= 2;
     }
 
     //
@@ -293,21 +265,17 @@ CUSBQueue::AddUSBRequest(
     // get internal req
     Request = PEHCIREQUEST(Req);
 
-    //
     // get request type
-    //
     Type = Request->GetTransferType();
 
-    //
     // check if supported
-    //
     switch(Type)
     {
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
-        case USB_ENDPOINT_TYPE_INTERRUPT:
             /* NOT IMPLEMENTED IN QUEUE */
             Status = STATUS_NOT_SUPPORTED;
             break;
+        case USB_ENDPOINT_TYPE_INTERRUPT:
         case USB_ENDPOINT_TYPE_BULK:
         case USB_ENDPOINT_TYPE_CONTROL:
             Status = STATUS_SUCCESS;
@@ -318,53 +286,45 @@ CUSBQueue::AddUSBRequest(
             Status = STATUS_NOT_SUPPORTED;
     }
 
-    //
     // check for success
-    //
     if (!NT_SUCCESS(Status))
     {
-        //
         // request not supported, please try later
-        //
         return Status;
     }
 
-    if (Type == USB_ENDPOINT_TYPE_BULK || Type == USB_ENDPOINT_TYPE_CONTROL)
+    // get queue head
+    Status = Request->GetQueueHead(&QueueHead);
+
+    // check for success
+    if (!NT_SUCCESS(Status))
     {
-        //
-        // get queue head
-        //
-        Status = Request->GetQueueHead(&QueueHead);
-
-        //
-        // check for success
-        //
-        if (!NT_SUCCESS(Status))
-        {
-            //
-            // failed to get queue head
-            //
-           return Status;
-        }
-
-        DPRINT("Request %p QueueHead %p inserted into AsyncQueue\n", Request, QueueHead);
-
-        //
-        // Add it to the pending list
-        //
-        KeAcquireSpinLock(m_Lock, &OldLevel);
-        LinkQueueHead(AsyncListQueueHead, QueueHead);
-        KeReleaseSpinLock(m_Lock, OldLevel);
-
+        // failed to get queue head
+        return Status;
     }
 
+    // acquire lock
+    KeAcquireSpinLock(m_Lock, &OldLevel);
 
-    //
+    if (Type == USB_ENDPOINT_TYPE_BULK || Type == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        // Add to list
+        LinkQueueHead(AsyncListQueueHead, QueueHead);
+    }
+    else if (Type == USB_ENDPOINT_TYPE_INTERRUPT)
+    {
+        // get interval
+        LinkInterruptQueueHead(QueueHead);
+    }
+
+    // release lock
+    KeReleaseSpinLock(m_Lock, OldLevel);
+
+
     // add extra reference which is released when the request is completed
-    //
     Request->AddRef();
 
-
+    // done
     return STATUS_SUCCESS;
 }
 
@@ -385,6 +345,79 @@ CUSBQueue::CreateUSBRequest(
     }
 
     return Status;
+}
+
+VOID
+CUSBQueue::LinkInterruptQueueHead(
+    PQUEUE_HEAD QueueHead)
+{
+    PEHCIREQUEST Request;
+    UCHAR Interval, IntervalIndex;
+    USB_DEVICE_SPEED DeviceSpeed;
+    PQUEUE_HEAD InterruptQueueHead;
+
+    // get internal req
+    Request = PEHCIREQUEST(QueueHead->Request);
+    ASSERT(Request);
+
+    // get interval
+    Interval = Request->GetInterval();
+
+    // get device speed
+    DeviceSpeed = Request->GetSpeed();
+    if (DeviceSpeed == UsbHighSpeed)
+    {
+        // interrupt queue head can be scheduled on each possible micro frame
+        QueueHead->EndPointCapabilities.InterruptScheduleMask = 0xFF;
+    }
+    else
+    {
+        // As we do not yet support FSTNs to correctly reference low/full
+        // speed interrupt transfers, we simply put them into the 1 interval
+        // queue. This way we ensure that we reach them on every micro frame
+        // and can do the corresponding start/complete split transactions.
+        // ToDo: use FSTNs to correctly link non high speed interrupt transfers
+        Interval = 1;
+
+        // For now we also force start splits to be in micro frame 0 and
+        // complete splits to be in micro frame 2, 3 and 4.
+        QueueHead->EndPointCapabilities.InterruptScheduleMask = 0x01;
+        QueueHead->EndPointCapabilities.SplitCompletionMask = 0x1C;
+    }
+
+    // sanitize interrupt interval
+    Interval = max(1, Interval);
+
+    if (Interval == 1)
+        IntervalIndex = 1;
+    else if (Interval == 2)
+        IntervalIndex = 2;
+    else if (Interval <= 4)
+        IntervalIndex = 3;
+    else if (Interval <= 8)
+        IntervalIndex = 4;
+    else if (Interval <= 16)
+        IntervalIndex = 5;
+    else if (Interval <= 32)
+        IntervalIndex = 6;
+    else if (Interval <= 64)
+        IntervalIndex = 7;
+    else if (Interval <= 128)
+        IntervalIndex = 8;
+    else if (Interval <= 256)
+        IntervalIndex = 9;
+    else
+        IntervalIndex = 10;
+
+    // get interrupt queue head
+    InterruptQueueHead = m_InterruptQueueHeads[IntervalIndex];
+
+    // link queue head
+    QueueHead->HorizontalLinkPointer = InterruptQueueHead->HorizontalLinkPointer;
+    QueueHead->NextQueueHead = InterruptQueueHead->NextQueueHead;
+
+    InterruptQueueHead->HorizontalLinkPointer = QueueHead->PhysicalAddr | QH_TYPE_QH;
+    InterruptQueueHead->NextQueueHead = QueueHead;
 }
 
 //
@@ -583,6 +616,16 @@ CUSBQueue::QueueHeadCompletion(
     InsertTailList(&m_CompletedRequestAsyncList, &CurrentQH->LinkedQueueHeads);
 }
 
+
+VOID
+CUSBQueue::ProcessPeriodicSchedule(
+    IN NTSTATUS Status,
+    OUT PULONG ShouldRingDoorBell)
+{
+
+
+}
+
 VOID
 CUSBQueue::ProcessAsyncList(
     IN NTSTATUS Status,
@@ -665,18 +708,18 @@ CUSBQueue::InterruptCallback(
     IN NTSTATUS Status, 
     OUT PULONG ShouldRingDoorBell)
 {
-
     DPRINT("CUSBQueue::InterruptCallback\n");
+
+    //
+    // process periodic schedule
+    //
+    ProcessPeriodicSchedule(Status, ShouldRingDoorBell);
 
     //
     // iterate asynchronous list
     //
     *ShouldRingDoorBell = FALSE;
     ProcessAsyncList(Status, ShouldRingDoorBell);
-
-    //
-    // TODO: implement periodic schedule processing
-    //
 }
 
 VOID
