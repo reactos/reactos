@@ -349,8 +349,8 @@ EXLATEOBJ_vInitialize(
     pexlo->hColorTransform = NULL;
     pexlo->ppalSrc = ppalSrc;
     pexlo->ppalDst = ppalDst;
-    pexlo->xlo.iSrcType = ppalSrc->flFlags;
-    pexlo->xlo.iDstType = ppalDst->flFlags;
+    pexlo->xlo.iSrcType = (USHORT)ppalSrc->flFlags;
+    pexlo->xlo.iDstType = (USHORT)ppalDst->flFlags;
     pexlo->ppalDstDc = &gpalRGB;
 
     if (ppalDst == ppalSrc)
@@ -634,7 +634,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
 {
     PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
     PPALETTE ppal;
-    INT i;
+    ULONG i;
 
     if (!pxlo)
     {

@@ -3,7 +3,7 @@
 typedef struct _ACCELERATOR_TABLE
 {
   HEAD head;
-  int Count;
+  ULONG Count;
   LPACCEL Table;
 } ACCELERATOR_TABLE, *PACCELERATOR_TABLE;
 

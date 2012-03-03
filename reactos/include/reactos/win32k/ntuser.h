@@ -386,7 +386,7 @@ typedef struct _CLSMENUNAME
 typedef struct tagSBDATA
 {
   INT posMin;
-  INT posMax;  
+  INT posMax;
   INT page;
   INT pos;
 } SBDATA, *PSBDATA;
@@ -471,7 +471,7 @@ typedef struct _CLS
     //PCURSOR spcur;
     HBRUSH hbrBackground;
     PWSTR lpszMenuName;     // kernel use
-    PSTR lpszAnsiClassName; // " 
+    PSTR lpszAnsiClassName; // "
     HANDLE hIconSm; /* FIXME - Use pointer! */
     //PCURSOR spicnSm;
 
@@ -730,7 +730,7 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define FNID_SENDMESSAGEWTOOPTION   0x02B3
 #define FNID_SENDMESSAGECALLPROC    0x02B4
 #define FNID_BROADCASTSYSTEMMESSAGE 0x02B5
-#define FNID_TOOLTIPS               0x02B6 
+#define FNID_TOOLTIPS               0x02B6
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
 #define FNID_SENDMESSAGECALLBACK    0x02B8
 #define FNID_LAST                   0x02B9
@@ -956,21 +956,21 @@ typedef struct _USERCONNECT
 } USERCONNECT, *PUSERCONNECT;
 
 typedef struct tagGETCLIPBDATA
-{ 
+{
   UINT uFmtRet;
-  BOOL fGlobalHandle; 
+  BOOL fGlobalHandle;
   union
-  { 
+  {
     HANDLE hLocale;
-    HANDLE hPalette; 
+    HANDLE hPalette;
   };
-} GETCLIPBDATA, *PGETCLIPBDATA; 
+} GETCLIPBDATA, *PGETCLIPBDATA;
 
 typedef struct tagSETCLIPBDATA
-{ 
+{
     BOOL fGlobalHandle;
     BOOL fIncSerialNumber;
-} SETCLIPBDATA, *PSETCLIPBDATA; 
+} SETCLIPBDATA, *PSETCLIPBDATA;
 
 DWORD
 NTAPI
@@ -1533,12 +1533,12 @@ NtUserConvertMemHandle(
   PVOID pData,
   DWORD cbData);
 
-int
+ULONG
 NTAPI
 NtUserCopyAcceleratorTable(
   HACCEL Table,
   LPACCEL Entries,
-  int EntriesCount);
+  ULONG EntriesCount);
 
 DWORD
 NTAPI
@@ -1548,7 +1548,7 @@ HACCEL
 NTAPI
 NtUserCreateAcceleratorTable(
   LPACCEL Entries,
-  SIZE_T EntriesCount);
+  ULONG EntriesCount);
 
 BOOL
 NTAPI
@@ -1943,7 +1943,7 @@ ULONG_PTR
 NTAPI
 NtUserGetCPD(
   HWND hWnd,
-  GETCPD Flags,   
+  GETCPD Flags,
   ULONG_PTR Proc);
 
 HCURSOR
@@ -3194,7 +3194,7 @@ NtUserWin32PoolAllocationStats(
 
 HWND
 NTAPI
-NtUserWindowFromPhysicalPoint(      
+NtUserWindowFromPhysicalPoint(
   POINT Point);
 
 HWND

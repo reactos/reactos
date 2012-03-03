@@ -2721,6 +2721,8 @@ typedef struct _BLENDFUNCTION {
     BYTE SourceConstantAlpha;
     BYTE AlphaFormat;
 } BLENDFUNCTION,*PBLENDFUNCTION,*LPBLENDFUNCTION;
+#define STAMP_DESIGNVECTOR (0x8000000 + 'd' + ('v' << 8))
+#define STAMP_AXESLIST     (0x8000000 + 'a' + ('l' << 8))
 #define MM_MAX_NUMAXES  16
 typedef struct _DESIGNVECTOR {
 	DWORD dvReserved;

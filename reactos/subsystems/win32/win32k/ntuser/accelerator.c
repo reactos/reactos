@@ -177,15 +177,15 @@ co_IntTranslateAccelerator(
 /* SYSCALLS *****************************************************************/
 
 
-int
+ULONG
 APIENTRY
 NtUserCopyAcceleratorTable(
     HACCEL hAccel,
     LPACCEL Entries,
-    int EntriesCount)
+    ULONG EntriesCount)
 {
     PACCELERATOR_TABLE Accel;
-    int Ret;
+    ULONG Ret;
     DECLARE_RETURN(int);
 
     TRACE("Enter NtUserCopyAcceleratorTable\n");
@@ -239,11 +239,11 @@ HACCEL
 APIENTRY
 NtUserCreateAcceleratorTable(
     LPACCEL Entries,
-    SIZE_T EntriesCount)
+    ULONG EntriesCount)
 {
     PACCELERATOR_TABLE Accel;
     HACCEL hAccel;
-    INT Index;
+    ULONG Index;
     NTSTATUS Status = STATUS_SUCCESS;
     DECLARE_RETURN(HACCEL);
 

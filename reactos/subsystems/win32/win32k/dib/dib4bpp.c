@@ -16,7 +16,7 @@ VOID
 DIB_4BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
    PBYTE addr = (PBYTE)SurfObj->pvScan0 + (x>>1) + y * SurfObj->lDelta;
-   *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
+   *addr = (*addr & notmask[x&1]) | (BYTE)(c << ((1-(x&1))<<2));
 }
 
 ULONG
@@ -34,7 +34,7 @@ DIB_4BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 
   while(cx < x2)
   {
-    *addr = (*addr & notmask[x1&1]) | (c << ((1-(x1&1))<<2));
+    *addr = (*addr & notmask[x1&1]) | (BYTE)(c << ((1-(x1&1))<<2));
     if((++x1 & 1) == 0)
       ++addr;
     ++cx;
@@ -50,7 +50,7 @@ DIB_4BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   addr += (x>>1) + y1 * lDelta;
   while(y1++ < y2)
   {
-    *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
+    *addr = (*addr & notmask[x&1]) | (BYTE)(c << ((1-(x&1))<<2));
     addr += lDelta;
   }
 }
@@ -127,7 +127,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
         {
           *DestLine = (*DestLine & notmask[f2]) |
-            ((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceLine_8BPP)) << ((4 * (1 - f2))));
+            (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceLine_8BPP)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
           SourceLine_8BPP++;
         }
@@ -151,7 +151,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           xColor = *((PWORD) SourceBits);
           *DestBits = (*DestBits & notmask[f2]) |
-            ((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
+            (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
           SourceBits += 2;
         }
@@ -176,7 +176,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
              (*(SourceLine_24BPP + 1) << 0x08) +
              (*(SourceLine_24BPP));
           *DestLine = (*DestLine & notmask[f2]) |
-            ((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
+            (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
           SourceLine_24BPP+=3;
         }
@@ -200,7 +200,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           xColor = *((PDWORD) SourceBits);
           *DestBits = (*DestBits & notmask[f2]) |
-            ((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
+            (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
           SourceBits += 4;
         }
@@ -220,9 +220,9 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_4BPP_BitBlt(PBLTINFO BltInfo)
 {
-  ULONG DestX, DestY;
-  ULONG SourceX, SourceY;
-  ULONG PatternY = 0;
+  LONG DestX, DestY;
+  LONG SourceX, SourceY;
+  LONG PatternY = 0;
   ULONG Dest, Source = 0, Pattern = 0;
   BOOLEAN UsesSource;
   BOOLEAN UsesPattern;
@@ -358,7 +358,7 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  ULONG DestY;
+  LONG DestY;
 
   for (DestY = DestRect->top; DestY < DestRect->bottom; DestY++)
   {

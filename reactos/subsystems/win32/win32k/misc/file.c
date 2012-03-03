@@ -127,8 +127,7 @@ W32kMapViewOfSection(
     ULONG_PTR ulViewSize;
     PVOID pvBase = 0;
 
-    ulViewSize =
-    liSectionOffset.QuadPart = ulSectionOffset;
+    liSectionOffset.QuadPart = ulViewSize = ulSectionOffset;
     Status = ZwMapViewOfSection(hSection,
                                 NtCurrentProcess(),
                                 &pvBase,

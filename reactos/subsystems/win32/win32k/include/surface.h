@@ -104,7 +104,7 @@ BOOL NTAPI SURFACE_Cleanup(PVOID ObjectBody);
 PSURFACE
 NTAPI
 SURFACE_AllocSurface(
-    IN ULONG iType,
+    IN USHORT iType,
     IN ULONG cx,
     IN ULONG cy,
     IN ULONG iFormat);
@@ -113,7 +113,7 @@ BOOL
 NTAPI
 SURFACE_bSetBitmapBits(
     IN PSURFACE psurf,
-    IN USHORT fjBitmap,
+    IN ULONG fjBitmap,
     IN ULONG ulWidth,
     IN PVOID pvBits OPTIONAL);
 

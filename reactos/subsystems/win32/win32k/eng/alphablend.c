@@ -38,7 +38,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     LONG               ClippingType;
     RECT_ENUM          RectEnum;
     BOOL               EnumMore;
-    INT                i;
+    ULONG              i;
     BOOLEAN            Ret;
 
     DPRINT("EngAlphaBlend(psoDest:0x%p, psoSource:0x%p, ClipRegion:0x%p, ColorTranslation:0x%p,\n", psoDest, psoSource, ClipRegion, ColorTranslation);

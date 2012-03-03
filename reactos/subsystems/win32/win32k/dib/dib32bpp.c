@@ -284,8 +284,8 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG X, Y, SourceX, SourceY = 0, Source = 0, wd;
-  ULONG *DestBits;
+  LONG X, Y, SourceX, SourceY = 0, wd;
+  ULONG *DestBits, Source = 0;
 
   LONG DstHeight;
   LONG DstWidth;
@@ -338,7 +338,7 @@ typedef union {
 static __inline UCHAR
 Clamp8(ULONG val)
 {
-  return (val > 255) ? 255 : val;
+  return (val > 255) ? 255 : (UCHAR)val;
 }
 
 BOOLEAN

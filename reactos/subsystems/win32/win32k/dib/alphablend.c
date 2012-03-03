@@ -26,7 +26,7 @@ typedef union
 static __inline UCHAR
 Clamp8(ULONG val)
 {
-  return (val > 255) ? 255 : val;
+  return (val > 255) ? 255 : (UCHAR)val;
 }
 
 BOOLEAN

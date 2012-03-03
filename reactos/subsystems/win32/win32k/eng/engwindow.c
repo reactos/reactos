@@ -82,7 +82,7 @@ IntEngWndUpdateClipObj(
                visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
                visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
         {
-          INT i;
+          ULONG i;
           for (i = 0; i < visRgn->rdh.nCount; i++)
           {
             DPRINT("  Rect #%d: %d,%d  %d,%d\n", i+1,

@@ -40,7 +40,7 @@ DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   while(y1++ < y2)
   {
     *(PUSHORT)(addr) = c & 0xFFFF;
-    *(addr + 2) = c >> 16;
+    *(addr + 2) = (BYTE)(c >> 16);
 
     addr += lDelta;
   }
@@ -94,7 +94,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest,
               (*SourceLine_4BPP & altnotmask[f1]) >> (4 * (1 - f1)));
           *DestLine++ = xColor & 0xff;
-          *(PWORD)DestLine = xColor >> 8;
+          *(PWORD)DestLine = (WORD)(xColor >> 8);
           DestLine += 2;
           if(f1 == 1) { SourceLine_4BPP++; f1 = 0; } else { f1 = 1; }
           sx++;
@@ -118,7 +118,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
           *DestBits = xColor & 0xff;
-          *(PWORD)(DestBits + 1) = xColor >> 8;
+          *(PWORD)(DestBits + 1) = (WORD)(xColor >> 8);
           SourceBits += 1;
           DestBits += 3;
         }
@@ -140,7 +140,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceLine_16BPP);
           *DestLine++ = xColor & 0xff;
-          *(PWORD)DestLine = xColor >> 8;
+          *(PWORD)DestLine = (WORD)(xColor >> 8);
           DestLine += 2;
           SourceLine_16BPP++;
         }
@@ -207,7 +207,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *((PDWORD) SourceBits));
           *DestBits = xColor & 0xff;
-          *(PWORD)(DestBits + 1) = xColor >> 8;
+          *(PWORD)(DestBits + 1) = (WORD)(xColor >> 8);
           SourceBits += 4;
           DestBits += 3;
         }
@@ -228,9 +228,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 {
-   ULONG DestX, DestY;
-   ULONG SourceX, SourceY;
-   ULONG PatternY = 0;
+   LONG DestX, DestY;
+   LONG SourceX, SourceY;
+   LONG PatternY = 0;
    ULONG Dest, Source = 0, Pattern = 0;
    BOOL UsesSource;
    BOOL UsesPattern;
@@ -279,7 +279,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 
          Dest = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern) & 0xFFFFFF;
          *(PUSHORT)(DestBits) = Dest & 0xFFFF;
-         *(DestBits + 2) = Dest >> 16;
+         *(DestBits + 2) = (BYTE)(Dest >> 16);
       }
 
       SourceY++;
@@ -299,7 +299,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  ULONG DestY;
+  LONG DestY;
 
 #if defined(_M_IX86) && !defined(_MSC_VER)
   PBYTE xaddr = (PBYTE)DestSurface->pvScan0 + DestRect->top * DestSurface->lDelta + (DestRect->left << 1) + DestRect->left;
@@ -400,7 +400,8 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG X, Y, SourceX, SourceY = 0, Source = 0, wd, Dest;
+  LONG X, Y, SourceX, SourceY = 0, wd;
+  ULONG Source = 0, Dest;
   BYTE *DestBits;
 
   LONG DstHeight;
@@ -430,9 +431,9 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
         if(Source != iTransColor)
         {
-          Dest = XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
+          Dest = (BYTE)XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
            *(PUSHORT)(DestBits) = Dest & 0xFFFF;
-           *(DestBits + 2) = Dest >> 16;
+           *(DestBits + 2) = (BYTE)(Dest >> 16);
         }
       }
     }
@@ -456,7 +457,7 @@ typedef union {
 static __inline UCHAR
 Clamp8(ULONG val)
 {
-   return (val > 255) ? 255 : val;
+   return (val > 255) ? 255 : (UCHAR)val;
 }
 
 BOOLEAN

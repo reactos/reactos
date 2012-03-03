@@ -92,7 +92,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 
   shift = (dl-sl)&7;
 
-  xormask = 0xFF * XLATEOBJ_iXlate(pxlo, 0);
+  xormask = 0xFF * (BYTE)XLATEOBJ_iXlate(pxlo, 0);
 
   if ( DestRect->top <= SourcePoint->y )
   {
@@ -316,15 +316,15 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 {
-  ULONG DestX, DestY;
-  ULONG SourceX, SourceY;
-  ULONG PatternY = 0;
+  LONG DestX, DestY;
+  LONG SourceX, SourceY;
+  LONG PatternY = 0;
   ULONG Dest, Source = 0, Pattern = 0;
   ULONG Index;
   BOOLEAN UsesSource;
   BOOLEAN UsesPattern;
   PULONG DestBits;
-  ULONG RoundedRight;
+  LONG RoundedRight;
 
   UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
@@ -457,7 +457,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_1BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  ULONG DestY;
+  LONG DestY;
 
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {

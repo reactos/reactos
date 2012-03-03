@@ -68,7 +68,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 
   if (0 != (cx & 0x01))
   {
-    *((PWORD) addr) = c;
+    *((PWORD) addr) = (WORD)c;
     cx++;
     addr = (PDWORD)((PWORD)(addr) + 1);
   }
@@ -80,7 +80,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
   if (cx < x2)
   {
-    *((PWORD) addr) = c;
+    *((PWORD) addr) = (WORD)c;
   }
 #endif /* _M_IX86 */
 }
@@ -400,7 +400,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  ULONG DestY;
+  LONG DestY;
 
 #if defined(_M_IX86) && !defined(_MSC_VER)
   /* This is about 10% faster than the generic C code below */
@@ -449,8 +449,8 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, Source, wd, Dest;
-  ULONG *DestBits;
+  LONG RoundedRight, X, Y, SourceX = 0, SourceY = 0, wd;
+  ULONG *DestBits, Source, Dest;
 
   LONG DstHeight;
   LONG DstWidth;
