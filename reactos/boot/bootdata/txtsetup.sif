@@ -17,9 +17,8 @@ FreeSysPartDiskSpace=350
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
-atapi.sys=,,,,,,x,,,,,,4
-uniata.sys=,,,,,,x,,,,,,4
 nmidebug.sys=,,,,,,x,,,,,,4
+uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
 bootvid.dll=,,,,,,,,,,,,2
@@ -71,7 +70,7 @@ PCI\CC_0101 = pciide
 PCI\CC_0104 = uniata
 PCI\CC_0105 = uniata
 PCI\CC_0106 = uniata
-*PNP0600 = atapi
+*PNP0600 = uniata
 ;USB\CLASS_09 = usbhub
 USB\ROOT_HUB = usbhub
 USB\ROOT_HUB20 = usbhub
