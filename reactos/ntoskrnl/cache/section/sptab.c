@@ -117,12 +117,12 @@ MiSectionPageTableGetOrAllocate
         SectionZeroPageTable.Refcount = 1;
         PageTableSlice = RtlInsertElementGenericTable
             (Table, &SectionZeroPageTable, sizeof(SectionZeroPageTable), NULL);
+        if (!PageTableSlice) return NULL;
         DPRINT
             ("Allocate page table %x (%08x%08x)\n", 
              PageTableSlice,
              PageTableSlice->FileOffset.u.HighPart,
              PageTableSlice->FileOffset.u.LowPart);
-        if (!PageTableSlice) return NULL;
     }
     return PageTableSlice;
 }
