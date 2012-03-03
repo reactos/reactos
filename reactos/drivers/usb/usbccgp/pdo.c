@@ -976,6 +976,40 @@ PDO_HandleInternalDeviceControl(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;
             }
+            else if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_STRING_DESCRIPTOR_TYPE)
+            {
+                PUSB_STRING_DESCRIPTOR StringDescriptor;
+
+                //
+                // get the requested string descriptor
+                //
+                ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
+                Status = USBCCGP_GetDescriptor(PDODeviceExtension->FDODeviceExtension->NextDeviceObject,
+                                               USB_STRING_DESCRIPTOR_TYPE,
+                                               Urb->UrbControlDescriptorRequest.TransferBufferLength,
+                                               Urb->UrbControlDescriptorRequest.Index,
+                                               Urb->UrbControlDescriptorRequest.LanguageId,
+                                               (PVOID*)&StringDescriptor);
+                if (NT_SUCCESS(Status))
+                {
+                    if (StringDescriptor->bLength == 2)
+                    {
+                        FreeItem(StringDescriptor);
+                        Status = STATUS_DEVICE_DATA_ERROR;
+                    }
+                    else
+                    {
+                        RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer,
+                                      StringDescriptor->bString,
+                                      StringDescriptor->bLength + sizeof(WCHAR));
+                        FreeItem(StringDescriptor);
+                        Status = STATUS_SUCCESS;
+                    }
+                }
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
         }
         else
         {
