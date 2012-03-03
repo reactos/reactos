@@ -414,6 +414,14 @@ PDO_HandlePnp(
            Status = STATUS_SUCCESS;
            break;
        }
+       case IRP_MN_QUERY_INTERFACE:
+       {
+           //
+           // forward to lower device object
+           //
+           IoSkipCurrentIrpStackLocation(Irp);
+           return IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+       }
        default:
         {
             //
