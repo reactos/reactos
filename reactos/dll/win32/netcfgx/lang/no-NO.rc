@@ -5,10 +5,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 228, 27
+ LTEXT "Du kan fÃ¥ IP innstillinger automatisk hvis ditt nettverk stÃ¸tter denne muligheten. Ellers, trenger du Ã¥ spÃ¸rre din nettverk administrator for Ã¥ fÃ¥ IP innstillingene.", -1, 9, 9, 228, 27
  CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ CONTROL "&Bruk fÃ¸lgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
  LTEXT "IP addresse:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
  LTEXT "Subnet maske:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
  CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ CONTROL "&Bruk fÃ¸lgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
  LTEXT "Forvalgt DNS server:", -1, 14, 171, 135, 8
  CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
  LTEXT "Alternativ DNS server:", -1, 14, 186, 135, 8
@@ -79,9 +79,9 @@ BEGIN
     PUSHBUTTON "&Legg til...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Rediger...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Fjern", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
-    LTEXT "Følgende tre innstillinger er brukt til alle tilkoblinger med TCP/IP aktivert. For beslutning av ukvalifisert navn:", -1, 5, 90, 220, 24
-    CONTROL "Legg til &primær og tilkobling spesifikt DNS suffikser", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Legg til forelder  suffi&kser for primær DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "FÃ¸lgende tre innstillinger er brukt til alle tilkoblinger med TCP/IP aktivert. For beslutning av ukvalifisert navn:", -1, 5, 90, 220, 24
+    CONTROL "Legg til &primÃ¦r og tilkobling spesifikt DNS suffikser", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
+    CHECKBOX "Legg til forelder  suffi&kser for primÃ¦r DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "Vis d&isse DNS suffikser(i system):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
     PUSHBUTTON "Opp", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
@@ -209,21 +209,21 @@ BEGIN
 	IDS_METRIC          "Metrisk"
 	IDS_DHCPACTIVE      "DHCP aktivert"
 	IDS_AUTOMATIC       "Automatisk"
-	IDS_NOITEMSEL       "Du har ikke valg en enhet. Velg en enhet først."
+	IDS_NOITEMSEL       "Du har ikke valg en enhet. Velg en enhet fÃ¸rst."
 	IDS_TCPIP           "ReactOS-TCP/IP"
 	IDS_ADD             "Legg til"
 	IDS_MOD             "OK"
 	IDS_TCP_PORTS       "TCP porter"
 	IDS_UDP_PORTS       "UDP porter"
 	IDS_IP_PROTO        "IP protokoller"
-	IDS_PORT_RANGE      "Port nummere må være større enn 0 og mindre enn 65536. Vennligst skriv inn et nummer innenfor dette området."
-	IDS_PROT_RANGE      "Protokoll nummeret må være større enn 0 og mindre enn 256. Vennligst skriv inn et nummer innenfor dette området."
-	IDS_DUP_NUMBER      "Nummeret som du prøver å legge til er allerede i listen. Vennligst skriv inn et annet nummer."
-	IDS_DISABLE_FILTER  "Deaktivere denne global TCP/IP innstillingen vil påvirke alle kortene."
-	IDS_NO_SUFFIX       "Nåværende innstilling av søke metoden trenger minst et DNS suffiks. Vennligst skriv inn et eller endre innstillingene."
+	IDS_PORT_RANGE      "Port nummere mÃ¥ vÃ¦re stÃ¸rre enn 0 og mindre enn 65536. Vennligst skriv inn et nummer innenfor dette omrÃ¥det."
+	IDS_PROT_RANGE      "Protokoll nummeret mÃ¥ vÃ¦re stÃ¸rre enn 0 og mindre enn 256. Vennligst skriv inn et nummer innenfor dette omrÃ¥det."
+	IDS_DUP_NUMBER      "Nummeret som du prÃ¸ver Ã¥ legge til er allerede i listen. Vennligst skriv inn et annet nummer."
+	IDS_DISABLE_FILTER  "Deaktivere denne global TCP/IP innstillingen vil pÃ¥virke alle kortene."
+	IDS_NO_SUFFIX       "NÃ¥vÃ¦rende innstilling av sÃ¸ke metoden trenger minst et DNS suffiks. Vennligst skriv inn et eller endre innstillingene."
 	IDS_DOMAIN_SUFFIX   "Domene suffiks er ikke et gyldig suffiks."
 	IDS_DNS_SUFFIX      "DNS domene navn ""%s"" er ikke et gyldig DNS navn."
-	IDS_DUP_SUFFIX      "DNS suffiks er allerede på listen."
-	IDS_DUP_IPADDR      "IP adresse er allerede på listen."
-	IDS_DUP_GW          "Standard gateway er allerede på listen."
+	IDS_DUP_SUFFIX      "DNS suffiks er allerede pÃ¥ listen."
+	IDS_DUP_IPADDR      "IP adresse er allerede pÃ¥ listen."
+	IDS_DUP_GW          "Standard gateway er allerede pÃ¥ listen."
 END

@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti Ë necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 228, 27
+ LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti √® necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 228, 27
  CONTROL "Ottieni automaticamente l'indirizzo IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
  CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
@@ -30,7 +30,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Configurazione alternativa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Se questo computer viene utilizzato in pi˘ di una rete indicare di seguito le configurazioni di rete alternative", -1, 9, 9, 220, 20
+    LTEXT "Se questo computer viene utilizzato in pi√π di una rete indicare di seguito le configurazioni di rete alternative", -1, 9, 9, 220, 20
     CONTROL "Indirizzo IP privato &automatico", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "Configurato dall'&utente", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
@@ -75,7 +75,7 @@ BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
     LTEXT "Indirizzi D&NS server in ordine di utilizzo:", -1, 5, 5, 180, 12
     PUSHBUTTON "&Su", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Gi˘", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Gi√π", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Aggiungi...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Modifica...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Rimuovi", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
@@ -85,7 +85,7 @@ BEGIN
     CONTROL "Aggiungere questi suffissi DNS(in ordine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
     PUSHBUTTON "Su", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Gi˘", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Gi√π", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Aggiungi...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Modifica...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "Rimuovi", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
@@ -103,7 +103,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "&Impostazioni opzionali", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Propriet‡", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Propriet√†", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Descrizione:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
@@ -218,12 +218,12 @@ BEGIN
 	IDS_IP_PROTO        "IP protocolli"
 	IDS_PORT_RANGE      "I numeri di porta devono essere maggiori di zero e minori di 65536. Indicare un numero valido."
 	IDS_PROT_RANGE      "I numeri di protocollo devono essere maggiori di zero e minori di 256. Indicare un numero valido."
-	IDS_DUP_NUMBER      "State aggiungendo un numero gi‡ presente nella lista. Indicarne uno diverso."
-	IDS_DISABLE_FILTER  "La disabilitazione di questa impostazione globale di TCP/IP influenzer‡ tutti gli adattatori."
+	IDS_DUP_NUMBER      "State aggiungendo un numero gi√† presente nella lista. Indicarne uno diverso."
+	IDS_DISABLE_FILTER  "La disabilitazione di questa impostazione globale di TCP/IP influenzer√† tutti gli adattatori."
 	IDS_NO_SUFFIX       "L'impostazione attuale del metodo di ricerca necessita almeno un suffisso DNS. Indicarne uno o modificare l'impostazione."
-	IDS_DOMAIN_SUFFIX   "Il suffisso di Dominio non Ë un suffisso valido."
-	IDS_DNS_SUFFIX      "Il nome di dominio DNS ""%s"" non Ë nome di DNS valido."
-	IDS_DUP_SUFFIX      "Il suffisso Ë gi‡ nella lista."
-	IDS_DUP_IPADDR      "L'indirizzo IP Ë gi‡ nella lista."
-	IDS_DUP_GW          "Il default gateway Ë gi‡ nella lista."
+	IDS_DOMAIN_SUFFIX   "Il suffisso di Dominio non √® un suffisso valido."
+	IDS_DNS_SUFFIX      "Il nome di dominio DNS ""%s"" non √® nome di DNS valido."
+	IDS_DUP_SUFFIX      "Il suffisso √® gi√† nella lista."
+	IDS_DUP_IPADDR      "L'indirizzo IP √® gi√† nella lista."
+	IDS_DUP_GW          "Il default gateway √® gi√† nella lista."
 END

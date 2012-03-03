@@ -6,18 +6,18 @@ CAPTION "Datamaskinnavn"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS bruker følgende informasjon for å identifisere datamaskinen på nettverket.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "ReactOS bruker fÃ¸lgende informasjon for Ã¥ identifisere datamaskinen pÃ¥ nettverket.", IDC_STATIC, 40, 5, 204, 20
     LTEXT       "Beskrivelse av datamaskinen:", IDC_STATIC, 6, 40, 135, 9
     EDITTEXT    IDC_COMPDESC, 110, 38, 136, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Fullt datamaskinnavn:", IDC_STATIC, 6, 68, 85, 9
     EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Arbeidsgruppe:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Klikk nettverks-ID for å bruke veiviseren for nettverksidentifikasjon til å bli med i et domene og opprette en lokal brukerkonto.", IDC_STATIC, 6, 113, 172, 24
+    LTEXT       "Klikk nettverks-ID for Ã¥ bruke veiviseren for nettverksidentifikasjon til Ã¥ bli med i et domene og opprette en lokal brukerkonto.", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Nettverk-ID...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "Klikk Endre for å gi datamaskinen et nytt navn eller bli med i et domenet.", IDC_STATIC, 6, 149, 170, 17
+    LTEXT       "Klikk Endre for Ã¥ gi datamaskinen et nytt navn eller bli med i et domenet.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "&Endre...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "OBS: Bare Administratorer kan endre disse innstillingene på datamaskinen.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT       "OBS: Bare Administratorer kan endre disse innstillingene pÃ¥ datamaskinen.", IDC_STATIC, 6, 179, 300, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -46,9 +46,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "DNS-suffiks og NetBIOS-datamaskinnavn"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Primært DNS-suffiks for denne datamaskinen:", -1, 7, 5, 253, 8
+    LTEXT "&PrimÃ¦rt DNS-suffiks for denne datamaskinen:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Endre primært DNS-suffiks når domenemedlemskap endres", 115, 11, 39, 250, 10
+    AUTOCHECKBOX "&Endre primÃ¦rt DNS-suffiks nÃ¥r domenemedlemskap endres", 115, 11, 39, 250, 10
     LTEXT "&NetBIOS-datamaskinnavn:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
@@ -60,13 +60,13 @@ STRINGTABLE
 BEGIN
     1 "* Ukjent *"
     2 "ARBEIDSGRUPPE"
-    3 "Følgende feil har oppstått mens datamaskinen prøvde å lese domene medlemskap informasjon:"
+    3 "FÃ¸lgende feil har oppstÃ¥tt mens datamaskinen prÃ¸vde Ã¥ lese domene medlemskap informasjon:"
     4 "Endring i datamaskinnavn"
     5 "Arbeidsgruppe:"
     6 "Domene:"
     22 "Velkommen til %1 arbeidsgruppen."
     23 "Velkommen til %1 domene."
-    24 "Du må starte denne datamaskinen på nytt for at endringene skal tre i kraft."
+    24 "Du mÃ¥ starte denne datamaskinen pÃ¥ nytt for at endringene skal tre i kraft."
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "OBS: Bare administratorer kan endre identifisering for denne datamaskinen."
     1022 "OBS: Identifisering for datamaskinen kunne ikke endres fordi:"

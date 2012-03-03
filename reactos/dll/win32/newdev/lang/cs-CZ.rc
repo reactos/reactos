@@ -8,69 +8,69 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "VÌtejte",IDC_WELCOMETITLE,120,8,195,24
-    LTEXT           "Tento pr˘vodce nainstaluje ovladaË novÈho za¯ÌzenÌ pro:",
+    LTEXT           "V√≠tejte",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Tento pr≈Øvodce nainstaluje ovladaƒç nov√©ho za≈ô√≠zen√≠ pro:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "PokraËujte kliknutÌm na DalöÌ.",IDC_STATIC,120,169,195,17
-    LTEXT           "NEZN¡M… ZAÿÕZENÕ",IDC_DEVICE,134,36,164,11
-    LTEXT           "POZOR! INSTALACE VLASTNÕHO ZAÿÕZENÕ MŸéE ZASEKNOUT PO»ÕTA» NEBO ZNEMOéNIT START OPERA»NÕHO SYST…MU!",IDC_STATIC,120,59,195,16
-    CONTROL         "Nainstalovat ovladaË automaticky",IDC_RADIO_AUTO,"Button",
+    LTEXT           "Pokraƒçujte kliknut√≠m na Dal≈°√≠.",IDC_STATIC,120,169,195,17
+    LTEXT           "NEZN√ÅM√â ZA≈ò√çZEN√ç",IDC_DEVICE,134,36,164,11
+    LTEXT           "POZOR! INSTALACE VLASTN√çHO ZA≈ò√çZEN√ç M≈Æ≈ΩE ZASEKNOUT POƒå√çTAƒå NEBO ZNEMO≈ΩNIT START OPERAƒåN√çHO SYST√âMU!",IDC_STATIC,120,59,195,16
+    CONTROL         "Nainstalovat ovladaƒç automaticky",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
-    CONTROL         "Nainstalovat ovladaË ze specifickÈho umÌstÏnÌ",IDC_RADIO_MANUAL,
+    CONTROL         "Nainstalovat ovladaƒç ze specifick√©ho um√≠stƒõn√≠",IDC_RADIO_MANUAL,
                     "Button",BS_AUTORADIOBUTTON,120,133,164,14
 END
 
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Instalace selhala",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Za¯ÌzenÌ nemohlo b˝t nainstalov·no, protoûe ovladaË nebyl nalezen.",
+    LTEXT           "Za≈ô√≠zen√≠ nemohlo b√Ωt nainstalov√°no, proto≈æe ovladaƒç nebyl nalezen.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "KliknÏte na ZpÏt, pokud m·te disk s ovladaËem nebo zn·te cestu k ovladaËi.",
+    LTEXT           "Kliknƒõte na Zpƒõt, pokud m√°te disk s ovladaƒçem nebo zn√°te cestu k ovladaƒçi.",
                     IDC_STATIC,120,98,181,24
-    CONTROL         "Neukazovat vÌce tento dialog",IDC_DONOTSHOWDLG,"Button",
+    CONTROL         "Neukazovat v√≠ce tento dialog",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
 END
 
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Instalace selhala",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Za¯ÌzenÌ nemohlo b˝t nainstalov·no, protoûe se vyskytla neoËek·van· chyba.",
+    LTEXT           "Za≈ô√≠zen√≠ nemohlo b√Ωt nainstalov√°no, proto≈æe se vyskytla neoƒçek√°van√° chyba.",
                     IDC_STATIC,120,40,195,19
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,134,55,164,11
 END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Hledat v tÏchto umÌstÏnÌch",IDC_RADIO_SEARCHHERE,"Button",
+    CONTROL         "Hledat v tƒõchto um√≠stƒõn√≠ch",IDC_RADIO_SEARCHHERE,"Button",
                     BS_AUTORADIOBUTTON,27,11,239,13
-    CONTROL         "Vybrat ovladaË ruËnÏ",IDC_RADIO_CHOOSE,"Button",
+    CONTROL         "Vybrat ovladaƒç ruƒçnƒõ",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "Hledat na v˝mÏnn˝ch discÌch",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "Hledat na v√Ωmƒõnn√Ωch disc√≠ch",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
     CONTROL         "Zahrnout tuto cestu",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "Proch·zet",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "Proch√°zet",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,51,20,169,16
@@ -78,7 +78,7 @@ END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,51,20,169,16
@@ -87,13 +87,13 @@ END
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Instalace je kompletnÌ",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Bude pot¯eba restartovat systÈm, aby mohla b˝t dokonËena instalace:",
+    LTEXT           "Instalace je kompletn√≠",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Bude pot≈ôeba restartovat syst√©m, aby mohla b√Ωt dokonƒçena instalace:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "KliknutÌm na DokonËit zav¯ete pr˘vodce.",IDC_STATIC,120,174,
+    LTEXT           "Kliknut√≠m na Dokonƒçit zav≈ôete pr≈Øvodce.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
 END
@@ -101,13 +101,13 @@ END
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Instalace za¯ÌzenÌ"
+CAPTION "Instalace za≈ô√≠zen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Instalace je kompletnÌ",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Pr˘vodce dokonËil instalaci ovladaËe pro:",
+    LTEXT           "Instalace je kompletn√≠",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Pr≈Øvodce dokonƒçil instalaci ovladaƒçe pro:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "KliknutÌm na DokonËit zav¯ete pr˘vodce.",IDC_STATIC,120,174,
+    LTEXT           "Kliknut√≠m na Dokonƒçit zav≈ôete pr≈Øvodce.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
 END

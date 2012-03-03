@@ -7,91 +7,91 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "Název"
+    IDS_NAME "NÃ¡zev"
     IDS_TYPE "Typ"
-    IDS_MANUFACTURER "Vırobce: %1"
-    IDS_LOCATION "Umístìní: %1"
-    IDS_STATUS "Status zaøízení: %1"
-    IDS_UNKNOWN "Neznámı"
-    IDS_LOCATIONSTR "Umístìní %1!u! (%2)"
-    IDS_DEVCODE " (Kód %1!u!)"
-    IDS_DEVCODE2 " (Kód %2!u!)"
-    IDS_ENABLEDEVICE "Pouívat toto zaøízení (zapnout)"
-    IDS_DISABLEDEVICE "Nepouívat toto zaøízení (vypnout)"
-    IDS_UNKNOWNDEVICE "Neznámé zaøízení"
-    IDS_NODRIVERLOADED "Pro toto zaøízení nejsou nainstalovány ádné ovladaèe."
+    IDS_MANUFACTURER "VÃ½robce: %1"
+    IDS_LOCATION "UmÃ­stÄ›nÃ­: %1"
+    IDS_STATUS "Status zaÅ™Ã­zenÃ­: %1"
+    IDS_UNKNOWN "NeznÃ¡mÃ½"
+    IDS_LOCATIONSTR "UmÃ­stÄ›nÃ­ %1!u! (%2)"
+    IDS_DEVCODE " (KÃ³d %1!u!)"
+    IDS_DEVCODE2 " (KÃ³d %2!u!)"
+    IDS_ENABLEDEVICE "PouÅ¾Ã­vat toto zaÅ™Ã­zenÃ­ (zapnout)"
+    IDS_DISABLEDEVICE "NepouÅ¾Ã­vat toto zaÅ™Ã­zenÃ­ (vypnout)"
+    IDS_UNKNOWNDEVICE "NeznÃ¡mÃ© zaÅ™Ã­zenÃ­"
+    IDS_NODRIVERLOADED "Pro toto zaÅ™Ã­zenÃ­ nejsou nainstalovÃ¡ny Å¾Ã¡dnÃ© ovladaÄe."
     IDS_DEVONPARENT "na %1"
-    IDS_TROUBLESHOOTDEV "Ø&ešení problémù..."
-    IDS_ENABLEDEV "Povolit zaøíze&ní"
-    IDS_REINSTALLDRV "Pøe&instalovat ovladaè"
+    IDS_TROUBLESHOOTDEV "Å˜&eÅ¡enÃ­ problÃ©mÅ¯..."
+    IDS_ENABLEDEV "Povolit zaÅ™Ã­ze&nÃ­"
+    IDS_REINSTALLDRV "PÅ™e&instalovat ovladaÄ"
     IDS_PROPERTIES "Vlas&tnosti"
-    IDS_UPDATEDRV "A&ktualizovat ovladaè..."
-    IDS_REBOOT "Resta&rtovat poèítaè..."
-    IDS_NOTAVAILABLE "Není dostupné"
-    IDS_NOTDIGITALLYSIGNED "Není digitálnì podepsáno"
-    IDS_NODRIVERS "Pro toto zaøízení nejsou vyadovány nebo nebyly naèteny ádné soubory ovladaèù."
+    IDS_UPDATEDRV "A&ktualizovat ovladaÄ..."
+    IDS_REBOOT "Resta&rtovat poÄÃ­taÄ..."
+    IDS_NOTAVAILABLE "NenÃ­ dostupnÃ©"
+    IDS_NOTDIGITALLYSIGNED "NenÃ­ digitÃ¡lnÄ› podepsÃ¡no"
+    IDS_NODRIVERS "Pro toto zaÅ™Ã­zenÃ­ nejsou vyÅ¾adovÃ¡ny nebo nebyly naÄteny Å¾Ã¡dnÃ© soubory ovladaÄÅ¯."
 END
 
 /* puvodni anglicke error messages prevzaty z: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Toto zaøízení funguje správnì."
-    IDS_DEV_NOT_CONFIGURED "Toto zaøízení není správnì nastaveno."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS nemohl naèíst ovladaè pro toto zaøízení, protoe poèítaè hlásí dva typy sbìrnice $1."
-    IDS_DEV_DEVLOADER_FAILED2 "Device loader $1 nemohl naèíst ovladaè tohoto zaøízení."
-    IDS_DEV_OUT_OF_MEMORY "Ovladaè tohoto zaøízení je poškozenı nebo má systém málo pamìti èi jinıch zdrojù."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Toto zaøízení nefunguje správnì, protoe je špatnı nìkterı z jeho ovladaèù nebo registr."
-    IDS_DEV_LACKED_ARBITRATOR "Ovladaè tohoto zaøízení poaduje zdroj, kterı ReactOS neumí zpracovat."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Zdroje, které toto zaøízení vyaduje, jsou u pouívány jinım zaøízením."
-    IDS_DEV_FAILED_FILTER "Ovladaèe tohoto zaøízení musí bıt pøeinstalovány."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Toto zaøízení nefunguje správnì, protoe ReactOS nedokáe naèíst soubor $1, kterı naèítá ovladaèe pro toto zaøízení."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Toto zaøízení nefunguje správnì, protoe soubor $1, kterı naèítá ovladaèe pro toto zaøízení, je poškozenı."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Selhání zaøízení: Zkuste zmìnit ovladaè tohoto zaøízení nebo konzultujte manuál."
-    IDS_DEV_INVALID_DATA "Toto zaøízení nefunguje správnì, protoe BIOS v poèítaèi nesprávnì hlásí zdroje zaøízení."
-    IDS_DEV_INVALID_DATA2 "Toto zaøízení nefunguje správnì, protoe BIOS v zaøízení nesprávnì hlásí zdroje zaøízení."
-    IDS_DEV_FAILED_START "Zaøízení není pøítomno, nepracuje správnì nebo nemá nainstalované všechny ovladaèe."
-    IDS_DEV_LIAR "ReactOS pøestal odpovídat pøi pokusu o spuštìní tohoto zaøízení, a proto se nebude znovu pokoušet spustit zaøízení."
-    IDS_DEV_NORMAL_CONFLICT "Toto zaøízení nedokáe nalézt volné $1 zdroje."
-    IDS_DEV_NOT_VERIFIED "Zaøízení není pøítomno, nepracuje správnì nebo nemá nainstalované všechny ovladaèe."
-    IDS_DEV_NEED_RESTART "Toto zaøízení nebude pracovat správnì, dokud nebude poèítaè zrestartován."
-    IDS_DEV_REENUMERATION "Toto zaøízení zpùsobuje konflikt zdrojù."
-    IDS_DEV_PARTIAL_LOG_CONF "ReactOS nedokázal identifikovat všechny zdroje, které toto zaøízení uívá."
-    IDS_DEV_UNKNOWN_RESOURCE "Informaèní soubor ovladaèe $1 poaduje po tomto zaøízení pouití zdroje, kterı jeho rodièovské zaøízení nemá nebo nepoznává."
-    IDS_DEV_REINSTALL "Ovladaèe tohoto zaøízení musí bıt pøeinstalovány."
-    IDS_DEV_REGISTRY "Registry jsou moná poškozeny."
-    IDS_DEV_WILL_BE_REMOVED "ReactOS odstraòuje toto zaøízení."
-    IDS_DEV_DISABLED "Toto zaøízení není spuštìno."
-    IDS_DEV_DISABLED2 "Toto zaøízení je vypnuto."
-    IDS_DEV_DEVLOADER_NOT_READY "Loadery tohoto zaøízení nemohou naèíst poadované ovladaèe."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Tento zobrazovací adaptér funguje správnì."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Loadery tohoto zaøízení nemohou naèíst poadované ovladaèe."
-    IDS_DEV_DEVICE_NOT_THERE "Zaøízení není pøítomno, nepracuje správnì nebo nemá nainstalované všechny ovladaèe."
-    IDS_DEV_MOVED "ReactOS právì nastavuje toto zaøízení."
-    IDS_DEV_TOO_EARLY "ReactOS právì nastavuje toto zaøízení."
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS nemohl urèit zdroje tohoto zaøízení."
-    IDS_DEV_FAILED_INSTALL "Ovladaèe tohoto zaøízení nejsou naintalovány."
-    IDS_DEV_HARDWARE_DISABLED "Toto zaøízení je vypnuto, protoe mu BIOS nepøiøadil ádné zdroje."
-    IDS_DEV_CANT_SHARE_IRQ "Toto zaøízení vyuívá IRQ, které je vyuíváno jinım zaøízením a nemùe bıt sdíleno.\nJe potøeba zmìnit konfliktní nastavení nebo odebrat ovladaè zpùsobující konflikt."
-    IDS_DEV_FAILED_ADD "Toto zaøízení nepracuje správnì, protoe $1 nepracuje správnì."
-    IDS_DEV_DISABLED_SERVICE "ReactOS nemùe nainstalovat ovladaèe tohoto zaøízení, protoe nemá pøístup na disk nebo síové umístìní, na kterém se nacházejí instalaèní soubory."
-    IDS_DEV_TRANSLATION_FAILED "Toto zaøízení neodpovídá svému ovladaèi."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáe urèit nastavení tohoto zaøízení. Konzultujte manuál, kterı byl pøibalen k zaøízení a pouijte záloku ""Zdroje"" k vybrání nastavení."
-    IDS_DEV_BIOS_TABLE "Firmware tohoto poèítaèe nezahrnuje dost informací nutnıch pro správné nastavení a pouití tohoto zaøízení.\nAby bylo moné pouít toto zaøízení, kontaktujte vırobce poèítaèe k získání novìjší verze firmwaru nebo BIOSu."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Toto zaøízení poaduje PCI pøerušení, ale je konfigurováno pro ISA pøerušení (èi naopak).\nProsím, nastavte správnì pøerušení pro toto zaøízení."
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nemùe incializovat ovladaè zaøízení pro toto zaøízení."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS nemùe naèíst ovladaè pro toto zaøízení, protoe pøedchozí instance ovladaèe je stále v pamìti."
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS nemùe naèíst ovladaè pro toto zaøízení. Ovladaè mùe bıt poškozenı nebo chybìt."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS nemùe získat pøístup k tomuto zaøízení, protoe jeho service key informace v registru chybí nebo je zapsána nesprávnì."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS úspìšnì naèetl ovladaè zaøízení, ale nemùe najít zaøízení."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS nemùe naèíst ovladaè tohoto zaøízení, protoe v systému u je spuštìno duplicitní zaøízení."
-    IDS_DEV_FAILED_POST_START "ReactOS zastavil toto zaøízení, protoe zpùsobovalo problémy."
-    IDS_DEV_HALTED "Aplikace nebo sluba zastavila toto zaøízení."
-    IDS_DEV_PHANTOM "Toto zaøízení nyní není pøipojeno k poèítaèi."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS nemohl získat pøístup k tomuto zaøízení, protoe operaèní systém se právì vypíná."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS nemùe pouívat toto zaøízení, protoe bylo pøipraveno pro bezpeèné odebrání a ještì nebylo odebráno."
-    IDS_DEV_DRIVER_BLOCKED "Softwaru tohoto zaøízení nebylo dovoleno spuštìní, protoe zpùsobuje v systému ReactOS problémy. Kontaktujte prodejce pro novı ovladaè."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS nemùe spustit nové zaøízení, protoe systémová sloka registru je pøíliš velká (pøekraèuje limit velikosti registru)."
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS nedokázal zmìnit nastavení tohoto zaøízení."
+    IDS_DEV_NO_PROBLEM "Toto zaÅ™Ã­zenÃ­ funguje sprÃ¡vnÄ›."
+    IDS_DEV_NOT_CONFIGURED "Toto zaÅ™Ã­zenÃ­ nenÃ­ sprÃ¡vnÄ› nastaveno."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS nemohl naÄÃ­st ovladaÄ pro toto zaÅ™Ã­zenÃ­, protoÅ¾e poÄÃ­taÄ hlÃ¡sÃ­ dva typy sbÄ›rnice $1."
+    IDS_DEV_DEVLOADER_FAILED2 "Device loader $1 nemohl naÄÃ­st ovladaÄ tohoto zaÅ™Ã­zenÃ­."
+    IDS_DEV_OUT_OF_MEMORY "OvladaÄ tohoto zaÅ™Ã­zenÃ­ je poÅ¡kozenÃ½ nebo mÃ¡ systÃ©m mÃ¡lo pamÄ›ti Äi jinÃ½ch zdrojÅ¯."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Toto zaÅ™Ã­zenÃ­ nefunguje sprÃ¡vnÄ›, protoÅ¾e je Å¡patnÃ½ nÄ›kterÃ½ z jeho ovladaÄÅ¯ nebo registr."
+    IDS_DEV_LACKED_ARBITRATOR "OvladaÄ tohoto zaÅ™Ã­zenÃ­ poÅ¾aduje zdroj, kterÃ½ ReactOS neumÃ­ zpracovat."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Zdroje, kterÃ© toto zaÅ™Ã­zenÃ­ vyÅ¾aduje, jsou uÅ¾ pouÅ¾Ã­vÃ¡ny jinÃ½m zaÅ™Ã­zenÃ­m."
+    IDS_DEV_FAILED_FILTER "OvladaÄe tohoto zaÅ™Ã­zenÃ­ musÃ­ bÃ½t pÅ™einstalovÃ¡ny."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Toto zaÅ™Ã­zenÃ­ nefunguje sprÃ¡vnÄ›, protoÅ¾e ReactOS nedokÃ¡Å¾e naÄÃ­st soubor $1, kterÃ½ naÄÃ­tÃ¡ ovladaÄe pro toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Toto zaÅ™Ã­zenÃ­ nefunguje sprÃ¡vnÄ›, protoÅ¾e soubor $1, kterÃ½ naÄÃ­tÃ¡ ovladaÄe pro toto zaÅ™Ã­zenÃ­, je poÅ¡kozenÃ½."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "SelhÃ¡nÃ­ zaÅ™Ã­zenÃ­: Zkuste zmÄ›nit ovladaÄ tohoto zaÅ™Ã­zenÃ­ nebo konzultujte manuÃ¡l."
+    IDS_DEV_INVALID_DATA "Toto zaÅ™Ã­zenÃ­ nefunguje sprÃ¡vnÄ›, protoÅ¾e BIOS v poÄÃ­taÄi nesprÃ¡vnÄ› hlÃ¡sÃ­ zdroje zaÅ™Ã­zenÃ­."
+    IDS_DEV_INVALID_DATA2 "Toto zaÅ™Ã­zenÃ­ nefunguje sprÃ¡vnÄ›, protoÅ¾e BIOS v zaÅ™Ã­zenÃ­ nesprÃ¡vnÄ› hlÃ¡sÃ­ zdroje zaÅ™Ã­zenÃ­."
+    IDS_DEV_FAILED_START "ZaÅ™Ã­zenÃ­ nenÃ­ pÅ™Ã­tomno, nepracuje sprÃ¡vnÄ› nebo nemÃ¡ nainstalovanÃ© vÅ¡echny ovladaÄe."
+    IDS_DEV_LIAR "ReactOS pÅ™estal odpovÃ­dat pÅ™i pokusu o spuÅ¡tÄ›nÃ­ tohoto zaÅ™Ã­zenÃ­, a proto se nebude znovu pokouÅ¡et spustit zaÅ™Ã­zenÃ­."
+    IDS_DEV_NORMAL_CONFLICT "Toto zaÅ™Ã­zenÃ­ nedokÃ¡Å¾e nalÃ©zt volnÃ© $1 zdroje."
+    IDS_DEV_NOT_VERIFIED "ZaÅ™Ã­zenÃ­ nenÃ­ pÅ™Ã­tomno, nepracuje sprÃ¡vnÄ› nebo nemÃ¡ nainstalovanÃ© vÅ¡echny ovladaÄe."
+    IDS_DEV_NEED_RESTART "Toto zaÅ™Ã­zenÃ­ nebude pracovat sprÃ¡vnÄ›, dokud nebude poÄÃ­taÄ zrestartovÃ¡n."
+    IDS_DEV_REENUMERATION "Toto zaÅ™Ã­zenÃ­ zpÅ¯sobuje konflikt zdrojÅ¯."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS nedokÃ¡zal identifikovat vÅ¡echny zdroje, kterÃ© toto zaÅ™Ã­zenÃ­ uÅ¾Ã­vÃ¡."
+    IDS_DEV_UNKNOWN_RESOURCE "InformaÄnÃ­ soubor ovladaÄe $1 poÅ¾aduje po tomto zaÅ™Ã­zenÃ­ pouÅ¾itÃ­ zdroje, kterÃ½ jeho rodiÄovskÃ© zaÅ™Ã­zenÃ­ nemÃ¡ nebo nepoznÃ¡vÃ¡."
+    IDS_DEV_REINSTALL "OvladaÄe tohoto zaÅ™Ã­zenÃ­ musÃ­ bÃ½t pÅ™einstalovÃ¡ny."
+    IDS_DEV_REGISTRY "Registry jsou moÅ¾nÃ¡ poÅ¡kozeny."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS odstraÅˆuje toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_DISABLED "Toto zaÅ™Ã­zenÃ­ nenÃ­ spuÅ¡tÄ›no."
+    IDS_DEV_DISABLED2 "Toto zaÅ™Ã­zenÃ­ je vypnuto."
+    IDS_DEV_DEVLOADER_NOT_READY "Loadery tohoto zaÅ™Ã­zenÃ­ nemohou naÄÃ­st poÅ¾adovanÃ© ovladaÄe."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Tento zobrazovacÃ­ adaptÃ©r funguje sprÃ¡vnÄ›."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Loadery tohoto zaÅ™Ã­zenÃ­ nemohou naÄÃ­st poÅ¾adovanÃ© ovladaÄe."
+    IDS_DEV_DEVICE_NOT_THERE "ZaÅ™Ã­zenÃ­ nenÃ­ pÅ™Ã­tomno, nepracuje sprÃ¡vnÄ› nebo nemÃ¡ nainstalovanÃ© vÅ¡echny ovladaÄe."
+    IDS_DEV_MOVED "ReactOS prÃ¡vÄ› nastavuje toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_TOO_EARLY "ReactOS prÃ¡vÄ› nastavuje toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS nemohl urÄit zdroje tohoto zaÅ™Ã­zenÃ­."
+    IDS_DEV_FAILED_INSTALL "OvladaÄe tohoto zaÅ™Ã­zenÃ­ nejsou naintalovÃ¡ny."
+    IDS_DEV_HARDWARE_DISABLED "Toto zaÅ™Ã­zenÃ­ je vypnuto, protoÅ¾e mu BIOS nepÅ™iÅ™adil Å¾Ã¡dnÃ© zdroje."
+    IDS_DEV_CANT_SHARE_IRQ "Toto zaÅ™Ã­zenÃ­ vyuÅ¾Ã­vÃ¡ IRQ, kterÃ© je vyuÅ¾Ã­vÃ¡no jinÃ½m zaÅ™Ã­zenÃ­m a nemÅ¯Å¾e bÃ½t sdÃ­leno.\nJe potÅ™eba zmÄ›nit konfliktnÃ­ nastavenÃ­ nebo odebrat ovladaÄ zpÅ¯sobujÃ­cÃ­ konflikt."
+    IDS_DEV_FAILED_ADD "Toto zaÅ™Ã­zenÃ­ nepracuje sprÃ¡vnÄ›, protoÅ¾e $1 nepracuje sprÃ¡vnÄ›."
+    IDS_DEV_DISABLED_SERVICE "ReactOS nemÅ¯Å¾e nainstalovat ovladaÄe tohoto zaÅ™Ã­zenÃ­, protoÅ¾e nemÃ¡ pÅ™Ã­stup na disk nebo sÃ­Å¥ovÃ© umÃ­stÄ›nÃ­, na kterÃ©m se nachÃ¡zejÃ­ instalaÄnÃ­ soubory."
+    IDS_DEV_TRANSLATION_FAILED "Toto zaÅ™Ã­zenÃ­ neodpovÃ­dÃ¡ svÃ©mu ovladaÄi."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS nedokÃ¡Å¾e urÄit nastavenÃ­ tohoto zaÅ™Ã­zenÃ­. Konzultujte manuÃ¡l, kterÃ½ byl pÅ™ibalen k zaÅ™Ã­zenÃ­ a pouÅ¾ijte zÃ¡loÅ¾ku ""Zdroje"" k vybrÃ¡nÃ­ nastavenÃ­."
+    IDS_DEV_BIOS_TABLE "Firmware tohoto poÄÃ­taÄe nezahrnuje dost informacÃ­ nutnÃ½ch pro sprÃ¡vnÃ© nastavenÃ­ a pouÅ¾itÃ­ tohoto zaÅ™Ã­zenÃ­.\nAby bylo moÅ¾nÃ© pouÅ¾Ã­t toto zaÅ™Ã­zenÃ­, kontaktujte vÃ½robce poÄÃ­taÄe k zÃ­skÃ¡nÃ­ novÄ›jÅ¡Ã­ verze firmwaru nebo BIOSu."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Toto zaÅ™Ã­zenÃ­ poÅ¾aduje PCI pÅ™eruÅ¡enÃ­, ale je konfigurovÃ¡no pro ISA pÅ™eruÅ¡enÃ­ (Äi naopak).\nProsÃ­m, nastavte sprÃ¡vnÄ› pÅ™eruÅ¡enÃ­ pro toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nemÅ¯Å¾e incializovat ovladaÄ zaÅ™Ã­zenÃ­ pro toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS nemÅ¯Å¾e naÄÃ­st ovladaÄ pro toto zaÅ™Ã­zenÃ­, protoÅ¾e pÅ™edchozÃ­ instance ovladaÄe je stÃ¡le v pamÄ›ti."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS nemÅ¯Å¾e naÄÃ­st ovladaÄ pro toto zaÅ™Ã­zenÃ­. OvladaÄ mÅ¯Å¾e bÃ½t poÅ¡kozenÃ½ nebo chybÄ›t."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS nemÅ¯Å¾e zÃ­skat pÅ™Ã­stup k tomuto zaÅ™Ã­zenÃ­, protoÅ¾e jeho service key informace v registru chybÃ­ nebo je zapsÃ¡na nesprÃ¡vnÄ›."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS ÃºspÄ›Å¡nÄ› naÄetl ovladaÄ zaÅ™Ã­zenÃ­, ale nemÅ¯Å¾e najÃ­t zaÅ™Ã­zenÃ­."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS nemÅ¯Å¾e naÄÃ­st ovladaÄ tohoto zaÅ™Ã­zenÃ­, protoÅ¾e v systÃ©mu uÅ¾ je spuÅ¡tÄ›no duplicitnÃ­ zaÅ™Ã­zenÃ­."
+    IDS_DEV_FAILED_POST_START "ReactOS zastavil toto zaÅ™Ã­zenÃ­, protoÅ¾e zpÅ¯sobovalo problÃ©my."
+    IDS_DEV_HALTED "Aplikace nebo sluÅ¾ba zastavila toto zaÅ™Ã­zenÃ­."
+    IDS_DEV_PHANTOM "Toto zaÅ™Ã­zenÃ­ nynÃ­ nenÃ­ pÅ™ipojeno k poÄÃ­taÄi."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS nemohl zÃ­skat pÅ™Ã­stup k tomuto zaÅ™Ã­zenÃ­, protoÅ¾e operaÄnÃ­ systÃ©m se prÃ¡vÄ› vypÃ­nÃ¡."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS nemÅ¯Å¾e pouÅ¾Ã­vat toto zaÅ™Ã­zenÃ­, protoÅ¾e bylo pÅ™ipraveno pro bezpeÄnÃ© odebrÃ¡nÃ­ a jeÅ¡tÄ› nebylo odebrÃ¡no."
+    IDS_DEV_DRIVER_BLOCKED "Softwaru tohoto zaÅ™Ã­zenÃ­ nebylo dovoleno spuÅ¡tÄ›nÃ­, protoÅ¾e zpÅ¯sobuje v systÃ©mu ReactOS problÃ©my. Kontaktujte prodejce pro novÃ½ ovladaÄ."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS nemÅ¯Å¾e spustit novÃ© zaÅ™Ã­zenÃ­, protoÅ¾e systÃ©movÃ¡ sloÅ¾ka registru je pÅ™Ã­liÅ¡ velkÃ¡ (pÅ™ekraÄuje limit velikosti registru)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS nedokÃ¡zal zmÄ›nit nastavenÃ­ tohoto zaÅ™Ã­zenÃ­."
 END
 
 STRINGTABLE
@@ -126,76 +126,76 @@ IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Zaøízení:",IDC_DEVICES,7,6,196,10
+    LTEXT           "&ZaÅ™Ã­zenÃ­:",IDC_DEVICES,7,6,196,10
     CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
                     LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
-    GROUPBOX        "Vlastnosti zaøízení",IDC_PROPERTIESGROUP,7,76,196,105
+    GROUPBOX        "Vlastnosti zaÅ™Ã­zenÃ­",IDC_PROPERTIESGROUP,7,76,196,105
     LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_STATUS,14,112,183,30
-    PUSHBUTTON      "Ø&ešení problémù...",IDC_TROUBLESHOOT,85,140,54,14,
+    PUSHBUTTON      "Å˜&eÅ¡enÃ­ problÃ©mÅ¯...",IDC_TROUBLESHOOT,85,140,54,14,
                     BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
     PUSHBUTTON      "Vlas&tnosti",IDC_PROPERTIES,146,140,50,14
 END
 
 IDD_DEVICEGENERAL DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Obecné"
+CAPTION "ObecnÃ©"
 FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Typ zaøízení:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Typ zaÅ™Ã­zenÃ­:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Vırobce:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "VÃ½robce:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Umístìní:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "UmÃ­stÄ›nÃ­:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     GROUPBOX "Stav zaøízení", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+     GROUPBOX "Stav zaÅ™Ã­zenÃ­", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
      EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-     PUSHBUTTON "Ø&ešení problémù...", IDC_DEVPROBLEM, 148, 163, 90, 15
-     LTEXT "Vyuití &zaøízení:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+     PUSHBUTTON "Å˜&eÅ¡enÃ­ problÃ©mÅ¯...", IDC_DEVPROBLEM, 148, 163, 90, 15
+     LTEXT "VyuÅ¾itÃ­ &zaÅ™Ã­zenÃ­:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
      COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ovladaè"
+CAPTION "OvladaÄ"
 FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Zprostøedkovatel:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "ZprostÅ™edkovatel:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Datum ovladaèe:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "Datum ovladaÄe:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Verze ovladaèe:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Verze ovladaÄe:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Digitální podpis:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     LTEXT "DigitÃ¡lnÃ­ podpis:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     PUSHBUTTON "&Detaily ovladaèe...", IDC_DRIVERDETAILS, 7, 106, 70, 15
-     LTEXT "Zobrazí detaily souborù ovladaèe.", -1, 91, 110, 154, 17, SS_NOPREFIX
+     PUSHBUTTON "&Detaily ovladaÄe...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "ZobrazÃ­ detaily souborÅ¯ ovladaÄe.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detaily souborù ovladaèe"
+CAPTION "Detaily souborÅ¯ ovladaÄe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Soubory ovla&daèe:", -1, 7, 36, 204, 8
+    LTEXT "Soubory ovla&daÄe:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Zprostøedkovatel:", -1, 14, 134, 66, 8
+    LTEXT "ZprostÅ™edkovatel:", -1, 14, 134, 66, 8
     EDITTEXT IDC_FILEPROVIDER, 80, 134, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Verze souboru:", -1, 14, 150, 66, 8
     EDITTEXT IDC_FILEVERSION, 80, 150, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Autorská práva:", -1, 14, 166, 66, 8
+    LTEXT "AutorskÃ¡ prÃ¡va:", -1, 14, 166, 66, 8
     EDITTEXT IDC_FILECOPYRIGHT, 80, 166, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Digitální podpis:", -1, 14, 182, 66, 8
+    LTEXT "DigitÃ¡lnÃ­ podpis:", -1, 14, 182, 66, 8
     EDITTEXT IDC_DIGITALSIGNER, 80, 182, 137, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
 END
@@ -215,7 +215,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Prostøedky"
+CAPTION "ProstÅ™edky"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -224,7 +224,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Napájení"
+CAPTION "NapÃ¡jenÃ­"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

@@ -34,6 +34,8 @@ IDR_GPL RT_TEXT "COPYING"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
+// UTF-8
+#pragma code_page(65001)
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -67,29 +69,20 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
-#ifdef LANGUAGE_PT_BR
-    #include "lang/pt-BR.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/sk-SK.rc"
-#endif
-#ifdef LANGUAGE_ZH_CN
-    #include "lang/zh-CN.rc"
-#endif
-
-// UTF-8
-#pragma code_page(65001)
-#ifdef LANGUAGE_JA_JP
-    #include "lang/ja-JP.rc"
-#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
@@ -97,6 +90,12 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
 #endif

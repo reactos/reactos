@@ -1,5 +1,5 @@
 /*
- *Spanish Language resource file
+ * Spanish Language resource file
  * Traducido por: Javier Remacha 2008-01-12
  */
 
@@ -33,7 +33,7 @@ BEGIN
 	CONTROL "Aceptar",IDC_OKBTN,"Button",0x50010000,98,156,56,13,0x00000000
 	CONTROL "Cancelar",IDC_CANCELBTN,"Button",0x50010000,158,156,56,13,0x00000000
 	CONTROL "Baud ratio:",IDC_STC1,"Static",0x50000000,24,31,42,9,0x00000000
-	CONTROL "Byte tamaño:",IDC_STC2,"Static",0x50000000,24,53,42,9,0x00000000
+	CONTROL "Byte tamaÃ±o:",IDC_STC2,"Static",0x50000000,24,53,42,9,0x00000000
 	CONTROL "Igualdad:",IDC_STC3,"Static",0x50000000,24,73,42,9,0x00000000
 	CONTROL "Stop bits:",IDC_STC4,"Static",0x50000000,24,96,42,9,0x00000000
 	CONTROL "Control flujo:",IDC_STC5,"Static",0x50000000,24,120,42,9,0x00000000

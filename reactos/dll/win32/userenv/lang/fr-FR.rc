@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Hervé Poussineau
+ * Copyright (C) 2005 HervÃ© Poussineau
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,19 +24,19 @@ BEGIN
     IDS_APPDATA        "Application Data"
     IDS_DESKTOP        "Bureau"
     IDS_FAVORITES      "Favoris"
-    IDS_STARTMENU      "Menu Démarrer"
-    IDS_PROGRAMS       "Menu Démarrer\\Programmes"
-    IDS_ADMINTOOLS     "Menu Démarrer\\Programmes\\Outils d'administration"
-    IDS_STARTUP        "Menu Démarrer\\Programmes\\Démarrage"
+    IDS_STARTMENU      "Menu DÃ©marrer"
+    IDS_PROGRAMS       "Menu DÃ©marrer\\Programmes"
+    IDS_ADMINTOOLS     "Menu DÃ©marrer\\Programmes\\Outils d'administration"
+    IDS_STARTUP        "Menu DÃ©marrer\\Programmes\\DÃ©marrage"
     IDS_MYDOCUMENTS    "Mes documents"
     IDS_MYPICTURES     "Mes documents\\Mes photos"
     IDS_MYMUSIC        "Mes documents\\Ma musique"
-    IDS_MYVIDEOS       "Mes documents\\Mes vidéos"
-    IDS_TEMPLATES      "Modèles"
+    IDS_MYVIDEOS       "Mes documents\\Mes vidÃ©os"
+    IDS_TEMPLATES      "ModÃ¨les"
     IDS_RECENT         "Recent"
     IDS_SENDTO         "SendTo"
     IDS_PRINTHOOD      "Voisinage d'impression"
-    IDS_NETHOOD        "Voisinage réseau"
+    IDS_NETHOOD        "Voisinage rÃ©seau"
     IDS_LOCALSETTINGS  "Local Settings"
     IDS_LOCALAPPDATA   "Local Settings\\Application Data"
     IDS_TEMP           "Local Settings\\Temp"

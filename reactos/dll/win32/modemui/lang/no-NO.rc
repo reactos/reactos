@@ -39,14 +39,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Port:", 1018, 9, 8, 32, 10
 	LTEXT "Com port", 1095, 48, 8, 181, 10
-	GROUPBOX "&Høytaller volum", 1029, 10, 21, 218, 48
+	GROUPBOX "&HÃ¸ytaller volum", 1029, 10, 21, 218, 48
 	CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
 	RTEXT "Av", 1045, 56, 40, 22, 8
-	LTEXT "Høyt", 1001, 155, 40, 25, 11
+	LTEXT "HÃ¸yt", 1001, 155, 40, 25, 11
 	GROUPBOX "&Maksimum port hastighet", 1031, 10, 78, 218, 46
 	COMBOBOX 1036, 18, 100, 202, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	GROUPBOX "Dial Kontroll", 1060, 10, 133, 218, 51
-	AUTOCHECKBOX "&Vent for dial tone før nummerslåing", 1003, 27, 157, 174, 10
+	AUTOCHECKBOX "&Vent for dial tone fÃ¸r nummerslÃ¥ing", 1003, 27, 157, 174, 10
 END
 
 IDD_DISTINCTIVE_RING DIALOGEX 0, 0, 238, 210
@@ -169,7 +169,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Endre &type", -1, 11, 6, 217, 39
 	COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "&Først nummer", -1, 11, 50, 217, 50
+	GROUPBOX "&FÃ¸rst nummer", -1, 11, 50, 217, 50
 	EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
 	LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
 	EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
@@ -207,7 +207,7 @@ CAPTION "Modemer"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 5100, 1057, 6, 7, 20, 20
-	LTEXT "Følgende &modemer er innstallert:", -1, 44, 12, 203, 9
+	LTEXT "FÃ¸lgende &modemer er innstallert:", -1, 44, 12, 203, 9
 	CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
 	PUSHBUTTON "L&egg til...", 110, 56, 198, 60, 14
 	PUSHBUTTON "&Fjern", 112, 121, 198, 60, 14
@@ -273,7 +273,7 @@ BEGIN
 	302 "Faks"
 	303 "Stemme"
 	304 "Ingen"
-	320 "Språk/region innstilling oppdatert"
+	320 "SprÃ¥k/region innstilling oppdatert"
 	340 "Modem"
 	341 "Modem innstilling"
 	342 "Modem addresse"
@@ -387,7 +387,7 @@ BEGIN
 	3221 "115K Baud"
 	3222 "Oppdaterer"
 	3223 "Feil"
-	3233 "Fullført"
+	3233 "FullfÃ¸rt"
 	3236 "The modem failed to respond. Make sure it is properly connected and turned on.  If it is an internal modem or is connected, verify that the interrupt for the port is properly set."
 	3237 "COMMAND NOT SUPPORTED"
 	3238 "Field"

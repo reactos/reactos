@@ -54,18 +54,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Поддежка"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Статус подключения", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Тип адреса:", -1, 22, 20, 80, 8
- LTEXT "IP адрес:", -1, 22, 34, 80, 8
- LTEXT "Маска подсети:", -1, 22, 48, 80, 8
- LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
+    GROUPBOX "Статус подключения", -1, 9, 8, 200, 88, BS_GROUPBOX
+    LTEXT "Тип адреса:", -1, 22, 20, 80, 8
+    LTEXT "IP адрес:", -1, 22, 34, 80, 8
+    LTEXT "Маска подсети:", -1, 22, 48, 80, 8
+    LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
 
- RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
- RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+    RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
- PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
+    PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200, 172
@@ -73,53 +73,53 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Детали сетевого подключения"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "&Дополнительные сведения о сети:", -1, 5, 4, 170, 12
- CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 5, 17, 190, 130
- PUSHBUTTON "&Закрыть", IDC_CLOSE, 132, 153, 62, 14
+    LTEXT "&Дополнительные сведения о сети:", -1, 5, 4, 170, 12
+    CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 5, 17, 190, 130
+    PUSHBUTTON "&Закрыть", IDC_CLOSE, 132, 153, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Физический адрес"
-	IDS_IP_ADDRESS              "IP-адрес"
-	IDS_SUBNET_MASK             "Маска подсети"
-	IDS_DEF_GATEWAY             "Основной шлюз"
-	IDS_DHCP_SERVER             "DHCP-сервер"
-	IDS_LEASE_OBTAINED          "Аренда получена"
-	IDS_LEASE_EXPIRES           "Аренда истекает"
-	IDS_DNS_SERVERS             "DNS-серверы"
-	IDS_WINS_SERVERS            "WINS-сервер"
-	IDS_PROPERTY                "Свойство"
-	IDS_VALUE                   "Значение"
-	IDS_NETWORKCONNECTION       "Сетевые подключения"
-	IDS_SHV_COLUMN_NAME         "Имя"
-	IDS_SHV_COLUMN_TYPE         "Тип"
-	IDS_SHV_COLUMN_STATE        "Состояние"
-	IDS_SHV_COLUMN_DEVNAME      "Имя устройства"
-	IDS_SHV_COLUMN_PHONE        "Номер телефона или адрес узла"
-	IDS_SHV_COLUMN_OWNER        "Владелец"
-	IDS_TYPE_ETHERNET           "ЛВС или высокоскоростной Интернет"
-	IDS_STATUS_NON_OPERATIONAL  "Отключено"
-	IDS_STATUS_UNREACHABLE      "Отключено"
-	IDS_STATUS_DISCONNECTED     "Сетевой кабель не подключен"
-	IDS_STATUS_CONNECTING       "Получение сетевого адреса"
-	IDS_STATUS_CONNECTED        "Подключено"
-	IDS_STATUS_OPERATIONAL      "Подключено"
+    IDS_PHYSICAL_ADDRESS        "Физический адрес"
+    IDS_IP_ADDRESS              "IP-адрес"
+    IDS_SUBNET_MASK             "Маска подсети"
+    IDS_DEF_GATEWAY             "Основной шлюз"
+    IDS_DHCP_SERVER             "DHCP-сервер"
+    IDS_LEASE_OBTAINED          "Аренда получена"
+    IDS_LEASE_EXPIRES           "Аренда истекает"
+    IDS_DNS_SERVERS             "DNS-серверы"
+    IDS_WINS_SERVERS            "WINS-сервер"
+    IDS_PROPERTY                "Свойство"
+    IDS_VALUE                   "Значение"
+    IDS_NETWORKCONNECTION       "Сетевые подключения"
+    IDS_SHV_COLUMN_NAME         "Имя"
+    IDS_SHV_COLUMN_TYPE         "Тип"
+    IDS_SHV_COLUMN_STATE        "Состояние"
+    IDS_SHV_COLUMN_DEVNAME      "Имя устройства"
+    IDS_SHV_COLUMN_PHONE        "Номер телефона или адрес узла"
+    IDS_SHV_COLUMN_OWNER        "Владелец"
+    IDS_TYPE_ETHERNET           "ЛВС или высокоскоростной Интернет"
+    IDS_STATUS_NON_OPERATIONAL  "Отключено"
+    IDS_STATUS_UNREACHABLE      "Отключено"
+    IDS_STATUS_DISCONNECTED     "Сетевой кабель не подключен"
+    IDS_STATUS_CONNECTING       "Получение сетевого адреса"
+    IDS_STATUS_CONNECTED        "Подключено"
+    IDS_STATUS_OPERATIONAL      "Подключено"
 
-	IDS_NET_ACTIVATE            "Включить"
-	IDS_NET_DEACTIVATE          "Отключить"
-	IDS_NET_STATUS              "Состояние"
-	IDS_NET_REPAIR              "Исправить"
-	IDS_NET_CREATELINK          "Создать ярлык"
-	IDS_NET_DELETE              "Удалить"
-	IDS_NET_PROPERTIES          "Свойства"
+    IDS_NET_ACTIVATE            "Включить"
+    IDS_NET_DEACTIVATE          "Отключить"
+    IDS_NET_STATUS              "Состояние"
+    IDS_NET_REPAIR              "Исправить"
+    IDS_NET_CREATELINK          "Создать ярлык"
+    IDS_NET_DELETE              "Удалить"
+    IDS_NET_PROPERTIES          "Свойства"
 
-	IDS_FORMAT_BIT              "%u бит/с"
-	IDS_FORMAT_KBIT             "%u Кбит/с"
-	IDS_FORMAT_MBIT             "%u Мбит/с"
-	IDS_FORMAT_GBIT             "%u Гбит/с"
-	IDS_DURATION_DAY            "%d день %s"
-	IDS_DURATION_DAYS           "%d дней %s"
-	IDS_ASSIGNED_DHCP           "Присвоен DHCP"
-	IDS_ASSIGNED_MANUAL         "Настроен вручную"
+    IDS_FORMAT_BIT              "%u бит/с"
+    IDS_FORMAT_KBIT             "%u Кбит/с"
+    IDS_FORMAT_MBIT             "%u Мбит/с"
+    IDS_FORMAT_GBIT             "%u Гбит/с"
+    IDS_DURATION_DAY            "%d день %s"
+    IDS_DURATION_DAYS           "%d дней %s"
+    IDS_ASSIGNED_DHCP           "Присвоен DHCP"
+    IDS_ASSIGNED_MANUAL         "Настроен вручную"
 END

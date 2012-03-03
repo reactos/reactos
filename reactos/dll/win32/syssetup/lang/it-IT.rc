@@ -1,11 +1,9 @@
 /*
  * PROJECT:     System Setup
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/syssetup_It.rc
- * PURPOSE:     Italian Translation of dll/win32/syssetup/syssetup_En.rc
- * PROGRAMMERS: Copyright (C) 2004 Filip Navara
- *              Copyright (C) 2004 Eric Kohl
- *              Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
+ * FILE:        dll/win32/syssetup/lang/it-IT.rc
+ * PURPOSE:     Italian Translation of dll/win32/syssetup/lang/en-US.rc
+ * TRANSLATOR:  Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -31,7 +29,7 @@ BEGIN
                     IDC_STATIC,20,7,286,19
     LISTBOX         IDC_PROJECTS,20,30,280,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS Ë soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo (in tutto o in parte) Ë necessario rispettare la GPL",
+    LTEXT           "ReactOS √® soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo (in tutto o in parte) √® necessario rispettare la GPL",
                     IDC_STATIC,20,110,217,22
     PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,241,110,60,19
     LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,20,136,
@@ -60,12 +58,12 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\nSe si Ë in rete, il nome del computer deve essere univoco.",
+    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\nSe si √® in rete, il nome del computer deve essere univoco.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nome del &computer:", IDC_STATIC, 29, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Questa procedura creer‡ su questo computer un account utente chiamato Administrator. Si potr‡ usare questo account se si necessita l'accesso completo al computer.",
+    LTEXT "Questa procedura creer√† su questo computer un account utente chiamato Administrator. Si potr√† usare questo account se si necessita l'accesso completo al computer.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
           IDC_STATIC, 26, 87, 280, 8
@@ -129,13 +127,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "L'installazione di ReactOS Ë completata"
+CAPTION "L'installazione di ReactOS √® completata"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completamento della procedura guidata di installazione di ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "La procedura guidata di installazione di ReactOS Ë completata.\n\nSelezionando Fine, il computer sar‡ riavviato.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "La procedura guidata di installazione di ReactOS √® completata.\n\nSelezionando Fine, il computer sar√† riavviato.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Se c'Ë un CD in un lettore, Ë necessario rimuoverlo. Poi, per riavviare il computer, selezionare Fine.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Se c'√® un CD in un lettore, √® necessario rimuoverlo. Poi, per riavviare il computer, selezionare Fine.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -166,9 +164,9 @@ BEGIN
     IDS_OWNERTITLE       "Personalizzare il software"
     IDS_OWNERSUBTITLE    "La procedura usa queste informazioni su di voi per personalizzare ReactOS."
     IDS_COMPUTERTITLE    "Il nome del computer e la password di Administrator"
-    IDS_COMPUTERSUBTITLE "» necessario fornire un nome e una password di Administrator per il proprio computer."
+    IDS_COMPUTERSUBTITLE "√à necessario fornire un nome e una password di Administrator per il proprio computer."
     IDS_LOCALETITLE      "Impostazioni regionali"
-    IDS_LOCALESUBTITLE   "» possibile personalizzare ReactOS per regioni e lingue differenti."
+    IDS_LOCALESUBTITLE   "√à possibile personalizzare ReactOS per regioni e lingue differenti."
     IDS_DATETIMETITLE    "Data e ora"
     IDS_DATETIMESUBTITLE "Impostare la data e l'ora corrette per il proprio computer."
     IDS_PROCESSTITLE     "Registrazione dei componenti"
@@ -216,7 +214,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibilit‡"
+	IDS_SYS_ACCESSIBILITY        "Accessibilit√†"
 	IDS_CMT_MAGNIFY      	     "Ingrandisci"
 END
 
@@ -271,9 +269,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME            "La procedura di installazione non puÚ proseguire se non indicate il vostro nome."
+    IDS_WZD_NAME            "La procedura di installazione non pu√≤ proseguire se non indicate il vostro nome."
     IDS_WZD_SETCOMPUTERNAME "La procedura di installazione non ha potuto impostare il nome del computer."
-    IDS_WZD_COMPUTERNAME    "La procedura di installazione non puÚ proseguire se non indicate il nome del computer."
+    IDS_WZD_COMPUTERNAME    "La procedura di installazione non pu√≤ proseguire se non indicate il nome del computer."
     IDS_WZD_PASSWORDEMPTY   "E' obbligatorio impostare la password !"
     IDS_WZD_PASSWORDMATCH   "Le due password digitate non corrispondono. Digitate di nuovo le password."
     IDS_WZD_PASSWORDCHAR    "La password contiene caratteri non validi. Digitate una password diversa."

@@ -2,7 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Почакайте..."
+CAPTION "РџРѕС‡Р°РєР°Р№С‚Рµ..."
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -10,48 +10,48 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0, 0, 186, 32
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "РеактОС ви приветства"
+CAPTION "Р РµР°РєС‚РћРЎ РІРё РїСЂРёРІРµС‚СЃС‚РІР°"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
-    LTEXT           "Натиснете едновременно Ctrl-Alt-Del",IDC_STATIC,38, 10, 144, 14
+    LTEXT           "РќР°С‚РёСЃРЅРµС‚Рµ РµРґРЅРѕРІСЂРµРјРµРЅРЅРѕ Ctrl-Alt-Del",IDC_STATIC,38, 10, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Вход"
+CAPTION "Р’С…РѕРґ"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,59
-    LTEXT           "Потребител:",IDC_STATIC,36,75,45,8
+    LTEXT           "РџРѕС‚СЂРµР±РёС‚РµР»:",IDC_STATIC,36,75,45,8
     EDITTEXT        IDC_USERNAME,84,72,119,14,ES_AUTOHSCROLL
-    LTEXT           "Парола:",IDC_STATIC,36,93,42,8
+    LTEXT           "РџР°СЂРѕР»Р°:",IDC_STATIC,36,93,42,8
     EDITTEXT        IDC_PASSWORD,84,91,119,14,ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON      "Добре",IDOK,51,122,50,14,BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Отказ",IDCANCEL,115,122,50,14
-    PUSHBUTTON      "Изключване",IDC_SHUTDOWN,179,122,50,14
+    PUSHBUTTON      "Р”РѕР±СЂРµ",IDOK,51,122,50,14,BS_DEFPUSHBUTTON
+    PUSHBUTTON      "РћС‚РєР°Р·",IDCANCEL,115,122,50,14
+    PUSHBUTTON      "РР·РєР»СЋС‡РІР°РЅРµ",IDC_SHUTDOWN,179,122,50,14
 END
 
 IDD_LOGGEDON_DLG DIALOGEX 0,0,247,116
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
-CAPTION "Сигурност"
+CAPTION "РЎРёРіСѓСЂРЅРѕСЃС‚"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,247,53
-    LTEXT           "Какво желаете?",IDC_STATIC,86,60,87,8
-    PUSHBUTTON      "Заключване на компютъра",IDC_LOCK,25,95,99,14
-    PUSHBUTTON      "Изход",IDC_LOGOFF,90,76,75,14
-    PUSHBUTTON      "Изключване",IDC_SHUTDOWN,170,76,75,14
-    PUSHBUTTON      "Задачен управител",IDC_TASKMGR,10,76,75,14
-    PUSHBUTTON      "Отказ",IDCANCEL,130,95,99,14
+    LTEXT           "РљР°РєРІРѕ Р¶РµР»Р°РµС‚Рµ?",IDC_STATIC,86,60,87,8
+    PUSHBUTTON      "Р—Р°РєР»СЋС‡РІР°РЅРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°",IDC_LOCK,25,95,99,14
+    PUSHBUTTON      "РР·С…РѕРґ",IDC_LOGOFF,90,76,75,14
+    PUSHBUTTON      "РР·РєР»СЋС‡РІР°РЅРµ",IDC_SHUTDOWN,170,76,75,14
+    PUSHBUTTON      "Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»",IDC_TASKMGR,10,76,75,14
+    PUSHBUTTON      "РћС‚РєР°Р·",IDCANCEL,130,95,99,14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LOGGEDOUTSAS "Здравейте!"
-    IDS_LOCKEDSAS "Компютърът е заключен."
-    IDS_PRESSCTRLALTDELETE "Натиснете Control+Alt+Del за да влезете."
-    IDS_ASKFORUSER "Потребителско име: "
-    IDS_ASKFORPASSWORD "Парола: "
-    IDS_FORCELOGOFF "Така текущият потребител ще излезе и ще изгуби всички несъхранени данни. Да продължа ли?"
+    IDS_LOGGEDOUTSAS "Р—РґСЂР°РІРµР№С‚Рµ!"
+    IDS_LOCKEDSAS "РљРѕРјРїСЋС‚СЉСЂСЉС‚ Рµ Р·Р°РєР»СЋС‡РµРЅ."
+    IDS_PRESSCTRLALTDELETE "РќР°С‚РёСЃРЅРµС‚Рµ Control+Alt+Del Р·Р° РґР° РІР»РµР·РµС‚Рµ."
+    IDS_ASKFORUSER "РџРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РёРјРµ: "
+    IDS_ASKFORPASSWORD "РџР°СЂРѕР»Р°: "
+    IDS_FORCELOGOFF "РўР°РєР° С‚РµРєСѓС‰РёСЏС‚ РїРѕС‚СЂРµР±РёС‚РµР» С‰Рµ РёР·Р»РµР·Рµ Рё С‰Рµ РёР·РіСѓР±Рё РІСЃРёС‡РєРё РЅРµСЃСЉС…СЂР°РЅРµРЅРё РґР°РЅРЅРё. Р”Р° РїСЂРѕРґСЉР»Р¶Р° Р»Рё?"
 END

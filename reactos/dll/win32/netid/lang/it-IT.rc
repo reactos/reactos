@@ -54,14 +54,14 @@ BEGIN
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
     PUSHBUTTON "Annulla", 2, 209, 104, 50, 14
-    LTEXT "Questo nome Ë usato per compatibilit‡ con vecchi servizi o computer.", 13, 7, 88, 253, 8
+    LTEXT "Questo nome √® usato per compatibilit√† con vecchi servizi o computer.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
     1 "* sconosciuto *"
     2 "WORKGROUP"
-    3 "L'errore seguente si Ë verificato durante il tentativo di lettura delle informazioni di iscrizione al Dominio:"
+    3 "L'errore seguente si √® verificato durante il tentativo di lettura delle informazioni di iscrizione al Dominio:"
     4 "Modifiche al nome del Computer "
     5 "Gruppo di lavoro:"
     6 "Dominio:"
@@ -70,7 +70,7 @@ BEGIN
     24 "Il computer deve essere riavviato per rendere operative queste modifiche."
     25 "Potete modificare il nome e il dominio di questo computer. Le modifiche potrebbero influenzare l'accesso alle risorse di rete."
     1021 "Nota: Solo gli Amministratori possono cambiare l'identificazione di questo computer."
-    1022 "Nota: L'identificazione di questo computer non puÚ essere cambiata perchË:"
+    1022 "Nota: L'identificazione di questo computer non pu√≤ essere cambiata perch√®:"
     1030 "Il nuovo nome del computer ""%s"" contiene dei caratteri non permessi. I caratteri vietati sono `? ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / "
     3210 "&Dettagli >>"
     3220 "<< &Dettagli"

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2004 Filip Navara
  * Copyright (C) 2004 Eric Kohl
- * Copyright (C) 2004 Hervé Poussineau
+ * Copyright (C) 2004 HervÃ© Poussineau
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, (ou seulement des composants) qui ont été utilisés pour créer ReactOS :",
+    LTEXT           "Les dÃ©veloppeurs de ReactOS voudraient prÃ©senter les projets Open Source suivants, (ou seulement des composants) qui ont Ã©tÃ© utilisÃ©s pour crÃ©er ReactOS :",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer (ou seulement des composants) vous devez respecter la GPL",
+    LTEXT           "ReactOS est sous license GPL, ainsi si vous voulez le rÃ©utiliser ou le redistribuer (ou seulement des composants) vous devez respecter la GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Voir la GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Cliquez sur Suivant pour continuer l'installation.",IDC_STATIC,15,136,
@@ -55,11 +55,11 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Entrez votre nom complet et le nom de votre société.",
+    LTEXT "Entrez votre nom complet et le nom de votre sociÃ©tÃ©.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Nom :", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Société :", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&SociÃ©tÃ© :", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -70,14 +70,14 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Entrez un nom pour votre ordinateur de 15 caractères ou moins. Si vous êtes sur un réseau, le nom saisi doit être unique.",
+    LTEXT "Entrez un nom pour votre ordinateur de 15 caractÃ¨res ou moins. Si vous Ãªtes sur un rÃ©seau, le nom saisi doit Ãªtre unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nom de l'ordinateur :", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "L'assistant va créer un compte utilisateur sur votre ordinateur appelé Administrateur. Vous pourrez utiliser ce compte pour avoir un accès complet à votre ordinateur.",
+    LTEXT "L'assistant va crÃ©er un compte utilisateur sur votre ordinateur appelÃ© Administrateur. Vous pourrez utiliser ce compte pour avoir un accÃ¨s complet Ã  votre ordinateur.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Entrez le mot de passe Administrateur (14 caractères ou moins).",
+    LTEXT "Entrez le mot de passe Administrateur (14 caractÃ¨res ou moins).",
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Mot de passe :", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -92,12 +92,12 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "La localisation systÃ¨me correspond Ã  la langue souhaitÃ©e pour les applications. Elle contrÃ´le la maniÃ¨re dont les nombres, monnaies et dates sont affichÃ©es.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Pour changer la localisation système, cliquez sur Modifier.",
+    LTEXT "Pour changer la localisation systÃ¨me, cliquez sur Modifier.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modifier...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "La configuration clavier contrôle la saisie des touches quand vous tapez.",
+    LTEXT "La configuration clavier contrÃ´le la saisie des touches quand vous tapez.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pour changer la configuration clavier, cliquez sur Modifier.",
@@ -120,7 +120,7 @@ BEGIN
     LTEXT "Fuseau horaire :", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ajuster automatiquement l'horloge pour l'heure &d'été",
+    AUTOCHECKBOX "Ajuster automatiquement l'horloge pour l'heure &d'Ã©tÃ©",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
@@ -141,10 +141,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'assistant d'installation de ReactOS est terminé.",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Vous avez installé avec succès ReactOS.\n\nEn cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "L'assistant d'installation de ReactOS est terminÃ©.",IDC_FINISHTITLE,115,9,195,37
+    LTEXT "Vous avez installÃ© avec succÃ¨s ReactOS.\n\nEn cliquant sur Terminer, votre ordinateur va redÃ©marrer.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redÃ©marrer votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
 END
 
 
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Remerciements"
-    IDS_ACKSUBTITLE      "Les épaules sur lesquelles repose ReactOS et informations sur la licence"
+    IDS_ACKSUBTITLE      "Les Ã©paules sur lesquelles repose ReactOS et informations sur la licence"
     IDS_OWNERTITLE       "Personnalisez votre logiciel"
     IDS_OWNERSUBTITLE    "L'installation utilise ces information sur vous pour personnaliser ReactOS."
     IDS_COMPUTERTITLE    "Nom de l'ordinateur et mot de passe Administrateur"
     IDS_COMPUTERSUBTITLE "Vous devez fournir un nom et un mot de passe Administrateur pour votre ordinateur."
-    IDS_LOCALETITLE      "Options régionales"
-    IDS_LOCALESUBTITLE   "Vous pouvez modifier ReactOS pour différentes régions et langues."
+    IDS_LOCALETITLE      "Options rÃ©gionales"
+    IDS_LOCALESUBTITLE   "Vous pouvez modifier ReactOS pour diffÃ©rentes rÃ©gions et langues."
     IDS_DATETIMETITLE    "Date et Heure"
     IDS_DATETIMESUBTITLE "Configurez la date et l'heure correcte pour votre ordinateur."
     IDS_PROCESSTITLE     "Enregistrement des composants"
@@ -186,7 +186,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Télécharger et installer diverses applications"
+    IDS_CMT_DOWNLOADER  "TÃ©lÃ©charger et installer diverses applications"
 END
 
 STRINGTABLE
@@ -195,15 +195,15 @@ BEGIN
     IDS_CMT_CALC        "Lancer la Calculatrice"
     IDS_CMT_CMD         "Ouvrir l'invite de commandes"
     IDS_CMT_EXPLORER    "Lancer Explorer"
-    IDS_CMT_NOTEPAD     "Lancer l'Éditeur de Texte"
-    IDS_CMT_REGEDIT     "Lancer l'Éditeur de Registre"
-    IDS_CMT_WORDPAD     "Lancer l'Éditeur de Documents"
-    IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
-    IDS_CMT_DEVMGMT     "Lancer le gestionnaire de périphériques"
+    IDS_CMT_NOTEPAD     "Lancer l'Ã‰diteur de Texte"
+    IDS_CMT_REGEDIT     "Lancer l'Ã‰diteur de Registre"
+    IDS_CMT_WORDPAD     "Lancer l'Ã‰diteur de Documents"
+    IDS_CMT_SCREENSHOT  "Faire une capture d'Ã©cran"
+    IDS_CMT_DEVMGMT     "Lancer le gestionnaire de pÃ©riphÃ©riques"
     IDS_CMT_SERVMAN     "Lancer le gestionnaire de services"
     IDS_CMT_RDESKTOP    "Lancer le bureau distant"
-    IDS_CMT_EVENTVIEW   "Lancer la visionneuse des événements"
-    IDS_CMT_MSCONFIG    "Lancer le programme de configuration système"
+    IDS_CMT_EVENTVIEW   "Lancer la visionneuse des Ã©vÃ©nements"
+    IDS_CMT_MSCONFIG    "Lancer le programme de configuration systÃ¨me"
     IDS_CMT_PAINT       "Lancer Paint"
 END
 
@@ -217,23 +217,23 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Outils système"
-	IDS_CMT_CHARMAP      "Table des Caractères"
-	IDS_CMT_KBSWITCH     "Sélecteur de configuration clavier"
+	IDS_SYS_TOOLS        "Outils systÃ¨me"
+	IDS_CMT_CHARMAP      "Table des CaractÃ¨res"
+	IDS_CMT_KBSWITCH     "SÃ©lecteur de configuration clavier"
     IDS_CMT_DXDIAG       "Lancer le prorgramme de diagnostic ReactX"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibilité"
+	IDS_SYS_ACCESSIBILITY        "AccessibilitÃ©"
 	IDS_CMT_MAGNIFY      	     "Loupe"
 END
 
 STRINGTABLE
 BEGIN
     IDS_SYS_ENTERTAINMENT       "Divertissement"
-    IDS_CMT_MPLAY32             "Lancer le lecteur multimédia"
-    IDS_CMT_SNDVOL32            "Lancer le contrôleur de volume"
+    IDS_CMT_MPLAY32             "Lancer le lecteur multimÃ©dia"
+    IDS_CMT_SNDVOL32            "Lancer le contrÃ´leur de volume"
     IDS_CMT_SNDREC32            "Lancer l'enregistreur de son"
 END
 
@@ -242,11 +242,11 @@ BEGIN
     IDS_REACTOS_SETUP		    "Installation de ReactOS"
     IDS_UNKNOWN_ERROR           "Erreur inconnue"
     IDS_REGISTERING_COMPONENTS  "Enregistrement des composants..."
-    IDS_LOADLIBRARY_FAILED	    "Échec de LoadLibrary : "
-    IDS_GETPROCADDR_FAILED	    "Échec de GetProcAddr : "
-    IDS_REGSVR_FAILED           "Échec de DllRegisterServer : "
-    IDS_DLLINSTALL_FAILED	    "Échec de DllInstall : "
-    IDS_TIMEOUT			        "Délai dépassé lors de l'enregistrement"
+    IDS_LOADLIBRARY_FAILED	    "Ã‰chec de LoadLibrary : "
+    IDS_GETPROCADDR_FAILED	    "Ã‰chec de GetProcAddr : "
+    IDS_REGSVR_FAILED           "Ã‰chec de DllRegisterServer : "
+    IDS_DLLINSTALL_FAILED	    "Ã‰chec de DllInstall : "
+    IDS_TIMEOUT			        "DÃ©lai dÃ©passÃ© lors de l'enregistrement"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -256,22 +256,22 @@ BEGIN
     IDS_SHORT_EXPLORER   "Explorateur ReactOS.lnk"
     IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Gestionnaire de services.lnk"
-    IDS_SHORT_DEVICE     "Gestionnaire de périphériques.lnk"
+    IDS_SHORT_DEVICE     "Gestionnaire de pÃ©riphÃ©riques.lnk"
     IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Calculatrice.lnk"
     IDS_SHORT_REGEDIT    "Regedit.lnk"
     IDS_SHORT_NOTEPAD    "Notepad.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "Capture d'écran.lnk"
+    IDS_SHORT_SNAP       "Capture d'Ã©cran.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
+    IDS_SHORT_CHARMAP    "Table des CaractÃ¨res.lnk"
     IDS_SHORT_MAGNIFY    "Loupe.lnk"
     IDS_SHORT_RDESKTOP   "Bureau Distant.lnk"
-    IDS_SHORT_KBSWITCH   "Sélecteur de configuration clavier.lnk"
-    IDS_SHORT_EVENTVIEW  "Visionneuse des événements.lnk"
-    IDS_SHORT_MSCONFIG   "Configuration système.lnk"
-    IDS_SHORT_SNDVOL32   "Contrôleur de volume.lnk"
+    IDS_SHORT_KBSWITCH   "SÃ©lecteur de configuration clavier.lnk"
+    IDS_SHORT_EVENTVIEW  "Visionneuse des Ã©vÃ©nements.lnk"
+    IDS_SHORT_MSCONFIG   "Configuration systÃ¨me.lnk"
+    IDS_SHORT_SNDVOL32   "ContrÃ´leur de volume.lnk"
     IDS_SHORT_SNDREC32   "Enregistreur de son.lnk"
     IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
@@ -280,18 +280,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "L'installation ne peut pas continuer tant que vous n'avez pas entré votre nom."
-    IDS_WZD_SETCOMPUTERNAME  "L'installation a échoué lors de la définition du nom de votre ordinateur."
-    IDS_WZD_COMPUTERNAME  "L'installation ne peut continuer tant que vous n'avez pas entré le nom de votre ordinateur."
+    IDS_WZD_NAME         "L'installation ne peut pas continuer tant que vous n'avez pas entrÃ© votre nom."
+    IDS_WZD_SETCOMPUTERNAME  "L'installation a Ã©chouÃ© lors de la dÃ©finition du nom de votre ordinateur."
+    IDS_WZD_COMPUTERNAME  "L'installation ne peut continuer tant que vous n'avez pas entrÃ© le nom de votre ordinateur."
     IDS_WZD_PASSWORDEMPTY  "Vous devez entrer un mot de passe !"
-    IDS_WZD_PASSWORDMATCH  "Les mots de passe entrés ne correspondent pas. Veuillez saisir une nouvelle fois le mot de passe désiré."
-    IDS_WZD_PASSWORDCHAR  "Le mot de passe entré contient des caractères invalides. Veuillez saisir un mot de passe correct."
-    IDS_WZD_LOCALTIME    "L'installation n'a pas réussi à définir l'heure locale."
+    IDS_WZD_PASSWORDMATCH  "Les mots de passe entrÃ©s ne correspondent pas. Veuillez saisir une nouvelle fois le mot de passe dÃ©sirÃ©."
+    IDS_WZD_PASSWORDCHAR  "Le mot de passe entrÃ© contient des caractÃ¨res invalides. Veuillez saisir un mot de passe correct."
+    IDS_WZD_LOCALTIME    "L'installation n'a pas rÃ©ussi Ã  dÃ©finir l'heure locale."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installation des périphériques en cours..."
+    IDS_STATUS_INSTALL_DEV "Installation des pÃ©riphÃ©riques en cours..."
 END
 
 /* EOF */

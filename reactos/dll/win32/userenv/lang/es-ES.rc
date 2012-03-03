@@ -17,9 +17,9 @@
  */
 
 /*
- *Spanish Language resource file
- *ReactOs (c) 2005 Samuel Serapi髇 Vega
- *ReactOs (c) 2007 Marc Piulachs
+ * Spanish Language resource file
+ * (C) 2005 Samuel Serapi贸n Vega
+ * (C) 2007 Marc Piulachs
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -35,19 +35,19 @@ BEGIN
     IDS_ADMINTOOLS     "Menu de Inicio\\Programas\\Herramientas Administrativas"
     IDS_STARTUP        "Menu de Inicio\\Programas\\Inicio"
     IDS_MYDOCUMENTS    "Mis Documentos"
-    IDS_MYPICTURES     "Mis Documentos\\Mis im醙enes"
-    IDS_MYMUSIC        "Mis Documentos\\Mi m鷖ica"
+    IDS_MYPICTURES     "Mis Documentos\\Mis im谩genes"
+    IDS_MYMUSIC        "Mis Documentos\\Mi m煤sica"
     IDS_MYVIDEOS       "Mis Documentos\\Mis videos"
     IDS_TEMPLATES      "Plantillas"
     IDS_RECENT         "Reciente"
     IDS_SENDTO         "SendTo"
     IDS_PRINTHOOD      "Impresoras"
     IDS_NETHOOD        "Entorno de red"
-    IDS_LOCALSETTINGS  "Configuraci髇 local"
-    IDS_LOCALAPPDATA   "Configuraci髇 local\\Application Data"
-    IDS_TEMP           "Configuraci髇 local\\Temp"
-    IDS_CACHE          "Configuraci髇 local\\Archivos temporales de Internet"
-    IDS_HISTORY        "Configuraci髇 local\\Historial"
+    IDS_LOCALSETTINGS  "Configuraci贸n local"
+    IDS_LOCALAPPDATA   "Configuraci贸n local\\Application Data"
+    IDS_TEMP           "Configuraci贸n local\\Temp"
+    IDS_CACHE          "Configuraci贸n local\\Archivos temporales de Internet"
+    IDS_HISTORY        "Configuraci贸n local\\Historial"
     IDS_COOKIES        "Cookies"
     IDS_PROGRAMFILES   "%SystemDrive%\\Archivos de programa"
     IDS_COMMONFILES    "Archivos comunes"

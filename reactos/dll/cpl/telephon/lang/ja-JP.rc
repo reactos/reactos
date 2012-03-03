@@ -2,6 +2,6 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "“d˜b‚Æƒ‚ƒfƒ€‚ÌƒIƒvƒVƒ‡ƒ“"
-	IDS_CPLSYSTEMDESCRIPTION "“d˜b‚Ìƒ_ƒCƒ„ƒ‹î•ñ‚Æƒ‚ƒfƒ€‚ÌƒvƒƒpƒeƒB‚ð\\¬‚µ‚Ü‚·B"
+	IDS_CPLSYSTEMNAME "é›»è©±ã¨ãƒ¢ãƒ‡ãƒ ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³"
+	IDS_CPLSYSTEMDESCRIPTION "é›»è©±ã®ãƒ€ã‚¤ãƒ¤ãƒ«æƒ…å ±ã¨ãƒ¢ãƒ‡ãƒ ã®ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’æ§‹\æˆã—ã¾ã™ã€‚"
 END

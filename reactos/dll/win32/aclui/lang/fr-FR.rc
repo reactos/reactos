@@ -2,7 +2,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Sécurité"
+CAPTION "SÃ©curitÃ©"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "&Groupe ou noms d'utilisateurs:", -1, 7, 7, 105, 8
@@ -13,15 +13,15 @@ BEGIN
   LTEXT "Permettre", IDC_LABEL_ALLOW, 135, 107, 32, 8, SS_CENTER
   LTEXT "Refuser", IDC_LABEL_DENY, 176, 107, 32, 8, SS_CENTER
   CONTROL "", IDC_ACE_CHECKLIST, "CHECKLIST_ACLUI", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 117, 213, 72, WS_EX_CLIENTEDGE
-  LTEXT "Pour les permissions spéciales ou pour les réglages avancés, cliquer sur Avancé.", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
-  PUSHBUTTON "A&vancé", IDC_ADVANCED, 165, 194, 55, 14
+  LTEXT "Pour les permissions spÃ©ciales ou pour les rÃ©glages avancÃ©s, cliquer sur AvancÃ©.", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
+  PUSHBUTTON "A&vancÃ©", IDC_ADVANCED, 165, 194, 55, 14
 END
 
 STRINGTABLE DISCARDABLE
 {
   IDS_PSP_TITLE "Permissions pour %1"
   IDS_UNKNOWN "Inconnu"
-  IDS_SPECIAL_PERMISSIONS "Permissions Spéciales"
+  IDS_SPECIAL_PERMISSIONS "Permissions SpÃ©ciales"
   IDS_PERMISSIONS_FOR "Permissions pour %1"
   IDS_PERMISSIONS "Permissions"
   IDS_USERDOMAINFORMAT "%1 (%2\\%3)"

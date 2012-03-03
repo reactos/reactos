@@ -3,15 +3,15 @@ LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
 	IDS_APPTITLE "Visionneuse d'Images et Fax de ReactOS"
-    	IDS_SETASDESKBG "Définir comme Arrière-plan du Bureau"
+    	IDS_SETASDESKBG "DÃ©finir comme ArriÃ¨re-plan du Bureau"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Image Suivante"
-    IDS_TOOLTIP_PREV_PIC   "Image Précédente"
+    IDS_TOOLTIP_PREV_PIC   "Image PrÃ©cÃ©dente"
     IDS_TOOLTIP_ZOOM_IN    "Augmenter (+)"
     IDS_TOOLTIP_ZOOM_OUT   "Diminuer (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Tourner dans le sens des aiguilles d'une montre (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Tourner dans le sens opposé des aiguilles d'une montre (Ctrl+L)"
+    IDS_TOOLTIP_ROT_COUNCW "Tourner dans le sens opposÃ© des aiguilles d'une montre (Ctrl+L)"
     IDS_TOOLTIP_PRINT      "Imprimer (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS     "Enregistrer sous... (Ctrl+S)"
 END

@@ -7,40 +7,40 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Název poèítaèe"
+CAPTION "NÃ¡zev poÄÃ­taÄe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS pouije následující informace k identifikování tohoto poèítaèe na síti.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Popis poèítaèe:", IDC_STATIC, 6, 40, 90, 9
+    LTEXT       "ReactOS pouÅ¾ije nÃ¡sledujÃ­cÃ­ informace k identifikovÃ¡nÃ­ tohoto poÄÃ­taÄe na sÃ­ti.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Popis poÄÃ­taÄe:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Úplnı název poèítaèe:", IDC_STATIC, 6, 68, 85, 9
+    LTEXT       "ÃšplnÃ½ nÃ¡zev poÄÃ­taÄe:", IDC_STATIC, 6, 68, 85, 9
     EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Pracovní skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT       "PracovnÃ­ skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Kliknutím na ""Síová ID"" lze pouít Prùvodce síovou identifikací k pøipojení se k doménì a vytvoøení místního uivatele.", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON  "&Síová ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
-    LTEXT       "Kliknutím na ""Zmìnit"" lze pøejmenovat tento poèítaè nebo se pøipojit k doménì.", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "&Zmìnit...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT       "KliknutÃ­m na ""SÃ­Å¥ovÃ¡ ID"" lze pouÅ¾Ã­t PrÅ¯vodce sÃ­Å¥ovou identifikacÃ­ k pÅ™ipojenÃ­ se k domÃ©nÄ› a vytvoÅ™enÃ­ mÃ­stnÃ­ho uÅ¾ivatele.", IDC_STATIC, 6, 113, 172, 24
+    PUSHBUTTON  "&SÃ­Å¥ovÃ¡ ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
+    LTEXT       "KliknutÃ­m na ""ZmÄ›nit"" lze pÅ™ejmenovat tento poÄÃ­taÄ nebo se pÅ™ipojit k domÃ©nÄ›.", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON  "&ZmÄ›nit...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT       "PoznÃ¡mka: Identifikaci tohoto poÄÃ­taÄe mohou zmÄ›nit pouze administrÃ¡toÅ™i.", IDC_STATIC, 6, 179, 300, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Zmìna názvu poèítaèe"
+CAPTION "ZmÄ›na nÃ¡zvu poÄÃ­taÄe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "(sem patøí zpráva)", 1017, 7, 5, 218, 30
-    LTEXT "&Název poèítaèe:", -1, 7, 41, 219, 8
+    LTEXT "(sem patÅ™Ã­ zprÃ¡va)", 1017, 7, 5, 218, 30
+    LTEXT "&NÃ¡zev poÄÃ­taÄe:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
-    LTEXT "Úplnı název poèítaèe:", 1016, 7, 72, 218, 10
+    LTEXT "ÃšplnÃ½ nÃ¡zev poÄÃ­taÄe:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&Více...", 1003, 150, 102, 75, 14
-    GROUPBOX "Èlen", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "&Domény:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Pracovní skupiny:", 1004, 17, 161, 191, 10
+    PUSHBUTTON "&VÃ­ce...", 1003, 150, 102, 75, 14
+    GROUPBOX "ÄŒlen", 1018, 7, 119, 219, 73
+    AUTORADIOBUTTON "&DomÃ©ny:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&PracovnÃ­ skupiny:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "Najít &moji doménu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "NajÃ­t &moji domÃ©nu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "Storno", 2, 176, 203, 50, 14
@@ -48,36 +48,36 @@ END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Pøípona DNS a NetBIOS název poèítaèe"
+CAPTION "PÅ™Ã­pona DNS a NetBIOS nÃ¡zev poÄÃ­taÄe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Primární pøípona DNS tohoto poèítaèe:", -1, 7, 5, 253, 8
+    LTEXT "&PrimÃ¡rnÃ­ pÅ™Ã­pona DNS tohoto poÄÃ­taÄe:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Zmìnit primární pøíponu DNS, kdy se zmìní èlenství v doménì", 115, 11, 39, 250, 10
-    LTEXT "&NetBIOS název poèítaèe:", -1, 7, 57, 148, 8
+    AUTOCHECKBOX "&ZmÄ›nit primÃ¡rnÃ­ pÅ™Ã­ponu DNS, kdyÅ¾ se zmÄ›nÃ­ ÄlenstvÃ­ v domÃ©nÄ›", 115, 11, 39, 250, 10
+    LTEXT "&NetBIOS nÃ¡zev poÄÃ­taÄe:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
     PUSHBUTTON "Storno", 2, 209, 104, 50, 14
-    LTEXT "Tento název je pouit pro zpìtnou kompatibilitu se staršími poèítaèi a slubami.", 13, 7, 88, 253, 8
+    LTEXT "Tento nÃ¡zev je pouÅ¾it pro zpÄ›tnou kompatibilitu se starÅ¡Ã­mi poÄÃ­taÄi a sluÅ¾bami.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
-    1 "* Neznámé *"
+    1 "* NeznÃ¡mÃ© *"
     2 "SKUPINA"
-    3 "Pøi pokusu o naètení informací o èlenství v doménì nastala následující chyba:"
-    4 "Zmìna názvu poèítaèe"
-    5 "Pracovní skupina:"
-    6 "Doména:"
-    22 "Vítejte v pracovní skupinì %1."
-    23 "Vítejte v doménì %1."
-    24 "Aby se zmìny mohly projevit, musí bıt poèítaè restartován."
-    25 "Lze zmìnit název a èlenství tohoto poèítaèe. Zmìny mohou mít vliv na pøístup k síovım prostøedkùm."
-    1021 "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi."
-    1022 "Poznámka: Identifikace poèítaèe nemùe bıt zmìnìna z následujících dùvodù:"
-    1030 "Novı název poèítaèe ""%s"" obsahuje nepovolené znaky. Mezi nepovolené znaky patøí ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ?"
+    3 "PÅ™i pokusu o naÄtenÃ­ informacÃ­ o ÄlenstvÃ­ v domÃ©nÄ› nastala nÃ¡sledujÃ­cÃ­ chyba:"
+    4 "ZmÄ›na nÃ¡zvu poÄÃ­taÄe"
+    5 "PracovnÃ­ skupina:"
+    6 "DomÃ©na:"
+    22 "VÃ­tejte v pracovnÃ­ skupinÄ› %1."
+    23 "VÃ­tejte v domÃ©nÄ› %1."
+    24 "Aby se zmÄ›ny mohly projevit, musÃ­ bÃ½t poÄÃ­taÄ restartovÃ¡n."
+    25 "Lze zmÄ›nit nÃ¡zev a ÄlenstvÃ­ tohoto poÄÃ­taÄe. ZmÄ›ny mohou mÃ­t vliv na pÅ™Ã­stup k sÃ­Å¥ovÃ½m prostÅ™edkÅ¯m."
+    1021 "PoznÃ¡mka: Identifikaci tohoto poÄÃ­taÄe mohou zmÄ›nit pouze administrÃ¡toÅ™i."
+    1022 "PoznÃ¡mka: Identifikace poÄÃ­taÄe nemÅ¯Å¾e bÃ½t zmÄ›nÄ›na z nÃ¡sledujÃ­cÃ­ch dÅ¯vodÅ¯:"
+    1030 "NovÃ½ nÃ¡zev poÄÃ­taÄe ""%s"" obsahuje nepovolenÃ© znaky. Mezi nepovolenÃ© znaky patÅ™Ã­ ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ?"
     3210 "&Detaily >>"
     3220 "<< &Detaily"
     4000 "Informace"
-    4001 "Nelze nastavit novı název poèítaèe!"
+    4001 "Nelze nastavit novÃ½ nÃ¡zev poÄÃ­taÄe!"
 END

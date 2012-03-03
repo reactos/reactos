@@ -1,18 +1,18 @@
-/* $Id: en-US.rc 29690 2007-10-19 23:21:45Z dreimer $
- *
+/*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/msgina/lang/it-IT.rc
+ * FILE:            dll/win32/serialui/lang/it-IT.rc
  * PURPOSE:         Italian resource file
- * PROGRAMMERS:     Paolo Devoti, devotip at tiscali.it, 2007-11-02
+ * TRANSLATOR:      Paolo Devoti, devotip at tiscali.it, 2007-11-02
  */
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE LOADONCALL DISCARDABLE
 BEGIN
 	IDS_EVENPARITY, "pari"
 	IDS_MARKPARITY, "Mark"
-	IDS_NOPARITY, "Senza parit‡"
+	IDS_NOPARITY, "Senza parit√†"
 	IDS_ODDPARITY, "Dispari"
 	IDS_SPACEPARITY, "Space"
 
@@ -24,7 +24,7 @@ BEGIN
 	IDS_FC_CTSRTS, "CTS/RTS"
 	IDS_FC_XONXOFF, "XON/XOFF"
 
-	IDS_TITLE, "Propriet‡ di %s"
+	IDS_TITLE, "Propriet√† di %s"
 END
 
 IDD_COMMDLG DIALOGEX 6,5,222,175
@@ -37,7 +37,7 @@ BEGIN
 	CONTROL "Annulla",IDC_CANCELBTN,"Button",0x50010000,158,156,56,13,0x00000000
 	CONTROL "Baud rate:",IDC_STC1,"Static",0x50000000,24,31,42,9,0x00000000
 	CONTROL "Bit per Byte:",IDC_STC2,"Static",0x50000000,24,53,42,9,0x00000000
-	CONTROL "Parit‡:",IDC_STC3,"Static",0x50000000,24,73,42,9,0x00000000
+	CONTROL "Parit√†:",IDC_STC3,"Static",0x50000000,24,73,42,9,0x00000000
 	CONTROL "Stop bits:",IDC_STC4,"Static",0x50000000,24,96,42,9,0x00000000
 	CONTROL "Controllo di flusso:",IDC_STC5,"Static",0x50000000,24,120,42,9,0x00000000
 	CONTROL "",IDC_BAUDRATE,"ComboBox",0x50210003,98,29,100,50,0x00000000

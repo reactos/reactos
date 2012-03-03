@@ -9,7 +9,7 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Neste bilde"
     IDS_TOOLTIP_PREV_PIC   "Forrige bilde"
-    IDS_TOOLTIP_ZOOM_IN    "Forstørre (+)"
+    IDS_TOOLTIP_ZOOM_IN    "ForstÃ¸rre (+)"
     IDS_TOOLTIP_ZOOM_OUT   "Forminske (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Med urviseren (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Dreie mot urviseren (Ctrl+L)"

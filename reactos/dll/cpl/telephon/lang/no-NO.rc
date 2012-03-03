@@ -5,5 +5,5 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE 
 BEGIN
 	IDS_CPLSYSTEMNAME "Telefon og Modem valg"
-	IDS_CPLSYSTEMDESCRIPTION "Konfigurer din telefon nummerslåing regler og modem innstillinger."
+	IDS_CPLSYSTEMDESCRIPTION "Konfigurer din telefon nummerslÃ¥ing regler og modem innstillinger."
 END

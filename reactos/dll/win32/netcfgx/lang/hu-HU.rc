@@ -2,27 +2,27 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "¡ltal·nos"
+CAPTION "√Åltal√°nos"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Az IP-be·llÌt·sokat automatikusan is megkaphatja, ha h·lÛzata t·mogatja ezt a kÈpessÈget. EltÈrı esetben keresse meg h·lÛzati rendszergazd·j·t a helyes IP-be·llÌt·sokÈrt.", -1, 9, 9, 228, 27
- CONTROL "IP-cÌm automatikus lekÈrÈse", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
+ LTEXT "Az IP-be√°ll√≠t√°sokat automatikusan is megkaphatja, ha h√°l√≥zata t√°mogatja ezt a k√©pess√©get. Elt√©r√µ esetben keresse meg h√°l√≥zati rendszergazd√°j√°t a helyes IP-be√°ll√≠t√°sok√©rt.", -1, 9, 9, 228, 27
+ CONTROL "IP-c√≠m automatikus lek√©r√©se", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "A &kˆvetkezı IP-cÌm haszn·lata:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "IP cÌm:", -1, 14, 75, 135, 8
+ CONTROL "A &k√∂vetkez√µ IP-c√≠m haszn√°lata:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "IP c√≠m:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
- LTEXT "Alh·lÛzati maszk:", -1, 14, 90, 135, 8
+ LTEXT "Alh√°l√≥zati maszk:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
- LTEXT "AlapÈrtelmezett ·tj·rÛ:", -1, 14, 105, 135, 8
+ LTEXT "Alap√©rtelmezett √°tj√°r√≥:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
- CONTROL "A DNS-kiszolg·lÛ cÌmÈnek automatikus lekÈrÈse", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
+ CONTROL "A DNS-kiszolg√°l√≥ c√≠m√©nek automatikus lek√©r√©se", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "A kˆ&vetkezı DNS-kiszolg·lÛk haszn·lata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Elsıdleges DNS-kiszolg·lÛ:", -1, 14, 171, 135, 8
+ CONTROL "A k√∂&vetkez√µ DNS-kiszolg√°l√≥k haszn√°lata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Els√µdleges DNS-kiszolg√°l√≥:", -1, 14, 171, 135, 8
  CONTROL "",IDC_DNS1,"SysIPAddress32",0,150,171-2,80,12
- LTEXT "M·sodlagos DNS-kiszolg·lÛ:", -1, 14, 186, 135, 8
+ LTEXT "M√°sodlagos DNS-kiszolg√°l√≥:", -1, 14, 186, 135, 8
  CONTROL "",IDC_DNS2,"SysIPAddress32",0,150,186-2,80,12
- PUSHBUTTON "&HaladÛknak", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Halad√≥knak", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228

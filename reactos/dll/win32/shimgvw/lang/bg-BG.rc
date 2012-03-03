@@ -2,17 +2,17 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "Прегледът за снимки и факсове на РеактОС"
-    IDS_SETASDESKBG "Слагане като подкраска"
-    IDS_PREVIEW     "Преглед"
+    IDS_APPTITLE    "РџСЂРµРіР»РµРґСЉС‚ Р·Р° СЃРЅРёРјРєРё Рё С„Р°РєСЃРѕРІРµ РЅР° Р РµР°РєС‚РћРЎ"
+    IDS_SETASDESKBG "РЎР»Р°РіР°РЅРµ РєР°С‚Рѕ РїРѕРґРєСЂР°СЃРєР°"
+    IDS_PREVIEW     "РџСЂРµРіР»РµРґ"
 
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Следващо изображение"
-    IDS_TOOLTIP_PREV_PIC   "Предходно изображение"
-    IDS_TOOLTIP_ZOOM_IN    "Увеличаване (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Намаляване (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Завъртане по часовника (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Завъртане срещу часовника (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Разпечатване (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Записване като... (Ctrl+S)"
+    IDS_TOOLTIP_NEXT_PIC   "РЎР»РµРґРІР°С‰Рѕ РёР·РѕР±СЂР°Р¶РµРЅРёРµ"
+    IDS_TOOLTIP_PREV_PIC   "РџСЂРµРґС…РѕРґРЅРѕ РёР·РѕР±СЂР°Р¶РµРЅРёРµ"
+    IDS_TOOLTIP_ZOOM_IN    "РЈРІРµР»РёС‡Р°РІР°РЅРµ (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "РќР°РјР°Р»СЏРІР°РЅРµ (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Р—Р°РІСЉСЂС‚Р°РЅРµ РїРѕ С‡Р°СЃРѕРІРЅРёРєР° (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Р—Р°РІСЉСЂС‚Р°РЅРµ СЃСЂРµС‰Сѓ С‡Р°СЃРѕРІРЅРёРєР° (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Р Р°Р·РїРµС‡Р°С‚РІР°РЅРµ (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Р—Р°РїРёСЃРІР°РЅРµ РєР°С‚Рѕ... (Ctrl+S)"
 END

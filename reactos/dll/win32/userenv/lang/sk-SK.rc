@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  29-05-2008
  * LAST CHANGE:  14-06-2009
  */
@@ -29,15 +29,15 @@ BEGIN
     IDS_APPDATA        "Application Data"
     IDS_DESKTOP        "Desktop"
     IDS_FAVORITES      "Favorites"
-    IDS_STARTMENU      "Ponuka ätart"
-    IDS_PROGRAMS       "Ponuka ätart\\Programy"
-    IDS_ADMINTOOLS     "Ponuka ätart\\Programy\\N·stroje na spr·vu"
-    IDS_STARTUP        "Ponuka ätart\\Programy\\Po spustenÌ"
+    IDS_STARTMENU      "Ponuka ≈†tart"
+    IDS_PROGRAMS       "Ponuka ≈†tart\\Programy"
+    IDS_ADMINTOOLS     "Ponuka ≈†tart\\Programy\\N√°stroje na spr√°vu"
+    IDS_STARTUP        "Ponuka ≈†tart\\Programy\\Po spusten√≠"
     IDS_MYDOCUMENTS    "Moje dokumenty"
-    IDS_MYPICTURES     "Moje dokumenty\\Obr·zky"
+    IDS_MYPICTURES     "Moje dokumenty\\Obr√°zky"
     IDS_MYMUSIC        "Moje dokumenty\\Hudba"
-    IDS_MYVIDEOS       "Moje dokumenty\\Vide·"
-    IDS_TEMPLATES      "äablÛny"
+    IDS_MYVIDEOS       "Moje dokumenty\\Vide√°"
+    IDS_TEMPLATES      "≈†abl√≥ny"
     IDS_RECENT         "Recent"
     IDS_SENDTO         "SendTo"
     IDS_PRINTHOOD      "PrintHood"

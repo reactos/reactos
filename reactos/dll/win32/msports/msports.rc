@@ -7,10 +7,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"msports.dll\0"
 #include <reactos/version.rc>
 
-#ifdef LANGUAGE_DE_DE
-    #include "lang/de-DE.rc"
-#endif
-
 // UTF-8
 #pragma code_page(65001)
 #ifdef LANGUAGE_BG_BG
@@ -18,6 +14,9 @@
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"

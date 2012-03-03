@@ -7,7 +7,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "ProsÌm Ëekejte..."
+CAPTION "Pros√≠m ƒçekejte..."
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -15,20 +15,20 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0, 0, 186, 32
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "VÌtejte v systÈmu ReactOS"
+CAPTION "V√≠tejte v syst√©mu ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
-    LTEXT           "StisknÏte kl·vesy Ctrl-Alt-Delete",IDC_STATIC, 38, 10, 144, 14
+    LTEXT           "Stisknƒõte kl√°vesy Ctrl-Alt-Delete",IDC_STATIC, 38, 10, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "P¯ihl·öenÌ"
+CAPTION "P≈ôihl√°≈°en√≠"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,59
-    LTEXT           "JmÈno:",IDC_STATIC,36,75,40,8
+    LTEXT           "Jm√©no:",IDC_STATIC,36,75,40,8
     EDITTEXT        IDC_USERNAME,84,72,119,14,ES_AUTOHSCROLL
     LTEXT           "Heslo:",IDC_STATIC,36,93,42,8
     EDITTEXT        IDC_PASSWORD,84,91,119,14,ES_AUTOHSCROLL | ES_PASSWORD
@@ -39,24 +39,24 @@ END
 
 IDD_LOGGEDON_DLG DIALOGEX 0,0,247,116
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
-CAPTION "BezpeËnost"
+CAPTION "Bezpeƒçnost"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,247,53
-    LTEXT           "Co chcete udÏlat?",IDC_STATIC,86,60,87,8
-    PUSHBUTTON      "Uzamknout poËÌtaË",IDC_LOCK,10,76,70,14
-    PUSHBUTTON      "Odhl·sit",IDC_LOGOFF,90,76,70,14
+    LTEXT           "Co chcete udƒõlat?",IDC_STATIC,86,60,87,8
+    PUSHBUTTON      "Uzamknout poƒç√≠taƒç",IDC_LOCK,10,76,70,14
+    PUSHBUTTON      "Odhl√°sit",IDC_LOGOFF,90,76,70,14
     PUSHBUTTON      "Vypnout",IDC_SHUTDOWN,170,76,70,14
-    PUSHBUTTON      "Spr·vce ˙loh",IDC_TASKMGR,90,95,70,14
+    PUSHBUTTON      "Spr√°vce √∫loh",IDC_TASKMGR,90,95,70,14
     PUSHBUTTON      "Storno",IDCANCEL,170,95,70,14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LOGGEDOUTSAS "VÌtejte!"
-    IDS_LOCKEDSAS "PoËÌtaË je nynÌ uzamËen."
-    IDS_PRESSCTRLALTDELETE "Pro p¯ihl·öenÌ stisknÏte kl·vesy Ctrl+Alt+Delete."
-    IDS_ASKFORUSER "UûivatelskÈ jmÈno: "
+    IDS_LOGGEDOUTSAS "V√≠tejte!"
+    IDS_LOCKEDSAS "Poƒç√≠taƒç je nyn√≠ uzamƒçen."
+    IDS_PRESSCTRLALTDELETE "Pro p≈ôihl√°≈°en√≠ stisknƒõte kl√°vesy Ctrl+Alt+Delete."
+    IDS_ASKFORUSER "U≈æivatelsk√© jm√©no: "
     IDS_ASKFORPASSWORD "Heslo: "
-    IDS_FORCELOGOFF "SouËasn˝ uûivatel bude odhl·öen a vöechna jeho neuloûen· data ztracena. PokraËovat?"
+    IDS_FORCELOGOFF "Souƒçasn√Ω u≈æivatel bude odhl√°≈°en a v≈°echna jeho neulo≈æen√° data ztracena. Pokraƒçovat?"
 END

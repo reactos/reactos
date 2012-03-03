@@ -2,28 +2,28 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "������ʹ���"
+CAPTION "ความปลอดภัย"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&���͡�������ͪ��ͧ͢�����:", -1, 7, 7, 105, 8
+  LTEXT "&ชื่อกลุ่มหรือชื่อของผู้ใช้:", -1, 7, 7, 105, 8
   CONTROL "", IDC_PRINCIPALS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP, 7, 17, 213, 66, WS_EX_NOPARENTNOTIFY | WS_EX_CLIENTEDGE
-  PUSHBUTTON "�&����...", IDC_ADD_PRINCIPAL, 116, 87, 50, 14
-  PUSHBUTTON "�&����͹����", IDC_REMOVE_PRINCIPAL, 170, 87, 50, 14
+  PUSHBUTTON "เ&พิ่ม...", IDC_ADD_PRINCIPAL, 116, 87, 50, 14
+  PUSHBUTTON "เ&คลื่อนย้าย", IDC_REMOVE_PRINCIPAL, 170, 87, 50, 14
   LTEXT "", IDC_LABEL_PERMISSIONS_FOR, 7, 107, 105, 8, SS_LEFT | SS_NOPREFIX
-  LTEXT "͹حҵ", IDC_LABEL_ALLOW, 135, 107, 32, 8, SS_CENTER
-  LTEXT "����ʸ", IDC_LABEL_DENY, 176, 107, 32, 8, SS_CENTER
+  LTEXT "อนุญาต", IDC_LABEL_ALLOW, 135, 107, 32, 8, SS_CENTER
+  LTEXT "ปฏิเสธ", IDC_LABEL_DENY, 176, 107, 32, 8, SS_CENTER
   CONTROL "", IDC_ACE_CHECKLIST, "CHECKLIST_ACLUI", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 117, 213, 72, WS_EX_CLIENTEDGE
-  LTEXT "�óա�â�͹حҵ����������繡�õ�駤�Ң�鹡���˹��, �����͡��鹡���˹��", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
-  PUSHBUTTON "&��鹡���˹��", IDC_ADVANCED, 165, 194, 55, 14
+  LTEXT "กรณีการขออนุญาตพิเศษหรือเป็นการตั้งค่าขั้นก้าวหน้า, กดเลือกขั้นก้าวหน้า", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
+  PUSHBUTTON "&ขั้นก้าวหน้า", IDC_ADVANCED, 165, 194, 55, 14
 END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_PSP_TITLE "͹حҵ��� %1"
-  IDS_UNKNOWN "����Һ"
-  IDS_SPECIAL_PERMISSIONS "��â�͹حҵẺ�����"
-  IDS_PERMISSIONS_FOR "͹حҵ��� %1"
-  IDS_PERMISSIONS "͹حҵ"
+  IDS_PSP_TITLE "อนุญาตให้ %1"
+  IDS_UNKNOWN "ไม่ทราบ"
+  IDS_SPECIAL_PERMISSIONS "การขออนุญาตแบบพิเศษ"
+  IDS_PERMISSIONS_FOR "อนุญาตให้ %1"
+  IDS_PERMISSIONS "อนุญาต"
   IDS_USERDOMAINFORMAT "%1 (%2\\%3)"
   IDS_USERFORMAT "%1"
 }

@@ -1,11 +1,13 @@
 /*
- *  (Simplified Chinese resources)
- *  (简体中文资源)
- *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/shell32/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language Resources
+ * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+                2011 Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-
 
 MENU_001 MENU DISCARDABLE
 BEGIN

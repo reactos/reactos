@@ -16,7 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
+// vertaald door Lionel Lowie
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN

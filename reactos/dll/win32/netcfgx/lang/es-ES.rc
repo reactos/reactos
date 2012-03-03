@@ -6,16 +6,16 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
  LTEXT "Se pueden asignar las propiedades de IP automaticamente si su red soporta esta capacidad. Si no, debe contactar a su administrador de red para los ajustes necesarios.", -1, 9, 9, 228, 27
- CONTROL "Obtener direcciÛn IP automaticamente", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
+ CONTROL "Obtener direcci√≥n IP automaticamente", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Usar la siguiente DirecciÛn IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 109, 12
- LTEXT "DirecciÛn IP:", -1, 14, 75, 135, 8
+ CONTROL "&Usar la siguiente Direcci√≥n IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 109, 12
+ LTEXT "Direcci√≥n IP:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
- LTEXT "M·scara de subred:", -1, 14, 90, 135, 8
+ LTEXT "M√°scara de subred:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
  LTEXT "Puerta de enlace predeterminada:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
- CONTROL "Obtener direcciÛn del servidor DNS automaticamente", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
+ CONTROL "Obtener direcci√≥n del servidor DNS automaticamente", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
  CONTROL "&Usar las siguiente direcciones de DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 140, 12
  LTEXT "Servidor DNS Preferido:", -1, 14, 171, 135, 8
@@ -27,16 +27,16 @@ END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "ConfiguraciÛn alternativa"
+CAPTION "Configuraci√≥n alternativa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Escriba a continuaciÛn la configuraciÛn IP alternativa si este equipo  se utiliza en m·s de una red.", -1, 9, 9, 220, 20
-    CONTROL "&DirecciÛn IP privada autom·tica", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    LTEXT "Escriba a continuaci√≥n la configuraci√≥n IP alternativa si este equipo  se utiliza en m√°s de una red.", -1, 9, 9, 220, 20
+    CONTROL "&Direcci√≥n IP privada autom√°tica", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "Configurada por el u&suario", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 90, 12
-    LTEXT "Dire&cciÛn IP:", -1, 14, 75, 135, 8
+    LTEXT "Dire&cci√≥n IP:", -1, 14, 75, 135, 8
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "M·scara de s&ubred:", -1, 14, 95, 135, 8
+    LTEXT "M√°scara de s&ubred:", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
     LTEXT "&Puerta de enlace predeterminada:", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
@@ -48,7 +48,7 @@ END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "ConfiguraciÛn de IP"
+CAPTION "Configuraci√≥n de IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Direcciones &IP ", -1, 5, 5, 240, 90
@@ -62,8 +62,8 @@ BEGIN
     PUSHBUTTON "Modificar...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Quitar", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
-    CHECKBOX "MÈtrica autom·tica", IDC_AUTOMETRIC, 9, 200, 85, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "MÈtrica de la interfaz:", -1, 15, 215, 90, 12
+    CHECKBOX "M√©trica autom√°tica", IDC_AUTOMETRIC, 9, 200, 85, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "M√©trica de la interfaz:", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -73,14 +73,14 @@ CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
-    LTEXT "Direcciones de servidores DNS, por orden de utili&zaciÛn:", -1, 5, 5, 180, 12
+    LTEXT "Direcciones de servidores DNS, por orden de utili&zaci√≥n:", -1, 5, 5, 180, 12
     PUSHBUTTON "Subir", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
     PUSHBUTTON "Bajar", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Agr&egar...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "Modifi&car...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Quitar", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
-    LTEXT "Los siguientes tres par·metros se aplican a todas las conexiones que tienen habilitado TCP/IP. Para resoluciÛn de nombres no cualificados:", -1, 5, 90, 225, 24
-    CONTROL "Anexar sufijos DNS principa&les y de conexiones especÌficas", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 210, 12
+    LTEXT "Los siguientes tres par√°metros se aplican a todas las conexiones que tienen habilitado TCP/IP. Para resoluci√≥n de nombres no cualificados:", -1, 5, 90, 225, 24
+    CONTROL "Anexar sufijos DNS principa&les y de conexiones espec√≠ficas", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 210, 12
     CHECKBOX "Anexar sufijos primarios del su&fijo DNS principal", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "A&nexar estos sufijos DNS (en este orden):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
@@ -89,10 +89,10 @@ BEGIN
     PUSHBUTTON "Ag&regar...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "Mo&dificar...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "Qui&tar", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "&Sufijo DNS para esta conexiÛn:", -1, 5, 227, 110, 14
+    LTEXT "&Sufijo DNS para esta conexi√≥n:", -1, 5, 227, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Registrar estas direcciones de cone&xiones en DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Utilizar este sufijo DNS de conexiÛn para registro DNS", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Utilizar este sufijo DNS de conexi√≥n para registro DNS", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
 END
 
@@ -102,20 +102,20 @@ CAPTION "Opciones"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
-    LTEXT "&ConfiguraciÛn opcional", -1, 5, 15, 130, 12
+    LTEXT "&Configuraci√≥n opcional", -1, 5, 15, 130, 12
     PUSHBUTTON "&Propiedades", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
-    GROUPBOX "DescripciÛn: ", -1, 5, 120, 240, 70
+    GROUPBOX "Descripci√≥n: ", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
 IDD_TCPIPADDIP_DLG DIALOGEX DISCARDABLE  0, 0, 200, 70
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "DirecciÛn TCP/IP"
+CAPTION "Direcci√≥n TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "DirecciÛn IP:", -1, 5, 15, 70, 12
-    LTEXT "M·scara de subred:", -1, 5, 30, 70, 12
+    LTEXT "Direcci√≥n IP:", -1, 5, 15, 70, 12
+    LTEXT "M√°scara de subred:", -1, 5, 30, 70, 12
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -123,13 +123,13 @@ END
 
 IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "DirecciÛn TCP/IP de puerta de enlace"
+CAPTION "Direcci√≥n TCP/IP de puerta de enlace"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Puerta de enlace:", -1, 5, 15, 70, 12
-    CHECKBOX "MÈtrica autom·tica", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "&MÈtrica:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    CHECKBOX "M√©trica autom√°tica", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&M√©trica:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
@@ -165,19 +165,19 @@ BEGIN
     CHECKBOX "Habilitar filtrado TCP/IP (todos los adaptadores)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
     CONTROL "Permitir todos", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 60, 12
-    CONTROL "Permitir sÛlo", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "Permitir s√≥lo", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
     PUSHBUTTON "Agregar", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Quitar", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
     CONTROL "Permitir todos", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 60, 12
-    CONTROL "Permitir sÛlo", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "Permitir s√≥lo", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
     PUSHBUTTON "Agregar", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Quitar", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 205, 30, 90, 150
     CONTROL "Permitir todos", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 60, 12
-    CONTROL "Permitir sÛlo", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "Permitir s√≥lo", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
     PUSHBUTTON "Agregar", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Quitar", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
@@ -198,33 +198,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "ConexiÛn de red"
-	IDS_NO_IPADDR_SET   "El adaptador requiere al menos una direcciÛn IP. Escriba una."
-	IDS_NO_SUBMASK_SET  "Ha introducido una direcciÛn que esta pierdiendo su m·scara de subred. Por favor,aÒada una m·scara de subred."
-	IDS_TCPFILTERDESC   "El filtro TCP/IP le permite controlar el tipo de tr·fico de red TCP/IP que llega a su equipo."
+	IDS_NET_CONNECT "Conexi√≥n de red"
+	IDS_NO_IPADDR_SET   "El adaptador requiere al menos una direcci√≥n IP. Escriba una."
+	IDS_NO_SUBMASK_SET  "Ha introducido una direcci√≥n que esta pierdiendo su m√°scara de subred. Por favor,a√±ada una m√°scara de subred."
+	IDS_TCPFILTERDESC   "El filtro TCP/IP le permite controlar el tipo de tr√°fico de red TCP/IP que llega a su equipo."
 	IDS_TCPFILTER       "Filtrado TCP/IP"
-	IDS_IPADDR          "DirecciÛn IP"
-	IDS_SUBMASK         "M·scara de subred"
+	IDS_IPADDR          "Direcci√≥n IP"
+	IDS_SUBMASK         "M√°scara de subred"
 	IDS_GATEWAY         "Puerta de enlace"
-	IDS_METRIC          "MÈtrica"
+	IDS_METRIC          "M√©trica"
 	IDS_DHCPACTIVE      "DHCP habilitado"
-	IDS_AUTOMATIC       "Autom·tico"
-	IDS_NOITEMSEL       "No ha seleccionado ning˙n elemento. Seleccione uno primero."
+	IDS_AUTOMATIC       "Autom√°tico"
+	IDS_NOITEMSEL       "No ha seleccionado ning√∫n elemento. Seleccione uno primero."
 	IDS_TCPIP           "ReactOS-TCP/IP"
 	IDS_ADD             "Agregar"
 	IDS_MOD             "Aceptar"
 	IDS_TCP_PORTS       "Puertos TCP"
 	IDS_UDP_PORTS       "Puertos UDP"
 	IDS_IP_PROTO        "Protocolos IP"
-	IDS_PORT_RANGE      "Los n˙meros de puerto deben ser mayores que 0 y menores que 65536. Escriba un n˙mero incluido en este intervalo."
-	IDS_PROT_RANGE      "Los n˙meros de protocolo deben ser mayores que 0 y menores que 256. Escriba un n˙mero incluido en este intervalo."
-	IDS_DUP_NUMBER      "El n˙mero que esta intentando agregar ya esta en la lista. Escriba un n˙mero diferente."
+	IDS_PORT_RANGE      "Los n√∫meros de puerto deben ser mayores que 0 y menores que 65536. Escriba un n√∫mero incluido en este intervalo."
+	IDS_PROT_RANGE      "Los n√∫meros de protocolo deben ser mayores que 0 y menores que 256. Escriba un n√∫mero incluido en este intervalo."
+	IDS_DUP_NUMBER      "El n√∫mero que esta intentando agregar ya esta en la lista. Escriba un n√∫mero diferente."
 	IDS_DISABLE_FILTER  "Disabling this global TCP/IP setting will affect all adapters."
-	IDS_NO_SUFFIX       "La configuraciÛn actual del mÈtodo de b˙squeda requiere al menos un sufijo DNS. Escriba uno o cambie la configuraciÛn."
-	IDS_DOMAIN_SUFFIX   "El sufijo del dominio no es un sufijo v·lido."
-	IDS_DNS_SUFFIX      "El nombre de dominio DNS ""%s"" no es un nombre DNS v·lido."
-	IDS_DUP_SUFFIX      "El sufijo DNS ya est· en la lista."
-	IDS_DUP_IPADDR      "La direcciÛn IP ya est· en la lista."
-	IDS_DUP_GW          "La puerta de enlace predeterminada ya est· en la lista."
+	IDS_NO_SUFFIX       "La configuraci√≥n actual del m√©todo de b√∫squeda requiere al menos un sufijo DNS. Escriba uno o cambie la configuraci√≥n."
+	IDS_DOMAIN_SUFFIX   "El sufijo del dominio no es un sufijo v√°lido."
+	IDS_DNS_SUFFIX      "El nombre de dominio DNS ""%s"" no es un nombre DNS v√°lido."
+	IDS_DUP_SUFFIX      "El sufijo DNS ya est√° en la lista."
+	IDS_DUP_IPADDR      "La direcci√≥n IP ya est√° en la lista."
+	IDS_DUP_GW          "La puerta de enlace predeterminada ya est√° en la lista."
 END
-

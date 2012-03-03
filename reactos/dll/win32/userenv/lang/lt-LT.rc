@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * 
- * Translated by Vytis "CMan" Girdþijauskas, cman [at] cman [dot] us
+ * Translated by Vytis "CMan" GirdÅ¾ijauskas, cman [at] cman [dot] us
  */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
@@ -28,15 +28,15 @@ BEGIN
     IDS_FAVORITES      "Adresynas"
     IDS_STARTMENU      "Meniu"
     IDS_PROGRAMS       "Meniu\\Programos"
-    IDS_ADMINTOOLS     "Meniu\\Programos\\Administravimo árankiai"
+    IDS_ADMINTOOLS     "Meniu\\Programos\\Administravimo Ä¯rankiai"
     IDS_STARTUP        "Meniu\\Programos\\Paleistis"
     IDS_MYDOCUMENTS    "Dokumentai"
-    IDS_MYPICTURES     "Dokumentai\\Paveikslëliai"
+    IDS_MYPICTURES     "Dokumentai\\PaveikslÄ—liai"
     IDS_MYMUSIC        "Dokumentai\\Muzika"
     IDS_MYVIDEOS       "Dokumentai\\Vaizdai"
-    IDS_TEMPLATES      "Ruoðiniai"
+    IDS_TEMPLATES      "RuoÅ¡iniai"
     IDS_RECENT         "Neseniai atverta"
-    IDS_SENDTO         "Siøsti á"
+    IDS_SENDTO         "SiÅ³sti Ä¯"
     IDS_PRINTHOOD      "PrintHood"
     IDS_NETHOOD        "NetHood"
     IDS_LOCALSETTINGS  "Local Settings"

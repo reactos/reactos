@@ -8,68 +8,68 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ObecnÈ nastavenÌ"
+CAPTION "Obecn√© nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Konfigurace IP adres m˘ûe probÏhnout automaticky, pokud to sÌù dovoluje. V opaËnÈm p¯ÌpadÏ kontaktujte spr·vce sÌtÏ pro spr·vnÈ nastavenÌ.", -1, 9, 9, 228, 27
- CONTROL "ZÌskat IP adresu automaticky", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
+ LTEXT "Konfigurace IP adres m≈Ø≈æe probƒõhnout automaticky, pokud to s√≠≈• dovoluje. V opaƒçn√©m p≈ô√≠padƒõ kontaktujte spr√°vce s√≠tƒõ pro spr√°vn√© nastaven√≠.", -1, 9, 9, 228, 27
+ CONTROL "Z√≠skat IP adresu automaticky", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&PouûÌt n·sledujÌcÌ IP adresu:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ CONTROL "&Pou≈æ√≠t n√°sleduj√≠c√≠ IP adresu:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
  LTEXT "IP adresa:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
- LTEXT "Maska podsÌtÏ:", -1, 14, 90, 135, 8
+ LTEXT "Maska pods√≠tƒõ:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
- LTEXT "V˝chozÌ br·na:", -1, 14, 105, 135, 8
+ LTEXT "V√Ωchoz√≠ br√°na:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
- CONTROL "ZÌskat adresy DNS server˘ automaticky", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
+ CONTROL "Z√≠skat adresy DNS server≈Ø automaticky", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&PouûÌt n·sledujÌcÌ adresy DNS server˘", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Up¯ednostÚovan˝ DNS server:", -1, 14, 171, 135, 8
+ CONTROL "&Pou≈æ√≠t n√°sleduj√≠c√≠ adresy DNS server≈Ø", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Up≈ôednost≈àovan√Ω DNS server:", -1, 14, 171, 135, 8
  CONTROL "",IDC_DNS1,"SysIPAddress32",0,150,171-2,80,12
- LTEXT "Z·loûnÌ DNS server:", -1, 14, 186, 135, 8
+ LTEXT "Z√°lo≈æn√≠ DNS server:", -1, 14, 186, 135, 8
  CONTROL "",IDC_DNS2,"SysIPAddress32",0,150,186-2,80,12
- PUSHBUTTON "&RozöÌ¯enÈ", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Roz≈°√≠≈ôen√©", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "AlternativnÌ konfigurace"
+CAPTION "Alternativn√≠ konfigurace"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pokud je tento poËÌtaË pouûÌv·n ve vÌce neû jednÈ sÌti, lze zadat alternativnÌ nastavenÌ nÌûe", -1, 9, 9, 220, 20
-    CONTROL "Au&tomatick· priv·tnÌ IP adresa", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    LTEXT "Pokud je tento poƒç√≠taƒç pou≈æ√≠v√°n ve v√≠ce ne≈æ jedn√© s√≠ti, lze zadat alternativn√≠ nastaven√≠ n√≠≈æe", -1, 9, 9, 220, 20
+    CONTROL "Au&tomatick√° priv√°tn√≠ IP adresa", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "&UûivatelskÈ nastavenÌ", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    CONTROL "&U≈æivatelsk√© nastaven√≠", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "&IP adresa:", -1, 14, 75, 135, 8
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "&Maska podsÌtÏ:", -1, 14, 95, 135, 8
+    LTEXT "&Maska pods√≠tƒõ:", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
-    LTEXT "&V˝chozÌ br·na:", -1, 14, 115, 135, 8
+    LTEXT "&V√Ωchoz√≠ br√°na:", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
-    LTEXT "&Preferovan˝ DNS server:", -1, 14, 150, 135, 8
+    LTEXT "&Preferovan√Ω DNS server:", -1, 14, 150, 135, 8
     CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
-    LTEXT "&AlternativnÌ DNS server:", -1, 14, 165, 180, 8
+    LTEXT "&Alternativn√≠ DNS server:", -1, 14, 165, 180, 8
     CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "IP nastavenÌ"
+CAPTION "IP nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "IP adresy", -1, 5, 5, 240, 90
     CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
-    PUSHBUTTON "P¯idat...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "P≈ôidat...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Upravit...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Odebrat", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "V˝chozÌ br·ny:", -1, 5, 100, 240, 90
+    GROUPBOX "V√Ωchoz√≠ br√°ny:", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
-    PUSHBUTTON "P¯idat...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "P≈ôidat...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Upravit...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Odebrat", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
-    CHECKBOX "Automatick· metrika", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Metrika rozhranÌ:", -1, 15, 215, 90, 12
+    CHECKBOX "Automatick√° metrika", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Metrika rozhran√≠:", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -79,26 +79,26 @@ CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
-    LTEXT "&Adresy DNS server˘ v po¯adÌ vyuûitÌ:", -1, 5, 5, 180, 12
+    LTEXT "&Adresy DNS server≈Ø v po≈ôad√≠ vyu≈æit√≠:", -1, 5, 5, 180, 12
     PUSHBUTTON "Nahoru", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Dol˘", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&P¯idat...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Dol≈Ø", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&P≈ôidat...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Upravit...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Odebrat", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
-    LTEXT "N·sledujÌcÌ t¯i nastavenÌ jsou aplikov·na na vöechna p¯ipojenÌ s povolen˝m TCP/IP. P¯i rezoluci nekvalifikovan˝ch jmen:", -1, 5, 90, 220, 24
-    CONTROL "P¯ipojit p&rim·rnÌ a p¯ipojenÌm danÈ DNS p¯Ìpony", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "P¯ipojit rodiËovskÈ p¯Ìpony prim·rnÌ DNS p¯Ìpony", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "P¯ipojit &tyto DNS p¯Ìpony (v tomto po¯adÌ):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    LTEXT "N√°sleduj√≠c√≠ t≈ôi nastaven√≠ jsou aplikov√°na na v≈°echna p≈ôipojen√≠ s povolen√Ωm TCP/IP. P≈ôi rezoluci nekvalifikovan√Ωch jmen:", -1, 5, 90, 220, 24
+    CONTROL "P≈ôipojit p&rim√°rn√≠ a p≈ôipojen√≠m dan√© DNS p≈ô√≠pony", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
+    CHECKBOX "P≈ôipojit rodiƒçovsk√© p≈ô√≠pony prim√°rn√≠ DNS p≈ô√≠pony", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "P≈ôipojit &tyto DNS p≈ô√≠pony (v tomto po≈ôad√≠):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
     PUSHBUTTON "Nahoru", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Dol˘", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&P¯idat...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Dol≈Ø", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&P≈ôidat...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Upravit...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Odebrat", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "DNS p¯Ìpo&na tohoto p¯ipojenÌ:", -1, 5, 225, 110, 14
+    LTEXT "DNS p≈ô√≠po&na tohoto p≈ôipojen√≠:", -1, 5, 225, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
-    CHECKBOX "Registrovat &adresy tohoto p¯ipojenÌ v DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "P&ouûÌt DNS p¯Ìponu tohoto p¯ipojenÌ p¯i DNS registraci", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Registrovat &adresy tohoto p≈ôipojen√≠ v DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "P&ou≈æ√≠t DNS p≈ô√≠ponu tohoto p≈ôipojen√≠ p≈ôi DNS registraci", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
 END
 
@@ -108,7 +108,7 @@ CAPTION "Volby"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
-    LTEXT "&Voliteln· nastavenÌ", -1, 5, 15, 130, 12
+    LTEXT "&Voliteln√° nastaven√≠", -1, 5, 15, 130, 12
     PUSHBUTTON "&Podrobnosti", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Popis:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
@@ -121,7 +121,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
     LTEXT "IP adresa:", -1, 5, 15, 70, 12
-    LTEXT "Maska podsÌtÏ:", -1, 5, 30, 70, 12
+    LTEXT "Maska pods√≠tƒõ:", -1, 5, 30, 70, 12
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "OK", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Storno", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -129,12 +129,12 @@ END
 
 IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP adresa br·ny"
+CAPTION "TCP/IP adresa br√°ny"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "Br·na:", -1, 5, 15, 70, 12
-    CHECKBOX "Automatick· metrika", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Br√°na:", -1, 5, 15, 70, 12
+    CHECKBOX "Automatick√° metrika", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metrika:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
@@ -154,38 +154,38 @@ END
 
 IDD_TCPIPSUFFIX_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP domÈnov· p¯Ìpona"
+CAPTION "TCP/IP dom√©nov√° p≈ô√≠pona"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
-    LTEXT "DomÈnov· p¯Ìpona:", -1, 5, 10, 120, 12
+    LTEXT "Dom√©nov√° p≈ô√≠pona:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Storno", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_FILTER_DLG DIALOGEX DISCARDABLE  0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP filtrov·nÌ"
+CAPTION "TCP/IP filtrov√°n√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CHECKBOX "Zapnout filtrov·nÌ TCP/IP (vöechny adaptÈry)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Zapnout filtrov√°n√≠ TCP/IP (v≈°echny adapt√©ry)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
-    CONTROL "Povolit vöe", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "Povolit v≈°e", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
     CONTROL "Povolit pouze", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
-    PUSHBUTTON "P¯idat", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "P≈ôidat", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Odebrat", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Povolit vöe", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Povolit v≈°e", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
     CONTROL "Povolit pouze", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
-    PUSHBUTTON "P¯idat", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "P≈ôidat", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Odebrat", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 205, 30, 90, 150
-    CONTROL "Povolit vöe", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "Povolit v≈°e", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
     CONTROL "Povolit pouze", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
-    PUSHBUTTON "P¯idat", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "P≈ôidat", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Odebrat", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
     PUSHBUTTON "OK", IDC_OK, 150, 190, 50, 14, WS_TABSTOP
     PUSHBUTTON "Storno", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
@@ -193,7 +193,7 @@ END
 
 IDD_TCPIP_PORT_DLG DIALOGEX DISCARDABLE  0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "P¯idat filtr"
+CAPTION "P≈ôidat filtr"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
@@ -204,33 +204,33 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "SÌùovÈ p¯ipojenÌ"
-	IDS_NO_IPADDR_SET   "AdaptÈr vyûaduje zad·nÌ alespoÚ jednÈ IP adresy."
-	IDS_NO_SUBMASK_SET  "K zadanÈ adrese je nutnÈ doplnit masku podsÌtÏ."
-	IDS_TCPFILTERDESC   "TCP/IP filtrov·nÌ dovoluje kontrolovat typ TCP/IP sÌùovÈho provozu, kter˝ se dostane k tomuto poËÌtaËi."
-	IDS_TCPFILTER       "TCP/IP filtrov·nÌ"
+	IDS_NET_CONNECT "S√≠≈•ov√© p≈ôipojen√≠"
+	IDS_NO_IPADDR_SET   "Adapt√©r vy≈æaduje zad√°n√≠ alespo≈à jedn√© IP adresy."
+	IDS_NO_SUBMASK_SET  "K zadan√© adrese je nutn√© doplnit masku pods√≠tƒõ."
+	IDS_TCPFILTERDESC   "TCP/IP filtrov√°n√≠ dovoluje kontrolovat typ TCP/IP s√≠≈•ov√©ho provozu, kter√Ω se dostane k tomuto poƒç√≠taƒçi."
+	IDS_TCPFILTER       "TCP/IP filtrov√°n√≠"
 	IDS_IPADDR          "IP adresa"
-	IDS_SUBMASK         "Maska podsÌtÏ"
-	IDS_GATEWAY         "Br·na"
+	IDS_SUBMASK         "Maska pods√≠tƒõ"
+	IDS_GATEWAY         "Br√°na"
 	IDS_METRIC          "Metrika"
 	IDS_DHCPACTIVE      "DHCP zapnuto"
 	IDS_AUTOMATIC       "Automaticky"
-	IDS_NOITEMSEL       "Nebyla vybr·na û·dn· poloûka."
+	IDS_NOITEMSEL       "Nebyla vybr√°na ≈æ√°dn√° polo≈æka."
 	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "P¯idat"
+	IDS_ADD             "P≈ôidat"
 	IDS_MOD             "OK"
 	IDS_TCP_PORTS       "TCP porty"
 	IDS_UDP_PORTS       "UDP porty"
 	IDS_IP_PROTO        "IP protokoly"
-	IDS_PORT_RANGE      "»Ìsla port˘ musÌ b˝t zad·na vyööÌ neû 0 a niûöÌ neû 65536."
-	IDS_PROT_RANGE      "»Ìsla protokol˘ musÌ b˝t zad·na vyööÌ neû 0 a niûöÌ neû 256."
-	IDS_DUP_NUMBER      "P¯id·vanÈ ËÌslo se uû nach·zÌ v seznamu. Je nutnÈ zadat jinÈ ËÌslo."
-	IDS_DISABLE_FILTER  "VypnutÌ tohoto glob·lnÌho nastavenÌ TCP/IP ovlivnÌ vöechny adaptÈry."
-	IDS_NO_SUFFIX       "SouËasnÈ nastavenÌ metod vyhled·v·nÌ vyûaduje alespoÚ jednu DNS p¯Ìponu. Je nutnÈ ji zadat nebo zmÏnit nastavenÌ."
-	IDS_DOMAIN_SUFFIX   "Zadan· domÈnov· p¯Ìpona nenÌ platn·."
-	IDS_DNS_SUFFIX      "DNS domÈnovÈ jmÈno ""%s"" nenÌ platnÈ."
-	IDS_DUP_SUFFIX      "DNS p¯Ìpona se uû nach·zÌ v seznamu."
-	IDS_DUP_IPADDR      "IP adresa se uû nach·zÌ v seznamu."
-	IDS_DUP_GW          "V˝chozÌ br·na se uû nach·zÌ v seznamu."
+	IDS_PORT_RANGE      "ƒå√≠sla port≈Ø mus√≠ b√Ωt zad√°na vy≈°≈°√≠ ne≈æ 0 a ni≈æ≈°√≠ ne≈æ 65536."
+	IDS_PROT_RANGE      "ƒå√≠sla protokol≈Ø mus√≠ b√Ωt zad√°na vy≈°≈°√≠ ne≈æ 0 a ni≈æ≈°√≠ ne≈æ 256."
+	IDS_DUP_NUMBER      "P≈ôid√°van√© ƒç√≠slo se u≈æ nach√°z√≠ v seznamu. Je nutn√© zadat jin√© ƒç√≠slo."
+	IDS_DISABLE_FILTER  "Vypnut√≠ tohoto glob√°ln√≠ho nastaven√≠ TCP/IP ovlivn√≠ v≈°echny adapt√©ry."
+	IDS_NO_SUFFIX       "Souƒçasn√© nastaven√≠ metod vyhled√°v√°n√≠ vy≈æaduje alespo≈à jednu DNS p≈ô√≠ponu. Je nutn√© ji zadat nebo zmƒõnit nastaven√≠."
+	IDS_DOMAIN_SUFFIX   "Zadan√° dom√©nov√° p≈ô√≠pona nen√≠ platn√°."
+	IDS_DNS_SUFFIX      "DNS dom√©nov√© jm√©no ""%s"" nen√≠ platn√©."
+	IDS_DUP_SUFFIX      "DNS p≈ô√≠pona se u≈æ nach√°z√≠ v seznamu."
+	IDS_DUP_IPADDR      "IP adresa se u≈æ nach√°z√≠ v seznamu."
+	IDS_DUP_GW          "V√Ωchoz√≠ br√°na se u≈æ nach√°z√≠ v seznamu."
 END
 
