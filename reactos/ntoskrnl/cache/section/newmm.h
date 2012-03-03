@@ -214,10 +214,6 @@ MiReadFilePage
  PMEMORY_AREA MemoryArea, 
  PMM_REQUIRED_RESOURCES RequiredResources);
 
-ULONG
-NTAPI
-MiChecksumPage(PFN_NUMBER Page, BOOLEAN Lock);
-
 NTSTATUS
 NTAPI
 MiGetOnePage

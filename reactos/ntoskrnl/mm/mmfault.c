@@ -80,10 +80,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
                                               (PVOID)Address);
             break;
 
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
          case MEMORY_AREA_CACHE:
             // This code locks for itself to keep from having to break a lock
             // passed in.
@@ -174,12 +170,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                                                   MemoryArea,
                                                   (PVOID)Address,
                                                   FromMdl);
-            break;
-
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-            Status = MmNotPresentFaultVirtualMemory(AddressSpace,
-                                                    MemoryArea,
-                                                    (PVOID)Address);
             break;
 
          case MEMORY_AREA_CACHE:

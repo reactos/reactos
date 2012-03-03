@@ -74,8 +74,7 @@ typedef ULONG_PTR SWAPENTRY;
 #endif
 
 #define MEMORY_AREA_SECTION_VIEW            (1)
-#define MEMORY_AREA_CACHE   (2)
-#define MEMORY_AREA_VIRTUAL_MEMORY          (8)
+#define MEMORY_AREA_CACHE                   (2)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
@@ -1772,13 +1771,17 @@ VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 0);
+    //Thread->OwnsProcessAddressSpaceExclusive = TRUE;
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
+    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 1);
     KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    //Thread->OwnsProcessAddressSpaceExclusive = 0;
 }
 
 FORCEINLINE

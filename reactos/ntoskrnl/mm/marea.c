@@ -374,14 +374,13 @@ MmInsertMemoryArea(
    PMEMORY_AREA PreviousNode;
    ULONG Depth = 0;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   PETHREAD CurrentThread = PsGetCurrentThread();
 
    /* Build a lame VAD if this is a user-space allocation */
    if ((marea->EndingAddress < MmSystemRangeStart) && (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
    {
        PMMVAD Vad;
 
-       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
+       ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), TAG_MVAD);
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));
@@ -403,15 +402,9 @@ MmInsertMemoryArea(
        Vad->u.VadFlags.PrivateMemory = 1;
        Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
        
-       /* Pretend as if we own the working set */
-       if (marea->Type == MEMORY_AREA_VIRTUAL_MEMORY) MiLockProcessWorkingSet(Process, CurrentThread);
-       
        /* Insert the VAD */
        MiInsertVad(Vad, Process);
        marea->Vad = Vad;
-       
-       /* Release the working set */
-       if (marea->Type == MEMORY_AREA_VIRTUAL_MEMORY) MiUnlockProcessWorkingSet(Process, CurrentThread);
    }
    else
    {
@@ -782,7 +775,7 @@ MmFreeMemoryArea(
        if (MemoryArea->Vad)
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
-           ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
+           ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
@@ -908,7 +901,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
           Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
           FixedAddress, Result);
 
-   Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
+   Granularity = PAGE_SIZE;
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
@@ -1067,10 +1060,6 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
              MmUnlockAddressSpace(&Process->Vm);
              MmUnmapViewOfCacheSegment(&Process->Vm, Address);
              MmLockAddressSpace(&Process->Vm);
-             break;
-
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-             MmFreeVirtualMemory(Process, MemoryArea);
              break;
 
          case MEMORY_AREA_OWNED_BY_ARM3:

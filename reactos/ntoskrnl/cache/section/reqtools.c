@@ -153,59 +153,6 @@ MiReadFilePage
 	return STATUS_SUCCESS;
 }
 
-ULONG
-NTAPI
-MiChecksumPage(PFN_NUMBER Page, BOOLEAN Lock)
-{
-	int i;
-	NTSTATUS Status;
-	ULONG Total = 0;
-	PULONG PageBuf = NULL;
-	PMEMORY_AREA TmpArea;
-	PHYSICAL_ADDRESS BoundaryAddressMultiple;
-
-	BoundaryAddressMultiple.QuadPart = 0;
-
-	if (Lock) MmLockAddressSpace(MmGetKernelAddressSpace());
-
-	Status = MmCreateMemoryArea
-		(MmGetKernelAddressSpace(),
-		 MEMORY_AREA_VIRTUAL_MEMORY, 
-		 (PVOID*)&PageBuf,
-		 PAGE_SIZE,
-		 PAGE_READWRITE,
-		 &TmpArea,
-		 FALSE,
-		 MEM_TOP_DOWN,
-		 BoundaryAddressMultiple);
-	
-	DPRINT("Status %x, PageBuf %x\n", Status, PageBuf);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("STATUS_NO_MEMORY: %x\n", Status);
-		if (Lock) MmUnlockAddressSpace(MmGetKernelAddressSpace());
-		return 0;
-	}
-	
-	Status = MmCreateVirtualMapping(NULL, PageBuf, PAGE_READWRITE, &Page, 1);
-	if (!NT_SUCCESS(Status))
-	{
-		MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
-		if (Lock) MmUnlockAddressSpace(MmGetKernelAddressSpace());
-		DPRINT1("Status: %x\n", Status);
-		return Status;
-	}
-	
-	for (i = 0; i < 1024; i++) {
-		Total += PageBuf[i];
-	}
-
-	MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
-	if (Lock) MmUnlockAddressSpace(MmGetKernelAddressSpace());
-
-	return Total;
-}
-
 NTSTATUS
 NTAPI
 MiSwapInPage

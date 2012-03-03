@@ -163,12 +163,6 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
        MmUnlockAddressSpace(AddressSpace);
        Status = MmpPageOutPhysicalAddress(Page);
    }
-   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
-   {
-       /* Do not page out virtual memory during ARM3 transition */
-       MmUnlockAddressSpace(AddressSpace);
-       Status = STATUS_SUCCESS;
-   }
    else
    {
       KeBugCheck(MEMORY_MANAGEMENT);
