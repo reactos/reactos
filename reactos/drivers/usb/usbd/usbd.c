@@ -32,17 +32,15 @@
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
+#define _USBD_
+#define NDEBUG
 #include <ntddk.h>
 #include <usbdi.h>
-#define NDEBUG
+#include <usbdlib.h>
 #include <debug.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
 #endif
-typedef struct _USBD_INTERFACE_LIST_ENTRY {
-    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    PUSBD_INTERFACE_INFORMATION Interface;
-} USBD_INTERFACE_LIST_ENTRY, *PUSBD_INTERFACE_LIST_ENTRY;
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
@@ -335,39 +333,61 @@ USBD_CreateConfigurationRequestEx(
 {
     PURB Urb;
     ULONG UrbSize = 0;
-    ULONG InterfaceCount;
+    ULONG InterfaceCount = 0, PipeCount = 0;
     ULONG InterfaceNumber, EndPointNumber;
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;
 
-    for (InterfaceCount = 0;
-         InterfaceList[InterfaceCount].InterfaceDescriptor != NULL;
-         InterfaceCount++)
+    while(InterfaceList[InterfaceCount].InterfaceDescriptor)
     {
-        UrbSize += sizeof(USBD_INTERFACE_INFORMATION);
-        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
+        // pipe count
+        PipeCount += InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints;
+
+        // interface count
+        InterfaceCount++;
     }
 
-    UrbSize += sizeof(URB) + sizeof(USBD_INTERFACE_INFORMATION);
+    // size of urb
+    UrbSize = GET_SELECT_CONFIGURATION_REQUEST_SIZE(InterfaceCount, PipeCount);
 
+    // allocate urb
     Urb = ExAllocatePool(NonPagedPool, UrbSize);
+    if (!Urb)
+    {
+        // no memory
+        return NULL;
+    }
+
+    // zero urb
     RtlZeroMemory(Urb, UrbSize);
+
+    // init urb header
     Urb->UrbSelectConfiguration.Hdr.Function =  URB_FUNCTION_SELECT_CONFIGURATION;
-    Urb->UrbSelectConfiguration.Hdr.Length = sizeof(Urb->UrbSelectConfiguration);
+    Urb->UrbSelectConfiguration.Hdr.Length = UrbSize;
     Urb->UrbSelectConfiguration.ConfigurationDescriptor = ConfigurationDescriptor;
 
+    // init interface information
     InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
     for (InterfaceNumber = 0; InterfaceNumber < InterfaceCount; InterfaceNumber++)
     {
+        // init interface info
         InterfaceList[InterfaceNumber].Interface = InterfaceInfo;
-        InterfaceInfo->Length = sizeof(USBD_INTERFACE_INFORMATION) +
-                                ((InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION));
         InterfaceInfo->InterfaceNumber = InterfaceList[InterfaceNumber].InterfaceDescriptor->bInterfaceNumber;
         InterfaceInfo->AlternateSetting = InterfaceList[InterfaceNumber].InterfaceDescriptor->bAlternateSetting;
         InterfaceInfo->NumberOfPipes = InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints;
+
+        // store length
+        InterfaceInfo->Length = GET_USBD_INTERFACE_SIZE(InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints);
+
+        // sanity check
+        //C_ASSERT(FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) == 16);
+
         for (EndPointNumber = 0; EndPointNumber < InterfaceInfo->NumberOfPipes; EndPointNumber++)
         {
+            // init max transfer size
             InterfaceInfo->Pipes[EndPointNumber].MaximumTransferSize = PAGE_SIZE;
         }
+
+        // next interface info
         InterfaceInfo = (PUSBD_INTERFACE_INFORMATION) ((ULONG_PTR)InterfaceInfo + InterfaceInfo->Length);
     }
 
