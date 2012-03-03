@@ -1802,8 +1802,8 @@ CHubController::HandleSyncResetAndClearStall(
     //
     // reset data toggle
     //
-    ASSERT(NT_SUCCESS(Status));
-    EndpointDescriptor->DataToggle = 0x0;
+    if (NT_SUCCESS(Status))
+        EndpointDescriptor->DataToggle = 0x0;
 
     //
     // done
