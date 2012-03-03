@@ -3098,6 +3098,11 @@ FileCopyCallback(PVOID Context,
 
         case SPFILENOTIFY_ENDCOPY:
             CopyContext->CompletedOperations++;
+
+            /* SYSREG checkpoint */
+            if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
+                DPRINT1("CHECKPOINT:HALF_COPIED\n");
+
             ProgressNextStep(CopyContext->ProgressBar);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
