@@ -1164,6 +1164,9 @@ CUSBDevice::SelectInterface(
             Found = TRUE;
             break;
         }
+
+        // next entry
+        Entry = Entry->Flink;
     }
 
     if (!Found)
