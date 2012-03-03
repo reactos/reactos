@@ -533,8 +533,8 @@ USBHUB_PdoQueryDeviceText(
 
     if (SourceString)
     {
-        ReturnString = ExAllocatePool(PagedPool, SourceString->Length);
-        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->Length);
+        ReturnString = ExAllocatePool(PagedPool, SourceString->MaximumLength);
+        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->MaximumLength);
         DPRINT1("%S\n", ReturnString);
         *Information = (ULONG_PTR)ReturnString;
     }

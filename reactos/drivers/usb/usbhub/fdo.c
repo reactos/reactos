@@ -997,7 +997,7 @@ CreateDeviceIds(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-            RtlInitUnicodeString(&UsbChildExtension->usTextDescription, L"");
+            RtlInitUnicodeString(&UsbChildExtension->usTextDescription, L"USB Device"); // FIXME NON-NLS
         }
         else
         {
@@ -1048,7 +1048,7 @@ CreateDeviceIds(
        DPRINT("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
     }
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
