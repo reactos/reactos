@@ -220,76 +220,32 @@ USBCCGP_GetDescriptors(
      return Status;
 }
 
-ULONG
-CountInterfaceDescriptors(
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
-{
-    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    PVOID CurrentPosition;
-    ULONG Count = 0;
-
-    //
-    // enumerate all interfaces
-    //
-    CurrentPosition = ConfigurationDescriptor;
-    do
-    {
-        //
-        // find next descriptor
-        //
-        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
-        if (!InterfaceDescriptor)
-            break;
-
-        //
-        // advance to next descriptor
-        //
-        CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
-
-        //
-        // increment descriptor count
-        //
-        Count++;
-
-    }while(TRUE);
-
-    //
-    // done
-    //
-    return Count;
-}
-
 NTSTATUS
 AllocateInterfaceDescriptorsArray(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     OUT PUSB_INTERFACE_DESCRIPTOR **OutArray)
 {
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    PVOID CurrentPosition;
     ULONG Count = 0;
     PUSB_INTERFACE_DESCRIPTOR *Array;
-
-    Count = CountInterfaceDescriptors(ConfigurationDescriptor);
-    ASSERT(Count);
 
     //
     // allocate array
     //
-    Array = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * Count);
+    Array = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * ConfigurationDescriptor->bNumInterfaces);
     if (!Array)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     //
     // enumerate all interfaces
     //
-    CurrentPosition = ConfigurationDescriptor;
     Count = 0;
     do
     {
         //
         // find next descriptor
         //
-        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, CurrentPosition, -1, -1, -1, -1, -1);
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, Count, 0, -1, -1, -1);
         if (!InterfaceDescriptor)
             break;
 
@@ -298,11 +254,6 @@ AllocateInterfaceDescriptorsArray(
         //
         Array[Count] = InterfaceDescriptor;
         Count++;
-
-        //
-        // advance to next descriptor
-        //
-        CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
 
     }while(TRUE);
 

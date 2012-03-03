@@ -460,6 +460,7 @@ USBCCGP_BuildConfigurationDescriptor(
     PURB Urb;
     PVOID Buffer;
     PUCHAR BufferPtr;
+    UCHAR InterfaceNumber;
 
     //
     // get current stack location
@@ -489,6 +490,7 @@ USBCCGP_BuildConfigurationDescriptor(
         // get current interface descriptor
         //
         InterfaceDescriptor = PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[Index];
+        InterfaceNumber = InterfaceDescriptor->bInterfaceNumber;
 
         //
         // add to size and move to next descriptor
@@ -513,10 +515,17 @@ USBCCGP_BuildConfigurationDescriptor(
             {
                 if (InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
                 {
+                    if (InterfaceNumber != InterfaceDescriptor->bInterfaceNumber)
+                    {
+                        //
+                        // reached next descriptor
+                        //
+                        break;
+                    }
+
                     //
-                    // reached next descriptor
+                    // include alternate descriptor
                     //
-                    break;
                 }
 
                 //
@@ -557,6 +566,7 @@ USBCCGP_BuildConfigurationDescriptor(
         // get current interface descriptor
         //
         InterfaceDescriptor = PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[Index];
+        InterfaceNumber = InterfaceDescriptor->bInterfaceNumber;
 
         //
         // copy descriptor and move to next descriptor
@@ -582,10 +592,18 @@ USBCCGP_BuildConfigurationDescriptor(
             {
                 if (InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
                 {
+                    if (InterfaceNumber != InterfaceDescriptor->bInterfaceNumber)
+                    {
+                        //
+                        // reached next descriptor
+                        //
+                        break;
+                    }
+
                     //
-                    // reached next descriptor
+                    // include alternate descriptor
                     //
-                    break;
+                    DPRINT("InterfaceDescriptor %p Alternate %x InterfaceNumber %x\n", InterfaceDescriptor, InterfaceDescriptor->bAlternateSetting, InterfaceDescriptor->bInterfaceNumber);
                 }
 
                 //
@@ -645,7 +663,7 @@ USBCCGP_PDOSelectConfiguration(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PURB Urb, NewUrb;
     PUSBD_INTERFACE_INFORMATION InterfaceInformation;
-    ULONG InterfaceInformationCount, Index, InterfaceIndex;
+    ULONG InterfaceIndex, Length;
     PUSBD_INTERFACE_LIST_ENTRY Entry;
     ULONG NeedSelect, FoundInterface;
     NTSTATUS Status;
@@ -677,28 +695,25 @@ USBCCGP_PDOSelectConfiguration(
         return STATUS_SUCCESS;
     }
 
-    //
-    // count interface information
-    //
-    InterfaceInformationCount = 0;
-    InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
-    do
-    {
-        InterfaceInformationCount++;
-        InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + InterfaceInformation->Length);
-    }while((ULONG_PTR)InterfaceInformation < (ULONG_PTR)Urb + Urb->UrbSelectConfiguration.Hdr.Length);
+    // sanity checks
+    //C_ASSERT(sizeof(struct _URB_HEADER) == 16);
+    //C_ASSERT(FIELD_OFFSET(struct _URB_SELECT_CONFIGURATION, Interface.Length) == 24);
+    //C_ASSERT(sizeof(USBD_INTERFACE_INFORMATION) == 36);
+    //C_ASSERT(sizeof(struct _URB_SELECT_CONFIGURATION) == 0x3C);
+
+    // available buffer length
+    Length = Urb->UrbSelectConfiguration.Hdr.Length - FIELD_OFFSET(struct _URB_SELECT_CONFIGURATION, Interface.Length);
 
     //
     // check all interfaces
     //
     InterfaceInformation = &Urb->UrbSelectConfiguration.Interface;
-    Index = 0;
+
     Entry = NULL;
-    DPRINT("Count %x\n", InterfaceInformationCount);
     do
     {
-        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);
-
+        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
+        ASSERT(InterfaceInformation->Length);
         //
         // search for the interface in the local interface list
         //
@@ -778,7 +793,19 @@ USBCCGP_PDOSelectConfiguration(
             //
             // interface is already selected
             //
-            RtlCopyMemory(InterfaceInformation, Entry->Interface, min(InterfaceInformation->Length, Entry->Interface->Length));
+            ASSERT(Length >= Entry->Interface->Length);
+            RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+
+            //
+            // adjust remaining buffer size
+            //
+            ASSERT(Entry->Interface->Length);
+            Length -= Entry->Interface->Length;
+
+            //
+            // move to next output interface information
+            //
+            InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + Entry->Interface->Length);
         }
         else
         {
@@ -811,23 +838,37 @@ USBCCGP_PDOSelectConfiguration(
             Status = USBCCGP_SyncUrbRequest(PDODeviceExtension->NextDeviceObject, NewUrb);
             DPRINT1("SelectInterface Status %x\n", Status);
 
-            //
-            // did it succeeed
-            //
-            if (NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
-                //
-                // update configuration info
-                //
-                ASSERT(Entry->Interface->Length == NewUrb->UrbSelectInterface.Interface.Length);
-                ASSERT(InterfaceInformation->Length == NewUrb->UrbSelectInterface.Interface.Length);
-                RtlCopyMemory(Entry->Interface, &NewUrb->UrbSelectInterface.Interface, NewUrb->UrbSelectInterface.Interface.Length);
-
-                //
-                // update provided interface information
-                //
-                RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+                 //
+                 // failed
+                 //
+                 break;
             }
+
+            //
+            // update configuration info
+            //
+            ASSERT(Entry->Interface->Length >= NewUrb->UrbSelectInterface.Interface.Length);
+            ASSERT(Length >= NewUrb->UrbSelectInterface.Interface.Length);
+            RtlCopyMemory(Entry->Interface, &NewUrb->UrbSelectInterface.Interface, NewUrb->UrbSelectInterface.Interface.Length);
+
+            //
+            // update provided interface information
+            //
+            ASSERT(Length >= Entry->Interface->Length);
+            RtlCopyMemory(InterfaceInformation, Entry->Interface, Entry->Interface->Length);
+
+            //
+            // decrement remaining buffer size
+            //
+            ASSERT(Entry->Interface->Length);
+            Length -= Entry->Interface->Length;
+
+            //
+            // adjust output buffer offset
+            //
+            InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + Entry->Interface->Length);
 
             //
             // free urb
@@ -835,12 +876,7 @@ USBCCGP_PDOSelectConfiguration(
             FreeItem(NewUrb);
         }
 
-        //
-        // move to next information
-        //
-        InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)InterfaceInformation + InterfaceInformation->Length);
-        Index++;
-    }while(Index < InterfaceInformationCount);
+    }while(Length);
 
     //
     // store configuration handle

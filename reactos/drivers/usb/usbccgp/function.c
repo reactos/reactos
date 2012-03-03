@@ -711,7 +711,6 @@ USBCCGP_EnumWithAudioLegacy(
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor, FirstDescriptor = NULL;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
-    PVOID StartPosition;
 
     //
     // get device extension
@@ -723,20 +722,14 @@ USBCCGP_EnumWithAudioLegacy(
     //
     // first check if all interfaces belong to the same audio class
     //
-    StartPosition = FDODeviceExtension->ConfigurationDescriptor;
-    for(Index = 0; Index < CountInterfaceDescriptors(FDODeviceExtension->ConfigurationDescriptor); Index++)
+    for(Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         //
         // get interface descriptor
         //
-        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, StartPosition, -1, -1, -1, -1, -1);
+        InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index, 0, -1, -1, -1);
         DPRINT1("Index %lu Descriptor %p\n", Index, InterfaceDescriptor);
         ASSERT(InterfaceDescriptor);
-
-        //
-        // move to next descriptor
-        //
-        StartPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
 
         if (InterfaceDescriptor->bInterfaceClass != 0x1)
         {
@@ -816,7 +809,7 @@ USBCCGP_EnumWithAudioLegacy(
     //
     // number of interfaces
     //
-    FDODeviceExtension->FunctionDescriptor[0].NumberOfInterfaces = CountInterfaceDescriptors(FDODeviceExtension->ConfigurationDescriptor);
+    FDODeviceExtension->FunctionDescriptor[0].NumberOfInterfaces = FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces;
 
     //
     // store function count
