@@ -8862,11 +8862,6 @@ DriverEntry(
             PrimaryClaimed = TRUE;
         if(GlobalConfig->AtDiskSecondaryAddressClaimed)
             SecondaryClaimed = TRUE;
-        
-        if(PrimaryClaimed && SecondaryClaimed) {
-            KdPrint2((PRINT_PREFIX "Both legacy channels claimed\n"));
-            break;
-        }
 
         BMList[i].AltInitMasterDev = (UCHAR)0xff;
 
