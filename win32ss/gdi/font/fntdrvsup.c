@@ -11,17 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _FONTDEV
-{
-    LIST_ENTRY leLink;
-    DHPDEV dhpdev;
-    PLDEVOBJ pldev;
-    HSURF ahsurf[HS_DDI_MAX];
-    DEVINFO devinfo;
-
-    GDIINFO gdiinfo; // FIXME: something else?
-} FONTDEV, *PFONTDEV;
-
 C_ASSERT(sizeof(GDIINFO) == 0x130);
 
 
@@ -67,15 +56,15 @@ NTAPI
 RFONT_vInitDeviceMetrics(
     PRFONT prfnt)
 {
-    PFONTDEV pfntdev = (PFONTDEV)prfnt->hdevProducer;
+    PPDEVOBJ ppdev = (PPDEVOBJ)prfnt->hdevProducer;
 
-    pfntdev->pldev->pfn.QueryFontData(prfnt->dhpdev,
-                                      &prfnt->fobj,
-                                      QFD_MAXEXTENTS,
-                                      -1,
-                                      NULL,
-                                      &prfnt->fddm,
-                                      sizeof(FD_DEVICEMETRICS));
+    ppdev->pldev->pfn.QueryFontData(prfnt->dhpdev,
+                                    &prfnt->fobj,
+                                    QFD_MAXEXTENTS,
+                                    -1,
+                                    NULL,
+                                    &prfnt->fddm,
+                                    sizeof(FD_DEVICEMETRICS));
 }
 
 static
@@ -85,8 +74,8 @@ PFE_vInitialize(
     PPFF ppff,
     ULONG iFace)
 {
-    PFONTDEV pfntdev = (PFONTDEV)ppff->hdev;
-    PLDEVOBJ pldev = pfntdev->pldev;
+    PPDEVOBJ ppdev = (PPDEVOBJ)ppff->hdev;
+    PLDEVOBJ pldev = ppdev->pldev;
     ppfe->pPFF = ppff;
     ppfe->iFont = iFace;
     ppfe->flPFE = 0;
@@ -95,13 +84,13 @@ PFE_vInitialize(
     ppfe->tid = HandleToUlong(PsGetCurrentThreadId());
 
     /* Query IFIMETRICS */
-    ppfe->pifi = pldev->pfn.QueryFont(pfntdev->dhpdev,
+    ppfe->pifi = pldev->pfn.QueryFont(ppdev->dhpdev,
                                       ppff->hff,
                                       iFace,
                                       &ppfe->idifi);
 
     /* Query FD_GLYPHSET */
-    ppfe->pfdg = pldev->pfn.QueryFontTree(pfntdev->dhpdev,
+    ppfe->pfdg = pldev->pfn.QueryFontTree(ppdev->dhpdev,
                                           ppff->hff,
                                           iFace,
                                           QFT_GLYPHSET,
@@ -168,7 +157,7 @@ EngLoadFontFileFD(
     PWCHAR pwcCurrent;
     KAPC_STATE ApcState;
     PLIST_ENTRY ple;
-    PFONTDEV pfntdev = NULL;
+    PPDEVOBJ ppdev = NULL;
     HFF hff = 0;
     ULONG cFaces, cjSize, i, ulLangID = 0;
     PPFF ppff = NULL;
@@ -206,23 +195,23 @@ EngLoadFontFileFD(
     }
 
     /* Acquire font driver list lock */
-    EngAcquireSemaphore(ghsemFontDriver);
+    EngAcquireSemaphoreShared(ghsemFontDriver);
 
     /* Loop all installed font drivers */
     for (ple = gleFontDriverList.Flink;
          ple != &gleFontDriverList;
          ple = ple->Flink)
     {
-        pfntdev = CONTAINING_RECORD(ple, FONTDEV, leLink);
+        ppdev = CONTAINING_RECORD(ple, PDEVOBJ, leLink);
 
         /* Call the drivers DrvLoadFontFile function */
-        hff = pfntdev->pldev->pfn.LoadFontFile(cFiles,
-                                               piFiles,
-                                               apvView,
-                                               acjView,
-                                               pdv,
-                                               ulLangID,
-                                               ulCheckSum);
+        hff = ppdev->pldev->pfn.LoadFontFile(cFiles,
+                                             piFiles,
+                                             apvView,
+                                             acjView,
+                                             pdv,
+                                             ulLangID,
+                                             ulCheckSum);
         if (hff) break;
     }
 
@@ -236,7 +225,7 @@ EngLoadFontFileFD(
     }
 
     /* Query the number of faces in the font file */
-    cFaces = pfntdev->pldev->pfn.QueryFontFile(hff, QFF_NUMFACES, 0, NULL);
+    cFaces = ppdev->pldev->pfn.QueryFontFile(hff, QFF_NUMFACES, 0, NULL);
 
     /* Allocate a new PFF */
     cjSize = FIELD_OFFSET(PFF, apfe[cFaces]);
@@ -251,7 +240,7 @@ EngLoadFontFileFD(
     ppff->sizeofThis = cjSize;
     ppff->cFiles = cFiles;
     ppff->cFonts = cFaces;
-    ppff->hdev = (HDEV)pfntdev;
+    ppff->hdev = (HDEV)ppdev;
     ppff->hff = hff;
 
     /* Copy the FONTFILEVIEW pointers */
@@ -278,49 +267,28 @@ EngLoadFontDriver(
     IN PWSTR pwszDriverName)
 {
     PLDEVOBJ pldev;
-    PFONTDEV pfntdev;
+    PPDEVOBJ ppdev;
 
-    /* Load the driver */
+    /* Try to load the driver */
     pldev = EngLoadImageEx(pwszDriverName, LDEV_FONT);
     if (!pldev)
     {
-        DPRINT1("Failed to load font driver: %ls\n", pwszDriverName);
+        DPRINT1("Could not load display driver '%ls'\n", pwszDriverName);
         return FALSE;
     }
 
-    // CHECK if all functions are there
-
-
-    /* Allocate a FONTDEV structure */
-    pfntdev = EngAllocMem(0, sizeof(FONTDEV), 'vdfG');
-    if (!pfntdev)
+    /* Create a new PDEVOBJ */
+    ppdev = PDEVOBJ_CreatePDEV(pldev);
+    if (!ppdev)
     {
-        DPRINT1("Failed to allocate FONTDEV structure\n");
+        DPRINT1("failed to allocate a PDEV\n");
         EngUnloadImage(pldev);
         return FALSE;
     }
 
-    pfntdev->pldev = pldev;
-
-    /* Call the drivers DrvEnablePDEV function */
-    pfntdev->dhpdev = pldev->pfn.EnablePDEV(NULL,
-                                            NULL,
-                                            HS_DDI_MAX,
-                                            pfntdev->ahsurf,
-                                            sizeof(GDIINFO),
-                                            (ULONG*)&pfntdev->gdiinfo,
-                                            sizeof(DEVINFO),
-                                            &pfntdev->devinfo,
-                                            (HDEV)pfntdev,
-                                            NULL,
-                                            NULL);
-
-    /* Call the drivers DrvCompletePDEV function */
-    pldev->pfn.CompletePDEV(pfntdev->dhpdev, (HDEV)pfntdev);
-
     /* Insert the driver into the list */
     EngAcquireSemaphore(ghsemFontDriver);
-    InsertTailList(&gleFontDriverList, &pfntdev->leLink);
+    InsertTailList(&gleFontDriverList, &ppdev->leLink);
     EngReleaseSemaphore(ghsemFontDriver);
 
     return TRUE;
