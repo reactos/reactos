@@ -3345,7 +3345,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                                                    &Process->VadRoot,
                                                    (PMMADDRESS_NODE*)&Process->VadFreeHint,
                                                    &StartingAddress);
-            ASSERT(NT_SUCCESS(Status));
+            if (!NT_SUCCESS(Status)) goto FailPath;
 
             //
             // Now we know where the allocation ends. Make sure it doesn't end up
