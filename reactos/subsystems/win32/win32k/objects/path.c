@@ -760,8 +760,11 @@ PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints)
   lastmove.x = orig_pos.x = pdcattr->ptlCurrent.x;
   lastmove.y = orig_pos.y = pdcattr->ptlCurrent.y;
 
-  for (i = pPath->numEntriesUsed - 1; i >= 0; i--)
+  i = pPath->numEntriesUsed;
+
+  while (i != 0)
   {
+      i--;
       if (pPath->pFlags[i] == PT_MOVETO)
       {
          lastmove.x = pPath->pPoints[i].x;
