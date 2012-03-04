@@ -19,6 +19,8 @@
 
 ULONG MmProcessColorSeed = 0x12345678;
 PMMWSL MmWorkingSetList;
+ULONG MmMaximumDeadKernelStacks = 5;
+SLIST_HEADER MmDeadStackSListHead;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -235,6 +237,19 @@ MmDeleteKernelStack(IN PVOID StackBase,
     PointerPte--;
 
     //
+    // If this is a small stack, just push the stack onto the dead stack S-LIST
+    //
+    if (!GuiStack)
+    {
+        if (ExQueryDepthSList(&MmDeadStackSListHead) < MmMaximumDeadKernelStacks)
+        {
+            Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
+            InterlockedPushEntrySList(&MmDeadStackSListHead, &Pfn1->u1.NextStackPfn);
+            return;
+        }
+    }
+
+    //
     // Calculate pages used
     //
     StackPages = BYTES_TO_PAGES(GuiStack ?
@@ -303,6 +318,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
     ULONG i;
+    PMMPFN Pfn1;
 
     //
     // Calculate pages needed
@@ -318,6 +334,21 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     }
     else
     {
+        //
+        // If the dead stack S-LIST has a stack on it, use it instead of allocating
+        // new system PTEs for this stack
+        //
+        if (ExQueryDepthSList(&MmDeadStackSListHead))
+        {
+            Pfn1 = (PMMPFN)InterlockedPopEntrySList(&MmDeadStackSListHead);
+            if (Pfn1)
+            {
+                PointerPte = Pfn1->PteAddress;
+                BaseAddress = MiPteToAddress(++PointerPte);
+                return BaseAddress;
+            }
+        }
+
         //
         // We'll allocate 12K and that's it
         //

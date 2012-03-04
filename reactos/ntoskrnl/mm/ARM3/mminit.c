@@ -2076,6 +2076,9 @@ MmArmInitSystem(IN ULONG Phase,
         KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
         MmZeroingPageThreadActive = FALSE;
 
+        /* Initialize the dead stack S-LIST */
+        InitializeSListHead(&MmDeadStackSListHead);
+
         //
         // Check if this is a machine with less than 19MB of RAM
         //
@@ -2268,18 +2271,21 @@ MmArmInitSystem(IN ULONG Phase,
         {
             /* Set small system */
             MmSystemSize = MmSmallSystem;
+            MmMaximumDeadKernelStacks = 0;
         }
         else if (MmNumberOfPhysicalPages <= ((19 * _1MB) / PAGE_SIZE))
         {
             /* Set small system and add 100 pages for the cache */
             MmSystemSize = MmSmallSystem;
             MmSystemCacheWsMinimum += 100;
+            MmMaximumDeadKernelStacks = 2;
         }
         else
         {
             /* Set medium system and add 400 pages for the cache */
             MmSystemSize = MmMediumSystem;
             MmSystemCacheWsMinimum += 400;
+            MmMaximumDeadKernelStacks = 5;
         }
 
         /* Check for less than 24MB */

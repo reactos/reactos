@@ -1346,7 +1346,7 @@ ExQueryPoolUsage(OUT PULONG PagedPoolPages,
 {
     ULONG i;
     PPOOL_DESCRIPTOR PoolDesc;
-    
+
     //
     // Assume all failures
     //
@@ -1414,6 +1414,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     KIRQL OldIrql;
     USHORT BlockSize, i;
     ULONG OriginalType;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PGENERAL_LOOKASIDE LookasideList;
 
     //
     // Some sanity checks
@@ -1560,6 +1562,57 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     i = (USHORT)((NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1))
                  / POOL_BLOCK_SIZE);
+
+    //
+    // Handle lookaside list optimization for both paged and nonpaged pool
+    //
+    if (i <= MAXIMUM_PROCESSORS)
+    {
+        //
+        // Try popping it from the per-CPU lookaside list
+        //
+        LookasideList = (PoolType == PagedPool) ?
+                         Prcb->PPPagedLookasideList[i - 1].P :
+                         Prcb->PPNPagedLookasideList[i - 1].P;
+        LookasideList->TotalAllocates++;
+        Entry = (PPOOL_HEADER)InterlockedPopEntrySList(&LookasideList->ListHead);
+        if (!Entry)
+        {
+            //
+            // We failed, try popping it from the global list
+            //
+            LookasideList = (PoolType == PagedPool) ?
+                             Prcb->PPPagedLookasideList[i - 1].L :
+                             Prcb->PPNPagedLookasideList[i - 1].L;
+            LookasideList->TotalAllocates++;
+            Entry = (PPOOL_HEADER)InterlockedPopEntrySList(&LookasideList->ListHead);
+        }
+
+        //
+        // If we were able to pop it, update the accounting and return the block
+        //
+        if (Entry)
+        {
+            LookasideList->AllocateHits++;
+
+            //
+            // Get the real entry, write down its pool type, and track it
+            //
+            Entry--;
+            Entry->PoolType = PoolType + 1;
+            ExpInsertPoolTracker(Tag,
+                                 Entry->BlockSize * POOL_BLOCK_SIZE,
+                                 OriginalType);
+
+            //
+            // Return the pool allocation
+            //
+            Entry->PoolTag = Tag;
+            (POOL_FREE_BLOCK(Entry))->Flink = NULL;
+            (POOL_FREE_BLOCK(Entry))->Blink = NULL;
+            return POOL_FREE_BLOCK(Entry);
+        }
+    }
 
     //
     // Loop in the free lists looking for a block if this size. Start with the
@@ -1902,6 +1955,8 @@ ExFreePoolWithTag(IN PVOID P,
     ULONG Tag;
     BOOLEAN Combined = FALSE;
     PFN_NUMBER PageCount, RealPageCount;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PGENERAL_LOOKASIDE LookasideList;
 
     //
     // Check if any of the debug flags are enabled
@@ -2071,6 +2126,40 @@ ExFreePoolWithTag(IN PVOID P,
     ExpRemovePoolTracker(Tag,
                          BlockSize * POOL_BLOCK_SIZE,
                          Entry->PoolType - 1);
+
+    //
+    // Is this allocation small enough to have come from a lookaside list?
+    //
+    if (BlockSize <= MAXIMUM_PROCESSORS)
+    {
+        //
+        // Try pushing it into the per-CPU lookaside list
+        //
+        LookasideList = (PoolType == PagedPool) ?
+                         Prcb->PPPagedLookasideList[BlockSize - 1].P :
+                         Prcb->PPNPagedLookasideList[BlockSize - 1].P;
+        LookasideList->TotalFrees++;
+        if (ExQueryDepthSList(&LookasideList->ListHead) < LookasideList->Depth)
+        {
+            LookasideList->FreeHits++;
+            InterlockedPushEntrySList(&LookasideList->ListHead, P);
+            return;
+        }
+
+        //
+        // We failed, try to push it into the global lookaside list
+        //
+        LookasideList = (PoolType == PagedPool) ?
+                         Prcb->PPPagedLookasideList[BlockSize - 1].L :
+                         Prcb->PPNPagedLookasideList[BlockSize - 1].L;
+        LookasideList->TotalFrees++;
+        if (ExQueryDepthSList(&LookasideList->ListHead) < LookasideList->Depth)
+        {
+            LookasideList->FreeHits++;
+            InterlockedPushEntrySList(&LookasideList->ListHead, P);
+            return;
+        }
+    }
 
     //
     // Get the pointer to the next entry

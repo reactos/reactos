@@ -367,7 +367,7 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
     /* We can't unload unless there's an unload handler */
     if (!DriverObject->DriverUnload)
     {
-        DPRINT1("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        DPRINT("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
         return;
     }
 

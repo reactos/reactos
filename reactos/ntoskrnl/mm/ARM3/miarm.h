@@ -598,6 +598,8 @@ extern PVOID MiSystemViewStart;
 extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
+extern ULONG MmMaximumDeadKernelStacks;
+extern SLIST_HEADER MmDeadStackSListHead;
 
 BOOLEAN
 FORCEINLINE
