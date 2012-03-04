@@ -1533,10 +1533,9 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
                                                SmpProcessModuleImports,
                                                RegEntry,
                                                &ImageCharacteristics);
+#if 0
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Hey ReactOS -- you suck! Please fix the checksum (or the API) behind: %wZ\n", &RegEntry->Value);
-            #if 0
             /* Checksum failed, so don't even try going further -- kill SMSS */
             RtlInitUnicodeString(&ErrorResponse,
                                  L"Verification of a KnownDLL failed.");
@@ -1544,9 +1543,10 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[1] = Status;
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
-            #endif
         }
-        else if (!(ImageCharacteristics & IMAGE_FILE_DLL))
+        else
+#endif
+        if (!(ImageCharacteristics & IMAGE_FILE_DLL))
         {
             /* An invalid known DLL entry will also kill SMSS */
             RtlInitUnicodeString(&ErrorResponse,
