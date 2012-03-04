@@ -142,13 +142,6 @@ MmNotPresentFaultCachePage
 		{
 			DPRINT("Set %x in address space @ %x\n", Required->Page[0], Address);
 			Status = MmCreateVirtualMapping(Process, Address, Attributes, Required->Page, 1);
-#if (_MI_PAGING_LEVELS == 2)
-            if (Address < MmSystemRangeStart)
-            {
-                Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-                ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
-            }
-#endif 
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
