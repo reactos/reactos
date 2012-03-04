@@ -4068,7 +4068,7 @@ FinalPath:
     // return whatever failure code was sent.
     //
 FailPath:
-    MiUnlockWorkingSet(CurrentThread, AddressSpace);
+    MmUnlockAddressSpace(AddressSpace);
     if (Attached) KeUnstackDetachProcess(&ApcState);
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
     return Status;
