@@ -461,6 +461,13 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
          * are removed from the cache */
         MiFlushTlb(Pt, Address);
 
+		if (Address < MmSystemRangeStart)
+		{
+			/* Remove PDE reference */
+			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+		}
+
         Pfn = PTE_TO_PFN(Pte);
 
         if (FreePage)
@@ -523,6 +530,13 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      * Atomically set the entry to zero and get the old value.
      */
     Pte = InterlockedExchangePte(Pt, 0);
+
+	if (Address < MmSystemRangeStart)
+	{
+		/* Remove PDE reference */
+		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
+		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_COUNT);
+	}
 
     /* We don't need to flush here because page file entries
      * are invalid translations, so the processor won't cache them */
@@ -717,6 +731,13 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
+	if (Address < MmSystemRangeStart)
+	{
+		/* Add PDE reference */
+		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+	}
+
     /* We don't need to flush the TLB here because it
      * only caches valid translations and a zero PTE
      * is not a valid translation */
@@ -826,6 +847,13 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
         /* We don't need to flush the TLB here because it only caches valid translations
          * and we're moving this PTE from invalid to valid so it can't be cached right now */
+
+		if (Addr < MmSystemRangeStart)
+		{
+			/* Add PDE reference */
+			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Addr)]++;
+			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Addr)] <= PTE_COUNT);
+		}
     }
 
     ASSERT(Addr > Address);

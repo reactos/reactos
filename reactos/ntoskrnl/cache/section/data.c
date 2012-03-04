@@ -143,14 +143,6 @@ MiZeroFillSection
 			MmReferencePage(Page);
 			MmCreateVirtualMapping(NULL, Address, PAGE_READWRITE, &Page, 1);
 			MmInsertRmap(Page, NULL, Address);
-#if (_MI_PAGING_LEVELS == 2)
-            /* Reference Page Directory Entry */
-            if(Address < MmSystemRangeStart)
-            {   
-                MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
-            }
-#endif
 		}
 		else
 			MmReleasePageMemoryConsumer(MC_CACHE, Page);
@@ -676,10 +668,6 @@ MmFreeCacheSectionPage
 	   MmDeleteRmap(Page, Process, Address);
 	   MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
 	   MmReleasePageMemoryConsumer(MC_CACHE, Page);
-#if (_MI_PAGING_LEVELS == 2)
-       if (Address < MmSystemRangeStart)
-           Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-#endif 
    }
    if (SwapEntry != 0)
    {

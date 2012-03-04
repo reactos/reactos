@@ -173,13 +173,6 @@ MmNotPresentFaultCachePage
 		MmReferencePage(Page);
 
 		Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
-#if (_MI_PAGING_LEVELS == 2)
-        if (Address < MmSystemRangeStart)
-        {
-            Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-            ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
-        }
-#endif   
 		if (NT_SUCCESS(Status))
 		{
 			MmInsertRmap(Page, Process, Address);

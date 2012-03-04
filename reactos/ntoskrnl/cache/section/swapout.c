@@ -215,11 +215,6 @@ MmPageOutCacheSection
 
 	MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
 
-#if (_MI_PAGING_LEVELS == 2)
-    if (Address < MmSystemRangeStart)
-        Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-#endif
-
 	MmUnlockSectionSegment(Segment);
 	MiSetPageEvent(Process, Address);
 	return STATUS_SUCCESS;
