@@ -14,6 +14,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
+        MENUITEM "&Ustaw datę/godzinę", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Dostosuj powiadomienia...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Okna &kaskadowo", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Okna sąsiadująco w pozio&mie", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Okna sąsiadująco w pio&nie", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Pokaż pulpit", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Cofnij", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
         MENUITEM "Menedżer zadań", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Zablokuj Pasek zadań", ID_LOCKTASKBAR
