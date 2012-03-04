@@ -177,14 +177,11 @@ Output(FILE *Out, const char *Fmt, ...)
     unsigned n;
     va_list Args;
 
-    if (NULL != strchr(Fmt, '{') && 0 != Indent)
+    if (strchr(Fmt, '}'))
     {
-        Indent += 2;
+        Indent -= 4;
     }
-    else if (NULL != strchr(Fmt, '}'))
-    {
-        Indent -= 2;
-    }
+
     if (AtBOL)
     {
         for (n = 0; n < Indent; n++)
@@ -198,14 +195,11 @@ Output(FILE *Out, const char *Fmt, ...)
     vfprintf(Out, Fmt, Args);
     va_end(Args);
 
-    if (NULL != strchr(Fmt, '{'))
+    if (strchr(Fmt, '{'))
     {
-        Indent += 2;
+        Indent += 4;
     }
-    else if (NULL != strchr(Fmt, '}') && 0 != Indent)
-    {
-        Indent -= 2;
-    }
+
     AtBOL = '\n' == Fmt[strlen(Fmt) - 1];
 }
 
@@ -460,7 +454,7 @@ CreateCounts(FILE *Out, unsigned Bpp)
         else
         {
             Output(Out, "LeftCount = (ULONG_PTR) DestBase & 0x03;\n");
-            Output(Out, "if (BltInfo->DestRect.right - BltInfo->DestRect.left < "
+            Output(Out, "if ((ULONG)(BltInfo->DestRect.right - BltInfo->DestRect.left) < "
                    "LeftCount)\n");
             Output(Out, "{\n");
             Output(Out, "LeftCount = BltInfo->DestRect.right - "
@@ -800,7 +794,7 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
         Output(Out, "ULONG i;\n");
         if (RopInfo->UsesPattern)
         {
-            Output(Out, "ULONG PatternX =0, PatternY = 0, BasePatternX = 0;\n");
+            Output(Out, "LONG PatternX =0, PatternY = 0, BasePatternX = 0;\n");
         }
         First = 1;
         if (RopInfo->UsesSource)
