@@ -158,10 +158,22 @@ MmNotPresentFaultCachePage
 			return Status;
 		}
 	}
+	else if (MM_IS_WAIT_PTE(Entry))
+	{
+		MmUnlockSectionSegment(Segment);
+		return STATUS_SUCCESS + 1;
+	}
 	else if (Entry)
 	{
 		PFN_NUMBER Page = PFN_FROM_SSE(Entry);
 		DPRINT("Take reference to page %x #\n", Page);
+
+		if (MiGetPfnEntry(Page) == NULL)
+		{
+			DPRINT1("Found no PFN entry for page 0x%x in page entry 0x%x (segment: 0x%p, offset: %08x%08x)\n",
+			Page, Entry, Segment, TotalOffset.HighPart, TotalOffset.LowPart);
+			KeBugCheck(CACHE_MANAGER);
+		}
 
 		MmReferencePage(Page);
 

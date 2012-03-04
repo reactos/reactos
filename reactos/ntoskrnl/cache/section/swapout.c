@@ -204,6 +204,12 @@ MmPageOutCacheSection
 
 	Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
 
+	if (MM_IS_WAIT_PTE(Entry))
+	{
+		MmUnlockSectionSegment(Segment);
+		return STATUS_SUCCESS + 1;
+	}
+
 	if (Dirty) {
         DPRINT("Dirty page: %p:%p segment %p offset %08x%08x\n", Process, Address, Segment, TotalOffset.HighPart, TotalOffset.LowPart);
 		MmSetPageEntrySectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
@@ -362,7 +368,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 		   if (Status == STATUS_SUCCESS + 1)
 		   {
 			   // Wait page ... the other guy has it, so we'll just fail for now
-			   DPRINTC("Wait entry ... can't continue\n");
+			   DPRINT1("Wait entry ... can't continue\n");
 			   Status = STATUS_UNSUCCESSFUL;
 			   goto bail;
 		   }
