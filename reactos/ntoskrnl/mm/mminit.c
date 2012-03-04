@@ -407,7 +407,6 @@ MmInitSystem(IN ULONG Phase,
     // the balance manager
     MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
 
-    KeInitializeGuardedMutex(&PsIdleProcess->AddressCreationLock);
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 
     /* Intialize system memory areas */
