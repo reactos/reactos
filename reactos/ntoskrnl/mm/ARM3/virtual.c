@@ -3295,6 +3295,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             //
             PRegionSize = ROUND_TO_PAGES(PRegionSize);
             PageCount = BYTES_TO_PAGES(PRegionSize);
+            EndingAddress = 0;
+            StartingAddress = 0;
         }
         else
         {
@@ -3336,7 +3338,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         // which was passed in isn't already conflicting with an existing address
         // range.
         //
-        EndingAddress = 0;
         if (!PBaseAddress)
         {
             Status = MiFindEmptyAddressRangeInTree(PRegionSize,
@@ -3345,6 +3346,17 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                                                    (PMMADDRESS_NODE*)&Process->VadFreeHint,
                                                    &StartingAddress);
             ASSERT(NT_SUCCESS(Status));
+
+            //
+            // Now we know where the allocation ends. Make sure it doesn't end up
+            // somewhere in kernel mode.
+            //
+            EndingAddress = ((ULONG_PTR)StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
+            if ((PVOID)EndingAddress > MM_HIGHEST_VAD_ADDRESS)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto FailPath;
+            }
         }
         else if (MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
                                            EndingAddress >> PAGE_SHIFT,
@@ -3354,17 +3366,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // The address specified is in conflict!
             //
             Status = STATUS_CONFLICTING_ADDRESSES;
-            goto FailPath;
-        }
-
-        //
-        // Now we know where the allocation ends. Make sure it doesn't end up
-        // somewhere in kernel mode.
-        //
-        EndingAddress = ((ULONG_PTR)StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
-        if ((PVOID)EndingAddress > MM_HIGHEST_VAD_ADDRESS)
-        {
-            Status = STATUS_NO_MEMORY;
             goto FailPath;
         }
 

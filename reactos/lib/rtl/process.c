@@ -84,7 +84,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     {
         /* Give 1MB starting at 0x4 */
         BaseAddress = (PVOID)4;
-        EnviroSize = 1024 * 1024;
+        EnviroSize = (1024 * 1024) - 256;
         Status = ZwAllocateVirtualMemory(ProcessHandle,
                                          &BaseAddress,
                                          0,
