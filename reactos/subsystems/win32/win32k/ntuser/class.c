@@ -1634,8 +1634,8 @@ UserSetClassLongPtr(IN PCLS Class,
 
         TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
-        if ((Index + (INT)sizeof(ULONG_PTR)) < Index ||
-            (Index + (INT)sizeof(ULONG_PTR)) > Class->cbclsExtra)
+        if (((ULONG)Index + sizeof(ULONG_PTR)) < (ULONG)Index ||
+            ((ULONG)Index + sizeof(ULONG_PTR)) > (ULONG)Class->cbclsExtra)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
