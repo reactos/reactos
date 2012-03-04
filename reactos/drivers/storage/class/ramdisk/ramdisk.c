@@ -1976,6 +1976,120 @@ PassToNext:
 
 NTSTATUS
 NTAPI
+RamdiskDeleteDiskDevice(IN PDEVICE_OBJECT DeviceObject,
+                        IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskRemoveBusDevice(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PLIST_ENTRY ListHead, NextEntry;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Acquire disks list lock
+    //
+    KeEnterCriticalRegion();
+    ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+
+    //
+    // Loop over drives
+    //
+    ListHead = &DeviceExtension->DiskList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        DriveExtension = CONTAINING_RECORD(NextEntry,
+                                           RAMDISK_DRIVE_EXTENSION,
+                                           DiskList);
+
+        //
+        // Delete the disk
+        //
+        IoAcquireRemoveLock(&DriveExtension->RemoveLock, NULL);
+        RamdiskDeleteDiskDevice(DriveExtension->PhysicalDeviceObject, NULL);
+
+        //
+        // RamdiskDeleteDiskDevice releases list lock, so reacquire it
+        //
+        KeEnterCriticalRegion();
+        ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+    }
+
+    //
+    // Release disks list lock
+    //
+    ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+    KeLeaveCriticalRegion();
+
+    //
+    // Prepare to pass to the lower driver
+    //
+    IoSkipCurrentIrpStackLocation(Irp);
+    //
+    // Here everything went fine
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    //
+    // Call lower driver
+    //
+    Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+
+    //
+    // Update state
+    //
+    DeviceExtension->State = RamdiskStateBusRemoved;
+
+    //
+    // Release the lock, and ensure that everyone
+    // has finished its job before we continue
+    // The lock has been acquired by the dispatcher
+    //
+    IoReleaseRemoveLockAndWait(&DeviceExtension->RemoveLock, Irp);
+
+    //
+    // If there's a drive name
+    //
+    if (DeviceExtension->DriveDeviceName.Buffer)
+    {
+        //
+        // Inform it's going to be disabled
+        // and free the drive name
+        //
+        IoSetDeviceInterfaceState(&DeviceExtension->DriveDeviceName, FALSE);
+        RtlFreeUnicodeString(&DeviceExtension->DriveDeviceName);
+    }
+
+    //
+    // Part from the stack, detach from lower device
+    //
+    IoDetachDevice(DeviceExtension->AttachedDevice);
+
+    //
+    // Finally, delete device
+    //
+    RamdiskBusFdo = NULL;
+    IoDeleteDevice(DeviceObject);
+
+    //
+    // Return status from lower driver
+    //
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
@@ -2068,10 +2182,33 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             break;
             
         case IRP_MN_REMOVE_DEVICE:
-            
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
-            break;
+
+            //
+            // Remove the proper device
+            //
+            if (DeviceExtension->Type == RamdiskBus)
+            {
+                Status = RamdiskRemoveBusDevice(DeviceObject, Irp);
+
+                //
+                // Return here, lower device has already been called
+                // And remove lock released. This is needed by the function.
+                //
+                return Status;
+            }
+            else
+            {
+                Status = RamdiskDeleteDiskDevice(DeviceObject, Irp);
+
+                //
+                // Complete the IRP here and return
+                // Here again we don't have to release remove lock
+                // This has already been done by the function.
+                //
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
 
         case IRP_MN_SURPRISE_REMOVAL:
             
