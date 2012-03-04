@@ -388,7 +388,8 @@ EngAssociateSurface(
     psurf->flags &= ~HOOK_FLAGS;
     psurf->flags |= (flHooks & HOOK_FLAGS);
 
-    /* Get palette */
+    /* Get new palette */
+    if (psurf->ppal) PALETTE_ShareUnlockPalette(psurf->ppal);
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
     SURFACE_ShareUnlockSurface(psurf);
@@ -432,7 +433,8 @@ EngModifySurface(
     psurf->flags &= ~HOOK_FLAGS;
     psurf->flags |= (flHooks & HOOK_FLAGS);
 
-    /* Get palette */
+    /* Get new palette */
+    if (psurf->ppal) PALETTE_ShareUnlockPalette(psurf->ppal);
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
     SURFACE_ShareUnlockSurface(psurf);
