@@ -798,6 +798,7 @@ CHubController::HandleIsochronousTransfer(
     // sanity checks
     //
     ASSERT(EndPointDesc);
+    DPRINT("HandleIsochronousTransfer EndPointDesc %p Address %x bmAttributes %x\n", EndPointDesc, EndPointDesc->bEndpointAddress, EndPointDesc->bmAttributes);
     ASSERT((EndPointDesc->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_ISOCHRONOUS);
 
     //

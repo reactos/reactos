@@ -13,7 +13,6 @@ extern "C"
     #include <usbdlib.h>
 }
 
-
 //
 // FIXME: 
 // #include <usbprotocoldefs.h>
