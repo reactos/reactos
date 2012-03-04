@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -59,7 +59,7 @@ CcInitializeCacheManager(VOID)
 
 	CcCacheBitmap->Buffer = ((PULONG)&CcCacheBitmap[1]);
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
-	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
+	DPRINT1("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
 
     return TRUE;

@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* STRUCTURES *****************************************************************/
@@ -50,7 +50,7 @@ CcpReadAhead(PVOID Context)
 	LARGE_INTEGER Offset;
 	PWORK_QUEUE_WITH_READ_AHEAD WorkItem = (PWORK_QUEUE_WITH_READ_AHEAD)Context;
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)WorkItem->FileObject->SectionObjectPointer->SharedCacheMap;
-	DPRINT("Reading ahead %08x%08x:%x %wZ\n",
+	DPRINT1("Reading ahead %08x%08x:%x %wZ\n",
 		   WorkItem->FileOffset.HighPart,
 		   WorkItem->FileOffset.LowPart,
 		   WorkItem->Length,
