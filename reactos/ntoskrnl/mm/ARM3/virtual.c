@@ -116,8 +116,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 {
     PFN_COUNT ActualPages = 0;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PMMPFN Pfn1;
-    //PMMPFN Pfn2;
+    PMMPFN Pfn1, Pfn2;
     PFN_NUMBER PageFrameIndex, PageTableIndex;
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -150,7 +149,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
-                //Pfn2 = MiGetPfnEntry(PageTableIndex);
+                Pfn2 = MiGetPfnEntry(PageTableIndex);
 
                 /* Lock the PFN database */
                 OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -160,10 +159,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 MiDecrementShareCount(Pfn1, PageFrameIndex);
 
                 /* Decrement the page table too */
-                DPRINT("FIXME: ARM3 should decrement the pool PDE refcount for: %p\n", PageTableIndex);
-                #if 0 // ARM3: Dont't trust this yet
                 MiDecrementShareCount(Pfn2, PageTableIndex);
-                #endif
 
                 /* Release the PFN database */
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -293,8 +289,7 @@ MiDeletePte(IN PMMPTE PointerPte,
         /* There should only be 1 shared reference count */
         ASSERT(Pfn1->u2.ShareCount == 1);
 
-        /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
-        //DPRINT1("Dropping a ref...\n");
+        /* Drop the reference on the page table. */
         MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
 
         /* Mark the PFN for deletion and dereference what should be the last ref */

@@ -371,9 +371,10 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
                         IN PMMPFN Pfn1)
 {
     MMPTE TempPte;
-    PMMPTE OriginalPte;
+    PMMPTE OriginalPte, PageTablePte;
     ULONG_PTR Protection;
     PFN_NUMBER PageFrameIndex;
+    PMMPFN Pfn2;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -386,7 +387,12 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     Pfn1 = MiGetPfnEntry(PageFrameIndex);
     Pfn1->u3.e1.PrototypePte = 1;
 
-    /* FIXME: Increment the share count for the page table */
+    /* Increment the share count for the page table */
+    // FIXME: This doesn't work because we seem to bump the sharecount to two, and MiDeletePte gets annoyed and ASSERTs.
+    // This could be beause MiDeletePte is now being called from strange code in Rosmm
+    PageTablePte = MiAddressToPte(PointerPte);
+    Pfn2 = MiGetPfnEntry(PageTablePte->u.Hard.PageFrameNumber);
+    //Pfn2->u2.ShareCount++;
 
     /* Check where we should be getting the protection information from */
     if (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
