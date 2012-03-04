@@ -2087,15 +2087,100 @@ KspCopyMethodSets(
     return STATUS_SUCCESS;
 }
 
+VOID
+KspAddPropertyItem(
+    OUT PKSPROPERTY_SET OutPropertySet,
+    IN PKSPROPERTY_ITEM PropertyItem,
+    IN ULONG PropertyItemSize)
+{
+    PKSPROPERTY_ITEM CurrentPropertyItem;
+    ULONG Index;
+
+    // check if the property item is already present
+    CurrentPropertyItem = (PKSPROPERTY_ITEM)OutPropertySet->PropertyItem;
+    for(Index = 0; Index < OutPropertySet->PropertiesCount; Index++)
+    {
+        if (CurrentPropertyItem->PropertyId == PropertyItem->PropertyId)
+        {
+            // item already present
+            return;
+        }
+
+        // next item
+        CurrentPropertyItem = (PKSPROPERTY_ITEM)((ULONG_PTR)CurrentPropertyItem + PropertyItemSize);
+    }
+    // add item
+    RtlCopyMemory(CurrentPropertyItem, PropertyItem, PropertyItemSize);
+    OutPropertySet->PropertiesCount++;
+}
+
+NTSTATUS
+KspMergePropertySet(
+    OUT PKSAUTOMATION_TABLE  Table,
+    OUT PKSPROPERTY_SET OutPropertySet,
+    IN PKSPROPERTY_SET PropertySetA,
+    IN PKSPROPERTY_SET PropertySetB,
+    IN KSOBJECT_BAG  Bag OPTIONAL)
+{
+    ULONG PropertyCount, Index;
+    PKSPROPERTY_ITEM PropertyItem, CurrentPropertyItem;
+    NTSTATUS Status;
+
+    // max properties 
+    PropertyCount = PropertySetA->PropertiesCount + PropertySetB->PropertiesCount;
+
+    // allocate items
+    PropertyItem = AllocateItem(NonPagedPool, Table->PropertyItemSize * PropertyCount);
+    if (!PropertyItem)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Bag)
+    {
+        /* add table to object bag */
+        Status = KsAddItemToObjectBag(Bag, PropertyItem, NULL);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* free table */
+            FreeItem(Table);
+            return Status;
+        }
+    }
+
+    // copy entries from dominant table
+    RtlCopyMemory(PropertyItem, PropertySetA->PropertyItem, Table->PropertyItemSize * PropertySetA->PropertiesCount);
+
+    // init property set
+    OutPropertySet->PropertiesCount = PropertySetA->PropertiesCount;
+    OutPropertySet->PropertyItem = PropertyItem;
+
+    // copy other entries
+    CurrentPropertyItem = (PKSPROPERTY_ITEM)PropertySetB->PropertyItem;
+    for(Index = 0; Index < PropertySetB->PropertiesCount; Index++)
+    {
+
+        // add entries
+        KspAddPropertyItem(OutPropertySet, CurrentPropertyItem, Table->PropertyItemSize);
+
+        // next entry
+        CurrentPropertyItem = (PKSPROPERTY_ITEM)((ULONG_PTR)CurrentPropertyItem + Table->PropertyItemSize);
+    }
+
+    // done
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 KspCopyPropertySets(
     OUT PKSAUTOMATION_TABLE  Table,
     IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
-    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL,
+    IN KSOBJECT_BAG  Bag OPTIONAL)
 {
     ULONG Index, SubIndex, Count;
     BOOL bFound;
+    NTSTATUS Status;
 
     if (!AutomationTableA)
     {
@@ -2136,6 +2221,17 @@ KspCopyPropertySets(
             /* copy new property item set */
             RtlMoveMemory((PVOID)&Table->PropertySets[Count], &AutomationTableB->PropertySets[Index], sizeof(KSPROPERTY_SET));
             Count++;
+        }
+        else
+        {
+            // merge property sets
+            Status = KspMergePropertySet(Table, (PKSPROPERTY_SET)&Table->PropertySets[SubIndex], (PKSPROPERTY_SET)&AutomationTableA->PropertySets[SubIndex], (PKSPROPERTY_SET)&AutomationTableB->PropertySets[Index], Bag);
+            if (!NT_SUCCESS(Status))
+            {
+                // failed to merge
+                DPRINT1("[KS] Failed to merge %x\n", Status);
+                return Status;
+            }
         }
     }
 
@@ -2251,6 +2347,12 @@ KsMergeAutomationTables(
             Table->PropertyItemSize = AutomationTableB->PropertyItemSize;
         }
 
+        if (AutomationTableA && AutomationTableB)
+        {
+            // FIXME handle different propery item sizes
+            ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
+        }
+
         /* now allocate the property sets */
         Table->PropertySets = AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * Table->PropertySetsCount);
 
@@ -2272,7 +2374,7 @@ KsMergeAutomationTables(
             }
         }
         /* now copy the property sets */
-        Status = KspCopyPropertySets(Table, AutomationTableA, AutomationTableB);
+        Status = KspCopyPropertySets(Table, AutomationTableA, AutomationTableB, Bag);
         if(!NT_SUCCESS(Status))
             goto cleanup;
 

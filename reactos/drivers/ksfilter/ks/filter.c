@@ -955,7 +955,7 @@ FilterPinPropertyHandler(
             UNIMPLEMENTED
             Status = STATUS_NOT_FOUND;
     }
-    //DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->PinDescriptorCount, Request->Id, Status);
+    DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->Filter.Descriptor->PinDescriptorsCount, Request->Id, Status);
 
 
     return Status;
@@ -1029,6 +1029,9 @@ IKsFilter_DispatchDeviceIoControl(
             SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
             PropertySet = FilterInstance->Descriptor->AutomationTable->PropertySets;
             PropertyItemSize = FilterInstance->Descriptor->AutomationTable->PropertyItemSize;
+            // FIXME: handle variable sized property items
+            ASSERT(PropertyItemSize == sizeof(KSPROPERTY_ITEM));
+            PropertyItemSize = 0;
         }
 
         /* needed for our property handlers */
@@ -1063,6 +1066,7 @@ IKsFilter_DispatchDeviceIoControl(
     }
 
     RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsFilter_DispatchDeviceIoControl property PinCount %x\n", FilterInstance->Descriptor->PinDescriptorsCount);
     DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x Status %lx ResultLength %lu\n", GuidString.Buffer, Property->Id, Property->Flags, Status, Irp->IoStatus.Information);
     RtlFreeUnicodeString(&GuidString);
 
