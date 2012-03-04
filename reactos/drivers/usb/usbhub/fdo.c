@@ -1198,6 +1198,10 @@ CreateUsbChildDeviceObject(
     UsbChildExtension->ParentDeviceObject = UsbHubDeviceObject;
     UsbChildExtension->PortNumber = PortId;
 
+    // copy device interface
+    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
+
+
     //
     // Create the UsbDeviceObject
     //
@@ -1211,6 +1215,12 @@ CreateUsbChildDeviceObject(
         DPRINT1("USBHUB: CreateUsbDevice failed with status %x\n", Status);
         goto Cleanup;
     }
+
+    // copy device interface
+    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
+
+    // FIXME replace buscontext
+    UsbChildExtension->DeviceInterface.BusContext = UsbChildExtension->UsbDeviceHandle;
 
     //
     // Initialize UsbDevice
@@ -1806,6 +1816,9 @@ USBHUB_FdoStartDevice(
     HubDeviceExtension->ConfigurationHandle = ConfigUrb->UrbSelectConfiguration.ConfigurationHandle;
     HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
     DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
+
+    FDO_QueryInterface(DeviceObject, &HubDeviceExtension->DeviceInterface);
+
 
     // free urb
     ExFreePool(ConfigUrb);

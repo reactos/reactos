@@ -605,6 +605,16 @@ IKsDevice_Create(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
+    if (IoStack->FileObject->FileName.Buffer == NULL)
+    {
+        // ReactOS PnPMgr still sucks
+        ASSERT(IoStack->FileObject->FileName.Length == 0);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        DPRINT1("ReactOS PnP hack\n");
+        return STATUS_SUCCESS;
+    }
+
     /* acquire list lock */
     IKsDevice_fnAcquireDevice((IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown);
 

@@ -67,6 +67,7 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
     USB_DEVICE_DESCRIPTOR DeviceDesc;
     PUSB_CONFIGURATION_DESCRIPTOR FullConfigDesc;
     UNICODE_STRING SymbolicLinkName;
+    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 } HUB_CHILDDEVICE_EXTENSION, *PHUB_CHILDDEVICE_EXTENSION;
 
 typedef struct _HUB_DEVICE_EXTENSION
@@ -100,6 +101,8 @@ typedef struct _HUB_DEVICE_EXTENSION
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;
     USBD_PIPE_HANDLE PipeHandle;
     PVOID RootHubHandle;
+    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
+
 
     UNICODE_STRING SymbolicLinkName;
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
@@ -148,6 +151,11 @@ SubmitRequestToRootHub(
     IN ULONG IoControlCode,
     OUT PVOID OutParameter1,
     OUT PVOID OutParameter2);
+
+NTSTATUS
+FDO_QueryInterface(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PUSB_BUS_INTERFACE_USBDI_V2 Interface);
 
 // pdo.c
 NTSTATUS

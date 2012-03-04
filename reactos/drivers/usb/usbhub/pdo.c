@@ -713,6 +713,21 @@ USBHUB_PdoHandlePnp(
             Information = 0;
             break;
         }
+        case IRP_MN_QUERY_INTERFACE:
+        {
+            DPRINT1("IRP_MN_QUERY_INTERFACE\n");
+            if (IsEqualGUIDAligned(Stack->Parameters.QueryInterface.InterfaceType, &USB_BUS_INTERFACE_USBDI_GUID))
+            {
+                DPRINT1("USB_BUS_INTERFACE_USBDI_GUID\n");
+                RtlCopyMemory(Stack->Parameters.QueryInterface.Interface, &UsbChildExtension->DeviceInterface, Stack->Parameters.QueryInterface.Size);
+                Status = STATUS_SUCCESS;
+                break;
+            }
+
+            // pass irp down
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(UsbChildExtension->ParentDeviceObject, Irp);
+        }
         default:
         {
             DPRINT1("PDO IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
