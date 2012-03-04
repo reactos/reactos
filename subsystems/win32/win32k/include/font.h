@@ -1,9 +1,17 @@
 #pragma once
 
+// FIXME: duplicated from ntoskrnl, should got to NDK or something
+#define InterlockedIncrementUL(Addend) \
+    (ULONG)InterlockedIncrement((PLONG)(Addend))
+
+#define InterlockedDecrementUL(Addend) \
+    (ULONG)InterlockedDecrement((PLONG)(Addend))
+
 #define LFONT_GetObject FontGetObject
 
 #define ENGAPI
 
+#define PENALTY_Max                    127979
 #define PENALTY_CharSet                65000
 #define PENALTY_OutputPrecision        19000
 #define PENALTY_FixedPitch             15000
@@ -38,6 +46,14 @@
 
 extern PEPROCESS gpepCSRSS;
 
+typedef struct _FONTSUBSTITUTE
+{
+    WCHAR awcSubstName[LF_FACESIZE];
+    WCHAR awcCapSubstName[LF_FACESIZE];
+    ULONG iHashValue;
+} FONTSUBSTITUTE, *PFONTSUBSTITUTE;
+
+
 typedef struct _POINTEF
 {
     FLOATOBJ x;
@@ -46,11 +62,24 @@ typedef struct _POINTEF
 
 typedef struct _RFONT *PRFONT;
 
+typedef enum _FLPFE
+{
+    PFE_DEVICEFONT  = 0x0001,
+    PFE_DEADSTATE   = 0x0002,
+    PFE_REMOTEFONT  = 0x0004,
+    PFE_EUDC        = 0x0008,
+    PFE_SBCS_SYSTEM = 0x0010,
+    PFE_UFIMATCH    = 0x0020,
+    PFE_MEMORYFONT  = 0x0040,
+    PFE_DBCS_FONT   = 0x0080,
+    PFE_VERT_FACE   = 0x0100,
+} FLPFE;
+
 typedef struct _PFE
 {
     struct _PFF * pPFF;
     ULONG_PTR iFont;
-    FLONG flPFE;
+    FLPFE flPFE;
     FD_GLYPHSET *pfdg;
     ULONG_PTR idfdg;
     IFIMETRICS * pifi;
@@ -71,6 +100,12 @@ typedef struct _PFE
     ULONG cPfdgRef;
     ULONG aiFamilyName[1];
 } PFE, *PPFE;
+
+typedef struct _PFEOBJ
+{
+    BASEOBJECT baseobj;
+    PPFE ppfe;
+} PFEOBJ, *PPFEOBJ;
 
 typedef struct _PFF
 {
@@ -215,11 +250,14 @@ typedef struct _RFONT
     ULONG iGraphicsMode;
     ULONG ulOrientation;
     ULONG cBitsPerPel;
-    BOOL bVertical;
-    BOOL bDeviceFont;
-    BOOL bIsSystemFont;
-    BOOL bNeededPaths;
-    BOOL bFilledEudcArray;
+    struct
+    {
+        ULONG bVertical:1;
+        ULONG bDeviceFont:1;
+        ULONG bIsSystemFont:1;
+        ULONG bNeededPaths:1;
+        ULONG bFilledEudcArray:1;
+    };
 
 
     FD_XFORM fdx;
@@ -278,6 +316,7 @@ typedef struct _LFONT
     FLONG fl;
     PPDEVOBJ ppdev;
     HGDIOBJ hPFE;
+    ULONG iNameHash;
     WCHAR awchFace[LF_FACESIZE];
     ENUMLOGFONTEXDVW elfexw;
 } LFONT, *PLFONT;
@@ -332,12 +371,8 @@ typedef struct _ESTROBJ
     ULONG     acFaceNameGlyphs[8];
 } ESTROBJ, *PESTROBJ;
 
-VOID
-NTAPI
-UpcaseString(
-    OUT PWSTR pwszDest,
-    IN PWSTR pwszSource,
-    IN ULONG cwc);
+extern PRFONT gprfntSystemTT;
+extern PFT gpftPublic;
 
 FORCEINLINE
 PLFONT
@@ -353,10 +388,35 @@ LFONT_ShareUnlockFont(PLFONT plfnt)
     GDIOBJ_vDereferenceObject(&plfnt->baseobj);
 }
 
+PPFE
+NTAPI
+LFONT_ppfe(PLFONT plfnt);
+
+VOID
+NTAPI
+UpcaseString(
+    OUT PWSTR pwszDest,
+    IN PWSTR pwszSource,
+    IN ULONG cwc);
+
+ULONG
+NTAPI
+CalculateNameHash(
+    PWSTR pwszName);
+
 BOOL
 NTAPI
 PFT_bInit(
     PFT *ppft);
+
+PPFE
+NTAPI
+PFT_ppfeFindBestMatch(
+    _In_ PPFT ppft,
+    _In_ PWSTR pwszCapName,
+    _In_ ULONG iHashValue,
+    _In_ LOGFONTW *plf,
+    _Inout_ PULONG pulPenalty);
 
 VOID
 NTAPI
@@ -423,3 +483,8 @@ GreGetTextExtentW(
     INT cwc,
     LPSIZE psize,
     UINT flOpts);
+
+PRFONT
+NTAPI
+RFONT_AllocRFONT(void);
+

@@ -7,12 +7,19 @@
 
 #include <win32k.h>
 #include <include/font.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(GdiFont);
 
 PFT gpftPublic;
 ULONG gulHashBucketId = 0;
+
+static
+PFONTSUBSTITUTE
+GetFontSubstitute(PWSTR pwszFace)
+{
+    // HACK
+    WARN("GetFontSubstitute is unimplemented.\n");
+    return NULL;
+}
 
 VOID
 NTAPI
@@ -34,8 +41,8 @@ UpcaseString(
 }
 
 
-static
 ULONG
+NTAPI
 CalculateNameHash(PWSTR pwszName)
 {
     ULONG iHash = 0;
@@ -121,7 +128,7 @@ HASHBUCKET_vUnlinkPFE(
 
             if (!ppfel)
             {
-                DPRINT1("PFE not found!\n");
+                ERR("PFE not found!\n");
                 ASSERT(FALSE);
             }
 
@@ -138,6 +145,185 @@ HASHBUCKET_vUnlinkPFE(
 
     /* Free the PFELINK */
     ExFreePoolWithTag(ppfel, GDITAG_PFE_LINK);
+}
+
+BYTE
+NTAPI
+GreGetDefaultCharset()
+{
+    USHORT usACP, usOEM;
+
+    RtlGetDefaultCodePage(&usACP, &usOEM);
+    WARN("GreGetDefaultCharset is unimplemented.\n");
+
+    // HACK!
+    return ANSI_CHARSET;
+}
+
+ULONG
+NTAPI
+PFE_ulPenalty(
+    PPFE ppfe,
+    LOGFONTW *plfw,
+    ULONG ulMargin)
+{
+    PIFIMETRICS pifi = ppfe->pifi;
+    ULONG i, ulPenalty = 0;
+    PBYTE pjCharSets;
+    BYTE jCharSet;
+
+    jCharSet = plfw->lfCharSet;
+    if (jCharSet == DEFAULT_CHARSET)
+    {
+        /* Get the default charset */
+        jCharSet = GreGetDefaultCharset();
+    }
+
+    /* Check charsets */
+    if (pifi->dpCharSets)
+    {
+        /* Get a pointer to the charset array */
+        pjCharSets = (PBYTE)pifi + pifi->dpCharSets;
+
+        /* Loop charsets, until the requeste one is found */
+        for (i = 0; pjCharSets[i] != jCharSet; i++)
+        {
+            /* Check if this is the last charset */
+            if ((i == 15) || (pjCharSets[i] == DEFAULT_CHARSET))
+            {
+                /* Charset wasn't found, add penalty */
+                ulPenalty += PENALTY_CharSet;
+                if (ulPenalty > ulMargin) return ulPenalty;
+                break;
+            }
+        }
+    }
+    else
+    {
+        /* Otherwise check if the win charset matches */
+        if (pifi->jWinCharSet != jCharSet)
+        {
+            /* Charset doesn't match, add penalty */
+            ulPenalty += PENALTY_CharSet;
+            if (ulPenalty > ulMargin) return ulPenalty;
+        }
+    }
+
+
+    /* There are contrary claims about the font mapper behaviour towards
+       different lfOutPrecision values between MS LOGFONT structure docs
+       and the font mapper article. */
+    if ((plfw->lfOutPrecision == OUT_DEVICE_PRECIS) &&
+        ((ppfe->flPFE & PFE_DEVICEFONT) == 0))
+    {
+        ulPenalty += PENALTY_OutputPrecision;
+    }
+
+    /* Check if pitch matches */
+    if (((plfw->lfPitchAndFamily & 0x0f) == FIXED_PITCH) &&
+        (pifi->jWinPitchAndFamily & 0x0f) != FIXED_PITCH)
+    {
+        ulPenalty += PENALTY_FixedPitch;
+        if (ulPenalty > ulMargin) return ulPenalty;
+    }
+    else if (((plfw->lfPitchAndFamily & 0x0f) == VARIABLE_PITCH) &&
+        (pifi->jWinPitchAndFamily & 0x0f) != VARIABLE_PITCH)
+    {
+        ulPenalty += PENALTY_PitchVariable;
+        if (ulPenalty > ulMargin) return ulPenalty;
+    }
+
+
+    if ((plfw->lfPitchAndFamily & 0xf0) != FF_DONTCARE)
+    {
+        if ((pifi->jWinPitchAndFamily & 0xf0) == FF_DONTCARE)
+        {
+            ulPenalty += PENALTY_FamilyUnknown;
+        }
+        else if ((plfw->lfPitchAndFamily & 0xf0) != (pifi->jWinPitchAndFamily & 0xf0))
+        {
+            ulPenalty += PENALTY_Family;
+        }
+    }
+
+// PENALTY_HeightSmaller            150
+// PENALTY_HeightBiggerDifference   150
+// PENALTY_FamilyUnlikely            50
+// PENALTY_Width                     50
+// PENALTY_SizeSynth                 50
+// PENALTY_Aspect                    30
+// PENALTY_IntSizeSynth              20
+// PENALTY_UnevenSizeSynth            4
+
+    if (!plfw->lfItalic && (pifi->fsSelection & FM_SEL_ITALIC))
+    {
+        ulPenalty += PENALTY_Italic;
+    }
+
+    if ((plfw->lfOutPrecision == OUT_TT_ONLY_PRECIS) &&
+        !(pifi->flInfo & FM_INFO_TECH_TRUETYPE))
+    {
+        ulPenalty += 500000; // more then can be accounted for
+    }
+
+    if ((plfw->lfOutPrecision == OUT_TT_PRECIS) &&
+        !(pifi->flInfo & FM_INFO_TECH_TRUETYPE))
+    {
+        ulPenalty += PENALTY_NotTrueType;
+    }
+
+
+    ulPenalty += (abs(plfw->lfWeight - pifi->usWinWeight) / 10) * PENALTY_Weight;
+
+    if (!plfw->lfUnderline && (pifi->fsSelection & FM_SEL_UNDERSCORE))
+    {
+        ulPenalty += PENALTY_Underline;
+    }
+
+    if (!plfw->lfStrikeOut && (pifi->fsSelection & FM_SEL_STRIKEOUT))
+    {
+        ulPenalty += PENALTY_StrikeOut;
+    }
+
+// PENALTY_VectorHeightSmaller        2
+// PENALTY_DeviceFavor                2
+// PENALTY_ItalicSim                  1
+
+    if (((plfw->lfPitchAndFamily & 0x0f) == DEFAULT_PITCH) &&
+        (pifi->jWinPitchAndFamily & 0x0f) != FIXED_PITCH)
+    {
+        ulPenalty += PENALTY_DefaultPitchFixed;
+    }
+
+// PENALTY_SmallPenalty               1
+// PENALTY_VectorHeightBigger         1
+    return ulPenalty;
+}
+
+
+static
+PPFE
+HASHBUCKET_ppfeFindBestMatch(
+    PHASHBUCKET pbkt,
+    LOGFONTW *plf,
+    ULONG *pulPenalty)
+{
+    PPFELINK ppfel;
+    ULONG ulPenalty, ulBestMatch = *pulPenalty;
+    PPFE ppfeBestMatch;
+
+    /* Loop all PFELINKs */
+    for (ppfel = pbkt->ppfelEnumHead; ppfel; ppfel = ppfel->ppfelNext)
+    {
+        ulPenalty = PFE_ulPenalty(ppfel->ppfe, plf, ulBestMatch);
+        if (ulPenalty < ulBestMatch)
+        {
+            ppfeBestMatch = ppfel->ppfe;
+            ulBestMatch = ulPenalty;
+        }
+    }
+
+    return ppfeBestMatch;
 }
 
 static
@@ -217,6 +403,7 @@ FONTHASH_pbktFindBucketByName(
 
     return pbkt;
 }
+
 
 static
 VOID
@@ -303,9 +490,69 @@ failed:
     return FALSE;
 }
 
+PPFE
+NTAPI
+PFT_ppfeFindBestMatch(
+    _In_ PPFT ppft,
+    _In_ PWSTR pwszCapName,
+    _In_ ULONG iHashValue,
+    _In_ LOGFONTW *plf,
+    _Inout_ PULONG pulPenalty)
+{
+    PHASHBUCKET pbkt;
+    ULONG ulPenalty = *pulPenalty;
+    PFONTSUBSTITUTE pfs = NULL;
+    PPFE ppfe;
+
+    /* Acquire PFT lock for reading */
+    EngAcquireSemaphoreShared(ppft->hsem);
+
+    /* Try to find a HASHBUCKET by the face name */
+    pbkt = FONTHASH_pbktFindBucketByName(ppft->pfhFace, pwszCapName, iHashValue);
+
+    /* Check if we found the face name */
+    if (!pbkt)
+    {
+        /* Check if there is a font substitute */
+        pfs = GetFontSubstitute(pwszCapName);
+        if (pfs)
+        {
+            /* Try again with the substitute name */
+            pbkt = FONTHASH_pbktFindBucketByName(ppft->pfhFace,
+                                                 pfs->awcCapSubstName,
+                                                 pfs->iHashValue);
+        }
+    }
+
+    if (pbkt)
+    {
+        ppfe = HASHBUCKET_ppfeFindBestMatch(pbkt, plf, &ulPenalty);
+        if (pfs) ulPenalty += PENALTY_FaceNameSubst;
+
+    }
+    else
+    {
+        TRACE("Font with face name '%ls' was not found!\n", pwszCapName);
+        ulPenalty = PENALTY_FaceName;
+    }
+
+
+    if (ulPenalty >= PENALTY_FaceName)
+    {
+    }
+
+    /* Release PFT lock */
+    EngReleaseSemaphore(ppft->hsem);
+
+    *pulPenalty = ulPenalty;
+    return ppfe;
+}
+
+
+
 static
 PPFF
-PFT_pffFindFont(
+PFT_pffFindFontByFile(
     PFT *ppft,
     PWSTR pwszFiles,
     ULONG cwc,
@@ -407,7 +654,7 @@ GreAddFontResourceW(
     iFileNameHash = CalculateNameHash(pwszFiles);
 
     /* Try to find the font in the font table */
-    ppff = PFT_pffFindFont(ppft, pwszFiles, cwc, cFiles, iFileNameHash);
+    ppff = PFT_pffFindFontByFile(ppft, pwszFiles, cwc, cFiles, iFileNameHash);
 
     /* Did we find the font? */
     if (ppff)
@@ -424,7 +671,7 @@ GreAddFontResourceW(
     ppff = EngLoadFontFileFD(pwszFiles, cwc, cFiles, pdv, ulCheckSum);
     if (!ppff)
     {
-        DPRINT1("Failed to load font with font driver\n");
+        ERR("Failed to load font with font driver\n");
         return 0;
     }
 
