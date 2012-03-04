@@ -978,8 +978,8 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         Status = IopCreateVpb(CreatedDeviceObject);
         if (!NT_SUCCESS(Status))
         {
-            /* Reference the device object and fail */
-            ObDereferenceObject(DeviceObject);
+            /* Dereference the device object and fail */
+            ObDereferenceObject(CreatedDeviceObject);
             return Status;
         }
 
