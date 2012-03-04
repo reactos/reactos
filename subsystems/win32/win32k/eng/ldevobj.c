@@ -250,9 +250,6 @@ LDEVOBJ_bLoadDriver(
     if (!pfnEnableDriver(GDI_ENGINE_VERSION, sizeof(ded), &ded))
     {
         DPRINT1("DrvEnableDriver failed\n");
-
-        /* Unload the image. */
-        LDEVOBJ_vUnloadImage(pldev);
         return FALSE;
     }
 
@@ -263,6 +260,44 @@ LDEVOBJ_bLoadDriver(
     for (i = 0; i < ded.c; i++)
     {
         pldev->apfn[ded.pdrvfn[i].iFunc] = ded.pdrvfn[i].pfn;
+    }
+
+    /* Check if the neccessary functions are there */
+    if ((!pldev->pfn.EnablePDEV) ||
+        (!pldev->pfn.CompletePDEV) ||
+        (!pldev->pfn.UnloadFontFile))
+    {
+        DPRINT1("Missing function for gdi driver\n");
+        return FALSE;
+    }
+
+    if (pldev->ldevtype == LDEV_DEVICE_DISPLAY)
+    {
+        if ((!pldev->pfn.AssertMode) ||
+            (!pldev->pfn.EnableSurface) ||
+            (!pldev->pfn.DisableSurface) ||
+            (!pldev->pfn.DisableDriver) ||
+            (!pldev->pfn.DisablePDEV) ||
+            (!pldev->pfn.GetModes))
+        {
+            DPRINT1("Missing function for display driver\n");
+            return FALSE;
+        }
+    }
+    else if (pldev->ldevtype == LDEV_FONT)
+    {
+        if ((!pldev->pfn.LoadFontFile) ||
+            (!pldev->pfn.QueryAdvanceWidths) || // ?
+            (!pldev->pfn.QueryFont) ||
+            (!pldev->pfn.QueryFontCaps) || // ?
+            (!pldev->pfn.QueryFontData) ||
+            (!pldev->pfn.QueryFontFile) ||
+            (!pldev->pfn.QueryFontTree) ||
+            (!pldev->pfn.UnloadFontFile))
+        {
+            DPRINT1("Missing function for font driver\n");
+            return FALSE;
+        }
     }
 
     /* Return success. */
@@ -356,10 +391,7 @@ EngLoadImageEx(
     RtlAppendUnicodeToString(&strDriverName, pwsz);
 
     /* MSDN says "The driver must include this suffix in the pwszDriver string."
-       But in fact it's optional.
-
-       ms win32k EngLoadImageEx loading .sys file without append .dll
-    */
+       But in fact it's optional. */
     if ( (_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0) &&
          (_wcsnicmp(pwszDriverName + cwcLength - 4, L".sys", 4) != 0) )
     {
@@ -399,9 +431,9 @@ EngLoadImageEx(
         /* Load the image */
         if (!LDEVOBJ_bLoadImage(pldev, &strDriverName))
         {
+            DPRINT1("LDEVOBJ_bLoadImage failed\n");
             LDEVOBJ_vFreeLDEV(pldev);
             pldev = NULL;
-            DPRINT1("LDEVOBJ_bLoadImage failed\n");
             goto leave;
         }
 
@@ -412,6 +444,9 @@ EngLoadImageEx(
             if (!LDEVOBJ_bLoadDriver(pldev))
             {
                 DPRINT1("LDEVOBJ_bLoadDriver failed\n");
+
+                /* Unload the image. */
+                LDEVOBJ_vUnloadImage(pldev);
                 LDEVOBJ_vFreeLDEV(pldev);
                 pldev = NULL;
                 goto leave;
