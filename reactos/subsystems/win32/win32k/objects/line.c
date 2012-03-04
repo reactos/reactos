@@ -419,7 +419,8 @@ NtGdiPolyDraw(
     PDC dc;
     PDC_ATTR pdcattr;
     POINT *line_pts = NULL, *line_pts_old, *bzr_pts = NULL, bzr[4];
-    ULONG i, num_pts, num_bzr_pts, space, space_old, size;
+    INT num_pts, num_bzr_pts, space, space_old, size;
+    ULONG i;
     BOOL result = FALSE;
 
     dc = DC_LockDc(hdc);
