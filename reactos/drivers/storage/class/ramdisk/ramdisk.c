@@ -881,6 +881,131 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	return Status;
 }
 
+NTSTATUS
+NTAPI
+RamdiskGetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    PPARTITION_INFORMATION PartitionInfo;
+    PVOID BaseAddress;
+    LARGE_INTEGER Zero = {{0, 0}};
+    ULONG Length;
+    PIO_STACK_LOCATION IoStackLocation;
+    
+    //
+    // Validate the length
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStackLocation->Parameters.DeviceIoControl.
+        OutputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        //
+        // Invalid length
+        //
+        Status = STATUS_BUFFER_TOO_SMALL;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Map the partition table
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
+    if (!BaseAddress)
+    {
+        //
+        // No memory
+        //
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Fill out the information
+    //
+    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
+    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
+    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
+                                              DeviceExtension->SectorsPerTrack *
+                                              DeviceExtension->NumberOfHeads *
+                                              DeviceExtension->Cylinders;
+    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
+    PartitionInfo->PartitionNumber = 0;
+    PartitionInfo->PartitionType = *((PCHAR)BaseAddress + 450);
+    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
+                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
+    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
+                                                               PartitionType);
+    PartitionInfo->RewritePartition = FALSE;
+
+    //
+    // Unmap the partition table
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
+    
+    //
+    // Done
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskSetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    ULONG BytesRead;
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    PIO_STACK_LOCATION Stack;
+    LARGE_INTEGER Zero = {{0, 0}};
+    PPARTITION_INFORMATION PartitionInfo;
+
+    //
+    // First validate input
+    //
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto SetAndQuit;
+    }
+
+    //
+    // Map to get MBR
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &BytesRead);
+    if (BaseAddress == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto SetAndQuit;
+    }
+
+    //
+    // Set the new partition type
+    // On partition 0, field system indicator
+    //
+    PartitionInfo = (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+    *((PCHAR)BaseAddress + 450) = PartitionInfo->PartitionType;
+
+    //
+    // And unmap
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, BytesRead);
+    Status = STATUS_SUCCESS;
+
+SetAndQuit:
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    return Status;
+}
+
 VOID
 NTAPI
 RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
@@ -935,12 +1060,10 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         break;
                         
                     case IOCTL_DISK_SET_PARTITION_INFO:
-                        
-                        DPRINT1("Set partition info request\n");
-                        UNIMPLEMENTED;
-                        while (TRUE);
+
+                        Status = RamdiskSetPartitionInfo(Irp, (PRAMDISK_DRIVE_EXTENSION)DeviceExtension);
                         break;
-                        
+
                     case IOCTL_DISK_GET_DRIVE_LAYOUT:
                         
                         DPRINT1("Get drive layout request\n");
@@ -949,12 +1072,10 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         break;
                         
                     case IOCTL_DISK_GET_PARTITION_INFO:
-                        
-                        DPRINT1("Get partitinon info request\n");
-                        UNIMPLEMENTED;
-                        while (TRUE);
+
+                        Status = RamdiskGetPartitionInfo(Irp, (PRAMDISK_DRIVE_EXTENSION)DeviceExtension);
                         break;
-                        
+
                     default:
                         
                         DPRINT1("Invalid request\n");
@@ -1193,80 +1314,6 @@ DoCopy:
         //
         if (!BytesLeft) return Status;
     }
-}
-
-NTSTATUS
-NTAPI
-RamdiskGetPartitionInfo(IN PIRP Irp,
-                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
-{
-    NTSTATUS Status;
-    PPARTITION_INFORMATION PartitionInfo;
-    PVOID BaseAddress;
-    LARGE_INTEGER Zero = {{0, 0}};
-    ULONG Length;
-    PIO_STACK_LOCATION IoStackLocation;
-    
-    //
-    // Validate the length
-    //
-    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    if (IoStackLocation->Parameters.DeviceIoControl.
-        OutputBufferLength < sizeof(PARTITION_INFORMATION))
-    {
-        //
-        // Invalid length
-        //
-        Status = STATUS_BUFFER_TOO_SMALL;
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-        return Status;
-    }
-    
-    //
-    // Map the partition table
-    //
-    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
-    if (!BaseAddress)
-    {
-        //
-        // No memory
-        //
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-        return Status;
-    }
-    
-    //
-    // Fill out the information
-    //
-    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
-    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
-    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
-                                              DeviceExtension->SectorsPerTrack *
-                                              DeviceExtension->NumberOfHeads *
-                                              DeviceExtension->Cylinders;
-    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
-    PartitionInfo->PartitionNumber = 0;
-    PartitionInfo->PartitionType = PARTITION_FAT32; //*((PCHAR)BaseAddress + 450);
-    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
-                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
-    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
-                                                               PartitionType);
-    PartitionInfo->RewritePartition = FALSE;
-
-    //
-    // Unmap the partition table
-    //
-    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
-    
-    //
-    // Done
-    //
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1572,8 +1619,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 
             case IOCTL_DISK_SET_PARTITION_INFO:
                 
-                UNIMPLEMENTED;
-                while (TRUE);
+                Status = RamdiskSetPartitionInfo(Irp, DriveExtension);
                 break;
                 
             case IOCTL_DISK_GET_PARTITION_INFO:
