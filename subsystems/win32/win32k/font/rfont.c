@@ -7,10 +7,79 @@
 
 #include <win32k.h>
 #include <include/font.h>
+DBG_DEFAULT_CHANNEL(GdiFont);
 
-#define NDEBUG
-#include <debug.h>
+ULONG gulRFONTUnique = 0;
+PRFONT gprfntSystemTT;
 
+PRFONT
+NTAPI
+RFONT_AllocRFONT(void)
+{
+    PRFONT prfnt;
+
+    /* Allocate the RFONT structure */
+    prfnt = ExAllocatePoolWithTag(PagedPool, sizeof(RFONT), GDITAG_RFONT);
+    if (!prfnt)
+    {
+        ERR("Not enough memory to allocate RFONT\n");
+        return NULL;
+    }
+
+    /* Zero out the whole structure */
+    RtlZeroMemory(prfnt, sizeof(RFONT));
+
+    /* Set a unique number */
+    prfnt->fobj.iUniq = InterlockedIncrementUL(&gulRFONTUnique);
+
+
+    return prfnt;
+}
+
+VOID
+NTAPI
+RFONT_vDeleteRFONT(
+    _Inout_ PRFONT prfnt)
+{
+    ASSERT(prfnt->cSelected == 0);
+
+    /* Free the structure */
+    ExFreePoolWithTag(prfnt, GDITAG_RFONT);
+
+}
+
+BOOL
+NTAPI
+RFONT_bQueryDeviceMetrics(
+    PRFONT prfnt)
+{
+    PPDEVOBJ ppdev = (PPDEVOBJ)prfnt->hdevProducer;
+    PLDEVOBJ pldev = ppdev->pldev;
+    ULONG ulResult;
+
+    /* Preinitialize some fields */
+    RtlZeroMemory(&prfnt->fddm, sizeof(FD_DEVICEMETRICS));
+    prfnt->fddm.lNonLinearExtLeading = 0x80000000;
+    prfnt->fddm.lNonLinearIntLeading = 0x80000000;
+    prfnt->fddm.lNonLinearMaxCharWidth = 0x80000000;
+    prfnt->fddm.lNonLinearAvgCharWidth = 0x80000000;
+    prfnt->fddm.fdxQuantized = prfnt->fdx;
+
+    /* Call the fontdriver */
+    ulResult = pldev->pfn.QueryFontData(prfnt->ppff->dhpdev,
+                                        &prfnt->fobj,
+                                        QFD_MAXEXTENTS,
+                                        -1,
+                                        NULL,
+                                        &prfnt->fddm,
+                                        sizeof(FD_DEVICEMETRICS));
+
+    /* Calculate max extents (This seems to be what Windows does) */
+    prfnt->fxMaxExtent = max(prfnt->fddm.fxMaxAscender, 0) +
+                         max(prfnt->fddm.fxMaxDescender, 0);
+
+    return (ulResult != FD_ERROR);
+}
 
 
 
