@@ -102,8 +102,8 @@ InitDisplayDriver(
 
     /* Initialize the UNICODE_STRING */
     ustrDisplayDrivers.Buffer = awcBuffer;
-    ustrDisplayDrivers.MaximumLength = cbSize;
-    ustrDisplayDrivers.Length = cbSize;
+    ustrDisplayDrivers.MaximumLength = (USHORT)cbSize;
+    ustrDisplayDrivers.Length = (USHORT)cbSize;
 
     /* Set Buffer for description and size of remaining buffer */
     ustrDescription.Buffer = awcBuffer + (cbSize / sizeof(WCHAR));
@@ -117,8 +117,8 @@ InitDisplayDriver(
                            &cbSize);
     if (NT_SUCCESS(Status))
     {
-        ustrDescription.MaximumLength = cbSize;
-        ustrDescription.Length = cbSize;
+        ustrDescription.MaximumLength = (USHORT)cbSize;
+        ustrDescription.Length = (USHORT)cbSize;
     }
     else
     {

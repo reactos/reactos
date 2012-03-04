@@ -1844,7 +1844,7 @@ NtUserDragDetect(
 {
     MSG msg;
     RECT rect;
-    WORD wDragWidth, wDragHeight;
+    ULONG wDragWidth, wDragHeight;
     DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserDragDetect(%x)\n", hWnd);

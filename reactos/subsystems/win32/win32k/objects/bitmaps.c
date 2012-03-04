@@ -158,11 +158,11 @@ NtGdiCreateBitmap(
 
     /* Calculate width and image size in bytes */
     cjWidthBytes = WIDTH_BYTES_ALIGN16(nWidth, cRealBpp);
-    cjSize = cjWidthBytes * nHeight;
+    cjSize = (ULONGLONG)cjWidthBytes * nHeight;
 
-    /* Check parameters (possible overflow of cjWidthBytes!) */
-    if (iFormat == 0 || nWidth <= 0 || nWidth >= 0x8000000 || nHeight <= 0 ||
-        cBitsPixel > 32 || cPlanes > 32 || cjSize >= 0x100000000ULL)
+    /* Check parameters (possible overflow of cjSize!) */
+    if ((iFormat == 0) || (nWidth <= 0) || (nWidth >= 0x8000000) || (nHeight <= 0) ||
+        (cBitsPixel > 32) || (cPlanes > 32) || (cjSize >= 0x100000000ULL))
     {
         DPRINT1("Invalid bitmap format! Width=%d, Height=%d, Bpp=%d, Planes=%d\n",
                 nWidth, nHeight, cBitsPixel, cPlanes);
@@ -178,7 +178,7 @@ NtGdiCreateBitmap(
         PSURFACE psurf = SURFACE_ShareLockSurface(hbmp);
         _SEH2_TRY
         {
-            ProbeForRead(pUnsafeBits, cjSize, 1);
+            ProbeForRead(pUnsafeBits, (SIZE_T)cjSize, 1);
             UnsafeSetBitmapBits(psurf, 0, pUnsafeBits);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

@@ -173,7 +173,7 @@ co_WinPosArrangeIconicWindows(PWND parent)
 
    TRACE("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
 
-   for( i = 0; List[i]; i++)
+   for(i = 0; List[i]; i++)
    {
       PWND Child;
 
@@ -197,7 +197,7 @@ co_WinPosArrangeIconicWindows(PWND parent)
 
          UserDerefObjectCo(Child);
 
-         if (x <= rectParent.right - UserGetSystemMetrics(SM_CXMINSPACING))
+         if (x <= (rectParent.right - UserGetSystemMetrics(SM_CXMINSPACING)))
             x += xspacing;
          else
          {
@@ -228,8 +228,8 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    }
 
    IntGetClientRect( pwndParent, &rectParent );
-   if ((Pos->x >= rectParent.left) && (Pos->x + UserGetSystemMetrics(SM_CXICON) < rectParent.right) &&
-       (Pos->y >= rectParent.top) && (Pos->y + UserGetSystemMetrics(SM_CYICON) < rectParent.bottom))
+   if ((Pos->x >= rectParent.left) && ((Pos->x + UserGetSystemMetrics(SM_CXICON)) < rectParent.right) &&
+       (Pos->y >= rectParent.top) && ((Pos->y + UserGetSystemMetrics(SM_CYICON)) < rectParent.bottom))
       return;  /* The icon already has a suitable position */
 
    xspacing = UserGetSystemMetrics(SM_CXICONSPACING);
@@ -318,7 +318,7 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
          if (Wnd->state & WNDS_MAXIMIZESTOMONITOR)
          {
             Wnd->InternalPos.flags &= ~WPF_MAXINIT;
-            Wnd->InternalPos.MaxPos.x = Wnd->InternalPos.MaxPos.y = -1; 
+            Wnd->InternalPos.MaxPos.x = Wnd->InternalPos.MaxPos.y = -1;
          }
          else
          {
@@ -1893,8 +1893,8 @@ co_WinPosSearchChildren(
         }
     }
 
-    *HitTest = co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
-                                 MAKELONG(Point->x, Point->y));
+    *HitTest = (USHORT)co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
+                                         MAKELONG(Point->x, Point->y));
     if ((*HitTest) == (USHORT)HTTRANSPARENT)
     {
          UserDereferenceObject(ScopeWin);
@@ -2046,7 +2046,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
         TRACE("hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
                winpos->pos.hwnd, winpos->pos.hwndInsertAfter, winpos->pos.x, winpos->pos.y,
                winpos->pos.cx, winpos->pos.cy, winpos->pos.flags);
-        
+
         pwnd = UserGetWindowObject(winpos->pos.hwnd);
         if (!pwnd)
            continue;

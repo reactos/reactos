@@ -727,7 +727,7 @@ SpiNotifyNCMetricsChanged()
         UserRefObjectCo(pwndCurrent, &Ref);
         co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
                                               pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
-                                              ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top, 
+                                              ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top,
                               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
                               SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
         UserDerefObjectCo(pwndCurrent);
@@ -800,7 +800,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetInt(&gspv.uiGridGranularity, uiParam, KEY_DESKTOP, VAL_GRID, fl);
 
         case SPI_GETDESKWALLPAPER:
-            uiParam = min(uiParam, gspv.ustrWallpaper.Length + 1);
+            uiParam = min(uiParam, gspv.ustrWallpaper.Length + 1UL);
             return SpiGet(pvParam, gspv.awcWallpaper, uiParam, fl);
 
         case SPI_SETDESKWALLPAPER:
@@ -1590,7 +1590,7 @@ UserSystemParametersInfo(
         }
         ulResult = 1;
     }
-    
+
     return ulResult;
 }
 
@@ -1616,7 +1616,7 @@ NtUserSystemParametersInfo(
 
     TRACE("Leave NtUserSystemParametersInfo, returning %d\n", bResult);
     UserLeave();
-    
+
     return bResult;
 }
 

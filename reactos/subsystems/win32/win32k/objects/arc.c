@@ -126,10 +126,10 @@ IntArc( DC *dc,
     AngleEnd   = atan2((RectSEpts.bottom - CenterY), RectSEpts.right - CenterX)*(360.0/(M_PI*2));
     AngleStart = atan2((RectSEpts.top - CenterY), RectSEpts.left - CenterX)*(360.0/(M_PI*2));
 
-    SfCx = (Rcos(AngleStart) * RadiusX);
-    SfCy = (Rsin(AngleStart) * RadiusY);
-    EfCx = (Rcos(AngleEnd) * RadiusX);
-    EfCy = (Rsin(AngleEnd) * RadiusY);
+    SfCx = (LONG)(Rcos(AngleStart) * RadiusX);
+    SfCy = (LONG)(Rsin(AngleStart) * RadiusY);
+    EfCx = (LONG)(Rcos(AngleEnd) * RadiusX);
+    EfCy = (LONG)(Rsin(AngleEnd) * RadiusY);
 
     if ((arctype == GdiTypePie) || (arctype == GdiTypeChord))
     {

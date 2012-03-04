@@ -15,7 +15,7 @@ static BOOL Setup = FALSE;
 /* FUNCTIONS *****************************************************************/
 
 BOOL
-FASTCALL
+NTAPI
 InitMetrics(VOID)
 {
     INT *piSysMet = gpsi->aiSysMet;
@@ -175,7 +175,8 @@ InitMetrics(VOID)
     return TRUE;
 }
 
-ULONG FASTCALL
+LONG
+NTAPI
 UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);

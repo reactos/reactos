@@ -876,8 +876,8 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                 Msg.lParam |= KF_REPEAT << 16;
             if (!bIsDown)
                 Msg.lParam |= KF_UP << 16;
-            /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */ 	 
-            if (pFocusQueue->QF_flags & QF_DIALOGACTIVE) 	 
+            /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */
+            if (pFocusQueue->QF_flags & QF_DIALOGACTIVE)
                 Msg.lParam |= KF_DLGMODE << 16;
             if (pFocusQueue->MenuOwner) // pFocusQueue->MenuState) // MenuState needs a start flag...
                 Msg.lParam |= KF_MENUMODE << 16;
@@ -967,7 +967,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     return ProcessKeyEvent(wVk, wScanCode, pKbdInput->dwFlags, bInjected, dwTime, pKbdInput->dwExtraInfo);
 }
 
-/* 
+/*
  * UserProcessKeyboardInput
  *
  * Process raw keyboard input data
@@ -1045,7 +1045,7 @@ UserProcessKeyboardInput(
     }
 }
 
-/* 
+/*
  * IntTranslateKbdMessage
  *
  * Addes WM_(SYS)CHAR messages to message queue if message
@@ -1408,8 +1408,8 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     if (pKeyName)
     {
         cchKeyName = wcslen(pKeyName);
-        if (cchKeyName > cchSize - 1)
-            cchKeyName = cchSize - 1; // Don't count '\0'
+        if (cchKeyName > (cchSize - 1UL))
+            cchKeyName = cchSize - 1UL; // Don't count '\0'
 
         _SEH2_TRY
         {

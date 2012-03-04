@@ -777,7 +777,7 @@ IntPrintWindow(
 }
 
 BOOL
-FASTCALL 
+FASTCALL
 IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 {
    PPROPERTY pprop;
@@ -1831,9 +1831,9 @@ BOOL UserDrawCaption(
       else if (pWnd != NULL) // FIXME: Windows does not do that
       {
          UNICODE_STRING ustr;
-         ustr.Buffer = pWnd->strName.Buffer;
-         ustr.Length = pWnd->strName.Length;
-         ustr.MaximumLength = pWnd->strName.MaximumLength;
+         ustr.Buffer = pWnd->strName.Buffer; // FIXME: LARGE_STRING truncated!
+         ustr.Length = (USHORT)min(pWnd->strName.Length, MAXUSHORT);
+         ustr.MaximumLength = (USHORT)min(pWnd->strName.MaximumLength, MAXUSHORT);
          UserDrawCaptionText(hDc, &ustr, &Rect, uFlags, hFont);
       }
    }

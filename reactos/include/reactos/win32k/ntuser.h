@@ -2038,7 +2038,7 @@ NtUserGetKeyboardLayout(
 UINT
 NTAPI
 NtUserGetKeyboardLayoutList(
-  INT nItems,
+  ULONG nItems,
   HKL *pHklBuff);
 
 BOOL

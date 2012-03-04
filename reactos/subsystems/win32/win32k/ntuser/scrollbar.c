@@ -361,7 +361,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    /* Make sure the page size is valid */
    if (Info->nPage < 0)
       Info->nPage = 0;
-   else if (Info->nMax - Info->nMin + 1 < Info->nPage)
+   else if ((Info->nMax - Info->nMin + 1UL) < Info->nPage)
    {
       Info->nPage = Info->nMax - Info->nMin + 1;
    }
@@ -371,7 +371,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    {
       Info->nPos = Info->nMin;
    }
-   else if (Info->nPos > Info->nMax - max(Info->nPage - 1, 0))
+   else if (Info->nPos > (Info->nMax - max((int)Info->nPage - 1, 0)))
    {
       Info->nPos = Info->nMax - max(Info->nPage - 1, 0);
    }
@@ -421,7 +421,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 
 done:
    if ( action & SA_SSI_HIDE )
-   { 
+   {
       co_UserShowScrollBar(Window, nBar, FALSE, FALSE);
    }
    else
@@ -616,7 +616,7 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
       case SB_HORZ:
          if (fShowH) set_bits |= WS_HSCROLL;
          else clear_bits |= WS_HSCROLL;
-         if( nBar == SB_HORZ ) break;  
+         if( nBar == SB_HORZ ) break;
       /* Fall through */
       case SB_VERT:
          if (fShowV) set_bits |= WS_VSCROLL;
@@ -701,8 +701,8 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserSBGetParms(
-  HWND hWnd, 
-  int fnBar, 
+  HWND hWnd,
+  int fnBar,
   PSBDATA pSBData,
   LPSCROLLINFO lpsi)
 {
@@ -822,11 +822,11 @@ NtUserEnableScrollBar(
 
    if(InfoH)
       Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
-     
+
    ERR("FIXME: EnableScrollBar wSBflags %d wArrows %d Chg %d\n",wSBflags,wArrows, Chg);
 // Done in user32:
 //   SCROLL_RefreshScrollBar( hwnd, nBar, TRUE, TRUE );
-   
+
    if (OrigArrows == wArrows) RETURN( FALSE);
    RETURN( TRUE);
 

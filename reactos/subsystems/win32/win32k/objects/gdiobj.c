@@ -1227,7 +1227,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
 {
     POBJ pobj;
     FLONG fl = 0;
-    UCHAR objt = ObjectType >> 16;
+    UCHAR objt = (ObjectType >> 16) & 0xFF;
 
     if ((objt == GDIObjType_DC_TYPE && cjSize == sizeof(DC)) ||
         (objt == GDIObjType_PAL_TYPE && cjSize == sizeof(PALETTE)) ||

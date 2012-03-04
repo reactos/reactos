@@ -355,7 +355,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     PULONG SafeCounts;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL Ret = TRUE;
-    INT nPoints = 0, nMaxPoints = 0, nInvalid = 0, i;
+    ULONG nPoints = 0, nMaxPoints = 0, nInvalid = 0, i;
 
     if (!UnsafePoints || !UnsafeCounts ||
         Count == 0 || iFunc == 0 || iFunc > GdiPolyPolyRgn)

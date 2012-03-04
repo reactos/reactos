@@ -62,8 +62,8 @@ NTSTATUS FASTCALL InitSessionImpl(VOID);
 
 /*************** METRIC.C ***************/
 
-BOOL FASTCALL InitMetrics(VOID);
-ULONG FASTCALL UserGetSystemMetrics(ULONG Index);
+BOOL NTAPI InitMetrics(VOID);
+LONG NTAPI UserGetSystemMetrics(ULONG Index);
 
 /*************** KEYBOARD.C ***************/
 

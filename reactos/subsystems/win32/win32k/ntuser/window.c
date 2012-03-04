@@ -795,7 +795,7 @@ IntGetClientRect(PWND Wnd, RECTL *Rect)
       Rect->bottom = UserGetSystemMetrics(SM_CYMINIMIZED);
       return;
    }
-   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
    {
       *Rect = Wnd->rcClient;
       RECTL_vOffsetRect(Rect, -Wnd->rcClient.left, -Wnd->rcClient.top);
@@ -1953,7 +1953,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
          if (Window->state & WNDS_ANSICREATOR)
          {
             ANSI_STRING AnsiString;
-            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
+            AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
             pszClass = UserHeapAlloc(AnsiString.MaximumLength);
             if (!pszClass)
             {
@@ -1984,13 +1984,13 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       {
          UNICODE_STRING Name;
          Name.Buffer = WindowName->Buffer;
-         Name.Length = WindowName->Length;
-         Name.MaximumLength = WindowName->MaximumLength;
+         Name.Length = (USHORT)min(WindowName->Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
+         Name.MaximumLength = (USHORT)min(WindowName->MaximumLength, MAXUSHORT);
 
          if (Window->state & WNDS_ANSICREATOR)
          {
             ANSI_STRING AnsiString;
-            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name) + sizeof(CHAR);
+            AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(&Name) + sizeof(CHAR);
             pszName = UserHeapAlloc(AnsiString.MaximumLength);
             if (!pszName)
             {
@@ -2325,8 +2325,8 @@ NtUserCreateWindowEx(
 
         /* We pass it on as a UNICODE_STRING */
         ustrClassName.Buffer = lstrClassName.Buffer;
-        ustrClassName.Length = lstrClassName.Length;
-        ustrClassName.MaximumLength = lstrClassName.MaximumLength;
+        ustrClassName.Length = (USHORT)min(lstrClassName.Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
+        ustrClassName.MaximumLength = (USHORT)min(lstrClassName.MaximumLength, MAXUSHORT);
     }
 
     /* Fill the CREATESTRUCTW */
@@ -2593,10 +2593,10 @@ IntFindWindow(PWND Parent,
             send WM_GETTEXT messages to windows belonging to its processes */
          if (!ClassAtom || Child->pcls->atomClassName == ClassAtom)
          {
-             // HACK: use UNICODE_STRING instead of LARGE_STRING
+             // FIXME: LARGE_STRING truncated
              CurrentWindowName.Buffer = Child->strName.Buffer;
-             CurrentWindowName.Length = Child->strName.Length;
-             CurrentWindowName.MaximumLength = Child->strName.MaximumLength;
+             CurrentWindowName.Length = (USHORT)min(Child->strName.Length, MAXUSHORT);
+             CurrentWindowName.MaximumLength = (USHORT)min(Child->strName.MaximumLength, MAXUSHORT);
              if(!CheckWindowName ||
                 (Child->strName.Length < 0xFFFF &&
                  !RtlCompareUnicodeString(WindowName, &CurrentWindowName, TRUE)))
@@ -2772,8 +2772,8 @@ NtUserFindWindowEx(HWND hwndParent,
                    The user mode version however calls GetWindowText() which will
                    send WM_GETTEXT messages to windows belonging to its processes */
                 ustr.Buffer = TopLevelWindow->strName.Buffer;
-                ustr.Length = TopLevelWindow->strName.Length;
-                ustr.MaximumLength = TopLevelWindow->strName.MaximumLength;
+                ustr.Length = (USHORT)min(TopLevelWindow->strName.Length, MAXUSHORT); // FIXME:LARGE_STRING truncated
+                ustr.MaximumLength = (USHORT)min(TopLevelWindow->strName.MaximumLength, MAXUSHORT);
                 WindowMatches = !CheckWindowName ||
                                 (TopLevelWindow->strName.Length < 0xFFFF &&
                                  !RtlCompareUnicodeString(&WindowName, &ustr, TRUE));
@@ -3158,7 +3158,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->pDeskInfo) 
+   if (ti->pDeskInfo)
    {
        ti->pDeskInfo->hShellWindow = hwndShell;
        ti->pDeskInfo->ppiShellProcess = ti->ppi;
@@ -3450,7 +3450,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       case GWL_ID:
       case GWL_HINSTANCE:
       case GWL_HWNDPARENT:
-         RETURN( co_UserSetWindowLong(Window->head.h, Index, (UINT)NewValue, TRUE));
+         RETURN( (WORD)co_UserSetWindowLong(Window->head.h, Index, (UINT)NewValue, TRUE));
       default:
          if (Index < 0)
          {
@@ -3459,7 +3459,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
          }
    }
 
-   if (Index > Window->cbwndExtra - sizeof(WORD))
+   if ((ULONG)Index > (Window->cbwndExtra - sizeof(WORD)))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);

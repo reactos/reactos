@@ -404,7 +404,7 @@ ColorCorrection(PPALETTE PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
 
     if (ppdev->flFlags & PDEV_GAMMARAMP_TABLE)
     {
-        INT i;
+        ULONG i;
         PGAMMARAMP GammaRamp = (PGAMMARAMP)ppdev->pvGammaRamp;
         for ( i = 0; i < Colors; i++)
         {
@@ -980,7 +980,7 @@ IntSetPaletteEntries(
     CONST LPPALETTEENTRY pe)
 {
     PPALETTE palGDI;
-    WORD numEntries;
+    ULONG numEntries;
 
     if ((UINT)hpal & GDI_HANDLE_STOCK_MASK)
     {

@@ -141,9 +141,9 @@ IntSetDIBColorTable(
     }
 
     biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-    if (biBitCount <= 8 && StartIndex < (1 << biBitCount))
+    if ((biBitCount <= 8) && (StartIndex < (1UL << biBitCount)))
     {
-        if (StartIndex + Entries > (1 << biBitCount))
+        if (StartIndex + Entries > (1UL << biBitCount))
             Entries = (1 << biBitCount) - StartIndex;
 
         if (psurf->ppal == NULL)
@@ -537,7 +537,8 @@ NtGdiGetDIBitsInternal(
     LONG width, height;
     WORD planes, bpp;
     DWORD compr, size ;
-    int i, bitmap_type;
+    USHORT i;
+    int bitmap_type;
     RGBTRIPLE* rgbTriples;
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
@@ -618,10 +619,10 @@ NtGdiGetDIBitsInternal(
     case 0: /* Only info */
         if(pbmci)
         {
-            pbmci->bmciHeader.bcWidth = psurf->SurfObj.sizlBitmap.cx;
-            pbmci->bmciHeader.bcHeight = (psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
+            pbmci->bmciHeader.bcWidth = (WORD)psurf->SurfObj.sizlBitmap.cx;
+            pbmci->bmciHeader.bcHeight = (WORD)((psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
                                          -psurf->SurfObj.sizlBitmap.cy :
-                                         psurf->SurfObj.sizlBitmap.cy;
+                                         psurf->SurfObj.sizlBitmap.cy);
             pbmci->bmciHeader.bcPlanes = 1;
             pbmci->bmciHeader.bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
         }
@@ -674,19 +675,19 @@ NtGdiGetDIBitsInternal(
         {
             if(Usage == DIB_RGB_COLORS)
             {
-                unsigned int colors = min(psurf->ppal->NumColors, 1 << bpp);
+                ULONG colors = min(psurf->ppal->NumColors, 256);
 
                 if(pbmci)
                 {
-                    for(i=0; i < colors; i++)
+                    for(i = 0; i < colors; i++)
                     {
                         rgbTriples[i].rgbtRed = psurf->ppal->IndexedColors[i].peRed;
                         rgbTriples[i].rgbtGreen = psurf->ppal->IndexedColors[i].peGreen;
                         rgbTriples[i].rgbtBlue = psurf->ppal->IndexedColors[i].peBlue;
                     }
                 }
-                if(colors != 1 << bpp) Info->bmiHeader.biClrUsed = colors;
-                for(i=0; i < colors; i++)
+                if(colors != 256) Info->bmiHeader.biClrUsed = colors;
+                for(i = 0; i < colors; i++)
                 {
                     rgbQuads[i].rgbRed = psurf->ppal->IndexedColors[i].peRed;
                     rgbQuads[i].rgbGreen = psurf->ppal->IndexedColors[i].peGreen;
@@ -695,7 +696,7 @@ NtGdiGetDIBitsInternal(
             }
             else
             {
-                for(i=0; i < 1 << bpp; i++)
+                for(i = 0; i < 256; i++)
                 {
                     if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
@@ -706,7 +707,7 @@ NtGdiGetDIBitsInternal(
         {
             if(Usage == DIB_PAL_COLORS)
             {
-                for(i=0; i < 1 << bpp; i++)
+                for(i = 0; i < 256; i++)
                 {
                     if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
@@ -877,7 +878,7 @@ NtGdiGetDIBitsInternal(
         POINTL srcPoint;
         BOOL ret ;
 
-        if (StartScan > psurf->SurfObj.sizlBitmap.cy)
+        if (StartScan > (ULONG)psurf->SurfObj.sizlBitmap.cy)
         {
             ScanLines = 0;
             goto done;
@@ -889,8 +890,8 @@ NtGdiGetDIBitsInternal(
 
         /* Fixup values */
         Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
-        Info->bmiHeader.biHeight = height < 0 ?
-                                   -ScanLines : ScanLines;
+        Info->bmiHeader.biHeight = (height < 0) ?
+                                   -(LONG)ScanLines : ScanLines;
         /* Create the DIB */
         hBmpDest = DIB_CreateDIBSection(pDC, Info, Usage, &pDIBits, NULL, 0, 0);
         /* Restore them */
@@ -1379,7 +1380,7 @@ NtGdiCreateDIBSection(
     {
         ProbeForRead(&bmi->bmiHeader.biSize, sizeof(DWORD), 1);
         ProbeForRead(bmi, bmi->bmiHeader.biSize, 1);
-        ProbeForRead(bmi, DIB_BitmapInfoSize(bmi, Usage), 1);
+        ProbeForRead(bmi, DIB_BitmapInfoSize(bmi, (WORD)Usage), 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1783,7 +1784,7 @@ HPALETTE
 FASTCALL
 BuildDIBPalette(CONST BITMAPINFO *bmi)
 {
-    BYTE bits;
+    WORD bits;
     ULONG ColorCount;
     HPALETTE hPal;
     ULONG RedMask = 0, GreenMask = 0, BlueMask = 0;

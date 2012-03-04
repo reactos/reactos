@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Pen functiona
  * FILE:              subsys/win32k/objects/pen.c
- * PROGRAMER:         
+ * PROGRAMER:
  */
 
 #include <win32k.h>
@@ -230,7 +230,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
       cbRetCount = sizeof(EXTLOGPEN) - sizeof(DWORD) + pbrushPen->dwStyleCount * sizeof(DWORD);
       if (pBuffer)
       {
-         INT i;
+         ULONG i;
 
          if (cbCount < cbRetCount) return 0;
          pExtLogPen = (PEXTLOGPEN)pBuffer;

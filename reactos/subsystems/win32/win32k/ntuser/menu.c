@@ -804,7 +804,7 @@ BOOL FASTCALL
 IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                   PROSMENUITEMINFO ItemInfo)
 {
-   int pos = (int)uItem;
+   int pos;
    PMENU_ITEM MenuItem;
    PMENU_OBJECT SubMenu = NULL;
 
@@ -818,7 +818,8 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    {
       SubMenu = MenuObject;
       /* calculate position */
-      if(MenuObject->MenuInfo.MenuItemCount < pos)
+      pos = (int)uItem;
+      if(uItem > MenuObject->MenuInfo.MenuItemCount)
       {
          pos = MenuObject->MenuInfo.MenuItemCount;
       }
@@ -1254,7 +1255,7 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
         bti->rcTitleBar.right  = pWindowObject->rcWindow.right - pWindowObject->rcWindow.left;
         bti->rcTitleBar.bottom = pWindowObject->rcWindow.bottom - pWindowObject->rcWindow.top;
 
-        /* Is it iconiced ? */ 
+        /* Is it iconiced ? */
         if ((dwStyle & WS_ICONIC)!=WS_ICONIC)
         {
             /* Remove frame from rectangle */
@@ -1303,24 +1304,24 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
             /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYSMCAPTION) */
             bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYSMCAPTION);
         }
-        else 
+        else
         {
             /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYCAPTION) and UserGetSystemMetrics(SM_CXSIZE) */
             bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYCAPTION);
             bti->rcTitleBar.left += UserGetSystemMetrics(SM_CXSIZE);
         }
 
-        if (dwStyle & WS_CAPTION) 
+        if (dwStyle & WS_CAPTION)
         {
             bti->rgstate[1] = STATE_SYSTEM_INVISIBLE;
-            if (dwStyle & WS_SYSMENU) 
+            if (dwStyle & WS_SYSMENU)
             {
-                if (!(dwStyle & (WS_MINIMIZEBOX|WS_MAXIMIZEBOX))) 
+                if (!(dwStyle & (WS_MINIMIZEBOX|WS_MAXIMIZEBOX)))
                 {
                     bti->rgstate[2] = STATE_SYSTEM_INVISIBLE;
                     bti->rgstate[3] = STATE_SYSTEM_INVISIBLE;
                 }
-                else 
+                else
                 {
                     if (!(dwStyle & WS_MINIMIZEBOX))
                     {
@@ -1341,7 +1342,7 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
                     bti->rgstate[5] = STATE_SYSTEM_UNAVAILABLE;
                 }
             }
-            else 
+            else
             {
                 bti->rgstate[2] = STATE_SYSTEM_INVISIBLE;
                 bti->rgstate[3] = STATE_SYSTEM_INVISIBLE;
@@ -1609,13 +1610,13 @@ NtUserGetTitleBarInfo(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail copy the data */ 
+        /* Fail copy the data */
         EngSetLastError(ERROR_INVALID_PARAMETER);
         retValue = FALSE;
     }
     _SEH2_END
 
-    /* Get the tile bar info */ 
+    /* Get the tile bar info */
     if (retValue)
     {
         retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
@@ -1629,7 +1630,7 @@ NtUserGetTitleBarInfo(
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Fail copy the data */ 
+                /* Fail copy the data */
                 EngSetLastError(ERROR_INVALID_PARAMETER);
                 retValue = FALSE;
             }
@@ -2240,7 +2241,7 @@ UserMenuItemInfo(
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
 // This will crash menu (line 80) correct_behavior test!
-// "NT4 and below can't handle a bigger MENUITEMINFO struct" 
+// "NT4 and below can't handle a bigger MENUITEMINFO struct"
       //EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
       return( FALSE);
    }
@@ -2445,7 +2446,7 @@ NtUserThunkedMenuItemInfo(
          ERR("Failed to capture MenuItem Caption (status 0x%08x)\n",Status);
          SetLastNtError(Status);
          RETURN(FALSE);
-      }       
+      }
    }
 
    if (bInsert) RETURN( UserInsertMenuItem(Menu, uItem, fByPosition, lpmii));

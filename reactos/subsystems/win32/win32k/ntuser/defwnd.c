@@ -59,7 +59,7 @@ IntClientShutdown(
                 break;
              }
           }
-          else          
+          else
           {
              co_IntSendMessage(WndChild->head.h, WM_ENDSESSION, KillTimers, lParams);
              if (KillTimers)
@@ -82,7 +82,7 @@ IntClientShutdown(
          lResult = MCSR_DONOTSHUTDOWN;
       }
    }
-   else          
+   else
    {
       co_IntSendMessage(pWindow->head.h, WM_ENDSESSION, KillTimers, lParams);
       if (KillTimers)
@@ -141,7 +141,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    {
       Hook = TRUE;
       lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
-      
+
       if (lResult) return lResult;
    }
 
@@ -218,7 +218,7 @@ IntDefWindowProc(
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
       case WM_GETHOTKEY:
-         return DefWndGetHotKey(UserHMGetHandle(Wnd));                
+         return DefWndGetHotKey(UserHMGetHandle(Wnd));
       case WM_SETHOTKEY:
          return DefWndSetHotKey(Wnd, wParam);
 

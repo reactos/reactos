@@ -137,7 +137,7 @@ RawInputThreadMain()
     ULONG cWaitObjects = 0, cMaxWaitObjects = 1;
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
-    
+
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
@@ -196,7 +196,7 @@ RawInputThreadMain()
                                        &ByteOffset,
                                        NULL);
             }
-            
+
             if (MouStatus == STATUS_PENDING)
                 WaitObjects[cWaitObjects++] = &pMouDevice->Event;
         }
@@ -215,7 +215,7 @@ RawInputThreadMain()
                                        sizeof(KEYBOARD_INPUT_DATA),
                                        &ByteOffset,
                                        NULL);
-                
+
             }
             if (KbdStatus == STATUS_PENDING)
                 WaitObjects[cWaitObjects++] = &pKbdDevice->Event;
@@ -233,7 +233,8 @@ RawInputThreadMain()
                                               NULL,//&WaitTimeout,
                                               NULL);
 
-            if (Status >= STATUS_WAIT_0 && Status < STATUS_WAIT_0 + cWaitObjects)
+            if ((Status >= STATUS_WAIT_0) &&
+                (Status < (STATUS_WAIT_0 + (LONG)cWaitObjects)))
             {
                 /* Some device has finished reading */
                 pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];

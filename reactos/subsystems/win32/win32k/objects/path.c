@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable:4244)
+#endif
+
 #define NUM_ENTRIES_INITIAL 16  /* Initial size of points / flags arrays  */
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
@@ -20,7 +24,7 @@
 /***********************************************************************
  * Internal functions
  */
- 
+
 /* PATH_DestroyGdiPath
  *
  * Destroys a GdiPath structure (frees the memory in the arrays).
@@ -71,7 +75,7 @@ FASTCALL
 GdiPathDPtoLP(PDC pdc, PPOINT ppt, INT count)
 {
   XFORMOBJ xo;
-   
+
   XFORMOBJ_vInit(&xo, &pdc->dclevel.mxDeviceToWorld);
   return XFORMOBJ_bApplyXform(&xo, XF_LTOL, count, (PPOINTL)ppt, (PPOINTL)ppt);
 }
@@ -738,7 +742,7 @@ PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints)
 {
   PPATH pPath;
   POINT lastmove, orig_pos;
-  INT i;
+  ULONG i;
   PDC_ATTR pdcattr;
   BOOL State = FALSE, Ret = FALSE;
 
@@ -751,7 +755,7 @@ PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints)
     return FALSE;
   }
 
-  pdcattr = dc->pdcattr;  
+  pdcattr = dc->pdcattr;
 
   lastmove.x = orig_pos.x = pdcattr->ptlCurrent.x;
   lastmove.y = orig_pos.y = pdcattr->ptlCurrent.y;

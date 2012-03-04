@@ -94,7 +94,7 @@ IntTopLevelWindowFromPoint(INT x, INT y)
         if ((pWnd->style & WS_VISIBLE) && IntPtInWindow(pWnd, x, y))
             return pWnd;
     }
-    
+
     /* Window has not been found */
     return NULL;
 }
@@ -177,10 +177,10 @@ int UserShowCursor(BOOL bShow)
 
     pti = PsGetCurrentThreadWin32Thread();
     MessageQueue = pti->MessageQueue;
-    
+
     /* Update counter */
     MessageQueue->ShowingCursor += bShow ? 1 : -1;
-    
+
     /* Check for trivial cases */
     if ((bShow && MessageQueue->ShowingCursor != 0) ||
         (!bShow && MessageQueue->ShowingCursor != -1))
@@ -189,7 +189,7 @@ int UserShowCursor(BOOL bShow)
           internally to check if cursor is visible */
         return MessageQueue->ShowingCursor;
     }
-    
+
     /* Check if cursor is above window owned by this MessageQueue */
     pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
     if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
@@ -206,7 +206,7 @@ int UserShowCursor(BOOL bShow)
             GreMovePointer(hdcScreen, -1, -1);
             TRACE("Removing pointer!\n");
         }
-        
+
         /* Update global info */
         IntGetSysCursorInfo()->ShowingCursor = MessageQueue->ShowingCursor;
     }
@@ -1382,7 +1382,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            if ((msg->message == clk_msg.message) &&
                (msg->hwnd == clk_msg.hwnd) &&
                (msg->wParam == clk_msg.wParam) &&
-               (msg->time - clk_msg.time < gspv.iDblClickTime) &&
+               ((msg->time - clk_msg.time) < (ULONG)gspv.iDblClickTime) &&
                (abs(msg->pt.x - clk_msg.pt.x) < UserGetSystemMetrics(SM_CXDOUBLECLK)/2) &&
                (abs(msg->pt.y - clk_msg.pt.y) < UserGetSystemMetrics(SM_CYDOUBLECLK)/2))
            {
@@ -1999,7 +1999,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    MessageQueue->nCntsQBits[QSRosPostMessage] = 0;
    MessageQueue->nCntsQBits[QSRosSendMessage] = 0;
    MessageQueue->nCntsQBits[QSRosHotKey] = 0;
-   
+
    if (MessageQueue->CursorObject)
    {
        PCURICON_OBJECT pCursor = MessageQueue->CursorObject;
@@ -2020,7 +2020,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
        UserDereferenceObject(pCursor);
    }
-      
+
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -2183,7 +2183,7 @@ NtUserGetKeyState(INT key)
 
    UserLeave();
 
-   return Ret;
+   return (SHORT)Ret;
 }
 
 

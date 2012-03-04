@@ -440,7 +440,7 @@ UserGetKeyboardLayout(
 UINT
 APIENTRY
 NtUserGetKeyboardLayoutList(
-    INT nBuff,
+    ULONG nBuff,
     HKL *pHklBuff)
 {
     UINT uRet = 0;
@@ -600,7 +600,7 @@ NtUserLoadKeyboardLayoutEx(
             pklLast = gspklBaseLayout->pklPrev;
             while (pklLast != gspklBaseLayout && pklLast->dwKL_Flags & KLF_UNLOAD)
                 pklLast = pklLast->pklPrev;
-            
+
             /* Add new layout to the list */
             pKl->pklNext = pklLast->pklNext;
             pKl->pklPrev = pklLast;

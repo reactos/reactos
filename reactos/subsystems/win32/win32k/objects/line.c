@@ -334,7 +334,7 @@ IntGdiPolyPolyline(DC      *dc,
                    PULONG  PolyPoints,
                    DWORD   Count)
 {
-    int i;
+    ULONG i;
     LPPOINT pts;
     PULONG pc;
     BOOL ret = FALSE; // Default to failure
@@ -419,7 +419,7 @@ NtGdiPolyDraw(
     PDC dc;
     PDC_ATTR pdcattr;
     POINT *line_pts = NULL, *line_pts_old, *bzr_pts = NULL, bzr[4];
-    INT i, num_pts, num_bzr_pts, space, space_old, size;
+    ULONG i, num_pts, num_bzr_pts, space, space_old, size;
     BOOL result = FALSE;
 
     dc = DC_LockDc(hdc);

@@ -64,7 +64,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     NULL,
     FNID_MESSAGEWND,
     ICLS_HWNDMESSAGE
-  }  
+  }
 };
 
 static struct
@@ -82,8 +82,8 @@ static struct
  { FNID_BUTTON,     ICLS_BUTTON},
  { FNID_COMBOBOX,   ICLS_COMBOBOX},
  { FNID_COMBOLBOX,  ICLS_COMBOLBOX},
- { FNID_DIALOG,     ICLS_DIALOG},  
- { FNID_EDIT,       ICLS_EDIT}, 
+ { FNID_DIALOG,     ICLS_DIALOG},
+ { FNID_EDIT,       ICLS_EDIT},
  { FNID_LISTBOX,    ICLS_LISTBOX},
  { FNID_MDICLIENT,  ICLS_MDICLIENT},
  { FNID_STATIC,     ICLS_STATIC},
@@ -97,7 +97,7 @@ FASTCALL
 LookupFnIdToiCls(int FnId, int *iCls )
 {
   int i;
-  
+
   for ( i = 0; i < ARRAYSIZE(FnidToiCls); i++)
   {
      if (FnidToiCls[i].FnId == FnId)
@@ -178,7 +178,7 @@ void FASTCALL DestroyProcessClasses(PPROCESSINFO Process )
 {
     PCLS Class;
     PPROCESSINFO pi = (PPROCESSINFO)Process;
-     
+
     if (pi != NULL)
     {
         /* Free all local classes */
@@ -413,7 +413,7 @@ IntSetClassWndProc(IN OUT PCLS Class,
       Class->lpfnWndProc = chWndProc;
       Class->Unicode = TRUE;
       Class->CSF_flags &= ~CSF_ANSIPROC;
-      Class->CSF_flags |= CSF_SERVERSIDEPROC;      
+      Class->CSF_flags |= CSF_SERVERSIDEPROC;
    }
    else
    {
@@ -433,7 +433,7 @@ IntSetClassWndProc(IN OUT PCLS Class,
    {
       Class->Unicode = !Ansi;
       Class->lpfnWndProc = chWndProc;
-                                
+
       Class = Class->pclsNext;
    }
 
@@ -936,7 +936,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                 ANSI_STRING AnsiString;
 
                 Class->lpszClientAnsiMenuName = (PSTR)pszMenuNameBuffer;
-                AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(MenuName);
+                AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(MenuName);
                 AnsiString.Buffer = Class->lpszClientAnsiMenuName;
                 Status = RtlUnicodeStringToAnsiString(&AnsiString,
                                                       MenuName,
@@ -1525,7 +1525,7 @@ IntSetClassMenuName(IN PCLS Class,
         ANSI_STRING AnsiString;
         PWSTR strBufW;
 
-        AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(MenuName);
+        AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(MenuName);
 
         strBufW = UserHeapAlloc(MenuName->Length + sizeof(UNICODE_NULL) +
                                 AnsiString.MaximumLength);
@@ -1634,8 +1634,8 @@ UserSetClassLongPtr(IN PCLS Class,
 
         TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
-        if (Index + sizeof(ULONG_PTR) < Index ||
-            Index + sizeof(ULONG_PTR) > Class->cbclsExtra)
+        if ((Index + (INT)sizeof(ULONG_PTR)) < Index ||
+            (Index + (INT)sizeof(ULONG_PTR)) > Class->cbclsExtra)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
@@ -1822,7 +1822,7 @@ UserGetClassInfo(IN PCLS Class,
        lpwcx->style &= ~CS_GLOBALCLASS;
 
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class, Ansi);
-    
+
     lpwcx->cbClsExtra = Class->cbclsExtra;
     lpwcx->cbWndExtra = Class->cbwndExtra;
     lpwcx->hIcon = Class->hIcon;        /* FIXME: Get handle from pointer */
@@ -1840,7 +1840,7 @@ UserGetClassInfo(IN PCLS Class,
  *  lpszClientXxxMenuName should already be mapped to user space.
  */
     /* Copy string ptr to user. */
-    if ( Class->lpszClientUnicodeMenuName != NULL && 
+    if ( Class->lpszClientUnicodeMenuName != NULL &&
          Class->MenuNameIsString)
     {
        lpwcx->lpszMenuName = UserHeapAddressToUser(Ansi ?
@@ -1897,7 +1897,7 @@ UserRegisterSystemClasses(VOID)
            ClassName.Length = 0;
            ClassName.MaximumLength = 0;
         }
-        
+
         wc.cbSize = sizeof(wc);
         wc.style = DefaultServerClasses[i].Style;
 
@@ -2016,15 +2016,14 @@ NtUserRegisterClassExWOW(
 
         CapturedMenuName = ProbeForReadUnicodeString(pClassMenuName->pusMenuName);
 
-        if ( CapturedName.Length & 1 ||
-             CapturedMenuName.Length & 1 ||
-             CapturedClassInfo.cbClsExtra < 0 ||
-             CapturedClassInfo.cbClsExtra +
-                CapturedName.Length +
-                CapturedMenuName.Length +
-                sizeof(CLS) < CapturedClassInfo.cbClsExtra ||
-             CapturedClassInfo.cbWndExtra < 0 ||
-             CapturedClassInfo.hInstance == NULL)
+        if ( (CapturedName.Length & 1) ||
+             (CapturedMenuName.Length & 1) ||
+             (CapturedClassInfo.cbClsExtra < 0) ||
+             ((CapturedClassInfo.cbClsExtra + CapturedName.Length +
+              CapturedMenuName.Length +  sizeof(CLS))
+                < (ULONG)CapturedClassInfo.cbClsExtra) ||
+             (CapturedClassInfo.cbWndExtra < 0) ||
+             (CapturedClassInfo.hInstance == NULL) )
         {
             ERR("NtUserRegisterClassExWOW Invalid Parameter Error!\n");
             goto InvalidParameter;
