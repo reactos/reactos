@@ -25,7 +25,6 @@
 #define TAG_PALETTE     GDITAG_HMGR_LOOKASIDE_PAL_TYPE
 #define TAG_ICMLCS      '90hG'
 #define TAG_LFONT       GDITAG_HMGR_LOOKASIDE_LFONT_TYPE
-#define TAG_RFONT       ';0gG' /* Correct? */
 #define TAG_PFE         '<0hG'
 #define TAG_PFT         '=0hG' /* Correct? */
 #define TAG_ICMCXF      '>0hG' /* Correct? */

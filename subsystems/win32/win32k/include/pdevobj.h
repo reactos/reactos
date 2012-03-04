@@ -113,7 +113,7 @@ typedef struct _PDEVOBJ
 //  PFN_DrvSynchronizeSurface pfnDrvSynchronizeSurface;
 //  PFN_DrvSetPalette         pfnDrvSetPalette;
 //  PFN_DrvNotify             pfnDrvNotify;
-//  ULONG                     TagSig;
+    ULONG                     TagSig;
     struct _LDEVOBJ *         pldev;
     DHPDEV                    dhpdev;         /* DHPDEV for device. */
     struct _PALETTE*          ppalSurf;       /* PEPALOBJ/PPALETTE for this device. */
@@ -138,6 +138,7 @@ typedef struct _PDEVOBJ
     };
 
     /* ros specific */
+    LIST_ENTRY    leLink;
     ULONG         DxDd_nCount;
     GDIPOINTER    Pointer;
     /* Stuff to keep track of software cursors; win32k gdi part */
@@ -178,6 +179,18 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitPDEVImpl(VOID);
+
+PPDEVOBJ
+NTAPI
+PDEVOBJ_CreatePDEV(
+    struct _LDEVOBJ *pldev);
+
+BOOL
+NTAPI
+PDEVOBJ_bEnablePDEV(
+    PPDEVOBJ ppdev,
+    PDEVMODEW pdevmode,
+    PWSTR pwszLogAddress);
 
 PSIZEL
 FASTCALL
