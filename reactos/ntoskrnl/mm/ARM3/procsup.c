@@ -1136,6 +1136,9 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
+    /* Use idle process Working set */
+    Process->Vm.VmWorkingSetList = PsGetCurrentProcess()->Vm.VmWorkingSetList;
+    
     /* Done */
     Process->HasAddressSpace = TRUE;//??
     return STATUS_SUCCESS;
