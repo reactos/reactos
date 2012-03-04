@@ -59,19 +59,37 @@ DbgLookupDHPDEV(DHPDEV dhpdev)
 #endif
 
 PPDEVOBJ
-PDEVOBJ_AllocPDEV(VOID)
+NTAPI
+PDEVOBJ_CreatePDEV(
+    PLDEVOBJ pldev)
 {
     PPDEVOBJ ppdev;
+    LDEVTYPE ldevtype;
 
+    /* Allocate a new PDEVOBJ */
     ppdev = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), GDITAG_PDEV);
     if (!ppdev)
+    {
+        DPRINT1("failed to allocate a PDEV\n");
         return NULL;
+    }
 
+    /* Zero out the structure */
     RtlZeroMemory(ppdev, sizeof(PDEVOBJ));
 
+    /* Initialize some fields */
+    ppdev->TagSig = 'Pdev';
+    ppdev->cPdevRefs = 1;
+    ppdev->pldev = pldev;
+
+    /* Copy the function table from the LDEVOBJ */
+    ppdev->pfn = ppdev->pldev->pfn;
+
+    /* Allocate the device lock semaphore */
     ppdev->hsemDevLock = EngCreateSemaphore();
     if (ppdev->hsemDevLock == NULL)
     {
+        ERR("Failed to create semaphore\n");
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
         return NULL;
     }
@@ -81,7 +99,32 @@ PDEVOBJ_AllocPDEV(VOID)
     if (ppdev->pEDDgpl)
         RtlZeroMemory(ppdev->pEDDgpl, sizeof(EDD_DIRECTDRAW_GLOBAL));
 
-    ppdev->cPdevRefs = 1;
+    /* Call the drivers DrvEnablePDEV function */
+    if (!PDEVOBJ_bEnablePDEV(ppdev, NULL, NULL))
+    {
+        ERR("Failed to enable PDEV\n");
+        EngDeleteSemaphore(ppdev->hsemDevLock);
+        ExFreePoolWithTag(ppdev, GDITAG_PDEV);
+        return FALSE;
+    }
+
+    /* Set flags based on the LDEV type */
+    ldevtype = pldev->ldevtype;
+    if (ldevtype == LDEV_DEVICE_MIRROR) ppdev->flFlags |= PDEV_CLONE_DEVICE;
+    else if (ldevtype == LDEV_DEVICE_DISPLAY) ppdev->flFlags |= PDEV_DISPLAY;
+    else if (ldevtype == LDEV_DEVICE_PRINTER) ppdev->flFlags |= PDEV_PRINTER;
+    else if (ldevtype == LDEV_DEVICE_META) ppdev->flFlags |= PDEV_META_DEVICE;
+    else if (ldevtype == LDEV_FONT) ppdev->flFlags |= PDEV_FONTDRIVER;
+
+    /* Check if the driver supports fonts */
+    if (ppdev->devinfo.cFonts != 0) ppdev->flFlags |= PDEV_GOTFONTS;
+
+    if (ppdev->pfn.MovePointer) ppdev->flFlags |= PDEV_HARDWARE_POINTER;
+
+    if (ppdev->pvGammaRamp) ppdev->flFlags |= PDEV_GAMMARAMP_TABLE;
+
+    /* Call the drivers DrvCompletePDEV function */
+    PDEVOBJ_vCompletePDEV(ppdev);
 
     return ppdev;
 }
@@ -91,7 +134,8 @@ VOID
 PDEVOBJ_vDeletePDEV(
     PPDEVOBJ ppdev)
 {
-    EngDeleteSemaphore(ppdev->hsemDevLock);
+    if (ppdev->hsemDevLock)
+        EngDeleteSemaphore(ppdev->hsemDevLock);
     if (ppdev->pdmwDev)
         ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
     if (ppdev->pEDDgpl)
@@ -101,71 +145,75 @@ PDEVOBJ_vDeletePDEV(
 
 VOID
 NTAPI
-PDEVOBJ_vRelease(
-    _Inout_ PPDEVOBJ ppdev)
+PDEVOBJ_vDestroyPDEV(
+    PPDEVOBJ ppdev)
 {
+    /* Do we have a surface? */
+    if (ppdev->pSurface)
+    {
+        /* Release the surface and let the driver free it */
+        SURFACE_ShareUnlockSurface(ppdev->pSurface);
+        TRACE("DrvDisableSurface(dhpdev %p)\n", ppdev->dhpdev);
+        ppdev->pfn.DisableSurface(ppdev->dhpdev);
+    }
+
+    /* Do we have a palette? */
+    if(ppdev->ppalSurf)
+    {
+        PALETTE_ShareUnlockPalette(ppdev->ppalSurf);
+    }
+
+    /* Check if the PDEV was enabled */
+    if (ppdev->dhpdev != NULL)
+    {
+        /* Disable the PDEV */
+        TRACE("DrvDisablePDEV(dhpdev %p)\n", ppdev->dhpdev);
+        ppdev->pfn.DisablePDEV(ppdev->dhpdev);
+    }
+
     /* Lock loader */
     EngAcquireSemaphore(ghsemPDEV);
 
-    /* Decrease reference count */
-    InterlockedDecrement(&ppdev->cPdevRefs);
-    ASSERT(ppdev->cPdevRefs >= 0);
-
-    /* Check if references are left */
-    if (ppdev->cPdevRefs == 0)
+    /* Remove it from list */
+    if (ppdev == gppdevList)
     {
-        /* Do we have a surface? */
-        if (ppdev->pSurface)
+        gppdevList = ppdev->ppdevNext;
+    }
+    else if (gppdevList)
+    {
+        PPDEVOBJ ppdevCurrent = gppdevList;
+        BOOL found = FALSE;
+        while (!found && ppdevCurrent->ppdevNext)
         {
-            /* Release the surface and let the driver free it */
-            SURFACE_ShareUnlockSurface(ppdev->pSurface);
-            TRACE("DrvDisableSurface(dhpdev %p)\n", ppdev->dhpdev);
-            ppdev->pfn.DisableSurface(ppdev->dhpdev);
+            if (ppdevCurrent->ppdevNext == ppdev)
+                found = TRUE;
+            else
+                ppdevCurrent = ppdevCurrent->ppdevNext;
         }
-
-        /* Do we have a palette? */
-        if (ppdev->ppalSurf)
-        {
-            PALETTE_ShareUnlockPalette(ppdev->ppalSurf);
-        }
-
-        /* Check if the PDEV was enabled */
-        if (ppdev->dhpdev != NULL)
-        {
-            /* Disable the PDEV */
-            TRACE("DrvDisablePDEV(dhpdev %p)\n", ppdev->dhpdev);
-            ppdev->pfn.DisablePDEV(ppdev->dhpdev);
-        }
-
-        /* Remove it from list */
-        if (ppdev == gppdevList)
-        {
-            gppdevList = ppdev->ppdevNext;
-        }
-        else if (gppdevList)
-        {
-            PPDEVOBJ ppdevCurrent = gppdevList;
-            BOOL found = FALSE;
-            while (!found && ppdevCurrent->ppdevNext)
-            {
-                if (ppdevCurrent->ppdevNext == ppdev)
-                    found = TRUE;
-                else
-                    ppdevCurrent = ppdevCurrent->ppdevNext;
-            }
-            if (found)
-                ppdevCurrent->ppdevNext = ppdev->ppdevNext;
-        }
-
-        /* Unload display driver */
-        EngUnloadImage(ppdev->pldev);
-
-        /* Free it */
-        PDEVOBJ_vDeletePDEV(ppdev);
+        if (found)
+            ppdevCurrent->ppdevNext = ppdev->ppdevNext;
     }
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemPDEV);
+
+    /* Free it */
+    PDEVOBJ_vDeletePDEV(ppdev);
+}
+
+VOID
+NTAPI
+PDEVOBJ_vRelease(
+    _Inout_ PPDEVOBJ ppdev)
+{
+    ASSERT(ppdev->cPdevRefs > 0) ;
+
+    /* Decrease reference count */
+    if (InterlockedDecrement(&ppdev->cPdevRefs) == 0)
+    {
+        /* Destroy this PDEV */
+        PDEVOBJ_vDestroyPDEV(ppdev);
+    }
 }
 
 BOOL
@@ -240,7 +288,7 @@ PDEVOBJ_bEnablePDEV(
 }
 
 VOID
-NTAPI
+FORCEINLINE
 PDEVOBJ_vCompletePDEV(
     PPDEVOBJ ppdev)
 {
@@ -468,14 +516,16 @@ PDEVOBJ_Create(
         return NULL;
     }
 
-    /* Allocate a new PDEVOBJ */
-    ppdev = PDEVOBJ_AllocPDEV();
+    /* Create a new PDEVOBJ */
+    ppdev = PDEVOBJ_CreatePDEV(pldev);
     if (!ppdev)
     {
         ERR("failed to allocate a PDEV\n");
+        EngUnloadImage(pldev);
         return NULL;
     }
 
+    // Move this to PDEVOBJ_CreatePDEV as well?
     if (ldevtype != LDEV_DEVICE_META)
     {
         ppdev->pGraphicsDevice = pGraphicsDevice;
@@ -495,16 +545,12 @@ PDEVOBJ_Create(
         }
     }
 
-    /* FIXME! */
-    ppdev->flFlags = PDEV_DISPLAY;
-
     /* HACK: Don't use the pointer */
     ppdev->Pointer.Exclude.right = -1;
 
-    /* Initialize PDEV */
-    ppdev->pldev = pldev;
     ppdev->dwAccelerationLevel = dwAccelerationLevel;
 
+    // FIXME: This seems very fishy
     /* Copy the function table */
     if ((ldevtype == LDEV_DEVICE_DISPLAY && dwAccelerationLevel >= 5) ||
         pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
@@ -521,23 +567,6 @@ PDEVOBJ_Create(
         for (i = 0; i < gPanDispDrvCount; i++)
             ppdev->apfn[gPanDispDrvFn[i].iFunc] = gPanDispDrvFn[i].pfn;
     }
-    else
-    {
-        ppdev->pfn = ppdev->pldev->pfn;
-    }
-
-    /* Call the driver to enable the PDEV */
-    if (!PDEVOBJ_bEnablePDEV(ppdev, pdm, NULL))
-    {
-        ERR("Failed to enable PDEV!\n");
-        PDEVOBJ_vRelease(ppdev);
-        EngUnloadImage(pldev);
-        return NULL;
-    }
-
-    /* Tell the driver that the PDEV is ready */
-    PDEVOBJ_vCompletePDEV(ppdev);
-
     /* Create the initial surface */
     pSurface = PDEVOBJ_pSurface(ppdev);
     if (!pSurface)

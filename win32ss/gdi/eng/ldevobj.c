@@ -194,6 +194,44 @@ LDEVOBJ_bEnableDriver(
         pldev->apfn[ded.pdrvfn[i].iFunc] = ded.pdrvfn[i].pfn;
     }
 
+    /* Check if the neccessary functions are there */
+    if ((!pldev->pfn.EnablePDEV) ||
+        (!pldev->pfn.CompletePDEV) ||
+        (!pldev->pfn.UnloadFontFile))
+    {
+        DPRINT1("Missing function for gdi driver\n");
+        return FALSE;
+    }
+
+    if (pldev->ldevtype == LDEV_DEVICE_DISPLAY)
+    {
+        if ((!pldev->pfn.AssertMode) ||
+            (!pldev->pfn.EnableSurface) ||
+            (!pldev->pfn.DisableSurface) ||
+            (!pldev->pfn.DisableDriver) ||
+            (!pldev->pfn.DisablePDEV) ||
+            (!pldev->pfn.GetModes))
+        {
+            DPRINT1("Missing function for display driver\n");
+            return FALSE;
+        }
+    }
+    else if (pldev->ldevtype == LDEV_FONT)
+    {
+        if ((!pldev->pfn.LoadFontFile) ||
+            (!pldev->pfn.QueryAdvanceWidths) || // ?
+            (!pldev->pfn.QueryFont) ||
+            (!pldev->pfn.QueryFontCaps) || // ?
+            (!pldev->pfn.QueryFontData) ||
+            (!pldev->pfn.QueryFontFile) ||
+            (!pldev->pfn.QueryFontTree) ||
+            (!pldev->pfn.UnloadFontFile))
+        {
+            DPRINT1("Missing function for font driver\n");
+            return FALSE;
+        }
+    }
+
     /* Return success. */
     return TRUE;
 }
@@ -430,9 +468,9 @@ LDEVOBJ_pLoadDriver(
         /* Load the image */
         if (!LDEVOBJ_bLoadImage(pldev, &strDriverName))
         {
+            ERR("LDEVOBJ_bLoadImage failed\n");
             LDEVOBJ_vFreeLDEV(pldev);
             pldev = NULL;
-            ERR("LDEVOBJ_bLoadImage failed\n");
             goto leave;
         }
 
