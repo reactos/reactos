@@ -224,7 +224,8 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     {
         /* This is the new root node */
         RtlInsertAsRightChildAvl(&Table->BalancedRoot, NewNode);
-        MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
+        //MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
+        if (RtlBalance(NewNode) != RtlBalancedAvlTree) DPRINT1("Warning: Root node unbalanced?\n");
         
         /* On AVL trees, we also update the depth */
         ASSERT(Table->DepthOfTree == 0);
@@ -243,7 +244,8 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     }
 
     /* Little cheat to save on loop processing, taken from Timo */
-    MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
+    //MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
+    if (RtlBalance(NewNode) != RtlBalancedAvlTree) DPRINT1("Warning: Root node unbalanced?\n");
     RtlSetBalance(&Table->BalancedRoot, RtlLeftHeavyAvlTree);
 
     /*
