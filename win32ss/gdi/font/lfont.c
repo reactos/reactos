@@ -19,6 +19,81 @@ LFONT_GetObject(PLFONT plfnt, INT cjSize, PVOID pvBuffer)
     return 0;
 }
 
+PPFE
+NTAPI
+LFONT_ppfe(PLFONT plfnt)
+{
+    PPFEOBJ ppfeobj;
+    PPFE ppfe, ppfeSave;
+    HGDIOBJ hPFE;
+    ULONG ulPenalty;
+
+    /* Check if the font has a PFE associated */
+    hPFE = plfnt->hPFE;
+    if (hPFE)
+    {
+        /* Try to lock the PFE */
+        ppfeobj = (PVOID)GDIOBJ_ReferenceObjectByHandle(hPFE, 0x0c);
+
+        /* If we succeeded, the font is still there and we can use it */
+        if (ppfeobj) return ppfeobj->ppfe;
+
+        /* The previous font is not loaded anymore, reset the handle */
+        InterlockedCompareExchangePointer((PVOID*)&plfnt->hPFE, hPFE, NULL);
+    }
+
+    ulPenalty = PENALTY_Max;
+#if 0
+    /* Search the private font table */
+    pti = PsGetCurrentThreadWin32Thread();
+    ppfe = PFT_ppfeFindBestMatch(pti->ppftPrivate,
+                                 plfnt->awchFace,
+                                 plfnt->iNameHash,
+                                 &plfnt->elfexw.elfEnumLogfontEx.elfLogFont,
+                                 &ulPenalty);
+#else
+    ppfe = 0;
+#endif
+    /* Check if we got an exact match */
+    if (ulPenalty != 0)
+    {
+        /* Not an exact match, save this PFE */
+        ppfeSave = ppfe;
+
+        /* Try to find a better match in the global table */
+        ppfe = PFT_ppfeFindBestMatch(&gpftPublic,
+                                     plfnt->awchFace,
+                                     plfnt->iNameHash,
+                                     &plfnt->elfexw.elfEnumLogfontEx.elfLogFont,
+                                     &ulPenalty);
+
+        /* If we didn't find a better one, use the old one */
+        if (!ppfe) ppfe = ppfeSave;
+    }
+
+    /* Check if we got an exact match now */
+    if (ulPenalty == 0)
+    {
+        __debugbreak();
+        // should create a PFEOBJ and save it
+    }
+
+    ASSERT(ppfe);
+    return ppfe;
+}
+
+PRFONT
+NTAPI
+LFONT_prfntFindRFONT(
+    IN PLFONT plfnt)
+{
+
+    __debugbreak();
+
+    return NULL;
+}
+
+
 HFONT
 NTAPI
 GreHfontCreate(
@@ -51,6 +126,9 @@ GreHfontCreate(
     UpcaseString(plfnt->awchFace,
                  pelfw->elfEnumLogfontEx.elfLogFont.lfFaceName,
                  LF_FACESIZE);
+
+    /* Calculate the name hash value */
+    plfnt->iNameHash = CalculateNameHash(plfnt->awchFace);
 
     /* Set client data */
     GDIOBJ_vSetObjectAttr(&plfnt->baseobj, pvCliData);
