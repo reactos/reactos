@@ -1825,7 +1825,6 @@ MiDecommitPages(IN PVOID StartingAddress,
     //
     if (PteCount) MiProcessValidPteList(ValidPteList, PteCount);
     MiUnlockWorkingSet(CurrentThread, &Process->Vm);
-    if (CommitReduction) DPRINT1("DBG-REDUCE: %lx\n", CommitReduction);
     return CommitReduction;
 }
 
@@ -3870,7 +3869,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
             //
             // Finally lock the working set and remove the VAD from the VAD tree
             //
-            MiLockWorkingSet(CurrentThread, &Process->Vm);
+            MiLockWorkingSet(CurrentThread, AddressSpace);
             ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
             MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
         }
@@ -3900,7 +3899,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     // the code path above when the caller sets a zero region size
                     // and the whole VAD is destroyed
                     //
-                    MiLockWorkingSet(CurrentThread, &Process->Vm);
+                    MiLockWorkingSet(CurrentThread, AddressSpace);
                     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
                     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
                 }
@@ -3972,7 +3971,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         // around with process pages.
         //
         MiDeleteVirtualAddresses(StartingAddress, EndingAddress, NULL);
-        MiUnlockWorkingSet(CurrentThread, &Process->Vm);
+        MiUnlockWorkingSet(CurrentThread, AddressSpace);
         Status = STATUS_SUCCESS;
 
 FinalPath:
@@ -4069,6 +4068,7 @@ FinalPath:
     // return whatever failure code was sent.
     //
 FailPath:
+    MiUnlockWorkingSet(CurrentThread, AddressSpace);
     if (Attached) KeUnstackDetachProcess(&ApcState);
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
     return Status;
