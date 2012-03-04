@@ -5211,4 +5211,133 @@ MmCreateSection (OUT PVOID  * Section,
     return Status;
 }
 
+VOID
+MmModifyAttributes(IN PMMSUPPORT AddressSpace,
+                   IN PVOID BaseAddress,
+                   IN SIZE_T RegionSize,
+                   IN ULONG OldType,
+                   IN ULONG OldProtect,
+                   IN ULONG NewType,
+                   IN ULONG NewProtect)
+{
+    //
+    // This function is deprecated but remains in order to support VirtualAlloc
+    // calls with MEM_COMMIT on top of MapViewOfFile calls with SEC_RESERVE.
+    //
+    // Win32k's shared user heap, for example, uses that mechanism. The two
+    // conditions when this function needs to do something are ASSERTed for,
+    // because they should not arise.
+    //
+    if (NewType == MEM_RESERVE && OldType == MEM_COMMIT)
+    {
+        ASSERT(FALSE);
+    }
+
+    if ((NewType == MEM_COMMIT) && (OldType == MEM_COMMIT))
+    {
+        ASSERT(OldProtect == NewProtect);
+    }
+}
+
+NTSTATUS
+NTAPI
+MiRosAllocateVirtualMemory(IN HANDLE ProcessHandle,
+                           IN PEPROCESS Process,
+                           IN PMEMORY_AREA MemoryArea,
+                           IN PMMSUPPORT AddressSpace,
+                           IN OUT PVOID* UBaseAddress,
+                           IN BOOLEAN Attached,
+                           IN OUT PSIZE_T URegionSize,
+                           IN ULONG AllocationType,
+                           IN ULONG Protect)
+{
+    ULONG_PTR PRegionSize;
+    ULONG Type, RegionSize;
+    NTSTATUS Status;
+    PVOID PBaseAddress, BaseAddress;
+    KAPC_STATE ApcState;
+
+    PBaseAddress = *UBaseAddress;
+    PRegionSize = *URegionSize;
+
+    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
+    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
+    PAGE_ROUND_DOWN(PBaseAddress);
+    Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
+
+    ASSERT(PBaseAddress != 0);
+    ASSERT(Type == MEM_COMMIT);
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+    ASSERT(((ULONG_PTR)BaseAddress + RegionSize) <= (ULONG_PTR)MemoryArea->EndingAddress);
+    ASSERT(((ULONG_PTR)MemoryArea->EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress) >= RegionSize);
+    ASSERT(MemoryArea->Data.SectionData.RegionListHead.Flink);
+
+    Status = MmAlterRegion(AddressSpace,
+                           MemoryArea->StartingAddress,
+                           &MemoryArea->Data.SectionData.RegionListHead,
+                           BaseAddress,
+                           RegionSize,
+                           Type,
+                           Protect,
+                           MmModifyAttributes);
+
+    MmUnlockAddressSpace(AddressSpace);
+    if (Attached) KeUnstackDetachProcess(&ApcState);
+    if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
+    if (NT_SUCCESS(Status))
+    {
+        *UBaseAddress = BaseAddress;
+        *URegionSize = RegionSize;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MiRosProtectVirtualMemory(IN PEPROCESS Process,
+                          IN OUT PVOID *BaseAddress,
+                          IN OUT PSIZE_T NumberOfBytesToProtect,
+                          IN ULONG NewAccessProtection,
+                          OUT PULONG OldAccessProtection OPTIONAL)
+{
+    PMEMORY_AREA MemoryArea;
+    PMMSUPPORT AddressSpace;
+    ULONG OldAccessProtection_;
+    NTSTATUS Status;
+
+    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
+    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+
+    AddressSpace = &Process->Vm;
+    MmLockAddressSpace(AddressSpace);
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
+
+    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    {
+        Status = MmProtectSectionView(AddressSpace,
+                                      MemoryArea,
+                                      *BaseAddress,
+                                      *NumberOfBytesToProtect,
+                                      NewAccessProtection,
+                                      OldAccessProtection);
+    }
+    else
+    {
+        /* FIXME: Should we return failure or success in this case? */
+        Status = STATUS_CONFLICTING_ADDRESSES;
+    }
+
+    MmUnlockAddressSpace(AddressSpace);
+
+    return Status;
+}
+
 /* EOF */

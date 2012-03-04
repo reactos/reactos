@@ -1128,6 +1128,16 @@ MiSyncARM3WithROS(
 
 NTSTATUS
 NTAPI
+MiRosProtectVirtualMemory(
+    IN PEPROCESS Process,
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToProtect,
+    IN ULONG NewAccessProtection,
+    OUT PULONG OldAccessProtection OPTIONAL
+);
+
+NTSTATUS
+NTAPI
 MmArmAccessFault(
     IN BOOLEAN StoreInstruction,
     IN PVOID Address,
@@ -1482,6 +1492,30 @@ NTAPI
 MiLocateSubsection(
     IN PMMVAD Vad,
     IN ULONG_PTR Vpn
+);
+
+NTSTATUS
+NTAPI
+MiQueryMemorySectionName(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    OUT PVOID MemoryInformation,
+    IN SIZE_T MemoryInformationLength,
+    OUT PSIZE_T ReturnLength
+);
+
+NTSTATUS
+NTAPI
+MiRosAllocateVirtualMemory(
+    IN HANDLE ProcessHandle,
+    IN PEPROCESS Process,
+    IN PMEMORY_AREA MemoryArea,
+    IN PMMSUPPORT AddressSpace,
+    IN OUT PVOID* UBaseAddress,
+    IN BOOLEAN Attached,
+    IN OUT PSIZE_T URegionSize,
+    IN ULONG AllocationType,
+    IN ULONG Protect
 );
 
 POOL_TYPE

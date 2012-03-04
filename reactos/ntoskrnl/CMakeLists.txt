@@ -223,7 +223,6 @@ list(APPEND SOURCE
     mm/ARM3/vadnode.c
     mm/ARM3/virtual.c
     mm/ARM3/zeropage.c
-    mm/anonmem.c
     mm/balance.c
     mm/freelist.c
     mm/marea.c

@@ -1130,6 +1130,71 @@ NotSection:
    return Status;
 }
 
+NTSTATUS
+NTAPI
+MiQueryMemorySectionName(IN HANDLE ProcessHandle,
+                         IN PVOID BaseAddress,
+                         OUT PVOID MemoryInformation,
+                         IN SIZE_T MemoryInformationLength,
+                         OUT PSIZE_T ReturnLength)
+{
+    PEPROCESS Process;
+    NTSTATUS Status;
+    WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
+    UNICODE_STRING ModuleFileName;
+    PMEMORY_SECTION_NAME SectionName = NULL;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       NULL,
+                                       PreviousMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("MiQueryMemorySectionName: ObReferenceObjectByHandle returned %x\n",Status);
+        return Status;
+    }
+
+    RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
+    Status = MmGetFileNameForAddress(BaseAddress, &ModuleFileName);
+
+    if (NT_SUCCESS(Status))
+    {
+        SectionName = MemoryInformation;
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+                SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
+                RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+
+                if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+            SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
+            RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+
+            if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+
+        }
+    }
+    ObDereferenceObject(Process);
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1374,6 +1439,53 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     MmUnlockAddressSpace(&Process->Vm);
     if (Attached) KeUnstackDetachProcess(&ApcState);
     return Status;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+MmDisableModifiedWriteOfSection(IN PSECTION_OBJECT_POINTERS SectionObjectPointer)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+MmForceSectionClosed(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+                     IN BOOLEAN DelayClose)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmMapViewInSessionSpace(IN PVOID Section,
+                        OUT PVOID *MappedBase,
+                        IN OUT PSIZE_T ViewSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmUnmapViewInSessionSpace(IN PVOID MappedBase)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -1919,55 +2031,6 @@ NtExtendSection(IN HANDLE SectionHandle,
     _SEH2_END;
 
     /* Return the status */
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-MmDisableModifiedWriteOfSection(IN PSECTION_OBJECT_POINTERS SectionObjectPointer)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-MmForceSectionClosed(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-                     IN BOOLEAN DelayClose)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-MmMapViewInSessionSpace(IN PVOID Section,
-                        OUT PVOID *MappedBase,
-                        IN OUT PSIZE_T ViewSize)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-MmUnmapViewInSessionSpace(IN PVOID MappedBase)
-{
-    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
