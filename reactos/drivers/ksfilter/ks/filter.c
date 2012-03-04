@@ -1104,6 +1104,7 @@ IKsFilter_CreateDescriptors(
 {
     ULONG Index = 0;
     NTSTATUS Status;
+    PKSNODE_DESCRIPTOR NodeDescriptor;
 
     /* initialize pin descriptors */
     This->FirstPin = NULL;
@@ -1190,8 +1191,8 @@ IKsFilter_CreateDescriptors(
         /* sanity check */
         ASSERT(FilterDescriptor->NodeDescriptors);
 
-        /* FIXME handle variable sized node descriptors */
-        ASSERT(FilterDescriptor->NodeDescriptorSize == sizeof(KSNODE_DESCRIPTOR));
+        /* sanity check */
+        ASSERT(FilterDescriptor->NodeDescriptorSize >= sizeof(KSNODE_DESCRIPTOR));
 
         This->Topology.TopologyNodes = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescriptor->NodeDescriptorsCount);
         /* allocate topology node types array */
@@ -1211,17 +1212,21 @@ IKsFilter_CreateDescriptors(
         }
 
         DPRINT("NodeDescriptorCount %lu\n", FilterDescriptor->NodeDescriptorsCount);
+        NodeDescriptor = (PKSNODE_DESCRIPTOR)FilterDescriptor->NodeDescriptors;
         for(Index = 0; Index < FilterDescriptor->NodeDescriptorsCount; Index++)
         {
-            DPRINT("Index %lu Type %p Name %p\n", Index, FilterDescriptor->NodeDescriptors[Index].Type, FilterDescriptor->NodeDescriptors[Index].Name);
+            DPRINT("Index %lu Type %p Name %p\n", Index, NodeDescriptor->Type, NodeDescriptor->Name);
 
             /* copy topology type */
-            if (FilterDescriptor->NodeDescriptors[Index].Type)
-                RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], FilterDescriptor->NodeDescriptors[Index].Type, sizeof(GUID));
+            if (NodeDescriptor->Type)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], NodeDescriptor->Type, sizeof(GUID));
 
             /* copy topology name */
-            if (FilterDescriptor->NodeDescriptors[Index].Name)
-                RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], FilterDescriptor->NodeDescriptors[Index].Name, sizeof(GUID));
+            if (NodeDescriptor->Name)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], NodeDescriptor->Name, sizeof(GUID));
+
+            // next node descriptor
+            NodeDescriptor = (PKSNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescriptor->NodeDescriptorSize);
         }
     }
     /* done! */
