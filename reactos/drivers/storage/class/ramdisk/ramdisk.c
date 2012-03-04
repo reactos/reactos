@@ -2191,9 +2191,87 @@ NTAPI
 RamdiskPower(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // If we have a device extension, take extra caution
+    // with the lower driver
+    //
+    if (DeviceExtension != NULL)
+    {
+        PoStartNextPowerIrp(Irp);
+
+        //
+        // Device has not been removed yet, so
+        // pass to the attached/lower driver
+        //
+        if (DeviceExtension->State < RamdiskStateBusRemoved)
+        {
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        }
+        //
+        // Otherwise, simply complete the IRP
+        // Notifying that deletion is pending
+        //
+        else
+        {
+            Irp->IoStatus.Status = STATUS_DELETE_PENDING;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_DELETE_PENDING;
+        }
+    }
+
+    //
+    // Get stack and deal with minor functions
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    switch (IoStackLocation->MinorFunction)
+    {
+        case IRP_MN_SET_POWER:
+            //
+            // If setting device power state
+            // it's all fine and return success
+            //
+            if (DevicePowerState)
+            {
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+            }
+
+            //
+            // Get appropriate status for return
+            //
+            Status = Irp->IoStatus.Status;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+
+        case IRP_MN_QUERY_POWER:
+            //
+            // We can obviously accept all states
+            // So just return success
+            //
+            Status =
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+
+        default:
+            //
+            // Just complete and save status for return
+            //
+            Status = Irp->IoStatus.Status;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -2201,9 +2279,31 @@ NTAPI
 RamdiskSystemControl(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // If we have a device extension, forward the IRP
+    // to the attached device
+    //
+    if (DeviceExtension != NULL)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+    //
+    // Otherwise just complete the request
+    // And return the status with which we complete it
+    //
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -2211,9 +2311,51 @@ NTAPI
 RamdiskScsi(IN PDEVICE_OBJECT DeviceObject,
             IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Having a proper device is mandatory
+    //
+    if (DeviceExtension->State > RamdiskStateStopped)
+    {
+        Status = STATUS_DEVICE_DOES_NOT_EXIST;
+        goto CompleteIRP;
+    }
+
+    //
+    // Acquire the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        goto CompleteIRP;
+    }
+
+    //
+    // Queue the IRP for worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        goto CompleteIRP;
+    }
+
+    //
+    // Release the remove lock
+    //
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    goto Quit;
+
+CompleteIRP:
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+Quit:
+    return Status;
 }
 
 NTSTATUS
@@ -2241,7 +2383,7 @@ RamdiskFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
     }
 
     //
-    // Queue the IRP from worker
+    // Queue the IRP for worker
     //
     Status = SendIrpToThread(DeviceObject, Irp);
     if (Status != STATUS_PENDING)
