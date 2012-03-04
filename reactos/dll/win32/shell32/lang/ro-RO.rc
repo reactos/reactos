@@ -174,21 +174,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON        "",               14000, 10, 4, 30, 30, WS_VISIBLE
-    LTEXT       "Tip țintă:",     14004, 8, 38, 64, 10
-    LTEXT       "",               14005, 78, 38, 142, 10
-    LTEXT       "Locație țintă:", 14006, 8, 58, 64, 10
-    EDITTEXT                      14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Ț&intă:",        14008, 8, 77, 45, 10
-    EDITTEXT                      14009, 79, 75, 150, 14, ES_AUTOHSCROLL
-    LTEXT       "P&ornire în:",   14010, 8, 96, 57, 10
-    EDITTEXT                      14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-    LTEXT       "&Taste rapide:", 14014, 8, 115, 57, 10
-    EDITTEXT                      14015, 79, 112, 150, 14, ES_LEFT
-    LTEXT       "E&xecuție:",     14016, 8, 134, 57, 10
-    EDITTEXT                      14017, 79, 131, 150, 14, ES_AUTOHSCROLL
-    LTEXT       "&Comentariu:",   14018, 8, 152, 57, 10
-    EDITTEXT                      14019, 79, 149, 150, 14, ES_AUTOHSCROLL
+    ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
+    EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Tip țintă:", 14004, 8, 38, 68, 10
+    EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Locație țintă:", 14006, 8, 55, 68, 10
+    EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Ț&intă:", 14008, 8, 71, 68, 10
+    EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "P&ornire în:", 14010, 8, 98, 68, 10
+    EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
+    LTEXT "&Taste rapide:", 14014, 8, 117, 68, 10
+    CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
+    LTEXT "E&xecuție:", 14016, 8, 136, 68, 10
+    COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Comentariu:", 14018, 8, 154, 68, 10
+    EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON  "&Găsire țintă…", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON  "&Pictogramă…",   14021, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON  "A&vansate…",     14022, 159, 172, 70, 14, ES_LEFT
