@@ -251,7 +251,9 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 	BOOLEAN InsertedNew;
 
     DPRINT1("FsRtlPrivateLock() is stubplemented!\n");
-	ASSERT(AlreadySynchronized);
+    /* Windows 2003 ignores that parameter
+    ASSERT(AlreadySynchronized);
+    */
 
     /* Initialize the lock, if necessary */
     if (!FileLock->LockInformation)
@@ -502,7 +504,8 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
 	PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
 	// The region to unlock must correspond exactly to a previously locked region
 	// -- msdn
-	ASSERT(AlreadySynchronized);
+	// But Windows 2003 doesn't assert on it and simply ignores that parameter
+	// ASSERT(AlreadySynchronized);
 	Find.Exclusive.FileLock.StartingByte = *FileOffset;
 	Find.Exclusive.FileLock.EndingByte.QuadPart = 
 		FileOffset->QuadPart + Length->QuadPart;
