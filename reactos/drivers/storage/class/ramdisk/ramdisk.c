@@ -2221,17 +2221,54 @@ NTAPI
 RamdiskFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_DRIVE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Ensure we have drive extension
+    // Only perform flush on disks that have been created
+    // from registry entries
+    //
+    if (DeviceExtension->Type != RamdiskDrive ||
+        DeviceExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // Queue the IRP from worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        //
+        // Queueing failed - complete the IRP
+        // and return failure
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 VOID
 NTAPI
 RamdiskUnload(IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Just release registry path if previously allocated
+    //
+    if (DriverRegistryPath.Buffer)
+    {
+        ExFreePoolWithTag(DriverRegistryPath.Buffer, 'dmaR');
+    }
 }
 
 NTSTATUS
