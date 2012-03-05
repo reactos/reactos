@@ -113,11 +113,11 @@ BEGIN
     "#include ""explorer-en.rc""\r\n"
     "#include ""explorer-es.rc""\r\n"
     "#include ""explorer-fr.rc""\r\n"
-    "#include ""explorer-gr.rc""\r\n"
+    "#include ""explorer-el.rc""\r\n"
     "#include ""explorer-hu.rc""\r\n"
     "#include ""explorer-id.rc""\r\n"
     "#include ""explorer-it.rc""\r\n"
-    "#include ""explorer-jp.rc""\r\n"
+    "#include ""explorer-ja.rc""\r\n"
     "#include ""explorer-ko.rc""\r\n"
     "#include ""explorer-ko.rc""\r\n"
     "#include ""explorer-nl.rc""\r\n"
@@ -126,18 +126,12 @@ BEGIN
     "#include ""explorer-sk.rc""\r\n"
     "#include ""explorer-sv.rc""\r\n"
     "\r\n"
-    "#ifdef __WINDRES__\r\n"
-    "#include ""explorer-cn.rc""\r\n"
-    "#else\r\n"
-    "//#include ""explorer-cn-msvc.rc""\r\n"
-    "#include ""explorer-bn.rc""\r\n"
-    "#endif\r\n"
-    "\r\n"
     "#pragma code_page(65001)"
     "#include ""explorer-pl.rc""\r\n"
     "#include ""explorer-ro.rc""\r\n"
     "#include ""explorer-ru.rc""\r\n"
     "#include ""explorer-uk.rc""\r\n"
+    "#include ""explorer-zh.rc""\r\n"
     "\0"
 END
 
@@ -218,37 +212,75 @@ END
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.manifest"
 #endif
 
-#include "explorer-bg.rc"
-#include "explorer-cz.rc"
-#include "explorer-de.rc"
-#include "explorer-en.rc"
-#include "explorer-es.rc"
-#include "explorer-fr.rc"
-#include "explorer-gr.rc"
-#include "explorer-hu.rc"
-#include "explorer-id.rc"
-#include "explorer-it.rc"
-#include "explorer-jp.rc"
-#include "explorer-ko.rc"
-#include "explorer-nl.rc"
-#include "explorer-no.rc"
-#include "explorer-pt.rc"
-#include "explorer-sk.rc"
-#include "explorer-sv.rc"
-
-#ifdef __WINDRES__
-#include "explorer-cn.rc"
-#else
-//#include "explorer-cn-msvc.rc"
-#include "explorer-bn.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "explorer-bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "explorer-cz.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "explorer-de.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "explorer-el.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "explorer-en.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "explorer-es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "explorer-fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "explorer-hu.rc"
+#endif
+#ifdef LANGUAGE_ID_ID
+    #include "explorer-id.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "explorer-it.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "explorer-ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "explorer-ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "explorer-nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "explorer-no.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "explorer-pt.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "explorer-sk.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "explorer-sv.rc"
 #endif
 
 // UTF-8
 #pragma code_page(65001)
-#include "explorer-pl.rc"
-#include "explorer-ro.rc"
-#include "explorer-ru.rc"
-#include "explorer-uk.rc"
+#ifdef LANGUAGE_PL_PL
+    #include "explorer-pl.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "explorer-ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "explorer-ru.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "explorer-uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "explorer-zh.rc"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
