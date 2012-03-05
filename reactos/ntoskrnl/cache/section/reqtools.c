@@ -51,6 +51,10 @@
 
 #define DPRINTC DPRINT
 
+VOID
+NTAPI
+MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages);
+
 NTSTATUS
 NTAPI
 MiGetOnePage
@@ -90,14 +94,12 @@ MiReadFilePage
 	PPFN_NUMBER Page = &RequiredResources->Page[RequiredResources->Offset];
 	PLARGE_INTEGER FileOffset = &RequiredResources->FileOffset;
 	NTSTATUS Status;
-	PVOID PageBuf = NULL;
+    PVOID PageBuf = NULL;
+    KEVENT Event;
 	IO_STATUS_BLOCK IOSB;
-	PHYSICAL_ADDRESS BoundaryAddressMultiple;
-	PPFN_NUMBER Pages;
-	PMDL Mdl;
-	PVOID HyperMap;
-
-	BoundaryAddressMultiple.QuadPart = 0;
+    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
+    PMDL Mdl = (PMDL)MdlBase;
+    KIRQL OldIrql;
 
 	DPRINTC
 		("Pulling page %08x%08x from %wZ to %x\n", 
@@ -112,36 +114,36 @@ MiReadFilePage
 		return Status;
 	}
 
-	HyperMap = MmCreateHyperspaceMapping(*Page);
-
-	Mdl = IoAllocateMdl(HyperMap, PAGE_SIZE, FALSE, FALSE, NULL);
-	if (!Mdl) {
-		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
-		return STATUS_NO_MEMORY;
-	}
-
-	MmInitializeMdl(Mdl, HyperMap, PAGE_SIZE);
-	Pages = (PPFN_NUMBER)(Mdl + 1);
-	Pages[0] = *Page;
-	MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-	PageBuf = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
-	MmDeleteHyperspaceMapping(HyperMap);
+    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
+    MmBuildMdlFromPages(Mdl, Page);
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 		 
-	Status = MiSimpleRead
-		(FileObject, 
-		 FileOffset,
-		 PageBuf,
-		 RequiredResources->Amount,
-		 TRUE,
-		 &IOSB);
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Status = IoPageRead
+        (FileObject,
+         Mdl,
+         FileOffset,
+         &Event,
+         &IOSB);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IOSB.Status;
+    }
+    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+    {
+        MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
+    }
+
+    OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    PageBuf = MmCreateHyperspaceMapping(*Page);
 	RtlZeroMemory
 		((PCHAR)PageBuf+RequiredResources->Amount,
 		 PAGE_SIZE-RequiredResources->Amount);
+    MmDeleteHyperspaceMapping(PageBuf);
+    KfLowerIrql(OldIrql);
 	
 	DPRINT("Read Status %x (Page %x)\n", Status, *Page);
-
-	MmUnlockPages(Mdl);
-	IoFreeMdl(Mdl);
 
 	if (!NT_SUCCESS(Status))
 	{
