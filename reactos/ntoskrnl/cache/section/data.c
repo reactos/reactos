@@ -361,6 +361,8 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     * Initialize it
     */
    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+   Section->Type = 'SC';
+   Section->Size = 'TN';
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
