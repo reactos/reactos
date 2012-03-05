@@ -245,33 +245,6 @@ VOID
 NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
-#if (_MI_PAGING_LEVELS == 2)
-    if(!MiIsBalancerThread())
-    {
-        /* Clean up the unused PDEs */
-        ULONG_PTR Address;
-        PEPROCESS Process = PsGetCurrentProcess();
-
-        /* Acquire PFN lock */
-        KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-        PMMPDE pointerPde;
-        for(Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
-            Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-            Address += (PAGE_SIZE * PTE_COUNT))
-        {
-            if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
-            {
-                pointerPde = MiAddressToPde(Address);
-                if(pointerPde->u.Hard.Valid)
-                    MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
-                ASSERT(pointerPde->u.Hard.Valid == 0);
-            }
-        }
-        /* Release lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    }
-#endif
-
     if (MiBalancerThreadHandle != NULL &&
         !MiIsBalancerThread())
     {
@@ -405,8 +378,34 @@ MiBalancerThread(PVOID Unused)
 
       if (Status == STATUS_WAIT_0 || Status == STATUS_WAIT_1)
       {
-          ULONG InitialTarget = 0;
+        ULONG InitialTarget = 0;
 
+#if (_MI_PAGING_LEVELS == 2)
+        if(!MiIsBalancerThread())
+        {
+            /* Clean up the unused PDEs */
+            ULONG_PTR Address;
+            PEPROCESS Process = PsGetCurrentProcess();
+
+            /* Acquire PFN lock */
+            KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            PMMPDE pointerPde;
+            for(Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
+                Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+                Address += (PAGE_SIZE * PTE_COUNT))
+            {
+                if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                {
+                    pointerPde = MiAddressToPde(Address);
+                    if(pointerPde->u.Hard.Valid)
+                        MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
+                    ASSERT(pointerPde->u.Hard.Valid == 0);
+                }
+            }
+            /* Release lock */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        }
+#endif
           do
           {
               ULONG OldTarget = InitialTarget;
