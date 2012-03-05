@@ -52,7 +52,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         endif()
         add_definitions(/Dinline=__inline)
     else()
-        add_compile_flags("-fshort-wchar")
+        add_compile_flags("-fshort-wchar -Wno-multichar")
     endif()
 
     include_directories(include/host)
