@@ -9,10 +9,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
-
-#define RESOURCE_OF_LOCK(L) ((PERESOURCE)&((L)->Unknown1))
 
 /* GLOBALS *******************************************************************/
 
@@ -37,6 +35,7 @@ typedef struct _LOCK_INFORMATION
 	RTL_GENERIC_TABLE RangeTable;
 	IO_CSQ Csq;
 	KSPIN_LOCK CsqLock;
+    LIST_ENTRY CsqList;
 	PFILE_LOCK BelongsTo;
 }
 LOCK_INFORMATION, *PLOCK_INFORMATION;
@@ -57,7 +56,7 @@ FsRtlCompleteLockIrpReal(IN PCOMPLETE_LOCK_IRP_ROUTINE CompleteRoutine,
 static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
 	PVOID Result;
-	Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'FLCK');
+	Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'LTAB');
 	DPRINT("LockAllocate(%d) => %p\n", Bytes, Result);
 	return Result;
 }
@@ -65,7 +64,7 @@ static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 static VOID NTAPI LockFree(PRTL_GENERIC_TABLE Table, PVOID Buffer)
 {
 	DPRINT("LockFree(%p)\n", Buffer);
-	ExFreePoolWithTag(Buffer, 'FLCK');
+	ExFreePoolWithTag(Buffer, 'LTAB');
 }
 
 static RTL_GENERIC_COMPARE_RESULTS NTAPI LockCompare
@@ -75,10 +74,10 @@ static RTL_GENERIC_COMPARE_RESULTS NTAPI LockCompare
 	RTL_GENERIC_COMPARE_RESULTS Result;
 	DPRINT("Starting to compare element %x to element %x\n", PtrA, PtrB);
 	Result =
-		(A->Exclusive.FileLock.EndingByte.QuadPart < 
+		(A->Exclusive.FileLock.StartingByte.QuadPart < 
 		 B->Exclusive.FileLock.StartingByte.QuadPart) ? GenericLessThan :
 		(A->Exclusive.FileLock.StartingByte.QuadPart > 
-		 B->Exclusive.FileLock.EndingByte.QuadPart) ? GenericGreaterThan :
+		 B->Exclusive.FileLock.StartingByte.QuadPart) ? GenericGreaterThan :
 		GenericEqual;
 	DPRINT("Compare(%x:%x) %x-%x to %x-%x => %d\n",
 		   A,B,
@@ -97,8 +96,8 @@ static NTSTATUS NTAPI LockInsertIrpEx
  PIRP Irp,
  PVOID InsertContext)
 {
-	PCOMBINED_LOCK_ELEMENT LockElement = InsertContext;
-	InsertTailList(&LockElement->Exclusive.ListEntry, &Irp->Tail.Overlay.ListEntry);
+	PLOCK_INFORMATION LockInfo = CONTAINING_RECORD(Csq, LOCK_INFORMATION, Csq);
+	InsertTailList(&LockInfo->CsqList, &Irp->Tail.Overlay.ListEntry);
 	return STATUS_SUCCESS;
 }
 
@@ -113,45 +112,51 @@ static PIRP NTAPI LockPeekNextIrp(PIO_CSQ Csq, PIRP Irp, PVOID PeekContext)
 	// lock that can be acquired, now that the lock matching PeekContext
 	// has been removed.
 	COMBINED_LOCK_ELEMENT LockElement;
-	PCOMBINED_LOCK_ELEMENT WhereUnlocked = PeekContext, Matching;
+    PCOMBINED_LOCK_ELEMENT WhereUnlock = PeekContext;
 	PLOCK_INFORMATION LockInfo = CONTAINING_RECORD(Csq, LOCK_INFORMATION, Csq);
-	PFILE_LOCK FileLock = LockInfo->BelongsTo;
-	if (!PeekContext)
-		return CONTAINING_RECORD
-			(Irp->Tail.Overlay.ListEntry.Flink, 
-			 IRP, 
-			 Tail.Overlay.ListEntry);
-	else
-	{
-		PLIST_ENTRY Following;
-		if (!FileLock->LockInformation)
-		{
-			return CONTAINING_RECORD
-				(Irp->Tail.Overlay.ListEntry.Flink,
-				 IRP,
-				 Tail.Overlay.ListEntry);
-		}
-		for (Following = Irp->Tail.Overlay.ListEntry.Flink;
-			 Following != &WhereUnlocked->Exclusive.ListEntry;
-			 Following = Following->Flink)
-		{
-			PIRP Irp = CONTAINING_RECORD(Following, IRP, Tail.Overlay.ListEntry);
-			PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-			LockElement.Exclusive.FileLock.StartingByte = 
-				IoStack->Parameters.LockControl.ByteOffset;
-			LockElement.Exclusive.FileLock.EndingByte.QuadPart = 
-				LockElement.Exclusive.FileLock.StartingByte.QuadPart + 
-				IoStack->Parameters.LockControl.Length->QuadPart;
-			Matching = RtlLookupElementGenericTable
-				(FileLock->LockInformation, &LockElement);
-			if (!Matching)
-			{
-				// This IRP is fine...
-				return Irp;
-			}
-		}
-		return NULL;
-	}
+    PLIST_ENTRY Following;
+    if (!Irp)
+    {
+        Irp = CONTAINING_RECORD
+            (LockInfo->CsqList.Flink,
+             IRP,
+             Tail.Overlay.ListEntry);
+        Following = &Irp->Tail.Overlay.ListEntry;
+    }
+    else
+        Following = Irp->Tail.Overlay.ListEntry.Flink;
+
+    for (;
+         Following != &LockInfo->CsqList;
+         Following = Following->Flink)
+    {
+        PIRP Irp = CONTAINING_RECORD(Following, IRP, Tail.Overlay.ListEntry);
+        PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+        BOOLEAN Matching;
+        LockElement.Exclusive.FileLock.StartingByte = 
+            IoStack->Parameters.LockControl.ByteOffset;
+        LockElement.Exclusive.FileLock.EndingByte.QuadPart = 
+            LockElement.Exclusive.FileLock.StartingByte.QuadPart + 
+            IoStack->Parameters.LockControl.Length->QuadPart;
+        /* If a context was specified, it's a range to check to unlock */
+        if (WhereUnlock)
+        {
+            Matching = LockCompare
+                (&LockInfo->RangeTable, &LockElement, WhereUnlock) != GenericEqual;
+        }
+        /* Else get any completable IRP */
+        else
+        {
+            Matching = !!RtlLookupElementGenericTable
+                (&LockInfo->RangeTable, &LockElement);
+        }
+        if (!Matching)
+        {
+            // This IRP is fine...
+            return Irp;
+        }
+    }
+    return NULL;
 }
 
 static VOID NTAPI
@@ -258,7 +263,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     /* Initialize the lock, if necessary */
     if (!FileLock->LockInformation)
     {
-		LockInfo = ExAllocatePool(PagedPool, sizeof(LOCK_INFORMATION));
+		LockInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(LOCK_INFORMATION), 'FLCK');
 		FileLock->LockInformation = LockInfo;
 		if (!FileLock)
 			return FALSE;
@@ -273,6 +278,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 			 NULL);
 
 		KeInitializeSpinLock(&LockInfo->CsqLock);
+        InitializeListHead(&LockInfo->CsqList);
 
 		IoCsqInitializeEx
 			(&LockInfo->Csq, 
@@ -359,10 +365,6 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 	{
 		/* Assume all is cool, and lock is set */
 		IoStatus->Status = STATUS_SUCCESS;
-	
-		// Initialize our resource ... We'll use this to mediate access to the
-		// irp queue.
-		ExInitializeResourceLite(RESOURCE_OF_LOCK(&Conflict->Exclusive));
 	
 		if (Irp)
 		{
@@ -520,9 +522,9 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
 		return STATUS_RANGE_NOT_LOCKED;
 	// this is definitely the thing we want
 	RtlCopyMemory(&Find, Entry, sizeof(Find));
-	RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
 	NextMatchingLockIrp = IoCsqRemoveNextIrp(&InternalInfo->Csq, &Find);
-	if (NextMatchingLockIrp)
+    RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
+	while (NextMatchingLockIrp)
 	{
 		// Got a new lock irp... try to do the new lock operation
 		// Note that we pick an operation that would succeed at the time
@@ -583,13 +585,13 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
                         IN PVOID Context OPTIONAL)
 {
 	PCOMBINED_LOCK_ELEMENT Entry;
-	PRTL_GENERIC_TABLE InternalInfo = FileLock->LockInformation;
+	PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
 
 	// XXX Synchronize somehow
 	if (!FileLock->LockInformation) return STATUS_RANGE_NOT_LOCKED; // no locks
-	for (Entry = RtlEnumerateGenericTable(InternalInfo, TRUE);
+	for (Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, TRUE);
 			 Entry;
-		 Entry = RtlEnumerateGenericTable(InternalInfo, FALSE))
+		 Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, FALSE))
 	{
 		LARGE_INTEGER Length;
 		// We'll take the first one to be the list head, and free the others first...
@@ -743,6 +745,7 @@ FsRtlInitializeFileLock (IN PFILE_LOCK FileLock,
                          IN PUNLOCK_ROUTINE UnlockRoutine OPTIONAL)
 {
     /* Setup the lock */
+    RtlZeroMemory(FileLock, sizeof(*FileLock));
     FileLock->FastIoIsQuestionable = FALSE;
     FileLock->CompleteLockIrpRoutine = CompleteLockIrpRoutine;
     FileLock->UnlockRoutine = UnlockRoutine;
@@ -758,8 +761,19 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
 {
 	if (FileLock->LockInformation)
 	{
-		ASSERT(!RtlNumberGenericTableElements(FileLock->LockInformation));
-		ExFreePool(FileLock->LockInformation);
+        PIRP Irp;
+        PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
+        PCOMBINED_LOCK_ELEMENT Entry;
+        // MSDN: this completes any remaining lock IRPs
+        while ((Entry = RtlGetElementGenericTable(&InternalInfo->RangeTable, 0)) != NULL)
+        {
+            RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
+        }
+        while ((Irp = IoCsqRemoveNextIrp(&InternalInfo->Csq, NULL)) != NULL)
+        {
+            FsRtlProcessFileLock(FileLock, Irp, NULL);
+        }
+		ExFreePoolWithTag(InternalInfo, 'FLCK');
 		FileLock->LockInformation = NULL;
 	}
 }
