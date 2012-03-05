@@ -7,8 +7,7 @@
  */
 
 #include <win32k.h>
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(EngPDev);
 
 PPDEVOBJ gppdevPrimary = NULL;
 
@@ -104,8 +103,7 @@ PDEVOBJ_bEnablePDEV(
     PWSTR pwszLogAddress)
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
-
-    DPRINT("PDEVOBJ_bEnablePDEV()\n");
+    TRACE("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
@@ -136,8 +134,7 @@ PDEVOBJ_bEnablePDEV(
     /* Setup Palette */
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
-
+    TRACE("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
     return TRUE;
 }
 
@@ -153,16 +150,18 @@ PDEVOBJ_vCompletePDEV(
 PPDEVOBJ
 NTAPI
 PDEVOBJ_CreatePDEV(
-    PLDEVOBJ pldev)
+    PLDEVOBJ pldev,
+    PGRAPHICS_DEVICE pGraphicsDevice,
+    PDEVMODEW pdevmode,
+    PWSTR pwszLogAddress)
 {
     PPDEVOBJ ppdev;
-    LDEVTYPE ldevtype;
 
     /* Allocate a new PDEVOBJ */
     ppdev = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), GDITAG_PDEV);
     if (!ppdev)
     {
-        DPRINT1("failed to allocate a PDEV\n");
+        ERR("failed to allocate a PDEV\n");
         return FALSE;
     }
 
@@ -177,37 +176,61 @@ PDEVOBJ_CreatePDEV(
     /* Copy the function table from the LDEVOBJ */
     ppdev->pfn = ppdev->pldev->pfn;
 
+    /* Set the graphics device */
+    ppdev->pGraphicsDevice = pGraphicsDevice;
+
     /* Allocate the device lock semaphore */
     ppdev->hsemDevLock = EngCreateSemaphore();
     if (!ppdev->hsemDevLock)
     {
-        DPRINT1("Failed to create semaphore\n");
+        ERR("Failed to create semaphore\n");
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
         return FALSE;
     }
 
     /* Call the drivers DrvEnablePDEV function */
-    if (!PDEVOBJ_bEnablePDEV(ppdev, NULL, NULL))
+    if (!PDEVOBJ_bEnablePDEV(ppdev, pdevmode, NULL))
     {
-        DPRINT1("Failed to enable PDEV\n");
+        ERR("Failed to enable PDEV\n");
         EngDeleteSemaphore(ppdev->hsemDevLock);
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
         return FALSE;
     }
 
-    /* Set flags based on the LDEV type */
-    ldevtype = pldev->ldevtype;
-    if (ldevtype == LDEV_DEVICE_MIRROR) ppdev->flFlags |= PDEV_CLONE_DEVICE;
-    else if (ldevtype == LDEV_DEVICE_DISPLAY) ppdev->flFlags |= PDEV_DISPLAY;
-    else if (ldevtype == LDEV_DEVICE_PRINTER) ppdev->flFlags |= PDEV_PRINTER;
-    else if (ldevtype == LDEV_DEVICE_META) ppdev->flFlags |= PDEV_META_DEVICE;
-    else if (ldevtype == LDEV_FONT) ppdev->flFlags |= PDEV_FONTDRIVER;
+    /* Check what type of driver this is */
+    if (pldev->ldevtype == LDEV_DEVICE_DISPLAY)
+    {
+        /* This is a display device */
+        ppdev->flFlags |= PDEV_DISPLAY;
+
+        /* Check if the driver supports a hardware pointer */
+        if (ppdev->pfn.SetPointerShape && ppdev->pfn.MovePointer)
+        {
+            ppdev->flFlags |= PDEV_HARDWARE_POINTER;
+            //ppdev->pfnDrvSetPointerShape = ppdev->pfn.SetPointerShape;
+            ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
+        }
+        else
+        {
+            ppdev->flFlags |= PDEV_SOFTWARE_POINTER;
+            //ppdev->pfnDrvSetPointerShape = EngSetPointerShape;
+            ppdev->pfnMovePointer = EngMovePointer;
+        }
+
+    }
+    else if (pldev->ldevtype == LDEV_DEVICE_MIRROR)
+        ppdev->flFlags |= PDEV_CLONE_DEVICE;
+    else if (pldev->ldevtype == LDEV_DEVICE_PRINTER)
+        ppdev->flFlags |= PDEV_PRINTER;
+    else if (pldev->ldevtype == LDEV_DEVICE_META)
+        ppdev->flFlags |= PDEV_META_DEVICE;
+    else if (pldev->ldevtype == LDEV_FONT)
+        ppdev->flFlags |= PDEV_FONTDRIVER;
 
     /* Check if the driver supports fonts */
     if (ppdev->devinfo.cFonts != 0) ppdev->flFlags |= PDEV_GOTFONTS;
 
-    if (ppdev->pfn.MovePointer) ppdev->flFlags |= PDEV_HARDWARE_POINTER;
-
+    /* Check for a gamma ramp table */
     if (ppdev->pvGammaRamp) ppdev->flFlags |= PDEV_GAMMARAMP_TABLE;
 
     /* Call the drivers DrvCompletePDEV function */
@@ -238,7 +261,7 @@ PDEVOBJ_pSurface(
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
     }
 
-    DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
+    TRACE("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
 }
 
@@ -290,7 +313,7 @@ EngCreateDisplayPDEV(
     PGRAPHICS_DEVICE pGraphicsDevice;
     PLDEVOBJ pldev;
     PPDEVOBJ ppdev;
-    DPRINT("EngCreateDisplayPDEV(%wZ, %p)\n", pustrDeviceName, pdm);
+    TRACE("EngCreateDisplayPDEV(%wZ, %p)\n", pustrDeviceName, pdm);
 
     /* Try to find the GRAPHICS_DEVICE */
     if (pustrDeviceName)
@@ -298,8 +321,8 @@ EngCreateDisplayPDEV(
         pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
         if (!pGraphicsDevice)
         {
-            DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",
-                    pustrDeviceName ? pustrDeviceName->Buffer : 0);
+            ERR("No GRAPHICS_DEVICE found for %ls!\n",
+                pustrDeviceName ? pustrDeviceName->Buffer : 0);
             return NULL;
         }
     }
@@ -313,34 +336,27 @@ EngCreateDisplayPDEV(
     {
         /* ... use the device's default one */
         pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
+        TRACE("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
     }
 
     /* Try to get a diplay driver */
     pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!pldev)
     {
-        DPRINT1("Could not load display driver '%ls', '%s'\n",
-                pGraphicsDevice->pDiplayDrivers,
-                pdm->dmDeviceName);
+        ERR("Could not load display driver '%ls', '%s'\n",
+            pGraphicsDevice->pDiplayDrivers, pdm->dmDeviceName);
         return NULL;
     }
 
     /* Create a new PDEVOBJ */
-    ppdev = PDEVOBJ_CreatePDEV(pldev);
+    ppdev = PDEVOBJ_CreatePDEV(pldev, pGraphicsDevice, pdm, NULL);
     if (!ppdev)
     {
-        DPRINT1("failed to allocate a PDEV\n");
+        ERR("failed to create a PDEV\n");
         EngUnloadImage(pldev);
         return FALSE;
     }
 
-    /* Set MovePointer function */
-    ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
-    if (!ppdev->pfnMovePointer)
-        ppdev->pfnMovePointer = EngMovePointer;
-
-    ppdev->pGraphicsDevice = pGraphicsDevice;
     // Should we change the ative mode of pGraphicsDevice ?
     ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
 
@@ -417,13 +433,13 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdevTmp;
     PSURFACE pSurface;
     BOOL retval = FALSE;
+    TRACE("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
+
     /* And everything else */
     EngAcquireSemaphore(ghsemPDEV);
-
-    DPRINT1("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     // Lookup the GraphicsDevice + select DEVMODE
     // pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
@@ -431,7 +447,7 @@ PDEVOBJ_bSwitchMode(
     /* 1. Temporarily disable the current PDEV */
     if (!ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE))
     {
-        DPRINT1("DrvAssertMode failed\n");
+        ERR("DrvAssertMode failed\n");
         goto leave;
     }
 
@@ -440,7 +456,7 @@ PDEVOBJ_bSwitchMode(
     ppdevTmp = EngCreateDisplayPDEV(&ustrDevice, pdm);
     if (!ppdevTmp)
     {
-        DPRINT1("Failed to create a new PDEV\n");
+        ERR("Failed to create a new PDEV\n");
         goto leave;
     }
 
@@ -448,7 +464,7 @@ PDEVOBJ_bSwitchMode(
     pSurface = PDEVOBJ_pSurface(ppdevTmp);
     if (!pSurface)
     {
-        DPRINT1("DrvEnableSurface failed\n");
+        ERR("DrvEnableSurface failed\n");
         goto leave;
     }
 
@@ -476,8 +492,7 @@ leave:
     EngReleaseSemaphore(ppdev->hsemDevLock);
     EngReleaseSemaphore(ghsemPDEV);
 
-    DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
-
+    TRACE("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
     return retval;
 }
 

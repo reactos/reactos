@@ -278,7 +278,7 @@ EngLoadFontDriver(
     }
 
     /* Create a new PDEVOBJ */
-    ppdev = PDEVOBJ_CreatePDEV(pldev);
+    ppdev = PDEVOBJ_CreatePDEV(pldev, NULL, NULL, NULL);
     if (!ppdev)
     {
         DPRINT1("failed to allocate a PDEV\n");

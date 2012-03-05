@@ -264,8 +264,7 @@ LDEVOBJ_bLoadDriver(
 
     /* Check if the neccessary functions are there */
     if ((!pldev->pfn.EnablePDEV) ||
-        (!pldev->pfn.CompletePDEV) ||
-        (!pldev->pfn.UnloadFontFile))
+        (!pldev->pfn.CompletePDEV))
     {
         DPRINT1("Missing function for gdi driver\n");
         return FALSE;
@@ -276,7 +275,6 @@ LDEVOBJ_bLoadDriver(
         if ((!pldev->pfn.AssertMode) ||
             (!pldev->pfn.EnableSurface) ||
             (!pldev->pfn.DisableSurface) ||
-            (!pldev->pfn.DisableDriver) ||
             (!pldev->pfn.DisablePDEV) ||
             (!pldev->pfn.GetModes))
         {
