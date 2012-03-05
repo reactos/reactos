@@ -134,7 +134,7 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         else
         {
             /* This is a section VAD. Store the MAREA here for now */
-            ASSERT(Vad->u4.Banked = (PVOID)0xDEADBABE);
+            ASSERT(Vad->u4.Banked == (PVOID)0xDEADBABE);
             Vad->u4.Banked = (PVOID)MemoryArea;
         }
     }
