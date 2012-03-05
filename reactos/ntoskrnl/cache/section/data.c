@@ -113,7 +113,7 @@ MiZeroFillSection
 	MmLockAddressSpace(AddressSpace);
 	MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
 	MmUnlockAddressSpace(AddressSpace);
-	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) 
+	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW || MemoryArea->DeleteInProgress) 
 	{
 		return STATUS_NOT_MAPPED_DATA;
 	}
@@ -188,7 +188,7 @@ _MiFlushMappedSection
 
 	MmLockAddressSpace(AddressSpace);
 	MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_CACHE) 
+	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_CACHE || MemoryArea->DeleteInProgress) 
 	{
 		MmUnlockAddressSpace(AddressSpace);
 		DPRINT("STATUS_NOT_MAPPED_DATA\n");
@@ -698,7 +698,7 @@ MmUnmapViewOfCacheSegment
    PMM_SECTION_SEGMENT Segment;
 
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-   if (MemoryArea == NULL)
+   if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
 	  ASSERT(MemoryArea);
       return(STATUS_UNSUCCESSFUL);
