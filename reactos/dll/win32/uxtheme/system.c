@@ -680,11 +680,13 @@ HTHEME WINAPI GetWindowTheme(HWND hwnd)
 HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
                               LPCWSTR pszSubIdList)
 {
-	if(!IsWindow(hwnd))
+	HRESULT hr;
+    TRACE("(%p,%s,%s)\n", hwnd, debugstr_w(pszSubAppName),
+        debugstr_w(pszSubIdList));
+    
+    if(!IsWindow(hwnd))
 		return E_HANDLE;
 
-    HRESULT hr;
-    TRACE("(%p,%s,%s)\n", hwnd, debugstr_w(pszSubAppName),
     hr = UXTHEME_SetWindowProperty(hwnd, atSubAppName, pszSubAppName);
     if(SUCCEEDED(hr))
         hr = UXTHEME_SetWindowProperty(hwnd, atSubIdList, pszSubIdList);
