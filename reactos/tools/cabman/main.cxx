@@ -553,22 +553,16 @@ bool CCABManager::Run()
     switch (Mode)
     {
         case CM_MODE_CREATE:
-        case CM_MODE_CREATE_SIMPLE:
-        {
-            bool ret;
-            if(Mode == CM_MODE_CREATE)
-                ret = CreateCabinet();
-            else
-                ret = CreateSimpleCabinet();
-            CloseCabinet();
-            return ret;
-        }
+            return CreateCabinet();
 
         case CM_MODE_DISPLAY:
             return DisplayCabinet();
 
         case CM_MODE_EXTRACT:
             return ExtractFromCabinet();
+
+        case CM_MODE_CREATE_SIMPLE:
+            return CreateSimpleCabinet();
 
         default:
             break;
