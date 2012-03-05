@@ -2105,7 +2105,7 @@ bool CCabinet::CreateSimpleCabinet()
     if (Status != CAB_STATUS_SUCCESS)
     {
         DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
-        goto cleanup;
+        goto cleanup2;
     }
 
     // Add each file in the criteria list
@@ -2217,10 +2217,11 @@ bool CCabinet::CreateSimpleCabinet()
         goto cleanup;
     }
 
+cleanup:
     CloseCabinet();
     bRet = true;
 
-cleanup:
+cleanup2:
     DestroySearchCriteria();
     return bRet;
 }
