@@ -314,6 +314,32 @@ KeBugCheckEx(
     for (;;);
 }
 
+VOID
+NTAPI
+RtlAssert(IN PVOID FailedAssertion,
+          IN PVOID FileName,
+          IN ULONG LineNumber,
+          IN PCHAR Message OPTIONAL)
+{
+   if (Message)
+   {
+      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+               (PCHAR)FailedAssertion,
+               (PCHAR)FileName,
+               LineNumber,
+               Message);
+   }
+   else
+   {
+      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
+               (PCHAR)FailedAssertion,
+               (PCHAR)FileName,
+               LineNumber);
+   }
+
+   DbgBreakPoint();
+}
+
 
 static BOOLEAN
 DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
