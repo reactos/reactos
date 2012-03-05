@@ -45,6 +45,7 @@ KbdHid_InsertScanCodes(
     KEYBOARD_INPUT_DATA InputData;
     ULONG Index;
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
+    CHAR Prefix = 0;
 
     /* get device extension */
     DeviceExtension = (PKBDHID_DEVICE_EXTENSION)Context;
@@ -53,20 +54,34 @@ KbdHid_InsertScanCodes(
     {
         DPRINT("[KBDHID] ScanCode Index %lu ScanCode %x\n", Index, NewScanCodes[Index] & 0xFF);
 
+        /* check if this is E0 or E1 prefix */
+        if (NewScanCodes[Index] == (CHAR)0xE0 || NewScanCodes[Index] == (CHAR)0xE1)
+        {
+            Prefix = NewScanCodes[Index];
+            continue;
+        }
+
         /* init input data */
         RtlZeroMemory(&InputData, sizeof(KEYBOARD_INPUT_DATA));
 
         /* use keyboard unit id */
         InputData.UnitId = DeviceExtension->KeyboardTypematic.UnitId;
 
-        if (((UCHAR)(NewScanCodes[Index] & 0xFF))> 0x7F)
+        if (NewScanCodes[Index] & 0x80)
         {
-            /* scan codes greater than 0x7F are a key break */
+            /* scan codes with 0x80 flag are a key break */
             InputData.Flags |= KEY_BREAK;
         }
 
+        /* set a prefix if needed */
+        if (Prefix)
+        {
+            InputData.Flags |= (Prefix == (CHAR)0xE0 ? KEY_E0 : KEY_E1);
+            Prefix = 0;
+        }
+
         /* store key code */
-        InputData.MakeCode = NewScanCodes[Index];
+        InputData.MakeCode = NewScanCodes[Index] & 0x7F;
 
         /* dispatch scan codes */
         KbdHid_DispatchInputData((PKBDHID_DEVICE_EXTENSION)Context, &InputData);
