@@ -104,8 +104,12 @@ MiZeroFillSection
 	PMEMORY_AREA MemoryArea;
 	PMM_SECTION_SEGMENT Segment;
 	LARGE_INTEGER FileOffset = *FileOffsetPtr, End, FirstMapped;
+	KIRQL OldIrql;
+
 	DPRINT("MiZeroFillSection(Address %x,Offset %x,Length %x)\n", Address, FileOffset.LowPart, Length);
+
 	AddressSpace = MmGetKernelAddressSpace();
+
 	MmLockAddressSpace(AddressSpace);
 	MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
 	MmUnlockAddressSpace(AddressSpace);
@@ -140,7 +144,10 @@ MiZeroFillSection
 			MmSetPageEntrySectionSegment(Segment, &FileOffset, MAKE_PFN_SSE(Page));
 			Address = ((PCHAR)MemoryArea->StartingAddress) + FileOffset.QuadPart - FirstMapped.QuadPart;
 
+			OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 			MmReferencePage(Page);
+			KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
 			MmCreateVirtualMapping(NULL, Address, PAGE_READWRITE, &Page, 1);
 			MmInsertRmap(Page, NULL, Address);
 		}
@@ -175,6 +182,7 @@ _MiFlushMappedSection
 	LARGE_INTEGER FileOffset;
 	PFN_NUMBER Page;
 	PPFN_NUMBER Pages;
+	KIRQL OldIrql;
 
 	DPRINT("MiFlushMappedSection(%x,%08x,%x,%d,%s:%d)\n", BaseAddress, BaseOffset->LowPart, FileSize, WriteData, File, Line);
 
@@ -222,7 +230,9 @@ _MiFlushMappedSection
 			(MmIsDirtyPageRmap(Page) || IS_DIRTY_SSE(Entry)) &&
 			FileOffset.QuadPart < FileSize->QuadPart)
 		{
+			OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 			MmReferencePage(Page);
+			KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 			Pages[(PageAddress - BeginningAddress) >> PAGE_SHIFT] = Entry;
 		}
 		else

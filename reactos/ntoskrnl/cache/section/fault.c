@@ -73,6 +73,7 @@ MmNotPresentFaultCachePage
 	ULONG Entry;
 	ULONG Attributes;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+	KIRQL OldIrql;
 
 	DPRINT("Not Present: %p %p (%p-%p)\n", AddressSpace, Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
@@ -175,7 +176,9 @@ MmNotPresentFaultCachePage
 			KeBugCheck(CACHE_MANAGER);
 		}
 
+		OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 		MmReferencePage(Page);
+		KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
 		Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
 		if (NT_SUCCESS(Status))
