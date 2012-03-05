@@ -374,11 +374,15 @@ USBSTOR_FdoHandlePnp(
        case IRP_MN_QUERY_STOP_DEVICE:
        case IRP_MN_QUERY_REMOVE_DEVICE:
        {
+#if 0
            //
            // we can if nothing is pending
            //
            if (DeviceExtension->IrpPendingCount != 0 ||
                DeviceExtension->ActiveSrb != NULL)
+#else
+           if (TRUE)
+#endif
            {
                /* We have pending requests */
                DPRINT1("Failing removal/stop request due to pending requests present\n");
