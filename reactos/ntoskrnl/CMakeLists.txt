@@ -18,9 +18,7 @@ add_definitions(
 
 set_rc_compiler()
 
-if(NOT DEFINED NEWCC)
-    set(NEWCC FALSE)
-endif(NOT DEFINED NEWCC)
+set(NEWCC TRUE)
 
 if(NEWCC)
     add_definitions(-DNEWCC)
