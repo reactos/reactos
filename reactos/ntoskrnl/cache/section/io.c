@@ -290,11 +290,14 @@ _MiWriteBackPage
 
 	if (!PageBuffer) return STATUS_NO_MEMORY;
 
-	KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-	Hyperspace = MmCreateHyperspaceMapping(Page);
+	Hyperspace = MiMapPageInHyperSpace(PsGetCurrentProcess(), Page, &OldIrql);
+    if (!Hyperspace)
+    {
+        ExFreePool(PageBuffer);
+        return STATUS_NO_MEMORY;
+    }
 	RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
-	MmDeleteHyperspaceMapping(Hyperspace);
-	KeLowerIrql(OldIrql);
+	MiUnmapPageInHyperSpace(PsGetCurrentProcess(), Hyperspace, OldIrql);
 
 	DPRINT("MiWriteBackPage(%wZ,%08x%08x,%s:%d)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart, File, Line);
 	Status = MiSimpleWrite

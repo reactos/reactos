@@ -135,13 +135,16 @@ MiReadFilePage
         MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
     }
 
-    OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
-    PageBuf = MmCreateHyperspaceMapping(*Page);
+    PageBuf = MiMapPageInHyperSpace(PsGetCurrentProcess(), *Page, &OldIrql);
+    if (!PageBuf)
+    {
+        MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
+        return STATUS_NO_MEMORY;
+    }
 	RtlZeroMemory
 		((PCHAR)PageBuf+RequiredResources->Amount,
 		 PAGE_SIZE-RequiredResources->Amount);
-    MmDeleteHyperspaceMapping(PageBuf);
-    KfLowerIrql(OldIrql);
+    MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PageBuf, OldIrql);
 	
 	DPRINT("Read Status %x (Page %x)\n", Status, *Page);
 
