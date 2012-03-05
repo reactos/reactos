@@ -184,7 +184,7 @@ MmPageOutCacheSection
 (PMMSUPPORT AddressSpace,
  MEMORY_AREA* MemoryArea,
  PVOID Address,
- BOOLEAN Dirty,
+ PBOOLEAN Dirty,
  PMM_REQUIRED_RESOURCES Required)
 {
 	ULONG Entry;
@@ -204,19 +204,16 @@ MmPageOutCacheSection
 
 	Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
 
-	if (MM_IS_WAIT_PTE(Entry))
+	if (MmIsPageSwapEntry(Process, PAddress))
 	{
+        SWAPENTRY SwapEntry;
+        MmGetPageFileMapping(Process, PAddress, &SwapEntry);
 		MmUnlockSectionSegment(Segment);
-		return STATUS_SUCCESS + 1;
+		return SwapEntry == MM_WAIT_ENTRY ? STATUS_SUCCESS + 1 : STATUS_UNSUCCESSFUL;
 	}
 
-	if (Dirty) {
-        DPRINT("Dirty page: %p:%p segment %p offset %08x%08x\n", Process, Address, Segment, TotalOffset.HighPart, TotalOffset.LowPart);
-		MmSetPageEntrySectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
-    }
-
     MmDeleteRmap(Required->Page[0], Process, Address);
-    MmDeleteVirtualMapping(Process, Address, FALSE, NULL, &OurPage);
+    MmDeleteVirtualMapping(Process, Address, FALSE, Dirty, &OurPage);
     ASSERT(OurPage == Required->Page[0]);
 
 	MmReleasePageMemoryConsumer(MC_CACHE, Required->Page[0]);
@@ -230,7 +227,7 @@ NTSTATUS
 NTAPI
 MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 {
-   BOOLEAN ProcRef = FALSE;
+   BOOLEAN ProcRef = FALSE, PageDirty;
    PFN_NUMBER SectionPage = 0;
    PMM_RMAP_ENTRY entry;
    PMM_SECTION_SEGMENT Segment = NULL;
@@ -357,8 +354,10 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
 		   DPRINT("%x:%x, page %x %x\n", Process, Address, Page, Resources.Page[0]);
+           PageDirty = FALSE;
 		   Status = MmPageOutCacheSection
-			   (AddressSpace, MemoryArea, Address, Dirty, &Resources);
+			   (AddressSpace, MemoryArea, Address, &PageDirty, &Resources);
+           Dirty |= PageDirty;
 		   DPRINT("%x\n", Status);
 		   
 		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
