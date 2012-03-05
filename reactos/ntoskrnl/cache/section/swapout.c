@@ -113,6 +113,13 @@ MmFinalizeSectionPageOut
 	BOOLEAN WriteZero = FALSE, WritePage = FALSE;
 	SWAPENTRY Swap = MmGetSavedSwapEntryPage(Page);
 
+    /* Bail early if the reference count isn't where we need it */
+    if (MmGetReferenceCountPage(Page) != 1)
+    {
+        DPRINT1("Cannot page out locked page %x with ref count %d\n", Page, MmGetReferenceCountPage(Page));
+        return STATUS_UNSUCCESSFUL;
+    }
+
 	MmLockSectionSegment(Segment);
 	(void)InterlockedIncrementUL(&Segment->ReferenceCount);
 
@@ -158,9 +165,6 @@ MmFinalizeSectionPageOut
 	{
 		DPRINT("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
-		if (MmGetReferenceCountPage(Page) != 1) {
-			DPRINT1("ALERT: Page %x about to be evicted with ref count %d\n", Page, MmGetReferenceCountPage(Page));
-		}
 		MmReleasePageMemoryConsumer(MC_CACHE, Page);
 	}
 
