@@ -7,8 +7,7 @@
  */
 
 #include <win32k.h>
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(EngPDev);
 DBG_DEFAULT_CHANNEL(EngPDev);
 
 static PPDEVOBJ gppdevList = NULL;
@@ -61,16 +60,18 @@ DbgLookupDHPDEV(DHPDEV dhpdev)
 PPDEVOBJ
 NTAPI
 PDEVOBJ_CreatePDEV(
-    PLDEVOBJ pldev)
+    PLDEVOBJ pldev,
+    PGRAPHICS_DEVICE pGraphicsDevice,
+    PDEVMODEW pdevmode,
+    PWSTR pwszLogAddress)
 {
     PPDEVOBJ ppdev;
-    LDEVTYPE ldevtype;
 
     /* Allocate a new PDEVOBJ */
     ppdev = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), GDITAG_PDEV);
     if (!ppdev)
     {
-        DPRINT1("failed to allocate a PDEV\n");
+        ERR("failed to allocate a PDEV\n");
         return NULL;
     }
 
@@ -84,6 +85,9 @@ PDEVOBJ_CreatePDEV(
 
     /* Copy the function table from the LDEVOBJ */
     ppdev->pfn = ppdev->pldev->pfn;
+
+    /* Set the graphics device */
+    ppdev->pGraphicsDevice = pGraphicsDevice;
 
     /* Allocate the device lock semaphore */
     ppdev->hsemDevLock = EngCreateSemaphore();
@@ -100,7 +104,7 @@ PDEVOBJ_CreatePDEV(
         RtlZeroMemory(ppdev->pEDDgpl, sizeof(EDD_DIRECTDRAW_GLOBAL));
 
     /* Call the drivers DrvEnablePDEV function */
-    if (!PDEVOBJ_bEnablePDEV(ppdev, NULL, NULL))
+    if (!PDEVOBJ_bEnablePDEV(ppdev, pdevmode, NULL))
     {
         ERR("Failed to enable PDEV\n");
         EngDeleteSemaphore(ppdev->hsemDevLock);
@@ -108,19 +112,40 @@ PDEVOBJ_CreatePDEV(
         return FALSE;
     }
 
-    /* Set flags based on the LDEV type */
-    ldevtype = pldev->ldevtype;
-    if (ldevtype == LDEV_DEVICE_MIRROR) ppdev->flFlags |= PDEV_CLONE_DEVICE;
-    else if (ldevtype == LDEV_DEVICE_DISPLAY) ppdev->flFlags |= PDEV_DISPLAY;
-    else if (ldevtype == LDEV_DEVICE_PRINTER) ppdev->flFlags |= PDEV_PRINTER;
-    else if (ldevtype == LDEV_DEVICE_META) ppdev->flFlags |= PDEV_META_DEVICE;
-    else if (ldevtype == LDEV_FONT) ppdev->flFlags |= PDEV_FONTDRIVER;
+    /* Check what type of driver this is */
+    if (pldev->ldevtype == LDEV_DEVICE_DISPLAY)
+    {
+        /* This is a display device */
+        ppdev->flFlags |= PDEV_DISPLAY;
+
+        /* Check if the driver supports a hardware pointer */
+        if (ppdev->pfn.SetPointerShape && ppdev->pfn.MovePointer)
+        {
+            ppdev->flFlags |= PDEV_HARDWARE_POINTER;
+            //ppdev->pfnDrvSetPointerShape = ppdev->pfn.SetPointerShape;
+            ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
+        }
+        else
+        {
+            ppdev->flFlags |= PDEV_SOFTWARE_POINTER;
+            //ppdev->pfnDrvSetPointerShape = EngSetPointerShape;
+            ppdev->pfnMovePointer = EngMovePointer;
+        }
+
+    }
+    else if (pldev->ldevtype == LDEV_DEVICE_MIRROR)
+        ppdev->flFlags |= PDEV_CLONE_DEVICE;
+    else if (pldev->ldevtype == LDEV_DEVICE_PRINTER)
+        ppdev->flFlags |= PDEV_PRINTER;
+    else if (pldev->ldevtype == LDEV_DEVICE_META)
+        ppdev->flFlags |= PDEV_META_DEVICE;
+    else if (pldev->ldevtype == LDEV_FONT)
+        ppdev->flFlags |= PDEV_FONTDRIVER;
 
     /* Check if the driver supports fonts */
     if (ppdev->devinfo.cFonts != 0) ppdev->flFlags |= PDEV_GOTFONTS;
 
-    if (ppdev->pfn.MovePointer) ppdev->flFlags |= PDEV_HARDWARE_POINTER;
-
+    /* Check for a gamma ramp table */
     if (ppdev->pvGammaRamp) ppdev->flFlags |= PDEV_GAMMARAMP_TABLE;
 
     /* Call the drivers DrvCompletePDEV function */
@@ -225,6 +250,8 @@ PDEVOBJ_bEnablePDEV(
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
     ULONG i;
+
+    TRACE("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pfn.EnablePDEV;
@@ -381,6 +408,7 @@ PDEVOBJ_pSurface(
     /* Increment reference count */
     GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
+    TRACE("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
 }
 
@@ -466,7 +494,7 @@ PDEVOBJ_Create(
     PLDEVOBJ pldev;
     PSURFACE pSurface;
 
-    TRACE("PDEVOBJ_Create(%p %p %d)\n", pGraphicsDevice, pdm, ldevtype);
+    TRACE("EngCreateDisplayPDEV(%wZ, %p)\n", pustrDeviceName, pdm);
 
     if (ldevtype != LDEV_DEVICE_META)
     {
@@ -517,10 +545,10 @@ PDEVOBJ_Create(
     }
 
     /* Create a new PDEVOBJ */
-    ppdev = PDEVOBJ_CreatePDEV(pldev);
+    ppdev = PDEVOBJ_CreatePDEV(pldev, pGraphicsDevice, pdm, NULL);
     if (!ppdev)
     {
-        ERR("failed to allocate a PDEV\n");
+        ERR("failed to create a PDEV\n");
         EngUnloadImage(pldev);
         return NULL;
     }
@@ -528,8 +556,6 @@ PDEVOBJ_Create(
     // Move this to PDEVOBJ_CreatePDEV as well?
     if (ldevtype != LDEV_DEVICE_META)
     {
-        ppdev->pGraphicsDevice = pGraphicsDevice;
-
         // DxEngGetHdevData asks for Graphics DeviceObject in hSpooler field
         ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
 
@@ -673,14 +699,13 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdevTmp;
     PSURFACE pSurface;
     BOOL retval = FALSE;
+    TRACE("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
 
     /* And everything else */
     EngAcquireSemaphore(ghsemPDEV);
-
-    DPRINT1("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     // Lookup the GraphicsDevice + select DEVMODE
     // pdm = LDEVOBJ_bProbeAndCaptureDevmode(ppdev, pdm);
@@ -696,7 +721,7 @@ PDEVOBJ_bSwitchMode(
     ppdevTmp = PDEVOBJ_Create(ppdev->pGraphicsDevice, pdm, 0, LDEV_DEVICE_DISPLAY);
     if (!ppdevTmp)
     {
-        DPRINT1("Failed to create a new PDEV\n");
+        ERR("Failed to create a new PDEV\n");
         goto leave2;
     }
 
@@ -704,7 +729,7 @@ PDEVOBJ_bSwitchMode(
     pSurface = PDEVOBJ_pSurface(ppdevTmp);
     if (!pSurface)
     {
-        DPRINT1("PDEVOBJ_pSurface failed\n");
+        ERR("PDEVOBJ_pSurface failed\n");
         PDEVOBJ_vRelease(ppdevTmp);
         goto leave2;
     }
@@ -744,8 +769,7 @@ leave:
     /* Unlock the PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
 
-    DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
-
+    TRACE("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
     return retval;
 }
 
