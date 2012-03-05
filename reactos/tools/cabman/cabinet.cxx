@@ -115,7 +115,7 @@ CCFDATAStorage::~CCFDATAStorage()
 }
 
 
-ULONG CCFDATAStorage::Create(const char* FileName)
+ULONG CCFDATAStorage::Create()
 /*
  * FUNCTION: Creates the file
  * ARGUMENTS:
@@ -124,13 +124,16 @@ ULONG CCFDATAStorage::Create(const char* FileName)
  *     Status of operation
  */
 {
+#if defined(_WIN32)
+    char tmpPath[MAX_PATH];
+#endif
     ASSERT(!FileCreated);
 
 #if defined(_WIN32)
-    if (GetTempPath(MAX_PATH, FullName) == 0)
+    if (GetTempPath(MAX_PATH, tmpPath) == 0)
         return CAB_STATUS_CANNOT_CREATE;
-
-    strcat(FullName, FileName);
+    if(GetTempFileName(tmpPath, "cab", 0, FullName) == 0)
+        return CAB_STATUS_CANNOT_CREATE;
 
     /* Create file, overwrite if it already exists */
     FileHandle = CreateFile(FullName,   // Create this file
@@ -1529,7 +1532,7 @@ ULONG CCabinet::NewCabinet()
         return CAB_STATUS_NOMEMORY;
     }
 
-    Status = ScratchFile->Create("~CAB.tmp");
+    Status = ScratchFile->Create();
 
     CreateNewFolder = false;
 
