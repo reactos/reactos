@@ -231,6 +231,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                  TrapFrame,
                                  ExceptionFrame);
                 Handled = TRUE;
+                break;
 
             /* Anything else, do nothing */
             default:
