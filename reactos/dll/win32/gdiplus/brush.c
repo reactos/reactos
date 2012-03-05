@@ -191,8 +191,14 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             GpStatus stat;
             GpTexture *texture = (GpTexture*)brush;
             GpTexture *new_texture;
+            UINT width, height;
 
-            stat = GdipCreateTexture(texture->image, texture->wrap, &new_texture);
+            stat = GdipGetImageWidth(texture->image, &width);
+            if (stat != Ok) return stat;
+            stat = GdipGetImageHeight(texture->image, &height);
+            if (stat != Ok) return stat;
+
+            stat = GdipCreateTextureIA(texture->image, texture->imageattributes, 0, 0, width, height, &new_texture);
 
             if (stat == Ok)
             {
@@ -245,6 +251,17 @@ static const char HatchBrushes[][8] = {
     { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc }, /* HatchStyleDarkVertical */
     { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff }, /* HatchStyleDarkHorizontal */
 };
+
+GpStatus get_hatch_data(HatchStyle hatchstyle, const char **result)
+{
+    if (hatchstyle < sizeof(HatchBrushes) / sizeof(HatchBrushes[0]))
+    {
+        *result = HatchBrushes[hatchstyle];
+        return Ok;
+    }
+    else
+        return NotImplemented;
+}
 
 /******************************************************************************
  * GdipCreateHatchBrush [GDIPLUS.@]
@@ -789,7 +806,7 @@ GpStatus WINGDIPAPI GdipCreateTexture(GpImage *image, GpWrapMode wrapmode,
         GpTexture **texture)
 {
     UINT width, height;
-    GpImageAttributes attributes;
+    GpImageAttributes *attributes;
     GpStatus stat;
 
     TRACE("%p, %d %p\n", image, wrapmode, texture);
@@ -801,10 +818,20 @@ GpStatus WINGDIPAPI GdipCreateTexture(GpImage *image, GpWrapMode wrapmode,
     if (stat != Ok) return stat;
     stat = GdipGetImageHeight(image, &height);
     if (stat != Ok) return stat;
-    attributes.wrap = wrapmode;
 
-    return GdipCreateTextureIA(image, &attributes, 0, 0, width, height,
+    stat = GdipCreateImageAttributes(&attributes);
+
+    if (stat == Ok)
+    {
+        attributes->wrap = wrapmode;
+
+        stat = GdipCreateTextureIA(image, attributes, 0, 0, width, height,
             texture);
+
+        GdipDisposeImageAttributes(attributes);
+    }
+
+    return stat;
 }
 
 /******************************************************************************
@@ -813,14 +840,25 @@ GpStatus WINGDIPAPI GdipCreateTexture(GpImage *image, GpWrapMode wrapmode,
 GpStatus WINGDIPAPI GdipCreateTexture2(GpImage *image, GpWrapMode wrapmode,
         REAL x, REAL y, REAL width, REAL height, GpTexture **texture)
 {
-    GpImageAttributes attributes;
+    GpImageAttributes *attributes;
+    GpStatus stat;
 
     TRACE("%p %d %f %f %f %f %p\n", image, wrapmode,
             x, y, width, height, texture);
 
-    attributes.wrap = wrapmode;
-    return GdipCreateTextureIA(image, &attributes, x, y, width, height,
-            texture);
+    stat = GdipCreateImageAttributes(&attributes);
+
+    if (stat == Ok)
+    {
+        attributes->wrap = wrapmode;
+
+        stat = GdipCreateTextureIA(image, attributes, x, y, width, height,
+                texture);
+
+        GdipDisposeImageAttributes(attributes);
+    }
+
+    return stat;
 }
 
 /******************************************************************************
@@ -870,16 +908,25 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
         goto exit;
     }
 
+    if (imageattr)
+    {
+        status = GdipCloneImageAttributes(imageattr, &(*texture)->imageattributes);
+    }
+    else
+    {
+        status = GdipCreateImageAttributes(&(*texture)->imageattributes);
+        if (status == Ok)
+            (*texture)->imageattributes->wrap = WrapModeTile;
+    }
+    if (status != Ok)
+        goto exit;
+
     (*texture)->brush.lb.lbStyle = BS_PATTERN;
     (*texture)->brush.lb.lbColor = 0;
     (*texture)->brush.lb.lbHatch = (ULONG_PTR)hbm;
 
     (*texture)->brush.gdibrush = CreateBrushIndirect(&(*texture)->brush.lb);
     (*texture)->brush.bt = BrushTypeTextureFill;
-    if (imageattr)
-        (*texture)->wrap = imageattr->wrap;
-    else
-        (*texture)->wrap = WrapModeTile;
     (*texture)->image = new_image;
 
 exit:
@@ -892,6 +939,7 @@ exit:
         if (*texture)
         {
             GdipDeleteMatrix((*texture)->transform);
+            GdipDisposeImageAttributes((*texture)->imageattributes);
             GdipFree(*texture);
             *texture = NULL;
         }
@@ -919,14 +967,22 @@ GpStatus WINGDIPAPI GdipCreateTextureIAI(GpImage *image, GDIPCONST GpImageAttrib
 GpStatus WINGDIPAPI GdipCreateTexture2I(GpImage *image, GpWrapMode wrapmode,
         INT x, INT y, INT width, INT height, GpTexture **texture)
 {
-    GpImageAttributes imageattr;
+    GpImageAttributes *imageattr;
+    GpStatus stat;
 
     TRACE("%p %d %d %d %d %d %p\n", image, wrapmode, x, y, width, height,
             texture);
 
-    imageattr.wrap = wrapmode;
+    stat = GdipCreateImageAttributes(&imageattr);
 
-    return GdipCreateTextureIA(image, &imageattr, x, y, width, height, texture);
+    if (stat == Ok)
+    {
+        imageattr->wrap = wrapmode;
+
+        stat = GdipCreateTextureIA(image, imageattr, x, y, width, height, texture);
+    }
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipGetBrushType(GpBrush *brush, GpBrushType *type)
@@ -1000,6 +1056,8 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
         case BrushTypeTextureFill:
             GdipDeleteMatrix(((GpTexture*)brush)->transform);
             GdipDisposeImage(((GpTexture*)brush)->image);
+            GdipDisposeImageAttributes(((GpTexture*)brush)->imageattributes);
+            GdipFree(((GpTexture*)brush)->bitmap_bits);
             break;
         default:
             break;
@@ -1222,10 +1280,15 @@ GpStatus WINGDIPAPI GdipGetPathGradientSurroundColorsWithCount(GpPathGradient
 
 GpStatus WINGDIPAPI GdipGetPathGradientSurroundColorCount(GpPathGradient *brush, INT *count)
 {
+    static int calls;
+
     TRACE("(%p, %p)\n", brush, count);
 
     if (!brush || !count)
        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
 
     return NotImplemented;
 }
@@ -1293,7 +1356,7 @@ GpStatus WINGDIPAPI GdipGetTextureWrapMode(GpTexture *brush, GpWrapMode *wrapmod
     if(!brush || !wrapmode)
         return InvalidParameter;
 
-    *wrapmode = brush->wrap;
+    *wrapmode = brush->imageattributes->wrap;
 
     return Ok;
 }
@@ -1773,7 +1836,7 @@ GpStatus WINGDIPAPI GdipSetTextureWrapMode(GpTexture *brush, GpWrapMode wrapmode
     if(!brush)
         return InvalidParameter;
 
-    brush->wrap = wrapmode;
+    brush->imageattributes->wrap = wrapmode;
 
     return Ok;
 }

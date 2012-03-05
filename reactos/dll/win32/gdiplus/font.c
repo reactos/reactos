@@ -126,27 +126,27 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
     {
         case UnitWorld:
             /* FIXME: Figure out when World != Pixel */
-            lfw->lfHeight = emSize; break;
+            (*font)->pixel_size = emSize; break;
         case UnitDisplay:
             FIXME("Unknown behavior for UnitDisplay! Please report!\n");
             /* FIXME: Figure out how this works...
              * MSDN says that if "DISPLAY" is a monitor, then pixel should be
              * used. That's not what I got. Tests on Windows revealed no output,
              * and the tests in tests/font crash windows */
-            lfw->lfHeight = 0; break;
+            (*font)->pixel_size = 0; break;
         case UnitPixel:
-            lfw->lfHeight = emSize; break;
+            (*font)->pixel_size = emSize; break;
         case UnitPoint:
-            lfw->lfHeight = point_to_pixel(emSize); break;
+            (*font)->pixel_size = point_to_pixel(emSize); break;
         case UnitInch:
-            lfw->lfHeight = inch_to_pixel(emSize); break;
+            (*font)->pixel_size = inch_to_pixel(emSize); break;
         case UnitDocument:
-            lfw->lfHeight = document_to_pixel(emSize); break;
+            (*font)->pixel_size = document_to_pixel(emSize); break;
         case UnitMillimeter:
-            lfw->lfHeight = mm_to_pixel(emSize); break;
+            (*font)->pixel_size = mm_to_pixel(emSize); break;
     }
 
-    lfw->lfHeight *= -1;
+    lfw->lfHeight = (*font)->pixel_size * -1;
 
     lfw->lfWeight = style & FontStyleBold ? 700 : 400;
     lfw->lfItalic = style & FontStyleItalic;
@@ -190,7 +190,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
     (*font)->lfw.lfUnderline = logfont->lfUnderline;
     (*font)->lfw.lfStrikeOut = logfont->lfStrikeOut;
 
-    (*font)->emSize = logfont->lfHeight;
+    (*font)->pixel_size = (*font)->emSize = logfont->lfHeight;
     (*font)->unit = UnitPixel;
 
     hfont = CreateFontIndirectW(&(*font)->lfw);
@@ -816,10 +816,20 @@ GpStatus WINGDIPAPI GdipIsStyleAvailable(GDIPCONST GpFontFamily* family,
 GpStatus WINGDIPAPI GdipGetGenericFontFamilyMonospace(GpFontFamily **nativeFamily)
 {
     static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
+    static const WCHAR LiberationMono[] = {'L','i','b','e','r','a','t','i','o','n',' ','M','o','n','o','\0'};
+    GpStatus stat;
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    return GdipCreateFontFamilyFromName(CourierNew, NULL, nativeFamily);
+    stat = GdipCreateFontFamilyFromName(CourierNew, NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        stat = GdipCreateFontFamilyFromName(LiberationMono, NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        ERR("Missing 'Courier New' font\n");
+
+    return stat;
 }
 
 /*****************************************************************************
@@ -837,12 +847,22 @@ GpStatus WINGDIPAPI GdipGetGenericFontFamilyMonospace(GpFontFamily **nativeFamil
 GpStatus WINGDIPAPI GdipGetGenericFontFamilySerif(GpFontFamily **nativeFamily)
 {
     static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
+    static const WCHAR LiberationSerif[] = {'L','i','b','e','r','a','t','i','o','n',' ','S','e','r','i','f','\0'};
+    GpStatus stat;
 
     TRACE("(%p)\n", nativeFamily);
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    return GdipCreateFontFamilyFromName(TimesNewRoman, NULL, nativeFamily);
+    stat = GdipCreateFontFamilyFromName(TimesNewRoman, NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        stat = GdipCreateFontFamilyFromName(LiberationSerif, NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        ERR("Missing 'Times New Roman' font\n");
+
+    return stat;
 }
 
 /*****************************************************************************
@@ -930,17 +950,158 @@ GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection* fontCollection,
     return NotImplemented;
 }
 
+/* Copied from msi/font.c */
+
+typedef struct _tagTT_OFFSET_TABLE {
+    USHORT uMajorVersion;
+    USHORT uMinorVersion;
+    USHORT uNumOfTables;
+    USHORT uSearchRange;
+    USHORT uEntrySelector;
+    USHORT uRangeShift;
+} TT_OFFSET_TABLE;
+
+typedef struct _tagTT_TABLE_DIRECTORY {
+    char szTag[4]; /* table name */
+    ULONG uCheckSum; /* Check sum */
+    ULONG uOffset; /* Offset from beginning of file */
+    ULONG uLength; /* length of the table in bytes */
+} TT_TABLE_DIRECTORY;
+
+typedef struct _tagTT_NAME_TABLE_HEADER {
+    USHORT uFSelector; /* format selector. Always 0 */
+    USHORT uNRCount; /* Name Records count */
+    USHORT uStorageOffset; /* Offset for strings storage,
+                            * from start of the table */
+} TT_NAME_TABLE_HEADER;
+
+#define NAME_ID_FULL_FONT_NAME  4
+#define NAME_ID_VERSION         5
+
+typedef struct _tagTT_NAME_RECORD {
+    USHORT uPlatformID;
+    USHORT uEncodingID;
+    USHORT uLanguageID;
+    USHORT uNameID;
+    USHORT uStringLength;
+    USHORT uStringOffset; /* from start of storage area */
+} TT_NAME_RECORD;
+
+#define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
+#define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+
+/*
+ * Code based off of code located here
+ * http://www.codeproject.com/gdi/fontnamefromfile.asp
+ */
+static WCHAR *load_ttf_name_id( const char *mem, DWORD_PTR size, DWORD id, WCHAR *ret, DWORD len )
+{
+    const TT_TABLE_DIRECTORY *tblDir;
+    TT_OFFSET_TABLE ttOffsetTable;
+    TT_NAME_TABLE_HEADER ttNTHeader;
+    TT_NAME_RECORD ttRecord;
+    DWORD ofs, pos;
+    int i;
+
+    if (sizeof(TT_OFFSET_TABLE) > size)
+        return NULL;
+    ttOffsetTable = *(TT_OFFSET_TABLE*)mem;
+    ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
+    ttOffsetTable.uMajorVersion = SWAPWORD(ttOffsetTable.uMajorVersion);
+    ttOffsetTable.uMinorVersion = SWAPWORD(ttOffsetTable.uMinorVersion);
+
+    if (ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0)
+        return NULL;
+
+    pos = sizeof(ttOffsetTable);
+    for (i = 0; i < ttOffsetTable.uNumOfTables; i++)
+    {
+        tblDir = (const TT_TABLE_DIRECTORY*)&mem[pos];
+        pos += sizeof(*tblDir);
+        if (memcmp(tblDir->szTag,"name",4)==0)
+        {
+            ofs = SWAPLONG(tblDir->uOffset);
+            break;
+        }
+    }
+    if (i >= ttOffsetTable.uNumOfTables)
+        return NULL;
+
+    pos = ofs + sizeof(ttNTHeader);
+    if (pos > size)
+        return NULL;
+    ttNTHeader = *(TT_NAME_TABLE_HEADER*)&mem[ofs];
+    ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
+    ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
+    for(i=0; i<ttNTHeader.uNRCount; i++)
+    {
+        ttRecord = *(TT_NAME_RECORD*)&mem[pos];
+        pos += sizeof(ttRecord);
+        if (pos > size)
+            return NULL;
+
+        ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
+        if (ttRecord.uNameID == id)
+        {
+            const char *buf;
+
+            ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
+            ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
+            if (ofs + ttRecord.uStringOffset + ttNTHeader.uStorageOffset + ttRecord.uStringLength > size)
+                return NULL;
+            buf = mem + ofs + ttRecord.uStringOffset + ttNTHeader.uStorageOffset;
+            len = MultiByteToWideChar(CP_ACP, 0, buf, ttRecord.uStringLength, ret, len-1);
+            ret[len] = 0;
+            return ret;
+        }
+    }
+    return NULL;
+}
+
+static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm, DWORD type, LPARAM lParam);
+
 /*****************************************************************************
  * GdipPrivateAddMemoryFont [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
         GDIPCONST void* memory, INT length)
 {
-    FIXME("%p, %p, %d\n", fontCollection, memory, length);
+    WCHAR buf[32], *name;
+    DWORD count = 0;
+    HANDLE font;
+    TRACE("%p, %p, %d\n", fontCollection, memory, length);
 
-    if (!(fontCollection && memory && length))
+    if (!fontCollection || !memory || !length)
         return InvalidParameter;
 
+    name = load_ttf_name_id(memory, length, NAME_ID_FULL_FONT_NAME, buf, sizeof(buf)/sizeof(*buf));
+    if (!name)
+        return OutOfMemory;
+
+    font = AddFontMemResourceEx((void*)memory, length, NULL, &count);
+    TRACE("%s: %p/%u\n", debugstr_w(name), font, count);
+    if (!font || !count)
+        return InvalidParameter;
+
+    if (count)
+    {
+        HDC hdc;
+        LOGFONTW lfw;
+
+        hdc = GetDC(0);
+
+        lfw.lfCharSet = DEFAULT_CHARSET;
+        lstrcpyW(lfw.lfFaceName, name);
+        lfw.lfPitchAndFamily = 0;
+
+        if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)fontCollection, 0))
+        {
+            ReleaseDC(0, hdc);
+            return OutOfMemory;
+        }
+
+        ReleaseDC(0, hdc);
+    }
     return Ok;
 }
 

@@ -19,10 +19,12 @@ list(APPEND SOURCE
     image.c
     imageattributes.c
     matrix.c
+	metafile.c
     pathiterator.c
     pen.c
     region.c
     stringformat.c
+	gdiplus.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
