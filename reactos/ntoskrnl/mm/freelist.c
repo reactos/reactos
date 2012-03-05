@@ -493,10 +493,9 @@ MmReferencePage(PFN_NUMBER Pfn)
 
    DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   if (Pfn == 0 || Pfn > MmHighestPhysicalPage)
-   {
-      return;
-   }
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT(Pfn != 0);
+   ASSERT(Pfn <= MmHighestPhysicalPage);
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);

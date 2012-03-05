@@ -747,6 +747,7 @@ MmFreeMemoryArea(
              }
 #if (_MI_PAGING_LEVELS == 2)
             /* Remove page table reference */
+            ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
             if((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
             {
                 ASSERT(AddressSpace != MmGetKernelAddressSpace());
