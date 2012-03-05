@@ -430,7 +430,16 @@ HidParser_InitializeReportForID(
     IN ULONG  ReportLength);
 
 HIDPARSER_STATUS
-HidParser_TranslateUsage(
+HidParser_TranslateKbdUsage(
+    IN PHID_PARSER Parser,
+    IN USAGE Usage,
+    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+    IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+    IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+    IN PVOID  InsertCodesContext);
+
+HIDPARSER_STATUS
+HidParser_TranslateCustUsage(
     IN PHID_PARSER Parser,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,

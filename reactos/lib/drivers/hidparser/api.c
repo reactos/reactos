@@ -31,6 +31,32 @@ static ULONG KeyboardScanCodes[256] =
 /* F */ 0x0096, 0x009e, 0x009f, 0x0080, 0x0088, 0x00b1, 0x00b2, 0x00b0, 0x008e, 0x0098, 0x00ad, 0x008c, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
+static struct
+{
+    USAGE Usage;
+    ULONG ScanCode;
+} CustomerScanCodes[] =
+{
+    { 0x00B5, 0xE019 },
+    { 0x00B6, 0xE010 },
+    { 0x00B7, 0xE024 },
+    { 0x00CD, 0xE022 },
+    { 0x00E2, 0xE020 },
+    { 0x00E9, 0xE030 },
+    { 0x00EA, 0xE02E },
+    { 0x0183, 0xE06D },
+    { 0x018A, 0xE06C },
+    { 0x0192, 0xE021 },
+    { 0x0194, 0xE06B },
+    { 0x0221, 0xE065 },
+    { 0x0223, 0xE032 },
+    { 0x0224, 0xE06A },
+    { 0x0225, 0xE069 },
+    { 0x0226, 0xE068 },
+    { 0x0227, 0xE067 },
+    { 0x022A, 0xE066 },
+};
+
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 
 HIDPARSER_STATUS
@@ -646,7 +672,7 @@ HidParser_GetScaledUsageValueWithReport(
 }
 
 ULONG
-HidParser_GetScanCode(
+HidParser_GetScanCodeFromKbdUsage(
     IN USAGE Usage)
 {
     if (Usage < sizeof(KeyboardScanCodes) / sizeof(KeyboardScanCodes[0]))
@@ -655,6 +681,33 @@ HidParser_GetScanCode(
         // valid usage
         //
         return KeyboardScanCodes[Usage];
+    }
+
+    //
+    // invalid usage
+    //
+    return 0;
+}
+
+ULONG
+HidParser_GetScanCodeFromCustUsage(
+    IN USAGE Usage)
+{
+    ULONG i;
+
+    //
+    // find usage in array
+    //
+    for (i = 0; i < sizeof(CustomerScanCodes) / sizeof(CustomerScanCodes[0]); ++i)
+    {
+        if (CustomerScanCodes[i].Usage == Usage)
+        {
+            //
+            // valid usage
+            //
+            return CustomerScanCodes[i].ScanCode;
+        }
+            
     }
 
     //
@@ -712,9 +765,8 @@ HidParser_DispatchKey(
     }
 }
 
-
 HIDPARSER_STATUS
-HidParser_TranslateUsage(
+HidParser_TranslateKbdUsage(
     IN PHID_PARSER Parser,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
@@ -729,7 +781,7 @@ HidParser_TranslateUsage(
     //
     // get scan code
     //
-    ScanCode = HidParser_GetScanCode(Usage);
+    ScanCode = HidParser_GetScanCodeFromKbdUsage(Usage);
     if (!ScanCode)
     {
         //
@@ -769,6 +821,49 @@ HidParser_TranslateUsage(
         // Print Screen generates additional FakeShift
         HidParser_DispatchKey(FakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
+
+    //
+    // done
+    //
+    return HIDPARSER_STATUS_SUCCESS;
+}
+
+HIDPARSER_STATUS
+HidParser_TranslateCustUsage(
+    IN PHID_PARSER Parser,
+    IN USAGE Usage,
+    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+    IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+    IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+    IN PVOID  InsertCodesContext)
+{
+    ULONG ScanCode;
+
+    //
+    // get scan code
+    //
+    ScanCode = HidParser_GetScanCodeFromCustUsage(Usage);
+    if (!ScanCode)
+    {
+        //
+        // invalid lookup or no scan code available
+        //
+        DPRINT1("No Scan code for Usage %x\n", Usage);
+        return HIDPARSER_STATUS_I8042_TRANS_UNKNOWN;
+    }
+
+    if (ScanCode & 0xFF00)
+    {
+        //
+        // swap scan code
+        //
+        ScanCode = NTOHS(ScanCode);
+    }
+
+    //
+    // FIXME: translate modifier states
+    //
+    HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
     //
     // done

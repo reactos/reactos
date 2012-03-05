@@ -681,17 +681,16 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
         if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_KEYBOARD)
         {
             //
-            // process usage
+            // process keyboard usage
             //
-            Status = HidParser_TranslateUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+            Status = HidParser_TranslateKbdUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
         }
         else if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_CONSUMER)
         {
             //
-            // FIXME: implement me
+            // process consumer usage
             //
-            UNIMPLEMENTED
-            Status = HIDPARSER_STATUS_NOT_IMPLEMENTED;
+            Status = HidParser_TranslateCustUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
         }
         else
         {
