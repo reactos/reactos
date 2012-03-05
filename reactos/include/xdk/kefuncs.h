@@ -255,8 +255,8 @@ KeInitializeSpinLock(_Out_ PKSPIN_LOCK SpinLock)
 }
 #endif
 
-//DECLSPEC_NORETURN
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
