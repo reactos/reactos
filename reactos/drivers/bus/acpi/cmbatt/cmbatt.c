@@ -258,7 +258,7 @@ CmBattUnload(IN PDRIVER_OBJECT DriverObject)
     {
         /* Get rid of it */
         ExUnregisterCallback(CmBattPowerCallBackRegistration);
-        ObfDereferenceObject(CmBattPowerCallBackObject);
+        ObDereferenceObject(CmBattPowerCallBackObject);
     }
     
     /* Free the registry buffer if it exists */
@@ -339,7 +339,7 @@ Complete:
     /* Release lock and complete request */
     ExReleaseFastMutex(&DeviceExtension->FastMutex);
     Irp->IoStatus.Status = Status;
-    IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;  
 }
 
@@ -361,7 +361,7 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
     {
         /* It's too late, fail */
         Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_REMOVED;
     }
     
@@ -514,7 +514,7 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Complete the request */
             Irp->IoStatus.Status = Status;
-            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
         }
         else
         {
@@ -1312,7 +1312,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
         }
         else
         {
-            ObfDereferenceObject(CmBattPowerCallBackObject);
+            ObDereferenceObject(CmBattPowerCallBackObject);
             if (CmBattDebug & CMBATT_GENERIC_WARNING)
                 DbgPrint("CmBattRegisterPowerCallBack: ExRegisterCallback failed.\n");
         }

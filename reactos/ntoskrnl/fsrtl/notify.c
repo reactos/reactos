@@ -200,7 +200,7 @@ ReleaseAndComplete:
 Completion:
     IoMarkIrpPending(Irp);
     Irp->IoStatus.Status = Status;
-    IofCompleteRequest(Irp, EVENT_INCREMENT);
+    IoCompleteRequest(Irp, EVENT_INCREMENT);
 }
 
 /*
@@ -537,7 +537,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
         {
             IoMarkIrpPending(NotifyIrp);
             NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
-            IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             _SEH2_LEAVE;
         }
 
@@ -550,14 +550,14 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
             {
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
-                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             }
             /* Or if it's about to be deleted, complete */
             else if (NotifyChange->Flags & DELETE_IN_PROCESS)
             {
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_DELETE_PENDING;
-                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             }
             /* Complete if there is directory enumeration and no buffer available any more */
             if ((NotifyChange->Flags & INVALIDATE_BUFFERS) && (NotifyChange->Flags & ENUMERATE_DIR))
@@ -565,7 +565,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                 NotifyChange->Flags &= ~INVALIDATE_BUFFERS;
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
-                IofCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             }
             /* If no data yet, or directory enumeration, handle */
             else if (NotifyChange->DataLength == 0 || (NotifyChange->Flags & ENUMERATE_DIR))

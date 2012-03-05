@@ -75,15 +75,15 @@ SendOnlineNotification(IN PUNICODE_STRING SymbolicName)
     Stack = IoGetNextIrpStackLocation(Irp);
     Stack->FileObject = FileObject;
 
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
     }
 
 Cleanup:
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
 
     return;
 }
@@ -301,7 +301,7 @@ RegisterForTargetDeviceNotification(IN PDEVICE_EXTENSION DeviceExtension,
         DeviceInformation->TargetDeviceNotificationEntry = NULL;
     }
 
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(FileObject);
 
     return;
 }
@@ -341,7 +341,7 @@ MountMgrNotify(IN PDEVICE_EXTENSION DeviceExtension)
         *((PULONG)Irp->AssociatedIrp.SystemBuffer) = DeviceExtension->EpicNumber;
         Irp->IoStatus.Information = sizeof(DeviceExtension->EpicNumber);
 
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 }
 
@@ -412,8 +412,8 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
                                         &IoStatusBlock);
     if (!Irp)
     {
-        ObfDereferenceObject(DeviceObject);
-        ObfDereferenceObject(FileObject);
+        ObDereferenceObject(DeviceObject);
+        ObDereferenceObject(FileObject);
     }
 
     Stack = IoGetNextIrpStackLocation(Irp);
@@ -428,15 +428,15 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
     Stack->FileObject = FileObject;
 
     /* And call driver */
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatusBlock.Status;
     }
 
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
 
     if (!NT_SUCCESS(Status))
     {
@@ -466,7 +466,7 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
                                            &DeviceNotification,
                                            NULL, NULL);
 
-    ObfDereferenceObject(DeviceObject);
+    ObDereferenceObject(DeviceObject);
 
     return;
 }
@@ -609,8 +609,8 @@ IssueUniqueIdChangeNotifyWorker(IN PUNIQUE_ID_WORK_ITEM WorkItem,
 
     if (InterlockedExchange((PLONG)&(WorkItem->Event), 0) != 0)
     {
-        ObfDereferenceObject(FileObject);
-        ObfDereferenceObject(DeviceObject);
+        ObDereferenceObject(FileObject);
+        ObDereferenceObject(DeviceObject);
         RemoveWorkItem(WorkItem);
         return;
     }
@@ -634,16 +634,16 @@ IssueUniqueIdChangeNotifyWorker(IN PUNIQUE_ID_WORK_ITEM WorkItem,
                                       TRUE, TRUE, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        ObfDereferenceObject(FileObject);
-        ObfDereferenceObject(DeviceObject);
+        ObDereferenceObject(FileObject);
+        ObDereferenceObject(DeviceObject);
         RemoveWorkItem(WorkItem);
         return;
     }
 
     /* Call the driver */
-    IofCallDriver(DeviceObject, Irp);
-    ObfDereferenceObject(FileObject);
-    ObfDereferenceObject(DeviceObject);
+    IoCallDriver(DeviceObject, Irp);
+    ObDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
 }
 
 /*
@@ -673,13 +673,13 @@ IssueUniqueIdChangeNotify(IN PDEVICE_EXTENSION DeviceExtension,
     /* And then, get attached device */
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
 
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(FileObject);
 
     /* Allocate a work item */
     WorkItem = AllocatePool(sizeof(UNIQUE_ID_WORK_ITEM));
     if (!WorkItem)
     {
-        ObfDereferenceObject(DeviceObject);
+        ObDereferenceObject(DeviceObject);
         return;
     }
 
@@ -687,7 +687,7 @@ IssueUniqueIdChangeNotify(IN PDEVICE_EXTENSION DeviceExtension,
     WorkItem->WorkItem = IoAllocateWorkItem(DeviceExtension->DeviceObject);
     if (!WorkItem->WorkItem)
     {
-        ObfDereferenceObject(DeviceObject);
+        ObDereferenceObject(DeviceObject);
         goto Cleanup;
     }
 
@@ -696,7 +696,7 @@ IssueUniqueIdChangeNotify(IN PDEVICE_EXTENSION DeviceExtension,
     /* Already provide the IRP */
     WorkItem->Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
 
-    ObfDereferenceObject(DeviceObject);
+    ObDereferenceObject(DeviceObject);
 
     if (!WorkItem->Irp)
     {

@@ -245,7 +245,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 {
                     /* Save our own PDO and reference it */
                     *ObjectEntry++ = PdoExtension->PhysicalDeviceObject;
-                    ObfReferenceObject(PdoExtension->PhysicalDeviceObject);
+                    ObReferenceObject(PdoExtension->PhysicalDeviceObject);
 
                     /* Go to our next PDO */
                     PdoExtension = PdoExtension->Next;
@@ -273,7 +273,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
             /* Fill it out and reference us */
             PdoRelations->Count = 1;
             PdoRelations->Objects[0] = DeviceObject;
-            ObfReferenceObject(DeviceObject);
+            ObReferenceObject(DeviceObject);
 
             /* Return it */
             *DeviceRelations = PdoRelations;

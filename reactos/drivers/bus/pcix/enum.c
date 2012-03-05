@@ -2130,7 +2130,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
         {
             /* Reference it and add it to the array */
             DeviceObject = PdoExtension->PhysicalDeviceObject;
-            ObfReferenceObject(DeviceObject);
+            ObReferenceObject(DeviceObject);
             *ObjectArray++ = DeviceObject;
         }
 

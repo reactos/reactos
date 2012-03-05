@@ -250,7 +250,7 @@ CmBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Complete the request here */
         Status = Irp->IoStatus.Status;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     
     /* Return status */
@@ -281,7 +281,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Complete the request */
         Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_REMOVED;
     }
 
@@ -485,7 +485,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* Release the remove lock and complete the request */
-            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
             return Status;
 
@@ -514,7 +514,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Complete the request */
         Status = Irp->IoStatus.Status;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* Release the remove lock and return status */

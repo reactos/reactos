@@ -353,12 +353,12 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
     /* FT volume can't be removable */
     if (FileDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
     {
-        ObfDereferenceObject(DeviceObject);
-        ObfDereferenceObject(FileObject);
+        ObDereferenceObject(DeviceObject);
+        ObDereferenceObject(FileObject);
         return FALSE;
     }
 
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(FileObject);
 
     /* Get partition information */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -373,18 +373,18 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
                                         &IoStatusBlock);
     if (!Irp)
     {
-        ObfDereferenceObject(DeviceObject);
+        ObDereferenceObject(DeviceObject);
         return FALSE;
     }
 
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatusBlock.Status;
     }
 
-    ObfDereferenceObject(DeviceObject);
+    ObDereferenceObject(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -1449,7 +1449,7 @@ Cleanup:
 
     if (FOReferenced)
     {
-        ObfDereferenceObject(FileObject);
+        ObDereferenceObject(FileObject);
     }
 
     return Status;
@@ -1596,7 +1596,7 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
 Complete:
     Irp->IoStatus.Status = Status;
-    IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }

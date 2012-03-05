@@ -240,7 +240,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
     /* The associate FO can't have a file name */
     if (FileObject->FileName.Length)
     {
-        ObfDereferenceObject(FileObject);
+        ObDereferenceObject(FileObject);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -275,12 +275,12 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                                                 &IoStatusBlock);
             if (!Irp)
             {
-                ObfDereferenceObject(DeviceObject);
-                ObfDereferenceObject(FileObject);
+                ObDereferenceObject(DeviceObject);
+                ObDereferenceObject(FileObject);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Status = IofCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceObject, Irp);
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -322,12 +322,12 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                                                 &IoStatusBlock);
             if (!Irp)
             {
-                ObfDereferenceObject(DeviceObject);
-                ObfDereferenceObject(FileObject);
+                ObDereferenceObject(DeviceObject);
+                ObDereferenceObject(FileObject);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Status = IofCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceObject, Irp);
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -361,12 +361,12 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                                                     &IoStatusBlock);
                 if (!Irp)
                 {
-                    ObfDereferenceObject(DeviceObject);
-                    ObfDereferenceObject(FileObject);
+                    ObDereferenceObject(DeviceObject);
+                    ObDereferenceObject(FileObject);
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
 
-                Status = IofCallDriver(DeviceObject, Irp);
+                Status = IoCallDriver(DeviceObject, Irp);
                 if (Status == STATUS_PENDING)
                 {
                     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -392,8 +392,8 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         Name = AllocatePool(sizeof(MOUNTDEV_NAME));
         if (!Name)
         {
-            ObfDereferenceObject(DeviceObject);
-            ObfDereferenceObject(FileObject);
+            ObDereferenceObject(DeviceObject);
+            ObDereferenceObject(FileObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -419,7 +419,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -437,8 +437,8 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             Name = AllocatePool(Size);
             if (!Name)
             {
-                ObfDereferenceObject(DeviceObject);
-                ObfDereferenceObject(FileObject);
+                ObDereferenceObject(DeviceObject);
+                ObDereferenceObject(FileObject);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -464,7 +464,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             Stack = IoGetNextIrpStackLocation(Irp);
             Stack->FileObject = FileObject;
 
-            Status = IofCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceObject, Irp);
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -524,15 +524,15 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         if (!Irp)
         {
             FreePool(Id);
-            ObfDereferenceObject(DeviceObject);
-            ObfDereferenceObject(FileObject);
+            ObDereferenceObject(DeviceObject);
+            ObDereferenceObject(FileObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -550,8 +550,8 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             Id = AllocatePool(Size);
             if (!Id)
             {
-                ObfDereferenceObject(DeviceObject);
-                ObfDereferenceObject(FileObject);
+                ObDereferenceObject(DeviceObject);
+                ObDereferenceObject(FileObject);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -577,7 +577,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             Stack = IoGetNextIrpStackLocation(Irp);
             Stack->FileObject = FileObject;
 
-            Status = IofCallDriver(DeviceObject, Irp);
+            Status = IoCallDriver(DeviceObject, Irp);
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -622,15 +622,15 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                                             &IoStatusBlock);
         if (!Irp)
         {
-            ObfDereferenceObject(DeviceObject);
-            ObfDereferenceObject(FileObject);
+            ObDereferenceObject(DeviceObject);
+            ObDereferenceObject(FileObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -640,8 +640,8 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         *HasGuid = NT_SUCCESS(Status);
     }
 
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
     return Status;
 }
 
@@ -1693,7 +1693,7 @@ MountMgrCancel(IN PDEVICE_OBJECT DeviceObject,
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_CANCELLED;
-    IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 /*

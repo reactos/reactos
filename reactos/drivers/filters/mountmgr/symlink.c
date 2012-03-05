@@ -218,7 +218,7 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -245,7 +245,7 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
     Stack->FileObject = FileObject;
 
     /* Really notify */
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -257,8 +257,8 @@ Cleanup:
         FreePool(Name);
     }
 
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
 
     return;
 }
@@ -322,7 +322,7 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -349,7 +349,7 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
     Stack->FileObject = FileObject;
 
     /* Really notify */
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -361,8 +361,8 @@ Cleanup:
         FreePool(Name);
     }
 
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
 
     return;
 }
@@ -740,7 +740,7 @@ QuerySuggestedLinkName(IN PUNICODE_STRING SymbolicName,
     IoStackLocation->FileObject = FileObject;
 
     /* And ask */
-    Status = IofCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode,
@@ -782,7 +782,7 @@ QuerySuggestedLinkName(IN PUNICODE_STRING SymbolicName,
         IoStackLocation = IoGetNextIrpStackLocation(Irp);
         IoStackLocation->FileObject = FileObject;
 
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode,
@@ -817,8 +817,8 @@ Release:
     FreePool(IoCtlSuggested);
 
 Dereference:
-    ObfDereferenceObject(DeviceObject);
-    ObfDereferenceObject(FileObject);
+    ObDereferenceObject(DeviceObject);
+    ObDereferenceObject(FileObject);
 
     return Status;
 }
