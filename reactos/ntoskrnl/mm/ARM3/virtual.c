@@ -258,7 +258,7 @@ MiDeletePte(IN PMMPTE PointerPte,
         MiDecrementShareCount(Pfn1, PageFrameIndex);
 
         /* Either a fork, or this is the shared user data page */
-        if (PointerPte <= MiHighestUserPte)
+        if ((PointerPte <= MiHighestUserPte) && (PrototypePte != Pfn1->PteAddress))
         {
             /* If it's not the shared user page, then crash, since there's no fork() yet */
             if ((PAGE_ALIGN(VirtualAddress) != (PVOID)USER_SHARED_DATA) ||

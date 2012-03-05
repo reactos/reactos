@@ -694,7 +694,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                        IN ULONG_PTR ZeroBits,
                        IN ULONG AllocationType)
 {
-    PMMVAD Vad;
+    PMMVAD_LONG Vad;
     PETHREAD Thread = PsGetCurrentThread();
     ULONG_PTR StartAddress, EndingAddress;
     PSUBSECTION Subsection;
@@ -799,9 +799,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     EndingAddress = (StartAddress + *ViewSize - 1) | (PAGE_SIZE - 1);
 
     /* A VAD can now be allocated. Do so and zero it out */
-    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'ldaV');
+    /* FIXME: we are allocating a LONG VAD for ReactOS compatibility only */
+    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
     ASSERT(Vad);
-    RtlZeroMemory(Vad, sizeof(MMVAD));
+    RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
+    Vad->u4.Banked = (PVOID)0xDEADBABE;
 
     /* Write all the data required in the VAD for handling a fault */
     Vad->StartingVpn = StartAddress >> PAGE_SHIFT;
@@ -833,7 +835,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     MiLockProcessWorkingSet(Process, Thread);
 
     /* Insert the VAD */
-    MiInsertVad(Vad, Process);
+    MiInsertVad((PMMVAD)Vad, Process);
 
     /* Release the working set */
     MiUnlockProcessWorkingSet(Process, Thread);
@@ -844,6 +846,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Finally, let the caller know where, and for what size, the view was mapped */
     *ViewSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)StartAddress + 1;
     *BaseAddress = (PVOID)StartAddress;
+    DPRINT1("Start and region: 0x%p, 0x%p\n", *BaseAddress, *ViewSize);
     return STATUS_SUCCESS;
 }
 
@@ -961,10 +964,10 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     ASSERT(SectionObject != NULL);
 
     /* Check if it's an ARM3, or ReactOS section */
-    if ((ULONG_PTR)SectionObject & 1)
+    if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
         /* Return the file pointer stored in the control area */
-        Section = (PVOID)((ULONG_PTR)SectionObject & ~1);
+        Section = SectionObject;
         return Section->Segment->ControlArea->FilePointer;
     }
 
@@ -1012,10 +1015,10 @@ MmGetFileNameForSection(IN PVOID Section,
     PFILE_OBJECT FileObject;
 
     /* Make sure it's an image section */
-    if ((ULONG_PTR)Section & 1)
+    if (MiIsRosSectionObject(Section) == FALSE)
     {
         /* Check ARM3 Section flag */
-        if (((PSECTION)((ULONG_PTR)Section & ~1))->u.Flags.Image == 0)
+        if (((PSECTION)Section)->u.Flags.Image == 0)
         {
             /* It's not, fail */
             DPRINT1("Not an image section\n");
@@ -1323,6 +1326,9 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     NTSTATUS Status;
     PAGED_CODE();
 
+    /* Force PAGE_READWRITE for everything, for now */
+    Protect = PAGE_READWRITE;
+
     /* Get the segment and control area */
     Section = (PSECTION)SectionObject;
     ControlArea = Section->Segment->ControlArea;
@@ -1333,7 +1339,6 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     ASSERT(Section->u.Flags.WriteCombined == 0);
     ASSERT((AllocationType & MEM_RESERVE) == 0);
     ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
-
 
 #if 0
     /* FIXME: Check if the mapping protection is compatible with the create */
@@ -1416,6 +1421,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     if (!Process->VmDeleted)
     {
         /* Do the actual mapping */
+        DPRINT1("Mapping ARM3 data section\n");
         Status = MiMapViewOfDataSection(ControlArea,
                                         Process,
                                         BaseAddress,
@@ -1498,11 +1504,11 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
     PVOID AddressSpace;
     PMEMORY_AREA MemoryArea1, MemoryArea2;
     PROS_SECTION_OBJECT Section1, Section2;
-    
+
     /* Lock address space */
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
-    
+
     /* Locate the memory area for the process by address */
     MemoryArea1 = MmLocateMemoryAreaByAddress(AddressSpace, File1MappedAsAnImage);
     if (!MemoryArea1)
@@ -1511,7 +1517,7 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_INVALID_ADDRESS;
     }
-    
+
     /* Check if it's a section view (RosMm section) or ARM3 section */
     if (MemoryArea1->Type != MEMORY_AREA_SECTION_VIEW)
     {
@@ -1519,15 +1525,15 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     /* Get the section pointer to the SECTION_OBJECT */
     Section1 = MemoryArea1->Data.SectionData.Section;
     if (Section1->FileObject == NULL)
     {
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES; 
+        return STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     /* Locate the memory area for the process by address */
     MemoryArea2 = MmLocateMemoryAreaByAddress(AddressSpace, File2MappedAsFile);
     if (!MemoryArea2)
@@ -1536,7 +1542,7 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_INVALID_ADDRESS;
     }
-    
+
     /* Check if it's a section view (RosMm section) or ARM3 section */
     if (MemoryArea2->Type != MEMORY_AREA_SECTION_VIEW)
     {
@@ -1544,23 +1550,23 @@ NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     /* Get the section pointer to the SECTION_OBJECT */
     Section2 = MemoryArea2->Data.SectionData.Section;
     if (Section2->FileObject == NULL)
     {
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_CONFLICTING_ADDRESSES; 
+        return STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     /* The shared cache map seems to be the same if both of these are equal */
     if (Section1->FileObject->SectionObjectPointer->SharedCacheMap ==
         Section2->FileObject->SectionObjectPointer->SharedCacheMap)
     {
         MmUnlockAddressSpace(AddressSpace);
-        return STATUS_SUCCESS; 
+        return STATUS_SUCCESS;
     }
-    
+
     /* Unlock address space */
     MmUnlockAddressSpace(AddressSpace);
     return STATUS_NOT_SAME_DEVICE;

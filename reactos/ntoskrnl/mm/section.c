@@ -2917,6 +2917,8 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
     * Initialize it
     */
    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+   Section->Type = 'SC';
+   Section->Size = 'TN';
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->MaximumSize = MaximumSize;
@@ -2989,6 +2991,8 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     * Initialize it
     */
    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+   Section->Type = 'SC';
+   Section->Size = 'TN';
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
@@ -3845,6 +3849,8 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     * Initialize it
     */
    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+   Section->Type = 'SC';
+   Section->Size = 'TN';
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
@@ -4530,9 +4536,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
    NTSTATUS Status = STATUS_SUCCESS;
    BOOLEAN NotAtBase = FALSE;
 
-   if ((ULONG_PTR)SectionObject & 1)
+   if (MiIsRosSectionObject(SectionObject) == FALSE)
    {
-       return MmMapViewOfArm3Section((PVOID)((ULONG_PTR)SectionObject & ~1),
+       DPRINT1("Mapping ARM3 section into %s\n", Process->ImageFileName);
+       return MmMapViewOfArm3Section(SectionObject,
                                      Process,
                                      BaseAddress,
                                      ZeroBits,
@@ -4866,9 +4873,10 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    NTSTATUS Status;
    PAGED_CODE();
 
-    if ((ULONG_PTR)SectionObject & 1)
+    if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
-        return MiMapViewInSystemSpace((PVOID)((ULONG_PTR)SectionObject & ~1),
+        DPRINT1("ARM3 System Mapping\n");
+        return MiMapViewInSystemSpace(SectionObject,
                                       &MmSession,
                                       MappedBase,
                                       ViewSize);
@@ -5004,7 +5012,7 @@ MmCreateSection (OUT PVOID  * Section,
     /* Check if an ARM3 section is being created instead */
     if (AllocationAttributes & 1)
     {
-        DPRINT1("arm 3 path\n");
+        DPRINT1("Creating ARM3 section\n");
         return MmCreateArm3Section(Section,
                                    DesiredAccess,
                                    ObjectAttributes,

@@ -1544,6 +1544,15 @@ MiRemoveZeroPageSafe(IN ULONG Color)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
+BOOLEAN
+FORCEINLINE
+MiIsRosSectionObject(IN PVOID Section)
+{
+    PROS_SECTION_OBJECT RosSection = Section;
+    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
+    return FALSE;
+}
+
 #ifdef _WIN64
 // HACK ON TOP OF HACK ALERT!!!
 #define MI_GET_ROS_DATA(x) \

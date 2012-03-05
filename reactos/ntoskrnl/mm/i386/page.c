@@ -222,11 +222,16 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
 
 NTSTATUS
 NTAPI
-MiResolveDemandZeroFault(IN PVOID Address,
-                         IN ULONG Protection,
-                         IN PEPROCESS Process,
-                         IN KIRQL OldIrql);
-VOID
+MiDispatchFault(IN BOOLEAN StoreInstruction,
+                IN PVOID Address,
+                IN PMMPTE PointerPte,
+                IN PMMPTE PointerProtoPte,
+                IN BOOLEAN Recursive,
+                IN PEPROCESS Process,
+                IN PVOID TrapInformation,
+                IN PVOID Vad);
+
+NTSTATUS
 NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
                           IN SIZE_T NumberOfBytes);
@@ -280,14 +285,23 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
         Pt = (PULONG)MiAddressToPte(Address);
         if (PointerPde->u.Hard.Valid == 0)
         {
+            NTSTATUS Status;
             if (Create == FALSE)
             {
                 return NULL;
             }
-            MiResolveDemandZeroFault(Pt,
-                                     MM_READWRITE,
-                                     Process,
-                                     MM_NOIRQL);
+            ASSERT(PointerPde->u.Long == 0);
+
+            MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+            Status = MiDispatchFault(TRUE,
+                                     Pt,
+                                     PointerPde,
+                                     NULL,
+                                     FALSE,
+                                     PsGetCurrentProcess(),
+                                     NULL,
+                                     NULL);
+            ASSERT(KeAreAllApcsDisabled() == TRUE);
             ASSERT(PointerPde->u.Hard.Valid == 1);
         }
         return (PULONG)MiAddressToPte(Address);

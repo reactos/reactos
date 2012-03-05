@@ -97,13 +97,13 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
              IN PMMADDRESS_NODE Parent,
              IN TABLE_SEARCH_RESULT Result)
 {
-    PMMVAD Vad;
+    PMMVAD_LONG Vad;
 
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
 
     /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
-    Vad = (PMMVAD)NewNode;
+    Vad = (PMMVAD_LONG)NewNode;
     if (Vad->u.VadFlags.Spare == 0)
     {
         NTSTATUS Status;
@@ -129,14 +129,13 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         if (Vad->ControlArea == NULL)
         {
             /* We store the reactos MEMORY_AREA here */
-            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
             Vad->FirstPrototypePte = (PMMPTE)MemoryArea;
         }
         else
         {
             /* This is a section VAD. Store the MAREA here for now */
-            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
-            Vad->ControlArea->WaitingForDeletion = (PVOID)MemoryArea;
+            ASSERT(Vad->u4.Banked = (PVOID)0xDEADBABE);
+            Vad->u4.Banked = (PVOID)MemoryArea;
         }
     }
 }
@@ -167,7 +166,7 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
-    PMMVAD Vad;
+    PMMVAD_LONG Vad;
 
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
@@ -184,7 +183,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
     }
 
     /* Free the node from ReactOS view as well */
-    Vad = (PMMVAD)Node;
+    Vad = (PMMVAD_LONG)Node;
     if (Vad->u.VadFlags.Spare == 0)
     {
         PMEMORY_AREA MemoryArea;
@@ -199,12 +198,15 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         else
         {
             /* This is a section VAD. We store the ReactOS MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->ControlArea->WaitingForDeletion;
+            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
         }
 
         /* Make sure one actually still exists */
         if (MemoryArea)
         {
+            /* Make sure we have not already freed it */
+            ASSERT(MemoryArea != (PVOID)0xDEADBAB1);
+
             /* Get the process */
             Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
 
@@ -214,6 +216,18 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
 
             /* Free it */
             MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
+
+            /* Check if this is VM VAD */
+            if (Vad->ControlArea == NULL)
+            {
+                /* Delete the pointer to it */
+                Vad->FirstPrototypePte = (PVOID)0xDEADBAB1;
+            }
+            else
+            {
+                /* Delete the pointer to it */
+                Vad->u4.Banked = (PVOID)0xDEADBAB1;
+            }
         }
     }
 }

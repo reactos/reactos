@@ -298,7 +298,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                              NULL,
                              &SectionSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT,
+                             SEC_COMMIT,// | 0x1,
                              NULL);
     if (!NT_SUCCESS(Status))
     {

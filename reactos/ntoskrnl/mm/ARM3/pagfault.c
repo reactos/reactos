@@ -247,12 +247,11 @@ MiZeroPfn(IN PFN_NUMBER PageFrameNumber)
 NTSTATUS
 NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
-                         IN ULONG Protection,
+                         IN PMMPTE PointerPte,
                          IN PEPROCESS Process,
                          IN KIRQL OldIrql)
 {
     PFN_NUMBER PageFrameNumber = 0;
-    PMMPTE PointerPte = MiAddressToPte(Address);
     MMPTE TempPte;
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
@@ -342,11 +341,23 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
 
-    /* Build the PTE */
-    MI_MAKE_HARDWARE_PTE(&TempPte,
-                         PointerPte,
-                         Protection,
-                         PageFrameNumber);
+    /* Fault on user PDE, or fault on user PTE? */
+    if (PointerPte <= MiHighestUserPte)
+    {
+        /* User fault, build a user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  PointerPte->u.Soft.Protection,
+                                  PageFrameNumber);
+    }
+    else
+    {
+        /* This is a user-mode PDE, create a kernel PTE for it */
+        MI_MAKE_HARDWARE_PTE(&TempPte,
+                             PointerPte,
+                             PointerPte->u.Soft.Protection,
+                             PageFrameNumber);
+    }
 
     /* Set it dirty if it's a writable page */
     if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
@@ -494,7 +505,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 
     /* Resolve the demand zero fault */
     Status = MiResolveDemandZeroFault(Address,
-                                      (ULONG)PointerProtoPte->u.Soft.Protection,
+                                      PointerProtoPte,
                                       Process,
                                       OldIrql);
     ASSERT(NT_SUCCESS(Status));
@@ -639,7 +650,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     // we want. Go handle it!
     //
     Status = MiResolveDemandZeroFault(Address,
-                                      (ULONG)PointerPte->u.Soft.Protection,
+                                      PointerPte,
                                       Process,
                                       MM_NOIRQL);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -884,36 +895,40 @@ UserFault:
 #endif
 
 #if (_MI_PAGING_LEVELS == 4)
+// Note to Timo: You should call MiCheckVirtualAddress and also check if it's zero pte
+// also this is missing the page count increment
     /* Check if the PXE is valid */
     if (PointerPxe->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PXE is totally empty */
         ASSERT(PointerPxe->u.Long == 0);
-
+#if 0
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPpe,
                                           MM_READWRITE,
                                           CurrentProcess,
                                           MM_NOIRQL);
-
+#endif
         /* We should come back with a valid PXE */
         ASSERT(PointerPxe->u.Hard.Valid == 1);
     }
 #endif
 
 #if (_MI_PAGING_LEVELS >= 3)
+// Note to Timo: You should call MiCheckVirtualAddress and also check if it's zero pte
+// also this is missing the page count increment
     /* Check if the PPE is valid */
     if (PointerPpe->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PPE is totally empty */
         ASSERT(PointerPpe->u.Long == 0);
-
+#if 0
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPde,
                                           MM_READWRITE,
                                           CurrentProcess,
                                           MM_NOIRQL);
-
+#endif
         /* We should come back with a valid PPE */
         ASSERT(PointerPpe->u.Hard.Valid == 1);
     }
@@ -929,11 +944,33 @@ UserFault:
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;
 #endif
-        /* Resolve a demand zero fault */
-        Status = MiResolveDemandZeroFault(PointerPte,
-                                          MM_READWRITE,
-                                          CurrentProcess,
-                                          MM_NOIRQL);
+        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        if (ProtectionCode == MM_NOACCESS)
+        {
+#if (_MI_PAGING_LEVELS == 2)
+            /* Could be a page table for paged pool */
+            MiCheckPdeForPagedPool(Address);
+#endif
+            /* Has the code above changed anything -- is this now a valid PTE? */
+            Status = (PointerPte->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
+
+            /* Either this was a bogus VA or we've fixed up a paged pool PDE */
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            return Status;
+        }
+
+        /* Write a demand-zero PDE */
+        MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+
+        /* Dispatch the fault */
+        Status = MiDispatchFault(TRUE,
+                                 PointerPte,
+                                 PointerPde,
+                                 NULL,
+                                 FALSE,
+                                 PsGetCurrentProcess(),
+                                 TrapInformation,
+                                 NULL);
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
@@ -951,7 +988,7 @@ UserFault:
     {
         /* Resolve the fault */
         MiResolveDemandZeroFault(Address,
-                                 (ULONG)PointerPte->u.Soft.Protection,
+                                 PointerPte,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
