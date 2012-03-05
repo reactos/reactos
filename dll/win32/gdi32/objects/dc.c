@@ -1589,7 +1589,7 @@ SetMapMode(
             pDc_Attr->ulDirty_ &= ~SLOW_WIDTHS;
             pDc_Attr->ulDirty_ |= DIRTY_CHARSET;
             pDc_Attr->hlfntNew = hGdiObj;
-
+#if 0
             if (!(pDc_Attr->ulDirty_ & DC_DIBSECTION))
             {
                 PGDIBSOBJECT pgO;
@@ -1601,7 +1601,7 @@ SetMapMode(
                     return hOldObj;
                 }
             }
-
+#endif
             // default for select object font
             return NtGdiSelectFont(hDC, hGdiObj);
 
