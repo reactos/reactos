@@ -286,9 +286,14 @@ static void test_texturewrap(void)
 static void test_gradientgetrect(void)
 {
     GpLineGradient *brush;
+    GpMatrix *transform;
+    REAL elements[6];
     GpRectF rectf;
     GpStatus status;
     GpPointF pt1, pt2;
+
+    status = GdipCreateMatrix(&transform);
+    expect(Ok, status);
 
     pt1.X = pt1.Y = 1.0;
     pt2.X = pt2.Y = 100.0;
@@ -301,7 +306,21 @@ static void test_gradientgetrect(void)
     expectf(1.0, rectf.Y);
     expectf(99.0, rectf.Width);
     expectf(99.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(1.0, elements[1]);
+        expectf(-1.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(50.50, elements[4]);
+        expectf(-50.50, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* vertical gradient */
     pt1.X = pt1.Y = pt2.X = 0.0;
     pt2.Y = 10.0;
@@ -314,7 +333,21 @@ static void test_gradientgetrect(void)
     expectf(0.0, rectf.Y);
     expectf(10.0, rectf.Width);
     expectf(10.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(0.0, elements[0]);
+        expectf(1.0, elements[1]);
+        expectf(-1.0, elements[2]);
+        expectf(0.0, elements[3]);
+        expectf(5.0, elements[4]);
+        expectf(5.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* horizontal gradient */
     pt1.X = pt1.Y = pt2.Y = 0.0;
     pt2.X = 10.0;
@@ -327,7 +360,21 @@ static void test_gradientgetrect(void)
     expectf(-5.0, rectf.Y);
     expectf(10.0, rectf.Width);
     expectf(10.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* slope = -1 */
     pt1.X = pt1.Y = 0.0;
     pt2.X = 20.0;
@@ -341,7 +388,21 @@ static void test_gradientgetrect(void)
     expectf(-20.0, rectf.Y);
     expectf(20.0, rectf.Width);
     expectf(20.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(-1.0, elements[1]);
+        expectf(1.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(10.0, elements[4]);
+        expectf(10.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* slope = 1/100 */
     pt1.X = pt1.Y = 0.0;
     pt2.X = 100.0;
@@ -355,7 +416,35 @@ static void test_gradientgetrect(void)
     expectf(0.0, rectf.Y);
     expectf(100.0, rectf.Width);
     expectf(1.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.01, elements[1]);
+        expectf(-0.02, elements[2]);
+        /* expectf(2.0, elements[3]); */
+        expectf(0.01, elements[4]);
+        /* expectf(-1.0, elements[5]); */
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
+    /* zero height rect */
+    rectf.X = rectf.Y = 10.0;
+    rectf.Width = 100.0;
+    rectf.Height = 0.0;
+    status = GdipCreateLineBrushFromRect(&rectf, 0, 0, LinearGradientModeVertical,
+        WrapModeTile, &brush);
+    expect(OutOfMemory, status);
+    /* zero width rect */
+    rectf.X = rectf.Y = 10.0;
+    rectf.Width = 0.0;
+    rectf.Height = 100.0;
+    status = GdipCreateLineBrushFromRect(&rectf, 0, 0, LinearGradientModeHorizontal,
+        WrapModeTile, &brush);
+    expect(OutOfMemory, status);
     /* from rect with LinearGradientModeHorizontal */
     rectf.X = rectf.Y = 10.0;
     rectf.Width = rectf.Height = 100.0;
@@ -369,7 +458,21 @@ static void test_gradientgetrect(void)
     expectf(10.0, rectf.Y);
     expectf(100.0, rectf.Width);
     expectf(100.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
     /* passing negative Width/Height to LinearGradientModeHorizontal */
     rectf.X = rectf.Y = 10.0;
     rectf.Width = rectf.Height = -100.0;
@@ -383,7 +486,23 @@ static void test_gradientgetrect(void)
     expectf(10.0, rectf.Y);
     expectf(-100.0, rectf.Width);
     expectf(-100.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
+
+    GdipDeleteMatrix(transform);
 }
 
 static void test_lineblend(void)
@@ -400,6 +519,10 @@ static void test_lineblend(void)
     REAL res_factors[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
     REAL res_positions[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
     ARGB res_colors[6] = {0xdeadbeef, 0, 0, 0, 0};
+
+    pt1.X = pt1.Y = pt2.Y = pt2.X = 1.0;
+    status = GdipCreateLineBrush(&pt1, &pt2, 0, 0, WrapModeTile, &brush);
+    expect(OutOfMemory, status);
 
     pt1.X = pt1.Y = 1.0;
     pt2.X = pt2.Y = 100.0;

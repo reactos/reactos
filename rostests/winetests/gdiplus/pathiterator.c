@@ -124,6 +124,7 @@ static void test_nextmarker(void)
     expect(4, result);
     start = end = result = (INT)0xdeadbeef;
     stat = GdipPathIterNextMarker(iter, &result, &start, &end);
+    expect(Ok, stat);
     /* start/end remain unchanged */
     expect((INT)0xdeadbeef, start);
     expect((INT)0xdeadbeef, end);

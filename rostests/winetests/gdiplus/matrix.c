@@ -26,6 +26,7 @@
 #include "wine/test.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
 
 static void test_constructor_destructor(void)
 {
@@ -220,6 +221,87 @@ static void test_shear(void)
     GdipDeleteMatrix(matrix);
 }
 
+static void test_constructor3(void)
+{
+    /* MSDN is on crack. GdipCreateMatrix3 makes a matrix that transforms the
+     * corners of the given rectangle to the three points given. */
+    GpMatrix *matrix;
+    REAL values[6];
+    GpRectF rc;
+    GpPointF pt[3];
+    GpStatus stat;
+
+    rc.X = 10;
+    rc.Y = 10;
+    rc.Width = 10;
+    rc.Height = 10;
+
+    pt[0].X = 10;
+    pt[0].Y = 10;
+    pt[1].X = 20;
+    pt[1].Y = 10;
+    pt[2].X = 10;
+    pt[2].Y = 20;
+
+    stat = GdipCreateMatrix3(&rc, pt, &matrix);
+    expect(Ok, stat);
+
+    stat = GdipGetMatrixElements(matrix, values);
+    expect(Ok, stat);
+
+    expectf(1.0, values[0]);
+    expectf(0.0, values[1]);
+    expectf(0.0, values[2]);
+    expectf(1.0, values[3]);
+    expectf(0.0, values[4]);
+    expectf(0.0, values[5]);
+
+    GdipDeleteMatrix(matrix);
+
+    pt[0].X = 20;
+    pt[0].Y = 10;
+    pt[1].X = 40;
+    pt[1].Y = 10;
+    pt[2].X = 20;
+    pt[2].Y = 20;
+
+    stat = GdipCreateMatrix3(&rc, pt, &matrix);
+    expect(Ok, stat);
+
+    stat = GdipGetMatrixElements(matrix, values);
+    expect(Ok, stat);
+
+    expectf(2.0, values[0]);
+    expectf(0.0, values[1]);
+    expectf(0.0, values[2]);
+    expectf(1.0, values[3]);
+    expectf(0.0, values[4]);
+    expectf(0.0, values[5]);
+
+    GdipDeleteMatrix(matrix);
+
+    pt[0].X = 10;
+    pt[0].Y = 20;
+    pt[1].X = 20;
+    pt[1].Y = 30;
+    pt[2].X = 10;
+    pt[2].Y = 30;
+
+    stat = GdipCreateMatrix3(&rc, pt, &matrix);
+    expect(Ok, stat);
+
+    stat = GdipGetMatrixElements(matrix, values);
+    expect(Ok, stat);
+
+    expectf(1.0, values[0]);
+    expectf(1.0, values[1]);
+    expectf(0.0, values[2]);
+    expectf(1.0, values[3]);
+    expectf(0.0, values[4]);
+    expectf(0.0, values[5]);
+
+    GdipDeleteMatrix(matrix);}
+
 START_TEST(matrix)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -237,6 +319,7 @@ START_TEST(matrix)
     test_isinvertible();
     test_invert();
     test_shear();
+    test_constructor3();
 
     GdiplusShutdown(gdiplusToken);
 }

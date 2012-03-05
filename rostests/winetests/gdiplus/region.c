@@ -22,6 +22,7 @@
 #include "gdiplus.h"
 #include "wingdi.h"
 #include "wine/test.h"
+#include <math.h>
 
 #define RGNDATA_RECT            0x10000000
 #define RGNDATA_PATH            0x10000001
@@ -32,6 +33,9 @@
 #define RGNDATA_MAGIC2          0xdbc01002
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+
+#define expectf_(expected, got, precision) ok(fabs(expected - got) < precision, "Expected %.2f, got %.2f\n", expected, got)
+#define expectf(expected, got) expectf_(expected, got, 0.0001)
 
 #define expect_magic(value) ok(*value == RGNDATA_MAGIC || *value == RGNDATA_MAGIC2, "Expected a known magic value, got %8x\n", *value)
 
@@ -1123,6 +1127,251 @@ static void test_translate(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_transform(void)
+{
+    GpRegion *region, *region2;
+    GpMatrix *matrix;
+    GpGraphics *graphics;
+    GpPath *path;
+    GpRectF rectf;
+    GpStatus status;
+    HDC hdc = GetDC(0);
+    BOOL res;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    status = GdipCreateRegion(&region);
+    expect(Ok, status);
+    status = GdipCreateRegion(&region2);
+    expect(Ok, status);
+
+    status = GdipCreateMatrix(&matrix);
+    expect(Ok, status);
+    status = GdipScaleMatrix(matrix, 2.0, 3.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    /* NULL */
+    status = GdipTransformRegion(NULL, matrix);
+    expect(InvalidParameter, status);
+
+    status = GdipTransformRegion(region, NULL);
+    expect(InvalidParameter, status);
+
+    /* infinite */
+    status = GdipTransformRegion(region, matrix);
+    expect(Ok, status);
+
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    expect(Ok, status);
+    ok(res, "Expected to be equal.\n");
+
+    /* empty */
+    status = GdipSetEmpty(region);
+    expect(Ok, status);
+    status = GdipTransformRegion(region, matrix);
+    expect(Ok, status);
+
+    status = GdipSetEmpty(region2);
+    expect(Ok, status);
+
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    expect(Ok, status);
+    ok(res, "Expected to be equal.\n");
+
+    /* rect */
+    rectf.X = 10.0;
+    rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeReplace);
+    expect(Ok, status);
+    rectf.X = 20.0;
+    rectf.Y = 0.0;
+    rectf.Width = 200.0;
+    rectf.Height = 300.0;
+    status = GdipCombineRegionRect(region2, &rectf, CombineModeReplace);
+    expect(Ok, status);
+    status = GdipTransformRegion(region, matrix);
+    expect(Ok, status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    expect(Ok, status);
+    ok(res, "Expected to be equal.\n");
+
+    /* path */
+    status = GdipAddPathEllipse(path, 0.0, 10.0, 100.0, 150.0);
+    expect(Ok, status);
+    status = GdipCombineRegionPath(region, path, CombineModeReplace);
+    expect(Ok, status);
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathEllipse(path, 0.0, 30.0, 200.0, 450.0);
+    expect(Ok, status);
+    status = GdipCombineRegionPath(region2, path, CombineModeReplace);
+    expect(Ok, status);
+    status = GdipTransformRegion(region, matrix);
+    expect(Ok, status);
+    res = FALSE;
+    status = GdipIsEqualRegion(region, region2, graphics, &res);
+    expect(Ok, status);
+    ok(res, "Expected to be equal.\n");
+
+    status = GdipDeleteRegion(region);
+    expect(Ok, status);
+    status = GdipDeleteRegion(region2);
+    expect(Ok, status);
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
+    status = GdipDeletePath(path);
+    expect(Ok, status);
+    status = GdipDeleteMatrix(matrix);
+    expect(Ok, status);
+    ReleaseDC(0, hdc);
+}
+
+static void test_scans(void)
+{
+    GpRegion *region;
+    GpMatrix *matrix;
+    GpRectF rectf;
+    GpStatus status;
+    ULONG count=80085;
+    INT icount;
+    GpRectF scans[2];
+    GpRect scansi[2];
+
+    status = GdipCreateRegion(&region);
+    expect(Ok, status);
+
+    status = GdipCreateMatrix(&matrix);
+    expect(Ok, status);
+
+    /* test NULL values */
+    status = GdipGetRegionScansCount(NULL, &count, matrix);
+    expect(InvalidParameter, status);
+
+    status = GdipGetRegionScansCount(region, NULL, matrix);
+    expect(InvalidParameter, status);
+
+    status = GdipGetRegionScansCount(region, &count, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetRegionScans(NULL, scans, &icount, matrix);
+    expect(InvalidParameter, status);
+
+    status = GdipGetRegionScans(region, scans, NULL, matrix);
+    expect(InvalidParameter, status);
+
+    status = GdipGetRegionScans(region, scans, &icount, NULL);
+    expect(InvalidParameter, status);
+
+    /* infinite */
+    status = GdipGetRegionScansCount(region, &count, matrix);
+    expect(Ok, status);
+    expect(1, count);
+
+    status = GdipGetRegionScans(region, NULL, &icount, matrix);
+    expect(Ok, status);
+    expect(1, icount);
+
+    status = GdipGetRegionScans(region, scans, &icount, matrix);
+    expect(Ok, status);
+    expect(1, icount);
+
+    status = GdipGetRegionScansI(region, scansi, &icount, matrix);
+    expect(Ok, status);
+    expect(1, icount);
+    expect(-0x400000, scansi[0].X);
+    expect(-0x400000, scansi[0].Y);
+    expect(0x800000, scansi[0].Width);
+    expect(0x800000, scansi[0].Height);
+
+    status = GdipGetRegionScans(region, scans, &icount, matrix);
+    expect(Ok, status);
+    expect(1, icount);
+    expectf((double)-0x400000, scans[0].X);
+    expectf((double)-0x400000, scans[0].Y);
+    expectf((double)0x800000, scans[0].Width);
+    expectf((double)0x800000, scans[0].Height);
+
+    /* empty */
+    status = GdipSetEmpty(region);
+    expect(Ok, status);
+
+    status = GdipGetRegionScansCount(region, &count, matrix);
+    expect(Ok, status);
+    expect(0, count);
+
+    status = GdipGetRegionScans(region, scans, &icount, matrix);
+    expect(Ok, status);
+    expect(0, icount);
+
+    /* single rectangle */
+    rectf.X = rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 5.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeReplace);
+    expect(Ok, status);
+
+    status = GdipGetRegionScansCount(region, &count, matrix);
+    expect(Ok, status);
+    expect(1, count);
+
+    status = GdipGetRegionScans(region, scans, &icount, matrix);
+    expect(Ok, status);
+    expect(1, icount);
+    expectf(0.0, scans[0].X);
+    expectf(0.0, scans[0].Y);
+    expectf(5.0, scans[0].Width);
+    expectf(5.0, scans[0].Height);
+
+    /* two rectangles */
+    rectf.X = rectf.Y = 5.0;
+    rectf.Width = rectf.Height = 5.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeUnion);
+    expect(Ok, status);
+
+    status = GdipGetRegionScansCount(region, &count, matrix);
+    expect(Ok, status);
+    expect(2, count);
+
+    /* Native ignores the initial value of count */
+    scans[1].X = scans[1].Y = scans[1].Width = scans[1].Height = 8.0;
+    icount = 1;
+    status = GdipGetRegionScans(region, scans, &icount, matrix);
+    expect(Ok, status);
+    expect(2, icount);
+    expectf(0.0, scans[0].X);
+    expectf(0.0, scans[0].Y);
+    expectf(5.0, scans[0].Width);
+    expectf(5.0, scans[0].Height);
+    expectf(5.0, scans[1].X);
+    expectf(5.0, scans[1].Y);
+    expectf(5.0, scans[1].Width);
+    expectf(5.0, scans[1].Height);
+
+    status = GdipGetRegionScansI(region, scansi, &icount, matrix);
+    expect(Ok, status);
+    expect(2, icount);
+    expect(0, scansi[0].X);
+    expect(0, scansi[0].Y);
+    expect(5, scansi[0].Width);
+    expect(5, scansi[0].Height);
+    expect(5, scansi[1].X);
+    expect(5, scansi[1].Y);
+    expect(5, scansi[1].Width);
+    expect(5, scansi[1].Height);
+
+    status = GdipDeleteRegion(region);
+    expect(Ok, status);
+    status = GdipDeleteMatrix(matrix);
+    expect(Ok, status);
+}
+
 static void test_getbounds(void)
 {
     GpRegion *region;
@@ -1634,6 +1883,8 @@ START_TEST(region)
     test_gethrgn();
     test_isequal();
     test_translate();
+    test_transform();
+    test_scans();
     test_getbounds();
     test_isvisiblepoint();
     test_isvisiblerect();

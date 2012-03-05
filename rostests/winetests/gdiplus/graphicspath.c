@@ -1106,6 +1106,34 @@ static void test_isvisible(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_empty_rect(void)
+{
+    GpPath *path;
+    GpStatus status;
+    BOOL result;
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, -5.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipIsVisiblePathPoint(path, -2.0, 2.0, NULL, &result);
+    expect(Ok, status);
+    expect(FALSE, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 5.0, -5.0);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 0.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 5.0, 0.0);
+    expect(Ok, status);
+
+    GdipDeletePath(path);
+}
+
 START_TEST(graphicspath)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1135,6 +1163,7 @@ START_TEST(graphicspath)
     test_addpie();
     test_flatten();
     test_isvisible();
+    test_empty_rect();
 
     GdiplusShutdown(gdiplusToken);
 }

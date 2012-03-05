@@ -34,6 +34,7 @@ static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t','
 static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
 static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
 static const WCHAR Tahoma[] = {'T','a','h','o','m','a',0};
+static const WCHAR LiberationSerif[] = {'L','i','b','e','r','a','t','i','o','n',' ','S','e','r','i','f',0};
 
 static void test_createfont(void)
 {
@@ -129,7 +130,8 @@ static void test_logfont(void)
     expect(0, lfa2.lfItalic);
     expect(0, lfa2.lfUnderline);
     expect(0, lfa2.lfStrikeOut);
-    expect(GetTextCharset(hdc), lfa2.lfCharSet);
+    ok(lfa2.lfCharSet == GetTextCharset(hdc) || lfa2.lfCharSet == ANSI_CHARSET,
+        "Expected %x or %x, got %x\n", GetTextCharset(hdc), ANSI_CHARSET, lfa2.lfCharSet);
     expect(0, lfa2.lfOutPrecision);
     expect(0, lfa2.lfClipPrecision);
     expect(0, lfa2.lfQuality);
@@ -159,7 +161,8 @@ static void test_logfont(void)
     expect(TRUE, lfa2.lfItalic);
     expect(TRUE, lfa2.lfUnderline);
     expect(TRUE, lfa2.lfStrikeOut);
-    expect(GetTextCharset(hdc), lfa2.lfCharSet);
+    ok(lfa2.lfCharSet == GetTextCharset(hdc) || lfa2.lfCharSet == ANSI_CHARSET,
+        "Expected %x or %x, got %x\n", GetTextCharset(hdc), ANSI_CHARSET, lfa2.lfCharSet);
     expect(0, lfa2.lfOutPrecision);
     expect(0, lfa2.lfClipPrecision);
     expect(0, lfa2.lfQuality);
@@ -252,6 +255,7 @@ static void test_fontfamily_properties (void)
         ok(result == 1854, "Expected 1854, got %d\n", result);
         result = 0;
         stat = GdipGetCellDescent(FontFamily, FontStyleRegular, &result);
+        expect(Ok, stat);
         ok(result == 434, "Expected 434, got %d\n", result);
         GdipDeleteFontFamily(FontFamily);
     }
@@ -275,65 +279,68 @@ static void test_fontfamily_properties (void)
         ok(result == 1825, "Expected 1825, got %d\n", result);
         result = 0;
         stat = GdipGetCellDescent(FontFamily, FontStyleRegular, &result);
+        expect(Ok, stat);
         ok(result == 443, "Expected 443 got %d\n", result);
         GdipDeleteFontFamily(FontFamily);
     }
 }
 
+static void check_family(const char* context, GpFontFamily *family, WCHAR *name)
+{
+    GpStatus stat;
+    GpFont* font;
+
+    *name = 0;
+    stat = GdipGetFamilyName(family, name, LANG_NEUTRAL);
+    ok(stat == Ok, "could not get the %s family name: %.8x\n", context, stat);
+
+    stat = GdipCreateFont(family, 12, FontStyleRegular, UnitPixel, &font);
+    ok(stat == Ok, "could not create a font for the %s family: %.8x\n", context, stat);
+    if (stat == Ok)
+    {
+        stat = GdipDeleteFont(font);
+        ok(stat == Ok, "could not delete the %s family font: %.8x\n", context, stat);
+    }
+
+    stat = GdipDeleteFontFamily(family);
+    ok(stat == Ok, "could not delete the %s family: %.8x\n", context, stat);
+}
+
 static void test_getgenerics (void)
 {
     GpStatus stat;
-    GpFontFamily* family;
-    WCHAR familyName[LF_FACESIZE];
-    ZeroMemory(familyName, sizeof(familyName)/sizeof(WCHAR));
+    GpFontFamily *family;
+    WCHAR sansname[LF_FACESIZE], serifname[LF_FACESIZE], mononame[LF_FACESIZE];
+    int missingfonts = 0;
 
-    stat = GdipGetGenericFontFamilySansSerif (&family);
+    stat = GdipGetGenericFontFamilySansSerif(&family);
+    expect (Ok, stat);
     if (stat == FontFamilyNotFound)
-    {
-        skip("Microsoft Sans Serif not installed\n");
-        goto serif;
-    }
-    expect (Ok, stat);
-    stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
-    expect (Ok, stat);
-    if (!lstrcmpiW(familyName, Tahoma))
-        todo_wine ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
-                      "Expected Microsoft Sans Serif, got Tahoma\n");
+        missingfonts = 1;
     else
-        ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
-            "Expected Microsoft Sans Serif, got %s\n", wine_dbgstr_w(familyName));
-    stat = GdipDeleteFontFamily (family);
-    expect (Ok, stat);
+        check_family("Sans Serif", family, sansname);
 
-serif:
-    stat = GdipGetGenericFontFamilySerif (&family);
+    stat = GdipGetGenericFontFamilySerif(&family);
+    expect (Ok, stat);
     if (stat == FontFamilyNotFound)
-    {
-        skip("Times New Roman not installed\n");
-        goto monospace;
-    }
-    expect (Ok, stat);
-    stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
-    expect (Ok, stat);
-    ok (lstrcmpiW(familyName, TimesNewRoman) == 0,
-        "Expected Times New Roman, got %s\n", wine_dbgstr_w(familyName));
-    stat = GdipDeleteFontFamily (family);
-    expect (Ok, stat);
+        missingfonts = 1;
+    else
+        check_family("Serif", family, serifname);
 
-monospace:
-    stat = GdipGetGenericFontFamilyMonospace (&family);
+    stat = GdipGetGenericFontFamilyMonospace(&family);
+    expect (Ok, stat);
     if (stat == FontFamilyNotFound)
-    {
-        skip("Courier New not installed\n");
-        return;
-    }
-    expect (Ok, stat);
-    stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
-    expect (Ok, stat);
-    ok (lstrcmpiW(familyName, CourierNew) == 0,
-        "Expected Courier New, got %s\n", wine_dbgstr_w(familyName));
-    stat = GdipDeleteFontFamily (family);
-    expect (Ok, stat);
+        missingfonts = 1;
+    else
+        check_family("Monospace", family, mononame);
+
+    if (missingfonts && strcmp(winetest_platform, "wine") == 0)
+        trace("You may need to install either the Microsoft Web Fonts or the Liberation Fonts\n");
+
+    /* Check that the family names are all different */
+    ok(lstrcmpiW(sansname, serifname) != 0, "Sans Serif and Serif families should be different: %s\n", wine_dbgstr_w(sansname));
+    ok(lstrcmpiW(sansname, mononame) != 0, "Sans Serif and Monospace families should be different: %s\n", wine_dbgstr_w(sansname));
+    ok(lstrcmpiW(serifname, mononame) != 0, "Serif and Monospace families should be different: %s\n", wine_dbgstr_w(serifname));
 }
 
 static void test_installedfonts (void)
