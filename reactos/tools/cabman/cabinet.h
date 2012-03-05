@@ -296,7 +296,7 @@ public:
     CCFDATAStorage();
     /* Default destructor */
     virtual ~CCFDATAStorage();
-    ULONG Create(const char* FileName);
+    ULONG Create();
     ULONG Destroy();
     ULONG Truncate();
     ULONG Position();
