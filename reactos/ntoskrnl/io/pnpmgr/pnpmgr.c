@@ -1281,7 +1281,10 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
                               NULL);
         Status = IoStatusBlock.Status;
     }
-    
+
+    /* Remove the reference */
+    ObDereferenceObject(TopDeviceObject);
+
     /* Return the information */
     *Information = (PVOID)IoStatusBlock.Information;
     return Status;
