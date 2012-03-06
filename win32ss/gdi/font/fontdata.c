@@ -18,11 +18,75 @@ NtGdiGetFontData(
     IN HDC hdc,
     IN DWORD dwTable,
     IN DWORD dwOffset,
-    OUT OPTIONAL PVOID pvBuf,
-    IN ULONG cjBuf)
+    OUT OPTIONAL PVOID pvBuffer,
+    IN ULONG cjBuffer)
 {
-    ASSERT(FALSE);
-    return 0;
+    PDC pdc;
+    PRFONT prfnt;
+    PVOID pvTempBuffer;
+    ULONG ulResult;
+
+    /* Check if the caller provides a buffer */
+    if (cjBuffer)
+    {
+        /* Must have a buffer */
+        if (!pvBuffer) return GDI_ERROR;
+
+        /* Allocate a temp buffer */
+        pvTempBuffer = ExAllocatePoolWithTag(PagedPool, cjBuffer, GDITAG_TEMP);
+        if (!pvTempBuffer)
+        {
+            return GDI_ERROR;
+        }
+    }
+    else
+    {
+        /* Don't provide a buffer */
+        pvTempBuffer = NULL;
+    }
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        ulResult = GDI_ERROR;
+        goto leave;
+    }
+
+    /* Get the RFONT from the DC */
+    prfnt = DC_prfnt(pdc);
+
+    /* Query the table data */
+    ulResult = PFE_ulQueryTrueTypeTable(prfnt->ppfe,
+                                        dwTable,
+                                        dwOffset,
+                                        cjBuffer,
+                                        pvTempBuffer);
+
+    /* Copy the data back, if requested */
+    if (cjBuffer && (ulResult != GDI_ERROR))
+    {
+        _SEH2_TRY
+        {
+            /* Probe and copy the data */
+            ProbeForWrite(pvBuffer, cjBuffer, 1);
+            RtlCopyMemory(pvBuffer, pvTempBuffer, cjBuffer);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ulResult = GDI_ERROR;
+        }
+        _SEH2_END;
+    }
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+leave:
+    /* Free the temp buffer */
+    if (pvTempBuffer) ExFreePoolWithTag(pvTempBuffer, GDITAG_TEMP);
+
+    return ulResult;
 }
 
 W32KAPI

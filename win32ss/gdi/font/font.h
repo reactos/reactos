@@ -392,6 +392,12 @@ PPFE
 NTAPI
 LFONT_ppfe(PLFONT plfnt);
 
+PRFONT
+NTAPI
+LFONT_prfntFindLinkedRFONT(
+    _In_ PLFONT plfnt,
+    _In_ PMATRIX pmxWorldToDevice);
+
 VOID
 NTAPI
 UpcaseString(
@@ -403,6 +409,15 @@ ULONG
 NTAPI
 CalculateNameHash(
     PWSTR pwszName);
+
+ULONG
+NTAPI
+PFE_ulQueryTrueTypeTable(
+    PPFE ppfe,
+    ULONG ulTableTag,
+    PTRDIFF dpStart,
+    ULONG cjBuffer,
+    PVOID pvBuffer);
 
 BOOL
 NTAPI

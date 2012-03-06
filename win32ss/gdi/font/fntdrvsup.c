@@ -51,22 +51,6 @@ DetachCSRSS(KAPC_STATE *pApcState)
     gbAttachedCSRSS = FALSE;
 }
 
-VOID
-NTAPI
-RFONT_vInitDeviceMetrics(
-    PRFONT prfnt)
-{
-    PPDEVOBJ ppdev = (PPDEVOBJ)prfnt->hdevProducer;
-
-    ppdev->pldev->pfn.QueryFontData(prfnt->dhpdev,
-                                    &prfnt->fobj,
-                                    QFD_MAXEXTENTS,
-                                    -1,
-                                    NULL,
-                                    &prfnt->fddm,
-                                    sizeof(FD_DEVICEMETRICS));
-}
-
 static
 VOID
 PFE_vInitialize(
@@ -113,6 +97,40 @@ PFE_vInitialize(
     //ppfe->aiFamilyName[];
 
 }
+
+ULONG
+NTAPI
+PFE_ulQueryTrueTypeTable(
+    PPFE ppfe,
+    ULONG ulTableTag,
+    PTRDIFF dpStart,
+    ULONG cjBuffer,
+    PVOID pvBuffer)
+{
+    PPDEVOBJ ppdev = (PDEVOBJ*)ppfe->pPFF->hdev;
+    KAPC_STATE ApcState;
+    ULONG ulResult;
+
+    /* Attach to CSRSS */
+    AttachCSRSS(&ApcState);
+
+    /* Call the driver to copy the requested data */
+    ulResult = ppdev->pfn.QueryTrueTypeTable(ppfe->pPFF->hff,
+                                             ppfe->iFont,
+                                             ulTableTag,
+                                             dpStart,
+                                             cjBuffer,
+                                             pvBuffer,
+                                             NULL,
+                                             NULL);
+
+    /* Detach from CSRSS */
+    DetachCSRSS(&ApcState);
+
+    /* Return the result */
+    return ulResult;
+}
+
 
 static
 VOID
