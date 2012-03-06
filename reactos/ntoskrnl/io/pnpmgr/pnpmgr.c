@@ -2592,19 +2592,9 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
          if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
          {
-            /* STATUS_IMAGE_ALREADY_LOADED means this driver
-               was loaded by the bootloader */
-            if ((Status != STATUS_IMAGE_ALREADY_LOADED) ||
-                (Status == STATUS_IMAGE_ALREADY_LOADED && !DriverObject))
-            {
-               /* Initialize the driver */
-               Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+            /* Initialize the driver */
+            Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
                   &DeviceNode->ServiceName, FALSE, &DriverObject);
-            }
-            else
-            {
-               Status = STATUS_SUCCESS;
-            }
          }
          else
          {
@@ -2618,6 +2608,9 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       {
           /* Initialize the device, including all filters */
           Status = PipCallDriverAddDevice(DeviceNode, FALSE, DriverObject);
+
+          /* Remove the extra reference */
+          ObDereferenceObject(DriverObject);
       }
       else
       {

@@ -558,6 +558,7 @@ IopAttachFilterDriversCallback(
         Filters += (ServiceName.Length / sizeof(WCHAR)) + 1)
    {
       DPRINT("Filter Driver: %S (%wZ)\n", Filters, &DeviceNode->InstancePath);
+
       ServiceName.Buffer = Filters;
       ServiceName.MaximumLength =
       ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
@@ -579,8 +580,9 @@ IopAttachFilterDriversCallback(
        }
 
        Status = IopInitializeDevice(DeviceNode, DriverObject);
-       if (!NT_SUCCESS(Status))
-           continue;
+
+       /* Remove extra reference */
+       ObDereferenceObject(DriverObject);
    }
 
    return STATUS_SUCCESS;
@@ -874,6 +876,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    {
       Status = IopStartDevice(DeviceNode);
    }
+
+   /* Remove extra reference from IopInitializeDriverModule */
+   ObDereferenceObject(DriverObject);
 
    return Status;
 }
@@ -1960,6 +1965,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    else
    {
       DPRINT("DriverObject already exist in ObjectManager\n");
+      Status = STATUS_IMAGE_ALREADY_LOADED;
 
       /* IopGetDriverObject references the DriverObject, so dereference it */
       ObDereferenceObject(DriverObject);
