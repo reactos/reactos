@@ -112,6 +112,8 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
+    HRGN hVisRgn;
+
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -121,6 +123,11 @@ DC_InitHack(PDC pdc)
     /* Select regions */
     pdc->rosdc.hClipRgn = NULL;
     pdc->rosdc.hGCClipRgn = NULL;
+
+    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
+    ASSERT(hVisRgn);
+    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
+    GreDeleteObject(hVisRgn);
 }
 
 VOID
