@@ -1008,6 +1008,8 @@ SearchForLegacyDrivers(
 			/* FIXME: Log the error */
 			WARN_(CLASS_NAME, "ClassAddDevice() failed with status 0x%08lx\n", Status);
 		}
+
+		ObDereferenceObject(FileObject);
 	}
 
 cleanup:
