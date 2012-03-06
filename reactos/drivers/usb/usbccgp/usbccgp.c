@@ -137,6 +137,13 @@ USBCCGP_Dispatch(
     }
 }
 
+VOID
+NTAPI
+USBCCGP_Unload(PDRIVER_OBJECT DriverObject)
+{
+    DPRINT("[USBCCGP] Unload\n");
+}
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -153,6 +160,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = USBCCGP_Dispatch;
     DriverObject->MajorFunction[IRP_MJ_POWER] = USBCCGP_Dispatch;
     DriverObject->MajorFunction[IRP_MJ_PNP] = USBCCGP_Dispatch;
+	DriverObject->DriverUnload = USBCCGP_Unload;
 
     /* FIMXE query GenericCompositeUSBDeviceString */
 
