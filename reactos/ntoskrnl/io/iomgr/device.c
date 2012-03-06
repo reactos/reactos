@@ -377,8 +377,6 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
     /* Check if deletion is pending */
     if (ThisExtension->ExtensionFlags & DOE_DELETE_PENDING)
     {
-		if (!(ThisExtension->ExtensionFlags & DOE_UNLOAD_PENDING)) return;
-
         if (DeviceObject->AttachedDevice)
         {
             DPRINT("Device object is in the middle of a device stack\n");
@@ -415,7 +413,7 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
          */
         if (DeviceObject->ReferenceCount)
         {
-               DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
+            DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
             return;
         }
 
@@ -432,6 +430,17 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         }
 
         /* Check the next device */
+        DeviceObject = DeviceObject->NextDevice;
+    }
+
+    /* Loop all the device objects */
+    DeviceObject = DriverObject->DeviceObject;
+    while (DeviceObject)
+    {
+        /* Set the unload pending flag */
+        IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_UNLOAD_PENDING;
+
+        /* Go to the next device */
         DeviceObject = DeviceObject->NextDevice;
     }
 
