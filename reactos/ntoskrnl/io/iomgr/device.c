@@ -359,78 +359,37 @@ NTAPI
 IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
-    PDEVICE_OBJECT AttachedDeviceObject, LowestDeviceObject;
-    PEXTENDED_DEVOBJ_EXTENSION ThisExtension, DeviceExtension;
-    PDEVICE_NODE DeviceNode;
-    BOOLEAN SafeToUnload = TRUE;
+    PEXTENDED_DEVOBJ_EXTENSION ThisExtension = IoGetDevObjExtension(DeviceObject);
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+
+    /* Return if we've already called unload (maybe we're in it?) */
+    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED) return;
 
     /* We can't unload unless there's an unload handler */
     if (!DriverObject->DriverUnload)
     {
-        DPRINT("No DriverUnload function! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
-        return;
-    }
+        if (DeviceNode && !(DeviceNode->Flags & DNF_LEGACY_DRIVER))
+            DPRINT1("No DriverUnload function on PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
 
-    /* Check if removal is pending */
-    ThisExtension = IoGetDevObjExtension(DeviceObject);
-    if (ThisExtension->ExtensionFlags & DOE_REMOVE_PENDING)
-    {
-        /* Get the PDO, extension, and node */
-        LowestDeviceObject = IopGetLowestDevice(DeviceObject);
-        DeviceExtension = IoGetDevObjExtension(LowestDeviceObject);
-        DeviceNode = DeviceExtension->DeviceNode;
-
-        /* The PDO needs a device node */
-        ASSERT(DeviceNode != NULL);
-
-        /* Loop all attached objects */
-        AttachedDeviceObject = LowestDeviceObject;
-        while (AttachedDeviceObject)
-        {
-            /* Make sure they're dereferenced */
-            if (AttachedDeviceObject->ReferenceCount) return;
-            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
-        }
-
-        /* Loop all attached objects */
-        AttachedDeviceObject = LowestDeviceObject;
-        while (AttachedDeviceObject)
-        {
-            /* Get the device extension */
-            DeviceExtension = IoGetDevObjExtension(AttachedDeviceObject);
-
-            /* Remove the pending flag and set processed */
-            DeviceExtension->ExtensionFlags &= ~DOE_REMOVE_PENDING;
-            DeviceExtension->ExtensionFlags |= DOE_REMOVE_PROCESSED;
-            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
-        }
-
-        /*
-         * FIXME: TODO HPOUSSIN
-         * We need to parse/lock the device node, and if we have any pending
-         * surprise removals, query all relationships and send IRP_MN_REMOVE_
-         * _DEVICE to the devices related...
-         */
         return;
     }
 
     /* Check if deletion is pending */
     if (ThisExtension->ExtensionFlags & DOE_DELETE_PENDING)
     {
-        /* Make sure unload is pending */
-        if (!(ThisExtension->ExtensionFlags & DOE_UNLOAD_PENDING) ||
-            (DriverObject->Flags & DRVO_UNLOAD_INVOKED))
+		if (!(ThisExtension->ExtensionFlags & DOE_UNLOAD_PENDING)) return;
+
+        if (DeviceObject->AttachedDevice)
         {
-            /* We can't unload anymore */
-            SafeToUnload = FALSE;
+            DPRINT("Device object is in the middle of a device stack\n");
+            return;
         }
 
-        /*
-         * Check if we have an attached device and fail if we're attached
-         * or still have a reference count.
-         */
-        AttachedDeviceObject = DeviceObject->AttachedDevice;
-        if ((AttachedDeviceObject) || (DeviceObject->ReferenceCount)) return;
+        if (DeviceObject->ReferenceCount)
+        {
+            DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
+            return;
+        }
 
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)
@@ -444,9 +403,6 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
         /* Dereference the keep-alive */
         ObDereferenceObject(DeviceObject);
-
-        /* If we're not unloading, stop here */
-        if (!SafeToUnload) return;
     }
 
     /* Loop all the device objects */
@@ -457,12 +413,21 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
          * Make sure we're not attached, having a reference count
          * or already deleting
          */
-        if ((DeviceObject->ReferenceCount) ||
-             (DeviceObject->AttachedDevice) ||
-             (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
-              (DOE_DELETE_PENDING | DOE_REMOVE_PENDING)))
+        if (DeviceObject->ReferenceCount)
         {
-            /* We're not safe to unload, quit */
+               DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
+            return;
+        }
+
+        if (DeviceObject->AttachedDevice)
+        {
+            DPRINT("Device object is in the middle of a device stack\n");
+            return;
+        }
+
+        if (IoGetDevObjExtension(DeviceObject)->ExtensionFlags & (DOE_DELETE_PENDING | DOE_REMOVE_PENDING))
+        {
+            DPRINT("Device object has a pending destructive operation\n");
             return;
         }
 
@@ -501,12 +466,9 @@ IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
      * Check if we can unload it and it's safe to unload (or if we're forcing
      * an unload, which is OK too).
      */
+    ASSERT(!ForceUnload);
     if (!(DeviceObject->ReferenceCount) &&
-        ((ForceUnload) || (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
-                           (DOE_UNLOAD_PENDING |
-                            DOE_DELETE_PENDING |
-                            DOE_REMOVE_PENDING |
-                            DOE_REMOVE_PROCESSED))))
+        (IoGetDevObjExtension(DeviceObject)->ExtensionFlags & DOE_DELETE_PENDING))
     {
         /* Unload it */
         IopUnloadDevice(DeviceObject);
@@ -1111,8 +1073,7 @@ IoDetachDevice(IN PDEVICE_OBJECT TargetDevice)
     TargetDevice->AttachedDevice = NULL;
 
     /* Check if it's ok to delete this device */
-    if ((IoGetDevObjExtension(TargetDevice)->ExtensionFlags &
-        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | DOE_REMOVE_PENDING)) &&
+    if ((IoGetDevObjExtension(TargetDevice)->ExtensionFlags & DOE_DELETE_PENDING) &&
         !(TargetDevice->ReferenceCount))
     {
         /* It is, do it */
