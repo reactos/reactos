@@ -306,6 +306,8 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
                 ShowWindow(hIconCtrl, SW_SHOW);
                 RECT rcIcon, rcDescr;
                 GetWindowRect(hIconCtrl, &rcIcon);
+                if (rcIcon.left == rcIcon.right)
+                    ERR("Icon control has invalid width: %d-%d\n", rcIcon.left, rcIcon.right);
                 MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcIcon, 2);
                 GetWindowRect(hDescrCtrl, &rcDescr);
                 MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcDescr, 2);
@@ -542,6 +544,9 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
         StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
         SetDlgItemTextW(hwndDlg, 14027, wszBuf);
     }
+
+    /* Hide Advanced button. TODO: Implement advanced dialog and enable this button if filesystem supports compression or encryption */
+    ShowWindow(GetDlgItem(hwndDlg, 14028), SW_HIDE);
 
     return TRUE;
 }
