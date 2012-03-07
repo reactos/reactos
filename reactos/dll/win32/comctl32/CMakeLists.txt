@@ -11,7 +11,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(comctl32.dll comctl32.spec)
+spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     animate.c
@@ -69,4 +69,4 @@ add_importlibs(comctl32
 
 add_pch(comctl32 comctl32.h)
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(comctl32.spec comctl32.dll)
+

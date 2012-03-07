@@ -103,7 +103,7 @@ if(ARCH MATCHES i386)
         up/pic.c
         up/processor.c)
 
-    spec2def(hal.dll ../hal.spec)
+    spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
 
     # hal
     add_library(hal SHARED
@@ -125,7 +125,7 @@ if(ARCH MATCHES i386)
     endif()
 
     # hal acpi
-    spec2def(halacpi.dll ../hal.spec halacpi)
+    spec2def(halacpi.dll ../hal.spec)
     add_library(halacpi SHARED
         ${HAL_UP_SOURCE}
         ${HAL_PIC_SOURCE}
@@ -151,7 +151,7 @@ if(ARCH MATCHES i386)
 
 elseif(ARCH MATCHES amd64)
 
-    spec2def(hal.dll ../hal.spec)
+    spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
 
     list(APPEND HAL_SOURCE
         ${HAL_GENERIC_SOURCE}
@@ -181,4 +181,4 @@ elseif(ARCH MATCHES amd64)
 
 endif()
 
-add_importlib_target(../hal.spec hal.dll)
+

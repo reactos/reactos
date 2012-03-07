@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(rsaenh.dll rsaenh.spec)
+spec2def(rsaenh.dll rsaenh.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     aes.c
@@ -25,5 +25,5 @@ set_module_type(rsaenh win32dll)
 target_link_libraries(rsaenh wine)
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
 add_pch(rsaenh tomcrypt.h)
-add_importlib_target(rsaenh.spec rsaenh.dll)
+
 add_cd_file(TARGET rsaenh DESTINATION reactos/system32 FOR all)

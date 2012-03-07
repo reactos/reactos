@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(csrsrv2.dll csrsrv2.spec)
+spec2def(csrsrv2.dll csrsrv2.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
      api.c
@@ -27,4 +27,4 @@ add_pch(csrsrv2 srv.h)
 
 add_dependencies(csrsrv2 psdk bugcodes)
 add_cd_file(TARGET csrsrv2 DESTINATION reactos/system32 FOR all)
-add_importlib_target(csrsrv2.spec csrsrv2.dll)
+

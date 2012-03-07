@@ -16,7 +16,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(oleaut32.dll oleaut32.spec)
+spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
@@ -65,4 +65,4 @@ target_link_libraries(oleaut32
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(oleaut32.spec oleaut32.dll)
+

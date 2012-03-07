@@ -1,7 +1,7 @@
 
 set_rc_compiler()
 
-spec2def(ole32.dll ole32.spec)
+spec2def(ole32.dll ole32.spec ADD_IMPORTLIB)
 generate_idl_iids(dcom.idl)
 add_idl_headers(ole32idl dcom.idl irot.idl)
 
@@ -87,4 +87,4 @@ add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
 
 add_dependencies(ole32 ole32idl)
 add_cd_file(TARGET ole32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(ole32.spec ole32.dll)
+

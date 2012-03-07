@@ -2,7 +2,7 @@
 add_definitions(-D__SECUR32__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(secur32.dll secur32.spec)
+spec2def(secur32.dll secur32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c
@@ -24,4 +24,4 @@ add_importlibs(secur32 advapi32 msvcrt kernel32 ntdll)
 add_pch(secur32 precomp.h)
 
 add_cd_file(TARGET secur32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(secur32.spec secur32.dll)
+

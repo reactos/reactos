@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(samlib.dll samlib.spec)
+spec2def(samlib.dll samlib.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c
@@ -17,4 +17,4 @@ set_module_type(samlib win32dll)
 add_importlibs(samlib advapi32 msvcrt kernel32 ntdll)
 add_pch(samlib precomp.h)
 add_cd_file(TARGET samlib DESTINATION reactos/system32 FOR all)
-add_importlib_target(samlib.spec samlib.dll)
+

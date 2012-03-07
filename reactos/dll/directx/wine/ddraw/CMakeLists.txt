@@ -11,7 +11,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(ddraw.dll ddraw.spec)
+spec2def(ddraw.dll ddraw.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     clipper.c
@@ -53,4 +53,4 @@ add_importlibs(ddraw
 add_dependencies(ddraw wineheaders)
 add_pch(ddraw ddraw_private.h)
 add_cd_file(TARGET ddraw DESTINATION reactos/system32 FOR all)
-add_importlib_target(ddraw.spec ddraw.dll)
+

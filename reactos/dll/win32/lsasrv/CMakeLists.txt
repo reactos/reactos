@@ -8,7 +8,7 @@ add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
 
 set_rc_compiler()
 
-spec2def(lsasrv.dll lsasrv.spec)
+spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     authport.c
@@ -31,4 +31,4 @@ add_importlibs(lsasrv rpcrt4 msvcrt kernel32 ntdll)
 add_pch(lsasrv lsasrv.h)
 add_dependencies(lsasrv psdk)
 add_cd_file(TARGET lsasrv DESTINATION reactos/system32 FOR all)
-add_importlib_target(lsasrv.spec lsasrv.dll)
+

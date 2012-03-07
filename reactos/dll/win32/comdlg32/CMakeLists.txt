@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(comdlg32.dll comdlg32.spec)
+spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cdlg32.c
@@ -41,4 +41,4 @@ add_importlibs(comdlg32
     ntdll)
 
 add_cd_file(TARGET comdlg32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(comdlg32.spec comdlg32.dll)
+

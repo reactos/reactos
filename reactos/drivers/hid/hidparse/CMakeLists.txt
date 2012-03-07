@@ -1,5 +1,5 @@
 
-spec2def(hidparse.sys hidparse.spec)
+spec2def(hidparse.sys hidparse.spec ADD_IMPORTLIB)
 add_definitions(-DDEBUG_MODE)
 
 include_directories(
@@ -11,7 +11,6 @@ add_library(hidparse SHARED hidparse.c hidparse.rc ${CMAKE_CURRENT_BINARY_DIR}/h
 
 set_module_type(hidparse kernelmodedriver)
 add_importlibs(hidparse ntoskrnl)
-add_importlib_target(hidparse.spec hidparse.sys)
 
 target_link_libraries(hidparse hidparser)
 

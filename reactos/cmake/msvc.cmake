@@ -40,13 +40,6 @@ if(${_MACHINE_ARCH_FLAG} MATCHES X86)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 endif()
 
-if(${ARCH} MATCHES amd64)
-    add_definitions(/D__x86_64)
-    set(SPEC2DEF_ARCH x86_64)
-else()
-    set(SPEC2DEF_ARCH i386)
-endif()
-
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> ${I18N_DEFS} /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 
 if(MSVC_IDE)
@@ -135,34 +128,6 @@ endfunction()
 #define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
 set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
-# Thanks MS for creating a stupid linker
-function(add_importlib_target _exports_file _implib_name)
-
-    get_filename_component(_name ${_exports_file} NAME_WE)
-
-    # Generate the asm stub file and the export def file
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_exp.def
-        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_implib_name} -d=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
-    # be clear about the language
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
-
-    # add our library
-    # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-    add_library(lib${_name} STATIC EXCLUDE_FROM_ALL
-        ${CMAKE_CURRENT_BINARY_DIR}/lib${_name}_stubs.asm)
-    
-    # Add necessary importlibs for redirections. Still necessary ?
-    if(ARGN)
-        target_link_libraries(lib${_name} ${ARGN})
-    endif()
-    
-    # set correct link rule
-    set_target_properties(lib${_name} PROPERTIES LINKER_LANGUAGE "IMPLIB"
-        STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\lib${_name}_exp.def")
-endfunction()
-
 macro(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
         add_target_link_flags(${MODULE} "/DELAYLOAD:${LIB}.dll")
@@ -171,18 +136,55 @@ macro(add_delay_importlibs MODULE)
     target_link_libraries(${MODULE} delayimp)
 endmacro()
 
+if(${ARCH} MATCHES amd64)
+    add_definitions(/D__x86_64)
+    set(SPEC2DEF_ARCH x86_64)
+else()
+    set(SPEC2DEF_ARCH i386)
+endif()
 function(spec2def _dllname _spec_file)
+    # do we also want to add impotlib targets?
     if(${ARGC} GREATER 2)
-        set(_file ${ARGV2})
-    else()
-        get_filename_component(_file ${_spec_file} NAME_WE)
+        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
+            set(__add_importlib TRUE)
+        else()
+            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
+        endif()
     endif()
+    
+    # get library basename
+    get_filename_component(_file ${_dllname} NAME_WE)
+    
+    # error out on anything else than spec
+    if(NOT ${_spec_file} MATCHES ".*\\.spec")
+        message(FATAL_ERROR "spec2def only takes spec files as input.")
+    endif()
+    
+    #generate def for the DLL and C stubs file
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        PROPERTIES GENERATED TRUE)
+    
+    if(__add_importlib)
+        # Generate the asm stub file and the export def file for import library
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_exp.def
+            COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+        # be clear about the "language"
+        # Thanks MS for creating a stupid linker
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
+
+        # add our library
+        # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
+        _add_library(lib${_file} STATIC EXCLUDE_FROM_ALL
+            ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm)
+        
+        # set correct "link rule"
+        set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB"
+            STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\lib${_file}_exp.def")
+    endif()
 endfunction()
 
 macro(macro_mc FLAG FILE)

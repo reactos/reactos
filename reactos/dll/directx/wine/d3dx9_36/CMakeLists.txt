@@ -1,6 +1,6 @@
 set_rc_compiler()
 
-spec2def(d3dx9_36.dll d3dx9_36.spec)
+spec2def(d3dx9_36.dll d3dx9_36.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     core.c
@@ -36,4 +36,3 @@ add_importlibs(d3dx9_36
 
 add_dependencies(d3dx9_36 wineheaders)
 add_cd_file(TARGET d3dx9_36 DESTINATION reactos/system32 FOR all)
-add_importlib_target(d3dx9_36.spec d3dx9_36.dll)

@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(gdiplus.dll gdiplus.spec)
+spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     brush.c
@@ -49,7 +49,7 @@ add_importlibs(gdiplus
     kernel32
     ntdll)
 
-add_importlib_target(gdiplus.spec gdiplus.dll)
+
 
 if(ARCH MATCHES amd64)
     target_link_libraries(gdiplus crt)

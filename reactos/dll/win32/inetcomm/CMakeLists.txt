@@ -7,7 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(inetcomm.dll inetcomm.spec)
+spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     imaptransport.c
@@ -37,5 +37,5 @@ add_importlibs(inetcomm
     kernel32
     ntdll)
 
-add_importlib_target(inetcomm.spec inetcomm.dll)
+
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)

@@ -13,7 +13,7 @@ if(MSVC)
     add_definitions(-Disinf=!_finite)
 endif()
 
-spec2def(wined3d.dll wined3d.spec)
+spec2def(wined3d.dll wined3d.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ati_fragment_shader.c
@@ -68,7 +68,7 @@ add_importlibs(wined3d
 add_dependencies(wined3d wineheaders)
 add_pch(wined3d wined3d_private.h)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)
-add_importlib_target(wined3d.spec wined3d.dll)
+
 
 if(NOT MSVC)
     allow_warnings(wined3d)

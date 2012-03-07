@@ -2,7 +2,7 @@
 add_definitions(-D_WINE)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(winmm.dll winmm.spec)
+spec2def(winmm.dll winmm.spec ADD_IMPORTLIB)
 
 set_rc_compiler()
 
@@ -29,4 +29,4 @@ add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 
 add_subdirectory(midimap)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
-add_importlib_target(winmm.spec winmm.dll)
+

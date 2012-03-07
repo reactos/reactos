@@ -14,7 +14,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/atl
     ${REACTOS_SOURCE_DIR})
 
-spec2def(shell32.dll shell32.spec)
+spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     authors.cpp
@@ -107,4 +107,4 @@ add_dependencies(shdocvw shdocvw_v1)
 add_pch(shell32 precomp.h)
 
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(shell32.spec shell32.dll)
+

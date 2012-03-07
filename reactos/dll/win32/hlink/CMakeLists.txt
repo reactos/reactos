@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(hlink.dll hlink.spec)
+spec2def(hlink.dll hlink.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     browse_ctx.c
@@ -28,5 +28,5 @@ add_importlibs(hlink
     ntdll)
 
 add_pch(hlink hlink_private.h)
-add_importlib_target(hlink.spec hlink.dll)
+
 add_cd_file(TARGET hlink DESTINATION reactos/system32 FOR all)

@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
 
-spec2def(ftfd.dll ftfd.spec)
+spec2def(ftfd.dll ftfd.spec ADD_IMPORTLIB)
 
 add_library(ftfd SHARED
     enable.c
@@ -23,4 +23,4 @@ add_pch(ftfd ftfd.h)
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cd_file(TARGET ftfd DESTINATION reactos/system32 FOR all)
-add_importlib_target(ftfd.spec ftfd.dll)
+

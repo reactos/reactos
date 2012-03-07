@@ -8,7 +8,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 set_rc_compiler()
-spec2def(msi.dll msi.spec)
+spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 
 generate_idl_iids(msiserver.idl)
 
@@ -98,4 +98,4 @@ add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)
 
-add_importlib_target(msi.spec msi.dll)
+

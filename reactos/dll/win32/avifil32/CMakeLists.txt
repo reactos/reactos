@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(avifil32.dll avifil32.spec)
+spec2def(avifil32.dll avifil32.spec ADD_IMPORTLIB)
 
 add_library(avifil32 SHARED
     acmstream.c
@@ -40,5 +40,5 @@ add_importlibs(avifil32
     kernel32
     ntdll)
 
-add_importlib_target(avifil32.spec avifil32.dll)
+
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

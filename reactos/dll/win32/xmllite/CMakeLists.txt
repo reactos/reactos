@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(xmllite.dll xmllite.spec)
+spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     reader.c
@@ -18,5 +18,5 @@ set_module_type(xmllite win32dll)
 target_link_libraries(xmllite wine uuid)
 
 add_importlibs(xmllite msvcrt kernel32 ntdll)
-add_importlib_target(xmllite.spec xmllite.dll)
+
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

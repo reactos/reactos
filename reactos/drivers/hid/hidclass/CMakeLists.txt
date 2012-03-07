@@ -1,5 +1,5 @@
 
-spec2def(hidclass.sys hidclass.spec)
+spec2def(hidclass.sys hidclass.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     fdo.c
@@ -16,6 +16,6 @@ set_target_properties(hidclass PROPERTIES SUFFIX ".sys")
 
 
 add_importlibs(hidclass ntoskrnl hidparse hal)
-add_importlib_target(hidclass.spec hidclass.sys)
+
 
 add_cd_file(TARGET hidclass DESTINATION reactos/system32/drivers NO_CAB FOR all)

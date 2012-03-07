@@ -1,5 +1,5 @@
 
-spec2def(ntoskrnl.exe ntoskrnl.spec)
+spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}
@@ -455,6 +455,6 @@ add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(ntoskrnl.spec ntoskrnl.exe)
+
 
 add_library(ntdllsys ntdll.S)

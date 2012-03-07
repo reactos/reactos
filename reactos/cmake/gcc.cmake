@@ -32,7 +32,6 @@ else()
     add_compile_flags("-gstabs+")
 endif()
 
-
 # Do not allow warnings
 add_compile_flags("-Werror")
 
@@ -227,46 +226,46 @@ endif()
 # Cute little hack to produce import libs
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
-function(add_importlib_target _exports_file _implib_name)
-    get_filename_component(_name ${_exports_file} NAME_WE)
-    get_filename_component(_extension ${_exports_file} EXT)
-
-    if(${_extension} STREQUAL ".spec")
-
-        # generate .def
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def
-            COMMAND native-spec2def -n=${_implib_name} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
-        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
-        
-        #create normal importlib
-        add_library(lib${_name} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def)
-        set_target_properties(lib${_name} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
-        
-        #create delayed importlib
-        add_library(lib${_name}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def)
-        set_target_properties(lib${_name}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
-    else()
-        message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
-    endif()
-endfunction()
-
 function(spec2def _dllname _spec_file)
-
+    # do we also want to add impotlib targets?
     if(${ARGC} GREATER 2)
-        set(_file ${ARGV2})
-    else()
-        get_filename_component(_file ${_spec_file} NAME_WE)
+        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
+            set(__add_importlib TRUE)
+        else()
+            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
+        endif()
+    endif()
+    
+    # get library basename
+    get_filename_component(_file ${_dllname} NAME_WE)
+    
+    # error out on anything else than spec
+    if(NOT ${_spec_file} MATCHES ".*\\.spec")
+        message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
+    # generate exports def and stubs C file for the module
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
+    
+    if(__add_importlib)
+        # generate the def for the export lib
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def
+            COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
+        
+        #create normal importlib
+        _add_library(lib${_file} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
+        set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+        
+        #create delayed importlib
+        _add_library(lib${_file}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
+        set_target_properties(lib${_file}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+    endif()
 endfunction()
 
 macro(macro_mc FLAG FILE)

@@ -14,7 +14,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(dbghelp.dll dbghelp.spec)
+spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     coff.c
@@ -51,5 +51,5 @@ target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(dbghelp version)
 add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
 add_pch(dbghelp dbghelp_private.h)
-add_importlib_target(dbghelp.spec dbghelp.dll)
+
 add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)

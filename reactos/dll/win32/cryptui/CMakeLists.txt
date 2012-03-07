@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(cryptui.dll cryptui.spec)
+spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c
@@ -32,5 +32,5 @@ add_importlibs(cryptui
     kernel32
     ntdll)
 
-add_importlib_target(cryptui.spec cryptui.dll)
+
 add_cd_file(TARGET cryptui DESTINATION reactos/system32 FOR all)

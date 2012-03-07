@@ -16,7 +16,7 @@ if(MSVC)
     add_compile_flags("/FItypeof.h")
 endif()
 
-spec2def(windowscodecs.dll windowscodecs.spec)
+spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bmpdecode.c
@@ -54,6 +54,6 @@ set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid)
 
 add_importlibs(windowscodecs ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-add_importlib_target(windowscodecs.spec windowscodecs.dll)
+
 
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

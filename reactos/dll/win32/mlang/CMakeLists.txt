@@ -9,7 +9,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(mlang.dll mlang.spec)
+spec2def(mlang.dll mlang.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     mlang.c
@@ -30,6 +30,6 @@ add_importlibs(mlang
     kernel32
     ntdll)
 
-add_importlib_target(mlang.spec mlang.dll)
+
 add_dependencies(mlang psdk)
 add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)

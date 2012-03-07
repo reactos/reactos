@@ -1,5 +1,5 @@
 
-spec2def(user32.dll user32.spec)
+spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
@@ -76,4 +76,4 @@ add_delay_importlibs(user32 imm32 usp10)
 add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(user32 include/user32.h)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(user32.spec user32.dll)
+

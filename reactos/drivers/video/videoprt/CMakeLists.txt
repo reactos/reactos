@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 add_definitions(-D_VIDEOPORT_)
 
-spec2def(videoprt.sys videoprt.spec)
+spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     agp.c
@@ -30,4 +30,4 @@ add_importlibs(videoprt ntoskrnl hal)
 
 add_pch(videoprt videoprt.h)
 add_cd_file(TARGET videoprt DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(videoprt.spec videoprt.sys)
+

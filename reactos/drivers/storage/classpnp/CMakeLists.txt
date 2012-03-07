@@ -17,7 +17,7 @@ if(ARCH MATCHES i386)
     endif()
 endif()
 
-spec2def(classpnp.sys classpnp.spec)
+spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     autorun.c
@@ -42,5 +42,5 @@ add_pch(classpnp classp.h)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)
-add_importlib_target(classpnp.spec classpnp.sys)
+
 add_cd_file(TARGET classpnp DESTINATION reactos/system32/drivers NO_CAB FOR all)
