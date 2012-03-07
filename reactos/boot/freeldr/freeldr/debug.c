@@ -255,6 +255,93 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 }
 
+static BOOLEAN
+DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
+{
+    int iLevel, iChannel;
+
+    if(channel == NULL || *channel == L'\0' ||strlen(channel) == 0 )
+        return FALSE;
+
+    if(level == NULL || *level == L'\0' ||strlen(level) == 0 )
+        iLevel = MAX_LEVEL;
+    else if(strcmp(level, "err") == 0)
+        iLevel = ERR_LEVEL;
+    else if(strcmp(level, "fixme") == 0)
+        iLevel = FIXME_LEVEL;
+    else if(strcmp(level, "warn") == 0)
+        iLevel = WARN_LEVEL;
+    else if (strcmp(level, "trace") == 0)
+        iLevel = TRACE_LEVEL;
+    else
+        return FALSE;
+    
+    if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
+    else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
+    else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
+    else if(strcmp(channel, "ui") == 0) iChannel = DPRINT_UI;
+    else if(strcmp(channel, "disk") == 0) iChannel = DPRINT_DISK;
+    else if(strcmp(channel, "cache") == 0) iChannel = DPRINT_CACHE;
+    else if(strcmp(channel, "registry") == 0) iChannel = DPRINT_REGISTRY;
+    else if(strcmp(channel, "linux") == 0) iChannel = DPRINT_LINUX;
+    else if(strcmp(channel, "hwdetect") == 0) iChannel = DPRINT_HWDETECT;
+    else if(strcmp(channel, "windows") == 0) iChannel = DPRINT_WINDOWS;
+    else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
+    else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
+    else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
+    else if(strcmp(channel, "all") == 0) 
+    {
+        int i;
+
+        for(i= 0 ; i < DBG_CHANNELS_COUNT; i++)
+        {
+            if(op==L'+')
+                DbgChannels[i] |= iLevel;
+            else
+                DbgChannels[i] &= ~iLevel;
+        }
+
+        return TRUE;
+    }
+
+    if(op==L'+')
+        DbgChannels[iChannel] |= iLevel;
+    else
+        DbgChannels[iChannel] &= ~iLevel;
+    
+    return TRUE;
+}
+
+VOID
+DbgParseDebugChannels(PCHAR Value)
+{
+    CHAR *str, *separator, *c, op;
+
+    str = Value;
+
+    do
+    {
+        separator = strchr(str, L',');
+        if(separator != NULL)
+            *separator = L'\0';
+
+        c = strchr(str, L'+');
+        if(c == NULL)
+            c = strchr(str, L'-');
+
+        if(c != NULL)
+        {
+            op = *c;
+            *c = L'\0';
+            c++;
+
+            DbgAddDebugChannel(c, str, op);
+        }
+
+        str = separator + 1;
+    } while(separator != NULL);
+}
+
 #else
 
 ULONG
@@ -339,94 +426,3 @@ RtlAssert(IN PVOID FailedAssertion,
 
    DbgBreakPoint();
 }
-
-
-static BOOLEAN
-DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
-{
-    int iLevel, iChannel;
-
-    if(channel == NULL || *channel == L'\0' ||strlen(channel) == 0 )
-        return FALSE;
-
-    if(level == NULL || *level == L'\0' ||strlen(level) == 0 )
-        iLevel = MAX_LEVEL;
-    else if(strcmp(level, "err") == 0)
-        iLevel = ERR_LEVEL;
-    else if(strcmp(level, "fixme") == 0)
-        iLevel = FIXME_LEVEL;
-    else if(strcmp(level, "warn") == 0)
-        iLevel = WARN_LEVEL;
-    else if (strcmp(level, "trace") == 0)
-        iLevel = TRACE_LEVEL;
-    else
-        return FALSE;
-    
-    if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
-    else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
-    else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
-    else if(strcmp(channel, "ui") == 0) iChannel = DPRINT_UI;
-    else if(strcmp(channel, "disk") == 0) iChannel = DPRINT_DISK;
-    else if(strcmp(channel, "cache") == 0) iChannel = DPRINT_CACHE;
-    else if(strcmp(channel, "registry") == 0) iChannel = DPRINT_REGISTRY;
-    else if(strcmp(channel, "linux") == 0) iChannel = DPRINT_LINUX;
-    else if(strcmp(channel, "hwdetect") == 0) iChannel = DPRINT_HWDETECT;
-    else if(strcmp(channel, "windows") == 0) iChannel = DPRINT_WINDOWS;
-    else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
-    else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
-    else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
-    else if(strcmp(channel, "all") == 0) 
-    {
-        int i;
-
-        for(i= 0 ; i < DBG_CHANNELS_COUNT; i++)
-        {
-            if(op==L'+')
-                DbgChannels[i] |= iLevel;
-            else
-                DbgChannels[i] &= ~iLevel;
-        }
-
-        return TRUE;
-    }
-
-    if(op==L'+')
-        DbgChannels[iChannel] |= iLevel;
-    else
-        DbgChannels[iChannel] &= ~iLevel;
-    
-    return TRUE;
-}
-
-BOOLEAN
-DbgParseDebugChannels(PCHAR Value)
-{
-    CHAR *str, *separator, *c, op;
-
-    str = Value;
-
-    do
-    {
-        separator = strchr(str, L',');
-        if(separator != NULL)
-            *separator = L'\0';
-
-        c = strchr(str, L'+');
-        if(c == NULL)
-            c = strchr(str, L'-');
-
-        if(c != NULL)
-        {
-            op = *c;
-            *c = L'\0';
-            c++;
-
-            DbgAddDebugChannel(c, str, op);
-        }
-
-        str = separator + 1;
-    }while(separator != NULL);
-
-    return TRUE;
-}
-

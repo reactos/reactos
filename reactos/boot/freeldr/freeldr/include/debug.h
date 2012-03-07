@@ -38,14 +38,13 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-BOOLEAN DbgParseDebugChannels(PCHAR Value);
-
 #if DBG && !defined(_M_ARM)
 
 	VOID	DebugInit(VOID);
     ULONG   DbgPrint(const char *Format, ...);
     VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
 	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
+	VOID    DbgParseDebugChannels(PCHAR Value);
 
     #define ERR_LEVEL      0x1
     #define FIXME_LEVEL    0x2
@@ -117,6 +116,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 	#define DebugInit()
 	#define BugCheck(fmt, ...)
 	#define DbgDumpBuffer(mask, buf, len)
+	#define DbgParseDebugChannels(val)
 
 #endif // DBG
 
