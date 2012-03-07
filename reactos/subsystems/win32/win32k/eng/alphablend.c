@@ -51,19 +51,11 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
 
     /* Validate output */
     OutputRect = *DestRect;
-    if (OutputRect.right < OutputRect.left)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
-    if (OutputRect.bottom < OutputRect.top)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
+    RECTL_vMakeWellOrdered(&OutputRect);
 
     /* Validate input */
     InputRect = *SourceRect;
+    RECTL_vMakeWellOrdered(&InputRect);
     if ( (InputRect.top < 0) || (InputRect.bottom < 0) ||
          (InputRect.left < 0) || (InputRect.right < 0) ||
          InputRect.right > psoSource->sizlBitmap.cx ||
@@ -125,6 +117,8 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     OutputRect.top += Translate.y;
     OutputRect.bottom += Translate.y;
 
+    ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
+
     Ret = FALSE;
     ClippingType = (ClipRegion == NULL) ? DC_TRIVIAL : ClipRegion->iDComplexity;
     switch (ClippingType)
@@ -141,10 +135,14 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
             ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
             if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
             {
-                Rect.left = InputRect.left + CombinedRect.left - OutputRect.left;
-                Rect.right = InputRect.right + CombinedRect.right - OutputRect.right;
-                Rect.top = InputRect.top + CombinedRect.top - OutputRect.top;
-                Rect.bottom = InputRect.bottom + CombinedRect.bottom - OutputRect.bottom;
+                /* take into acount clipping results when calculating new input rect (scaled to input rect size) */
+                Rect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
+                Rect.right = InputRect.right + (CombinedRect.right - OutputRect.right) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
+                Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
+                Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
+                ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
+                
+                /* Aplha blend one rect */
                 Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
                           OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj);
             }
@@ -166,10 +164,14 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
                     ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
                     if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
                     {
-                        Rect.left = InputRect.left + CombinedRect.left - OutputRect.left;
-                        Rect.right = InputRect.right + CombinedRect.right - OutputRect.right;
-                        Rect.top = InputRect.top + CombinedRect.top - OutputRect.top;
-                        Rect.bottom = InputRect.bottom + CombinedRect.bottom - OutputRect.bottom;
+                        /* take into acount clipping results when calculating new input rect (scaled to input rect size) */
+                        Rect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
+                        Rect.right = InputRect.right + (CombinedRect.right - OutputRect.right) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
+                        Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
+                        Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
+                        ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
+                        
+                        /* Alpha blend one rect */
                         Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
                                   OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj) && Ret;
                     }
