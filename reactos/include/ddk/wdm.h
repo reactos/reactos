@@ -128,6 +128,16 @@ extern "C" {
 #define ALLOC_DATA_PRAGMA 1
 #endif
 
+/* Add NOP_FUNCTION support */
+#ifndef NOP_FUNCTION && (_MSC_VER >= 1210)
+#define NOP_FUNCTION __noop
+#else
+#define NOP_FUNCTION (void)0
+#endif
+#else
+#ifndef NOP_FUNCTION
+#define NOP_FUNCTION (void)0
+#endif
 #endif
 
 #if defined(_WIN64)
