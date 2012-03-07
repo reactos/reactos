@@ -1309,9 +1309,11 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
         }
     }
 
+#ifdef DBG
 //#ifdef GDI_DEBUG
 	DbgGdiHTIntegrityCheck();
 //#endif
+#endif
 
     ppi = PsGetCurrentProcessWin32Process();
     DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);

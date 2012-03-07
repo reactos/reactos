@@ -8,6 +8,7 @@
 
 /** INCLUDES ******************************************************************/
 
+#ifdef DBG
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>
@@ -727,5 +728,7 @@ BOOL DbgInitDebugChannels()
 
     return ret;
 }
+
+#endif
 
 /* EOF */

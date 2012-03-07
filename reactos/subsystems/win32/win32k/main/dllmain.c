@@ -30,6 +30,7 @@ extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
+#ifdef DBG
 void
 NTAPI
 DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
@@ -46,6 +47,7 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
     ulResult = UserDbgPostServiceHook(ulSyscallId, ulResult);
     return ulResult;
 }
+#endif
 
 NTSTATUS
 APIENTRY
@@ -564,8 +566,10 @@ DriverEntry(
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
 
     /* Register service hook callbacks */
+#ifdef DBG
     KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
+#endif
 
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,

@@ -151,11 +151,11 @@
 
 #else
     #define DBG_GET_PPI 
-    #define DBG_DEFAULT_CHANNEL(x) ()
+    #define DBG_DEFAULT_CHANNEL(x)
 
-    #define DBG_ENABLE_CHANNEL(ppi,ch,level) ()
-    #define DBG_DISABLE_CHANNEL(ppi,ch,level) ()
-    #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level) ()
+    #define DBG_ENABLE_CHANNEL(ppi,ch,level)
+    #define DBG_DISABLE_CHANNEL(ppi,ch,level)
+    #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level)
 
     #define DBG_PRINT(ppi,ch,level) 
 
@@ -174,7 +174,8 @@
     #define WARN_PPI(ppi,ch,fmt, ...)  
     #define TRACE_PPI(ppi,ch,fmt, ...) 
 
-    #define UNIMPLEMENTED
+    #define STUB
+
 #endif
 
 #define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
