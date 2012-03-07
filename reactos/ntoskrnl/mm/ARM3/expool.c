@@ -2170,7 +2170,7 @@ ExFreePoolWithTag(IN PVOID P,
     // Update performance counters
     //
     InterlockedIncrement((PLONG)&PoolDesc->RunningDeAllocs);
-    InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, -BlockSize * sizeof(POOL_BLOCK_SIZE));
+    InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, -BlockSize * POOL_BLOCK_SIZE);
 
     //
     // Acquire the pool lock
