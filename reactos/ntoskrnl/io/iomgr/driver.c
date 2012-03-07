@@ -73,12 +73,16 @@ IopDeleteDriver(IN PVOID ObjectBody)
         DriverExtension = NextDriverExtension;
     }
 
+#if 0
     /* Check if the driver image is still loaded */
     if (DriverObject->DriverSection)
     {
         /* Unload it */
         MmUnloadSystemImage(DriverObject->DriverSection);
     }
+#else
+    DPRINT1("HACK: Not unloading the driver image due to critical bugs!\n");
+#endif
 
     /* Check if it has a name */
     if (DriverObject->DriverName.Buffer)
