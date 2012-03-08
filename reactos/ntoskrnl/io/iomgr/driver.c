@@ -60,6 +60,9 @@ IopDeleteDriver(IN PVOID ObjectBody)
 
     DPRINT1("Deleting driver object '%wZ'\n", &DriverObject->DriverName);
 
+    /* There must be no device objects remaining at this point */
+    ASSERT(!DriverObject->DeviceObject);
+
     /* Get the extension and loop them */
     DriverExtension = IoGetDrvObjExtension(DriverObject)->
                       ClientDriverExtension;
