@@ -363,15 +363,11 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
                                          DEVICE_OBJECT,
                                          Queue.ListEntry);
 
+        /* Get the attached device */
+        DeviceObject = IoGetAttachedDevice(DeviceObject);
+
         ObReferenceObject(DeviceObject);
         IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
-
-        /* Check if we're attached */
-        if (DeviceObject->AttachedDevice)
-        {
-            /* Get the attached device */
-            DeviceObject = IoGetAttachedDevice(DeviceObject);
-        }
 
         /* Build the shutdown IRP and call the driver */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
