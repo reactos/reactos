@@ -75,7 +75,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
         }
 #endif
     }
-#ifdef DBG
+#if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
 #endif
