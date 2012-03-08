@@ -8,7 +8,7 @@
 
 /** INCLUDES ******************************************************************/
 
-#ifdef DBG
+#if DBG
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>

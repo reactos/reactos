@@ -506,7 +506,7 @@ Win32CsrHardError(
     IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message)
 {
-#ifdef DBG
+#if DBG
     PCSR_PROCESS ProcessData = ThreadData->Process;
 #endif
     ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];

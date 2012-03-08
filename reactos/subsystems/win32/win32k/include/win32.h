@@ -194,12 +194,12 @@ typedef struct _PROCESSINFO
   struct _GDI_POOL *pPoolBrushAttr;
   struct _GDI_POOL *pPoolRgnAttr;
 
-#ifdef DBG
+#if DBG
   BYTE DbgChannelLevel[DbgChCount];
 #endif
 } PROCESSINFO;
 
-#ifdef DBG
+#if DBG
 void NTAPI UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
 ULONG_PTR NTAPI UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 #endif

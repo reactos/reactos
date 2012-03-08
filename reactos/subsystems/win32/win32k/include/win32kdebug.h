@@ -27,7 +27,7 @@
 
 */
 
-#ifdef DBG
+#if DBG
 
     typedef struct
     {

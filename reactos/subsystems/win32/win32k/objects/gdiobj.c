@@ -1309,7 +1309,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
         }
     }
 
-#ifdef DBG
+#if DBG
 //#ifdef GDI_DEBUG
 	DbgGdiHTIntegrityCheck();
 //#endif

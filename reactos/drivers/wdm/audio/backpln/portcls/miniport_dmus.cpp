@@ -1312,7 +1312,7 @@ ProcessResources
     ULONG   countDMA    = ResourceList->NumberOfDmas();
     ULONG   lengthIO    = ResourceList->FindTranslatedPort(0)->u.Port.Length;
 
-#ifdef DBG
+#if DBG
     DPRINT("Starting MPU401 Port 0x%lx", ResourceList->FindTranslatedPort(0)->u.Port.Start.LowPart);
 #endif
 

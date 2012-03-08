@@ -114,7 +114,7 @@ KiInitializePcr(IN PKIPCR Pcr,
 #ifndef CONFIG_SMP
     Pcr->Prcb.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
-#ifdef DBG
+#if DBG
     Pcr->Prcb.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 

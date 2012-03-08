@@ -30,7 +30,7 @@ extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
-#ifdef DBG
+#if DBG
 void
 NTAPI
 DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
@@ -85,7 +85,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         PsSetProcessWin32Process(Process, ppiCurrent);
 
-#ifdef DBG
+#if DBG
         DbgInitDebugChannels();
 #endif
 
@@ -566,7 +566,7 @@ DriverEntry(
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
 
     /* Register service hook callbacks */
-#ifdef DBG
+#if DBG
     KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
 #endif

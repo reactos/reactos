@@ -22,13 +22,13 @@
 #endif
 
 #ifdef CONFIG_SMP
-#ifdef DBG
+#if DBG
 #define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
 #else
 #define HAL_BUILD_TYPE 0
 #endif
 #else
-#ifdef DBG
+#if DBG
 #define HAL_BUILD_TYPE ((DBG ? PRCB_BUILD_DEBUG : 0) | PRCB_BUILD_UNIPROCESSOR)
 #else
 #define HAL_BUILD_TYPE 0 | PRCB_BUILD_UNIPROCESSOR
