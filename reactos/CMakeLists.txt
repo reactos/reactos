@@ -105,7 +105,7 @@ else()
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
-    else
+    else()
         add_definitions(-DDBG=0)
     endif()
 
