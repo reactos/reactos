@@ -174,9 +174,12 @@ IoShutdownSystem(IN ULONG Phase)
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             }
 
+            /* Remove the flag */
+            ShutdownEntry->DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
             /* Get rid of our reference to it */
-            ObDereferenceObject(DeviceObject);
-            
+            ObDereferenceObject(ShutdownEntry->DeviceObject);
+
             /* Free the shutdown entry and reset the event */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
             KeClearEvent(&Event);
@@ -228,9 +231,12 @@ IoShutdownSystem(IN ULONG Phase)
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             }
 
+            /* Remove the flag */
+            ShutdownEntry->DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
             /* Get rid of our reference to it */
-            ObDereferenceObject(DeviceObject);
-            
+            ObDereferenceObject(ShutdownEntry->DeviceObject);
+
             /* Free the shutdown entry and reset the event */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
             KeClearEvent(&Event);
@@ -1485,6 +1491,9 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
     PSHUTDOWN_ENTRY ShutdownEntry;
     PLIST_ENTRY NextEntry;
     KIRQL OldIrql;
+    
+    /* Remove the flag */
+    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 
     /* Acquire the shutdown lock and loop the shutdown list */
     KeAcquireSpinLock(&ShutdownListLock, &OldIrql);
@@ -1543,9 +1552,6 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
     /* Release the shutdown lock */
     KeReleaseSpinLock(&ShutdownListLock, OldIrql);
-
-    /* Now remove the flag */
-    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 }
 
 /*
