@@ -50,6 +50,9 @@ IopDecrementDeviceObjectRef(IN PDEVICE_OBJECT DeviceObject,
         return;
     }
 
+    /* Release lock */
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
     /* Here, DO is not referenced any longer, check if we have to unload it */
     if (UnloadIfUnused || IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
                           (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | DOE_REMOVE_PENDING))
@@ -57,9 +60,6 @@ IopDecrementDeviceObjectRef(IN PDEVICE_OBJECT DeviceObject,
         /* Unload the driver */
         IopUnloadDevice(DeviceObject);
     }
-
-    /* Release lock */
-    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
 }
 
 /*
