@@ -22,17 +22,9 @@
 #endif
 
 #ifdef CONFIG_SMP
-#if DBG
 #define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
 #else
-#define HAL_BUILD_TYPE 0
-#endif
-#else
-#if DBG
 #define HAL_BUILD_TYPE ((DBG ? PRCB_BUILD_DEBUG : 0) | PRCB_BUILD_UNIPROCESSOR)
-#else
-#define HAL_BUILD_TYPE 0 | PRCB_BUILD_UNIPROCESSOR
-#endif
 #endif
 
 typedef struct _HAL_BIOS_FRAME
