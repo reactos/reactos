@@ -58,10 +58,11 @@ target_link_libraries(portcls
     libcntpr
     ${PSEH_LIB})
 
+# FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)
-    add_target_compile_flags(portcls "/GR-")
+    #add_target_compile_flags(portcls "/GR-")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
 else()
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998        
     #add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif()
@@ -70,4 +71,3 @@ set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )
 add_pch(portcls private.hpp)
 add_importlibs(portcls ntoskrnl ks drmk hal)
 add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers FOR all)
-

@@ -7,11 +7,14 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(
     ${REACTOS_SOURCE_DIR}/lib/drivers/libusb)
 
-add_library(usbuhci SHARED
+list(APPEND SOURCE
     usbuhci.cpp
     usb_request.cpp
     usb_queue.cpp
-    hardware.cpp
+    hardware.cpp)
+
+add_library(usbuhci SHARED
+    ${SOURCE}
     usbuhci.rc)
 
 target_link_libraries(usbuhci
@@ -19,12 +22,15 @@ target_link_libraries(usbuhci
     libcntpr
     ${PSEH_LIB})
 
+# FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)
-    set_target_properties(usbuhci PROPERTIES COMPILE_FLAGS "/GR-")
+    #add_target_compile_flags(usbuhci "/GR-")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
 else()
     target_link_libraries(usbuhci -lgcc)
-    set_target_properties(usbuhci PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
-endif(MSVC)
+    #add_target_compile_flags(usbuhci "-fno-exceptions -fno-rtti")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+endif()
 
 set_module_type(usbuhci kernelmodedriver)
 add_importlibs(usbuhci ntoskrnl hal usbd)

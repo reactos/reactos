@@ -33,10 +33,12 @@ add_library(classpnp SHARED
     class.rc)
 
 if(ARCH MATCHES i386)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     if(MSVC)
-        add_target_compile_flags(classpnp "/Gz")
+        #add_target_compile_flags(classpnp "/Gz")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
     else()
-        # FIXME: http://www.cmake.org/Bug/view.php?id=12998        
+        
         #add_target_compile_flags(classpnp "-mrtd -fno-builtin -w")
         set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin -w")
     endif()
