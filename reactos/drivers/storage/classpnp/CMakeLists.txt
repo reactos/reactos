@@ -9,14 +9,6 @@ add_definitions(
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
 
-if(ARCH MATCHES i386)
-    if(MSVC)
-        add_definitions(/Gz)
-    else()
-        add_definitions(-mrtd -fno-builtin -w)
-    endif()
-endif()
-
 spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -34,10 +26,22 @@ list(APPEND SOURCE
     retry.c
     utils.c
     xferpkt.c
-    class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
-add_library(classpnp SHARED ${SOURCE})
+add_library(classpnp SHARED
+    ${SOURCE}
+    class.rc)
+
+if(ARCH MATCHES i386)
+    if(MSVC)
+        add_target_compile_flags(classpnp "/Gz")
+    else()
+        # FIXME: http://www.cmake.org/Bug/view.php?id=12998        
+        #add_target_compile_flags(classpnp "-mrtd -fno-builtin -w")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin -w")
+    endif()
+endif()
+
 add_pch(classpnp classp.h)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)

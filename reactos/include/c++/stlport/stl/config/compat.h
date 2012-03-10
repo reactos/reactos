@@ -4,6 +4,8 @@
  * This section sets new-style macros based on old-style ones, for compatibility
  */
 
+#ifndef RC_INVOKED
+
 #if defined (__STL_DEBUG) && !defined (_STLP_DEBUG)
 #  define _STLP_DEBUG __STL_DEBUG
 #endif
@@ -78,3 +80,5 @@
 #  error STLport do not support anymore the wrapper mode. If you want to use STLport \
 use its iostreams implementation or no iostreams at all.
 #endif
+
+#endif /* RC_INVOKED */

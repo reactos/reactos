@@ -1,13 +1,26 @@
 include_directories(..)
 
-add_library(disk_new SHARED data.c disk.c diskwmi.c enum.c geometry.c part.c pnp.c disk.rc)
+list(APPEND SOURCE
+    data.c
+    disk.c
+    diskwmi.c
+    enum.c
+    geometry.c
+    part.c
+    pnp.c)
+
+add_library(disk_new SHARED
+    ${SOURCE}
+    disk.rc)
 
 target_link_libraries(disk_new libcntpr wdmguid)
 if(ARCH MATCHES i386)
     if(MSVC)
         add_target_compile_flags(disk_new "/Gz")
     else()
-        add_target_compile_flags(disk_new "-mrtd -fno-builtin -Wno-unused-variable -Wno-pointer-sign")
+        # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+        #add_target_compile_flags(disk_new "-mrtd -fno-builtin -Wno-unused-variable -Wno-pointer-sign")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin -Wno-unused-variable -Wno-pointer-sign")
     endif()
 endif()
 

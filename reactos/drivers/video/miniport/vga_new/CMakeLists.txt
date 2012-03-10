@@ -4,17 +4,20 @@ list(APPEND SOURCE
     vgadata.c
     vga.c
     vbemodes.c
-    vbe.c
-    vga.rc)
+    vbe.c)
 
-add_library(vga SHARED ${SOURCE})
+add_library(vga SHARED
+    ${SOURCE}
+    vga.rc)
 
 target_link_libraries(vga libcntpr)
 
 if(MSVC)
     add_target_compile_flags(vga "/Gz")
 else()
-    add_target_compile_flags(vga "-mrtd -fno-builtin")
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(vga "-mrtd -fno-builtin")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
 endif()
 
 set_module_type(vga kernelmodedriver)

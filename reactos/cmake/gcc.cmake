@@ -162,7 +162,7 @@ SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <O
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
-set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> ${I18N_DEFS} -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
@@ -198,18 +198,6 @@ function(set_module_type_toolchain MODULE TYPE)
 endfunction()
 
 function(set_rc_compiler)
-    get_directory_property(defines COMPILE_DEFINITIONS)
-    get_directory_property(includes INCLUDE_DIRECTORIES)
-
-    foreach(arg ${defines})
-        set(rc_result_defs "${rc_result_defs} -D${arg}")
-    endforeach()
-
-    foreach(arg ${includes})
-        set(rc_result_incs "-I${arg} ${rc_result_incs}")
-    endforeach()
-
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${I18N_DEFS} -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>" PARENT_SCOPE)
 endfunction()
 
 function(add_delay_importlibs MODULE)
