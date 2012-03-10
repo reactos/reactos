@@ -10,14 +10,17 @@ spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     imm.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)
 
-add_library(imm32 SHARED ${SOURCE})
+add_library(imm32 SHARED
+    ${SOURCE}
+    version.rc)
 
 if(MSVC)
-    add_target_compile_flags(imm32 "/FIwine/typeof.h")
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(imm32 "/FIwine/typeof.h")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
 endif()
 
 set_module_type(imm32 win32dll)
