@@ -405,7 +405,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
         {
           IoStatus->Information = 0;
           IoStatus->Status = Status;
-          DPRINT1("ReadCacheSegmentChain failed, Status %x\n", Status);
+          DPRINT("ReadCacheSegmentChain failed, Status %x\n", Status);
           return FALSE;
         }
 
