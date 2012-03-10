@@ -178,7 +178,7 @@ function(spec2def _dllname _spec_file)
 
         # add our library
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-        _add_library(lib${_file} STATIC EXCLUDE_FROM_ALL
+        add_library(lib${_file} STATIC EXCLUDE_FROM_ALL
             ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm)
         
         # set correct "link rule"
