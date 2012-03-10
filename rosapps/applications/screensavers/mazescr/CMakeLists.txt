@@ -6,7 +6,7 @@ add_executable(mazescr
     maze.c
     scrnsave.rc)
 
-set_module_type(mazescr win32gui UNICODE)
+set_module_type(mazescr win32gui)
 set_target_properties(mazescr PROPERTIES SUFFIX ".scr")
 
 add_importlibs(mazescr user32 gdi32 msvcrt kernel32)
