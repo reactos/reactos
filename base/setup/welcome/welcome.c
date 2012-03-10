@@ -46,6 +46,7 @@
 #define TITLE_WIDTH  480
 #define TITLE_HEIGHT  93
 
+#define TOPIC_DESC_LENGTH	1024
 
 /* GLOBALS ******************************************************************/
 
@@ -238,15 +239,11 @@ ButtonSubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 RunApplication(int nTopic)
 {
-  PROCESS_INFORMATION ProcessInfo;
-  STARTUPINFO StartupInfo;
-  TCHAR AppName[256];
-  TCHAR CurrentDir[256];
+  TCHAR AppName[512];
+  TCHAR Parameters[2];
   int nLength;
 
   InvalidateRect(hwndMain, NULL, TRUE);
-
-  GetCurrentDirectory(256, CurrentDir);
 
   nLength = LoadString(hInstance, IDS_TOPICACTION0 + nTopic, AppName, 256);
   if (nLength == 0)
@@ -255,25 +252,18 @@ RunApplication(int nTopic)
   if (!_tcsicmp(AppName, TEXT("<exit>")))
     return FALSE;
 
+  if (!_tcsnicmp(AppName, TEXT("<msg>"), 5))
+  {
+    MessageBox(hwndMain, AppName + 5, TEXT("ReactOS"), MB_OK | MB_TASKMODAL);
+    return TRUE;
+  }
+
   if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
-    {
-      _tcscat(AppName, TEXT(" "));
-      _tcscat(AppName, CurrentDir);
-    }
+    _tcscpy(Parameters, TEXT("\\"));
+  else
+    *Parameters = 0;
 
-  memset(&StartupInfo, 0, sizeof(STARTUPINFO));
-  StartupInfo.cb = sizeof(STARTUPINFO);
-  StartupInfo.lpTitle = TEXT("Test");
-  StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-  StartupInfo.wShowWindow = SW_SHOWNORMAL;
-
-  CreateProcess(NULL, AppName, NULL, NULL, FALSE, CREATE_NEW_CONSOLE,NULL,
-		CurrentDir,
-		&StartupInfo,
-		&ProcessInfo);
-
-  CloseHandle(ProcessInfo.hProcess);
-  CloseHandle(ProcessInfo.hThread);
+  ShellExecute(NULL, TEXT("open"), AppName, Parameters, NULL, SW_SHOWDEFAULT);
 
   return TRUE;
 }
@@ -521,7 +511,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   HFONT hOldFont;
   RECT rcTitle, rcDescription;
   TCHAR szTopicTitle[80];
-  TCHAR szTopicDesc[256];
+  TCHAR szTopicDesc[TOPIC_DESC_LENGTH];
   int nLength;
   BITMAP bmpInfo;
   TCHAR version[50];
@@ -605,13 +595,13 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   if (nTopic == -1)
     {
-      nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, 256);
+      nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, TOPIC_DESC_LENGTH);
     }
   else
     {
-      nLength = LoadString(hInstance, IDS_TOPICDESC0 + nTopic, szTopicDesc, 256);
+      nLength = LoadString(hInstance, IDS_TOPICDESC0 + nTopic, szTopicDesc, TOPIC_DESC_LENGTH);
       if (nLength == 0)
-	nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, 256);
+	nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, TOPIC_DESC_LENGTH);
     }
 
   SetBkMode(hdc, TRANSPARENT);

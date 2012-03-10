@@ -5,6 +5,7 @@
 	<include base="welcome">.</include>
 	<library>gdi32</library>
 	<library>user32</library>
+	<library>shell32</library>
 	<file>welcome.c</file>
 	<file>welcome.rc</file>
 </module>
