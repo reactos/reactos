@@ -68,6 +68,7 @@
 #define IDHK_RUN 1
 #define IDHK_DESKTOP 2
 #define IDHK_LOGOFF 3
+#define IDHK_STARTMENU 4
 
  /// desktop bar window, also known as "system tray"
 struct DesktopBar : public

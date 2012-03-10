@@ -140,9 +140,6 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	rbBand.cbSize = sizeof(REBARBANDINFO);
 	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE|RBBIM_ID|RBBIM_IDEALSIZE;
-#ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
-#define RBBS_HIDETITLE	0x400
-#endif
 	rbBand.cyChild = REBARBAND_HEIGHT;
 	rbBand.cyMaxChild = (ULONG)-1;
 	rbBand.cyMinChild = REBARBAND_HEIGHT;
@@ -249,6 +246,7 @@ void DesktopBar::RegisterHotkeys()
 	RegisterHotKey(_hwnd, IDHK_RUN, MOD_WIN, 'R');
 	RegisterHotKey(_hwnd, IDHK_DESKTOP, MOD_WIN, 'D');
 	RegisterHotKey(_hwnd, IDHK_LOGOFF, MOD_WIN, 'L');
+	RegisterHotKey(_hwnd, IDHK_STARTMENU, MOD_CONTROL, VK_ESCAPE);
 
 		///@todo register all common hotkeys
 }
@@ -272,6 +270,9 @@ void DesktopBar::ProcessHotKey(int id_hotkey)
 			g_Globals._desktops.ToggleMinimize();
 			break;
 
+		case IDHK_STARTMENU:
+			ShowOrHideStartMenu();
+			break;
 		///@todo implement all common hotkeys
 	}
 }
