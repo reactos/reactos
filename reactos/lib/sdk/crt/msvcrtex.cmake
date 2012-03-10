@@ -3,6 +3,9 @@ include_directories(include/internal/mingw-w64)
 
 if(NOT MSVC)
     add_compile_flags("-Wno-main")
+    if(LTCG)
+        add_compile_flags("-fno-lto")
+    endif()
 endif()
 
 list(APPEND MSVCRTEX_SOURCE

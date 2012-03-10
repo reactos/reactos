@@ -16,6 +16,9 @@ set (OPTIMIZE "1" CACHE STRING
   4 = -O2
   5 = -O3")
 
+set(LTCG FALSE CACHE BOOL
+"Whether to build with link-time code generation")
+
 set(DBG TRUE CACHE BOOL
 "Whether to compile for debugging.")
 
