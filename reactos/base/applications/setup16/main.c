@@ -26,13 +26,15 @@ static UINT WINAPI ExtCabCallback(PVOID Context, UINT Notification, UINT_PTR Par
 
 BOOL DeleteDirectory(LPWSTR lpszDir)
 {
+    SHFILEOPSTRUCT fileop;
     DWORD len = wcslen(lpszDir);
     WCHAR *pszFrom = HeapAlloc(GetProcessHeap(), 0, (len + 2) * sizeof(WCHAR)); 
+    int ret;
+
     wcscpy(pszFrom, lpszDir);
     pszFrom[len] = 0;
     pszFrom[len+1] = 0;
 
-    SHFILEOPSTRUCT fileop;
     fileop.hwnd   = NULL;
     fileop.wFunc  = FO_DELETE;
     fileop.pFrom  = pszFrom;
@@ -42,7 +44,7 @@ BOOL DeleteDirectory(LPWSTR lpszDir)
     fileop.lpszProgressTitle     = NULL;
     fileop.hNameMappings         = NULL;
 
-    int ret = SHFileOperation(&fileop);
+    ret = SHFileOperation(&fileop);
     HeapFree(GetProcessHeap(), 0, &pszFrom);
     return (ret == 0);
 }
@@ -60,9 +62,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
                        LPWSTR    lpCmdLine,
                        int       nCmdShow)
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(nCmdShow);
-
     WCHAR szSetupPath[MAX_PATH];
     WCHAR szFileName[MAX_PATH];
     WCHAR szCabFileName[MAX_PATH];
@@ -76,6 +75,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     DWORD dwAttrib;
     PROCESS_INFORMATION processInfo;
     STARTUPINFO startupInfo;
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(nCmdShow);
     
     GetCurrentDirectory(MAX_PATH, szSetupPath);
     wcscat(szSetupPath, L"\\");
