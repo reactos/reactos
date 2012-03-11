@@ -557,7 +557,7 @@ GeneratePData(PFILE_INFO File)
 
     /* Allocate .pdata buffer */
     pdata = File->pdata.p = malloc(pshp->SizeOfRawData);
-    memset(File->pdata.p, 0, pshp->SizeOfRawData,);
+    memset(File->pdata.p, 0, pshp->SizeOfRawData);
 
     /* Init exception data dir */
     Dir = &File->OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
