@@ -589,7 +589,7 @@ IopAttachFilterDriversCallback(
        Status = IopInitializeDevice(DeviceNode, DriverObject);
 
        /* Remove extra reference */
-       ObDereferenceObject(DriverObject);
+       //ObDereferenceObject(DriverObject);
    }
 
    return STATUS_SUCCESS;
@@ -885,7 +885,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 
    /* Remove extra reference from IopInitializeDriverModule */
-   ObDereferenceObject(DriverObject);
+   //ObDereferenceObject(DriverObject);
 
    return Status;
 }
