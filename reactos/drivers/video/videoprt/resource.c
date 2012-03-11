@@ -64,7 +64,9 @@ IntVideoPortGetLegacyResources(
         *AccessRanges = DriverExtension->InitializationData.HwLegacyResourceList;
         *AccessRangeCount = DriverExtension->InitializationData.HwLegacyResourceCount;
     }
-    
+
+    INFO_(VIDEOPRT, "Got %d legacy access ranges\n", *AccessRangeCount);
+
     return STATUS_SUCCESS;
 }
 
@@ -580,7 +582,7 @@ VideoPortGetAccessRanges(
     PIO_RESOURCE_REQUIREMENTS_LIST ResReqList;
     BOOLEAN DeviceAndVendorFound = FALSE;
     
-    TRACE_(VIDEOPRT, "VideoPortGetAccessRanges\n");
+    TRACE_(VIDEOPRT, "VideoPortGetAccessRanges(%d, %p, %d, %p)\n", NumRequestedResources, RequestedResources, NumAccessRanges, AccessRanges);
     
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
     DriverObject = DeviceExtension->DriverObject;
@@ -729,7 +731,10 @@ VideoPortGetAccessRanges(
     if (!NT_SUCCESS(Status))
         return ERROR_DEV_NOT_EXIST;
     if (NumAccessRanges < LegacyAccessRangeCount)
+    {
+        ERR_(VIDEOPRT, "Too many legacy access ranges found\n");
         return ERROR_NOT_ENOUGH_MEMORY;
+    }
     RtlCopyMemory(AccessRanges, LegacyAccessRanges, LegacyAccessRangeCount * sizeof(VIDEO_ACCESS_RANGE));
     AssignedCount = LegacyAccessRangeCount;
     for (FullList = AllocatedResources->List;
@@ -751,7 +756,7 @@ VideoPortGetAccessRanges(
                  Descriptor->Type == CmResourceTypePort) &&
                 AssignedCount >= NumAccessRanges)
             {
-                WARN_(VIDEOPRT, "Too many access ranges found\n");
+                ERR_(VIDEOPRT, "Too many access ranges found\n");
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
             if (Descriptor->Type == CmResourceTypeMemory)
