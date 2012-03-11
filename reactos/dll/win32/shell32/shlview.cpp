@@ -1421,7 +1421,7 @@ void CDefView::DoActivate(UINT uState)
     TRACE("%p uState=%x\n", this, uState);
 
     /*don't do anything if the state isn't really changing */
-    if (uState == uState)
+    if (this->uState == uState)
     {
         return;
     }
@@ -2179,7 +2179,7 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
     TRACE("(%p)->(state=%x) stub\n", this, uState);
 
     /*don't do anything if the state isn't really changing*/
-    if (uState == uState)
+    if (this->uState == uState)
     {
         return S_OK;
     }
