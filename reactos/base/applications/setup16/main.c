@@ -83,6 +83,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     wcscpy(szFileName, szSetupPath);
     wcscat(szFileName, L"setup.lst");
     
+    if (GetFileAttributes(szFileName) == INVALID_FILE_ATTRIBUTES)
+    {
+        MessageBoxW(0, L"Cannot find Setup.lst file", L"Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+    
     /* read information from setup.lst */
     GetPrivateProfileStringW(NT_PARAMS, L"CabinetFile", NULL, szCabFileName, MAX_PATH, szFileName);
     GetPrivateProfileStringW(NT_PARAMS, L"TmpDirName", NULL, szTempDirName, 50, szFileName);
