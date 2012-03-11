@@ -7,16 +7,20 @@ list(APPEND SOURCE
     palette.c
     pointer.c
     screen.c
-    framebuf_new.rc
     ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def)
 
-add_library(framebuf_new SHARED ${SOURCE})
+add_library(framebuf_new SHARED
+    ${SOURCE}
+    framebuf_new.rc)
 
 if(ARCH MATCHES i386)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     if(MSVC)
-        add_target_compile_flags(framebuf_new "/Gz")
+        #add_target_compile_flags(framebuf_new "/Gz")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
     else()
-        add_target_compile_flags(framebuf_new "-mrtd -fno-builtin")
+        #add_target_compile_flags(framebuf_new "-mrtd -fno-builtin")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
     endif()
 endif()
 
