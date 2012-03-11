@@ -121,7 +121,7 @@ VBEReadEdidUsingSCI(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_REPORT_CAPABILITIES;
-   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
+   BiosRegisters.Ecx = ChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -137,7 +137,7 @@ VBEReadEdidUsingSCI(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_BEGIN_SCL_SDA_CONTROL;
-   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
+   BiosRegisters.Ecx = ChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
