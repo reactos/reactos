@@ -231,15 +231,20 @@ VOID RunLoader(VOID)
 		IniOpenSection("Operating Systems", &SectionId);
 		IniReadSettingByName(SectionId, SectionName, SettingValue, sizeof(SettingValue));
 
+#ifndef _M_ARM
 		// Install the drive mapper according to this sections drive mappings
 #if defined(_M_IX86) && !defined(_MSC_VER)
 		DriveMapMapDrivesInSection(SectionName);
 #endif
 
 #ifdef FREELDR_REACTOS_SETUP
-        // WinLdr-style boot
-        LoadReactOSSetup();
-#elif defined(_M_IX86)
+		if (_stricmp(BootType, "ReactOSSetup") == 0)
+		{
+			LoadReactOSSetup();
+		}
+		else
+#endif
+#ifdef _M_IX86
 		if (_stricmp(BootType, "Windows") == 0)
 		{
 			LoadAndBootWindows(SectionName, SettingValue, 0);
@@ -268,6 +273,7 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootDrive(SectionName);
 		}
+#endif
 #else
 		LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
 #endif
