@@ -71,6 +71,19 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
+#define NAME       L"microsoft.windows.common-controls"
+#define VERSION    L"6.0.2600.2982"
+#define PUBLIC_KEY L"6595b64144ccf1df"
+
+#ifdef __i386__
+#define ARCH L"x86"
+#elif defined __x86_64__
+#define ARCH L"amd64"
+#else
+#define ARCH L"none"
+#endif
+
+static const WCHAR manifest_filename[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION L"_none_deadbeef.manifest";
 
 static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -91,6 +104,67 @@ static const WORD wPattern55AA[] =
 static const WCHAR strCC32SubclassInfo[] = {
     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
 };
+
+static BOOL create_manifest(BOOL install)
+{
+    WCHAR *pwszBuf;
+    HRSRC hResInfo;
+    HGLOBAL hResData;
+    PVOID pManifest;
+    DWORD cchBuf, cbManifest, cbWritten;
+    HANDLE hFile;
+    BOOL bRet = FALSE;
+
+    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", RT_MANIFEST);
+    if (!hResInfo)
+        return FALSE;
+
+    cbManifest = SizeofResource(COMCTL32_hModule, hResInfo);
+    if (!cbManifest)
+        return FALSE;
+
+    hResData = LoadResource(COMCTL32_hModule, hResInfo);
+    if (!hResData)
+        return FALSE;
+
+    pManifest = LockResource(hResData);
+    if (!pManifest)
+        return FALSE;
+
+    cchBuf = GetWindowsDirectoryW(NULL, 0) * sizeof(WCHAR) + sizeof(L"\\winsxs\\manifests\\") + sizeof(manifest_filename);
+    pwszBuf = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchBuf * sizeof(WCHAR));
+    if (!pwszBuf)
+        return FALSE;
+
+    GetWindowsDirectoryW(pwszBuf, cchBuf);
+    lstrcatW(pwszBuf, L"\\winsxs");
+    CreateDirectoryW(pwszBuf, NULL);
+    lstrcatW(pwszBuf, L"\\manifests\\");
+    CreateDirectoryW(pwszBuf, NULL);
+    lstrcatW(pwszBuf, manifest_filename);
+    if (install)
+    {
+        hFile = CreateFileW(pwszBuf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            if (WriteFile(hFile, pManifest, cbManifest, &cbWritten, NULL) && cbWritten == cbManifest)
+                bRet = TRUE;
+
+            CloseHandle(hFile);
+
+            if (!bRet)
+                DeleteFileW(pwszBuf);
+            else
+                TRACE("created %s\n", debugstr_w(pwszBuf));
+        }
+    }
+    else
+        bRet = DeleteFileW(pwszBuf);
+
+    HeapFree(GetProcessHeap(), 0, pwszBuf);
+
+    return bRet;
+}
 
 
 /***********************************************************************
@@ -930,6 +1004,12 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
+    if (!create_manifest(bInstall))
+    {
+        ERR("create_manifest failed!\n");
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+        
     return S_OK;
 }
 
