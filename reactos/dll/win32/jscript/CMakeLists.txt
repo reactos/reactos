@@ -36,10 +36,11 @@ list(APPEND SOURCE
     bool.c
     function.c
     global.c
-    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
-add_library(jscript SHARED ${SOURCE})
+add_library(jscript SHARED
+    ${SOURCE}
+    rsrc.rc)
 
 set_module_type(jscript win32dll)
 
@@ -63,7 +64,9 @@ add_dependencies(jscript stdole2)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    allow_warnings(jscript)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(jscript)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/jsglobal.tlb)

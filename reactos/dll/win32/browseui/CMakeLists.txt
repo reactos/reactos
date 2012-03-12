@@ -40,12 +40,19 @@ list(APPEND SOURCE
     toolsband.cpp
     travellog.cpp
     utility.cpp
-    browseui.rc
     dllinstall.c
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
-add_library(browseui SHARED ${SOURCE})
-allow_warnings(browseui)
+add_library(browseui SHARED
+    ${SOURCE}
+    browseui.rc)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(browseui)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 set_module_type(browseui win32dll UNICODE)
 
 target_link_libraries(browseui
@@ -68,3 +75,4 @@ add_importlibs(browseui
 
 add_pch(browseui precomp.h)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
+

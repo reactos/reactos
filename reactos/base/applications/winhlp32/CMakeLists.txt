@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_definitions(
@@ -9,13 +7,16 @@ add_definitions(
     -Dfileno=_fileno
     -Disatty=_isatty)
 
-add_executable(winhlp32
+list(APPEND SOURCE
     callback.c
     hlpfile.c
     macro.c
     string.c
     winhelp.c
-    lex.yy.c
+    lex.yy.c)
+
+add_executable(winhlp32
+    ${SOURCE}
     rsrc.rc)
 
 set_module_type(winhlp32 win32gui)
@@ -24,5 +25,7 @@ add_importlibs(winhlp32 user32 gdi32 shell32 comctl32 comdlg32 msvcrt kernel32 n
 add_cd_file(TARGET winhlp32 DESTINATION reactos FOR all)
 
 if(NOT MSVC)
-    allow_warnings(winhlp32)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(winhlp32)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()

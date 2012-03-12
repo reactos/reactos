@@ -6,8 +6,6 @@ add_definitions(
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 if(MSVC)
     add_definitions(-Disnan=_isnan)
     add_definitions(-Disinf=!_finite)
@@ -42,7 +40,6 @@ list(APPEND SOURCE
     view.c
     volume.c
     wined3d_main.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
 if(ARCH MATCHES amd64)
@@ -51,7 +48,9 @@ list(APPEND SOURCE
      sqrtf.c)
 endif()
 
-add_library(wined3d SHARED ${SOURCE})
+add_library(wined3d SHARED
+    ${SOURCE}
+    version.rc)
 set_module_type(wined3d win32dll ENTRYPOINT 0)
 
 target_link_libraries(wined3d wine)
@@ -69,7 +68,8 @@ add_dependencies(wined3d wineheaders)
 add_pch(wined3d wined3d_private.h)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)
 
-
 if(NOT MSVC)
-    allow_warnings(wined3d)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(wined3d)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()

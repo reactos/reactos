@@ -3,7 +3,7 @@ set_cpp()
 
 spec2def(ksproxy.ax ksproxy.spec)
 
-add_library(ksproxy SHARED
+list(APPEND SOURCE
     allocator.cpp
     basicaudio.cpp
     classfactory.cpp
@@ -16,7 +16,6 @@ add_library(ksproxy SHARED
     input_pin.cpp
     interface.cpp
     ksproxy.cpp
-    ksproxy.rc
     mediasample.cpp
     node.cpp
     output_pin.cpp
@@ -24,13 +23,19 @@ add_library(ksproxy SHARED
     qualityforward.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
 
+add_library(ksproxy SHARED
+    ${SOURCE}
+    ksproxy.rc)
+
 set_module_type(ksproxy win32dll ENTRYPOINT 0)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
 
 if(MSVC)
     add_target_compile_flags(ksproxy "/GR-")
 else()
-    add_target_compile_flags(ksproxy "-fno-exceptions -fno-rtti")
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(ksproxy "-fno-exceptions -fno-rtti")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif()
 
 target_link_libraries(ksproxy strmiids)
@@ -45,3 +50,4 @@ add_importlibs(ksproxy
     ntdll)
 
 add_cd_file(TARGET ksproxy DESTINATION reactos/system32 FOR all)
+

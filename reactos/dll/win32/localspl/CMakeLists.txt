@@ -14,11 +14,12 @@ list(APPEND SOURCE
     localmon.c
     localspl_main.c
     provider.c
-    localspl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/localspl_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/localspl.def)
 
-add_library(localspl SHARED ${SOURCE})
+add_library(localspl SHARED
+    ${SOURCE}
+    localspl.rc)
 
 set_module_type(localspl win32dll)
 
@@ -35,5 +36,8 @@ add_importlibs(localspl
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    allow_warnings(localspl)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(localspl)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
+
