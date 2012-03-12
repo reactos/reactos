@@ -21,6 +21,7 @@ Signature = "$ReactOS$"
 6 = inf
 7 = bin
 8 = media
+9 = Resources\Themes\Lautus
 
 .InfEnd
 
@@ -693,6 +694,9 @@ media\inf\xboxdisp.inf                              6
 
 ; Media Files
 media\sounds\ReactOS_LogOn.wav                      8
+
+; Lautus Theme
+media\themes\Lautus.msstyles                        9   optional
 
 ; Ini Files
 boot\bootdata\system.ini                            4

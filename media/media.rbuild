@@ -16,6 +16,9 @@
 	<directory name="sounds">
 		<xi:include href="sounds/sounds.rbuild" />
 	</directory>
+	<directory name="themes">
+		<xi:include href="themes/themes.rbuild" />
+	</directory>
 	<directory name="vgafonts">
 		<xi:include href="vgafonts/vgafonts.rbuild" />
 	</directory>
