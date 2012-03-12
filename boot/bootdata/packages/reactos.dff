@@ -888,6 +888,4 @@ modules\rostests\kmtests\example\example_drv.sys                           7   o
 modules\rostests\kmtests\ntos_io\iodeviceobject_drv.sys                    7   optional
 modules\rostests\kmtests\ntos_io\iohelper_drv.sys                          7   optional
 
-modules\wallpaper\Angelus_ReactOS7_Dark_4-3.bmp                            4   optional
-modules\wallpaper\Angelus_Sea04_FarBeyondTheSea_4x3.bmp                    4   optional
-modules\wallpaper\RainInTheScreen_4x3.bmp                                  4   optional
+modules\wallpaper\dark-clt2012.bmp                                         4   optional

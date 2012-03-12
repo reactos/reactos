@@ -53,4 +53,4 @@ modules\optional\vmx_svga.inf                       6  optional
 modules\optional\vmx_svga.sys                       2  optional
 modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
 
-modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
+modules\wallpaper\dark-clt2012.bmp                  4   optional
