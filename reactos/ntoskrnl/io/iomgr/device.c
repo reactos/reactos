@@ -364,6 +364,7 @@ VOID
 NTAPI
 IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 {
+#if 0
     PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
     PEXTENDED_DEVOBJ_EXTENSION ThisExtension = IoGetDevObjExtension(DeviceObject);
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
@@ -463,7 +464,7 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Dereference once more, referenced at driver object creation */
     ObDereferenceObject(DriverObject);
-
+#endif
 }
 
 VOID
