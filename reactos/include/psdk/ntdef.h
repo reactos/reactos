@@ -237,6 +237,14 @@
 #endif
 #endif /* DECLSPEC_ADDRSAFE */
 
+#ifndef NOP_FUNCTION
+#if (_MSC_VER >= 1210)
+#define NOP_FUNCTION __noop
+#else
+#define NOP_FUNCTION (void)0
+#endif
+#endif
+
 #if !defined(_NTSYSTEM_)
 #define NTSYSAPI     DECLSPEC_IMPORT
 #define NTSYSCALLAPI DECLSPEC_IMPORT

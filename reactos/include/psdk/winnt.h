@@ -81,6 +81,14 @@
 # endif
 #endif
 
+#ifndef NOP_FUNCTION
+#if (_MSC_VER >= 1210)
+#define NOP_FUNCTION __noop
+#else
+#define NOP_FUNCTION (void)0
+#endif
+#endif
+
 # define DECLSPEC_HIDDEN
 
 #ifdef __cplusplus
