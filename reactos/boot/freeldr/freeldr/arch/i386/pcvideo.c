@@ -798,7 +798,7 @@ PcVideoSetMode(USHORT NewMode)
       ScreenHeight = VesaVideoModeInformation.HeightInPixels;
       BytesPerScanLine = VesaVideoModeInformation.BytesPerScanLine;
       BiosVideoMode = NewMode;
-      DisplayMode = VideoTextMode;
+      DisplayMode = VideoGraphicsMode;
       VesaVideoMode = TRUE;
 
       return TRUE;
