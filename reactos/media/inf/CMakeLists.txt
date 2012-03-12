@@ -18,6 +18,7 @@ list(APPEND INF_FILES
     kscaptur.inf
     layout.inf
     machine.inf
+    monitor.inf
     msmouse.inf
     NET_NIC.inf
     netamd.inf

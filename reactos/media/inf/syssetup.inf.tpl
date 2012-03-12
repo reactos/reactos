@@ -25,6 +25,7 @@ hdc.inf
 input.inf
 keyboard.inf
 machine.inf
+monitor.inf
 msmouse.inf
 NET_NIC.inf
 ports.inf

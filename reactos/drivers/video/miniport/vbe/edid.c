@@ -273,6 +273,11 @@ VBEGetVideoChildDescriptor(
    {
       VideoPortDebugPrint(Info, "VBEMP: EDID information read using I²C\n");
    }
+   else if (ChildEnumInfo->ChildIndex == 1)
+   {
+       /* We must have 1 monitor, so just report it with no EDID information */
+       VideoPortDebugPrint(Info, "VBEMP: Reporting monitor with no EDID information\n");
+   }
    else
    {
       VideoPortDebugPrint(Warn, "VBEMP: Unable to read EDID information\n");
