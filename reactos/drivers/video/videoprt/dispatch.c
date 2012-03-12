@@ -444,6 +444,7 @@ IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     {
         ChildExtension = CONTAINING_RECORD(CurrentEntry, VIDEO_PORT_CHILD_EXTENSION, ListEntry);
 
+        ObReferenceObject(ChildExtension->PhysicalDeviceObject);
         DeviceRelations->Objects[i] = ChildExtension->PhysicalDeviceObject;
 
         i++;
