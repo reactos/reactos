@@ -410,6 +410,51 @@ IntVideoPortForwardIrpAndWaitCompletionRoutine(
   return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+NTSTATUS
+NTAPI
+IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+    PDEVICE_RELATIONS DeviceRelations;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
+    ULONG i;
+    PLIST_ENTRY CurrentEntry;
+
+    /* Count the children */
+    i = 0;
+    CurrentEntry = DeviceExtension->ChildDeviceList.Flink;
+    while (CurrentEntry != &DeviceExtension->ChildDeviceList)
+    {
+        i++;
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    if (i == 0)
+        return Irp->IoStatus.Status;
+
+    DeviceRelations = ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS) + ((i - 1) * sizeof(PVOID)));
+    if (!DeviceRelations) return STATUS_NO_MEMORY;
+
+    DeviceRelations->Count = i;
+
+    /* Add the children */
+    i = 0;
+    CurrentEntry = DeviceExtension->ChildDeviceList.Flink;
+    while (CurrentEntry != &DeviceExtension->ChildDeviceList)
+    {
+        ChildExtension = CONTAINING_RECORD(CurrentEntry, VIDEO_PORT_CHILD_EXTENSION, ListEntry);
+
+        DeviceRelations->Objects[i] = ChildExtension->PhysicalDeviceObject;
+
+        i++;
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    INFO_(VIDEOPRT, "Reported %d PDOs\n", i);
+    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI
@@ -433,14 +478,14 @@ IntVideoPortForwardIrpAndWait(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return Status;
 }
 
-
 NTSTATUS NTAPI
-IntVideoPortDispatchPnp(
+IntVideoPortDispatchFdoPnp(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
    PIO_STACK_LOCATION IrpSp;
    NTSTATUS Status;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -463,6 +508,20 @@ IntVideoPortDispatchPnp(
          Irp->IoStatus.Information = 0;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          break;
+
+       case IRP_MN_QUERY_DEVICE_RELATIONS:
+           if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
+           {
+               IoSkipCurrentIrpStackLocation(Irp);
+               Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+           }
+           else
+           {
+               Status = IntVideoPortQueryBusRelations(DeviceObject, Irp);
+               Irp->IoStatus.Status = Status;
+               IoCompleteRequest(Irp, IO_NO_INCREMENT);
+           }
+           break;
 
       case IRP_MN_REMOVE_DEVICE:
       case IRP_MN_QUERY_REMOVE_DEVICE:
@@ -493,6 +552,19 @@ IntVideoPortDispatchPnp(
    }
 
    return Status;
+}
+
+NTSTATUS NTAPI
+IntVideoPortDispatchPnp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PVIDEO_PORT_COMMON_EXTENSION CommonExtension = DeviceObject->DeviceExtension;
+    
+    if (CommonExtension->Fdo)
+        return IntVideoPortDispatchFdoPnp(DeviceObject, Irp);
+    else
+        return IntVideoPortDispatchPdoPnp(DeviceObject, Irp);
 }
 
 NTSTATUS NTAPI

@@ -250,11 +250,14 @@ IntVideoPortCreateAdapterDeviceObject(
     */
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)((*DeviceObject)->DeviceExtension);
+   DeviceExtension->Common.Fdo = TRUE;
    DeviceExtension->DeviceNumber = DeviceNumber;
    DeviceExtension->DriverObject = DriverObject;
    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
    DeviceExtension->FunctionalDeviceObject = *DeviceObject;
    DeviceExtension->DriverExtension = DriverExtension;
+
+   InitializeListHead(&DeviceExtension->ChildDeviceList);
 
    /*
     * Get the registry path associated with this driver.
@@ -1097,14 +1100,14 @@ VideoPortEnumerateChildren(
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    ULONG Status;
    VIDEO_CHILD_ENUM_INFO ChildEnumInfo;
-   VIDEO_CHILD_TYPE ChildType;
    BOOLEAN bHaveLastMonitorID = FALSE;
    UCHAR LastMonitorID[10];
-   UCHAR ChildDescriptor[256];
-   ULONG ChildId;
    ULONG Unused;
    UINT i;
+   PDEVICE_OBJECT ChildDeviceObject;
+   PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
 
+   INFO_(VIDEOPRT, "Starting child device probe\n");
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
    {
@@ -1112,95 +1115,144 @@ VideoPortEnumerateChildren(
       return NO_ERROR;
    }
 
-   /* Setup the ChildEnumInfo */
-   ChildEnumInfo.Size = sizeof (ChildEnumInfo);
-   ChildEnumInfo.ChildDescriptorSize = sizeof (ChildDescriptor);
-   ChildEnumInfo.ACPIHwId = 0;
-   ChildEnumInfo.ChildHwDeviceExtension = NULL; /* FIXME: must be set to
-                                                   ChildHwDeviceExtension... */
+   if (!IsListEmpty(&DeviceExtension->ChildDeviceList))
+   {
+       ERR_(VIDEOPRT, "FIXME: Support calling VideoPortEnumerateChildren again!\n");
+       return NO_ERROR;
+   }
 
    /* Enumerate the children */
    for (i = 1; ; i++)
    {
-      ChildEnumInfo.ChildIndex = i;
-      RtlZeroMemory(ChildDescriptor, sizeof(ChildDescriptor));
+       Status = IoCreateDevice(DeviceExtension->DriverObject,
+                               sizeof(VIDEO_PORT_CHILD_EXTENSION) +
+                               DeviceExtension->DriverExtension->InitializationData.HwChildDeviceExtensionSize,
+                               NULL,
+                               FILE_DEVICE_CONTROLLER,
+                               FILE_DEVICE_SECURE_OPEN,
+                               FALSE,
+                               &ChildDeviceObject);
+       if (!NT_SUCCESS(Status))
+           return Status;
+
+       ChildExtension = ChildDeviceObject->DeviceExtension;
+
+       RtlZeroMemory(ChildExtension, sizeof(VIDEO_PORT_CHILD_EXTENSION) +
+                     DeviceExtension->DriverExtension->InitializationData.HwChildDeviceExtensionSize);
+
+       ChildExtension->Common.Fdo = FALSE;
+       ChildExtension->ChildId = i;
+       ChildExtension->PhysicalDeviceObject = ChildDeviceObject;
+       ChildExtension->DriverObject = DeviceExtension->DriverObject;
+
+       /* Setup the ChildEnumInfo */
+       ChildEnumInfo.Size = sizeof(ChildEnumInfo);
+       ChildEnumInfo.ChildDescriptorSize = sizeof(ChildExtension->ChildDescriptor);
+       ChildEnumInfo.ACPIHwId = 0;
+
+       if (DeviceExtension->DriverExtension->InitializationData.HwChildDeviceExtensionSize)
+           ChildEnumInfo.ChildHwDeviceExtension = VIDEO_PORT_GET_CHILD_EXTENSION(ChildExtension);
+       else
+           ChildEnumInfo.ChildHwDeviceExtension = NULL;
+
+       ChildEnumInfo.ChildIndex = ChildExtension->ChildId;
+
+      INFO_(VIDEOPRT, "Probing child: %d\n", ChildEnumInfo.ChildIndex);
       Status = DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor(
                   HwDeviceExtension,
                   &ChildEnumInfo,
-                  &ChildType,
-                  ChildDescriptor,
-                  &ChildId,
+                  &ChildExtension->ChildType,
+                  ChildExtension->ChildDescriptor,
+                  &ChildExtension->ChildId,
                   &Unused);
       if (Status == VIDEO_ENUM_MORE_DEVICES)
       {
-         if (ChildType == Monitor)
+         if (ChildExtension->ChildType == Monitor)
          {
             // Check if the EDID is valid
-            if (ChildDescriptor[0] == 0x00 &&
-                ChildDescriptor[1] == 0xFF &&
-                ChildDescriptor[2] == 0xFF &&
-                ChildDescriptor[3] == 0xFF &&
-                ChildDescriptor[4] == 0xFF &&
-                ChildDescriptor[5] == 0xFF &&
-                ChildDescriptor[6] == 0xFF &&
-                ChildDescriptor[7] == 0x00)
+            if (ChildExtension->ChildDescriptor[0] == 0x00 &&
+                ChildExtension->ChildDescriptor[1] == 0xFF &&
+                ChildExtension->ChildDescriptor[2] == 0xFF &&
+                ChildExtension->ChildDescriptor[3] == 0xFF &&
+                ChildExtension->ChildDescriptor[4] == 0xFF &&
+                ChildExtension->ChildDescriptor[5] == 0xFF &&
+                ChildExtension->ChildDescriptor[6] == 0xFF &&
+                ChildExtension->ChildDescriptor[7] == 0x00)
             {
                if (bHaveLastMonitorID)
                {
                   // Compare the previous monitor ID with the current one, break the loop if they are identical
-                  if (RtlCompareMemory(LastMonitorID, &ChildDescriptor[8], sizeof(LastMonitorID)) == sizeof(LastMonitorID))
+                  if (RtlCompareMemory(LastMonitorID, &ChildExtension->ChildDescriptor[8], sizeof(LastMonitorID)) == sizeof(LastMonitorID))
                   {
                      INFO_(VIDEOPRT, "Found identical Monitor ID two times, stopping enumeration\n");
+                     IoDeleteDevice(ChildDeviceObject);
                      break;
                   }
                }
 
                // Copy 10 bytes from the EDID, which can be used to uniquely identify the monitor
-               RtlCopyMemory(LastMonitorID, &ChildDescriptor[8], sizeof(LastMonitorID));
+               RtlCopyMemory(LastMonitorID, &ChildExtension->ChildDescriptor[8], sizeof(LastMonitorID));
                bHaveLastMonitorID = TRUE;
+
+               /* Mark it valid */
+               ChildExtension->EdidValid = TRUE;
+            }
+            else
+            {
+                /* Mark it invalid */
+                ChildExtension->EdidValid = FALSE;
             }
          }
       }
       else if (Status == VIDEO_ENUM_INVALID_DEVICE)
       {
          WARN_(VIDEOPRT, "Child device %d is invalid!\n", ChildEnumInfo.ChildIndex);
+         IoDeleteDevice(ChildDeviceObject);
          continue;
       }
       else if (Status == VIDEO_ENUM_NO_MORE_DEVICES)
       {
          INFO_(VIDEOPRT, "End of child enumeration! (%d children enumerated)\n", i - 1);
+         IoDeleteDevice(ChildDeviceObject);
          break;
       }
       else
       {
          WARN_(VIDEOPRT, "HwGetVideoChildDescriptor returned unknown status code 0x%x!\n", Status);
+         IoDeleteDevice(ChildDeviceObject);
          break;
       }
 
-#ifndef NDEBUG
-      if (ChildType == Monitor)
+      if (ChildExtension->ChildType == Monitor)
       {
          UINT j;
-         PUCHAR p = ChildDescriptor;
-         INFO_(VIDEOPRT, "Monitor device enumerated! (ChildId = 0x%x)\n", ChildId);
-         for (j = 0; j < sizeof (ChildDescriptor); j += 8)
+         PUCHAR p = ChildExtension->ChildDescriptor;
+         INFO_(VIDEOPRT, "Monitor device enumerated! (ChildId = 0x%x)\n", ChildExtension->ChildId);
+         for (j = 0; j < sizeof (ChildExtension->ChildDescriptor); j += 8)
          {
             INFO_(VIDEOPRT, "%02x %02x %02x %02x %02x %02x %02x %02x\n",
                    p[j+0], p[j+1], p[j+2], p[j+3],
                    p[j+4], p[j+5], p[j+6], p[j+7]);
          }
       }
-      else if (ChildType == Other)
+      else if (ChildExtension->ChildType == Other)
       {
-         INFO_(VIDEOPRT, "\"Other\" device enumerated: DeviceId = %S\n", (PWSTR)ChildDescriptor);
+         INFO_(VIDEOPRT, "\"Other\" device enumerated: DeviceId = %S\n", (PWSTR)ChildExtension->ChildDescriptor);
       }
       else
       {
-         WARN_(VIDEOPRT, "HwGetVideoChildDescriptor returned unsupported type: %d\n", ChildType);
+         ERR_(VIDEOPRT, "HwGetVideoChildDescriptor returned unsupported type: %d\n", ChildExtension->ChildType);
       }
-#endif /* NDEBUG */
 
+       /* Clear the init flag */
+       ChildDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+       InsertTailList(&DeviceExtension->ChildDeviceList,
+                      &ChildExtension->ListEntry);
    }
+
+   /* Trigger reenumeration by the PnP manager */
+   IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, BusRelations);
 
    return NO_ERROR;
 }

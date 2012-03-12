@@ -7,6 +7,7 @@ spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     agp.c
+    child.c
     ddc.c
     dispatch.c
     dma.c

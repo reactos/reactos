@@ -78,8 +78,14 @@ typedef struct _VIDEO_PORT_DRIVER_EXTENSION
    UNICODE_STRING RegistryPath;
 } VIDEO_PORT_DRIVER_EXTENSION, *PVIDEO_PORT_DRIVER_EXTENSION;
 
+typedef struct _VIDEO_PORT_COMMON_EXTENSION
+{
+    BOOLEAN Fdo;
+} VIDEO_PORT_COMMON_EXTENSION, *PVIDEO_PORT_COMMON_EXTENSION;
+
 typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 {
+   VIDEO_PORT_COMMON_EXTENSION Common;
    ULONG DeviceNumber;
    PDRIVER_OBJECT DriverObject;
    PDEVICE_OBJECT PhysicalDeviceObject;
@@ -101,13 +107,37 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG DeviceOpened;
    AGP_BUS_INTERFACE_STANDARD AgpInterface;
    KMUTEX DeviceLock;
-   LIST_ENTRY DmaAdapterList;
+   LIST_ENTRY DmaAdapterList, ChildDeviceList;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
+typedef struct _VIDEO_PORT_CHILD_EXTENSION
+{
+    VIDEO_PORT_COMMON_EXTENSION Common;
+
+    ULONG ChildId;
+    VIDEO_CHILD_TYPE ChildType;
+    UCHAR ChildDescriptor[256];
+
+    BOOLEAN EdidValid;
+
+    PDRIVER_OBJECT DriverObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+
+    LIST_ENTRY ListEntry;
+
+    CHAR ChildDeviceExtension[1];
+} VIDEO_PORT_CHILD_EXTENSION, *PVIDEO_PORT_CHILD_EXTENSION;
+
+#define VIDEO_PORT_GET_CHILD_EXTENSION(MiniportExtension) \
+   CONTAINING_RECORD( \
+       MiniportExtension, \
+       VIDEO_PORT_CHILD_EXTENSION, \
+       ChildDeviceExtension)
+
 #define VIDEO_PORT_GET_DEVICE_EXTENSION(MiniportExtension) \
    CONTAINING_RECORD( \
-      HwDeviceExtension, \
+      MiniportExtension, \
       VIDEO_PORT_DEVICE_EXTENSION, \
       MiniPortDeviceExtension)
 
@@ -129,6 +159,13 @@ NTSTATUS NTAPI
 IntAgpGetInterface(
    IN PVOID HwDeviceExtension,
    IN OUT PINTERFACE Interface);
+
+/* child.c */
+
+NTSTATUS NTAPI
+IntVideoPortDispatchPdoPnp(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
 
 /* dispatch.c */
 
