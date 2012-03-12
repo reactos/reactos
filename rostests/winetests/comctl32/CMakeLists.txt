@@ -7,8 +7,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 remove_definitions(-D_WIN32_IE=0x600)
 add_definitions(-D_WIN32_IE=0x500)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     comboex.c
     datetime.c
@@ -31,17 +29,21 @@ list(APPEND SOURCE
     trackbar.c
     treeview.c
     updown.c
-    testlist.c
+    testlist.c)
+
+add_executable(comctl32_winetest
+    ${SOURCE}
     rsrc.rc)
 
-add_executable(comctl32_winetest ${SOURCE})
 target_link_libraries(comctl32_winetest wine)
 
 if(MSVC)
     target_link_libraries(comctl32_winetest uuid)
 else()
-    add_target_compile_flags(comctl32_winetest "-Wno-format")
-    allow_warnings(comctl32_winetest)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(comctl32_winetest "-Wno-format")
+    #allow_warnings(comctl32_winetest)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-error")
 endif()
 
 set_module_type(comctl32_winetest win32cui)

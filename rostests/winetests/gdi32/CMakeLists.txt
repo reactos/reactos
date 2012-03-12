@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
@@ -22,11 +20,18 @@ list(APPEND SOURCE
     palette.c
     path.c
     pen.c
-    testlist.c
+    testlist.c)
+
+add_executable(gdi32_winetest
+    ${SOURCE}
     resource.rc)
 
-add_executable(gdi32_winetest ${SOURCE})
-allow_warnings(gdi32_winetest)
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(gdi32_winetest)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 set_module_type(gdi32_winetest win32cui)
 add_importlibs(gdi32_winetest gdi32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET gdi32_winetest DESTINATION reactos/bin FOR all)

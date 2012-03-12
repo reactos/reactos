@@ -4,8 +4,6 @@ add_definitions(
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     actctx.c
     alloc.c
@@ -42,16 +40,21 @@ list(APPEND SOURCE
     virtual.c
     volume.c
     dosdev.c
-    testlist.c
+    testlist.c)
+
+add_executable(kernel32_winetest
+    ${SOURCE}
     resource.rc)
 
-add_executable(kernel32_winetest ${SOURCE})
 target_link_libraries(kernel32_winetest wine)
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
+
 if(NOT MSVC)
-    add_target_compile_flags(kernel32_winetest "-Wno-format")
-    allow_warnings(kernel32_winetest)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(kernel32_winetest "-Wno-format")
+    #allow_warnings(kernel32_winetest)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-error")
 endif()
 
 add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)
