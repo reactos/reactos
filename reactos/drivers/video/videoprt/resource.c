@@ -567,7 +567,7 @@ VideoPortGetAccessRanges(
     PCI_COMMON_CONFIG Config;
     PCM_RESOURCE_LIST AllocatedResources;
     NTSTATUS Status;
-    UINT AssignedCount;
+    UINT AssignedCount = 0;
     CM_FULL_RESOURCE_DESCRIPTOR *FullList;
     CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor;
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
@@ -682,6 +682,21 @@ VideoPortGetAccessRanges(
             }
             DeviceExtension->AllocatedResources = AllocatedResources;
             DeviceExtension->SystemIoSlotNumber = PciSlotNumber.u.AsULONG;
+
+            /* Add legacy resources to the resources from HAL */
+            Status = IntVideoPortGetLegacyResources(DriverExtension, DeviceExtension,
+                                                    &LegacyAccessRanges, &LegacyAccessRangeCount);
+            if (!NT_SUCCESS(Status))
+                return ERROR_DEV_NOT_EXIST;
+
+            if (NumAccessRanges < LegacyAccessRangeCount)
+            {
+                ERR_(VIDEOPRT, "Too many legacy access ranges found\n");
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+            RtlCopyMemory(AccessRanges, LegacyAccessRanges, LegacyAccessRangeCount * sizeof(VIDEO_ACCESS_RANGE));
+            AssignedCount = LegacyAccessRangeCount;
         }
     }
     else
@@ -725,18 +740,7 @@ VideoPortGetAccessRanges(
     
     /* Return the slot number if the caller wants it */
     if (Slot != NULL) *Slot = DeviceExtension->SystemIoBusNumber;
-    
-    Status = IntVideoPortGetLegacyResources(DriverExtension, DeviceExtension,
-                                            &LegacyAccessRanges, &LegacyAccessRangeCount);
-    if (!NT_SUCCESS(Status))
-        return ERROR_DEV_NOT_EXIST;
-    if (NumAccessRanges < LegacyAccessRangeCount)
-    {
-        ERR_(VIDEOPRT, "Too many legacy access ranges found\n");
-        return ERROR_NOT_ENOUGH_MEMORY;
-    }
-    RtlCopyMemory(AccessRanges, LegacyAccessRanges, LegacyAccessRangeCount * sizeof(VIDEO_ACCESS_RANGE));
-    AssignedCount = LegacyAccessRangeCount;
+
     for (FullList = AllocatedResources->List;
          FullList < AllocatedResources->List + AllocatedResources->Count;
          FullList++)
