@@ -32,7 +32,6 @@ kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
 i8042prt.sys=,,,,,,x,,,,,,4
-usbdrv.sys=,,,,,,,,,,,,4
 kbdclass.sys=,,,,,,x,,,,,,4
 l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
