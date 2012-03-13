@@ -24,6 +24,12 @@ static VOID FsRtlIsNameInExpressionTest()
         ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
         RtlInitUnicodeString(&Expression, L"");
         ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+        RtlInitUnicodeString(&Expression, L"**");
+        RtlInitUnicodeString(&Name, L"");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+        RtlInitUnicodeString(&Name, L"a");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     }
 
     RtlInitUnicodeString(&Expression, L"ntdll.dll");
@@ -176,6 +182,14 @@ static VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Name, L"127.0.0.1");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
 
+    RtlInitUnicodeString(&Expression, L"*?*?*?*");
+    RtlInitUnicodeString(&Name, L"1.0.0.1");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Expression, L"?*?*?*?");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Expression, L"?.?.?.?");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
     RtlInitUnicodeString(&Expression, L"*a*ab*abc");
     RtlInitUnicodeString(&Name, L"aabaabcdadabdabc");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
@@ -191,6 +205,12 @@ static VOID FsRtlIsDbcsInExpressionTest()
         RtlInitAnsiString(&Name, "");
         ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
         RtlInitAnsiString(&Expression, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+        RtlInitAnsiString(&Expression, "**");
+        RtlInitAnsiString(&Name, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+        RtlInitAnsiString(&Name, "a");
         ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     }
 
@@ -339,9 +359,17 @@ static VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Name, "winhlp32.exe");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
 
-    /* Backtracking tetss */
+    /* Backtracking tests */
     RtlInitAnsiString(&Expression, "*.*.*.*");
     RtlInitAnsiString(&Name, "127.0.0.1");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "*?*?*?*");
+    RtlInitAnsiString(&Name, "1.0.0.1");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Expression, "?*?*?*?");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Expression, "?.?.?.?");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
 
     RtlInitAnsiString(&Expression, "*a*ab*abc");
