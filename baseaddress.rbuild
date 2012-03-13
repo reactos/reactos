@@ -171,7 +171,7 @@
 	<property name="BASEADDRESS_MSCTF"		value="0x746e0000" />
 	<property name="BASEADDRESS_QUARTZ"		value="0x747d0000" />
 	<property name="BASEADDRESS_USERENV"		value="0x74850000" />
-	<property name="BASEADDRESS_SYSSETUP"		value="0x74a10000" />
+	<property name="BASEADDRESS_SYSSETUP"		value="0x74900000" />
 	<property name="BASEADDRESS_WS2_32"		value="0x74aa0000" />
 	<property name="BASEADDRESS_POWRPROF"		value="0x74ad0000" />
 	<property name="BASEADDRESS_MSXML3"		value="0x74ae0000" />
