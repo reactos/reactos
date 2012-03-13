@@ -187,6 +187,12 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         /* Test star */
         else if (Expression->Buffer[ExpressionPosition] == '*')
         {
+            /* Skip contigous stars */
+            while (ExpressionPosition + 1 < Expression->Length && Expression->Buffer[ExpressionPosition + 1] == '*')
+            {
+                ExpressionPosition++;
+            }
+
             /* Save star position */
             if (!BackTracking)
             {
