@@ -136,6 +136,7 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
         if (!SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
         {
             /* No rights */
+            *Response = ResponseNotHandled;
             return STATUS_PRIVILEGE_NOT_HELD;
         }
 
@@ -247,6 +248,11 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
 
             /* Set the response */
             *Response = Message->Response;
+        }
+        else
+        {
+            /* Set the response */
+            *Response = ResponseReturnToCaller;
         }
     }
     else

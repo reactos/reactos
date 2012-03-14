@@ -323,7 +323,7 @@ CsrpFormatMessages(
     RtlAppendUnicodeStringToString(CaptionStringU, &TempStringU);
 
     /* Zero terminate the buffer */
-    CaptionStringU->Buffer[CaptionStringU->Length] = 0;
+    CaptionStringU->Buffer[CaptionStringU->Length / sizeof(WCHAR)] = 0;
 
     /* Free the file name buffer */
     RtlFreeUnicodeString(&FileNameU);
