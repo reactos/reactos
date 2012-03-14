@@ -196,6 +196,38 @@ static VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Expression, L"*a*ab*abc");
     RtlInitUnicodeString(&Name, L"aabaabcdadabdabc");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+    /* Tests for extra wildcards */
+    RtlInitUnicodeString(&Expression, L"ab<exe");
+    RtlInitUnicodeString(&Name, L"abcd.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"ab.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"abcdexe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"acd.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitUnicodeString(&Expression, L"abc.exe\"");
+    RtlInitUnicodeString(&Name, L"abc.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"abc.exe.");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"abc.exe.back");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Name, L"abc.exes");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitUnicodeString(&Expression, L"a>c.exe");
+    RtlInitUnicodeString(&Name, L"abc.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"ac.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"a>>>exe");
+    RtlInitUnicodeString(&Name, L"abc.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Name, L"ac.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
 }
 
 static VOID FsRtlIsDbcsInExpressionTest()
@@ -381,6 +413,38 @@ static VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Expression, "*a*ab*abc");
     RtlInitAnsiString(&Name, "aabaabcdadabdabc");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    /* Tests for extra wildcards */
+    RtlInitAnsiString(&Expression, "ab<exe");
+    RtlInitAnsiString(&Name, "abcd.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "ab.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "abcdexe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "acd.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "abc.exe\"");
+    RtlInitAnsiString(&Name, "abc.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "abc.exe.");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "abc.exe.back");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "abc.exes");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "a>c.exe");
+    RtlInitAnsiString(&Name, "abc.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "ac.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "a>>>exe");
+    RtlInitAnsiString(&Name, "abc.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "ac.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
 }
 
 START_TEST(FsRtlExpression)
