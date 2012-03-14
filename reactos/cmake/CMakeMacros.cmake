@@ -377,3 +377,19 @@ function(set_module_type MODULE TYPE)
     # do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
 endfunction()
+
+function(preprocess_file __in __out)
+    set(__arg ${__in})
+    foreach(__def in ${ARGN})
+        list(APPEND __arg -D${__def})
+    endforeach()
+    if(MSVC)
+        add_custom_command(OUTPUT ${_out}
+            COMMAND ${CMAKE_C_COMPILER} /EP ${__arg}
+            DEPENDS ${__in})
+    else()
+        add_custom_command(OUTPUT ${_out}
+            COMMAND ${CMAKE_C_COMPILER} -E ${__arg}
+            DEPENDS ${__in})
+    endif()
+endfunction()
