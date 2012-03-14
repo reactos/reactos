@@ -69,8 +69,8 @@ interface ISAXEntityResolver;
 interface ISAXErrorHandler;
 interface ISAXLexicalHandler;
 interface ISAXLocator;
-interface ISAXXMLFilter;
 interface ISAXXMLReader;
+interface ISAXXMLFilter;
 
 interface IVBSAXAttributes;
 interface IVBSAXContentHandler;
@@ -1955,19 +1955,6 @@ interface ISAXLocator : IUnknown
 };
 
 [
-    local,
-    object,
-    uuid(70409222-ca09-4475-acb8-40312fe8d145)
-]
-interface ISAXXMLFilter : ISAXXMLReader
-{
-    HRESULT getParent(
-        [out, retval] ISAXXMLReader ** pReader);
-    HRESULT putParent(
-        [in] ISAXXMLReader * reader);
-};
-
-[
 local,
 object,
 uuid (a4f96ed0-f829-476e-81c0-cdc7bd2a0802)
@@ -2022,7 +2009,20 @@ interface ISAXXMLReader : IUnknown
         [in] VARIANT varInput);
     HRESULT parseURL(
         [in] const WCHAR * url);
-}
+};
+
+[
+    local,
+    object,
+    uuid(70409222-ca09-4475-acb8-40312fe8d145)
+]
+interface ISAXXMLFilter : ISAXXMLReader
+{
+    HRESULT getParent(
+        [out, retval] ISAXXMLReader ** pReader);
+    HRESULT putParent(
+        [in] ISAXXMLReader * reader);
+};
 
 [
     object,
