@@ -19,8 +19,8 @@
 
 #if DBG
 
-//ULONG DebugTraceLevel = MIN_TRACE;
-ULONG DebugTraceLevel = MID_TRACE;
+ULONG DebugTraceLevel = MIN_TRACE;
+//ULONG DebugTraceLevel = MID_TRACE;
 //ULONG DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
