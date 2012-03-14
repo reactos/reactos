@@ -75,8 +75,8 @@ interface ISAXEntityResolver;
 interface ISAXErrorHandler;
 interface ISAXLexicalHandler;
 interface ISAXLocator;
-interface ISAXXMLFilter;
 interface ISAXXMLReader;
+interface ISAXXMLFilter;
 
 interface IVBSAXAttributes;
 interface IVBSAXContentHandler;
