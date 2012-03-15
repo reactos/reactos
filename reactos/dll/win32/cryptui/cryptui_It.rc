@@ -1,7 +1,7 @@
 /*
- * cryptui dll Italian resources
+ * cryptui dll resources
  *
- * Copyright 2010 Luca Bennati
+ * Copyright 2008 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,17 +20,14 @@
 
 #include "cryptuires.h"
 
-/* UTF-8 */
-#pragma code_page(65001)
-
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
     IDS_CERTIFICATE "Certificato"
     IDS_CERTIFICATEINFORMATION "Informazioni sul certificato"
     IDS_CERT_INFO_BAD_SIG "Questo certificato ha una firma non valida. Il certificato può essere stato alterato o corrotto."
-    IDS_CERT_INFO_UNTRUSTED_CA "Questo certificato root non è fidato. Per fidarsene, aggiungilo al deposito certificati root fidati del tuo sistema."
+    IDS_CERT_INFO_UNTRUSTED_CA "Questo certificato root non è fidato. Per fidarsene, aggiungilo al deposito certificati base fidati del tuo sistema."
     IDS_CERT_INFO_UNTRUSTED_ROOT "Impossibile convalidare questo certificato in un certificato root fidato."
     IDS_CERT_INFO_PARTIAL_CHAIN "Impossibile trovare l'emittente di questo certificato."
     IDS_CERT_INFO_BAD_PURPOSES "Impossibile verificare tutti i soggetti intesi di questo certificato."
@@ -58,8 +55,8 @@ STRINGTABLE
     IDS_FIELD_VALID_TO "Valido fino a"
     IDS_FIELD_SUBJECT "Soggetto"
     IDS_FIELD_PUBLIC_KEY "Chiave pubblica"
-    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d bits)"
-    IDS_PROP_HASH "SHA1 hash"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%1 (%2!d! bit)"
+    IDS_PROP_HASH "Hash SHA1"
     IDS_PROP_ENHKEY_USAGE "Uso delle chiavi avanzate (proprietà)"
     IDS_PROP_FRIENDLY_NAME "Nome amichevole"
     IDS_PROP_DESCRIPTION "Descrizione"
@@ -69,11 +66,11 @@ STRINGTABLE
     IDS_SELECT_STORE_TITLE "Seleziona il deposito certificati"
     IDS_SELECT_STORE "Prego selezionare il deposito certificati."
     IDS_IMPORT_WIZARD "Guida all'Importazione di Certificati"
-    IDS_IMPORT_TYPE_MISMATCH "Il file contiene oggetti che non match con i criteri dati. Selezionare un altro file."
+    IDS_IMPORT_TYPE_MISMATCH "Il file contiene oggetti che non corrisponde con i criteri dati. Selezionare un altro file."
     IDS_IMPORT_FILE_TITLE "File da importare"
     IDS_IMPORT_FILE_SUBTITLE "Specificare il file che vuoi importare."
     IDS_IMPORT_STORE_TITLE "Deposito certificati"
-    IDS_IMPORT_STORE_SUBTITLE "I depositi certificati sono collezioni di certificati, liste di revoca di certificati, e liste di fiducia di certificati."
+    IDS_IMPORT_STORE_SUBTITLE "I depositi certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati."
     IDS_IMPORT_FILTER_CERT "Certificato X.509 (*.cer; *.crt)"
     IDS_IMPORT_FILTER_PFX "Scambio Informazioni Personali (*.pfx; *.p12)"
     IDS_IMPORT_FILTER_CRL "Lista Revoca Certificati (*.crl)"
@@ -92,61 +89,72 @@ STRINGTABLE
     IDS_IMPORT_CONTENT "Contenuto"
     IDS_IMPORT_CONTENT_CERT "Certificato"
     IDS_IMPORT_CONTENT_CRL "Lista Revoca Certificati"
-    IDS_IMPORT_CONTENT_CTL "Lista Fiducia Certificati"
+    IDS_IMPORT_CONTENT_CTL "Lista dei certificati fidati"
     IDS_IMPORT_CONTENT_CMS "Messaggio CMS/PKCS #7"
     IDS_IMPORT_CONTENT_PFX "Scambio Informazioni Personali"
-    IDS_IMPORT_CONTENT_STORE "Deposito Certificati"
+    IDS_IMPORT_CONTENT_STORE "Deposito certificati"
     IDS_IMPORT_SUCCEEDED "Importazione riuscita."
-    IDS_IMPORT_FAILED "Imposrtazione fallita."
+    IDS_IMPORT_FAILED "Importazione fallita."
     IDS_WIZARD_TITLE_FONT "Arial"
     IDS_PURPOSE_ALL "<Tutti>"
-    IDS_PURPOSE_ADVANCED "<Advanced Purposes>"
+    IDS_PURPOSE_ADVANCED "<Ragioni speciali>"
     IDS_SUBJECT_COLUMN "Emesso per"
     IDS_ISSUER_COLUMN "Emesso da"
     IDS_EXPIRATION_COLUMN "Data di scadenza"
     IDS_FRIENDLY_NAME_COLUMN "Nome amichevole"
     IDS_ALLOWED_PURPOSE_ALL "<Tutti>"
     IDS_ALLOWED_PURPOSE_NONE "<Nessuno>"
-    IDS_WARN_REMOVE_MY "Non sarai più in grado di decriptare messaggi con questo certificato, o di firmare messaggi con questo.\nSei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_MY "Non sarai più in grado di decriptare messaggi con questi certificati, o di firmare messaggi con questi.\nSei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questo certificato, o di verificare messaggi con questo.\nSei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questi certificati, o di verificare messaggi con questi.\nSei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_CA "I certificati emessi da questa autorità di certificazione non saranno più fidati.\nSei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_PLURAL_CA "I certificati emessi da queste autorità di certificazione non saranno più fidati.\nSei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\nSei sicuro di voler rimuovere questo certificato root fidato?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\nSei sicuro di voler rimuovere questi certificati root fidati?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software firmato da questo editore non sarà più fidato.\nSei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software firmato da questi editori non sarà più fidato.\nSei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_MY "Non sarai più in grado di decriptare messaggi con questo certificato, o di firmare messaggi con questo.\n\
+Sei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_MY "Non sarai più in grado di decriptare messaggi con questi certificati, o di firmare messaggi con questi.\n\
+Sei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questo certificato, o di verificare messaggi con questo.\n\
+Sei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questi certificati, o di verificare messaggi con questi.\n\
+Sei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_CA "I certificati emessi da questa autorità di certificazione non saranno più fidati.\n\
+Sei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_PLURAL_CA "I certificati emessi da queste autorità di certificazione non saranno più fidati.\n\
+Sei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\n\
+Sei sicuro di voler rimuovere questo certificato root fidato?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\n\
+Sei sicuro di voler rimuovere questi certificati root fidati?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software firmato da questo editore non sarà più fidato.\n\
+Sei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software firmato da questi editori non sarà più fidato.\n\
+Sei sicuro di voler rimuovere questi certificati?"
     IDS_WARN_REMOVE_DEFAULT "Sei sicuro di voler rimuovere questo certificato?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Sei sicuro di voler rimuovere questi certificati?"
     IDS_CERT_MGR "Certificati"
     IDS_FRIENDLY_NAME_NONE "<Nessuno>"
     IDS_PURPOSE_SERVER_AUTH "Assicura l'identità di un computer remoto"
     IDS_PURPOSE_CLIENT_AUTH "Prova la tua identità ad un computer remoto"
-    IDS_PURPOSE_CODE_SIGNING "Assicura che il software venga dall'editore del software\nProtegge i software da alterazioni dopo la pubblicazione"
+    IDS_PURPOSE_CODE_SIGNING "Assicura che il software venga dall'editore del software\n\
+Protegge i software da alterazioni dopo la pubblicazione"
     IDS_PURPOSE_EMAIL_PROTECTION "Protegge messaggi e-mail"
     IDS_PURPOSE_IPSEC "Permette la comunicazione sicura tramite Internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permette di firmare i dati con l'ora corrente"
     IDS_PURPOSE_CTL_USAGE_SIGNING "Ti permette di firmare digitalmente una lista di fiducia di certificati"
     IDS_PURPOSE_EFS "Permette di criptare i dati sul disco"
-    IDS_PURPOSE_EFS_RECOVERY "Recupero del file"
-    IDS_PURPOSE_WHQL "Verifica di Driver Hardware per Windows"
+    IDS_PURPOSE_EFS_RECOVERY "Recupero di file"
+    IDS_PURPOSE_WHQL "Verifica del Driver Hardware per Windows"
     IDS_PURPOSE_NT5 "Verifica del Componente di Sistema Windows"
     IDS_PURPOSE_OEM_WHQL "Verifica del Componente di Sistema Windows OEM"
     IDS_PURPOSE_EMBEDDED_NT "Verifica del Componente di Sistema Windows Embedded"
-    IDS_PURPOSE_ROOT_LIST_SIGNER "Firmatario Lista Root"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Firmatario della lista base"
     IDS_PURPOSE_QUALIFIED_SUBORDINATION "Subordinazione qualificata"
     IDS_PURPOSE_KEY_RECOVERY "Recupero della chiave"
-    IDS_PURPOSE_DOCUMENT_SIGNING "Firma Documento"
-    IDS_PURPOSE_LIFETIME_SIGNING "Firma Lifetime"
-    IDS_PURPOSE_DRM "Diritti Digitali"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Firma del documento"
+    IDS_PURPOSE_LIFETIME_SIGNING "Firma vitalizia"
+    IDS_PURPOSE_DRM "Diritti digitali"
     IDS_PURPOSE_LICENSES "Licenze del pacchetto di chiavi"
     IDS_PURPOSE_LICENSE_SERVER "Verifica del server delle licenze"
     IDS_PURPOSE_ENROLLMENT_AGENT "Agente di richiesta dei certificati"
     IDS_PURPOSE_SMARTCARD_LOGON "Logon con Smart Card"
     IDS_PURPOSE_CA_EXCHANGE "Archivio chiavi private"
     IDS_PURPOSE_KEY_RECOVERY_AGENT "Agente di recupero delle chiavi"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "Servizio di Directory di replica e-mail"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Servizio directory di Risposta Email"
     IDS_EXPORT_WIZARD "Guida all'Esportazione del Certificato"
     IDS_EXPORT_FORMAT_TITLE "Formato di Esportazione"
     IDS_EXPORT_FORMAT_SUBTITLE "Scegli il formato nel quale il contenuto sarà salvato."
@@ -154,9 +162,9 @@ STRINGTABLE
     IDS_EXPORT_FILE_SUBTITLE "Specifica il nome del file nel quale il contenuto sarà salvato."
     IDS_EXPORT_FILE_EXISTS "File specificato esistene. Vuoi sostituirlo?"
     IDS_EXPORT_FILTER_CERT "Binario DER-Encoded X.509 (*.cer)"
-    IDS_EXPORT_FILTER_BASE64_CERT "Base64-Encoded X.509 (*.cer)"
-    IDS_EXPORT_FILTER_CRL "Lista di Revoca di Certificati (*.crl)"
-    IDS_EXPORT_FILTER_CTL "Lista di Fiducia di Certificati (*.stl)"
+    IDS_EXPORT_FILTER_BASE64_CERT "X.509 Base64-Encoded (*.cer)"
+    IDS_EXPORT_FILTER_CRL "Lista Revoca Certificati (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Lista Fiducia Certificati (*.stl)"
     IDS_EXPORT_FILTER_CMS "Messaggi CMS/PKCS #7 (*.p7b)"
     IDS_EXPORT_FILTER_PFX "Scambio Informazioni Personali (*.pfx)"
     IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Deposito certificati serializzato (*.sst)"
@@ -182,18 +190,14 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
-  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,8,11,26,26
-  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W", ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W", ES_READONLY|WS_DISABLED,34,11,212,26
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
-  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W", ES_READONLY|ES_MULTILINE,8,38,238,78
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
-  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
-  PUSHBUTTON "&Installa Certificato...", IDC_ADDTOSTORE,103,216,70,14
-  PUSHBUTTON "&Annuncio dell'emittente", IDC_ISSUERSTATEMENT,177,216,70,14
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W", ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "&Installa Certificato...", IDC_ADDTOSTORE,53,216,95,14
+  PUSHBUTTON "&Annuncio dell'emittente", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
 IDD_DETAIL DIALOG 0, 0, 255, 236
@@ -202,15 +206,12 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Mostra:", -1, 6,12,40,14
-  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  COMBOBOX IDC_DETAIL_SELECT, 48,10,100,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
-    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    6,28,241,100
-  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "Modifica &Proprietà...", IDC_EDITPROPERTIES,103,216,70,14
-  PUSHBUTTON "&Copia su File...", IDC_EXPORT,177,216,70,14
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "Modifica &Proprietà...", IDC_EDITPROPERTIES,53,216,95,14
+  PUSHBUTTON "&Copia su File...", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOG 0, 0, 255, 236
@@ -218,11 +219,11 @@ CAPTION "Percorso di certificazione"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "&Percorso di certificazione", -1,6,10,245,165, BS_GROUPBOX
+  GROUPBOX "Percorso di certificazione", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
-  PUSHBUTTON "&Vedi Certificato", IDC_VIEWCERTIFICATE,175,156,70,14
-  LTEXT "&Stato del Certificato:", IDC_CERTIFICATESTATUS,6,183,70,14
+  PUSHBUTTON "&Vedi Certificato", IDC_VIEWCERTIFICATE,155,156,90,14
+  LTEXT "&Stato del Certificato:", IDC_CERTIFICATESTATUS,6,183,200,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
@@ -234,8 +235,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
-  PUSHBUTTON "&Chiudi", IDOK,103,216,70,14
-  PUSHBUTTON "Più %Informazioni", IDC_CPS,177,216,70,14
+  PUSHBUTTON "Chiudi", IDOK,73,216,85,14
+  PUSHBUTTON "Più %Informazioni", IDC_CPS,162,216,85,14
 END
 
 IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
@@ -244,20 +245,20 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nome amichevole:", -1, 6,14,60,14
-  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  EDITTEXT IDC_FRIENDLY_NAME, 70,12,181,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Descrizione:", -1, 6,32,60,14
-  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Soggetti del certificato", -1,6,48,245,165, BS_GROUPBOX
+  EDITTEXT IDC_DESCRIPTION, 70,30,181,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Soggetti del certificato", -1,6,48,245,185, BS_GROUPBOX
   AUTORADIOBUTTON "&Abilita tutti i soggetti per questo certificato",
-    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_ENABLE_ALL_PURPOSES, 12,58,230,14, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "D&isabilita tutti i soggetti per questo certificato",
-    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+    IDC_DISABLE_ALL_PURPOSES, 12,70,230,14, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Abilita &solo i seguenti soggetti per questo certificato:",
-    IDC_ENABLE_SELECTED_PURPOSES, 12,82,180,14, BS_AUTORADIOBUTTON
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,230,14, BS_AUTORADIOBUTTON
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    24,100,220,90
-  PUSHBUTTON "A&ggiungi Soggetto...", IDC_ADD_PURPOSE,184,194,60,14
+    24,100,220,106
+  PUSHBUTTON "A&ggiungi Soggetto...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
 IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
@@ -267,20 +268,19 @@ BEGIN
   LTEXT "Aggiungi l'identificatore oggetto (OID) per questo soggetto di certificato che desideri aggiungere:",
     -1, 6,6,190,28
   EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  PUSHBUTTON "OK", IDOK, 33,48,60,14
+  PUSHBUTTON "Ok", IDOK, 33,48,60,14
   PUSHBUTTON "Annulla", IDCANCEL, 100,48,60,14
 END
 
 IDD_SELECT_STORE DIALOG 0,0,200,136
-CAPTION "Seleziona il Deposito Certificati"
+CAPTION "Seleziona il deposito certificati"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Seleziona il deposito certificati che vuoi usare:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "&Mostra i depositi fisici", IDC_SHOW_PHYSICAL_STORES, 6,102,90,14,
-    BS_AUTOCHECKBOX|WS_TABSTOP
-  PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
+  CHECKBOX "&Mostra i depositi fisici", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
+  PUSHBUTTON "Ok", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Annulla", IDCANCEL, 144,118,50,14
 END
 
@@ -288,14 +288,13 @@ IDD_IMPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Guida all'Importazione di Certificati"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Benvenuto alla Guida all'Importazione di Certificati", IDC_IMPORT_TITLE,
-    115,7,195,12
-  LTEXT "Questa guida ti aiuta a importare certificati, liste di revoca di certificati, e liste di fiducia di certificati da un file ad un deposito certificati.",
-    -1, 115,26,195,25
-  LTEXT "Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione, e per firmare messaggi. I depositi certificati sono collezioni di certificati, liste di revoca di certificati, e liste di fiducia di certificati.",
-    -1, 115,56,195,40
-  LTEXT "Per continuare, clicca Avanti.",
-    -1, 115,103,195,8
+  LTEXT "Benvenuto alla Guida all'Importazione di Certificati", IDC_IMPORT_TITLE, 115,7,195,30
+  LTEXT "Questa guida ti aiuta a importare certificate, liste di revoca di certificati e liste di fiducia di certificati da un file in un deposito di certificati.\n\
+\n\
+Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\
+\n\
+Per continuare, premere Avanti.",
+    -1, 115,40,195,120
 END
 
 IDD_IMPORT_FILE DIALOG 0,0,317,178
@@ -304,15 +303,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Nome del &file:", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  PUSHBUTTON "&Sfoglia...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
+  PUSHBUTTON "&Naviga", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Nota:  i seguenti formati di file potrebbero contenere più di un certificato, lista di revoca di certificati, o lista di fiducia di certificati:",
-    -1, 21,26,265,16
+    -1, 21,30,265,16
   LTEXT "Messaggio Crittografico con Sintassi Standard/Messaggi PKCS #7 (.p7b)",
-    -1, 31,49,265,10
+    -1, 31,53,265,10
   LTEXT "Scambio di Informazioni Personali/PKCS #12 (.pfx, .p12)",
-    -1, 31,64,265,10
+    -1, 31,68,265,10
   LTEXT "Deposito Certificati Serializzato Microsoft (.sst)",
-    -1, 31,79,265,10
+    -1, 31,83,265,10
 END
 
 IDD_IMPORT_STORE DIALOG 0,0,317,143
@@ -320,13 +319,13 @@ CAPTION "Guida all'Importazione di Certificati"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine può selezionare automaticamente il deposito certificati, oppure puoi specificare una locazione per i certificati.",
-    -1, 21,1,195,20
+    -1, 21,1,220,25
   AUTORADIOBUTTON "Seleziona &automaticamente il deposito certificati",
-    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Piazza tutti i certificati nel deposito seguente:",
-    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
-  EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
-  PUSHBUTTON "&Sfoglia...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+    IDC_IMPORT_SPECIFY_STORE, 31,42,220,12, BS_AUTORADIOBUTTON
+  EDITTEXT IDC_IMPORT_STORE, 44,61,185,14, ES_READONLY
+  PUSHBUTTON "&Naviga", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
 IDD_IMPORT_FINISH DIALOG 0,0,317,178
@@ -349,19 +348,16 @@ CAPTION "Certificati"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Soggetto inteso:", -1, 7,9,100,12
-  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
-  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
-    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
-  CONTROL "", IDC_MGR_CERTS, "SysListView32",
-    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
-  PUSHBUTTON "&Importa...", IDC_MGR_IMPORT, 7,172,51,14
-  PUSHBUTTON "&Esporta...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
-  PUSHBUTTON "&Rimuovi", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
-  PUSHBUTTON "&Avanzato...", IDC_MGR_ADVANCED, 277,172,51,14
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32", WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32", LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "&Importa...", IDC_MGR_IMPORT, 7,172,65,14
+  PUSHBUTTON "&Esporta...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Rimuovi...", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Avanzato...", IDC_MGR_ADVANCED, 263,172,65,14
   GROUPBOX "Soggetti intesi del certificato", -1,7,194,321,47, BS_GROUPBOX
-  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
-  PUSHBUTTON "&Vedi...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  LTEXT "", IDC_MGR_PURPOSES, 13,206,252,32
+  PUSHBUTTON "&Visualizza", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
   PUSHBUTTON "&Chiudi", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
@@ -376,7 +372,7 @@ BEGIN
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     14,51,220,90
-  PUSHBUTTON "OK", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "Ok", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Annulla", IDCANCEL, 190,155,51,14
 END
 
@@ -384,14 +380,13 @@ IDD_EXPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Guida all'Esportazione del Certificato"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Benvenuto alla Guida all'Esportazione del Certificato", IDC_EXPORT_TITLE,
-    115,7,195,12
-  LTEXT "Questa guida ti aiuta ad esportare certificati, liste di revoca di certificati, e liste di fiducia di certificati da un deposito di certificati ad un file.",
-    -1, 115,26,195,25
-  LTEXT "Un certificato può essere usato per identificare te o il computer dal quale stai comunicando. Può essere anche usato per l'autenticazione, e per firmare messaggi. I depositi di certificati sono collezioni di certificati, di liste di revoca di certificati, e di liste di fiducia di certificati.",
-    -1, 115,56,195,40
-  LTEXT "Per continuare, clicca Avanti.",
-    -1, 115,103,195,8
+  LTEXT "Benvenuto alla Guida all'Esportazione del Certificato", IDC_EXPORT_TITLE, 115,7,195,30
+  LTEXT "Questa guida ti aiuta a esportare certificate, liste di revoca di certificati e liste di fiducia di certificati da un deposito di certificati in un file.\n\
+\n\
+Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\
+\n\
+Per continuare, premere Avanti.",
+    -1, 115,40,195,120
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
@@ -422,33 +417,31 @@ CAPTION "Guida all'Esportazione del Certificato"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Seleziona il formato che vuoi usare:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "X.509 &DER-encoded (.cer)",
+    IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "X.509 Ba&se64-encoded (.cer):",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Messaggio &Crittografico con Sintassi Standard/Messaggio PKCS #7 (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Includi tutti i certificati nel percorso di certificazione se possibile",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "Scambia di Informazioni &Personali/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Incl&udi tutti i certificati nel percorso di certificazione se possibile",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Abilita Crittazione forte",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Elimina la chiave privata se l'esportazione riesce",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
 IDD_EXPORT_FILE DIALOG 0,0,317,143
 CAPTION "Guida all'Esportazione del Certificato"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Nome del file:", -1, 21,1,195,10
+  LTEXT "Nome del &file:", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  PUSHBUTTON "%Sfoglia...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+  PUSHBUTTON "&Naviga", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
 IDD_EXPORT_FINISH DIALOG 0,0,317,178
@@ -459,7 +452,7 @@ BEGIN
     115,1,195,40
   LTEXT "Hai completato con successo la Guida all'Esportazione del Certificato.",
     -1, 115,33,195,24
-  LTEXT "Hai specificato le seguenti impostazioni:",
+  LTEXT "Hai specificato le impostazioni seguenti:",
     -1, 115,57,195,12
   CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
