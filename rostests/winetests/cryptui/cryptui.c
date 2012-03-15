@@ -344,7 +344,7 @@ static void test_crypt_ui_wiz_import(void)
     /* Brings up UI.  Cancelling yields ret = 1. */
     if (0)
     {
-        ret = pCryptUIWizImport(0, 0, NULL, NULL, NULL);
+        pCryptUIWizImport(0, 0, NULL, NULL, NULL);
     }
     SetLastError(0xdeadbeef);
     ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI, 0, NULL, NULL, NULL);
@@ -528,17 +528,17 @@ static void test_crypt_ui_wiz_import(void)
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
      0, NULL, &info, store);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
      0, NULL, &info, store);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI |
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI |
      CRYPTUI_WIZ_IMPORT_NO_CHANGE_DEST_STORE |
      CRYPTUI_WIZ_IMPORT_ALLOW_CERT | CRYPTUI_WIZ_IMPORT_ALLOW_CRL, 0, NULL,
      &info, store);
@@ -576,7 +576,7 @@ static void test_crypt_ui_wiz_import(void)
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
      0, NULL, &info, store);
     ok(ret, "CryptUIWizImport failed: %08x\n", GetLastError());
     if (ret)
@@ -599,7 +599,7 @@ static void test_crypt_ui_wiz_import(void)
         ok(count == 0, "expected 0 CRLs, got %d\n", count);
     }
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
      0, NULL, &info, store);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
@@ -616,7 +616,7 @@ static void test_crypt_ui_wiz_import(void)
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CRL,
      0, NULL, &info, store);
     ok(ret, "CryptUIWizImport failed: %08x\n", GetLastError());
     if (ret)
@@ -639,7 +639,7 @@ static void test_crypt_ui_wiz_import(void)
         ok(count == 1, "expected 1 CRL, got %d\n", count);
     }
     SetLastError(0xdeadbeef);
-    ret = CryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
+    ret = pCryptUIWizImport(CRYPTUI_WIZ_NO_UI | CRYPTUI_WIZ_IMPORT_ALLOW_CERT,
      0, NULL, &info, store);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
