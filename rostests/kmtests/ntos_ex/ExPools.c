@@ -5,8 +5,6 @@
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>
  */
 
-/* TODO: PoolsCorruption tests fail because accessing invalid memory doesn't necessarily cause an access violation */
-
 #include <kmt_test.h>
 
 #define NDEBUG
@@ -112,6 +110,9 @@ static VOID PoolsCorruption(VOID)
     // touch all bytes, it shouldn't cause an exception
     RtlZeroMemory(Ptr, AllocSize);
 
+/* TODO: These fail because accessing invalid memory doesn't necessarily
+         cause an access violation */
+#ifdef THIS_DOESNT_WORK
     // test buffer overrun, right after our allocation ends
     _SEH2_TRY
     {
@@ -139,6 +140,7 @@ static VOID PoolsCorruption(VOID)
     } _SEH2_END;
 
     ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
+#endif
 
     // free the pool
     ExFreePoolWithTag(Ptr, TAG_POOLTEST);

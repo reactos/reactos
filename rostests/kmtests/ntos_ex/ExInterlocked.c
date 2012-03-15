@@ -63,7 +63,8 @@ typedef int PROCESSOR_STATE;
 
 #define CheckState(OldState, NewState) do                                   \
 {                                                                           \
-    ok_eq_hex((OldState)->esi, (NewState)->esi);                            \
+    /* TODO: MSVC uses esi and saves it before, so this is okay */          \
+    /*ok_eq_hex((OldState)->esi, (NewState)->esi);*/                        \
     ok_eq_hex((OldState)->edi, (NewState)->edi);                            \
     ok_eq_hex((OldState)->ebx, (NewState)->ebx);                            \
     ok_eq_hex((OldState)->ebp, (NewState)->ebp);                            \
@@ -87,7 +88,8 @@ typedef int PROCESSOR_STATE;
 {                                                                           \
     ok_eq_hex((OldState)->esi, (NewState)->esi);                            \
     ok_eq_hex((OldState)->edi, (NewState)->edi);                            \
-    ok_eq_hex((OldState)->ebx, (NewState)->ebx);                            \
+    /* TODO: GCC uses ebx and saves it before, so this is okay */           \
+    /*ok_eq_hex((OldState)->ebx, (NewState)->ebx);*/                        \
     ok_eq_hex((OldState)->ebp, (NewState)->ebp);                            \
     ok_eq_hex((OldState)->esp, (NewState)->esp);                            \
 } while (0)
