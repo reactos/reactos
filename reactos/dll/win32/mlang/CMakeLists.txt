@@ -8,7 +8,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
 spec2def(mlang.dll mlang.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -18,7 +17,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mlang.def)
 
 add_library(mlang SHARED ${SOURCE})
-set_module_type(mlang win32dll ENTRYPOINT 0)
+set_module_type(mlang win32dll UNICODE)
 target_link_libraries(mlang uuid wine)
 add_delay_importlibs(mlang oleaut32)
 
@@ -27,6 +26,7 @@ add_importlibs(mlang
     user32
     gdi32
     advapi32
+	msvcrt
     kernel32
     ntdll)
 
