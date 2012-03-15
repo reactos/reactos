@@ -41,8 +41,8 @@ reactos/dll/directx/msdmo         # Autosync
 reactos/dll/directx/qedit         # Autosync
 reactos/dll/directx/quartz        # Autosync
 reactos/dll/win32/advpack         # Synced to Wine-1.3.37
-reactos/dll/win32/atl             # Autosync
-reactos/dll/win32/avifil32        # Autosync
+reactos/dll/win32/atl             # Synced to Wine-1.3.37
+reactos/dll/win32/avifil32        # Synced to Wine-1.3.37
 reactos/dll/win32/bcrypt          # Synced to Wine-1.3.37
 reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Synced to Wine-1.3.37

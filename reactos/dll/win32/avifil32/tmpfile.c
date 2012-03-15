@@ -34,102 +34,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 /***********************************************************************/
 
-static HRESULT WINAPI ITmpFile_fnQueryInterface(IAVIFile* iface,REFIID refiid,LPVOID *obj);
-static ULONG   WINAPI ITmpFile_fnAddRef(IAVIFile* iface);
-static ULONG   WINAPI ITmpFile_fnRelease(IAVIFile* iface);
-static HRESULT WINAPI ITmpFile_fnInfo(IAVIFile*iface,AVIFILEINFOW*afi,LONG size);
-static HRESULT WINAPI ITmpFile_fnGetStream(IAVIFile*iface,PAVISTREAM*avis,DWORD fccType,LONG lParam);
-static HRESULT WINAPI ITmpFile_fnCreateStream(IAVIFile*iface,PAVISTREAM*avis,AVISTREAMINFOW*asi);
-static HRESULT WINAPI ITmpFile_fnWriteData(IAVIFile*iface,DWORD ckid,LPVOID lpData,LONG size);
-static HRESULT WINAPI ITmpFile_fnReadData(IAVIFile*iface,DWORD ckid,LPVOID lpData,LONG *size);
-static HRESULT WINAPI ITmpFile_fnEndRecord(IAVIFile*iface);
-static HRESULT WINAPI ITmpFile_fnDeleteStream(IAVIFile*iface,DWORD fccType,LONG lParam);
-
-static const struct IAVIFileVtbl itmpft = {
-  ITmpFile_fnQueryInterface,
-  ITmpFile_fnAddRef,
-  ITmpFile_fnRelease,
-  ITmpFile_fnInfo,
-  ITmpFile_fnGetStream,
-  ITmpFile_fnCreateStream,
-  ITmpFile_fnWriteData,
-  ITmpFile_fnReadData,
-  ITmpFile_fnEndRecord,
-  ITmpFile_fnDeleteStream
-};
-
 typedef struct _ITmpFileImpl {
-  /* IUnknown stuff */
-  const IAVIFileVtbl *lpVtbl;
+  IAVIFile     IAVIFile_iface;
   LONG         ref;
 
-  /* IAVIFile stuff */
   AVIFILEINFOW  fInfo;
   PAVISTREAM   *ppStreams;
 } ITmpFileImpl;
 
-PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams) {
-  ITmpFileImpl *tmpFile;
-  int           i;
-
-  tmpFile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ITmpFileImpl));
-  if (tmpFile == NULL)
-    return NULL;
-
-  tmpFile->lpVtbl = &itmpft;
-  tmpFile->ref    = 1;
-  memset(&tmpFile->fInfo, 0, sizeof(tmpFile->fInfo));
-
-  tmpFile->fInfo.dwStreams = nStreams;
-  tmpFile->ppStreams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(PAVISTREAM));
-  if (tmpFile->ppStreams == NULL) {
-    HeapFree(GetProcessHeap(), 0, tmpFile);
-    return NULL;
-  }
-
-  for (i = 0; i < nStreams; i++) {
-    AVISTREAMINFOW sInfo;
-
-    tmpFile->ppStreams[i] = ppStreams[i];
-
-    AVIStreamAddRef(ppStreams[i]);
-    AVIStreamInfoW(ppStreams[i], &sInfo, sizeof(sInfo));
-    if (i == 0) {
-      tmpFile->fInfo.dwScale = sInfo.dwScale;
-      tmpFile->fInfo.dwRate  = sInfo.dwRate;
-      if (!sInfo.dwScale || !sInfo.dwRate) {
-	tmpFile->fInfo.dwScale = 1;
-	tmpFile->fInfo.dwRate  = 100;
-      }
-    }
-
-    if (tmpFile->fInfo.dwSuggestedBufferSize < sInfo.dwSuggestedBufferSize)
-      tmpFile->fInfo.dwSuggestedBufferSize = sInfo.dwSuggestedBufferSize;
-
-    {
-      register DWORD tmp;
-
-      tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength),
-		   tmpFile->fInfo.dwScale, tmpFile->fInfo.dwRate * 1000);
-      if (tmpFile->fInfo.dwLength < tmp)
-	tmpFile->fInfo.dwLength = tmp;
-
-      tmp = sInfo.rcFrame.right - sInfo.rcFrame.left;
-      if (tmpFile->fInfo.dwWidth < tmp)
-	tmpFile->fInfo.dwWidth = tmp;
-      tmp = sInfo.rcFrame.bottom - sInfo.rcFrame.top;
-      if (tmpFile->fInfo.dwHeight < tmp)
-	tmpFile->fInfo.dwHeight = tmp;
-    }
-  }
-
-  return (PAVIFILE)tmpFile;
+static inline ITmpFileImpl *impl_from_IAVIFile(IAVIFile *iface)
+{
+  return CONTAINING_RECORD(iface, ITmpFileImpl, IAVIFile_iface);
 }
 
 static HRESULT WINAPI ITmpFile_fnQueryInterface(IAVIFile *iface, REFIID refiid,
 						LPVOID *obj)
 {
-  ITmpFileImpl *This = (ITmpFileImpl *)iface;
+  ITmpFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p,%s,%p)\n", This, debugstr_guid(refiid), obj);
 
@@ -146,7 +67,7 @@ static HRESULT WINAPI ITmpFile_fnQueryInterface(IAVIFile *iface, REFIID refiid,
 
 static ULONG   WINAPI ITmpFile_fnAddRef(IAVIFile *iface)
 {
-  ITmpFileImpl *This = (ITmpFileImpl *)iface;
+  ITmpFileImpl *This = impl_from_IAVIFile(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
   TRACE("(%p) -> %d\n", iface, ref);
@@ -156,7 +77,7 @@ static ULONG   WINAPI ITmpFile_fnAddRef(IAVIFile *iface)
 
 static ULONG   WINAPI ITmpFile_fnRelease(IAVIFile *iface)
 {
-  ITmpFileImpl *This = (ITmpFileImpl *)iface;
+  ITmpFileImpl *This = impl_from_IAVIFile(iface);
   ULONG ref = InterlockedDecrement(&This->ref);
 
   TRACE("(%p) -> %d\n", iface, ref);
@@ -182,7 +103,7 @@ static ULONG   WINAPI ITmpFile_fnRelease(IAVIFile *iface)
 static HRESULT WINAPI ITmpFile_fnInfo(IAVIFile *iface,
 				      AVIFILEINFOW *afi, LONG size)
 {
-  ITmpFileImpl *This = (ITmpFileImpl *)iface;
+  ITmpFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p,%p,%d)\n",iface,afi,size);
 
@@ -201,7 +122,7 @@ static HRESULT WINAPI ITmpFile_fnInfo(IAVIFile *iface,
 static HRESULT WINAPI ITmpFile_fnGetStream(IAVIFile *iface, PAVISTREAM *avis,
 					   DWORD fccType, LONG lParam)
 {
-  ITmpFileImpl *This = (ITmpFileImpl *)iface;
+  ITmpFileImpl *This = impl_from_IAVIFile(iface);
 
   ULONG nStream = (ULONG)-1;
 
@@ -282,4 +203,76 @@ static HRESULT WINAPI ITmpFile_fnDeleteStream(IAVIFile *iface, DWORD fccType,
   TRACE("(%p,0x%08X,%d)\n", iface, fccType, lParam);
 
   return AVIERR_UNSUPPORTED;
+}
+
+static const struct IAVIFileVtbl itmpft = {
+  ITmpFile_fnQueryInterface,
+  ITmpFile_fnAddRef,
+  ITmpFile_fnRelease,
+  ITmpFile_fnInfo,
+  ITmpFile_fnGetStream,
+  ITmpFile_fnCreateStream,
+  ITmpFile_fnWriteData,
+  ITmpFile_fnReadData,
+  ITmpFile_fnEndRecord,
+  ITmpFile_fnDeleteStream
+};
+
+PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams)
+{
+  ITmpFileImpl *tmpFile;
+  int           i;
+
+  tmpFile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ITmpFileImpl));
+  if (tmpFile == NULL)
+    return NULL;
+
+  tmpFile->IAVIFile_iface.lpVtbl = &itmpft;
+  tmpFile->ref    = 1;
+  memset(&tmpFile->fInfo, 0, sizeof(tmpFile->fInfo));
+
+  tmpFile->fInfo.dwStreams = nStreams;
+  tmpFile->ppStreams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(PAVISTREAM));
+  if (tmpFile->ppStreams == NULL) {
+    HeapFree(GetProcessHeap(), 0, tmpFile);
+    return NULL;
+  }
+
+  for (i = 0; i < nStreams; i++) {
+    AVISTREAMINFOW sInfo;
+
+    tmpFile->ppStreams[i] = ppStreams[i];
+
+    AVIStreamAddRef(ppStreams[i]);
+    AVIStreamInfoW(ppStreams[i], &sInfo, sizeof(sInfo));
+    if (i == 0) {
+      tmpFile->fInfo.dwScale = sInfo.dwScale;
+      tmpFile->fInfo.dwRate  = sInfo.dwRate;
+      if (!sInfo.dwScale || !sInfo.dwRate) {
+        tmpFile->fInfo.dwScale = 1;
+        tmpFile->fInfo.dwRate  = 100;
+      }
+    }
+
+    if (tmpFile->fInfo.dwSuggestedBufferSize < sInfo.dwSuggestedBufferSize)
+      tmpFile->fInfo.dwSuggestedBufferSize = sInfo.dwSuggestedBufferSize;
+
+    {
+      register DWORD tmp;
+
+      tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength),
+                   tmpFile->fInfo.dwScale, tmpFile->fInfo.dwRate * 1000);
+      if (tmpFile->fInfo.dwLength < tmp)
+        tmpFile->fInfo.dwLength = tmp;
+
+      tmp = sInfo.rcFrame.right - sInfo.rcFrame.left;
+      if (tmpFile->fInfo.dwWidth < tmp)
+        tmpFile->fInfo.dwWidth = tmp;
+      tmp = sInfo.rcFrame.bottom - sInfo.rcFrame.top;
+      if (tmpFile->fInfo.dwHeight < tmp)
+        tmpFile->fInfo.dwHeight = tmp;
+    }
+  }
+
+  return (PAVIFILE)tmpFile;
 }

@@ -19,7 +19,6 @@ add_library(avifil32 SHARED
     factory.c
     getframe.c
     icmstream.c
-    regsvr.c
     tmpfile.c
     wavfile.c
     rsrc.rc

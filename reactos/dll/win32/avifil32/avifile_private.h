@@ -49,25 +49,23 @@
 #define IDS_ALLFILES         0x0185
 #define IDS_VIDEO            0x0189
 #define IDS_AUDIO            0x0190
-#define IDS_AVISTREAMFORMAT  0x0191
 #define IDS_AVIFILETYPE      0x0192
 #define IDS_UNCOMPRESSED     0x0193
 
 DEFINE_AVIGUID(CLSID_ICMStream, 0x00020001, 0, 0);
 DEFINE_AVIGUID(CLSID_WAVFile,   0x00020003, 0, 0);
 DEFINE_AVIGUID(CLSID_ACMStream, 0x0002000F, 0, 0);
-DEFINE_AVIGUID(IID_IEditStreamInternal, 0x0002000A,0,0);
 
-extern HMODULE AVIFILE_hModule;
+extern HMODULE AVIFILE_hModule DECLSPEC_HIDDEN;
 
-extern HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppobj);
-extern HRESULT AVIFILE_CreateWAVFile(REFIID riid, LPVOID *ppobj);
-extern HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppobj);
-extern HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppobj);
-extern PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream);
-extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream);
-extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams);
+extern HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT AVIFILE_CreateWAVFile(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream) DECLSPEC_HIDDEN;
+extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream) DECLSPEC_HIDDEN;
+extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams) DECLSPEC_HIDDEN;
 
-extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName);
+extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName) DECLSPEC_HIDDEN;
 
 #endif

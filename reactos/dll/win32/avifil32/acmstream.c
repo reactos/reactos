@@ -36,41 +36,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 /***********************************************************************/
 
-static HRESULT WINAPI ACMStream_fnQueryInterface(IAVIStream*iface,REFIID refiid,LPVOID *obj);
-static ULONG   WINAPI ACMStream_fnAddRef(IAVIStream*iface);
-static ULONG   WINAPI ACMStream_fnRelease(IAVIStream* iface);
-static HRESULT WINAPI ACMStream_fnCreate(IAVIStream*iface,LPARAM lParam1,LPARAM lParam2);
-static HRESULT WINAPI ACMStream_fnInfo(IAVIStream*iface,AVISTREAMINFOW *psi,LONG size);
-static LONG    WINAPI ACMStream_fnFindSample(IAVIStream*iface,LONG pos,LONG flags);
-static HRESULT WINAPI ACMStream_fnReadFormat(IAVIStream*iface,LONG pos,LPVOID format,LONG *formatsize);
-static HRESULT WINAPI ACMStream_fnSetFormat(IAVIStream*iface,LONG pos,LPVOID format,LONG formatsize);
-static HRESULT WINAPI ACMStream_fnRead(IAVIStream*iface,LONG start,LONG samples,LPVOID buffer,LONG buffersize,LONG *bytesread,LONG *samplesread);
-static HRESULT WINAPI ACMStream_fnWrite(IAVIStream*iface,LONG start,LONG samples,LPVOID buffer,LONG buffersize,DWORD flags,LONG *sampwritten,LONG *byteswritten);
-static HRESULT WINAPI ACMStream_fnDelete(IAVIStream*iface,LONG start,LONG samples);
-static HRESULT WINAPI ACMStream_fnReadData(IAVIStream*iface,DWORD fcc,LPVOID lp,LONG *lpread);
-static HRESULT WINAPI ACMStream_fnWriteData(IAVIStream*iface,DWORD fcc,LPVOID lp,LONG size);
-static HRESULT WINAPI ACMStream_fnSetInfo(IAVIStream*iface,AVISTREAMINFOW*info,LONG infolen);
-
-static const struct IAVIStreamVtbl iacmst = {
-  ACMStream_fnQueryInterface,
-  ACMStream_fnAddRef,
-  ACMStream_fnRelease,
-  ACMStream_fnCreate,
-  ACMStream_fnInfo,
-  ACMStream_fnFindSample,
-  ACMStream_fnReadFormat,
-  ACMStream_fnSetFormat,
-  ACMStream_fnRead,
-  ACMStream_fnWrite,
-  ACMStream_fnDelete,
-  ACMStream_fnReadData,
-  ACMStream_fnWriteData,
-  ACMStream_fnSetInfo
-};
-
 typedef struct _IAVIStreamImpl {
   /* IUnknown stuff */
-  const IAVIStreamVtbl *lpVtbl;
+  IAVIStream      IAVIStream_iface;
   LONG		  ref;
 
   /* IAVIStream stuff */
@@ -102,34 +70,74 @@ typedef struct _IAVIStreamImpl {
                          &__bytes, ACM_STREAMSIZEF_DESTINATION); \
            *(a) = __bytes / This->lpInFormat->nBlockAlign; } while(0)
 
-static HRESULT AVIFILE_OpenCompressor(IAVIStreamImpl *This);
-
-HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppv)
+static HRESULT AVIFILE_OpenCompressor(IAVIStreamImpl *This)
 {
-  IAVIStreamImpl *pstream;
-  HRESULT         hr;
+  HRESULT hr;
 
-  assert(riid != NULL && ppv != NULL);
+  /* pre-conditions */
+  assert(This != NULL);
+  assert(This->pStream != NULL);
 
-  *ppv = NULL;
+  if (This->has != NULL)
+    return AVIERR_OK;
 
-  pstream = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIStreamImpl));
-  if (pstream == NULL)
-    return AVIERR_MEMORY;
+  if (This->lpInFormat == NULL) {
+    /* decode or encode the data from pStream */
+    hr = AVIStreamFormatSize(This->pStream, This->sInfo.dwStart, &This->cbInFormat);
+    if (FAILED(hr))
+      return hr;
+    This->lpInFormat = HeapAlloc(GetProcessHeap(), 0, This->cbInFormat);
+    if (This->lpInFormat == NULL)
+      return AVIERR_MEMORY;
 
-  pstream->lpVtbl = &iacmst;
+    hr = IAVIStream_ReadFormat(This->pStream, This->sInfo.dwStart,
+                               This->lpInFormat, &This->cbInFormat);
+    if (FAILED(hr))
+      return hr;
 
-  hr = IAVIStream_QueryInterface((IAVIStream*)pstream, riid, ppv);
-  if (FAILED(hr))
-    HeapFree(GetProcessHeap(), 0, pstream);
+    if (This->lpOutFormat == NULL) {
+      /* we must decode to default format */
+      This->cbOutFormat = sizeof(PCMWAVEFORMAT);
+      This->lpOutFormat = HeapAlloc(GetProcessHeap(), 0, This->cbOutFormat);
+      if (This->lpOutFormat == NULL)
+        return AVIERR_MEMORY;
 
-  return hr;
+      This->lpOutFormat->wFormatTag = WAVE_FORMAT_PCM;
+      if (acmFormatSuggest(NULL, This->lpInFormat, This->lpOutFormat,
+                           This->cbOutFormat, ACM_FORMATSUGGESTF_WFORMATTAG) != S_OK)
+        return AVIERR_NOCOMPRESSOR;
+    }
+  } else if (This->lpOutFormat == NULL)
+    return AVIERR_ERROR; /* To what should I encode? */
+
+  if (acmStreamOpen(&This->has, NULL, This->lpInFormat, This->lpOutFormat,
+                    NULL, 0, 0, ACM_STREAMOPENF_NONREALTIME) != S_OK)
+    return AVIERR_NOCOMPRESSOR;
+
+  /* update AVISTREAMINFO structure */
+  This->sInfo.dwSampleSize = This->lpOutFormat->nBlockAlign;
+  This->sInfo.dwScale      = This->lpOutFormat->nBlockAlign;
+  This->sInfo.dwRate       = This->lpOutFormat->nAvgBytesPerSec;
+  This->sInfo.dwQuality    = (DWORD)ICQUALITY_DEFAULT;
+  SetRectEmpty(&This->sInfo.rcFrame);
+
+  /* convert positions and sizes to output format */
+  CONVERT_STREAM_to_THIS(&This->sInfo.dwStart);
+  CONVERT_STREAM_to_THIS(&This->sInfo.dwLength);
+  CONVERT_STREAM_to_THIS(&This->sInfo.dwSuggestedBufferSize);
+
+  return AVIERR_OK;
+}
+
+static inline IAVIStreamImpl *impl_from_IAVIStream(IAVIStream *iface)
+{
+  return CONTAINING_RECORD(iface, IAVIStreamImpl, IAVIStream_iface);
 }
 
 static HRESULT WINAPI ACMStream_fnQueryInterface(IAVIStream *iface,
 						  REFIID refiid, LPVOID *obj)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,%s,%p)\n", iface, debugstr_guid(refiid), obj);
 
@@ -146,7 +154,7 @@ static HRESULT WINAPI ACMStream_fnQueryInterface(IAVIStream *iface,
 
 static ULONG WINAPI ACMStream_fnAddRef(IAVIStream *iface)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
   TRACE("(%p) -> %d\n", iface, ref);
@@ -160,7 +168,7 @@ static ULONG WINAPI ACMStream_fnAddRef(IAVIStream *iface)
 
 static ULONG WINAPI ACMStream_fnRelease(IAVIStream* iface)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
   ULONG ref = InterlockedDecrement(&This->ref);
 
   TRACE("(%p) -> %d\n", iface, ref);
@@ -209,7 +217,7 @@ static ULONG WINAPI ACMStream_fnRelease(IAVIStream* iface)
 static HRESULT WINAPI ACMStream_fnCreate(IAVIStream *iface, LPARAM lParam1,
 					  LPARAM lParam2)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,0x%08lX,0x%08lX)\n", iface, lParam1, lParam2);
 
@@ -262,7 +270,7 @@ static HRESULT WINAPI ACMStream_fnCreate(IAVIStream *iface, LPARAM lParam1,
 static HRESULT WINAPI ACMStream_fnInfo(IAVIStream *iface,LPAVISTREAMINFOW psi,
 					LONG size)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,%p,%d)\n", iface, psi, size);
 
@@ -289,7 +297,7 @@ static HRESULT WINAPI ACMStream_fnInfo(IAVIStream *iface,LPAVISTREAMINFOW psi,
 static LONG WINAPI ACMStream_fnFindSample(IAVIStream *iface, LONG pos,
 					   LONG flags)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,%d,0x%08X)\n",iface,pos,flags);
 
@@ -317,7 +325,7 @@ static LONG WINAPI ACMStream_fnFindSample(IAVIStream *iface, LONG pos,
 static HRESULT WINAPI ACMStream_fnReadFormat(IAVIStream *iface, LONG pos,
 					      LPVOID format, LONG *formatsize)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,%d,%p,%p)\n", iface, pos, format, formatsize);
 
@@ -352,7 +360,7 @@ static HRESULT WINAPI ACMStream_fnReadFormat(IAVIStream *iface, LONG pos,
 static HRESULT WINAPI ACMStream_fnSetFormat(IAVIStream *iface, LONG pos,
 					     LPVOID format, LONG formatsize)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   HRESULT hr;
 
@@ -399,7 +407,7 @@ static HRESULT WINAPI ACMStream_fnRead(IAVIStream *iface, LONG start,
 					LONG buffersize, LPLONG bytesread,
 					LPLONG samplesread)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   HRESULT hr;
   DWORD   size;
@@ -520,7 +528,7 @@ static HRESULT WINAPI ACMStream_fnWrite(IAVIStream *iface, LONG start,
 					 LPLONG sampwritten,
 					 LPLONG byteswritten)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   HRESULT hr;
   ULONG   size;
@@ -613,7 +621,7 @@ static HRESULT WINAPI ACMStream_fnWrite(IAVIStream *iface, LONG start,
 static HRESULT WINAPI ACMStream_fnDelete(IAVIStream *iface, LONG start,
 					  LONG samples)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,%d,%d)\n", iface, start, samples);
 
@@ -647,7 +655,7 @@ static HRESULT WINAPI ACMStream_fnDelete(IAVIStream *iface, LONG start,
 static HRESULT WINAPI ACMStream_fnReadData(IAVIStream *iface, DWORD fcc,
 					    LPVOID lp, LPLONG lpread)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,0x%08X,%p,%p)\n", iface, fcc, lp, lpread);
 
@@ -659,7 +667,7 @@ static HRESULT WINAPI ACMStream_fnReadData(IAVIStream *iface, DWORD fcc,
 static HRESULT WINAPI ACMStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 					     LPVOID lp, LONG size)
 {
-  IAVIStreamImpl *This = (IAVIStreamImpl *)iface;
+  IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
   TRACE("(%p,0x%08x,%p,%d)\n", iface, fcc, lp, size);
 
@@ -676,63 +684,41 @@ static HRESULT WINAPI ACMStream_fnSetInfo(IAVIStream *iface,
   return E_FAIL;
 }
 
-/***********************************************************************/
+static const struct IAVIStreamVtbl iacmst = {
+  ACMStream_fnQueryInterface,
+  ACMStream_fnAddRef,
+  ACMStream_fnRelease,
+  ACMStream_fnCreate,
+  ACMStream_fnInfo,
+  ACMStream_fnFindSample,
+  ACMStream_fnReadFormat,
+  ACMStream_fnSetFormat,
+  ACMStream_fnRead,
+  ACMStream_fnWrite,
+  ACMStream_fnDelete,
+  ACMStream_fnReadData,
+  ACMStream_fnWriteData,
+  ACMStream_fnSetInfo
+};
 
-static HRESULT AVIFILE_OpenCompressor(IAVIStreamImpl *This)
+HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppv)
 {
-  HRESULT hr;
+  IAVIStreamImpl *pstream;
+  HRESULT         hr;
 
-  /* pre-conditions */
-  assert(This != NULL);
-  assert(This->pStream != NULL);
+  assert(riid != NULL && ppv != NULL);
 
-  if (This->has != NULL)
-    return AVIERR_OK;
+  *ppv = NULL;
 
-  if (This->lpInFormat == NULL) {
-    /* decode or encode the data from pStream */
-    hr = AVIStreamFormatSize(This->pStream, This->sInfo.dwStart, &This->cbInFormat);
-    if (FAILED(hr))
-      return hr;
-    This->lpInFormat = HeapAlloc(GetProcessHeap(), 0, This->cbInFormat);
-    if (This->lpInFormat == NULL)
-      return AVIERR_MEMORY;
+  pstream = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIStreamImpl));
+  if (pstream == NULL)
+    return AVIERR_MEMORY;
 
-    hr = IAVIStream_ReadFormat(This->pStream, This->sInfo.dwStart,
-			       This->lpInFormat, &This->cbInFormat);
-    if (FAILED(hr))
-      return hr;
+  pstream->IAVIStream_iface.lpVtbl = &iacmst;
 
-    if (This->lpOutFormat == NULL) {
-      /* we must decode to default format */
-      This->cbOutFormat = sizeof(PCMWAVEFORMAT);
-      This->lpOutFormat = HeapAlloc(GetProcessHeap(), 0, This->cbOutFormat);
-      if (This->lpOutFormat == NULL)
-	return AVIERR_MEMORY;
+  hr = IAVIStream_QueryInterface(&pstream->IAVIStream_iface, riid, ppv);
+  if (FAILED(hr))
+    HeapFree(GetProcessHeap(), 0, pstream);
 
-      This->lpOutFormat->wFormatTag = WAVE_FORMAT_PCM;
-      if (acmFormatSuggest(NULL, This->lpInFormat, This->lpOutFormat,
-			   This->cbOutFormat, ACM_FORMATSUGGESTF_WFORMATTAG) != S_OK)
-	return AVIERR_NOCOMPRESSOR;
-    }
-  } else if (This->lpOutFormat == NULL)
-    return AVIERR_ERROR; /* To what should I encode? */
-
-  if (acmStreamOpen(&This->has, NULL, This->lpInFormat, This->lpOutFormat,
-		    NULL, 0, 0, ACM_STREAMOPENF_NONREALTIME) != S_OK)
-    return AVIERR_NOCOMPRESSOR;
-
-  /* update AVISTREAMINFO structure */
-  This->sInfo.dwSampleSize = This->lpOutFormat->nBlockAlign;
-  This->sInfo.dwScale      = This->lpOutFormat->nBlockAlign;
-  This->sInfo.dwRate       = This->lpOutFormat->nAvgBytesPerSec;
-  This->sInfo.dwQuality    = (DWORD)ICQUALITY_DEFAULT;
-  SetRectEmpty(&This->sInfo.rcFrame);
-
-  /* convert positions and sizes to output format */
-  CONVERT_STREAM_to_THIS(&This->sInfo.dwStart);
-  CONVERT_STREAM_to_THIS(&This->sInfo.dwLength);
-  CONVERT_STREAM_to_THIS(&This->sInfo.dwSuggestedBufferSize);
-
-  return AVIERR_OK;
+  return hr;
 }
