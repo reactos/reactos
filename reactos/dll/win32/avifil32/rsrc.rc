@@ -34,6 +34,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "wine/wine_common_ver.rc"
 #include "avifile_private.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.
@@ -68,8 +71,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_TR_TR
     #include "avifile_Tr.rc"
 #endif
-
-/* UTF-8 */
 #ifdef LANGUAGE_DA_DK
     #include "avifile_Da.rc"
 #endif

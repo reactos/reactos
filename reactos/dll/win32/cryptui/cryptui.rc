@@ -46,6 +46,9 @@ IDB_CERT_WATERMARK BITMAP certwatermark.bmp
 /* @makedep: certheader.bmp */
 IDB_CERT_HEADER BITMAP certheader.bmp
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_EN_US
     #include "cryptui_En.rc"
 #endif
@@ -55,8 +58,6 @@ IDB_CERT_HEADER BITMAP certheader.bmp
 #ifdef LANGUAGE_PL_PL
     #include "cryptui_Pl.rc"
 #endif
-
-/* UTF-8 */
 #ifdef LANGUAGE_DE_DE
     #include "cryptui_De.rc"
 #endif
