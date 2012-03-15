@@ -194,11 +194,11 @@ static void test_AVISaveOptions(void)
 
     SetLastError(0xdeadbeef);
     hres = EditStreamSetNameA(streams[0], winetest0);
-    todo_wine ok(hres == AVIERR_OK, "0: got 0x%x (expected AVIERR_OK)\n", hres);
+    ok(hres == AVIERR_OK, "0: got 0x%x (expected AVIERR_OK)\n", hres);
 
     SetLastError(0xdeadbeef);
     hres = EditStreamSetNameA(streams[1], winetest1);
-    todo_wine ok(hres == AVIERR_OK, "1: got 0x%x (expected AVIERR_OK)\n", hres);
+    ok(hres == AVIERR_OK, "1: got 0x%x (expected AVIERR_OK)\n", hres);
 
     if (winetest_interactive) {
         SetLastError(0xdeadbeef);
@@ -222,6 +222,102 @@ static void test_AVISaveOptions(void)
 }
 
 /* ########################### */
+
+static void test_EditStreamSetInfo(void)
+{
+    PAVISTREAM stream = NULL;
+    HRESULT hres;
+    AVISTREAMINFO info, info2;
+
+    hres = CreateEditableStream(&stream, NULL);
+    ok(hres == AVIERR_OK, "got 0x%08X, expected AVIERR_OK\n", hres);
+
+    /* Size parameter is somehow checked (notice the crash with size=-1 below) */
+    hres = EditStreamSetInfo(stream, NULL, 0);
+    ok( hres == AVIERR_BADSIZE, "got 0x%08X, expected AVIERR_BADSIZE\n", hres);
+
+    hres = EditStreamSetInfo(stream, NULL, sizeof(AVISTREAMINFO)-1 );
+    ok( hres == AVIERR_BADSIZE, "got 0x%08X, expected AVIERR_BADSIZE\n", hres);
+
+    if(0)
+    {   
+        /* Crashing - first parameter not checked */
+        EditStreamSetInfo(NULL, &info, sizeof(AVISTREAMINFO) );
+
+        /* Crashing - second parameter not checked */
+        EditStreamSetInfo(stream, NULL, sizeof(AVISTREAMINFO) );
+
+        EditStreamSetInfo(stream, NULL, -1);
+    }
+
+    hres = AVIStreamInfo(stream, &info, sizeof(AVISTREAMINFO) );
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres);
+
+             /* Does the function check what's it's updating ? */
+
+#define IS_INFO_UPDATED(m) do { \
+    hres = EditStreamSetInfo(stream, &info, sizeof(AVISTREAMINFO) ); \
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres); \
+    hres = AVIStreamInfo(stream, &info2, sizeof(AVISTREAMINFO) ); \
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres); \
+    ok( info2.m == info.m, "EditStreamSetInfo did not update "#m" parameter\n" ); \
+    } while(0)
+
+    info.dwStart++;
+    IS_INFO_UPDATED(dwStart);
+    info.dwStart = 0;
+    IS_INFO_UPDATED(dwStart);
+
+    info.wPriority++;
+    IS_INFO_UPDATED(wPriority);
+    info.wPriority = 0;
+    IS_INFO_UPDATED(wPriority);
+
+    info.wLanguage++;
+    IS_INFO_UPDATED(wLanguage);
+    info.wLanguage = 0;
+    IS_INFO_UPDATED(wLanguage);
+
+    info.dwScale++;
+    IS_INFO_UPDATED(dwScale);
+    info.dwScale = 0;
+    IS_INFO_UPDATED(dwScale);
+
+    info.dwRate++;
+    IS_INFO_UPDATED(dwRate);
+    info.dwRate = 0;
+    IS_INFO_UPDATED(dwRate);
+
+    info.dwQuality++;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = 0;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = -2;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = ICQUALITY_HIGH+1;
+    IS_INFO_UPDATED(dwQuality);
+
+    info.rcFrame.left = 0;
+    IS_INFO_UPDATED(rcFrame.left);
+    info.rcFrame.top = 0;
+    IS_INFO_UPDATED(rcFrame.top);
+    info.rcFrame.right = 0;
+    IS_INFO_UPDATED(rcFrame.right);
+    info.rcFrame.bottom = 0;
+    IS_INFO_UPDATED(rcFrame.bottom);
+
+    info.rcFrame.left = -1;
+    IS_INFO_UPDATED(rcFrame.left);
+    info.rcFrame.top = -1;
+    IS_INFO_UPDATED(rcFrame.top);
+    info.rcFrame.right = -1;
+    IS_INFO_UPDATED(rcFrame.right);
+    info.rcFrame.bottom = -1;
+    IS_INFO_UPDATED(rcFrame.bottom);
+    AVIStreamRelease(stream);
+#undef IS_INFO_UPDATED
+}
+
 
 static void init_test_struct(COMMON_AVI_HEADERS *cah)
 {
@@ -451,6 +547,7 @@ START_TEST(api)
 {
 
     AVIFileInit();
+    test_EditStreamSetInfo();
     test_AVISaveOptions();
     test_default_data();
     test_amh_corruption();
