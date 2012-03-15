@@ -99,9 +99,8 @@ static VOID PoolsTest(VOID)
 
 static VOID PoolsCorruption(VOID)
 {
-    PULONG Ptr, TestPtr;
+    PULONG Ptr;
     ULONG AllocSize;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     // start with non-paged pool
     AllocSize = 4096 + 0x10;
