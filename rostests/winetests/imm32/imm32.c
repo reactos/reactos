@@ -573,6 +573,51 @@ static void test_ImmGetContext(void)
     ok(ImmReleaseContext(hwnd, himc), "ImmReleaseContext failed\n");
 }
 
+static void test_ImmGetDescription(void)
+{
+    HKL hkl;
+    WCHAR japime[] = { 'E', '0', '0', '1', '0', '4', '1', '1', 0 };
+    WCHAR descW[100];
+    CHAR descA[100];
+    UINT ret, lret;
+
+    /* FIXME: invalid keyboard layouts should not pass */
+    ret = ImmGetDescriptionW(NULL, NULL, 0);
+    todo_wine ok(!ret, "ImmGetDescriptionW failed, expected 0 received %d.\n", ret);
+
+    /* load a language with valid IMM descriptions */
+    hkl = LoadKeyboardLayoutW(japime, KLF_ACTIVATE);
+    todo_wine ok(hkl != 0, "LoadKeyboardLayoutW failed, expected != 0.\n");
+
+    ret = ImmGetDescriptionW(hkl, NULL, 0);
+    if(!ret)
+    {
+        win_skip("ImmGetDescriptionW is not working for current loaded keyboard.\n");
+        return;
+    }
+
+    ret = ImmGetDescriptionW(hkl, descW, 0);
+    ok(ret, "ImmGetDescriptionW failed, expected != 0 received 0.\n");
+
+    lret = ImmGetDescriptionW(hkl, descW, ret + 1);
+    ok(lret, "ImmGetDescriptionW failed, expected != 0 received 0.\n");
+    ok(lret == ret, "ImmGetDescriptionW failed to return the correct amount of data. Expected %d, got %d.\n", ret, lret);
+
+    lret = ImmGetDescriptionA(hkl, descA, ret + 1);
+    ok(lret, "ImmGetDescriptionA failed, expected != 0 received 0.\n");
+    todo_wine ok(lret == ret, "ImmGetDescriptionA failed to return the correct amount of data. Expected %d, got %d.\n", ret, lret);
+
+    ret /= 2; /* try to copy partially */
+    lret = ImmGetDescriptionW(hkl, descW, ret + 1);
+    ok(lret, "ImmGetDescriptionW failed, expected != 0 received 0.\n");
+    ok(lret == ret, "ImmGetDescriptionW failed to return the correct amount of data. Expected %d, got %d.\n", ret, lret);
+
+    ret = ImmGetDescriptionW(hkl, descW, 1);
+    ok(!ret, "ImmGetDescriptionW failed, expected 0 received %d.\n", ret);
+
+    UnloadKeyboardLayout(hkl);
+}
+
 START_TEST(imm32) {
     if (init())
     {
@@ -584,6 +629,7 @@ START_TEST(imm32) {
         test_ImmThreads();
         test_ImmIsUIMessage();
         test_ImmGetContext();
+        test_ImmGetDescription();
     }
     cleanup();
 }
