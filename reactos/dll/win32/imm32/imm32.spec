@@ -39,7 +39,7 @@
 @ stdcall ImmGetDescriptionW(long ptr long)
 @ stdcall ImmGetGuideLineA(long long ptr long)
 @ stdcall ImmGetGuideLineW(long long ptr long)
-@ stub ImmGetHotKey
+@ stdcall ImmGetHotKey(long ptr ptr ptr)
 @ stdcall ImmGetIMCCLockCount(long)
 @ stdcall ImmGetIMCCSize(long)
 @ stdcall ImmGetIMCLockCount(long)

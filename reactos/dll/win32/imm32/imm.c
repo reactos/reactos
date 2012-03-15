@@ -2845,3 +2845,13 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
     FIXME("Stub\n");
     return FALSE;
 }
+
+/***********************************************************************
+ *              ImmGetHotKey(IMM32.@)
+ */
+
+BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
+{
+    FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
+    return FALSE;
+}
