@@ -89,10 +89,7 @@ STRINGTABLE
     IDS_IMPORT_CONTENT "Conținut"
     IDS_IMPORT_CONTENT_CERT "Certificat"
     IDS_IMPORT_CONTENT_CRL "Lista certificatelor revocate"
-    IDS_IMPORT_CONTENT_CTL "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Lista certificatelor de încredere\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Lista certificatelor acreditate"
+    IDS_IMPORT_CONTENT_CTL "Lista certificatelor acreditate"
     IDS_IMPORT_CONTENT_CMS "Mesaj CMS/PKCS #7"
     IDS_IMPORT_CONTENT_PFX "Schimb de informații personale"
     IDS_IMPORT_CONTENT_STORE "Depozit de certificate"
@@ -140,66 +137,24 @@ Protejează aplicația de alterări după publicare"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permite semnarea datelor cu ora curentă"
     IDS_PURPOSE_CTL_USAGE_SIGNING "Vă permite să semnați digital o listă de certificate acreditate"
     IDS_PURPOSE_EFS "Permite criptarea datelor de pe disc"
-    IDS_PURPOSE_EFS_RECOVERY "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Recuperare de fișiere\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Recupererea fișierelor"
-    IDS_PURPOSE_WHQL "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea driverelor hardware Windows\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea driverelor de hardware din Windows"
-    IDS_PURPOSE_NT5 "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor sistem Windows\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor de sistem din Windows"
-    IDS_PURPOSE_OEM_WHQL "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor sistem Windows OEM\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor de sistem din Windows OEM"
-    IDS_PURPOSE_EMBEDDED_NT "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor sistem Windows Embedded\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea componentelor de sistem din Windows Embedded"
+    IDS_PURPOSE_EFS_RECOVERY "Recupererea fișierelor"
+    IDS_PURPOSE_WHQL "Verificarea driverelor de hardware din Windows"
+    IDS_PURPOSE_NT5 "Verificarea componentelor de sistem din Windows"
+    IDS_PURPOSE_OEM_WHQL "Verificarea componentelor de sistem din Windows OEM"
+    IDS_PURPOSE_EMBEDDED_NT "Verificarea componentelor de sistem din Windows Embedded"
     IDS_PURPOSE_ROOT_LIST_SIGNER "Semnatarul listei rădăcină"
     IDS_PURPOSE_QUALIFIED_SUBORDINATION "Subordonare calificată"
-    IDS_PURPOSE_KEY_RECOVERY "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Recuperare de chei\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Recuperarea cheilor"
-    IDS_PURPOSE_DOCUMENT_SIGNING "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Semnare de documente\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Semnarea documentelor"
-    IDS_PURPOSE_LIFETIME_SIGNING "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Semnare pe toată durata vieții\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Semnătură pe viață"
+    IDS_PURPOSE_KEY_RECOVERY "Recuperarea cheilor"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Semnarea documentelor"
+    IDS_PURPOSE_LIFETIME_SIGNING "Semnătură pe viață"
     IDS_PURPOSE_DRM "Drepturi digitale"
-    IDS_PURPOSE_LICENSES "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Licențiere pachet de chei\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Licențe de pachete de chei"
-    IDS_PURPOSE_LICENSE_SERVER "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificarea serverului de licență\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Verificare a serverului de licențe"
-    IDS_PURPOSE_ENROLLMENT_AGENT "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Agent de cerere de certificate\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Agent solicitare certificat"
-    IDS_PURPOSE_SMARTCARD_LOGON "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Log on cu Smart Card\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Autentificare prin Smart Card"
+    IDS_PURPOSE_LICENSES "Licențe de pachete de chei"
+    IDS_PURPOSE_LICENSE_SERVER "Verificare a serverului de licențe"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Agent solicitare certificat"
+    IDS_PURPOSE_SMARTCARD_LOGON "Autentificare prin Smart Card"
     IDS_PURPOSE_CA_EXCHANGE "Arhivare chei private"
-    IDS_PURPOSE_KEY_RECOVERY_AGENT "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Agent de recuperare a cheilor\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Agent recuperare chei"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Replicarea serviciilor repertoar de e-mail\n\
-#-#-#-#-#  ro.po (Wine)  #-#-#-#-#\n\
-Serviciu Registru pentru replicare email"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Agent recuperare chei"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Serviciu Registru pentru replicare email"
     IDS_EXPORT_WIZARD "Asistent de exportare a certificatelor"
     IDS_EXPORT_FORMAT_TITLE "Format pentru exportare"
     IDS_EXPORT_FORMAT_SUBTITLE "Alegeți formatul în care va fi salvat conținutul."
