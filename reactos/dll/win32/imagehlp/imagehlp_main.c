@@ -26,7 +26,7 @@
 #include "wine/debug.h"
 
 /**********************************************************************/
-HANDLE IMAGEHLP_hHeap = NULL;
+DECLSPEC_HIDDEN HANDLE IMAGEHLP_hHeap = NULL;
 
 /***********************************************************************
  *           DllMain (IMAGEHLP.init)

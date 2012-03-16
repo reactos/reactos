@@ -77,7 +77,7 @@ static int IMAGEHLP_GetNTHeaders(HANDLE handle, DWORD *pe_offset, IMAGE_NT_HEADE
         return HDR_FAIL;
 
     /* verify magic number of 'MZ' */
-    if (dos_hdr.e_magic != 0x5A4D)
+    if (dos_hdr.e_magic != IMAGE_DOS_SIGNATURE)
         return HDR_FAIL;
 
     if (pe_offset != NULL)
@@ -392,10 +392,6 @@ BOOL WINAPI ImageAddCertificate(
     /* If we've already got a security directory, find the end of it */
     if ((r) && (sd_VirtualAddr != 0))
     {
-        offset = 0;
-        index = 0;
-        count = 0;
-
         /* Check if the security directory is at the end of the file.
            If not, we should probably relocate it. */
         if (GetFileSize(FileHandle, NULL) != sd_VirtualAddr + size)
@@ -463,10 +459,9 @@ BOOL WINAPI ImageAddCertificate(
     if (Certificate->dwLength % 8)
     {
         char null[8];
-		DWORD dwBytesWritten;
 
         ZeroMemory(null, 8);
-        WriteFile(FileHandle, null, 8 - (Certificate->dwLength % 8), &dwBytesWritten, NULL);
+        WriteFile(FileHandle, null, 8 - (Certificate->dwLength % 8), &count, NULL);
 
         size += 8 - (Certificate->dwLength % 8);
     }
@@ -480,6 +475,8 @@ BOOL WINAPI ImageAddCertificate(
     if (!IMAGEHLP_RecalculateChecksum(FileHandle))
         return FALSE;
 
+    if(Index)
+        *Index = index;
     return TRUE;
 }
 
@@ -747,7 +744,7 @@ static BOOL IMAGEHLP_ReportImportSection( IMAGE_SECTION_HEADER *hdr,
 /***********************************************************************
  *		ImageGetDigestStream (IMAGEHLP.@)
  *
- * Gets a stream of bytes from a PE file overwhich a hash might be computed to
+ * Gets a stream of bytes from a PE file over which a hash might be computed to
  * verify that the image has not changed.  Useful for creating a certificate to
  * be added to the file with ImageAddCertificate.
  *

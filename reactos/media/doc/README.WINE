@@ -58,7 +58,7 @@ reactos/dll/win32/cryptdll        # Synced to Wine-1.3.37
 reactos/dll/win32/cryptnet        # Synced to Wine-1.3.37
 reactos/dll/win32/cryptui         # Synced to Wine-1.3.37
 reactos/dll/win32/dbghelp         # Synced to Wine-1.3.37
-reactos/dll/win32/dciman32        # Autosync
+reactos/dll/win32/dciman32        # Synced to Wine-1.3.37
 reactos/dll/win32/dwmapi          # Synced to Wine-1.3.37
 reactos/dll/win32/fusion          # Synced to Wine-1.3.37
 reactos/dll/win32/gdiplus         # Synced to Wine-1.3.37
@@ -69,7 +69,7 @@ reactos/dll/win32/httpapi         # Synced to Wine-1.3.37
 reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imaadp32.acm    # Synced to Wine-1.3.37
-reactos/dll/win32/imagehlp        # Autosync
+reactos/dll/win32/imagehlp        # Synced to Wine-1.3.37
 reactos/dll/win32/imm32           # Synced to Wine-1.3.37
 reactos/dll/win32/inetcomm        # Synced to Wine-1.3.37
 reactos/dll/win32/inetmib1        # Autosync
