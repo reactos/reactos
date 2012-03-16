@@ -77,10 +77,7 @@ STRINGTABLE
     IDS_IMPORT_FILTER_CTL "Lista de Certificados Confiáveis (*.stl)"
     IDS_IMPORT_FILTER_SERIALIZED_STORE "Conjunto de Certificados Serializados da Microsoft (*.sst)"
     IDS_IMPORT_FILTER_CMS "Mensagens CMS/PKCS #7 (*.spc; *.p7b)"
-    IDS_IMPORT_FILTER_ALL "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Todos os arquivos (*.*)\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Todos os ficheiros (*.*)"
+    IDS_IMPORT_FILTER_ALL "Todos os ficheiros (*.*)"
     IDS_IMPORT_EMPTY_FILE "Por favor seleccione um ficheiro."
     IDS_IMPORT_BAD_FORMAT "O formato do ficheiro não é reconhecido. Por favor seleccione outro ficheiro."
     IDS_IMPORT_OPEN_FAILED "Não consegui abrir "
@@ -141,65 +138,23 @@ Protege o software de alterações após publicação"
     IDS_PURPOSE_CTL_USAGE_SIGNING "Permite que assine digitalmente uma lista de certificados confiáveis"
     IDS_PURPOSE_EFS "Permite que os dados em disco sejam cifrados"
     IDS_PURPOSE_EFS_RECOVERY "Recuperação de Ficheiros"
-    IDS_PURPOSE_WHQL "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Verificação de Driver de Hardware Windows\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Windows Hardware Driver Verification"
-    IDS_PURPOSE_NT5 "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Verificação de Componentes de Sistema Windows\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Windows System Component Verification"
-    IDS_PURPOSE_OEM_WHQL "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Verificação de Componentes de Sistema OEM Windows\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-OEM Windows System Component Verification"
-    IDS_PURPOSE_EMBEDDED_NT "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Verificação de Componentes de Sistema Windows Embebida\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Embedded Windows System Component Verification"
+    IDS_PURPOSE_WHQL "Windows Hardware Driver Verification"
+    IDS_PURPOSE_NT5 "Windows System Component Verification"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows System Component Verification"
+    IDS_PURPOSE_EMBEDDED_NT "Embedded Windows System Component Verification"
     IDS_PURPOSE_ROOT_LIST_SIGNER "Root List Signer"
-    IDS_PURPOSE_QUALIFIED_SUBORDINATION "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Subordinação Qualificada\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Qualified Subordination"
-    IDS_PURPOSE_KEY_RECOVERY "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Recuperação de chaves\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Key Recovery"
-    IDS_PURPOSE_DOCUMENT_SIGNING "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Assinatura de Documento\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Document Signing"
-    IDS_PURPOSE_LIFETIME_SIGNING "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Assinatura de tempo de vida\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Lifetime Signing"
-    IDS_PURPOSE_DRM "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Direitos Digitais\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Digital Rights"
-    IDS_PURPOSE_LICENSES "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Licenças de Pacotes de Chaves\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Key Pack Licenses"
-    IDS_PURPOSE_LICENSE_SERVER "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Verificação de Licença de Servidor\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-License Server Verification"
-    IDS_PURPOSE_ENROLLMENT_AGENT "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Agente de Pedido de Certificados\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Certificate Request Agent"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Qualified Subordination"
+    IDS_PURPOSE_KEY_RECOVERY "Key Recovery"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Document Signing"
+    IDS_PURPOSE_LIFETIME_SIGNING "Lifetime Signing"
+    IDS_PURPOSE_DRM "Digital Rights"
+    IDS_PURPOSE_LICENSES "Key Pack Licenses"
+    IDS_PURPOSE_LICENSE_SERVER "License Server Verification"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Certificate Request Agent"
     IDS_PURPOSE_SMARTCARD_LOGON "Smart Card Logon"
     IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
-    IDS_PURPOSE_KEY_RECOVERY_AGENT "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Agente Recuperador de Chaves\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Key Recovery Agent"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Replicação do Directório de Serviço Email\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Directory Service Email Replication"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
     IDS_EXPORT_WIZARD "Assistente de Exportação de Certificados"
     IDS_EXPORT_FORMAT_TITLE "Formato de Exportação"
     IDS_EXPORT_FORMAT_SUBTITLE "Escolha o formato em que o conteúdo será guardado."
