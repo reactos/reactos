@@ -5,15 +5,17 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c
-    cryptui.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui.def)
+
+# FIXME: Fix your rc files, Rafal!
+if(NOT MSVC)
+    list(APPEND SOURCE cryptui.rc)
+endif()
 
 add_library(cryptui SHARED ${SOURCE})
 set_module_type(cryptui win32dll)
@@ -31,6 +33,5 @@ add_importlibs(cryptui
     msvcrt
     kernel32
     ntdll)
-
 
 add_cd_file(TARGET cryptui DESTINATION reactos/system32 FOR all)
