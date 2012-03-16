@@ -27,10 +27,7 @@ STRINGTABLE
   IDS_WAVESTREAMFORMAT	"Hullámforma: %s"
   IDS_WAVEFILETYPE	"Hullámforma"
   IDS_ALLMULTIMEDIA	"Minden multimédia fájl"
-  IDS_ALLFILES		"#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Minden fájl (*.*)\n\
-#-#-#-#-#  hu.po (Wine)  #-#-#-#-#\n\
-Összes fájl (*.*)"
+  IDS_ALLFILES		"Minden fájl (*.*)"
   IDS_VIDEO		""
   IDS_AUDIO		"hang"
   IDS_AVIFILETYPE	"Wine AVI-alapértelmezett-fájlkezelő"

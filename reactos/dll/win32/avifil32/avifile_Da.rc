@@ -27,10 +27,7 @@ STRINGTABLE
   IDS_WAVESTREAMFORMAT	"Lydkurve: %s"
   IDS_WAVEFILETYPE	"Lydkurve"
   IDS_ALLMULTIMEDIA	"Alle multimedia filer"
-  IDS_ALLFILES		"#-#-#-#-#  da.po (Wine)  #-#-#-#-#\n\
-Alle filer (*.*)\n\
-#-#-#-#-#  da.po (Wine)  #-#-#-#-#\n\
-Alle Filer (*.*)"
+  IDS_ALLFILES		"Alle filer (*.*)"
   IDS_VIDEO		"video"
   IDS_AUDIO		"lyd"
   IDS_AVIFILETYPE	"Wine AVI-standard-filehandler"

@@ -27,10 +27,7 @@ STRINGTABLE
   IDS_WAVESTREAMFORMAT	"Formato wave: %s"
   IDS_WAVEFILETYPE	"Formato wave"
   IDS_ALLMULTIMEDIA	"Todos os ficheiros multimédia"
-  IDS_ALLFILES		"#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Todos os arquivos (*.*)\n\
-#-#-#-#-#  pt_PT.po (Wine)  #-#-#-#-#\n\
-Todos os ficheiros (*.*)"
+  IDS_ALLFILES		"Todos os ficheiros (*.*)"
   IDS_VIDEO		"vídeo"
   IDS_AUDIO		"áudio"
   IDS_AVIFILETYPE	"Manipulador AVI Wine predefinido"
