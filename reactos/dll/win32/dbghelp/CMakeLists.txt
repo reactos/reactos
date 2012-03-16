@@ -18,8 +18,10 @@ spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     coff.c
+    cpu_arm.c
     cpu_i386.c
     cpu_ppc.c
+    cpu_sparc.c
     cpu_x86_64.c
     crc32.c
     dbghelp.c
@@ -32,7 +34,6 @@ list(APPEND SOURCE
     msc.c
     path.c
     pe_module.c
-    regex.c
     rosstubs.c
     source.c
     stabs.c
@@ -40,6 +41,7 @@ list(APPEND SOURCE
     storage.c
     symbol.c
     type.c
+    regex.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 

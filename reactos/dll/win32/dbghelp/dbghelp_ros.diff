@@ -2,12 +2,25 @@ Index: stabs.c
 ===================================================================
 --- stabs.c	(revision 35085)
 +++ stabs.c	(working copy)
-@@ -63,8 +63,6 @@
+@@ -64,6 +64,8 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
  
 +#define strtoull _strtoui64
 +
- #ifndef N_UNDF
- #define N_UNDF		0x00
- #endif
+ /* Masks for n_type field */
+ #ifndef N_STAB
+ #define N_STAB		0xe0
+Index: cpu_sparc.c
+===================================================================
+--- cpu_sparc.c	(revision 35085)
++++ cpu_sparc.c	(working copy)
+@@ -29,6 +29,8 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
++#define IMAGE_FILE_MACHINE_SPARC   0x2000
++
+ static unsigned sparc_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                              enum cpu_addr ca, ADDRESS64* addr)
+ {

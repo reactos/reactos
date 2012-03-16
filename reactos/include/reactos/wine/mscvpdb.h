@@ -996,6 +996,7 @@ union codeview_fieldtype
 
 /* 32-bit far pointers to basic types */
 #define T_32PFVOID          0x0503  /* 32-bit far pointer to void */
+#define T_32PFHRESULT       0x0508  /* 16:32 far pointer to HRESULT - or error code ??? */
 #define T_32PFCHAR          0x0510  /* 16:32 far pointer to 8-bit signed */
 #define T_32PFSHORT         0x0511  /* 16:32 far pointer to 16-bit signed */
 #define T_32PFLONG          0x0512  /* 16:32 far pointer to 32-bit signed */
@@ -1026,6 +1027,38 @@ union codeview_fieldtype
 #define T_32PFINT8          0x0576  /* 16:32 far pointer to 64-bit signed int */
 #define T_32PFUINT8         0x0577  /* 16:32 far pointer to 64-bit unsigned int */
 
+/* 64-bit near pointers to basic types */
+#define T_64PVOID           0x0603  /* 64-bit near pointer to void */
+#define T_64PHRESULT        0x0608  /* 64 near pointer to HRESULT - or error code ??? */
+#define T_64PCHAR           0x0610  /* 64 near pointer to 8-bit signed */
+#define T_64PSHORT          0x0611  /* 64 near pointer to 16-bit signed */
+#define T_64PLONG           0x0612  /* 64 near pointer to 32-bit signed */
+#define T_64PQUAD           0x0613  /* 64 near pointer to 64-bit signed */
+#define T_64PUCHAR          0x0620  /* 64 near pointer to 8-bit unsigned */
+#define T_64PUSHORT         0x0621  /* 64 near pointer to 16-bit unsigned */
+#define T_64PULONG          0x0622  /* 64 near pointer to 32-bit unsigned */
+#define T_64PUQUAD          0x0623  /* 64 near pointer to 64-bit unsigned */
+#define T_64PBOOL08         0x0630  /* 64 near pointer to 8-bit Boolean */
+#define T_64PBOOL16         0x0631  /* 64 near pointer to 16-bit Boolean */
+#define T_64PBOOL32         0x0632  /* 64 near pointer to 32-bit Boolean */
+#define T_64PBOOL64         0x0633  /* 64 near pointer to 64-bit Boolean */
+#define T_64PREAL32         0x0640  /* 64 near pointer to 32-bit real */
+#define T_64PREAL64         0x0641  /* 64 near pointer to 64-bit real */
+#define T_64PREAL80         0x0642  /* 64 near pointer to 80-bit real */
+#define T_64PREAL128        0x0643  /* 64 near pointer to 128-bit real */
+#define T_64PREAL48         0x0644  /* 64 near pointer to 48-bit real */
+#define T_64PCPLX32         0x0650  /* 64 near pointer to 32-bit complex */
+#define T_64PCPLX64         0x0651  /* 64 near pointer to 64-bit complex */
+#define T_64PCPLX80         0x0652  /* 64 near pointer to 80-bit complex */
+#define T_64PCPLX128        0x0653  /* 64 near pointer to 128-bit complex */
+#define T_64PRCHAR          0x0670  /* 64 near pointer to a real char */
+#define T_64PWCHAR          0x0671  /* 64 near pointer to a wide char */
+#define T_64PINT2           0x0672  /* 64 near pointer to 16-bit signed int */
+#define T_64PUINT2          0x0673  /* 64 near pointer to 16-bit unsigned int */
+#define T_64PINT4           0x0674  /* 64 near pointer to 32-bit signed int */
+#define T_64PUINT4          0x0675  /* 64 near pointer to 32-bit unsigned int */
+#define T_64PINT8           0x0676  /* 64 near pointer to 64-bit signed int */
+#define T_64PUINT8          0x0677  /* 64 near pointer to 64-bit unsigned int */
 
 /* counts, bit masks, and shift values needed to access various parts of the built-in type numbers */
 #define T_MAXPREDEFINEDTYPE 0x0580  /* maximum type index for all built-in types */
@@ -1347,9 +1380,9 @@ union codeview_symbol
         short int               id;             /* Always S_BPREL_V3 */
         int                     offset;         /* Stack offset relative to BP */
         unsigned int            symtype;
-        unsigned short          unknown;
+        unsigned short          reg;
         char                    name[1];
-    } stack_xxxx_v3;
+    } regrel_v3;
 
     struct
     {
@@ -1521,6 +1554,36 @@ union codeview_symbol
         short int               id;
         unsigned int            offset;
         unsigned short          segment;
+        unsigned short          symtype;
+        struct p_string         p_name;
+    } thread_v1;
+
+    struct
+    {
+        short int               len;
+        short int               id;
+        unsigned int            symtype;
+        unsigned int            offset;
+        unsigned short          segment;
+        struct p_string         p_name;
+    } thread_v2;
+
+    struct
+    {
+        short int               len;
+        short int               id;
+        unsigned int            symtype;
+        unsigned int            offset;
+        unsigned short          segment;
+        char                    name[1];
+    } thread_v3;
+
+    struct
+    {
+        short int               len;
+        short int               id;
+        unsigned int            offset;
+        unsigned short          segment;
     } ssearch_v1;
 
     struct
@@ -1535,15 +1598,14 @@ union codeview_symbol
     {
         short int               len;
         short int               id;
-        unsigned int            unknown1;       /* maybe size (of what ?) */
+        unsigned int            sz_frame;       /* size of frame */
         unsigned int            unknown2;
         unsigned int            unknown3;
-        unsigned int            unknown4;       /* maybe size (of what ?) */
-        unsigned int            unknown5;       /* maybe address <offset and segment> (of what ?) */
-        unsigned short          unknown6;
-        unsigned short          flags;
-        unsigned int            unknown7;
-    } func_info_v2;
+        unsigned int            sz_saved_regs;  /* size of saved registers from callee */
+        unsigned int            eh_offset;      /* offset for exception handler */
+        unsigned short          eh_sect;        /* section for exception handler */
+        unsigned int            flags;
+    } frame_info_v2;
 };
 
 #define S_COMPILAND_V1  0x0001
@@ -1597,7 +1659,7 @@ union codeview_symbol
 #define S_REGREL_V2     0x100d
 #define S_LTHREAD_V2    0x100e
 #define S_GTHREAD_V2    0x100f
-#define S_FUNCINFO_V2   0x1012
+#define S_FRAMEINFO_V2  0x1012
 #define S_COMPILAND_V2  0x1013
 
 #define S_COMPILAND_V3  0x1101
@@ -1613,7 +1675,9 @@ union codeview_symbol
 #define S_PUB_V3        0x110E
 #define S_LPROC_V3      0x110F
 #define S_GPROC_V3      0x1110
-#define S_BPREL_XXXX_V3 0x1111  /* not really understood, but looks like bprel... */
+#define S_REGREL_V3     0x1111
+#define S_LTHREAD_V3    0x1112
+#define S_GTHREAD_V3    0x1113
 #define S_MSTOOL_V3     0x1116  /* compiler command line options and build information */
 #define S_PUB_FUNC1_V3  0x1125  /* didn't get the difference between the two */
 #define S_PUB_FUNC2_V3  0x1127
@@ -1881,8 +1945,54 @@ typedef struct _PDB_SYMBOLS
     DWORD       hash_size;
     DWORD       srcmodule_size;
     DWORD       pdbimport_size;
-    DWORD       resvd[5];
+    DWORD       resvd0;
+    DWORD       stream_index_size;
+    DWORD       unknown2_size;
+    WORD        resvd3;
+    WORD        machine;
+    DWORD       resvd4;
 } PDB_SYMBOLS, *PPDB_SYMBOLS;
+
+typedef struct
+{
+    WORD        FPO;
+    WORD        unk0;
+    WORD        unk1;
+    WORD        unk2;
+    WORD        unk3;
+    WORD        segments;
+} PDB_STREAM_INDEXES_OLD;
+
+typedef struct
+{
+    WORD        FPO;
+    WORD        unk0;
+    WORD        unk1;
+    WORD        unk2;
+    WORD        unk3;
+    WORD        segments;
+    WORD        unk4;
+    WORD        unk5;
+    WORD        unk6;
+    WORD        FPO_EXT;
+    WORD        unk7;
+} PDB_STREAM_INDEXES;
+
+typedef struct _PDB_FPO_DATA
+{
+    DWORD       start;
+    DWORD       func_size;
+    DWORD       locals_size;
+    DWORD       params_size;
+    DWORD       maxstack_size;
+    DWORD       str_offset;
+    WORD        prolog_size;
+    WORD        savedregs_size;
+#define PDB_FPO_DFL_SEH         0x00000001
+#define PDB_FPO_DFL_EH          0x00000002
+#define PDB_FPO_DFL_IN_BLOCK    0x00000004
+    DWORD       flags;
+} PDB_FPO_DATA;
 
 #include "poppack.h"
 

@@ -51,12 +51,9 @@ static inline int cmp_addr(ULONG64 a1, ULONG64 a2)
 static inline int cmp_sorttab_addr(struct module* module, int idx, ULONG64 addr)
 {
     ULONG64     ref;
-
-    symt_get_info(module, &module->addr_sorttab[idx]->symt, TI_GET_ADDRESS, &ref);
+    symt_get_address(&module->addr_sorttab[idx]->symt, &ref);
     return cmp_addr(ref, addr);
 }
-
-struct module*  symt_cmp_addr_module = NULL;
 
 int symt_cmp_addr(const void* p1, const void* p2)
 {
@@ -64,8 +61,8 @@ int symt_cmp_addr(const void* p1, const void* p2)
     const struct symt*  sym2 = *(const struct symt* const *)p2;
     ULONG64     a1, a2;
 
-    symt_get_info(symt_cmp_addr_module, sym1, TI_GET_ADDRESS, &a1);
-    symt_get_info(symt_cmp_addr_module, sym2, TI_GET_ADDRESS, &a2);
+    symt_get_address(sym1, &a1);
+    symt_get_address(sym2, &a2);
     return cmp_addr(a1, a2);
 }
 
@@ -131,7 +128,7 @@ static void symt_add_module_ht(struct module* module, struct symt_ht* ht)
     /* Don't store in sorttab a symbol without address, they are of
      * no use here (e.g. constant values)
      */
-    if (symt_get_info(module, &ht->symt, TI_GET_ADDRESS, &addr) &&
+    if (symt_get_address(&ht->symt, &addr) &&
         symt_grow_sorttab(module, module->num_symbols + 1))
     {
         module->addr_sorttab[module->num_symbols++] = ht;
@@ -219,6 +216,10 @@ static BOOL compile_file_regex(regex_t* re, const char* srcfile)
         case '.':
             *p++ = '\\';
             *p++ = '.';
+            break;
+        case '*':
+            *p++ = '.';
+            *p++ = '*';
             break;
         default:
             *p++ = *srcfile;
@@ -334,15 +335,15 @@ struct symt_public* symt_new_public(struct module* module,
 struct symt_data* symt_new_global_variable(struct module* module, 
                                            struct symt_compiland* compiland, 
                                            const char* name, unsigned is_static,
-                                           unsigned long addr, unsigned long size,
+                                           struct location loc, unsigned long size,
                                            struct symt* type)
 {
     struct symt_data*   sym;
     struct symt**       p;
     DWORD64             tsz;
 
-    TRACE_(dbghelp_symt)("Adding global symbol %s:%s @%lx %p\n",
-                         debugstr_w(module->module.ModuleName), name, addr, type);
+    TRACE_(dbghelp_symt)("Adding global symbol %s:%s %d@%lx %p\n",
+                         debugstr_w(module->module.ModuleName), name, loc.kind, loc.offset, type);
     if ((sym = pool_alloc(&module->pool, sizeof(*sym))))
     {
         sym->symt.tag      = SymTagData;
@@ -350,7 +351,7 @@ struct symt_data* symt_new_global_variable(struct module* module,
         sym->kind          = is_static ? DataIsFileStatic : DataIsGlobal;
         sym->container     = compiland ? &compiland->symt : NULL;
         sym->type          = type;
-        sym->u.var.offset  = addr;
+        sym->u.var         = loc;
         if (type && size && symt_get_info(module, type, TI_GET_LENGTH, &tsz))
         {
             if (tsz != size)
@@ -689,6 +690,7 @@ static void symt_fill_sym_info(struct module_pair* pair,
                 sym_info->Flags |= SYMFLAG_PARAMETER;
                 /* fall through */
             case DataIsLocal:
+                sym_info->Flags |= SYMFLAG_LOCAL;
                 {
                     struct location loc = data->u.var;
 
@@ -711,7 +713,6 @@ static void symt_fill_sym_info(struct module_pair* pair,
                     {
                     case loc_error:
                         /* for now we report error cases as a negative register number */
-                        sym_info->Flags |= SYMFLAG_LOCAL;
                         /* fall through */
                     case loc_register:
                         sym_info->Flags |= SYMFLAG_REGISTER;
@@ -719,9 +720,10 @@ static void symt_fill_sym_info(struct module_pair* pair,
                         sym_info->Address = 0;
                         break;
                     case loc_regrel:
-                        sym_info->Flags |= SYMFLAG_LOCAL | SYMFLAG_REGREL;
-                        /* FIXME: it's i386 dependent !!! */
-                        sym_info->Register = loc.reg ? loc.reg : CV_REG_EBP;
+                        sym_info->Flags |= SYMFLAG_REGREL;
+                        sym_info->Register = loc.reg;
+                        if (loc.reg == CV_REG_NONE || (int)loc.reg < 0 /* error */)
+                            FIXME("suspicious register value %x\n", loc.reg);
                         sym_info->Address = loc.offset;
                         break;
                     case loc_absolute:
@@ -736,8 +738,19 @@ static void symt_fill_sym_info(struct module_pair* pair,
                 break;
             case DataIsGlobal:
             case DataIsFileStatic:
-                symt_get_info(pair->effective, sym, TI_GET_ADDRESS, &sym_info->Address);
-                sym_info->Register = 0;
+                switch (data->u.var.kind)
+                {
+                case loc_tlsrel:
+                    sym_info->Flags |= SYMFLAG_TLSREL;
+                    /* fall through */
+                case loc_absolute:
+                    symt_get_address(sym, &sym_info->Address);
+                    sym_info->Register = 0;
+                    break;
+                default:
+                    FIXME("Shouldn't happen (kind=%d), debug reader backend is broken\n", data->u.var.kind);
+                    assert(0);
+                }
                 break;
             case DataIsConstant:
                 sym_info->Flags |= SYMFLAG_VALUEPRESENT;
@@ -764,18 +777,18 @@ static void symt_fill_sym_info(struct module_pair* pair,
         break;
     case SymTagPublicSymbol:
         sym_info->Flags |= SYMFLAG_EXPORT;
-        symt_get_info(pair->effective, sym, TI_GET_ADDRESS, &sym_info->Address);
+        symt_get_address(sym, &sym_info->Address);
         break;
     case SymTagFunction:
         sym_info->Flags |= SYMFLAG_FUNCTION;
-        symt_get_info(pair->effective, sym, TI_GET_ADDRESS, &sym_info->Address);
+        symt_get_address(sym, &sym_info->Address);
         break;
     case SymTagThunk:
         sym_info->Flags |= SYMFLAG_THUNK;
-        symt_get_info(pair->effective, sym, TI_GET_ADDRESS, &sym_info->Address);
+        symt_get_address(sym, &sym_info->Address);
         break;
     default:
-        symt_get_info(pair->effective, sym, TI_GET_ADDRESS, &sym_info->Address);
+        symt_get_address(sym, &sym_info->Address);
         sym_info->Register = 0;
         break;
     }
@@ -846,7 +859,7 @@ static inline unsigned where_to_insert(struct module* module, unsigned high, con
     ULONG64     addr;
 
     if (!high) return 0;
-    symt_get_info(module, &elt->symt, TI_GET_ADDRESS, &addr);
+    symt_get_address(&elt->symt, &addr);
     do
     {
         switch (cmp_sorttab_addr(module, mid, addr))
@@ -867,34 +880,50 @@ static inline unsigned where_to_insert(struct module* module, unsigned high, con
  */
 static BOOL resort_symbols(struct module* module)
 {
+    int delta;
+
     if (!(module->module.NumSyms = module->num_symbols))
         return FALSE;
 
-    /* FIXME: what's the optimal value here ??? */
-    if (module->num_sorttab && module->num_symbols <= module->num_sorttab + 30)
+    /* we know that set from 0 up to num_sorttab is already sorted
+     * so sort the remaining (new) symbols, and merge the two sets
+     * (unless the first set is empty)
+     */
+    delta = module->num_symbols - module->num_sorttab;
+    qsort(&module->addr_sorttab[module->num_sorttab], delta, sizeof(struct symt_ht*), symt_cmp_addr);
+    if (module->num_sorttab)
     {
-        int     i, delta, ins_idx = module->num_sorttab, prev_ins_idx;
-        struct symt_ht* tmp[30];
+        int     i, ins_idx = module->num_sorttab, prev_ins_idx;
+        static struct symt_ht** tmp;
+        static unsigned num_tmp;
 
-        delta = module->num_symbols - module->num_sorttab;
+        if (num_tmp < delta)
+        {
+            static struct symt_ht** new;
+            if (tmp)
+                new = HeapReAlloc(GetProcessHeap(), 0, tmp, delta * sizeof(struct symt_ht*));
+            else
+                new = HeapAlloc(GetProcessHeap(), 0, delta * sizeof(struct symt_ht*));
+            if (!new)
+            {
+                module->num_sorttab = 0;
+                return resort_symbols(module);
+            }
+            tmp = new;
+            num_tmp = delta;
+        }
         memcpy(tmp, &module->addr_sorttab[module->num_sorttab], delta * sizeof(struct symt_ht*));
-        symt_cmp_addr_module = module;
         qsort(tmp, delta, sizeof(struct symt_ht*), symt_cmp_addr);
 
         for (i = delta - 1; i >= 0; i--)
         {
             prev_ins_idx = ins_idx;
-            ins_idx = where_to_insert(module, prev_ins_idx = ins_idx, tmp[i]);
+            ins_idx = where_to_insert(module, ins_idx, tmp[i]);
             memmove(&module->addr_sorttab[ins_idx + i + 1],
                     &module->addr_sorttab[ins_idx],
                     (prev_ins_idx - ins_idx) * sizeof(struct symt_ht*));
             module->addr_sorttab[ins_idx + i] = tmp[i];
         }
-    }
-    else
-    {
-        symt_cmp_addr_module = module;
-        qsort(module->addr_sorttab, module->num_symbols, sizeof(struct symt_ht*), symt_cmp_addr);
     }
     module->num_sorttab = module->num_symbols;
     return module->sortlist_valid = TRUE;
@@ -929,11 +958,11 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
     low = 0;
     high = module->num_sorttab;
 
-    symt_get_info(module, &module->addr_sorttab[0]->symt, TI_GET_ADDRESS, &ref_addr);
+    symt_get_address(&module->addr_sorttab[0]->symt, &ref_addr);
     if (addr < ref_addr) return NULL;
     if (high)
     {
-        symt_get_info(module, &module->addr_sorttab[high - 1]->symt, TI_GET_ADDRESS, &ref_addr);
+        symt_get_address(&module->addr_sorttab[high - 1]->symt, &ref_addr);
         symt_get_length(module, &module->addr_sorttab[high - 1]->symt, &ref_size);
         if (addr >= ref_addr + ref_size) return NULL;
     }
@@ -954,8 +983,8 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
      * might also have the same address, but would get better information
      */
     if (module->addr_sorttab[low]->symt.tag == SymTagPublicSymbol)
-    {   
-        symt_get_info(module, &module->addr_sorttab[low]->symt, TI_GET_ADDRESS, &ref_addr);
+    {
+        symt_get_address(&module->addr_sorttab[low]->symt, &ref_addr);
         if (low > 0 &&
             module->addr_sorttab[low - 1]->symt.tag != SymTagPublicSymbol &&
             !cmp_sorttab_addr(module, low - 1, ref_addr))
@@ -966,7 +995,7 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
             low++;
     }
     /* finally check that we fit into the found symbol */
-    symt_get_info(module, &module->addr_sorttab[low]->symt, TI_GET_ADDRESS, &ref_addr);
+    symt_get_address(&module->addr_sorttab[low]->symt, &ref_addr);
     if (addr < ref_addr) return NULL;
     symt_get_length(module, &module->addr_sorttab[low]->symt, &ref_size);
     if (addr >= ref_addr + ref_size) return NULL;
@@ -1814,8 +1843,8 @@ BOOL WINAPI SymUnDName64(PIMAGEHLP_SYMBOL64 sym, PSTR UnDecName, DWORD UnDecName
                                 UNDNAME_COMPLETE) != 0;
 }
 
-static void* und_alloc(size_t len) { return HeapAlloc(GetProcessHeap(), 0, len); }
-static void  und_free (void* ptr)  { HeapFree(GetProcessHeap(), 0, ptr); }
+static void * CDECL und_alloc(size_t len) { return HeapAlloc(GetProcessHeap(), 0, len); }
+static void   CDECL und_free (void* ptr)  { HeapFree(GetProcessHeap(), 0, ptr); }
 
 /***********************************************************************
  *		UnDecorateSymbolName (DBGHELP.@)
@@ -1824,7 +1853,7 @@ DWORD WINAPI UnDecorateSymbolName(PCSTR DecoratedName, PSTR UnDecoratedName,
                                   DWORD UndecoratedLength, DWORD Flags)
 {
     /* undocumented from msvcrt */
-    static char* (*p_undname)(char*, const char*, int, void* (*)(size_t), void (*)(void*), unsigned short);
+    static char* (* CDECL p_undname)(char*, const char*, int, void* (* CDECL)(size_t), void (* CDECL)(void*), unsigned short);
     static const WCHAR szMsvcrt[] = {'m','s','v','c','r','t','.','d','l','l',0};
 
     TRACE("(%s, %p, %d, 0x%08x)\n",
@@ -1845,10 +1874,10 @@ DWORD WINAPI UnDecorateSymbolName(PCSTR DecoratedName, PSTR UnDecoratedName,
 }
 
 /******************************************************************
- *		SymMatchString (DBGHELP.@)
+ *		SymMatchStringA (DBGHELP.@)
  *
  */
-BOOL WINAPI SymMatchString(PCSTR string, PCSTR re, BOOL _case)
+BOOL WINAPI SymMatchStringA(PCSTR string, PCSTR re, BOOL _case)
 {
     regex_t     preg;
     BOOL        ret;
@@ -1858,6 +1887,35 @@ BOOL WINAPI SymMatchString(PCSTR string, PCSTR re, BOOL _case)
     compile_regex(re, -1, &preg, _case);
     ret = match_regexp(&preg, string);
     regfree(&preg);
+    return ret;
+}
+
+/******************************************************************
+ *		SymMatchStringW (DBGHELP.@)
+ *
+ * FIXME: SymMatchStringA should convert and pass the strings to SymMatchStringW,
+ *        but that needs a unicode RE library.
+ */
+BOOL WINAPI SymMatchStringW(PCWSTR string, PCWSTR re, BOOL _case)
+{
+    BOOL ret;
+    LPSTR s, r;
+    DWORD len;
+
+    TRACE("%s %s %c\n", debugstr_w(string), debugstr_w(re), _case ? 'Y' : 'N');
+
+    len = WideCharToMultiByte( CP_ACP, 0, string, -1, NULL, 0, NULL, NULL );
+    s = HeapAlloc( GetProcessHeap(), 0, len );
+    WideCharToMultiByte( CP_ACP, 0, string, -1, s, len, NULL, NULL );
+
+    len = WideCharToMultiByte( CP_ACP, 0, re, -1, NULL, 0, NULL, NULL );
+    r = HeapAlloc( GetProcessHeap(), 0, len );
+    WideCharToMultiByte( CP_ACP, 0, re, -1, r, len, NULL, NULL );
+
+    ret = SymMatchStringA(s, r, _case);
+
+    HeapFree( GetProcessHeap(), 0, r );
+    HeapFree( GetProcessHeap(), 0, s );
     return ret;
 }
 
@@ -2018,8 +2076,8 @@ BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
             if (dli->is_source_file)
             {
                 file = source_get(pair.effective, dli->u.source_file);
-                if (!match_regexp(&re, file)) file = "";
-                strcpy(sci.FileName, file);
+                if (!match_regexp(&re, file)) sci.FileName[0] = '\0';
+                else strcpy(sci.FileName, file);
             }
             else if (sci.FileName[0])
             {
@@ -2056,5 +2114,29 @@ BOOL WINAPI SymGetLineFromNameW64(HANDLE hProcess, PCWSTR ModuleName, PCWSTR Fil
 {
     FIXME("(%p) (%s, %s, %d %p %p): stub\n", hProcess, debugstr_w(ModuleName), debugstr_w(FileName),
                 dwLineNumber, plDisplacement, Line);
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymFromIndex (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymFromIndex(HANDLE hProcess, ULONG64 BaseOfDll, DWORD index, PSYMBOL_INFO symbol)
+{
+    FIXME("hProcess = %p, BaseOfDll = %s, index = %d, symbol = %p\n",
+          hProcess, wine_dbgstr_longlong(BaseOfDll), index, symbol);
+
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymFromIndexW (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymFromIndexW(HANDLE hProcess, ULONG64 BaseOfDll, DWORD index, PSYMBOL_INFOW symbol)
+{
+    FIXME("hProcess = %p, BaseOfDll = %s, index = %d, symbol = %p\n",
+          hProcess, wine_dbgstr_longlong(BaseOfDll), index, symbol);
+
     return FALSE;
 }

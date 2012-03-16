@@ -79,8 +79,16 @@ const char* pe_map_section(struct image_section_map* ism)
         fmap->sect[ism->sidx].mapped == IMAGE_NO_MAP)
     {
         IMAGE_NT_HEADERS*       nth;
+
+        if (fmap->sect[ism->sidx].shdr.Misc.VirtualSize > fmap->sect[ism->sidx].shdr.SizeOfRawData)
+        {
+            FIXME("Section %ld: virtual (0x%x) > raw (0x%x) size - not supported\n",
+                  ism->sidx, fmap->sect[ism->sidx].shdr.Misc.VirtualSize,
+                  fmap->sect[ism->sidx].shdr.SizeOfRawData);
+            return IMAGE_NO_MAP;
+        }
         /* FIXME: that's rather drastic, but that will do for now
-         * that's ok if the full file map exists, but we could be less agressive otherwise and
+         * that's ok if the full file map exists, but we could be less aggressive otherwise and
          * only map the relevant section
          */
         if ((mapping = pe_map_full(ism->fmap, &nth)))
@@ -162,13 +170,13 @@ DWORD_PTR pe_get_map_rva(const struct image_section_map* ism)
 /******************************************************************
  *		pe_get_map_size
  *
- * Get the size of an PE section
+ * Get the size of a PE section
  */
 unsigned pe_get_map_size(const struct image_section_map* ism)
 {
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections)
         return 0;
-    return ism->fmap->u.pe.sect[ism->sidx].shdr.SizeOfRawData;
+    return ism->fmap->u.pe.sect[ism->sidx].shdr.Misc.VirtualSize;
 }
 
 /******************************************************************
@@ -368,6 +376,7 @@ static BOOL pe_locate_with_coff_symbol_table(struct module* module)
                 sym = GET_ENTRY(ptr, struct symt_data, hash_elt);
                 if (sym->symt.tag == SymTagData &&
                     (sym->kind == DataIsGlobal || sym->kind == DataIsFileStatic) &&
+                    sym->u.var.kind == loc_absolute &&
                     !strcmp(sym->hash_elt.name, name))
                 {
                     TRACE("Changing absolute address for %d.%s: %lx -> %s\n",
@@ -453,17 +462,6 @@ static BOOL pe_load_coff_symbol_table(struct module* module)
     pe_unmap_full(fmap);
 
     return TRUE;
-}
-
-static inline void* pe_get_sect(IMAGE_NT_HEADERS* nth, void* mapping,
-                                IMAGE_SECTION_HEADER* sect)
-{
-    return (sect) ? RtlImageRvaToVa(nth, mapping, sect->VirtualAddress, NULL) : NULL;
-}
-
-static inline DWORD pe_get_sect_size(IMAGE_SECTION_HEADER* sect)
-{
-    return (sect) ? sect->SizeOfRawData : 0;
 }
 
 /******************************************************************
@@ -602,8 +600,8 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs, struct module* mod
         if (nDbg != 1 || dbg->Type != IMAGE_DEBUG_TYPE_MISC ||
             misc->DataType != IMAGE_DEBUG_MISC_EXENAME)
         {
-            WINE_ERR("-Debug info stripped, but no .DBG file in module %s\n",
-                     debugstr_w(module->module.ModuleName));
+            ERR("-Debug info stripped, but no .DBG file in module %s\n",
+                debugstr_w(module->module.ModuleName));
         }
         else
         {
@@ -736,7 +734,7 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
  *
  */
 struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
-                                     HANDLE hFile, DWORD base, DWORD size)
+                                     HANDLE hFile, DWORD64 base, DWORD size)
 {
     struct module*              module = NULL;
     BOOL                        opened = FALSE;
@@ -777,6 +775,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
                 module->module.SymType = SymDeferred;
             else
                 pe_load_debug_info(pcs, module);
+            module->reloc_delta = base - modfmt->u.pe_info->fmap.u.pe.ntheader.OptionalHeader.ImageBase;
         }
         else
         {

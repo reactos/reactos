@@ -539,46 +539,27 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
         break;
     case DMT_PDB:
         {
-            struct pdb_lookup   pdb_lookup;
-            char                fn[MAX_PATH];
+            struct pdb_lookup           pdb_lookup;
+            char                        fn[MAX_PATH];
 
             WideCharToMultiByte(CP_ACP, 0, buffer, -1, fn, MAX_PATH, NULL, NULL);
             pdb_lookup.filename = fn;
 
-            if (!pdb_fetch_file_info(&pdb_lookup)) return FALSE;
-            matched++;
-            switch (pdb_lookup.kind)
+            if (mf->guid)
             {
-            case PDB_JG:
-                if (mf->guid)
-                {
-                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
-                }
-                else if (pdb_lookup.u.jg.timestamp == mf->dw1)
-                    matched++;
-                else
-                    WARN("Found %s, but wrong signature: %08x %08x\n",
-                         debugstr_w(buffer), pdb_lookup.u.jg.timestamp, mf->dw1);
-                break;
-            case PDB_DS:
-                if (!mf->guid)
-                {
-                    WARN("Found %s, but wrong PDB version\n", debugstr_w(buffer));
-                }
-                else if (!memcmp(&pdb_lookup.u.ds.guid, mf->guid, sizeof(GUID)))
-                    matched++;
-                else
-                    WARN("Found %s, but wrong GUID: %s %s\n",
-                         debugstr_w(buffer), debugstr_guid(&pdb_lookup.u.ds.guid),
-                         debugstr_guid(mf->guid));
-                break;
+                pdb_lookup.kind = PDB_DS;
+                pdb_lookup.timestamp = 0;
+                pdb_lookup.guid = *mf->guid;
             }
-            if (pdb_lookup.age != mf->dw2)
+            else
             {
-                matched--;
-                WARN("Found %s, but wrong age: %08x %08x\n",
-                     debugstr_w(buffer), pdb_lookup.age, mf->dw2);
+                pdb_lookup.kind = PDB_JG;
+                pdb_lookup.timestamp = mf->dw1;
+                /* pdb_loopkup.guid = */
             }
+            pdb_lookup.age = mf->dw2;
+
+            if (!pdb_fetch_file_info(&pdb_lookup, &matched)) return FALSE;
         }
         break;
     case DMT_DBG:
