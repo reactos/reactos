@@ -260,6 +260,8 @@ ScmCreateNamedPipe(VOID)
             DPRINT("CreateNamedPipe() - returning FALSE\n");
             return FALSE;
         }
+
+        CloseHandle(hThread);
     }
     else
     {
@@ -315,6 +317,8 @@ StartScmNamedPipeThreadListener(VOID)
         DPRINT1("SERVICES: Could not create thread (Status %lx)\n", GetLastError());
         return FALSE;
     }
+
+    CloseHandle(hThread);
 
     return TRUE;
 }
