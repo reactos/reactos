@@ -2,13 +2,13 @@
 
 [Section]
 Name = SMPlayer
-Version = 0.7.0
+Version = 0.7.1
 Licence = GPL
 Description = SMPlayer.
-Size = 14.65MB
+Size = 15.1MB
 Category = 1
 URLSite = http://smplayer.sourceforge.net/
-URLDownload = http://freefr.dl.sourceforge.net/project/smplayer/SMPlayer/0.7.0/smplayer-0.7.0-win32.exe
+URLDownload = http://freefr.dl.sourceforge.net/project/smplayer/SMPlayer/0.7.1/smplayer-0.7.1-win32.exe
 CDPath = none
 
 [Section.0407]
