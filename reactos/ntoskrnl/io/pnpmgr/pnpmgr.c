@@ -1158,12 +1158,9 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
 
    /* All children must be deleted before a parent is deleted */
    ASSERT(!DeviceNode->Child);
-
-   KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
-
    ASSERT(DeviceNode->PhysicalDeviceObject);
 
-   ObDereferenceObject(DeviceNode->PhysicalDeviceObject);
+   KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
 
     /* Get previous sibling */
     if (DeviceNode->Parent && DeviceNode->Parent->Child != DeviceNode)
