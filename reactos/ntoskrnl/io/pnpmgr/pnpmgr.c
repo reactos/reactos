@@ -2610,7 +2610,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
           Status = PipCallDriverAddDevice(DeviceNode, FALSE, DriverObject);
 
           /* Remove the extra reference */
-          //ObDereferenceObject(DriverObject);
+          ObDereferenceObject(DriverObject);
       }
       else
       {
