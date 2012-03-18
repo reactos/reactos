@@ -364,22 +364,8 @@ VOID
 NTAPI
 IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 {
-#if 0
     PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
     PEXTENDED_DEVOBJ_EXTENSION ThisExtension = IoGetDevObjExtension(DeviceObject);
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-
-    /* Return if we've already called unload (maybe we're in it?) */
-    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED) return;
-
-    /* We can't unload unless there's an unload handler */
-    if (!DriverObject->DriverUnload)
-    {
-        if (DeviceNode && !(DeviceNode->Flags & DNF_LEGACY_DRIVER))
-            DPRINT1("No DriverUnload function on PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
-
-        return;
-    }
 
     /* Check if deletion is pending */
     if (ThisExtension->ExtensionFlags & DOE_DELETE_PENDING)
@@ -410,45 +396,28 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         ObDereferenceObject(DeviceObject);
     }
 
-    /* Loop all the device objects */
-    DeviceObject = DriverObject->DeviceObject;
-    while (DeviceObject)
+    /* We can't unload a non-PnP driver here */
+    if (DriverObject->Flags & DRVO_LEGACY_DRIVER)
     {
-        /*
-         * Make sure we're not attached, having a reference count
-         * or already deleting
-         */
-        if (DeviceObject->ReferenceCount)
-        {
-            DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
-            return;
-        }
-
-        if (DeviceObject->AttachedDevice)
-        {
-            DPRINT("Device object is in the middle of a device stack\n");
-            return;
-        }
-
-        if (IoGetDevObjExtension(DeviceObject)->ExtensionFlags & (DOE_DELETE_PENDING | DOE_REMOVE_PENDING))
-        {
-            DPRINT("Device object has a pending destructive operation\n");
-            return;
-        }
-
-        /* Check the next device */
-        DeviceObject = DeviceObject->NextDevice;
+        DPRINT("Not a PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
     }
 
-    /* Loop all the device objects */
-    DeviceObject = DriverObject->DeviceObject;
-    while (DeviceObject)
-    {
-        /* Set the unload pending flag */
-        IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_UNLOAD_PENDING;
+    /* Return if we've already called unload (maybe we're in it?) */
+    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED) return;
 
-        /* Go to the next device */
-        DeviceObject = DeviceObject->NextDevice;
+    /* We can't unload unless there's an unload handler */
+    if (!DriverObject->DriverUnload)
+    {
+        DPRINT1("No DriverUnload function on PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
+    }
+
+    /* Bail if there are still devices present */
+    if (DriverObject->DeviceObject)
+    {
+        DPRINT("Devices still present! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
     }
 
     DPRINT1("Unloading driver '%wZ' (automatic)\n", &DriverObject->DriverName);
@@ -461,10 +430,6 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Make object temporary so it can be deleted */
     ObMakeTemporaryObject(DriverObject);
-
-    /* Dereference once more, referenced at driver object creation */
-    ObDereferenceObject(DriverObject);
-#endif
 }
 
 VOID

@@ -589,7 +589,7 @@ IopAttachFilterDriversCallback(
        Status = IopInitializeDevice(DeviceNode, DriverObject);
 
        /* Remove extra reference */
-       //ObDereferenceObject(DriverObject);
+       ObDereferenceObject(DriverObject);
    }
 
    return STATUS_SUCCESS;
@@ -885,7 +885,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 
    /* Remove extra reference from IopInitializeDriverModule */
-   //ObDereferenceObject(DriverObject);
+   ObDereferenceObject(DriverObject);
 
    return Status;
 }
@@ -948,6 +948,7 @@ IopInitializeBootDrivers(VOID)
     {
         /* Fail */
         IopFreeDeviceNode(DeviceNode);
+        ObDereferenceObject(DriverObject);
         return;
     }
 
@@ -957,6 +958,7 @@ IopInitializeBootDrivers(VOID)
     {
         /* Fail */
         IopFreeDeviceNode(DeviceNode);
+        ObDereferenceObject(DriverObject);
         return;
     }
 
@@ -1268,7 +1270,8 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     */
 
     /* Call the load/unload routine, depending on current process */
-   if (DriverObject->DriverUnload && DriverObject->DriverSection)
+   if (DriverObject->DriverUnload && DriverObject->DriverSection &&
+       (UnloadPnpDrivers || (DriverObject->Flags & DRVO_LEGACY_DRIVER)))
    {
       /* Loop through each device object of the driver
          and set DOE_UNLOAD_PENDING flag */
@@ -1484,7 +1487,7 @@ try_again:
     RtlZeroMemory(DriverObject, ObjectSize);
     DriverObject->Type = IO_TYPE_DRIVER;
     DriverObject->Size = sizeof(DRIVER_OBJECT);
-    DriverObject->Flags = DRVO_LEGACY_DRIVER;//DRVO_BUILTIN_DRIVER;
+    DriverObject->Flags = DRVO_LEGACY_DRIVER;
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
@@ -1584,6 +1587,10 @@ try_again:
         /* Returns to caller the object */
         *pDriverObject = DriverObject;
     }
+
+    /* We're going to say if we don't have any DOs from DriverEntry, then we're not legacy.
+     * Other parts of the I/O manager depend on this behavior */
+    if (!DriverObject->DeviceObject) DriverObject->Flags &= ~DRVO_LEGACY_DRIVER;
 
     /* Loop all Major Functions */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
@@ -1920,7 +1927,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
        DPRINT("Loading module from %wZ\n", &ImagePath);
        Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
 
-       if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
+       if (!NT_SUCCESS(Status))
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
            LoadParams->Status = Status;
@@ -1931,43 +1938,37 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
        /*
         * Initialize the driver module if it's loaded for the first time
         */
-       if (Status != STATUS_IMAGE_ALREADY_LOADED)
+       Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
+       if (!NT_SUCCESS(Status))
        {
-           Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
-
-           if (!NT_SUCCESS(Status))
-           {
-               DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-               MmUnloadSystemImage(ModuleObject);
-               LoadParams->Status = Status;
-               (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-               return;
-           }
-
-           IopDisplayLoadingMessage(&DeviceNode->ServiceName);
-
-           Status = IopInitializeDriverModule(
-               DeviceNode,
-               ModuleObject,
-               &DeviceNode->ServiceName,
-               (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-               Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
-               &DriverObject);
-
-           if (!NT_SUCCESS(Status))
-           {
-               DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
-               MmUnloadSystemImage(ModuleObject);
-               IopFreeDeviceNode(DeviceNode);
-               LoadParams->Status = Status;
-               (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-               return;
-           }
-
-           /* Initialize and start device */
-           IopInitializeDevice(DeviceNode, DriverObject);
-           Status = IopStartDevice(DeviceNode);
+           DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+           MmUnloadSystemImage(ModuleObject);
+           LoadParams->Status = Status;
+           (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+           return;
        }
+
+       IopDisplayLoadingMessage(&DeviceNode->ServiceName);
+
+       Status = IopInitializeDriverModule(DeviceNode,
+                                          ModuleObject,
+                                          &DeviceNode->ServiceName,
+                                          (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+                                           Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
+                                          &DriverObject);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
+           MmUnloadSystemImage(ModuleObject);
+           IopFreeDeviceNode(DeviceNode);
+           LoadParams->Status = Status;
+           (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+           return;
+       }
+
+       /* Initialize and start device */
+       IopInitializeDevice(DeviceNode, DriverObject);
+       Status = IopStartDevice(DeviceNode);
    }
    else
    {
