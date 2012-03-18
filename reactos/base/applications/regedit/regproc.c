@@ -290,7 +290,7 @@ static void REGPROC_unescape_string(WCHAR* str)
                 str[val_idx] = str[str_idx];
                 break;
             default:
-                fprintf(stderr,"Warning! Unrecognized escape sequence: \\%c'\n",
+                fprintf(stderr,"Warning! Unrecognized escape sequence: \\%C'\n",
                 str[str_idx]);
                 str[val_idx] = str[str_idx];
                 break;

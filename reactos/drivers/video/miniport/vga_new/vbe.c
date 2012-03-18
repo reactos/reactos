@@ -12,10 +12,10 @@
 
 /* GLOBALS ********************************************************************/
 
-static const PCHAR Nv11Board = "NV11 (GeForce2) Board";
-static const PCHAR Nv11Chip = "Chip Rev B2";
-static const PCHAR Nv11Vendor = "NVidia Corporation";
-static const PCHAR IntelBrookdale = "Brookdale-G Graphics Controller";
+static const CHAR Nv11Board[] = "NV11 (GeForce2) Board";
+static const CHAR Nv11Chip[] = "Chip Rev B2";
+static const CHAR Nv11Vendor[] = "NVidia Corporation";
+static const CHAR IntelBrookdale[] = "Brookdale-G Graphics Controller";
 static const PCHAR BrokenVesaBiosList[] =
 {
     "SiS 5597",
@@ -51,12 +51,12 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
     }
 
     /* For Brookdale-G (Intel), special hack used */
-    g_bIntelBrookdaleBIOS = !strncmp(Product, IntelBrookdale, sizeof(IntelBrookdale));
+    g_bIntelBrookdaleBIOS = !strncmp(Product, IntelBrookdale, sizeof(IntelBrookdale) - 1);
 
     /* For NVIDIA make sure */
-    if (!(strncmp(Vendor, Nv11Vendor, sizeof(Nv11Vendor))) &&
-        !(strncmp(Product, Nv11Board, sizeof(Nv11Board))) &&
-        !(strncmp(Revision, Nv11Chip, sizeof(Nv11Chip))) &&
+    if (!(strncmp(Vendor, Nv11Vendor, sizeof(Nv11Vendor) - 1)) &&
+        !(strncmp(Product, Nv11Board, sizeof(Nv11Board) - 1)) &&
+        !(strncmp(Revision, Nv11Chip, sizeof(Nv11Chip) - 1)) &&
         (OemRevision == 0x311))
     {
         /* Read version */
