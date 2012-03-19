@@ -1484,7 +1484,7 @@ void CDefView::DoActivate(UINT uState)
             pShellBrowser->SetMenuSB(hMenu, 0, m_hWnd);
         }
     }
-    uState = uState;
+    this->uState = uState;
     TRACE("--\n");
 }
 
