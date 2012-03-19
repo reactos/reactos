@@ -24,7 +24,7 @@ BEGIN
   END
   POPUP "&?"
   BEGIN
-    MENUITEM "&Manual",                       IDC_PROGHELP
+    MENUITEM "&Manual…",                      IDC_PROGHELP
     MENUITEM "Despre…",                       IDC_ABOUT
   END
 END
@@ -35,7 +35,7 @@ BEGIN
   BEGIN
     MENUITEM "&Proprietăți",                  IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Manual",                       IDC_PROGHELP
+    MENUITEM "&Manual…",                      IDC_PROGHELP
   END
 END
 

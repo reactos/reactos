@@ -26,7 +26,7 @@ BEGIN
 	MENUITEM "&Opțiuni",                    ID_OPTIONS
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Manual",                 IDM_HELP
+		MENUITEM "&Manual…",                IDM_HELP
 		MENUITEM SEPARATOR
 		MENUITEM "&Despre…",                IDM_ABOUT
 	END
@@ -66,7 +66,7 @@ BEGIN
 	DEFPUSHBUTTON   "Î&nchide",      IDOK,12,258,50,14
 	PUSHBUTTON      "&Precedent",    IDPREVIOUS,78,258,50,14
 	PUSHBUTTON      "U&rmător",      IDNEXT,144,258,50,14
-	PUSHBUTTON      "&Manual",       IDHELP,210,258,50,14
+	PUSHBUTTON      "&Manual…",      IDHELP,210,258,50,14
 	EDITTEXT                         IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
 	LTEXT           "&Descriere:",   IDC_STATIC,15,70,39,8
 	LTEXT           "Dată:",         IDC_STATIC,14,14,36,8

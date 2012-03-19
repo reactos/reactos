@@ -221,7 +221,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",        1590, 8, 103, 61, 14
 	PUSHBUTTON     "A&nulează",        1591, 70, 103, 60, 14
 	PUSHBUTTON     "Pr&oprietăți",     1107, 132, 103, 60, 14
-	PUSHBUTTON     "&Manual",          1592, 194, 103, 60, 14
+	PUSHBUTTON     "&Manual…",         1592, 194, 103, 60, 14
 END
 
 116 DIALOGEX 0, 0, 265, 176
@@ -242,7 +242,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",                 1590, 8, 156, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nulează",                 1591, 71, 156, 60, 14
 	PUSHBUTTON       "P&roprietăți",              1107, 133, 156, 60, 14
-	PUSHBUTTON       "&Manual",                   1592, 195, 156, 60, 14
+	PUSHBUTTON       "&Manual…",                  1592, 195, 156, 60, 14
 END
 
 117 DIALOGEX 0, 0, 263, 192
@@ -265,7 +265,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",               1590, 8, 173, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nulează",               1591, 71, 173, 60, 14
 	PUSHBUTTON       "P&roprietăți",            1107, 133, 173, 60, 14
-	PUSHBUTTON       "&Manual",                 1592, 195, 173, 60, 14
+	PUSHBUTTON       "&Manual…",                1592, 195, 173, 60, 14
 END
 
 118 DIALOGEX 0, 0, 265, 220
@@ -291,7 +291,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",              1590, 10, 199, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nulează",              1591, 72, 199, 60, 14
 	PUSHBUTTON       "P&roprietăți",           1107, 134, 199, 60, 14
-	PUSHBUTTON       "&Manual",                1592, 196, 199, 60, 14
+	PUSHBUTTON       "&Manual…",               1592, 196, 199, 60, 14
 END
 
 119 DIALOGEX 0, 0, 265, 200
@@ -315,7 +315,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",               1590, 10, 180, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nulează",               1591, 72, 180, 60, 14
 	PUSHBUTTON       "P&roprietăți",            1107, 134, 180, 60, 14
-	PUSHBUTTON       "&Manual",                 1592, 197, 180, 60, 14
+	PUSHBUTTON       "&Manual…",                1592, 197, 180, 60, 14
 END
 
 121 DIALOGEX 6, 18, 230, 131
@@ -1008,7 +1008,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",     1590, 8, 89, 60, 14
 	PUSHBUTTON     "A&nulează",     1591, 71, 89, 60, 14
 	PUSHBUTTON     "&Proprietăți",  1107, 133, 89, 60, 14
-	PUSHBUTTON     "&Manual",       1592, 195, 89, 60, 14
+	PUSHBUTTON     "&Manual…",      1592, 195, 89, 60, 14
 END
 
 540 DIALOGEX 0, 0, 265, 133
@@ -1026,7 +1026,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",    1590, 8, 113, 60, 14
 	PUSHBUTTON     "A&nulează",    1591, 71, 113, 60, 14
 	PUSHBUTTON     "&Proprietăți", 1107, 134, 113, 60, 14
-	PUSHBUTTON     "&Manual",      1592, 197, 113, 60, 14
+	PUSHBUTTON     "&Manual…",     1592, 197, 113, 60, 14
 END
 
 541 DIALOGEX 0, 0, 265, 157
@@ -1047,7 +1047,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",        1590, 6, 136, 60, 14
 	PUSHBUTTON     "A&nulează",        1591, 69, 136, 60, 14
 	PUSHBUTTON     "&Proprietăți",     1107, 132, 136, 60, 14
-	PUSHBUTTON     "&Manual",          1592, 196, 136, 60, 14
+	PUSHBUTTON     "&Manual…",         1592, 196, 136, 60, 14
 END
 
 544 DIALOGEX 0, 0, 317, 143
@@ -1122,7 +1122,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează", 1590, 9, 106, 61, 14
 	PUSHBUTTON     "A&nulează", 1591, 72, 106, 60, 14
 	PUSHBUTTON     "&Proprietăți", 1107, 135, 106, 60, 14
-	PUSHBUTTON     "&Manual", 1592, 198, 106, 60, 14
+	PUSHBUTTON     "&Manual…", 1592, 198, 106, 60, 14
 END
 
 552 DIALOGEX 0, 0, 265, 159
@@ -1142,7 +1142,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",     1590, 8, 139, 60, 14
 	PUSHBUTTON     "A&nuleză",      1591, 71, 139, 60, 14
 	PUSHBUTTON     "&Proprietăți",  1107, 134, 139, 60, 14
-	PUSHBUTTON     "&Manual",       1592, 198, 139, 60, 14
+	PUSHBUTTON     "&Manual…",      1592, 198, 139, 60, 14
 END
 
 553 DIALOGEX 0, 0, 265, 183
@@ -1165,7 +1165,7 @@ BEGIN
 	DEFPUSHBUTTON "&Apelează",       1590, 8, 162, 60, 14
 	PUSHBUTTON    "A&nuleză",        1591, 71, 162, 60, 14
 	PUSHBUTTON    "&Proprietăți",    1107, 134, 162, 60, 14
-	PUSHBUTTON    "&Manual",         1592, 198, 162, 60, 14
+	PUSHBUTTON    "&Manual…",        1592, 198, 162, 60, 14
 END
 
 554 DIALOGEX 0, 0, 230, 215
@@ -1396,7 +1396,7 @@ BEGIN
 	DEFPUSHBUTTON  "&Apelează",    1590, 9, 87, 60, 14
 	PUSHBUTTON     "A&nulează",    1591, 72, 87, 60, 14
 	PUSHBUTTON     "&Proprietăți", 1107, 135, 87, 60, 14
-	PUSHBUTTON     "&Manual",      1592, 198, 87, 60, 14
+	PUSHBUTTON     "&Manual…",     1592, 198, 87, 60, 14
 END
 
 1421 DIALOGEX 0, 0, 265, 223
@@ -1423,7 +1423,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",     1590, 9, 202, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nuleză",      1591, 72, 202, 60, 14
 	PUSHBUTTON       "P&roprietăți",  1107, 135, 202, 60, 14
-	PUSHBUTTON       "&Manual",       1592, 198, 202, 60, 14
+	PUSHBUTTON       "&Manual…",      1592, 198, 202, 60, 14
 END
 
 1422 DIALOGEX 0, 0, 265, 242
@@ -1452,7 +1452,7 @@ BEGIN
 	DEFPUSHBUTTON    "&Apelează",    1590, 8, 221, 60, 14, WS_GROUP
 	PUSHBUTTON       "A&nulează",    1591, 71, 221, 60, 14
 	PUSHBUTTON       "P&roprietăți", 1107, 134, 221, 60, 14
-	PUSHBUTTON       "&Manual",      1592, 198, 221, 60, 14
+	PUSHBUTTON       "&Manual…",     1592, 198, 221, 60, 14
 END
 
 1425 DIALOGEX 0, 0, 230, 215

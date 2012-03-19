@@ -113,7 +113,7 @@ CAPTION "Mesaj"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON  "&Da",       IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON     "Da pentru &toate", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON     "Da pentru t&oate", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON     "N&u",       IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON     "A&nulează", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
     ICON           "",          IDC_YESTOALL_ICON, 10, 10, 16, 16
@@ -174,24 +174,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
-    EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Tip țintă:", 14004, 8, 38, 68, 10
-    EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Locație țintă:", 14006, 8, 55, 68, 10
-    EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ț&intă:", 14008, 8, 71, 68, 10
-    EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "P&ornire în:", 14010, 8, 98, 68, 10
-    EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
-    LTEXT "&Taste rapide:", 14014, 8, 117, 68, 10
-    CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
-    LTEXT "E&xecuție:", 14016, 8, 136, 68, 10
-    COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Comentariu:", 14018, 8, 154, 68, 10
-    EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
+    ICON        "",               14000, 8, 8, 21, 20, WS_VISIBLE
+    EDITTEXT                      14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT       "",               -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT       "Tip țintă:",     14004, 8, 38, 68, 10
+    EDITTEXT                      14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT       "Locație țintă:", 14006, 8, 55, 68, 10
+    EDITTEXT                      14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT       "Ț&intă:",        14008, 8, 71, 68, 10
+    EDITTEXT                      14009, 79, 69, 150, 14, ES_AUTOHSCROLL
+    LTEXT       "",               -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT       "P&ornire în:",   14010, 8, 98, 68, 10
+    EDITTEXT                      14011, 79, 96, 150, 14, ES_AUTOHSCROLL
+    LTEXT       "&Taste rapide:", 14014, 8, 117, 68, 10
+    CONTROL     "",               14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
+    LTEXT       "E&xecuție:",     14016, 8, 136, 68, 10
+    COMBOBOX                      14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    LTEXT       "&Comentariu:",   14018, 8, 154, 68, 10
+    EDITTEXT                      14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON  "&Găsire țintă…", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON  "&Pictogramă…",   14021, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON  "A&vansate…",     14022, 159, 172, 70, 14, ES_LEFT
@@ -215,65 +215,65 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN    
-    ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
-    EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
-    LTEXT "Tip fișier:", 14004, 8, 40, 55, 10
-    CONTROL "Dosar", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
-    LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Locație:", 14008, 8, 56, 55, 10
-    EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "Mărime:", 14010, 8, 72, 55, 10
-    EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
-    EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Conține:", 14026, 8, 104, 55, 10
-    EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Creat:", 14014, 8, 128, 55, 10
-    EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Atribute:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Doar-citire", 14021, 56, 152, 70, 10
-    AUTOCHECKBOX "Asc&uns", 14022, 56, 166, 70, 10
-    AUTOCHECKBOX "Ar&hivă", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    ICON          "",               14000, 10, 3, 32, 32, WS_VISIBLE
+    EDITTEXT                        14001, 70, 9, 158, 14, ES_LEFT
+    LTEXT         "Tip fișier:",    14004, 8, 40, 55, 10
+    CONTROL       "Dosar",          14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
+    LTEXT         "",               -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT         "Locație:",       14008, 8, 56, 55, 10
+    EDITTEXT                        14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT         "Dimensiune:",    14010, 8, 72, 55, 10
+    EDITTEXT                        14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT         "Spațiu ocupat:", 140101, 8, 88, 55, 10
+    EDITTEXT                        14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT         "Conține:",       14026, 8, 104, 55, 10
+    EDITTEXT                        14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT         "",               -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT         "Creat:",         14014, 8, 128, 55, 10
+    EDITTEXT                        14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT         "",               -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT         "Atribute:",      14020, 8, 152, 46, 10
+    AUTOCHECKBOX  "&Doar-citire",   14021, 56, 152, 70, 10
+    AUTOCHECKBOX  "Asc&uns",        14022, 56, 166, 70, 10
+    AUTOCHECKBOX  "Ar&hivă",        14023, 56, 180, 70, 10
+    PUSHBUTTON    "A&vansate…",     14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON      "",                14000, 10, 3, 30, 30, WS_VISIBLE
-    EDITTEXT                     14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
-    LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT     "Tip fișier:",     14004, 8, 35, 50, 10
-    CONTROL   "Fișier",          14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
-    LTEXT     "Se deschide cu:", 14006, 8, 53, 50, 10
-    ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT     "Locație:",        14008, 8, 75, 45, 10
-    EDITTEXT                     14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT     "Mărime:",         14010, 8, 91, 45, 10
-    EDITTEXT                     14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
-    EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT     "Creat:",          14014, 8, 131, 45, 10
-    EDITTEXT                     14015, 68, 131, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT     "Modificat:",      14016, 8, 147, 45, 10
-    EDITTEXT                     14017, 68, 147, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT     "Accesat:",        14018, 8, 163, 45, 10
-    EDITTEXT                     14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT     "Atribute:",       14020, 8, 189, 45, 10
-    AUTOCHECKBOX "&Doar-citire", 14021, 58, 189, 67, 10
-    AUTOCHECKBOX "Asc&uns",      14022, 126, 189, 50, 10
-    AUTOCHECKBOX "Ar&hivă",      14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    ICON         "",                14000, 10, 3, 30, 30, WS_VISIBLE
+    EDITTEXT                        14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
+    LTEXT        "",                -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT        "Tip fișier:",     14004, 8, 35, 50, 10
+    CONTROL      "Fișier",          14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
+    LTEXT        "Se deschide cu:", 14006, 8, 53, 50, 10
+    ICON         "",                14025, 68, 52, 11, 10, NOT WS_VISIBLE
+    PUSHBUTTON   "Sc&himbare…",     14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    EDITTEXT                        14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT        "",                -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT        "Locație:",        14008, 8, 75, 45, 10
+    EDITTEXT                        14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT        "Dimensiune:",     14010, 8, 91, 45, 10
+    EDITTEXT                        14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT        "Spațiu ocupat:",  140112, 8, 107, 55, 10
+    EDITTEXT                        14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT        "",                -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT        "Creat:",          14014, 8, 131, 45, 10
+    EDITTEXT                        14015, 68, 131, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT        "Modificat:",      14016, 8, 147, 45, 10
+    EDITTEXT                        14017, 68, 147, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT        "Accesat:",        14018, 8, 163, 45, 10
+    EDITTEXT                        14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT        "",                -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT        "Atribute:",       14020, 8, 189, 45, 10
+    AUTOCHECKBOX "&Doar-citire",    14021, 58, 189, 67, 10
+    AUTOCHECKBOX "Asc&uns",         14022, 126, 189, 50, 10
+    AUTOCHECKBOX "Ar&hivă",         14023, 181, 189, 49, 10
+    PUSHBUTTON   "A&vansate…", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -299,36 +299,36 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
-    EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    ICON        "",                14016, 10, 3, 32, 32, WS_VISIBLE
+    EDITTEXT                       14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
+    LTEXT       "",                -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
 
-    LTEXT "Tip:", -1, 8, 38, 95, 10
-    EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Sistem de fișiere:", -1, 8, 51, 95, 10
-    EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT       "Tip:",            -1, 8, 38, 95, 10
+    EDITTEXT                       14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT       "Sistem de fișiere:", -1, 8, 51, 95, 10
+    EDITTEXT                       14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT       "",                -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
 
-    CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "Spațiu folosit:", -1, 25, 69, 80, 10
-    EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
-    LTEXT "Spațiu liber:", -1, 25, 82, 80, 10
-    EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CONTROL     "",                14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
+    LTEXT       "Spațiu folosit:", -1, 25, 69, 80, 10
+    EDITTEXT                       14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT                       14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    CONTROL     "",                14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
+    LTEXT       "Spațiu liber:",   -1, 25, 82, 80, 10
+    EDITTEXT                       14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT                       14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT       "",                -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
 
-    LTEXT "Capacitate:", -1, 25, 103, 80, 10
-    EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "Partiție %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "Curățare &disc…", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT       "Capacitate:",     -1, 25, 103, 80, 10
+    EDITTEXT                       14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT                       14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    CONTROL     "",                14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
+    LTEXT       "Partiție %c",     14009, 100, 150, 70, 10
+    PUSHBUTTON  "Curățare &disc…",  14010, 160, 154, 70, 15, WS_TABSTOP
+    LTEXT       "",                -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
 
-    CHECKBOX "Comprimă pentru a economisi spațiu", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Permite „Serviciu de indexare”, pentru accelerarea căutărilor", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX    "&Comprimă volumul pentru a economisi spațiu", 14011, 8, 191, 222, 10, WS_DISABLED
+    CHECKBOX    "Permite „Serviciu de inde&xare” pentru accelerarea căutărilor", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -337,14 +337,14 @@ CAPTION "Instrumente"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "Verificarea erorilor", -1, 5, 5, 230, 60
-    LTEXT       "Această opțiune va verifica acest volum pentru eventuale erori în sistemul de fișiere.", -1, 40, 25, 160, 20
-    PUSHBUTTON  "Verificare…",          14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX    "Defragmentare",        -1, 5, 65, 230, 60
-    LTEXT       "Această opțiune presupune ordonarea fragmentelor de fișiere pentru a îmbunătăți viteza de citire.", -1, 40, 85, 160, 20
+    LTEXT       "Această opțiune va verifica acest volum pentru eventuale erori în sistemul de fișiere.", -1, 40, 25, 180, 20
+    PUSHBUTTON  "&Verificare…",          14000, 130, 45, 90, 15, WS_TABSTOP
+    GROUPBOX    "&Defragmentare",        -1, 5, 65, 230, 60
+    LTEXT       "Această opțiune presupune ordonarea fragmentelor de fișiere pentru a îmbunătăți viteza de citire.", -1, 40, 85, 180, 20
     PUSHBUTTON  "Defragmentare…",       14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX    "Copie de rezervă",     -1, 5, 130, 230, 60
-    LTEXT       "Această opțiune va crea o copie de siguranță a fișierelor de pe această partiție.", -1, 40, 150, 160, 20
-    PUSHBUTTON  "Creare rezervă…",      14002, 130, 170, 90, 15, WS_TABSTOP
+    LTEXT       "Această opțiune va crea o copie de siguranță a fișierelor de pe această partiție.", -1, 40, 150, 180, 20
+    PUSHBUTTON  "&Creare rezervă…",      14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
@@ -398,10 +398,10 @@ BEGIN
     LTEXT         "Specificați programul folosit pentru deschiderea acestui fișier:", -1, 44, 12, 211, 10
     LTEXT         "Fișier:    ",   14001, 44, 25, 188, 10
     GROUPBOX      "&Programe",     -1, 7, 42, 249, 187
-        LISTBOX                    14002, 16 ,57, 235, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+    LISTBOX                        14002, 16 ,57, 235, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     AUTOCHECKBOX  "&Utilizează întotdeauna această aplicație", 14003, 20, 198, 225, 10
     PUSHBUTTON    "&Răsfoire…",    14004, 198, 207, 50, 14
-    DEFPUSHBUTTON    "Con&firmă",     IDOK, 150, 236, 50, 14
+    DEFPUSHBUTTON "Con&firmă",     IDOK, 150, 236, 50, 14
     PUSHBUTTON    "A&nulează",     IDCANCEL, 206, 236, 50, 14
 END
 
@@ -581,7 +581,7 @@ BEGIN
     LTEXT          "Aceasta va menține sesiunea de lucru, păstrând calculatorul pe consum redus, cu toate datele în memorie. Calculatorul își va reveni când veți apăsa o tastă sau veți acționa dispozitivul de indicare.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON  "Con&firmă",                 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON     "A&nulează",                 IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON     "&Manual",                   IDHELP, 144, 82, 60, 14
+    PUSHBUTTON     "&Manual…",                  IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
@@ -758,14 +758,14 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH               "Deschide cu"
     IDS_OPEN_WITH_CHOOSE        "Alegere program…"
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED   "Programe recomandate:"
+    IDS_OPEN_WITH_OTHER         "Alte programe:"
 
     IDS_SHELL_ABOUT_AUTHORS     "&Autori"
     IDS_SHELL_ABOUT_BACK        "< Îna&poi"
-    FCIDM_SHVIEW_NEW             "N&ou"
-    FCIDM_SHVIEW_NEWFOLDER         "&Dosar"
-    FCIDM_SHVIEW_NEWLINK         "Sc&urtătură"
+    FCIDM_SHVIEW_NEW            "N&ou"
+    FCIDM_SHVIEW_NEWFOLDER      "&Dosar"
+    FCIDM_SHVIEW_NEWLINK        "Sc&urtătură"
     IDS_FOLDER_OPTIONS          "Opțiuni dosar"
     IDS_RECYCLEBIN_LOCATION     "Locația pentru Coșul de gunoi"
     IDS_RECYCLEBIN_DISKSPACE    "Spațiul disponibil"
@@ -812,7 +812,7 @@ BEGIN
     IDS_FILE_TYPES              "Tipuri"
     IDS_COLUMN_EXTENSION        "Extensii"
     IDS_BYTES_FORMAT            "octeți"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_UNKNOWN_APP             "Aplicație nespecificată"
+    IDS_EXE_DESCRIPTION         "Descriere:"
 END
 

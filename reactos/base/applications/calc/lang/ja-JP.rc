@@ -344,9 +344,9 @@ BEGIN
     POPUP "編集"
     BEGIN
         MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼\り付け\tCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "貼 り付けtCtrl+V",           IDM_EDIT_PASTE
     END
-    POPUP "表\示"
+    POPUP "表 示"
     BEGIN
         MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
         MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
@@ -376,9 +376,9 @@ BEGIN
     POPUP "編集"
     BEGIN
         MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼\り付け\tCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "貼 り付け\tCtrl+V",           IDM_EDIT_PASTE
     END
-    POPUP "表\示"
+    POPUP "表 示"
     BEGIN
         MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
         MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
@@ -409,9 +409,9 @@ BEGIN
     POPUP "編集"
     BEGIN
         MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼\り付け\tCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "貼 り付け\tCtrl+V",           IDM_EDIT_PASTE
     END
-    POPUP "表\示"
+    POPUP "表 示"
     BEGIN
         MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
         MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
@@ -431,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS 電卓はGNU GPLライセンスの元で提供されるフリーソ\フトウェアです。\r\n\r\nこちらでGNU GPLライセンスのコピーを得ることができます:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nこちらでGNU GPLライセンスの翻訳を得ることができます:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS 電卓はGNU GPLライセンスの元で提供されるフリーソ フトウェアです。\r\n\r\nこちらでGNU GPLライセンスのコピーを得ることができます:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nこちらでGNU GPLライセンスの翻訳を得ることができます:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "エラー"
     IDS_QUICKHELP           "クイックヘルプ"
 END

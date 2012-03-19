@@ -92,7 +92,7 @@ BEGIN
     ICON                     IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT       "Localizarea regională trebuie să se potrivească cu limba aplicațiilor utilizate. De ea depinde cum vor apărea numerele, valutele și data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT       "",          IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT       "Modificați configurația de sistem și localizare.",
+    LTEXT       "Modificați configurația de localizare a sistemului.",
                              IDC_STATIC, 53, 60, 186, 8
     PUSHBUTTON  "&Configurare…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
     LTEXT       "Configurări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
@@ -140,7 +140,7 @@ CAPTION "Finalizare instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT    "Terminare Expert instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT    "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea Termină calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT    "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului „Termină”, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL  "",        IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT    "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați „Termină”.", IDC_STATIC, 115, 169, 195, 17
 END

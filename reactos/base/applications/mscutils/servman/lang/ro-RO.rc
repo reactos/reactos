@@ -38,7 +38,7 @@ BEGIN
   END
   POPUP "&?"
   BEGIN
-    MENUITEM "&Manual",          ID_HELP
+    MENUITEM "&Manual…",         ID_HELP
     MENUITEM "&Despre…",         ID_ABOUT
   END
 END
@@ -65,7 +65,7 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Despre Gestionarul de servicii"
+CAPTION "Despre Gestionar de servicii"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -130,8 +130,8 @@ BEGIN
   LTEXT       "Descriere:", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON  "Con&firmă",  IDOK, 126, 192, 44, 13
   PUSHBUTTON  "A&nulează",  IDCANCEL, 176, 192, 46, 13
-  LTEXT       "Alte opțiuni (clic pe Manual pentru detalii)", IDC_STATIC, 10, 151, 134, 9
-  PUSHBUTTON  "&Manual",    ID_CREATE_HELP, 10, 192, 44, 13
+  LTEXT       "Alte opțiuni (apăsați „Manual” pentru detalii)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON  "&Manual…",   ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
@@ -266,7 +266,7 @@ BEGIN
   IDS_HINT_CUST         " Particularizează afișajul."
 
   IDS_HINT_HELP         " Afișează fereastra de ajutor."
-  IDS_HINT_ABOUT        " Despre Gestionarul de servicii ReactOS."
+  IDS_HINT_ABOUT        " Despre Gestionar de servicii ReactOS."
 
   IDS_HINT_SYS_RESTORE  " Restabilește fereastra la mărimea originală."
   IDS_HINT_SYS_MOVE     " Mută fereastra."
@@ -279,5 +279,5 @@ END
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Gestionarul de servicii"
+  IDS_APPNAME "Gestionar de servicii"
 END

@@ -146,7 +146,7 @@ BEGIN
     CONTROL         "Ca sim&bol", 214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,45,71,12
     DEFPUSHBUTTON   "Con&firmă",  1,158,6,47,14
     PUSHBUTTON      "A&nulează",  2,158,23,47,14
-    PUSHBUTTON      "&Manual",    254,158,43,47,14
+    PUSHBUTTON      "&Manual…",    254,158,43,47,14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65

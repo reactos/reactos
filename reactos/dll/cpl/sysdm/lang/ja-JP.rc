@@ -18,7 +18,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
     CONTROL     "<A HREF=""http://www.reactos.org/"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
-    PUSHBUTTON  "ライセンスを表\示(&L)...", IDC_LICENCE, 170, 199, 78, 13
+    PUSHBUTTON  "ライセンスを表 示(&L)...", IDC_LICENCE, 170, 199, 78, 13
 END
 
 
@@ -29,7 +29,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     GROUPBOX    "デバイス マネージャ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表\示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
+    LTEXT       "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表 示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON  "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
 
     GROUPBOX    "ハードウェア ウィザード", IDC_STATIC, 6, 79, 244, 61
@@ -39,7 +39,7 @@ BEGIN
 
     GROUPBOX    "ハードウェア プロファイル", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "ハードウェアプロファイルは別のハードウェアの構\成を設定し、格納する方法を 提供します。", IDC_STATIC, 42, 160, 204, 24
+    LTEXT       "ハードウェアプロファイルは別のハードウェアの構 成を設定し、格納する方法を 提供します。", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON  "ハードウェア プロファイル(&W)...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -86,8 +86,8 @@ CAPTION "ハードウェア プロファイル"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "異なるハードウェア構\成に合わせたハードウェア プロファイルをセットアップできます。 起動時に使用するプロファイルを選択できます。", IDC_STATIC, 46, 11, 188, 25
-    LTEXT       "利用可能\なハードウェア プロファイル:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "異なるハードウェア構 成に合わせたハードウェア プロファイルをセットアップできます。 起動時に使用するプロファイルを選択できます。", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "利用可能 なハードウェア プロファイル:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
@@ -169,11 +169,11 @@ BEGIN
     GROUPBOX    "システムの起動", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "既定のオペレーティング システム(&S):", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    AUTOCHECKBOX "オペレーティング システムの一覧を表\示する時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
+    AUTOCHECKBOX "オペレーティング システムの一覧を表 示する時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "秒", IDC_STATIC, 223, 56, 18, 8
-    AUTOCHECKBOX "必要なときに修復オプションを表\示する時間(&D):", IDC_STRRECREC, 14, 70, 170, 8
+    AUTOCHECKBOX "必要なときに修復オプションを表 示する時間(&D):", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "秒", IDC_STATIC, 223, 70, 18, 8
