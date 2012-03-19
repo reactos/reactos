@@ -1,12 +1,13 @@
 
 add_definitions(-D__ROS_LONG64__)
 
-add_executable(xmllite_winetest reader.c testlist.c)
-target_link_libraries(xmllite_winetest wine)
+list(APPEND SOURCE
+    reader.c
+	writer.c
+	testlist.c)
 
-if(MSVC)
-    target_link_libraries(xmllite_winetest uuid)
-endif()
+add_executable(xmllite_winetest ${SOURCE})
+target_link_libraries(xmllite_winetest wine uuid)
 
 set_module_type(xmllite_winetest win32cui)
 add_importlibs(xmllite_winetest xmllite ole32 msvcrt kernel32 ntdll)

@@ -19,6 +19,7 @@
  */
 
 #define COBJMACROS
+#define CONST_VTABLE
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -32,8 +33,8 @@
 
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);
 
-HRESULT (WINAPI *pCreateXmlReader)(REFIID riid, void **ppvObject, IMalloc *pMalloc);
-HRESULT (WINAPI *pCreateXmlReaderInputWithEncodingName)(IUnknown *stream,
+static HRESULT WINAPI (*pCreateXmlReader)(REFIID riid, void **ppvObject, IMalloc *pMalloc);
+static HRESULT WINAPI (*pCreateXmlReaderInputWithEncodingName)(IUnknown *stream,
                                                         IMalloc *pMalloc,
                                                         LPCWSTR encoding,
                                                         BOOL hint,
@@ -258,13 +259,13 @@ static void test_read_state_(IXmlReader *reader, XmlReadState expected,
 
 typedef struct _testinput
 {
-    const IUnknownVtbl *lpVtbl;
+    IUnknown IUnknown_iface;
     LONG ref;
 } testinput;
 
 static inline testinput *impl_from_IUnknown(IUnknown *iface)
 {
-    return (testinput *)((char*)iface - FIELD_OFFSET(testinput, lpVtbl));
+    return CONTAINING_RECORD(iface, testinput, IUnknown_iface);
 }
 
 static HRESULT WINAPI testinput_QueryInterface(IUnknown *iface, REFIID riid, void** ppvObj)
@@ -317,10 +318,10 @@ static HRESULT testinput_createinstance(void **ppObj)
     input = HeapAlloc(GetProcessHeap(), 0, sizeof (*input));
     if(!input) return E_OUTOFMEMORY;
 
-    input->lpVtbl = &testinput_vtbl;
+    input->IUnknown_iface.lpVtbl = &testinput_vtbl;
     input->ref = 1;
 
-    *ppObj = &input->lpVtbl;
+    *ppObj = &input->IUnknown_iface;
 
     return S_OK;
 }
@@ -353,8 +354,8 @@ static void test_reader_create(void)
     /* crashes native */
     if (0)
     {
-        hr = pCreateXmlReader(&IID_IXmlReader, NULL, NULL);
-        hr = pCreateXmlReader(NULL, (LPVOID*)&reader, NULL);
+        pCreateXmlReader(&IID_IXmlReader, NULL, NULL);
+        pCreateXmlReader(NULL, (LPVOID*)&reader, NULL);
     }
 
     hr = pCreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader, NULL);
@@ -372,13 +373,14 @@ static void test_reader_create(void)
     hr = testinput_createinstance((void**)&input);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
-    input_iids.count = 0;
-    hr = IXmlReader_SetInput(reader, input);
-    ok(hr == E_NOINTERFACE, "Expected E_NOINTERFACE, got %08x\n", hr);
-    ok_iids(&input_iids, setinput_full, setinput_full_old, FALSE);
-
-    IUnknown_Release(input);
-
+    if (hr == S_OK)
+    {
+        input_iids.count = 0;
+        hr = IXmlReader_SetInput(reader, input);
+        ok(hr == E_NOINTERFACE, "Expected E_NOINTERFACE, got %08x\n", hr);
+        ok_iids(&input_iids, setinput_full, setinput_full_old, FALSE);
+        IUnknown_Release(input);
+    }
     IXmlReader_Release(reader);
 }
 
@@ -574,7 +576,7 @@ todo_wine {
     ok(type == XmlNodeType_XmlDeclaration,
                      "Expected XmlNodeType_XmlDeclaration, got %s\n", type_to_str(type));
 }
-    /* new version 1.2.x and 1.3.x properly update postition for <?xml ?> */
+    /* new version 1.2.x and 1.3.x properly update position for <?xml ?> */
     ok_pos(reader, 1, 3, -1, 55, TRUE);
 
     /* check attributes */
