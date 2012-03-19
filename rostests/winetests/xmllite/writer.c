@@ -28,7 +28,7 @@
 #include "xmllite.h"
 #include "wine/test.h"
 
-static HRESULT WINAPI (*pCreateXmlWriter)(REFIID riid, void **ppvObject, IMalloc *pMalloc);
+static HRESULT (WINAPI *pCreateXmlWriter)(REFIID riid, void **ppvObject, IMalloc *pMalloc);
 
 static void test_writer_create(void)
 {
