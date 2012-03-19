@@ -6,6 +6,7 @@ spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     reader.c
+    writer.c
     xmllite_main.c
     #${REACTOS_BINARY_DIR}/include/psdk/xmllite_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c
