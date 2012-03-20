@@ -69,6 +69,17 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     ULARGE_INTEGER CurrentTime, InterruptTime;
     LONG OldTickOffset;
 
+    /* Check if this tick is being skipped */
+    if (Prcb->SkipTick)
+    {
+        /* Handle it next time */
+        Prcb->SkipTick = FALSE;
+
+        /* Increase interrupt count and end the interrupt */
+        Prcb->InterruptCount++;
+        KiEndInterrupt(Irql, TrapFrame);
+    }
+
     /* Add the increment time to the shared data */
     InterruptTime.QuadPart = *(ULONGLONG*)&SharedUserData->InterruptTime;
     InterruptTime.QuadPart += Increment;
@@ -79,6 +90,13 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
 
     /* Update the tick offset */
     OldTickOffset = InterlockedExchangeAdd(&KiTickOffset, -(LONG)Increment);
+
+    /* If the debugger is enabled, check for break-in request */
+    if (KdDebuggerEnabled && KdPollBreakIn())
+    {
+        /* Break-in requested! */
+        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    }
 
     /* Check for full tick */
     if (OldTickOffset <= (LONG)Increment)
@@ -122,6 +140,14 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
     PKTHREAD Thread = KeGetCurrentThread();
     PKPRCB Prcb = KeGetCurrentPrcb();
 
+    /* Check if this tick is being skipped */
+    if (Prcb->SkipTick)
+    {
+        /* Handle it next time */
+        Prcb->SkipTick = FALSE;
+        return;
+    }
+
     /* Increase interrupt count */
     Prcb->InterruptCount++;
 
@@ -154,6 +180,24 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
         {
             /* Handle being in a DPC */
             Prcb->DpcTime++;
+
+#if DBG
+            /* Update the DPC time */
+            Prcb->DebugDpcTime++;
+
+            /* Check if we have timed out */
+            if (Prcb->DebugDpcTime == KiDPCTimeout);
+            {
+                /* We did! */
+                DbgPrint("*** DPC routine > 1 sec --- This is not a break in KeUpdateSystemTime\n");
+
+                /* Break if debugger is enabled */
+                if (KdDebuggerEnabled) DbgBreakPoint();
+
+                /* Clear state */
+                Prcb->DebugDpcTime = 0;
+            }
+#endif
         }
     }
 
