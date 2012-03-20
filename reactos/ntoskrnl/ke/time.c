@@ -181,7 +181,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             /* Handle being in a DPC */
             Prcb->DpcTime++;
 
-#if DBG
+#if 0 //DBG
             /* Update the DPC time */
             Prcb->DebugDpcTime++;
 
