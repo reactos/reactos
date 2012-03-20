@@ -1,4 +1,4 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
@@ -16,10 +16,10 @@ BEGIN
   END
   POPUP "Affichage"
   BEGIN
-    MENUITEM "Périphériques par type",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Périphériques par connexion",   IDC_STATIC, GRAYED
-    MENUITEM "Ressources par type",       IDC_STATIC, GRAYED
-    MENUITEM "Ressources par connexion", IDC_STATIC, GRAYED
+    MENUITEM "Périphériques par type",      IDC_DEVBYTYPE
+    MENUITEM "Périphériques par connexion", IDC_DEVBYCONN
+    MENUITEM "Ressources par type",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressources par connexion",    IDC_RESBYCONN, GRAYED
   END
   POPUP "Aide"
   BEGIN

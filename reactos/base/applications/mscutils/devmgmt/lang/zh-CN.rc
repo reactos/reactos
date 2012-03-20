@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
  */
 
@@ -20,10 +20,10 @@ BEGIN
   END
   POPUP "查看"
   BEGIN
-    MENUITEM "设备，按类型",              IDC_DEVBYTYPE, CHECKED
-    MENUITEM "设备，按连接",              IDC_STATIC, GRAYED
-    MENUITEM "资源，按类型",              IDC_STATIC, GRAYED
-    MENUITEM "资源，按连接",              IDC_STATIC, GRAYED
+    MENUITEM "设备，按类型",              IDC_DEVBYTYPE
+    MENUITEM "设备，按连接",              IDC_DEVBYCONN
+    MENUITEM "资源，按类型",              IDC_RESBYTYPE, GRAYED
+    MENUITEM "资源，按连接",              IDC_RESBYCONN, GRAYED
   END
   POPUP "帮助"
   BEGIN

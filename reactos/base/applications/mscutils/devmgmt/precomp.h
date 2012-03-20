@@ -18,6 +18,14 @@
 
 #define MAX_DEV_LEN 256
 
+typedef enum
+{
+    DevicesByType,
+    DevicesByConnection,
+    RessourcesByType,
+    RessourcesByConnection
+} DISPLAY_TYPE;
+
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;
@@ -27,6 +35,8 @@ typedef struct _MAIN_WND_INFO
     HWND  hProgDlg;
     HMENU hShortcutMenu;
     int   nCmdShow;
+
+    DISPLAY_TYPE Display;
 
     /* status flags */
     UINT InMenuLoop : 1;
@@ -59,6 +69,7 @@ VOID FreeDeviceStrings(HWND hTreeView);
 VOID OpenPropSheet(HWND hTreeView, HTREEITEM hItem);
 HTREEITEM InitTreeView(HWND hTreeView);
 VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot);
+VOID ListDevicesByConnection(HWND hTreeView, HTREEITEM hRoot);
 
 
 /* misc.c */

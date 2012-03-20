@@ -16,10 +16,10 @@ BEGIN
   END
   POPUP "&Zobrazení"
   BEGIN
-    MENUITEM "Zařízení podle typu",        IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Zařízení podle připojení",   IDC_STATIC, GRAYED
-    MENUITEM "Prostředky podle typu",      IDC_STATIC, GRAYED
-    MENUITEM "Prostředky podle připojení", IDC_STATIC, GRAYED
+    MENUITEM "Zařízení podle typu",        IDC_DEVBYTYPE
+    MENUITEM "Zařízení podle připojení",   IDC_DEVBYCONN
+    MENUITEM "Prostředky podle typu",      IDC_RESBYTYPE, GRAYED
+    MENUITEM "Prostředky podle připojení", IDC_RESBYCONN, GRAYED
   END
   POPUP "Nápověda"
   BEGIN

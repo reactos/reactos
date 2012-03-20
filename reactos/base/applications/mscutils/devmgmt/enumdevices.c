@@ -421,6 +421,165 @@ ListDevicesByType(HWND hTreeView,
 }
 
 
+static HTREEITEM
+AddDeviceToTree(HWND hTreeView,
+                HTREEITEM hRoot,
+                DEVINST dnDevInst)
+{
+    TCHAR DevName[MAX_DEV_LEN];
+    TCHAR FriendlyName[MAX_DEV_LEN];
+    TCHAR ClassGuidString[MAX_GUID_STRING_LEN];
+    GUID ClassGuid;
+    ULONG ulLength;
+    LPTSTR DeviceID;
+    INT ClassImage = 24;
+    CONFIGRET cr;
+
+    cr = CM_Get_Device_ID(dnDevInst,
+                          DevName,
+                          MAX_DEV_LEN,
+                          0);
+    if (cr != CR_SUCCESS)
+        return NULL;
+
+    ulLength = MAX_DEV_LEN * sizeof(TCHAR);
+    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                          CM_DRP_FRIENDLYNAME,
+                                          NULL,
+                                          FriendlyName,
+                                          &ulLength,
+                                          0);
+    if (cr != CR_SUCCESS)
+    {
+        ulLength = MAX_DEV_LEN * sizeof(TCHAR);
+        cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                              CM_DRP_DEVICEDESC,
+                                              NULL,
+                                              FriendlyName,
+                                              &ulLength,
+                                              0);
+        if (cr != CR_SUCCESS)
+            return NULL;
+    }
+
+    ulLength = MAX_GUID_STRING_LEN * sizeof(TCHAR);
+    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                          CM_DRP_CLASSGUID,
+                                          NULL,
+                                          ClassGuidString,
+                                          &ulLength,
+                                          0);
+    if (cr == CR_SUCCESS)
+    {
+        pSetupGuidFromString(ClassGuidString, &ClassGuid);
+
+        if (!SetupDiGetClassImageIndex(&ImageListData,
+                                       &ClassGuid,
+                                       &ClassImage))
+        {
+            /* FIXME: can we do this?
+             * Set the blank icon: IDI_SETUPAPI_BLANK = 41
+             * it'll be image 24 in the imagelist */
+            ClassImage = 24;
+        }
+    }
+
+    if (DevName != NULL)
+    {
+        DeviceID = HeapAlloc(GetProcessHeap(),
+                             0,
+                             (lstrlen(DevName) + 1) * sizeof(TCHAR));
+        if (DeviceID == NULL)
+        {
+            return NULL;
+        }
+
+        lstrcpy(DeviceID, DevName);
+    }
+
+    return InsertIntoTreeView(hTreeView,
+                              hRoot,
+                              FriendlyName,
+                              DeviceID,
+                              ClassImage,
+                              0);
+}
+
+
+static VOID
+EnumChildDevices(HWND hTreeView,
+                 HTREEITEM hRoot,
+                 DEVINST dnParentDevInst)
+{
+    HTREEITEM hDevItem;
+    DEVINST dnDevInst;
+    CONFIGRET cr;
+
+    cr = CM_Get_Child(&dnDevInst,
+                      dnParentDevInst,
+                      0);
+    if (cr != CR_SUCCESS)
+        return;
+
+    hDevItem = AddDeviceToTree(hTreeView,
+                               hRoot,
+                               dnDevInst);
+    if (hDevItem == NULL)
+        return;
+
+    EnumChildDevices(hTreeView,
+                     hDevItem,
+                     dnDevInst);
+
+    while (cr == CR_SUCCESS)
+    {
+        cr = CM_Get_Sibling(&dnDevInst,
+                            dnDevInst,
+                            0);
+        if (cr != CR_SUCCESS)
+            break;
+
+        hDevItem = AddDeviceToTree(hTreeView,
+                                   hRoot,
+                                   dnDevInst);
+        if (hDevItem == NULL)
+            break;
+
+        EnumChildDevices(hTreeView,
+                         hDevItem,
+                         dnDevInst);
+    }
+
+    (void)TreeView_SortChildren(hTreeView,
+                                hRoot,
+                                0);
+}
+
+
+VOID
+ListDevicesByConnection(HWND hTreeView,
+                        HTREEITEM hRoot)
+{
+    DEVINST devInst;
+    CONFIGRET cr;
+
+    cr = CM_Locate_DevNode(&devInst,
+                           NULL,
+                           CM_LOCATE_DEVNODE_NORMAL);
+    if (cr == CR_SUCCESS)
+        EnumChildDevices(hTreeView,
+                         hRoot,
+                         devInst);
+
+    (void)TreeView_Expand(hTreeView,
+                          hRoot,
+                          TVE_EXPAND);
+
+    (void)TreeView_SelectItem(hTreeView,
+                              hRoot);
+}
+
+
 HTREEITEM
 InitTreeView(HWND hTreeView)
 {
