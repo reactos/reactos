@@ -207,20 +207,22 @@ LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
         KeyValueInformation = RtlAllocateHeap(RtlGetProcessHeap(),
                                               0,
                                               KeyInfoSize);
-        if (KeyValueInformation == NULL)
+        if (KeyValueInformation != NULL)
+        {
+            /* Try again */
+            Status = ZwQueryValueKey(KeyHandle,
+                                     &ValueNameString,
+                                     KeyValuePartialInformation,
+                                     KeyValueInformation,
+                                     KeyInfoSize,
+                                     &ResultSize);
+            FreeHeap = TRUE;
+        }
+        else
         {
             /* Give up this time */
             Status = STATUS_NO_MEMORY;
         }
-
-        /* Try again */
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueNameString,
-                                 KeyValuePartialInformation,
-                                 KeyValueInformation,
-                                 KeyInfoSize,
-                                 &ResultSize);
-        FreeHeap = TRUE;
     }
 
     /* Check for success */
@@ -641,7 +643,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             /* Allocate space for all the entries */
             LdrRootEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                            0,
-                                           Count * sizeof(LdrRootEntry));
+                                           Count * sizeof(*LdrRootEntry));
             if (!LdrRootEntry) return STATUS_NO_MEMORY;
         }
         else
@@ -687,6 +689,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                 if (LdrEntry->EntryPoint)
                 {
                     /* Write in array */
+                    ASSERT(i < Count);
                     LdrRootEntry[i] = LdrEntry;
 
                     /* Display debug message */
@@ -1546,7 +1549,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Normalize the parameters */
     ProcessParameters = RtlNormalizeProcessParams(Peb->ProcessParameters);
-    ProcessParameters = Peb->ProcessParameters;
     if (ProcessParameters)
     {
         /* Save the Image and Command Line Names */
@@ -1993,7 +1995,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
     {
         DPRINT1("LDR: Performing EXE relocation\n");
-        
+
         /* Change the protection to prepare for relocation */
         ViewBase = Peb->ImageBaseAddress;
         Status = LdrpSetProtection(ViewBase, FALSE);
@@ -2011,7 +2013,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             DPRINT1("LdrRelocateImageWithBias() failed\n");
             return Status;
         }
-        
+
         /* Check if a start context was provided */
         if (Context)
         {
@@ -2019,7 +2021,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             UNIMPLEMENTED; // We should support this
             return STATUS_INVALID_IMAGE_FORMAT;
         }
-        
+
         /* Restore the protection */
         Status = LdrpSetProtection(ViewBase, TRUE);
         if (!NT_SUCCESS(Status)) return Status;
