@@ -50,6 +50,9 @@ IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
 NTSTATUS
 IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject, BOOLEAN Force);
 
+PDEVICE_OBJECT
+IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
+
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
@@ -1850,7 +1853,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    HANDLE InstanceKey = NULL;
    UNICODE_STRING ValueName;
    UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
+   UNICODE_STRING InstancePathU;
    DEVICE_CAPABILITIES DeviceCapabilities;
+   PDEVICE_OBJECT OldDeviceObject;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
    DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
@@ -1991,11 +1996,25 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    RtlFreeUnicodeString(&ParentIdPrefix);
 
-   if (!RtlCreateUnicodeString(&DeviceNode->InstancePath, InstancePath))
+   if (!RtlCreateUnicodeString(&InstancePathU, InstancePath))
    {
       DPRINT("No resources\n");
       /* FIXME: Cleanup and disable device */
    }
+
+   /* Verify that this is not a duplicate */
+   OldDeviceObject = IopGetDeviceObjectFromDeviceInstance(&InstancePathU);
+   if (OldDeviceObject != NULL)
+   {
+       DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
+       KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
+                    0x01,
+                    (ULONG_PTR)DeviceNode->PhysicalDeviceObject,
+                    (ULONG_PTR)OldDeviceObject,
+                    0);
+   }
+
+   DeviceNode->InstancePath = InstancePathU;
 
    DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
 

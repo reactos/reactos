@@ -141,7 +141,7 @@ IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
 }
 
 
-static PDEVICE_OBJECT
+PDEVICE_OBJECT
 IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
 {
     if (IopRootDeviceNode == NULL)
