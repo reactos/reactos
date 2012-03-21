@@ -1431,7 +1431,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmLockAddressSpace(AddressSpace);
       Status = MmCreateVirtualMapping(Process,
-                                      Address,
+                                      PAddress,
                                       Region->Protect,
                                       &Page,
                                       1);
