@@ -12,6 +12,7 @@
 static SP_CLASSIMAGELIST_DATA ImageListData;
 static HDEVINFO hDevInfo;
 
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 VOID
 FreeDeviceStrings(HWND hTreeView)
@@ -138,7 +139,8 @@ EnumDeviceClasses(INT ClassIndex,
                   LPTSTR DevClassName,
                   LPTSTR DevClassDesc,
                   BOOL *DevPresent,
-                  INT *ClassImage)
+                  INT *ClassImage,
+                  BOOL *IsUnknown)
 {
     GUID ClassGuid;
     HKEY KeyClass;
@@ -157,7 +159,6 @@ EnumDeviceClasses(INT ClassIndex,
         /* all classes enumerated */
         if(Ret == CR_NO_SUCH_VALUE)
         {
-            hDevInfo = NULL;
             return -1;
         }
 
@@ -168,6 +169,9 @@ EnumDeviceClasses(INT ClassIndex,
 
         /* handle other errors... */
     }
+
+    /* This case is special because these devices don't show up with normal class enumeration */
+    *IsUnknown = IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_UNKNOWN);
 
     if (SetupDiClassNameFromGuid(&ClassGuid,
                                  ClassName,
@@ -188,13 +192,12 @@ EnumDeviceClasses(INT ClassIndex,
     }
 
     /* Get device info for all devices of a particular class */
-    hDevInfo = SetupDiGetClassDevs(&ClassGuid,
+    hDevInfo = SetupDiGetClassDevs(*IsUnknown ? NULL : &ClassGuid,
                                    NULL,
                                    NULL,
-                                   DIGCF_PRESENT);
+                                   DIGCF_PRESENT | (*IsUnknown ? DIGCF_ALLCLASSES : 0));
     if (hDevInfo == INVALID_HANDLE_VALUE)
     {
-        hDevInfo = NULL;
         return 0;
     }
 
@@ -218,7 +221,7 @@ EnumDeviceClasses(INT ClassIndex,
     }
     else
     {
-        return -3;
+        return 0;
     }
 
     *DevPresent = TRUE;
@@ -252,6 +255,12 @@ EnumDevices(INT index,
     {
         /* no such device */
         return -1;
+    }
+
+    if (DeviceClassName == NULL && !IsEqualGUID(&DeviceInfoData.ClassGuid, &GUID_NULL))
+    {
+        /* we're looking for unknown devices and this isn't one */
+        return -2;
     }
 
     /* get the device ID */
@@ -328,6 +337,7 @@ ListDevicesByType(HWND hTreeView,
     INT ClassRet;
     INT index = 0;
     INT DevImage;
+    BOOL IsUnknown = FALSE;
 
     do
     {
@@ -335,7 +345,8 @@ ListDevicesByType(HWND hTreeView,
                                      DevName,
                                      DevDesc,
                                      &DevExist,
-                                     &DevImage);
+                                     &DevImage,
+                                     &IsUnknown);
 
         if ((ClassRet != -1) && (DevExist))
         {
@@ -365,7 +376,7 @@ ListDevicesByType(HWND hTreeView,
             do
             {
                 Ret = EnumDevices(DevIndex,
-                                  DevName,
+                                  IsUnknown ? NULL : DevName,
                                   DeviceName,
                                   &DeviceID);
                 if (Ret >= 0)
@@ -376,6 +387,13 @@ ListDevicesByType(HWND hTreeView,
                                        DeviceID,
                                        DevImage,
                                        Ret);
+                    if (Ret != 0)
+                    {
+                        /* Expand the class if the device has a problem */
+                        (void)TreeView_Expand(hTreeView,
+                                              hDevItem,
+                                              TVE_EXPAND);
+                    }
                 }
 
                 DevIndex++;
@@ -472,16 +490,21 @@ AddDeviceToTree(HWND hTreeView,
     if (cr == CR_SUCCESS)
     {
         pSetupGuidFromString(ClassGuidString, &ClassGuid);
+    }
+    else
+    {
+        /* It's a device with no driver */
+        ClassGuid = GUID_DEVCLASS_UNKNOWN;
+    }
 
-        if (!SetupDiGetClassImageIndex(&ImageListData,
-                                       &ClassGuid,
-                                       &ClassImage))
-        {
-            /* FIXME: can we do this?
-             * Set the blank icon: IDI_SETUPAPI_BLANK = 41
-             * it'll be image 24 in the imagelist */
-            ClassImage = 24;
-        }
+    if (!SetupDiGetClassImageIndex(&ImageListData,
+                                   &ClassGuid,
+                                   &ClassImage))
+    {
+        /* FIXME: can we do this?
+         * Set the blank icon: IDI_SETUPAPI_BLANK = 41
+         * it'll be image 24 in the imagelist */
+        ClassImage = 24;
     }
 
     if (DevName != NULL)

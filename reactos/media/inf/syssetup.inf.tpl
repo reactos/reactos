@@ -24,6 +24,7 @@ hal.inf
 hdc.inf
 input.inf
 keyboard.inf
+legcydrv.inf
 machine.inf
 monitor.inf
 msmouse.inf

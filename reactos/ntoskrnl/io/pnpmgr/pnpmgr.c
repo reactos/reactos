@@ -460,6 +460,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
               &DeviceNode->InstancePath,
               Status);
       IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+      DeviceNode->Problem = CM_PROB_FAILED_ADD;
       return Status;
    }
 
@@ -663,6 +664,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
 
         /* Set the appropriate flag */
         DeviceNode->Flags |= DNF_START_FAILED;
+        DeviceNode->Problem = CM_PROB_FAILED_START;
 
         DPRINT1("Warning: PnP Start failed (%wZ) [Status: 0x%x]\n", &DeviceNode->InstancePath, Status);
         return;
@@ -1008,9 +1010,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    UNICODE_STRING KeyName, ClassName;
    PUNICODE_STRING ServiceName1;
    ULONG LegacyValue;
-#if 0
    UNICODE_STRING ClassGUID;
-#endif
    HANDLE InstanceHandle;
 
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
@@ -1091,17 +1091,21 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
           {
               RtlInitUnicodeString(&KeyName, L"Class");
 
-              RtlInitUnicodeString(&ClassName, L"LegacyDriver");
-              Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length);
-#if 0
+              RtlInitUnicodeString(&ClassName, L"LegacyDriver\0");
+              Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length + sizeof(UNICODE_NULL));
               if (NT_SUCCESS(Status))
               {
                   RtlInitUnicodeString(&KeyName, L"ClassGUID");
 
-                  RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
-                  Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length);
+                  RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}\0");
+                  Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length + sizeof(UNICODE_NULL));
+                  if (NT_SUCCESS(Status))
+                  {
+                      RtlInitUnicodeString(&KeyName, L"DeviceDesc");
+
+                      Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName1->Buffer, ServiceName1->Length + sizeof(UNICODE_NULL));
+                  }
               }
-#endif
           }
       }
 
@@ -2490,6 +2494,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
          }
          else
          {
+            DeviceNode->Problem = CM_PROB_FAILED_INSTALL;
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
          }
          return STATUS_SUCCESS;
@@ -2621,6 +2626,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          {
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
             IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
+            DeviceNode->Problem = CM_PROB_FAILED_START;
+
             /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
             DPRINT1("Initialization of service %S failed (Status %x)\n",
               DeviceNode->ServiceName.Buffer, Status);

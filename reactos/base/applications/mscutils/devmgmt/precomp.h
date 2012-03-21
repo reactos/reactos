@@ -10,6 +10,9 @@
 #include <cfgmgr32.h>
 #include <commctrl.h>
 #include <dll/devmgr/devmgr.h>
+#include <initguid.h>
+#include <cguid.h>
+#include <devguid.h>
 #include "resource.h"
 
 #ifdef _MSC_VER

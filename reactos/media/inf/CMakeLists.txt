@@ -17,6 +17,7 @@ list(APPEND INF_FILES
     ks.inf
     kscaptur.inf
     layout.inf
+    legcydrv.inf
     machine.inf
     monitor.inf
     msmouse.inf

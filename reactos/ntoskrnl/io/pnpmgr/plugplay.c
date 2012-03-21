@@ -406,6 +406,47 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     return Status;
 }
 
+static ULONG
+IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
+{
+    ULONG Output = 0;
+
+    if (DeviceNode->Parent == IopRootDeviceNode)
+        Output |= DN_ROOT_ENUMERATED;
+
+    if (DeviceNode->Flags & DNF_ADDED)
+        Output |= DN_DRIVER_LOADED;
+
+    /* FIXME: DN_ENUM_LOADED */
+
+    if (DeviceNode->Flags & DNF_STARTED)
+        Output |= DN_STARTED;
+
+    /* FIXME: Manual */
+
+    if (!(DeviceNode->Flags & DNF_PROCESSED))
+        Output |= DN_NEED_TO_ENUM;
+
+    /* DN_NOT_FIRST_TIME is 9x only */
+
+    /* FIXME: DN_HARDWARE_ENUM */
+
+    /* DN_LIAR and DN_HAS_MARK are 9x only */
+
+    if (DeviceNode->Problem != 0)
+        Output |= DN_HAS_PROBLEM;
+
+    /* FIXME: DN_FILTERED */
+
+    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
+        Output |= DN_LEGACY_DRIVER;
+
+    /* FIXME: Implement the rest */
+
+    Output |= DN_NT_ENUMERATOR | DN_NT_DRIVER;
+
+    return Output;
+}
 
 static NTSTATUS
 IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
@@ -453,14 +494,12 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     {
         case PNP_GET_DEVICE_STATUS:
             DPRINT("Get status data\n");
-            DeviceStatus = DeviceNode->Flags;
+            DeviceStatus = IopGetDeviceNodeStatus(DeviceNode);
             DeviceProblem = DeviceNode->Problem;
             break;
 
         case PNP_SET_DEVICE_STATUS:
-            DPRINT("Set status data\n");
-            DeviceNode->Flags = DeviceStatus;
-            DeviceNode->Problem = DeviceProblem;
+            DPRINT1("Set status data is NOT SUPPORTED\n");
             break;
 
         case PNP_CLEAR_DEVICE_STATUS:
@@ -576,6 +615,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     {
         /* FIXME: What if the device really is disabled? */
         DeviceNode->Flags &= ~DNF_DISABLED;
+        DeviceNode->Problem = 0;
 
         /* Load service data from the registry */
         Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
