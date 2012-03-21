@@ -597,15 +597,17 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     /* Check if there's already a driver loaded for this device */
     if (DeviceNode->Flags & DNF_ADDED)
     {
+#if 0
         /* Remove the device node */
         Status = IopRemoveDevice(DeviceNode);
         if (NT_SUCCESS(Status))
         {
             /* Invalidate device relations for the parent to reenumerate the device */
+            DPRINT1("A new driver will be loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
             Status = IoSynchronousInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
-            DPRINT1("A new driver has been loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
         }
         else
+#endif
         {
             /* A driver has already been loaded for this device */
             DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
@@ -623,8 +625,8 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
         if (NT_SUCCESS(Status))
         {
             /* Start the service and begin PnP initialization of the device again */
-            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
             DPRINT1("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
         }
     }
 
