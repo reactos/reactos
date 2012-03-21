@@ -75,7 +75,7 @@ WSHGetBroadcastSockaddr(
     OUT PSOCKADDR Sockaddr,
     OUT PINT SockaddrLength)
 {
-    DWORD Size = 2 * sizeof(UINT);
+    INT Size = 2 * sizeof(UINT);
 
     if (*SockaddrLength < Size)
     {
@@ -184,10 +184,15 @@ GetAddressOption(INT Level, INT OptionName)
           }
           break;
 
+       case SOL_SOCKET:
+          DPRINT1("SOL_SOCKET option %d\n", OptionName);
+          break;
+
        default:
           DPRINT1("Unknown level: %d\n", Level);
-          return 0;
+          break;
     }
+    return 0;
 }
 
 INT
@@ -215,7 +220,7 @@ WSHGetWildcardSockaddr(
     OUT PSOCKADDR Sockaddr,
     OUT PINT SockaddrLength)
 {
-    DWORD Size = 2 * sizeof(UINT);
+    INT Size = 2 * sizeof(UINT);
 
     if (*SockaddrLength < Size)
     {
@@ -456,7 +461,7 @@ WSHNotify(
             }
             Context->RequestQueue = NULL;
             break;
-            
+
         default:
             DPRINT1("Unwanted notification received! (%d)\n", NotifyEvent);
             break;
