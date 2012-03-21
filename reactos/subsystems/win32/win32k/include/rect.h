@@ -46,6 +46,14 @@ RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
 }
 
 BOOL
+FORCEINLINE
+RECTL_bIsWellOrdered(const RECTL *prcl)
+{
+    return ((prcl->left <= prcl->right) &&
+            (prcl->top  <= prcl->bottom));
+}
+
+BOOL
 FASTCALL
 RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2);
 
@@ -57,6 +65,6 @@ VOID
 FASTCALL
 RECTL_vMakeWellOrdered(RECTL *prcl);
 
-VOID 
+VOID
 FASTCALL
 RECTL_vInflateRect(RECTL *rect, INT dx, INT dy);

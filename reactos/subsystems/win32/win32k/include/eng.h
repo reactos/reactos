@@ -1,5 +1,10 @@
 #pragma once
 
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    IN HSEMAPHORE hsem);
+
 BOOL APIENTRY
 IntEngMaskBlt(SURFOBJ *psoDest,
               SURFOBJ *psoMask,

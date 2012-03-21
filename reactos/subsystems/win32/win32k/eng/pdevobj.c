@@ -25,6 +25,29 @@ InitPDEVImpl()
     return STATUS_SUCCESS;
 }
 
+#if DBG
+PPDEVOBJ
+NTAPI
+DbgLookupDHPDEV(DHPDEV dhpdev)
+{
+    PPDEVOBJ ppdev;
+
+    /* Lock PDEV list */
+    EngAcquireSemaphoreShared(ghsemPDEV);
+
+    /* Walk through the list of PDEVs */
+    for (ppdev = gppdevList;  ppdev; ppdev = ppdev->ppdevNext)
+    {
+        /* Compare with the given DHPDEV */
+        if (ppdev->dhpdev == dhpdev) break;
+    }
+
+    /* Unlock PDEV list */
+    EngReleaseSemaphore(ghsemPDEV);
+
+    return ppdev;
+}
+#endif
 
 PPDEVOBJ
 PDEVOBJ_AllocPDEV()
@@ -803,7 +826,7 @@ NtGdiGetDhpdev(
         return NULL;
 
     /* Lock PDEV list */
-    EngAcquireSemaphore(ghsemPDEV);
+    EngAcquireSemaphoreShared(ghsemPDEV);
 
     /* Walk through the list of PDEVs */
     for (ppdev = gppdevList;  ppdev; ppdev = ppdev->ppdevNext)
