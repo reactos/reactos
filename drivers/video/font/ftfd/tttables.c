@@ -29,7 +29,7 @@ CalcTableChecksum(PVOID pvTable, ULONG cjTable)
  *  \brief Searches for a specific table in TrueType and OpenType font files
  *  \param pvView - The address where the font file is mapped
  *  \param cjView - Size of the mapped font file
- *  \param iFace - 1-based index of the font in the font file.
+ *  \param ulFont - 1-based index of the font in the font file.
  *  \param ulTag - Identifier tag of the table to search
  *  \param pulLength - Pointer to an ULONG that recieves the table length,
  *                     Can be NULL.
