@@ -1027,6 +1027,10 @@ PnpRootCreateDevice(
     OUT OPTIONAL PUNICODE_STRING FullInstancePath
 );
 
+NTSTATUS
+PnpRootRegisterDevice(
+    IN PDEVICE_OBJECT DeviceObject);
+
 //
 // Driver Routines
 //

@@ -338,6 +338,10 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     /* Close the instance key handle */
     ZwClose(InstanceKey);
 
+    /* Register the given DO with PnP root if required */
+    if (DeviceObject && *DeviceObject)
+        PnpRootRegisterDevice(*DeviceObject);
+
     /* Report the device's enumeration to umpnpmgr */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
                               &DeviceNode->InstancePath);

@@ -126,6 +126,61 @@ LocateChildDevice(
     return STATUS_NO_SUCH_DEVICE;
 }
 
+NTSTATUS
+PnpRootRegisterDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension = PnpRootDeviceObject->DeviceExtension;
+    PPNPROOT_DEVICE Device;
+    PDEVICE_NODE DeviceNode;
+    PWSTR InstancePath;
+    UNICODE_STRING InstancePathCopy;
+
+    Device = ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
+    if (!Device) return STATUS_NO_MEMORY;
+
+    DeviceNode = IopGetDeviceNode(DeviceObject);
+    if (!RtlCreateUnicodeString(&InstancePathCopy, DeviceNode->InstancePath.Buffer))
+    {
+        ExFreePoolWithTag(Device, TAG_PNP_ROOT);
+        return STATUS_NO_MEMORY;
+    }
+
+    InstancePath = wcsrchr(InstancePathCopy.Buffer, L'\\');
+    ASSERT(InstancePath);
+
+    if (!RtlCreateUnicodeString(&Device->InstanceID, InstancePath + 1))
+    {
+        RtlFreeUnicodeString(&InstancePathCopy);
+        ExFreePoolWithTag(Device, TAG_PNP_ROOT);
+        return STATUS_NO_MEMORY;
+    }
+
+    InstancePath[0] = UNICODE_NULL;
+
+    if (!RtlCreateUnicodeString(&Device->DeviceID, InstancePathCopy.Buffer))
+    {
+        RtlFreeUnicodeString(&InstancePathCopy);
+        RtlFreeUnicodeString(&Device->InstanceID);
+        ExFreePoolWithTag(Device, TAG_PNP_ROOT);
+        return STATUS_NO_MEMORY;
+    }
+
+    InstancePath[0] = L'\\';
+
+    Device->Pdo = DeviceObject;
+
+    KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
+    InsertTailList(&DeviceExtension->DeviceListHead,
+                   &Device->ListEntry);
+    DeviceExtension->DeviceListCount++;
+    KeReleaseGuardedMutex(&DeviceExtension->DeviceListLock);
+
+    RtlFreeUnicodeString(&InstancePathCopy);
+
+    return STATUS_SUCCESS;
+}
+
 /* Creates a new PnP device for a legacy driver */
 NTSTATUS
 PnpRootCreateDevice(
