@@ -2006,7 +2006,12 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    OldDeviceObject = IopGetDeviceObjectFromDeviceInstance(&InstancePathU);
    if (OldDeviceObject != NULL)
    {
+       PDEVICE_NODE OldDeviceNode = IopGetDeviceNode(OldDeviceObject);
+
        DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
+       DPRINT1("Current instance parent: '%wZ'\n", &DeviceNode->Parent->InstancePath);
+       DPRINT1("Old instance parent: '%wZ'\n", &OldDeviceNode->Parent->InstancePath);
+
        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
                     0x01,
                     (ULONG_PTR)DeviceNode->PhysicalDeviceObject,
