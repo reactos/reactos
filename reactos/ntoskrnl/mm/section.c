@@ -1685,7 +1685,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        */
       MmSetSavedSwapEntryPage(Page, SwapEntry);
       Status = MmCreateVirtualMapping(Process,
-                                      Address,
+                                      PAddress,
                                       Region->Protect,
                                       &Page,
                                       1);
