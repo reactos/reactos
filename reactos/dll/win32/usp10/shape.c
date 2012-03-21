@@ -2359,13 +2359,11 @@ static void ShapeCharGlyphProp_Default( HDC hdc, ScriptCache* psc, SCRIPT_ANALYS
         int char_index[20];
         int char_count = 0;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         if (char_count == 0)
@@ -2425,13 +2423,11 @@ static void ShapeCharGlyphProp_Arabic( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSI
         int char_count = 0;
         BOOL isInit, isFinal;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         isInit = (i == initGlyph || (i+dirR > 0 && i+dirR < cGlyphs && spaces[i+dirR]));
@@ -2534,13 +2530,11 @@ static void ShapeCharGlyphProp_Thai( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS 
         int char_index[20];
         int char_count = 0;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         if (char_count == 0)
@@ -2581,13 +2575,11 @@ static void ShapeCharGlyphProp_None( HDC hdc, ScriptCache* psc, SCRIPT_ANALYSIS*
         int char_index[20];
         int char_count = 0;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         if (char_count == 0)
@@ -2614,13 +2606,11 @@ static void ShapeCharGlyphProp_Tibet( HDC hdc, ScriptCache* psc, SCRIPT_ANALYSIS
         int char_index[20];
         int char_count = 0;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         if (char_count == 0)
@@ -2658,13 +2648,11 @@ static void ShapeCharGlyphProp_BaseIndic( HDC hdc, ScriptCache *psc, SCRIPT_ANAL
         int char_index[20];
         int char_count = 0;
 
-        for (k = 0; k < cChars; k++)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k>=0)
         {
-            if (pwLogClust[k] == i)
-            {
-                char_index[char_count] = k;
-                char_count++;
-            }
+            for (; k < cChars && pwLogClust[k] == i; k++)
+                char_index[char_count++] = k;
         }
 
         if (override_gsub)

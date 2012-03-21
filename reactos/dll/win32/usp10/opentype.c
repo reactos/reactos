@@ -438,9 +438,12 @@ void OpenType_GDEF_UpdateGlyphProps(HDC hdc, ScriptCache *psc, const WORD *pwGly
         int char_count = 0;
         int k;
 
-        for (k = 0; k < cChars; k++)
-            if (pwLogClust[k] == i)
+        k = USP10_FindGlyphInLogClust(pwLogClust, cChars, i);
+        if (k >= 0)
+        {
+            for (; k < cChars && pwLogClust[k] == i; k++)
                 char_count++;
+        }
 
         class = GDEF_get_glyph_class(psc->GDEF_Table, pwGlyphs[i]);
 
@@ -868,12 +871,15 @@ static void GSUB_initialize_script_cache(ScriptCache *psc)
         script = (const GSUB_ScriptList*)((const BYTE*)header + GET_BE_WORD(header->ScriptList));
         psc->script_count = GET_BE_WORD(script->ScriptCount);
         TRACE("initializing %i scripts in this font\n",psc->script_count);
-        psc->scripts = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(LoadedScript) * psc->script_count);
-        for (i = 0; i < psc->script_count; i++)
+        if (psc->script_count)
         {
-            int offset = GET_BE_WORD(script->ScriptRecord[i].Script);
-            psc->scripts[i].tag = MS_MAKE_TAG(script->ScriptRecord[i].ScriptTag[0], script->ScriptRecord[i].ScriptTag[1], script->ScriptRecord[i].ScriptTag[2], script->ScriptRecord[i].ScriptTag[3]);
-            psc->scripts[i].table = ((const BYTE*)script + offset);
+            psc->scripts = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(LoadedScript) * psc->script_count);
+            for (i = 0; i < psc->script_count; i++)
+            {
+                int offset = GET_BE_WORD(script->ScriptRecord[i].Script);
+                psc->scripts[i].tag = MS_MAKE_TAG(script->ScriptRecord[i].ScriptTag[0], script->ScriptRecord[i].ScriptTag[1], script->ScriptRecord[i].ScriptTag[2], script->ScriptRecord[i].ScriptTag[3]);
+                psc->scripts[i].table = ((const BYTE*)script + offset);
+            }
         }
     }
 }
@@ -923,15 +929,18 @@ static void GSUB_initialize_language_cache(LoadedScript *script)
         script->default_language.tag = MS_MAKE_TAG('d','f','l','t');
         script->default_language.table = (const BYTE*)table + GET_BE_WORD(table->DefaultLangSys);
 
-        TRACE("Deflang %p, LangCount %i\n",script->default_language.table, script->language_count);
-
-        script->languages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LoadedLanguage) * script->language_count);
-
-        for (i = 0; i < script->language_count; i++)
+        if (script->language_count)
         {
-            int offset = GET_BE_WORD(table->LangSysRecord[i].LangSys);
-            script->languages[i].tag = MS_MAKE_TAG(table->LangSysRecord[i].LangSysTag[0], table->LangSysRecord[i].LangSysTag[1], table->LangSysRecord[i].LangSysTag[2], table->LangSysRecord[i].LangSysTag[3]);
-            script->languages[i].table = ((const BYTE*)table + offset);
+            TRACE("Deflang %p, LangCount %i\n",script->default_language.table, script->language_count);
+
+            script->languages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LoadedLanguage) * script->language_count);
+
+            for (i = 0; i < script->language_count; i++)
+            {
+                int offset = GET_BE_WORD(table->LangSysRecord[i].LangSys);
+                script->languages[i].tag = MS_MAKE_TAG(table->LangSysRecord[i].LangSysTag[0], table->LangSysRecord[i].LangSysTag[1], table->LangSysRecord[i].LangSysTag[2], table->LangSysRecord[i].LangSysTag[3]);
+                script->languages[i].table = ((const BYTE*)table + offset);
+            }
         }
     }
 }
@@ -1016,23 +1025,26 @@ static void GSUB_initialize_feature_cache(LPCVOID table, LoadedLanguage *languag
         language->feature_count = GET_BE_WORD(lang->FeatureCount);
         TRACE("%i features\n",language->feature_count);
 
-        language->features = HeapAlloc(GetProcessHeap(),0,sizeof(LoadedFeature)*language->feature_count);
-
-        feature_list = (const GSUB_FeatureList*)((const BYTE*)header + GET_BE_WORD(header->FeatureList));
-
-        for (i = 0; i < language->feature_count; i++)
+        if (language->feature_count)
         {
-            const GSUB_Feature *feature;
-            int j;
-            int index = GET_BE_WORD(lang->FeatureIndex[i]);
+            language->features = HeapAlloc(GetProcessHeap(),0,sizeof(LoadedFeature)*language->feature_count);
 
-            language->features[i].tag = MS_MAKE_TAG(feature_list->FeatureRecord[index].FeatureTag[0], feature_list->FeatureRecord[index].FeatureTag[1], feature_list->FeatureRecord[index].FeatureTag[2], feature_list->FeatureRecord[index].FeatureTag[3]);
-            language->features[i].feature = ((const BYTE*)feature_list + GET_BE_WORD(feature_list->FeatureRecord[index].Feature));
-            feature = (const GSUB_Feature*)language->features[i].feature;
-            language->features[i].lookup_count = GET_BE_WORD(feature->LookupCount);
-            language->features[i].lookups = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * language->features[i].lookup_count);
-            for (j = 0; j < language->features[i].lookup_count; j++)
-                language->features[i].lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
+            feature_list = (const GSUB_FeatureList*)((const BYTE*)header + GET_BE_WORD(header->FeatureList));
+
+            for (i = 0; i < language->feature_count; i++)
+            {
+                const GSUB_Feature *feature;
+                int j;
+                int index = GET_BE_WORD(lang->FeatureIndex[i]);
+
+                language->features[i].tag = MS_MAKE_TAG(feature_list->FeatureRecord[index].FeatureTag[0], feature_list->FeatureRecord[index].FeatureTag[1], feature_list->FeatureRecord[index].FeatureTag[2], feature_list->FeatureRecord[index].FeatureTag[3]);
+                language->features[i].feature = ((const BYTE*)feature_list + GET_BE_WORD(feature_list->FeatureRecord[index].Feature));
+                feature = (const GSUB_Feature*)language->features[i].feature;
+                language->features[i].lookup_count = GET_BE_WORD(feature->LookupCount);
+                language->features[i].lookups = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * language->features[i].lookup_count);
+                for (j = 0; j < language->features[i].lookup_count; j++)
+                    language->features[i].lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
+            }
         }
     }
 }

@@ -25,6 +25,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -703,6 +704,11 @@ typedef struct {
     int* logical2visual;
 } StringAnalysis;
 
+typedef struct {
+    BOOL ascending;
+    WORD target;
+} FindGlyph_struct;
+
 static inline void *heap_alloc(SIZE_T size)
 {
     return HeapAlloc(GetProcessHeap(), 0, size);
@@ -879,6 +885,46 @@ static WORD get_char_script( LPCWSTR str, INT index, INT end, INT *consumed)
     } while (1);
 
     return SCRIPT_UNDEFINED;
+}
+
+static int compare_FindGlyph(const void *a, const void* b)
+{
+    const FindGlyph_struct *find = (FindGlyph_struct*)a;
+    const WORD *idx= (WORD*)b;
+    int rc = 0;
+
+    if ( find->target > *idx)
+        rc = 1;
+    else if (find->target < *idx)
+        rc = -1;
+
+    if (!find->ascending)
+        rc *= -1;
+    return rc;
+}
+
+int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target)
+{
+    FindGlyph_struct fgs;
+    WORD *ptr;
+    INT k;
+
+    if (pwLogClust[0] < pwLogClust[cChars-1])
+        fgs.ascending = TRUE;
+    else
+        fgs.ascending = FALSE;
+
+    fgs.target = target;
+    ptr = bsearch(&fgs, pwLogClust, cChars, sizeof(WORD), compare_FindGlyph);
+
+    if (!ptr)
+        return -1;
+
+    for (k = (ptr - pwLogClust)-1; k >= 0 && pwLogClust[k] == target; k--)
+    ;
+    k++;
+
+    return k;
 }
 
 /***********************************************************************
@@ -1726,19 +1772,12 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     hr = ScriptItemize(pString, cString, num_items, &sControl, &sState, analysis->pItem,
                        &analysis->numItems);
 
-    while (hr == E_OUTOFMEMORY)
+    if FAILED(hr)
     {
-        SCRIPT_ITEM *tmp;
-
-        num_items *= 2;
-        if (!(tmp = heap_realloc_zero(analysis->pItem, num_items * sizeof(SCRIPT_ITEM) + 1)))
-            goto error;
-
-        analysis->pItem = tmp;
-        hr = ScriptItemize(pString, cString, num_items, psControl, psState, analysis->pItem,
-                           &analysis->numItems);
+        if (hr == E_OUTOFMEMORY)
+            hr = E_INVALIDARG;
+        goto error;
     }
-    if (hr != S_OK) goto error;
 
     /* set back to out of memory for default goto error behaviour */
     hr = E_OUTOFMEMORY;
@@ -1817,6 +1856,13 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
                 }
             }
 
+            /* FIXME: When we properly shape Hangul remove this check */
+            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && analysis->pItem[i].a.eScript == Script_Hangul)
+                analysis->pItem[i].a.fNoGlyphIndex = TRUE;
+
+            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && !scriptInformation[analysis->pItem[i].a.eScript].props.fComplex)
+                analysis->pItem[i].a.fNoGlyphIndex = TRUE;
+
             hr = ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos],
                              cChar, numGlyphs, &analysis->pItem[i].a,
                              glyphs, pwLogClust, psva, &numGlyphsReturned);
@@ -1873,13 +1919,9 @@ error:
 
 static inline BOOL does_glyph_start_cluster(const SCRIPT_VISATTR *pva, const WORD *pwLogClust, int cChars, int glyph, int direction)
 {
-    int i;
-
     if (pva[glyph].fClusterStart)
         return TRUE;
-    for (i = 0; i < cChars; i++)
-        if (pwLogClust[i] == glyph) break;
-    if (i != cChars)
+    if (USP10_FindGlyphInLogClust(pwLogClust, cChars, glyph) >= 0)
         return TRUE;
 
     return FALSE;
@@ -2309,16 +2351,14 @@ static inline int get_cluster_size(const WORD *pwLogClust, int cChars, int item,
 static inline int get_glyph_cluster_advance(const int* piAdvance, const SCRIPT_VISATTR *pva, const WORD *pwLogClust, int cGlyphs, int cChars, int glyph, int direction)
 {
     int advance;
-    int log_clust_max = 0;
-    int i;
+    int log_clust_max;
 
     advance = piAdvance[glyph];
 
-    for (i = 0; i < cChars; i++)
-    {
-        if (pwLogClust[i] > log_clust_max)
-            log_clust_max = pwLogClust[i];
-    }
+    if (pwLogClust[0] > pwLogClust[cChars-1])
+        log_clust_max = pwLogClust[0];
+    else
+        log_clust_max = pwLogClust[cChars-1];
 
     if (glyph > log_clust_max)
         return advance;

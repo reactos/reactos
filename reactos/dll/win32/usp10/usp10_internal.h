@@ -204,6 +204,8 @@ typedef void (*reorder_function)(LPWSTR pwChar, IndicSyllable *syllable, lexical
 #define BIDI_WEAK    2
 #define BIDI_NEUTRAL 0
 
+int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target) DECLSPEC_HIDDEN;
+
 BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
                 const SCRIPT_CONTROL *c, WORD *lpOutLevels ) DECLSPEC_HIDDEN;
 BOOL BIDI_GetStrengths(LPCWSTR lpString, INT uCount, const SCRIPT_CONTROL *c,

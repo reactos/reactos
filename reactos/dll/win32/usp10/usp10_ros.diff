@@ -2,9 +2,9 @@ Index: usp10.c
 ===================================================================
 --- usp10.c     (revision 54504)
 +++ usp10.c     (working copy)
-@@ -1989,3 +3159,9 @@
-     for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
-     return S_OK;
+@@ -3621,3 +3621,9 @@
+ 
+     return SHAPE_GetFontFeatureTags(hdc, (ScriptCache *)*psc, psa, tagScript, tagLangSys, cMaxTags, pFeatureTags, pcTags);
  }
 +
 +BOOL gbLpkPresent = FALSE;
