@@ -188,6 +188,7 @@ FtfdCreateFontInstance(
     /* Check if there is rotation / skewing (cannot use iComplexity!?) */
     if (!FLOATOBJ_bIsNull(&fxform.eM12) || !FLOATOBJ_bIsNull(&fxform.eM21))
     {
+        TRACE("Setting extended xform\n");
         //__debugbreak();
 
         /* Create a transformation matrix that is applied after the character
@@ -386,14 +387,17 @@ FtfdQueryMaxExtents(
         }
 
         /* Copy some values from the font structure */
-        pfddm->fxMaxAscender = (pfont->metrics.fxMaxAscender + 15) & ~0x0f;
-        pfddm->fxMaxDescender = (pfont->metrics.fxMaxDescender + 15) & ~0x0f;
         pfddm->ptlUnderline1 = pfont->metrics.ptlUnderline1;
         pfddm->ptlStrikeout = pfont->metrics.ptlStrikeout;
         pfddm->ptlULThickness = pfont->metrics.ptlULThickness;
         pfddm->ptlSOThickness = pfont->metrics.ptlSOThickness;
         pfddm->cxMax = pfont->sizlMax.cx;
         pfddm->cyMax = pfont->sizlMax.cy;
+
+        /* These values are rounded to pixels to fix inconsistent height
+           of marked text and the rest of the marked row in XP list boxes */
+        pfddm->fxMaxAscender = (pfont->metrics.fxMaxAscender + 15) & ~0x0f;
+        pfddm->fxMaxDescender = (pfont->metrics.fxMaxDescender + 15) & ~0x0f;
 
         /* Convert the base vectors from FLOATOBJ to FLOATL */
         pfddm->pteBase.x = FLOATOBJ_GetFloat(&pfont->ptefBase.x);
@@ -460,7 +464,7 @@ FtfdQueryGlyphData(
     /* D is the glyph advance width. Convert it from 26.6 to 28.4 fixpoint format */
     pgd->fxD = ftglyph->advance.x >> 2; // FIXME: should be projected on the x-axis
 
-    /* Get the bitnmap size */
+    /* Get the bitmap size */
     sizlBitmap.cx = ftglyph->bitmap.width;
     sizlBitmap.cy = ftglyph->bitmap.rows;
 
