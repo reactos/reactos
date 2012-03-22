@@ -1,6 +1,8 @@
 
 #include "DibLib.h"
 
+BYTE ajShift4[2] = {4, 0};
+
 enum
 {
     INDEX_BitBlt_NOOP,

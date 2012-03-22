@@ -9,6 +9,9 @@
 #define _WritePixel(pj, jShift, c) __PASTE(_WritePixel_, _DEST_BPP)(pj, jShift, c)
 #define _NextPixel(bpp, ppj, pjShift) __PASTE(_NextPixel_, bpp)(ppj, pjShift)
 #define _SHIFT(bpp, x) __PASTE(_SHIFT_, bpp)(x)
+#define _CALCSHIFT(bpp, pshift, x) __PASTE(_CALCSHIFT_, bpp)(pshift, x)
+
+#if (__PASTE(_DibFunction, _manual) != 1)
 
 VOID
 FASTCALL
@@ -42,7 +45,7 @@ _DibFunction(PBLTDATA pBltData)
     pjPatBase = pBltData->siPat.pjBase;
     pjPatBase += pBltData->siPat.ptOrig.y * pBltData->siPat.lDelta;
     pjPattern = pjPatBase + pBltData->siPat.ptOrig.x * _DEST_BPP / 8;
-    _SHIFT(_DEST_BPP, jPatShift = pBltData->siPat.jShift0;)
+    _CALCSHIFT(_DEST_BPP, &jPatShift, pBltData->siPat.ptOrig.x);
     cPatLines = pBltData->ulPatHeight - pBltData->siPat.ptOrig.y;
     cPatRows = pBltData->ulPatWidth - pBltData->siPat.ptOrig.x;
 #endif
@@ -57,14 +60,14 @@ _DibFunction(PBLTDATA pBltData)
     {
         /* Set current bit pointers and shifts */
         pjDest = pjDestBase;
-        _SHIFT(_DEST_BPP, jDstShift = pBltData->siDst.jShift0;)
+        _CALCSHIFT(_DEST_BPP, &jDstShift, pBltData->siDst.ptOrig.x);
 #if __USES_SOURCE
         pjSource = pjSrcBase;
-        _SHIFT(_SOURCE_BPP, jSrcShift = pBltData->siSrc.jShift0;)
+        _CALCSHIFT(_SOURCE_BPP, &jSrcShift, pBltData->siSrc.ptOrig.x);
 #endif
 #if __USES_MASK
         pjMask = pjMaskBase;
-        jMskShift = pBltData->siMsk.jShift0;
+        _CALCSHIFT_1(&jMskShift, pBltData->siMsk.ptOrig.x);
 #endif
 
         /* Loop all rows */
@@ -125,6 +128,8 @@ _DibFunction(PBLTDATA pBltData)
 #endif
     }
 }
+
+#endif // manual
 
 #undef _DibFunction
 #undef __FUNCTIONNAME2

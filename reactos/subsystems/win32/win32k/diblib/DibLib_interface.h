@@ -1,17 +1,14 @@
 
 #include "RopFunctions.h"
 
-typedef
-ULONG
-(NTAPI *PFN_XLATE)(XLATEOBJ* pxlo, ULONG ulColor);
-
 typedef struct
 {
     ULONG iFormat;
+    PBYTE pvScan0;
     PBYTE pjBase;
     LONG lDelta;
     POINTL ptOrig;
-    BYTE jShift0;
+    BYTE jBpp;
 } SURFINFO;
 
 typedef struct
@@ -30,6 +27,7 @@ typedef struct
     ULONG rop4;
     PFN_DOROP apfnDoRop[2];
     ULONG ulSolidColor;
+    BYTE jDstBpp;
 } BLTDATA, *PBLTDATA;
 
 typedef
