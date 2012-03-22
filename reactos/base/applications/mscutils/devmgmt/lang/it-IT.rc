@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Dispositivi per connessione", IDC_DEVBYCONN
     MENUITEM "Risorse per tipo",            IDC_RESBYTYPE, GRAYED
     MENUITEM "Risorse per connessione",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Aiuto"
   BEGIN

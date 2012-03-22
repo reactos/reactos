@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Enheter etter tilkobling",   IDC_DEVBYCONN
     MENUITEM "Ressurser etter type",       IDC_RESBYTYPE, GRAYED
     MENUITEM "Ressurser etter tilkobling", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",        IDC_SHOWHIDDEN
   END
   POPUP "Hjelp"
   BEGIN

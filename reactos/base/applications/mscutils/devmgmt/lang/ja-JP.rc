@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "デバイス (接続別)",       IDC_DEVBYCONN
     MENUITEM "リソ ース (種類別)",      IDC_RESBYTYPE, GRAYED
     MENUITEM "リソ ース (接続別)",      IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
   END
   POPUP "ヘルプ"
   BEGIN

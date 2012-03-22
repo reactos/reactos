@@ -27,6 +27,8 @@ BEGIN
     MENUITEM "Ur&ządzenia według połączenia", IDC_DEVBYCONN
     MENUITEM "Zaso&by według typu",           IDC_RESBYTYPE, GRAYED
     MENUITEM "Za&soby według połączenia",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",           IDC_SHOWHIDDEN
   END
   POPUP "Pomo&c"
   BEGIN

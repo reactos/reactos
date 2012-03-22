@@ -28,6 +28,8 @@ BEGIN
     MENUITEM "Пристрої за підключенням", IDC_DEVBYCONN
     MENUITEM "Ресурси за типом",         IDC_RESBYTYPE, GRAYED
     MENUITEM "Ресурси за підключенням",  IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",      IDC_SHOWHIDDEN
   END
   POPUP "Довідка"
   BEGIN

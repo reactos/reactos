@@ -136,11 +136,13 @@ InsertIntoTreeView(HWND hTreeView,
 
 static INT
 EnumDeviceClasses(INT ClassIndex,
+                  BOOL ShowHidden,
                   LPTSTR DevClassName,
                   LPTSTR DevClassDesc,
                   BOOL *DevPresent,
                   INT *ClassImage,
-                  BOOL *IsUnknown)
+                  BOOL *IsUnknown,
+                  BOOL *IsHidden)
 {
     GUID ClassGuid;
     HKEY KeyClass;
@@ -150,6 +152,7 @@ EnumDeviceClasses(INT ClassIndex,
 
     *DevPresent = FALSE;
     *DevClassName = _T('\0');
+    *IsHidden = FALSE;
 
     Ret = CM_Enumerate_Classes(ClassIndex,
                                &ClassGuid,
@@ -172,6 +175,11 @@ EnumDeviceClasses(INT ClassIndex,
 
     /* This case is special because these devices don't show up with normal class enumeration */
     *IsUnknown = IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_UNKNOWN);
+
+    if (ShowHidden == FALSE &&
+        (IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_LEGACYDRIVER) ||
+         IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_VOLUME)))
+        *IsHidden = TRUE;
 
     if (SetupDiClassNameFromGuid(&ClassGuid,
                                  ClassName,
@@ -327,7 +335,8 @@ EnumDevices(INT index,
 
 VOID
 ListDevicesByType(HWND hTreeView,
-                  HTREEITEM hRoot)
+                  HTREEITEM hRoot,
+                  BOOL bShowHidden)
 {
     HTREEITEM hDevItem;
     TCHAR DevName[MAX_DEV_LEN];
@@ -338,17 +347,20 @@ ListDevicesByType(HWND hTreeView,
     INT index = 0;
     INT DevImage;
     BOOL IsUnknown = FALSE;
+    BOOL IsHidden = FALSE;
 
     do
     {
         ClassRet = EnumDeviceClasses(index,
+                                     bShowHidden,
                                      DevName,
                                      DevDesc,
                                      &DevExist,
                                      &DevImage,
-                                     &IsUnknown);
+                                     &IsUnknown,
+                                     &IsHidden);
 
-        if ((ClassRet != -1) && (DevExist))
+        if ((ClassRet != -1) && (DevExist) && !IsHidden)
         {
             TCHAR DeviceName[MAX_DEV_LEN];
             INT DevIndex = 0;
@@ -442,7 +454,8 @@ ListDevicesByType(HWND hTreeView,
 static HTREEITEM
 AddDeviceToTree(HWND hTreeView,
                 HTREEITEM hRoot,
-                DEVINST dnDevInst)
+                DEVINST dnDevInst,
+                BOOL bShowHidden)
 {
     TCHAR DevName[MAX_DEV_LEN];
     TCHAR FriendlyName[MAX_DEV_LEN];
@@ -452,6 +465,28 @@ AddDeviceToTree(HWND hTreeView,
     LPTSTR DeviceID;
     INT ClassImage = 24;
     CONFIGRET cr;
+
+    ulLength = MAX_GUID_STRING_LEN * sizeof(TCHAR);
+    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                          CM_DRP_CLASSGUID,
+                                          NULL,
+                                          ClassGuidString,
+                                          &ulLength,
+                                          0);
+    if (cr == CR_SUCCESS)
+    {
+        pSetupGuidFromString(ClassGuidString, &ClassGuid);
+
+        if (bShowHidden == FALSE &&
+            (IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_LEGACYDRIVER) ||
+             IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_VOLUME)))
+            return NULL;
+    }
+    else
+    {
+        /* It's a device with no driver */
+        ClassGuid = GUID_DEVCLASS_UNKNOWN;
+    }
 
     cr = CM_Get_Device_ID(dnDevInst,
                           DevName,
@@ -478,23 +513,6 @@ AddDeviceToTree(HWND hTreeView,
                                               0);
         if (cr != CR_SUCCESS)
             return NULL;
-    }
-
-    ulLength = MAX_GUID_STRING_LEN * sizeof(TCHAR);
-    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
-                                          CM_DRP_CLASSGUID,
-                                          NULL,
-                                          ClassGuidString,
-                                          &ulLength,
-                                          0);
-    if (cr == CR_SUCCESS)
-    {
-        pSetupGuidFromString(ClassGuidString, &ClassGuid);
-    }
-    else
-    {
-        /* It's a device with no driver */
-        ClassGuid = GUID_DEVCLASS_UNKNOWN;
     }
 
     if (!SetupDiGetClassImageIndex(&ImageListData,
@@ -532,7 +550,8 @@ AddDeviceToTree(HWND hTreeView,
 static VOID
 EnumChildDevices(HWND hTreeView,
                  HTREEITEM hRoot,
-                 DEVINST dnParentDevInst)
+                 DEVINST dnParentDevInst,
+                 BOOL bShowHidden)
 {
     HTREEITEM hDevItem;
     DEVINST dnDevInst;
@@ -546,13 +565,15 @@ EnumChildDevices(HWND hTreeView,
 
     hDevItem = AddDeviceToTree(hTreeView,
                                hRoot,
-                               dnDevInst);
-    if (hDevItem == NULL)
-        return;
-
-    EnumChildDevices(hTreeView,
-                     hDevItem,
-                     dnDevInst);
+                               dnDevInst,
+                               bShowHidden);
+    if (hDevItem != NULL)
+    {
+        EnumChildDevices(hTreeView,
+                         hDevItem,
+                         dnDevInst,
+                         bShowHidden);
+    }
 
     while (cr == CR_SUCCESS)
     {
@@ -564,13 +585,15 @@ EnumChildDevices(HWND hTreeView,
 
         hDevItem = AddDeviceToTree(hTreeView,
                                    hRoot,
-                                   dnDevInst);
-        if (hDevItem == NULL)
-            break;
-
-        EnumChildDevices(hTreeView,
-                         hDevItem,
-                         dnDevInst);
+                                   dnDevInst,
+                                   bShowHidden);
+        if (hDevItem != NULL)
+        {
+            EnumChildDevices(hTreeView,
+                             hDevItem,
+                             dnDevInst,
+                             bShowHidden);
+        }
     }
 
     (void)TreeView_SortChildren(hTreeView,
@@ -581,7 +604,8 @@ EnumChildDevices(HWND hTreeView,
 
 VOID
 ListDevicesByConnection(HWND hTreeView,
-                        HTREEITEM hRoot)
+                        HTREEITEM hRoot,
+                        BOOL bShowHidden)
 {
     DEVINST devInst;
     CONFIGRET cr;
@@ -592,7 +616,8 @@ ListDevicesByConnection(HWND hTreeView,
     if (cr == CR_SUCCESS)
         EnumChildDevices(hTreeView,
                          hRoot,
-                         devInst);
+                         devInst,
+                         bShowHidden);
 
     (void)TreeView_Expand(hTreeView,
                           hRoot,

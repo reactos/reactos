@@ -27,6 +27,8 @@ BEGIN
     MENUITEM "Enheter efter koppling",  IDC_DEVBYCONN
     MENUITEM "Resurcer efter typ",      IDC_RESBYTYPE, GRAYED
     MENUITEM "Resurcer efter koppling", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Hjälp"
   BEGIN

@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Устройствата според свързването",   IDC_DEVBYCONN
     MENUITEM "Средствата според вида",       IDC_RESBYTYPE, GRAYED
     MENUITEM "Средствата според свързването", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Помощ"
   BEGIN

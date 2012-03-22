@@ -217,11 +217,11 @@ DeviceEnumThread(LPVOID lpParameter)
         switch (Info->Display)
         {
             case DevicesByType:
-                ListDevicesByType(Info->hTreeView, hRoot);
+                ListDevicesByType(Info->hTreeView, hRoot, Info->bShowHidden);
                 break;
 
             case DevicesByConnection:
-                ListDevicesByConnection(Info->hTreeView, hRoot);
+                ListDevicesByConnection(Info->hTreeView, hRoot, Info->bShowHidden);
                 break;
 
             default:
@@ -238,6 +238,9 @@ static VOID
 UpdateViewMenu(PMAIN_WND_INFO Info)
 {
     UINT id = IDC_DEVBYTYPE;
+    HMENU hMenu;
+
+    hMenu = GetMenu(Info->hMainWnd);
 
     switch (Info->Display)
     {
@@ -255,11 +258,15 @@ UpdateViewMenu(PMAIN_WND_INFO Info)
             break;
     }
 
-    CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+    CheckMenuRadioItem(hMenu,
                        IDC_DEVBYTYPE,
                        IDC_RESBYCONN,
                        id,
                        MF_BYCOMMAND);
+
+    CheckMenuItem(hMenu,
+                  IDC_SHOWHIDDEN,
+                  MF_BYCOMMAND | (Info->bShowHidden) ? MF_CHECKED : MF_UNCHECKED);
 }
 
 
@@ -598,6 +605,14 @@ MainWndCommand(PMAIN_WND_INFO Info,
             OnRefresh(Info);
         }
         break;
+
+        case IDC_SHOWHIDDEN:
+        {
+            Info->bShowHidden = !Info->bShowHidden;
+            UpdateViewMenu(Info);
+            OnRefresh(Info);
+        }
+        break;
     }
 }
 
@@ -794,6 +809,7 @@ CreateMainWindow(LPCTSTR lpCaption,
     {
         Info->nCmdShow = nCmdShow;
         Info->Display = DevicesByType;
+        Info->bShowHidden = TRUE;
 
         hMainWnd = CreateWindowEx(WS_EX_WINDOWEDGE,
                                   szMainWndClass,

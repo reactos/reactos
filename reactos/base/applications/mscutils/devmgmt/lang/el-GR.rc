@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Συσκευές ανά σύνδεση", IDC_DEVBYCONN
     MENUITEM "Πηγές ανά τύπο",       IDC_RESBYTYPE, GRAYED
     MENUITEM "Πηγές ανά σύνδεση",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",  IDC_SHOWHIDDEN
   END
   POPUP "Βοήθεια"
   BEGIN

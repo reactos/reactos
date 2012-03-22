@@ -40,6 +40,7 @@ typedef struct _MAIN_WND_INFO
     int   nCmdShow;
 
     DISPLAY_TYPE Display;
+    BOOL bShowHidden;
 
     /* status flags */
     UINT InMenuLoop : 1;
@@ -71,8 +72,8 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 VOID FreeDeviceStrings(HWND hTreeView);
 VOID OpenPropSheet(HWND hTreeView, HTREEITEM hItem);
 HTREEITEM InitTreeView(HWND hTreeView);
-VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot);
-VOID ListDevicesByConnection(HWND hTreeView, HTREEITEM hRoot);
+VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot, BOOL bShowHidden);
+VOID ListDevicesByConnection(HWND hTreeView, HTREEITEM hRoot, BOOL bShowHidden);
 
 
 /* misc.c */

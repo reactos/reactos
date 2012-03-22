@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Device dengan koneksi",   IDC_DEVBYCONN
     MENUITEM "Resource dengan tipe",    IDC_RESBYTYPE, GRAYED
     MENUITEM "Resource dengan koneksi", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Bantuan"
   BEGIN

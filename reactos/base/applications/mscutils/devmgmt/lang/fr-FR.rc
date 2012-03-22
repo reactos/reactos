@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Périphériques par connexion", IDC_DEVBYCONN
     MENUITEM "Ressources par type",         IDC_RESBYTYPE, GRAYED
     MENUITEM "Ressources par connexion",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Aide"
   BEGIN

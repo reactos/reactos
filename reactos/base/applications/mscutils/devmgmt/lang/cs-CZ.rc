@@ -20,6 +20,8 @@ BEGIN
     MENUITEM "Zařízení podle připojení",   IDC_DEVBYCONN
     MENUITEM "Prostředky podle typu",      IDC_RESBYTYPE, GRAYED
     MENUITEM "Prostředky podle připojení", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",        IDC_SHOWHIDDEN
   END
   POPUP "Nápověda"
   BEGIN

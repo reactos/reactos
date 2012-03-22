@@ -25,6 +25,8 @@ BEGIN
     MENUITEM "Zariadenia podľa pripojenia",  IDC_DEVBYCONN
     MENUITEM "Prostriedky podľa typu",       IDC_RESBYTYPE, GRAYED
     MENUITEM "Prostriedky podľa pripojenia", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",          IDC_SHOWHIDDEN
   END
   POPUP "Pomocník"
   BEGIN
