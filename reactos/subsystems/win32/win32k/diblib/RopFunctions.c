@@ -1283,7 +1283,7 @@ ULONG FASTCALL DoRop_1(ULONG D, ULONG S, ULONG P)
     return ROP_1(D,S,P);
 }
 
-PFN_DOROP
+const PFN_DOROP
 gapfnRop[256] =
 {
    DoRop_0, // BLACKNESS

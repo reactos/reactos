@@ -20,9 +20,9 @@
 
 typedef
 ULONG
-(NTAPI *PFN_XLATE)(XLATEOBJ* pxlo, ULONG ulColor);
+(FASTCALL *PFN_XLATE)(XLATEOBJ* pxlo, ULONG ulColor);
 
-extern BYTE ajShift4[2];
+extern const BYTE ajShift4[2];
 
 #include "DibLib_interface.h"
 
@@ -63,15 +63,15 @@ extern BYTE ajShift4[2];
 
 #define _ReadPixel_16(pjSource, x)  (*(USHORT*)(pjSource))
 #define _WritePixel_16(pjDest, x, ulColor) (void)(*(USHORT*)(pjDest) = (USHORT)(ulColor))
-#define _NextPixel_16(ppj, pjShift) (void)(*(ppj) -= 2)
-#define _NextPixelR2L_16(ppj, pjShift) (void)(*(ppj) += 2)
+#define _NextPixel_16(ppj, pjShift) (void)(*(ppj) += 2)
+#define _NextPixelR2L_16(ppj, pjShift) (void)(*(ppj) -= 2)
 #define _SHIFT_16(x)
 #define _CALCSHIFT_16(pShift, x)
 
 #define _ReadPixel_24(pjSource, x)  ((pjSource)[0] | ((pjSource)[1] << 8) | ((pjSource)[2] << 16))
 #define _WritePixel_24(pjDest, x, ulColor) (void)(((pjDest)[0] = ((ulColor)&0xFF)),((pjDest)[1] = (((ulColor)>>8)&0xFF)),((pjDest)[2] = (((ulColor)>>16)&0xFF)))
-#define _NextPixel_24(ppj, pjShift) (void)(*(ppj) -= 3)
-#define _NextPixelR2L_24(ppj, pjShift) (void)(*(ppj) += 3)
+#define _NextPixel_24(ppj, pjShift) (void)(*(ppj) += 3)
+#define _NextPixelR2L_24(ppj, pjShift) (void)(*(ppj) -= 3)
 #define _SHIFT_24(x)
 #define _CALCSHIFT_24(pShift, x)
 

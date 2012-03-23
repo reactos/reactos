@@ -1,7 +1,29 @@
 
 #include "DibLib.h"
 
-BYTE ajShift4[2] = {4, 0};
+/*
+ *  M D S P    Generic function
+ * -----------------------
+ *  0 0 0 0    -> BLACKNESS, WHITENESS
+ *  0 0 0 1    -> PATCOPY, NOTPATCOPY
+ *  0 0 1 0    -> SRCCOPY, NOTSRCCOPY
+ *  0 0 1 1    SrcPatBlt
+ *  0 1 0 0    -> NOOP, DESTINVERT
+ *  0 1 0 1    PatPaint
+ *  0 1 1 0    SrcPaint
+ *  0 1 1 1    BitBlt
+ *  1 0 0 0    MaskCopy, -> SRCCOPY / SRCINVERT using Mask als source
+ *  1 0 0 1    MaskPatBlt
+ *  1 0 1 0    MaskSrcBlt
+ *  1 0 1 1    MaskSrcPatBlt
+ *  1 1 0 0    MaskPaint
+ *  1 1 0 1    MaskPatPaint
+ *  1 1 1 0    MaskSrcPaint
+ *  1 1 1 1    MaskBlt
+ */
+
+
+const BYTE ajShift4[2] = {4, 0};
 
 enum
 {
@@ -28,9 +50,8 @@ enum
     INDEX_BitBlt,
 };
 
-
-PFN_DIBFUNCTION
-apfnDibFunction[] =
+const PFN_DIBFUNCTION
+gapfnDibFunction[] =
 {
     Dib_BitBlt_NOOP,
     Dib_BitBlt_DSTINVERT,
@@ -55,8 +76,8 @@ apfnDibFunction[] =
     Dib_BitBlt,
 };
 
-UCHAR
-aiIndexPerRop[256] =
+const UCHAR
+gajIndexPerRop[256] =
 {
     INDEX_BitBlt_BLACKNESS, // BLACKNESS
     INDEX_BitBlt, // DPSoon,
@@ -316,3 +337,15 @@ aiIndexPerRop[256] =
     INDEX_BitBlt_WHITENESS //WHITENESS
 };
 
+const PFN_DIBFUNCTION
+gapfnMaskFunction[8] =
+{
+    Dib_MaskCopy,
+    Dib_MaskPatBlt,
+    Dib_MaskSrcBlt,
+    Dib_MaskSrcPatBlt,
+    Dib_MaskPaint,
+    Dib_MaskPatPaint,
+    Dib_MaskSrcPaint,
+    Dib_MaskBlt
+};

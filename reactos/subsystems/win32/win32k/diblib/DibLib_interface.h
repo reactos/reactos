@@ -58,7 +58,17 @@ VOID FASTCALL Dib_PatPaint(PBLTDATA pBltData);
 VOID FASTCALL Dib_SrcPaint(PBLTDATA pBltData);
 VOID FASTCALL Dib_BitBlt(PBLTDATA pBltData);
 
+VOID FASTCALL Dib_MaskCopy(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskPatBlt(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskSrcBlt(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskSrcPatBlt(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskPaint(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskPatPaint(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskSrcPaint(PBLTDATA pBltData);
+VOID FASTCALL Dib_MaskBlt(PBLTDATA pBltData);
 
-extern PFN_DIBFUNCTION apfnDibFunction[];
-extern UCHAR aiIndexPerRop[256];
+extern const UCHAR gajIndexPerRop[256];
+extern const PFN_DIBFUNCTION gapfnDibFunction[];
+extern const PFN_DIBFUNCTION gapfnMaskFunction[8];
+
 

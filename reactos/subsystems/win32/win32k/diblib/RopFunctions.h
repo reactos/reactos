@@ -4,7 +4,7 @@ ULONG
 (__fastcall
 *PFN_DOROP)(ULONG D, ULONG S, ULONG P);
 
-PFN_DOROP gapfnRop[256];
+extern const PFN_DOROP gapfnRop[256];
 
 #define ROP_0(D,S,P) 0 /* BLACKNESS */
 #define ROP_DPSoon(D,S,P) (~((D)|((P)|(S))))
