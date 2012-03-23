@@ -14,13 +14,15 @@
 
 /** Globals *******************************************************************/
 
-ULONG giUniqueXlate = 0;
+EXLATEOBJ gexloTrivial = {{0, XO_TRIVIAL, 0, 0, 0, 0}, EXLATEOBJ_iXlateTrivial};
 
-const BYTE gajXlate5to8[32] =
+static ULONG giUniqueXlate = 0;
+
+static const BYTE gajXlate5to8[32] =
 {  0,  8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99,107,115,123,
  132,140,148,156,165,173,181,189,197,206,214,222,231,239,247,255};
 
-const BYTE gajXlate6to8[64] =
+static const BYTE gajXlate6to8[64] =
 { 0,  4,  8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 52, 57, 61,
  65, 69, 73, 77, 81, 85, 89, 93, 97,101,105,109,113,117,121,125,
 130,134,138,142,146,150,154,158,162,166,170,174,178,182,186,190,

@@ -1,9 +1,5 @@
 #pragma once
 
-#ifdef _M_IX86
-#define memset4(dest, value, count) asm volatile("rep stosl" : : "D"(dest), "a"(value), "c"(count) : "memory");
-#endif
-
 #define ROP4_BLACKNESS    ((((0x00000042) >> 8) & 0xff00) | (((0x00000042) >> 16) & 0x00ff))
 #define ROP4_NOTSRCERASE  ((((0x001100A6) >> 8) & 0xff00) | (((0x001100A6) >> 16) & 0x00ff))
 #define ROP4_NOTSRCCOPY   ((((0x00330008) >> 8) & 0xff00) | (((0x00330008) >> 16) & 0x00ff))

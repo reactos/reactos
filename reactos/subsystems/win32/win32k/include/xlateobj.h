@@ -38,6 +38,19 @@ typedef struct _EXLATEOBJ
     };
 } EXLATEOBJ, *PEXLATEOBJ;
 
+PFN_XLATE
+FORCEINLINE
+XLATEOBJ_pfnXlate(XLATEOBJ *pxlo)
+{
+    return ((PEXLATEOBJ)pxlo)->pfnXlate;
+}
+
+extern EXLATEOBJ gexloTrivial;
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateTrivial(PEXLATEOBJ pexlo, ULONG iColor);
+
 void
 DbgCmpXlate(XLATEOBJ *pxlo1, XLATEOBJ *pxlo2);
 

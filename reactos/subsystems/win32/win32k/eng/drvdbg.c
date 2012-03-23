@@ -307,6 +307,8 @@ DbgDrvBitBlt(
     ASSERT(prclTrg->right <= psoTrg->sizlBitmap.cx);
     ASSERT(prclTrg->bottom <= psoTrg->sizlBitmap.cy);
     ASSERT(RECTL_bIsWellOrdered(prclTrg));
+    ASSERT(pco);
+    ASSERT(pco->iDComplexity != DC_RECT);
 
     if (ROP4_USES_SOURCE(rop4))
     {

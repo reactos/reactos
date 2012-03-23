@@ -98,7 +98,6 @@ EngBitBlt(
     RECT_ENUM rcenum;
     PSIZEL psizlPat;
 
-__debugbreak();
 
     ASSERT(psoTrg);
     ASSERT(psoTrg->iBitmapFormat >= BMF_1BPP);
@@ -112,6 +111,7 @@ __debugbreak();
     rcTrg = *prclTrg;
 
     bltdata.rop4 = rop4;
+    if (!pxlo) pxlo = &gexloTrivial.xlo;
     bltdata.pxlo = pxlo;
     bltdata.pfnXlate = XLATEOBJ_pfnXlate(pxlo);
 
@@ -170,7 +170,7 @@ __debugbreak();
         bltdata.siDst.iFormat = psoTrg->iBitmapFormat;
     }
 
-    /* Check of the ROP uses a pattern / brush */
+    /* Check if the ROP uses a pattern / brush */
     if (ROP4_USES_PATTERN(rop4))
     {
         /* Must have a brush */
@@ -213,6 +213,8 @@ __debugbreak();
         ASSERT(psoMask);
         ASSERT(pptlMask);
 
+        __debugbreak();
+
         bltdata.siMsk.iFormat = psoMask->iBitmapFormat;
         bltdata.siMsk.pvScan0 = psoMask->pvScan0;
         bltdata.siMsk.lDelta = psoMask->lDelta;
@@ -220,17 +222,21 @@ __debugbreak();
         bltdata.apfnDoRop[0] = gapfnRop[ROP4_BKGND(rop4)];
         bltdata.apfnDoRop[1] = gapfnRop[ROP4_FGND(rop4)];
 
-        ASSERT(FALSE);
-        // get masking function!
-        pfnBitBlt = 0;
+        /* Calculate the masking function index */
+        iFunctionIndex = ROP4_USES_PATTERN(rop4) ? 1 : 0;
+        iFunctionIndex |= ROP4_USES_SOURCE(rop4) ? 2 : 0;
+        iFunctionIndex |= ROP4_USES_DEST(rop4) ? 4 : 0;
+
+        /* Get the masking function */
+        pfnBitBlt = gapfnMaskFunction[iFunctionIndex];
     }
     else
     {
         /* Get the function index from the foreground ROP index*/
-        iFunctionIndex = aiIndexPerRop[ROP4_FGND(rop4)];
+        iFunctionIndex = gajIndexPerRop[ROP4_FGND(rop4)];
 
         /* Get the dib function */
-        pfnBitBlt = apfnDibFunction[iFunctionIndex];
+        pfnBitBlt = gapfnDibFunction[iFunctionIndex];
     }
 
     /* If no clip object is given, use trivial one */
@@ -557,20 +563,4 @@ NtGdiEngBitBlt(
     return bResult;
 }
 
-BOOL
-NTAPI
-IntEngMaskBlt(
-    SURFOBJ *psoDest,
-    SURFOBJ *psoMask,
-    CLIPOBJ *pco,
-    XLATEOBJ *pxloDest,
-    XLATEOBJ *pxloSource,
-    RECTL *DestRect,
-    POINTL *pptlMask,
-    BRUSHOBJ *pbo,
-    POINTL *pptlBrushOrigin)
-{
-    ASSERT(FALSE);
-    return 0;
-}
 
