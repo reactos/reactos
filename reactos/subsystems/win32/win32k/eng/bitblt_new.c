@@ -27,8 +27,13 @@ CalculateCoordinates(
     pbltdata->ulWidth = prclClipped->right - prclClipped->left;
     pbltdata->ulHeight = prclClipped->bottom - prclClipped->top;
 
-    /* Calculate the offset to the origin coordinates */
-    cx = (prclClipped->left - prclOrg->left);
+    /* Calculate the x offset to the origin coordinates */
+    if (pbltdata->siDst.iFormat == 0)
+        cx = (prclClipped->right - 1 - prclOrg->left);
+    else
+        cx = (prclClipped->left - prclOrg->left);
+
+    /* Calculate the y offset to the origin coordinates */
     if (pbltdata->dy < 0)
         cy = (prclClipped->bottom - 1 - prclOrg->top);
     else
@@ -43,14 +48,11 @@ CalculateCoordinates(
     pbltdata->siDst.pjBase += pbltdata->siDst.ptOrig.y * pbltdata->siDst.lDelta;
     pbltdata->siDst.pjBase += pbltdata->siDst.ptOrig.x * pbltdata->siDst.jBpp / 8;
 
-
     if (pptlSrc)
     {
-        /* Calculate current origin for the source */
+        /* Calculate start point and bitpointer for source */
         pbltdata->siSrc.ptOrig.x = pptlSrc->x + cx;
         pbltdata->siSrc.ptOrig.y = pptlSrc->y + cy;
-
-        /* Calculate start position for source */
         pbltdata->siSrc.pjBase = pbltdata->siSrc.pvScan0;
         pbltdata->siSrc.pjBase += pbltdata->siSrc.ptOrig.y * pbltdata->siSrc.lDelta;
         pbltdata->siSrc.pjBase += pbltdata->siSrc.ptOrig.x * pbltdata->siSrc.jBpp / 8;
@@ -58,10 +60,9 @@ CalculateCoordinates(
 
     if (pptlMask)
     {
+        /* Calculate start point and bitpointer for mask */
         pbltdata->siMsk.ptOrig.x = pptlMask->x + cx;
         pbltdata->siMsk.ptOrig.y = pptlMask->y + cy;
-
-        /* Calculate start position for mask */
         pbltdata->siMsk.pjBase = pbltdata->siMsk.pvScan0;
         pbltdata->siMsk.pjBase += pbltdata->siMsk.ptOrig.y * pbltdata->siMsk.lDelta;
         pbltdata->siMsk.pjBase += pbltdata->siMsk.ptOrig.x * pbltdata->siMsk.jBpp / 8;
@@ -69,10 +70,9 @@ CalculateCoordinates(
 
     if (pptlPat)
     {
+        /* Calculate start point and bitpointer for pattern */
         pbltdata->siPat.ptOrig.x = (pptlPat->x + cx) % psizlPat->cx;
         pbltdata->siPat.ptOrig.y = (pptlPat->x + cy) % psizlPat->cy;
-
-        /* Calculate start position for pattern */
         pbltdata->siPat.pjBase = pbltdata->siPat.pvScan0;
         pbltdata->siPat.pjBase += pbltdata->siPat.ptOrig.y * pbltdata->siPat.lDelta;
         pbltdata->siPat.pjBase += pbltdata->siPat.ptOrig.x * pbltdata->siPat.jBpp / 8;
@@ -158,7 +158,7 @@ EngBitBlt(
                 /* Use 0 as target format to get special right to left versions */
                 bltdata.siDst.iFormat = 0;
                 bltdata.siSrc.iFormat = psoSrc->iBitmapFormat;
-                __debugbreak();
+                //__debugbreak();
             }
             else
             {
@@ -241,8 +241,9 @@ EngBitBlt(
         ASSERT(psoMask);
         ASSERT(pptlMask);
 
-        __debugbreak();
+        //__debugbreak();
 
+        /* Set the mask format info */
         bltdata.siMsk.iFormat = psoMask->iBitmapFormat;
         bltdata.siMsk.pvScan0 = psoMask->pvScan0;
         bltdata.siMsk.lDelta = psoMask->lDelta;
@@ -342,7 +343,7 @@ AdjustOffsetAndSize(
     if (x < 0) pptOffset->x -= x, x = 0;
 
     cxMax = psizSrc->cx - x;
-    if (psizTrg->cx > cxMax) psizTrg->cx= cxMax;
+    if (psizTrg->cx > cxMax) psizTrg->cx = cxMax;
 
     y = pptlSrc->y + pptOffset->y;
     if (y < 0) pptOffset->y -= y, y = 0;
@@ -380,7 +381,6 @@ IntEngBitBlt(
     ASSERT(psoTrg->iBitmapFormat >= BMF_1BPP);
     ASSERT(psoTrg->iBitmapFormat <= BMF_32BPP);
     ASSERT(prclTrg);
-    ASSERT(RECTL_bIsWellOrdered(prclTrg));
 
     /* Clip the target rect to the extents of the target surface */
     rcClipped.left = max(prclTrg->left, 0);
@@ -395,11 +395,15 @@ IntEngBitBlt(
     if (pco->iDComplexity != DC_TRIVIAL)
     {
         /* Clip the target rect to the bounds of the clipping region */
-        RECTL_bIntersectRect(&rcClipped, &rcClipped, &pco->rclBounds);
+        if (!RECTL_bIntersectRect(&rcClipped, &rcClipped, &pco->rclBounds))
+        {
+            /* Nothing left */
+            return TRUE;
+        }
     }
 
     /* Don't pass a clip object with a single rectangle */
-//    if (pco->iDComplexity == DC_RECT) pco = (CLIPOBJ*)&gxcoTrivial;
+    if (pco->iDComplexity == DC_RECT) pco = (CLIPOBJ*)&gxcoTrivial;
 
     /* Calculate initial offset and size */
     ptOffset.x = rcClipped.left - prclTrg->left;
@@ -446,6 +450,10 @@ IntEngBitBlt(
         ptMask.x = 0;
         ptMask.y = 0;
     }
+
+    /* Check if all has been clipped away */
+    if ((sizTrg.cx <= 0) || (sizTrg.cy <= 0))
+        return TRUE;
 
     /* Adjust the points */
     ptSrc.x += ptOffset.x;
@@ -627,4 +635,17 @@ EngCopyBits(
 
     /* Forward to the driver */
     return pfnCopyBits(psoTrg, psoSrc, pco, pxlo, prclTrg, pptlSrc);
+}
+
+BOOL
+APIENTRY
+IntEngCopyBits(
+    SURFOBJ *psoTrg,
+    SURFOBJ *psoSrc,
+    CLIPOBJ *pco,
+    XLATEOBJ *pxlo,
+    RECTL *prclTrg,
+    POINTL *pptlSrc)
+{
+    return EngCopyBits(psoTrg, psoSrc, pco, pxlo, prclTrg, pptlSrc);
 }
