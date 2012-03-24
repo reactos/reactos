@@ -23,22 +23,26 @@ CalculateCoordinates(
 {
     ULONG cx, cy;
 
-    /* Copy the target start point */
-    pbltdata->siDst.ptOrig.x = prclClipped->left;
-    pbltdata->siDst.ptOrig.y = prclClipped->top;
-
     /* Calculate width and height of this rect */
     pbltdata->ulWidth = prclClipped->right - prclClipped->left;
     pbltdata->ulHeight = prclClipped->bottom - prclClipped->top;
+
+    /* Calculate the offset to the origin coordinates */
+    cx = (prclClipped->left - prclOrg->left);
+    if (pbltdata->dy < 0)
+        cy = (prclClipped->bottom - 1 - prclOrg->top);
+    else
+        cy = (prclClipped->top - prclOrg->top);
+
+    /* Calculate the target start point */
+    pbltdata->siDst.ptOrig.x = prclOrg->left + cx;
+    pbltdata->siDst.ptOrig.y = prclOrg->top + cy;
 
     /* Calculate start position for target */
     pbltdata->siDst.pjBase = pbltdata->siDst.pvScan0;
     pbltdata->siDst.pjBase += pbltdata->siDst.ptOrig.y * pbltdata->siDst.lDelta;
     pbltdata->siDst.pjBase += pbltdata->siDst.ptOrig.x * pbltdata->siDst.jBpp / 8;
 
-    /* Calculate the offset from the original coordinates */
-    cx = (prclClipped->left - prclOrg->left);
-    cy = (prclClipped->top - prclOrg->top);
 
     if (pptlSrc)
     {
@@ -97,8 +101,12 @@ EngBitBlt(
     BOOL bEnumMore;
     RECT_ENUM rcenum;
     PSIZEL psizlPat;
+    SURFOBJ *psoPattern;
 
+//static int count = 0;
+//if (++count >= 1230) __debugbreak();
 
+    /* Sanity checks */
     ASSERT(psoTrg);
     ASSERT(psoTrg->iBitmapFormat >= BMF_1BPP);
     ASSERT(psoTrg->iBitmapFormat <= BMF_32BPP);
@@ -110,14 +118,13 @@ EngBitBlt(
 
     rcTrg = *prclTrg;
 
+    bltdata.dy = 1;
     bltdata.rop4 = rop4;
+    bltdata.apfnDoRop[0] = gapfnRop[ROP4_BKGND(rop4)];
+    bltdata.apfnDoRop[1] = gapfnRop[ROP4_FGND(rop4)];
     if (!pxlo) pxlo = &gexloTrivial.xlo;
     bltdata.pxlo = pxlo;
     bltdata.pfnXlate = XLATEOBJ_pfnXlate(pxlo);
-
-    bltdata.siDst.pvScan0 = psoTrg->pvScan0;
-    bltdata.siDst.lDelta = psoTrg->lDelta;
-    bltdata.siDst.jBpp = gajBitsPerFormat[psoTrg->iBitmapFormat];
 
     /* Check if the ROP uses a source */
     if (ROP4_USES_SOURCE(rop4))
@@ -132,18 +139,18 @@ EngBitBlt(
         ASSERT(pptlSrc->x <= psoSrc->sizlBitmap.cx);
         ASSERT(pptlSrc->y <= psoSrc->sizlBitmap.cy);
 
-        bltdata.siSrc.pvScan0 = psoSrc->pvScan0;
-        bltdata.siSrc.lDelta = psoSrc->lDelta;
-        bltdata.siSrc.jBpp = gajBitsPerFormat[psoSrc->iBitmapFormat];
-
         /* Check if source and target are equal */
         if (psoSrc == psoTrg)
         {
             /* Analyze the copying direction */
-            if (rcTrg.top < pptlSrc->y)
-                iDirection = rcTrg.left < pptlSrc->x ? CD_RIGHTDOWN : CD_LEFTDOWN;
-            else
+            if (rcTrg.top > pptlSrc->y)
+            {
+                /* Need to copy from bottom to top */
                 iDirection = rcTrg.left < pptlSrc->x ? CD_RIGHTUP : CD_LEFTUP;
+                bltdata.dy = -1;
+            }
+            else
+                iDirection = rcTrg.left < pptlSrc->x ? CD_RIGHTDOWN : CD_LEFTDOWN;
 
             /* Check for special right to left case */
             if ((rcTrg.top == pptlSrc->y) && (rcTrg.left > pptlSrc->x))
@@ -151,6 +158,7 @@ EngBitBlt(
                 /* Use 0 as target format to get special right to left versions */
                 bltdata.siDst.iFormat = 0;
                 bltdata.siSrc.iFormat = psoSrc->iBitmapFormat;
+                __debugbreak();
             }
             else
             {
@@ -164,11 +172,23 @@ EngBitBlt(
             bltdata.siDst.iFormat = psoTrg->iBitmapFormat;
             bltdata.siSrc.iFormat = psoSrc->iBitmapFormat;
         }
+
+        /* Set the source format info */
+        bltdata.siSrc.pvScan0 = psoSrc->pvScan0;
+        bltdata.siSrc.lDelta = psoSrc->lDelta;
+        bltdata.siSrc.cjAdvanceY = bltdata.dy * psoSrc->lDelta;
+        bltdata.siSrc.jBpp = gajBitsPerFormat[psoSrc->iBitmapFormat];
     }
     else
     {
         bltdata.siDst.iFormat = psoTrg->iBitmapFormat;
     }
+
+    /* Set the destination format info */
+    bltdata.siDst.pvScan0 = psoTrg->pvScan0;
+    bltdata.siDst.lDelta = psoTrg->lDelta;
+    bltdata.siDst.cjAdvanceY = bltdata.dy * psoTrg->lDelta;
+    bltdata.siDst.jBpp = gajBitsPerFormat[psoTrg->iBitmapFormat];
 
     /* Check if the ROP uses a pattern / brush */
     if (ROP4_USES_PATTERN(rop4))
@@ -182,17 +202,25 @@ EngBitBlt(
         /* Check if this is a pattern brush */
         if (pbo->iSolidColor == 0xFFFFFFFF)
         {
-            __debugbreak();
+            /* Get the realized pattern bitmap */
+            psoPattern = BRUSHOBJ_psoPattern(pbo);
+            if (!psoPattern)
+            {
+                __debugbreak();
+                return FALSE;
+            }
 
-            // FIXME
-            bltdata.siPat.iFormat = 0;//psoPat->iBitmapFormat;
-            bltdata.siPat.pvScan0 = 0;//psoPat->pvScan0;
-            bltdata.siPat.lDelta = 0;//psoPat->lDelta;
+            /* Set the pattern format info */
+            bltdata.siPat.iFormat = psoPattern->iBitmapFormat;
+            bltdata.siPat.pvScan0 = psoPattern->pvScan0;
+            bltdata.siPat.lDelta = psoPattern->lDelta;
+            bltdata.siPat.cjAdvanceY = bltdata.dy * psoPattern->lDelta;
+            bltdata.siPat.jBpp = gajBitsPerFormat[psoPattern->iBitmapFormat];
 
-            bltdata.ulPatWidth = 0;
-            bltdata.ulPatHeight = 0;
+            bltdata.ulPatWidth = psoPattern->sizlBitmap.cx;
+            bltdata.ulPatHeight = psoPattern->sizlBitmap.cy;
 
-            psizlPat = 0;// fixme
+            psizlPat = &psoPattern->sizlBitmap;
         }
         else
         {
@@ -218,9 +246,8 @@ EngBitBlt(
         bltdata.siMsk.iFormat = psoMask->iBitmapFormat;
         bltdata.siMsk.pvScan0 = psoMask->pvScan0;
         bltdata.siMsk.lDelta = psoMask->lDelta;
-
-        bltdata.apfnDoRop[0] = gapfnRop[ROP4_BKGND(rop4)];
-        bltdata.apfnDoRop[1] = gapfnRop[ROP4_FGND(rop4)];
+        bltdata.siMsk.cjAdvanceY = bltdata.dy * psoMask->lDelta;
+        bltdata.siMsk.jBpp = 1;
 
         /* Calculate the masking function index */
         iFunctionIndex = ROP4_USES_PATTERN(rop4) ? 1 : 0;
@@ -247,56 +274,54 @@ EngBitBlt(
     {
         /* Start the enumeration of the clip object */
         CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, iDirection, 0);
-        do
-        {
-            /* Enumerate a set of rectangles */
-            bEnumMore = CLIPOBJ_bEnum(pco, sizeof(rcenum), (ULONG*)&rcenum);
-
-            /* Loop all rectangles we got */
-            for (i = 0; i < rcenum.c; i++)
-            {
-                /* Intersect this rect with the target rect */
-                if (!RECTL_bIntersectRect(&rcenum.arcl[i], &rcenum.arcl[i], &rcTrg))
-                {
-                    /* This rect is outside the bounds, continue */
-                    continue;
-                }
-
-                /* Calculate the coordinates */
-                CalculateCoordinates(&bltdata,
-                                     &rcenum.arcl[i],
-                                     prclTrg,
-                                     pptlSrc,
-                                     pptlMask,
-                                     pptlBrush,
-                                     psizlPat);
-
-                /* Call the dib function */
-                pfnBitBlt(&bltdata);
-            }
-        }
-        while (bEnumMore);
+        bEnumMore = CLIPOBJ_bEnum(pco, sizeof(rcenum), (ULONG*)&rcenum);
+    }
+    else if (pco->iDComplexity == DC_RECT)
+    {
+        /* Use the clip bounds */
+        rcenum.arcl[0] = pco->rclBounds;
+        rcenum.c = 1;
+        bEnumMore = FALSE;
     }
     else
     {
-        /* Check if there is something to clip */
-        if (pco->iDComplexity == DC_RECT)
+        /* Use the target rect */
+        rcenum.arcl[0] = rcTrg;
+        rcenum.c = 1;
+        bEnumMore = FALSE;
+    }
+
+    /* Enter enumeration loop */
+    while (TRUE)
+    {
+        /* Loop all rectangles we got */
+        for (i = 0; i < rcenum.c; i++)
         {
-            /* Clip the target rect to the bounds of the clipping region */
-            RECTL_bIntersectRect(&rcTrg, &rcTrg, &pco->rclBounds);
+            /* Intersect this rect with the target rect */
+            if (!RECTL_bIntersectRect(&rcenum.arcl[i], &rcenum.arcl[i], &rcTrg))
+            {
+                /* This rect is outside the bounds, continue */
+                continue;
+            }
+
+            /* Calculate coordinates and pointers */
+            CalculateCoordinates(&bltdata,
+                                 &rcenum.arcl[i],
+                                 prclTrg,
+                                 pptlSrc,
+                                 pptlMask,
+                                 pptlBrush,
+                                 psizlPat);
+
+            /* Call the dib function */
+            pfnBitBlt(&bltdata);
         }
 
-        /* Calculate the coordinates */
-        CalculateCoordinates(&bltdata,
-                             &rcTrg,
-                             prclTrg,
-                             pptlSrc,
-                             pptlMask,
-                             pptlBrush,
-                             psizlPat);
+        /* Bail out, when there's nothing more to do */
+        if(!bEnumMore) break;
 
-        /* Call the dib function */
-        pfnBitBlt(&bltdata);
+        /* Enumerate more rectangles */
+        bEnumMore = CLIPOBJ_bEnum(pco, sizeof(rcenum), (ULONG*)&rcenum);
     }
 
     return TRUE;
@@ -563,4 +588,43 @@ NtGdiEngBitBlt(
     return bResult;
 }
 
+BOOL
+APIENTRY
+EngCopyBits(
+    SURFOBJ *psoTrg,
+    SURFOBJ *psoSrc,
+    CLIPOBJ *pco,
+    XLATEOBJ *pxlo,
+    RECTL *prclTrg,
+    POINTL *pptlSrc)
+{
+    PFN_DrvCopyBits pfnCopyBits;
 
+    /* Is the target surface device managed? */
+    if (SURFOBJ_flags(psoTrg) & HOOK_COPYBITS)
+    {
+        pfnCopyBits = GDIDEVFUNCS(psoTrg).CopyBits;
+    }
+    if (SURFOBJ_flags(psoSrc) & HOOK_COPYBITS)
+    {
+        pfnCopyBits = GDIDEVFUNCS(psoSrc).CopyBits;
+    }
+    else
+    {
+        /* Use SRCCOPY for 2 bitmaps */
+        return EngBitBlt(psoTrg,
+                         psoSrc,
+                         NULL,
+                         pco,
+                         pxlo,
+                         prclTrg,
+                         pptlSrc,
+                         NULL,
+                         NULL,
+                         NULL,
+                         ROP4_SRCCOPY);
+    }
+
+    /* Forward to the driver */
+    return pfnCopyBits(psoTrg, psoSrc, pco, pxlo, prclTrg, pptlSrc);
+}
