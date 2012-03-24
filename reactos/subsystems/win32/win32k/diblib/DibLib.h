@@ -42,8 +42,8 @@ extern const BYTE ajShift4[2];
 
 #define _ReadPixel_1(pjSource, jShift) (((*(pjSource)) >> (jShift)) & 1)
 #define _WritePixel_1(pjDest, jShift, ulColor) (void)(*(pjDest) = (UCHAR)((*(pjDest) & ~(1<<(jShift))) | ((ulColor)<<(jShift))))
-#define _NextPixel_1(ppj, pjShift) (void)((*(pjShift))--, *(pjShift) &= 7, (*(ppj) += (*(pjShift) >> 5)))
-#define _NextPixelR2L_1(ppj, pjShift) (void)((*(ppj) -= (*(pjShift) >> 5)), (*(pjShift))++, *(pjShift) &= 7)
+#define _NextPixel_1(ppj, pjShift)    (void)(((*(pjShift))--), (*(pjShift) &= 7), (*(ppj) += (*(pjShift) == 7)))
+#define _NextPixelR2L_1(ppj, pjShift) (void)(((*(pjShift))++), (*(pjShift) &= 7), (*(ppj) -= (*(pjShift) == 0)))
 #define _SHIFT_1(x) x
 #define _CALCSHIFT_1(pShift, x) (void)(*(pShift) = (7 - ((x) & 7)))
 

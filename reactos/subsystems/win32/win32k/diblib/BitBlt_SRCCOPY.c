@@ -5,17 +5,20 @@ VOID
 FASTCALL
 Dib_BitBlt_SRCCOPY_EqSurf(PBLTDATA pBltData)
 {
-    ULONG cLines, cjWidth = pBltData->ulWidth * pBltData->jDstBpp;
+    ULONG cLines, cjWidth;
     PBYTE pjDestBase = pBltData->siDst.pjBase;
     PBYTE pjSrcBase = pBltData->siSrc.pjBase;
+
+    /* Calculate the width in bytes */
+    cjWidth = pBltData->ulWidth * pBltData->siDst.jBpp / 8;
 
     /* Loop all lines */
     cLines = pBltData->ulHeight;
     while (cLines--)
     {
         memcpy(pjDestBase, pjSrcBase, cjWidth);
-        pjDestBase += pBltData->siDst.lDelta;
-        pjSrcBase += pBltData->siSrc.lDelta;
+        pjDestBase += pBltData->siDst.cjAdvanceY;
+        pjSrcBase += pBltData->siSrc.cjAdvanceY;
     }
 }
 
@@ -38,8 +41,8 @@ Dib_BitBlt_SRCCOPY_S32_D32_EqSurf(PBLTDATA pBltData)
     while (cLines--)
     {
         __movsd((PULONG)pjDestBase, (PULONG)pjSrcBase, cRows);
-        pjDestBase += pBltData->siDst.lDelta;
-        pjSrcBase += pBltData->siSrc.lDelta;
+        pjDestBase += pBltData->siDst.cjAdvanceY;
+        pjSrcBase += pBltData->siSrc.cjAdvanceY;
     }
 }
 #else

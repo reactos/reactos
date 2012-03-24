@@ -7,6 +7,7 @@ typedef struct
     PBYTE pvScan0;
     PBYTE pjBase;
     LONG lDelta;
+    LONG cjAdvanceY;
     POINTL ptOrig;
     BYTE jBpp;
 } SURFINFO;
@@ -27,7 +28,7 @@ typedef struct
     ULONG rop4;
     PFN_DOROP apfnDoRop[2];
     ULONG ulSolidColor;
-    BYTE jDstBpp;
+    LONG dy;
 } BLTDATA, *PBLTDATA;
 
 typedef

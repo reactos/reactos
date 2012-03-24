@@ -30,16 +30,17 @@
 #undef _DibXlate
 #define _DibXlate(pBltData, ulColor) (ulColor)
 #define _SOURCE_BPP _DEST_BPP
-#define _NextPixel_ _NextPixelR2L_
 
 #undef __DIB_FUNCTION_NAME
 #define __DIB_FUNCTION_NAME __DIB_FUNCTION_NAME_SRCDSTEQ
 #include "diblib_alldstbpp.h"
 
+#define _NextPixel_ _NextPixelR2L_
 #undef __DIB_FUNCTION_NAME
 #define __DIB_FUNCTION_NAME __DIB_FUNCTION_NAME_SRCDSTEQR2L
 #include "diblib_alldstbpp.h"
 #undef _SOURCE_BPP
+#undef _NextPixel_
 
 PFN_DIBFUNCTION
 __PASTE(gapfn, __FUNCTIONNAME)[7][7] =

@@ -77,7 +77,7 @@ _DibFunction(PBLTDATA pBltData)
 #if __USES_MASK
             /* Read the mask color and go to the next mask pixel */
             jMaskBit = _ReadPixel_1(pjMask, jMskShift);
-            _NextPixel_1(&pjMask, &jMskShift);
+            _NextPixel(1, &pjMask, &jMskShift);
 #endif
 #if __USES_PATTERN
             /* Read the pattern color and go to the next pattern pixel */
@@ -110,13 +110,13 @@ _DibFunction(PBLTDATA pBltData)
             _NextPixel(_DEST_BPP, &pjDest, &jDstShift);
         }
 
-        pjDestBase += pBltData->siDst.lDelta;
+        pjDestBase += pBltData->siDst.cjAdvanceY;
 #if __USES_SOURCE
-        pjSrcBase += pBltData->siSrc.lDelta;
+        pjSrcBase += pBltData->siSrc.cjAdvanceY;
 #endif
 #if __USES_PATTERN
         /* Go to the next pattern line */
-        pjPatBase += pBltData->siPat.lDelta;
+        pjPatBase += pBltData->siPat.cjAdvanceY;
 
         /* Check if this was the last line in the pattern */
         if (--cPatLines == 0)

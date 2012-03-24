@@ -6,9 +6,10 @@
 #define __USES_DEST 1
 #define __USES_MASK 0
 
+#define __FUNCTIONNAME BitBlt
+
 #define _DibDoRop(pBltData, M, D, S, P) pBltData->apfnDoRop[0](D,S,P)
 
-#define __FUNCTIONNAME BitBlt
 #include "DibLib_AllSrcBPP.h"
 
 #undef __FUNCTIONNAME
@@ -20,7 +21,17 @@ VOID
 FASTCALL
 Dib_BitBlt(PBLTDATA pBltData)
 {
-    gapfnBitBlt[pBltData->siDst.iFormat][pBltData->siSrc.iFormat](pBltData);
+    /* Check for solid brush */
+    if (pBltData->ulSolidColor != 0xFFFFFFFF)
+    {
+        /* Use the solid version of PATCOPY! */
+        gapfnBitBlt_Solid[pBltData->siDst.iFormat][pBltData->siSrc.iFormat](pBltData);
+    }
+    else
+    {
+        /* Use the pattern version */
+        gapfnBitBlt[pBltData->siDst.iFormat][pBltData->siSrc.iFormat](pBltData);
+    }
 }
 
 
