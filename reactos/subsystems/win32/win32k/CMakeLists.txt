@@ -1,4 +1,6 @@
 
+set (USE_DIBLIB FALSE)
+
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
 include_directories(
@@ -33,7 +35,6 @@ list(APPEND SOURCE
     dib/dib16bpp.c
     dib/dib24bpp.c
     dib/dib32bpp.c
-    dib/dib.c
     dib/floodfill.c
     dib/stretchblt.c
     eng/alphablend.c
@@ -41,8 +42,8 @@ list(APPEND SOURCE
     eng/engbrush.c
     eng/engevent.c
     eng/clip.c
-    eng/copybits.c
     eng/debug.c
+    eng/drvdbg.c
     eng/device.c
     eng/driverobj.c
     eng/error.c
@@ -143,7 +144,7 @@ list(APPEND SOURCE
     objects/font.c
     objects/freetype.c
     objects/gdibatch.c
-	objects/gdidbg.c
+    objects/gdidbg.c
     objects/gdiobj.c
     objects/gdipool.c
     objects/icm.c
@@ -164,7 +165,18 @@ list(APPEND SOURCE
     stubs/umpdstubs.c
     win32k.rc)
 
-list(APPEND SOURCE ${GENDIB_FILES})
+if (USE_DIBLIB)
+    add_definitions(
+        -D_USE_DIBLIB_)
+    list(APPEND SOURCE
+        dib/dib_new.c
+        eng/bitblt_new.c)
+else()
+    list(APPEND SOURCE
+        dib/dib.c
+        eng/copybits.c
+         ${GENDIB_FILES})
+endif()
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -194,6 +206,11 @@ target_link_libraries(win32k
     dxguid
     libcntpr)
 
+if (USE_DIBLIB)
+    target_link_libraries(win32k
+        diblib)
+endif()
+
 add_importlibs(win32k ntoskrnl hal ftfd)
 add_pch(win32k pch.h)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
@@ -201,3 +218,9 @@ add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
 add_library(win32ksys sys-stubs.S)
 set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)
+
+if (USE_DIBLIB)
+    add_subdirectory(diblib)
+endif()
+
+

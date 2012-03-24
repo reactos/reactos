@@ -313,6 +313,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   return TRUE;
 }
 
+#ifndef _USE_DIBLIB_
 BOOLEAN
 DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 {
@@ -465,6 +466,7 @@ DIB_1BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   }
   return TRUE;
 }
+#endif // !_USE_DIBLIB_
 
 BOOLEAN
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,

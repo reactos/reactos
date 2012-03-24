@@ -55,6 +55,7 @@ DIB_4BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
+#ifndef _USE_DIBLIB_
 BOOLEAN
 DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
@@ -366,6 +367,7 @@ DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   }
   return TRUE;
 }
+#endif // !_USE_DIBLIB_
 
 BOOLEAN
 DIB_4BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
