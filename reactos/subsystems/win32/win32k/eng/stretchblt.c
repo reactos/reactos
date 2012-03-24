@@ -35,11 +35,8 @@ CallDibStretchBlt(SURFOBJ* psoDest,
                   ROP4 Rop4)
 {
     POINTL RealBrushOrigin;
-    SURFACE* psurfPattern;
-    PEBRUSHOBJ GdiBrush = NULL;
-    SURFOBJ* PatternSurface = NULL;
+    SURFOBJ* psoPattern;
     BOOL bResult;
-    HBITMAP hbmPattern;
 
     if (BrushOrigin == NULL)
     {
@@ -53,33 +50,19 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     /* Pattern brush */
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-        hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
-        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
-        if (psurfPattern)
-        {
-            PatternSurface = &psurfPattern->SurfObj;
-        }
-        else
-        {
-            /* FIXME: What to do here? */
-        }
+        psoPattern = BRUSHOBJ_psoPattern(pbo);
+
+        if (!psoPattern) return FALSE;
     }
     else
     {
-        psurfPattern = NULL;
+        psoPattern = NULL;
     }
 
     bResult = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, Mask, PatternSurface,
+               psoDest, psoSource, Mask, psoPattern,
                OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin,
                ColorTranslation, Rop4);
-
-    /* Pattern brush */
-    if (psurfPattern)
-    {
-        SURFACE_ShareUnlockSurface(psurfPattern);
-    }
 
     return bResult;
 }

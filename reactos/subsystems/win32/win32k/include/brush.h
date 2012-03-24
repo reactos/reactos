@@ -122,6 +122,13 @@ PVOID
 NTAPI
 EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
 
+SURFOBJ*
+NTAPI
+EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo);
+
+#define BRUSHOBJ_psoPattern(pbo) \
+    EBRUSHOBJ_psoPattern(CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject))
+
 BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);
 BOOL FASTCALL GreSetBrushOwner(HBRUSH,DWORD);
 

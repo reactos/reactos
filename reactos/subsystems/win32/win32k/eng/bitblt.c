@@ -39,16 +39,13 @@ BltMask(SURFOBJ* psoDest,
     BYTE *pjMskLine, *pjMskCurrent;
     BYTE fjMaskBit0, fjMaskBit;
     /* Pattern brushes */
-    PEBRUSHOBJ pebo = NULL;
-    SURFOBJ *psoPattern = NULL;
-    PSURFACE psurfPattern;
+    SURFOBJ *psoPattern;
     ULONG PatternWidth = 0, PatternHeight = 0;
     LONG PatternX0 = 0, PatternX = 0, PatternY = 0;
     LONG SrcX = 0, SrcY = 0;
     PFN_DIB_PutPixel fnDest_PutPixel = NULL;
     PFN_DIB_GetPixel fnPattern_GetPixel = NULL, fnSrc_GetPixel = NULL, fnDest_GetPixel;
     ULONG Pattern = 0, Source = 0, Dest = 0;
-    HBITMAP hbmPattern;
     DWORD fgndRop, bkgndRop;
 
     ASSERT(IS_VALID_ROP4(Rop4));
@@ -61,20 +58,16 @@ BltMask(SURFOBJ* psoDest,
     /* Determine pattern */
     if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-
-        hbmPattern = EBRUSHOBJ_pvGetEngBrush(pebo);
-        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
-        if (psurfPattern != NULL)
+        psoPattern = BRUSHOBJ_psoPattern(pbo);
+        if (psoPattern)
         {
-            psoPattern = &psurfPattern->SurfObj;
             PatternWidth = psoPattern->sizlBitmap.cx;
             PatternHeight = psoPattern->sizlBitmap.cy;
             fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
         }
     }
     else
-        psurfPattern = NULL;
+        psoPattern = NULL;
 
     pjMskLine = (PBYTE)psoMask->pvScan0 + pptlMask->y * psoMask->lDelta + (pptlMask->x >> 3);
     fjMaskBit0 = 0x80 >> (pptlMask->x & 0x07);
@@ -92,7 +85,7 @@ BltMask(SURFOBJ* psoDest,
         SrcX = pptlSource->x;
     }
 
-    if (psurfPattern)
+    if (psoPattern)
     {
         PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
         if (PatternY < 0)
@@ -120,7 +113,7 @@ BltMask(SURFOBJ* psoDest,
         {
             Rop4 = (*pjMskCurrent & fjMaskBit) ? fgndRop : bkgndRop;
 
-            if(psurfPattern)
+            if(psoPattern)
             {
                 if(ROP4_USES_PATTERN(Rop4))
                     Pattern = fnPattern_GetPixel(psoPattern, PatternX, PatternY);
@@ -152,7 +145,7 @@ BltMask(SURFOBJ* psoDest,
             pjMskCurrent += (fjMaskBit >> 7);
         }
         pjMskLine += psoMask->lDelta;
-        if(psurfPattern)
+        if(psoPattern)
         {
             PatternY++;
             PatternY %= PatternHeight;
@@ -165,11 +158,10 @@ BltMask(SURFOBJ* psoDest,
         }
     }
 
-    if (psurfPattern)
-        SURFACE_ShareUnlockSurface(psurfPattern);
-
     return TRUE;
 }
+
+#ifndef _USE_DIBLIB_
 
 static BOOLEAN APIENTRY
 BltPatCopy(SURFOBJ* Dest,
@@ -204,10 +196,8 @@ CallDibBitBlt(SURFOBJ* OutputObj,
               ROP4 Rop4)
 {
     BLTINFO BltInfo;
-    PEBRUSHOBJ GdiBrush = NULL;
-    SURFACE *psurfPattern;
+    SURFOBJ *psoPattern;
     BOOLEAN Result;
-    HBITMAP hbmPattern;
 
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
@@ -226,12 +216,10 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     /* Pattern brush */
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-        hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
-        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
-        if (psurfPattern)
+        psoPattern = BRUSHOBJ_psoPattern(pbo);
+        if (psoPattern)
         {
-            BltInfo.PatternSurface = &psurfPattern->SurfObj;
+            BltInfo.PatternSurface = psoPattern;
         }
         else
         {
@@ -240,16 +228,10 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     }
     else
     {
-        psurfPattern = NULL;
+        psoPattern = NULL;
     }
 
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
-
-    /* Pattern brush */
-    if (psurfPattern)
-    {
-        SURFACE_ShareUnlockSurface(psurfPattern);
-    }
 
     return Result;
 }
@@ -649,6 +631,7 @@ IntEngBitBlt(
     return bResult;
 }
 
+#endif // !_USE_DIBLIB_
 
 /**** REACTOS FONT RENDERING CODE *********************************************/
 

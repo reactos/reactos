@@ -97,7 +97,8 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
     /* Check if there's a GDI realisation */
     if (pebo->pengbrush)
     {
-        EngDeleteSurface(pebo->pengbrush);
+        /* Unlock the bitmap again */
+        SURFACE_ShareUnlockSurface(pebo->pengbrush);
         pebo->pengbrush = NULL;
     }
 
@@ -139,6 +140,7 @@ EngRealizeBrush(
     EBRUSHOBJ *pebo;
     HBITMAP hbmpRealize;
     SURFOBJ *psoRealize;
+    PSURFACE psurfRealize;
     POINTL ptlSrc = {0, 0};
     RECTL rclDest;
     ULONG lWidth;
@@ -159,10 +161,13 @@ EngRealizeBrush(
     }
 
     /* Lock the bitmap */
-    psoRealize = EngLockSurface(hbmpRealize);
-    if (!psoRealize)
+    psurfRealize = SURFACE_ShareLockSurface(hbmpRealize);
+
+    /* Already delete the pattern bitmap (will be kept until dereferenced) */
+    EngDeleteSurface(hbmpRealize);
+
+    if (!psurfRealize)
     {
-        EngDeleteSurface(hbmpRealize);
         return FALSE;
     }
 
@@ -170,13 +175,12 @@ EngRealizeBrush(
     rclDest.left = rclDest.top = 0;
     rclDest.right = psoPattern->sizlBitmap.cx;
     rclDest.bottom = psoPattern->sizlBitmap.cy;
+    psoRealize = &psurfRealize->SurfObj;
     EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
 
-    /* Unlock the bitmap again */
-    EngUnlockSurface(psoRealize);
 
     pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-    pebo->pengbrush = (PVOID)hbmpRealize;
+    pebo->pengbrush = (PVOID)psurfRealize;
 
     return TRUE;
 }
@@ -211,7 +215,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     psurfMask = NULL;
 
     /* Initialize XLATEOBJ for the brush */
-    EXLATEOBJ_vInitialize(&exlo, 
+    EXLATEOBJ_vInitialize(&exlo,
                           psurfPattern->ppal,
                           pebo->psurfTrg->ppal,
                           0,
@@ -256,6 +260,17 @@ EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo)
     }
 
     return pebo->pengbrush;
+}
+
+SURFOBJ*
+NTAPI
+EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo)
+{
+    PSURFACE psurfPattern;
+
+    psurfPattern = EBRUSHOBJ_pvGetEngBrush(pebo);
+
+    return psurfPattern ? &psurfPattern->SurfObj : NULL;
 }
 
 

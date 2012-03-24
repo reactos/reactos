@@ -337,7 +337,7 @@ EngSetPointerShape(
 
         /* Calculate lDelta for our surfaces. */
         lDelta = WIDTH_BYTES_ALIGN32(sizel.cx,
-                                      BitsPerFormat(pso->iBitmapFormat));
+                                     BitsPerFormat(pso->iBitmapFormat));
 
         /* Create a bitmap for saving the pixels under the cursor. */
         hbmSave = EngCreateBitmap(sizel,
