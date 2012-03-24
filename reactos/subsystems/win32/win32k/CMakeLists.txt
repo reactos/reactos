@@ -43,7 +43,7 @@ list(APPEND SOURCE
     eng/engevent.c
     eng/clip.c
     eng/debug.c
-    eng/drvdbg.c
+    #eng/drvdbg.c
     eng/device.c
     eng/driverobj.c
     eng/error.c
