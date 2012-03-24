@@ -510,7 +510,7 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
         }
 
         /* There is a whole bunch of new UCR descriptors. Put them into the unused list */
-        while ((PCHAR)(UcrDescriptor + 1) < (PCHAR)UcrSegment + UcrSegment->CommittedSize)
+        while ((PCHAR)(UcrDescriptor + 1) <= (PCHAR)UcrSegment + UcrSegment->CommittedSize)
         {
             InsertTailList(&Heap->UCRList, &UcrDescriptor->ListEntry);
             UcrDescriptor++;
