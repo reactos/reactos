@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
+    RtlGetFullPathName_U.c
     RtlGetFullPathName_UstrEx.c
     RtlInitializeBitMap.c
     SystemInfo.c

@@ -98,6 +98,7 @@ static
 VOID
 RunTestCases(VOID)
 {
+    /* TODO: don't duplicate this here and in the RtlGetFullPathName_U test */
     struct
     {
         PCWSTR FileName;
@@ -166,8 +167,13 @@ RunTestCases(VOID)
                 ExpectedPathName[3] = UNICODE_NULL;
                 break;
             case PrefixCurrentPath:
-                GetCurrentDirectoryW(sizeof(ExpectedPathName) / sizeof(WCHAR), ExpectedPathName);
+            {
+                ULONG Length;
+                Length = GetCurrentDirectoryW(sizeof(ExpectedPathName) / sizeof(WCHAR), ExpectedPathName);
+                if (Length == 3 && TestCases[i].FullPathName[0])
+                    ExpectedPathName[2] = UNICODE_NULL;
                 break;
+            }
             default:
                 skip(0, "Invalid test!\n");
                 continue;
@@ -212,17 +218,24 @@ RunTestCases(VOID)
                 break;
             case PrefixCurrentPath:
                 ExpectedFilePartSize = GetCurrentDirectoryW(0, NULL) * sizeof(WCHAR);
+                if (ExpectedFilePartSize == sizeof(L"C:\\"))
+                    ExpectedFilePartSize -= sizeof(WCHAR);
                 break;
             case PrefixCurrentPathWithoutLastPart:
             {
                 WCHAR CurrentPath[MAX_PATH];
                 PCWSTR BackSlash;
                 ExpectedFilePartSize = GetCurrentDirectoryW(sizeof(CurrentPath) / sizeof(WCHAR), CurrentPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-                BackSlash = wcsrchr(CurrentPath, L'\\');
-                if (BackSlash)
-                    ExpectedFilePartSize -= wcslen(BackSlash + 1) * sizeof(WCHAR);
+                if (ExpectedFilePartSize == sizeof(L"C:\\"))
+                    ExpectedFilePartSize = 0;
                 else
-                    ok(0, "GetCurrentDirectory returned %S\n", CurrentPath);
+                {
+                    BackSlash = wcsrchr(CurrentPath, L'\\');
+                    if (BackSlash)
+                        ExpectedFilePartSize -= wcslen(BackSlash + 1) * sizeof(WCHAR);
+                    else
+                        ok(0, "GetCurrentDirectory returned %S\n", CurrentPath);
+                }
                 break;
             }
             default:
