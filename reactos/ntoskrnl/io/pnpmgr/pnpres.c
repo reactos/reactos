@@ -202,12 +202,48 @@ IopFixupResourceListWithRequirements(
    IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
    OUT PCM_RESOURCE_LIST *ResourceList)
 {
-    ULONG i;
+    ULONG i, OldCount;
+    BOOLEAN AlternateRequired = FALSE;
+
+    /* Save the initial resource count when we got here so we can restore if an alternate fails */
+    if (*ResourceList != NULL)
+        OldCount = (*ResourceList)->List[0].PartialResourceList.Count;
+    else
+        OldCount = 0;
+
     for (i = 0; i < RequirementsList->AlternativeLists; i++)
     {
         ULONG ii;
         PIO_RESOURCE_LIST ResList = &RequirementsList->List[i];
-        BOOLEAN AlternateRequired = FALSE;
+
+        /* We need to get back to where we were before processing the last alternative list */
+        if (OldCount == 0 && *ResourceList != NULL)
+        {
+            /* Just free it and kill the pointer */
+            ExFreePool(*ResourceList);
+            *ResourceList = NULL;
+        }
+        else if (OldCount != 0)
+        {
+            PCM_RESOURCE_LIST NewList;
+
+            /* Let's resize it */
+            (*ResourceList)->List[0].PartialResourceList.Count = OldCount;
+
+            /* Allocate the new smaller list */
+            NewList = ExAllocatePool(PagedPool, PnpDetermineResourceListSize(*ResourceList));
+            if (!NewList)
+                return STATUS_NO_MEMORY;
+
+            /* Copy the old stuff back */
+            RtlCopyMemory(NewList, *ResourceList, PnpDetermineResourceListSize(*ResourceList));
+
+            /* Free the old one */
+            ExFreePool(*ResourceList);
+
+            /* Store the pointer to the new one */
+            *ResourceList = NewList;
+        }
 
         for (ii = 0; ii < ResList->Count; ii++)
         {
@@ -226,14 +262,10 @@ IopFixupResourceListWithRequirements(
             /* Check if we couldn't satsify a requirement or its alternates */
             if (AlternateRequired && !(IoDesc->Option & IO_RESOURCE_ALTERNATIVE))
             {
-                DPRINT1("Unable to satisfy preferred resource or alternates\n");
+                DPRINT1("Unable to satisfy preferred resource or alternates in list %d\n", i);
 
-                if (*ResourceList)
-                {
-                    ExFreePool(*ResourceList);
-                    *ResourceList = NULL;
-                }
-                return STATUS_CONFLICTING_ADDRESSES;
+                /* Break out of this loop and try the next list */
+                break;
             }
 
             for (iii = 0; PartialList && iii < PartialList->Count && !Matched; iii++)
@@ -411,12 +443,9 @@ IopFixupResourceListWithRequirements(
                 /* Check if it's missing and required */
                 if (!FoundResource && IoDesc->Option == 0)
                 {
-                    if (*ResourceList)
-                    {
-                        ExFreePool(*ResourceList);
-                        *ResourceList = NULL;
-                    }
-                    return STATUS_CONFLICTING_ADDRESSES;
+                    /* Break out of this loop and try the next list */
+                    DPRINT1("Unable to satisfy required resource in list %d\n", i);
+                    break;
                 }
                 else if (!FoundResource)
                 {
@@ -476,10 +505,32 @@ IopFixupResourceListWithRequirements(
                 *ResourceList = NewList;
             }
         }
+
+        /* Check if we need an alternate with no resources left */
+        if (AlternateRequired)
+        {
+            DPRINT1("Unable to satisfy preferred resource or alternates in list %d\n", i);
+
+            /* Try the next alternate list */
+            continue;
+        }
+
+        /* We're done because we satisfied one of the alternate lists */
+        return STATUS_SUCCESS;
     }
 
-    /* Done */
-    return STATUS_SUCCESS;
+    /* We ran out of alternates */
+    DPRINT1("Out of alternate lists!\n");
+
+    /* Free the list */
+    if (*ResourceList)
+    {
+        ExFreePool(*ResourceList);
+        *ResourceList = NULL;
+    }
+
+    /* Fail */
+    return STATUS_CONFLICTING_ADDRESSES;
 }
 
 static
@@ -717,28 +768,28 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   OBJECT_ATTRIBUTES ObjectAttributes;
 
   RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
+               L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     0,
-			     NULL);
+                 &KeyName,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 0,
+                 NULL);
   Status = ZwCreateKey(&ResourceMapKey,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_VOLATILE,
-		       &Disposition);
+               KEY_ALL_ACCESS,
+               &ObjectAttributes,
+               0,
+               NULL,
+               REG_OPTION_VOLATILE,
+               &Disposition);
   if (!NT_SUCCESS(Status))
       return Status;
 
   RtlInitUnicodeString(&KeyName, Level1Key);
   InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     ResourceMapKey,
-			     NULL);
+                 &KeyName,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 ResourceMapKey,
+                 NULL);
   Status = ZwCreateKey(&PnpMgrLevel1,
                        KEY_ALL_ACCESS,
                        &ObjectAttributes,
@@ -752,10 +803,10 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
 
   RtlInitUnicodeString(&KeyName, Level2Key);
   InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     PnpMgrLevel1,
-			     NULL);
+                 &KeyName,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 PnpMgrLevel1,
+                 NULL);
   Status = ZwCreateKey(&PnpMgrLevel2,
                        KEY_ALL_ACCESS,
                        &ObjectAttributes,
@@ -1069,6 +1120,7 @@ IopAssignDeviceResources(
    if (!NT_SUCCESS(Status))
    {
        DPRINT1("Failed to fixup a resource list from supplied resources for %wZ\n", &DeviceNode->InstancePath);
+       DeviceNode->Problem = CM_PROB_NORMAL_CONFLICT;
        goto ByeBye;
    }
 
@@ -1079,6 +1131,7 @@ Finish:
    Status = IopTranslateDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
    {
+       DeviceNode->Problem = CM_PROB_TRANSLATION_FAILED;
        DPRINT1("Failed to translate resources for %wZ\n", &DeviceNode->InstancePath);
        goto ByeBye;
    }

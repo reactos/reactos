@@ -402,8 +402,8 @@ IopLoadServiceModule(
 
    if (ServiceStart >= 4)
    {
-      /* FIXME: Check if it is the right status code */
-      Status = STATUS_PLUGPLAY_NO_DEVICE;
+      /* We can't load this */
+      Status = STATUS_DRIVER_UNABLE_TO_LOAD;
    }
    else
    {

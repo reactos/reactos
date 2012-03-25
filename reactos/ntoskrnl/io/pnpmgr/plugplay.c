@@ -441,6 +441,9 @@ IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         Output |= DN_LEGACY_DRIVER;
 
+    if (DeviceNode->UserFlags & DNUF_DONT_SHOW_IN_UI)
+        Output |= DN_NO_SHOW_IN_DM;
+
     /* FIXME: Implement the rest */
 
     Output |= DN_NT_ENUMERATOR | DN_NT_DRIVER;
@@ -611,6 +614,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
         {
             /* A driver has already been loaded for this device */
             DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
+            DeviceNode->Problem = CM_PROB_NEED_RESTART;
         }
     }
     else

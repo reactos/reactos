@@ -2624,11 +2624,18 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             /* Initialize the driver */
             Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
                   &DeviceNode->ServiceName, FALSE, &DriverObject);
+            if (!NT_SUCCESS(Status)) DeviceNode->Problem = CM_PROB_FAILED_DRIVER_ENTRY;
+         }
+         else if (Status == STATUS_DRIVER_UNABLE_TO_LOAD)
+         {
+            DPRINT1("Service '%wZ' is disabled\n", &DeviceNode->ServiceName);
+            DeviceNode->Problem = CM_PROB_DISABLED_SERVICE;
          }
          else
          {
             DPRINT("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
                     &DeviceNode->ServiceName, Status);
+            if (!BootDrivers) DeviceNode->Problem = CM_PROB_DRIVER_FAILED_LOAD;
          }
       }
 
@@ -2649,12 +2656,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          if (!BootDrivers)
          {
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
-            DeviceNode->Problem = CM_PROB_FAILED_START;
-
-            /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
-            DPRINT1("Initialization of service %S failed (Status %x)\n",
-              DeviceNode->ServiceName.Buffer, Status);
          }
       }
    }
@@ -4504,7 +4505,7 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
     }
     
     Stack.Parameters.QueryDeviceRelations.Type = RemovalRelations;
-    
+
     Status = IopInitiatePnpIrp(DeviceObject,
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_RELATIONS,
@@ -4518,7 +4519,7 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
     {
         DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
     }
-    
+
     if (DeviceRelations)
     {
         Status = IopQueryRemoveDeviceRelations(DeviceRelations, Force);
@@ -4535,6 +4536,7 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
     }
 
     DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
+    DeviceNode->Problem = CM_PROB_WILL_BE_REMOVED;
     if (DeviceRelations)
         IopSendRemoveDeviceRelations(DeviceRelations);
     IopSendRemoveChildDevices(DeviceNode);
@@ -4625,7 +4627,8 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
     if (DeviceRelations)
         IopSendRemoveDeviceRelations(DeviceRelations);
     IopSendRemoveChildDevices(DeviceNode);
-    
+
+    DeviceNode->Problem = CM_PROB_HELD_FOR_EJECT;
     if (Capabilities.EjectSupported)
     {
         if (IopSendEject(PhysicalDeviceObject) != STATUS_SUCCESS)
