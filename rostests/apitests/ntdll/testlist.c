@@ -8,6 +8,7 @@
 extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtSystemInformation(void);
+extern void func_RtlGetFullPathName_UstrEx(void);
 extern void func_RtlInitializeBitMap(void);
 extern void func_ZwContinue(void);
 
@@ -16,9 +17,9 @@ const struct test winetest_testlist[] =
     { "NtAllocateVirtualMemory",    func_NtAllocateVirtualMemory },
     { "NtFreeVirtualMemory",        func_NtFreeVirtualMemory },
     { "NtSystemInformation",        func_NtSystemInformation },
+    { "RtlGetFullPathName_UstrEx",  func_RtlGetFullPathName_UstrEx },
     { "RtlInitializeBitMap",        func_RtlInitializeBitMap },
     { "ZwContinue",                 func_ZwContinue },
 
     { 0, 0 }
 };
-
