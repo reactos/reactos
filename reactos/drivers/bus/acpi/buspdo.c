@@ -1269,7 +1269,7 @@ Bus_PDO_QueryResourceRequirements(
 
     /* Fill resources list structure */
         resource = Buffer.Pointer;
-    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG && resource->Type != ACPI_RESOURCE_TYPE_END_DEPENDENT)
     {
         switch (resource->Type)
         {
@@ -1280,7 +1280,7 @@ Bus_PDO_QueryResourceRequirements(
                     break;
                 for (i = 0; i < irq_data->InterruptCount; i++)
                 {
-                    RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
                     RequirementDescriptor->Type = CmResourceTypeInterrupt;
                     RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
                     RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
@@ -1296,7 +1296,7 @@ Bus_PDO_QueryResourceRequirements(
                 ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
                 for (i = 0; i < irq_data->InterruptCount; i++)
                 {
-                    RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
                     RequirementDescriptor->Type = CmResourceTypeInterrupt;
                     RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
                     RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
@@ -1329,7 +1329,7 @@ Bus_PDO_QueryResourceRequirements(
                         case ACPI_TRANSFER_8_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
                     }
 
-                    RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
                     RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
                     RequirementDescriptor->u.Dma.MinimumChannel =
                     RequirementDescriptor->u.Dma.MaximumChannel = dma_data->Channels[i];
