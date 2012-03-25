@@ -67,7 +67,6 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 //#include "lang/sl-SI.rc"
 //#include "lang/sk-SK.rc"
 //#include "lang/sv-SE.rc"
-//#include "lang/tr-TR.rc"
 //#include "lang/zh-CN.rc"
 //#include "lang/zh-TW.rc"
 
@@ -86,6 +85,9 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

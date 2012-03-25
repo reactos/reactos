@@ -54,7 +54,7 @@ XCOPY källa [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 Där:\n\
 \n\
 [/I]  Antag att målet är en katalog om målet inte existerar och\n\
-\      två eller fler filer kopieras\n\
+      två eller fler filer kopieras\n\
 [/S]  Kopiera kataloger och underkataloger\n\
 [/E]  Kopiera kataloger och underkataloger, inklusive tomma sådana\n\
 [/Q]  Tyst läge: Lista inte filnamn under kopiering\n\
@@ -72,7 +72,7 @@ Där:\n\
 [/C]  Fortsätt även om ett fel uppstår under kopieringen\n\
 [/A]  Kopiera enbart filer markerade som arkiv\n\
 [/M]  Kopiera enbart filer markerade som arkiv, ta bort\n\
-\      markeringen\n\
+      markeringen\n\
 [/D | /D:m-d-y] Kopiera nya filer eller de ändrade efter angivet datum.\n\
 \t\tOm inget datum angivits utförs endast kopiering om målet är\n\
 \t\täldre än källan\n\n"

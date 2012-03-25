@@ -28,7 +28,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE
-    "\用法：\n \
+    "\n用法：\n \
         ipconfig [/? | /all | /renew [适配器] | /release [适配器] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid 适配器 |\n \
