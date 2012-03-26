@@ -4044,8 +4044,13 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
     if ((PnPFlags & PNP_DEVICE_REMOVED) ||
         ((PnPFlags & PNP_DEVICE_FAILED) && !(PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)))
     {
-        /* Surprise removal */
-        
+        /* Flag it if it's failed */
+        if (PnPFlags & PNP_DEVICE_FAILED) DeviceNode->Problem = CM_PROB_FAILED_POST_START;
+
+        /* Send removal IRPs to all of its children */
+        IopPrepareDeviceForRemoval(PhysicalDeviceObject, TRUE);
+
+        /* Send surprise removal */
         IopSendSurpriseRemoval(PhysicalDeviceObject);
         
         /* Tell the user-mode PnP manager that a device was removed */
@@ -4057,7 +4062,6 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
     else if ((PnPFlags & PNP_DEVICE_FAILED) && (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED))
     {
         /* Stop for resource rebalance */
-        
         Status = IopStopDevice(DeviceNode);
         if (!NT_SUCCESS(Status))
         {
