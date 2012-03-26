@@ -95,13 +95,13 @@ FORCEINLINE
 ULONG
 HintFromAccel(ULONG flAccel)
 {
-    switch (flAccel & (MX_NOTRANSLATE |  MX_IDENTITYSCALE | MX_SCALE))
+    switch (flAccel & (XFORM_SCALE|XFORM_UNITY|XFORM_NO_TRANSLATION))
     {
-        case (MX_SCALE | MX_IDENTITYSCALE | MX_NOTRANSLATE):
+        case (XFORM_SCALE|XFORM_UNITY|XFORM_NO_TRANSLATION):
             return GX_IDENTITY;
-        case (MX_SCALE | MX_IDENTITYSCALE):
+        case (XFORM_SCALE|XFORM_UNITY):
             return GX_OFFSET;
-        case MX_SCALE:
+        case XFORM_SCALE:
             return GX_SCALE;
         default:
             return GX_GENERAL;
@@ -126,25 +126,25 @@ XFORMOBJ_UpdateAccel(
     if (FLOATOBJ_Equal0(&pmx->efDx) &&
         FLOATOBJ_Equal0(&pmx->efDy))
     {
-        pmx->flAccel |= MX_NOTRANSLATE;
+        pmx->flAccel |= XFORM_NO_TRANSLATION;
     }
 
     if (FLOATOBJ_Equal0(&pmx->efM12) &&
         FLOATOBJ_Equal0(&pmx->efM21))
     {
-        pmx->flAccel |= MX_SCALE;
+        pmx->flAccel |= XFORM_SCALE;
     }
 
     if (FLOATOBJ_Equal1(&pmx->efM11) &&
         FLOATOBJ_Equal1(&pmx->efM22))
     {
-        pmx->flAccel |= MX_IDENTITYSCALE;
+        pmx->flAccel |= XFORM_UNITY;
     }
 
     if (FLOATOBJ_IsLong(&pmx->efM11) && FLOATOBJ_IsLong(&pmx->efM12) &&
         FLOATOBJ_IsLong(&pmx->efM21) && FLOATOBJ_IsLong(&pmx->efM22))
     {
-        pmx->flAccel |= MX_INTEGER;
+        pmx->flAccel |= XFORM_INTEGER;
     }
 
     return HintFromAccel(pmx->flAccel);
@@ -253,9 +253,17 @@ XFORMOBJ_iInverse(
 {
     PMATRIX pmxDst, pmxSrc;
     FLOATOBJ foDet;
+    XFORM xformSrc;
+    union
+    {
+        FLOAT Float;
+        LONG Long;
+    } eDet;
 
     pmxDst = XFORMOBJ_pmx(pxoDst);
     pmxSrc = XFORMOBJ_pmx(pxoSrc);
+
+    XFORMOBJ_iGetXform(pxoSrc, (XFORML*)&xformSrc);
 
     /* det = M11 * M22 - M12 * M21 */
     MulSub(&foDet, &pmxSrc->efM11, &pmxSrc->efM22, &pmxSrc->efM12, &pmxSrc->efM21);
@@ -266,6 +274,8 @@ XFORMOBJ_iInverse(
         return DDI_ERROR;
     }
 
+    eDet.Long = FLOATOBJ_GetFloat(&foDet);
+
     /* Calculate adj(A) / det(A) */
     pmxDst->efM11 = pmxSrc->efM22;
     FLOATOBJ_Div(&pmxDst->efM11, &foDet);
@@ -274,10 +284,10 @@ XFORMOBJ_iInverse(
 
     /* The other 2 are negative, negate foDet for that */
     FLOATOBJ_Neg(&foDet);
-    pmxDst->efM12 = pmxSrc->efM21;
+    pmxDst->efM12 = pmxSrc->efM12;
     FLOATOBJ_Div(&pmxDst->efM12, &foDet);
-    pmxDst->efM21 = pmxSrc->efM12;
-    FLOATOBJ_Div(&pmxDst->efM22, &foDet);
+    pmxDst->efM21 = pmxSrc->efM21;
+    FLOATOBJ_Div(&pmxDst->efM21, &foDet);
 
     /* Update accelerators and return complexity */
     return XFORMOBJ_UpdateAccel(pxoDst);
@@ -300,13 +310,13 @@ XFORMOBJ_bXformFixPoints(
     pmx = XFORMOBJ_pmx(pxo);
     flAccel = pmx->flAccel;
 
-    if ((flAccel & (MX_SCALE|MX_IDENTITYSCALE)) == (MX_SCALE|MX_IDENTITYSCALE))
+    if ((flAccel & (XFORM_SCALE|XFORM_UNITY)) == (XFORM_SCALE|XFORM_UNITY))
     {
         /* Identity transformation, nothing todo */
     }
-    else if (flAccel & MX_INTEGER)
+    else if (flAccel & XFORM_INTEGER)
     {
-        if (flAccel & MX_IDENTITYSCALE)
+        if (flAccel & XFORM_UNITY)
         {
             /* 1-scale integer transform */
             i = cPoints - 1;
@@ -319,7 +329,7 @@ XFORMOBJ_bXformFixPoints(
             }
             while (--i >= 0);
         }
-        else if (flAccel & MX_SCALE)
+        else if (flAccel & XFORM_SCALE)
         {
             /* Diagonal integer transform */
             i = cPoints - 1;
@@ -346,7 +356,7 @@ XFORMOBJ_bXformFixPoints(
             while (--i >= 0);
         }
     }
-    else if (flAccel & MX_IDENTITYSCALE)
+    else if (flAccel & XFORM_UNITY)
     {
         /* 1-scale transform */
         i = cPoints - 1;
@@ -361,7 +371,7 @@ XFORMOBJ_bXformFixPoints(
         }
         while (--i >= 0);
     }
-    else if (flAccel & MX_SCALE)
+    else if (flAccel & XFORM_SCALE)
     {
         /* Diagonal float transform */
         i = cPoints - 1;
@@ -390,13 +400,12 @@ XFORMOBJ_bXformFixPoints(
         while (--i >= 0);
     }
 
-    if (!(pmx->flAccel & MX_NOTRANSLATE))
+    if (!(pmx->flAccel & XFORM_NO_TRANSLATION))
     {
         /* Translate points */
         i = cPoints - 1;
         do
         {
-//		DPRINT1("Translating Points (%d,%d)->(%d,%d)\n", pptOut[i].x, pptOut[i].y, pptOut[i].x + pmx->fxDx, pptOut[i].y + pmx->fxDy);
             pptOut[i].x += pmx->fxDx;
             pptOut[i].y += pmx->fxDy;
         }

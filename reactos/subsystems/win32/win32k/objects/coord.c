@@ -3,7 +3,65 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Coordinate systems
  * FILE:             subsystems/win32/win32k/objects/coord.c
- * PROGRAMER:        Unknown
+ * PROGRAMER:        Timo Kreuzer (timo.kreuzer@rectos.org)
+ */
+
+/* Coordinate translation overview
+ * -------------------------------
+ *
+ * Windows uses 3 different coordinate systems, referred to as world space,
+ * page space and device space.
+ *
+ * Device space:
+ * This is the coordinate system of the physical device that displays the
+ * graphics. One unit matches one pixel of the surface. The coordinate system
+ * is always orthogonal.
+ *
+ * Page space:
+ * This is the coordinate system on the screen or on the paper layout for
+ * printer devices. The coordinate system is also orthogonal but one unit
+ * does not neccesarily match one pixel. Instead there are different mapping
+ * modes that can be set using SetMapMode() that specify how page space units
+ * are transformed into device space units. These mapping modes are:
+ * - MM_TEXT: One unit matches one unit in device space (one pixel)
+ * - MM_TWIPS One unit matches 1/20 point (1/1440 inch)
+ * - MM_LOMETRIC: One unit matches 0.1 millimeter
+ * - MM_HIMETRIC: One unit matches 0.01 millimeter
+ * - MM_LOENGLISH: One unit matches 0.01 inch
+ * - MM_HIENGLISH: One unit matches 0.001 inch
+ * - MM_ISOTROPIC:
+ * - MM_ANISOTROPIC:
+ * If the mapping mode is either MM_ISOTROPIC or MM_ANISOTROPIC, the actual
+ * transormation is calculated from the window and viewport extension.
+ * The window extension can be set using SetWindowExtEx() and describes the
+ * extents of an arbitrary window (not to confuse with the gui element!) in
+ * page space coordinates.
+ * The viewport extension can be set using SetViewportExtEx() and describes
+ * the extent of the same window in device space coordinates. If the mapping
+ * mode is MM_ISOTROPIC one of the viewport extensions can be adjusted by GDI
+ * to make sure the mapping stays isotropic, that is it has the same x/y ratio
+ * as the window extension.
+ *
+ * World space:
+ * World space is the coordinate system that is used for all GDI drawing
+ * operations. The metrics of this coordinate system depend on the DCs
+ * graphics mode, which can be set using SetGraphicsMode().
+ * If the graphics mode is GM_COMPATIBLE, world space is identical to page
+ * space and no additional transformation is applied.
+ * If the graphics mode is GM_ADVANCED, an arbitrary coordinate transformation
+ * can be set using SetWorldTransform(), which is applied to transform world
+ * space coordinates into page space coordinates.
+ *
+ * User mode data
+ * All coordinate translation data is stored in the dc attribute, so the values
+ * might be invalid. This has to be taken into account. Integer values might be
+ * zero, so when a division is made, the value has to be read first and then
+ * checked! For floating point values (FLOATOBJ as well) these restrictions do
+ * not apply, since we cannot get dividy-by-zero exceptions.
+ * Though the result might be a completely random and invalid value, if it was
+ * messed with in an illegal way in user mode. This is not a problem, since the
+ * result of coordinate transformations are never expected to be "valid" values.
+ * In the worst case, the drawing operation draws rubbish into the DC.
  */
 
 /* INCLUDES ******************************************************************/
@@ -12,140 +70,183 @@
 
 #define NDEBUG
 #include <debug.h>
+C_ASSERT(sizeof(XFORML) == sizeof(XFORM));
+
+
+/* GLOBALS *******************************************************************/
+
+const MATRIX gmxIdentity =
+{
+    FLOATOBJ_1, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_1,
+    FLOATOBJ_0, FLOATOBJ_0,
+    0, 0, XFORM_NO_TRANSLATION|XFORM_FORMAT_LTOL|XFORM_UNITY|XFORM_SCALE
+};
+
 
 /* FUNCTIONS *****************************************************************/
 
-void FASTCALL
-IntFixIsotropicMapping(PDC pdc)
+VOID
+FASTCALL
+DC_vFixIsotropicMapping(PDC pdc)
 {
     PDC_ATTR pdcattr;
-    LONG fx, fy, s;
+    LONG64 fx, fy;
+    LONG s;
+    SIZEL szlWindowExt, szlViewportExt;
+    ASSERT(pdc->pdcattr->iMapMode == MM_ISOTROPIC);
 
     /* Get a pointer to the DC_ATTR */
     pdcattr = pdc->pdcattr;
 
+    /* Read the extents, we rely on non-null values */
+    szlWindowExt = pdcattr->szlWindowExt;
+    szlViewportExt = pdcattr->szlViewportExt;
+
     /* Check if all values are valid */
-    if (pdcattr->szlWindowExt.cx == 0 || pdcattr->szlWindowExt.cy == 0 ||
-        pdcattr->szlViewportExt.cx == 0 || pdcattr->szlViewportExt.cy == 0)
+    if ((szlWindowExt.cx == 0) || (szlWindowExt.cy == 0) ||
+        (szlViewportExt.cx == 0) || (szlViewportExt.cy == 0))
     {
-        /* Don't recalculate */
+        /* Someone put rubbish into the fields, just ignore it. */
         return;
     }
 
-    fx = abs(pdcattr->szlWindowExt.cx * pdcattr->szlViewportExt.cy);
-    fy = abs(pdcattr->szlWindowExt.cy * pdcattr->szlViewportExt.cx);
+    fx = abs((LONG64)szlWindowExt.cx * szlViewportExt.cy);
+    fy = abs((LONG64)szlWindowExt.cy * szlViewportExt.cx);
 
-    if (fy > fx)
+    if (fx < fy)
     {
-        s = pdcattr->szlWindowExt.cy * pdcattr->szlViewportExt.cx > 0 ? 1 : -1;
-        pdcattr->szlViewportExt.cx = s * fx / pdcattr->szlWindowExt.cy;
+        s = (szlWindowExt.cy ^ szlViewportExt.cx) > 0 ? 1 : -1;
+        pdcattr->szlViewportExt.cx = (LONG)(fx * s / szlWindowExt.cy);
     }
     else if (fx > fy)
     {
-        s = pdcattr->szlWindowExt.cx * pdcattr->szlViewportExt.cy > 0 ? 1 : -1;
-        pdcattr->szlViewportExt.cy = s * fy / pdcattr->szlWindowExt.cx;
-    }
-}
-
-// FIXME: Don't use floating point in the kernel!
-void IntWindowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
-{
-    FLOAT scaleX, scaleY;
-
-    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
-    xformWnd2Vport->eM11 = scaleX;
-    xformWnd2Vport->eM12 = 0.0;
-    xformWnd2Vport->eM21 = 0.0;
-    xformWnd2Vport->eM22 = scaleY;
-    xformWnd2Vport->eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport->eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
-}
-
-// FIXME: Use XFORMOBJECT!
-VOID FASTCALL
-DC_UpdateXforms(PDC dc)
-{
-    XFORM  xformWnd2Vport;
-    PDC_ATTR pdcattr = dc->pdcattr;
-    XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
-
-    /* Construct a transformation to do the window-to-viewport conversion */
-    IntWindowToViewPort(pdcattr, &xformWnd2Vport);
-
-    /* Combine with the world transformation */
-    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
-    MatrixS2XForm(&xformWorld2Wnd, &dc->dclevel.mxWorldToPage);
-    IntGdiCombineTransform(&xformWorld2Vport, &xformWorld2Wnd, &xformWnd2Vport);
-
-    /* Create inverse of world-to-viewport transformation */
-    MatrixS2XForm(&xformVport2World, &dc->dclevel.mxDeviceToWorld);
-    if (DC_InvertXform(&xformWorld2Vport, &xformVport2World))
-    {
-        pdcattr->flXform &= ~DEVICE_TO_WORLD_INVALID;
-    }
-    else
-    {
-        pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
+        s = (szlWindowExt.cx ^ szlViewportExt.cy) > 0 ? 1 : -1;
+        pdcattr->szlViewportExt.cy = (LONG)(fy * s / szlWindowExt.cx);
     }
 
-    /* Update transformation matrices */
-    XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
-    XForm2MatrixS(&dc->dclevel.mxDeviceToWorld, &xformVport2World);
+    /* Reset the flag */
+    pdc->pdcattr->flXform &= ~PAGE_EXTENTS_CHANGED;
 }
 
 VOID
 FASTCALL
-DC_vUpdateViewportExt(PDC pdc)
+DC_vGetPageToDevice(PDC pdc, MATRIX *pmx)
 {
-    PDC_ATTR pdcattr;
+    PDC_ATTR pdcattr = pdc->pdcattr;
+    PSIZEL pszlViewPortExt;
 
-    /* Get a pointer to the dc attribute */
-    pdcattr = pdc->pdcattr;
+    /* Get the viewport extension */
+    pszlViewPortExt = DC_pszlViewportExt(pdc);
 
-    /* Check if we need to recalculate */
-    if (pdcattr->flXform & PAGE_EXTENTS_CHANGED)
+    /* No shearing / rotation */
+    FLOATOBJ_SetLong(&pmx->efM12, 0);
+    FLOATOBJ_SetLong(&pmx->efM21, 0);
+
+    /* Calculate scaling */
+    if (pdcattr->szlWindowExt.cx != 0)
     {
-        /* Check if we need to do isotropic fixup */
-        if (pdcattr->iMapMode == MM_ISOTROPIC)
-        {
-            IntFixIsotropicMapping(pdc);
-        }
-
-        /* Update xforms, CHECKME: really done here? */
-        DC_UpdateXforms(pdc);
+        FLOATOBJ_SetLong(&pmx->efM11, pszlViewPortExt->cx);
+        FLOATOBJ_DivLong(&pmx->efM11, pdcattr->szlWindowExt.cx);
     }
+    else
+        FLOATOBJ_SetLong(&pmx->efM11, 1);
+
+    if (pdcattr->szlWindowExt.cy != 0)
+    {
+        FLOATOBJ_SetLong(&pmx->efM22, pszlViewPortExt->cy);
+        FLOATOBJ_DivLong(&pmx->efM22, pdcattr->szlWindowExt.cy);
+    }
+    else
+        FLOATOBJ_SetLong(&pmx->efM22, 1);
+
+    /* Calculate x offset */
+    FLOATOBJ_SetLong(&pmx->efDx, -pdcattr->ptlWindowOrg.x);
+    FLOATOBJ_Mul(&pmx->efDx, &pmx->efM11);
+    FLOATOBJ_AddLong(&pmx->efDx, pdcattr->ptlViewportOrg.x);
+
+    /* Calculate y offset */
+    FLOATOBJ_SetLong(&pmx->efDy, -pdcattr->ptlWindowOrg.y);
+    FLOATOBJ_Mul(&pmx->efDy, &pmx->efM22);
+    FLOATOBJ_AddLong(&pmx->efDy, pdcattr->ptlViewportOrg.y);
 }
 
-// FIXME: Don't use floating point in the kernel! use XFORMOBJ function
-BOOL FASTCALL
-IntGdiCombineTransform(
-    LPXFORM XFormResult,
-    LPXFORM xform1,
-    LPXFORM xform2)
+VOID
+FASTCALL
+DC_vUpdateWorldToDevice(PDC pdc)
 {
-    XFORM xformTemp;
+    XFORMOBJ xoPageToDevice, xoWorldToPage, xoWorldToDevice;
+    MATRIX mxPageToDevice;
 
-    /* Check for illegal parameters */
-    if (!XFormResult || !xform1 || !xform2)
+    // FIXME: make sure world-to-page is valid!
+
+    /* Construct a transformation to do the page-to-device conversion */
+    DC_vGetPageToDevice(pdc, &mxPageToDevice);
+    XFORMOBJ_vInit(&xoPageToDevice, &mxPageToDevice);
+
+    /* Recalculate the world-to-device xform */
+    XFORMOBJ_vInit(&xoWorldToPage, &pdc->pdcattr->mxWorldToPage);
+    XFORMOBJ_vInit(&xoWorldToDevice, &pdc->pdcattr->mxWorldToDevice);
+    XFORMOBJ_iCombine(&xoWorldToDevice, &xoWorldToPage, &xoPageToDevice);
+
+    /* Reset the flags */
+    pdc->pdcattr->flXform &= ~(PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|WORLD_XFORM_CHANGED);
+}
+
+VOID
+FASTCALL
+DC_vUpdateDeviceToWorld(PDC pdc)
+{
+    XFORMOBJ xoWorldToDevice, xoDeviceToWorld;
+    PMATRIX pmxWorldToDevice;
+
+    /* Get the world-to-device translation */
+    pmxWorldToDevice = DC_pmxWorldToDevice(pdc);
+    XFORMOBJ_vInit(&xoWorldToDevice, pmxWorldToDevice);
+
+    /* Create inverse of world-to-device transformation */
+    XFORMOBJ_vInit(&xoDeviceToWorld, &pdc->pdcattr->mxDeviceToWorld);
+    if (XFORMOBJ_iInverse(&xoDeviceToWorld, &xoWorldToDevice) == DDI_ERROR)
     {
-        return  FALSE;
+        // FIXME: do we need to reset anything?
+        return;
     }
 
-    /* Create the result in a temporary XFORM, since xformResult may be
-     * equal to xform1 or xform2 */
-    xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
-    xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
-    xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
-    xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
-    xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
-    xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
-    *XFormResult = xformTemp;
+    /* Reset the flag */
+    pdc->pdcattr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+}
+
+BOOL
+NTAPI
+GreCombineTransform(
+    XFORML *pxformDest,
+    XFORML *pxform1,
+    XFORML *pxform2)
+{
+    MATRIX mxDest, mx1, mx2;
+    XFORMOBJ xoDest, xo1, xo2;
+
+    /* Check for illegal parameters */
+    if (!pxformDest || !pxform1 || !pxform2) return FALSE;
+
+    /* Initialize XFORMOBJs */
+    XFORMOBJ_vInit(&xoDest, &mxDest);
+    XFORMOBJ_vInit(&xo1, &mx1);
+    XFORMOBJ_vInit(&xo2, &mx2);
+
+    /* Convert the XFORMLs into XFORMOBJs */
+    XFORMOBJ_iSetXform(&xo1, pxform1);
+    XFORMOBJ_iSetXform(&xo2, pxform2);
+
+    /* Combine them */
+    XFORMOBJ_iCombine(&xoDest, &xo1, &xo2);
+
+    /* Translate back into XFORML */
+    XFORMOBJ_iGetXform(&xoDest, pxformDest);
 
     return TRUE;
 }
 
-// FIXME: Should be XFORML and use XFORMOBJ functions
 BOOL
 APIENTRY
 NtGdiCombineTransform(
@@ -160,9 +261,9 @@ NtGdiCombineTransform(
         ProbeForWrite(UnsafeXFormResult, sizeof(XFORM), 1);
         ProbeForRead(Unsafexform1, sizeof(XFORM), 1);
         ProbeForRead(Unsafexform2, sizeof(XFORM), 1);
-        Ret = IntGdiCombineTransform(UnsafeXFormResult,
-                                     Unsafexform1,
-                                     Unsafexform2);
+        Ret = GreCombineTransform((XFORML*)UnsafeXFormResult,
+                                  (XFORML*)Unsafexform1,
+                                  (XFORML*)Unsafexform2);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -177,61 +278,71 @@ NtGdiCombineTransform(
 BOOL
 APIENTRY
 NtGdiGetTransform(
-    HDC  hDC,
+    HDC hdc,
     DWORD iXform,
-    LPXFORM  XForm)
+    LPXFORM pXForm)
 {
     PDC pdc;
-    NTSTATUS Status = STATUS_SUCCESS;
+    BOOL ret = TRUE;
+    MATRIX mxPageToDevice;
+    XFORMOBJ xo;
+    PMATRIX pmx;
 
-    if (!XForm)
+    if (!pXForm)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    pdc = DC_LockDc(hDC);
+    pdc = DC_LockDc(hdc);
     if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
+    switch (iXform)
+    {
+        case GdiWorldSpaceToPageSpace:
+            pmx = DC_pmxWorldToPage(pdc);
+            break;
+
+        case GdiWorldSpaceToDeviceSpace:
+            pmx = DC_pmxWorldToDevice(pdc);
+            break;
+
+        case GdiDeviceSpaceToWorldSpace:
+            pmx = DC_pmxDeviceToWorld(pdc);
+            break;
+
+        case GdiPageSpaceToDeviceSpace:
+            DC_vGetPageToDevice(pdc, &mxPageToDevice);
+            pmx = &mxPageToDevice;
+            break;
+
+        default:
+            DPRINT1("Unknown transform %lu\n", iXform);
+            ret = FALSE;
+            goto leave;
+    }
+
+    /* Initialize an XFORMOBJ */
+    XFORMOBJ_vInit(&xo, pmx);
+
     _SEH2_TRY
     {
-        ProbeForWrite(XForm, sizeof(XFORM), 1);
-        switch (iXform)
-        {
-            case GdiWorldSpaceToPageSpace:
-                MatrixS2XForm(XForm, &pdc->dclevel.mxWorldToPage);
-                break;
-
-            case GdiWorldSpaceToDeviceSpace:
-                MatrixS2XForm(XForm, &pdc->dclevel.mxWorldToDevice);
-                break;
-
-            case GdiPageSpaceToDeviceSpace:
-                IntWindowToViewPort(pdc->pdcattr, XForm);
-                break;
-
-            case GdiDeviceSpaceToWorldSpace:
-                MatrixS2XForm(XForm, &pdc->dclevel.mxDeviceToWorld);
-                break;
-
-            default:
-                DPRINT1("Unknown transform %lu\n", iXform);
-                Status = STATUS_INVALID_PARAMETER;
-                break;
-        }
+        ProbeForWrite(pXForm, sizeof(XFORML), 1);
+        XFORMOBJ_iGetXform(&xo, (XFORML*)pXForm);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        ret = FALSE;
     }
     _SEH2_END;
 
+leave:
     DC_UnlockDc(pdc);
-    return NT_SUCCESS(Status);
+    return ret;
 }
 
 
@@ -295,11 +406,11 @@ NtGdiTransformPoints(
     switch (iMode)
     {
         case GdiDpToLp:
-            IntDPtoLP(pdc, Points, Count);
+            DC_vXformDeviceToWorld(pdc, Count, Points, Points);
             break;
 
         case GdiLpToDp:
-            IntLPtoDP(pdc, Points, Count);
+            DC_vXformWorldToDevice(pdc, Count, Points, Points);
             break;
 
         case 2: // Not supported yet. Need testing.
@@ -331,78 +442,78 @@ leave:
     return ret;
 }
 
-// FIXME: Don't use floating point in the kernel
 BOOL
-FASTCALL
-IntGdiModifyWorldTransform(
-    PDC pDc,
-    CONST LPXFORM lpXForm,
-    DWORD Mode)
+NTAPI
+GreModifyWorldTransform(
+    PDC pdc,
+    const XFORML *pxform,
+    DWORD dwMode)
 {
-    XFORM xformWorld2Wnd;
-    ASSERT(pDc);
+    MATRIX mxSrc;
+    XFORMOBJ xoSrc, xoDC;
 
-    switch (Mode)
+    switch (dwMode)
     {
         case MWT_IDENTITY:
-            xformWorld2Wnd.eM11 = 1.0f;
-            xformWorld2Wnd.eM12 = 0.0f;
-            xformWorld2Wnd.eM21 = 0.0f;
-            xformWorld2Wnd.eM22 = 1.0f;
-            xformWorld2Wnd.eDx  = 0.0f;
-            xformWorld2Wnd.eDy  = 0.0f;
-            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
+            pdc->pdcattr->mxWorldToPage = gmxIdentity;
             break;
 
         case MWT_LEFTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
-            IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
-            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
+            XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
+            XFORMOBJ_vInit(&xoSrc, &mxSrc);
+            XFORMOBJ_iSetXform(&xoSrc, pxform);
+            XFORMOBJ_iCombine(&xoDC, &xoSrc, &xoDC);
             break;
 
         case MWT_RIGHTMULTIPLY:
-            MatrixS2XForm(&xformWorld2Wnd, &pDc->dclevel.mxWorldToPage);
-            IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
-            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, &xformWorld2Wnd);
+            XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
+            XFORMOBJ_vInit(&xoSrc, &mxSrc);
+            XFORMOBJ_iSetXform(&xoSrc, pxform);
+            XFORMOBJ_iCombine(&xoDC, &xoDC, &xoSrc);
             break;
 
         case MWT_MAX+1: // Must be MWT_SET????
-            XForm2MatrixS(&pDc->dclevel.mxWorldToPage, lpXForm); // Do it like Wine.
+            XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
+            XFORMOBJ_iSetXform(&xoDC, pxform);
             break;
 
         default:
             return FALSE;
     }
-    DC_UpdateXforms(pDc);
+
+    /*Set invalidation flags */
+    pdc->pdcattr->flXform |= WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID;
+
     return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiModifyWorldTransform(
-    HDC hDC,
-    LPXFORM  UnsafeXForm,
-    DWORD Mode)
+    HDC hdc,
+    LPXFORM pxformUnsafe,
+    DWORD dwMode)
 {
-    PDC dc;
-    XFORM SafeXForm; // FIXME: Use XFORML
+    PDC pdc;
+    XFORML xformSafe;
     BOOL Ret = TRUE;
 
-    dc = DC_LockDc(hDC);
-    if (!dc)
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    // The xform is permitted to be NULL for MWT_IDENTITY.
-    // However, if it is not NULL, then it must be valid even though it is not used.
-    if (UnsafeXForm != NULL || Mode != MWT_IDENTITY)
+    /* The xform is permitted to be NULL for MWT_IDENTITY.
+     * However, if it is not NULL, then it must be valid even
+     * though it is not used. */
+    if (pxformUnsafe != NULL || dwMode != MWT_IDENTITY)
     {
         _SEH2_TRY
         {
-            ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
-            RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+            ProbeForRead(pxformUnsafe, sizeof(XFORML), 1);
+            RtlCopyMemory(&xformSafe, pxformUnsafe, sizeof(XFORML));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -411,9 +522,9 @@ NtGdiModifyWorldTransform(
         _SEH2_END;
     }
 
-    // Safe to handle kernel mode data.
-    if (Ret) Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
-    DC_UnlockDc(dc);
+    /* Safe to handle kernel mode data. */
+    if (Ret) Ret = GreModifyWorldTransform(pdc, &xformSafe, dwMode);
+    DC_UnlockDc(pdc);
     return Ret;
 }
 
@@ -469,7 +580,8 @@ NtGdiOffsetViewportOrgEx(
     }
     pdcattr->ptlViewportOrg.x += XOffset;
     pdcattr->ptlViewportOrg.y += YOffset;
-    DC_UpdateXforms(dc);
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -520,8 +632,8 @@ NtGdiOffsetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x += XOffset;
     pdcattr->ptlWindowOrg.y += YOffset;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
 
-    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -554,6 +666,7 @@ NtGdiScaleViewportExtEx(
     {
         if (Xdenom && Ydenom)
         {
+            DC_pszlViewportExt(pDC);
             X = Xnum * pdcattr->szlViewportExt.cx / Xdenom;
             if (X)
             {
@@ -562,6 +675,7 @@ NtGdiScaleViewportExtEx(
                 {
                     pdcattr->szlViewportExt.cx = X;
                     pdcattr->szlViewportExt.cy = Y;
+                    pdcattr->flXform |= PAGE_XLATE_CHANGED;
 
                     IntMirrorWindowOrg(pDC);
 
@@ -571,9 +685,8 @@ NtGdiScaleViewportExtEx(
 
                     if (pdcattr->iMapMode == MM_ISOTROPIC)
                     {
-                        IntFixIsotropicMapping(pDC);
+                        DC_vFixIsotropicMapping(pDC);
                     }
-                    DC_UpdateXforms(pDC);
 
                     Ret = TRUE;
                 }
@@ -671,9 +784,6 @@ NtGdiScaleWindowExtEx(
 
                     pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
 
-                    if (pdcattr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
-                    DC_UpdateXforms(pDC);
-
                     Ret = TRUE;
                 }
             }
@@ -698,6 +808,9 @@ IntGdiSetMapMode(
     PrevMapMode = pdcattr->iMapMode;
 
     pdcattr->iMapMode = MapMode;
+    pdcattr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+        PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP|PAGE_TO_DEVICE_SCALE_IDENTITY|
+        PAGE_TO_DEVICE_IDENTITY);
 
     switch (MapMode)
     {
@@ -706,10 +819,7 @@ IntGdiSetMapMode(
             pdcattr->szlWindowExt.cy = 1;
             pdcattr->szlViewportExt.cx = 1;
             pdcattr->szlViewportExt.cy = 1;
-            pdcattr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
-                                  PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
-            pdcattr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
-                                 INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+            pdcattr->flXform |= PAGE_TO_DEVICE_SCALE_IDENTITY;
             break;
 
         case MM_ISOTROPIC:
@@ -760,7 +870,9 @@ IntGdiSetMapMode(
             pdcattr->iMapMode = PrevMapMode;
             PrevMapMode = 0;
     }
-    DC_UpdateXforms(dc);
+
+    pdcattr->flXform |= (PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|
+        INVALIDATE_ATTRIBUTES|DEVICE_TO_PAGE_INVALID|DEVICE_TO_WORLD_INVALID);
 
     return PrevMapMode;
 }
@@ -811,8 +923,8 @@ NtGdiSetViewportOrgEx(
 
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
 
-    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -863,8 +975,8 @@ NtGdiSetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x = X;
     pdcattr->ptlWindowOrg.y = Y;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
 
-    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -896,6 +1008,7 @@ IntMirrorWindowOrg(PDC dc)
     X = (X * pdcattr->szlWindowExt.cx) / pdcattr->szlViewportExt.cx;
 
     pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx - X; // Now set the inverted win origion.
+    pdcattr->flXform |= PAGE_XLATE_CHANGED;
 
     return;
 }
@@ -918,13 +1031,13 @@ DC_vSetLayout(
         pdcattr->iMapMode = MM_ANISOTROPIC;
     }
 
-    pdcattr->szlWindowExt.cy = -pdcattr->szlWindowExt.cy;
-    pdcattr->ptlWindowOrg.x  = -pdcattr->ptlWindowOrg.x;
+    //pdcattr->szlWindowExt.cy = -pdcattr->szlWindowExt.cy;
+    //pdcattr->ptlWindowOrg.x  = -pdcattr->ptlWindowOrg.x;
 
-    if (wox == -1)
-        IntMirrorWindowOrg(pdc);
-    else
-        pdcattr->ptlWindowOrg.x = wox - pdcattr->ptlWindowOrg.x;
+    //if (wox == -1)
+    //    IntMirrorWindowOrg(pdc);
+    //else
+    //    pdcattr->ptlWindowOrg.x = wox - pdcattr->ptlWindowOrg.x;
 
     if (!(pdcattr->flTextAlign & TA_CENTER)) pdcattr->flTextAlign |= TA_RIGHT;
 
@@ -956,8 +1069,7 @@ NtGdiSetLayout(
     IN DWORD dwLayout)
 {
     PDC pdc;
-    PDC_ATTR pdcattr;
-    DWORD oLayout;
+    DWORD dwOldLayout;
 
     pdc = DC_LockDc(hdc);
     if (!pdc)
@@ -965,13 +1077,12 @@ NtGdiSetLayout(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
-    pdcattr = pdc->pdcattr;
 
-    oLayout = pdcattr->dwLayout;
+    dwOldLayout = pdc->pdcattr->dwLayout;
     DC_vSetLayout(pdc, wox, dwLayout);
 
     DC_UnlockDc(pdc);
-    return oLayout;
+    return dwOldLayout;
 }
 
 /*
@@ -1041,7 +1152,6 @@ NtGdiSetSizeDevice(
     pdcattr->szlVirtualDeviceSize.cx = cxVirtualDevice;
     pdcattr->szlVirtualDeviceSize.cy = cyVirtualDevice;
 
-//    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -1087,42 +1197,9 @@ NtGdiSetVirtualResolution(
     pdcattr->szlVirtualDeviceMm.cx = cxVirtualDeviceMm;
     pdcattr->szlVirtualDeviceMm.cy = cyVirtualDeviceMm;
 
-//    DC_UpdateXforms(dc);
+//    DC_vUpdateXforms(dc);
     DC_UnlockDc(dc);
     return TRUE;
-}
-
-
-// FIXME: Don't use floating point in the kernel!
-BOOL FASTCALL
-DC_InvertXform(const XFORM *xformSrc,
-               XFORM *xformDest)
-{
-    FLOAT  determinant;
-
-    determinant = xformSrc->eM11*xformSrc->eM22 - xformSrc->eM12*xformSrc->eM21;
-    if (determinant > -1e-12 && determinant < 1e-12)
-    {
-        return  FALSE;
-    }
-
-    xformDest->eM11 =  xformSrc->eM22 / determinant;
-    xformDest->eM12 = -xformSrc->eM12 / determinant;
-    xformDest->eM21 = -xformSrc->eM21 / determinant;
-    xformDest->eM22 =  xformSrc->eM11 / determinant;
-    xformDest->eDx  = -xformSrc->eDx * xformDest->eM11 - xformSrc->eDy * xformDest->eM21;
-    xformDest->eDy  = -xformSrc->eDx * xformDest->eM12 - xformSrc->eDy * xformDest->eM22;
-
-    return  TRUE;
-}
-
-LONG FASTCALL
-IntCalcFillOrigin(PDC pdc)
-{
-    pdc->ptlFillOrigin.x = pdc->dclevel.ptlBrushOrigin.x + pdc->ptlDCOrig.x;
-    pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
-
-    return pdc->ptlFillOrigin.y;
 }
 
 PPOINTL
@@ -1131,7 +1208,8 @@ IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
 {
     pdc->dclevel.ptlBrushOrigin.x = x;
     pdc->dclevel.ptlBrushOrigin.y = y;
-    IntCalcFillOrigin(pdc);
+    pdc->ptlFillOrigin.x = pdc->dclevel.ptlBrushOrigin.x + pdc->ptlDCOrig.x;
+    pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
     return &pdc->dclevel.ptlBrushOrigin;
 }
 
@@ -1163,6 +1241,7 @@ NtGdiGetDCPoint(
     DC *pdc;
     POINTL SafePoint;
     SIZE Size;
+    PSIZEL pszlViewportExt;
     NTSTATUS Status = STATUS_SUCCESS;
 
     if (!Point)
@@ -1181,9 +1260,9 @@ NtGdiGetDCPoint(
     switch (iPoint)
     {
         case GdiGetViewPortExt:
-            DC_vUpdateViewportExt(pdc);
-            SafePoint.x = pdc->pdcattr->szlViewportExt.cx;
-            SafePoint.y = pdc->pdcattr->szlViewportExt.cy;
+            pszlViewportExt = DC_pszlViewportExt(pdc);
+            SafePoint.x = pszlViewportExt->cx;
+            SafePoint.y = pszlViewportExt->cy;
             break;
 
         case GdiGetWindowExt:

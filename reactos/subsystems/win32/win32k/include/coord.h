@@ -45,8 +45,72 @@ InvertXform(
     XFORMOBJ_iGetXform(&xo, pxformDest);
 }
 
+VOID
+FASTCALL
+DC_vFixIsotropicMapping(PDC pdc);
+
+VOID
+FASTCALL
+DC_vUpdateWorldToDevice(PDC pdc);
+
+VOID
+FASTCALL
+DC_vUpdateDeviceToWorld(PDC pdc);
+
+PSIZEL
 FORCEINLINE
-void
+DC_pszlViewportExt(PDC pdc)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+
+    /* Check if we need isotropic fixup */
+    if ((pdcattr->flXform & PAGE_EXTENTS_CHANGED) &&
+        (pdcattr->iMapMode == MM_ISOTROPIC))
+    {
+        /* Fixup viewport extension */
+        DC_vFixIsotropicMapping(pdc);
+    }
+
+    return &pdcattr->szlViewportExt;
+}
+
+PMATRIX
+FORCEINLINE
+DC_pmxWorldToPage(PDC pdc)
+{
+    return &pdc->pdcattr->mxWorldToPage;
+}
+
+PMATRIX
+FORCEINLINE
+DC_pmxWorldToDevice(PDC pdc)
+{
+    /* Check if world or page xform was changed */
+    if (pdc->pdcattr->flXform & (PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|WORLD_XFORM_CHANGED))
+    {
+        /* Update the world-to-device xform */
+         DC_vUpdateWorldToDevice(pdc);
+    }
+
+    return &pdc->pdcattr->mxWorldToDevice;
+}
+
+PMATRIX
+FORCEINLINE
+DC_pmxDeviceToWorld(PDC pdc)
+{
+    /* Check if the device-to-world xform is invalid */
+    if (pdc->pdcattr->flXform & DEVICE_TO_WORLD_INVALID)
+    {
+        /* Update the world-to-device xform */
+         DC_vUpdateDeviceToWorld(pdc);
+    }
+
+    return &pdc->pdcattr->mxDeviceToWorld;
+}
+
+VOID
+FORCEINLINE
 DC_vXformDeviceToWorld(
     IN PDC pdc,
     IN ULONG cNumPoints,
@@ -54,13 +118,15 @@ DC_vXformDeviceToWorld(
     IN PPOINTL pptlSource)
 {
     XFORMOBJ xo;
+    PMATRIX pmx;
 
-    XFORMOBJ_vInit(&xo, &pdc->dclevel.mxDeviceToWorld);
+    pmx = DC_pmxDeviceToWorld(pdc);
+    XFORMOBJ_vInit(&xo, pmx);
     XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
 }
 
+VOID
 FORCEINLINE
-void
 DC_vXformWorldToDevice(
     IN PDC pdc,
     IN ULONG cNumPoints,
@@ -68,18 +134,27 @@ DC_vXformWorldToDevice(
     IN PPOINTL pptlSource)
 {
     XFORMOBJ xo;
+    PMATRIX pmx;
 
-    XFORMOBJ_vInit(&xo, &pdc->dclevel.mxWorldToDevice);
+    pmx = DC_pmxWorldToDevice(pdc);
+    XFORMOBJ_vInit(&xo, pmx);
     XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
 }
 
 int APIENTRY IntGdiSetMapMode(PDC, int);
 
+BOOL NTAPI
+IntGdiCombineTransform(
+    XFORML *pxformDest,
+    XFORML *pxform1,
+    XFORML *pxform2);
+
 BOOL
-FASTCALL
-IntGdiModifyWorldTransform(PDC pDc,
-                           CONST LPXFORM lpXForm,
-                           DWORD Mode);
+NTAPI
+GreModifyWorldTransform(
+    PDC pdc,
+    const XFORML *pXForm,
+    DWORD dwMode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
 void FASTCALL IntFixIsotropicMapping(PDC);

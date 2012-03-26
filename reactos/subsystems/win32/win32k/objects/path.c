@@ -1424,8 +1424,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     /* Save the mapping mode info */
     mapMode = pdcattr->iMapMode;
 
-    DC_vUpdateViewportExt(dc);
-    szViewportExt = dc->pdcattr->szlViewportExt;
+    szViewportExt = *DC_pszlViewportExt(dc);
     ptViewportOrg = dc->pdcattr->ptlViewportOrg;
     szWindowExt = dc->pdcattr->szlWindowExt;
     ptWindowOrg = dc->pdcattr->ptlWindowOrg;
@@ -1440,7 +1439,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     pdcattr->ptlWindowOrg.y = 0;
     graphicsMode = pdcattr->iGraphicsMode;
     pdcattr->iGraphicsMode = GM_ADVANCED;
-    IntGdiModifyWorldTransform(dc, &xform, MWT_IDENTITY);
+    GreModifyWorldTransform(dc, (XFORML*)&xform, MWT_IDENTITY);
     pdcattr->iGraphicsMode = graphicsMode;
 
     /* Allocate enough memory for the worst case without beziers (one PT_MOVETO

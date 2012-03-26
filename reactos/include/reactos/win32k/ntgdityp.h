@@ -100,10 +100,16 @@ typedef enum _TRANSFORMTYPE
 /* MATRIX flAccel flags */
 enum
 {
-    MX_SCALE = 1,
-    MX_IDENTITYSCALE = 2,
-    MX_INTEGER = 4,
-    MX_NOTRANSLATE = 8,
+    XFORM_SCALE = 1,
+    XFORM_UNITY = 2,
+    XFORM_Y_NEG = 4,
+    XFORM_FORMAT_LTOFX = 8,
+    XFORM_FORMAT_FXTOL = 0x10,
+    XFORM_FORMAT_LTOL = 0x20,
+    XFORM_NO_TRANSLATION = 0x40,
+
+    /* Reactos specific */
+    XFORM_INTEGER = 0x1000,
 };
 
 typedef enum GDIObjType
@@ -548,7 +554,7 @@ typedef VOID (APIENTRY *PFN_DrvMovePanning)(LONG, LONG, FLONG);
 //
 typedef struct _DRIVER_FUNCTIONS
 {
-    PFN_DrvEnablePDEV              EnablePDEV;    
+    PFN_DrvEnablePDEV              EnablePDEV;
     PFN_DrvCompletePDEV            CompletePDEV;
     PFN_DrvDisablePDEV             DisablePDEV;
     PFN_DrvEnableSurface           EnableSurface;
@@ -584,10 +590,10 @@ typedef struct _DRIVER_FUNCTIONS
     PFN_DrvStartPage               StartPage;
     PFN_DrvEndDoc                  EndDoc;
     PFN_DrvStartDoc                StartDoc;
-    PVOID                          Unknown3; 
+    PVOID                          Unknown3;
     PFN_DrvGetGlyphMode            GetGlyphMode;
     PFN_DrvSynchronize             Synchronize;
-    PVOID                          Unknown4; 
+    PVOID                          Unknown4;
     PFN_DrvSaveScreenBits          SaveScreenBits;
     PFN_DrvGetModes                GetModes;
     PFN_DrvFree                    Free;
@@ -641,7 +647,7 @@ typedef struct _DRIVER_FUNCTIONS
     PVOID                          Reserved9;
     PVOID                          Reserved10;
     PVOID                          Reserved11; /* 92 */
-    
+
     /* ReactOS specify */
     PFN_DrvEnableDriver            EnableDriver; //ReactOS Extra
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;

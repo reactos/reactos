@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(_X86_)
+#if defined(_M_IX86)
 
 FORCEINLINE
 BOOL
@@ -54,6 +54,15 @@ _FLOATOBJ_Equal1(FLOATOBJ *pf)
 	return (pef->lMant == 0x40000000 && pef->lExp == 2);
 }
 
+extern const FLOATOBJ gef0;
+extern const FLOATOBJ gef1;
+extern const FLOATOBJ gef16;
+
+#define FLOATOBJ_0 {0x00000000, 0x00000000}
+#define FLOATOBJ_1 {0x40000000, 0x00000002}
+#define FLOATOBJ_16 {0x40000000, 0x00000006}
+#define FLOATOBJ_1_16 {0x40000000, 0xfffffffe}
+
 #define FLOATOBJ_Set0(fo) (fo)->ul1 = 0; (fo)->ul2 = 0;
 #define FLOATOBJ_Set1(fo) (fo)->ul1 = 0x40000000; (fo)->ul2 = 2;
 
@@ -66,7 +75,16 @@ _FLOATOBJ_Equal1(FLOATOBJ *pf)
 #define _FLOATOBJ_Equal1(pf) (*(pf) == 1.)
 #define _FLOATOBJ_GetFix(pf) ((LONG)(*(pf) * 16.))
 
-#define FLOATOBJ_Set0(fo) *(fo) = 0; 
+#define FLOATOBJ_0 0.
+#define FLOATOBJ_1 1.
+#define FLOATOBJ_16 16.
+#define FLOATOBJ_1_16 (1./16.)
+
+#define gef0 FLOATOBJ_0
+#define gef1 FLOATOBJ_1
+#define gef16 FLOATOBJ_16
+
+#define FLOATOBJ_Set0(fo) *(fo) = 0;
 #define FLOATOBJ_Set1(fo) *(fo) = 1;
 
 #endif

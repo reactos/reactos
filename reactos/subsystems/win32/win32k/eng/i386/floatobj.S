@@ -81,6 +81,22 @@
 #define PARAM1 8
 #define PARAM2 12
 
+/** Globals **/
+/* extern const FLOATOBJ gef0; */
+PUBLIC _gef0
+_gef0:
+    .long 0, 0
+
+/* extern const FLOATOBJ gef1; */
+PUBLIC _gef1
+_gef1:
+    .long HEX(40000000), HEX(00000002)
+
+/* extern const FLOATOBJ gef16; */
+PUBLIC _gef16
+_gef16:
+    .long HEX(40000000), HEX(00000006)
+
 /******************************************************************************
  * VOID
  * APIENTRY

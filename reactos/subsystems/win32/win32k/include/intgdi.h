@@ -80,13 +80,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
                CONST PDEVMODEW InitData,
                BOOL CreateAsIC);
 
-/* Coord functions */
-
-BOOL FASTCALL
-IntGdiCombineTransform(LPXFORM XFormResult,
-                       LPXFORM xform1,
-                       LPXFORM xform2);
-
 /* Stock objects */
 
 VOID FASTCALL

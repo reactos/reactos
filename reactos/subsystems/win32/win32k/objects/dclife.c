@@ -17,23 +17,6 @@
 PSURFACE psurfDefaultBitmap = NULL;
 PBRUSH pbrDefaultBrush = NULL;
 
-// FIXME: These should go to floatobj.h or something
-#ifdef _M_IX86
-#define FLOATOBJ_0 {0x00000000, 0x00000000}
-#define FLOATOBJ_1 {0x40000000, 0x00000002}
-#define FLOATOBJ_16 {0x40000000, 0x00000006}
-#define FLOATOBJ_1_16 {0x40000000, 0xfffffffe}
-#else
-#define FLOATOBJ_0 0.
-#define FLOATOBJ_1 1.
-#define FLOATOBJ_16 16.
-#define FLOATOBJ_1_16 (1./16.)
-#endif
-
-static const FLOATOBJ gef0 = FLOATOBJ_0;
-static const FLOATOBJ gef1 = FLOATOBJ_1;
-static const FLOATOBJ gef16 = FLOATOBJ_16;
-
 static const MATRIX	gmxWorldToDeviceDefault =
 {
     FLOATOBJ_16, FLOATOBJ_0,
