@@ -775,6 +775,7 @@ Bus_PDO_QueryResources(
             case ACPI_RESOURCE_TYPE_MEMORY24:
             case ACPI_RESOURCE_TYPE_MEMORY32:
             case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
             case ACPI_RESOURCE_TYPE_IO:
             {
                 NumberOfResources++;
@@ -892,6 +893,18 @@ Bus_PDO_QueryResources(
                 ResourceDescriptor->u.Port.Start.QuadPart = io_data->Minimum;
                 ResourceDescriptor->u.Port.Length = io_data->AddressLength;
 
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            {
+                ACPI_RESOURCE_FIXED_IO *io_data = (ACPI_RESOURCE_FIXED_IO*) &resource->Data;
+                ResourceDescriptor->Type = CmResourceTypePort;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                ResourceDescriptor->u.Port.Start.QuadPart = io_data->Address;
+                ResourceDescriptor->u.Port.Length = io_data->AddressLength;
+                
                 ResourceDescriptor++;
                 break;
             }
@@ -1236,6 +1249,7 @@ Bus_PDO_QueryResourceRequirements(
             case ACPI_RESOURCE_TYPE_MEMORY24:
             case ACPI_RESOURCE_TYPE_MEMORY32:
             case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
             case ACPI_RESOURCE_TYPE_IO:
             {
                 NumberOfResources++;
@@ -1353,6 +1367,21 @@ Bus_PDO_QueryResourceRequirements(
                 RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Minimum;
                 RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum + io_data->AddressLength - 1;
 
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            {
+                ACPI_RESOURCE_FIXED_IO *io_data = (ACPI_RESOURCE_FIXED_IO*) &resource->Data;
+                RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                RequirementDescriptor->u.Port.Length = io_data->AddressLength;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypePort;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                RequirementDescriptor->u.Port.Alignment = 1;
+                RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Address;
+                RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Address + io_data->AddressLength - 1;
+                
                 RequirementDescriptor++;
                 break;
             }
