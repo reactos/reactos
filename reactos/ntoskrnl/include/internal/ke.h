@@ -1130,4 +1130,12 @@ NTAPI
 KiRosPcToUserFileHeader(IN PVOID Eip,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
 
+PCHAR
+NTAPI
+KeBugCheckUnicodeToAnsi(
+    IN PUNICODE_STRING Unicode,
+    OUT PCHAR Ansi,
+    IN ULONG Length
+);
+
 #include "ke_x.h"

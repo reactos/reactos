@@ -102,42 +102,6 @@ KiPcToFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
-BOOLEAN
-NTAPI
-KiRosPrintAddress(PVOID address)
-{
-    PLIST_ENTRY current_entry;
-    PLDR_DATA_TABLE_ENTRY current;
-    extern LIST_ENTRY PsLoadedModuleList;
-    ULONG_PTR RelativeAddress;
-    ULONG i = 0;
-
-    do
-    {
-        current_entry = PsLoadedModuleList.Flink;
-
-        while (current_entry != &PsLoadedModuleList)
-        {
-            current = CONTAINING_RECORD(current_entry,
-                                        LDR_DATA_TABLE_ENTRY,
-                                        InLoadOrderLinks);
-
-            if (address >= (PVOID)current->DllBase &&
-                address < (PVOID)((ULONG_PTR)current->DllBase +
-                                             current->SizeOfImage))
-            {
-                RelativeAddress = (ULONG_PTR)address -
-                                  (ULONG_PTR)current->DllBase;
-                DbgPrint("<%wZ: %x>", &current->FullDllName, RelativeAddress);
-                return(TRUE);
-            }
-            current_entry = current_entry->Flink;
-        }
-    } while(++i <= 1);
-
-    return(FALSE);
-}
-
 PVOID
 NTAPI
 KiRosPcToUserFileHeader(IN PVOID Pc,
@@ -270,9 +234,14 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
             if (!KdbSymPrintAddress((PVOID)Addr, NULL))
 #endif
             {
-                /* Print out the module name */
+                CHAR AnsiName[64];
+
+                /* Convert module name to ANSI and print it */
+                KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
+                                        AnsiName,
+                                        sizeof(AnsiName));
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%wZ: %p>", &LdrEntry->FullDllName, (PVOID)Addr);
+                DbgPrint("<%s: %p>", AnsiName, (PVOID)Addr);
             }
         }
         else

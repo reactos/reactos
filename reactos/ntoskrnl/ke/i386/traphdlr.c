@@ -1190,6 +1190,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     /* Enable interupts */
     _enable();
 
+#if 0
     /* Check if we faulted with interrupts disabled */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
     {
@@ -1201,6 +1202,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                          TrapFrame->Eip,
                          TrapFrame);
     }
+#else
+    if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
+    {
+        /* Warn and dump stack */
+        DPRINT1("Page fault with interrupts disabled!\n");
+        KeRosDumpStackFrames(NULL, 0);
+    }
+#endif
 
     /* Check for S-LIST fault in kernel mode */
     if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
