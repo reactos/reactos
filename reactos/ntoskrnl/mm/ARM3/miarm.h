@@ -26,7 +26,7 @@
                                                  MI_SESSION_IMAGE_SIZE + \
                                                  MI_SESSION_WORKING_SET_SIZE)
 
-#define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
+#define MI_SYSTEM_VIEW_SIZE                     (32 * _1MB)
 
 #define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
@@ -526,6 +526,7 @@ extern ULONG_PTR MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
 extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
+extern KGUARDED_MUTEX MmSectionCommitMutex;
 extern PVOID MmPagedPoolStart;
 extern PVOID MmPagedPoolEnd;
 extern PVOID MmNonPagedSystemStart;
@@ -557,6 +558,7 @@ extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
 extern PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+extern MMPFNLIST MmStandbyPageListByPriority[8];
 extern ULONG MmProductType;
 extern MM_SYSTEMSIZE MmSystemSize;
 extern PKEVENT MiLowMemoryEvent;
@@ -600,6 +602,9 @@ extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
 extern ULONG MmMaximumDeadKernelStacks;
 extern SLIST_HEADER MmDeadStackSListHead;
+extern MM_AVL_TABLE MmSectionBasedRoot;
+extern KGUARDED_MUTEX MmSectionBasedMutex;
+extern PVOID MmHighSectionBase;
 
 BOOLEAN
 FORCEINLINE
@@ -1264,6 +1269,12 @@ MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
 );
 
+VOID
+NTAPI
+MiUnlinkPageFromList(
+    IN PMMPFN Pfn
+);
+
 PFN_NUMBER
 NTAPI
 MiAllocatePfn(
@@ -1405,6 +1416,16 @@ MiFindEmptyAddressRangeDownTree(
 
 NTSTATUS
 NTAPI
+MiFindEmptyAddressRangeDownBasedTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR BoundaryAddress,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PULONG_PTR Base
+);
+
+NTSTATUS
+NTAPI
 MiFindEmptyAddressRangeInTree(
     IN SIZE_T Length,
     IN ULONG_PTR Alignment,
@@ -1418,6 +1439,28 @@ NTAPI
 MiInsertVad(
     IN PMMVAD Vad,
     IN PEPROCESS Process
+);
+
+VOID
+NTAPI
+MiInsertBasedSection(
+    IN PSECTION Section
+);
+
+NTSTATUS
+NTAPI
+MiUnmapViewOfSection(
+    IN PEPROCESS Process,
+    IN PVOID BaseAddress,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+MiRosUnmapViewOfSection(
+    IN PEPROCESS Process,
+    IN PVOID BaseAddress,
+    IN ULONG Flags
 );
 
 VOID
@@ -1520,10 +1563,24 @@ MiRosAllocateVirtualMemory(
     IN ULONG Protect
 );
 
+NTSTATUS
+NTAPI
+MiRosUnmapViewInSystemSpace(
+    IN PVOID MappedBase
+);
+
 POOL_TYPE
 NTAPI
 MmDeterminePoolType(
     IN PVOID PoolAddress
+);
+
+VOID
+NTAPI
+MiMakePdeExistAndMakeValid(
+    IN PMMPTE PointerPde,
+    IN PEPROCESS TargetProcess,
+    IN KIRQL OldIrql
 );
 
 //

@@ -163,6 +163,21 @@ MiInsertVad(IN PMMVAD Vad,
 
 VOID
 NTAPI
+MiInsertBasedSection(IN PSECTION Section)
+{
+    TABLE_SEARCH_RESULT Result;
+    PMMADDRESS_NODE Parent = NULL;
+    ASSERT(Section->Address.EndingVpn >= Section->Address.StartingVpn);
+
+    /* Find the parent VAD and where this child should be inserted */
+    Result = RtlpFindAvlTableNodeOrParent(&MmSectionBasedRoot, (PVOID)Section->Address.StartingVpn, &Parent);
+    ASSERT(Result != TableFoundNode);
+    ASSERT((Parent != NULL) || (Result == TableEmptyTree));
+    MiInsertNode(&MmSectionBasedRoot, &Section->Address, Parent, Result);
+}
+
+VOID
+NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
@@ -469,6 +484,103 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     *Base = 0;
     *Parent = NULL;
     return TableFoundNode;
+}
+
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
+                                     IN ULONG_PTR BoundaryAddress,
+                                     IN ULONG_PTR Alignment,
+                                     IN PMM_AVL_TABLE Table,
+                                     OUT PULONG_PTR Base)
+{
+    PMMADDRESS_NODE Node, LowestNode;
+    ULONG_PTR LowVpn, BestVpn;
+
+    /* Sanity checks */
+    ASSERT(Table == &MmSectionBasedRoot);
+    ASSERT(BoundaryAddress);
+    ASSERT(BoundaryAddress <= ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
+
+    /* Compute page length, make sure the boundary address is valid */
+    Length = ROUND_TO_PAGES(Length);
+    if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
+
+    /* Check if the table is empty */
+    BestVpn = ROUND_UP(BoundaryAddress + 1 - Length, Alignment);
+    if (Table->NumberGenericTableElements == 0)
+    {
+        /* Tree is empty, the candidate address is already the best one */
+        *Base = BestVpn;
+        return STATUS_SUCCESS;
+    }
+
+    /* Go to the right-most node which should be the biggest address */
+    Node = Table->BalancedRoot.RightChild;
+    while (RtlRightChildAvl(Node)) Node = RtlRightChildAvl(Node);
+
+    /* Check if we can fit in here */
+    LowVpn = ROUND_UP(Node->EndingVpn, Alignment);
+    if ((LowVpn < BoundaryAddress) && (Length < (BoundaryAddress - LowVpn)))
+    {
+        /* Return the address */
+        *Base = ROUND_UP(BoundaryAddress - Length, Alignment);
+        return STATUS_SUCCESS;
+    }
+
+    /* Now loop the Vad nodes */
+    do
+    {
+        /* Break out if we've reached the last node */
+        LowestNode = MiGetPreviousNode(Node);
+        if (!LowestNode) break;
+
+        /* Check if this node could contain the requested address */
+        LowVpn = ROUND_UP(LowestNode->EndingVpn + 1, Alignment);
+        if ((LowestNode->EndingVpn < BestVpn) &&
+            (Length <= (Node->StartingVpn - LowVpn)))
+        {
+            /* Check if it fits in perfectly */
+            if ((BestVpn > LowestNode->EndingVpn) &&
+                (BoundaryAddress < Node->StartingVpn))
+            {
+                /* Return the optimal VPN address */
+                *Base = BestVpn;
+                return STATUS_SUCCESS;
+            }
+
+            /* It doesn't, check if it can partly fit */
+            if (Node->StartingVpn > LowVpn)
+            {
+                /* Return an aligned base address within this node */
+                *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        /* Move to the next node */
+        Node = LowestNode;
+    } while (TRUE);
+
+    /* Check if there's enough space before the lowest Vad */
+    if ((Node->StartingVpn > (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) &&
+        ((Node->StartingVpn - (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) > Length))
+    {
+        /* Check if it fits in perfectly */
+        if (BoundaryAddress < Node->StartingVpn)
+        {
+            /* Return the optimal VPN address */
+            *Base = BestVpn;
+            return STATUS_SUCCESS;
+        }
+
+        /* Return an aligned base address within this node */
+        *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+        return STATUS_SUCCESS;
+    }
+
+    /* No address space left at all */
+    return STATUS_NO_MEMORY;
 }
 
 /* EOF */

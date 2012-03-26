@@ -2855,6 +2855,10 @@ MmInitSectionImplementation(VOID)
 
    DPRINT("Creating Section Object Type\n");
 
+   /* Initialize the section based root */
+   ASSERT(MmSectionBasedRoot.NumberGenericTableElements == 0);
+   MmSectionBasedRoot.BalancedRoot.u1.Parent = &MmSectionBasedRoot.BalancedRoot;
+
    /* Initialize the Section object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
@@ -4231,6 +4235,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
        MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
        MemoryArea->DeleteInProgress)
    {
+      ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
       MmUnlockAddressSpace(AddressSpace);
       return STATUS_NOT_MAPPED_VIEW;
    }
@@ -4538,7 +4543,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    if (MiIsRosSectionObject(SectionObject) == FALSE)
    {
-       DPRINT1("Mapping ARM3 section into %s\n", Process->ImageFileName);
+       DPRINT("Mapping ARM3 section into %s\n", Process->ImageFileName);
        return MmMapViewOfArm3Section(SectionObject,
                                      Process,
                                      BaseAddress,
@@ -4875,7 +4880,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
-        DPRINT1("ARM3 System Mapping\n");
         return MiMapViewInSystemSpace(SectionObject,
                                       &MmSession,
                                       MappedBase,
@@ -4917,11 +4921,9 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    return Status;
 }
 
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-MmUnmapViewInSystemSpace (IN PVOID MappedBase)
+NTSTATUS
+NTAPI
+MiRosUnmapViewInSystemSpace(IN PVOID MappedBase)
 {
    PMMSUPPORT AddressSpace;
    NTSTATUS Status;
@@ -4938,7 +4940,6 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
 
    return Status;
 }
-
 
 /**********************************************************************
  * NAME       EXPORTED

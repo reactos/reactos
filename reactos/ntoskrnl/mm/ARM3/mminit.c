@@ -149,7 +149,7 @@ PMMPTE MiSessionLastPte;
 // The system view space, on the other hand, is where sections that are memory
 // mapped into "system space" end up.
 //
-// By default, it is a 16MB region.
+// By default, it is a 16MB region, but we hack it to be 32MB for ReactOS
 //
 PVOID MiSystemViewStart;
 SIZE_T MmSystemViewSize;
@@ -1134,7 +1134,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* See how many pages are in this run */
         i = Entry->PageCount;
         BasePage = Entry->BasePage;
-        
+
         /* Loop each page */
         Pfn1 = MiGetPfnEntry(BasePage);
         while (i--)
@@ -2062,12 +2062,27 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize session space address layout */
         MiInitializeSessionSpaceLayout();
+        
+        /* Set the based section highest address */
+        MmHighSectionBase = (PVOID)((ULONG_PTR)MmHighestUserAddress - 0x800000);
+
+        /* Loop all 8 standby lists */
+        for (i = 0; i < 8; i++)
+        {
+            /* Initialize them */
+            MmStandbyPageListByPriority[i].Total = 0;
+            MmStandbyPageListByPriority[i].ListName = StandbyPageList;
+            MmStandbyPageListByPriority[i].Flink = MM_EMPTY_LIST;
+            MmStandbyPageListByPriority[i].Blink = MM_EMPTY_LIST;
+        }
 
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
 
-        /* Initialize the paged pool mutex */
+        /* Initialize the paged pool mutex and the section commit mutex */
         KeInitializeGuardedMutex(&MmPagedPoolMutex);
+        KeInitializeGuardedMutex(&MmSectionCommitMutex);
+        KeInitializeGuardedMutex(&MmSectionBasedMutex);
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
