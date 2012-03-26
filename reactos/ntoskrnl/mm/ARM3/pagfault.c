@@ -446,6 +446,151 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
+MiResolveTransitionFault(IN PVOID FaultingAddress,
+                         IN PMMPTE PointerPte,
+                         IN PEPROCESS CurrentProcess,
+                         IN KIRQL OldIrql,
+                         OUT PVOID *InPageBlock)
+{
+    PFN_NUMBER PageFrameIndex;
+    PMMPFN Pfn1;
+    MMPTE TempPte;
+    PMMPTE PointerToPteForProtoPage;
+    USHORT NewRefCount;
+    DPRINT1("Transition fault on 0x%p with PTE 0x%lx in process %s\n", FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
+
+    /* Windowss does this check */
+    ASSERT(*InPageBlock == NULL);
+
+    /* ARM3 doesn't support this path */
+    ASSERT(OldIrql != MM_NOIRQL);
+
+    /* Capture the PTE and make sure it's in transition format */
+    TempPte = *PointerPte;
+    ASSERT((TempPte.u.Soft.Valid == 0) &&
+           (TempPte.u.Soft.Prototype == 0) &&
+           (TempPte.u.Soft.Transition == 1));
+
+    /* Get the PFN and the PFN entry */
+    PageFrameIndex = TempPte.u.Trans.PageFrameNumber;
+    DPRINT1("Transition PFN: %lx\n", PageFrameIndex);
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+
+    /* One more transition fault! */
+    InterlockedIncrement(&KeGetCurrentPrcb()->MmTransitionCount);
+
+    /* This is from ARM3 -- Windows normally handles this here */
+    ASSERT(Pfn1->u4.InPageError == 0);
+
+    /* Not supported in ARM3 */
+    ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
+
+    /* Windows checks there's some free pages and this isn't an in-page error */
+    ASSERT(MmAvailablePages >= 0);
+    ASSERT(Pfn1->u4.InPageError == 0);
+
+    /* Was this a transition page in the valid list, or free/zero list? */
+    if (Pfn1->u3.e1.PageLocation == ActiveAndValid)
+    {
+        /* All Windows does here is a bunch of sanity checks */
+        DPRINT1("Transition in active list\n");
+        ASSERT((Pfn1->PteAddress >= MiAddressToPte(MmPagedPoolStart)) &&
+               (Pfn1->PteAddress <= MiAddressToPte(MmPagedPoolEnd)));
+        ASSERT(Pfn1->u2.ShareCount != 0);
+        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+    }
+    else
+    {
+        /* Otherwise, the page is removed from its list */
+        DPRINT1("Transition page in free/zero list\n");
+        MiUnlinkPageFromList(Pfn1);
+
+        /* Windows does these checks -- perhaps a macro? */
+        ASSERT(Pfn1->u2.ShareCount == 0);
+        ASSERT(Pfn1->u2.ShareCount == 0);
+        ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+        /* Check if this was a prototype PTE */
+        if ((Pfn1->u3.e1.PrototypePte == 1) &&
+            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+        {
+            DPRINT1("Prototype floating page not yet supported\n");
+            ASSERT(FALSE);
+        }
+
+        /* FIXME: Update counter */
+
+        /* We must be the first reference */
+        NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+        ASSERT(NewRefCount == 1);
+    }
+
+    /* At this point, there should no longer be any in-page errors */
+    ASSERT(Pfn1->u4.InPageError == 0);
+
+    /* Check if this was a PFN with no more share references */
+    if (Pfn1->u2.ShareCount == 0)
+    {
+        /* Windows checks for these... maybe a macro? */
+        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+        ASSERT(Pfn1->u2.ShareCount == 0);
+
+        /* Was this the last active reference to it */
+        DPRINT1("Page share count is zero\n");
+        if (Pfn1->u3.e2.ReferenceCount == 1)
+        {
+            /* The page should be leaking somewhere on the free/zero list */
+            DPRINT1("Page reference count is one\n");
+            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+            if ((Pfn1->u3.e1.PrototypePte == 1) &&
+                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+            {
+                /* Do extra processing if it was a prototype page */
+                DPRINT1("Prototype floating page not yet supported\n");
+                ASSERT(FALSE);
+            }
+
+            /* FIXME: Update counter */
+        }
+    }
+
+    /* Bump the share count and make the page valid */
+    Pfn1->u2.ShareCount++;
+    Pfn1->u3.e1.PageLocation = ActiveAndValid;
+
+    /* Prototype PTEs are in paged pool, which itself might be in transition */
+    if (FaultingAddress >= MmSystemRangeStart)
+    {
+        /* Check if this is a paged pool PTE in transition state */
+        PointerToPteForProtoPage = MiAddressToPte(PointerPte);
+        TempPte = *PointerToPteForProtoPage;
+        if ((TempPte.u.Hard.Valid == 0) && (TempPte.u.Soft.Transition == 1))
+        {
+            /* This isn't yet supported */
+            DPRINT1("Double transition fault not yet supported\n");
+            ASSERT(FALSE);
+        }
+    }
+
+    /* Build the transition PTE -- maybe a macro? */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+    ASSERT(PointerPte->u.Trans.Prototype == 0);
+    ASSERT(PointerPte->u.Trans.Transition == 1);
+    TempPte.u.Long = (PointerPte->u.Long & ~0xFFF) |
+                     (MmProtectToPteMask[PointerPte->u.Trans.Protection]) |
+                     MiDetermineUserGlobalPteMask(PointerPte);
+
+    /* FIXME: Set dirty bit */
+
+    /* Write the valid PTE */
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+    /* Return success */
+    return STATUS_PAGE_FAULT_TRANSITION;
+}
+
+NTSTATUS
+NTAPI
 MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                        IN PVOID Address,
                        IN PMMPTE PointerPte,
@@ -457,10 +602,11 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                        IN KIRQL OldIrql,
                        IN PVOID TrapInformation)
 {
-    MMPTE TempPte;
+    MMPTE TempPte, PteContents;
     PMMPFN Pfn1;
     PFN_NUMBER PageFrameIndex;
     NTSTATUS Status;
+    PVOID InPageBlock = NULL;
 
     /* Must be called with an invalid, prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -497,19 +643,50 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         return STATUS_ACCESS_VIOLATION;
     }
 
-    /* This is the only thing we support right now */
-    ASSERT(TempPte.u.Soft.PageFileHigh == 0);
-    ASSERT(TempPte.u.Proto.ReadOnly == 0);
-    ASSERT(PointerPte > MiHighestUserPte);
-    ASSERT(TempPte.u.Soft.Prototype == 0);
-    ASSERT(TempPte.u.Soft.Transition == 0);
+    /* Check for access rights on the PTE proper */
+    PteContents = *PointerPte;
+    if (PteContents.u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED)
+    {
+        if (!PteContents.u.Proto.ReadOnly)
+        {
+            /* FIXME: CHECK FOR ACCESS AND COW */
+        }
+    }
+    else
+    {
+        /* FIXME: Should check for COW */
+    }
 
-    /* Resolve the demand zero fault */
-    Status = MiResolveDemandZeroFault(Address,
-                                      PointerProtoPte,
-                                      Process,
-                                      OldIrql);
-    ASSERT(NT_SUCCESS(Status));
+    /* Check for clone PTEs */
+    if (PointerPte <= MiHighestUserPte) ASSERT(Process->CloneRoot == NULL);
+
+    /* We don't support mapped files yet */
+    ASSERT(TempPte.u.Soft.Prototype == 0);
+
+    /* We might however have transition PTEs */
+    if (TempPte.u.Soft.Transition == 1)
+    {
+        /* Resolve the transition fault */
+        ASSERT(OldIrql != MM_NOIRQL);
+        Status = MiResolveTransitionFault(Address,
+                                          PointerProtoPte,
+                                          Process,
+                                          OldIrql,
+                                          &InPageBlock);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    else
+    {
+        /* We also don't support paged out pages */
+        ASSERT(TempPte.u.Soft.PageFileHigh == 0);
+
+        /* Resolve the demand zero fault */
+        Status = MiResolveDemandZeroFault(Address,
+                                          PointerProtoPte,
+                                          Process,
+                                          OldIrql);
+        ASSERT(NT_SUCCESS(Status));
+    }
 
     /* Complete the prototype PTE fault -- this will release the PFN lock */
     ASSERT(PointerPte->u.Hard.Valid == 0);

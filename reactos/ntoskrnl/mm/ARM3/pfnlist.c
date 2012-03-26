@@ -227,6 +227,124 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 #endif
 }
 
+VOID
+NTAPI
+MiUnlinkPageFromList(IN PMMPFN Pfn)
+{
+    PMMPFNLIST ListHead;
+    PFN_NUMBER OldFlink, OldBlink;
+
+    /* Make sure the PFN lock is held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* ARM3 should only call this for dead pages */
+    ASSERT(Pfn->u3.e2.ReferenceCount == 0);
+
+    /* Transition pages are supposed to be standby/modified/nowrite */
+    ListHead = MmPageLocationList[Pfn->u3.e1.PageLocation];
+    ASSERT(ListHead->ListName >= StandbyPageList);
+
+    /* Check if this was standby, or modified */
+    if (ListHead == &MmStandbyPageListHead)
+    {
+        /* Should not be a ROM page */
+        ASSERT(Pfn->u3.e1.Rom == 0);
+
+        /* Get the exact list */
+        ListHead = &MmStandbyPageListByPriority[Pfn->u4.Priority];
+
+        /* See if we hit any thresholds */
+        if (MmAvailablePages == MmHighMemoryThreshold)
+        {
+            /* Clear the high memory event */
+            KeClearEvent(MiHighMemoryEvent);
+        }
+        else if (MmAvailablePages == MmLowMemoryThreshold)
+        {
+            /* Signal the low memory event */
+            KeSetEvent(MiLowMemoryEvent, 0, FALSE);
+        }
+
+        /* Decrease transition page counter */
+        ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
+        MmTransitionSharedPages--;
+
+        /* One less page */
+        if (--MmAvailablePages < MmMinimumFreePages)
+        {
+            /* FIXME: Should wake up the MPW and working set manager, if we had one */
+            DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+
+            /* Call RosMm and see if it can release any pages for us */
+            MmRebalanceMemoryConsumers();
+        }
+    }
+    else if (ListHead == &MmModifiedPageListHead)
+    {
+        /* Only shared memory (page-file backed) modified pages are supported */
+        ASSERT(Pfn->OriginalPte.u.Soft.Prototype == 0);
+
+        /* Decrement the counters */
+        ListHead->Total--;
+        MmTotalPagesForPagingFile--;
+
+        /* Pick the correct colored list */
+        ListHead = &MmModifiedPageListByColor[0];
+
+        /* Decrease transition page counter */
+        ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
+        MmTransitionSharedPages--;
+    }
+    else if (ListHead == &MmModifiedNoWritePageListHead)
+    {
+        /* List not yet supported */
+        ASSERT(FALSE);
+    }
+
+    /* Nothing should be in progress and the list should not be empty */
+    ASSERT(Pfn->u3.e1.WriteInProgress == 0);
+    ASSERT(Pfn->u3.e1.ReadInProgress == 0);
+    ASSERT(ListHead->Total != 0);
+
+    /* Get the forward and back pointers */
+    OldFlink = Pfn->u1.Flink;
+    OldBlink = Pfn->u2.Blink;
+
+    /* Check if the next entry is the list head */
+    if (OldFlink != LIST_HEAD)
+    {
+        /* It is not, so set the backlink of the actual entry, to our backlink */
+        MI_PFN_ELEMENT(OldFlink)->u2.Blink = OldBlink;
+    }
+    else
+    {
+        /* Set the list head's backlink instead */
+        ListHead->Blink = OldBlink;
+    }
+
+    /* Check if the back entry is the list head */
+    if (OldBlink != LIST_HEAD)
+    {
+        /* It is not, so set the backlink of the actual entry, to our backlink */
+        MI_PFN_ELEMENT(OldBlink)->u1.Flink = OldFlink;
+    }
+    else
+    {
+        /* Set the list head's backlink instead */
+        ListHead->Flink = OldFlink;
+    }
+
+    /* ReactOS Hack */
+    Pfn->OriginalPte.u.Long = 0;
+
+    /* We are not on a list anymore */
+    Pfn->u1.Flink = Pfn->u2.Blink = 0;
+    ASSERT_LIST_INVARIANT(ListHead);
+
+    /* Remove one entry from the list */
+    ListHead->Total--;
+}
+
 PFN_NUMBER
 NTAPI
 MiRemovePageByColor(IN PFN_NUMBER PageIndex,
