@@ -1183,27 +1183,23 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             while (TRUE);
         }
     }
-    
+
     /* Save CR2 */
     Cr2 = __readcr2();
-    
-    /* HACK: Check if interrupts are disabled and enable them */
+
+    /* Enable interupts */
+    _enable();
+
+    /* Check if we faulted with interrupts disabled */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
     {
-        /* Enable interupts */
-        _enable();
-#ifdef HACK_ABOVE_FIXED
-        if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
-        {
-            /* This is illegal */
-            KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
-                             Cr2,
-                             -1,
-                             TrapFrame->ErrCode & 2 ? TRUE : FALSE,
-                             TrapFrame->Eip,
-                             TrapFrame);
-        }
-#endif
+        /* This is completely illegal, bugcheck the system */
+        KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
+                         Cr2,
+                         -1,
+                         TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                         TrapFrame->Eip,
+                         TrapFrame);
     }
 
     /* Check for S-LIST fault in kernel mode */
