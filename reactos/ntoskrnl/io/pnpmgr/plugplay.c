@@ -444,6 +444,9 @@ IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
     if (DeviceNode->UserFlags & DNUF_DONT_SHOW_IN_UI)
         Output |= DN_NO_SHOW_IN_DM;
 
+    if (!(DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE))
+        Output |= DN_DISABLEABLE;
+
     /* FIXME: Implement the rest */
 
     Output |= DN_NT_ENUMERATOR | DN_NT_DRIVER;
