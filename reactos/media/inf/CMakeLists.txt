@@ -3,6 +3,7 @@ list(APPEND INF_FILES
     audio.inf
     battery.inf
     bda.inf
+    bth.inf
     cdrom.inf
     cpu.inf
     disk.inf

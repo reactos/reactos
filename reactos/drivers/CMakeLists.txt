@@ -1,6 +1,7 @@
 
 add_subdirectory(base)
 add_subdirectory(battery)
+add_subdirectory(bluetooth)
 add_subdirectory(bus)
 add_subdirectory(directx)
 add_subdirectory(filesystems)
