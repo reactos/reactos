@@ -205,7 +205,6 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
 
 #ifdef PRTL_BALANCED_LINKS
 void
-FORCEINLINE
 Indent(ULONG Level)
 {
     while (Level--)
@@ -214,7 +213,7 @@ Indent(ULONG Level)
     }
 }
 
-static VOID
+VOID
 DbgDumpAvlNodes(
     PRTL_BALANCED_LINKS Node,
     ULONG Level)
