@@ -594,7 +594,8 @@ Bus_PDO_QueryDeviceText(
             Temp = L"ACPI Embedded Controller";
            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
             Temp = L"ACPI Fan";
-           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
+           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+                    wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0 )
             Temp = L"PCI Root Bridge";
            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
             Temp = L"ACPI Battery";
@@ -666,7 +667,8 @@ Bus_PDO_QueryResources(
     /* A bus number resource is not included in the list of current resources
      * for the root PCI bus so we manually query one here and if we find it
      * we create a resource list and add a bus number descriptor to it */
-    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
+    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+        wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0)
     {
         acpi_bus_get_device(DeviceData->AcpiHandle, &device);
 
@@ -1169,7 +1171,8 @@ Bus_PDO_QueryResourceRequirements(
     }
 
     /* Handle the PCI root manually */
-    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
+    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+        wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0)
     {
         return Irp->IoStatus.Status;
     }
