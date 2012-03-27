@@ -203,6 +203,7 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     return TRUE;
 }
 
+#ifdef PRTL_BALANCED_LINKS
 void
 FORCEINLINE
 Indent(ULONG Level)
@@ -213,13 +214,11 @@ Indent(ULONG Level)
     }
 }
 
-VOID
-FORCEINLINE
+static VOID
 DbgDumpAvlNodes(
     PRTL_BALANCED_LINKS Node,
     ULONG Level)
 {
-#ifdef PRTL_BALANCED_LINKS
     if (Level == 0)
     {
         DbgPrint("++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
@@ -239,8 +238,9 @@ DbgDumpAvlNodes(
         DbgPrint("(%lx, %lx)\n", Node->RightChild->StartingVpn,Node->RightChild->EndingVpn);
         DbgDumpAvlNodes(Node->RightChild, Level+1);
     }
-#endif
+    else DbgPrint("\n");
 }
+#endif
 
 
 VOID
@@ -268,8 +268,8 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
         if (RtlBalance(NewNode) != RtlBalancedAvlTree)
         {
             DPRINT1("Warning: Root node unbalanced?\n");
-            DbgDumpAvlNodes(&Table->BalancedRoot, 0);
 #ifdef PRTL_BALANCED_LINKS
+            DbgDumpAvlNodes(&Table->BalancedRoot, 0);
             KeRosDumpStackFrames(NULL, 0);
 #endif
         }
@@ -295,8 +295,8 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     if (RtlBalance(NewNode) != RtlBalancedAvlTree)
     {
         DPRINT1("Warning: Root node unbalanced?\n");
-        DbgDumpAvlNodes(&Table->BalancedRoot, 0);
 #ifdef PRTL_BALANCED_LINKS
+        DbgDumpAvlNodes(&Table->BalancedRoot, 0);
         KeRosDumpStackFrames(NULL, 0);
 #endif
     }
