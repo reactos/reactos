@@ -203,45 +203,6 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     return TRUE;
 }
 
-#ifdef PRTL_BALANCED_LINKS
-void
-Indent(ULONG Level)
-{
-    while (Level--)
-    {
-        DbgPrint("  ");
-    }
-}
-
-VOID
-DbgDumpAvlNodes(
-    PRTL_BALANCED_LINKS Node,
-    ULONG Level)
-{
-    if (Level == 0)
-    {
-        DbgPrint("++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-        DbgPrint("Root = %p\n", Node);
-    }
-
-    Indent(Level+1); DbgPrint("LetChid = %p", Node->LeftChild);
-    if (Node->LeftChild)
-    {
-        DbgPrint("(%lx, %lx)\n", Node->LeftChild->StartingVpn,Node->LeftChild->EndingVpn);
-        DbgDumpAvlNodes(Node->LeftChild, Level+1);
-    }
-    else DbgPrint("\n");
-    Indent(Level+1); DbgPrint("RightChild = %p\n", Node->RightChild);
-    if (Node->RightChild)
-    {
-        DbgPrint("(%lx, %lx)\n", Node->RightChild->StartingVpn,Node->RightChild->EndingVpn);
-        DbgDumpAvlNodes(Node->RightChild, Level+1);
-    }
-    else DbgPrint("\n");
-}
-#endif
-
-
 VOID
 FORCEINLINE
 RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
@@ -254,6 +215,7 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     /* Initialize the new inserted element */
     MI_ASSERT(SearchResult != TableFoundNode);
     NewNode->LeftChild = NewNode->RightChild = NULL;
+    RtlSetBalance(NewNode, RtlBalancedAvlTree);
 
     /* Increase element count */
     Table->NumberGenericTableElements++;
@@ -263,15 +225,6 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     {
         /* This is the new root node */
         RtlInsertAsRightChildAvl(&Table->BalancedRoot, NewNode);
-        //MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
-        if (RtlBalance(NewNode) != RtlBalancedAvlTree)
-        {
-            DPRINT1("Warning: Root node unbalanced?\n");
-#ifdef PRTL_BALANCED_LINKS
-            DbgDumpAvlNodes(&Table->BalancedRoot, 0);
-            KeRosDumpStackFrames(NULL, 0);
-#endif
-        }
 
         /* On AVL trees, we also update the depth */
         ASSERT(Table->DepthOfTree == 0);
@@ -290,15 +243,6 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     }
 
     /* Little cheat to save on loop processing, taken from Timo */
-    //MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
-    if (RtlBalance(NewNode) != RtlBalancedAvlTree)
-    {
-        DPRINT1("Warning: Root node unbalanced?\n");
-#ifdef PRTL_BALANCED_LINKS
-        DbgDumpAvlNodes(&Table->BalancedRoot, 0);
-        KeRosDumpStackFrames(NULL, 0);
-#endif
-    }
     RtlSetBalance(&Table->BalancedRoot, RtlLeftHeavyAvlTree);
 
     /*
