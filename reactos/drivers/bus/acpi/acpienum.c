@@ -60,11 +60,11 @@ Bus_PlugInDevice (
             continue;
 
         //check if the HID matches
-        if (strstr(Device->pnp.hardware_id, CurrentDevice->pnp.hardware_id))
+        if (!strcmp(Device->pnp.hardware_id, CurrentDevice->pnp.hardware_id))
         {
             //check if UID exists for both and matches
             if (Device->flags.unique_id && CurrentDevice->flags.unique_id &&
-                strstr(Device->pnp.unique_id, CurrentDevice->pnp.unique_id))
+                !strcmp(Device->pnp.unique_id, CurrentDevice->pnp.unique_id))
             {
                 /* We have a UID on both but they're the same so we have to ignore it */
                 DPRINT1("Detected duplicate device: %hs %hs\n", Device->pnp.hardware_id, Device->pnp.unique_id);
