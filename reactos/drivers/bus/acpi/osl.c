@@ -264,7 +264,7 @@ AcpiOsCreateMutex(
         return AE_BAD_PARAMETER;
     }
     
-    Mutex = ExAllocatePool(PagedPool, sizeof(FAST_MUTEX));
+    Mutex = ExAllocatePool(NonPagedPool, sizeof(FAST_MUTEX));
     if (!Mutex) return AE_NO_MEMORY;
     
     ExInitializeFastMutex(Mutex);
