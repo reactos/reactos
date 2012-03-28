@@ -435,7 +435,7 @@ INT cmd_move (LPTSTR param)
 							if (nDirLevel > 0)
 							{
 								TCHAR szTempPath[MAX_PATH];
-								INT nDiff;
+								INT_PTR nDiff;
 
 								FoundFile = TRUE; /* we need to continue our seek for files */
 								nDirLevel--;

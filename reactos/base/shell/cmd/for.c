@@ -94,15 +94,15 @@ static BOOL Exiting(PARSED_COMMAND *Cmd)
  * dynamically allocating enough space to hold it all */
 static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 {
-	DWORD Len = 0;
-	DWORD AllocLen = 1000;
+	SIZE_T Len = 0;
+	SIZE_T AllocLen = 1000;
 	LPTSTR Contents = cmd_alloc(AllocLen * sizeof(TCHAR));
 	if (!Contents)
 		return NULL;
 
 	while (_fgetts(Buffer, CMDLINE_LENGTH, InputFile))
 	{
-		DWORD CharsRead = _tcslen(Buffer);
+		ULONG_PTR CharsRead = _tcslen(Buffer);
 		while (Len + CharsRead >= AllocLen)
 		{
 			Contents = cmd_realloc(Contents, (AllocLen *= 2) * sizeof(TCHAR));

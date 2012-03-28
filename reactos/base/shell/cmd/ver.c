@@ -36,7 +36,7 @@ VOID ShortVersion (VOID)
 	if (GetVersionEx(&VersionInfo))
 	{
 		LPTSTR RosVersion;
-		unsigned RosVersionLen;
+		SIZE_T RosVersionLen;
 
 		RosVersion = VersionInfo.szCSDVersion + _tcslen(VersionInfo.szCSDVersion) + 1;
 		RosVersionLen = sizeof(VersionInfo.szCSDVersion) / sizeof(VersionInfo.szCSDVersion[0]) -
@@ -76,7 +76,7 @@ INT cmd_ver (LPTSTR param)
 	{
 
 		ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-		ConOutPuts (_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team")); 
+		ConOutPuts (_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team"));
 
 		for (i = 0; param[i]; i++)
 		{

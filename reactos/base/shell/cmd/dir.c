@@ -817,7 +817,7 @@ TCHAR* getExt(const TCHAR* file)
 static LPTSTR
 getName(const TCHAR* file, TCHAR * dest)
 {
-	int iLen;
+	INT_PTR iLen;
 	LPTSTR end;
 
 	/* Check for "." and ".." folders */
@@ -919,7 +919,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   SHORT iScreenWidth;
   USHORT iColumns;
   USHORT iLines;
-  UINT iLongestName;
+  UINT_PTR iLongestName;
   TCHAR szTempFname[MAX_PATH];
   DWORD i;
   DWORD j;
@@ -944,7 +944,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 
   /* Count the highest number of columns */
   GetScreenSize(&iScreenWidth, 0);
-  iColumns = iScreenWidth / iLongestName;
+  iColumns = (USHORT)(iScreenWidth / iLongestName);
 
   /* Check if there is enough space for spaces between names */
   if (((iLongestName * iColumns) + iColumns) >= (UINT)iScreenWidth)
@@ -1301,7 +1301,7 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
 static INT
 DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
 		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
-{	
+{
 	BOOL fPoint;							/* If szPath is a file with extension fPoint will be True*/
 	HANDLE hSearch;							/* The handle of the search */
 	HANDLE hRecSearch;						/* The handle for searching recursivly */

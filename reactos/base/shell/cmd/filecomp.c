@@ -509,7 +509,7 @@ int __cdecl compare(const void *arg1,const void *arg2)
 VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 {
 	/* Length of string before we complete it */
-	INT StartLength;
+	INT_PTR StartLength;
 	/* Length of string after completed */
 	//INT EndLength;
 	/* The number of chars added too it */

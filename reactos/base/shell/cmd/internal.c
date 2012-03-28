@@ -281,7 +281,7 @@ MakeFullPath(TCHAR * DirPath)
 {
     TCHAR path[MAX_PATH];
     TCHAR *p = DirPath;
-    INT  n;
+    INT_PTR  n;
 
     if (CreateDirectory(DirPath, NULL))
         return TRUE;

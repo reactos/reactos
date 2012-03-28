@@ -203,7 +203,8 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
 INT recReplace(DWORD dwFlags, TCHAR szSrcPath[MAX_PATH], TCHAR szDestPath[MAX_PATH], BOOL *doMore)
 {
 	TCHAR tmpDestPath[MAX_PATH], tmpSrcPath[MAX_PATH];
-	INT filesReplaced=0, i;
+	INT filesReplaced=0;
+	INT_PTR i;
 	DWORD dwAttrib = 0;
 	HANDLE hFile;
 	WIN32_FIND_DATA findBuffer;
@@ -298,7 +299,8 @@ INT recFindSubDirs(DWORD dwFlags,
 	HANDLE hFile;
 	WIN32_FIND_DATA findBuffer;
 	TCHAR tmpDestPath[MAX_PATH], tmpSrcPath[MAX_PATH];
-	INT filesReplaced = 0, i;
+	INT filesReplaced = 0;
+	INT_PTR i;
 
 	/* Add a wildcard to dest end so the it will be easy to itterate
 	   over all the files and directorys in the dest directory */

@@ -212,7 +212,7 @@ ident_len ( LPCTSTR p )
 		while ( __iscsym(*p2) )
 			++p2;
 	}
-	return p2-p;
+	return (INT)(p2-p);
 }
 
 #define PARSE_IDENT(ident,identlen,p) \

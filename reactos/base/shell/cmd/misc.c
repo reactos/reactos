@@ -281,7 +281,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 	LPTSTR start;
 	LPTSTR q;
 	INT  ac;
-	INT  len;
+	INT_PTR  len;
 
 	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
@@ -360,7 +360,7 @@ LPTSTR *splitspace (LPTSTR s, LPINT args)
 	LPTSTR start;
 	LPTSTR q;
 	INT  ac;
-	INT  len;
+	INT_PTR  len;
 
 	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
@@ -505,7 +505,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 		len = dwRead;
 		if (end)
 		{
-			len = (end - lpString) + 1;
+			len = (INT)(end - lpString) + 1;
 			SetFilePointer(hFile, len - dwRead, NULL, FILE_CURRENT);
 		}
 	}
