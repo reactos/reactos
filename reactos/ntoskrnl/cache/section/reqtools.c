@@ -57,74 +57,73 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages);
 
 NTSTATUS
 NTAPI
-MiGetOnePage
-(PMMSUPPORT AddressSpace,
- PMEMORY_AREA MemoryArea,
- PMM_REQUIRED_RESOURCES Required)
+MiGetOnePage(PMMSUPPORT AddressSpace,
+             PMEMORY_AREA MemoryArea,
+             PMM_REQUIRED_RESOURCES Required)
 {
-	int i;
-	NTSTATUS Status = STATUS_SUCCESS;
+    int i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-	for (i = 0; i < Required->Amount; i++)
-	{
-		DPRINTC("MiGetOnePage(%s:%d)\n", Required->File, Required->Line);
-		Status = MmRequestPageMemoryConsumer(Required->Consumer, TRUE, &Required->Page[i]);
-		if (!NT_SUCCESS(Status))
-		{
-			while (i > 0)
-			{
-				MmReleasePageMemoryConsumer(Required->Consumer, Required->Page[i-1]);
-				i--;
-			}
-			return Status;
-		}
-	}
-	
-	return Status;
+    for (i = 0; i < Required->Amount; i++)
+    {
+        DPRINTC("MiGetOnePage(%s:%d)\n", Required->File, Required->Line);
+        Status = MmRequestPageMemoryConsumer(Required->Consumer,
+                                             TRUE,
+                                             &Required->Page[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            while (i > 0)
+            {
+                MmReleasePageMemoryConsumer(Required->Consumer,
+                                            Required->Page[i-1]);
+                i--;
+            }
+            return Status;
+        }
+    }
+
+    return Status;
 }
 
 NTSTATUS
 NTAPI
-MiReadFilePage
-(PMMSUPPORT AddressSpace, 
- PMEMORY_AREA MemoryArea, 
- PMM_REQUIRED_RESOURCES RequiredResources)
+MiReadFilePage(PMMSUPPORT AddressSpace,
+               PMEMORY_AREA MemoryArea,
+               PMM_REQUIRED_RESOURCES RequiredResources)
 {
-	PFILE_OBJECT FileObject = RequiredResources->Context;
-	PPFN_NUMBER Page = &RequiredResources->Page[RequiredResources->Offset];
-	PLARGE_INTEGER FileOffset = &RequiredResources->FileOffset;
-	NTSTATUS Status;
+    PFILE_OBJECT FileObject = RequiredResources->Context;
+    PPFN_NUMBER Page = &RequiredResources->Page[RequiredResources->Offset];
+    PLARGE_INTEGER FileOffset = &RequiredResources->FileOffset;
+    NTSTATUS Status;
     PVOID PageBuf = NULL;
     KEVENT Event;
-	IO_STATUS_BLOCK IOSB;
+    IO_STATUS_BLOCK IOSB;
     UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
     PMDL Mdl = (PMDL)MdlBase;
     KIRQL OldIrql;
 
-	DPRINTC
-		("Pulling page %08x%08x from %wZ to %x\n", 
-		 FileOffset->u.HighPart, FileOffset->u.LowPart,
-		 &FileObject->FileName,
-		 Page);
+    DPRINTC("Pulling page %08x%08x from %wZ to %x\n",
+            FileOffset->u.HighPart,
+            FileOffset->u.LowPart,
+            &FileObject->FileName,
+            Page);
 
-	Status = MmRequestPageMemoryConsumer(RequiredResources->Consumer, TRUE, Page);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("Status: %x\n", Status);
-		return Status;
-	}
+    Status = MmRequestPageMemoryConsumer(RequiredResources->Consumer,
+                                         TRUE,
+                                         Page);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Status: %x\n", Status);
+        return Status;
+    }
 
     MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
     MmBuildMdlFromPages(Mdl, Page);
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
-		 
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoPageRead
-        (FileObject,
-         Mdl,
-         FileOffset,
-         &Event,
-         &IOSB);
+    Status = IoPageRead(FileObject, Mdl, FileOffset, &Event, &IOSB);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -141,65 +140,71 @@ MiReadFilePage
         MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
         return STATUS_NO_MEMORY;
     }
-	RtlZeroMemory
-		((PCHAR)PageBuf+RequiredResources->Amount,
-		 PAGE_SIZE-RequiredResources->Amount);
+
+    RtlZeroMemory((PCHAR)PageBuf+RequiredResources->Amount,
+                  PAGE_SIZE-RequiredResources->Amount);
+
     MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PageBuf, OldIrql);
-	
-	DPRINT("Read Status %x (Page %x)\n", Status, *Page);
 
-	if (!NT_SUCCESS(Status))
-	{
-		MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
-		DPRINT("Status: %x\n", Status);
-		return Status;
-	}
+    DPRINT("Read Status %x (Page %x)\n", Status, *Page);
 
-	return STATUS_SUCCESS;
+    if (!NT_SUCCESS(Status))
+    {
+        MmReleasePageMemoryConsumer(RequiredResources->Consumer, *Page);
+        DPRINT("Status: %x\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-MiSwapInPage
-(PMMSUPPORT AddressSpace,
- PMEMORY_AREA MemoryArea,
- PMM_REQUIRED_RESOURCES Resources)
+MiSwapInPage(PMMSUPPORT AddressSpace,
+             PMEMORY_AREA MemoryArea,
+             PMM_REQUIRED_RESOURCES Resources)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = MmRequestPageMemoryConsumer(Resources->Consumer, TRUE, &Resources->Page[Resources->Offset]);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
-		return Status;
-	}
-	
-	Status = MmReadFromSwapPage(Resources->SwapEntry, Resources->Page[Resources->Offset]);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
-		return Status;
-	}
+    Status = MmRequestPageMemoryConsumer(Resources->Consumer,
+                                         TRUE,
+                                         &Resources->Page[Resources->Offset]);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
+        return Status;
+    }
 
-	MmSetSavedSwapEntryPage(Resources->Page[Resources->Offset], Resources->SwapEntry);
+    Status = MmReadFromSwapPage(Resources->SwapEntry,
+                                Resources->Page[Resources->Offset]);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
+        return Status;
+    }
 
-	DPRINT1("MiSwapInPage(%x,%x)\n", Resources->Page[Resources->Offset], Resources->SwapEntry);
+    MmSetSavedSwapEntryPage(Resources->Page[Resources->Offset],
+                            Resources->SwapEntry);
 
-	return Status;
+    DPRINT1("MiSwapInPage(%x,%x)\n",
+            Resources->Page[Resources->Offset],
+            Resources->SwapEntry);
+
+    return Status;
 }
 
 NTSTATUS
 NTAPI
-MiWriteFilePage
-(PMMSUPPORT AddressSpace, 
- PMEMORY_AREA MemoryArea, 
- PMM_REQUIRED_RESOURCES Required)
+MiWriteFilePage(PMMSUPPORT AddressSpace,
+                PMEMORY_AREA MemoryArea,
+                PMM_REQUIRED_RESOURCES Required)
 {
-	DPRINT1("MiWriteFilePage(%x,%x)\n", Required->Page[Required->Offset], Required->FileOffset.LowPart);
+    DPRINT1("MiWriteFilePage(%x,%x)\n",
+            Required->Page[Required->Offset],
+            Required->FileOffset.LowPart);
 
-	return MiWriteBackPage
-		(Required->Context, 
-		 &Required->FileOffset, 
-		 PAGE_SIZE, 
-		 Required->Page[Required->Offset]);
+    return MiWriteBackPage(Required->Context,
+                           &Required->FileOffset,
+                           PAGE_SIZE,
+                           Required->Page[Required->Offset]);
 }
