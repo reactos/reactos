@@ -349,13 +349,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
                 ExReleaseFastMutex(&RmapListLock);
                 goto bail;
             }
-            Status = ObReferenceObject(Process);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("bail\n");
-                ExReleaseFastMutex(&RmapListLock);
-                goto bail;
-            }
+            ObReferenceObject(Process);
             ProcRef = TRUE;
             AddressSpace = &Process->Vm;
         }

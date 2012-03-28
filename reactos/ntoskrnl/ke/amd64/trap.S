@@ -416,6 +416,9 @@ FUNC KiPageFault
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
 
+    /* Enable interrupts for the page fault handler */
+    sti
+
     /* Call page fault handler */
     mov ecx, [rbp + KTRAP_FRAME_ErrorCode] // StoreInstruction
     and ecx, 1
@@ -428,6 +431,9 @@ FUNC KiPageFault
     /* Check for success */
     test eax, eax
     jge PageFaultReturn
+
+    /* Disable interrupts again for the debugger */
+    cli
 
     /* Set parameter 1 to error code */
     mov r9d, [rbp + KTRAP_FRAME_ErrorCode]
