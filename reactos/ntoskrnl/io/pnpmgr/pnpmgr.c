@@ -63,7 +63,7 @@ IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
 VOID
 IopFixupDeviceId(PWCHAR String)
 {
-    ULONG Length = wcslen(String), i;
+    SIZE_T Length = wcslen(String), i;
 
     for (i = 0; i < Length; i++)
     {

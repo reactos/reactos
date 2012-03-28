@@ -3668,9 +3668,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     IN ULONG FreeType)
 {
     PMEMORY_AREA MemoryArea;
-    ULONG PRegionSize;
+    SIZE_T PRegionSize;
     PVOID PBaseAddress;
-    ULONG CommitReduction = 0;
+    ULONG_PTR CommitReduction = 0;
     ULONG_PTR StartingAddress, EndingAddress;
     PMMVAD Vad;
     NTSTATUS Status;

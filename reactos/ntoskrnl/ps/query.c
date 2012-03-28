@@ -470,8 +470,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 VmCounters->PagefileUsage = Process->QuotaUsage[2] << PAGE_SHIFT;
                 VmCounters->PeakPagefileUsage = Process->QuotaPeak[2] << PAGE_SHIFT;
                 //VmCounters->PrivateUsage = Process->CommitCharge << PAGE_SHIFT;
-                // 
-                
+                //
+
                 /* Set the return length */
                 Length = ProcessInformationLength;
             }

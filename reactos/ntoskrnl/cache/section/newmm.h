@@ -5,16 +5,20 @@
 /* TYPES *********************************************************************/
 
 #define MM_WAIT_ENTRY            0x7ffff800
-#define PFN_FROM_SSE(E)          ((E) >> PAGE_SHIFT)
+#define PFN_FROM_SSE(E)          ((PFN_NUMBER)((E) >> PAGE_SHIFT))
 #define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
 #define MM_IS_WAIT_PTE(E)        \
     (IS_SWAP_FROM_SSE(E) && SWAPENTRY_FROM_SSE(E) == MM_WAIT_ENTRY)
-#define MAKE_PFN_SSE(P)          ((P) << PAGE_SHIFT)
+#define MAKE_PFN_SSE(P)          ((ULONG_PTR)((P) << PAGE_SHIFT))
 #define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
-#define MAKE_SWAP_SSE(S)         (((ULONG)(S) << 1) | 0x1)
+#define MAKE_SWAP_SSE(S)         (((ULONG_PTR)(S) << 1) | 0x1)
 #define DIRTY_SSE(E)             ((E) | 2)
 #define CLEAN_SSE(E)             ((E) & ~2)
 #define IS_DIRTY_SSE(E)          ((E) & 2)
+#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
+#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 2)
+#define MAX_SHARE_COUNT          0x3FF
+#define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 2)))
 
 #define MM_SEGMENT_FINALIZE (0x40000000)
 
@@ -52,7 +56,7 @@ typedef struct _CACHE_SECTION_PAGE_TABLE
     LARGE_INTEGER FileOffset;
     PMM_SECTION_SEGMENT Segment;
     ULONG Refcount;
-    ULONG PageEntries[ENTRIES_PER_ELEMENT];
+    ULONG_PTR PageEntries[ENTRIES_PER_ELEMENT];
 } CACHE_SECTION_PAGE_TABLE, *PCACHE_SECTION_PAGE_TABLE;
 
 struct _MM_REQUIRED_RESOURCES;
@@ -124,11 +128,11 @@ NTSTATUS
 NTAPI
 _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                               PLARGE_INTEGER Offset,
-                              ULONG Entry,
+                              ULONG_PTR Entry,
                               const char *file,
                               int line);
 
-ULONG
+ULONG_PTR
 NTAPI
 _MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                               PLARGE_INTEGER Offset,

@@ -64,7 +64,7 @@ MmWithdrawSectionPage(PMM_SECTION_SEGMENT Segment,
                       PLARGE_INTEGER FileOffset,
                       BOOLEAN *Dirty)
 {
-    ULONG Entry;
+    ULONG_PTR Entry;
 
     DPRINT("MmWithdrawSectionPage(%x,%08x%08x,%x)\n",
            Segment,
@@ -228,7 +228,7 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
                       PBOOLEAN Dirty,
                       PMM_REQUIRED_RESOURCES Required)
 {
-    ULONG Entry;
+    ULONG_PTR Entry;
     PFN_NUMBER OurPage;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     LARGE_INTEGER TotalOffset;
@@ -521,7 +521,8 @@ NTAPI
 MiCacheEvictPages(PMM_SECTION_SEGMENT Segment,
                   ULONG Target)
 {
-    ULONG Entry, Result = 0, i, j;
+    ULONG_PTR Entry;
+    ULONG Result = 0, i, j;
     NTSTATUS Status;
     PFN_NUMBER Page;
     LARGE_INTEGER Offset;

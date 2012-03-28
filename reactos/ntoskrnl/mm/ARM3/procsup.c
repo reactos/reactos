@@ -244,7 +244,8 @@ MmDeleteKernelStack(IN PVOID StackBase,
         if (ExQueryDepthSList(&MmDeadStackSListHead) < MmMaximumDeadKernelStacks)
         {
             Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
-            InterlockedPushEntrySList(&MmDeadStackSListHead, &Pfn1->u1.NextStackPfn);
+            InterlockedPushEntrySList(&MmDeadStackSListHead,
+                                      (PSLIST_ENTRY)&Pfn1->u1.NextStackPfn);
             return;
         }
     }
@@ -1138,7 +1139,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 
     /* Use idle process Working set */
     Process->Vm.VmWorkingSetList = PsGetCurrentProcess()->Vm.VmWorkingSetList;
-    
+
     /* Done */
     Process->HasAddressSpace = TRUE;//??
     return STATUS_SUCCESS;

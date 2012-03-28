@@ -148,11 +148,11 @@ NTSTATUS
 NTAPI
 _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                               PLARGE_INTEGER Offset,
-                              ULONG Entry,
+                              ULONG_PTR Entry,
                               const char *file,
                               int line)
 {
-    ULONG PageIndex, OldEntry;
+    ULONG_PTR PageIndex, OldEntry;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
     ASSERT(Segment->Locked);
@@ -202,7 +202,7 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     return STATUS_SUCCESS;
 }
 
-ULONG
+ULONG_PTR
 NTAPI
 _MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                               PLARGE_INTEGER Offset,
@@ -210,7 +210,7 @@ _MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                               int line)
 {
     LARGE_INTEGER FileOffset;
-    ULONG PageIndex, Result;
+    ULONG_PTR PageIndex, Result;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
     ASSERT(Segment->Locked);
@@ -247,10 +247,10 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
                Element->FileOffset.u.LowPart);
         if (FreePage)
         {
-            int i;
+            ULONG i;
             for (i = 0; i < ENTRIES_PER_ELEMENT; i++)
             {
-                ULONG Entry;
+                ULONG_PTR Entry;
                 LARGE_INTEGER Offset;
                 Offset.QuadPart = Element->FileOffset.QuadPart + i * PAGE_SIZE;
                 Entry = Element->PageEntries[i];

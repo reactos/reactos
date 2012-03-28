@@ -129,7 +129,7 @@ MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length)
     while (FileOffset.QuadPart < End.QuadPart)
     {
         PVOID Address;
-        ULONG Entry;
+        ULONG_PTR Entry;
 
         if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page)))
             break;
@@ -223,7 +223,7 @@ _MiFlushMappedSection(PVOID BaseAddress,
          PageAddress < EndingAddress;
          PageAddress += PAGE_SIZE)
     {
-        ULONG Entry;
+        ULONG_PTR Entry;
         FileOffset.QuadPart = ViewOffset.QuadPart + PageAddress - BeginningAddress;
         Entry = MmGetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment,
                                              &FileOffset);
@@ -250,7 +250,7 @@ _MiFlushMappedSection(PVOID BaseAddress,
          PageAddress < EndingAddress;
          PageAddress += PAGE_SIZE)
     {
-        ULONG Entry;
+        ULONG_PTR Entry;
         FileOffset.QuadPart = ViewOffset.QuadPart + PageAddress - BeginningAddress;
         Entry = Pages[(PageAddress - BeginningAddress) >> PAGE_SHIFT];
         Page = PFN_FROM_SSE(Entry);
@@ -351,7 +351,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
 {
     PROS_SECTION_OBJECT Section;
     NTSTATUS Status;
-    ULARGE_INTEGER MaximumSize;
+    LARGE_INTEGER MaximumSize;
     PMM_SECTION_SEGMENT Segment;
     IO_STATUS_BLOCK Iosb;
     CC_FILE_SIZES FileSizes;
@@ -394,6 +394,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     */
     if (!CcGetFileSizes(FileObject, &FileSizes))
     {
+        ULONG Information;
         /*
         * FIXME: This is propably not entirely correct. We can't look into
         * the standard FCB header because it might not be initialized yet
@@ -405,7 +406,8 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
                                         FileStandardInformation,
                                         sizeof(FILE_STANDARD_INFORMATION),
                                         &FileInfo,
-                                        &Iosb.Information);
+                                        &Information);
+        Iosb.Information = Information;
         DPRINT("Query => %x\n", Status);
 
         if (!NT_SUCCESS(Status))
@@ -644,7 +646,7 @@ NTAPI
 MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
                   PLARGE_INTEGER FileOffset)
 {
-    ULONG Entry;
+    ULONG_PTR Entry;
     PFILE_OBJECT FileObject = Segment->FileObject;
 
     Entry = MmGetPageEntrySectionSegment(Segment, FileOffset);
@@ -696,7 +698,7 @@ MmFreeCacheSectionPage(PVOID Context,
                        SWAPENTRY SwapEntry,
                        BOOLEAN Dirty)
 {
-    ULONG Entry;
+    ULONG_PTR Entry;
     PVOID *ContextData = Context;
     PMMSUPPORT AddressSpace;
     PEPROCESS Process;

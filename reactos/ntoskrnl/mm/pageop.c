@@ -72,7 +72,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 PMM_PAGEOP
 NTAPI
 MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
-                 PMM_SECTION_SEGMENT Segment, ULONG Offset)
+                 PMM_SECTION_SEGMENT Segment, ULONGLONG Offset)
 {
    ULONG_PTR Hash;
    KIRQL oldIrql;
@@ -135,7 +135,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 PMM_PAGEOP
 NTAPI
 MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
-            PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOLEAN First)
+            PMM_SECTION_SEGMENT Segment, ULONGLONG Offset, ULONG OpType, BOOLEAN First)
 /*
  * FUNCTION: Get a page operation descriptor corresponding to
  * the memory area and either the segment, offset pair or the

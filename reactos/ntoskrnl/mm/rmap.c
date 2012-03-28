@@ -53,7 +53,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    PVOID Address;
    PEPROCESS Process;
    PMM_PAGEOP PageOp;
-   ULONG Offset;
+   ULONGLONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
    ExAcquireFastMutex(&RmapListLock);
@@ -126,8 +126,8 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+      Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
+               ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress);
 
       /*
        * Get or create a pageop

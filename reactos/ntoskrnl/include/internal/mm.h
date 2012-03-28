@@ -206,10 +206,10 @@ typedef struct _MM_SECTION_SEGMENT
     BOOLEAN WriteCopy;
 	BOOLEAN Locked;
 
-	struct 
+	struct
 	{
-		LONG FileOffset;		/* start offset into the file for image sections */
-		ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
+		ULONGLONG FileOffset;		/* start offset into the file for image sections */
+		ULONG_PTR VirtualAddress;	/* start offset into the address range for image sections */
 		ULONG Characteristics;
 	} Image;
 
@@ -443,7 +443,7 @@ typedef struct _MM_PAGEOP
    * section mapping.
    */
   PMM_SECTION_SEGMENT Segment;
-  ULONG Offset;
+  ULONGLONG Offset;
 } MM_PAGEOP, *PMM_PAGEOP;
 
 typedef struct _MM_MEMORY_CONSUMER
@@ -1020,7 +1020,7 @@ MmGetPageOp(
     HANDLE Pid,
     PVOID Address,
     PMM_SECTION_SEGMENT Segment,
-    ULONG Offset,
+    ULONGLONG Offset,
     ULONG OpType,
     BOOLEAN First
 );
@@ -1032,7 +1032,7 @@ MmCheckForPageOp(
     HANDLE Pid,
     PVOID Address,
     PMM_SECTION_SEGMENT Segment,
-    ULONG Offset
+    ULONGLONG Offset
 );
 
 VOID

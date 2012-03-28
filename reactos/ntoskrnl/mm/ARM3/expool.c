@@ -306,7 +306,7 @@ ExpCheckPoolBlocks(IN PVOID Block)
 FORCEINLINE
 VOID
 ExpCheckPoolIrqlLevel(IN POOL_TYPE PoolType,
-                      IN ULONG NumberOfBytes,
+                      IN SIZE_T NumberOfBytes,
                       IN PVOID Entry)
 {
     //
@@ -341,7 +341,7 @@ ExpComputeHashForTag(IN ULONG Tag,
     // the table
     //
     ULONGLONG Result = 40543 * Tag;
-    return BucketMask & (Result ^ (Result >> 32));
+    return (ULONG)BucketMask & ((ULONG)Result ^ (Result >> 32));
 }
 
 FORCEINLINE
@@ -358,7 +358,7 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
     // while holding the expansion pushlock, and this is why we call this a
     // "partial" hash only.
     //
-    Result = (ULONG_PTR)BaseAddress >> PAGE_SHIFT;
+    Result = (ULONG)((ULONG_PTR)BaseAddress >> PAGE_SHIFT);
     return (Result >> 24) ^ (Result >> 16) ^ (Result >> 8) ^ Result;
 }
 
@@ -538,11 +538,13 @@ ExpRemovePoolTracker(IN ULONG Key,
             if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
             {
                 InterlockedIncrement(&TableEntry->NonPagedFrees);
-                InterlockedExchangeAddSizeT(&TableEntry->NonPagedBytes, -NumberOfBytes);
+                InterlockedExchangeAddSizeT(&TableEntry->NonPagedBytes,
+                                            -(SSIZE_T)NumberOfBytes);
                 return;
             }
             InterlockedIncrement(&TableEntry->PagedFrees);
-            InterlockedExchangeAddSizeT(&TableEntry->PagedBytes, -NumberOfBytes);
+            InterlockedExchangeAddSizeT(&TableEntry->PagedBytes,
+                                        -(SSIZE_T)NumberOfBytes);
             return;
         }
 
@@ -1071,7 +1073,7 @@ ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
                  IN ULONG SystemInformationLength,
                  IN OUT PULONG ReturnLength OPTIONAL)
 {
-    SIZE_T TableSize, CurrentLength;
+    ULONG TableSize, CurrentLength;
     ULONG EntryCount;
     NTSTATUS Status = STATUS_SUCCESS;
     PSYSTEM_POOLTAG TagEntry;
@@ -1094,7 +1096,7 @@ ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
     // Capture the number of entries, and the total size needed to make a copy
     // of the table
     //
-    EntryCount = PoolTrackTableSize;
+    EntryCount = (ULONG)PoolTrackTableSize;
     TableSize = EntryCount * sizeof(POOL_TRACKER_TABLE);
 
     //
@@ -1262,7 +1264,7 @@ ExpAddTagForBigPages(IN PVOID Va,
 ULONG
 NTAPI
 ExpFindAndRemoveTagBigPages(IN PVOID Va,
-                            OUT PULONG BigPages,
+                            OUT PULONG_PTR BigPages,
                             IN POOL_TYPE PoolType)
 {
     BOOLEAN FirstTry = TRUE;
@@ -1525,7 +1527,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Increment required counters
         //
-        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages, BYTES_TO_PAGES(NumberOfBytes));
+        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages,
+                               (LONG)BYTES_TO_PAGES(NumberOfBytes));
         InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, NumberOfBytes);
         InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
 
@@ -1535,7 +1538,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if (!ExpAddTagForBigPages(Entry,
                                   Tag,
-                                  BYTES_TO_PAGES(NumberOfBytes),
+                                  (ULONG)BYTES_TO_PAGES(NumberOfBytes),
                                   OriginalType))
         {
             Tag = ' GIB';
@@ -2083,14 +2086,16 @@ ExFreePoolWithTag(IN PVOID P,
         //
         PoolDesc = PoolVector[PoolType];
         InterlockedIncrement((PLONG)&PoolDesc->RunningDeAllocs);
-        InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes, -PageCount << PAGE_SHIFT);
+        InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes,
+                                    -(LONG_PTR)(PageCount << PAGE_SHIFT));
 
         //
         // Do the real free now and update the last counter with the big page count
         //
         RealPageCount = MiFreePoolPages(P);
         ASSERT(RealPageCount == PageCount);
-        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages, -RealPageCount);
+        InterlockedExchangeAdd((PLONG)&PoolDesc->TotalBigPages,
+                               -(LONG)RealPageCount);
         return;
     }
 

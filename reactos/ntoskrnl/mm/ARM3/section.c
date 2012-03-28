@@ -848,7 +848,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     {
         PointerPte = &Subsection->SubsectionBase[PteOffset];
         LastPte = PointerPte + BYTES_TO_PAGES(CommitSize);
-        QuotaCharge = LastPte - PointerPte;
+        QuotaCharge = (ULONG)(LastPte - PointerPte);
     }
 
     /* ARM3 does not currently support large pages */
@@ -1467,7 +1467,8 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     {
         /* Convert the flag, and make sure the section isn't too big */
         NewSection->u.Flags.Based = TRUE;
-        if (NewSection->SizeOfSection.QuadPart > (ULONG_PTR)MmHighSectionBase)
+        if ((ULONGLONG)NewSection->SizeOfSection.QuadPart >
+            (ULONG_PTR)MmHighSectionBase)
         {
             DPRINT1("BASED section is too large\n");
             ObDereferenceObject(NewSection);

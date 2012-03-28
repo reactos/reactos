@@ -69,7 +69,7 @@ MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
     ULONG Consumer;
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER FileOffset, TotalOffset;
-    ULONG Entry;
+    ULONG_PTR Entry;
     ULONG Attributes;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     KIRQL OldIrql;
@@ -295,7 +295,7 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
             Region->Protect == PAGE_EXECUTE_READWRITE)
 #endif
         {
-            ULONG Entry;
+            ULONG_PTR Entry;
             DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n",
                     Segment,
                     Process,

@@ -1071,7 +1071,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextMd;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    ULONG i;
+    ULONG_PTR i;
     PFN_NUMBER BasePage, LoaderPages;
     PMMPFN Pfn1;
     KIRQL OldIrql;

@@ -167,15 +167,6 @@ static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
          SECTION_ALL_ACCESS};
 
-#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
-#define PFN_FROM_SSE(E)          ((E) >> PAGE_SHIFT)
-#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 2)
-#define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
-#define MAX_SHARE_COUNT          0x3FF
-#define MAKE_SSE(P, C)           ((P) | ((C) << 2))
-#define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
-#define MAKE_SWAP_SSE(S)         (((ULONG)(S) << 1) | 0x1)
-
 static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
 {
   ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */
@@ -695,7 +686,7 @@ l_ReadHeaderFromFile:
         pssSegments[i].Image.Characteristics = pishSectionHeaders[i].Characteristics;
 
         /* ensure the memory image is no larger than 4GB */
-        nPrevVirtualEndOfSegment = pssSegments[i].Image.VirtualAddress + pssSegments[i].Length.QuadPart;
+        nPrevVirtualEndOfSegment = (ULONG_PTR)(pssSegments[i].Image.VirtualAddress + pssSegments[i].Length.QuadPart);
         if (nPrevVirtualEndOfSegment < pssSegments[i].Image.VirtualAddress)
             DIE(("The image is too large\n"));
     }
@@ -813,7 +804,7 @@ NTAPI
 MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                                PLARGE_INTEGER Offset)
 {
-   ULONG Entry;
+   ULONG_PTR Entry;
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
    if (Entry == 0)
@@ -842,7 +833,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                                  BOOLEAN Dirty,
                                  BOOLEAN PageOut)
 {
-   ULONG Entry;
+   ULONG_PTR Entry;
    BOOLEAN IsDirectMapped = FALSE;
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
@@ -982,7 +973,7 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
       PBCB Bcb;
       PCACHE_SEGMENT CacheSeg;
       Bcb = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
-      CacheSeg = CcRosLookupCacheSegment(Bcb, SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset);
+      CacheSeg = CcRosLookupCacheSegment(Bcb, (ULONG)(SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset));
       if (CacheSeg)
       {
          CcRosReleaseCacheSegment(Bcb, CacheSeg, CacheSeg->Valid, FALSE, TRUE);
@@ -1029,7 +1020,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  */
 {
    ULONG BaseOffset;
-   ULONG_PTR FileOffset;
+   ULONGLONG FileOffset;
    PVOID BaseAddress;
    BOOLEAN UptoDate;
    PCACHE_SEGMENT CacheSeg;
@@ -1042,7 +1033,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-   RawLength = MemoryArea->Data.SectionData.Segment->RawLength.QuadPart;
+   RawLength = (ULONG_PTR)(MemoryArea->Data.SectionData.Segment->RawLength.QuadPart);
    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
@@ -1055,8 +1046,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     * memory area was mapped at an offset in the file which is page aligned
     * then get the related cache segment.
     */
-   if ((FileOffset % PAGE_SIZE) == 0 &&
-       (SegOffset + PAGE_SIZE <= RawLength || !IsImageSection) &&
+   if (((FileOffset % PAGE_SIZE) == 0) &&
+       ((SegOffset + PAGE_SIZE <= RawLength) || !IsImageSection) &&
        !(MemoryArea->Data.SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
    {
 
@@ -1140,7 +1131,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
       Process = PsGetCurrentProcess();
       PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
-      CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
+      CacheSegOffset = (ULONG_PTR)(BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset);
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
       {
@@ -1469,7 +1460,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       /*
        * Just map the desired physical page
        */
-      Page = Offset.QuadPart >> PAGE_SHIFT;
+      Page = (PFN_NUMBER)(Offset.QuadPart >> PAGE_SHIFT);
       Status = MmCreateVirtualMappingUnsafe(Process,
                                             PAddress,
                                             Region->Protect,
@@ -1552,7 +1543,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
 
       if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-          (Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart) && Section->AllocationAttributes & SEC_IMAGE))
+          ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart) &&
+          (Section->AllocationAttributes & SEC_IMAGE))))
       {
          MI_SET_USAGE(MI_USAGE_SECTION);
          if (Process) MI_SET_PROCESS2(Process->ImageFileName);
@@ -1566,7 +1558,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       else
       {
-         Status = MiReadPage(MemoryArea, Offset.QuadPart, &Page);
+         Status = MiReadPage(MemoryArea, (ULONG_PTR)Offset.QuadPart, &Page);
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("MiReadPage failed (Status %x)\n", Status);
@@ -1745,7 +1737,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    LARGE_INTEGER Offset;
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
-   ULONG Entry;
+   ULONG_PTR Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
@@ -1800,10 +1792,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
       MmSetPageProtect(Process, Address, Region->Protect);
       return(STATUS_SUCCESS);
    }
-   
+
    if(OldPage == 0)
       DPRINT("OldPage == 0!\n");
-   
+
    /*
     * Get or create a pageop
     */
@@ -1962,8 +1954,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    PFN_NUMBER Page;
    MM_SECTION_PAGEOUT_CONTEXT Context;
    SWAPENTRY SwapEntry;
-   ULONG Entry;
-   ULONG FileOffset;
+   ULONG_PTR Entry;
+   ULONGLONG FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
 #ifndef NEWCC
@@ -2162,7 +2154,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          KeBugCheckEx(MEMORY_MANAGEMENT, STATUS_UNSUCCESSFUL, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
 #ifndef NEWCC
-      Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
+      Status = CcRosUnmapCacheSegment(Bcb, (ULONG)FileOffset, FALSE);
 #else
       Status = STATUS_SUCCESS;
 #endif
@@ -2170,7 +2162,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
-         KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)Bcb, FileOffset, (ULONG_PTR)Address);
+         KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)Bcb, (ULONG_PTR)FileOffset, (ULONG_PTR)Address);
       }
 #endif
       PageOp->Status = STATUS_SUCCESS;
@@ -2237,7 +2229,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          }
          else
          {
-            LONG OldEntry;
+            ULONG_PTR OldEntry;
             /*
              * For non-private pages if the page wasn't direct mapped then
              * set it back into the section segment entry so we don't loose
@@ -2365,7 +2357,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    PMM_SECTION_SEGMENT Segment;
    PFN_NUMBER Page;
    SWAPENTRY SwapEntry;
-   ULONG Entry;
+   ULONG_PTR Entry;
    BOOLEAN Private;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -2457,7 +2449,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    {
       ASSERT(SwapEntry == 0);
 #ifndef NEWCC
-      CcRosMarkDirtyCacheSegment(Bcb, Offset.LowPart + Segment->Image.FileOffset);
+      CcRosMarkDirtyCacheSegment(Bcb, (ULONG)(Offset.QuadPart + Segment->Image.FileOffset));
 #endif
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -2543,7 +2535,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
          if (DoCOW && MmIsPagePresent(Process, Address))
          {
             LARGE_INTEGER Offset;
-            ULONG Entry;
+            ULONG_PTR Entry;
             PFN_NUMBER Page;
 
             Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
@@ -2655,7 +2647,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
 {
    ULONG Length;
    LARGE_INTEGER Offset;
-   ULONG Entry;
+   ULONG_PTR Entry;
    SWAPENTRY SavedSwapEntry;
    PFN_NUMBER Page;
 
@@ -2739,7 +2731,7 @@ MmpDeleteSection(PVOID ObjectBody)
          ULONG RefCount = 0;
          PMM_SECTION_SEGMENT Segment = Section->Segment;
 
-         if (Segment && 
+         if (Segment &&
                  (RefCount = InterlockedDecrementUL(&Segment->ReferenceCount)) == 0)
          {
                  DPRINT("Freeing section segment\n");
@@ -3307,7 +3299,7 @@ ExeFmtpReadFile(IN PVOID File,
 
    Status = MiSimpleRead(FileObject, &FileOffset, Buffer, BufferSize, TRUE, &Iosb);
 
-   UsedSize = Iosb.Information;
+   UsedSize = (ULONG)Iosb.Information;
 
    if(NT_SUCCESS(Status) && UsedSize < OffsetAdjustment)
    {
@@ -3540,7 +3532,7 @@ MmspPageAlignSegments
          PMM_SECTION_SEGMENT Segment = &ImageSectionObject->Segments[i];
          ULONG_PTR EndOfEffectiveSegment;
 
-         EndOfEffectiveSegment = EffectiveSegment->Image.VirtualAddress + EffectiveSegment->Length.QuadPart;
+         EndOfEffectiveSegment = (ULONG_PTR)(EffectiveSegment->Image.VirtualAddress + EffectiveSegment->Length.QuadPart);
          ASSERT((EndOfEffectiveSegment % PAGE_SIZE) == 0);
 
          /*
@@ -4042,7 +4034,7 @@ static VOID
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_NUMBER Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
-   ULONG Entry;
+   ULONG_PTR Entry;
    PFILE_OBJECT FileObject;
    PBCB Bcb;
    LARGE_INTEGER Offset;
@@ -4098,7 +4090,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
          Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 #ifndef NEWCC
-         CcRosMarkDirtyCacheSegment(Bcb, Offset.QuadPart + Segment->Image.FileOffset);
+         CcRosMarkDirtyCacheSegment(Bcb, (ULONG)(Offset.QuadPart + Segment->Image.FileOffset));
 #endif
          ASSERT(SwapEntry == 0);
       }
@@ -4597,8 +4589,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
          if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             ULONG_PTR MaxExtent;
-            MaxExtent = (ULONG_PTR)SectionSegments[i].Image.VirtualAddress +
-                        SectionSegments[i].Length.QuadPart;
+            MaxExtent = (ULONG_PTR)(SectionSegments[i].Image.VirtualAddress +
+                        SectionSegments[i].Length.QuadPart);
             ImageSize = max(ImageSize, MaxExtent);
          }
       }
@@ -5047,7 +5039,7 @@ MmCreateSection (OUT PVOID  * Section,
         DPRINT("Creating a section with WRITE access\n");
         FileAccess = FILE_READ_DATA | FILE_WRITE_DATA | SYNCHRONIZE;
     }
-    else 
+    else
     {
         DPRINT("Creating a section with READ access\n");
         FileAccess = FILE_READ_DATA | SYNCHRONIZE;

@@ -157,7 +157,7 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
     if (MmAvailablePages < MiMinimumAvailablePages)
     {
         /* Global page limit exceeded */
-        Target = max(Target, MiMinimumAvailablePages - MmAvailablePages);
+        Target = (ULONG)max(Target, MiMinimumAvailablePages - MmAvailablePages);
     }
 
     if (Target)

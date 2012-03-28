@@ -61,7 +61,7 @@ MiGetOnePage(PMMSUPPORT AddressSpace,
              PMEMORY_AREA MemoryArea,
              PMM_REQUIRED_RESOURCES Required)
 {
-    int i;
+    ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
     for (i = 0; i < Required->Amount; i++)
