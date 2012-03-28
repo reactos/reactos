@@ -250,7 +250,7 @@ VBEInitialize(PVOID HwDeviceExtension)
       /* Verify the VBE signature. */
       if (VideoPortCompareMemory(VBEDeviceExtension->VbeInfo.Signature, "VESA", 4) != 4)
       {
-         VideoPortDebugPrint(Warn, "No VBE BIOS present\n");
+         VideoPortDebugPrint(Error, "No VBE BIOS present\n");
          return FALSE;
       }
 
@@ -265,13 +265,15 @@ VBEInitialize(PVOID HwDeviceExtension)
       if (VBEDeviceExtension->VbeInfo.Version < 0x200)
 #endif
       {
-         VideoPortDebugPrint(Warn, "VBE BIOS present, but incompatible version.\n");
+         VideoPortDebugPrint(Error, "VBE BIOS present, but incompatible version %d.%d\n",
+                             VBEDeviceExtension->VbeInfo.Version / 0x100,
+                             VBEDeviceExtension->VbeInfo.Version & 0xFF);
          return FALSE;
       }
    }
    else
    {
-      VideoPortDebugPrint(Warn, "No VBE BIOS found.\n");
+      VideoPortDebugPrint(Error, "No VBE BIOS found.\n");
       return FALSE;
    }
 
