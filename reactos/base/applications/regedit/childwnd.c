@@ -26,11 +26,7 @@ HBITMAP SizingPattern = 0;
 HBRUSH  SizingBrush = 0;
 static TCHAR Suggestions[256];
 
-/*******************************************************************************
- * Local module support methods
- */
-
-static LPCTSTR get_root_key_name(HKEY hRootKey)
+extern LPCTSTR get_root_key_name(HKEY hRootKey)
 {
     if (hRootKey == HKEY_CLASSES_ROOT) return _T("HKEY_CLASSES_ROOT");
     if (hRootKey == HKEY_CURRENT_USER) return _T("HKEY_CURRENT_USER");
@@ -40,6 +36,31 @@ static LPCTSTR get_root_key_name(HKEY hRootKey)
     if (hRootKey == HKEY_DYN_DATA) return _T("HKEY_DYN_DATA");
     return _T("UKNOWN HKEY, PLEASE REPORT");
 }
+
+extern void ResizeWnd(int cx, int cy)
+{
+    HDWP hdwp = BeginDeferWindowPos(3);
+    RECT rt, rs, rb;
+    const int tHeight = 18;
+    SetRect(&rt, 0, 0, cx, cy);
+    cy = 0;
+    if (hStatusBar != NULL)
+    {
+        GetWindowRect(hStatusBar, &rs);
+        cy = rs.bottom - rs.top;
+    }
+    GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
+    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    EndDeferWindowPos(hdwp);
+}
+
+/*******************************************************************************
+ * Local module support methods
+ */
 
 static void draw_splitbar(HWND hWnd, int x)
 {
@@ -63,27 +84,6 @@ static void draw_splitbar(HWND hWnd, int x)
     PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
     SelectObject(hdc, OldObj);
     ReleaseDC(hWnd, hdc);
-}
-
-static void ResizeWnd(int cx, int cy)
-{
-    HDWP hdwp = BeginDeferWindowPos(3);
-    RECT rt, rs, rb;
-    const int tHeight = 18;
-    SetRect(&rt, 0, 0, cx, cy);
-    cy = 0;
-    if (hStatusBar != NULL)
-    {
-        GetWindowRect(hStatusBar, &rs);
-        cy = rs.bottom - rs.top;
-    }
-    GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
-    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    EndDeferWindowPos(hdwp);
 }
 
 static void OnPaint(HWND hWnd)
@@ -526,20 +526,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                                 EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
                             else if(!_tcschr(keyPath, _T('\\')))
                                 EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                        }
-
-                        {
-                            HKEY hKey;
-                            TCHAR szBuffer[MAX_PATH];
-                            _sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("My Computer\\%s\\%s"), rootName, keyPath);
-
-                            if (RegCreateKey(HKEY_CURRENT_USER,
-                                             g_szGeneralRegKey,
-                                             &hKey) == ERROR_SUCCESS)
-                            {
-                                RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) _tcslen(szBuffer) * sizeof(szBuffer[0]));
-                                RegCloseKey(hKey);
-                            }
                         }
                     }
                 }

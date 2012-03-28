@@ -34,8 +34,6 @@ HMENU hMenuFrame;
 HMENU hPopupMenus = 0;
 UINT nClipboardFormat;
 LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
-const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit");
-
 
 #define MAX_LOADSTRING  100
 TCHAR szTitle[MAX_LOADSTRING];
@@ -60,7 +58,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-    TCHAR szBuffer[256];
 
     WNDCLASSEX wcFrame;
     WNDCLASSEX wcChild;
@@ -142,14 +139,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
 
-    /* Restore position */
-    if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"),
-                         szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
-    {
-        SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
-    }
-
-    ShowWindow(hFrameWnd, nCmdShow);
+    LoadSettings();
     UpdateWindow(hFrameWnd);
     return TRUE;
 }

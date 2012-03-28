@@ -16,6 +16,7 @@ list(APPEND SOURCE
     regedit.c
     regproc.c
     security.c
+    settings.c
     treeview.c
     regedit.rc)
 

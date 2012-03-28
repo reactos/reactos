@@ -1188,6 +1188,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
+        SaveSettings();
         PostQuitMessage(0);
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

@@ -90,6 +90,8 @@ extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+extern void ResizeWnd(int cx, int cy);
+extern LPCTSTR get_root_key_name(HKEY hRootKey);
 
 /* error.c */
 extern void ErrorMessageBox(HWND hWnd, LPCTSTR title, DWORD code);
@@ -137,3 +139,7 @@ extern BOOL GetKeyName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTST
 
 /* security.c */
 extern BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);
+
+/* settings.c */
+extern void LoadSettings(void);
+extern void SaveSettings(void);
