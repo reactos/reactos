@@ -47,7 +47,7 @@ HalpReportSerialNumber(VOID)
                       REG_BINARY,
                       HalpSerialNumber,
                       HalpSerialLen);
-                      
+
         /* Close the handle */
         ZwClose(Handle);
     }
@@ -63,7 +63,7 @@ HalpMarkAcpiHal(VOID)
     HANDLE KeyHandle;
     HANDLE Handle;
     ULONG Value = HalDisableFirmwareMapper ? 1 : 0;
-    
+
     /* Open the control set key */
     RtlInitUnicodeString(&KeyString,
                          L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
@@ -79,7 +79,7 @@ HalpMarkAcpiHal(VOID)
                                      TRUE);
         /* Close root key */
         ZwClose(Handle);
-        
+
         /* Check if PNP BIOS key exists */
         if (NT_SUCCESS(Status))
         {
@@ -91,28 +91,28 @@ HalpMarkAcpiHal(VOID)
                                    REG_DWORD,
                                    &Value,
                                    sizeof(Value));
-            
+
             /* Close subkey */
             ZwClose(KeyHandle);
         }
     }
-    
+
     /* Return status */
     return Status;
 }
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 HalpOpenRegistryKey(IN PHANDLE KeyHandle,
                     IN HANDLE RootKey,
                     IN PUNICODE_STRING KeyName,
-                    IN ACCESS_MASK DesiredAccess, 
+                    IN ACCESS_MASK DesiredAccess,
                     IN BOOLEAN Create)
 {
     NTSTATUS Status;
     ULONG Disposition;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    
+
     /* Setup the attributes we received */
     InitializeObjectAttributes(&ObjectAttributes,
                                KeyName,
@@ -137,7 +137,7 @@ HalpOpenRegistryKey(IN PHANDLE KeyHandle,
         /* Open the key */
         Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
     }
-        
+
     /* We're done */
     return Status;
 }
@@ -157,7 +157,7 @@ VOID
 NTAPI
 HalpFlushTLB(VOID)
 {
-    ULONG Flags, Cr4;
+    ULONG_PTR Flags, Cr4;
     INT CpuInfo[4];
     ULONG_PTR PageDirectory;
 
@@ -250,7 +250,7 @@ HalHandleNMI(IN PVOID NmiInfo)
         //
         // Fill the screen
         //
-        InbvSolidColorFill(0, 0, 639, 479, 1);       
+        InbvSolidColorFill(0, 0, 639, 479, 1);
         InbvSetScrollRegion(0, 0, 639, 479);
 
         //

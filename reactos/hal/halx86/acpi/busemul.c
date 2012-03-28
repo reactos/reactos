@@ -87,8 +87,8 @@ HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
                                  OUT PKIRQL Irql,
                                  OUT PKAFFINITY Affinity)
 {
-    ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
-    *Irql = (KIRQL)VECTOR2IRQL(Vector);
+    UCHAR Vector = IRQ2VECTOR((UCHAR)BusInterruptLevel);
+    *Irql = VECTOR2IRQL(Vector);
     *Affinity = 0xFFFFFFFF;
     return Vector;
 }

@@ -52,7 +52,7 @@ HalpAcpiGetCachedTable(IN ULONG Signature)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PACPI_CACHED_TABLE CachedTable;
-    
+
     /* Loop cached tables */
     ListHead = &HalpAcpiTableCacheList;
     NextEntry = ListHead->Flink;
@@ -60,10 +60,10 @@ HalpAcpiGetCachedTable(IN ULONG Signature)
     {
         /* Get the table */
         CachedTable = CONTAINING_RECORD(NextEntry, ACPI_CACHED_TABLE, Links);
-        
+
         /* Compare signatures */
         if (CachedTable->Header.Signature == Signature) return &CachedTable->Header;
-        
+
         /* Keep going */
         NextEntry = NextEntry->Flink;
     }
@@ -77,7 +77,7 @@ NTAPI
 HalpAcpiCacheTable(IN PDESCRIPTION_HEADER TableHeader)
 {
     PACPI_CACHED_TABLE CachedTable;
-    
+
     /* Get the cached table and link it */
     CachedTable = CONTAINING_RECORD(TableHeader, ACPI_CACHED_TABLE, Header);
     InsertTailList(&HalpAcpiTableCacheList, &CachedTable->Links);
@@ -89,11 +89,11 @@ HalpAcpiCopyBiosTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN PDESCRIPTION_HEADER TableHeader)
 {
     ULONG Size;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
     PHYSICAL_ADDRESS PhysAddress;
     PACPI_CACHED_TABLE CachedTable;
     PDESCRIPTION_HEADER CopiedTable;
-    
+
     /* Size we'll need for the cached table */
     Size = TableHeader->Length + FIELD_OFFSET(ACPI_CACHED_TABLE, Header);
     if (LoaderBlock)
@@ -120,7 +120,7 @@ HalpAcpiCopyBiosTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Use Mm pool */
         CachedTable = ExAllocatePoolWithTag(NonPagedPool, Size, ' laH');
     }
-    
+
     /* Do we have the cached table? */
     if (CachedTable)
     {
@@ -133,7 +133,7 @@ HalpAcpiCopyBiosTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Nothing to return */
         CopiedTable = NULL;
     }
-    
+
     /* Return the table */
     return CopiedTable;
 }
@@ -153,8 +153,8 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG Offset;
     ULONG EntryCount, CurrentEntry;
     PCHAR CurrentByte;
-    PFN_NUMBER PageCount;
-  
+    PFN_COUNT PageCount;
+
     /* Should not query the RSDT/XSDT by itself */
     if ((Signature == RSDT_SIGNATURE) || (Signature == XSDT_SIGNATURE)) return NULL;
 
@@ -169,7 +169,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             PhysicalAddress.HighPart = 0;
             PhysicalAddress.LowPart = Fadt->dsdt;
             TableLength = 2 * PAGE_SIZE;
-            
+
             /* Map it */
             if (LoaderBlock)
             {
@@ -188,7 +188,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 DPRINT1("HAL: Failed to map ACPI table.\n");
                 return NULL;
             }
-            
+
             /* Validate the signature */
             if (Header->Signature != DSDT_SIGNATURE)
             {
@@ -232,7 +232,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Won't be using the RSDT */
             Rsdt = NULL;
         }
-    
+
         /* Smallest RSDT/XSDT is one without table entries */
         Offset = FIELD_OFFSET(RSDT, Tables);
         if (Xsdt)
@@ -240,7 +240,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Figure out total size of table and the offset */
             TableLength = Xsdt->Header.Length;
             if (TableLength < Offset) Offset = Xsdt->Header.Length;
-        
+
             /* The entries are each 64-bits, so count them */
             EntryCount = (TableLength - Offset) / sizeof(PHYSICAL_ADDRESS);
         }
@@ -249,11 +249,11 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Figure out total size of table and the offset */
             TableLength = Rsdt->Header.Length;
             if (TableLength < Offset) Offset = Rsdt->Header.Length;
-        
+
             /* The entries are each 32-bits, so count them */
             EntryCount = (TableLength - Offset) / sizeof(ULONG);
         }
-  
+
         /* Start at the beginning of the array and loop it */
         for (CurrentEntry = 0; CurrentEntry < EntryCount; CurrentEntry++)
         {
@@ -269,7 +269,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Read the 64-bit physical address */
                 PhysicalAddress = Xsdt->Tables[CurrentEntry];
             }
-        
+
             /* Had we already mapped a table? */
             if (Header)
             {
@@ -285,7 +285,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     MmUnmapIoSpace(Header, 2 * PAGE_SIZE);
                 }
             }
-        
+
             /* Now map this table */
             if (!LoaderBlock)
             {
@@ -297,7 +297,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Phase 0: Use Mm */
                 Header = HalpMapPhysicalMemory64(PhysicalAddress, 2);
             }
-        
+
             /* Check if we mapped it */
             if (!Header)
             {
@@ -315,7 +315,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     Header);
             if (Header->Signature == Signature) break;
         }
-    
+
         /* Did we end up here back at the last entry? */
         if (CurrentEntry == EntryCount)
         {
@@ -335,10 +335,10 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             return NULL;
         }
     }
-    
+
     /* Past this point, we assume something was found */
     ASSERT(Header);
-    
+
     /* How many pages do we need? */
     PageCount = BYTES_TO_PAGES(Header->Length);
     if (PageCount != 2)
@@ -354,7 +354,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Using Mm */
             MmUnmapIoSpace(Header, 2 * PAGE_SIZE);
         }
-        
+
         /* Now map this table using its correct size */
         if (!LoaderBlock)
         {
@@ -367,7 +367,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             Header = HalpMapPhysicalMemory64(PhysicalAddress, PageCount);
         }
     }
-    
+
     /* Fail if the remapped failed */
     if (!Header) return NULL;
 
@@ -382,7 +382,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Add this byte */
             CheckSum += *CurrentByte;
         }
-        
+
         /* The correct checksum is always 0, anything else is illegal */
         if (CheckSum)
         {
@@ -394,7 +394,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     (Signature & 0xFF000000) >> 24);
         }
     }
- 
+
     /* Return the table */
     return Header;
 }
@@ -404,7 +404,7 @@ NTAPI
 HalpAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                  IN ULONG Signature)
 {
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
     PDESCRIPTION_HEADER TableAddress, BiosCopy;
 
     /* See if we have a cached table? */
@@ -417,7 +417,7 @@ HalpAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         {
             /* Found it, copy it into our own memory */
             BiosCopy = HalpAcpiCopyBiosTable(LoaderBlock, TableAddress);
-            
+
             /* Get the pages, and unmap the BIOS copy */
             PageCount = BYTES_TO_PAGES(TableAddress->Length);
             if (LoaderBlock)
@@ -430,13 +430,13 @@ HalpAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Phase 1, use Mm */
                 MmUnmapIoSpace(TableAddress, PageCount << PAGE_SHIFT);
             }
-            
+
             /* Cache the bios copy */
             TableAddress = BiosCopy;
             if (BiosCopy) HalpAcpiCacheTable(BiosCopy);
         }
     }
-    
+
     /* Return the table */
     return TableAddress;
 }
@@ -447,7 +447,7 @@ HalAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 IN ULONG Signature)
 {
     PDESCRIPTION_HEADER TableHeader;
-    
+
     /* Is this phase0 */
     if (LoaderBlock)
     {
@@ -462,7 +462,7 @@ HalAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Get the table */
     TableHeader = HalpAcpiGetTable(LoaderBlock, Signature);
-    
+
     /* Release the lock in phase 1 */
     if (!LoaderBlock) ExReleaseFastMutex(&HalpAcpiTableCacheLock);
 
@@ -475,7 +475,7 @@ NTAPI
 HalpNumaInitializeStaticConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PACPI_SRAT SratTable;
-    
+
     /* Get the SRAT, bail out if it doesn't exist */
     SratTable = HalAcpiGetTable(LoaderBlock, SRAT_SIGNATURE);
     HalpAcpiSrat = SratTable;
@@ -487,7 +487,7 @@ NTAPI
 HalpGetHotPlugMemoryInfo(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PACPI_SRAT SratTable;
-    
+
     /* Get the SRAT, bail out if it doesn't exist */
     SratTable = HalAcpiGetTable(LoaderBlock, SRAT_SIGNATURE);
     HalpAcpiSrat = SratTable;
@@ -537,7 +537,7 @@ HalpInitBootTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Invalid or doesn't exist, ignore it */
         HalpSimpleBootFlagTable = 0;
     }
-    
+
     /* Install the end of boot handler */
 //    HalEndOfBoot = HalpEndOfBoot;
 }
@@ -552,7 +552,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCM_PARTIAL_RESOURCE_LIST ResourceList;
     PACPI_BIOS_MULTI_NODE NodeData;
     SIZE_T NodeLength;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
     PVOID MappedAddress;
     PHYSICAL_ADDRESS PhysicalAddress;
 
@@ -566,7 +566,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Assume failure */
     *AcpiMultiNode = NULL;
-    
+
     /* Find the multi function adapter key */
     ComponentEntry = KeFindConfigurationNextEntry(LoaderBlock->ConfigurationRoot,
                                                   AdapterClass,
@@ -581,7 +581,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Found it */
             break;
         }
-        
+
         /* Keep searching */
         Next = ComponentEntry;
         ComponentEntry = KeFindConfigurationNextEntry(LoaderBlock->ConfigurationRoot,
@@ -590,24 +590,24 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                       NULL,
                                                       &Next);
     }
-    
+
     /* Make sure we found it */
     if (!ComponentEntry)
     {
         DPRINT1("**** HalpAcpiFindRsdtPhase0: did NOT find RSDT\n");
         return STATUS_NOT_FOUND;
     }
-    
+
     /* The configuration data is a resource list, and the BIOS node follows */
     ResourceList = ComponentEntry->ConfigurationData;
     NodeData = (PACPI_BIOS_MULTI_NODE)(ResourceList + 1);
-    
+
     /* How many E820 memory entries are there? */
     NodeLength = sizeof(ACPI_BIOS_MULTI_NODE) +
                  (NodeData->Count - 1) * sizeof(ACPI_E820_ENTRY);
-                 
+
     /* Convert to pages */
-    PageCount = BYTES_TO_PAGES(NodeLength);
+    PageCount = (PFN_COUNT)BYTES_TO_PAGES(NodeLength);
 
     /* Allocate the memory */
     PhysicalAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock,
@@ -624,11 +624,11 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Otherwise we'll have to fail */
         MappedAddress = NULL;
     }
-    
+
     /* Save the multi node, bail out if we didn't find it */
     HalpAcpiMultiNode = MappedAddress;
     if (!MappedAddress) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     /* Copy the multi-node data */
     RtlCopyMemory(MappedAddress, NodeData, NodeLength);
 
@@ -648,20 +648,20 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG TableLength;
     PRSDT Rsdt;
     PLOADER_PARAMETER_EXTENSION LoaderExtension;
-   
+
     /* Only initialize once */
     if (HalpAcpiTableCacheList.Flink) return Status;
-   
+
     /* Setup the lock and table */
     ExInitializeFastMutex(&HalpAcpiTableCacheLock);
     InitializeListHead(&HalpAcpiTableCacheList);
-   
+
     /* Find the RSDT */
     Status = HalpAcpiFindRsdtPhase0(LoaderBlock, &AcpiMultiNode);
     if (!NT_SUCCESS(Status)) return Status;
 
     PhysicalAddress.QuadPart = AcpiMultiNode->RsdtAddress.QuadPart;
-   
+
     /* Map the RSDT */
     if (LoaderBlock)
     {
@@ -673,7 +673,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Use an I/O map */
         MappedAddress = MmMapIoSpace(PhysicalAddress, PAGE_SIZE * 2, MmNonCached);
     }
-   
+
     /* Get the RSDT */
     Rsdt = MappedAddress;
     if (!MappedAddress)
@@ -682,7 +682,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("HAL: Failed to map RSDT\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-   
+
     /* Validate it */
     if ((Rsdt->Header.Signature != RSDT_SIGNATURE) &&
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
@@ -691,7 +691,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         HalDisplayString("Bad RSDT pointer\n");
         KeBugCheckEx(MISMATCHED_HAL, 4, __LINE__, 0, 0);
     }
-   
+
     /* We assumed two pages -- do we need less or more? */
     TableLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(PhysicalAddress.LowPart,
                                                  Rsdt->Header.Length);
@@ -712,7 +712,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             HalpUnmapVirtualAddress(MappedAddress, 2);
             MappedAddress = HalpMapPhysicalMemory64(PhysicalAddress, TableLength);
         }
-        
+
         /* Get the remapped table */
         Rsdt = MappedAddress;
         if (!MappedAddress)
@@ -722,7 +722,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
-    
+
     /* Now take the BIOS copy and make our own local copy */
     Rsdt = HalpAcpiCopyBiosTable(LoaderBlock, &Rsdt->Header);
     if (!Rsdt)
@@ -731,7 +731,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("HAL: Couldn't remap RSDT\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /* Get rid of the BIOS mapping */
     if (LoaderBlock)
     {
@@ -747,10 +747,10 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         LoaderExtension = NULL;
     }
-    
+
     /* Cache the RSDT */
     HalpAcpiCacheTable(&Rsdt->Header);
-    
+
     /* Check for compatible loader block extension */
     if (LoaderExtension && (LoaderExtension->Size >= 0x58))
     {
@@ -772,7 +772,7 @@ HaliAcpiTimerInit(IN ULONG TimerPort,
                   IN ULONG TimerValExt)
 {
     PAGED_CODE();
-    
+
     /* Is this in the init phase? */
     if (!TimerPort)
     {
@@ -781,7 +781,7 @@ HaliAcpiTimerInit(IN ULONG TimerPort,
         TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
         DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
     }
-    
+
     /* FIXME: Now proceed to the timer initialization */
     //HalaAcpiTimerInit(TimerPort, TimerValExt);
 }
@@ -810,23 +810,23 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("HAL: Didn't find the FACP\n");
         return STATUS_NOT_FOUND;
     }
-    
+
     /* Assume typical size, otherwise whatever the descriptor table says */
     TableLength = sizeof(FADT);
     if (Fadt->Header.Length < sizeof(FADT)) TableLength = Fadt->Header.Length;
 
     /* Copy it in the HAL static buffer */
     RtlCopyMemory(&HalpFixedAcpiDescTable, Fadt, TableLength);
-    
+
     /* Anything special this HAL needs to do? */
     HalpAcpiDetectMachineSpecificActions(LoaderBlock, &HalpFixedAcpiDescTable);
-    
+
     /* Get the debug table for KD */
     HalpDebugPortTable = HalAcpiGetTable(LoaderBlock, DBGP_SIGNATURE);
-    
+
     /* Initialize NUMA through the SRAT */
     HalpNumaInitializeStaticConfiguration(LoaderBlock);
-    
+
     /* Initialize hotplug through the SRAT */
     HalpDynamicSystemResourceConfiguration(LoaderBlock);
     if (HalpAcpiSrat)
@@ -840,10 +840,10 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* We'll need this for DMA later */
         HalpPhysicalMemoryMayAppearAbove4GB = TRUE;
     }
-    
+
     /* Setup the ACPI timer */
     HaliAcpiTimerInit(0, 0);
-    
+
     /* Do we have a low stub address yet? */
     if (!HalpLowStubPhysicalAddress.QuadPart)
     {
@@ -858,15 +858,15 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             HalpLowStub = HalpMapPhysicalMemory64(HalpLowStubPhysicalAddress, 1);
         }
     }
-    
+
     /* Grab a page for flushes */
     PhysicalAddress.QuadPart = 0x100000;
     HalpVirtAddrForFlush = HalpMapPhysicalMemory64(PhysicalAddress, 1);
     HalpPteForFlush = HalAddressToPte(HalpVirtAddrForFlush);
-    
+
     /* Don't do this again */
     HalpProcessedACPIPhase0 = TRUE;
-    
+
     /* Setup the boot table */
     HalpInitBootTable(LoaderBlock);
 
@@ -912,7 +912,7 @@ HalpInitializePciBus(VOID)
 {
     /* Setup the PCI stub support */
     HalpInitializePciStubs();
-    
+
     /* Set the NMI crash flag */
     HalpGetNMICrashFlag();
 }
@@ -963,7 +963,7 @@ NTAPI
 HalpAcpiDetectResourceListSize(OUT PULONG ListSize)
 {
     PAGED_CODE();
-    
+
     /* One element if there is a SCI */
     *ListSize = HalpFixedAcpiDescTable.sci_int_vector ? 1: 0;
 }
@@ -983,7 +983,7 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
     ResourceList->List[0].Version = 1;
     ResourceList->List[0].Revision = 1;
     ResourceList->List[0].Count = 0;
-    
+
     /* Is there a SCI? */
     if (HalpFixedAcpiDescTable.sci_int_vector)
     {
@@ -991,16 +991,16 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
         ResourceList->List[0].Descriptors[0].Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
         ResourceList->List[0].Descriptors[0].Type = CmResourceTypeInterrupt;
         ResourceList->List[0].Descriptors[0].ShareDisposition = CmResourceShareShared;
-        
+
         /* Get the interrupt number */
         Interrupt = HalpPicVectorRedirect[HalpFixedAcpiDescTable.sci_int_vector];
         ResourceList->List[0].Descriptors[0].u.Interrupt.MinimumVector = Interrupt;
         ResourceList->List[0].Descriptors[0].u.Interrupt.MaximumVector = Interrupt;
-        
+
         /* One more */
         ++ResourceList->List[0].Count;
     }
-    
+
     /* All good */
     return STATUS_SUCCESS;
 }
@@ -1013,11 +1013,11 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
     ULONG Count = 0, ListSize;
     NTSTATUS Status;
     PAGED_CODE();
-  
+
     /* Get ACPI resources */
     HalpAcpiDetectResourceListSize(&Count);
     DPRINT("Resource count: %d\n", Count);
-    
+
     /* Compute size of the list and allocate it */
     ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
                (Count * sizeof(IO_RESOURCE_DESCRIPTOR));
@@ -1028,14 +1028,14 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         /* Initialize it */
         RtlZeroMemory(RequirementsList, ListSize);
         RequirementsList->ListSize = ListSize;
-        
+
         /* Build it */
         Status = HalpBuildAcpiResourceList(RequirementsList);
         if (NT_SUCCESS(Status))
         {
             /* It worked, return it */
             *Requirements = RequirementsList;
-            
+
             /* Validate the list */
             ASSERT(RequirementsList->List[0].Count == Count);
         }
@@ -1051,7 +1051,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         /* Not enough memory */
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /* Return the status */
     return Status;
 }
