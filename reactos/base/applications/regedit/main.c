@@ -177,6 +177,16 @@ void ExitInstance(HINSTANCE hInstance)
 BOOL TranslateChildTabMessage(MSG *msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
+
+    /* Allow Ctrl+A on address bar */
+    if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
+        (msg->message == WM_KEYDOWN) &&
+        (msg->wParam == 'A') && (GetKeyState(VK_CONTROL) < 0))
+    {
+        SendMessage(msg->hwnd, EM_SETSEL, 0, -1);
+        return TRUE;
+    }
+
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
     PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
