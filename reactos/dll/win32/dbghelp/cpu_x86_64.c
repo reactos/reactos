@@ -281,10 +281,10 @@ static BOOL is_inside_epilog(struct cpu_stack_walk* csw, DWORD64 pc)
     if ((op0 & 0xf8) == 0x48)
     {
         if (!sw_read_mem(csw, pc + 1, &op1, 1)) return FALSE;
+        if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
         switch (op1)
         {
         case 0x81: /* add $nnnn,%rsp */
-            if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
             if (op0 == 0x48 && op2 == 0xc4)
             {
                 pc += 7;
