@@ -880,10 +880,10 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
-            
+
             /* Indicate success */
             Status = STATUS_SUCCESS;
-            
+
             /* Protect write in SEH */
             _SEH2_TRY
             {
@@ -958,14 +958,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             {
                 /* Get the WOW64 process structure */
 #ifdef _WIN64
-                Wow64 = Process->Wow64Process;
+                Wow64 = (ULONG_PTR)Process->Wow64Process;
 #else
                 Wow64 = 0;
 #endif
                 /* Release the lock */
                 ExReleaseRundownProtection(&Process->RundownProtect);
             }
-            
+
             /* Protect write with SEH */
             _SEH2_TRY
             {
@@ -982,9 +982,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
-            
+
         case ProcessExecuteFlags:
-        
+
             /* Set return length */
             Length = sizeof(ULONG);
             if (ProcessInformationLength != Length)
@@ -1322,7 +1322,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Write the session ID in the EPROCESS */
-            Process->Session = SessionInfo.SessionId;
+            Process->Session = UlongToPtr(SessionInfo.SessionId); // HACK!!!
 
             /* Check if the process also has a PEB */
             if (Process->Peb)
@@ -1811,11 +1811,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             KeSetAutoAlignmentProcess(&Process->Pcb, FALSE);
             Status = STATUS_SUCCESS;
             break;
-            
+
         case ProcessUserModeIOPL:
 
             /* Only TCB can do this */
-            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode)) 
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
                 /* Fail */
                 DPRINT1("Need TCB to set IOPL\n");
@@ -1863,7 +1863,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Call Mm for the update */
             Status = MmSetExecuteOptions(NoExecute);
             break;
-                
+
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
@@ -2319,7 +2319,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
             /* All done */
             break;
-            
+
         case ThreadBreakOnTermination:
 
             /* Check buffer length */

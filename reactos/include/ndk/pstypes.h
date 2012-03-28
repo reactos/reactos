@@ -1112,13 +1112,17 @@ typedef struct _EPROCESS
         HARDWARE_PTE PageDirectoryPte;
         ULONGLONG Filler;
     };
-    ULONG Session; // FIXME: PVOID
+    PVOID Session;
     CHAR ImageFileName[16];
     LIST_ENTRY JobLinks;
     PVOID LockedPagesList;
     LIST_ENTRY ThreadListHead;
     PVOID SecurityPort;
+#ifdef _M_AMD64
+    struct _WOW64_PROCESS *Wow64Process;
+#else
     PVOID PaeTop;
+#endif
     ULONG ActiveThreads;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG ImagePathHash;
