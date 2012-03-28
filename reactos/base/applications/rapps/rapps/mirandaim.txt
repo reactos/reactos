@@ -23,5 +23,9 @@ Description = Application de messagerie instantannée multi-protocoles open sour
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 
+[Section.0418]
+Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
+Size = 3.1Mo
+
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

@@ -35,6 +35,12 @@ Size = 9.73MB
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/pl/Thunderbird%20Setup%203.1.20.exe
 
+[Section.0418]
+Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
+Size = 9.06Mo
+URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ro/Thunderbird%20Setup%203.1.20.exe
+
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 Size = 9.29MB

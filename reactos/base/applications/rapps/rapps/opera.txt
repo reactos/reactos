@@ -29,6 +29,11 @@ Description = Il famoso browser Opera con features avanzate come un client BitTo
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
 
+[Section.0418]
+Licence = Gratuită
+Description = Navigatorul popular Opera cu multe funcționalități avansate incluzând poștă electronică și un client de BitTorrent.
+Size = 10.13Mo
+
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 1998 Juergen Schmied
  * Copyright 2003-2004 Puoti
  *
@@ -235,7 +235,7 @@ BEGIN
     AUTOCHECKBOX "&Sola lettura", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "&Nascosto", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "&Archivio", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&vanzate...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -250,14 +250,14 @@ BEGIN
     CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Apri con:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Modifica...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Posizione:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "Dimensione sul disco:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creato:", 14014, 8, 131, 45, 10
@@ -271,7 +271,7 @@ BEGIN
     AUTOCHECKBOX "&Sola lettura", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "&Nascosto", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "&Archivio", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "A&vanzate...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -750,8 +750,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH               "Apri con"
     IDS_OPEN_WITH_CHOOSE        "Scegliere un programma..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED   "Programmi suggeriti:"
+    IDS_OPEN_WITH_OTHER         "Altri Programmi:"
 
     IDS_SHELL_ABOUT_AUTHORS     "&Autori"
     IDS_SHELL_ABOUT_BACK        "< &Indietro"
@@ -804,6 +804,6 @@ BEGIN
     IDS_FILE_TYPES              "Tipi di file"
     IDS_COLUMN_EXTENSION        "Estensioni"
     IDS_BYTES_FORMAT            "byte"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_UNKNOWN_APP             "Applicazione sconosciuta"
+    IDS_EXE_DESCRIPTION         "Descrizione:"
 END

@@ -23,5 +23,9 @@ Description = Clone de Atomix utilisant la bibliothèque SDL.
 [Section.0415]
 Description = Klon gry Atomix, używający biblioteki SDL.
 
+[Section.0418]
+Description = Clona Atomix utilizând bibliotecile SDL.
+Size = 1.39Mo
+
 [Section.0422]
 Description = Клон гри Atomix, що використовує бібліотеки SDL.

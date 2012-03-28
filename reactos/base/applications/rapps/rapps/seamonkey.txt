@@ -31,6 +31,10 @@ Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IR
 Size = 18.38MB
 URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.8/win32/pl/SeaMonkey%20Setup%202.8.exe
 
+[Section.0418]
+Description = Suita Mozilla. Acest pachet ce încorporează navigator, poștă electronică, client IRC și editor HTML, acoperind astfel o arie largă de necesități.
+Size = 17.59Mo
+
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Size = 18.01MB

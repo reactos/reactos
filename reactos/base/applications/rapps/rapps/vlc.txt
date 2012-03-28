@@ -26,6 +26,10 @@ Description = Un lettore multimediale.
 [Section.0415]
 Description = Odtwarzacz multimediów.
 
+[Section.0418]
+Description = Lector multimedia.
+Size = 21.1Mo
+
 [Section.0419]
 Description = Мультимедийный проигрыватель.
 

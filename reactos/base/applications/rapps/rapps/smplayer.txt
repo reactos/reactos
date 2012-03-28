@@ -25,6 +25,11 @@ URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=fr
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
 Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
 
+[Section.0418]
+Description = Lector multimedia (interfață pentru MPlayer).
+Size = 15.1Mo
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=ro
+
 [Section.0422]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=uk
 Description = Графічний інтерфейс для MPlayer (мультимедійний плеєр).

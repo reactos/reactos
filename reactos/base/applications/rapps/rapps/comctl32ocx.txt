@@ -27,6 +27,11 @@ Description = Fichier nécessaire pour certaines applications.
 Licence = Nieznana
 Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez część aplikacji.
 
+[Section.0418]
+Licence = Nespecificată
+Description = Modul logic necesar unor aplicații. Conține: comctl32.ocx, mscomctl.ocx, advpack.dll.
+Size = 913.73ko
+
 [Section.0422]
 Licence = Невідома
 Description = Файл потрібен декотрим програмам.

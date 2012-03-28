@@ -40,6 +40,11 @@ Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek in
 Size = 7.9M
 URLSite = http://www.mozilla-europe.org/pl/
 
+[Section.0418]
+Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
+Size = 7.16Mo
+URLSite = http://www.mozilla-europe.org/ro/
+
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 7.8M

@@ -20,6 +20,10 @@ Description = Reproductor multimedia.
 [Section.040c]
 Description = Un lecteur media.
 
+[Section.0418]
+Description = Lector multimedia.
+Size = 5.57Mo
+
 [Section.0419]
 Description = Мультимедийный проигрыватель.
 

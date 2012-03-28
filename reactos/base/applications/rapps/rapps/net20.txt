@@ -19,3 +19,8 @@ Description = Microsoft .NET Framework version 2.0 - Paquet redistribuable.
 
 [Section.0415]
 Description = Microsoft .NET Framework Wersja 2.0 - Pakiet Dystrybucyjny.
+
+[Section.0418]
+Licence = Nespecificată
+Description = Platforma Microsoft .NET versiunea 2.0 - Pachet redistributabl.
+Size = 22.42Mo

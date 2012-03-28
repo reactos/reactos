@@ -23,5 +23,9 @@ Description = DOSBox est un émulateur DOS.
 [Section.0415]
 Description = DOSBox - emulator DOSa.
 
+[Section.0418]
+Description = DOSBox este un emulator DOS.
+Size = 1.38Mo
+
 [Section.0422]
 Description = DOSBox - емулятор DOSу.

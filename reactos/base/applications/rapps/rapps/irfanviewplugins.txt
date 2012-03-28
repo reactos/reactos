@@ -27,6 +27,11 @@ Description = Modules additionnels pour supporter plus de types de fichiers.
 Licence = Freeware (dla użytku domowego)
 Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 
+[Section.0418]
+Licence = Gratuită (pentru uz personal)
+Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
+Size = 8.92Mo
+
 [Section.0422]
 Licence = Freeware (для домашнього використання)
 Description = Додаткові плагіни для підтримки більшої кількості файлових типів.

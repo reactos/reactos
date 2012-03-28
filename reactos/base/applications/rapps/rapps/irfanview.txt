@@ -27,6 +27,11 @@ Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo
 Licence = Freeware (dla użytku domowego)
 Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
 
+[Section.0418]
+Licence = Gratuită (pentru uz personal)
+Description = Lector pentru multiple formate de fișiere grafice/audio/video.
+Size = 1.46Mo
+
 [Section.0422]
 Licence = Freeware (для домашнього використання)
 Description = Переглядач для всіх видів графічних та аудіо/відео файлів.

@@ -41,6 +41,11 @@ Licence = Nieznana
 Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
 URLSite = Nieznana
 
+[Section.0418]
+Licence = Nespecificată
+Description = Dezarhivați în dosarul „ReactOS” apoi reporniți ReactOS de două ori.
+Size = 2.22Mo
+
 [Section.0419]
 Name = Драйвер SoundBlaster для VMWare
 Licence = Не указано

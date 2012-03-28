@@ -23,5 +23,10 @@ Description = glidewrapper est nécessaire pour faire tourner Diablo 2 dans Reac
 [Section.0415]
 Description = glidewrapper jest potrzebny do uruchomienia Diablo2 w ReactOS-ie.
 
+[Section.0418]
+Licence = Gratuită
+Description = Glide wrapper, necesar pentru a executa Diablo 2 în ReactOS.
+Size = 249.02ko
+
 [Section.0422]
 Description = glidewrapper необхідний для запуску Diablo2 в ReactOS.

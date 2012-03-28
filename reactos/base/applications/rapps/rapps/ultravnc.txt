@@ -20,5 +20,9 @@ Description = Client/serveur VNC open source.
 [Section.0415]
 Description = Otwarty klient/serwer VNC.
 
+[Section.0418]
+Description = Client/server VNC (open-source).
+Size = 2.19Mo
+
 [Section.0422]
 Description = Відкритий VNC клієнт/сервер.

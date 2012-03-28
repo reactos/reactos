@@ -27,6 +27,11 @@ Description = Bibliothèque Visual Studio 6.
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 6.
 
+[Section.0418]
+Licence = Necunoscută
+Description = Visual Studio 6 Runtime. Conține: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Size = 1.75Mo
+
 [Section.0422]
 Licence = Невідома
 Description = Бібліотеки Visual Studio 6.
