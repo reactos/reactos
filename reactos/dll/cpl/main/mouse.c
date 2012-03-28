@@ -1415,8 +1415,8 @@ OptionProc(IN HWND hwndDlg,
 
             /* Set mouse speed */
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SPEED);
-            SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 19));
-            SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pOptionData->ulMouseSpeed - 1);
+            SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(1, 20));
+            SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pOptionData->ulMouseSpeed);
 
             if (pOptionData->MouseAccel.nAcceleration)
             {
@@ -1625,7 +1625,7 @@ OptionProc(IN HWND hwndDlg,
                     case TB_TOP:
                     case TB_BOTTOM:
                     case TB_ENDTRACK:
-                        pOptionData->ulMouseSpeed = (ULONG)SendDlgItemMessage(hwndDlg, IDC_SLIDER_MOUSE_SPEED, TBM_GETPOS, 0, 0) + 1;
+                        pOptionData->ulMouseSpeed = (ULONG)SendDlgItemMessage(hwndDlg, IDC_SLIDER_MOUSE_SPEED, TBM_GETPOS, 0, 0);
                         SystemParametersInfo(SPI_SETMOUSESPEED, 0, IntToPtr(pOptionData->ulMouseSpeed), SPIF_SENDCHANGE);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         break;
