@@ -26,8 +26,8 @@
 /*
 
 This file implements the section page table.  It relies on rtl generic table
-functionality to provide access to 256-page chunks.  Calls to 
-MiSetPageEntrySectionSegment and MiGetPageEntrySectionSegment must be 
+functionality to provide access to 256-page chunks.  Calls to
+MiSetPageEntrySectionSegment and MiGetPageEntrySectionSegment must be
 synchronized by holding the segment lock.
 
 Each page table entry is a ULONG as in x86.
@@ -46,7 +46,7 @@ These functions, in addition to maintaining the segment page table also
 automatically maintain the segment rmap by calling MmSetSectionAssociation
 and MmDeleteSectionAssociation.  Segment rmaps are discussed in rmap.c.  The
 upshot is that it is impossible to have a page properly registered in a segment
-page table and not also found in a segment rmap that can be found from the 
+page table and not also found in a segment rmap that can be found from the
 paging machinery.
 
 */
@@ -310,10 +310,10 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
     DPRINT("Done\n");
 }
 
-/* 
+/*
 
 Retrieves the MM_SECTION_SEGMENT and fills in the LARGE_INTEGER Offset given
-by the caller that corresponds to the page specified.  This uses 
+by the caller that corresponds to the page specified.  This uses
 MmGetSegmentRmap to find the rmap belonging to the segment itself, and uses
 the result as a pointer to a 256-entry page table structure.  The rmap also
 includes 8 bits of offset information indication one of 256 page entries that

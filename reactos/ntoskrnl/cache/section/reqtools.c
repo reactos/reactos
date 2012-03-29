@@ -44,7 +44,7 @@
 
 /*
   This file contains functions used by fault.c to do blocking resource
-  acquisition.  To call one of these functions, fill out your 
+  acquisition.  To call one of these functions, fill out your
   MM_REQUIRED_RESOURCES with a pointer to the desired function and configure
   the other members as below.
  */
@@ -64,7 +64,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages);
 
 /*
 
-Blocking function to acquire zeroed pages from the balancer.  
+Blocking function to acquire zeroed pages from the balancer.
 
 Upon entry:
 
@@ -110,7 +110,7 @@ MiGetOnePage(PMMSUPPORT AddressSpace,
 
 /*
 
-Blocking function to read (part of) a page from a file.  
+Blocking function to read (part of) a page from a file.
 
 Upon entry:
 

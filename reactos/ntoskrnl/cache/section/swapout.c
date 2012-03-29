@@ -77,7 +77,7 @@ FAST_MUTEX MiGlobalPageOperation;
 
 MmWithdrawSectionPage removes a page entry from the section segment, replacing
 it with a wait entry.  The caller must replace the wait entry with a 0, when
-any required writing is done.  The wait entry must remain until the page is 
+any required writing is done.  The wait entry must remain until the page is
 written to protect against cases where a fault brings a stale copy of the page
 back before writing is complete.
 
@@ -147,7 +147,7 @@ MmWithdrawSectionPage(PMM_SECTION_SEGMENT Segment,
 /*
 
 This function determines whether the segment holds the very last reference to
-the page being considered and if so, writes it back or discards it as 
+the page being considered and if so, writes it back or discards it as
 approriate.  One small niggle here is that we might be holding the last
 reference to the section segment associated with this page.  That happens
 when the segment is destroyed at the same time that an active swap operation
@@ -265,7 +265,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
 The slightly misnamed MmPageOutCacheSection removes a page from an address
 space in the manner of fault handlers found in fault.c.  In the ultimate form
 of the code, this is one of the function pointers stored in a memory area
-to control how pages in that memory area are managed.  
+to control how pages in that memory area are managed.
 
 Also misleading is the call to MmReleasePageMemoryConsumer, which releases
 the reference held by this address space only.  After all address spaces
@@ -319,7 +319,7 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
-/* 
+/*
 
 This function is called by rmap when spare pages are needed by the blancer.
 It attempts first to release the page from every address space in which it
@@ -332,7 +332,7 @@ the page mapped.
 
 This code is like the other fault handlers, in that MmPageOutCacheSection has
 the option of returning either STATUS_SUCCESS + 1 to wait for a wait entry
-to disppear or to use the blocking callout facility by returning 
+to disppear or to use the blocking callout facility by returning
 STATUS_MORE_PROCESSING_REQUIRED and placing a pointer to a function from
 reqtools.c in the MM_REQUIRED_RESOURCES struct.
 

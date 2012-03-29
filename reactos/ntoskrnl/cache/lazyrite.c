@@ -22,7 +22,7 @@ KEVENT CcpLazyWriteEvent;
 VOID NTAPI
 CcpLazyWriteThread(PVOID Unused)
 {
-	/* Not implemented */
+    /* Not implemented */
 }
 
 NTSTATUS

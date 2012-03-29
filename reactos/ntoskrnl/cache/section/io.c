@@ -64,11 +64,11 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
     return IoGetRelatedDeviceObject(FileObject);
 }
 
-/* 
+/*
 
 Note:
 This completion function is really required. Paging io completion does almost
-nothing, including freeing the mdls. 
+nothing, including freeing the mdls.
 
 */
 NTSTATUS
@@ -282,7 +282,7 @@ FAST_MUTEX MiWriteMutex;
 /*
 
 Function which uses MiSimpleWrite to write back a single page to a file.
-The page in question does not need to be mapped.  This function could be 
+The page in question does not need to be mapped.  This function could be
 made a bit more efficient by avoiding the copy and making a system space
 mdl.
 

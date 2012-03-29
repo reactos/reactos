@@ -51,9 +51,9 @@ action atomically, or place a wait entry and return a continuation to the
 caller.  This lends itself to code that has a simple, structured form,
 doesn't make assumptions about lock taking and breaking, and provides an
 obvious, graphic seperation between code that may block and code that isn't
-allowed to.  This file contains the non-blocking half.  
+allowed to.  This file contains the non-blocking half.
 
-In order to request a blocking operation to happen outside locks, place a 
+In order to request a blocking operation to happen outside locks, place a
 function pointer in the provided MM_REQUIRED_RESOURCES struct and return
 STATUS_MORE_PROCESSING_REQUIRED.  The function indicated will receive the
 provided struct and take action outside of any mm related locks and at
@@ -89,7 +89,7 @@ extern PMMWSL MmWorkingSetList;
 Multiple stage handling of a not-present fault in a data section.
 
 Required->State is used to accumulate flags that indicate the next action
-the handler should take.  
+the handler should take.
 
 State & 2 is currently used to indicate that the page acquired by a previous
 callout is a global page to the section and should be placed in the section
@@ -351,7 +351,7 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
         Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
     {
 #if 0
-        if (Region->Protect == PAGE_READWRITE || 
+        if (Region->Protect == PAGE_READWRITE ||
             Region->Protect == PAGE_EXECUTE_READWRITE)
 #endif
         {
@@ -513,7 +513,7 @@ MM_WAIT_ENTRY from a page table.
 
 In the ultimate form of this code, there is a single system wide fault handler
 for each of access fault and not present and each memory area contains a
-function pointer that indicates the active fault handler.  Since the mm code 
+function pointer that indicates the active fault handler.  Since the mm code
 in reactos is currently fragmented, I didn't bring this change to trunk.
 
 */
@@ -669,7 +669,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
 
 /*
 
-This is the outer fault handler mentioned in the description of 
+This is the outer fault handler mentioned in the description of
 MmpSectionAccsesFaultInner.  It increments a fault depth count in the current
 thread.
 
