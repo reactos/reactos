@@ -23,16 +23,16 @@ endfunction()
 function(add_idl_headers TARGET)
     get_includes(INCLUDES)
     get_defines(DEFINES)
-    foreach(FILE ${ARGN})
-        get_filename_component(NAME ${FILE} NAME_WE)
-        set(HEADER ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h)
+    foreach(_input_file ${ARGN})
+        get_filename_component(_name ${_input_file} NAME_WE)
+        set(_name ${CMAKE_CURRENT_BINARY_DIR}/${_name})
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h
-            COMMAND midl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} /h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        list(APPEND HEADERS ${HEADER})
+            OUTPUT ${_name}.h
+            COMMAND midl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} /h ${_name}.h /iid ${_name}_dummy_i.h ${CMAKE_CURRENT_SOURCE_DIR}/${_input_file}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_input_file})
+        list(APPEND _target_dependencies ${_name}.h)
     endforeach()
-    add_custom_target(${TARGET} DEPENDS ${HEADERS})
+    add_custom_target(${TARGET} DEPENDS ${_target_dependencies})
 endfunction()
 
 function(add_rpcproxy_files)
