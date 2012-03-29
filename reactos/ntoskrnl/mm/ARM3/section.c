@@ -391,8 +391,7 @@ MiAddMappedPtes(IN PMMPTE FirstPte,
         if (ProtoPte >= LastProtoPte)
         {
             /* But we don't handle this yet */
-            UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE);
         }
 
         /* The PTE should be completely clear */
@@ -717,8 +716,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
     if (*ViewSize > SectionSize)
     {
         /* We should probably fail. FIXME TODO */
-        UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
 
     /* Get the number of 64K buckets required for this mapping */
@@ -729,8 +727,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
     if (Buckets >= MI_SYSTEM_VIEW_BUCKET_SIZE)
     {
         /* We should probably fail */
-        UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
 
     /* Insert this view into system space and get a base address for it */
