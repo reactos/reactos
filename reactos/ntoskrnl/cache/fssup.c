@@ -27,6 +27,45 @@ HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
 CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
 FAST_MUTEX GlobalPageOperation;
 
+/* 
+
+A note about private cache maps. 
+
+CcInitializeCacheMap and CcUninitializeCacheMap are not meant to be paired,
+although they can work that way.
+
+The actual operation I've gleaned from reading both jan kratchovil's writing
+and real filesystems is this:
+
+CcInitializeCacheMap means:
+
+Make the indicated FILE_OBJECT have a private cache map if it doesn't already
+and make it have a shared cache map if it doesn't already.  
+
+CcUninitializeCacheMap means:
+
+Take away the private cache map from this FILE_OBJECT.  If it's the last
+private cache map corresponding to a specific shared cache map (the one that
+was present in the FILE_OBJECT when it was created), then delete that too,
+flusing all cached information.
+
+Using these simple semantics, filesystems can do all the things they actually
+do:
+
+- Copy out the shared cache map pointer from a newly initialized file object 
+and store it in the fcb cache.
+- Copy it back into any file object and call CcInitializeCacheMap to make
+that file object be associated with the caching of all the other siblings.
+- Call CcUninitializeCacheMap on a FILE_OBJECT many times, but have only the
+first one count for each specific FILE_OBJECT.
+- Have the actual last call to CcUninitializeCacheMap (that is, the one that
+causes zero private cache maps to be associated with a shared cache map) to
+delete the cache map and flush.
+
+So private cache map here is a light weight structure that just remembers
+what shared cache map it associates with.
+
+ */
 typedef struct _NOCC_PRIVATE_CACHE_MAP
 {
 	LIST_ENTRY ListEntry;
@@ -98,6 +137,19 @@ CcpReleaseFileLock(PNOCC_CACHE_MAP Map)
 	Map->Callbacks.ReleaseFromLazyWrite(Map->LazyContext);
 }
 
+/*
+
+Cc functions are required to treat alternate streams of a file as the same
+for the purpose of caching, meaning that we must be able to find the shared
+cache map associated with the ``real'' stream associated with a stream file
+object, if one exists.  We do that by identifying a private cache map in
+our gamut that has the same volume, device and fscontext as the stream file
+object we're holding.  It's heavy but it does work.  This can probably be
+improved, although there doesn't seem to be any real association between
+a stream file object and a sibling file object in the file object struct
+itself.
+
+ */
 // Must have CcpLock()
 PFILE_OBJECT CcpFindOtherStreamFileObject(PFILE_OBJECT FileObject)
 {
@@ -141,6 +193,8 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 	PNOCC_PRIVATE_CACHE_MAP PrivateCacheMap = FileObject->PrivateCacheMap;
 
     CcpLock();
+    /* We don't have a shared cache map.  First find out if we have a sibling
+       stream file object we can take it from. */
 	if (!Map && FileObject->Flags & FO_STREAM_FILE)
 	{
 		PFILE_OBJECT IdenticalStreamFileObject = 
@@ -154,6 +208,7 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 				 FileObject, IdenticalStreamFileObject, Map);
 		}
 	}
+    /* We still don't have a shared cache map.  We need to create one. */
     if (!Map)
     {
 		DPRINT("Initializing file object for (%p) %wZ\n", FileObject, &FileObject->FileName);
@@ -170,6 +225,9 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 		InsertTailList(&CcpAllSharedCacheMaps, &Map->Entry);
 		DPRINT("New Map %x\n", Map);
     }
+    /* We don't have a private cache map.  Link it with the shared cache map
+       to serve as a held reference. When the list in the shared cache map
+       is empty, we know we can delete it. */
 	if (!PrivateCacheMap)
 	{
 		PrivateCacheMap = ExAllocatePool(NonPagedPool, sizeof(*PrivateCacheMap));
@@ -183,6 +241,14 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 
     CcpUnlock();
 }
+
+/*
+
+This function is used by NewCC's MM to determine whether any section objects
+for a given file are not cache sections.  If that's true, we're not allowed
+to resize the file, although nothing actually prevents us from doing ;-)
+
+ */
 
 ULONG
 NTAPI
@@ -210,18 +276,25 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 
     ASSERT(UninitializeEvent == NULL);
 
+    /* It may not be strictly necessary to flush here, but we do just for 
+       kicks. */
 	if (Map)
 		CcpFlushCache(Map, NULL, 0, NULL, FALSE);
 
 	CcpLock();
+    /* We have a private cache map, so we've been initialized and haven't been
+     * uninitialized. */
 	if (PrivateCacheMap)
 	{
 		ASSERT(!Map || Map == PrivateCacheMap->Map);
 		ASSERT(PrivateCacheMap->FileObject == FileObject);
 
 		RemoveEntryList(&PrivateCacheMap->ListEntry);
+        /* That was the last private cache map.  It's time to delete all
+           cache stripes and all aspects of caching on the file. */
 		if (IsListEmpty(&PrivateCacheMap->Map->PrivateCacheMaps))
 		{
+            /* Get rid of all the cache stripes. */
 			while (!IsListEmpty(&PrivateCacheMap->Map->AssociatedBcb))
 			{
 				PNOCC_BCB Bcb = CONTAINING_RECORD(PrivateCacheMap->Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
@@ -242,9 +315,19 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 
 	DPRINT("Uninit complete\n");
 
+    /* The return from CcUninitializeCacheMap means that 'caching was stopped'.
+     */
     return LastMap;
 }
 
+/* 
+
+CcSetFileSizes is used to tell the cache manager that the file changed
+size.  In our case, we use the internal Mm method MmExtendCacheSection
+to notify Mm that our section potentially changed size, which may mean
+truncating off data.
+
+ */
 VOID
 NTAPI
 CcSetFileSizes(IN PFILE_OBJECT FileObject,
@@ -298,6 +381,13 @@ CcSetDirtyPageThreshold(IN PFILE_OBJECT FileObject,
     while (TRUE);
 }
 
+/* 
+
+This could be implemented much more intelligently by mapping instances
+of a CoW zero page into the affected regions.  We just RtlZeroMemory
+for now. 
+
+*/
 BOOLEAN
 NTAPI
 CcZeroData(IN PFILE_OBJECT FileObject,

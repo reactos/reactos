@@ -21,6 +21,73 @@
  * This helped me determine that a certain bug was not a memory overwrite. */
 //#define PIN_WRITE_ONLY
 
+/*
+
+Pinsup implements the core of NewCC.
+
+A couple of things about this code:
+
+I wrote this code over the course of about 2 years, often referring to Rajeev
+Nagar's Filesystem Internals, book, the msdn pages on the Cc interface, and 
+a few NT filesystems that are open sourced.  I went to fairly great lengths to
+achieve a couple of goals.
+
+1) To make a strictly layered facility that relies entirely on Mm to provide
+maps.  There were many ways in which data segments in the legacy Mm were unable
+to provide what I needed; page maps were only 4 gig, and all offsets were in
+ULONG, so no mapping at an offset greater than 4 gig was possible.  Worse than
+that, due to a convoluted set of dependencies, it would have been impossible to
+support any two mappings farther apart than 4 gig, even if the above was
+corrected.  Along with that, the cache system's ownership of some pages was
+integral to the operation of legacy Mm.  All of the above problems, along with
+an ambiguity about when the size of a file for mapping purposes is acquired,
+and its inability to allow a file to be resized when any mappings were active
+led me to rewrite data sections (and all other kinds of sections in the
+original version), and use that layer to implement the Cc API without regard
+to any internal, undocumented parts.
+
+2) To write the simplest possible code that implements the Cc interface as
+documented.  Again this is without regard to any information that might be
+gained through reverse engineering the real Cc.  All conclusions about workings
+of Cc here are mine, any failures are mine, any differences to the documented
+interface were introduced by me due to misreading, misunderstanding or mis
+remembering while implementing the code.  I also implemented some obvious, but
+not actually specified behaviors of Cc, for example that each cache stripe is
+represented by a distinct BCB that the user can make decisions about as an
+opaque pointer.
+
+3) To make real filesystems work properly.
+
+So about how it works:
+
+CcCacheSections is the collection of cache sections that are currently mapped.
+The cache ranges which are allocated and contain pages is larger, due to the
+addition of sections containing rmaps and page references, but this array
+determines the actual mapped pages on behalf of all mapped files for Cc's use.
+All BCB pointers yielded to a driver are a pointer to one of these cache stripe
+structures.  The data structure is specified as opaque and so it contains
+information convenient to NEWCC's implementation here.  Free entries are
+summarized in CcpBitmapBuffer, for which bits are set when the entry may be
+safely evicted and redirected for use by another client.  Note that the 
+reference count for an evictable cache section will generally be 1, since
+we'll keep a reference to wait for any subsequent mapping of the same stripe.
+We use CcCacheClockHand as a hint to start checking free bits at a point that
+walks around the cache stripe list, so that we might evict a different stripe
+every time even if all are awaiting reuse.  This is a way to avoid thrashing.
+
+CcpBitmapBuffer is the RTL_BITMAP that allows us to quickly decide what buffer
+to allocate from the mapped buffer set.
+
+CcDeleteEvent is an event used to wait for a cache stripe reference count to
+go to 1, thus making the stripe eligible for eviction.  It's used by CcpMapData
+to wait for a free map when we can't fail.
+
+All in all, use of Mm by Cc makes this code into a simple manager that wields
+sections on behalf of filesystems.  As such, its code is fairly high level and
+no architecture specific changes should be necessary.
+
+*/
+
 /* GLOBALS ********************************************************************/
 
 #define TAG_MAP_SEC    TAG('C', 'c', 'S', 'x')
@@ -54,6 +121,14 @@ VOID _CcpUnlock(const char *file, int line)
 PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
+
+/*
+
+Allocate an almost ordinary section object for use by the cache system.
+The special internal SEC_CACHE flag is used to indicate that the section
+should not count when determining whether the file can be resized.
+
+*/
 
 NTSTATUS CcpAllocateSection
 (PFILE_OBJECT FileObject, 
@@ -94,6 +169,14 @@ typedef struct _WORK_QUEUE_WITH_CONTEXT
 	BOOLEAN Dirty;
 } WORK_QUEUE_WITH_CONTEXT, *PWORK_QUEUE_WITH_CONTEXT;
 
+/*
+
+Unmap a cache stripe.  Note that cache stripes aren't unmapped when their
+last reference disappears.  We enter this code only if cache for the file
+is uninitialized in the last file object, or a cache stripe is evicted.
+
+*/
+
 VOID
 CcpUnmapCache(PVOID Context)
 {
@@ -104,6 +187,20 @@ CcpUnmapCache(PVOID Context)
 	ExFreePool(WorkItem);
 	DPRINT("Done\n");
 }
+
+/*
+
+Somewhat deceptively named function which removes the last reference to a 
+cache stripe and completely removes it using CcUnmapCache.  This may be
+done either inline (if the Immediate BOOLEAN is set), or using a work item
+at a later time.  Whether this is called to unmap immeidately is mainly 
+determined by whether the caller is calling from a place in filesystem code
+where a deadlock may occur if immediate flushing is required.
+
+It's always safe to reuse the Bcb at CcCacheSections[Start] after calling
+this.
+
+ */
 
 /* Must have acquired the mutex */
 VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
@@ -186,6 +283,18 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 	DPRINT("Done\n");
 }
 
+/*
+
+CcpAllocateCacheSections is called by CcpMapData to obtain a cache stripe,
+possibly evicting an old stripe by calling CcpDereferenceCache in order to
+obtain an empty Bcb.
+
+This function was named plural due to a question I had at the beginning of
+this endeavor about whether a map may span a 256k stripe boundary.  It can't
+so this function can only return the index of one Bcb.  Returns INVALID_CACHE
+on failure.
+
+ */
 /* Needs mutex */
 ULONG CcpAllocateCacheSections
 (PFILE_OBJECT FileObject, 
@@ -198,12 +307,12 @@ ULONG CcpAllocateCacheSections
     DPRINT("AllocateCacheSections: FileObject %x\n", FileObject);
 	
     if (!FileObject->SectionObjectPointer)
-	return INVALID_CACHE;
+        return INVALID_CACHE;
 
     Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
 
     if (!Map)
-	return INVALID_CACHE;
+        return INVALID_CACHE;
 
     DPRINT("Allocating Cache Section\n");
 
@@ -212,34 +321,34 @@ ULONG CcpAllocateCacheSections
 
     if (i != INVALID_CACHE)
     {
-	DPRINT("Setting up Bcb #%x\n", i);
-
-	Bcb = &CcCacheSections[i];
+        DPRINT("Setting up Bcb #%x\n", i);
+        
+        Bcb = &CcCacheSections[i];
 		
-	ASSERT(Bcb->RefCount < 2);
-
-	if (Bcb->RefCount > 0)
-	{
-	    CcpDereferenceCache(i, FALSE);
-	}
-
-	ASSERT(!Bcb->RefCount);
-	Bcb->RefCount = 1;
-
-	DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
-	
-	if (!RtlTestBit(CcCacheBitmap, i))
-	{
-	    DPRINT1("Somebody stoeled BCB #%x\n", i);
-	}
-	ASSERT(RtlTestBit(CcCacheBitmap, i));
-	
-	DPRINT("Allocated #%x\n", i);
-	ASSERT(CcCacheSections[i].RefCount);
+        ASSERT(Bcb->RefCount < 2);
+        
+        if (Bcb->RefCount > 0)
+        {
+            CcpDereferenceCache(i, FALSE);
+        }
+        
+        ASSERT(!Bcb->RefCount);
+        Bcb->RefCount = 1;
+        
+        DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
+        
+        if (!RtlTestBit(CcCacheBitmap, i))
+        {
+            DPRINT1("Somebody stoeled BCB #%x\n", i);
+        }
+        ASSERT(RtlTestBit(CcCacheBitmap, i));
+        
+        DPRINT("Allocated #%x\n", i);
+        ASSERT(CcCacheSections[i].RefCount);
     }
     else
     {
-	DPRINT1("Failed to allocate cache segment\n");
+        DPRINT1("Failed to allocate cache segment\n");
     }
     return i;
 }
@@ -262,6 +371,14 @@ VOID CcpMarkForExclusive(ULONG Start)
     Bcb->ExclusiveWaiter++;
 }
 
+/*
+
+Cache stripes have an idea of exclusive access, which would be hard to support
+properly in the previous code.  In our case, it's fairly easy, since we have
+an event that indicates that the previous exclusive waiter has returned in each
+Bcb.
+
+*/
 /* Must not have the mutex */
 VOID CcpReferenceCacheExclusive(ULONG Start)
 {
@@ -277,7 +394,19 @@ VOID CcpReferenceCacheExclusive(ULONG Start)
     CcpUnlock();
 }
 
-/* Find a map that encompasses the target range */
+/* 
+
+Find a map that encompasses the target range.  This function does not check
+whether the desired range is partly outside the stripe.  This could be 
+implemented with a generic table, but we generally aren't carring around a lot
+of segments at once for a particular file.
+
+When this returns a map for a given file address, then that address is by
+definition already mapped and can be operated on.
+
+Returns a valid index or INVALID_CACHE.
+
+*/
 /* Must have the mutex */
 ULONG CcpFindMatchingMap(PLIST_ENTRY Head, PLARGE_INTEGER FileOffset, ULONG Length)
 {
@@ -301,6 +430,14 @@ ULONG CcpFindMatchingMap(PLIST_ENTRY Head, PLARGE_INTEGER FileOffset, ULONG Leng
 
     return INVALID_CACHE;
 }
+
+/*
+
+Internal function that's used by all pinning functions.
+It causes a mapped region to exist and prefaults the pages in it if possible,
+possibly evicting another stripe in order to get our stripe.
+
+*/
 
 BOOLEAN
 NTAPI
@@ -364,6 +501,11 @@ CcpMapData
 
 	DPRINT("File size %08x%08x\n", Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
 	
+    /* Not all files have length, in fact filesystems often use stream file
+       objects for various internal purposes and are loose about the file
+       length, since the filesystem promises itself to write the right number
+       of bytes to the internal stream.  In these cases, we just allow the file
+       to have the full stripe worth of space. */
 	if (Map->FileSizes.ValidDataLength.QuadPart)
 	{
 		SectionSize = min(CACHE_STRIPE, Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart);
@@ -378,6 +520,8 @@ CcpMapData
 	//ASSERT(SectionSize <= CACHE_STRIPE);
 
 	CcpUnlock();
+    /* CcpAllocateSection doesn't need the lock, so we'll give other action
+       a chance in here. */
 	Status = CcpAllocateSection
 		(FileObject,
 		 SectionSize,
@@ -399,8 +543,9 @@ CcpMapData
 	
 retry:
     /* Returns a reference */
-	DPRINT("Allocating cache sections: %wZ\n", &FileObject->FileName);	
+	DPRINT("Allocating cache sections: %wZ\n", &FileObject->FileName);
 	BcbHead = CcpAllocateCacheSections(FileObject, SectionObject);
+    /* XXX todo: we should handle the immediate fail case here, but don't */
 	if (BcbHead == INVALID_CACHE)
 	{
 		ULONG i;
@@ -429,12 +574,18 @@ retry:
 	ViewSize = CACHE_STRIPE;
 
     Bcb = &CcCacheSections[BcbHead];
+    /* MmMapCacheViewInSystemSpaceAtOffset is one of three methods of Mm
+       that are specific to NewCC.  In this case, it's implementation 
+       exactly mirrors MmMapViewInSystemSpace, but allows an offset to
+       be specified. */
 	Status = MmMapCacheViewInSystemSpaceAtOffset
 		(SectionObject->Segment,
 		 &Bcb->BaseAddress,
 		 &Target,
 		 &ViewSize);
 	
+    /* Summary: Failure.  Dereference our section and tell the user we failed 
+     */
     if (!NT_SUCCESS(Status))
     {
 		*BcbResult = NULL;
@@ -447,6 +598,9 @@ retry:
 		goto cleanup;
 	}
 	
+    /* Summary: Success.  Put together a valid Bcb and link it with the others
+     * in the NOCC_CACHE_MAP.
+     */
 	Success = TRUE;
 	//DPRINT("w1n\n");
 
@@ -539,6 +693,8 @@ CcMapData
 	return Result;
 }
 
+/* Used by functions that repin data, CcpPinMappedData does not alter the map,
+   but finds the appropriate stripe and update the accounting. */
 BOOLEAN
 NTAPI
 CcpPinMappedData(IN PNOCC_CACHE_MAP Map,
@@ -707,6 +863,32 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
 
     return Result;
 }
+
+/*
+
+CcpUnpinData is the internal function that generally handles unpinning data.
+It may be a little confusing, because of the way reference counts are handled.
+
+A reference count of 2 or greater means that the stripe is still fully pinned
+and can't be removed.  If the owner had taken an exclusive reference, then
+give one up.  Note that it's an error to take more than one exclusive reference
+or to take a non-exclusive reference after an exclusive reference, so detecting
+or handling that case is not considered.
+
+ReleaseBit is unset if we want to detect when a cache stripe would become 
+evictable without actually giving up our reference.  We might want to do that
+if we were going to flush before formally releasing the cache stripe, although
+that facility is not used meaningfully at this time.
+
+A reference count of exactly 1 means that the stripe could potentially be 
+reused, but could also be evicted for another mapping.  In general, most 
+stripes should be in that state most of the time.
+
+A reference count of zero means that the Bcb is completely unused.  That's the
+start state and the state of a Bcb formerly owned by a file that is 
+uninitialized.
+
+*/
 
 BOOLEAN
 NTAPI
