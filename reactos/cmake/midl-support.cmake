@@ -82,9 +82,9 @@ function(generate_idl_iids _idl_file)
     get_defines(_defines)
 
     get_filename_component(_name ${_idl_file} NAME)
-    #if(_name STREQUAL "${_idl_file}")
-    #    set(_idl_file "${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}")
-    #endif()
+    if(_name STREQUAL "${_idl_file}")
+        set(_idl_file "${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}")
+    endif()
 
     get_filename_component(_name_we ${_idl_file} NAME_WE)
     add_custom_command(
