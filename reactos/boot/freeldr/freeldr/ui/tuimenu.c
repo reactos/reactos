@@ -119,6 +119,8 @@ TuiDisplayMenu(PCSTR MenuItemList[],
             //
             break;
         }
+
+        MachHwIdle();
     }
 
     //

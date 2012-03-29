@@ -47,6 +47,7 @@ PcMachInit(const char *CmdLine)
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
     MachVtbl.GetTime = PcGetTime;
     MachVtbl.HwDetect = PcHwDetect;
+    MachVtbl.HwIdle = PcHwIdle;
 }
 
 VOID

@@ -1731,4 +1731,28 @@ PcHwDetect(VOID)
   return SystemKey;
 }
 
+VOID
+PcHwIdle(VOID)
+{
+  REGS Regs;
+
+  /* Select APM 1.0+ function */
+  Regs.b.ah = 0x53;
+
+  /* Function 05h: CPU idle */
+  Regs.b.al = 0x05;
+
+  /* Call INT 15h */
+  Int386(0x15, &Regs, &Regs);
+
+  /* Check if successfull (CF set on error) */
+  if (INT386_SUCCESS(Regs))
+    return;
+
+  /*
+   * No futher processing here.
+   * Optionally implement HLT instruction handling.
+   */
+}
+
 /* EOF */

@@ -512,4 +512,9 @@ XboxHwDetect(VOID)
   return SystemKey;
 }
 
+VOID XboxHwIdle(VOID)
+{
+    /* UNIMPLEMENTED */
+}
+
 /* EOF */

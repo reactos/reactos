@@ -59,6 +59,7 @@ ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
 TIMEINFO* XboxGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
+VOID XboxHwIdle(VOID);
 
 VOID XboxSetLED(PCSTR Pattern);
 

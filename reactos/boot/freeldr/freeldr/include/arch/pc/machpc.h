@@ -57,6 +57,7 @@ ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 TIMEINFO* PcGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
+VOID PcHwIdle(VOID);
 
 extern BIOS_MEMORY_MAP PcBiosMemoryMap[];
 extern ULONG PcBiosMapCount;

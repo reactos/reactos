@@ -624,6 +624,8 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
 		TuiUpdateDateTime();
 
 		VideoCopyOffScreenBufferToVRAM();
+
+		MachHwIdle();
 	}
 
 }
@@ -944,6 +946,8 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 		TuiUpdateDateTime();
 
 		VideoCopyOffScreenBufferToVRAM();
+
+		MachHwIdle();
 	}
 
 	// Hide the cursor again
