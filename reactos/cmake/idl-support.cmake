@@ -87,28 +87,28 @@ function(add_rpcproxy_files)
 
     if(MSVC)
         set(DLLDATA_ARG /dlldata ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c)
-        set(DLLDATA_DEPENDENCIES "")
+        set(OUTPUT_FILES "")
     endif()
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
         if(MSVC)
-            set(DLLDATA_DEPENDENCIES ${DLLDATA_DEPENDENCIES} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c)
+            add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+                COMMAND midl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} /proxy ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c /h ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} /dlldata ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${OUTPUT_FILES})
+            list(APPEND OUTPUT_FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c)
+            list(APPEND OUTPUT_FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h)
         else()
             list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
+                COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -h -H ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} native-widl)
         endif()
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
     endforeach()
 
     # Extra pass to generate dlldata
     if(MSVC)
-        #touch it, so we're sure it's older than its dependencies
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-            DEPENDS ${DLLDATA_DEPENDENCIES})
         set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
     else()
         add_custom_command(
