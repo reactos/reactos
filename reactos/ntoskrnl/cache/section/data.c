@@ -68,7 +68,7 @@ When we wish for other threads to know that we're waiting and will finish
 handling a page fault, we place the swap entry MM_WAIT_ENTRY in the page table
 at the fault address (this works on either the section page table or a process
 address space), perform any blocking operations required, then replace the
-entry with 
+entry.
 
 */
 
