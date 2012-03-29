@@ -23,6 +23,34 @@
  * PROGRAMMERS:     arty
  */
 
+/*
+
+This file implements the section page table.  It relies on rtl generic table
+functionality to provide access to 256-page chunks.  Calls to 
+MiSetPageEntrySectionSegment and MiGetPageEntrySectionSegment must be 
+synchronized by holding the segment lock.
+
+Each page table entry is a ULONG as in x86.
+
+Bit 1 is used as a swap entry indication as in the main page table.
+Bit 2 is used as a dirty indication.  A dirty page will eventually be written
+back to the file.
+Bits 3-11 are used as a map count in the legacy mm code, Note that zero is
+illegal, as the legacy code does not take advantage of segment rmaps.
+Therefore, every segment page is mapped in at least one address space, and
+MmUnsharePageEntry is quite complicated.  In addition, the page may also be
+owned by the legacy cache manager, giving an implied additional reference.
+Upper bits are a PFN_NUMBER.
+
+These functions, in addition to maintaining the segment page table also
+automatically maintain the segment rmap by calling MmSetSectionAssociation
+and MmDeleteSectionAssociation.  Segment rmaps are discussed in rmap.c.  The
+upshot is that it is impossible to have a page properly registered in a segment
+page table and not also found in a segment rmap that can be found from the 
+paging machinery.
+
+*/
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -232,6 +260,17 @@ _MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     return Result;
 }
 
+/*
+
+Destroy the rtl generic table that serves as the section's page table.  Call
+the FreePage function for each non-zero entry in the section page table as
+we go.  Note that the page table is still techinally valid until after all
+pages are destroyed, as we don't finally destroy the table until we've free
+each slice.  There is no order guarantee for deletion of individual elements
+although it's in-order as written now.
+
+*/
+
 VOID
 NTAPI
 MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
@@ -270,6 +309,21 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
     }
     DPRINT("Done\n");
 }
+
+/* 
+
+Retrieves the MM_SECTION_SEGMENT and fills in the LARGE_INTEGER Offset given
+by the caller that corresponds to the page specified.  This uses 
+MmGetSegmentRmap to find the rmap belonging to the segment itself, and uses
+the result as a pointer to a 256-entry page table structure.  The rmap also
+includes 8 bits of offset information indication one of 256 page entries that
+the rmap corresponds to.  This information together gives us an exact offset
+into the file, as well as the MM_SECTION_SEGMENT pointer stored in the page
+table slice.
+
+NULL is returned is there is no segment rmap for the page.
+
+*/
 
 PMM_SECTION_SEGMENT
 NTAPI

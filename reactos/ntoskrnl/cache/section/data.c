@@ -42,6 +42,36 @@
  *                  Herve Poussineau
  */
 
+/*
+
+A note on this code:
+
+Unlike the previous section code, this code does not rely on an active map
+for a page to exist in a data segment.  Each mapping contains a large integer
+offset to map at, and the segment always represents the entire section space
+from zero to the maximum long long.  This allows us to associate one single
+page map with each file object, and to let each mapping view an offset into
+the overall mapped file.  Temporarily unmapping the file has no effect on the
+section membership.
+
+This necessitates a change in the section page table implementation, which is
+now an RtlGenericTable.  This will be elaborated more in sptab.c.  One upshot
+of this change is that a mapping of a small files takes a bit more than 1/4
+of the size in nonpaged kernel space as it did previously.
+
+When we need other threads that may be competing for the same page fault to
+wait, we have a mechanism seperate from PageOps for dealing with that, which
+was suggested by Travis Geiselbrecht after a conversation I had with Alex
+Ionescu.  That mechanism is the MM_WAIT_ENTRY, which is the all-ones SWAPENTRY.
+
+When we wish for other threads to know that we're waiting and will finish
+handling a page fault, we place the swap entry MM_WAIT_ENTRY in the page table
+at the fault address (this works on either the section page table or a process
+address space), perform any blocking operations required, then replace the
+entry with 
+
+*/
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -163,6 +193,17 @@ MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length)
     return STATUS_SUCCESS;
 }
 
+/*
+
+MiFlushMappedSection
+
+Called from cache code to cause dirty pages of a section
+to be written back.  This doesn't affect the mapping.
+
+BaseOffset is the base at which to start writing in file space.
+FileSize is the length of the file as understood by the cache.
+
+ */
 NTSTATUS
 NTAPI
 _MiFlushMappedSection(PVOID BaseAddress,
@@ -299,6 +340,13 @@ _MiFlushMappedSection(PVOID BaseAddress,
     return Status;
 }
 
+/*
+
+This deletes a segment entirely including its page map.
+It must have been unmapped in every address space.
+
+ */
+
 VOID
 NTAPI
 MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
@@ -346,7 +394,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
                      ULONG AllocationAttributes,
                      PFILE_OBJECT FileObject)
 /*
- * Create a section backed by a data file
+ * Create a section backed by a data file.
  */
 {
     PROS_SECTION_OBJECT Section;
@@ -640,6 +688,13 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 
     return STATUS_SUCCESS;
 }
+
+/*
+
+Completely remove the page at FileOffset in Segment.  The page must not
+be mapped.
+
+*/
 
 VOID
 NTAPI

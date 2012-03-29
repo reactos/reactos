@@ -42,6 +42,13 @@
  *                  Herve Poussineau
  */
 
+/*
+  This file contains functions used by fault.c to do blocking resource
+  acquisition.  To call one of these functions, fill out your 
+  MM_REQUIRED_RESOURCES with a pointer to the desired function and configure
+  the other members as below.
+ */
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -55,6 +62,22 @@ VOID
 NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages);
 
+/*
+
+Blocking function to acquire zeroed pages from the balancer.  
+
+Upon entry:
+
+Required->Amount: Number of pages to acquire
+Required->Consumer: consumer to charge the page to
+
+Upon return:
+
+Required->Pages[0..Amount]: Allocated pages.
+
+The function fails unless all requested pages can be allocated.
+
+ */
 NTSTATUS
 NTAPI
 MiGetOnePage(PMMSUPPORT AddressSpace,
@@ -84,6 +107,26 @@ MiGetOnePage(PMMSUPPORT AddressSpace,
 
     return Status;
 }
+
+/*
+
+Blocking function to read (part of) a page from a file.  
+
+Upon entry:
+
+Required->Context: a FILE_OBJECT to read
+Required->Consumer: consumer to charge the page to
+Required->FileOffset: Offset to read at
+Required->Amount: Number of bytes to read (0 -> 4096)
+
+Upon return:
+
+Required->Page[Required->Offset]: The allocated and read in page
+
+The indicated page is filled to Required->Amount with file data and zeroed
+afterward.
+
+ */
 
 NTSTATUS
 NTAPI
@@ -158,6 +201,21 @@ MiReadFilePage(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
+/*
+
+Blocking function to read a swap page into a memory page.
+
+Upon entry:
+
+Required->Consumer: consumer to charge the page to
+Required->SwapEntry: swap entry to use
+
+Upon return:
+
+Required->Page[Required->Offset]: Populated page
+
+*/
+
 NTSTATUS
 NTAPI
 MiSwapInPage(PMMSUPPORT AddressSpace,
@@ -192,6 +250,22 @@ MiSwapInPage(PMMSUPPORT AddressSpace,
 
     return Status;
 }
+
+/*
+
+A way to write a page without a lock acquired using the same blocking mechanism
+as resource acquisition.
+
+Upon entry:
+
+Required->Page[Required->Offset]: Page to write
+Required->Context: FILE_OBJECT to write to
+Required->FileOffset: offset to write at
+
+This always does a paging write with whole page size.  Note that paging IO
+doesn't change the valid data length of a file.
+
+*/
 
 NTSTATUS
 NTAPI

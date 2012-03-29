@@ -64,9 +64,13 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
     return IoGetRelatedDeviceObject(FileObject);
 }
 
-/* Note:
-   This completion function is really required. Paging io completion does almost
-   nothing, including freeing the mdls. */
+/* 
+
+Note:
+This completion function is really required. Paging io completion does almost
+nothing, including freeing the mdls. 
+
+*/
 NTSTATUS
 NTAPI
 MiSimpleReadComplete(PDEVICE_OBJECT DeviceObject,
@@ -94,6 +98,15 @@ MiSimpleReadComplete(PDEVICE_OBJECT DeviceObject,
 
     return STATUS_SUCCESS;
 }
+
+/*
+
+MiSimpleRead is a convenience function that provides either paging or non
+paging reads.  The caching and mm systems use this in paging mode, where
+a completion function is required as above.  The Paging BOOLEAN determines
+whether the read is issued as a paging read or as an ordinary buffered read.
+
+*/
 
 NTSTATUS
 NTAPI
@@ -177,6 +190,13 @@ MiSimpleRead(PFILE_OBJECT FileObject,
     return Status;
 }
 
+/*
+
+Convenience function for writing from kernel space.  This issues a paging
+write in all cases.
+
+*/
+
 NTSTATUS
 NTAPI
 _MiSimpleWrite(PFILE_OBJECT FileObject,
@@ -258,6 +278,15 @@ _MiSimpleWrite(PFILE_OBJECT FileObject,
 
 extern KEVENT MpwThreadEvent;
 FAST_MUTEX MiWriteMutex;
+
+/*
+
+Function which uses MiSimpleWrite to write back a single page to a file.
+The page in question does not need to be mapped.  This function could be 
+made a bit more efficient by avoiding the copy and making a system space
+mdl.
+
+*/
 
 NTSTATUS
 NTAPI

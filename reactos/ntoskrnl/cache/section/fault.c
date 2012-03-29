@@ -43,6 +43,34 @@
  *                  Herve Poussineau
  */
 
+/*
+
+I've generally organized fault handling code in newmm as handlers that run
+under a single lock acquisition, check the state, and either take necessary
+action atomically, or place a wait entry and return a continuation to the
+caller.  This lends itself to code that has a simple, structured form,
+doesn't make assumptions about lock taking and breaking, and provides an
+obvious, graphic seperation between code that may block and code that isn't
+allowed to.  This file contains the non-blocking half.  
+
+In order to request a blocking operation to happen outside locks, place a 
+function pointer in the provided MM_REQUIRED_RESOURCES struct and return
+STATUS_MORE_PROCESSING_REQUIRED.  The function indicated will receive the
+provided struct and take action outside of any mm related locks and at
+PASSIVE_LEVEL.  The same fault handler will be called again after the
+blocking operation succeeds.  In this way, the fault handler can accumulate
+state, but will freely work while competing with other threads.
+
+Fault handlers in this file should check for an MM_WAIT_ENTRY in a page
+table they're using and return STATUS_SUCCESS + 1 if it's found.  In that
+case, the caller will wait on the wait entry event until the competing thread
+is finished, and recall this handler in the current thread.
+
+Another thing to note here is that we require mappings to exactly mirror
+rmaps, so each mapping should be immediately followed by an rmap addition.
+
+*/
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -55,6 +83,22 @@
 
 extern KEVENT MmWaitPageEvent;
 extern PMMWSL MmWorkingSetList;
+
+/*
+
+Multiple stage handling of a not-present fault in a data section.
+
+Required->State is used to accumulate flags that indicate the next action
+the handler should take.  
+
+State & 2 is currently used to indicate that the page acquired by a previous
+callout is a global page to the section and should be placed in the section
+page table.
+
+Note that the primitive tail recursion done here reaches the base case when
+the page is present.
+
+*/
 
 NTSTATUS
 NTAPI
@@ -168,6 +212,10 @@ MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
     }
     else if (MM_IS_WAIT_PTE(Entry))
     {
+        // Whenever MM_WAIT_ENTRY is required as a swap entry, we need to
+        // ask the fault handler to wait until we should continue.  Rathern
+        // than recopy this boilerplate code everywhere, we just ask them
+        // to wait.
         MmUnlockSectionSegment(Segment);
         return STATUS_SUCCESS + 1;
     }
@@ -254,6 +302,18 @@ MiCopyPageToPage(PFN_NUMBER DestPage, PFN_NUMBER SrcPage)
     MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
     return STATUS_SUCCESS;
 }
+
+/*
+
+This function is deceptively named, in that it does the actual work of handling
+access faults on data sections.  In the case of the code that's present here,
+we don't allow cow sections, but we do need this to unset the initial
+PAGE_READONLY condition of pages faulted into the cache so that we can add
+a dirty bit in the section page table on the first modification.
+
+In the ultimate form of this code, CoW is reenabled.
+
+*/
 
 NTSTATUS
 NTAPI
@@ -344,6 +404,8 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
             else
                 return STATUS_SUCCESS; // Nonwait swap entry ... handle elsewhere
         }
+        /* Call out to acquire a page to copy to.  We'll be re-called when
+         * the page has been allocated. */
         Required->Page[1] = MmGetPfnForProcess(Process, Address);
         Required->Consumer = MC_CACHE;
         Required->Amount = 1;
@@ -403,6 +465,15 @@ typedef struct _WORK_QUEUE_WITH_CONTEXT
     AcquireResource DoAcquisition;
 } WORK_QUEUE_WITH_CONTEXT, *PWORK_QUEUE_WITH_CONTEXT;
 
+/*
+
+This is the work item used do blocking resource acquisition when a fault
+handler returns STATUS_MORE_PROCESSING_REQUIRED.  It's used to allow resource
+acquisition to take place on a different stack, and outside of any locks used
+by fault handling, making recursive fault handling possible when required.
+
+*/
+
 VOID
 NTAPI
 MmpFaultWorker(PWORK_QUEUE_WITH_CONTEXT WorkItem)
@@ -414,6 +485,38 @@ MmpFaultWorker(PWORK_QUEUE_WITH_CONTEXT WorkItem)
     DPRINT("Status %x\n", WorkItem->Status);
     KeSetEvent(&WorkItem->Wait, IO_NO_INCREMENT, FALSE);
 }
+
+/*
+
+This code seperates the action of fault handling into an upper and lower
+handler to allow the inner handler to optionally be called in work item
+if the stack is getting too deep.  My experiments show that the third
+recursive page fault taken at PASSIVE_LEVEL must be shunted away to a
+worker thread.  In the ultimate form of this code, the primary fault handler
+makes this decision by using a thread-local counter to detect a too-deep
+fault stack and call the inner fault handler in a worker thread if required.
+
+Note that faults are taken at passive level and have access to ordinary
+driver entry points such as those that read and write files, and filesystems
+should use paged structures whenever possible.  This makes recursive faults
+both a perfectly normal occurrance, and a worthwhile case to handle.
+
+The code below will repeatedly call MiCowSectionPage as long as it returns
+either STATUS_SUCCESS + 1 or STATUS_MORE_PROCESSING_REQUIRED.  In the more
+processing required case, we call out to a blocking resource acquisition
+function and then recall the faut handler with the shared state represented
+by the MM_REQUIRED_RESOURCES struct.
+
+In the other case, we wait on the wait entry event and recall the handler.
+Each time the wait entry event is signalled, one thread has removed an
+MM_WAIT_ENTRY from a page table.
+
+In the ultimate form of this code, there is a single system wide fault handler
+for each of access fault and not present and each memory area contains a
+function pointer that indicates the active fault handler.  Since the mm code 
+in reactos is currently fragmented, I didn't bring this change to trunk.
+
+*/
 
 NTSTATUS
 NTAPI
@@ -564,6 +667,17 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
     return Status;
 }
 
+/*
+
+This is the outer fault handler mentioned in the description of 
+MmpSectionAccsesFaultInner.  It increments a fault depth count in the current
+thread.
+
+In the ultimate form of this code, the lower fault handler will optionally
+use the count to keep the kernel stack from overflowing.
+
+*/
+
 NTSTATUS
 NTAPI
 MmAccessFaultCacheSection(KPROCESSOR_MODE Mode,
@@ -612,6 +726,16 @@ MmAccessFaultCacheSection(KPROCESSOR_MODE Mode,
 
     return Status;
 }
+
+/*
+
+As above, this code seperates the active part of fault handling from a carrier
+that can use the thread's active fault count to determine whether a work item
+is required.  Also as above, this function repeatedly calls the active not
+present fault handler until a clear success or failure is received, using a
+return of STATUS_MORE_PROCESSING_REQUIRED or STATUS_SUCCESS + 1.
+
+*/
 
 NTSTATUS
 NTAPI
@@ -764,6 +888,14 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
 
     return Status;
 }
+
+/*
+
+Call the inner not present fault handler, keeping track of the fault count.
+In the ultimate form of this code, optionally use a worker thread the handle
+the fault in order to sidestep stack overflow in the multiple fault case.
+
+*/
 
 NTSTATUS
 NTAPI

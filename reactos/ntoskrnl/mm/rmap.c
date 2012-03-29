@@ -418,6 +418,20 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
    KeBugCheck(MEMORY_MANAGEMENT);
 }
 
+/*
+
+Return the process pointer given when a previous call to MmInsertRmap was
+called with a process and address pointer that conform to the segment rmap
+schema.  In short, this requires the address part to be 0xffffff00 + n
+where n is between 0 and 255.  When such an rmap exists, it specifies a
+segment rmap in which the process part is a pointer to a slice of a section
+page table, and the low 8 bits of the address represent a page index in the
+page table slice.  Together, this information is used by 
+MmGetSectionAssociation to determine which page entry points to this page in
+the segment page table.
+
+*/
+
 PVOID
 NTAPI
 MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
@@ -444,6 +458,12 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
    ExReleaseFastMutex(&RmapListLock);
    return NULL;
 }
+
+/*
+
+Remove the section rmap associated with the indicated page, if it exists.
+
+*/
 
 VOID
 NTAPI
