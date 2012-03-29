@@ -77,10 +77,10 @@ else()
 
     #useful stuff!
     include(CMakeParseArguments)
-    
+
     # this is needed as well
     link_directories(${REACTOS_SOURCE_DIR}/importlibs)
-    
+
     if(ENABLE_CCACHE)
         set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
         set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
@@ -142,7 +142,7 @@ else()
     elseif(ARCH MATCHES arm)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
-    
+
     # Activate support for assembly source files
     enable_language(ASM)
 
@@ -166,7 +166,11 @@ else()
     include(cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
-    include(cmake/idl-support.cmake)
+    if (MSVC)
+        include(cmake/midl-support.cmake)
+    else()
+        include(cmake/widl-support.cmake)
+    endif()
 
     if(MSVC AND USE_WDK_HEADERS)
         include_directories(
@@ -197,7 +201,7 @@ else()
             include/reactos
             include/reactos/libs)
     endif()
-    
+
 
     if(ARCH MATCHES arm)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
