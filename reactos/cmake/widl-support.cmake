@@ -1,23 +1,5 @@
 
 #idl files support
-if(MSVC)
-    set(IDL_COMPILER midl)
-    set(IDL_HEADER_ARG /h) #.h
-    set(IDL_HEADER_ARG2 /h) #.h
-    set(IDL_TYPELIB_ARG /tlb) #.tlb
-    set(IDL_SERVER_ARG /sstub) #.c for stub server library
-    set(IDL_CLIENT_ARG /cstub) #.c for stub client library
-    set(IDL_PROXY_ARG /proxy)
-    set(IDL_INTERFACE_ARG /iid)
-    if(ARCH MATCHES i386)
-        set(IDL_FLAGS /nologo /win32 /no_def_idir)
-    elseif(ARCH MATCHES amd64)
-        set(IDL_FLAGS /nologo /amd64 /no_def_idir)
-    else()
-        set(IDL_FLAGS /nologo /no_def_idir)
-    endif()
-    set(IDL_DEPENDS "")
-else()
     set(IDL_COMPILER native-widl)
     set(IDL_HEADER_ARG -h -o) #.h
     set(IDL_HEADER_ARG2 -h -H) #.h
@@ -34,24 +16,6 @@ else()
         set(IDL_FLAGS "")
     endif()
     set(IDL_DEPENDS native-widl)
-endif()
-
-
-function(get_includes OUTPUT_VAR)
-    get_directory_property(_includes INCLUDE_DIRECTORIES)
-    foreach(arg ${_includes})
-        list(APPEND __tmp_var -I${arg})
-    endforeach()
-    set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
-endfunction()
-
-function(get_defines OUTPUT_VAR)
-    get_directory_property(_defines COMPILE_DEFINITIONS)
-    foreach(arg ${_defines})
-        list(APPEND __tmp_var -D${arg})
-    endforeach()
-    set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
-endfunction()
 
 function(add_typelib)
     get_includes(INCLUDES)
