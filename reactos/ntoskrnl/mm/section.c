@@ -4254,6 +4254,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
                KeBugCheck(MEMORY_MANAGEMENT);
             }
             MmLockAddressSpace(AddressSpace);
+            MmspCompleteAndReleasePageOp(PageOp);
             MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                                                      BaseAddress);
             if (MemoryArea == NULL ||

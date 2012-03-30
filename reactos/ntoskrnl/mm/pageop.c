@@ -239,7 +239,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp->Status = STATUS_PENDING;
    PageOp->OpType = OpType;
    PageOp->MArea = MArea;
-   KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
+   KeInitializeEvent(&PageOp->CompletionEvent, SynchronizationEvent, FALSE);
    MmPageOpHashTable[Hash] = PageOp;
    (void)InterlockedIncrementUL(&MArea->PageOpCount);
 
