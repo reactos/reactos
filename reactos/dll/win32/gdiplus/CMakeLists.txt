@@ -28,12 +28,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
-if(MSVC)
-    set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE
-        ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
-endif()
-
 add_library(gdiplus SHARED ${SOURCE})
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus uuid wine)
@@ -48,11 +42,5 @@ add_importlibs(gdiplus
     gdi32
     kernel32
     ntdll)
-
-
-
-if(ARCH MATCHES amd64)
-    target_link_libraries(gdiplus crt)
-endif()
 
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)

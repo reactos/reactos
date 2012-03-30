@@ -47,10 +47,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 if(MSVC)
-    set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE
-        ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c
-        msvc.S)
+    list(APPEND SOURCE msvc.S)
 endif()
 
 add_library(oleaut32 SHARED ${SOURCE})

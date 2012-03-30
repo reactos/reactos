@@ -169,6 +169,7 @@ list(APPEND IDL_SOURCES
     tuner.idl
     vmr9.idl
     wia_xp.idl
+    wincodec.idl
     xmldom.idl
     xmldso.idl
     ctfutb.idl
@@ -183,7 +184,6 @@ if(MSVC)
 else()
     list(APPEND IDL_SOURCES
         wbemcli.idl
-        wincodec.idl
         wuapi.idl)
 endif()
 

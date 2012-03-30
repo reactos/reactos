@@ -41,12 +41,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
-if(MSVC)
-    set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE
-         ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
-endif()
-
 add_library(windowscodecs SHARED ${SOURCE})
 
 set_module_type(windowscodecs win32dll)
