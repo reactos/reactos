@@ -153,9 +153,8 @@ function(spec2def _dllname _spec_file)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def PROPERTIES EXTERNAL_OBJECT TRUE)
-    
-    if(__add_importlib)
+
+        if(__add_importlib)
         # Generate the asm stub file and the export def file for import library
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_exp.def
