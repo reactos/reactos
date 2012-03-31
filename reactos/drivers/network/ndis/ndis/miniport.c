@@ -339,14 +339,7 @@ MiniIndicateReceivePacket(
                 
                 HeaderSize = NDIS_GET_PACKET_HEADER_SIZE(PacketArray[i]);
 
-                if (Adapter->NdisMiniportBlock.CurrentLookahead < (TotalBufferLength - HeaderSize))
-                {
-                    LookAheadSize = Adapter->NdisMiniportBlock.CurrentLookahead;
-                }
-                else
-                {
-                    LookAheadSize = TotalBufferLength - HeaderSize;
-                }
+                LookAheadSize = TotalBufferLength - HeaderSize;
 
                 LookAheadBuffer = ExAllocatePool(NonPagedPool, LookAheadSize);
                 if (!LookAheadBuffer)
