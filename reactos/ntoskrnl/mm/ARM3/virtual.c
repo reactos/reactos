@@ -3082,7 +3082,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD CurrentThread = PsGetCurrentThread();
     KAPC_STATE ApcState;
-    ULONG ProtectionMask;
+    ULONG ProtectionMask, QuotaCharge = 0, QuotaFree = 0;
     BOOLEAN Attached = FALSE, ChangeProtection = FALSE;
     MMPTE TempPte;
     PMMPTE PointerPte, PointerPde, LastPte;
@@ -3512,11 +3512,104 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                                           Protect);
     }
 
+    // Is this a previously reserved section being committed? If so, enter the
+    // special section path
     //
-    // This is a specific ReactOS check because we do not support Section VADs
+    if (FoundVad->u.VadFlags.PrivateMemory == FALSE)
+    {
+        //
+        // You cannot commit large page sections through this API
+        //
+        if (FoundVad->u.VadFlags.VadType == VadLargePageSection)
+        {
+            DPRINT1("Large page sections cannot be VirtualAlloc'd\n");
+            Status = STATUS_INVALID_PAGE_PROTECTION;
+            goto FailPath;
+        }
+
+        //
+        // You can only use caching flags on a rotate VAD
+        //
+        if ((Protect & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) &&
+            (FoundVad->u.VadFlags.VadType != VadRotatePhysical))
+        {
+            DPRINT1("Cannot use caching flags with anything but rotate VADs\n");
+            Status = STATUS_INVALID_PAGE_PROTECTION;
+            goto FailPath;
+        }
+
+        //
+        // We should make sure that the section's permissions aren't being messed with
+        //
+        if (FoundVad->u.VadFlags.NoChange)
+        {
+            DPRINT1("SEC_NO_CHANGE section being touched. Assuming this is ok\n");
+        }
+
+        //
+        // ARM3 does not support file-backed sections, only shared memory
+        //
+        ASSERT(FoundVad->ControlArea->FilePointer == NULL);
+
+        //
+        // Rotate VADs cannot be guard pages or inaccessible, nor copy on write
+        //
+        if ((FoundVad->u.VadFlags.VadType == VadRotatePhysical) &&
+            (Protect & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY | PAGE_NOACCESS | PAGE_GUARD)))
+        {
+            DPRINT1("Invalid page protection for rotate VAD\n");
+            Status = STATUS_INVALID_PAGE_PROTECTION;
+            goto FailPath;
+        }
+
+        //
+        // Compute PTE addresses and the quota charge, then grab the commit lock
+        //
+        PointerPte = MI_GET_PROTOTYPE_PTE_FOR_VPN(FoundVad, StartingAddress >> PAGE_SHIFT);
+        LastPte = MI_GET_PROTOTYPE_PTE_FOR_VPN(FoundVad, EndingAddress >> PAGE_SHIFT);
+        QuotaCharge = LastPte - PointerPte + 1;
+        KeAcquireGuardedMutexUnsafe(&MmSectionCommitMutex);
+
+        //
+        // Get the segment template PTE and start looping each page
+        //
+        TempPte = FoundVad->ControlArea->Segment->SegmentPteTemplate;
+        ASSERT(TempPte.u.Long != 0);
+        while (PointerPte <= LastPte)
+        {
+            //
+            // For each non-already-committed page, write the invalid template PTE
+            //
+            if (PointerPte->u.Long == 0)
+            {
+                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+            }
+            else
+            {
+                QuotaFree++;
+            }
+            PointerPte++;
+        }
+
+        //
+        // Now do the commit accounting and release the lock
+        //
+        ASSERT(QuotaCharge >= QuotaFree);
+        QuotaCharge -= QuotaFree;
+        FoundVad->ControlArea->Segment->NumberOfCommittedPages += QuotaCharge;
+        KeReleaseGuardedMutexUnsafe(&MmSectionCommitMutex);
+
+        //
+        // We are done with committing the section pages
+        //
+        Status = STATUS_SUCCESS;
+        goto FailPath;
+    }
+
+    //
+    // This is a specific ReactOS check because we only use normal VADs
     //
     ASSERT(FoundVad->u.VadFlags.VadType == VadNone);
-    ASSERT(FoundVad->u.VadFlags.PrivateMemory == TRUE);
 
     //
     // While this is an actual Windows check
