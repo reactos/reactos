@@ -27,7 +27,7 @@ function(add_idl_headers TARGET)
         get_filename_component(_name_we ${_idl_file} NAME_WE)
         add_custom_command(
             OUTPUT ${_name_we}.h
-            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}.h /iid ${_name_we}_dummy_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}
+            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}.h /client none /server none /iid ${_name_we}_dummy_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file})
         list(APPEND _target_dependencies ${_name_we}.h)
     endforeach()
@@ -42,7 +42,7 @@ function(add_rpcproxy_files)
         get_filename_component(_name_we ${_idl_file} NAME_WE)
         add_custom_command(
             OUTPUT ${_name_we}_p.c ${_name_we}_p.h proxy.dlldata.c
-            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /proxy ${_name_we}_p.c /h ${_name_we}_p.h /dlldata proxy.dlldata.c ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}
+            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /client none /server none /proxy ${_name_we}_p.c /h ${_name_we}_p.h /dlldata proxy.dlldata.c ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file} ${_chain_dependency})
         list(APPEND _chain_dependency ${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_p.c)
         list(APPEND _chain_dependency ${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_p.h)
@@ -57,13 +57,11 @@ function(add_rpc_files _type)
     if(_type STREQUAL server)
         set(_server_client /sstub)
         set(_suffix _s)
-        set(_dummy_stub /cstub)
-        set(_dummy_suffix _c)
+        set(_prevent_second_type /client none)
     elseif(_type STREQUAL client)
         set(_server_client /cstub)
         set(_suffix _c)
-        set(_dummy_stub /sstub)
-        set(_dummy_suffix _s)
+        set(_prevent_second_type /server none)
     else()
         message(FATAL_ERROR "Please pass either server or client as argument to add_rpc_files")
     endif()
@@ -72,11 +70,10 @@ function(add_rpc_files _type)
             set(_idl_file ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file})
         endif()
         get_filename_component(_name_we ${_idl_file} NAME_WE)
-        set(_dummy_name_we ${_name_we}${_dummy_suffix})
         set(_name_we ${_name_we}${_suffix})
         add_custom_command(
             OUTPUT ${_name_we}.c ${_name_we}.h
-            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}.h ${_server_client} ${_name_we}.c ${_dummy_stub} ${_dummy_name_we}.c ${_idl_file}
+            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}.h ${_server_client} ${_name_we}.c ${_prevent_second_type} ${_idl_file}
             DEPENDS ${_idl_file})
     endforeach()
 endfunction()
@@ -92,7 +89,7 @@ function(generate_idl_iids _idl_file)
     get_filename_component(_name_we ${_idl_file} NAME_WE)
     add_custom_command(
         OUTPUT ${_name_we}_i.c ${_name_we}_i.h
-        COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}_i.h /iid ${_name_we}_i.c ${_idl_file}
+        COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}_i.h /client none /server none /iid ${_name_we}_i.c /proxy ${_name_we}_dummy_p.c ${_idl_file}
         DEPENDS ${_idl_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_i.c PROPERTIES GENERATED TRUE)
 endfunction()
