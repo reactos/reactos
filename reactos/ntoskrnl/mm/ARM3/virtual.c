@@ -1430,8 +1430,20 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         return Status;
     }
 
-    /* This must be a VM VAD */
-    ASSERT(Vad->u.VadFlags.PrivateMemory);
+    /* Set the correct memory type based on what kind of VAD this is */
+    if ((Vad->u.VadFlags.PrivateMemory) ||
+        (Vad->u.VadFlags.VadType == VadRotatePhysical))
+    {
+        MemoryInfo.Type = MEM_PRIVATE;
+    }
+    else if (Vad->u.VadFlags.VadType == VadImageMap)
+    {
+        MemoryInfo.Type = MEM_IMAGE;
+    }
+    else
+    {
+        MemoryInfo.Type = MEM_MAPPED;
+    }
 
     /* Lock the address space of the process */
     MmLockAddressSpace(&TargetProcess->Vm);
