@@ -1130,7 +1130,7 @@ UserFault:
             MiCheckPdeForPagedPool(Address);
 #endif
             /* Has the code above changed anything -- is this now a valid PTE? */
-            Status = (PointerPte->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
+            Status = (PointerPde->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
 
             /* Either this was a bogus VA or we've fixed up a paged pool PDE */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
