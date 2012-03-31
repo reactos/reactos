@@ -1233,6 +1233,9 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
+            /* In ReactOS, this path should always be hit with a deleted PFN */
+            ASSERT((MI_IS_PFN_DELETED(Pfn1) == TRUE) || (Pfn1->u3.e1.PrototypePte == 1));
+#if 0 // INVESTIGATE
             /* Is there still a PFN for this page? */
             if (MI_IS_PFN_DELETED(Pfn1) == TRUE)
             {
@@ -1251,6 +1254,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
                 /* PFN not yet deleted, drop a ref count */
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
+#endif
 
             /* Clear the last reference */
             Pfn1->u3.e2.ReferenceCount = 0;
@@ -1306,6 +1310,7 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
     }
 
     /* Check to see which list this page should go into */
+    ASSERT(FALSE);
     if (Pfn1->u3.e1.Modified == 1)
     {
         /* Push it into the modified page list */
