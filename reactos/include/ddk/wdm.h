@@ -1406,9 +1406,9 @@ typedef struct _KTIMER {
   ULARGE_INTEGER DueTime;
   LIST_ENTRY TimerListEntry;
   struct _KDPC *Dpc;
-# if !defined(_X86_)
+#if (NTDDI_VERSION >= NTDDI_WIN7) && !defined(_X86_)
   ULONG Processor;
-# endif
+#endif
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 
