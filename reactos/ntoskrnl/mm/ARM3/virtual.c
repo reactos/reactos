@@ -34,7 +34,8 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
                          IN PEPROCESS CurrentProcess)
 {
     NTSTATUS Status;
-    BOOLEAN LockChange = FALSE;
+    BOOLEAN WsWasLocked = FALSE, LockChange = FALSE;
+    PETHREAD CurrentThread = PsGetCurrentThread();
 
     /* Must be a non-pool page table, since those are double-mapped already */
     ASSERT(PageTableVirtualAddress > MM_HIGHEST_USER_ADDRESS);
@@ -47,6 +48,14 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
     /* Check if the page table is valid */
     while (!MmIsAddressValid(PageTableVirtualAddress))
     {
+        /* Check if the WS is locked */
+        if (CurrentThread->OwnsProcessWorkingSetExclusive)
+        {
+            /* Unlock the working set and remember it was locked */
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            WsWasLocked = TRUE;
+        }
+
         /* Fault it in */
         Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
         if (!NT_SUCCESS(Status))
@@ -58,6 +67,9 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
                          (ULONG_PTR)CurrentProcess,
                          (ULONG_PTR)PageTableVirtualAddress);
         }
+
+        /* Lock the working set again */
+        if (WsWasLocked) MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
 
         /* This flag will be useful later when we do better locking */
         LockChange = TRUE;

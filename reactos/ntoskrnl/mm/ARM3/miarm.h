@@ -917,7 +917,6 @@ MiLockProcessWorkingSet(IN PEPROCESS Process,
     //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
 
     /* Okay, now we can own it exclusively */
-    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
     Thread->OwnsProcessWorkingSetExclusive = TRUE;
 }
 
