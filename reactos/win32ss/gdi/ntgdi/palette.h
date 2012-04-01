@@ -48,7 +48,7 @@ typedef struct _PALETTE
   ULONG ulGreenShift;
   ULONG ulBlueShift;
   HDEV  hPDev;
-} PALETTE, *PPALETTE;
+} PALETTE;
 
 extern PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
 extern PPALETTE appalSurfaceDefault[];
@@ -104,3 +104,4 @@ PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
                ppal->IndexedColors[ulIndex].peGreen,
                ppal->IndexedColors[ulIndex].peBlue);
 }
+

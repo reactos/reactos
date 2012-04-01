@@ -97,6 +97,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <freetype/freetype.h>
 
 /* Internal Win32K header */
-#include "include/win32kp.h"
+#include "win32kp.h"
 
 #endif /* __W32K_H */

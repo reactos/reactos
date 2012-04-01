@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "videoprt.h"
-#include "../../subsystems/win32/win32k/include/engevent.h"
+#include "../../gdi/eng/engevent.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

@@ -7,7 +7,7 @@
  */
 
 #include <win32k.h>
-#include <include/napi.h>
+#include <napi.h>
 
 #define NDEBUG
 #include <debug.h>
