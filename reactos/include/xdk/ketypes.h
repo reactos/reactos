@@ -463,7 +463,7 @@ typedef struct _KWAIT_BLOCK {
   struct _KWAIT_BLOCK *NextWaitBlock;
   USHORT WaitKey;
   UCHAR WaitType;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
   volatile UCHAR BlockState;
 #else
   UCHAR SpareByte;

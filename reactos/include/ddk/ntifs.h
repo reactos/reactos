@@ -4501,8 +4501,8 @@ typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE {
   ULONG ResponseLevel;
   ULONG NumberEntries;
   _ANONYMOUS_UNION union {
-    STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[];
-    STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[];
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[0];
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[0];
   } DUMMYUNIONNAME;
 } STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE, *PSTORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE;
 
@@ -10572,14 +10572,14 @@ SEC_ENTRY
 SspiMarshalAuthIdentity(
     _In_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
     _Out_ PULONG AuthIdentityLength,
-    _Deref_out__bcount(*AuthIdentityLength) PCHAR* AuthIdentityByteArray);
+    _Outptr_result_bytebuffer_(*AuthIdentityLength) PCHAR* AuthIdentityByteArray);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiUnmarshalAuthIdentity(
     _In_ PULONG AuthIdentityLength,
-    _In__bcount(AuthIdentityLength) PCHAR AuthIdentityByteArray,
-    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
+    _In_reads_bytes_(AuthIdentityLength) PCHAR AuthIdentityByteArray,
+    _Outptr_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppAuthIdentity);
 
 BOOLEAN
 SEC_ENTRY
@@ -10590,14 +10590,14 @@ SECURITY_STATUS
 SEC_ENTRY
 SspiGetTargetHostName(
     _In_ PCWSTR pszTargetName,
-    _Deref_out_ PWSTR* pszHostName);
+    _Outptr_ PWSTR* pszHostName);
 
 SECURITY_STATUS
 SEC_ENTRY
 SspiExcludePackage(
     _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE AuthIdentity,
     _In_ PCWSTR pszPackageName,
-    _Deref_out_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppNewAuthIdentity);
+    _Outptr_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE* ppNewAuthIdentity);
 
 #define SEC_WINNT_AUTH_IDENTITY_MARSHALLED 0x04
 #define SEC_WINNT_AUTH_IDENTITY_ONLY 0x08
