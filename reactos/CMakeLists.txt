@@ -234,6 +234,7 @@ else()
     add_subdirectory(modules)
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
+    add_subdirectory(win32ss)
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
