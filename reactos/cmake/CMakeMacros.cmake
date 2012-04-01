@@ -222,16 +222,20 @@ function(add_cd_file)
 endfunction()
 
 # Create module_clean targets
-function(add_clean_target target)
-    if(CMAKE_GENERATOR MATCHES "Unix Makefiles" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles")
-        set(CLEAN_COMMAND make clean)
-    elseif(CMAKE_GENERATOR MATCHES "NMake Makefiles")
-        set(CLEAN_COMMAND nmake /nologo clean)
+function(add_clean_target _target)
+    set(_clean_working_directory ${CMAKE_CURRENT_BINARY_DIR})
+    if(CMAKE_GENERATOR STREQUAL "Unix Makefiles" OR CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
+        set(_clean_command make clean)
+    elseif(CMAKE_GENERATOR STREQUAL "NMake Makefiles")
+        set(_clean_command nmake /nologo clean)
+    elseif(CMAKE_GENERATOR STREQUAL "Ninja")
+        set(_clean_command ninja -t clean ${_target})
+        set(_clean_working_directory ${REACTOS_BINARY_DIR})
     endif()
-    add_custom_target(${target}_clean
-        COMMAND ${CLEAN_COMMAND}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Cleaning ${target}")
+    add_custom_target(${_target}_clean
+        COMMAND ${_clean_command}
+        WORKING_DIRECTORY ${_clean_working_directory}
+        COMMENT "Cleaning ${_target}")
 endfunction()
 
 if(NOT MSVC_IDE)
