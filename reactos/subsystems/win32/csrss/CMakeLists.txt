@@ -13,4 +13,3 @@ add_dependencies(csrss psdk bugcodes)
 add_cd_file(TARGET csrss DESTINATION reactos/system32 FOR all)
 
 add_subdirectory(csrsrv)
-add_subdirectory(win32csr)
