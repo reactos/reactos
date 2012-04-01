@@ -410,7 +410,6 @@ MiAddMappedPtes(IN PMMPTE FirstPte,
     return STATUS_SUCCESS;
 }
 
-#if (_MI_PAGING_LEVELS == 2)
 VOID
 NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
@@ -418,7 +417,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
 {
     PMMPDE PointerPde, LastPde, SystemMapPde;
     MMPDE TempPde;
-    PFN_NUMBER PageFrameIndex;
+    PFN_NUMBER PageFrameIndex, ParentPage;
     KIRQL OldIrql;
     PAGED_CODE();
 
@@ -426,8 +425,13 @@ MiFillSystemPageDirectory(IN PVOID Base,
     PointerPde = MiAddressToPde(Base);
     LastPde = MiAddressToPde((PVOID)((ULONG_PTR)Base + NumberOfBytes - 1));
 
+#if (_MI_PAGING_LEVELS == 2)
     /* Find the system double-mapped PDE that describes this mapping */
     SystemMapPde = &MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)];
+#else
+    /* We don't have a double mapping */
+    SystemMapPde = PointerPde;
+#endif
 
     /* Use the PDE template and loop the PDEs */
     TempPde = ValidKernelPde;
@@ -446,10 +450,15 @@ MiFillSystemPageDirectory(IN PVOID Base,
             ASSERT(PageFrameIndex);
             TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
 
+#if (_MI_PAGING_LEVELS == 2)
+            ParentPage = MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT];
+#else
+            ParentPage = MiPdeToPpe(PointerPde)->u.Hard.PageFrameNumber;
+#endif
             /* Initialize its PFN entry, with the parent system page directory page table */
             MiInitializePfnForOtherProcess(PageFrameIndex,
                                            (PMMPTE)PointerPde,
-                                           MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
+                                           ParentPage);
 
             /* Make the system PDE entry valid */
             MI_WRITE_VALID_PDE(SystemMapPde, TempPde);
@@ -468,7 +477,6 @@ MiFillSystemPageDirectory(IN PVOID Base,
         PointerPde++;
     }
 }
-#endif
 
 NTSTATUS
 NTAPI
@@ -734,10 +742,8 @@ MiMapViewInSystemSpace(IN PVOID Section,
     Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
     ASSERT(Base);
 
-#if (_MI_PAGING_LEVELS == 2)
     /* Create the PDEs needed for this mapping, and double-map them if needed */
     MiFillSystemPageDirectory(Base, Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE);
-#endif
 
     /* Create the actual prototype PTEs for this mapping */
     Status = MiAddMappedPtes(MiAddressToPte(Base),

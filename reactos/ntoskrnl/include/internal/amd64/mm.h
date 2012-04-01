@@ -256,6 +256,10 @@ MiIsPdeForAddressValid(PVOID Address)
 
 #define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
 #define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
+#define MiPdeToPpe(Pde) ((PMMPPE)MiAddressToPte(Pde))
+
+/* Sign extend 48 bits */
+#define MiProtoPteToPte(x) (PMMPTE)(((LONG64)(x)->u.Long) >> 16)
 
 FORCEINLINE
 VOID
@@ -263,17 +267,13 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
                       IN PMMPTE PointerPte)
 {
     /* Store the Address */
-    NewPte->u.Long = (ULONG64)PointerPte;
+    NewPte->u.Long = (ULONG64)PointerPte << 16;
 
     /* Mark this as a prototype PTE */
     NewPte->u.Proto.Prototype = 1;
-    NewPte->u.Proto.Valid  = 1;
-    NewPte->u.Proto.ReadOnly = 0;
-    NewPte->u.Proto.Protection = 0;
-}
 
-/* Sign extend 48 bits */
-#define MiProtoPteToPte(x) (PMMPTE)((LONG64)(x)->u.Proto.ProtoAddress)
+    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+}
 
 VOID
 FORCEINLINE

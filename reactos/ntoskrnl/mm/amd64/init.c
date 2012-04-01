@@ -242,6 +242,9 @@ MiInitializePageTable()
     /* Setup 1 PPE for hyper space */
     MiMapPPEs((PVOID)HYPER_SPACE, (PVOID)HYPER_SPACE_END);
 
+    /* Setup PPEs for system space view */
+    MiMapPPEs(MiSystemViewStart, (PCHAR)MiSystemViewStart + MmSystemViewSize);
+
     /* Setup the mapping PDEs */
     MiMapPDEs((PVOID)MI_MAPPING_RANGE_START, (PVOID)MI_MAPPING_RANGE_END);
 
