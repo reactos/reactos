@@ -107,7 +107,7 @@ QueryDeskCplString(IDataObject *pdo, UINT cfFormat)
 #ifdef UNICODE
             wcscpy(lpStr, lpRecvBuffer);
 #else
-            WideCharToMultiByte(CP_APC, 0, lpRecvBuffer, -1, lpStr, BufLen, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, 0, lpRecvBuffer, -1, lpStr, BufLen, NULL, NULL);
 #endif
         }
 
