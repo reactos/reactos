@@ -37,6 +37,7 @@ add_library(user32_wsprintf
     string/mbstowcs_nt.c
     string/wcstombs_nt.c)
 
+add_dependencies(user32_wsprintf psdk)
 add_target_compile_definitions(user32_wsprintf _USER32_WSPRINTF)
 
 add_library(getopt misc/getopt.c)
