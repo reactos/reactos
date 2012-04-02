@@ -1233,9 +1233,6 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
-            /* In ReactOS, this path should always be hit with a deleted PFN */
-            ASSERT((MI_IS_PFN_DELETED(Pfn1) == TRUE) || (Pfn1->u3.e1.PrototypePte == 1));
-#if 0 // INVESTIGATE
             /* Is there still a PFN for this page? */
             if (MI_IS_PFN_DELETED(Pfn1) == TRUE)
             {
@@ -1254,17 +1251,6 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
                 /* PFN not yet deleted, drop a ref count */
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
-#endif
-
-            /* Clear the last reference */
-            Pfn1->u3.e2.ReferenceCount = 0;
-            ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
-
-            /* Mark the page temporarily as valid, we're going to make it free soon */
-            Pfn1->u3.e1.PageLocation = ActiveAndValid;
-
-            /* Bring it back into the free list */
-            MiInsertPageInFreeList(PageFrameIndex);
         }
         else
         {
