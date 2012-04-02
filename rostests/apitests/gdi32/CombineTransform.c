@@ -9,8 +9,6 @@
 #include <wine/test.h>
 #include <windows.h>
 #include <winddi.h>
-#include <reactos/win32k/ntgdityp.h>
-#include <reactos/win32k/ntgdihdl.h>
 
 #define ok_int(x, y) ok(x == y, "Wrong value for " #x ", expected " #y ", got %ld\n", (long)x);
 #define ok_flt(x, y) ok(x == y, "Wrong value for " #x ", expected " #y ", got %f\n", (double)x);
