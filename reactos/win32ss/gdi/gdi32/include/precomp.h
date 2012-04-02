@@ -33,14 +33,14 @@
 #include <d3dhal.h>
 
 /* Public Win32K Headers */
-#include <win32k/ntgdityp.h>
+#include <ntgdityp.h>
 #include <ntgdi.h>
-#include <win32k/ntgdihdl.h>
+#include <ntgdihdl.h>
 
 /* Private GDI32 Header */
 #include "gdi32p.h"
 
 /* Deprecated NTGDI calls which shouldn't exist */
-#include <win32k/ntgdibad.h>
+#include <ntgdibad.h>
 
 /* EOF */

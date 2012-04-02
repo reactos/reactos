@@ -4,7 +4,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers
-    ${REACTOS_SOURCE_DIR}/dll/cpl/console)
+    ${REACTOS_SOURCE_DIR}/dll/cpl/console
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 spec2def(win32csr.dll win32csr.spec)
 

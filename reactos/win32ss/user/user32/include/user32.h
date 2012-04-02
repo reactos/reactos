@@ -33,9 +33,9 @@
 #include <csrss/csrss.h>
 
 /* Public Win32K Headers */
-#include <win32k/ntusrtyp.h>
-#include <win32k/ntuser.h>
-#include <win32k/callback.h>
+#include <ntusrtyp.h>
+#include <ntuser.h>
+#include <callback.h>
 
 /* Undocumented user definitions*/
 #include <undocuser.h>

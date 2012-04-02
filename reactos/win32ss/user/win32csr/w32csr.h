@@ -16,7 +16,7 @@
 #include "tuiconsole.h"
 
 /* Public Win32K Headers */
-#include <win32k/ntuser.h>
+#include <ntuser.h>
 
 #include "resource.h"
 

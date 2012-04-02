@@ -8,7 +8,8 @@ add_definitions(
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     csr/api.c

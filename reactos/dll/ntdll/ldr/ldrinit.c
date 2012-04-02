@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
-#include <win32k/callback.h>
+#include <callback.h>
 
 #define NDEBUG
 #include <debug.h>
