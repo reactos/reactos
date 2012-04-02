@@ -4198,12 +4198,11 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
    return(Status);
 }
 
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-MmUnmapViewOfSection(PEPROCESS Process,
-                     PVOID BaseAddress)
+NTSTATUS
+NTAPI
+MiRosUnmapViewOfSection(IN PEPROCESS Process,
+                        IN PVOID BaseAddress,
+                        IN ULONG Flags)
 {
    NTSTATUS Status;
    PMEMORY_AREA MemoryArea;

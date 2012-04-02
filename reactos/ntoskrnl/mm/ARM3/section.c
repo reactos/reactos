@@ -688,6 +688,111 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
 
 NTSTATUS
 NTAPI
+MiUnmapViewOfSection(IN PEPROCESS Process,
+                     IN PVOID BaseAddress,
+                     IN ULONG Flags)
+{
+    PMEMORY_AREA MemoryArea;
+    BOOLEAN Attached = FALSE;
+    KAPC_STATE ApcState;
+    PMMVAD Vad;
+    PVOID DbgBase = NULL;
+    SIZE_T RegionSize;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Check for Mm Region */
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, BaseAddress);
+    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    {
+        /* Call Mm API */
+        return MiRosUnmapViewOfSection(Process, BaseAddress, Flags);
+    }
+
+    /* Check if we should attach to the process */
+    if (PsGetCurrentProcess() != Process)
+    {
+        /* The process is different, do an attach */
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
+
+    /* Check if we need to lock the address space */
+    if (!Flags) MmLockAddressSpace(&Process->Vm);
+
+    /* Check if the process is already daed */
+    if (Process->VmDeleted)
+    {
+        /* Fail the call */
+        DPRINT1("Process died!\n");
+        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+        Status = STATUS_PROCESS_IS_TERMINATING;
+        goto Quickie;
+    }
+
+    /* Find the VAD for the address and make sure it's a section VAD */
+    Vad = MiLocateAddress(BaseAddress);
+    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
+    {
+        /* Couldn't find it, or invalid VAD, fail */
+        DPRINT1("No VAD or invalid VAD\n");
+        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+        Status = STATUS_NOT_MAPPED_VIEW;
+        goto Quickie;
+    }
+
+    /* We should be attached */
+    ASSERT(Process == PsGetCurrentProcess());
+
+    /* We need the base address for the debugger message on image-backed VADs */
+    if (Vad->u.VadFlags.VadType == VadImageMap)
+    {
+        DbgBase = (PVOID)(Vad->StartingVpn >> PAGE_SHIFT);
+    }
+
+    /* Compute the size of the VAD region */
+    RegionSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
+
+    /* For SEC_NO_CHANGE sections, we need some extra checks */
+    if (Vad->u.VadFlags.NoChange == 1)
+    {
+        DPRINT1("Unmapping SEC_NO_CHANGE. Should validate if allowed!\n");
+    }
+
+    /* Not currently supported */
+    ASSERT(Vad->u.VadFlags.VadType != VadRotatePhysical);
+
+    /* FIXME: Remove VAD charges */
+
+    /* Lock the working set */
+    MiLockWorkingSet(PsGetCurrentThread(), &Process->Vm);
+
+    /* Remove the VAD */
+    ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
+    MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+
+    /* Remove the PTEs for this view */
+    MiRemoveMappedView(Process, Vad);
+
+    /* FIXME: Remove commitment */
+
+    /* Update performance counter and release the lock */
+    Process->VirtualSize -= RegionSize;
+    if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+
+    /* Destroy the VAD and return success */
+    ExFreePool(Vad);
+    Status = STATUS_SUCCESS;
+
+    /* Failure and success case -- send debugger message, detach, and return */
+Quickie:
+    if (DbgBase) DbgkUnMapViewOfSection(DbgBase);
+    if (Attached) KeUnstackDetachProcess(&ApcState);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
                        IN PMMSESSION Session,
                        OUT PVOID *MappedBase,
@@ -1357,6 +1462,404 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
     return Status;
 }
 
+VOID
+NTAPI
+MiFlushTbAndCapture(IN PMMVAD FoundVad,
+                    IN PMMPTE PointerPte,
+                    IN ULONG ProtectionMask,
+                    IN PMMPFN Pfn1,
+                    IN BOOLEAN CaptureDirtyBit)
+{
+    MMPTE TempPte, PreviousPte;
+    KIRQL OldIrql;
+
+    //
+    // User for sanity checking later on
+    //
+    PreviousPte = *PointerPte;
+
+    //
+    // Build the PTE and acquire the PFN lock
+    //
+    MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                              PointerPte,
+                              ProtectionMask,
+                              PreviousPte.u.Hard.PageFrameNumber);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    //
+    // We don't support I/O mappings in this path yet, and only cached memory
+    //
+    ASSERT(Pfn1 != NULL);
+    ASSERT(Pfn1->u3.e1.CacheAttribute == MiCached);
+    ASSERT((ProtectionMask & (MM_NOCACHE | MM_NOACCESS)) == 0);
+
+    //
+    // Write the new PTE, making sure we are only changing the bits
+    //
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
+    *PointerPte = TempPte;
+
+    //
+    // Flush the TLB
+    //
+    ASSERT(PreviousPte.u.Hard.Valid == 1);
+    KeFlushCurrentTb();
+    ASSERT(PreviousPte.u.Hard.Valid == 1);
+
+    //
+    // Windows updates the relevant PFN1 information, we currently don't.
+    //
+    if (CaptureDirtyBit) DPRINT1("Warning, not handling dirty bit\n");
+
+    //
+    // Not supported in ARM3
+    //
+    ASSERT(FoundVad->u.VadFlags.VadType != VadWriteWatch);
+
+    //
+    // Release the PFN lock, we are done
+    //
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+}
+
+//
+// NOTE: This function gets a lot more complicated if we want Copy-on-Write support
+//
+NTSTATUS
+NTAPI
+MiSetProtectionOnSection(IN PEPROCESS Process,
+                         IN PMMVAD FoundVad,
+                         IN PVOID StartingAddress,
+                         IN PVOID EndingAddress,
+                         IN ULONG NewProtect,
+                         OUT PULONG CapturedOldProtect,
+                         IN ULONG DontCharge,
+                         OUT PULONG Locked)
+{
+    PMMPTE PointerPte, LastPte;
+    MMPTE TempPte, PteContents;
+    PMMPDE PointerPde;
+    PMMPFN Pfn1;
+    ULONG ProtectionMask, QuotaCharge = 0;
+    PUSHORT UsedPageTableEntries;
+    //PETHREAD Thread = PsGetCurrentThread();
+    PAGED_CODE();
+
+    //
+    // Tell caller nothing is being locked
+    //
+    *Locked = FALSE;
+
+    //
+    // This function should only be used for section VADs. Windows ASSERT */
+    //
+    ASSERT(FoundVad->u.VadFlags.PrivateMemory == 0);
+
+    //
+    // We don't support these features in ARM3
+    //
+    ASSERT(FoundVad->u.VadFlags.VadType != VadImageMap);
+    ASSERT(FoundVad->u2.VadFlags2.CopyOnWrite == 0);
+
+    //
+    // Convert and validate the protection mask
+    //
+    ProtectionMask = MiMakeProtectionMask(NewProtect);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid section protect\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
+
+    //
+    // Get the PTE and PDE for the address, as well as the final PTE
+    //
+    //MiLockProcessWorkingSet(Thread, Process);
+    PointerPde = MiAddressToPde(StartingAddress);
+    PointerPte = MiAddressToPte(StartingAddress);
+    LastPte = MiAddressToPte(EndingAddress);
+
+    //
+    // Make the PDE valid, and check the status of the first PTE
+    //
+    MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
+    if (PointerPte->u.Long)
+    {
+        //
+        // Not supported in ARM3
+        //
+        ASSERT(FoundVad->u.VadFlags.VadType != VadRotatePhysical);
+
+        //
+        // Capture the page protection and make the PDE valid
+        //
+        *CapturedOldProtect = MiGetPageProtection(PointerPte);
+        MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
+    }
+    else
+    {
+        //
+        // Only pagefile-backed section VADs are supported for now
+        //
+        ASSERT(FoundVad->u.VadFlags.VadType != VadImageMap);
+
+        //
+        // Grab the old protection from the VAD itself
+        //
+        *CapturedOldProtect = MmProtectToValue[FoundVad->u.VadFlags.Protection];
+    }
+
+    //
+    // Loop all the PTEs now
+    //
+    MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
+    while (PointerPte <= LastPte)
+    {
+        //
+        // Check if we've crossed a PDE boundary and make the new PDE valid too
+        //
+        if ((((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)) == 0)
+        {
+            PointerPde = MiAddressToPte(PointerPte);
+            MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
+        }
+
+        //
+        // Capture the PTE and see what we're dealing with
+        //
+        PteContents = *PointerPte;
+        if (PteContents.u.Long == 0)
+        {
+            //
+            // This used to be a zero PTE and it no longer is, so we must add a
+            // reference to the pagetable.
+            //
+            UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
+            (*UsedPageTableEntries)++;
+            ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+
+            //
+            // Create the demand-zero prototype PTE
+            //
+            TempPte = PrototypePte;
+            TempPte.u.Soft.Protection = ProtectionMask;
+            MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+        }
+        else if (PteContents.u.Hard.Valid == 1)
+        {
+            //
+            // Get the PFN entry
+            //
+            Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(&PteContents));
+
+            //
+            // We don't support these yet
+            //
+            ASSERT((NewProtect & (PAGE_NOACCESS | PAGE_GUARD)) == 0);
+            ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+
+            //
+            // Write the protection mask and write it with a TLB flush
+            //
+            Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
+            MiFlushTbAndCapture(FoundVad,
+                                PointerPte,
+                                ProtectionMask,
+                                Pfn1,
+                                TRUE);
+        }
+        else
+        {
+            //
+            // We don't support these cases yet
+            //
+            ASSERT(PteContents.u.Soft.Prototype == 0);
+            ASSERT(PteContents.u.Soft.Transition == 0);
+
+            //
+            // The PTE is already demand-zero, just update the protection mask
+            //
+            PointerPte->u.Soft.Protection = ProtectionMask;
+        }
+
+        PointerPte++;
+    }
+
+    //
+    // Unlock the working set and update quota charges if needed, then return
+    //
+    //MiUnlockProcessWorkingSet(Thread, Process);
+    if ((QuotaCharge > 0) && (!DontCharge))
+    {
+        FoundVad->u.VadFlags.CommitCharge -= QuotaCharge;
+        Process->CommitCharge -= QuotaCharge;
+    }
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiRemoveMappedPtes(IN PVOID BaseAddress,
+                   IN ULONG NumberOfPtes,
+                   IN PCONTROL_AREA ControlArea,
+                   IN PMMSUPPORT Ws)
+{
+    PMMPTE PointerPte, FirstPte;
+    PMMPDE PointerPde, SystemMapPde;
+    PMMPFN Pfn1, Pfn2;
+    MMPTE PteContents;
+    KIRQL OldIrql;
+    DPRINT("Removing mapped view at: 0x%p\n", BaseAddress);
+
+    /* Get the PTE and loop each one */
+    PointerPte = MiAddressToPte(BaseAddress);
+    FirstPte = PointerPte;
+    while (NumberOfPtes)
+    {
+        /* Check if the PTE is already valid */
+        PteContents = *PointerPte;
+        if (PteContents.u.Hard.Valid == 1)
+        {
+            /* Get the PFN entry */
+            Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(&PteContents));
+
+            /* Get the PTE */
+            PointerPde = MiAddressToPte(PointerPte);
+
+            /* Lock the PFN database and make sure this isn't a mapped file */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            ASSERT(((Pfn1->u3.e1.PrototypePte) && (Pfn1->OriginalPte.u.Soft.Prototype)) == 0);
+
+            /* FIXME: Dirty bit management */
+
+            /* Was the PDE invalid */
+            if (PointerPde->u.Long == 0)
+            {
+                /* Find the system double-mapped PDE that describes this mapping */
+                SystemMapPde = &MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)];
+
+                /* Make it valid */
+                ASSERT(SystemMapPde->u.Hard.Valid == 1);
+                MI_WRITE_VALID_PDE(PointerPde, *SystemMapPde);
+            }
+
+            /* Dereference the PDE and the PTE */
+            Pfn2 = MiGetPfnEntry(PFN_FROM_PTE(PointerPde));
+            //MiDecrementShareCount(Pfn2, PFN_FROM_PTE(PointerPde));
+            MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
+
+            /* Release the PFN lock */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        }
+        else
+        {
+            /* Windows ASSERT */
+            ASSERT((PteContents.u.Long == 0) || (PteContents.u.Soft.Prototype == 1));
+
+            /* But not handled in ARM3 */
+            ASSERT(PteContents.u.Soft.Prototype == 0);
+        }
+
+        /* Make the PTE into a zero PTE */
+        PointerPte->u.Long = 0;
+
+        /* Move to the next PTE */
+        PointerPte++;
+        NumberOfPtes--;
+    }
+
+    /* Flush the TLB */
+    KeFlushCurrentTb();
+
+    /* Acquire the PFN lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Decrement the accounting counters */
+    ControlArea->NumberOfUserReferences--;
+    ControlArea->NumberOfMappedViews--;
+
+    /* Check if we should destroy the CA and release the lock */
+    MiCheckControlArea(ControlArea, OldIrql);
+}
+
+ULONG
+NTAPI
+MiRemoveFromSystemSpace(IN PMMSESSION Session,
+                        IN PVOID Base,
+                        OUT PCONTROL_AREA *ControlArea)
+{
+    ULONG Hash, Size, Count = 0, Entry;
+    PAGED_CODE();
+
+    /* Compute the hash for this entry and loop trying to find it */
+    Entry = (ULONG_PTR)Base >> 16;
+    Hash = Entry % Session->SystemSpaceHashKey;
+    while ((Session->SystemSpaceViewTable[Hash].Entry >> 16) != Entry)
+    {
+        /* Check if we overflew past the end of the hash table */
+        if (++Hash >= Session->SystemSpaceHashSize)
+        {
+            /* Reset the hash to zero and keep searching from the bottom */
+            Hash = 0;
+            if (++Count == 2)
+            {
+                /* But if we overflew twice, then this is not a real mapping */
+                KeBugCheckEx(0xD7, //DRIVER_UNMAPPING_INVALID_VIEW,
+                             (ULONG_PTR)Base,
+                             1,
+                             0,
+                             0);
+            }
+        }
+    }
+
+    /* One less entry */
+    Session->SystemSpaceHashEntries--;
+
+    /* Extract the size and clear the entry */
+    Size = Session->SystemSpaceViewTable[Hash].Entry & 0xFFFF;
+    Session->SystemSpaceViewTable[Hash].Entry = 0;
+
+    /* Return the control area and the size */
+    *ControlArea = Session->SystemSpaceViewTable[Hash].ControlArea;
+    return Size;
+}
+
+NTSTATUS
+NTAPI
+MiUnmapViewInSystemSpace(IN PMMSESSION Session,
+                         IN PVOID MappedBase)
+{
+    ULONG Size;
+    PCONTROL_AREA ControlArea;
+    PAGED_CODE();
+
+    /* Only global mappings supported for now */
+    ASSERT(Session == &MmSession);
+
+    /* Remove this mapping */
+    KeAcquireGuardedMutex(Session->SystemSpaceViewLockPointer);
+    Size = MiRemoveFromSystemSpace(Session, MappedBase, &ControlArea);
+
+    /* Clear the bits for this mapping */
+    RtlClearBits(Session->SystemSpaceBitMap,
+                 ((ULONG_PTR)MappedBase - (ULONG_PTR)Session->SystemSpaceViewStart) >> 16,
+                 Size);
+
+    /* Convert the size from a bit size into the actual size */
+    Size = Size * (_64K >> PAGE_SHIFT);
+
+    /* Remove the PTEs now */
+    MiRemoveMappedPtes(MappedBase, Size, ControlArea, NULL);
+    KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1701,6 +2204,17 @@ MmUnmapViewInSessionSpace(IN PVOID MappedBase)
  */
 NTSTATUS
 NTAPI
+MmUnmapViewOfSection(IN PEPROCESS Process,
+                     IN PVOID BaseAddress)
+{
+    return MiUnmapViewOfSection(Process, BaseAddress, 0);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 MmUnmapViewInSystemSpace(IN PVOID MappedBase)
 {
     PMEMORY_AREA MemoryArea;
@@ -1714,10 +2228,7 @@ MmUnmapViewInSystemSpace(IN PVOID MappedBase)
     }
 
     /* It was not, call the ARM3 routine */
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
-//    DPRINT("ARM3 unmapping\n");
-//    return MiUnmapViewInSystemSpace(&MmSession, MappedBase);
+    return MiUnmapViewInSystemSpace(&MmSession, MappedBase);
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -2188,7 +2699,7 @@ NtUnmapViewOfSection(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Unmap the view */
-    Status = MmUnmapViewOfSection(Process, BaseAddress);
+    Status = MiUnmapViewOfSection(Process, BaseAddress, 0);
 
     /* Dereference the process and return status */
     ObDereferenceObject(Process);
