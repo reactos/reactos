@@ -2,7 +2,11 @@
 set(USE_DIBLIB FALSE)
 
 add_subdirectory(drivers)
-add_subdirectory(gdi/diblib)
+
+if(USE_DIBLIB)
+    add_subdirectory(gdi/diblib)
+endif()
+
 add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
 add_subdirectory(user/user32)
