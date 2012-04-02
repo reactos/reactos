@@ -5152,12 +5152,19 @@ typedef struct _OBJECT_TYPE_LIST {
 } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 #if defined(_M_IX86)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    return (struct _TEB *)__readfsdword(0x18);
+}
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
     return (PVOID)(ULONG_PTR)__readfsdword(0x10);
 }
-
 #elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+}
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
   #ifdef NONAMELESSUNION
@@ -5166,12 +5173,10 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
   #endif
 }
-
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
-
 #elif defined(_M_PPC)
-static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
+FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
 {
     unsigned long result;
     __asm__("\tadd 7,13,%1\n"
@@ -5181,18 +5186,17 @@ static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_win
             : "r7");
     return result;
 }
-
-static __inline__ PVOID GetCurrentFiber(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
 {
-    return __readfsdword_winnt(0x10);
+    return (struct _TEB *)_read_teb_dword(0x18);
+}
+FORCEINLINE PVOID GetCurrentFiber(void)
+{
+    return _read_teb_dword(0x10);
 }
 #else
 #error Unknown architecture
 #endif
-
-
-
-#include "inline_ntcurrentteb.h"
 
 static __inline PVOID GetFiberData(void)
 {

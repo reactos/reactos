@@ -436,51 +436,7 @@ typedef struct _KPROCESSOR_STATE
     CONTEXT ContextFrame;
 } KPROCESSOR_STATE, *PKPROCESSOR_STATE;
 
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-typedef struct _GENERAL_LOOKASIDE_POOL
-{
-    union
-    {
-        SLIST_HEADER ListHead;
-        SINGLE_LIST_ENTRY SingleListHead;
-    };
-    USHORT Depth;
-    USHORT MaximumDepth;
-    ULONG TotalAllocates;
-    union
-    {
-        ULONG AllocateMisses;
-        ULONG AllocateHits;
-    };
-    union
-    {
-        ULONG TotalFrees;
-        ULONG FreeMisses;
-    };
-    ULONG FreeHits;
-    POOL_TYPE Type;
-    ULONG Tag;
-    ULONG Size;
-    union
-    {
-        PVOID AllocateEx;
-        PVOID Allocate;
-    };
-    union
-    {
-        PVOID FreeEx;
-        PVOID Free;
-    };
-    LIST_ENTRY ListEntry;
-    ULONG LastTotalAllocates;
-    union
-    {
-        ULONG LastAllocateMisses;
-        ULONG LastAllocateHits;
-    };
-    ULONG Future[2];
-} GENERAL_LOOKASIDE_POOL, *PGENERAL_LOOKASIDE_POOL;
-#else
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
 #define GENERAL_LOOKASIDE_POOL PP_LOOKASIDE_LIST
 #endif
 
