@@ -1,7 +1,6 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
-
-set_rc_compiler()
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     osver.c
