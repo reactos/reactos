@@ -226,7 +226,7 @@ CsrLoadServerDll(IN PCHAR DllString,
                 /* No, save the pointer to its shared section in our list */
                 CsrSrvSharedStaticServerData[ServerDll->ServerId] = ServerDll->SharedSection;
             }
-            
+
             /* ReactOS Specific hax */
             if (ServerDll->HighestApiSupported == 0xDEADBABE)
             {
@@ -673,10 +673,10 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             RtlInitUnicodeString(&ErrorSource, L"Windows SubSystem");
 
             /* Set the parameters */
-            ErrorParameters[0] = PtrToUlong(&ErrorSource);
+            ErrorParameters[0] = (ULONG_PTR)&ErrorSource;
             ErrorParameters[1] = ExceptionInfo->ExceptionRecord->ExceptionCode;
-            ErrorParameters[2] = PtrToUlong(ExceptionInfo->ExceptionRecord->ExceptionAddress);
-            ErrorParameters[3] = PtrToUlong(ExceptionInfo->ContextRecord);
+            ErrorParameters[2] = (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+            ErrorParameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
 
             /* Bugcheck */
             Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
